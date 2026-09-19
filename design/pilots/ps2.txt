@@ -1,0 +1,2 @@
+Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'python.exe' -or $_.ProcessId -eq 232 } | ForEach-Object { "{0} parent={1} created={2} cmd={3}" -f $_.ProcessId, $_.ParentProcessId, $_.CreationDate, $_.CommandLine }
+Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'sshd|cmd|powershell' } | ForEach-Object { "{0} {1} parent={2} created={3}" -f $_.ProcessId, $_.Name, $_.ParentProcessId, $_.CreationDate }
