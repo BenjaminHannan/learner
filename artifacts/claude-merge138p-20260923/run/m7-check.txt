@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138p_score.py", line 470, in <module>
+    sys.exit(main(sys.argv))
+             ^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138p_score.py", line 459, in main
+    out = m7(mdir, pred)
+          ^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138p_score.py", line 373, in m7
+    tot = [sum(1 for i in r if r["right"]) for r in
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138p_score.py", line 373, in <genexpr>
+    tot = [sum(1 for i in r if r["right"]) for r in
+                               ~^^^^^^^^^
+TypeError: 'dict_values' object is not subscriptable
+scorer exit 1
+
+--- MANUAL EQUIVALENT COMPLETION (sealed panel.sh line with $R2B typo stopped the script AFTER all six one-time panel runs finished; the sealed file was NOT edited, per the 138n precedent) ---
+2026-09-23: ran the two remaining sealed-scorer m4 commands once each with $R2B -> artifacts/claude-correct252b-20260922/run (the value $R252B holds in the sealed script), then the m7 tally with the sealed logic plus two one-line read fixes (totals loop variable; turn text via panel items for the question-write check). No panel arm was re-run: each of the 6 rows files was written exactly once by the sealed script.
+score-panel252c.json exit 0; score-panel138p.json exit 0.
+m7-check.json holds the full tally (openpanel260 pass; corrtail258 53 vs 54 with r2w=[t258-049]; corrpanel252 10 moved incl. c252-022, M4_pass false).
+Deviations: (1) sealed panel.sh $R2B unbound-variable typo (would-be diff: R2B -> R252B on two lines; NOT applied); (2) sealed scorer m7() crashes on the openpanel totals line (dict_values subscript) and on the tail question-write check (rows carry no turn field); both worked around by identical-logic one-off runs, sealed files untouched, seal re-verified 9/9 OK.
