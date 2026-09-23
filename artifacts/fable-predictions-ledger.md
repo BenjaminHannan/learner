@@ -2669,3 +2669,10 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - Pown0b.2 (own-O0b) 0 train rows carry an L2 frame id (split by frame before generating; 20% of frame ids held out).
 - Pown0b.3 (own-O0b) 0 non-whole-word spans across all 210,000 rows.
 - Pown0b.4 (own-O0b) each of the 10 families in [9%, 11%] of the 200,000 train rows (bar: >= 3% each).
+- Pown0f.1 (2026-09-23, own-O0f sealed comparison benchmark, sealed 7 files SEAL.sha256.txt artifacts/claude-own-bench-20260923; blind generator, CPU only, fictional names) 500 worlds per family x 5 families = 2500 worlds, 3000 questions (mquake 2/world); abstention 167/167/166, long 250x3-hop + 250x4-hop; max conversation 605 chars ~ 151 tokens (bar 900).
+- Pown0f.2 same: rule-based checker re-derives every gold from conversation facts, 0 mismatches over 3000 questions, 0 ungrounded facts, 0 over-budget conversations.
+- Pown0f.3 same: 0 worlds share a name set with another family's world (globally unique names by construction).
+- Pown0e.1 (2026-09-23, own-O0e baseline code, CPU only, sealed 5 files SEAL.sha256.txt artifacts/claude-own-o0e-20260923; audit once) count printed exactly 61,783,680 == expected (diff 0, bar +/- 0.2%): PASS as measured.
+- Pown0e.2 same (tiny width vocab1024/w64/2 layers, 147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS as measured.
+- Pown0e.3 same (200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts) poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0; round-trip 1800/1800; smoke loss 58.6267 -> 13.8225 in 0.2 s; CPU throughput 133120 tok/120.2 s = 1107.8 tok/s (report only): PASS as measured.
+- Pown0e OUTCOME: registered verdict FAIL by the seal rule (post-seal 2-line rotary broadcast fix in scripts/claude_own_o0e_model.py after a crash with no result observed; SEAL now model.py FAILED, other 4 OK; never re-sealed; diff in RESULTS.md). Marks themselves all PASS as measured above.
