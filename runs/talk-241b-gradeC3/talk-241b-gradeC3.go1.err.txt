@@ -1,0 +1,100 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main; git rev-parse --show-toplevel; ls
+1:59  up 2 days, 17:48, 4 users, load averages: 53.26 60.52 62.56
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    46%  484014 157823320    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt > /tmp/style241b.txt; shasum -a 256 /tmp/style241b.txt; wc -l /tmp/style241b.txt; git show origin/main:artifacts/claude-grade241b-set2-20260923/rows.jsonl > /tmp/rows241b_set2.jsonl; shasum -a 256 /tmp/rows241b_set2.jsonl; wc -l /tmp/rows241b_set2.jsonl
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/style241b.txt
+      47 /tmp/style241b.txt
+f4327edbc3cc891861e5df40684dc25cd38d110d468e5bc283784081f0be43d5  /tmp/rows241b_set2.jsonl
+    1245 /tmp/rows241b_set2.jsonl
+[0m
+[0m→ [0mRead /tmp/style241b.txt
+[0m→ [0mRead /tmp/rows241b_set2.jsonl[90m [limit=70, offset=831][0m
+[0m→ [0mRead /tmp/rows241b_set2.jsonl[90m [limit=100, offset=901][0m
+[0m→ [0mRead /tmp/rows241b_set2.jsonl[90m [limit=100, offset=1001][0m
+[0m→ [0mRead /tmp/rows241b_set2.jsonl[90m [limit=150, offset=1101][0m
+[0m
+[0m$ [0mls artifacts/ | grep grade241b; ls artifacts/claude-grade241b-C-set2-20260923/ 2>/dev/null || echo NODIR
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+part1.jsonl
+[0m
+[0m$ [0mmkdir -p artifacts/claude-grade241b-C-set2-20260923 && ls artifacts/claude-grade241b-C-set2-20260923/
+part1.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-grade241b-C-set2-20260923/part3.jsonl
+Wrote file successfully.
+[0m
+[0m$ [0mwc -l artifacts/claude-grade241b-C-set2-20260923/part3.jsonl && df -g / | tail -1 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-grade241b-C-set2-20260923/part3.jsonl')]; print(len(rows)); ids=[r['id'] for r in rows]; print(ids[0], ids[-1]); print('unique:', len(set(ids))); print('false:', sum(1 for r in rows if not r['grammatical'])); print([r['id'] for r in rows if not r['grammatical']]); exp=['g%04d'%i for i in range(831,1246)]; print('order-ok:', ids==exp)"
+415 artifacts/claude-grade241b-C-set2-20260923/part3.jsonl
+/dev/disk3s1s1       460   12        14    46%  484014 157151320    0%   /
+415
+g0831 g1245
+unique: 415
+false: 19
+['g0856', 'g0882', 'g0896', 'g0944', 'g0969', 'g0983', 'g0996', 'g1033', 'g1038', 'g1082', 'g1093', 'g1105', 'g1108', 'g1151', 'g1152', 'g1163', 'g1195', 'g1212', 'g1227']
+order-ok: True
+[0m
+[0m$ [0mgit status --short | head -20; git log --oneline -3
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+[0m
+[0m$ [0mgit status --short | grep -i grade241b; ls -la artifacts/claude-grade241b-C-set2-20260923/
+total 96
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 23 02:01 .
+drwxr-xr-x@ 401 ben-hannan  staff  12832 Sep 23 01:51 ..
+-rw-r--r--    1 ben-hannan  staff  22829 Sep 23 01:52 part1.jsonl
+-rw-r--r--    1 ben-hannan  staff  23342 Sep 23 02:01 part3.jsonl
+[0m
