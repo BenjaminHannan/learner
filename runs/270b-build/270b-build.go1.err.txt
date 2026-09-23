@@ -1,0 +1,2416 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin main 2>&1 | head -20; git status --short | head -30; ls artifacts/ | head -40
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 6:48  up 2 days, 22:37, 4 users, load averages: 58.40 56.08 54.92
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    54%  484014 116198440    0%   /
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/264-qa-checker.md 2>&1; echo "===SEPARATOR==="; git show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+- Q-value (V hidden): "Message from the speaker: «turn». According to this message, stated as a real, current fact (not asked, pretended, planned, wished, denied, or replaced), what is <S>'s <relation words>? Answer with the exact words from the message. If several, list them separated by ' | '. If the message does not state it, answer NOT STATED. If it is unclear, answer AMBIGUOUS."
+- Q-owner (S hidden): the same frame of words, "whose <relation words> is <V>?". The speaker is answered as "the speaker".
+- Q-relation (R hidden): "How is <V> related to <S> in this message? Answer with one to three words, or NOT STATED or AMBIGUOUS."
+Save iff V (case- and space-normalised) is one of Q-value's answers, AND S is one of Q-owner's answers ("the speaker" matches "me"), AND Q-relation's answer maps to R through relation table v2 names, aliases or narrower. Otherwise hold back as UNSURE. No threshold, so nothing is tuned; dev is used only to debug prompt wording, and every wording change is logged. The span guard stays after it.
+Report wrong saves per saved fact AND per turn, plus recall, with every arm on the same scorer (Ruling 1 included).
+"our/we" owners are excluded from panel 264 (Ben ruled they must ask whose; that is a separate experiment, 265).
+Certification is separate: panels like 264 are discovery panels, and certifying uses the 600-turn fixed set (to be written).
+===SEPARATOR===
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-earcheck261b-20260923/PASSMARKS.md 2>&1 | head -200
+echo "===RESULTS261b==="
+git show origin/main:artifacts/claude-earcheck261b-20260923/RESULTS.md 2>&1 | head -300
+echo "===270RESULTS==="
+git show origin/main:artifacts/claude-type270-20260923/RESULTS.md 2>&1 | head -300
+echo "===270PASS==="
+git show origin/main:artifacts/claude-type270-20260923/PASSMARKS.md 2>&1 | head -300
+fatal: path 'artifacts/claude-earcheck261b-20260923/PASSMARKS.md' exists on disk, but not in 'origin/main'
+===RESULTS261b===
+fatal: path 'artifacts/claude-earcheck261b-20260923/RESULTS.md' exists on disk, but not in 'origin/main'
+===270RESULTS===
+fatal: path 'artifacts/claude-type270-20260923/RESULTS.md' exists on disk, but not in 'origin/main'
+===270PASS===
+fatal: path 'artifacts/claude-type270-20260923/PASSMARKS.md' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mls artifacts/claude-earcheck261b-20260923/ 2>&1; echo "---"; ls artifacts/claude-type270-20260923/ 2>&1; echo "---"; ls scripts/claude_earcheck261*.py scripts/claude_earcheck261b*.py scripts/claude_type270*.py 2>&1; echo "---"; ls artifacts/claude-typepanel270b-20260923/ 2>&1; echo "---ledger tail---"; tail -40 artifacts/fable-predictions-ledger.md 2>&1
+dev_261b.jsonl
+dev261b_earpreds.json
+dev261b_manifest.json
+dev261b_pyes.json
+guarddev_261bdev.json
+guarddev_261dev.json
+panel261b_bpreds.json
+panel261b_earpreds.json
+panel261b_pyes.json
+panel261b_score.json
+panel261b_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+---
+dev270_rows263.json
+dev270_rowsA.json
+dev270.json
+devreport270.json
+loop270-config.json
+panel270_rows263.jsonl
+panel270_rowsA.jsonl
+panel270_score.json
+PASSMARKS.md
+predicted_moves270.json
+RESULTS.md
+SEAL.sha256.txt
+---
+scripts/claude_earcheck261_armb.py
+scripts/claude_earcheck261_arms.py
+scripts/claude_earcheck261_canon.py
+scripts/claude_earcheck261_checker.py
+scripts/claude_earcheck261_checks.py
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_earcheck261_devturns.py
+scripts/claude_earcheck261_panel.py
+scripts/claude_earcheck261_pchecks.py
+scripts/claude_earcheck261_promptB.py
+scripts/claude_earcheck261_qbuild.py
+scripts/claude_earcheck261_qwen.py
+scripts/claude_earcheck261_score.py
+scripts/claude_earcheck261_score257.py
+scripts/claude_earcheck261_scoremain.py
+scripts/claude_earcheck261_theta.py
+scripts/claude_earcheck261_turns.py
+scripts/claude_earcheck261b_armb.py
+scripts/claude_earcheck261b_armb.py
+scripts/claude_earcheck261b_arms.py
+scripts/claude_earcheck261b_arms.py
+scripts/claude_earcheck261b_devset5.py
+scripts/claude_earcheck261b_devset5.py
+scripts/claude_earcheck261b_guard.py
+scripts/claude_earcheck261b_guard.py
+scripts/claude_earcheck261b_guarddev.py
+scripts/claude_earcheck261b_guarddev.py
+scripts/claude_earcheck261b_panel.py
+scripts/claude_earcheck261b_panel.py
+scripts/claude_earcheck261b_scoremain.py
+scripts/claude_earcheck261b_scoremain.py
+scripts/claude_earcheck261b_turns.py
+scripts/claude_earcheck261b_turns.py
+scripts/claude_type270_agent.py
+scripts/claude_type270_devrun.py
+scripts/claude_type270_devscore.py
+scripts/claude_type270_devset.py
+scripts/claude_type270_normalise.py
+scripts/claude_type270_panelrun.py
+scripts/claude_type270_panelscore.py
+---
+make_panel.py
+panel.jsonl
+SEAL.sha256.txt
+---ledger tail---
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0d2.1 (2026-09-23, own-O0d2 diagnosis follow-up, scripts/claude_own_o0d2_{model,train,test}.py + PASSMARKS.md artifacts/claude-own-o0d2-20260923; CPU only): all 8 unit tests pass; bar = 8/8 pass.
+- Pown0d2.2 same: audited ear count still exactly 32,850,051; bar = diff <= 0.005 with exact number reported per part.
+- Pown0d2.3 same: kill test identical (kill at step 30, resume to step 60, sha256 equal); bar = identical.
+- Pown0d2.4 same: fuzz 10,000 random-logit draws, 0 non-whole-word spans decoded (span + owner checks); bar = 0.
+- Pown0d2.5 same: o0d smoke (toy frames, <= 10 min) loss still falls; bar = mean(last 10%) < mean(first 10%).
+- Pown0d2 OUTCOME (2026-09-23, builder; registered verdict PASS, 5/5 marks PASS, test run once): Pown0d2.1 units 8/8; Pown0d2.2 audit exactly 32,850,051; Pown0d2.3 kill A=054dbec63839 B=054dbec63839 (match o0d hashes); Pown0d2.4 fuzz 0/10,000; Pown0d2.5 smoke 120 steps 1.3347 -> 0.3635 (falls). Deviations: D1 fuzz reference + round-trip call updated to the fixed rule/signature; D2 predictions pre-registered pre-run. See artifacts/claude-own-o0d2-20260923/RESULTS.md.
+- P282b.1 (2026-09-23, builder; exp 282b vocab small talk on 282, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-small282b-20260923; blind panel never opened, smallpanel282 burned per director note) M1 blind smallpanel282b run once per arm with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories greeting/closing/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): writer greeting+closing fitting on 282b >= 90% (bar 32/35 at spec counts, 282 shown); 0 writes on them; mixed + control 0 moves vs 282; 0 store diffs; 0 question writes. Panel moves: exactly the writer-smalltalk turns where 282 errs and the vocab test fires (dev proxy 18/40 smalltalk dev turns move, rest keep 282's already-fitting reply; blind ids not predictable).
+- P282b.2 (same) M2 frozen suites vs 282 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 282's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 282 rows: vp 98 + supp 12, 0 changes. Dev 65 own-wording fictional-name dialogs 79 turns: greet 20/20 + thanks_close 20/20 with the head's canonical reply, mixed 15/15 + control 10/10 byte-identical 282b vs 282, exactly the 18 listed moves d282b-002/007/009/010/011/013/014/015/016/017/018/021/026/036/037/038/039/040 turn 0, 0 question writes.
+- P282b.3 (same) M3 smalltalkpanel234 once per arm: wellbeing 282b >= 282, other items all identical, 0 writes, 0 setup/store diffs; predicted only all-vocabulary wellbeing turns 282 errs on move to fitting. Falsifiers: any 282b reply change on mixed/control, any question-turn write, any suite/probe move vs 282 rows, any store diff. Known limits: class-less pure tails and how-are-you shapes keep 282's route; bare emoji and foreign greetings uncovered; stored-name homographs keep 282's route; first-word class on multi-class turns.
+- Pown0e2.1 (pred, sealed pre-run 2026-09-23) own-O0e2 follow-up, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0e2-20260923 (o0e2 model = o0e model code unchanged incl. rotary fix, o0e serialize/train imported unchanged): audit prints exactly 61,783,680 (fix is forward-math only, adds no params): PASS.
+- Pown0e2.2 (pred, same) kill test at tiny width (147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS.
+- Pown0e2.3 (pred, same) 200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts: poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0: PASS.
+- Pown0e2.4 (pred, same) rotary unit test: same-offset rotation leaves q.k unchanged, per-position and cross-position (0,d) vs (m,m+d) max abs errors both <= 1e-5 (rotation is orthogonal, float32 rounding ~1e-6): PASS.
+- P282b.4 OUTCOME (2026-09-23, builder, sealed exp 282b) registered verdict FAIL on the M1 bar only. M1 (60 turns once per arm, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): writer greeting+closing 30/35 on 282b (bar 32/35; greeting 15/20, closing 15/15) vs 19/35 on 282 (greeting 10/20, closing 9/15); 0 writes; mixed+control 25/25 same-as-282; 0 store diffs; 0 question writes. 11 moves (d_greet_07/12/15/17/18, d_close_03/08/09/12/13/14 turn 0, ev 0, all toward canonical); 5 misses all greeting and byte-identical to 282 (d_greet_08/16/20 identical non-fitting fixed reply both arms, d_greet_13/14 abstain both); 0 new wrongs/abstains. M2/probes PASS exactly as P282b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical to 282's; rt143 0; vp/vs 0/0). M3 PASS (wellbeing 17/20 both, other 36/36 same, 0 writes/diffs, 0 moves). P282b.1 wrong on the M1 figure only; P282b.2 right; P282b.3 bars right (0 st234 moves observed).
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+- P291.6 OUTCOME (2026-09-23, builder) registered verdict FAIL. M1-M6 all PASS first try (M1 503/503 + devs; M2 suites/rt136/rt143 as predicted; M3 4 fields; M4 4/4 identical x3; M5 +0.671 ms; M6 2 + 5 moves). M7 4/5 PASS (openpanel 80/80, corrtail 53/54 with 6 q2-wording, invpanel clean, tablepanel clean) and corrpanel252 FAIL on c252-009 (sealed scorer new_wrong_value; evidence: removal miss shared by all arms, 291 == base 138nb reply+store verbatim, 138p abstains; same shape as disclosed v259-056). M8 corrpanel291 73/96 (138nb 34, 138p 65): union preservation perfect (0 r2w both ways), cause families all >= 138p, controls 12/12, 0 question/followup writes, 0 new wrong/junk/claim beyond both parents (17/3/1 all inherited; c291-006 == 138nb verbatim) -- FAIL on absolute-zero bars only. P291.1 right; P291.2 right; P291.3 right; P291.4 wrong (1 row); P291.5 wrong (overall). Diagnosis for the director: stale-answer-on-shared-removal-miss, verbatim-base both times; ruling options: accept as table behaviour per the M7 classification clause, or route a removal-path follow-up.
+- P293.1 (pred, sealed pre-run 2026-09-23, builder exp 293 yes/no reader on 138nb, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-yesno293-20260923) M1 blind yesnopanel293 once per arm with sealed score_panel.py: yes/no families together >= 90% right on 293 (138nb dev 11/51); 0 wrong (never Yes when not stored, never No when stored); taken_back 0 Yes; 0 question writes; is_single/wh/statement controls byte-identical to 138nb. Dev proxy 111 dialogs: exactly the 72 listed moves Q2->Yes/No/IDK, 7 Q2 left (5 chain + 1 inverted-wh + 1 lowercase), 0 writes; blind ids not predictable.
+- P293.2 (same) M2 invpanel138nb + chainpanel266b regression once per arm: 0 moves on both (pilot 0/70 + 0/70).
+- P293.3 (same) M3 frozen suites vs 138nb rows: sessions152 0 moves; bench 0; marks123 exactly 1 reply-only (rt81 D_q_vs_s-04 OK->UNCLEAR, honest IDK); rt136 0 field diffs vs 138nb rows; rt143nogate exactly 2 (M3 Q2->Yes of-form, O5 Q2->IDK); 0 new WRONG/WRONG-WRITE/junk/lost-OK.
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+[0m
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-type270-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-type270-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/RESULTS.md
+[0m→ [0mRead scripts/claude_earcheck261b_arms.py
+[0m→ [0mRead scripts/claude_type270_normalise.py
+[0m→ [0mRead scripts/claude_earcheck261b_guard.py
+[0m
+[0m$ [0mdf -g / 2>&1; uptime 2>&1; ls artifacts/ | grep -i -E "264|265|269|270b|261b|earpanel" 2>&1; echo "---panel270b seal---"; cat artifacts/claude-typepanel270b-20260923/SEAL.sha256.txt 2>&1 | head -5; echo "---264 design---"; ls design/v3/30-modes/ | grep -E "264|265|269|270" 2>&1
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    54%  484014 116094320    0%   /
+ 6:49  up 2 days, 22:38, 4 users, load averages: 63.71 57.48 55.46
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-typepanel270b-20260923
+---panel270b seal---
+cbb549986322798da56f135633c971d7763c233d2e8114bf0a59e24707271ea5  artifacts/claude-typepanel270b-20260923/panel.jsonl
+9823ea917957d6eb0da61a384fa28307d224248ab5ab8b14be5fbaf6fef45a7e  artifacts/claude-typepanel270b-20260923/make_panel.py
+---264 design---
+[0m
+[0m$ [0mls -la artifacts/claude-earcheck264-20260923/ 2>&1; echo "---"; ls -la artifacts/claude-earpanel264-20260923/ 2>&1; echo "---"; ls scripts/claude_earcheck264* 2>&1; echo "---ledger 264---"; grep -n "P264\." artifacts/fable-predictions-ledger.md 2>&1 | head -20; echo "---ledger 270b---"; grep -n "P270b\." artifacts/fable-predictions-ledger.md 2>&1 | head -20
+total 4360
+drwxr-xr-x   27 ben-hannan  staff     864 Sep 23 00:55 .
+drwxr-xr-x@ 433 ben-hannan  staff   13856 Sep 23 06:44 ..
+-rw-r--r--    1 ben-hannan  staff    6615 Sep 22 23:23 dev_264.jsonl
+-rw-------    1 ben-hannan  staff  344558 Sep 23 00:33 dev257_qa.json
+-rw-r--r--    1 ben-hannan  staff  851444 Sep 23 00:35 dev257_qmanifest.json
+-rw-------    1 ben-hannan  staff   19844 Sep 23 00:33 dev261b_qa.json
+-rw-r--r--    1 ben-hannan  staff   46226 Sep 23 00:35 dev261b_qmanifest.json
+-rw-------    1 ben-hannan  staff   26453 Sep 22 23:25 dev264_earpreds.json
+-rw-------    1 ben-hannan  staff   13725 Sep 23 00:33 dev264_qa.json
+-rw-r--r--    1 ben-hannan  staff   34112 Sep 23 00:35 dev264_qmanifest.json
+-rw-------    1 ben-hannan  staff   70419 Sep 23 00:33 devcheck_qa.json
+-rw-r--r--    1 ben-hannan  staff  168164 Sep 23 00:35 devcheck_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff   41875 Sep 23 00:35 devreport_261.json
+-rw-r--r--    1 ben-hannan  staff    5232 Sep 23 00:33 devreport_264.json
+-rw-r--r--    1 ben-hannan  staff   22363 Sep 23 00:53 panel264_bpreds.json
+-rw-------    1 ben-hannan  staff   91241 Sep 23 00:38 panel264_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   67088 Sep 23 00:41 panel264_pmanifest.json
+-rw-------    1 ben-hannan  staff   26416 Sep 23 00:41 panel264_pyes.json
+-rw-------    1 ben-hannan  staff   44077 Sep 23 00:41 panel264_qa.json
+-rw-r--r--    1 ben-hannan  staff   98690 Sep 23 00:41 panel264_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff  164357 Sep 23 00:53 panel264_score.json
+-rw-r--r--    1 ben-hannan  staff   11254 Sep 23 00:37 panel264_turns.json
+-rw-r--r--    1 ben-hannan  staff    3976 Sep 23 00:54 panel264comma_tags.json
+-rw-r--r--    1 ben-hannan  staff    9932 Sep 23 00:36 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    7735 Sep 23 00:55 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    2618 Sep 23 00:36 SEAL.sha256.txt
+drwxr-xr-x  112 ben-hannan  staff    3584 Sep 23 00:53 workB
+---
+total 184
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 22 23:43 .
+drwxr-xr-x@ 433 ben-hannan  staff  13856 Sep 23 06:44 ..
+-rw-r--r--    1 ben-hannan  staff  33243 Sep 22 23:42 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  44885 Sep 22 23:42 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   5543 Sep 22 23:43 README.md
+-rw-r--r--    1 ben-hannan  staff    234 Sep 22 23:43 SEAL.sha256.txt
+---
+scripts/claude_earcheck264_armb.py
+scripts/claude_earcheck264_arms.py
+scripts/claude_earcheck264_client.py
+scripts/claude_earcheck264_commatags.py
+scripts/claude_earcheck264_devreport.py
+scripts/claude_earcheck264_devset.py
+scripts/claude_earcheck264_panel.py
+scripts/claude_earcheck264_qa.py
+scripts/claude_earcheck264_qbuild.py
+scripts/claude_earcheck264_scoremain.py
+scripts/claude_earcheck264_turns.py
+---ledger 264---
+2680:- P264.1 (2026-09-23, builder; exp 264 = 261b sealed arm A with YES/NO checker replaced by QA checker v5 (3 questions, decide-first + single-word relation + de-anchored owner), span guard kept, scorer = 261b sealed + Ruling 1 with per-fact/per-turn rates, sealed 23 files SEAL.sha256.txt artifacts/claude-earcheck264-20260923) M1 no_save saves 0-3; pass (<= 1) ~55 %. Dev: pretend 5/5, checkq 13/13, plan 26/28 held.
+2681:- P264.2 M2 wrong saves (statement fams + no_save) 2-6; pass (<= 1) ~25 %. Dev ~1%/turn (15/1207 on 261 dev) plus new R16/R17 traps (5/32 own dev).
+2682:- P264.3 M3 exact TEACH recall 65-78 % and >= B + 30; pass ~15 %. Dev d257 73.4 %, dc 74.9 %, b5 75.0 %; three gates multiply holds.
+2683:- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+2684:- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+2685:- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+2686:- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+2687:- P264.8 Overall registered PASS ~5 %.
+2688:- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+2713:- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+2714:- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+2715:- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+2716:- P264.4 M3b held back <= 12% of gold TEACH: predicted 20-30% PASS ~10%. Got 38/125 = 30.4% (37 QA + 1 guard). FAIL (range missed by 0.4).
+2717:- P264.5 M4 exact ASK recall >= 90%: predicted 90-100% PASS ~85%. Got 37/40 = 92.5%. PASS.
+2718:- P264.6 M5 median per turn <= 800 ms: predicted 850-1100 ms PASS ~5%. Got median 880.1, p90 1826.8, max 2664.2. FAIL.
+2719:- P264.7 M6 every A frame byte-identical in A_brake: predicted exact PASS ~99%. Got 0 mismatches. PASS.
+2720:- P264.8 Overall registered PASS: predicted ~5%. Got FAIL (M1, M2, M3, M3b, M5 fail; M4, M6 pass).
+2721:- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, all arms reported. Got A 5/86 = 0.0581 per fact, 5/110 = 0.0455 per turn; A261b 6/100 = 0.0600, 5/110 = 0.0455; A_brake 30/125 = 0.2400, 21/110 = 0.1909; B 9/11 = 0.8182, 9/110 = 0.0818. A vs A261b: M2 5 vs 6, M3 81 vs 94 (QA trades 13 hits for 1 fewer wrong).
+---ledger 270b---
+[0m
+[0m$ [0mls -la artifacts/claude-type270b-20260923/ 2>&1; echo "---"; ls scripts/claude_type270b* 2>&1; echo "---"; cat artifacts/claude-earcheck264-20260923/RESULTS.md 2>&1 | head -60
+ls: artifacts/claude-type270b-20260923/: No such file or directory
+---
+---
+# Exp 264 RESULTS: the question-answering checker (builder, 2026-09-23)
+
+## Result: registered FAIL
+
+Arm A (261b's A with the YES/NO checker replaced by the QA checker, sealed
+prompts v5 + mapping v3, span guard kept, scorer with Ruling 1) on the blind
+panel (150 items, every arm run once after both seals): M1 FAIL, M2 FAIL,
+M3 FAIL, M3b FAIL, M4 pass, M5 FAIL, M6 pass. Overall verdict FAIL.
+Predictions P264.2, .5, .6, .7, .8, .9 ranges right; P264.1 range right but
+the bar missed (2 vs 1); P264.3 range missed by 0.2 (64.8 vs 65-78);
+P264.4 range missed by 0.4 (30.4 vs 20-30).
+
+## Marks, arm A (integer counts)
+
+| Mark | Bar | Got | Pass? |
+|---|---|---|---|
+| M1 | no_save saves <= 1 | 2 | NO |
+| M2 | wrong saves (statement fams + no_save) <= 1 | 5 | NO |
+| M3 | exact TEACH recall >= 85% and >= B + 30 | 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2) | NO |
+| M3b | held back <= 12% of gold TEACH | 38/125 = 30.4% (37 QA + 1 guard on statement fams) | NO |
+| M4 | exact ASK recall >= 90% | 37/40 = 92.5% | yes |
+| M5 | median per turn <= 800 ms | median 880.1, p90 1826.8, max 2664.2 | NO |
+| M6 | every A frame byte-identical in A_brake | 0 mismatches | yes |
+
+Every arm's M1-M4 plus wrong-save rates (each arm run once; B = 138i + 228):
+
+| Arm | M1 no_save saved | M2 wrong | per-fact wrong/saved | per-turn turns-wrong/turns | M3 hit/gold (%) | M4 hit/gold (%) |
+|---|---|---|---|---|---|---|
+| A_brake (canon + brake) | 3 | 30 | 30/125 = 0.2400 | 21/110 = 0.1909 | 95/125 (76.0) | 37/40 (92.5) |
+| A261b (canon + brake + YES/NO checker 0.25 + guard) | 1 | 6 | 6/100 = 0.0600 | 5/110 = 0.0455 | 94/125 (75.2) | 37/40 (92.5) |
+| A (registered: canon + brake + QA checker + guard) | 2 | 5 | 5/86 = 0.0581 | 5/110 = 0.0455 | 81/125 (64.8) | 37/40 (92.5) |
+| B (138i + 228) | 0 | 9 | 9/11 = 0.8182 | 9/110 = 0.0818 | 2/125 (1.6) | - |
+
+A vs A261b: M1 2 vs 1; M2 5 vs 6 (QA removed 1 net wrong save); M3 81 vs
+94 (QA cost 13 hits); M4 37 = 37; per-fact 0.0581 vs 0.0600; per-turn
+0.0455 = 0.0455.
+
+Question families: 0 stray TEACH saves on questions/chain_questions in
+every ear arm.
+
+## Per family, arm A
+
+| Family | n | TEACH hit/gold | wrong | saved | ASK hit/gold | exact | unsure (QA+guard) |
+|---|---|---|---|---|---|---|---|
+| plain_teach | 25 | 21/32 | 1 | 22 | 0/0 | 17 | 10 |
+| varied_teach | 30 | 28/50 | 1 | 29 | 0/0 | 16 | 17 |
+| full_names | 15 | 21/28 | 0 | 21 | 0/0 | 10 | 4 |
+| corrections | 15 | 11/15 | 1 | 12 | 0/0 | 10 | 7 |
+| no_save | 25 | 0/0 | 2 | 2 | 0/0 | 23 | 0 |
+| questions | 25 | 0/0 | 0 | 0 | 25/25 | 25 | 0 |
+| chain_questions | 15 | 0/0 | 0 | 0 | 12/15 | 12 | 0 |
+
+## Per risk tag, arm A (comma-split notes; see D6)
+
+| Tag | n items | TEACH hit/gold | wrong | ASK hit/gold | unsure |
+|---|---|---|---|---|---|
+| R1 pronoun across clauses (:stmt) | 10 | 16/20 | 0 | - | 4 |
+| R2 statement-questions (:stmt 3 / :no_save 9) | 12 | 3/3 | 2 | - | 0 |
+| R3 verb decides (:stmt) | 6 | 4/6 | 0 | - | 2 |
+| R4 compound relatives (:stmt 6, :questions 1, :chain 1) | 8 | 8/8 | 0 | 2/2 | 0 |
+zsh:1: no matches found: scripts/claude_type270b*
+[0m
+[0m# [0mTodos
+[•] Read task files (270 scripts, 261b panel/turns/score, 269 compute method)
+[ ] Verify exp 264 already-complete state (no rebuild)
+[ ] Check BensPC reachability + load/disk gates
+[ ] Build 270b normaliser (fixed keep-s) + dev set (60+ casual, 20+ traps, 15+ s-names)
+[ ] Dev run on BensPC ear+checker, PASSMARKS + seal + ledger P270b.n
+[ ] Poll typepanel270b seal, schema check, run arms A/A261b ONCE
+[ ] Write RESULTS.md + final report
+[0m
+[0m→ [0mRead scripts/claude_type270_agent.py
+[0m→ [0mRead scripts/claude_type270_panelrun.py
+[0m→ [0mRead scripts/claude_type270_panelscore.py
+[0m→ [0mRead scripts/claude_earcheck261b_panel.py
+[0m→ [0mRead scripts/claude_earcheck261b_turns.py
+[0m→ [0mRead scripts/claude_earcheck261b_scoremain.py
+[0m
+[0m$ [0mls artifacts/claude-ear269-20260923/ 2>&1; echo "---"; ls scripts/claude_ear269* 2>&1 | head; echo "---"; grep -rn "100.75.113.114\|ssh\|llama-server\|ngl\|8081" scripts/claude_earcheck261_panel.py 2>&1 | head -20
+dev_269.jsonl
+dev269_bpreds.json
+dev269_bpredsA.json
+dev269_bpredsB.json
+dev269_earpreds.json
+dev269_manifest.json
+dev269_pyes.json
+dev269_score.json
+panel269_bpreds.json
+panel269_earpreds.json
+panel269_pyes.json
+panel269_q
+panel269_score.json
+panel269_turns.json
+PASSMARKS.md
+RESULTS-resume.md
+RESULTS-resume2.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdevA
+workBdevB
+---
+scripts/claude_ear269_armb.py
+scripts/claude_ear269_arms.py
+scripts/claude_ear269_devset.py
+scripts/claude_ear269_groupcheck.py
+scripts/claude_ear269_panel.py
+scripts/claude_ear269_qbuild.py
+scripts/claude_ear269_scoremain.py
+scripts/claude_ear269_turns.py
+---
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_panel.py
+[0m→ [0mRead artifacts/claude-ear269-20260923/RESULTS-resume.md[90m [limit=120][0m
+[0m
+[0m$ [0muptime; echo "---ping---"; ping -c 3 -t 5 100.75.113.114 2>&1 | head -10; echo "---ssh---"; ssh -o ConnectTimeout=8 -o BatchMode=yes ben@100.75.113.114 "hostname" 2>&1 | head -5
+6:49  up 2 days, 22:38, 4 users, load averages: 64.93 58.77 56.03
+---ping---
+PING 100.75.113.114 (100.75.113.114): 56 data bytes
+64 bytes from 100.75.113.114: icmp_seq=0 ttl=128 time=27.352 ms
+64 bytes from 100.75.113.114: icmp_seq=1 ttl=128 time=4.252 ms
+64 bytes from 100.75.113.114: icmp_seq=2 ttl=128 time=4.597 ms
+
+--- 100.75.113.114 ping statistics ---
+3 packets transmitted, 3 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 4.252/12.067/27.352/10.809 ms
+---ssh---
+ben@100.75.113.114: Permission denied (publickey,password,keyboard-interactive).
+[0m
+[0m✗ [0mGrep "ssh|100\.75|benja|BensPC|tailscale" failed[90m in artifacts/claude-ear269-20260923[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGrep "ssh|100\.75|BensPC" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mcommand grep -rn "100.75" artifacts/claude-ear269-20260923/PASSMARKS.md artifacts/claude-ear269-20260923/RESULTS-resume.md 2>&1 | head -20; echo "---"; command grep -rln "BensPC\|benja" scripts/claude_ear269_panel.py 2>&1 | head
+---
+[0m
+[0m→ [0mRead artifacts/claude-ear269-20260923/PASSMARKS.md
+[0m
+[0m$ [0mls handoff/kit/ 2>&1; echo "---"; ls handoff/kit/briefs/ 2>&1 | head -30
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+---
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+[0m
+[0m$ [0mls handoff/kit/briefs/ | command grep -i -E "261|269|270|264|bens|ssh|gpu" 2>&1; echo "---"; ls scratchpad/ 2>&1 | head -20
+261-earcheck.txt
+earpanel261-spec.txt
+---
+o0c-scratch-20260923
+w255
+w255b
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_qwen.py
+[0m→ [0mRead scripts/claude_earcheck264_client.py
+[0m
+[0m$ [0mcommand grep -rln "BensPC\|benspc" scripts/ 2>&1 | head -20; echo "---"; command grep -rn "scp\|rsync\|tailscale\|100\.75" scripts/claude_ear269_devset.py 2>&1 | head; echo "---ssh config---"; command ls ~/.ssh/ 2>&1 | head
+scripts/fable_ears213_wave.bat
+scripts/fable_talker24_model.py
+scripts/fable_ears109_data.py
+scripts/fable_ears119_data.py
+scripts/fable_ears119b_data.py
+scripts/fable_ears109_train.py
+scripts/fable_ears119f_wave.bat
+scripts/fable_ears119g_wave.bat
+scripts/fable_talker24_train.py
+scripts/claude_diag267_c3client.py
+scripts/claude_smolear235_model.py
+scripts/fable_ears119h_data.py
+scripts/fable_talker24_dialogues.py
+scripts/fable_ears119h_train.py
+scripts/fable_ears119_train.py
+scripts/remote_benspc.ps1
+scripts/claude_smolear235_train.py
+scripts/fable_ears119e_wave.bat
+scripts/claude_smolear235b_infer.py
+scripts/fable_ears119g_train.py
+---
+---ssh config---
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+[0m
+[0m→ [0mRead scripts/remote_benspc.ps1
+[0m
+[0m$ [0mcommand grep -i -E "benspc|100\.75|Host " ~/.ssh/config 2>&1 | head -20
+Host benspc
+  HostName 100.75.113.114
+[0m
+[0m$ [0mcommand grep -A 8 "^Host benspc" ~/.ssh/config 2>&1; echo "---test---"; ssh -o ConnectTimeout=10 -o BatchMode=yes benspc "hostname; whoami" 2>&1 | head -5
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---test---
+sethostname: Use the Network Control Panel Applet to set hostname.
+hostname -s is not supported.
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -o BatchMode=yes benspc "whoami; echo OK" 2>&1 | head -5; echo "---nvidia---"; ssh -o ConnectTimeout=10 -o BatchMode=yes benspc "nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv" 2>&1 | head -5
+ERROR: Invalid argument/option - ';'.
+Type "WHOAMI /?" for usage.
+---nvidia---
+name, memory.used [MiB], memory.total [MiB]
+NVIDIA GeForce RTX 5070 Ti, 582 MiB, 16303 MiB
+[0m
+[0m$ [0mcommand grep -rln "scp\|benspc" scripts/claude_earcheck26*.py scripts/claude_ear269*.py 2>&1 | head; echo "---"; command grep -rn "scp\|ssh " scripts/claude_earcheck264_panel.py 2>&1 | head -20
+---
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\beautiful-model\scripts\claude_earcheck264_* | Select-Object Name; nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader\"" 2>&1 | head -30
+571 MiB, 16303 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"echo HELLO\"" 2>&1 | head -5
+HELLO
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Test-Path C:\Users\benja\beautiful-model; Test-Path C:\Users\benja\smolear235\out_v41\smolear235.safetensors; Get-Process | Where-Object { \$_.ProcessName -like '*llama*' -or \$_.ProcessName -like '*python*' } | Select-Object ProcessName,Id | Format-Table -HideTableHeaders | Out-String\"" 2>&1 | head -20
+True
+True
+
+llama-server 17056
+pythonw       8456
+pythonw       8916
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\beautiful-model\scripts\claude_earcheck261b_* | Select-Object -ExpandProperty Name; echo ---; Get-ChildItem C:\Users\benja\beautiful-model\scripts\claude_type270_* | Select-Object -ExpandProperty Name; echo ---; cd C:\Users\benja\beautiful-model; git log --oneline -3; git status --short | Select-Object -First 10\"" 2>&1 | head -40
+---
+---
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\beautiful-model | Select-Object -ExpandProperty Name; echo ---SCRIPTS---; Get-ChildItem C:\Users\benja\beautiful-model\scripts\claude_earcheck26*.py | Select-Object -ExpandProperty Name\"" 2>&1 | head -40
+.budget
+.runtime
+archive
+artifacts
+data
+design
+learnlab
+memorylab
+premonition
+reviews
+scratchpad
+scripts
+tests
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+run.py
+run.sh
+runtime.local.json
+TEACHING_TO_TEST_CONTRACT.md
+---SCRIPTS---
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\beautiful-model\scripts | Where-Object { \$_.Name -like '*ear*' -or \$_.Name -like '*smolear*' } | Select-Object -ExpandProperty Name; echo ---; Get-ChildItem C:\Users\benja\smolear235 | Select-Object -ExpandProperty Name; echo ---; Get-ChildItem C:\Users\benja\beautiful-model\.runtime\runs 2\\\u0024null | Select-Object -ExpandProperty Name | Select-Object -Last 10\"" 2>&1 | head -40
+fable_ears45_data.py
+fable_ears45_frames.py
+fable_ears45_lexicon.py
+fable_ears47_data.py
+fable_ears47_encoder.py
+fable_ears47_model.py
+fable_ears47_score.py
+fable_ears47_train.py
+---
+artifacts
+base
+data
+data3
+data4
+data41
+dev257
+on235b_257
+out
+out_smoke
+out_smoke2
+out_v1
+out_v2
+out_v3
+out_v4
+out_v41
+run257
+run261
+run265
+run269
+scripts
+bench235.py
+bench235b.py
+claude_smolear235_infer.py
+dev235b_log.txt
+dev235b_preds.json
+dev235b_turns.json
+fixture_preds.json
+fixture_turns.json
+llama261.err
+llama261.log
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\smolear235\scripts | Select-Object -ExpandProperty Name; echo ---RUN269---; Get-ChildItem C:\Users\benja\smolear235\run269 | Select-Object -ExpandProperty Name\"" 2>&1 | head -40
+__pycache__
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_qwen.py
+claude_smolear235b_beam.py
+claude_smolear235b_infer.py
+claude_smolear235_data.py
+claude_smolear235_infer.py
+claude_smolear235_model.py
+claude_smolear235_panel.py
+claude_smolear235_score.py
+claude_smolear235_train.py
+claude_smolear257_armb.py
+claude_smolear257_data.py
+claude_smolear257_devreport.py
+claude_smolear257_devset.py
+claude_smolear257_infer.py
+claude_smolear257_on235b.py
+claude_smolear257_panel.py
+claude_smolear257_score.py
+claude_smolear257_table.py
+claude_smolear257_tau.py
+claude_smolear257_turns.py
+---RUN269---
+269_qwen_adapter.py
+checks.json
+claude_earcheck261_qwen.py
+claude_smolear235b_beam.py
+claude_smolear235b_infer.py
+claude_smolear235_model.py
+claude_smolear235_panel.py
+claude_smolear235_score.py
+claude_smolear257_infer.py
+claude_smolear257_table.py
+dev269_checks_run.json
+dev269_pyes_run.json
+manifest.json
+panel269_checks.json
+panel269_earpreds.json
+panel269_pyes_run.json
+[0m
+[0m→ [0mRead artifacts/claude-earcheck264-20260923/PASSMARKS.md
+[0m→ [0mRead scripts/claude_earcheck261_checker.py
+[0m→ [0mRead scripts/claude_earcheck261_arms.py
+[0m→ [0mRead scripts/claude_earcheck261_canon.py
+[0m→ [0mRead scripts/claude_earcheck261_qbuild.py
+[0m→ [0mRead scripts/claude_type270_devset.py[90m [limit=80][0m
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\smolear235\run269 | Select-Object -ExpandProperty Name; echo ---RUN265---; Get-ChildItem C:\Users\benja\smolear235\run265 | Select-Object -ExpandProperty Name\"" 2>&1 | head -40
+269_qwen_adapter.py
+checks.json
+claude_earcheck261_qwen.py
+claude_smolear235b_beam.py
+claude_smolear235b_infer.py
+claude_smolear235_model.py
+claude_smolear235_panel.py
+claude_smolear235_score.py
+claude_smolear257_infer.py
+claude_smolear257_table.py
+dev269_checks_run.json
+dev269_pyes_run.json
+manifest.json
+panel269_checks.json
+panel269_earpreds.json
+panel269_pyes_run.json
+panel269_turns.json
+---RUN265---
+dev265_checks.json
+dev265_earpreds.json
+dev265_pyes.json
+dev265_turns.json
+earcheck261_checker.py
+llama_dev.log
+panel265_checks.json
+panel265_earpreds.json
+panel265_pyes.json
+panel265_turns.json
+[0m
+[0m$ [0mhead -60 scripts/claude_smolear257_infer.py 2>&1
+#!/usr/bin/env python3
+"""Exp 257 -- run the 235b inference driver (greedy + k=4 beams + gate) UNCHANGED, with the
+brake pointed at relation table v2 (claude_smolear257_table.install()). Same arguments as
+claude_smolear235b_infer.py."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235b_infer as I  # noqa: E402
+
+if __name__ == "__main__":
+    I.main()
+[0m
+[0m$ [0mcommand grep -n "add_argument\|def main" scripts/claude_smolear235b_infer.py 2>&1 | head -30
+34:def main():
+36:    ap.add_argument("--ckpt", required=True)
+37:    ap.add_argument("--base", required=True)
+38:    ap.add_argument("--turns", required=True)
+39:    ap.add_argument("--out", required=True)
+40:    ap.add_argument("--device", default="cuda")
+41:    ap.add_argument("--expect-sha", default=None)
+42:    ap.add_argument("--tau", type=float, default=None)
+43:    ap.add_argument("--k", type=int, default=B.K)
+[0m
+[0m$ [0mcommand grep -n "STATEMENT\s*=\|QUESTION\s*=\|SAVE_FAMS\s*=" scripts/claude_earcheck261_scoremain.py 2>&1; echo "---"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; which uv 2>&1; uv --version 2>&1 | head -2
+38:STATEMENT = ["plain_teach", "varied_teach", "full_names", "corrections"]
+39:SAVE_FAMS = STATEMENT + ["no_save"]
+40:QUESTION = ["questions", "chain_questions"]
+---
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_turns.py
+[0m
+[0m$ [0mcat artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1; echo "---seal recheck---"; shasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | sort | uniq -c | head -5
+117f574ecce76139bdfd793282d207ececfc6ac0ffeeebd5132944e32cedabed  scripts/claude_earcheck264_qa.py
+7d5641ab8a74087487e4f084065b449a383e2121b31cc8f2fb19fb3887001927  scripts/claude_earcheck264_client.py
+2cf299eda22b132d99541d8f678db44cd477dea76e7ee98384e0a31b465c19ea  scripts/claude_earcheck264_qbuild.py
+a5d099ddbf48522e31d66370216ddcb8df2937540392fcebc70c41d83312ea73  scripts/claude_earcheck264_arms.py
+b3d1c4402d2ba69c0256b4e50fec533199d7cb2205312ac1838a04ee364c7627  scripts/claude_earcheck264_scoremain.py
+a3c97c37f359ec0c7411a54ae2ef7b617423ed14588375766e2b0368c6386050  scripts/claude_earcheck264_panel.py
+44ae9bc8698f5edd1ee7c992d27a49e429b645d37a44995451d83475efd55228  scripts/claude_earcheck264_turns.py
+631676f19e9f3edbc837805ea0997619922a9b8ae00b1604e46e38a2ac2e026c  scripts/claude_earcheck264_armb.py
+42366d5f6c54d8230f26ef45a6a676ac51efb9fe3d3be7b2e85a0bdb23f5c3cf  scripts/claude_earcheck264_devset.py
+76ae06bf2ddff698a832febaa2770dfa1ab3947eea989d5294aacf249eab00fd  scripts/claude_earcheck264_devreport.py
+585835efc06c2902f2a6b1dc4944a2922339b6186c7d51ec4a5f38855efec4b2  artifacts/claude-earcheck264-20260923/PASSMARKS.md
+f7774e9eafa0650a4e3de4cf130cc142d2fe7610246571d819168cf555e76775  artifacts/claude-earcheck264-20260923/dev_264.jsonl
+bef524ad69ccf8409dd3d2c06751bb38e1147739e3dc164f6eb4c9f38555a8f4  artifacts/claude-earcheck264-20260923/dev264_earpreds.json
+0ca3285860acd99b48ba40b069c1b9ac4be9a08cd59529a1b225fb3b7b415e32  artifacts/claude-earcheck264-20260923/dev257_qa.json
+9fc7577d7c688d3e690d8790132a666650389d73ac8c2c24f5ef2804fb51ac07  artifacts/claude-earcheck264-20260923/devcheck_qa.json
+17cd60701b15dbfb6a9bc486543947f3bafb8417d5a48700fc4e614bbe35d3c4  artifacts/claude-earcheck264-20260923/dev261b_qa.json
+9c1969694db7c5fc0a2ebba29620eb6e933b2cd5997901c97d4adce081310e85  artifacts/claude-earcheck264-20260923/dev264_qa.json
+312195a3c5cdd6f3be136a49a6d67c498d9e26c9efc6a09553ab5a0094638181  artifacts/claude-earcheck264-20260923/dev257_qmanifest.json
+3e5fb89396deeb54f3d6ee935affdefcb6965f1450387297def80a15d0da2703  artifacts/claude-earcheck264-20260923/devcheck_qmanifest.json
+f07a86528af4cb54f3b36ef1f87fa9752c7f226caa5aad2e86578099645dbf4b  artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json
+0912e135ded68c0905e1a0adc0d31bb5e0e9f352af13f136dd2d3dd8562de557  artifacts/claude-earcheck264-20260923/dev264_qmanifest.json
+32d6fb34daeb4c2e92e57a01f6ec2f617af4f7ba1d5dfcaaa311c61dbfd6bffa  artifacts/claude-earcheck264-20260923/devreport_261.json
+85ef1c44b1be8c3efdddf10abe9fc5ff9e61154e0c2aa7771b4a7394b35d2cec  artifacts/claude-earcheck264-20260923/devreport_264.json
+---seal recheck---
+   1 artifacts/claude-earcheck264-20260923/dev_264.jsonl: OK
+   1 artifacts/claude-earcheck264-20260923/dev257_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev257_qmanifest.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev261b_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json: OK
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import torch, numpy; print(torch.__version__, numpy.__version__)" 2>&1 | tail -3
+2.14.0 2.5.3
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | command grep -c "OK"; shasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | command grep -v "OK" | head -5; echo "exit=$?"; uptime; df -g / | head -3
+23
+exit=0
+ 6:55  up 2 days, 22:44, 4 users, load averages: 45.30 49.65 52.70
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 141080760    0%   /
+[0m
+[0m# [0mTodos
+[✓] Read task files (270 scripts, 261b panel/turns/score, 269 compute method)
+[✓] Verify exp 264 already-complete state (23/23 seal OK, RESULTS FAIL filed, ledger P264 present)
+[•] BensPC preflight (llama binary, model file, python torch/cuda, ports, GPU idle)
+[ ] Write 270b normaliser (fixed keep-s) + unit self-test local
+[ ] Write 270b devset (60+ casual, 20+ traps, 15+ s-names), generate + inspect
+[ ] Dev wave: BensPC ear + Qwen checker, local score A vs A261b
+[ ] PASSMARKS P270b.n + seal + ledger append
+[ ] Panel seal check, run arms A/A261b ONCE, score
+[ ] RESULTS.md + final report (264 verdict + 270b verdict)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Test-Path C:\llama-b10679\llama-server.exe; Test-Path 'C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf'; Test-Path C:\Users\benja\smolear235\out_v41\smolear235.safetensors; netstat -ano | Select-String '8081|8082'; nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader\"" 2>&1 | head -15
+True
+True
+True
+
+  TCP    127.0.0.1:8081         0.0.0.0:0              LISTENING       17056
+571 MiB, 16303 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B -c \\\"import torch; print(torch.__version__, torch.cuda.is_available())\\\"\"" 2>&1 | head -8
+2.11.0+cu128 True
+[0m
+[0m# [0mTodos
+[✓] Read task files (270 scripts, 261b panel/turns/score, 269 compute method)
+[✓] Verify exp 264 already-complete state (23/23 seal OK, RESULTS FAIL filed, ledger P264 present)
+[✓] BensPC preflight (llama binary, model file, python torch/cuda, ports, GPU idle)
+[•] Write 270b normaliser (fixed keep-s) + unit self-test local
+[ ] Write 270b devset (60+ casual, 20+ traps, 15+ s-names), generate + inspect
+[ ] Dev wave: BensPC ear + Qwen checker, local score A vs A261b
+[ ] PASSMARKS P270b.n + seal + ledger append
+[ ] Panel seal check, run arms A/A261b ONCE, score
+[ ] RESULTS.md + final report (264 verdict + 270b verdict)
+[0m
+[0m← [0mWrite scripts/claude_type270b_normalise.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_type270b_normalise as N
+cases = [
+  ('benos dog is rex.', {}, \"Beno's dog is Rex.\"),
+  ('belmaras mother is marisol.', {}, \"Belmara's mother is Marisol.\"),
+  ('benos dog is rex.', {'beno':'Beno'}, \"Beno's dog is Rex.\"),
+  ('morris mother is belmara.', {}, \"Morris's mother is Belmara.\"),
+  ('tess boss is corvin.', {}, \"Tess's boss is Corvin.\"),
+  ('james mother is wren.', {}, \"James's mother is Wren.\"),
+  ('thomas brother is jesper.', {}, \"Thomas's brother is Jesper.\"),
+  ('hakis mother is tilda.', {}, \"Haki's mother is Tilda.\"),
+  ('dilos boss is pellin.', {}, \"Dilo's boss is Pellin.\"),
+  ('zoranas mother is vexley, right.', {}, None),
+  (\"Belmara's mother is Marisol.\", {}, None),
+  ('my dog is rex.', {}, 'My dog is Rex.'),
+  ('who is belmaras mother', {}, \"Who is Belmara's mother\"),
+  ('dogs mother is rex.', {}, \"Dog's mother is Rex.\"),
+]
+bad = 0
+for raw, names, want in cases:
+    fixed, reason, ms = N.normalise270b(raw, names)
+    if want is None:
+        ok = (fixed == raw and reason is None)
+    else:
+        ok = (fixed == want)
+    if not ok: bad += 1
+    print(('OK ' if ok else 'MISS'), repr(raw), '->', repr(fixed), reason)
+print('BAD:', bad)
+"
+OK  'benos dog is rex.' -> "Beno's dog is Rex." lowercase
+OK  'belmaras mother is marisol.' -> "Belmara's mother is Marisol." lowercase
+OK  'benos dog is rex.' -> "Beno's dog is Rex." lowercase
+OK  'morris mother is belmara.' -> "Morris's mother is Belmara." lowercase
+OK  'tess boss is corvin.' -> "Tess's boss is Corvin." lowercase
+OK  'james mother is wren.' -> "James's mother is Wren." lowercase
+OK  'thomas brother is jesper.' -> "Thomas's brother is Jesper." lowercase
+OK  'hakis mother is tilda.' -> "Haki's mother is Tilda." lowercase
+OK  'dilos boss is pellin.' -> "Dilo's boss is Pellin." lowercase
+OK  'zoranas mother is vexley, right.' -> 'zoranas mother is vexley, right.' None
+OK  "Belmara's mother is Marisol." -> "Belmara's mother is Marisol." None
+MISS 'my dog is rex.' -> 'my dog is Rex.' lowercase
+MISS 'who is belmaras mother' -> "who is Belmara's mother" lowercase
+OK  'dogs mother is rex.' -> "Dog's mother is Rex." lowercase
+BAD: 2
+[0m
+[0m$ [0mcommand grep -n "def match\|def rel_ok\|def subj_ok\|def val_ok\|FIRST\|def rkey" scripts/claude_smolear235_score.py | head; echo ---; sed -n '1,120p' scripts/claude_smolear235_score.py 2>/dev/null | head -120
+42:FIRST = {"i", "me", "my", "myself", "mine", "user"}
+53:    return "<user>" if n in FIRST else n
+61:def rkey(s):
+65:def rel_ok(pred, gold, aliases):
+93:def match(preds, golds, act):
+---
+#!/usr/bin/env python3
+"""Exp 235 scorer: arms A (SmolLM ear, raw and after the brake) and B (138i).
+
+python claude_smolear235_score.py --panel P --a-preds A.json --b-preds B.json --out SCORE.json
+
+Matching (fixed before the seal):
+- subject/value: lower-case, edge punctuation trimmed, spaces collapsed, a
+  leading "the/a/an" dropped; values also drop a trailing "years old".
+  First-person subjects {i, me, my, myself, mine, user} are one entity
+  (the notebook stores them as USER).
+- relation hop: the predicted relation matches a gold hop when its canonical
+  table name equals the canonical name (via table v1 names + aliases) of the
+  gold relation or of any listed gold alias, or when the plain strings match
+  after lower-casing and treating _ - and space alike.
+- a gold frame is matched at most once (greedy, in gold order).
+Marks (see PASSMARKS.md):
+  M1 no_save: TEACH frames saved (A after brake) <= 1.
+  M2 wrong saves across statement families (plain_teach, varied_teach,
+     full_names, corrections, no_save): TEACH frames kept that match no gold
+     TEACH frame of that item <= 2 (A after brake).
+  M3 exact TEACH-frame recall on plain_teach+varied_teach+full_names+corrections:
+     A >= 80% and A >= B + 15 points.
+  M4 exact ASK-frame recall on questions+chain_questions: A >= 80%.
+  M5 GPU median latency per turn <= 300 ms.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import statistics
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear235_model as E  # noqa: E402  (parse_frames, brake, canon_rel only)
+import claude_smolear235_panel as P  # noqa: E402
+
+STATEMENT = ["plain_teach", "varied_teach", "full_names", "corrections"]
+SAVE_FAMS = STATEMENT + ["no_save"]
+QUESTION = ["questions", "chain_questions"]
+FIRST = {"i", "me", "my", "myself", "mine", "user"}
+
+
+def norm(s):
+    s = " ".join(str(s or "").strip(" \t\"'.,;:!?()[]{}").split()).lower()
+    s = re.sub(r"^(the|a|an)\s+", "", s)
+    return s
+
+
+def norm_subj(s):
+    n = norm(s)
+    return "<user>" if n in FIRST else n
+
+
+def norm_val(s):
+    n = norm(s)
+    return re.sub(r"\s+years?\s+old$", "", n)
+
+
+def rkey(s):
+    return re.sub(r"[\s_\-]+", " ", str(s).strip().lower())
+
+
+def rel_ok(pred, gold, aliases):
+    pc = E.canon_rel(pred) or pred
+    for c in [gold] + list(aliases or []):
+        if rkey(c) == rkey(pc) or rkey(c) == rkey(pred):
+            return True
+        cc = E.canon_rel(c)
+        if cc is not None and cc == pc:
+            return True
+    return False
+
+
+def frame_ok(p, g):
+    if p["act"] != g["act"]:
+        return False
+    if norm_subj(p["subject"]) != norm_subj(g["subject"]):
+        return False
+    prel = p["relation"] if isinstance(p["relation"], list) else [p["relation"]]
+    if len(prel) != len(g["relation"]):
+        return False
+    for i, (pr, gr) in enumerate(zip(prel, g["relation"])):
+        al = g["aliases"][i] if i < len(g["aliases"]) else []
+        if not rel_ok(pr, gr, al):
+            return False
+    if g["act"] == "TEACH" and norm_val(p["value"]) != norm_val(g["value"]):
+        return False
+    return True
+
+
+def match(preds, golds, act):
+    """Returns (matched_gold_count, unmatched_pred_frames)."""
+    gl = [g for g in golds if g["act"] == act]
+    used = [False] * len(gl)
+    extra, hit = [], 0
+    for p in [p for p in preds if p["act"] == act]:
+        for i, g in enumerate(gl):
+            if not used[i] and frame_ok(p, g):
+                used[i] = True
+                hit += 1
+                break
+        else:
+            extra.append(p)
+    return hit, extra, len(gl)
+
+
+def b_frames(rec):
+    out = []
+    for s, r, v in rec.get("triples", []):
+        out.append(dict(act="TEACH", subject=("me" if s == "USER" else s), relation=r, value=v))
+    return out
+
+
+def pct(a, b):
+    return round(100.0 * a / b, 1) if b else None
+
+
+def score(items, apreds, bpreds):
+[0m
+[0m← [0mWrite scripts/claude_type270b_devset.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -105,9 +105,9 @@
+     add("casual_q", "where do i live", [A("me", "city")],
+         note="q-where-me")
+ elif w == "where":
+     add("casual_q", f"where does {n.lower()} live",
+-        [A(n, "city")], note="q-where")
++        [A("me", "city")], note="q-where")
+ elif w == "whos":
+     add("casual_q", f"whos {n.lower()}s {rel}",
+         [A("me", rel)], note="q-whos")
+ elif w == "whats":
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -151,9 +151,9 @@
+     add("lower_trap", t, g, note="trap")
+ 
+ # ---- clean 24: passthrough + frame identity ----
+ cleans = [
+-    ("BelmaraX lives in Aldermere.", [T("BelmaraX", "city", "Aldermere")]),
++    ("Rurik lives in Aldermere.", [T("Rurik", "city", "Aldermere")]),
+     ("Dilo's mother is Senna.", [T("Dilo", "mother", "Senna")]),
+     ("Beno works at Cinderfell.", [T("Beno", "employer", "Cinderfell")]),
+     ("My friend is Zorana.", [T("me", "friend", "Zorana")]),
+     ("James's sister is Kessa.", [T("James", "sister", "Kessa")]),
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -159,9 +159,9 @@
+ ("James's sister is Kessa.", [T("James", "sister", "Kessa")]),
+ ("Morris's boss is Rurik.", [T("Morris", "boss", "Rurik")]),
+ ("Sarella's dog is Rex.", [T("Sarella", "pet", "Rex")]),
+ ("Vanno's father is Fenwick.", [T("Vanno", "father", "Fenwick")]),
+-("Kessa works as cooper.", [T("Kessa", "occupation", "cooper")]),
++("Kessa works as Cooper.", [T("Kessa", "occupation", "Cooper")]),
+ ("Haki's brother is Quillan.", [T("Haki", "brother", "Quillan")]),
+ ("Isolde lives in Emberlyn.", [T("Isolde", "city", "Emberlyn")]),
+ ("My mother is Senna.", [T("me", "mother", "Senna")]),
+ ("Who is Beno's mother?", [A("me", "mother")]),
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -204,9 +204,9 @@
+ 
+ # ---- seen 4: multi-turn seen-name memory ----
+ add("seen", "benos dog is rex.", [T("Beno", "pet", "Rex")],
+     setup=["Beno lives in Aldermere."], note="seen-strip")
+-add("seen", "jamess sister is wren2.", [T("James", "sister", "Wren2")],
++add("seen", "jamess sister is senna.", [T("James", "sister", "Senna")],
+     setup=["James works at Cinderfell."], note="seen-keep-double-s")
+ add("seen", "dilos boss is quillan.", [T("Dilo", "boss", "Quillan")],
+     setup=["Dilo lives in Brackenholme."], note="seen-strip")
+ add("seen", "hakis mother is senna.", [T("Haki", "mother", "Senna")],
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -3 || mkdir -p artifacts/claude-type270b-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -3
+with open(out, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-type270b-20260923/dev270b.jsonl'
+    with open(out, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-type270b-20260923/dev270b.jsonl'
+[0m
+[0m$ [0mls artifacts/ > /dev/null && mkdir artifacts/claude-type270b-20260923 && ls -d artifacts/claude-type270b-20260923
+artifacts/claude-type270b-20260923
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -3
+148 turns {'casual': 64, 'casual_q': 16, 'lower_trap': 24, 'clean': 24, 'sname': 16, 'seen': 4}
+[0m
+[0m$ [0mcommand grep -n "def arm_set" -A 40 scripts/claude_earcheck261_scoremain.py | head -60
+52:def arm_set(it, rec, pmap, theta):
+53-    """Return dict arm -> (saved_frames, unsure_list, p_list)."""
+54-    arms0 = A.base_arms(rec["raw"], it["turn"], rec["greedy_lp"], rec["beams"])
+55-    kept_nc = [f for f in E.brake(E.parse_frames(rec["raw"]), it["turn"])[0]]
+56-    n_teach = sum(1 for f in arms0["kept_canon"] if f.get("act") == "TEACH")
+57-    n_nc = sum(1 for f in kept_nc if f.get("act") == "TEACH")
+58-    pl = [float(pmap[f"{it['id']}#t{k}"][0]) for k in range(n_teach)]
+59-    cms = [float(pmap[f"{it['id']}#t{k}"][1]) for k in range(n_teach)]
+60-    pl_nc = [float(pmap[f"nc:{it['id']}#t{k}"][0]) for k in range(n_nc)]
+61-    saved, unsure = A.checker_split(arms0["kept_canon"], pl, theta)
+62-    saved_nc, unsure_nc = A.checker_split(kept_nc, pl_nc, theta)
+63-    return (dict(A_raw=arms0["A_raw"], A_brake=arms0["A_brake"],
+64-                 A_gate=arms0["A_gate"], A=saved, A_nocanon=saved_nc),
+65-            unsure, unsure_nc, pl, cms)
+66-
+67-
+68-def score(items, apreds, bpreds, pmap, theta):
+69-    rows, agg, tags = [], {}, {}
+70-    m6_bad = 0
+71-    details = []
+72-    for it in items:
+73-        rec = apreds[it["id"]]
+74-        arms, unsure, unsure_nc, pl, cms = arm_set(it, rec, pmap, theta)
+75-        if it["family"] not in QUESTION and it["id"] in bpreds:
+76-            arms["B"] = S.b_frames(bpreds[it["id"]])
+77-        for f in arms["A"]:
+78-            if not any(f == b for b in arms["A_brake"]):
+79-                m6_bad += 1
+80-        ear_ms = float(rec.get("ms_greedy", rec.get("ms", 0.0)))
+81-        ms = round(ear_ms + sum(cms), 2)
+82-        row = dict(id=it["id"], family=it["family"], tags=it["tags"], ms=ms,
+83-                   arms={}, unsure=len(unsure))
+84-        keys = [("family", it["family"])] + [("tag", f"{t}:{'stmt' if it['family'] in STATEMENT else it['family']}")
+85-                                             for t in it["tags"]]
+86-        for arm, fr in arms.items():
+87-            th, tx, tn = S.match(fr, it["gold"], "TEACH")
+88-            ah, ax, an = S.match(fr, it["gold"], "ASK")
+89-            saved_n = sum(1 for f in fr if f["act"] == "TEACH")
+90-            row["arms"][arm] = dict(teach_hit=th, teach_gold=tn, wrong=len(tx),
+91-                                    ask_hit=ah, ask_gold=an, ask_extra=len(ax),
+92-                                    saved=saved_n,
+[0m
+[0m← [0mWrite scripts/claude_type270b_turns.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_type270b_qbuild.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_type270b_devscore.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_turns.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --out artifacts/claude-type270b-20260923/dev270b_turns.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json 2>&1 | tail -12
+148 items -> 296 turns, fired 105
+  casual: fired 51/64
+  casual_q: fired 14/16
+  clean: fired 0/24
+  lower_trap: fired 20/24
+  seen: fired 4/4
+  sname: fired 16/16
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+nman = json.load(open('artifacts/claude-type270b-20260923/dev270b_norm.json'))
+dev = [json.loads(x) for x in open('artifacts/claude-type270b-20260923/dev270b.jsonl')]
+for it in dev:
+    m = nman[it['id']]
+    if not m['fired'] and it['family'] != 'clean':
+        print(it['id'], it['family'], repr(it['turn']), m['reason'])
+"
+d270b-017 casual "zorana's sister is Rurik." None
+d270b-018 casual "sarella's brother is Isolde." None
+d270b-019 casual "vanno's friend is Fenwick." None
+d270b-020 casual "kessa's boss is Senna." None
+d270b-021 casual "rurik's mother is Quillan." None
+d270b-022 casual "isolde's father is Beno." None
+d270b-023 casual "fenwick's sister is Dilo." None
+d270b-024 casual "senna's brother is Haki." None
+d270b-043 casual 'my mother is Sarella.' None
+d270b-044 casual 'my father is Fenwick.' None
+d270b-047 casual 'my boss is Haki.' None
+d270b-048 casual 'my friend is Kessa.' None
+d270b-049 casual 'my brother is Dilo.' None
+d270b-077 casual_q 'who is my mother' lowercase
+d270b-078 casual_q 'where do i live' lowercase
+d270b-090 lower_trap 'benos mother is senna, right.' None
+d270b-091 lower_trap "dilo lives in aldermere, isn't it." None
+d270b-092 lower_trap "hakis boss is quillan, don't you think." None
+d270b-093 lower_trap 'zoranas brother is vanno, yeah.' None
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -53,10 +53,10 @@
+ # ---- casual 17-24: possessive with apostrophe, all lowercase ----
+ for i in range(8):
+     n, rel = PEOPLE[(i + 3) % 12], rels[(i + 2) % 6]
+     v = PEOPLE[(i + 7) % 12]
+-    add("casual", f"{n.lower()}'s {rel} is {v}.", [T(n, rel, v)],
+-        note="apos-lower")
++    add("casual", f"{n.lower()}'s {rel} is {v.lower()}.",
++        [T(n, rel, v)], note="apos-lower")
+ # ---- casual 25-34: lives, lowercase slots ----
+ for i in range(10):
+     n, p = PEOPLE[(i + 1) % 12], PLACES[i % 5]
+     add("casual", f"{n.lower()} lives in {p.lower()}.", [T(n, "city", p)],
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -74,9 +74,9 @@
+     if rel in ("dog", "cat", "horse"):
+         add("casual", f"my {rel} is {str(v).lower()}.",
+             [T("me", "pet", v)], note="my-pet")
+     else:
+-        add("casual", f"my {rel} is {v}.", [T("me", rel, v)],
++        add("casual", f"my {rel} is {v.lower()}.", [T("me", rel, v)],
+             note="my-shape")
+ # ---- casual 51-60: opener-led casual teaches ----
+ openers = ["hey", "yo,", "so", "well,", "oh,", "btw,", "listen,",
+            "look,", "yes,", "okay,"]
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_turns.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --out artifacts/claude-type270b-20260923/dev270b_turns.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json 2>&1 | tail -9
+148 turns {'casual': 64, 'casual_q': 16, 'lower_trap': 24, 'clean': 24, 'sname': 16, 'seen': 4}
+148 items -> 296 turns, fired 118
+  casual: fired 64/64
+  casual_q: fired 14/16
+  clean: fired 0/24
+  lower_trap: fired 20/24
+  seen: fired 4/4
+  sname: fired 16/16
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+nman = json.load(open('artifacts/claude-type270b-20260923/dev270b_norm.json'))
+dev = [json.loads(x) for x in open('artifacts/claude-type270b-20260923/dev270b.jsonl')]
+for it in dev:
+    if it['family']=='casual_q':
+        m = nman[it['id']]
+        print(it['id'], repr(it['turn']), '->', repr(m['fixed']), m['reason'])
+"
+d270b-065 'who is benos mother' -> "who is Beno's mother" lowercase
+d270b-066 'who is dilos boss' -> "who is Dilo's boss" lowercase
+d270b-067 'who is hakis brother' -> "who is Haki's brother" lowercase
+d270b-068 'what is zoranas friend' -> "what is Zorana's friend" lowercase
+d270b-069 'who is sarellas father' -> "who is Sarella's father" lowercase
+d270b-070 'who is vannos sister' -> "who is Vanno's sister" lowercase
+d270b-071 'what is kessas mother' -> "what is Kessa's mother" lowercase
+d270b-072 'who is ruriks friend' -> "who is Rurik's friend" lowercase
+d270b-073 'where does isolde live' -> 'where does Isolde live' lowercase
+d270b-074 'who is fenwicks boss' -> "who is Fenwick's boss" lowercase
+d270b-075 'who is sennas sister' -> "who is Senna's sister" lowercase
+d270b-076 'what is quillans friend' -> "what is Quillan's friend" lowercase
+d270b-077 'who is my mother' -> 'who is my mother' lowercase
+d270b-078 'where do i live' -> 'where do i live' lowercase
+d270b-079 'whos benos boss' -> "Who's Beno's boss" lowercase
+d270b-080 'whats dilos friend' -> "What's Dilo's friend" lowercase
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-Content C:\Users\benja\smolear235\run269\manifest.json | Select-Object -First 30\"" 2>&1 | head -35; echo "===infer base arg==="; command grep -n '"--base"\|--base' scripts/claude_smolear235b_infer.py | head -5
+{
+ "o269-001#t0": {
+  "row": "o269-001",
+  "canon": true,
+  "turn": "Our dog Biscuit is three years old.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+   "relation": "dog",
+   "value": "Biscuit"
+  },
+  "claim": "the speaker's dog is Biscuit.",
+  "divert_265": true
+ },
+ "o269-001#t1": {
+  "row": "o269-001",
+  "canon": true,
+  "turn": "Our dog Biscuit is three years old.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "Biscuit",
+   "relation": "age",
+   "value": "three"
+  },
+  "claim": "Biscuit's age is three.",
+  "divert_265": false
+ },
+ "nc:o269-001#t0": {
+  "row": "o269-001",
+  "canon": false,
+===infer base arg===
+10:python claude_smolear235b_infer.py --ckpt C --base DIR --turns T --out O [--device cuda] [--tau X]
+37:    ap.add_argument("--base", required=True)
+[0m
+[0m$ [0msed -n '1,33p' scripts/claude_smolear235b_infer.py
+#!/usr/bin/env python3
+"""Exp 235b -- run the UNCHANGED 235 v3 ear + k-best beams (+ optional gate) over a turns file.
+
+turns.json: [{"id": ..., "turn": str}, ...]   (no gold is sent here)
+Per turn: greedy reading (same as 235) with its summed log-prob; then, ONLY when the
+brake keeps at least one TEACH frame and the turn does not end in "?", the top-k
+beams (k=4). (No TEACH frame -> nothing for the gate to decide; "?" -> guard blocks.)
+With --tau the gate itself is applied and timed, so ms = greedy + brake + beams + gate.
+
+python claude_smolear235b_infer.py --ckpt C --base DIR --turns T --out O [--device cuda] [--tau X]
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import statistics
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear235_model as E  # noqa: E402
+import claude_smolear235b_beam as B  # noqa: E402
+
+
+def needs_beams(raw, turn):
+    kept, _ = E.brake(E.parse_frames(raw), turn)
+    return any(f["act"] == "TEACH" for f in kept) and not B.ends_q(turn)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-ChildItem C:\Users\benja\smolear235\base | Select-Object -ExpandProperty Name; echo ---; Get-ChildItem C:\Users\benja\smolear235\out_v41 | Select-Object -ExpandProperty Name\"" 2>&1 | head -15
+model.safetensors
+tokenizer.json
+---
+CKPT.sha256.txt
+dev_eval.json
+smolear235.safetensors
+train_log.txt
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"New-Item -ItemType Directory -Path C:\Users\benja\smolear235\run270b | Out-Null; echo MADE\"" 2>&1 | head -3 && scp -o ConnectTimeout=20 scripts/claude_smolear257_infer.py scripts/claude_smolear235b_infer.py scripts/claude_smolear235_model.py scripts/claude_smolear257_table.py scripts/claude_smolear235b_beam.py scripts/claude_smolear235_panel.py scripts/claude_smolear235_score.py scripts/claude_earcheck261_checker.py "benspc:C:/Users/benja/smolear235/run270b/" 2>&1 | tail -3; echo "scp-exit=$?"
+MADE
+scp-exit=0
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/dev270b_turns.json "benspc:C:/Users/benja/smolear235/run270b/dev270b_turns.json" 2>&1 | tail -2; echo "exit=$?"; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"certutil -hashfile C:\Users\benja\smolear235\out_v41\smolear235.safetensors SHA256 | Select-Object -Index 1; nvidia-smi --query-gpu=memory.used --format=csv,noheader\"" 2>&1 | head -5
+exit=0
+55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2
+573 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns C:\Users\benja\smolear235\run270b\dev270b_turns.json --out C:\Users\benja\smolear235\run270b\dev270b_earpreds.json --device cuda --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3\"" 2>&1 | tail -8
+{"n": 296, "median_ms": 142.74714999919524, "p90_ms": 176.5586000001349, "max_ms": 198.82180000058725, "n_beamed": 207, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/dev270b_earpreds.json" artifacts/claude-type270b-20260923/dev270b_earpreds.json 2>&1 | tail -2; echo "exit=$?"; ls -la artifacts/claude-type270b-20260923/ | head
+exit=0
+total 504
+drwxr-xr-x    6 ben-hannan  staff     192 Sep 23 07:05 .
+drwxr-xr-x@ 435 ben-hannan  staff   13920 Sep 23 07:01 ..
+-rw-------    1 ben-hannan  staff  175182 Sep 23 07:05 dev270b_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   26582 Sep 23 07:03 dev270b_norm.json
+-rw-r--r--    1 ben-hannan  staff   20763 Sep 23 07:03 dev270b_turns.json
+-rw-r--r--    1 ben-hannan  staff   28650 Sep 23 07:03 dev270b.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_qbuild.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --arm A --out artifacts/claude-type270b-20260923/qA 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_qbuild.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --arm A261b --out artifacts/claude-type270b-20260923/qB 2>&1 | tail -2
+arm A: 148 items -> 104 checks
+arm A261b: 148 items -> 103 checks
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import base64
+ps = \"\\\$created = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = 'C:\\\\llama-b10679\\\\llama-server.exe --host 127.0.0.1 --port 8082 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6 -c 4096 -m C:\\\\Users\\\\benja\\\\.lmstudio\\\\models\\\\Qwen3.8-27B\\\\Qwen3.8-27B-UD-IQ4_XS.gguf'; CurrentDirectory = 'C:\\\\Users\\\\benja\\\\smolear235\\\\run270b'}; echo PID=\$(\$created.ProcessId); echo RET=\$(\$created.ReturnValue)\"
+print(base64.b64encode(ps.encode('utf-16-le')).decode())
+" > /tmp/srv270b.b64 2>&1; wc -c /tmp/srv270b.b64
+1233 /tmp/srv270b.b64
+[0m
+[0m→ [0mRead /tmp/srv270b.b64
+[0m
+[0m← [0mWrite scratchpad/srv270b.ps1
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "import base64; print(base64.b64encode(open('scratchpad/srv270b.ps1','rb').read().decode('utf-8').encode('utf-16-le')).decode())"
+JABjAHIAZQBhAHQAZQBkACAAPQAgAEkAbgB2AG8AawBlAC0AQwBpAG0ATQBlAHQAaABvAGQAIAAtAEMAbABhAHMAcwBOAGEAbQBlACAAVwBpAG4AMwAyAF8AUAByAG8AYwBlAHMAcwAgAC0ATQBlAHQAaABvAGQATgBhAG0AZQAgAEMAcgBlAGEAdABlACAALQBBAHIAZwB1AG0AZQBuAHQAcwAgAEAAewBDAG8AbQBtAGEAbgBkAEwAaQBuAGUAIAA9ACAAJwBDADoAXABsAGwAYQBtAGEALQBiADEAMAA2ADcAOQBcAGwAbABhAG0AYQAtAHMAZQByAHYAZQByAC4AZQB4AGUAIAAtAC0AaABvAHMAdAAgADEAMgA3AC4AMAAuADAALgAxACAALQAtAHAAbwByAHQAIAA4ADAAOAAyACAALQBuAGcAbAAgADkAOQAgAC0AZgBhACAAMQAgAC0ALQBjAGEAYwBoAGUALQB0AHkAcABlAC0AawAgAHEAOABfADAAIAAtAC0AYwBhAGMAaABlAC0AdAB5AHAAZQAtAHYAIABxADgAXwAwACAALQAtAHAAYQByAGEAbABsAGUAbAAgADEAIAAtAHQAIAA2ACAALQBjACAANAAwADkANgAgAC0AbQAgAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAC4AbABtAHMAdAB1AGQAaQBvAFwAbQBvAGQAZQBsAHMAXABRAHcAZQBuADMALgA4AC0AMgA3AEIAXABRAHcAZQBuADMALgA4AC0AMgA3AEIALQBVAEQALQBJAFEANABfAFgAUwAuAGcAZwB1AGYAJwA7ACAAQwB1AHIAcgBlAG4AdABEAGkAcgBlAGMAdABvAHIAeQAgAD0AIAAnAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAHMAbQBvAGwAZQBhAHIAMgAzADUAXAByAHUAbgAyADcAMABiACcAfQAKAGUAYwBoAG8AIABQAEkARAA9ACQAKAAkAGMAcgBlAGEAdABlAGQALgBQAHIAbwBjAGUAcwBzAEkAZAApAAoAZQBjAGgAbwAgAFIARQBUAD0AJAAoACQAYwByAGUAYQB0AGUAZAAuAFIAZQB0AHUAcgBuAFYAYQBsAHUAZQApAAoA
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -EncodedCommand JABjAHIAZQBhAHQAZQBkACAAPQAgAEkAbgB2AG8AawBlAC0AQwBpAG0ATQBlAHQAaABvAGQAIAAtAEMAbABhAHMAcwBOAGEAbQBlACAAVwBpAG4AMwAyAF8AUAByAG8AYwBlAHMAcwAgAC0ATQBlAHQAaABvAGQATgBhAG0AZQAgAEMAcgBlAGEAdABlACAALQBBAHIAZwB1AG0AZQBuAHQAcwAgAEAAewBDAG8AbQBtAGEAbgBkAEwAaQBuAGUAIAA9ACAAJwBDADoAXABsAGwAYQBtAGEALQBiADEAMAA2ADcAOQBcAGwAbABhAG0AYQAtAHMAZQByAHYAZQByAC4AZQB4AGUAIAAtAC0AaABvAHMAdAAgADEAMgA3AC4AMAAuADAALgAxACAALQAtAHAAbwByAHQAIAA4ADAAOAAyACAALQBuAGcAbAAgADkAOQAgAC0AZgBhACAAMQAgAC0ALQBjAGEAYwBoAGUALQB0AHkAcABlAC0AawAgAHEAOABfADAAIAAtAC0AYwBhAGMAaABlAC0AdAB5AHAAZQAtAHYAIABxADgAXwAwACAALQAtAHAAYQByAGEAbABsAGUAbAAgADEAIAAtAHQAIAA2ACAALQBjACAANAAwADkANgAgAC0AbQAgAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAC4AbABtAHMAdAB1AGQAaQBvAFwAbQBvAGQAZQBsAHMAXABRAHcAZQBuADMALgA4AC0AMgA3AEIAXABRAHcAZQBuADMALgA4AC0AMgA3AEIALQBVAEQALQBJAFEANABfAFgAUwAuAGcAZwB1AGYAJwA7ACAAQwB1AHIAcgBlAG4AdABEAGkAcgBlAGMAdABvAHIAeQAgAD0AIAAnAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAHMAbQBvAGwAZQBhAHIAMgAzADUAXAByAHUAbgAyADcAMABiACcAfQAKAGUAYwBoAG8AIABQAEkARAA9ACQAKAAkAGMAcgBlAGEAdABlAGQALgBQAHIAbwBjAGUAcwBzAEkAZAApAAoAZQBjAGgAbwAgAFIARQBUAD0AJAAoACQAYwByAGUAYQB0AGUAZAAuAFIAZQB0AHUAcgBuAFYAYQBsAHUAZQApAAoA" 2>&1 | head -5
+#< CLIXML
+PID=20880
+RET=0
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S="progress" RefId="1"><TNRef RefId="0" /><MS><I64 N="SourceId">2</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/qA/checks.json "benspc:C:/Users/benja/smolear235/run270b/dev270b_checksA.json" 2>&1 | tail -1; scp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/qB/checks.json "benspc:C:/Users/benja/smolear235/run270b/dev270b_checksB.json" 2>&1 | tail -1; echo done; sleep 45; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"Get-Process -Id 20880 | Select-Object ProcessName,Id; nvidia-smi --query-gpu=memory.used --format=csv,noheader; C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B -c \\\"import urllib.request,json; print(json.load(urllib.request.urlopen('http://127.0.0.1:8082/health', timeout=20)).read()[:60] if False else urllib.request.urlopen('http://127.0.0.1:8082/health', timeout=20).read()[:80])\\\"\"" 2>&1 | head -8
+done
+
+13971 MiB
+b'{"status":"ok"}'
+ProcessName     Id
+-----------     --
+llama-server 20880
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, json; sys.path.insert(0, 'scripts')
+import claude_smolear257_table as TB; TB.install()
+import claude_earcheck261_promptB as PB
+checks = [
+  {'id': 'smoke-yes', 'prompt': PB.build_prompt_b(\"Beno's mother is Senna.\", \"Beno's mother is Senna.\")},
+  {'id': 'smoke-no', 'prompt': PB.build_prompt_b(\"Suppose Beno's mother is Senna.\", \"Beno's mother is Senna.\")},
+]
+open('/tmp/smoke270b.json','w').write(json.dumps(checks))
+print('wrote', len(checks))
+" 2>&1 | tail -2
+wrote 2
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 /tmp/smoke270b.json "benspc:C:/Users/benja/smolear235/run270b/smoke_checks.json" 2>&1 | tail -1; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_earcheck261_checker.py --url http://127.0.0.1:8082 --in C:\Users\benja\smolear235\run270b\smoke_checks.json --out C:\Users\benja\smolear235\run270b\smoke_pyes.json; Get-Content C:\Users\benja\smolear235\run270b\smoke_pyes.json\"" 2>&1 | head -25
+{"n": 2, "fallbacks": 0, "median_ms": 336.4, "p90_ms": 387.3, "max_ms": 387.3}
+{
+ "summary": {
+  "n": 2,
+  "fallbacks": 0,
+  "median_ms": 336.4,
+  "p90_ms": 387.3,
+  "max_ms": 387.3
+ },
+ "checks": {
+  "smoke-yes": {
+   "p": 0.927114,
+   "text": "YES",
+   "fallback": false,
+   "ms": 387.28
+  },
+  "smoke-no": {
+   "p": 0.004356,
+   "text": "NO",
+   "fallback": false,
+   "ms": 285.44
+  }
+ }
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_earcheck261_checker.py --url http://127.0.0.1:8082 --in C:\Users\benja\smolear235\run270b\dev270b_checksA.json --out C:\Users\benja\smolear235\run270b\dev270b_pyesA.json\"" 2>&1 | tail -2
+{"n": 104, "fallbacks": 0, "median_ms": 287.3, "p90_ms": 316.4, "max_ms": 455.8}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_earcheck261_checker.py --url http://127.0.0.1:8082 --in C:\Users\benja\smolear235\run270b\dev270b_checksB.json --out C:\Users\benja\smolear235\run270b\dev270b_pyesB.json\"" 2>&1 | tail -2
+{"n": 103, "fallbacks": 0, "median_ms": 289.7, "p90_ms": 308.5, "max_ms": 327.6}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/dev270b_pyesA.json" artifacts/claude-type270b-20260923/dev270b_pyesA.json 2>&1 | tail -1; scp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/dev270b_pyesB.json" artifacts/claude-type270b-20260923/dev270b_pyesB.json 2>&1 | tail -1; echo fetched
+fetched
+[0m
+[0m← [0mWrite scratchpad/stop270b.ps1
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "import base64; print(base64.b64encode(open('scratchpad/stop270b.ps1','rb').read().decode('utf-8').encode('utf-16-le')).decode())"
+JABwACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMgAwADgAOAAwACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAHQAbwBwAAoAaQBmACAAKAAkAHAALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAG4AZQAgACcAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAJwApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAyADAAOAA4ADAAIABpAHMAIABuAG8AdAAgAGwAbABhAG0AYQAtAHMAZQByAHYAZQByADsAIAByAGUAZgB1AHMAaQBuAGcAIAB0AG8AIABzAHQAbwBwACcAIAB9AAoAUwB0AG8AcAAtAFAAcgBvAGMAZQBzAHMAIAAtAEkAZAAgADIAMAA4ADgAMAAgAC0ARgBvAHIAYwBlAAoAUwB0AGEAcgB0AC0AUwBsAGUAZQBwACAALQBTAGUAYwBvAG4AZABzACAAMwAKACQAYQBsAGkAdgBlACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMgAwADgAOAAwACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlAAoAaQBmACAAKAAkAGEAbABpAHYAZQApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAyADAAOAA4ADAAIABzAHQAaQBsAGwAIABhAGwAaQB2AGUAJwAgAH0ACgBlAGMAaABvACAAUwBUAE8AUABQAEUARAAtADIAMAA4ADgAMAAKAG4AdgBpAGQAaQBhAC0AcwBtAGkAIAAtAC0AcQB1AGUAcgB5AC0AZwBwAHUAPQBtAGUAbQBvAHIAeQAuAHUAcwBlAGQAIAAtAC0AZgBvAHIAbQBhAHQAPQBjAHMAdgAsAG4AbwBoAGUAYQBkAGUAcgAKAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAGwAaQBrAGUAIAAnAGwAbABhAG0AYQAqACcAIAB9ACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIABQAHIAbwBjAGUAcwBzAE4AYQBtAGUALABJAGQACgA=
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -EncodedCommand JABwACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMgAwADgAOAAwACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAHQAbwBwAAoAaQBmACAAKAAkAHAALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAG4AZQAgACcAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAJwApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAyADAAOAA4ADAAIABpAHMAIABuAG8AdAAgAGwAbABhAG0AYQAtAHMAZQByAHYAZQByADsAIAByAGUAZgB1AHMAaQBuAGcAIAB0AG8AIABzAHQAbwBwACcAIAB9AAoAUwB0AG8AcAAtAFAAcgBvAGMAZQBzAHMAIAAtAEkAZAAgADIAMAA4ADgAMAAgAC0ARgBvAHIAYwBlAAoAUwB0AGEAcgB0AC0AUwBsAGUAZQBwACAALQBTAGUAYwBvAG4AZABzACAAMwAKACQAYQBsAGkAdgBlACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMgAwADgAOAAwACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlAAoAaQBmACAAKAAkAGEAbABpAHYAZQApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAyADAAOAA4ADAAIABzAHQAaQBsAGwAIABhAGwAaQB2AGUAJwAgAH0ACgBlAGMAaABvACAAUwBUAE8AUABQAEUARAAtADIAMAA4ADgAMAAKAG4AdgBpAGQAaQBhAC0AcwBtAGkAIAAtAC0AcQB1AGUAcgB5AC0AZwBwAHUAPQBtAGUAbQBvAHIAeQAuAHUAcwBlAGQAIAAtAC0AZgBvAHIAbQBhAHQAPQBjAHMAdgAsAG4AbwBoAGUAYQBkAGUAcgAKAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAGwAaQBrAGUAIAAnAGwAbABhAG0AYQAqACcAIAB9ACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIABQAHIAbwBjAGUAcwBzAE4AYQBtAGUALABJAGQACgA=" 2>&1 | head -10
+#< CLIXML
+STOPPED-20880
+573 MiB
+
+ProcessName     Id
+-----------     --
+llama-server 17056
+
+
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S="progress" RefId="1"><TNRef RefId="0" /><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_devscore.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/dev270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/dev270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/devreport270b.json 2>&1 | head -60
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py", line 197, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py", line 82, in main
+    return run(a)
+           ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py", line 148, in run
+    m2b = sum(1 for r in q if r["ask"]["exactB"])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py", line 148, in <genexpr>
+    m2b = sum(1 for r in q if r["ask"]["exactB"])
+                              ~~~~~~~~^^^^^^^^^^
+KeyError: 'exactB'
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -113,8 +113,10 @@
+ exactB_T = (thB == tn and not txB) if not any(
+     g["act"] == "ASK" for g in gold) else None
+ exactA_Q = (ahA == an and not axA) if any(
+     g["act"] == "ASK" for g in gold) else None
++exactB_Q = (ahB == an and not axB) if any(
++    g["act"] == "ASK" for g in gold) else None
+ newwrong = [f for f in txA
+             if not any(f == b for b in txB)]
+ rows.append({"id": it["id"], "family": it["family"],
+              "turn": it["turn"], "fixed": turnA,
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -126,9 +126,9 @@
+           "wrongA": len(txA), "wrongB": len(txB),
+           "exactA": exactA_T, "exactB": exactB_T},
+ "ask": {"hitA": ahA, "hitB": ahB, "gold": an,
+         "extraA": len(axA), "extraB": len(axB),
+-        "exactA": exactA_Q},
++        "exactA": exactA_Q, "exactB": exactB_Q},
+ "framesA": fA, "framesB": fB,
+ "frames_identical": fA == fB,
+ "new_wrong": newwrong, "msA": msA, "msB": msB,
+ "note": it.get("note", "")})
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_devscore.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/dev270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/dev270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/devreport270b.json 2>&1 | head -70
+M1 casual TEACH exact: A 62/64  A261b 37/64  margin 25
+M1 sname exact: A 16/16  A261b 6/16
+M1 seen exact: A 4/4
+M2 casual_q ASK exact: A 2/16  A261b 2/16
+M3 lower_trap wrong saves: A 5  A261b 8
+M4 clean identical frames: 24/24
+M5 new wrong saves: 3 ['d270b-050', 'd270b-087', 'd270b-102']
+M6 norm_ms median: 0.0094 max: 0.1396
+MISS-A+NEWW d270b-050 casual my-pet raw='my horse is bramble.' fixed='my horse is Bramble.' framesA=[{'act': 'TEACH', 'subject': 'me', 'relation': 'horse', 'value': 'Bramble'}] framesB=[{'act': 'TEACH', 'subject': 'me', 'relation': 'horse', 'value': 'bramble'}]
+MISS-A d270b-053 casual opener raw='so sennas brother is Sarella.' fixed="so Senna's brother is Sarella." framesA=[] framesB=[]
+MISS-A d270b-065 casual_q q-who raw='who is benos mother' fixed="who is Beno's mother" framesA=[{'act': 'ASK', 'subject': 'Beno', 'relation': ['mother']}] framesB=[{'act': 'ASK', 'subject': 'benos', 'relation': ['mother']}]
+MISS-A d270b-066 casual_q q-who raw='who is dilos boss' fixed="who is Dilo's boss" framesA=[{'act': 'ASK', 'subject': 'Dilo', 'relation': ['boss']}] framesB=[{'act': 'ASK', 'subject': 'dilos', 'relation': ['boss']}]
+MISS-A d270b-067 casual_q q-who raw='who is hakis brother' fixed="who is Haki's brother" framesA=[{'act': 'ASK', 'subject': 'Haki', 'relation': ['brother']}] framesB=[{'act': 'ASK', 'subject': 'hakis', 'relation': ['brother']}]
+MISS-A d270b-068 casual_q q-who raw='what is zoranas friend' fixed="what is Zorana's friend" framesA=[{'act': 'ASK', 'subject': 'Zorana', 'relation': ['friend']}] framesB=[{'act': 'ASK', 'subject': 'zoranas', 'relation': ['friend']}]
+MISS-A d270b-069 casual_q q-who raw='who is sarellas father' fixed="who is Sarella's father" framesA=[{'act': 'ASK', 'subject': 'Sarella', 'relation': ['father']}] framesB=[{'act': 'ASK', 'subject': 'sarellas', 'relation': ['father']}]
+MISS-A d270b-070 casual_q q-who raw='who is vannos sister' fixed="who is Vanno's sister" framesA=[{'act': 'ASK', 'subject': 'Vanno', 'relation': ['sister']}] framesB=[{'act': 'ASK', 'subject': 'vannos', 'relation': ['sister']}]
+MISS-A d270b-071 casual_q q-who raw='what is kessas mother' fixed="what is Kessa's mother" framesA=[{'act': 'ASK', 'subject': 'Kessa', 'relation': ['mother']}] framesB=[{'act': 'ASK', 'subject': 'kessas', 'relation': ['mother']}]
+MISS-A d270b-072 casual_q q-who raw='who is ruriks friend' fixed="who is Rurik's friend" framesA=[{'act': 'ASK', 'subject': 'Rurik', 'relation': ['friend']}] framesB=[{'act': 'ASK', 'subject': 'ruriks', 'relation': ['friend']}]
+MISS-A d270b-073 casual_q q-where raw='where does isolde live' fixed='where does Isolde live' framesA=[{'act': 'ASK', 'subject': 'Isolde', 'relation': ['city']}] framesB=[{'act': 'ASK', 'subject': 'isolde', 'relation': ['city']}]
+MISS-A d270b-074 casual_q q-who raw='who is fenwicks boss' fixed="who is Fenwick's boss" framesA=[{'act': 'ASK', 'subject': 'Fenwick', 'relation': ['boss']}] framesB=[{'act': 'ASK', 'subject': 'fenwicks', 'relation': ['boss']}]
+MISS-A d270b-075 casual_q q-who raw='who is sennas sister' fixed="who is Senna's sister" framesA=[{'act': 'ASK', 'subject': 'Senna', 'relation': ['sister']}] framesB=[{'act': 'ASK', 'subject': 'sennas', 'relation': ['sister']}]
+MISS-A d270b-076 casual_q q-who raw='what is quillans friend' fixed="what is Quillan's friend" framesA=[{'act': 'ASK', 'subject': 'Quillan', 'relation': ['friend']}] framesB=[{'act': 'ASK', 'subject': 'quillans', 'relation': ['friend']}]
+MISS-A d270b-079 casual_q q-whos raw='whos benos boss' fixed="Who's Beno's boss" framesA=[{'act': 'ASK', 'subject': 'Beno', 'relation': ['boss']}] framesB=[]
+MISS-A d270b-080 casual_q q-whats raw='whats dilos friend' fixed="What's Dilo's friend" framesA=[{'act': 'ASK', 'subject': 'Dilo', 'relation': ['friend']}] framesB=[{'act': 'ASK', 'subject': 'dilos', 'relation': ['friend']}]
++NEWW d270b-087 lower_trap trap raw='kessas sister will be senna.' fixed="Kessa's sister will be Senna." framesA=[{'act': 'TEACH', 'subject': 'Kessa', 'relation': 'sister', 'value': 'Senna'}] framesB=[{'act': 'TEACH', 'subject': 'kessas', 'relation': 'sister', 'value': 'senna'}]
++NEWW d270b-102 lower_trap trap raw='zorana is a cooper.' fixed='Zorana is a Cooper.' framesA=[{'act': 'TEACH', 'subject': 'Zorana', 'relation': 'occupation', 'value': 'Cooper'}] framesB=[{'act': 'TEACH', 'subject': 'zorana', 'relation': 'occupation', 'value': 'cooper'}]
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -72,9 +72,9 @@
+        ("brother", PEOPLE[1]), ("horse", "Bramble")]
+ for rel, v in mys:
+     if rel in ("dog", "cat", "horse"):
+         add("casual", f"my {rel} is {str(v).lower()}.",
+-            [T("me", "pet", v)], note="my-pet")
++            [T("me", "pet", v, aliases=rel)], note="my-pet")
+     else:
+         add("casual", f"my {rel} is {v.lower()}.", [T("me", rel, v)],
+             note="my-shape")
+ # ---- casual 51-60: opener-led casual teaches ----
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -91,8 +91,11 @@
+     add("casual", f"{n.lower()} works as {j}.", [T(n, "occupation", j)],
+         note="occupation")
+ 
+ # ---- casual_q 16: lowercase questions, no "?" ----
++# Gold ASK subject = the questioned name (the ear's ASK convention on the
++# builder's dev wave: ASK (Beno, mother) for "who is Beno's mother";
++# asker-me only for my-shapes). Fixed pre-seal from own dev evidence.
+ q = [("who", "Beno", "mother"), ("who", "Dilo", "boss"),
+      ("who", "Haki", "brother"), ("what", "Zorana", "friend"),
+      ("who", "Sarella", "father"), ("who", "Vanno", "sister"),
+      ("what", "Kessa", "mother"), ("who", "Rurik", "friend"),
+@@ -105,20 +108,20 @@
+         add("casual_q", "where do i live", [A("me", "city")],
+             note="q-where-me")
+     elif w == "where":
+         add("casual_q", f"where does {n.lower()} live",
+-            [A("me", "city")], note="q-where")
++            [A(n, "city")], note="q-where")
+     elif w == "whos":
+         add("casual_q", f"whos {n.lower()}s {rel}",
+-            [A("me", rel)], note="q-whos")
++            [A(n, rel)], note="q-whos")
+     elif w == "whats":
+         add("casual_q", f"whats {n.lower()}s {rel}",
+-            [A("me", rel)], note="q-whats")
++            [A(n, rel)], note="q-whats")
+     elif n == "me":
+         add("casual_q", f"{w} is my {rel}", [A("me", rel)],
+             note="q-my")
+     else:
+-        add("casual_q", f"{w} is {n.lower()}s {rel}", [A("me", rel)],
++        add("casual_q", f"{w} is {n.lower()}s {rel}", [A(n, rel)],
+             note="q-who")
+ 
+ # ---- lower_trap 24: expect no wrong saves ----
+ traps = [
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -205,9 +205,9 @@
+     add("sname", f"{raw} {rel} is {v.lower()}.", [T(want, rel, v)],
+         note="strip-s")
+ 
+ # ---- seen 4: multi-turn seen-name memory ----
+-add("seen", "benos dog is rex.", [T("Beno", "pet", "Rex")],
++add("seen", "benos dog is rex.", [T("Beno", "pet", "Rex", aliases="dog")],
+     setup=["Beno lives in Aldermere."], note="seen-strip")
+ add("seen", "jamess sister is senna.", [T("James", "sister", "Senna")],
+     setup=["James works at Cinderfell."], note="seen-keep-double-s")
+ add("seen", "dilos boss is quillan.", [T("Dilo", "boss", "Quillan")],
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -160,9 +160,9 @@
+ ("Beno works at Cinderfell.", [T("Beno", "employer", "Cinderfell")]),
+ ("My friend is Zorana.", [T("me", "friend", "Zorana")]),
+ ("James's sister is Kessa.", [T("James", "sister", "Kessa")]),
+ ("Morris's boss is Rurik.", [T("Morris", "boss", "Rurik")]),
+-("Sarella's dog is Rex.", [T("Sarella", "pet", "Rex")]),
++("Sarella's dog is Rex.", [T("Sarella", "pet", "Rex", aliases="dog")]),
+ ("Vanno's father is Fenwick.", [T("Vanno", "father", "Fenwick")]),
+ ("Kessa works as Cooper.", [T("Kessa", "occupation", "Cooper")]),
+ ("Haki's brother is Quillan.", [T("Haki", "brother", "Quillan")]),
+ ("Isolde lives in Emberlyn.", [T("Isolde", "city", "Emberlyn")]),
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devset.py
+@@ -166,14 +166,14 @@
+ ("Kessa works as Cooper.", [T("Kessa", "occupation", "Cooper")]),
+ ("Haki's brother is Quillan.", [T("Haki", "brother", "Quillan")]),
+ ("Isolde lives in Emberlyn.", [T("Isolde", "city", "Emberlyn")]),
+ ("My mother is Senna.", [T("me", "mother", "Senna")]),
+-("Who is Beno's mother?", [A("me", "mother")]),
+-("Where does Dilo live?", [A("me", "city")]),
+-("Who's Haki's boss?", [A("me", "boss")]),
+-("What is Zorana's friend?", [A("me", "friend")]),
++("Who is Beno's mother?", [A("Beno", "mother")]),
++("Where does Dilo live?", [A("Dilo", "city")]),
++("Who's Haki's boss?", [A("Haki", "boss")]),
++("What is Zorana's friend?", [A("Zorana", "friend")]),
+ ("Who is my sister?", [A("me", "sister")]),
+-("Where's Sarella's boss?", [A("me", "boss")]),
++("Where's Sarella's boss?", [A("Sarella", "boss")]),
+ ("Let's say Beno's mother is Senna.", []),
+ ("Dilo will live in Aldermere.", []),
+ ("Haki's boss is Quillan, right?", []),
+ ("I am training to be cooper.", []),
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -60,12 +60,16 @@
+         fr["value"] = str(g["value"])
+     return fr
+ 
+ 
+-def extras(pred_frames, gold):
+-    _, tx, _ = S.match(pred_frames, gold, "TEACH")
+-    _, ax, _ = S.match(pred_frames, gold, "ASK")
+-    return tx, ax
++def frame_key(f):
++    """Normalised identity for M5 new-wrong comparison (case-insensitive)."""
++    rel = f["relation"]
++    rel = " ".join(rel) if isinstance(rel, list) else str(rel)
++    key = (S.norm_subj(f.get("subject", "")), S.rkey(rel))
++    if f.get("act") == "TEACH":
++        key = key + (S.norm_val(f.get("value", "")),)
++    return (f.get("act"),) + key
+ 
+ 
+ def main():
+     ap = argparse.ArgumentParser()
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -120,9 +120,12 @@
+     g["act"] == "ASK" for g in gold) else None
+ exactB_Q = (ahB == an and not axB) if any(
+     g["act"] == "ASK" for g in gold) else None
+ newwrong = [f for f in txA
+-            if not any(f == b for b in txB)]
++            if frame_key(f) not in {frame_key(b) for b in txB}]
++newwrong_q = [f for f in axA
++              if frame_key(f) not in {frame_key(b) for b in axB}]
++newwrong = newwrong + newwrong_q
+ rows.append({"id": it["id"], "family": it["family"],
+              "turn": it["turn"], "fixed": turnA,
+              "reason": nman[it["id"]]["reason"],
+              "norm_ms": nman[it["id"]]["norm_ms"],
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_devscore.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/dev270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/dev270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/devreport270b.json 2>&1 | head -40
+148 turns {'casual': 64, 'casual_q': 16, 'lower_trap': 24, 'clean': 24, 'sname': 16, 'seen': 4}
+M1 casual TEACH exact: A 62/64  A261b 37/64  margin 25
+M1 sname exact: A 16/16  A261b 6/16
+M1 seen exact: A 4/4
+M2 casual_q ASK exact: A 16/16  A261b 3/16
+M3 lower_trap wrong saves: A 5  A261b 8
+M4 clean identical frames: 24/24
+M5 new wrong saves: 2 ['d270b-087', 'd270b-100']
+M6 norm_ms median: 0.0094 max: 0.1396
+MISS-A d270b-050 casual my-pet raw='my horse is bramble.' fixed='my horse is Bramble.' framesA=[{'act': 'TEACH', 'subject': 'me', 'relation': 'horse', 'value': 'Bramble'}] framesB=[{'act': 'TEACH', 'subject': 'me', 'relation': 'horse', 'value': 'bramble'}]
+MISS-A d270b-053 casual opener raw='so sennas brother is Sarella.' fixed="so Senna's brother is Sarella." framesA=[] framesB=[]
++NEWW d270b-087 lower_trap trap raw='kessas sister will be senna.' fixed="Kessa's sister will be Senna." framesA=[{'act': 'TEACH', 'subject': 'Kessa', 'relation': 'sister', 'value': 'Senna'}] framesB=[{'act': 'TEACH', 'subject': 'kessas', 'relation': 'sister', 'value': 'senna'}]
++NEWW d270b-100 lower_trap trap raw='is benos mother senna.' fixed="is Beno's mother Senna." framesA=[{'act': 'ASK', 'subject': 'Beno', 'relation': ['mother']}] framesB=[{'act': 'ASK', 'subject': 'benos', 'relation': ['mother']}]
+[0m
+[0m$ [0mcommand grep -n 'aliases=' scripts/claude_type270b_devset.py
+28:def T(subj, rel, val, aliases=None):
+76:                [T("me", "pet", v, aliases=rel)], note="my-pet")
+164:        ("Sarella's dog is Rex.", [T("Sarella", "pet", "Rex", aliases="dog")]),
+209:    add("seen", "benos dog is rex.", [T("Beno", "pet", "Rex", aliases="dog")],
+[0m
+[0m$ [0mcd /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 && python3 - <<'EOF'
+import re
+p = 'scripts/claude_type270b_devset.py'
+s = open(p).read()
+s = s.replace('[T("me", "pet", v, aliases=rel)]', '[T("me", "pet", v, aliases=[rel])]')
+s = s.replace('[T("Sarella", "pet", "Rex", aliases="dog")]', '[T("Sarella", "pet", "Rex", aliases=["dog"])]')
+s = s.replace('[T("Beno", "pet", "Rex", aliases="dog")]', '[T("Beno", "pet", "Rex", aliases=["dog"])]')
+open(p,'w').write(s)
+print('done')
+EOF
+command grep -n 'aliases=\[' scripts/claude_type270b_devset.py
+done
+76:                [T("me", "pet", v, aliases=[rel])], note="my-pet")
+164:        ("Sarella's dog is Rex.", [T("Sarella", "pet", "Rex", aliases=["dog"])]),
+209:    add("seen", "benos dog is rex.", [T("Beno", "pet", "Rex", aliases=["dog"])],
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -155,10 +155,14 @@
+ q = fam("casual_q")
+ m2a = sum(1 for r in q if r["ask"]["exactA"])
+ m2b = sum(1 for r in q if r["ask"]["exactB"])
+ tr = fam("lower_trap")
+-m3a = sum(r["teach"]["wrongA"] + r["ask"]["extraA"] for r in tr)
+-m3b = sum(r["teach"]["wrongB"] + r["ask"]["extraB"] for r in tr)
++# M3/M5 count TEACH saves only (ASK frames never write). ASK extras on
++# traps are reported separately (ear reading a "?"-less turn as a
++# question is not a save).
++m3a = sum(r["teach"]["wrongA"] for r in tr)
++m3b = sum(r["teach"]["wrongB"] for r in tr)
++m3a_q = sum(r["ask"]["extraA"] for r in tr)
+ cl = fam("clean")
+ m4i = sum(1 for r in cl if r["frames_identical"])
+ newwrong_ids = sorted(r["id"] for r in rows if r["new_wrong"])
+ ms = sorted(r["norm_ms"] for r in rows)
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -182,9 +182,10 @@
+       f"A261b {m1b}/{len(cas)}  margin {m1a - m1b}")
+ print(f"M1 sname exact: A {m1s_a}/{len(sn)}  A261b {m1s_b}/{len(sn)}")
+ print(f"M1 seen exact: A {m1e_a}/{len(se)}")
+ print(f"M2 casual_q ASK exact: A {m2a}/{len(q)}  A261b {m2b}/{len(q)}")
+-print(f"M3 lower_trap wrong saves: A {m3a}  A261b {m3b}")
++print(f"M3 lower_trap wrong TEACH saves: A {m3a}  A261b {m3b}  "
++      f"(ASK extras on traps, not saves: A {m3a_q})")
+ print(f"M4 clean identical frames: {m4i}/{len(cl)}")
+ print(f"M5 new wrong saves: {len(newwrong_ids)} {newwrong_ids}")
+ print(f"M6 norm_ms median: {med} max: {max(ms) if ms else None}")
+ for r in rows:
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -123,9 +123,8 @@
+ newwrong = [f for f in txA
+             if frame_key(f) not in {frame_key(b) for b in txB}]
+ newwrong_q = [f for f in axA
+               if frame_key(f) not in {frame_key(b) for b in axB}]
+-newwrong = newwrong + newwrong_q
+ rows.append({"id": it["id"], "family": it["family"],
+              "turn": it["turn"], "fixed": turnA,
+              "reason": nman[it["id"]]["reason"],
+              "norm_ms": nman[it["id"]]["norm_ms"],
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -135,9 +135,10 @@
+                          "extraA": len(axA), "extraB": len(axB),
+                          "exactA": exactA_Q, "exactB": exactB_Q},
+                  "framesA": fA, "framesB": fB,
+                  "frames_identical": fA == fB,
+-                 "new_wrong": newwrong, "msA": msA, "msB": msB,
++                 "new_wrong": newwrong, "new_wrong_q": newwrong_q,
++                 "msA": msA, "msB": msB,
+                  "note": it.get("note", "")})
+ rep: dict = {"theta": a.theta, "rows": rows}
+ 
+ def fam(f):
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -164,8 +164,9 @@
+ m3a_q = sum(r["ask"]["extraA"] for r in tr)
+ cl = fam("clean")
+ m4i = sum(1 for r in cl if r["frames_identical"])
+ newwrong_ids = sorted(r["id"] for r in rows if r["new_wrong"])
++newwrong_q = sorted(r["id"] for r in rows if r["new_wrong_q"])
+ ms = sorted(r["norm_ms"] for r in rows)
+ med = statistics.median(ms) if ms else None
+ rep["marks"] = {
+     "M1_casual_exact": {"A": m1a, "n": len(cas), "A261b": m1b,
+
+[0m
+[0m← [0mEdit scripts/claude_type270b_devscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_devscore.py
+@@ -186,9 +186,10 @@
+ print(f"M2 casual_q ASK exact: A {m2a}/{len(q)}  A261b {m2b}/{len(q)}")
+ print(f"M3 lower_trap wrong TEACH saves: A {m3a}  A261b {m3b}  "
+       f"(ASK extras on traps, not saves: A {m3a_q})")
+ print(f"M4 clean identical frames: {m4i}/{len(cl)}")
+-print(f"M5 new wrong saves: {len(newwrong_ids)} {newwrong_ids}")
++print(f"M5 new wrong TEACH saves: {len(newwrong_ids)} {newwrong_ids} "
++      f"(new ASK extras, not saves: {newwrong_q})")
+ print(f"M6 norm_ms median: {med} max: {max(ms) if ms else None}")
+ for r in rows:
+     flag = ""
+     if r["family"] in ("casual", "sname", "seen") and not r["teach"]["exactA"]:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_devset.py artifacts/claude-type270b-20260923/dev270b.jsonl 2>&1 | tail -1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_devscore.py --dev artifacts/claude-type270b-20260923/dev270b.jsonl --preds artifacts/claude-type270b-20260923/dev270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/dev270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/dev270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/dev270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/devreport270b.json 2>&1 | head -50
+148 turns {'casual': 64, 'casual_q': 16, 'lower_trap': 24, 'clean': 24, 'sname': 16, 'seen': 4}
+M1 casual TEACH exact: A 63/64  A261b 38/64  margin 25
+M1 sname exact: A 16/16  A261b 6/16
+M1 seen exact: A 4/4
+M2 casual_q ASK exact: A 16/16  A261b 3/16
+M3 lower_trap wrong TEACH saves: A 3  A261b 6  (ASK extras on traps, not saves: A 2)
+M4 clean identical frames: 24/24
+M5 new wrong TEACH saves: 1 ['d270b-087'] (new ASK extras, not saves: ['d270b-100'])
+M6 norm_ms median: 0.0094 max: 0.1396
+MISS-A d270b-053 casual opener raw='so sennas brother is Sarella.' fixed="so Senna's brother is Sarella." framesA=[] framesB=[]
++NEWW d270b-087 lower_trap trap raw='kessas sister will be senna.' fixed="Kessa's sister will be Senna." framesA=[{'act': 'TEACH', 'subject': 'Kessa', 'relation': 'sister', 'value': 'Senna'}] framesB=[{'act': 'TEACH', 'subject': 'kessas', 'relation': 'sister', 'value': 'senna'}]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+rep = json.load(open('artifacts/claude-type270b-20260923/devreport270b.json'))
+for r in rep['rows']:
+    if r['family'] == 'lower_trap' and (r['teach']['wrongA'] or r['teach']['wrongB']):
+        print(r['id'], r['note'], 'A-wrong:', r['teach']['wrongA'], 'B-wrong:', r['teach']['wrongB'])
+        print('   raw:', repr(r['turn']))
+        print('   A:', r['framesA'])
+        print('   B:', r['framesB'])
+"
+d270b-086 trap A-wrong: 0 B-wrong: 1
+   raw: 'vanno will live in brackenholme.'
+   A: []
+   B: [{'act': 'TEACH', 'subject': 'vanno', 'relation': 'city', 'value': 'brackenholme'}]
+d270b-087 trap A-wrong: 1 B-wrong: 1
+   raw: 'kessas sister will be senna.'
+   A: [{'act': 'TEACH', 'subject': 'Kessa', 'relation': 'sister', 'value': 'Senna'}]
+   B: [{'act': 'TEACH', 'subject': 'kessas', 'relation': 'sister', 'value': 'senna'}]
+d270b-093 trap A-wrong: 1 B-wrong: 1
+   raw: 'zoranas brother is vanno, yeah.'
+   A: [{'act': 'TEACH', 'subject': 'zoranas', 'relation': 'brother', 'value': 'vanno'}]
+   B: [{'act': 'TEACH', 'subject': 'zoranas', 'relation': 'brother', 'value': 'vanno'}]
+d270b-094 trap A-wrong: 0 B-wrong: 1
+   raw: 'so sarellas friend is kessa.'
+   A: []
+   B: [{'act': 'TEACH', 'subject': 'sarellas', 'relation': 'friend', 'value': 'kessa'}]
+d270b-095 trap A-wrong: 0 B-wrong: 1
+   raw: 'so vanno works at cinderfell.'
+   A: []
+   B: [{'act': 'TEACH', 'subject': 'vanno', 'relation': 'employer', 'value': 'cinderfell'}]
+d270b-102 trap A-wrong: 1 B-wrong: 1
+   raw: 'zorana is a cooper.'
+   A: [{'act': 'TEACH', 'subject': 'Zorana', 'relation': 'occupation', 'value': 'Cooper'}]
+   B: [{'act': 'TEACH', 'subject': 'zorana', 'relation': 'occupation', 'value': 'cooper'}]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json, statistics
+rep = json.load(open('artifacts/claude-type270b-20260923/devreport270b.json'))
+rows = rep['rows']
+msA = sorted(r['msA'] for r in rows); msB = sorted(r['msB'] for r in rows)
+n = len(msA)
+print('n items:', n)
+print('A ear+checker+guard ms: median', statistics.median(msA), 'p90', msA[int(0.9*n)], 'max', msA[-1])
+print('A261b ms: median', statistics.median(msB), 'p90', msB[int(0.9*n)], 'max', msB[-1])
+import collections
+fam = collections.Counter(r['family'] for r in rows)
+print('fams:', dict(fam))
+# sname table
+for r in rows:
+    if r['family'] in ('sname','seen'):
+        print(r['id'], r['note'], repr(r['turn']), '->', repr(r['fixed']), 'exactA:', r['teach']['exactA'], 'exactB:', r['teach']['exactB'])
+"
+n items: 148
+A ear+checker+guard ms: median 343.285 p90 384.86 max 522.77
+A261b ms: median 349.28499999999997 p90 382.2 max 403.56
+fams: {'casual': 64, 'casual_q': 16, 'lower_trap': 24, 'clean': 24, 'sname': 16, 'seen': 4}
+d270b-129 keep-s 'morris mother is senna.' -> "Morris's mother is Senna." exactA: True exactB: True
+d270b-130 keep-s 'tess boss is rurik.' -> "Tess's boss is Rurik." exactA: True exactB: False
+d270b-131 keep-s 'james sister is kessa.' -> "James's sister is Kessa." exactA: True exactB: True
+d270b-132 keep-s 'thomas brother is quillan.' -> "Thomas's brother is Quillan." exactA: True exactB: True
+d270b-133 keep-s 'charles father is fenwick.' -> "Charles's father is Fenwick." exactA: True exactB: True
+d270b-134 keep-s 'louis friend is vanno.' -> "Louis's friend is Vanno." exactA: True exactB: True
+d270b-135 keep-s 'dennis mother is isolde.' -> "Dennis's mother is Isolde." exactA: True exactB: False
+d270b-136 keep-s 'miles boss is dilo.' -> "Miles's boss is Dilo." exactA: True exactB: True
+d270b-137 strip-s 'benos mother is rurik.' -> "Beno's mother is Rurik." exactA: True exactB: False
+d270b-138 strip-s 'dilos mother is rurik.' -> "Dilo's mother is Rurik." exactA: True exactB: False
+d270b-139 strip-s 'hakis mother is rurik.' -> "Haki's mother is Rurik." exactA: True exactB: False
+d270b-140 strip-s 'zoranas brother is fenwick.' -> "Zorana's brother is Fenwick." exactA: True exactB: False
+d270b-141 strip-s 'sarellas friend is senna.' -> "Sarella's friend is Senna." exactA: True exactB: False
+d270b-142 strip-s 'vannos boss is isolde.' -> "Vanno's boss is Isolde." exactA: True exactB: False
+d270b-143 strip-s 'kessas boss is isolde.' -> "Kessa's boss is Isolde." exactA: True exactB: False
+d270b-144 strip-s 'ruriks boss is isolde.' -> "Rurik's boss is Isolde." exactA: True exactB: False
+d270b-145 seen-strip 'benos dog is rex.' -> "Beno's dog is Rex." exactA: True exactB: False
+d270b-146 seen-keep-double-s 'jamess sister is senna.' -> "James's sister is Senna." exactA: True exactB: False
+d270b-147 seen-strip 'dilos boss is quillan.' -> "Dilo's boss is Quillan." exactA: True exactB: False
+d270b-148 seen-strip 'hakis mother is senna.' -> "Haki's mother is Senna." exactA: True exactB: False
+[0m
+[0m← [0mWrite artifacts/claude-type270b-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-type270b-20260923/predicted_moves270b.json
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_type270b_normalise.py scripts/claude_type270b_devset.py scripts/claude_type270b_turns.py scripts/claude_type270b_qbuild.py scripts/claude_type270b_devscore.py artifacts/claude-type270b-20260923/PASSMARKS.md artifacts/claude-type270b-20260923/predicted_moves270b.json artifacts/claude-type270b-20260923/dev270b.jsonl artifacts/claude-type270b-20260923/dev270b_turns.json artifacts/claude-type270b-20260923/dev270b_norm.json artifacts/claude-type270b-20260923/dev270b_earpreds.json artifacts/claude-type270b-20260923/qA/checks.json artifacts/claude-type270b-20260923/qA/manifest.json artifacts/claude-type270b-20260923/qB/checks.json artifacts/claude-type270b-20260923/qB/manifest.json artifacts/claude-type270b-20260923/dev270b_pyesA.json artifacts/claude-type270b-20260923/dev270b_pyesB.json artifacts/claude-type270b-20260923/devreport270b.json > artifacts/claude-type270b-20260923/SEAL.sha256.txt && cat artifacts/claude-type270b-20260923/SEAL.sha256.txt | wc -l && shasum -a 256 -c artifacts/claude-type270b-20260923/SEAL.sha256.txt 2>&1 | command grep -c OK
+18
+18
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P270b.1 (2026-09-23, builder; exp 270b = 270's normaliser with keep-s fixed in front of the EAR on 261b's arm A, CPU+Mac local + BensPC GPU, sealed 18 files SEAL.sha256.txt artifacts/claude-type270b-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A261b+15: predicted A 30-37/40, A261b 5-15/40, margin +18-28; PASS ~60%. Dev 63/64 (+25); blind risk ear-vocab shapes + so-head holds.
+- P270b.2 (same) M2 casual_q ASK >= 12/15: predicted A 12-15/15; PASS ~75%. Dev 16/16 (A261b 3/16); blind risk odd question shapes.
+- P270b.3 (same) M3 lower_trap wrong saves <= 1: predicted A 0-3; PASS ~45%. Dev 3 (will-future-possessive d270b-087, check-tail passthrough d270b-093, is-a d270b-102).
+- P270b.4 (same) M4 clean 30/30 identical to A261b: predicted 30/30 by construction, dev 24/24; PASS ~95%.
+- P270b.5 (same) M5 0 new wrong saves vs A261b: predicted 0-2; PASS ~55%. Dev 1 (087 span-difference class).
+- P270b.6 (same) M6 median added normaliser time <= 20 ms: predicted ~0.01-0.5 ms (dev median 0.0094); PASS ~99%.
+- P270b.7 (same) overall registered PASS: predicted ~10%. Needs M1+M2+M3+M5 together.
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+EOF
+tail -9 artifacts/fable-predictions-ledger.md | cut -c1-60
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permissio
+- P270b.1 (2026-09-23, builder; exp 270b = 270's normaliser 
+- P270b.2 (same) M2 casual_q ASK >= 12/15: predicted A 12-15
+- P270b.3 (same) M3 lower_trap wrong saves <= 1: predicted A
+- P270b.4 (same) M4 clean 30/30 identical to A261b: predicte
+- P270b.5 (same) M5 0 new wrong saves vs A261b: predicted 0-
+- P270b.6 (same) M6 median added normaliser time <= 20 ms: p
+- P270b.7 (same) overall registered PASS: predicted ~10%. Ne
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b
+[0m
+[0m# [0mTodos
+[✓] Read task files (270 scripts, 261b panel/turns/score, 269 compute method)
+[✓] Verify exp 264 already-complete state (23/23 seal OK, RESULTS FAIL filed, ledger P264 present)
+[✓] BensPC preflight (llama binary, model file, python torch/cuda, ports, GPU idle)
+[✓] Write 270b normaliser (fixed keep-s) + unit self-test local
+[✓] Write 270b devset (60+ casual, 20+ traps, 15+ s-names), generate + inspect
+[✓] Dev wave: BensPC ear + Qwen checker, local score A vs A261b
+[✓] PASSMARKS P270b.n + seal (18/18 OK) + ledger append
+[•] Panel seal check, schema read, post-seal runner+scorer, run arms A/A261b ONCE
+[ ] RESULTS.md + ledger OUTCOME + final report (264 verdict + 270b verdict)
+[0m
+[0m$ [0muptime; df -g / | head -2; shasum -a 256 -c artifacts/claude-typepanel270b-20260923/SEAL.sha256.txt 2>&1 | head -5
+7:14  up 2 days, 23:03, 4 users, load averages: 86.95 63.50 60.61
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 137585880    0%   /
+artifacts/claude-typepanel270b-20260923/panel.jsonl: OK
+artifacts/claude-typepanel270b-20260923/make_panel.py: OK
+[0m
+[0m→ [0mRead artifacts/claude-typepanel270b-20260923/make_panel.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+pA = json.load(open('artifacts/claude-type270b-20260923/dev270b_pyesA.json'))['checks']
+pB = json.load(open('artifacts/claude-type270b-20260923/dev270b_pyesB.json'))['checks']
+mA = json.load(open('artifacts/claude-type270b-20260923/qA/manifest.json'))
+mB = json.load(open('artifacts/claude-type270b-20260923/qB/manifest.json'))
+import statistics
+psA = sorted(v['p'] for v in pA.values()); psB = sorted(v['p'] for v in pB.values())
+print('A pYES: n=%d med=%.3f <0.25: %d' % (len(psA), statistics.median(psA), sum(1 for p in psA if p < 0.25)))
+print('B pYES: n=%d med=%.3f <0.25: %d' % (len(psB), statistics.median(psB), sum(1 for p in psB if p < 0.25)))
+# paired by row: which arm holds more?
+holdsA = sum(1 for v in pA.values() if v['p'] < 0.25); holdsB = sum(1 for v in pB.values() if v['p'] < 0.25)
+print('holds A:', holdsA, 'holds B:', holdsB)
+"
+A pYES: n=104 med=0.912 <0.25: 6
+B pYES: n=103 med=0.915 <0.25: 2
+holds A: 6 holds B: 2
+[0m
+[0m← [0mWrite scripts/claude_type270b_panelturns.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_type270b_panelscore.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_type270b_panelscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_panelscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_panelscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270b_panelscore.py
+@@ -64,17 +64,16 @@
+ ap.add_argument("--theta", type=float, default=0.25)
+ ap.add_argument("--out", required=True)
+ a = ap.parse_args(argv[1:])
+ S.norm_subj = strip_subj
+-D.S.norm_subj = strip_subj
+ try:
+-    rc = D.main(["devscore", "--dev", a.rows, "--preds", a.preds,
+-                 "--pyesA", a.pyesA, "--pyesB", a.pyesB,
+-                 "--normmanifest", a.normmanifest, "--theta",
+-                 str(a.theta), "--out", a.out])
++    sys.argv = ["devscore", "--dev", a.rows, "--preds", a.preds,
++                "--pyesA", a.pyesA, "--pyesB", a.pyesB,
++                "--normmanifest", a.normmanifest, "--theta",
++                str(a.theta), "--out", a.out]
++    rc = D.main()
+ finally:
+     S.norm_subj = _ORIG_NORM_SUBJ
+-    D.S.norm_subj = _ORIG_NORM_SUBJ
+ rep = json.loads(Path(a.out).read_text(encoding="utf-8"))
+ m = rep["marks"]
+ m1a, m1b = m["M1_casual_exact"]["A"], m["M1_casual_exact"]["A261b"]
+ m1n = m["M1_casual_exact"]["n"]
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_type270b_panelturns.py --panel artifacts/claude-typepanel270b-20260923/panel.jsonl --seal artifacts/claude-typepanel270b-20260923/SEAL.sha256.txt --rows artifacts/claude-type270b-20260923/panel270b_rows.jsonl --turns artifacts/claude-type270b-20260923/panel270b_turns.json --normmanifest artifacts/claude-type270b-20260923/panel270b_norm.json 2>&1 | tail -8
+SCHEMA OK (100 items u270-001..100, 40/15/15/30)
+100 items -> 200 turns, fired 67
+  casual: fired 40/40
+  casual_q: fired 12/15
+  lower_trap: fired 15/15
+  clean: fired 0/30
+[0m
+[0m$ [0muptime | head -1; scp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/panel270b_turns.json "benspc:C:/Users/benja/smolear235/run270b/panel270b_turns.json" 2>&1 | tail -1; echo shipped; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"nvidia-smi --query-gpu=memory.used --format=csv,noheader; Get-Process | Where-Object { \$_.ProcessName -like 'llama*' } | Select-Object ProcessName,Id\"" 2>&1 | head -6
+7:23  up 2 days, 23:12, 4 users, load averages: 172.33 129.82 92.40
+shipped
+573 MiB
+
+ProcessName     Id
+-----------     --
+llama-server 17056
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns C:\Users\benja\smolear235\run270b\panel270b_turns.json --out C:\Users\benja\smolear235\run270b\panel270b_earpreds.json --device cuda --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3\"" 2>&1 | tail -3
+{"n": 200, "median_ms": 139.48585000071034, "p90_ms": 169.46249999818974, "max_ms": 292.7582000011171, "n_beamed": 143, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/panel270b_earpreds.json" artifacts/claude-type270b-20260923/panel270b_earpreds.json 2>&1 | tail -1; echo ok; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_qbuild.py --dev artifacts/claude-type270b-20260923/panel270b_rows.jsonl --preds artifacts/claude-type270b-20260923/panel270b_earpreds.json --normmanifest artifacts/claude-type270b-20260923/panel270b_norm.json --arm A --out artifacts/claude-type270b-20260923/pqA 2>&1 | tail -1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_qbuild.py --dev artifacts/claude-type270b-20260923/panel270b_rows.jsonl --preds artifacts/claude-type270b-20260923/panel270b_earpreds.json --normmanifest artifacts/claude-type270b-20260923/panel270b_norm.json --arm A261b --out artifacts/claude-type270b-20260923/pqB 2>&1 | tail -1
+ok
+arm A: 100 items -> 75 checks
+arm A261b: 100 items -> 70 checks
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/pqA/checks.json "benspc:C:/Users/benja/smolear235/run270b/panel270b_checksA.json" 2>&1 | tail -1; scp -o ConnectTimeout=20 artifacts/claude-type270b-20260923/pqB/checks.json "benspc:C:/Users/benja/smolear235/run270b/panel270b_checksB.json" 2>&1 | tail -1; echo shipped; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -EncodedCommand JABjAHIAZQBhAHQAZQBkACAAPQAgAEkAbgB2AG8AawBlAC0AQwBpAG0ATQBlAHQAaABvAGQAIAAtAEMAbABhAHMAcwBOAGEAbQBlACAAVwBpAG4AMwAyAF8AUAByAG8AYwBlAHMAcwAgAC0ATQBlAHQAaABvAGQATgBhAG0AZQAgAEMAcgBlAGEAdABlACAALQBBAHIAZwB1AG0AZQBuAHQAcwAgAEAAewBDAG8AbQBtAGEAbgBkAEwAaQBuAGUAIAA9ACAAJwBDADoAXABsAGwAYQBtAGEALQBiADEAMAA2ADcAOQBcAGwAbABhAG0AYQAtAHMAZQByAHYAZQByAC4AZQB4AGUAIAAtAC0AaABvAHMAdAAgADEAMgA3AC4AMAAuADAALgAxACAALQAtAHAAbwByAHQAIAA4ADAAOAAyACAALQBuAGcAbAAgADkAOQAgAC0AZgBhACAAMQAgAC0ALQBjAGEAYwBoAGUALQB0AHkAcABlAC0AawAgAHEAOABfADAAIAAtAC0AYwBhAGMAaABlAC0AdAB5AHAAZQAtAHYAIABxADgAXwAwACAALQAtAHAAYQByAGEAbABsAGUAbAAgADEAIAAtAHQAIAA2ACAALQBjACAANAAwADkANgAgAC0AbQAgAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAC4AbABtAHMAdAB1AGQAaQBvAFwAbQBvAGQAZQBsAHMAXABRAHcAZQBuADMALgA4AC0AMgA3AEIAXABRAHcAZQBuADMALgA4AC0AMgA3AEIALQBVAEQALQBJAFEANABfAFgAUwAuAGcAZwB1AGYAJwA7ACAAQwB1AHIAcgBlAG4AdABEAGkAcgBlAGMAdABvAHIAeQAgAD0AIAAnAEMAOgBcAFUAcwBlAHIAcwBcAGIAZQBuAGoAYQBcAHMAbQBvAGwAZQBhAHIAMgAzADUAXAByAHUAbgAyADcAMABiACcAfQAKAGUAYwBoAG8AIABQAEkARAA9ACQAKAAkAGMAcgBlAGEAdABlAGQALgBQAHIAbwBjAGUAcwBzAEkAZAApAAoAZQBjAGgAbwAgAFIARQBUAD0AJAAoACQAYwByAGUAYQB0AGUAZAAuAFIAZQB0AHUAcgBuAFYAYQBsAHUAZQApAAoA" 2>&1 | command grep -E "PID|RET"
+shipped
+PID=19776
+RET=0
+[0m
+[0m$ [0msleep 50; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B -c \\\"import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8082/health', timeout=20).read()[:20])\\\"\"" 2>&1 | head -3
+b'{"status":"ok"}'
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_earcheck261_checker.py --url http://127.0.0.1:8082 --in C:\Users\benja\smolear235\run270b\panel270b_checksA.json --out C:\Users\benja\smolear235\run270b\panel270b_pyesA.json\"" 2>&1 | tail -1
+{"n": 75, "fallbacks": 0, "median_ms": 281.6, "p90_ms": 295.6, "max_ms": 385.8}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -Command \"C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe -B C:\Users\benja\smolear235\run270b\claude_earcheck261_checker.py --url http://127.0.0.1:8082 --in C:\Users\benja\smolear235\run270b\panel270b_checksB.json --out C:\Users\benja\smolear235\run270b\panel270b_pyesB.json\"" 2>&1 | tail -1
+{"n": 70, "fallbacks": 0, "median_ms": 283.6, "p90_ms": 296.5, "max_ms": 318.3}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/panel270b_pyesA.json" artifacts/claude-type270b-20260923/panel270b_pyesA.json 2>&1 | tail -1; scp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/run270b/panel270b_pyesB.json" artifacts/claude-type270b-20260923/panel270b_pyesB.json 2>&1 | tail -1; echo fetched; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -EncodedCommand JABwACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAHQAbwBwAAoAaQBmACAAKAAkAHAALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAG4AZQAgACcAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAJwApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAxADkANwA3ADYAIABpAHMAIABubwB0ACAAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAOwAgAHIAZQBmAHUAcwBpAG4AZwAgAHQAbwAgAHMAdABvAHAAJwAgAH0ACgBT AHQAbwBwAC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBGAG8AcgBjAGUAClMAdABhAHIAdAAtAFMAbABlAGUAcAAgAC0AUwBlAGMAbwBuAGQAcwAgADMA спокойно" 2>&1 | head -3
+fetched
+
+Cannot process command because a command is already specified with -Command or -EncodedCommand.
+PowerShell[.exe] [-PSConsoleFile <file> | -Version <version>]
+[0m
+[0m← [0mWrite scratchpad/stop270b_panel.ps1
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "import base64; print(base64.b64encode(open('scratchpad/stop270b_panel.ps1','rb').read().decode('utf-8').encode('utf-16-le')).decode())"
+JABwACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAHQAbwBwAAoAaQBmACAAKAAkAHAALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAG4AZQAgACcAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAJwApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAxADkANwA3ADYAIABpAHMAIABuAG8AdAAgAGwAbABhAG0AYQAtAHMAZQByAHYAZQByADsAIAByAGUAZgB1AHMAaQBuAGcAIAB0AG8AIABzAHQAbwBwACcAIAB9AAoAUwB0AG8AcAAtAFAAcgBvAGMAZQBzAHMAIAAtAEkAZAAgADEAOQA3ADcANgAgAC0ARgBvAHIAYwBlAAoAUwB0AGEAcgB0AC0AUwBsAGUAZQBwACAALQBTAGUAYwBvAG4AZABzACAAMwAKACQAYQBsAGkAdgBlACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlAAoAaQBmACAAKAAkAGEAbABpAHYAZQApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAxADkANwA3ADYAIABzAHQAaQBsAGwAIABhAGwAaQB2AGUAJwAgAH0ACgBlAGMAaABvACAAUwBUAE8AUABQAEUARAAtADEAOQA3ADcANgAKAG4AdgBpAGQAaQBhAC0AcwBtAGkAIAAtAC0AcQB1AGUAcgB5AC0AZwBwAHUAPQBtAGUAbQBvAHIAeQAuAHUAcwBlAGQAIAAtAC0AZgBvAHIAbQBhAHQAPQBjAHMAdgAsAG4AbwBoAGUAYQBkAGUAcgAKAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAGwAaQBrAGUAIAAnAGwAbABhAG0AYQAqACcAIAB9ACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIABQAHIAbwBjAGUAcwBzAE4AYQBtAGUALABJAGQACgA=
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -NonInteractive -EncodedCommand JABwACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAHQAbwBwAAoAaQBmACAAKAAkAHAALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAG4AZQAgACcAbABsAGEAbQBhAC0AcwBlAHIAdgBlAHIAJwApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAxADkANwA3ADYAIABpAHMAIABuAG8AdAAgAGwAbABhAG0AYQAtAHMAZQByAHYAZQByADsAIAByAGUAZgB1AHMAaQBuAGcAIAB0AG8AIABzAHQAbwBwACcAIAB9AAoAUwB0AG8AcAAtAFAAcgBvAGMAZQBzAHMAIAAtAEkAZAAgADEAOQA3ADcANgAgAC0ARgBvAHIAYwBlAAoAUwB0AGEAcgB0AC0AUwBsAGUAZQBwACAALQBTAGUAYwBvAG4AZABzACAAMwAKACQAYQBsAGkAdgBlACAAPQAgAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAC0ASQBkACAAMQA5ADcANwA2ACAALQBFAHIAcgBvAHIAQQBjAHQAaQBvAG4AIABTAGkAbABlAG4AdABsAHkAQwBvAG4AdABpAG4AdQBlAAoAaQBmACAAKAAkAGEAbABpAHYAZQApACAAewAgAHQAaAByAG8AdwAgACcAUABJAEQAIAAxADkANwA3ADYAIABzAHQAaQBsAGwAIABhAGwAaQB2AGUAJwAgAH0ACgBlAGMAaABvACAAUwBUAE8AUABQAEUARAAtADEAOQA3ADcANgAKAG4AdgBpAGQAaQBhAC0AcwBtAGkAIAAtAC0AcQB1AGUAcgB5AC0AZwBwAHUAPQBtAGUAbQBvAHIAeQAuAHUAcwBlAGQAIAAtAC0AZgBvAHIAbQBhAHQAPQBjAHMAdgAsAG4AbwBoAGUAYQBkAGUAcgAKAEcAZQB0AC0AUAByAG8AYwBlAHMAcwAgAHwAIABXAGgAZQByAGUALQBPAGIAagBlAGMAdAAgAHsAIAAkAF8ALgBQAHIAbwBjAGUAcwBzAE4AYQBtAGUAIAAtAGwAaQBrAGUAIAAnAGwAbABhAG0AYQAqACcAIAB9ACAAfAAgAFMAZQBsAGUAYwB0AC0ATwBiAGoAZQBjAHQAIABQAHIAbwBjAGUAcwBzAE4AYQBtAGUALABJAGQACgA=" 2>&1 | command grep -E "STOPPED|MiB|llama-server|throw|still" | head -6
+STOPPED-19776
+573 MiB
+llama-server 17056
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_panelscore.py --rows artifacts/claude-type270b-20260923/panel270b_rows.jsonl --preds artifacts/claude-type270b-20260923/panel270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/panel270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/panel270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/panel270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/panel270b_score.json 2>&1 | head -80
+M1 casual TEACH exact: A 32/40  A261b 31/40  margin 1
+M1 sname exact: A 0/0  A261b 0/0
+M1 seen exact: A 0/0
+M2 casual_q ASK exact: A 12/15  A261b 15/15
+M3 lower_trap wrong TEACH saves: A 2  A261b 3  (ASK extras on traps, not saves: A 0)
+M4 clean identical frames: 30/30
+M5 new wrong TEACH saves: 8 ['u270-002', 'u270-005', 'u270-012', 'u270-034', 'u270-038', 'u270-040', 'u270-061', 'u270-068'] (new ASK extras, not saves: ['u270-046', 'u270-053', 'u270-054'])
+M6 norm_ms median: 0.00955 max: 0.1146
+MISS-A+NEWW u270-002 casual casual lower no-apos s-owner raw='jamess dog is tyto' fixed="James's dog is Tyto" framesA=[{'act': 'TEACH', 'subject': 'James', 'relation': 'dog', 'value': 'Tyto'}] framesB=[{'act': 'TEACH', 'subject': 'jamess dog', 'relation': 'owner', 'value': 'tyto'}]
+MISS-A+NEWW u270-005 casual casual lower no-apos s-owner raw='louiss brother is theo' fixed="Louis's brother is Theo" framesA=[{'act': 'TEACH', 'subject': 'Louis', 'relation': 'brother', 'value': 'Theo'}] framesB=[{'act': 'TEACH', 'subject': 'louiss', 'relation': 'brother', 'value': 'theo'}]
+MISS-A+NEWW u270-012 casual casual lower no-apos s-owner raw='marcuss cousin is alba' fixed="Marcus's cousin is Alba" framesA=[{'act': 'TEACH', 'subject': 'Marcus', 'relation': 'cousin', 'value': 'Alba'}] framesB=[{'act': 'TEACH', 'subject': 'marcuss', 'relation': 'cousin', 'value': 'alba'}]
+MISS-A u270-020 casual casual lower s-name-owner raw='kostas fish is nino' fixed='Kostas Fish is Nino' framesA=[{'act': 'TEACH', 'subject': 'Nino', 'relation': 'son', 'value': 'Kostas Fish'}] framesB=[{'act': 'TEACH', 'subject': 'nino', 'relation': 'son', 'value': 'kostas fish'}]
+MISS-A u270-033 casual casual lower no-apos s-owner raw='felixs turtle is otto' fixed='Felixs turtle is Otto' framesA=[] framesB=[{'act': 'TEACH', 'subject': 'felixs turtle', 'relation': 'owner', 'value': 'otto'}]
+MISS-A+NEWW u270-034 casual casual lower no-apos s-owner raw='jonass mother is greta' fixed="Jonas's mother is Greta" framesA=[{'act': 'TEACH', 'subject': 'Jonas', 'relation': 'mother', 'value': 'Greta'}] framesB=[{'act': 'TEACH', 'subject': 'jonass', 'relation': 'mother', 'value': 'greta'}]
+MISS-A+NEWW u270-038 casual casual lower no-apos s-owner raw='brunoss dog is wuff' fixed="Brunos's dog is Wuff" framesA=[{'act': 'TEACH', 'subject': 'Brunos', 'relation': 'dog', 'value': 'Wuff'}] framesB=[]
+MISS-A+NEWW u270-040 casual casual lower plain-language raw='sanne speaks dutch daily' fixed='Sanne Speaks Dutch Daily' framesA=[{'act': 'TEACH', 'subject': 'Sanne Speaks Dutch Daily', 'relation': 'language', 'value': 'Dutch'}] framesB=[]
+MISS-A u270-046 casual_q casual_q lower no-qmark who s-owner raw='who is louiss brother' fixed="who is Louis's brother" framesA=[{'act': 'ASK', 'subject': 'Louis', 'relation': ['brother']}] framesB=[{'act': 'ASK', 'subject': 'louiss', 'relation': ['brother']}]
+MISS-A u270-053 casual_q casual_q lower who s-owner raw='who is jonass mother?' fixed="who is Jonas's mother?" framesA=[{'act': 'ASK', 'subject': 'Jonas', 'relation': ['mother']}] framesB=[{'act': 'ASK', 'subject': 'jonass', 'relation': ['mother']}]
+MISS-A u270-054 casual_q casual_q lower no-qmark where-hometown raw='where did sanne grow up' fixed='where did Sanne Grow up' framesA=[{'act': 'ASK', 'subject': 'Sanne Grow', 'relation': ['hometown']}] framesB=[{'act': 'ASK', 'subject': 'sanne', 'relation': ['hometown']}]
++NEWW u270-061 lower_trap lower_trap lower profession-name raw='hunter is a tough job in winter' fixed='Hunter is a Tough job in Winter' framesA=[{'act': 'TEACH', 'subject': 'Hunter', 'relation': 'occupation', 'value': 'Tough job'}] framesB=[{'act': 'TEACH', 'subject': 'hunter', 'relation': 'occupation', 'value': 'tough job in winter'}]
++NEWW u270-068 lower_trap lower_trap lower month-name raw='may is always hectic at work' fixed='may is Always Hectic at work' framesA=[{'act': 'TEACH', 'subject': 'may', 'relation': 'occupation', 'value': 'Always Hectic'}] framesB=[]
+PANEL VERDICT: M1 A 32/40 vs A261b 31/40 margin 1 -> FAIL
+M2 12/15 -> PASS; M3 2 -> FAIL; M4 30/30 -> PASS; M5 8 ['u270-002', 'u270-005', 'u270-012', 'u270-034', 'u270-038', 'u270-040', 'u270-061', 'u270-068'] -> FAIL; M6 0.00955 -> PASS
+OVERALL: FAIL
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+rep = json.load(open('artifacts/claude-type270b-20260923/panel270b_score.json'))
+for r in rep['rows']:
+    if r['id'] in ('u270-003','u270-011','u270-020','u270-033','u270-061','u270-068') or r['family']=='clean' and not r['frames_identical']:
+        print(r['id'], r['family'])
+        print('   A:', r['framesA'])
+        print('   B:', r['framesB'])
+"
+u270-003 casual
+   A: [{'act': 'TEACH', 'subject': 'Iri', 'relation': 'cat', 'value': 'Mimi'}]
+   B: [{'act': 'TEACH', 'subject': 'iris cat', 'relation': 'nickname', 'value': 'mimi'}]
+u270-011 casual
+   A: [{'act': 'TEACH', 'subject': 'Tesss', 'relation': 'rabbit', 'value': 'Bobo'}]
+   B: [{'act': 'TEACH', 'subject': 'tesss rabbit', 'relation': 'owner', 'value': 'bobo'}]
+u270-020 casual
+   A: [{'act': 'TEACH', 'subject': 'Nino', 'relation': 'son', 'value': 'Kostas Fish'}]
+   B: [{'act': 'TEACH', 'subject': 'nino', 'relation': 'son', 'value': 'kostas fish'}]
+u270-033 casual
+   A: []
+   B: [{'act': 'TEACH', 'subject': 'felixs turtle', 'relation': 'owner', 'value': 'otto'}]
+u270-061 lower_trap
+   A: [{'act': 'TEACH', 'subject': 'Hunter', 'relation': 'occupation', 'value': 'Tough job'}]
+   B: [{'act': 'TEACH', 'subject': 'hunter', 'relation': 'occupation', 'value': 'tough job in winter'}]
+u270-068 lower_trap
+   A: [{'act': 'TEACH', 'subject': 'may', 'relation': 'occupation', 'value': 'Always Hectic'}]
+   B: []
+[0m
+[0m← [0mWrite scripts/claude_type270b_panelscore2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270b_panelscore2.py --rows artifacts/claude-type270b-20260923/panel270b_rows.jsonl --preds artifacts/claude-type270b-20260923/panel270b_earpreds.json --pyesA artifacts/claude-type270b-20260923/panel270b_pyesA.json --pyesB artifacts/claude-type270b-20260923/panel270b_pyesB.json --normmanifest artifacts/claude-type270b-20260923/panel270b_norm.json --theta 0.25 --out artifacts/claude-type270b-20260923/panel270b_score_v2.json 2>&1 | head -50
+V2 M1 casual exact: A 37/40  A261b 31/40 margin 6 -> FAIL
+V2 M2 casual_q ASK exact: A 14/15  A261b 15/15 -> PASS
+V2 M3 lower_trap wrong TEACH saves: A 2  A261b 3 -> FAIL
+V2 M4 clean identical: 30/30 -> PASS
+V2 M5 new wrong TEACH saves: 3 ['u270-040', 'u270-061', 'u270-068'] -> FAIL
+V2 M6 norm_ms median: 0.00955 max: 0.1146 -> PASS
+V2 OVERALL: FAIL
+MISS-A u270-020 casual casual lower s-name-owner A=[('TEACH', 'Nino', 'son', 'Kostas Fish')] B=[('TEACH', 'nino', 'son', 'kostas fish')]
+MISS-A u270-033 casual casual lower no-apos s-owner A=[] B=[('TEACH', 'felixs turtle', 'owner', 'otto')]
+MISS-A+NEWW u270-040 casual casual lower plain-language A=[('TEACH', 'Sanne Speaks Dutch Daily', 'language', 'Dutch')] B=[]
+MISS-A u270-054 casual_q casual_q lower no-qmark where-hometown A=[('ASK', 'Sanne Grow', ['hometown'], None)] B=[('ASK', 'sanne', ['hometown'], None)]
+NEWW u270-061 lower_trap lower_trap lower profession-name A=[('TEACH', 'Hunter', 'occupation', 'Tough job')] B=[('TEACH', 'hunter', 'occupation', 'tough job in winter')]
+NEWW u270-068 lower_trap lower_trap lower month-name A=[('TEACH', 'may', 'occupation', 'Always Hectic')] B=[]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+rep = json.load(open('artifacts/claude-type270b-20260923/panel270b_score_v2.json'))
+rows = rep['rows']
+print('=== A261b M1 misses (casual exactB False) ===')
+for r in rows:
+    if r['family']=='casual' and not r['teach']['exactB']:
+        fa=[(f['subject'],f['relation'],f.get('value')) for f in r['framesB']]
+        print(r['id'], r['note'], 'B=', fa)
+print('=== A261b M2 misses ===')
+for r in rows:
+    if r['family']=='casual_q' and not r['ask']['exactB']:
+        print(r['id'], r['note'], 'B=', [(f['subject'],f['relation']) for f in r['framesB']])
+print('=== trap wrongs ===')
+for r in rows:
+    if r['family']=='lower_trap' and (r['teach']['wrongA'] or r['teach']['wrongB']):
+        print(r['id'], r['note'], 'A-wrong:', r['teach']['wrongA'], 'B-wrong:', r['teach']['wrongB'])
+print('=== A hits count check ===')
+print('A casual hits:', sum(1 for r in rows if r['family']=='casual' and r['teach']['exactA']))
+"
+=== A261b M1 misses (casual exactB False) ===
+u270-002 casual lower no-apos s-owner B= [('jamess dog', 'owner', 'tyto')]
+u270-003 casual lower s-name-owner B= [('iris cat', 'nickname', 'mimi')]
+u270-011 casual lower no-apos s-owner B= [('tesss rabbit', 'owner', 'bobo')]
+u270-020 casual lower s-name-owner B= [('nino', 'son', 'kostas fish')]
+u270-025 casual lower no-apos B= []
+u270-033 casual lower no-apos s-owner B= [('felixs turtle', 'owner', 'otto')]
+u270-036 casual lower no-apos B= []
+u270-038 casual lower no-apos s-owner B= []
+u270-040 casual lower plain-language B= []
+=== A261b M2 misses ===
+=== trap wrongs ===
+u270-061 lower_trap lower profession-name A-wrong: 1 B-wrong: 1
+u270-064 lower_trap lower gem-name A-wrong: 0 B-wrong: 1
+u270-068 lower_trap lower month-name A-wrong: 1 B-wrong: 0
+u270-070 lower_trap lower material-name A-wrong: 0 B-wrong: 1
+=== A hits count check ===
+A casual hits: 37
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+rep = json.load(open('artifacts/claude-type270b-20260923/panel270b_score_v2.json'))
+for r in rep['rows']:
+    if r['id'] in ('u270-025','u270-036','u270-064','u270-070'):
+        print(r['id'], r['note'])
+        print('   A:', [(f['subject'],f['relation'],f.get('value')) for f in r['framesA']])
+        print('   B:', [(f['subject'],f['relation'],f.get('value')) for f in r['framesB']])
+"; shasum -a 256 -c artifacts/claude-type270b-20260923/SEAL.sha256.txt 2>&1 | command grep -c OK; shasum -a 256 -c artifacts/claude-typepanel270b-20260923/SEAL.sha256.txt 2>&1 | command grep -c OK; uptime | head -1
+u270-025 casual lower no-apos
+   A: [('Casper', 'horse', 'Bruno')]
+   B: []
+u270-036 casual lower no-apos
+   A: [('Adele', 'cat', 'Suki')]
+   B: []
+u270-064 lower_trap lower gem-name
+   A: []
+   B: [('the ruby glass', 'color', 'red')]
+u270-070 lower_trap lower material-name
+   A: []
+   B: [('the blue coat', 'color', 'pearl buttons')]
+18
+2
+ 7:29  up 2 days, 23:19, 4 users, load averages: 85.62 95.15 89.33
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+mA = json.load(open('artifacts/claude-type270b-20260923/pqA/manifest.json'))
+pA = json.load(open('artifacts/claude-type270b-20260923/panel270b_pyesA.json'))['checks']
+for cid, m in sorted(mA.items()):
+    if m['row'] in ('u270-061','u270-068','u270-040'):
+        print(cid, 'p=', pA[cid]['p'], 'claim-frame:', m['frame']['subject'], m['frame']['relation'], m['frame']['value'])
+"
+u270-040#t0 p= 0.735676 claim-frame: Sanne Speaks Dutch Daily language Dutch
+u270-061#t0 p= 0.511045 claim-frame: Hunter occupation Tough job
+u270-061#t1 p= 0.13438 claim-frame: Hunter work_location Winter
+u270-068#t0 p= 0.266191 claim-frame: may occupation Always Hectic
+[0m
+[0m← [0mWrite artifacts/claude-type270b-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P270b OUTCOME (2026-09-23, builder; registered verdict FAIL: M1 margin, M3, M5 fail; M2, M4, M6 pass; panel seal 2/2 OK, schema clean, arms A/A261b ran ONCE each on BensPC GPU, sealed 18/18 OK after, no sealed file changed): M1 A 37/40 vs A261b 31/40 margin +6 (bar >=30 and +15: absolute met, margin missed by 9; P270b.1 margin half wrong, absolute right); M2 A 14/15 (P270b.2 right); M3 A 2 (061 hunter-occupation pYES 0.511, 068 may-occupation pYES 0.266; P270b.3 range right, bar missed by 1); M4 30/30 (P270b.4 right); M5 3 (040 capitalised-phrase-span, 061 value-span diff, 068 capitalised-decoy save; P270b.5 range wrong by 1); M6 median 0.0096 max 0.1146 (P270b.6 right); ALL FAIL (P270b.7 resolves). Post-seal scorer fix disclosed with diff (v1 symmetric-strip wrongly missed 5 correct s-name frames; v2 pred-anchored re-scores recorded rows, arms never re-ran; v1 file kept). Scorer artifact: u270-003 arm A HIT undeserved (true M1 36, margin +5). See artifacts/claude-type270b-20260923/RESULTS.md.
+EOF
+echo appended; shasum -a 256 -c artifacts/claude-type270b-20260923/SEAL.sha256.txt 2>&1 | command grep -c OK
+appended
+18
+[0m
+[0m# [0mTodos
+[✓] Read task files (270 scripts, 261b panel/turns/score, 269 compute method)
+[✓] Verify exp 264 already-complete state (23/23 seal OK, RESULTS FAIL filed, ledger P264 present)
+[✓] BensPC preflight (llama binary, model file, python torch/cuda, ports, GPU idle)
+[✓] Write 270b normaliser (fixed keep-s) + unit self-test local
+[✓] Write 270b devset (60+ casual, 20+ traps, 15+ s-names), generate + inspect
+[✓] Dev wave: BensPC ear + Qwen checker, local score A vs A261b
+[✓] PASSMARKS P270b.n + seal (18/18 OK) + ledger append
+[✓] Panel seal check, schema read, post-seal runner+scorer, run arms A/A261b ONCE
+[✓] RESULTS.md + ledger OUTCOME + final report (264 verdict + 270b verdict)
+[0m

@@ -1,0 +1,6168 @@
+{
+ "summary": {
+  "n": 200,
+  "median_ms": 139.48585000071034,
+  "p90_ms": 169.46249999818974,
+  "max_ms": 292.7582000011171,
+  "n_beamed": 143,
+  "device": "cuda",
+  "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+  "torch": "2.11.0+cu128",
+  "threads": 6,
+  "tau": 9.3,
+  "k": 4,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti"
+ },
+ "preds": {
+  "u270-001-raw": {
+   "raw": "TEACH | my | dog | pip",
+   "greedy_lp": -0.00011491319902035002,
+   "beams": [
+    [
+     "TEACH | my | dog | pip",
+     -0.00010656927042873576
+    ],
+    [
+     "TEACH | my | dog |pip",
+     -10.375112533569336
+    ],
+    [
+     "TEACH | my | dog | pipe",
+     -11.250123023986816
+    ],
+    [
+     "TEACH | my | dog | pips",
+     -11.948223114013672
+    ]
+   ],
+   "ms_greedy": 71.85,
+   "ms": 141.79,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "pip"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-001-norm": {
+   "raw": "TEACH | my | dog | Pip",
+   "greedy_lp": -0.0001745094766434363,
+   "beams": [
+    [
+     "TEACH | my | dog | Pip",
+     -0.0001745094486977905
+    ],
+    [
+     "TEACH | My | dog | Pip",
+     -8.812676429748535
+    ],
+    [
+     "TEACH | my | dog | Piper",
+     -12.920844078063965
+    ],
+    [
+     "TEACH | my | dog |pip",
+     -12.93769359588623
+    ]
+   ],
+   "ms_greedy": 53.43,
+   "ms": 122.92,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "Pip"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-002-raw": {
+   "raw": "TEACH | jamess dog | owner | tyto",
+   "greedy_lp": -1.6539124495276951,
+   "beams": [
+    [
+     "TEACH | jamess dog | owner | tyto",
+     -1.6910122632980347
+    ],
+    [
+     "TEACH | jamess dog | son | tyto",
+     -1.8159997463226318
+    ],
+    [
+     "TEACH | jamess dog | nickname | tyto",
+     -2.1910321712493896
+    ],
+    [
+     "TEACH | jamess dog | dog | tyto",
+     -2.3160204887390137
+    ]
+   ],
+   "ms_greedy": 90.46,
+   "ms": 171.45,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "jamess dog",
+      "relation": "owner",
+      "value": "tyto",
+      "why": "UNSURE",
+      "margin": 0.12498748302459717
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-002-norm": {
+   "raw": "TEACH | James | dog | Tyto",
+   "greedy_lp": -0.0008388961506966552,
+   "beams": [
+    [
+     "TEACH | James | dog | Tyto",
+     -0.000754204229451716
+    ],
+    [
+     "TEACH |James | dog | Tyto",
+     -7.375763416290283
+    ],
+    [
+     "TEACH | Joss | dog | Tyto",
+     -10.243075370788574
+    ],
+    [
+     "TEACH | Josses | dog | Tyto",
+     -11.445663452148438
+    ]
+   ],
+   "ms_greedy": 56.86,
+   "ms": 142.97,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "James",
+      "relation": "dog",
+      "value": "Tyto"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-003-raw": {
+   "raw": "TEACH | iris cat | nickname | mimi",
+   "greedy_lp": -0.09593913609293736,
+   "beams": [
+    [
+     "TEACH | iris cat | nickname | mimi",
+     -0.10594160109758377
+    ],
+    [
+     "TEACH | iris | cat | mimi",
+     -3.5649003982543945
+    ],
+    [
+     "TEACH | iris cat | owner | mimi",
+     -3.8557701110839844
+    ],
+    [
+     "TEACH | mimi | cat | iris cat",
+     -4.439295291900635
+    ]
+   ],
+   "ms_greedy": 61.37,
+   "ms": 157.18,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "iris cat",
+      "relation": "nickname",
+      "value": "mimi",
+      "why": "UNSURE",
+      "margin": 3.4589587971568108
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-003-norm": {
+   "raw": "TEACH | Iri | cat | Mimi",
+   "greedy_lp": -0.00023184117353025613,
+   "beams": [
+    [
+     "TEACH | Iri | cat | Mimi",
+     -0.0002330330607946962
+    ],
+    [
+     "TEACH | Iri | cat | Mimi",
+     -9.00136947631836
+    ],
+    [
+     "TEACH | iri | cat | mimi",
+     -11.294175148010254
+    ],
+    [
+     "TEACH | Rhea Iri | cat | Mimi",
+     -11.430663108825684
+    ]
+   ],
+   "ms_greedy": 61.83,
+   "ms": 165.71,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Iri",
+      "relation": "cat",
+      "value": "Mimi"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-004-raw": {
+   "raw": "TEACH | martas | sister | elsa",
+   "greedy_lp": -0.03486907141638085,
+   "beams": [
+    [
+     "TEACH | martas | sister | elsa",
+     -0.03491455316543579
+    ],
+    [
+     "TEACH | marta | sister | elsa",
+     -4.034945011138916
+    ],
+    [
+     "TEACH | marta | sister | elsa",
+     -5.534039497375488
+    ],
+    [
+     "TEACH | matas | sister | elsa",
+     -6.304267883300781
+    ]
+   ],
+   "ms_greedy": 60.27,
+   "ms": 133.34,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "martas",
+      "relation": "sister",
+      "value": "elsa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-004-norm": {
+   "raw": "TEACH | Marta | sister | Elsa",
+   "greedy_lp": -0.0032230238218176055,
+   "beams": [
+    [
+     "TEACH | Marta | sister | Elsa",
+     -0.0037737505044788122
+    ],
+    [
+     "TEACH |Marta | sister | Elsa",
+     -6.316351413726807
+    ],
+    [
+     "TEACH | Mara | sister | Elsa",
+     -7.422567367553711
+    ],
+    [
+     "TEACH | Marata | sister | Elsa",
+     -8.047569274902344
+    ]
+   ],
+   "ms_greedy": 88.0,
+   "ms": 167.79,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Marta",
+      "relation": "sister",
+      "value": "Elsa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-005-raw": {
+   "raw": "TEACH | louiss | brother | theo",
+   "greedy_lp": -0.09544805490798325,
+   "beams": [
+    [
+     "TEACH | louiss | brother | theo",
+     -0.09546580165624619
+    ],
+    [
+     "TEACH | louiss brother | theo",
+     -2.6120848655700684
+    ],
+    [
+     "TEACH | louiss | brother | theo",
+     -4.811977386474609
+    ],
+    [
+     "TEACH | lous brother | theo",
+     -6.111822605133057
+    ]
+   ],
+   "ms_greedy": 61.28,
+   "ms": 148.8,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "louiss",
+      "relation": "brother",
+      "value": "theo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-005-norm": {
+   "raw": "TEACH | Louis | brother | Theo",
+   "greedy_lp": -0.002619215200063252,
+   "beams": [
+    [
+     "TEACH | Louis | brother | Theo",
+     -0.002312378492206335
+    ],
+    [
+     "TEACH |Louis | brother | Theo",
+     -6.127315521240234
+    ],
+    [
+     "TEACH | Louis |brother | Theo",
+     -9.8773193359375
+    ],
+    [
+     "TEACH | Louis | brother | Theo",
+     -10.538498878479004
+    ]
+   ],
+   "ms_greedy": 58.8,
+   "ms": 130.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Louis",
+      "relation": "brother",
+      "value": "Theo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-006-raw": {
+   "raw": "TEACH | my | cat | luni",
+   "greedy_lp": -7.438548082916441e-05,
+   "beams": [
+    [
+     "TEACH | my | cat | luni",
+     -7.092857413226739e-05
+    ],
+    [
+     "TEACH | My | cat | luni",
+     -11.625073432922363
+    ],
+    [
+     "TEACH | my | cat | luni",
+     -11.752979278564453
+    ],
+    [
+     "TEACH | my | cat | lumi",
+     -12.125076293945312
+    ]
+   ],
+   "ms_greedy": 56.94,
+   "ms": 128.9,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cat",
+      "value": "luni"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-006-norm": {
+   "raw": "TEACH | my | cat | Luni",
+   "greedy_lp": -0.00024233896586167702,
+   "beams": [
+    [
+     "TEACH | my | cat | Luni",
+     -0.0002510403865016997
+    ],
+    [
+     "TEACH | My | cat | Luni",
+     -9.125267028808594
+    ],
+    [
+     "TEACH | my | cat | Lunci",
+     -10.87541675567627
+    ],
+    [
+     "TEACH | my | cat | Lunei",
+     -10.875777244567871
+    ]
+   ],
+   "ms_greedy": 56.81,
+   "ms": 133.16,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cat",
+      "value": "Luni"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-007-raw": {
+   "raw": "TEACH | i | city | branfield",
+   "greedy_lp": -0.0011140672038081334,
+   "beams": [
+    [
+     "TEACH | i | city | branfield",
+     -0.0011072842171415687
+    ],
+    [
+     "TEACH | my | city | branfield",
+     -7.376204013824463
+    ],
+    [
+     "TEACH |i | city | branfield",
+     -9.376381874084473
+    ],
+    [
+     "TEACH | I | city | branfield",
+     -9.626124382019043
+    ]
+   ],
+   "ms_greedy": 74.44,
+   "ms": 142.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "city",
+      "value": "branfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-007-norm": {
+   "raw": "TEACH | i | city | Branfield",
+   "greedy_lp": -0.004408660370465611,
+   "beams": [
+    [
+     "TEACH | i | city | Branfield",
+     -0.003972380422055721
+    ],
+    [
+     "TEACH | i | city | branfield",
+     -5.754019260406494
+    ],
+    [
+     "TEACH | my | city | Branfield",
+     -7.8791117668151855
+    ],
+    [
+     "TEACH | I | city | Branfield",
+     -9.00090217590332
+    ]
+   ],
+   "ms_greedy": 60.62,
+   "ms": 159.17,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "city",
+      "value": "Branfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-008-raw": {
+   "raw": "TEACH | nora | city | kelsow",
+   "greedy_lp": -0.2672014232169815,
+   "beams": [
+    [
+     "TEACH | nora | city | kelsow",
+     -0.2399345338344574
+    ],
+    [
+     "TEACH | noor | city | kelsow",
+     -2.3077547550201416
+    ],
+    [
+     "TEACH | nora | city | kelsow",
+     -2.8650474548339844
+    ],
+    [
+     "TEACH | noras | city | kelsow",
+     -6.6068620681762695
+    ]
+   ],
+   "ms_greedy": 94.61,
+   "ms": 187.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "nora",
+      "relation": "city",
+      "value": "kelsow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-008-norm": {
+   "raw": "TEACH | Nora | city | Kelsow",
+   "greedy_lp": -0.034469529635707374,
+   "beams": [
+    [
+     "TEACH | Nora | city | Kelsow",
+     -0.032111965119838715
+    ],
+    [
+     "TEACH | Noor | city | Kelsow",
+     -5.287211894989014
+    ],
+    [
+     "TEACH |Nora | city | Kelsow",
+     -5.323723793029785
+    ],
+    [
+     "TEACH | Orna | city | Kelsow",
+     -5.776804447174072
+    ]
+   ],
+   "ms_greedy": 86.1,
+   "ms": 164.53,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Nora",
+      "relation": "city",
+      "value": "Kelsow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-009-raw": {
+   "raw": "TEACH | pavel | occupation | baker",
+   "greedy_lp": -0.08984855507451783,
+   "beams": [
+    [
+     "TEACH | pavel | occupation | baker",
+     -0.07975094020366669
+    ],
+    [
+     "TEACH | paul | occupation | baker",
+     -2.8137898445129395
+    ],
+    [
+     "TEACH | pavl | occupation | baker",
+     -4.6009626388549805
+    ],
+    [
+     "TEACH | pavel | occupation | baker",
+     -6.600677967071533
+    ]
+   ],
+   "ms_greedy": 73.08,
+   "ms": 160.06,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "pavel",
+      "relation": "occupation",
+      "value": "baker"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-009-norm": {
+   "raw": "TEACH | Pavel | occupation | Baker",
+   "greedy_lp": -0.001139776812166815,
+   "beams": [
+    [
+     "TEACH | Pavel | occupation | Baker",
+     -0.0012298282235860825
+    ],
+    [
+     "TEACH | Pavel | occupation | baker",
+     -8.251236915588379
+    ],
+    [
+     "TEACH | Paev | occupation | Baker",
+     -8.394463539123535
+    ],
+    [
+     "TEACH | Pavel | occupation | BAKER",
+     -9.84877872467041
+    ]
+   ],
+   "ms_greedy": 57.0,
+   "ms": 144.51,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Pavel",
+      "relation": "occupation",
+      "value": "Baker"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-010-raw": {
+   "raw": "TEACH | my | boss | selma",
+   "greedy_lp": -0.0010318199435843667,
+   "beams": [
+    [
+     "TEACH | my | boss | selma",
+     -0.001097348751500249
+    ],
+    [
+     "TEACH | my | boss |selma",
+     -8.00112533569336
+    ],
+    [
+     "TEACH | my | boss | seleniumma",
+     -8.371342658996582
+    ],
+    [
+     "TEACH | my | boss | selda",
+     -9.679744720458984
+    ]
+   ],
+   "ms_greedy": 68.58,
+   "ms": 145.28,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "selma"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-010-norm": {
+   "raw": "TEACH | my | boss | Selma",
+   "greedy_lp": -0.0012305329949526822,
+   "beams": [
+    [
+     "TEACH | my | boss | Selma",
+     -0.0012488941429182887
+    ],
+    [
+     "TEACH | My | boss | Selma",
+     -7.063713073730469
+    ],
+    [
+     "TEACH | my | boss | Selda",
+     -8.956628799438477
+    ],
+    [
+     "TEACH | my | boss |Selma",
+     -9.751232147216797
+    ]
+   ],
+   "ms_greedy": 83.8,
+   "ms": 165.49,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "Selma"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-011-raw": {
+   "raw": "TEACH | tesss rabbit | owner | bobo",
+   "greedy_lp": -0.5609948331323196,
+   "beams": [
+    [
+     "TEACH | tesss rabbit | owner | bobo",
+     -0.528371274471283
+    ],
+    [
+     "TEACH | tesss rabbit | nickname | bobo",
+     -1.5307461023330688
+    ],
+    [
+     "TEACH | tesss rabbit | brother | bobo",
+     -3.029388666152954
+    ],
+    [
+     "TEACH | tesss rabbit | dog | bobo",
+     -3.52954363822937
+    ]
+   ],
+   "ms_greedy": 82.55,
+   "ms": 169.86,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "tesss rabbit",
+      "relation": "owner",
+      "value": "bobo",
+      "why": "UNSURE",
+      "margin": 1.0023748278617859
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-011-norm": {
+   "raw": "TEACH | Tesss | rabbit | Bobo",
+   "greedy_lp": -0.639958098989851,
+   "beams": [
+    [
+     "TEACH | Tesss | rabbit | Bobo",
+     -0.6394273638725281
+    ],
+    [
+     "TEACH | Tesss rabbit | owner | Bobo",
+     -0.7706476449966431
+    ],
+    [
+     "TEACH | Tess | rabbit | Bobo",
+     -5.381121635437012
+    ],
+    [
+     "TEACH | Tesss rabbit | dog | Bobo",
+     -7.520687580108643
+    ]
+   ],
+   "ms_greedy": 69.88,
+   "ms": 164.12,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tesss",
+      "relation": "rabbit",
+      "value": "Bobo",
+      "why": "UNSURE",
+      "margin": 0.131220281124115
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-012-raw": {
+   "raw": "TEACH | marcuss | cousin | alba",
+   "greedy_lp": -0.05452884753682952,
+   "beams": [
+    [
+     "TEACH | marcuss | cousin | alba",
+     -0.06780923902988434
+    ],
+    [
+     "TEACH | marcuss cousin | cousin | alba",
+     -3.0399529933929443
+    ],
+    [
+     "TEACH | marcuss | cousin | alba",
+     -4.753668308258057
+    ],
+    [
+     "TEACH | marcuss cousin | sister | alba",
+     -6.414948463439941
+    ]
+   ],
+   "ms_greedy": 69.49,
+   "ms": 147.58,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "marcuss",
+      "relation": "cousin",
+      "value": "alba",
+      "why": "UNSURE",
+      "margin": 2.97214375436306
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-012-norm": {
+   "raw": "TEACH | Marcus | cousin | Alba",
+   "greedy_lp": -0.0005841044915655402,
+   "beams": [
+    [
+     "TEACH | Marcus | cousin | Alba",
+     -0.0005818429053761065
+    ],
+    [
+     "TEACH |Marcus | cousin | Alba",
+     -7.62563419342041
+    ],
+    [
+     "TEACH | Marcus | cousin | Alba",
+     -10.688085556030273
+    ],
+    [
+     "TEACH | Marcus | cousin |Alba",
+     -11.12559700012207
+    ]
+   ],
+   "ms_greedy": 70.85,
+   "ms": 168.72,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Marcus",
+      "relation": "cousin",
+      "value": "Alba"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-013-raw": {
+   "raw": "TEACH | priyas | occupation | nurse",
+   "greedy_lp": -0.09972227280007218,
+   "beams": [
+    [
+     "TEACH | priyas | occupation | nurse",
+     -0.1001846045255661
+    ],
+    [
+     "TEACH | pryyas | occupation | nurse",
+     -3.1693968772888184
+    ],
+    [
+     "TEACH | pryas | occupation | nurse",
+     -3.4194352626800537
+    ],
+    [
+     "TEACH | priyas | occupation | nurse",
+     -5.805610656738281
+    ]
+   ],
+   "ms_greedy": 70.99,
+   "ms": 143.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "priyas",
+      "relation": "occupation",
+      "value": "nurse"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-013-norm": {
+   "raw": "TEACH | Priya | occupation | Nurse",
+   "greedy_lp": -0.0016178758700675644,
+   "beams": [
+    [
+     "TEACH | Priya | occupation | Nurse",
+     -0.0016112019075080752
+    ],
+    [
+     "TEACH | Priya | occupation | nurse",
+     -6.751613616943359
+    ],
+    [
+     "TEACH | Priya | occupation | Nurse",
+     -9.369318008422852
+    ],
+    [
+     "TEACH | Priya | occupation | Nursing",
+     -9.751814842224121
+    ]
+   ],
+   "ms_greedy": 56.47,
+   "ms": 129.6,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Priya",
+      "relation": "occupation",
+      "value": "Nurse"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-014-raw": {
+   "raw": "TEACH | my | sister | livia",
+   "greedy_lp": -0.0005302305720462641,
+   "beams": [
+    [
+     "TEACH | my | sister | livia",
+     -0.0005496509838849306
+    ],
+    [
+     "TEACH | my | sister | liveia",
+     -8.532696723937988
+    ],
+    [
+     "TEACH | my | sister | livia",
+     -10.126717567443848
+    ],
+    [
+     "TEACH | my | sister | liveiia",
+     -10.150884628295898
+    ]
+   ],
+   "ms_greedy": 56.88,
+   "ms": 157.23,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "sister",
+      "value": "livia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-014-norm": {
+   "raw": "TEACH | my | sister | Livia",
+   "greedy_lp": -0.00018786509085089165,
+   "beams": [
+    [
+     "TEACH | my | sister | Livia",
+     -0.0001691507495706901
+    ],
+    [
+     "TEACH | My | sister | Livia",
+     -9.250178337097168
+    ],
+    [
+     "TEACH | my | sister | Lelia",
+     -10.376863479614258
+    ],
+    [
+     "TEACH | my | sister | Liota",
+     -11.877700805664062
+    ]
+   ],
+   "ms_greedy": 75.08,
+   "ms": 150.83,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "sister",
+      "value": "Livia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-015-raw": {
+   "raw": "TEACH | darios | dog | kiko",
+   "greedy_lp": -0.3384002990488284,
+   "beams": [
+    [
+     "TEACH | darios | dog | kiko",
+     -0.30512696504592896
+    ],
+    [
+     "TEACH | darios dog | owner | kiko",
+     -1.7615687847137451
+    ],
+    [
+     "TEACH | darios dog | nickname | kiko",
+     -3.2615747451782227
+    ],
+    [
+     "TEACH | dario | dog | kiko",
+     -4.335879325866699
+    ]
+   ],
+   "ms_greedy": 60.26,
+   "ms": 139.83,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "darios",
+      "relation": "dog",
+      "value": "kiko",
+      "why": "UNSURE",
+      "margin": 1.4564418196678162
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-015-norm": {
+   "raw": "TEACH | Dario | dog | Kiko",
+   "greedy_lp": -9.345774782332228e-05,
+   "beams": [
+    [
+     "TEACH | Dario | dog | Kiko",
+     -8.821294613881037e-05
+    ],
+    [
+     "TEACH | Doro | dog | Kiko",
+     -10.664839744567871
+    ],
+    [
+     "TEACH | Dario | dog | Kika",
+     -11.250090599060059
+    ],
+    [
+     "TEACH | Dorio | dog | Kiko",
+     -11.263703346252441
+    ]
+   ],
+   "ms_greedy": 69.72,
+   "ms": 150.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Dario",
+      "relation": "dog",
+      "value": "Kiko"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-016-raw": {
+   "raw": "TEACH | i | language | spanish",
+   "greedy_lp": -0.012326319099877026,
+   "beams": [
+    [
+     "TEACH | i | language | spanish",
+     -0.012332088313996792
+    ],
+    [
+     "TEACH | my | language | spanish",
+     -5.762590408325195
+    ],
+    [
+     "TEACH | i | language | espa\u00f1ol",
+     -5.937356472015381
+    ],
+    [
+     "TEACH | i | language | Spanish",
+     -6.012367248535156
+    ]
+   ],
+   "ms_greedy": 56.14,
+   "ms": 133.31,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "language",
+      "value": "spanish"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-016-norm": {
+   "raw": "TEACH | i | language | spanish",
+   "greedy_lp": -0.5197736682566685,
+   "beams": [
+    [
+     "TEACH | i | language | spanish",
+     -0.5095695853233337
+    ],
+    [
+     "TEACH | i | language | espa\u00f1ol",
+     -1.3447608947753906
+    ],
+    [
+     "TEACH | i | language | Spanish",
+     -2.5036745071411133
+    ],
+    [
+     "TEACH | i | language |panish",
+     -5.380833148956299
+    ]
+   ],
+   "ms_greedy": 65.51,
+   "ms": 151.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "language",
+      "value": "spanish"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-017-raw": {
+   "raw": "TEACH | samir | employer | halden",
+   "greedy_lp": -0.004932083641442375,
+   "beams": [
+    [
+     "TEACH | samir | employer | halden",
+     -0.004742269404232502
+    ],
+    [
+     "TEACH |samir | employer | halden",
+     -5.87978982925415
+    ],
+    [
+     "TEACH | smir | employer | halden",
+     -7.020665168762207
+    ],
+    [
+     "TEACH | siamr | employer | halden",
+     -8.677458763122559
+    ]
+   ],
+   "ms_greedy": 73.21,
+   "ms": 165.84,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "samir",
+      "relation": "employer",
+      "value": "halden"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-017-norm": {
+   "raw": "TEACH | Samir | employer | Halden",
+   "greedy_lp": -9.035754219866021e-05,
+   "beams": [
+    [
+     "TEACH | Samir | employer | Halden",
+     -9.941667667590082e-05
+    ],
+    [
+     "TEACH |Samir | employer | Halden",
+     -9.812860488891602
+    ],
+    [
+     "TEACH | Samuelir | employer | Halden",
+     -12.10129451751709
+    ],
+    [
+     "TEACH | Saimir | employer | Halden",
+     -13.066971778869629
+    ]
+   ],
+   "ms_greedy": 73.69,
+   "ms": 161.79,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Samir",
+      "relation": "employer",
+      "value": "Halden"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-018-raw": {
+   "raw": "TEACH | ines | school | northfield",
+   "greedy_lp": -0.1148497451109165,
+   "beams": [
+    [
+     "TEACH | ines | school | northfield",
+     -0.12899106740951538
+    ],
+    [
+     "TEACH | ines | school | northfield",
+     -2.325068473815918
+    ],
+    [
+     "TEACH | ires | school | northfield",
+     -4.588420867919922
+    ],
+    [
+     "TEACH | ices | school | northfield",
+     -5.703398704528809
+    ]
+   ],
+   "ms_greedy": 68.65,
+   "ms": 146.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "ines",
+      "relation": "school",
+      "value": "northfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-018-norm": {
+   "raw": "TEACH | Ines | school | Northfield",
+   "greedy_lp": -0.010350658257834766,
+   "beams": [
+    [
+     "TEACH | Ines | school | Northfield",
+     -0.008504415862262249
+    ],
+    [
+     "TEACH | Ines Studies | school | Northfield",
+     -5.0766921043396
+    ],
+    [
+     "TEACH | Ines | educated_at | Northfield",
+     -6.383535861968994
+    ],
+    [
+     "TEACH | Ines studies | school | Northfield",
+     -9.523883819580078
+    ]
+   ],
+   "ms_greedy": 60.21,
+   "ms": 151.59,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Ines",
+      "relation": "school",
+      "value": "Northfield",
+      "why": "UNSURE",
+      "margin": 5.068187688477337
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-019-raw": {
+   "raw": "TEACH | my | brother | renzo",
+   "greedy_lp": -0.0004051262969966274,
+   "beams": [
+    [
+     "TEACH | my | brother | renzo",
+     -0.0004532688471954316
+    ],
+    [
+     "TEACH | my | brother |renzo",
+     -8.250463485717773
+    ],
+    [
+     "TEACH | my | brother | renzo",
+     -10.174992561340332
+    ],
+    [
+     "TEACH | my | brother | renyzo",
+     -11.468606948852539
+    ]
+   ],
+   "ms_greedy": 67.66,
+   "ms": 140.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "brother",
+      "value": "renzo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-019-norm": {
+   "raw": "TEACH | my | brother | Renzo",
+   "greedy_lp": -0.0006213117444673344,
+   "beams": [
+    [
+     "TEACH | my | brother | Renzo",
+     -0.0005903321434743702
+    ],
+    [
+     "TEACH | My | brother | Renzo",
+     -7.750612735748291
+    ],
+    [
+     "TEACH | my | brother |Renzo",
+     -9.250598907470703
+    ],
+    [
+     "TEACH | my |brother | Renzo",
+     -11.25113296508789
+    ]
+   ],
+   "ms_greedy": 57.97,
+   "ms": 125.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "brother",
+      "value": "Renzo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-020-raw": {
+   "raw": "TEACH | nino | son | kostas fish",
+   "greedy_lp": -0.8893530225943778,
+   "beams": [
+    [
+     "TEACH | nino | son | kostas fish",
+     -0.8222958445549011
+    ],
+    [
+     "TEACH | nino | brother | kostas fish",
+     -1.8223624229431152
+    ],
+    [
+     "TEACH | nino | colleague | kostas fish",
+     -2.4474122524261475
+    ],
+    [
+     "TEACH | nino | nickname | kostas fish",
+     -2.447432279586792
+    ]
+   ],
+   "ms_greedy": 70.9,
+   "ms": 153.34,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "nino",
+      "relation": "son",
+      "value": "kostas fish",
+      "why": "UNSURE",
+      "margin": 1.0000665783882141
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-020-norm": {
+   "raw": "TEACH | Nino | son | Kostas Fish",
+   "greedy_lp": -1.2043475467472717,
+   "beams": [
+    [
+     "TEACH | Nino | son | Kostas Fish",
+     -1.1690902709960938
+    ],
+    [
+     "TEACH | Kostas Fish | son | Nino",
+     -1.2968732118606567
+    ],
+    [
+     "TEACH | Nino | brother | Kostas Fish",
+     -2.1691906452178955
+    ],
+    [
+     "TEACH | Kostas Fish | brother | Nino",
+     -2.7968780994415283
+    ]
+   ],
+   "ms_greedy": 64.38,
+   "ms": 141.49,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Nino",
+      "relation": "son",
+      "value": "Kostas Fish",
+      "why": "UNSURE",
+      "margin": 0.127782940864563
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-021-raw": {
+   "raw": "TEACH | my | parrot | saba",
+   "greedy_lp": -0.008342046169090622,
+   "beams": [
+    [
+     "TEACH | my | parrot | saba",
+     -0.007804913446307182
+    ],
+    [
+     "TEACH | my | parrot | saba",
+     -5.6327805519104
+    ],
+    [
+     "TEACH | my | parrot | saba",
+     -6.003385543823242
+    ],
+    [
+     "TEACH | my | parrot |saba",
+     -7.1332268714904785
+    ]
+   ],
+   "ms_greedy": 57.05,
+   "ms": 124.08,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "parrot",
+      "value": "saba"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-021-norm": {
+   "raw": "TEACH | my | parrot | Saba",
+   "greedy_lp": -0.0006497355333223709,
+   "beams": [
+    [
+     "TEACH | my | parrot | Saba",
+     -0.0007315775728784502
+    ],
+    [
+     "TEACH | My | parrot | Saba",
+     -7.313261985778809
+    ],
+    [
+     "TEACH | my | pet | Saba",
+     -11.625732421875
+    ],
+    [
+     "TEACH | my | bird | Saba",
+     -11.625738143920898
+    ]
+   ],
+   "ms_greedy": 56.33,
+   "ms": 123.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "parrot",
+      "value": "Saba"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-022-raw": {
+   "raw": "TEACH | tariks | employer | veldt",
+   "greedy_lp": -0.013125269257891148,
+   "beams": [
+    [
+     "TEACH | tariks | employer | veldt",
+     -0.013079403899610043
+    ],
+    [
+     "TEACH | toriks | employer | veldt",
+     -5.674161911010742
+    ],
+    [
+     "TEACH | taerks | employer | veldt",
+     -7.347663402557373
+    ],
+    [
+     "TEACH | tariks | employer |veldt",
+     -7.888441562652588
+    ]
+   ],
+   "ms_greedy": 73.45,
+   "ms": 160.77,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "tariks",
+      "relation": "employer",
+      "value": "veldt"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-022-norm": {
+   "raw": "TEACH | Tarik | employer | Veldt",
+   "greedy_lp": -0.001541047976267862,
+   "beams": [
+    [
+     "TEACH | Tarik | employer | Veldt",
+     -0.001510176109150052
+    ],
+    [
+     "TEACH | Tarik | employer | VelDT",
+     -6.877811908721924
+    ],
+    [
+     "TEACH | Tark | employer | Veldt",
+     -9.379386901855469
+    ],
+    [
+     "TEACH | Tarik | employer | Vel dt",
+     -9.555191993713379
+    ]
+   ],
+   "ms_greedy": 69.41,
+   "ms": 143.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Tarik",
+      "relation": "employer",
+      "value": "Veldt"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-023-raw": {
+   "raw": "TEACH | jorunns | cat | tiko",
+   "greedy_lp": -0.048760287669999514,
+   "beams": [
+    [
+     "TEACH | jorunns | cat | tiko",
+     -0.0483267568051815
+    ],
+    [
+     "TEACH | jorunns cat | nickname | tiko",
+     -3.72339129447937
+    ],
+    [
+     "TEACH | jorunns cat | owner | tiko",
+     -4.723324775695801
+    ],
+    [
+     "TEACH | jorunns cat | name | tiko",
+     -5.348327159881592
+    ]
+   ],
+   "ms_greedy": 77.25,
+   "ms": 173.44,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "jorunns",
+      "relation": "cat",
+      "value": "tiko",
+      "why": "UNSURE",
+      "margin": 3.6750645376741886
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-023-norm": {
+   "raw": "TEACH | Jorunn | cat | Tiko",
+   "greedy_lp": -0.0002583017526873732,
+   "beams": [
+    [
+     "TEACH | Jorunn | cat | Tiko",
+     -0.000270696880761534
+    ],
+    [
+     "TEACH | Jorunn | cat | Tika",
+     -9.250287055969238
+    ],
+    [
+     "TEACH | Jorunn | cat | Tico",
+     -9.500274658203125
+    ],
+    [
+     "TEACH | Jorunn | cat | Tikko",
+     -10.932809829711914
+    ]
+   ],
+   "ms_greedy": 73.24,
+   "ms": 159.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Jorunn",
+      "relation": "cat",
+      "value": "Tiko"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-024-raw": {
+   "raw": "TEACH | my | hometown | durnham",
+   "greedy_lp": -0.00025711919749227263,
+   "beams": [
+    [
+     "TEACH | my | hometown | durnham",
+     -0.00024341177777387202
+    ],
+    [
+     "TEACH | my | hometown | durnhaam",
+     -9.460339546203613
+    ],
+    [
+     "TEACH | My | hometown | durnham",
+     -10.062743186950684
+    ],
+    [
+     "TEACH | my | hometown | durnhaem",
+     -11.295164108276367
+    ]
+   ],
+   "ms_greedy": 60.29,
+   "ms": 138.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "hometown",
+      "value": "durnham"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-024-norm": {
+   "raw": "TEACH | my | hometown | Durnham",
+   "greedy_lp": -0.0025914336579759834,
+   "beams": [
+    [
+     "TEACH | my | hometown | Durnham",
+     -0.002436307957395911
+    ],
+    [
+     "TEACH | My | hometown | Durnham",
+     -6.189958095550537
+    ],
+    [
+     "TEACH | my | hometown | Durnhaam",
+     -9.43577766418457
+    ],
+    [
+     "TEACH | my | hometown | Durnhaem",
+     -10.80026912689209
+    ]
+   ],
+   "ms_greedy": 69.19,
+   "ms": 148.77,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "hometown",
+      "value": "Durnham"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-025-raw": {
+   "raw": "TEACH | caspers horse | owner | bruno",
+   "greedy_lp": -1.2030432831912137,
+   "beams": [
+    [
+     "TEACH | caspers horse | owner | bruno",
+     -1.1760244369506836
+    ],
+    [
+     "TEACH | caspers horse | horse | bruno",
+     -1.2998604774475098
+    ],
+    [
+     "TEACH | caspers horse | rider | bruno",
+     -1.9263540506362915
+    ],
+    [
+     "TEACH | caspers | horse | bruno",
+     -2.5449228286743164
+    ]
+   ],
+   "ms_greedy": 72.56,
+   "ms": 160.01,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "caspers horse",
+      "relation": "owner",
+      "value": "bruno",
+      "why": "UNSURE",
+      "margin": 0.12383604049682617
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-025-norm": {
+   "raw": "TEACH | Casper | horse | Bruno",
+   "greedy_lp": -0.016855947512731007,
+   "beams": [
+    [
+     "TEACH | Casper | horse | Bruno",
+     -0.015604188665747643
+    ],
+    [
+     "TEACH | Caasper | horse | Bruno",
+     -5.036087989807129
+    ],
+    [
+     "TEACH | Capper | horse | Bruno",
+     -6.223586559295654
+    ],
+    [
+     "TEACH | Casper | horse | Bruno",
+     -6.393341541290283
+    ]
+   ],
+   "ms_greedy": 57.25,
+   "ms": 124.4,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Casper",
+      "relation": "horse",
+      "value": "Bruno"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-026-raw": {
+   "raw": "TEACH | milenas | boss | helga",
+   "greedy_lp": -0.0023931812992827872,
+   "beams": [
+    [
+     "TEACH | milenas | boss | helga",
+     -0.0024652276188135147
+    ],
+    [
+     "TEACH | milnes | boss | helga",
+     -7.768492221832275
+    ],
+    [
+     "TEACH | milenas | boss | helga",
+     -8.6593017578125
+    ],
+    [
+     "TEACH | my | boss | helga",
+     -8.671219825744629
+    ]
+   ],
+   "ms_greedy": 60.54,
+   "ms": 137.66,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "milenas",
+      "relation": "boss",
+      "value": "helga"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-026-norm": {
+   "raw": "TEACH | Milena | boss | Helga",
+   "greedy_lp": -0.0001973990262058578,
+   "beams": [
+    [
+     "TEACH | Milena | boss | Helga",
+     -0.00021515859407372773
+    ],
+    [
+     "TEACH | Milna | boss | Helga",
+     -9.625266075134277
+    ],
+    [
+     "TEACH | Milenia | boss | Helga",
+     -10.000234603881836
+    ],
+    [
+     "TEACH | Milena | boss |Helga",
+     -10.250214576721191
+    ]
+   ],
+   "ms_greedy": 61.01,
+   "ms": 141.54,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Milena",
+      "relation": "boss",
+      "value": "Helga"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-027-raw": {
+   "raw": "TEACH | my | neighbour | boris",
+   "greedy_lp": -0.002101907298587946,
+   "beams": [
+    [
+     "TEACH | my | neighbour | boris",
+     -0.0021000022534281015
+    ],
+    [
+     "TEACH | my | neighbour |boris",
+     -6.377100467681885
+    ],
+    [
+     "TEACH | my | neighbour | boronis",
+     -8.675921440124512
+    ],
+    [
+     "TEACH | my | neighbour | boron",
+     -9.425917625427246
+    ]
+   ],
+   "ms_greedy": 60.92,
+   "ms": 139.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "neighbour",
+      "value": "boris"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-027-norm": {
+   "raw": "TEACH | my | neighbour | Boris",
+   "greedy_lp": -0.0001956043226272186,
+   "beams": [
+    [
+     "TEACH | my | neighbour | Boris",
+     -0.00023541183327324688
+    ],
+    [
+     "TEACH | My | neighbour | Boris",
+     -8.500237464904785
+    ],
+    [
+     "TEACH | the user | neighbour | Boris",
+     -12.853249549865723
+    ],
+    [
+     "TEACH | the | neighbour | Boris",
+     -12.978256225585938
+    ]
+   ],
+   "ms_greedy": 57.15,
+   "ms": 144.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "neighbour",
+      "value": "Boris"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-028-raw": {
+   "raw": "TEACH | oskars | dog | mox",
+   "greedy_lp": -0.4828562735383386,
+   "beams": [
+    [
+     "TEACH | oskars | dog | mox",
+     -0.47861093282699585
+    ],
+    [
+     "TEACH | oskars | dog | mox",
+     -1.214144229888916
+    ],
+    [
+     "TEACH | oksars | dog | mox",
+     -5.514346122741699
+    ],
+    [
+     "TEACH | oskars dog | dog | mox",
+     -6.077184677124023
+    ]
+   ],
+   "ms_greedy": 64.82,
+   "ms": 157.29,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "oskars",
+      "relation": "dog",
+      "value": "mox",
+      "why": "UNSURE",
+      "margin": 5.598573744297028
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-028-norm": {
+   "raw": "TEACH | Oskar | dog | Mox",
+   "greedy_lp": -0.0008796802085839772,
+   "beams": [
+    [
+     "TEACH | Oskar | dog | Mox",
+     -0.0007829528767615557
+    ],
+    [
+     "TEACH | Oscar | dog | Mox",
+     -7.5007123947143555
+    ],
+    [
+     "TEACH | Oscar | dog | Mox",
+     -10.380171775817871
+    ],
+    [
+     "TEACH | Oksar | dog | Mox",
+     -10.628509521484375
+    ]
+   ],
+   "ms_greedy": 74.56,
+   "ms": 152.61,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Oskar",
+      "relation": "dog",
+      "value": "Mox"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-029-raw": {
+   "raw": "TEACH | zelda | employer | peldon college",
+   "greedy_lp": -0.05688739812384824,
+   "beams": [
+    [
+     "TEACH | zelda | employer | peldon college",
+     -0.06330325454473495
+    ],
+    [
+     "TEACH |zelda | employer | peldon college",
+     -2.9368696212768555
+    ],
+    [
+     "TEACH | zelda | employer | peldoncollege",
+     -6.188304901123047
+    ],
+    [
+     "TEACH | Zelda | employer | peldon college",
+     -7.079665184020996
+    ]
+   ],
+   "ms_greedy": 68.38,
+   "ms": 153.28,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "zelda",
+      "relation": "employer",
+      "value": "peldon college"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-029-norm": {
+   "raw": "TEACH | Zelda | employer | Peldon College",
+   "greedy_lp": -0.0032109853152562096,
+   "beams": [
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -0.0032275451812893152
+    ],
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -5.881819248199463
+    ],
+    [
+     "TEACH | Zelda | employer | Pelton College",
+     -9.44073486328125
+    ],
+    [
+     "TEACH | Zeelda | employer | Peldon College",
+     -9.577231407165527
+    ]
+   ],
+   "ms_greedy": 64.37,
+   "ms": 163.53,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Zelda",
+      "relation": "employer",
+      "value": "Peldon College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-030-raw": {
+   "raw": "TEACH | my | cousin | tanja",
+   "greedy_lp": -0.000498063584331021,
+   "beams": [
+    [
+     "TEACH | my | cousin | tanja",
+     -0.0004467084654606879
+    ],
+    [
+     "TEACH | my | cousin |tanja",
+     -7.875450611114502
+    ],
+    [
+     "TEACH | my | cousin | Tanja",
+     -11.375448226928711
+    ],
+    [
+     "TEACH | my | cousin | tanningja",
+     -11.657517433166504
+    ]
+   ],
+   "ms_greedy": 57.16,
+   "ms": 131.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "tanja"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-030-norm": {
+   "raw": "TEACH | my | cousin | Tanja",
+   "greedy_lp": -0.0004201314374938647,
+   "beams": [
+    [
+     "TEACH | my | cousin | Tanja",
+     -0.00042084642336703837
+    ],
+    [
+     "TEACH | My | cousin | Tanja",
+     -7.8754658699035645
+    ],
+    [
+     "TEACH | my |cousin | Tanja",
+     -12.625500679016113
+    ],
+    [
+     "TEACH | me | cousin | Tanja",
+     -12.812917709350586
+    ]
+   ],
+   "ms_greedy": 78.56,
+   "ms": 154.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Tanja"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-031-raw": {
+   "raw": "TEACH | viktors | sister | nadia",
+   "greedy_lp": -0.01208509725719864,
+   "beams": [
+    [
+     "TEACH | viktors | sister | nadia",
+     -0.013522962108254433
+    ],
+    [
+     "TEACH | viktor | sister | nadia",
+     -5.763574600219727
+    ],
+    [
+     "TEACH | victor | sister | nadia",
+     -5.804986476898193
+    ],
+    [
+     "TEACH | Viktors | sister | nadia",
+     -7.314778804779053
+    ]
+   ],
+   "ms_greedy": 68.86,
+   "ms": 151.12,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "viktors",
+      "relation": "sister",
+      "value": "nadia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-031-norm": {
+   "raw": "TEACH | Viktor | sister | Nadia",
+   "greedy_lp": -9.870371241049725e-05,
+   "beams": [
+    [
+     "TEACH | Viktor | sister | Nadia",
+     -9.512759424978867e-05
+    ],
+    [
+     "TEACH | Viktor | sister | Naadia",
+     -11.198822975158691
+    ],
+    [
+     "TEACH | Viktor | sister | Nadia",
+     -11.257762908935547
+    ],
+    [
+     "TEACH | Viktore | sister | Nadia",
+     -11.426995277404785
+    ]
+   ],
+   "ms_greedy": 60.73,
+   "ms": 162.71,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Viktor",
+      "relation": "sister",
+      "value": "Nadia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-032-raw": {
+   "raw": "TEACH | my | hamster | pippa",
+   "greedy_lp": -0.00010347171750879625,
+   "beams": [
+    [
+     "TEACH | my | hamster | pippa",
+     -0.00011157760309288278
+    ],
+    [
+     "TEACH | My | hamster | pippa",
+     -10.562633514404297
+    ],
+    [
+     "TEACH | my | pet | pippa",
+     -11.125093460083008
+    ],
+    [
+     "TEACH | my | hamstercat | pippa",
+     -12.046565055847168
+    ]
+   ],
+   "ms_greedy": 82.47,
+   "ms": 169.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "hamster",
+      "value": "pippa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-032-norm": {
+   "raw": "TEACH | my | hamster | Pippa",
+   "greedy_lp": -0.0004644737431860335,
+   "beams": [
+    [
+     "TEACH | my | hamster | Pippa",
+     -0.00046137464232742786
+    ],
+    [
+     "TEACH | My | hamster | Pippa",
+     -7.8755106925964355
+    ],
+    [
+     "TEACH | my | pet | Pippa",
+     -11.125452041625977
+    ],
+    [
+     "TEACH | my | hamstercat | Pippa",
+     -12.535163879394531
+    ]
+   ],
+   "ms_greedy": 64.61,
+   "ms": 179.8,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "hamster",
+      "value": "Pippa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-033-raw": {
+   "raw": "TEACH | felixs turtle | owner | otto",
+   "greedy_lp": -1.0134213029186867,
+   "beams": [
+    [
+     "TEACH | felixs turtle | owner | otto",
+     -1.0077449083328247
+    ],
+    [
+     "TEACH | Felixs turtle | owner | otto",
+     -2.122920513153076
+    ],
+    [
+     "TEACH | feliks turtle | owner | otto",
+     -2.3336918354034424
+    ],
+    [
+     "TEACH | Felixs Turtle | owner | otto",
+     -2.7592861652374268
+    ]
+   ],
+   "ms_greedy": 68.53,
+   "ms": 153.26,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "felixs turtle",
+      "relation": "owner",
+      "value": "otto"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-033-norm": {
+   "raw": "TEACH | Felixs turtle | owner | Otto",
+   "greedy_lp": -0.15175402025212748,
+   "beams": [
+    [
+     "TEACH | Felixs turtle | owner | Otto",
+     -0.15201430022716522
+    ],
+    [
+     "TEACH | Felixs | turtle | Otto",
+     -2.133606433868408
+    ],
+    [
+     "TEACH | Felixs turtle | creator | Otto",
+     -5.2770586013793945
+    ],
+    [
+     "TEACH | Felixs turtle | nickname | Otto",
+     -5.9020185470581055
+    ]
+   ],
+   "ms_greedy": 61.33,
+   "ms": 134.31,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Felixs turtle",
+      "relation": "owner",
+      "value": "Otto",
+      "why": "UNSURE",
+      "margin": 5.125044301152229
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-034-raw": {
+   "raw": "TEACH | jonass | mother | greta",
+   "greedy_lp": -0.00970482228410674,
+   "beams": [
+    [
+     "TEACH | jonass | mother | greta",
+     -0.009203635156154633
+    ],
+    [
+     "TEACH | Jonass | mother | greta",
+     -5.262882709503174
+    ],
+    [
+     "TEACH |Jonass | mother | greta",
+     -7.267669200897217
+    ],
+    [
+     "TEACH | jonass mother | mother | greta",
+     -7.637676239013672
+    ]
+   ],
+   "ms_greedy": 68.7,
+   "ms": 162.39,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "jonass",
+      "relation": "mother",
+      "value": "greta",
+      "why": "UNSURE",
+      "margin": 7.628472603857517
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-034-norm": {
+   "raw": "TEACH | Jonas | mother | Greta",
+   "greedy_lp": -0.01286473302081248,
+   "beams": [
+    [
+     "TEACH | Jonas | mother | Greta",
+     -0.012912328355014324
+    ],
+    [
+     "TEACH |Jonas | mother | Greta",
+     -4.387962341308594
+    ],
+    [
+     "TEACH | Jonathan | mother | Greta",
+     -8.82544994354248
+    ],
+    [
+     "TEACH | Jona | mother | Greta",
+     -9.436596870422363
+    ]
+   ],
+   "ms_greedy": 69.28,
+   "ms": 141.55,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Jonas",
+      "relation": "mother",
+      "value": "Greta"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-035-raw": {
+   "raw": "TEACH | my | friend | emil",
+   "greedy_lp": -7.891530030690319e-05,
+   "beams": [
+    [
+     "TEACH | my | friend | emil",
+     -7.98689725343138e-05
+    ],
+    [
+     "TEACH | my |friend | emil",
+     -11.500136375427246
+    ],
+    [
+     "TEACH | my | friend | eli",
+     -11.908404350280762
+    ],
+    [
+     "TEACH | my | friend | elm",
+     -11.931709289550781
+    ]
+   ],
+   "ms_greedy": 56.27,
+   "ms": 123.57,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "friend",
+      "value": "emil"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-035-norm": {
+   "raw": "TEACH | my | friend | Emil",
+   "greedy_lp": -0.00027140695600991194,
+   "beams": [
+    [
+     "TEACH | my | friend | Emil",
+     -0.00030644534854218364
+    ],
+    [
+     "TEACH | My | friend | Emil",
+     -8.250303268432617
+    ],
+    [
+     "TEACH | my |friend | Emil",
+     -11.625311851501465
+    ],
+    [
+     "TEACH | me | friend | Emil",
+     -12.50031852722168
+    ]
+   ],
+   "ms_greedy": 56.61,
+   "ms": 122.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "friend",
+      "value": "Emil"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-036-raw": {
+   "raw": "TEACH | deles | cat | suki",
+   "greedy_lp": -1.18459870146296,
+   "beams": [],
+   "ms_greedy": 67.18,
+   "ms": 67.31,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-036-norm": {
+   "raw": "TEACH | Adele | cat | Suki",
+   "greedy_lp": -0.025310130073357584,
+   "beams": [
+    [
+     "TEACH | Adele | cat | Suki",
+     -0.026768891140818596
+    ],
+    [
+     "TEACH | Adele | cat | Suki",
+     -4.772942543029785
+    ],
+    [
+     "TEACH | Dele | cat | Suki",
+     -5.426904678344727
+    ],
+    [
+     "TEACH | Adele | cat | Suki",
+     -5.870913028717041
+    ]
+   ],
+   "ms_greedy": 61.56,
+   "ms": 146.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Adele",
+      "relation": "cat",
+      "value": "Suki"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-037-raw": {
+   "raw": "TEACH | i | occupation | mason",
+   "greedy_lp": -0.003222194160798608,
+   "beams": [
+    [
+     "TEACH | i | occupation | mason",
+     -0.002903999062255025
+    ],
+    [
+     "TEACH | i | occupation | masonry",
+     -6.2532219886779785
+    ],
+    [
+     "TEACH | i | occupation | Mason",
+     -7.752993106842041
+    ],
+    [
+     "TEACH |i | occupation | mason",
+     -9.752985954284668
+    ]
+   ],
+   "ms_greedy": 56.75,
+   "ms": 123.47,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "occupation",
+      "value": "mason"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-037-norm": {
+   "raw": "TEACH | i | occupation | Mason",
+   "greedy_lp": -0.009889983557513915,
+   "beams": [
+    [
+     "TEACH | i | occupation | Mason",
+     -0.009048964828252792
+    ],
+    [
+     "TEACH | i | occupation | mason",
+     -5.009167194366455
+    ],
+    [
+     "TEACH | i | occupation | masonry",
+     -7.010435104370117
+    ],
+    [
+     "TEACH | i | occupation | Masons",
+     -8.273734092712402
+    ]
+   ],
+   "ms_greedy": 52.4,
+   "ms": 119.42,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "i",
+      "relation": "occupation",
+      "value": "Mason"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-038-raw": {
+   "raw": "TEACH | brunoss dog | owner | wuff",
+   "greedy_lp": -0.4135340150430622,
+   "beams": [
+    [
+     "TEACH | brunoss dog | owner | wuff",
+     -0.43779081106185913
+    ],
+    [
+     "TEACH | brunoss | dog | wuff",
+     -1.7987945079803467
+    ],
+    [
+     "TEACH | brunoss dog | nickname | wuff",
+     -2.937793731689453
+    ],
+    [
+     "TEACH | brunoss dog | son | wuff",
+     -4.562784671783447
+    ]
+   ],
+   "ms_greedy": 82.02,
+   "ms": 165.24,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "brunoss dog",
+      "relation": "owner",
+      "value": "wuff",
+      "why": "UNSURE",
+      "margin": 1.3610036969184875
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-038-norm": {
+   "raw": "TEACH | Brunos | dog | Wuff",
+   "greedy_lp": -0.03182325231318828,
+   "beams": [
+    [
+     "TEACH | Brunos | dog | Wuff",
+     -0.031924016773700714
+    ],
+    [
+     "TEACH | Bruno | dog | Wuff",
+     -3.5327255725860596
+    ],
+    [
+     "TEACH | Bruns | dog | Wuff",
+     -7.031926155090332
+    ],
+    [
+     "TEACH | Brunos | dog | Wuff",
+     -8.02605152130127
+    ]
+   ],
+   "ms_greedy": 61.03,
+   "ms": 140.38,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Brunos",
+      "relation": "dog",
+      "value": "Wuff"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-039-raw": {
+   "raw": "TEACH | my | employer | kessler",
+   "greedy_lp": -0.0002480490846821226,
+   "beams": [
+    [
+     "TEACH | my | employer | kessler",
+     -0.0002616356941871345
+    ],
+    [
+     "TEACH | My | employer | kessler",
+     -9.437763214111328
+    ],
+    [
+     "TEACH | the user | employer | kessler",
+     -11.402329444885254
+    ],
+    [
+     "TEACH | i | employer | kessler",
+     -11.62600326538086
+    ]
+   ],
+   "ms_greedy": 78.73,
+   "ms": 157.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "employer",
+      "value": "kessler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-039-norm": {
+   "raw": "TEACH | my | employer | Kessler",
+   "greedy_lp": -0.0019700419949373327,
+   "beams": [
+    [
+     "TEACH | my | employer | Kessler",
+     -0.0017512190388515592
+    ],
+    [
+     "TEACH | My | employer | Kessler",
+     -6.501755237579346
+    ],
+    [
+     "TEACH | I | employer | Kessler",
+     -10.376798629760742
+    ],
+    [
+     "TEACH | the user | employer | Kessler",
+     -11.698332786560059
+    ]
+   ],
+   "ms_greedy": 70.19,
+   "ms": 175.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "employer",
+      "value": "Kessler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-040-raw": {
+   "raw": "TEACH | sane | language | dutch",
+   "greedy_lp": -1.7451320243412738,
+   "beams": [],
+   "ms_greedy": 86.68,
+   "ms": 86.83,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-040-norm": {
+   "raw": "TEACH | Sanne Speaks Dutch Daily | language | Dutch",
+   "greedy_lp": -1.2277572794679301,
+   "beams": [
+    [
+     "TEACH | Sanne Speaks Dutch Daily | language | Dutch",
+     -1.2632819414138794
+    ],
+    [
+     "TEACH | Sanne Speaks | language | Dutch",
+     -2.86779522895813
+    ],
+    [
+     "TEACH | Sanne Speaks Dutch | daily | daily",
+     -3.3040847778320312
+    ],
+    [
+     "TEACH | Sanne Speaks Dutch | daily | Dutch",
+     -4.087288856506348
+    ]
+   ],
+   "ms_greedy": 72.08,
+   "ms": 168.13,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Sanne Speaks Dutch Daily",
+      "relation": "language",
+      "value": "Dutch",
+      "why": "UNSURE",
+      "margin": 1.6045132875442505
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-041-raw": {
+   "raw": "ASK | nora | city",
+   "greedy_lp": -0.005207199624230441,
+   "beams": [],
+   "ms_greedy": 44.61,
+   "ms": 44.65,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "nora",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-041-norm": {
+   "raw": "ASK | Nora | city",
+   "greedy_lp": -0.004336239463746949,
+   "beams": [],
+   "ms_greedy": 52.91,
+   "ms": 52.94,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Nora",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-042-raw": {
+   "raw": "ASK | martas | sister",
+   "greedy_lp": -0.022380844035012615,
+   "beams": [],
+   "ms_greedy": 44.41,
+   "ms": 44.45,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "martas",
+      "relation": [
+       "sister"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-042-norm": {
+   "raw": "ASK | Marta | sister",
+   "greedy_lp": -0.0005584709520007891,
+   "beams": [],
+   "ms_greedy": 44.34,
+   "ms": 44.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Marta",
+      "relation": [
+       "sister"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-043-raw": {
+   "raw": "ASK | pavel | occupation",
+   "greedy_lp": -0.0005779858571770546,
+   "beams": [],
+   "ms_greedy": 44.26,
+   "ms": 44.29,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "pavel",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-043-norm": {
+   "raw": "ASK | Pavel | occupation",
+   "greedy_lp": -0.0003335253919303227,
+   "beams": [],
+   "ms_greedy": 52.71,
+   "ms": 52.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Pavel",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-044-raw": {
+   "raw": "ASK | my | boss",
+   "greedy_lp": -3.349751247583299e-05,
+   "beams": [],
+   "ms_greedy": 44.59,
+   "ms": 44.63,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-044-norm": {
+   "raw": "ASK | my | boss",
+   "greedy_lp": -3.349751247583299e-05,
+   "beams": [],
+   "ms_greedy": 40.57,
+   "ms": 40.6,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-045-raw": {
+   "raw": "ASK | sanne | language",
+   "greedy_lp": -0.012429512069005,
+   "beams": [],
+   "ms_greedy": 44.56,
+   "ms": 44.7,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "sanne",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-045-norm": {
+   "raw": "ASK | Sanne | language",
+   "greedy_lp": -0.0058878261841925905,
+   "beams": [],
+   "ms_greedy": 50.15,
+   "ms": 50.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sanne",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-046-raw": {
+   "raw": "ASK | louiss | brother",
+   "greedy_lp": -0.021555236782603515,
+   "beams": [],
+   "ms_greedy": 52.99,
+   "ms": 53.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "louiss",
+      "relation": [
+       "brother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-046-norm": {
+   "raw": "ASK | Louis | brother",
+   "greedy_lp": -0.000718031080396031,
+   "beams": [],
+   "ms_greedy": 40.81,
+   "ms": 40.84,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Louis",
+      "relation": [
+       "brother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-047-raw": {
+   "raw": "ASK | dario | employer",
+   "greedy_lp": -0.00018929807298206924,
+   "beams": [],
+   "ms_greedy": 44.36,
+   "ms": 44.39,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "dario",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-047-norm": {
+   "raw": "ASK | Dario | employer",
+   "greedy_lp": -0.0001493645235512986,
+   "beams": [],
+   "ms_greedy": 44.78,
+   "ms": 44.84,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Dario",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-048-raw": {
+   "raw": "ASK | ines | school",
+   "greedy_lp": -9.620048496117306e-05,
+   "beams": [],
+   "ms_greedy": 44.74,
+   "ms": 44.78,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "ines",
+      "relation": [
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-048-norm": {
+   "raw": "ASK | Ines | school",
+   "greedy_lp": -9.584113956151441e-05,
+   "beams": [],
+   "ms_greedy": 51.83,
+   "ms": 51.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Ines",
+      "relation": [
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-049-raw": {
+   "raw": "ASK | selmas | boss",
+   "greedy_lp": -0.0027658308515867702,
+   "beams": [],
+   "ms_greedy": 44.3,
+   "ms": 44.43,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "selmas",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-049-norm": {
+   "raw": "ASK | Selma | boss",
+   "greedy_lp": -0.0009492579273455704,
+   "beams": [],
+   "ms_greedy": 44.4,
+   "ms": 44.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Selma",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-050-raw": {
+   "raw": "ASK | theo | city",
+   "greedy_lp": -0.0035775108558340207,
+   "beams": [],
+   "ms_greedy": 44.63,
+   "ms": 44.67,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "theo",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-050-norm": {
+   "raw": "ASK | Theo | city",
+   "greedy_lp": -0.00011205389992596793,
+   "beams": [],
+   "ms_greedy": 44.99,
+   "ms": 45.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Theo",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-051-raw": {
+   "raw": "ASK | my | neighbour",
+   "greedy_lp": -2.574899876606196e-05,
+   "beams": [],
+   "ms_greedy": 40.55,
+   "ms": 40.59,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "neighbour"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-051-norm": {
+   "raw": "ASK | my | neighbour",
+   "greedy_lp": -2.574899876606196e-05,
+   "beams": [],
+   "ms_greedy": 40.34,
+   "ms": 40.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "neighbour"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-052-raw": {
+   "raw": "ASK | tarik | occupation",
+   "greedy_lp": -0.0010342268711767133,
+   "beams": [],
+   "ms_greedy": 44.42,
+   "ms": 44.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "tarik",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-052-norm": {
+   "raw": "ASK | Tarik | occupation",
+   "greedy_lp": -0.0001555620831013016,
+   "beams": [],
+   "ms_greedy": 44.51,
+   "ms": 44.55,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tarik",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-053-raw": {
+   "raw": "ASK | jonass | mother",
+   "greedy_lp": -0.0005071637483453628,
+   "beams": [],
+   "ms_greedy": 48.91,
+   "ms": 48.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "jonass",
+      "relation": [
+       "mother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-053-norm": {
+   "raw": "ASK | Jonas | mother",
+   "greedy_lp": -0.0010802138365306746,
+   "beams": [],
+   "ms_greedy": 53.85,
+   "ms": 53.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Jonas",
+      "relation": [
+       "mother"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-054-raw": {
+   "raw": "ASK | sanne | hometown",
+   "greedy_lp": -0.006487629936088979,
+   "beams": [],
+   "ms_greedy": 53.18,
+   "ms": 53.22,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "sanne",
+      "relation": [
+       "hometown"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-054-norm": {
+   "raw": "ASK | Sanne Grow | hometown",
+   "greedy_lp": -0.000759732288621251,
+   "beams": [],
+   "ms_greedy": 56.79,
+   "ms": 56.94,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Sanne Grow",
+      "relation": [
+       "hometown"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-055-raw": {
+   "raw": "ASK | my | cousin",
+   "greedy_lp": -3.814662929357837e-05,
+   "beams": [],
+   "ms_greedy": 49.11,
+   "ms": 49.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "cousin"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-055-norm": {
+   "raw": "ASK | my | cousin",
+   "greedy_lp": -3.814662929357837e-05,
+   "beams": [],
+   "ms_greedy": 48.98,
+   "ms": 49.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "my",
+      "relation": [
+       "cousin"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-056-raw": {
+   "raw": "TEACH | my | busiest_month | april",
+   "greedy_lp": -0.3497916602643443,
+   "beams": [],
+   "ms_greedy": 77.35,
+   "ms": 77.39,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-056-norm": {
+   "raw": "TEACH | my | busiest_month | April",
+   "greedy_lp": -0.015551591582152469,
+   "beams": [],
+   "ms_greedy": 72.9,
+   "ms": 72.94,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-057-raw": {
+   "raw": "NONE",
+   "greedy_lp": -0.10061638801380468,
+   "beams": [],
+   "ms_greedy": 28.57,
+   "ms": 28.59,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-057-norm": {
+   "raw": "TEACH | my | rose_bush | finally_bloomed",
+   "greedy_lp": -0.6135587026956202,
+   "beams": [],
+   "ms_greedy": 75.56,
+   "ms": 75.6,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-058-raw": {
+   "raw": "NONE",
+   "greedy_lp": -1.1801687264778593e-05,
+   "beams": [],
+   "ms_greedy": 28.87,
+   "ms": 28.89,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-058-norm": {
+   "raw": "NONE",
+   "greedy_lp": -1.227852084184633e-05,
+   "beams": [],
+   "ms_greedy": 28.85,
+   "ms": 28.87,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-059-raw": {
+   "raw": "TEACH | the bill | price | twelve dollars",
+   "greedy_lp": -0.3899015679260103,
+   "beams": [],
+   "ms_greedy": 60.57,
+   "ms": 60.72,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-059-norm": {
+   "raw": "TEACH | Twelve Dollars | bill | the Bill",
+   "greedy_lp": -0.5189289237914636,
+   "beams": [],
+   "ms_greedy": 64.29,
+   "ms": 64.43,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-060-raw": {
+   "raw": "NONE",
+   "greedy_lp": -0.00047934717929365434,
+   "beams": [],
+   "ms_greedy": 29.11,
+   "ms": 29.12,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-060-norm": {
+   "raw": "TEACH | my | June Deadline | Tight",
+   "greedy_lp": -0.5328658613883022,
+   "beams": [],
+   "ms_greedy": 63.98,
+   "ms": 64.01,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-061-raw": {
+   "raw": "TEACH | hunter | occupation | tough job in winter",
+   "greedy_lp": -0.3512970824701753,
+   "beams": [
+    [
+     "TEACH | hunter | occupation | tough job in winter",
+     -0.3520072102546692
+    ],
+    [
+     "TEACH | hunter | occupation | tough job\nTEACH | hunter | work_environment | winter",
+     -2.235428810119629
+    ],
+    [
+     "TEACH | hunter | occupation | tough job\nTEACH | hunter | work_season | winter",
+     -2.8606953620910645
+    ],
+    [
+     "TEACH | hunter | occupation | tough job\nTEACH | hunter | work_location | winter",
+     -3.4866812229156494
+    ]
+   ],
+   "ms_greedy": 64.69,
+   "ms": 187.44,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "hunter",
+      "relation": "occupation",
+      "value": "tough job in winter",
+      "why": "UNSURE",
+      "margin": 3.1346740126609802
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-061-norm": {
+   "raw": "TEACH | Hunter | occupation | Tough job\nTEACH | Hunter | work_location | Winter",
+   "greedy_lp": -0.3816828084637649,
+   "beams": [
+    [
+     "TEACH | Hunter | occupation | Tough job\nTEACH | Hunter | work_location | Winter",
+     -0.3733068108558655
+    ],
+    [
+     "TEACH | Hunter | occupation | Tough job in Winter",
+     -1.6048904657363892
+    ],
+    [
+     "TEACH | Hunter | occupation | Tough job\nTEACH | Hunter | place_of_birth | Winter",
+     -3.7467002868652344
+    ],
+    [
+     "TEACH | Hunter | occupation | Tough job\nTEACH | Hunter | location | Winter",
+     -4.116524696350098
+    ]
+   ],
+   "ms_greedy": 103.49,
+   "ms": 242.1,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Hunter",
+      "relation": "occupation",
+      "value": "Tough job",
+      "why": "UNSURE",
+      "margin": 1.2315836548805237
+     },
+     {
+      "act": "TEACH",
+      "subject": "Hunter",
+      "relation": "work_location",
+      "value": "Winter",
+      "why": "UNSURE",
+      "margin": 1.2315836548805237
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-062-raw": {
+   "raw": "NONE",
+   "greedy_lp": -1.585476547916187e-05,
+   "beams": [],
+   "ms_greedy": 37.86,
+   "ms": 37.88,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-062-norm": {
+   "raw": "NONE",
+   "greedy_lp": -0.08939751981415611,
+   "beams": [],
+   "ms_greedy": 30.78,
+   "ms": 30.8,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-063-raw": {
+   "raw": "NONE",
+   "greedy_lp": -4.446429238669225e-05,
+   "beams": [],
+   "ms_greedy": 28.96,
+   "ms": 28.97,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-063-norm": {
+   "raw": "NONE",
+   "greedy_lp": -0.5248821377635977,
+   "beams": [],
+   "ms_greedy": 28.8,
+   "ms": 28.82,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-064-raw": {
+   "raw": "TEACH | the ruby glass | color | red",
+   "greedy_lp": -0.1305515295834354,
+   "beams": [
+    [
+     "TEACH | the ruby glass | color | red",
+     -0.1463196575641632
+    ],
+    [
+     "TEACH | the ruby glass on the shelf | color | red",
+     -2.0211687088012695
+    ],
+    [
+     "NONE",
+     -6.376760005950928
+    ],
+    [
+     "TEACH | ruby glass | color | red",
+     -7.518006801605225
+    ]
+   ],
+   "ms_greedy": 64.26,
+   "ms": 157.58,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "the ruby glass",
+      "relation": "color",
+      "value": "red",
+      "why": "UNSURE",
+      "margin": 1.8748490512371063
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-064-norm": {
+   "raw": "TEACH | the Ruby Glass on the Shelf | color | red",
+   "greedy_lp": -0.748129228630205,
+   "beams": [
+    [
+     "TEACH | the Ruby Glass on the Shelf | color | red",
+     -0.7440798282623291
+    ],
+    [
+     "TEACH | the Ruby Glass on the Shelf | color | Red",
+     -1.3690766096115112
+    ],
+    [
+     "TEACH | the Ruby Glass on the Shelf | owner | Red",
+     -2.6441915035247803
+    ],
+    [
+     "TEACH | The Ruby Glass on the Shelf | color | Red",
+     -2.9373016357421875
+    ]
+   ],
+   "ms_greedy": 76.61,
+   "ms": 169.39,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "the Ruby Glass on the Shelf",
+      "relation": "color",
+      "value": "red",
+      "why": "UNSURE",
+      "margin": 1.9001116752624512
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-065-raw": {
+   "raw": "TEACH | my iris patch by the fence | blooming",
+   "greedy_lp": -1.2445487945319584,
+   "beams": [],
+   "ms_greedy": 64.75,
+   "ms": 64.77,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-065-norm": {
+   "raw": "TEACH | my | iris_patch | Blooming",
+   "greedy_lp": -1.2359489944662982,
+   "beams": [],
+   "ms_greedy": 64.36,
+   "ms": 64.4,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-066-raw": {
+   "raw": "NONE",
+   "greedy_lp": -0.0004244156530148757,
+   "beams": [],
+   "ms_greedy": 28.9,
+   "ms": 28.92,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-066-norm": {
+   "raw": "TEACH | i | need | Grace",
+   "greedy_lp": -1.3814047651653425,
+   "beams": [],
+   "ms_greedy": 52.57,
+   "ms": 52.6,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-067-raw": {
+   "raw": "NONE",
+   "greedy_lp": -0.000558819544949074,
+   "beams": [],
+   "ms_greedy": 29.03,
+   "ms": 29.05,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-067-norm": {
+   "raw": "TEACH | the Chase | successor | Wild",
+   "greedy_lp": -0.8021851690459627,
+   "beams": [],
+   "ms_greedy": 56.33,
+   "ms": 56.47,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-068-raw": {
+   "raw": "TEACH | may | work_style | hectic",
+   "greedy_lp": -2.356743383497019,
+   "beams": [],
+   "ms_greedy": 64.35,
+   "ms": 64.48,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-068-norm": {
+   "raw": "TEACH | may | occupation | Always Hectic",
+   "greedy_lp": -0.7047870086018975,
+   "beams": [
+    [
+     "TEACH | may | occupation | Always Hectic",
+     -0.6728537082672119
+    ],
+    [
+     "TEACH | may | occupation | always hectic",
+     -1.6421464681625366
+    ],
+    [
+     "TEACH | may | occupation | always Hectic",
+     -2.101508855819702
+    ],
+    [
+     "TEACH | may | occupation | Hectic",
+     -2.296985387802124
+    ]
+   ],
+   "ms_greedy": 64.07,
+   "ms": 141.52,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "may",
+      "relation": "occupation",
+      "value": "Always Hectic",
+      "why": "UNSURE",
+      "margin": 1.624131679534912
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-069-raw": {
+   "raw": "TEACH | the old canal | line | reed beds",
+   "greedy_lp": -1.9243137655689608,
+   "beams": [],
+   "ms_greedy": 64.55,
+   "ms": 64.69,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-069-norm": {
+   "raw": "TEACH | Reed Beds | line_of_work | Old Canal",
+   "greedy_lp": -2.9927908088011463,
+   "beams": [],
+   "ms_greedy": 80.24,
+   "ms": 80.37,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-070-raw": {
+   "raw": "TEACH | the blue coat | color | pearl buttons",
+   "greedy_lp": -1.768968040905058,
+   "beams": [
+    [
+     "TEACH | pearl buttons | color | blue coat",
+     -1.4232221841812134
+    ],
+    [
+     "TEACH | the blue coat | color | pearl buttons",
+     -1.950626254081726
+    ],
+    [
+     "TEACH | the blue coat | accessory | pearl buttons",
+     -2.720127820968628
+    ],
+    [
+     "TEACH | pearl buttons | suit | blue coat",
+     -3.1111373901367188
+    ]
+   ],
+   "ms_greedy": 72.92,
+   "ms": 191.48,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "the blue coat",
+      "relation": "color",
+      "value": "pearl buttons",
+      "why": "UNSURE",
+      "margin": -0.5274040699005127
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-070-norm": {
+   "raw": "TEACH | The Blue Coat | color | pearl buttons suit\nTEACH | The Blue Coat | designer | pearl buttons suit",
+   "greedy_lp": -3.1537715713713723,
+   "beams": [
+    [
+     "TEACH | The Blue Coat | color | pearl buttons suit the blue coat",
+     -2.357449769973755
+    ],
+    [
+     "TEACH | The Blue Coat | designer | Pearl Buttons Suit the Blue Coat",
+     -2.9479892253875732
+    ],
+    [
+     "TEACH | The Blue Coat | color | pearl buttons suit\nTEACH | The Blue Coat | designer | pearl buttons suit",
+     -3.095862627029419
+    ],
+    [
+     "TEACH | The Blue Coat | color | Pearl Buttons Suit the Blue Coat",
+     -3.330930471420288
+    ]
+   ],
+   "ms_greedy": 121.72,
+   "ms": 292.76,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "The Blue Coat",
+      "relation": "color",
+      "value": "pearl buttons suit",
+      "why": "UNSURE",
+      "margin": -0.7384128570556641
+     },
+     {
+      "act": "TEACH",
+      "subject": "The Blue Coat",
+      "relation": "designer",
+      "value": "pearl buttons suit",
+      "why": "UNSURE",
+      "margin": -0.7384128570556641
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-071-raw": {
+   "raw": "TEACH | My | dog | Pip",
+   "greedy_lp": -1.8596606501830593e-05,
+   "beams": [
+    [
+     "TEACH | My | dog | Pip",
+     -1.8238977645523846e-05
+    ],
+    [
+     "TEACH |My | dog | Pip",
+     -12.625019073486328
+    ],
+    [
+     "TEACH My | My | dog | Pip",
+     -12.750188827514648
+    ],
+    [
+     "TEACH | My | dog | Pip<|im_start|>",
+     -13.12887954711914
+    ]
+   ],
+   "ms_greedy": 60.33,
+   "ms": 131.69,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "dog",
+      "value": "Pip"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-071-norm": {
+   "raw": "TEACH | My | dog | Pip",
+   "greedy_lp": -1.8596606501830593e-05,
+   "beams": [
+    [
+     "TEACH | My | dog | Pip",
+     -1.8238977645523846e-05
+    ],
+    [
+     "TEACH |My | dog | Pip",
+     -12.625019073486328
+    ],
+    [
+     "TEACH My | My | dog | Pip",
+     -12.750188827514648
+    ],
+    [
+     "TEACH | My | dog | Pip<|im_start|>",
+     -13.12887954711914
+    ]
+   ],
+   "ms_greedy": 52.82,
+   "ms": 125.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "dog",
+      "value": "Pip"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-072-raw": {
+   "raw": "TEACH | Nora | city | Kelsow",
+   "greedy_lp": -0.03134380599194486,
+   "beams": [
+    [
+     "TEACH | Nora | city | Kelsow",
+     -0.027813632041215897
+    ],
+    [
+     "TEACH |Nora | city | Kelsow",
+     -5.458998203277588
+    ],
+    [
+     "TEACH | Noor | city | Kelsow",
+     -5.5964155197143555
+    ],
+    [
+     "TEACH | Orna | city | Kelsow",
+     -5.899884223937988
+    ]
+   ],
+   "ms_greedy": 74.72,
+   "ms": 173.24,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Nora",
+      "relation": "city",
+      "value": "Kelsow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-072-norm": {
+   "raw": "TEACH | Nora | city | Kelsow",
+   "greedy_lp": -0.03134380599194486,
+   "beams": [
+    [
+     "TEACH | Nora | city | Kelsow",
+     -0.027813632041215897
+    ],
+    [
+     "TEACH |Nora | city | Kelsow",
+     -5.458998203277588
+    ],
+    [
+     "TEACH | Noor | city | Kelsow",
+     -5.5964155197143555
+    ],
+    [
+     "TEACH | Orna | city | Kelsow",
+     -5.899884223937988
+    ]
+   ],
+   "ms_greedy": 66.35,
+   "ms": 148.3,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Nora",
+      "relation": "city",
+      "value": "Kelsow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-073-raw": {
+   "raw": "TEACH | Pavel | occupation | baker",
+   "greedy_lp": -0.0005853126111077245,
+   "beams": [
+    [
+     "TEACH | Pavel | occupation | baker",
+     -0.0005277613527141511
+    ],
+    [
+     "TEACH | Paev | occupation | baker",
+     -9.192325592041016
+    ],
+    [
+     "NONE",
+     -9.625073432922363
+    ],
+    [
+     "TEACH | P\u00e1vlo | occupation | baker",
+     -10.456083297729492
+    ]
+   ],
+   "ms_greedy": 56.73,
+   "ms": 150.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Pavel",
+      "relation": "occupation",
+      "value": "baker"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-073-norm": {
+   "raw": "TEACH | Pavel | occupation | baker",
+   "greedy_lp": -0.0005853126111077245,
+   "beams": [
+    [
+     "TEACH | Pavel | occupation | baker",
+     -0.0005277613527141511
+    ],
+    [
+     "TEACH | Paev | occupation | baker",
+     -9.192325592041016
+    ],
+    [
+     "NONE",
+     -9.625073432922363
+    ],
+    [
+     "TEACH | P\u00e1vlo | occupation | baker",
+     -10.456083297729492
+    ]
+   ],
+   "ms_greedy": 56.95,
+   "ms": 162.96,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Pavel",
+      "relation": "occupation",
+      "value": "baker"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-074-raw": {
+   "raw": "TEACH | My | sister | Livia",
+   "greedy_lp": -7.16431342056012e-05,
+   "beams": [
+    [
+     "TEACH | My | sister | Livia",
+     -7.176234794314951e-05
+    ],
+    [
+     "TEACH | My | sister | Lelia",
+     -10.630516052246094
+    ],
+    [
+     "TEACH | My | sister | Liota",
+     -11.638718605041504
+    ],
+    [
+     "TEACH | My | sister | Liavia",
+     -12.684442520141602
+    ]
+   ],
+   "ms_greedy": 57.87,
+   "ms": 150.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Livia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-074-norm": {
+   "raw": "TEACH | My | sister | Livia",
+   "greedy_lp": -7.16431342056012e-05,
+   "beams": [
+    [
+     "TEACH | My | sister | Livia",
+     -7.176234794314951e-05
+    ],
+    [
+     "TEACH | My | sister | Lelia",
+     -10.630516052246094
+    ],
+    [
+     "TEACH | My | sister | Liota",
+     -11.638718605041504
+    ],
+    [
+     "TEACH | My | sister | Liavia",
+     -12.684442520141602
+    ]
+   ],
+   "ms_greedy": 83.12,
+   "ms": 155.11,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Livia"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-075-raw": {
+   "raw": "TEACH | my | dog | Kiko",
+   "greedy_lp": -0.0002037121750930737,
+   "beams": [
+    [
+     "TEACH | my | dog | Kiko",
+     -0.00020037498325109482
+    ],
+    [
+     "TEACH | my | dog | Kaiko",
+     -9.754314422607422
+    ],
+    [
+     "TEACH | my | dog | Ciko",
+     -10.136277198791504
+    ],
+    [
+     "TEACH | my | dog | Kiiko",
+     -11.089999198913574
+    ]
+   ],
+   "ms_greedy": 58.23,
+   "ms": 125.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "Kiko"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-075-norm": {
+   "raw": "TEACH | my | dog | Kiko",
+   "greedy_lp": -0.0002037121750930737,
+   "beams": [
+    [
+     "TEACH | my | dog | Kiko",
+     -0.00020037498325109482
+    ],
+    [
+     "TEACH | my | dog | Kaiko",
+     -9.754314422607422
+    ],
+    [
+     "TEACH | my | dog | Ciko",
+     -10.136277198791504
+    ],
+    [
+     "TEACH | my | dog | Kiiko",
+     -11.089999198913574
+    ]
+   ],
+   "ms_greedy": 56.04,
+   "ms": 122.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "Kiko"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-076-raw": {
+   "raw": "TEACH | I | language | Spanish",
+   "greedy_lp": -0.001521941648768177,
+   "beams": [
+    [
+     "TEACH | I | language | Spanish",
+     -0.0015532844699919224
+    ],
+    [
+     "TEACH | I | language_of_work_or_name | Spanish",
+     -6.879604339599609
+    ],
+    [
+     "TEACH | I | language |Spanish",
+     -8.376850128173828
+    ],
+    [
+     "NONE",
+     -9.375091552734375
+    ]
+   ],
+   "ms_greedy": 52.67,
+   "ms": 154.45,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Spanish",
+      "why": "UNSURE",
+      "margin": 6.8780510551296175
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-076-norm": {
+   "raw": "TEACH | I | language | Spanish",
+   "greedy_lp": -0.001521941648768177,
+   "beams": [
+    [
+     "TEACH | I | language | Spanish",
+     -0.0015532844699919224
+    ],
+    [
+     "TEACH | I | language_of_work_or_name | Spanish",
+     -6.879604339599609
+    ],
+    [
+     "TEACH | I | language |Spanish",
+     -8.376850128173828
+    ],
+    [
+     "NONE",
+     -9.375091552734375
+    ]
+   ],
+   "ms_greedy": 52.25,
+   "ms": 154.92,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Spanish",
+      "why": "UNSURE",
+      "margin": 6.8780510551296175
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-077-raw": {
+   "raw": "TEACH | Elsa | occupation | nurse",
+   "greedy_lp": -0.00019357926097285372,
+   "beams": [
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -0.0001715292310109362
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -8.784601211547852
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -12.267379760742188
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse<|im_start|>",
+     -12.530878067016602
+    ]
+   ],
+   "ms_greedy": 56.86,
+   "ms": 128.59,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Elsa",
+      "relation": "occupation",
+      "value": "nurse"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-077-norm": {
+   "raw": "TEACH | Elsa | occupation | nurse",
+   "greedy_lp": -0.00019357926097285372,
+   "beams": [
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -0.0001715292310109362
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -8.784601211547852
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse",
+     -12.267379760742188
+    ],
+    [
+     "TEACH | Elsa | occupation | nurse<|im_start|>",
+     -12.530878067016602
+    ]
+   ],
+   "ms_greedy": 56.56,
+   "ms": 139.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Elsa",
+      "relation": "occupation",
+      "value": "nurse"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-078-raw": {
+   "raw": "TEACH | My | boss | Selma",
+   "greedy_lp": -0.0002987079166913986,
+   "beams": [
+    [
+     "TEACH | My | boss | Selma",
+     -0.0003025220357812941
+    ],
+    [
+     "TEACH | My | boss | Selda",
+     -8.5670747756958
+    ],
+    [
+     "TEACH | My | boss |Selma",
+     -10.125300407409668
+    ],
+    [
+     "TEACH | My | employer | Selma",
+     -12.000358581542969
+    ]
+   ],
+   "ms_greedy": 56.61,
+   "ms": 122.98,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Selma"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-078-norm": {
+   "raw": "TEACH | My | boss | Selma",
+   "greedy_lp": -0.0002987079166913986,
+   "beams": [
+    [
+     "TEACH | My | boss | Selma",
+     -0.0003025220357812941
+    ],
+    [
+     "TEACH | My | boss | Selda",
+     -8.5670747756958
+    ],
+    [
+     "TEACH | My | boss |Selma",
+     -10.125300407409668
+    ],
+    [
+     "TEACH | My | employer | Selma",
+     -12.000358581542969
+    ]
+   ],
+   "ms_greedy": 56.02,
+   "ms": 122.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Selma"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-079-raw": {
+   "raw": "TEACH | Tessa | rabbit | Bobo",
+   "greedy_lp": -0.001367259963544143,
+   "beams": [
+    [
+     "TEACH | Tessa | rabbit | Bobo",
+     -0.001383469090797007
+    ],
+    [
+     "TEACH | Tessa | pet | Bobo",
+     -7.254756927490234
+    ],
+    [
+     "TEACH | Tessa | rabbit | Bozo",
+     -8.469025611877441
+    ],
+    [
+     "TEACH | Tessa | rabbit |Bobo",
+     -8.876383781433105
+    ]
+   ],
+   "ms_greedy": 60.64,
+   "ms": 163.13,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tessa",
+      "relation": "rabbit",
+      "value": "Bobo",
+      "why": "UNSURE",
+      "margin": 7.253373458399437
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-079-norm": {
+   "raw": "TEACH | Tessa | rabbit | Bobo",
+   "greedy_lp": -0.001367259963544143,
+   "beams": [
+    [
+     "TEACH | Tessa | rabbit | Bobo",
+     -0.001383469090797007
+    ],
+    [
+     "TEACH | Tessa | pet | Bobo",
+     -7.254756927490234
+    ],
+    [
+     "TEACH | Tessa | rabbit | Bozo",
+     -8.469025611877441
+    ],
+    [
+     "TEACH | Tessa | rabbit |Bobo",
+     -8.876383781433105
+    ]
+   ],
+   "ms_greedy": 80.9,
+   "ms": 178.5,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tessa",
+      "relation": "rabbit",
+      "value": "Bobo",
+      "why": "UNSURE",
+      "margin": 7.253373458399437
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-080-raw": {
+   "raw": "TEACH | Samir | employer | Halden",
+   "greedy_lp": -7.533824826566615e-05,
+   "beams": [
+    [
+     "TEACH | Samir | employer | Halden",
+     -7.891426503192633e-05
+    ],
+    [
+     "TEACH |Samir | employer | Halden",
+     -10.062782287597656
+    ],
+    [
+     "TEACH | Samuelir | employer | Halden",
+     -12.333340644836426
+    ],
+    [
+     "TEACH | Samir | work_location | Halden",
+     -13.269098281860352
+    ]
+   ],
+   "ms_greedy": 80.34,
+   "ms": 194.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Samir",
+      "relation": "employer",
+      "value": "Halden"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-080-norm": {
+   "raw": "TEACH | Samir | employer | Halden",
+   "greedy_lp": -7.533824826566615e-05,
+   "beams": [
+    [
+     "TEACH | Samir | employer | Halden",
+     -7.891426503192633e-05
+    ],
+    [
+     "TEACH |Samir | employer | Halden",
+     -10.062782287597656
+    ],
+    [
+     "TEACH | Samuelir | employer | Halden",
+     -12.333340644836426
+    ],
+    [
+     "TEACH | Samir | work_location | Halden",
+     -13.269098281860352
+    ]
+   ],
+   "ms_greedy": 73.18,
+   "ms": 177.06,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Samir",
+      "relation": "employer",
+      "value": "Halden"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-081-raw": {
+   "raw": "TEACH | Ines | school | Northfield",
+   "greedy_lp": -3.290151186519097e-05,
+   "beams": [
+    [
+     "TEACH | Ines | school | Northfield",
+     -3.2543881388846785e-05
+    ],
+    [
+     "TEACH | ines | school | northfield",
+     -11.487984657287598
+    ],
+    [
+     "TEACH | Ines | educated_at | Northfield",
+     -12.875062942504883
+    ],
+    [
+     "TEACH | Ines | school | Northfield<|im_start|>",
+     -13.099486351013184
+    ]
+   ],
+   "ms_greedy": 69.11,
+   "ms": 153.73,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ines",
+      "relation": "school",
+      "value": "Northfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-081-norm": {
+   "raw": "TEACH | Ines | school | Northfield",
+   "greedy_lp": -3.290151186519097e-05,
+   "beams": [
+    [
+     "TEACH | Ines | school | Northfield",
+     -3.2543881388846785e-05
+    ],
+    [
+     "TEACH | ines | school | northfield",
+     -11.487984657287598
+    ],
+    [
+     "TEACH | Ines | educated_at | Northfield",
+     -12.875062942504883
+    ],
+    [
+     "TEACH | Ines | school | Northfield<|im_start|>",
+     -13.099486351013184
+    ]
+   ],
+   "ms_greedy": 88.78,
+   "ms": 185.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ines",
+      "relation": "school",
+      "value": "Northfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-082-raw": {
+   "raw": "TEACH | My | brother | Renzo",
+   "greedy_lp": -0.00013470237216495207,
+   "beams": [
+    [
+     "TEACH | My | brother | Renzo",
+     -0.00013100705109536648
+    ],
+    [
+     "TEACH | My | brother |Renzo",
+     -9.500141143798828
+    ],
+    [
+     "TEACH | My |brother | Renzo",
+     -10.375319480895996
+    ],
+    [
+     "TEACH My | My | brother | Renzo",
+     -12.000137329101562
+    ]
+   ],
+   "ms_greedy": 56.59,
+   "ms": 130.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Renzo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-082-norm": {
+   "raw": "TEACH | My | brother | Renzo",
+   "greedy_lp": -0.00013470237216495207,
+   "beams": [
+    [
+     "TEACH | My | brother | Renzo",
+     -0.00013100705109536648
+    ],
+    [
+     "TEACH | My | brother |Renzo",
+     -9.500141143798828
+    ],
+    [
+     "TEACH | My |brother | Renzo",
+     -10.375319480895996
+    ],
+    [
+     "TEACH My | My | brother | Renzo",
+     -12.000137329101562
+    ]
+   ],
+   "ms_greedy": 75.23,
+   "ms": 163.18,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Renzo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-083-raw": {
+   "raw": "TEACH | my | cat | Luni",
+   "greedy_lp": -0.004798684569408351,
+   "beams": [],
+   "ms_greedy": 61.46,
+   "ms": 61.5,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-083-norm": {
+   "raw": "TEACH | my | cat | Luni",
+   "greedy_lp": -0.004798684569408351,
+   "beams": [],
+   "ms_greedy": 73.43,
+   "ms": 73.46,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-084-raw": {
+   "raw": "TEACH | Tarik | employer | Veldt",
+   "greedy_lp": -0.0016445802478273208,
+   "beams": [
+    [
+     "TEACH | Tarik | employer | Veldt",
+     -0.001579230884090066
+    ],
+    [
+     "TEACH | Tarik | employer | VelDT",
+     -7.376602649688721
+    ],
+    [
+     "TEACH | Tarik | employer | Velltd",
+     -7.952407360076904
+    ],
+    [
+     "TEACH | Tarik | boss | Veldt",
+     -8.876418113708496
+    ]
+   ],
+   "ms_greedy": 77.54,
+   "ms": 184.93,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tarik",
+      "relation": "employer",
+      "value": "Veldt",
+      "why": "UNSURE",
+      "margin": 8.874838882824406
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-084-norm": {
+   "raw": "TEACH | Tarik | employer | Veldt",
+   "greedy_lp": -0.0016445802478273208,
+   "beams": [
+    [
+     "TEACH | Tarik | employer | Veldt",
+     -0.001579230884090066
+    ],
+    [
+     "TEACH | Tarik | employer | VelDT",
+     -7.376602649688721
+    ],
+    [
+     "TEACH | Tarik | employer | Velltd",
+     -7.952407360076904
+    ],
+    [
+     "TEACH | Tarik | boss | Veldt",
+     -8.876418113708496
+    ]
+   ],
+   "ms_greedy": 75.85,
+   "ms": 154.21,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tarik",
+      "relation": "employer",
+      "value": "Veldt",
+      "why": "UNSURE",
+      "margin": 8.874838882824406
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-085-raw": {
+   "raw": "TEACH | My | hometown | Durnham",
+   "greedy_lp": -0.0003064488578985447,
+   "beams": [
+    [
+     "TEACH | My | hometown | Durnham",
+     -0.00037986080860719085
+    ],
+    [
+     "TEACH | My | hometown | Durnhaam",
+     -8.402300834655762
+    ],
+    [
+     "TEACH | My | hometown | Durnhaem",
+     -10.50008773803711
+    ],
+    [
+     "TEACH My | hometown | Durnham",
+     -10.575882911682129
+    ]
+   ],
+   "ms_greedy": 69.56,
+   "ms": 156.85,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hometown",
+      "value": "Durnham"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-085-norm": {
+   "raw": "TEACH | My | hometown | Durnham",
+   "greedy_lp": -0.0003064488578985447,
+   "beams": [
+    [
+     "TEACH | My | hometown | Durnham",
+     -0.00037986080860719085
+    ],
+    [
+     "TEACH | My | hometown | Durnhaam",
+     -8.402300834655762
+    ],
+    [
+     "TEACH | My | hometown | Durnhaem",
+     -10.50008773803711
+    ],
+    [
+     "TEACH My | hometown | Durnham",
+     -10.575882911682129
+    ]
+   ],
+   "ms_greedy": 60.35,
+   "ms": 136.87,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hometown",
+      "value": "Durnham"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-086-raw": {
+   "raw": "TEACH | Casper | horse | Bruno",
+   "greedy_lp": -0.0266276905579943,
+   "beams": [
+    [
+     "TEACH | Casper | horse | Bruno",
+     -0.024181369692087173
+    ],
+    [
+     "TEACH | Caasper | horse | Bruno",
+     -4.587708950042725
+    ],
+    [
+     "TEACH | Capper | horse | Bruno",
+     -5.52518892288208
+    ],
+    [
+     "TEACH | Casper | horse | Bruno",
+     -6.151093006134033
+    ]
+   ],
+   "ms_greedy": 56.61,
+   "ms": 123.98,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Casper",
+      "relation": "horse",
+      "value": "Bruno"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-086-norm": {
+   "raw": "TEACH | Casper | horse | Bruno",
+   "greedy_lp": -0.0266276905579943,
+   "beams": [
+    [
+     "TEACH | Casper | horse | Bruno",
+     -0.024181369692087173
+    ],
+    [
+     "TEACH | Caasper | horse | Bruno",
+     -4.587708950042725
+    ],
+    [
+     "TEACH | Capper | horse | Bruno",
+     -5.52518892288208
+    ],
+    [
+     "TEACH | Casper | horse | Bruno",
+     -6.151093006134033
+    ]
+   ],
+   "ms_greedy": 56.71,
+   "ms": 133.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Casper",
+      "relation": "horse",
+      "value": "Bruno"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-087-raw": {
+   "raw": "TEACH | my | boss | Milena",
+   "greedy_lp": -4.470313906779211e-05,
+   "beams": [
+    [
+     "TEACH | my | boss | Milena",
+     -4.363029802334495e-05
+    ],
+    [
+     "TEACH | my | boss | Milenia",
+     -11.750094413757324
+    ],
+    [
+     "TEACH | my | boss | Milna",
+     -12.250540733337402
+    ],
+    [
+     "TEACH | my | boss | Milena<|im_start|>",
+     -12.91506576538086
+    ]
+   ],
+   "ms_greedy": 63.27,
+   "ms": 149.45,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "Milena"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-087-norm": {
+   "raw": "TEACH | my | boss | Milena",
+   "greedy_lp": -4.470313906779211e-05,
+   "beams": [
+    [
+     "TEACH | my | boss | Milena",
+     -4.363029802334495e-05
+    ],
+    [
+     "TEACH | my | boss | Milenia",
+     -11.750094413757324
+    ],
+    [
+     "TEACH | my | boss | Milna",
+     -12.250540733337402
+    ],
+    [
+     "TEACH | my | boss | Milena<|im_start|>",
+     -12.91506576538086
+    ]
+   ],
+   "ms_greedy": 56.22,
+   "ms": 133.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "Milena"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-088-raw": {
+   "raw": "TEACH | My | neighbour | Boris",
+   "greedy_lp": -1.609319441797652e-05,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Boris",
+     -1.4424274922930636e-05
+    ],
+    [
+     "TEACH |My | neighbour | Boris",
+     -11.750017166137695
+    ],
+    [
+     "TEACH | My | neighbour | Boris<|im_start|>",
+     -13.05148696899414
+    ],
+    [
+     "TEACH My | neighbour | Boris",
+     -13.476411819458008
+    ]
+   ],
+   "ms_greedy": 61.16,
+   "ms": 140.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Boris"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-088-norm": {
+   "raw": "TEACH | My | neighbour | Boris",
+   "greedy_lp": -1.609319441797652e-05,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Boris",
+     -1.4424274922930636e-05
+    ],
+    [
+     "TEACH |My | neighbour | Boris",
+     -11.750017166137695
+    ],
+    [
+     "TEACH | My | neighbour | Boris<|im_start|>",
+     -13.05148696899414
+    ],
+    [
+     "TEACH My | neighbour | Boris",
+     -13.476411819458008
+    ]
+   ],
+   "ms_greedy": 52.25,
+   "ms": 124.6,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Boris"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-089-raw": {
+   "raw": "TEACH | Oskar | occupation | driver",
+   "greedy_lp": -0.0011788159163685918,
+   "beams": [
+    [
+     "TEACH | Oskar | occupation | driver",
+     -0.0010584124829620123
+    ],
+    [
+     "TEACH | Oscar | occupation | driver",
+     -7.250942230224609
+    ],
+    [
+     "TEACH | Oscar | occupation | driver",
+     -9.8883638381958
+    ],
+    [
+     "TEACH | Oksar | occupation | driver",
+     -10.129740715026855
+    ]
+   ],
+   "ms_greedy": 60.58,
+   "ms": 137.39,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Oskar",
+      "relation": "occupation",
+      "value": "driver"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-089-norm": {
+   "raw": "TEACH | Oskar | occupation | driver",
+   "greedy_lp": -0.0011788159163685918,
+   "beams": [
+    [
+     "TEACH | Oskar | occupation | driver",
+     -0.0010584124829620123
+    ],
+    [
+     "TEACH | Oscar | occupation | driver",
+     -7.250942230224609
+    ],
+    [
+     "TEACH | Oscar | occupation | driver",
+     -9.8883638381958
+    ],
+    [
+     "TEACH | Oksar | occupation | driver",
+     -10.129740715026855
+    ]
+   ],
+   "ms_greedy": 60.78,
+   "ms": 142.54,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Oskar",
+      "relation": "occupation",
+      "value": "driver"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-090-raw": {
+   "raw": "TEACH | Zelda | employer | Peldon College",
+   "greedy_lp": -0.002131356756308378,
+   "beams": [
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -0.002374692354351282
+    ],
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -6.2552490234375
+    ],
+    [
+     "TEACH | Zelda | employer | Pelton College",
+     -9.252378463745117
+    ],
+    [
+     "TEACH | Zelda | employer | Pelgon College",
+     -9.857430458068848
+    ]
+   ],
+   "ms_greedy": 64.77,
+   "ms": 156.65,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Zelda",
+      "relation": "employer",
+      "value": "Peldon College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-090-norm": {
+   "raw": "TEACH | Zelda | employer | Peldon College",
+   "greedy_lp": -0.002131356756308378,
+   "beams": [
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -0.002374692354351282
+    ],
+    [
+     "TEACH | Zelda | employer | Peldon College",
+     -6.2552490234375
+    ],
+    [
+     "TEACH | Zelda | employer | Pelton College",
+     -9.252378463745117
+    ],
+    [
+     "TEACH | Zelda | employer | Pelgon College",
+     -9.857430458068848
+    ]
+   ],
+   "ms_greedy": 72.03,
+   "ms": 154.81,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Zelda",
+      "relation": "employer",
+      "value": "Peldon College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-091-raw": {
+   "raw": "TEACH | My | cousin | Tanja",
+   "greedy_lp": -1.9669493141805106e-05,
+   "beams": [
+    [
+     "TEACH | My | cousin | Tanja",
+     -1.9550283468561247e-05
+    ],
+    [
+     "TEACH |My | cousin | Tanja",
+     -12.37503719329834
+    ],
+    [
+     "TEACH My | My | cousin | Tanja",
+     -12.500116348266602
+    ],
+    [
+     "TEACH | My |cousin | Tanja",
+     -12.93765926361084
+    ]
+   ],
+   "ms_greedy": 62.2,
+   "ms": 148.43,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Tanja"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-091-norm": {
+   "raw": "TEACH | My | cousin | Tanja",
+   "greedy_lp": -1.9669493141805106e-05,
+   "beams": [
+    [
+     "TEACH | My | cousin | Tanja",
+     -1.9550283468561247e-05
+    ],
+    [
+     "TEACH |My | cousin | Tanja",
+     -12.37503719329834
+    ],
+    [
+     "TEACH My | My | cousin | Tanja",
+     -12.500116348266602
+    ],
+    [
+     "TEACH | My |cousin | Tanja",
+     -12.93765926361084
+    ]
+   ],
+   "ms_greedy": 58.94,
+   "ms": 145.67,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Tanja"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-092-raw": {
+   "raw": "TEACH | Viktor | occupation | pilot",
+   "greedy_lp": -3.814675943658585e-05,
+   "beams": [
+    [
+     "TEACH | Viktor | occupation | pilot",
+     -3.802754508797079e-05
+    ],
+    [
+     "TEACH | Viktor | occupation | pilot",
+     -11.382624626159668
+    ],
+    [
+     "TEACH | Viktor | occupation | pilot<|im_start|>",
+     -12.519490242004395
+    ],
+    [
+     "TEACH | Vik Tor | occupation | pilot",
+     -13.06104564666748
+    ]
+   ],
+   "ms_greedy": 65.09,
+   "ms": 146.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Viktor",
+      "relation": "occupation",
+      "value": "pilot"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-092-norm": {
+   "raw": "TEACH | Viktor | occupation | pilot",
+   "greedy_lp": -3.814675943658585e-05,
+   "beams": [
+    [
+     "TEACH | Viktor | occupation | pilot",
+     -3.802754508797079e-05
+    ],
+    [
+     "TEACH | Viktor | occupation | pilot",
+     -11.382624626159668
+    ],
+    [
+     "TEACH | Viktor | occupation | pilot<|im_start|>",
+     -12.519490242004395
+    ],
+    [
+     "TEACH | Vik Tor | occupation | pilot",
+     -13.06104564666748
+    ]
+   ],
+   "ms_greedy": 65.04,
+   "ms": 146.41,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Viktor",
+      "relation": "occupation",
+      "value": "pilot"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-093-raw": {
+   "raw": "TEACH | My | hamster | Pippa",
+   "greedy_lp": -5.0902011388131996e-05,
+   "beams": [
+    [
+     "TEACH | My | hamster | Pippa",
+     -4.75641900266055e-05
+    ],
+    [
+     "TEACH | My | Hamster | Pippa",
+     -12.000068664550781
+    ],
+    [
+     "TEACH My | My | hamster | Pippa",
+     -12.000682830810547
+    ],
+    [
+     "TEACH | My | hamstercat | Pippa",
+     -12.142210006713867
+    ]
+   ],
+   "ms_greedy": 72.97,
+   "ms": 169.76,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hamster",
+      "value": "Pippa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-093-norm": {
+   "raw": "TEACH | My | hamster | Pippa",
+   "greedy_lp": -5.0902011388131996e-05,
+   "beams": [
+    [
+     "TEACH | My | hamster | Pippa",
+     -4.75641900266055e-05
+    ],
+    [
+     "TEACH | My | Hamster | Pippa",
+     -12.000068664550781
+    ],
+    [
+     "TEACH My | My | hamster | Pippa",
+     -12.000682830810547
+    ],
+    [
+     "TEACH | My | hamstercat | Pippa",
+     -12.142210006713867
+    ]
+   ],
+   "ms_greedy": 73.4,
+   "ms": 161.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hamster",
+      "value": "Pippa"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-094-raw": {
+   "raw": "TEACH | Felix | occupation | singer",
+   "greedy_lp": -0.002111049657202102,
+   "beams": [
+    [
+     "TEACH | Felix | occupation | singer",
+     -0.0018828153843060136
+    ],
+    [
+     "TEACH | Felix | occupation | performer",
+     -6.503808498382568
+    ],
+    [
+     "TEACH | Felix | occupation | Singer",
+     -8.751887321472168
+    ],
+    [
+     "TEACH | Felix | occupation | singer",
+     -9.127129554748535
+    ]
+   ],
+   "ms_greedy": 60.9,
+   "ms": 127.8,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Felix",
+      "relation": "occupation",
+      "value": "singer"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-094-norm": {
+   "raw": "TEACH | Felix | occupation | singer",
+   "greedy_lp": -0.002111049657202102,
+   "beams": [
+    [
+     "TEACH | Felix | occupation | singer",
+     -0.0018828153843060136
+    ],
+    [
+     "TEACH | Felix | occupation | performer",
+     -6.503808498382568
+    ],
+    [
+     "TEACH | Felix | occupation | Singer",
+     -8.751887321472168
+    ],
+    [
+     "TEACH | Felix | occupation | singer",
+     -9.127129554748535
+    ]
+   ],
+   "ms_greedy": 61.38,
+   "ms": 137.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Felix",
+      "relation": "occupation",
+      "value": "singer"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-095-raw": {
+   "raw": "TEACH | My | friend | Emil",
+   "greedy_lp": -2.062313969730667e-05,
+   "beams": [
+    [
+     "TEACH | My | friend | Emil",
+     -2.0742352717206813e-05
+    ],
+    [
+     "TEACH | My |friend | Emil",
+     -11.875020980834961
+    ],
+    [
+     "TEACH My | My | friend | Emil",
+     -12.375207901000977
+    ],
+    [
+     "TEACH |My | friend | Emil",
+     -12.625033378601074
+    ]
+   ],
+   "ms_greedy": 64.83,
+   "ms": 146.0,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Emil"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-095-norm": {
+   "raw": "TEACH | My | friend | Emil",
+   "greedy_lp": -2.062313969730667e-05,
+   "beams": [
+    [
+     "TEACH | My | friend | Emil",
+     -2.0742352717206813e-05
+    ],
+    [
+     "TEACH | My |friend | Emil",
+     -11.875020980834961
+    ],
+    [
+     "TEACH My | My | friend | Emil",
+     -12.375207901000977
+    ],
+    [
+     "TEACH |My | friend | Emil",
+     -12.625033378601074
+    ]
+   ],
+   "ms_greedy": 56.43,
+   "ms": 137.51,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Emil"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-096-raw": {
+   "raw": "TEACH | Adele | occupation | mason",
+   "greedy_lp": -0.03786927005354812,
+   "beams": [
+    [
+     "TEACH | Adele | occupation | mason",
+     -0.03365941345691681
+    ],
+    [
+     "TEACH | Adele | occupation | mason",
+     -4.940525531768799
+    ],
+    [
+     "TEACH | Dele | occupation | mason",
+     -4.984870433807373
+    ],
+    [
+     "TEACH | Adael | occupation | mason",
+     -5.874078750610352
+    ]
+   ],
+   "ms_greedy": 69.65,
+   "ms": 141.92,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Adele",
+      "relation": "occupation",
+      "value": "mason"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-096-norm": {
+   "raw": "TEACH | Adele | occupation | mason",
+   "greedy_lp": -0.03786927005354812,
+   "beams": [
+    [
+     "TEACH | Adele | occupation | mason",
+     -0.03365941345691681
+    ],
+    [
+     "TEACH | Adele | occupation | mason",
+     -4.940525531768799
+    ],
+    [
+     "TEACH | Dele | occupation | mason",
+     -4.984870433807373
+    ],
+    [
+     "TEACH | Adael | occupation | mason",
+     -5.874078750610352
+    ]
+   ],
+   "ms_greedy": 63.32,
+   "ms": 140.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Adele",
+      "relation": "occupation",
+      "value": "mason"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-097-raw": {
+   "raw": "TEACH | I | occupation | clerk",
+   "greedy_lp": -0.0003490040320386356,
+   "beams": [
+    [
+     "TEACH | I | occupation | clerk",
+     -0.00035484469844959676
+    ],
+    [
+     "TEACH | I | occupation | Clerk",
+     -8.875361442565918
+    ],
+    [
+     "TEACH | I | occupation | clerks",
+     -10.124722480773926
+    ],
+    [
+     "TEACH | I | occupation | lawyer",
+     -10.297751426696777
+    ]
+   ],
+   "ms_greedy": 52.56,
+   "ms": 114.3,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "occupation",
+      "value": "clerk"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-097-norm": {
+   "raw": "TEACH | I | occupation | clerk",
+   "greedy_lp": -0.0003490040320386356,
+   "beams": [
+    [
+     "TEACH | I | occupation | clerk",
+     -0.00035484469844959676
+    ],
+    [
+     "TEACH | I | occupation | Clerk",
+     -8.875361442565918
+    ],
+    [
+     "TEACH | I | occupation | clerks",
+     -10.124722480773926
+    ],
+    [
+     "TEACH | I | occupation | lawyer",
+     -10.297751426696777
+    ]
+   ],
+   "ms_greedy": 52.39,
+   "ms": 113.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "occupation",
+      "value": "clerk"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-098-raw": {
+   "raw": "TEACH | Bruno | occupation | dentist",
+   "greedy_lp": -9.011951667048379e-05,
+   "beams": [
+    [
+     "TEACH | Bruno | occupation | dentist",
+     -9.870194480754435e-05
+    ],
+    [
+     "TEACH | Bruno | occupation | dentist",
+     -9.562653541564941
+    ],
+    [
+     "TEACH | Bruno | occupation | dentist<|im_start|>",
+     -11.872913360595703
+    ],
+    [
+     "TEACH | Bruno | occupation | doctor",
+     -13.000107765197754
+    ]
+   ],
+   "ms_greedy": 53.71,
+   "ms": 120.91,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Bruno",
+      "relation": "occupation",
+      "value": "dentist"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-098-norm": {
+   "raw": "TEACH | Bruno | occupation | dentist",
+   "greedy_lp": -9.011951667048379e-05,
+   "beams": [
+    [
+     "TEACH | Bruno | occupation | dentist",
+     -9.870194480754435e-05
+    ],
+    [
+     "TEACH | Bruno | occupation | dentist",
+     -9.562653541564941
+    ],
+    [
+     "TEACH | Bruno | occupation | dentist<|im_start|>",
+     -11.872913360595703
+    ],
+    [
+     "TEACH | Bruno | occupation | doctor",
+     -13.000107765197754
+    ]
+   ],
+   "ms_greedy": 52.75,
+   "ms": 140.11,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Bruno",
+      "relation": "occupation",
+      "value": "dentist"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-099-raw": {
+   "raw": "TEACH | My | employer | Kessler",
+   "greedy_lp": -3.4332023659544575e-05,
+   "beams": [
+    [
+     "TEACH | My | employer | Kessler",
+     -3.1828680221224204e-05
+    ],
+    [
+     "TEACH My | employer | Kessler",
+     -10.989911079406738
+    ],
+    [
+     "TEACH | my | employer | Kessler",
+     -13.125031471252441
+    ],
+    [
+     "TEACH |My | employer | Kessler",
+     -13.125040054321289
+    ]
+   ],
+   "ms_greedy": 60.67,
+   "ms": 132.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "employer",
+      "value": "Kessler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-099-norm": {
+   "raw": "TEACH | My | employer | Kessler",
+   "greedy_lp": -3.4332023659544575e-05,
+   "beams": [
+    [
+     "TEACH | My | employer | Kessler",
+     -3.1828680221224204e-05
+    ],
+    [
+     "TEACH My | employer | Kessler",
+     -10.989911079406738
+    ],
+    [
+     "TEACH | my | employer | Kessler",
+     -13.125031471252441
+    ],
+    [
+     "TEACH |My | employer | Kessler",
+     -13.125040054321289
+    ]
+   ],
+   "ms_greedy": 61.42,
+   "ms": 135.12,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "employer",
+      "value": "Kessler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "u270-100-raw": {
+   "raw": "TEACH | Sanne | language | Dutch",
+   "greedy_lp": -0.0028108623894738116,
+   "beams": [
+    [
+     "TEACH | Sanne | language | Dutch",
+     -0.0028918979223817587
+    ],
+    [
+     "TEACH | Sanne | daily_language | Dutch",
+     -7.107148170471191
+    ],
+    [
+     "TEACH | Sanne | language_of_work_or_name | Dutch",
+     -7.3891448974609375
+    ],
+    [
+     "NONE",
+     -7.625498294830322
+    ]
+   ],
+   "ms_greedy": 69.67,
+   "ms": 178.59,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Sanne",
+      "relation": "language",
+      "value": "Dutch",
+      "why": "UNSURE",
+      "margin": 7.386252999538556
+     }
+    ],
+    "guard": []
+   }
+  },
+  "u270-100-norm": {
+   "raw": "TEACH | Sanne | language | Dutch",
+   "greedy_lp": -0.0028108623894738116,
+   "beams": [
+    [
+     "TEACH | Sanne | language | Dutch",
+     -0.0028918979223817587
+    ],
+    [
+     "TEACH | Sanne | daily_language | Dutch",
+     -7.107148170471191
+    ],
+    [
+     "TEACH | Sanne | language_of_work_or_name | Dutch",
+     -7.3891448974609375
+    ],
+    [
+     "NONE",
+     -7.625498294830322
+    ]
+   ],
+   "ms_greedy": 57.24,
+   "ms": 169.98,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Sanne",
+      "relation": "language",
+      "value": "Dutch",
+      "why": "UNSURE",
+      "margin": 7.386252999538556
+     }
+    ],
+    "guard": []
+   }
+  }
+ }
+}
