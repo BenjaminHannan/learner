@@ -115,3 +115,38 @@ Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored
 (at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
 was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
 turn_index, user_text, category, gold. Fictional names only.
+
+## 282 ruling and the 282b follow-up (director, 2026-09-23 09:15 UTC)
+
+282's PASSMARKS defined the M1 denominator as "turns the sealed matcher fires on". That is the fix's own recogniser,
+so the bar could not fail on a missed shape. This note's M1 bar (written before the build) says "at least 90% of
+small-talk items", and the small-talk items are the panel's greeting and closing items (35). Ruling: this note's bar
+governs. Director recount from run/panel-260b.json and run/panel-282b.json: 31/35 fitting on 282 (88.6%; bar 32/35),
+19/35 on 260. **282 is a registered FAIL by one item.** Everything else passed: 0 writes on small-talk items, mixed and
+control items unchanged, 0 store differences, suites 0 moves, M3 17/20 vs 16/20. 12 dialogs moved, all toward a fitting
+reply. Merge candidate. The director did not read the 4 missed items.
+The one follow-up, 282b (on top of 282), comes from the spec, not from the misses: instead of 282's closed word-order
+grammar, a whole turn is small talk when every word, after lowercasing and stripping punctuation and emoji, belongs to
+a sealed small-talk vocabulary (greetings, thanks, closings, "how are you" words, fillers such as "so", "ok", "lol",
+"man", "again", "all", "for", "now", "much", "a", "lot", and the assistant's own name), it has at least one greeting,
+thanks or closing word, and it names no stored or new entity and no relation word. Class = the first such word.
+Marks: M1 smallpanel282b (fresh): at least 90% of the panel's greeting and closing items (the writer's categories,
+never the matcher's) get the arm's own fitting reply (greeting -> the "Hello." reply; thanks or closing -> the
+"Thanks!" or "Bye." reply); 0 writes on them; mixed and control items identical to 282. M2 frozen suites vs 282's rows:
+only predicted moves, GATE clean. M3 smalltalkpanel234: every figure equal or better than 282.
+Panel spec (smallpanel282b, 60 turns): 20 greetings, 15 thanks and closings (casual, slang, typos in filler words,
+extra words, emoji), 15 mixed turns (small talk plus a real teach or question), 10 controls. Columns exactly:
+dialog_id, turn_index, user_text, category (greeting / closing / mixed / control), gold. Fictional names only.
+
+## 280b and 281b results (director, 2026-09-23 09:15 UTC)
+
+- 280b: registered FAIL, M1 general 24/25 (bar 25/25; 280 arm 10/25). 0 unsupported claims (director check: every
+  280b reply is the sealed CAN280 text or byte-identical to 280's; non-general replies are declines or clarify lines).
+  0 writes. The 280 line has used its follow-up. Merge candidate: 14 moves, all toward the honest text.
+- 281b: registered FAIL, stored 9/25 on both arms, 0 moves, 0 wrong. The director read calledpanel281b's missed items
+  (the 281 line is closed, so this burns nothing still in use; no item is quoted anywhere). 12 of the 16 misses drop
+  the possessive ending entirely (a bare name before the relation word), which the 281b change does not cover; my
+  spec's "no apostrophe" was ambiguous between "anas cat" and that form. The builder's diagnosis counts (5 and 11)
+  do not match mine (12 normalise to a 281 shape but name no possessive); the verdict is the same. 281b is not a
+  merge candidate: it moved nothing on its blind panel. Lead for a new experiment (not a follow-up): read a bare
+  known name directly before a known relation word as a possessive, on question turns only.
