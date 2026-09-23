@@ -1,0 +1,1588 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main 2>&1 | head -20; git status --short | head -30; ls artifacts/ | head -40
+4:30  up 2 days, 20:19, 4 users, load averages: 21.72 35.14 47.91
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 129248520    0%   /
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-calledpanel281-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280-282-chat-fixes.md > /tmp/280-282-chat-fixes.md; wc -l /tmp/280-282-chat-fixes.md; git show origin/main:artifacts/fable-predictions-ledger.md | tail -30; echo ---; ls artifacts/claude-called281-20260923/ scripts/claude_*281* artifacts/claude-chatweak-20260923/ 2>&1
+117 /tmp/280-282-chat-fixes.md
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+---
+scripts/claude_281_panel.sh
+scripts/claude_281_panelrun.sh
+scripts/claude_281_runall.sh
+scripts/claude_called281_devcases.py
+scripts/claude_called281_panelrun.py
+scripts/claude_called281_panelscore.py
+scripts/claude_called281_regscore.py
+scripts/claude_called281_run.py
+scripts/claude_called281_score.py
+scripts/claude_fix281_called.py
+scripts/claude_loop281_agent.py
+
+artifacts/claude-called281-20260923/:
+devcases281.json
+loop281-config.json
+PASSMARKS.md
+pilot
+predicted_moves281.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-chatweak-20260923/:
+dialogs.json
+WEAKSPOTS.md
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280-282-chat-fixes.md | sed -n '1,117p'
+# 280, 281, 282: three chat fixes from the chat-demo probe. Director's note, 2026-09-23 04:30 UTC
+
+Source: artifacts/claude-chatweak-20260923/WEAKSPOTS.md (90 fresh dev turns on base 260; dev material, not a panel).
+Base for all three: 260 (scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json).
+Each experiment is one change, sealed before its registered run, graded on its own fresh blind panel written
+by a separate agent from the spec below. The probe's dialogs are dev material: builders may read them.
+The three are independent and run in parallel. None of them may change what gets saved in the notebook.
+
+## 280: "What can you do?" says only what is true (honesty; first priority)
+
+Problem: t08-t1 lists "answer ... following one or two steps" and "correct a fact or forget one", but the probe
+shows two-step questions fail (t02-t3) and forget commands fail (t05-t2, t05-t5).
+The one change: the self-description replies ("What can you do?" and its variants, and "Can you <ability>?"
+yes/no questions if the base already routes them to the self sheet) are rendered from a sealed ability table.
+- Each row: ability, the exact example phrasing that works, evidence (a registered PASS or a frozen-suite family
+  that measures it), and a dev score from the builder's OWN new dev chats (fictional names; at least 8 turns per
+  ability, varied phrasing).
+- An ability is listed plainly only if its dev score is at least 80%. If only one phrasing works (at least 90% on
+  that phrasing), it is listed with that phrasing as an example ("I can follow two steps if you ask like
+  'Who is Kim's boss's boss?'"). Otherwise it is dropped from the list.
+- "What can't you do?" stays as it is, except that any ability dropped above is not claimed anywhere else.
+Marks: M1 capabilpanel280: 0 replies that claim an ability the table does not support (the director checks each
+claim; the 260 arm's count is shown beside it); every general "what can you do" item lists at least 3 abilities.
+M2 frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench vs 260 rows): only predicted reply-only
+moves, GATE clean. M3 0 notebook changes on the panel and suites. M4 grammar of every changed reply: director.
+
+Panel spec (capabilpanel280, 40 turns, fresh dialogs): 12 general ability questions in varied wording and register
+("What can you do?", "what are you good at", "Tell me what you're able to do."), 20 "Can you ...?" questions over
+abilities that plausibly exist or not (forget, correct, two-step, remember after restart, math, web, feelings,
+translate, names, sources), 8 controls (plain teach and ask). Each dialog may first teach 1 or 2 facts.
+
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+
+## 282: casual greetings and closings get small talk, not an error
+
+Problem: "hey whats up" (t07-t0) gets "I didn't understand that question"; "Thanks, that's all!" (t01-t7) gets
+"I didn't understand that well enough to save it". Bare "Thanks!" and "cool thanks!" already work.
+The one change: the small-talk recogniser also accepts greetings and closings that are lowercase, lack
+apostrophes or end marks, or carry a short closing tail ("that's all", "that's it", "bye for now", "see ya").
+Only whole turns that are pure small talk; a turn with any fact or question content keeps its old route.
+Marks: M1 smallpanel282: at least 90% of small-talk items get a fitting small-talk reply (260 arm shown);
+0 writes on small-talk items; mixed items (small talk + a fact or question) keep 260's route and result exactly.
+M2 frozen suites as in 280. M3 smalltalkpanel234 re-run once: every figure equal or better than 260.
+
+Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
+closings with tails, 15 mixed turns (a greeting or thanks plus a real teach or question, e.g. "hey, whats Ana's
+city"), 10 controls. Fictional names only.
+
+## 280b: the one follow-up to 280 (added 07:45 UTC after 280's registered FAIL on M1b 9/12)
+
+Diagnosis: 280's honest text only fires for 16 closed wordings; 3 of 12 general panel items (category level only:
+wordings outside that closed set) keep 260's clarify line. (Director's correction 07:50: an earlier version of this
+paragraph quoted panel items; that was a breach of the blind-panel rule. capabilpanel280 is therefore burned for
+280b: it is not used for any 280b mark, and 280b is graded only on the fresh capabilpanel280b.)
+The one change (on top of 280): a turn is a general ability question when it is question-shaped (or starts with
+"tell me"/"list"), addresses the assistant (you/u/your/yourself), contains an ability cue (can, able, good at,
+capable, help with, abilities, skills, "what do you do"), and names no stored or new entity and no relation word.
+Such turns get 280's sealed CAN280 text. "Can you <specific thing>?" questions are NOT in scope and keep 280's reply.
+Marks: M1 capabilpanel280b: every general item gets CAN280 (bar 100%; 280 arm shown); 0 unsupported claims
+anywhere (director checks); 0 "can you X" items changed vs 280; 0 writes. M2 frozen suites vs 280's rows: only
+predicted moves, GATE clean.
+Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in wordings as varied as real people
+type (slang, typos, long and short, "tell me"/"list" forms, questions about what it is for); 10 "Can you <specific>?"
+turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
+"What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
+
+## 280b re-run ruling (director, 2026-09-23 08:28 UTC, before any 280b panel row has run)
+
+280b's registered panel step exited VOID: the blind panel names its turn-text column `user`, the sealed runner
+requires `user_text`. Neither arm ran a single row, so no panel result exists and nothing was tuned. The brief
+(mine) named no text column, so this is a director error, not the builder's.
+Ruling: one re-run, with one new adapter file `scripts/claude_capab280b_paneladapt.py` that writes
+`artifacts/claude-capab280b-20260923/rerun/panel-adapted.jsonl`: every row identical to the sealed panel except the
+key `user` renamed to `user_text` (same order, same values, no other key touched). The adapter checks this
+mechanically (row count, every other field equal, text equal) and records both sha256 values. Then the sealed
+`claude_280b_panel.sh` steps run ONCE per arm on the adapted file, unchanged. The sealed marks and bars stand as
+registered. The sealed .sh files were not in 280b's PUSH list (my glob missed them); the re-run pushes them so the
+director can check the 15/15 seal.
+
+## 281 result and the 281b follow-up (director, 2026-09-23 08:28 UTC)
+
+281 is a registered FAIL (M1 stored 16/25, bar 23/25; every other bar passed: 0 wrong answers, 10/10 not-stored
+abstains, 0 moves on ambiguous and control items, 0 notebook changes, 0 suite moves). Director recount from the raw
+rows: 16 replies changed, all 16 on stored items, all toward the right answer; 0 triple diffs; 0 writes on questions.
+Diagnosis available without the panel: of 281's 9 misses, the builder reports 5 sit in dialogs whose teach turn is
+not stored by 260 either (so no question wording could be answered: a panel-design flaw), and 4 are called-wordings
+outside the four sealed shapes. The builder described those 4 by shape category; the director read that summary.
+So calledpanel281 is burned for 281b.
+281b's one change (on top of 281) comes from dev material that predates the panel: the 04:18 chat-demo probe found
+casual typing (lowercase, no apostrophe, no question mark) fails generally. Change: 281's called/named reader also
+accepts the same question typed casually: any letter case, a possessive written without its apostrophe ("anas cat"
+only when "ana" is a known entity), "whats"/"what's"/"what is", and a missing question mark when the turn starts
+with a question word. Teach turns and writes untouched. Nothing else moves.
+Marks: M1 calledpanel281b (fresh): stored items answered exactly >= 90%, counted only over items whose teach turn
+the 260 arm stores (panel writers must use plain teach forms; teach-fail count reported separately, bar: at most 2
+of the teach turns fail on 260, else the panel is VOID); 0 wrong answers; not-stored items abstain 100%; 0 writes on
+question items; ambiguous and control items identical to 281. M2 frozen suites vs 281's rows: only predicted moves,
+GATE clean.
+Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+(at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
+was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
+turn_index, user_text, category, gold. Fictional names only.
+[0m
+[0m→ [0mRead artifacts/claude-chatweak-20260923/WEAKSPOTS.md
+[0m→ [0mRead artifacts/claude-called281-20260923/PASSMARKS.md
+[0m→ [0mRead scripts/claude_fix281_called.py
+[0m→ [0mRead scripts/claude_loop281_agent.py
+[0m
+[0m$ [0mls scripts/ | grep -E "281|280|282|suitediff|verif" ; echo ---; ls artifacts/claude-called281-20260923/run/ artifacts/claude-called281-20260923/pilot/ 2>&1; echo ---; ls artifacts/ | grep -i 281b; echo ---; tail -5 artifacts/fable-predictions-ledger.md
+claude_280_panel.sh
+claude_280_runall.sh
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_281_panel.sh
+claude_281_panelrun.sh
+claude_281_runall.sh
+claude_282_panel.sh
+claude_282_panelrun.sh
+claude_282_runall.sh
+claude_called281_devcases.py
+claude_called281_panelrun.py
+claude_called281_panelscore.py
+claude_called281_regscore.py
+claude_called281_run.py
+claude_called281_score.py
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_capab280b_devcases.py
+claude_capab280b_regscore.py
+claude_capab280b_run.py
+claude_capab280b_score.py
+claude_fix280_capab.py
+claude_fix280b_general.py
+claude_fix281_called.py
+claude_fix282_small.py
+claude_loop280_agent.py
+claude_loop280b_agent.py
+claude_loop281_agent.py
+claude_loop282_agent.py
+claude_small282_devcases.py
+claude_small282_regscore.py
+claude_small282_run.py
+claude_small282_score.py
+fable_audit75_verify.py
+fable_loop148b_verify.py
+fable_suitediff.py
+fable_suitediff218.py
+---
+artifacts/claude-called281-20260923/pilot/:
+dev-score.json
+dev260.json
+dev281.json
+reg
+regscore-pilot.json
+work-dev260
+work-dev281
+
+artifacts/claude-called281-20260923/run/:
+own-seal-check.txt
+panel-260.json
+panel-260.log
+panel-281.json
+panel-281.log
+panel-files.txt
+panel-score.txt
+panel-score281.json
+panel-seal-check.txt
+regscore.txt
+regscore281.json
+rt143nogate-281.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-281.json
+vp-281.log
+vs-281.json
+vs-281.log
+work
+---
+---
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-capab280b-20260923; blind panel never opened, capabilpanel280 burned per director correction) M1 blind capabilpanel280b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text, SCHEMA-MISMATCH exit 3 = VOID): all 25 general items byte-equal to sealed CAN280 on 280b (280 arm shown); 0 unsupported-claim replies on 280b anywhere; canyou 10/10 + nearmiss 10/10 + control 5/5 byte-identical 280b vs 280; 0 panel write diffs; 0 question/self writes on 280b. Truth of claims and grammar director-graded, ungraded here.
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 280's (16 inherited), rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 280 rows: vp 98 + supp 12, 0 changes. Dev 68 own-wording fictional-name dialogs: general 28/28 exact CAN280 on 280b, all other families 0 diffs vs 280, 0 question writes.
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not byte-equal CAN280, or any question-turn write proves the change wrong. Known limits: cue-less generals ("Can you tell me about yourself?"), negations ("What can't you do?"), and "What can you not do?" keep 280's replies by construction. Pre-seal pilot fix disclosed: B17 "What do you know about me?" over-fired the unordered what+do+you cue; cue ordered (what...you...do) before seal, B17 0-diff since.
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+[0m
+[0m→ [0mRead scripts/claude_called281_devcases.py
+[0m→ [0mRead scripts/claude_called281_run.py
+[0m→ [0mRead scripts/claude_called281_score.py
+[0m→ [0mRead scripts/claude_called281_panelscore.py
+[0m→ [0mRead scripts/claude_called281_regscore.py
+[0m→ [0mRead scripts/claude_called281_panelrun.py
+[0m→ [0mRead scripts/claude_281_runall.sh
+[0m→ [0mRead scripts/claude_281_panel.sh
+[0m→ [0mRead artifacts/claude-called281-20260923/RESULTS.md
+[0m
+[0m# [0mTodos
+[•] Step 1: show casual forms fail on 281 with own dev turns
+[ ] Step 2: write 50+ dev dialogs (casual+formal, never-taught, ambiguous, controls)
+[ ] Step 3: build 281b mixin+agent, pilot on dev, suites vs 281 rows, probes
+[ ] Step 4: PASSMARKS + mock-panel end-to-end (user/user_text keys) + seal + ledger
+[ ] Step 5: poll panel seal, run once per arm (281, 281b)
+[ ] Step 6: RESULTS.md + final reply verdict/marks/moves
+[0m
+[0m→ [0mRead artifacts/claude-called281-20260923/RESULTS.md[90m [offset=59][0m
+[0m→ [0mRead artifacts/claude-called281-20260923/predicted_moves281.json
+[0m
+[0m$ [0mwc -l artifacts/claude-called281-20260923/RESULTS.md artifacts/claude-called281-20260923/devcases281.json; python3 -c "print('x')" 2>&1 | head -2; which uv
+66 artifacts/claude-called281-20260923/RESULTS.md
+     865 artifacts/claude-called281-20260923/devcases281.json
+     931 total
+x
+/Users/ben-hannan/.local/bin/uv
+[0m
+[0m→ [0mRead artifacts/claude-called281-20260923/RESULTS.md[90m [offset=64][0m
+[0m
+[0m$ [0mpython3 -c "
+lines = open('artifacts/claude-called281-20260923/RESULTS.md').read().splitlines()
+for l in lines[63:]:
+    print(l[:400])
+    if len(l) > 400:
+        print('...[cont]...')
+        print(l[400:800])
+        if len(l) > 800: print(l[800:1200])
+"
+sealed `claude_281_panel.sh` + `claude_called281_run.py` load
+   whole-dialog items. New files `scripts/claude_called281_panelrun.py`
+   (dialog-wise runner, fresh daemon per dialog), 
+...[truncated 1474 chars]
+[0m
+[0m$ [0mpython3 -c "
+raw = open('artifacts/claude-called281-20260923/RESULTS.md','rb').read()
+print(len(raw))
+i = raw.find(b'truncated')
+print(raw[max(0,i-200):i+60])
+"
+3335
+b'ile the\n   sealed `claude_281_panel.sh` + `claude_called281_run.py` load\n   whole-dialog items. New files `scripts/claude_called281_panelrun.py`\n   (dialog-wise runner, fresh daemon per dialog), \n...[truncated 1474 chars]'
+[0m
+[0m$ [0mpython3 -c "
+import re
+src = open('scripts/claude_openers260_run.py').read()
+for m in re.finditer(r'^(class |def |    def )\w+', src, re.M):
+    print(m.group(0))
+print('----')
+i = src.find('def split_openers260')
+print(src[i:i+1500])
+"
+def nev
+def trip
+class Runner
+    def __init__
+    def fresh
+    def send
+def run_dev
+def run_panel
+def main
+----
+[0m
+[0m$ [0mpython3 -c "
+import re
+src = open('scripts/claude_fix260_openers.py').read()
+for m in re.finditer(r'^(def |[A-Z_0-9]+ ?=)', src, re.M):
+    print(m.group(0)[:60])
+print('---- snapshot/restore/nb_events ----')
+i = src.find('def snapshot260')
+print(src[i:i+1200])
+"
+GREETINGS260 =
+GREET_TAIL260 =
+STRIP_OPENERS260 =
+GUARD_ONLY260 =
+def 
+_ALL_OPENERS =
+_GREET_ALT =
+_TAIL_ALT =
+_OPENER_RE =
+_BARE_GREETING_RE =
+_GUARD_WORDS =
+_JUNK_SUBJECT_RE =
+MAX_STRIP260 =
+def 
+def 
+def 
+def 
+def 
+CLARIFY_MARKS260 =
+def 
+RECASE_WORDS260 =
+def 
+def 
+_PLAIN =
+_SKIP_TYPES =
+def 
+def 
+def 
+def 
+CLARIFY_ACTION260 =
+QUESTION_OK_ACTS260 =
+def 
+def 
+---- snapshot/restore/nb_events ----
+def snapshot260(loop):
+    snap = []
+    for obj in _helpers(loop):
+        attrs = {}
+        for k, v in list(vars(obj).items()):
+            if isinstance(v, _PLAIN):
+                attrs[k] = (v, copy.deepcopy(v))
+        snap.append((obj, attrs))
+    return snap
+
+
+def restore260(snap) -> None:
+    for obj, attrs in snap:
+        d = vars(obj)
+        for k in [k for k, v in d.items()
+                  if isinstance(v, _PLAIN) and k not in attrs]:
+            del d[k]
+        for k, (ref, saved) in attrs.items():
+            if isinstance(ref, list):
+                ref[:] = copy.deepcopy(saved)
+            elif isinstance(ref, dict):
+                ref.clear()
+                ref.update(copy.deepcopy(saved))
+            elif isinstance(ref, set):
+                ref.clear()
+                ref.update(copy.deepcopy(saved))
+            d[k] = ref
+
+
+def _nb_events(loop) -> int:
+    nb = getattr(loop, "nb", None)
+    for o in (nb, getattr(nb, "nb", None)):
+        if o is not None and hasattr(o, "events"):
+            try:
+                return len(o.events)
+            except TypeError:
+                pass
+    return -1
+
+
+# ----------------------------------------------------
+[0m
+[0m$ [0mpython3 -c "
+src = open('scripts/claude_openers260_run.py').read()
+i = src.find('class Runner')
+print(src[i:i+2500])
+"
+class Runner:
+    def __init__(self, agent, config, work):
+        _mod, self.dcls, _, _ = M.load_agent(agent)
+        self.base = M.load_base_cfg(config)
+        self.work = Path(work)
+
+    def fresh(self, name):
+        root = self.work / name
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir(parents=True)
+        return root, M.make_daemon(self.dcls, self.base, root)
+
+    @staticmethod
+    def send(d, root, k, text):
+        f = root / "inbox" / f"m{k:03d}.txt"
+        f.write_text(text, encoding="utf-8")
+        b = nev(d)
+        t0 = time.perf_counter()
+        try:
+            d.process_file(f)
+            rep = (root / "outbox" / f"m{k:03d}.txt").read_text(
+                encoding="utf-8").strip()
+        except Exception as e:  # noqa: BLE001
+            rep = f"CRASH {type(e).__name__}: {e}"
+        return rep, nev(d) - b, time.perf_counter() - t0
+
+
+def run_dev(r, cases):
+    out = []
+    for c in cases:
+        root, d = r.fresh(c["id"])
+        rows, k = [], 0
+        for t in c["turns"]:
+            if t == "__RESTART__":
+                del d
+                gc.collect()
+                d = M.make_daemon(r.dcls, r.base, root)
+                rows.append({"restart": True, "triples": trip(d)})
+                continue
+            rep, ev, sec = r.send(d, root, k, t)
+            rows.append({"turn": t, "reply": rep, "ev": ev,
+                         "triples": trip(d), "sec": round(sec, 5)})
+            k += 1
+        out.append({"id": c["id"], "rows": rows, "stored": trip(d)})
+        del d
+        gc.collect()
+        shutil.rmtree(root, ignore_errors=True)
+    return out
+
+
+def run_panel(r, items):
+    out = []
+    for it in items:
+        root, d = r.fresh(it["id"])
+        k = 0
+        setup_replies = []
+        for t in it["setup"]:
+            rep, _ev, _s = r.send(d, root, k, t)
+            setup_replies.append(rep)
+            k += 1
+        s_setup = trip(d)
+        turn_reply, _ev, _s = r.send(d, root, k, it["turn"])
+        k += 1
+        s_turn = trip(d)
+        f_reply, s_f = "", s_turn
+        if it["followup"]:
+            f_reply, _ev, _s = r.send(d, root, k, it["followup"])
+            s_f = trip(d)
+        out.append({"id": it["id"], "setup_replies": setup_replies,
+                    "stored_after_setup": s_setup, "turn_reply": turn_reply,
+                    "stored_after_turn": s_turn, "followup_reply": f_reply,
+                    "stored_after_followup": s_f, "plain_reply": "",
+                    "base
+[0m
+[0m← [0mWrite /tmp/probe281b_step1.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe281b_step1.py 2>&1 | tail -40
+T0 ev=3 stored=[['Ana', 'cat', 'Moss']]
+     reply: "Saved: Ana's cat is Moss."
+  T1 ev=0 stored=[['Ana', 'cat', 'Moss']]
+     reply: "Ana's cat is Moss."
+== s1-lower
+  T0 ev=3 stored=[['Bram', 'cat', 'Soot']]
+     reply: "Saved: Bram's cat is Soot."
+  T1 ev=0 stored=[['Bram', 'cat', 'Soot']]
+     reply: "Bram's cat is Soot."
+== s1-whats
+  T0 ev=3 stored=[['Cleo', 'boat', 'Reed']]
+     reply: "Saved: Cleo's boat is Reed."
+  T1 ev=0 stored=[['Cleo', 'boat', 'Reed']]
+     reply: "I didn't understand that question — could you say it another way?"
+== s1-noq
+  T0 ev=3 stored=[['Dara', 'band', 'Lumen']]
+     reply: "Saved: Dara's band is Lumen."
+  T1 ev=0 stored=[['Dara', 'band', 'Lumen']]
+     reply: "I don't know Dara's band called."
+== s1-allcasual
+  T0 ev=3 stored=[['Elif', 'street', 'Grove']]
+     reply: "Saved: Elif's street is Grove."
+  T1 ev=0 stored=[['Elif', 'street', 'Grove']]
+     reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+== s1-namednoq
+  T0 ev=4 stored=[['Finn', 'teacher', 'Mara']]
+     reply: "Saved: Finn's teacher is Mara."
+  T1 ev=0 stored=[['Finn', 'teacher', 'Mara']]
+     reply: "I don't know Finn's teacher named."
+== s1-callcasual
+  T0 ev=4 stored=[['Greta', 'boss', 'Holm']]
+     reply: "Saved: Greta's boss is Holm."
+  T1 ev=0 stored=[['Greta', 'boss', 'Holm']]
+     reply: "I didn't understand that question — could you say it another way?"
+== s1-nameofcasual
+  T0 ev=3 stored=[['Hugo', 'city', 'Berne']]
+     reply: "Saved: Hugo's city is Berne."
+  T1 ev=0 stored=[['Hugo', 'city', 'Berne']]
+     reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+done
+[0m
+[0m$ [0mpython3 -c "
+src = open('scripts/claude_fix260_openers.py').read()
+i = src.find('def split_openers260')
+print(src[i:i+1800])
+print('===== trip =====')
+src2 = open('scripts/claude_openers260_run.py').read()
+i2 = src2.find('def trip')
+print(src2[i2:i2+600])
+i3 = src2.find('def nev')
+print(src2[i3:i3+600])
+"
+def split_openers260(text: str):
+    """text -> (rest, punct, first_op, mode) after at most 2 listed openers,
+    else None.
+
+    punct is True when the last stripped opener was followed by
+    punctuation (",", "!", ".", ":" or a spaced dash). mode is "hard" or
+    "soft" for the first opener:
+      soft = no punctuation after it AND the next word is capitalised AND
+             (it is a greeting, or 2+ capitalised words follow): "Hey Jude",
+             "So Long Summer", "Hey Pell" -- can't tell a title/vocative from
+             an opener, so the original is never overridden when it acts;
+      hard = everything else: the original's teach/correct may not store a
+             subject that starts with this opener (it becomes the ears'
+             clarify), so "So Pell's boss is Rhoda." cannot store "So Pell".
+    """
+    rest = str(text).lstrip()
+    n = 0
+    punct = False
+    first_op, mode = None, "hard"
+    while n < MAX_STRIP260:
+        m = _OPENER_RE.match(rest)
+        if not m:
+            break
+        tail = rest[m.end():]
+        if not tail.strip() or not re.search(r"[A-Za-z0-9]", tail):
+            break
+        sep_punct = bool(re.search(r"[,!.:\-\u2013\u2014]", m.group("sep")))
+        op = m.group("op")
+        if n == 0:
+            first_op = op
+            nxt_cap = tail.lstrip()[:1].isupper()
+            greet = bool(re.match(r"^(?:" + _GREET_ALT + r")\b", op,
+                                  re.IGNORECASE))
+            if not sep_punct and nxt_cap and (greet or _cap_run(tail) >= 2):
+                mode = "soft"
+        punct = sep_punct
+        rest = tail
+        n += 1
+    if n == 0:
+        return None
+    return rest.strip(), punct, first_op, mode
+
+
+def prefix_re260(op: str):
+    """Subjects that start with this opener (as typed) + a separa
+===== trip =====
+def trip(d):
+    return [list(x) for x in L90.notebook_triples(d.loop.nb)]
+
+
+class Runner:
+    def __init__(self, agent, config, work):
+        _mod, self.dcls, _, _ = M.load_agent(agent)
+        self.base = M.load_base_cfg(config)
+        self.work = Path(work)
+
+    def fresh(self, name):
+        root = self.work / name
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir(parents=True)
+        return root, M.make_daemon(self.dcls, self.base, root)
+
+    @staticmethod
+    def send(d, root, k, text):
+        f = root / "inbox" / f"m{k:03d}.txt"
+        f.write_text(text, encoding="
+def nev(d):
+    nb = d.loop.nb
+    for o in (nb, getattr(nb, "nb", None)):
+        if o is not None and hasattr(o, "events"):
+            return len(o.events)
+    return -1
+
+
+def trip(d):
+    return [list(x) for x in L90.notebook_triples(d.loop.nb)]
+
+
+class Runner:
+    def __init__(self, agent, config, work):
+        _mod, self.dcls, _, _ = M.load_agent(agent)
+        self.base = M.load_base_cfg(config)
+        self.work = Path(work)
+
+    def fresh(self, name):
+        root = self.work / name
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir(parents=True)
+        return root,
+[0m
+[0m$ [0mpython3 -c "
+src = open('scripts/claude_fix260_openers.py').read()
+i = src.find('_OPENER_RE =')
+print(src[i:i+700])
+i = src.find('STRIP_OPENERS260 =')
+print(src[i:i+900])
+"
+_OPENER_RE = re.compile(
+    r"^(?P<op>(?:" + _GREET_ALT + r")(?:[\s,]+(?:" + _TAIL_ALT + r")){0,2}"
+    r"(?=[\s,!.:\-–—]|$)|(?:"
+    + "|".join(_phrase_re(p) for p in _ALL_OPENERS) + r"))"
+    r"(?P<sep>[,!.:]+\s+|\s+[-–—]+\s+|\s+)",
+    re.IGNORECASE)
+_BARE_GREETING_RE = re.compile(
+    r"^\s*(?:" + _GREET_ALT + r")(?:[\s,!.]+(?:" + _TAIL_ALT + r")){0,2}"
+    r"\s*[!.,]*\s*$", re.IGNORECASE)
+_GUARD_WORDS = tuple(sorted(set(_ALL_OPENERS) | set(GUARD_ONLY260),
+                            key=lambda s: (-len(s), s)))
+_JUNK_SUBJECT_RE = re.compile(
+    r"^\s*(?:" + "|".join(_phrase_re(p) for p in _GUARD_WORDS) + r")"
+    r"(?:[\s,]+(?:" + _TAIL_ALT + r")){0,2}\s*,", re.IGNORECASE)
+
+MAX_STRIP2
+STRIP_OPENERS260 = (
+    # multi-word
+    "oh by the way", "by the way", "just so you know", "for the record",
+    "for your information", "one more thing", "fun fact", "quick one",
+    "quick question", "heads up", "guess what", "you know what",
+    "oh and", "oh also", "oh yeah", "oh right", "oh well", "oh so",
+    "and also", "and so", "but also", "okay so", "ok so", "alright so",
+    "all right", "so anyway", "so yeah", "well then", "just fyi",
+    "my friend", "my neighbor", "my neighbour",
+    # single words (DISCOURSE137B minus suppose/imagine/say)
+    "so", "well", "oh", "also", "and", "but", "okay", "ok", "alright",
+    "right", "please", "actually", "anyway", "anyways", "btw", "fyi", "listen", "look",
+    "basically", "remember", "note", "honestly", "frankly",
+    # hesitation
+    "um", "umm", "uh", "uhh", "er", "erm", "hmm",
+)
+# Guard-only words: never stripped, but never allo
+[0m
+[0m$ [0mcat artifacts/claude-called281-20260923/SEAL.sha256.txt; echo ---; ls artifacts/claude-called281-20260923/run/sd artifacts/claude-called281-20260923/run/sd136 2>&1; echo ---; ls artifacts/claude-openers260-20260922/run/ 2>&1 | head
+5f875ad731e5bea2e8ff2b19e4e1c439b33355c58d78fe256c37e6bfdc68abec  scripts/claude_fix281_called.py
+76b6874cf9e1710ccc014a4ddbf4a7f2299a019a2e5ef6d9bc76f4d06b8a272b  scripts/claude_loop281_agent.py
+5f6c357a31b086b6e3e7054530ad061e16da53ba83cabf69fc07e23402147dad  artifacts/claude-called281-20260923/loop281-config.json
+fd8ed198ec4f1c4980e540caec0c7a3945548416cb6d523f2f4d365a72c585c8  scripts/claude_called281_devcases.py
+766871784d251f34fe33f3accff72c6c4e2f2906967faeb08592bcd0320a4bdd  artifacts/claude-called281-20260923/devcases281.json
+d3b7f3f43d4d1c021a338b700f73e259abd278e9403aa41d620d1161113824e1  scripts/claude_called281_run.py
+9fb1c3ea4ade9bc18ce96d300c0f0cf5d42a0bfa956e445d6bd47ce25d11bd45  scripts/claude_called281_score.py
+29210250358927703f53b463b68e7fe70db074de01e9e80a226e41592a8decb8  scripts/claude_called281_regscore.py
+dc8cd5f4ff69d7a33fb359b53f34fe34e60f208b56f54b2d1e4486d42ced1313  scripts/claude_281_runall.sh
+f0cbaef21a98adfbe67d8dd9eb2873162649cb76bf351bd78beafac858dbd12f  scripts/claude_281_panel.sh
+927fdcb770d970118dbd5c30269ccdc8d18e06db1a0ed4ddbf818fb31ad4f852  artifacts/claude-called281-20260923/PASSMARKS.md
+49f98b14c53d801f7e77b038a3131ad2fa4e92fd01f530f5ee9511f28f34ce6a  artifacts/claude-called281-20260923/predicted_moves281.json
+48ed9fa7eb9f26b00e466d6c5e17bda68561992b894422db3b4a85d8223df22d  artifacts/claude-called281-20260923/pilot/dev260.json
+7a1ef15a5e249e115524b53d377b87c32b1b3ef9478b85842f97fba427bfd769  artifacts/claude-called281-20260923/pilot/dev281.json
+cd3fa263a07757c38326e425e3f11d0699ef57f326aeaa981322a46f7426d95e  artifacts/claude-called281-20260923/pilot/dev-score.json
+---
+artifacts/claude-called281-20260923/run/sd:
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+
+artifacts/claude-called281-20260923/run/sd136:
+rt136-diff.json
+rt136-rows.json
+SUITEDIFF218-SUMMARY.json
+---
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop260_agent.py --config artifacts/claude-openers260-20260922/loop260-config.json --once "What is zaras dog?" --state-dir /tmp/once1 2>&1 | tail -3; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281_agent.py --config artifacts/claude-called281-20260923/loop281-config.json --once "What's Cleo's boat called?" --state-dir /tmp/once2 2>&1 | tail -3
+I didn't understand that question — could you say it another way?
+I don't know anyone called Cleo.
+[0m
+[0m← [0mWrite scripts/claude_fix281b_casual.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_loop281b_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281b_devcases.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281b_run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281b_score.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281b_agent.py --write-config artifacts/claude-called281b-20260923/loop281b-config.json 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_devcases.py 2>&1 | tail -2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-called281b-20260923/loop281b-config.json'
+wrote 56 cases to artifacts/claude-called281b-20260923/devcases281b.json
+[0m
+[0m$ [0mmkdir -p artifacts/claude-called281b-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281b_agent.py --write-config artifacts/claude-called281b-20260923/loop281b-config.json 2>&1 | tail -2 && python3 -c "import json; c=json.load(open('artifacts/claude-called281b-20260923/loop281b-config.json')); print(sorted(c.keys())); print(c['daemon']['module']); print(c['self'].get('rule281b','MISSING')[:80])"
+Wrote artifacts/claude-called281b-20260923/loop281b-config.json
+['daemon', 'ears', 'exp260', 'exp281', 'exp281b', 'merge138k', 'merge138l', 'merge138m', 'mouth', 'notebook', 'reasoner', 'self', 'sleep', 'sleep_threshold', 'sleeper', 'thinker']
+Loop281bDaemon (scripts/claude_loop281b_agent.py) over Loop138kDaemon with the 138m classes
+281b (scripts/claude_fix281b_casual.py): a called/named question typed casually
+[0m
+[0m$ [0muptime; df -g / | tail -1
+4:39  up 2 days, 20:28, 4 users, load averages: 100.60 72.64 59.59
+/dev/disk3s1s1       460   12        12    52%  484014 127647680    0%   /
+[0m
+[0m← [0mWrite scripts/claude_called281b_panelrun.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281b_panelscore.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --help 2>&1 | head -50; uptime
+usage: fable_suitediff218.py [-h] [--agent AGENT] [--config CONFIG]
+                             [--base {138h,138i}] [--base-dir BASE_DIR]
+                             [--out OUT] [--only ONLY]
+                             [--bench-only BENCH_ONLY]
+                             [--check-table CHECK_TABLE]
+
+Exp 218 suite-diff v2
+
+options:
+  -h, --help            show this help message and exit
+  --agent AGENT
+  --config CONFIG
+  --base {138h,138i}
+  --base-dir BASE_DIR   any sealed agent artifact folder
+  --out OUT
+  --only ONLY           comma list of rt136,rt143,sessions152,bench,marks123
+                        (or all)
+  --bench-only BENCH_ONLY
+  --check-table CHECK_TABLE
+                        classify hand-made (base,new) pairs and exit
+ 4:40  up 2 days, 20:29, 4 users, load averages: 117.98 82.41 64.11
+[0m
+[0m← [0mWrite scripts/claude_called281b_regscore.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_281b_panel.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_281b_panel.sh
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_281b_runall.sh scripts/claude_281b_panel.sh && uptime
+chmod: scripts/claude_281b_runall.sh: No such file or directory
+[0m
+[0m← [0mWrite scripts/claude_281b_runall.sh
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_281b_runall.sh scripts/claude_281b_panel.sh && ls -la scripts/claude_281b_* scripts/claude_called281b_* scripts/claude_fix281b_casual.py scripts/claude_loop281b_agent.py && uptime
+-rwxr-xr-x  1 ben-hannan  staff   1873 Sep 23 04:40 scripts/claude_281b_panel.sh
+-rwxr-xr-x  1 ben-hannan  staff   1911 Sep 23 04:40 scripts/claude_281b_runall.sh
+-rw-r--r--  1 ben-hannan  staff   6873 Sep 23 04:38 scripts/claude_called281b_devcases.py
+-rw-r--r--  1 ben-hannan  staff   3973 Sep 23 04:39 scripts/claude_called281b_panelrun.py
+-rw-r--r--  1 ben-hannan  staff  11912 Sep 23 04:40 scripts/claude_called281b_panelscore.py
+-rw-r--r--  1 ben-hannan  staff   5035 Sep 23 04:40 scripts/claude_called281b_regscore.py
+-rw-r--r--  1 ben-hannan  staff    789 Sep 23 04:38 scripts/claude_called281b_run.py
+-rw-r--r--  1 ben-hannan  staff   4496 Sep 23 04:38 scripts/claude_called281b_score.py
+-rw-r--r--  1 ben-hannan  staff   7622 Sep 23 04:37 scripts/claude_fix281b_casual.py
+-rw-r--r--  1 ben-hannan  staff   6313 Sep 23 04:37 scripts/claude_loop281b_agent.py
+ 4:40  up 2 days, 20:30, 4 users, load averages: 116.40 86.26 66.35
+[0m
+[0m$ [0mpython3 -m py_compile scripts/claude_fix281b_casual.py scripts/claude_loop281b_agent.py scripts/claude_called281b_devcases.py scripts/claude_called281b_run.py scripts/claude_called281b_score.py scripts/claude_called281b_panelrun.py scripts/claude_called281b_panelscore.py scripts/claude_called281b_regscore.py && echo COMPILE-OK; sleep 90; uptime
+COMPILE-OK
+ 4:42  up 2 days, 20:31, 4 users, load averages: 127.64 98.62 73.26
+[0m
+[0m$ [0msleep 240; uptime; df -g / | tail -1
+4:46  up 2 days, 20:35, 4 users, load averages: 146.59 125.60 91.78
+/dev/disk3s1s1       460   12        12    52%  484014 126388840    0%   /
+[0m
+[0m$ [0mhead -30 scripts/claude_fix260_openers.py | grep -n import; echo ---; head -20 scripts/claude_fix281_called.py | grep -n import; echo ---; grep -n "^import\|^from" scripts/fable_loop90_agent.py | head; echo ---; sleep 200; uptime
+---
+---
+33:from __future__ import annotations
+35:import argparse
+36:import json
+37:import sys
+38:from pathlib import Path
+44:import fable_agent_loop as A  # noqa: E402 (Protocols + AgentLoop base, read-only)
+45:import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+46:import fable_daemon74_run as D74  # noqa: E402 (mailbox daemon base, read-only)
+47:import fable_fix77_core as F77  # noqa: E402 (gate + reasoner + seal, read-only)
+48:import fable_listening_m1 as L  # noqa: E402 (doorway, read-only)
+---
+ 4:50  up 2 days, 20:39, 4 users, load averages: 53.74 97.18 87.71
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281b_agent.py --config artifacts/claude-called281b-20260923/loop281b-config.json --once "What is Alma's cat called?" --state-dir /tmp/once281b 2>&1 | tail -3
+I don't know anyone called Alma.
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_run.py dev scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json artifacts/claude-called281b-20260923/pilot/work281 devcases_tmp 2>/dev/null || export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_run.py dev scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json artifacts/claude-called281b-20260923/pilot/work281 artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281.json 2>&1 | tail -3
+4:50  up 2 days, 20:39, 4 users, load averages: 58.48 96.10 87.50
+done 56
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_run.py dev scripts/claude_loop281b_agent.py artifacts/claude-called281b-20260923/loop281b-config.json artifacts/claude-called281b-20260923/pilot/work281b artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281b.json 2>&1 | tail -3
+done 56
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_score.py dev artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281.json artifacts/claude-called281b-20260923/pilot/dev281b.json artifacts/claude-called281b-20260923/pilot/dev-score.json 2>&1 | tail -50
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281b_score.py", line 117, in <module>
+    sys.exit(main(sys.argv))
+             ^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281b_score.py", line 40, in main
+    cases = json.load(open(argv[1]))
+                      ^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'dev'
+[0m
+[0m← [0mEdit scripts/claude_called281b_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281b_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281b_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281b_score.py
+@@ -36,12 +36,15 @@
+     return str(turn).rstrip().endswith("?")
+ 
+ 
+ def main(argv):
+-    cases = json.load(open(argv[1]))
+-    run281 = json.load(open(argv[2]))
+-    run281b = json.load(open(argv[3]))
+-    outp = argv[4]
++    args = list(argv[1:])
++    if args and args[0] == "dev":
++        args = args[1:]
++    cases = json.load(open(args[0]))
++    run281 = json.load(open(args[1]))
++    run281b = json.load(open(args[2]))
++    outp = args[3]
+     r81 = {c["id"]: c for c in run281}
+     r8b = {c["id"]: c for c in run281b}
+     fams = {}
+     moves = []
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_score.py dev artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281.json artifacts/claude-called281b-20260923/pilot/dev281b.json artifacts/claude-called281b-20260923/pilot/dev-score.json 2>&1 | tail -50
+stored_formal  10/10 miss=[]
+stored_casual  19/20 miss=['d281b-014']
+opener_casual  4/4 miss=[]
+notstored      8/8 miss=[]
+ambiguous      8/8 miss=[]
+control        6/6 miss=[]
+moves 281->281b: 20
+  MOVE d281b-003 1
+  MOVE d281b-009 1
+  MOVE d281b-010 1
+  MOVE d281b-012 1
+  MOVE d281b-013 1
+  MOVE d281b-015 1
+  MOVE d281b-016 1
+  MOVE d281b-017 1
+  MOVE d281b-018 1
+  MOVE d281b-019 1
+  MOVE d281b-021 1
+  MOVE d281b-022 1
+  MOVE d281b-023 1
+  MOVE d281b-027 1
+  MOVE d281b-028 1
+  MOVE d281b-029 1
+  MOVE d281b-030 1
+  MOVE d281b-031 1
+  MOVE d281b-032 1
+  MOVE d281b-033 1
+problems: ["d281b-014 check 1 has 'Eng'"]
+[0m
+[0m$ [0mpython3 -c "
+import json
+d281 = {c['id']: c for c in json.load(open('artifacts/claude-called281b-20260923/pilot/dev281.json'))}
+d281b = {c['id']: c for c in json.load(open('artifacts/claude-called281b-20260923/pilot/dev281b.json'))}
+for cid in ['d281b-014']:
+    for arm, d in (('281', d281), ('281b', d281b)):
+        print('==', arm, cid)
+        for r in d[cid]['rows']:
+            print('  turn:', r['turn'][:60])
+            print('  reply:', r['reply'][:160])
+            print('  ev:', r['ev'], 'triples:', d[cid]['stored'])
+"
+== 281 d281b-014
+  turn: Nils's farm is Eng.
+  reply: Saved: Nils's farm is Eng.
+  ev: 3 triples: [['Nils', 'farm', 'Eng']]
+  turn: whats nils farm called
+  reply: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+  ev: 0 triples: [['Nils', 'farm', 'Eng']]
+== 281b d281b-014
+  turn: Nils's farm is Eng.
+  reply: Saved: Nils's farm is Eng.
+  ev: 3 triples: [['Nils', 'farm', 'Eng']]
+  turn: whats nils farm called
+  reply: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+  ev: 0 triples: [['Nils', 'farm', 'Eng']]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_fix281b_casual as F
+subs = {'nils': 'Nils'}
+for t in ['whats nils farm called', 'whats Nils farm called?', 'What is Nils farm called?']:
+    print(repr(t), '->', repr(F.normalize_casual281b(t, subs)))
+" 2>&1 | tail -5
+'whats nils farm called' -> 'What is nils farm called?'
+'whats Nils farm called?' -> 'What is Nils farm called?'
+'What is Nils farm called?' -> None
+[0m
+[0m← [0mEdit scripts/claude_fix281b_casual.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281b_casual.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281b_casual.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281b_casual.py
+@@ -92,12 +92,16 @@
+     m = re.match(r"^([A-Za-z]+)s$", tok)
+     if m is not None:
+         stem = m.group(1)
+         if len(stem) >= 2 and stem.lower() in subjects:
++            # "anas" names known "Ana" -> the formal possessive.
+             return subjects[stem.lower()] + "'s"
+-        return None
+     if tok.lower() in subjects:
+-        return subjects[tok.lower()]
++        canon = subjects[tok.lower()]
++        if canon.endswith(("s", "S")):
++            # "nils" names known "Nils" -> "Nils's", the formal teach form.
++            return canon + "'s"
++        return canon
+     return None
+ 
+ 
+ # (head, subj_tok, rel_tok) shapes for the possessive fix, matched on the
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_fix281b_casual as F
+subs = {'nils': 'Nils', 'ana': 'Ana'}
+for t in ['whats nils farm called', 'whats anas cat called', 'what is Nils farm called?']:
+    print(repr(t), '->', repr(F.normalize_casual281b(t, subs)))
+" 2>&1 | tail -4
+'whats nils farm called' -> "What is Nils's farm called?"
+'whats anas cat called' -> "What is Ana's cat called?"
+'what is Nils farm called?' -> None
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_run.py dev scripts/claude_loop281b_agent.py artifacts/claude-called281b-20260923/loop281b-config.json artifacts/claude-called281b-20260923/pilot/work281b artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281b.json 2>&1 | tail -2 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_score.py dev artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281.json artifacts/claude-called281b-20260923/pilot/dev281b.json artifacts/claude-called281b-20260923/pilot/dev-score.json 2>&1 | tail -12
+4:51  up 2 days, 20:41, 4 users, load averages: 57.07 87.06 84.96
+done 56
+  MOVE d281b-019 1
+  MOVE d281b-021 1
+  MOVE d281b-022 1
+  MOVE d281b-023 1
+  MOVE d281b-027 1
+  MOVE d281b-028 1
+  MOVE d281b-029 1
+  MOVE d281b-030 1
+  MOVE d281b-031 1
+  MOVE d281b-032 1
+  MOVE d281b-033 1
+problems: none
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_score.py dev artifacts/claude-called281b-20260923/devcases281b.json artifacts/claude-called281b-20260923/pilot/dev281.json artifacts/claude-called281b-20260923/pilot/dev281b.json artifacts/claude-called281b-20260923/pilot/dev-score.json 2>&1 | head -12
+stored_formal  10/10 miss=[]
+stored_casual  20/20 miss=[]
+opener_casual  4/4 miss=[]
+notstored      8/8 miss=[]
+ambiguous      8/8 miss=[]
+control        6/6 miss=[]
+moves 281->281b: 21
+  MOVE d281b-003 1
+  MOVE d281b-009 1
+  MOVE d281b-010 1
+  MOVE d281b-012 1
+  MOVE d281b-013 1
+[0m
+[0m$ [0mpython3 -c "
+import json
+s = json.load(open('artifacts/claude-called281b-20260923/pilot/dev-score.json'))
+print([f'{a}:turn{b}' for a, b in s['moves_281_to_281b']])
+print('problems:', s['problems'])
+for fam, f in s['families'].items(): print(fam, f['right'], '/', f['n'])
+"
+['d281b-003:turn1', 'd281b-009:turn1', 'd281b-010:turn1', 'd281b-012:turn1', 'd281b-013:turn1', 'd281b-014:turn1', 'd281b-015:turn1', 'd281b-016:turn1', 'd281b-017:turn1', 'd281b-018:turn1', 'd281b-019:turn1', 'd281b-021:turn1', 'd281b-022:turn1', 'd281b-023:turn1', 'd281b-027:turn1', 'd281b-028:turn1', 'd281b-029:turn1', 'd281b-030:turn1', 'd281b-031:turn1', 'd281b-032:turn1', 'd281b-033:turn1']
+problems: []
+stored_formal 10 / 10
+stored_casual 20 / 20
+opener_casual 4 / 4
+notstored 8 / 8
+ambiguous 8 / 8
+control 6 / 6
+[0m
+[0m$ [0mpython3 -c "
+import json
+d281 = {c['id']: c for c in json.load(open('artifacts/claude-called281b-20260923/pilot/dev281.json'))}
+d281b = {c['id']: c for c in json.load(open('artifacts/claude-called281b-20260923/pilot/dev281b.json'))}
+cases = {c['id']: c for c in json.load(open('artifacts/claude-called281b-20260923/devcases281b.json'))}
+for cid in ['d281b-011','d281b-020','d281b-024','d281b-025','d281b-026','d281b-034']:
+    print('==', cid, cases[cid]['family'], '|', cases[cid]['turns'][1][:50])
+    print('  281 :', d281[cid]['rows'][1]['reply'][:100])
+    print('  281b:', d281b[cid]['rows'][1]['reply'][:100])
+"
+== d281b-011 stored_casual | what is kajas bird called?
+  281 : Kaja's bird is Pip.
+  281b: Kaja's bird is Pip.
+== d281b-020 stored_casual | what is Ulriks trail called?
+  281 : Ulrik's trail is Sti.
+  281b: Ulrik's trail is Sti.
+== d281b-024 stored_casual | what do you call Bentes garden?
+  281 : Bente's garden is Hage.
+  281b: Bente's garden is Hage.
+== d281b-025 stored_casual | what is Dags bridge named?
+  281 : Dag's bridge is Bru.
+  281b: Dag's bridge is Bru.
+== d281b-026 stored_casual | whats the name of Edels tower?
+  281 : Edel's tower is Taarn.
+  281b: Edel's tower is Taarn.
+== d281b-034 opener_casual | So, whats the name of mortens flute?
+  281 : Morten's flute is Floyte.
+  281b: Morten's flute is Floyte.
+[0m
+[0m$ [0mcat artifacts/claude-called281-20260923/run/uptime.log 2>/dev/null | head; uptime
+04:16:23 uptime load1=58.65 before: M2-suites
+04:16:48 uptime load1=62.15 before: M2-rt136
+04:17:18 uptime load1=60.28 before: M2-rt136
+04:17:48 uptime load1=53.98 before: M2-rt136
+04:17:50 uptime load1=53.98 before: M2-rt143
+04:17:55 uptime load1=53.18 before: VP
+TOTAL 102 s
+ 4:52  up 2 days, 20:41, 4 users, load averages: 55.07 82.37 83.34
+[0m
+[0m$ [0mbash scripts/claude_281b_runall.sh artifacts/claude-called281b-20260923/pilot/suites 2>&1 | tail -15
+04:52:44 uptime load1=54.72 before: M2-suites
+04:53:19 uptime load1=56.73 before: M2-rt136
+04:53:22 uptime load1=56.73 before: M2-rt143
+04:53:27 uptime load1=57.07 before: VP
+TOTAL 55 s
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.7', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=29.8'} gate=GATE: clean
+rt136: n=145 diffs=[] gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=[] vs diffs=[]
+VERDICT: PASS
+[0m
+[0m# [0mTodos
+[✓] Step 1: show casual forms fail on 281 with own dev turns
+[✓] Step 2: write 50+ dev dialogs (casual+formal, never-taught, ambiguous, controls)
+[✓] Step 3: build 281b mixin+agent, pilot on dev, suites vs 281 rows, probes
+[•] Step 4: PASSMARKS + mock-panel end-to-end (user/user_text keys) + seal + ledger
+[ ] Step 5: poll panel seal, run once per arm (281, 281b)
+[ ] Step 6: RESULTS.md + final reply verdict/marks/moves
+[0m
+[0m$ [0mpython3 -c "
+import re
+txt = open('artifacts/fable-predictions-ledger.md').read()
+for line in txt.splitlines():
+    if re.match(r'^- P28[012]', line):
+        print(line[:140])
+"
+- P280.1 (exp 280 honest ability list, outermost turn280 over 260, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-capab280
+- P280.2 M1 blind capabilpanel280 (never read): M1a 0 replies on 280 with an old-sheet signature (260 arm >= 1 beside it); M1b every general
+- P280.3 Registered verdict lean: PASS ~70%. Likeliest failure is M1b on a panel general wording outside the closed 16-form set (stays clari
+- P280.4 OUTCOME (2026-09-23, build agent, sealed exp 280) registered verdict FAIL on M1b only, as P280.3's likeliest failure. M1 panel (36 
+- P280.5 CORRECTION to P280.4's seal count: 12/15 sealed files byte-identical (the 3 post-seal driver fixes are run.py, score.py, regscore.p
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-2
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 12
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stor
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-ca
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not by
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH 
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers
+- P282.1 (exp 282 casual greetings and closings get small talk, outermost layer on 260, builder, sealed 2026-09-23, SEAL.sha256.txt artifact
+- P282.2 Verifier probes vs 260's saved rows: exactly 1 changed row, vp E04 (Q "what's up?" with nothing stored -> the head's greeting reply
+- P282.3 M1 blind smallpanel282: smalltalk fitting on 282 >= 90% (260 arm shown beside); 0 smalltalk writes on 282; 0 question writes on 282
+- P282.4 M3 smalltalkpanel234 rerun once per arm: wellbeing hits 282 >= 260's hits; every other item 282 == 260; 0 setup/store diffs; 0 writ
+- P282.5 OUTCOME (2026-09-23, builder) registered verdict PASS on all sealed bars with a flagged figure. M1 (fixed driver re-run after void
+[0m
+[0m← [0mWrite /tmp/mock281b_gen.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 /tmp/mock281b_gen.py && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelrun.py panelrun scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json /tmp/mockwork81 /tmp/mock281b_text.jsonl /tmp/mockrun81.json 2>&1 | tail -2
+mock panels written: 10
+done 6 dialogs 10 turns
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelrun.py panelrun scripts/claude_loop281b_agent.py artifacts/claude-called281b-20260923/loop281b-config.json /tmp/mockwork8b /tmp/mock281b_text.jsonl /tmp/mockrun8b.json 2>&1 | tail -2 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelscore.py /tmp/mock281b_text.jsonl /tmp/mockrun81.json /tmp/mockrun8b.json /tmp/mockscore.json 2>&1 | tail -10
+done 6 dialogs 10 turns
+teach ok81=4/4 ok8b=4 store_same=4 fail81=[] fail8b=[] teach_store_diffs=[]
+stored denom=2/3 excluded=['M6#0']
+stored(denom): 8b right 2/2 wrong=0 abstain=0 (281 right=1) miss=[] wrong=[] all_n_right8b=2
+notstored abstain8b 1/1 (281 1) guesses8b=[] guesses81=[]
+ambiguous abstain8b=1 abstain81=1 same=1/1 moved=[]
+control right8b=1 right81=1 same=1/1 moved=[]
+question writes 8b=[] 81=[]
+store diffs 281bvs281: []
+broken abstains 8b=[] 81=[]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelrun.py panelrun scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json /tmp/mockwork81u /tmp/mock281b_user.jsonl /tmp/mockrun81u.json 2>&1 | tail -1 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelrun.py panelrun scripts/claude_loop281b_agent.py artifacts/claude-called281b-20260923/loop281b-config.json /tmp/mockwork8bu /tmp/mock281b_user.jsonl /tmp/mockrun8bu.json 2>&1 | tail -1 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelscore.py /tmp/mock281b_user.jsonl /tmp/mockrun81u.json /tmp/mockrun8bu.json /tmp/mockscoreu.json 2>&1 | tail -4 && python3 -c "
+import json
+a = json.load(open('/tmp/mockscore.json')); b = json.load(open('/tmp/mockscoreu.json'))
+a.pop('stored', None); b.pop('stored', None)
+print('score files identical (excl stored-denom detail):', json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True))
+sa = json.load(open('/tmp/mockscore.json'))['stored']; sb = json.load(open('/tmp/mockscoreu.json'))['stored']
+print('stored blocks identical:', sa == sb)
+"
+done 6 dialogs 10 turns
+done 6 dialogs 10 turns
+control right8b=1 right81=1 same=1/1 moved=[]
+question writes 8b=[] 81=[]
+store diffs 281bvs281: []
+broken abstains 8b=[] 81=[]
+score files identical (excl stored-denom detail): True
+stored blocks identical: True
+[0m
+[0m$ [0mpython3 -c "
+import json
+rows = [json.loads(x) for x in open('/tmp/mock281b_text.jsonl')]
+rows[0].pop('gold')
+open('/tmp/mock281b_bad.jsonl','w').write('\n'.join(json.dumps(r) for r in rows))
+rows2 = [json.loads(x) for x in open('/tmp/mock281b_text.jsonl')]
+rows2[1]['category'] = 'weird_cat'
+open('/tmp/mock281b_badcat.jsonl','w').write('\n'.join(json.dumps(r) for r in rows2))
+"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelscore.py /tmp/mock281b_bad.jsonl /tmp/mockrun81.json /tmp/mockrun8b.json /tmp/x.json; echo "exit=$?"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281b_panelscore.py /tmp/mock281b_badcat.jsonl /tmp/mockrun81.json /tmp/mockrun8b.json /tmp/x.json; echo "exit=$?"
+SCHEMA-MISMATCH: panel row missing 'gold'
+exit=3
+SCHEMA-MISMATCH: unexpected category 'weird_cat'
+exit=3
+[0m
+[0m← [0mWrite artifacts/claude-called281b-20260923/predicted_moves281b.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-called281b-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix281b_casual.py scripts/claude_loop281b_agent.py artifacts/claude-called281b-20260923/loop281b-config.json scripts/claude_called281b_devcases.py artifacts/claude-called281b-20260923/devcases281b.json scripts/claude_called281b_run.py scripts/claude_called281b_score.py scripts/claude_called281b_regscore.py scripts/claude_called281b_panelrun.py scripts/claude_called281b_panelscore.py scripts/claude_281b_runall.sh scripts/claude_281b_panel.sh artifacts/claude-called281b-20260923/PASSMARKS.md artifacts/claude-called281b-20260923/predicted_moves281b.json artifacts/claude-called281b-20260923/pilot/dev281.json artifacts/claude-called281b-20260923/pilot/dev281b.json artifacts/claude-called281b-20260923/pilot/dev-score.json > artifacts/claude-called281b-20260923/SEAL.sha256.txt && cat artifacts/claude-called281b-20260923/SEAL.sha256.txt | wc -l && ( shasum -a 256 -c artifacts/claude-called281b-20260923/SEAL.sha256.txt && echo SEAL-OK ); ls artifacts/ | grep -i panel281b; echo ---; git status --short | grep -v "^??" | head; git status --short | grep "^??" | head -20
+17
+scripts/claude_fix281b_casual.py: OK
+scripts/claude_loop281b_agent.py: OK
+artifacts/claude-called281b-20260923/loop281b-config.json: OK
+scripts/claude_called281b_devcases.py: OK
+artifacts/claude-called281b-20260923/devcases281b.json: OK
+scripts/claude_called281b_run.py: OK
+scripts/claude_called281b_score.py: OK
+scripts/claude_called281b_regscore.py: OK
+scripts/claude_called281b_panelrun.py: OK
+scripts/claude_called281b_panelscore.py: OK
+scripts/claude_281b_runall.sh: OK
+scripts/claude_281b_panel.sh: OK
+artifacts/claude-called281b-20260923/PASSMARKS.md: OK
+artifacts/claude-called281b-20260923/predicted_moves281b.json: OK
+artifacts/claude-called281b-20260923/pilot/dev281.json: OK
+artifacts/claude-called281b-20260923/pilot/dev281b.json: OK
+artifacts/claude-called281b-20260923/pilot/dev-score.json: OK
+SEAL-OK
+claude-calledpanel281b-20260923
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+[0m
+[0m$ [0mls -la artifacts/claude-calledpanel281b-20260923/; echo ---; ( shasum -a 256 -c artifacts/claude-calledpanel281b-20260923/SEAL.sha256.txt && echo PANEL-SEAL-OK ) 2>&1 | tail -8
+total 40
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 04:37 .
+drwxr-xr-x@ 422 ben-hannan  staff  13504 Sep 23 04:53 ..
+-rw-r--r--    1 ben-hannan  staff   7983 Sep 23 04:36 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   1021 Sep 23 04:37 README.md
+-rw-r--r--    1 ben-hannan  staff    241 Sep 23 04:37 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff    629 Sep 23 04:37 SPEC-COPY.md
+---
+artifacts/claude-calledpanel281b-20260923/panel.jsonl: OK
+artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md: OK
+PANEL-SEAL-OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P281b.1 (2026-09-23, builder; exp 281b casual called/named questions on 281, CPU only, sealed 17 files SEAL.sha256.txt artifacts/claude-called281b-20260923; blind panel never opened, calledpanel281 burned per director note) M1 blind calledpanel281b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text|user, categories teach_setup/stored_called/nostore_called/ambiguous_called/control_plain, SCHEMA-MISMATCH exit 3 = VOID): stored items answered exactly >= 90% over the denominator (stored rows whose dialog teach triple is stored on the 281 arm = the note's 260-arm denominator via the sealed teach-identity property; 281 arm shown); 0 wrong; notstored 100% abstain; ambiguous + control 0 moves vs 281; teach fails <= 2 on 281 else VOID; 0 store diffs; 0 question writes. Predicted moves: exactly the casual-wording + stored-fact items (dev: 21 stored-shape moves d281b-003/009/010/012-019/021-023/027-033 turn 1); ?-terminated lowercase/doyoucall/whats-nameof shapes 281 already answers stay identical.
+- P281b.2 (same) M2 frozen suites vs 281 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 281's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 281 rows: vp 98 + supp 12, 0 changes. Dev 56 own-wording fictional-name dialogs: stored_formal 10/10 + stored_casual 20/20 + opener_casual 4/4 answer with the stored value on 281b, all other 91 turns byte-identical 281b vs 281, notstored 8/8 abstain both arms, 0 question writes.
+- P281b.3 (same) falsifiers: any 281b answer with a value not in the store, any question-turn write, any ambiguous/control/notstored move vs 281, any suite/probe move vs 281's rows, or any teach store diff 281b vs 281 proves the change wrong. Known limits: multi-word no-apostrophe subjects unrestored; formal text 281 mishandles stays byte-identical; ?-less non-question-word-start or cue-less turns never normalise; rewrite failures keep 281's reply (incl. malformed abstains, report-only).
+EOF
+tail -3 artifacts/fable-predictions-ledger.md | cut -c1-60
+- P281b.1 (2026-09-23, builder; exp 281b casual called/named
+- P281b.2 (same) M2 frozen suites vs 281 saved rows: session
+- P281b.3 (same) falsifiers: any 281b answer with a value no
+[0m
+[0m# [0mTodos
+[✓] Step 1: show casual forms fail on 281 with own dev turns
+[✓] Step 2: write 50+ dev dialogs (casual+formal, never-taught, ambiguous, controls)
+[✓] Step 3: build 281b mixin+agent, pilot on dev, suites vs 281 rows, probes
+[✓] Step 4: PASSMARKS + mock-panel end-to-end (user/user_text keys) + seal + ledger
+[•] Step 5: poll panel seal, run once per arm (281, 281b)
+[ ] Step 6: RESULTS.md + final reply verdict/marks/moves
+[0m
+[0m$ [0muptime
+4:55  up 2 days, 20:45, 4 users, load averages: 52.02 68.80 77.40
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-called281b-20260923/SEAL.sha256.txt > /tmp/sealrecheck.txt 2>&1; tail -1 /tmp/sealrecheck.txt; grep -c OK /tmp/sealrecheck.txt
+artifacts/claude-called281b-20260923/pilot/dev-score.json: OK
+17
+[0m
+[0m$ [0mbash scripts/claude_281b_runall.sh artifacts/claude-called281b-20260923/run 2>&1 | tail -10
+04:56:19 uptime load1=47.03 before: M2-rt136
+04:56:21 uptime load1=49.11 before: M2-rt143
+04:56:26 uptime load1=48.62 before: VP
+TOTAL 43 s
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.6', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=20.3'} gate=GATE: clean
+rt136: n=145 diffs=[] gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=[] vs diffs=[]
+VERDICT: PASS
+[0m
+[0m$ [0mbash scripts/claude_281b_panel.sh artifacts/claude-called281b-20260923/run 2>&1 | tail -14
+artifacts/claude-calledpanel281b-20260923/panel.jsonl: OK
+artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md: OK
+panel file: artifacts/claude-calledpanel281b-20260923/panel.jsonl
+teach ok81=10/10 ok8b=10 store_same=10 fail81=[] fail8b=[] teach_store_diffs=[]
+stored denom=25/25 excluded=[]
+stored(denom): 8b right 9/25 wrong=0 abstain=16 (281 right=9) miss=['d01#1', 'd01#3', 'd02#2', 'd02#3', 'd03#1', 'd03#3', 'd04#2', 'd04#3', 'd05#1', 'd05#2', 'd06#2', 'd07#1', 'd08#1', 'd08#2', 'd09#1', 'd10#2'] wrong=[] all_n_right8b=9
+notstored abstain8b 10/10 (281 10) guesses8b=[] guesses81=[]
+ambiguous abstain8b=10 abstain81=10 same=10/10 moved=[]
+control right8b=5 right81=5 same=5/5 moved=[]
+question writes 8b=[] 81=[]
+store diffs 281bvs281: []
+broken abstains 8b=[] 81=[]
+exit 0
+TOTAL 5 s
+[0m
+[0m$ [0mpython3 -c "
+import json
+s = json.load(open('artifacts/claude-called281b-20260923/run/panel-score281b.json'))
+print('n =', s['n'])
+for k in ('teach','stored','notstored','ambiguous','control'): print(k, {kk: v for kk, v in s[k].items() if not isinstance(v, list)})
+print('qwrite8b', s['qwrite8b'], 'qwrite81', s['qwrite81'])
+print('store_diffs', s['store_diffs'])
+r81 = {(r['dialog_id'], r['turn_index']): r for r in json.load(open('artifacts/claude-called281b-20260923/run/panel-281.json'))}
+r8b = {(r['dialog_id'], r['turn_index']): r for r in json.load(open('artifacts/claude-called281b-20260923/run/panel-281b.json'))}
+panel = [json.loads(x) for x in open('artifacts/claude-calledpanel281b-20260923/panel.jsonl')]
+nst = [it for it in panel if it['category'] == 'stored_called']
+same = sum(1 for it in nst if r81[(it['dialog_id'], it['turn_index'])]['reply'] == r8b[(it['dialog_id'], it['turn_index'])]['reply'])
+print('stored same-reply 281b vs 281:', same, '/', len(nst))
+"
+n = 60
+teach {'n': 10, 'ok81': 10, 'ok8b': 10, 'store_same': 10}
+stored {'n': 25, 'denom_n': 25, 'right8b': 9, 'wrong8b': 0, 'abstain8b': 16, 'right81': 9, 'all_right8b': 9}
+notstored {'n': 10, 'right8b': 10, 'right81': 10}
+ambiguous {'n': 10, 'abstain8b': 10, 'abstain81': 10, 'same': 10}
+control {'n': 5, 'right8b': 5, 'right81': 5, 'same': 5}
+qwrite8b [] qwrite81 []
+store_diffs []
+stored same-reply 281b vs 281: 25 / 25
+[0m
+[0m← [0mWrite /tmp/diag281b.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/diag281b.py 2>&1 | tail -30
+stored n=25 denom=25 right8b=9 misses=16
+d01#1 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d01#2 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d01#3 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d02#1 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d02#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d02#3 MISS {'ends_q': False, 'start_qw': True, 'cue': False, 'rw281': False, 'norm_fires': False}
+d03#1 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d03#2 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d03#3 MISS {'ends_q': True, 'start_qw': False, 'cue': True, 'rw281': False, 'norm_fires': False}
+d04#1 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d04#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d04#3 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d05#1 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d05#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d05#3 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d06#1 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d06#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d07#1 MISS {'ends_q': False, 'start_qw': True, 'cue': False, 'rw281': False, 'norm_fires': False}
+d07#2 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d08#1 MISS {'ends_q': True, 'start_qw': False, 'cue': True, 'rw281': False, 'norm_fires': False}
+d08#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d09#1 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+d09#2 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d10#1 right {'ends_q': True, 'start_qw': True, 'cue': True, 'rw281': True, 'norm_fires': False}
+d10#2 MISS {'ends_q': False, 'start_qw': True, 'cue': True, 'rw281': False, 'norm_fires': True}
+[0m
+[0m← [0mWrite /tmp/diag281b2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/diag281b2.py 2>&1 | tail -20
+d01#1 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d01#3 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d02#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d02#3 norm-silent
+d03#1 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d03#3 norm-silent
+d04#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d04#3 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d05#1 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d05#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d06#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d07#1 norm-silent
+d08#1 norm-silent
+d08#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d09#1 norm-fired {'rel_parses': False, 'rel_in_store': False}
+d10#2 norm-fired {'rel_parses': False, 'rel_in_store': False}
+[0m
+[0m← [0mWrite /tmp/diag281b3.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/diag281b3.py 2>&1 | tail -4
+RIGHT shapes: {('nameof', 2, 'apos'): 3, ('trailing', 2, 'apos'): 6}
+MISS shapes: {('no-match', None): 11, ('trailing', 2, 'noapos'): 3, ('nameof', 2, 'noapos'): 2}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import json
+import claude_fix281_called as F281
+import claude_fix281b_casual as F281B
+import claude_fix260_openers as F260
+panel = [json.loads(x) for x in open('artifacts/claude-calledpanel281b-20260923/panel.jsonl')]
+r81 = {(r['dialog_id'], r['turn_index']): r for r in json.load(open('artifacts/claude-called281b-20260923/run/panel-281.json'))}
+score = json.load(open('artifacts/claude-called281b-20260923/run/panel-score281b.json'))
+miss = set(score['stored']['miss_ids8b'])
+for it in panel:
+    if it['category'] != 'stored_called': continue
+    key = (it['dialog_id'], it['turn_index']); iid = f'{key[0]}#{key[1]}'
+    if iid not in miss: continue
+    t = it.get('user_text', it.get('user', ''))
+    ta = F281._apos(t); core = ta.strip()
+    sp = F260.split_openers260(ta)
+    if sp is not None and sp[0].strip(): core = sp[0].strip()
+    m, kind = F281._match_core(core)
+    if m is None: m, kind = F281._match_core(core.rstrip() + '?')
+    subs = {}
+    for tr in r81[key]['triples']: subs[' '.join(str(tr[0]).lower().split())] = str(tr[0])
+    if m is None:
+        print(iid, 'no-match cue=', F281B._has_cue281b(core))
+        continue
+    toks = m.group('rel').strip().split()
+    subj = toks[0] if toks else ''
+    print(iid, kind, 'ntok=', len(toks), 'apos=', chr(39) in m.group('rel'), 'restorable=', F281B._fix_tok281b(subj, subs) is not None, 'norm=', F281B.normalize_casual281b(t, subs) is not None)
+" 2>&1 | tail -18
+d01#1 no-match cue= True
+d01#3 trailing ntok= 2 apos= False restorable= True norm= True
+d02#2 nameof ntok= 2 apos= False restorable= True norm= True
+d02#3 no-match cue= False
+d03#1 no-match cue= True
+d03#3 no-match cue= True
+d04#2 no-match cue= True
+d04#3 trailing ntok= 2 apos= False restorable= True norm= True
+d05#1 no-match cue= True
+d05#2 nameof ntok= 2 apos= False restorable= True norm= True
+d06#2 no-match cue= True
+d07#1 no-match cue= False
+d08#1 no-match cue= True
+d08#2 no-match cue= True
+d09#1 no-match cue= True
+d10#2 trailing ntok= 2 apos= False restorable= True norm= True
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-called281b-20260923/SEAL.sha256.txt 2>&1 | grep -cv OK; echo "non-OK count above (want 0)"; uptime; df -g / | tail -1
+0
+non-OK count above (want 0)
+ 5:00  up 2 days, 20:49, 4 users, load averages: 90.60 76.58 77.92
+/dev/disk3s1s1       460   12        11    53%  484014 123078440    0%   /
+[0m
+[0m← [0mWrite artifacts/claude-called281b-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-called281b-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-called281b-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-called281b-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-called281b-20260923/RESULTS.md
+@@ -52,9 +52,9 @@
+ - verifier probes: vp 98 rows 0 changes, supp 12 rows 0 changes vs 281's rows.
+ 
+ ## Report-only: broken "don't know X's R called/named." abstains
+ 
+-- 281b: 0 turns; 281: 0 turns. (This panel's misses abstain with other شمالی wordings, not the broken template.)
++- 281b: 0 turns; 281: 0 turns. (This panel's misses abstain with other wordings, not the broken template.)
+ 
+ ## Deviations
+ 
+ None after the seal. The 17-file seal re-verified 17/17 OK after all registered runs. Each registered command
+
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL on the M1 stored bar only, with one figure off prediction. M1 (60 turns once per arm, seals 17/17 + panel OK, schema clean, no post-seal change): stored 9/25 on 281b (bar >= 23/25; denom 25/25, 0 excluded) with 0 wrong and 16 abstains (281: 9/25, same 9 ids); notstored 10/10 abstain both; ambiguous 10/10 same-as-281; control 5/5 same (5/5 right both); teach 10/10 both (panel VALID); 0 store diffs; 0 question writes; broken abstains 0 both. M2/probes PASS exactly as P281b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical; rt143 0; vp/vs 0/0). Miss diagnosis by shape category: 5 misses formalise (known-entity restore, 281 shape match) yet resolve to no stored triple (wording beyond casual typing); 11 match no called shape at all (2 cue-less, rest embedded/non-trailing-cue wordings). No falsifier tripped (0 wrong values, 0 question writes, 0 unpredicted moves). P281b.1 wrong on the stored figure (9 vs >= 23), right on 0-wrong/notstored/ambiguous/control/teach; P281b.2 right; P281b.3 no falsifier tripped.
+EOF
+tail -1 artifacts/fable-predictions-ledger.md | cut -c1-80; ls artifacts/claude-called281b-20260923/ artifacts/claude-called281b-20260923/run/ | head -30
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL
+artifacts/claude-called281b-20260923/:
+devcases281b.json
+loop281b-config.json
+PASSMARKS.md
+pilot
+predicted_moves281b.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-called281b-20260923/run/:
+panel-281.json
+panel-281.log
+panel-281b.json
+panel-281b.log
+panel-files.txt
+panel-score.txt
+panel-score281b.json
+panel-seal-check.txt
+regscore.txt
+regscore281b.json
+rt143nogate-281b.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-281b.json
+vp-281b.log
+[0m
+[0m# [0mTodos
+[✓] Step 1: show casual forms fail on 281 with own dev turns
+[✓] Step 2: write 50+ dev dialogs (casual+formal, never-taught, ambiguous, controls)
+[✓] Step 3: build 281b mixin+agent, pilot on dev, suites vs 281 rows, probes
+[✓] Step 4: PASSMARKS + mock-panel end-to-end (user/user_text keys) + seal + ledger
+[✓] Step 5: poll panel seal, run once per arm (281, 281b)
+[✓] Step 6: RESULTS.md + final reply verdict/marks/moves
+[0m
