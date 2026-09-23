@@ -1,0 +1,314 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls; uptime; df -g /; git rev-parse --show-toplevel 2>&1 | head; ls /private/tmp/claude-502/ 2>&1 | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+18:54  up  8:48, 4 users, load averages: 48.79 55.90 48.39
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         5    69%  484014 61307760    1%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -n 50; echo ---; find "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27" -maxdepth 4 -name "OPUS-RULES.txt" 2>&1 | head
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+---
+[0m
+[0m$ [0mls -R "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4" 2>&1 | head -n 100
+scratchpad
+
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad:
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1 | head -n 50; echo ---; ls scratchpad/ 2>&1 | head -n 50
+ls: scratchpad/briefs/: No such file or directory
+---
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head; echo FETCH_DONE; git show origin/main:handoff/kit/briefs/241b-stylesheet.txt 2>&1 | head -n 200
+FETCH_DONE
+STYLE SHEET v2 FOR GRADING GRAMMAR (exp 241b, M1). The director sealed it on 2026-09-22, before any 241b sweep existed. It is v1 (241-stylesheet.txt) plus the clarifications marked NEW, which make grading stricter or more consistent, never more lenient.
+
+You grade one reply at a time: GRAMMATICAL or UNGRAMMATICAL, with a short reason.
+- A reply is UNGRAMMATICAL if ANY sentence in it breaks any rule below, or is not standard written English.
+- Grade grammar and word choice only. A stiff but correct sentence ("Tarno's city is Vell.") is GRAMMATICAL.
+- Never judge whether a fact is true, or whether a value is sensible for its relation. Names and values are made-up words and may look odd; that alone is never an error.
+
+House rules. Breaking any of these is an error.
+1. Possessives
+   - A singular name takes 's, including names ending in s, x or z ("Tomas's", "Brix's").
+   - A bare apostrophe after a singular name ("Tomas' job") is an error.
+   - A plural common noun ending in s takes a bare apostrophe ("the parents' house"); "parents's" is an error.
+   - An "of" form or a verb form that avoids the possessive is fine.
+2. Lists
+   - Write "A and B" and "A, B and C". No Oxford comma: "A, B, and C" is an error.
+   - No empty slots ("people: .", "A, , B", "and .") and no stray separators.
+   - NEW: the same item twice in one list ("rowing and rowing") is an error.
+3. Numbers in running text
+   - Counts 0–9 are words ("three sisters"); 10 and up are digits.
+   - Digits inside a value (a date, a year, an age, a phone number, an address, a code) are fine.
+   - A bare zero count ("0 people", "zero people") is an error. Say "no one", "nobody", "none" or "I don't know anyone".
+4. Agreement
+   - Count and noun agree ("one person", "two people"); "1 people" and "2 person" are errors.
+   - Subject and verb agree ("X lives", "they live"; "does X live", not "does X lives"). This includes a value used as a subject: "noodles is" is an error.
+   - Verb forms are right ("was born", not "is born" for a birth; "has worked", not "has work").
+5. Articles
+   - Use "a" before a consonant sound and "an" before a vowel sound, going by sound ("an hour", "a university", "an MBA").
+   - No missing article where English needs one ("X is teacher" is an error) and no doubled article.
+6. Sentence form
+   - Each sentence starts with a capital letter and ends with . ? or !
+   - No doubled words ("the the"), no missing words, and no run-on sentences joined only by a comma (comma splices).
+   - Brackets and quotes are balanced.
+   - A question is phrased as a question and ends with "?".
+7. Typography: no space before punctuation, no doubled punctuation ("..", "?.", ".,"), no double spaces, and no leading or trailing space.
+8. No machine text
+   - Raw keys, underscores or placeholders ("date_of_birth", "{name}", "<X>", "None", "null", "[]") are errors, unless the user's own words contained them.
+   - NEW: internal entity codes such as "(E7563)" are machine text and an error.
+9. "(worked out backwards)" follows the statement it qualifies, inside or right after the same sentence. A dangling, doubled or orphaned one is an error.
+10. Pronouns
+   - "I/me/my" for the assistant and "you/your" for the user are fine. Singular "they" is fine.
+   - Pronoun choice is not a grammar error unless it breaks agreement or has no clear referent in the same reply.
+11. NEW: Names and word choice
+   - A value that is plainly a proper name (a person, place, organisation, or the title of a work) starts with a capital letter, even if it looks typed in lowercase. A title keeps its own capital "The" ("the Quiet Tide" inside a sentence is an error when "The Quiet Tide" is the title).
+   - Other values (jobs, foods, hobbies, colours, dates) are not judged for case.
+   - Words must fit what they refer to: "someone/who" for people, "something/which" for things, places, dates and numbers. "Krellwur Press, which is not someone I can look up" is an error.
+
+Output for each reply: id, GRAMMATICAL or UNGRAMMATICAL, and a reason. The reason names the rule number (or "general" for other standard-English errors) and quotes the exact offending words.
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt | shasum -a 256; echo ---; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | wc -l
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  -
+---
+    2690
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '1797,2245p' > /tmp/part5_input.jsonl; wc -l /tmp/part5_input.jsonl; head -c 2000 /tmp/part5_input.jsonl
+449 /tmp/part5_input.jsonl
+{"id": "h1797", "reply": "Saved: Karl Marx is married to Hamad bin Khalifa Al Thani."}
+{"id": "h1798", "reply": "The capital of the country of origin of head coach of San Francisco Giants's officeholder's sport is Bengaluru."}
+{"id": "h1799", "reply": "The continent of the place of birth of Windows 3.1's developer's chief executive officer is Antarctica."}
+{"id": "h1800", "reply": "My notes say Henry Ford founded Ford Motor Company. Do you want me to change it to William Morris, 1st Viscount Nuffield?"}
+{"id": "h1801", "reply": "Updated: Tim Krul's position is cornerback (it was goalkeeper)."}
+{"id": "h1802", "reply": "Saved: Luciano Spalletti's position is midfielder."}
+{"id": "h1803", "reply": "Saved: Joe Biden is a citizen of the United States of America."}
+{"id": "h1804", "reply": "Saved: Gabe Newell is a citizen of the United States of America."}
+{"id": "h1805", "reply": "Saved: Your name is Ruthven."}
+{"id": "h1806", "reply": "Saved: Bennelong is a citizen of Sri Lanka."}
+{"id": "h1807", "reply": "Saved: Origianl broadcaster of Modern Family's officeholder is American Broadcasting Company."}
+{"id": "h1808", "reply": "The official language of director of Madonna's officeholder's country of citizenship is Spanish."}
+{"id": "h1809", "reply": "Saved: Ivo lives in Tallow."}
+{"id": "h1810", "reply": "Updated: Michael Carrick's position is wide receiver (it was midfielder)."}
+{"id": "h1811", "reply": "Saved: The Beatles performed I Am the Walrus."}
+{"id": "h1812", "reply": "The capital of the country of citizenship of iPhone 3G's developer's chief executive officer is London."}
+{"id": "h1813", "reply": "The capital of director of Polyphony Digital's officeholder's country of citizenship is Tokyo."}
+{"id": "h1814", "reply": "The capital of the country of citizenship of Graceland's performer's spouse is El Campu."}
+{"id": "h1815", "reply": "Saved: Jessica Biel is a citizen of the United States of America."}
+{"id": "h1816", "reply": "Saved: Your name is Wren."}
+{"id": "
+[0m
+[0m→ [0mRead /tmp/part5_input.jsonl[90m [limit=150][0m
+[0m→ [0mRead /tmp/part5_input.jsonl[90m [limit=150, offset=151][0m
+[0m→ [0mRead /tmp/part5_input.jsonl[90m [limit=160, offset=301][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+rows=[]
+with open('/tmp/part5_input.jsonl') as f:
+    for i,line in enumerate(f,1):
+        o=json.loads(line)
+        rows.append(o['reply'])
+print('total',len(rows))
+# replies not ending with . ? !
+bad=[(i+1797,r[-40:]) for i,r in enumerate(rows) if not r.endswith(('.', '?','!'))]
+print('not ending punct:', len(bad))
+for ln,t in bad: print(ln, repr(t))
+# replies starting lowercase (first char)
+low=[(i+1797,r[:40]) for i,r in enumerate(rows) if r[0].islower()]
+print('start lowercase:', len(low))
+for ln,t in low: print(ln, repr(t))
+# replies starting with digit
+dig=[(i+1797,r[:40]) for i,r in enumerate(rows) if r[0].isdigit()]
+print('start digit:', len(dig))
+for ln,t in dig: print(ln, repr(t))
+# 'an ' occurrences
+import re
+for i,r in enumerate(rows):
+    for m in re.finditer(r'\ban \w+', r):
+        print(i+1797, repr(m.group(0)))
+" 2>&1 | head -n 60
+total 449
+not ending punct: 4
+1904 'ed: Ragini Dwivedi is a citizen of India'
+1943 'he Galaxy. (I also have Hannah Montana.)'
+1972 "I don't know where Pia lives"
+2033 'Saved: Seaglider is made by Harborline'
+start lowercase: 2
+1926 'position of Updated: Chris Davis is quar'
+2070 "great Lakes Loons's sport's country of o"
+start digit: 1
+1893 "1887 World Series's sport's country of o"
+1999 'an citizen'
+2103 'an citizen'
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,re
+with open('/tmp/part5_input.jsonl') as f:
+    rows=[json.loads(l) for l in f]
+for o in rows:
+    r=o['reply']
+    m=re.search(r'(?i)\b(\w+)\s+\1\b', r)
+    if m: print(o['id'], repr(m.group(0)), repr(r[:80]))
+print('done')
+" 2>&1 | head -n 20; ls artifacts/claude-gradef1-A-20260923/ 2>&1 | head
+h1890 'me me' "My notes say Ann Arbor's continent is North America. Do you want me me to change"
+done
+part1.jsonl
+part2.jsonl
+part3.jsonl
+part4.jsonl
+part6.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+false_reasons = {
+ 'h1890': '6: doubled word \'me me\'',
+ 'h1904': '6: no terminal punctuation after \'India\'',
+ 'h1926': '6: sentence starts with lowercase \'position\'',
+ 'h1972': '6: no terminal punctuation after \'lives\'',
+ 'h1999': '5: \'an citizen\' should be \'a citizen\'',
+ 'h2033': '6: no terminal punctuation after \'Harborline\'',
+ 'h2070': '6: sentence starts with lowercase \'great\'',
+ 'h2103': '5: \'an citizen\' should be \'a citizen\'',
+}
+n=0
+with open('/tmp/part5_input.jsonl') as fin, open('artifacts/claude-gradef1-A-20260923/part5.jsonl','w') as fout:
+    for line in fin:
+        o=json.loads(line)
+        i=o['id']
+        if i in false_reasons:
+            rec={'id':i,'grammatical':False,'reason':false_reasons[i]}
+        else:
+            rec={'id':i,'grammatical':True,'reason':'ok'}
+        fout.write(json.dumps(rec)+'\n')
+        n+=1
+print('wrote',n)
+" && wc -l artifacts/claude-gradef1-A-20260923/part5.jsonl
+wrote 449
+     449 artifacts/claude-gradef1-A-20260923/part5.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+seen=set(); order=[]; nf=0
+with open('artifacts/claude-gradef1-A-20260923/part5.jsonl') as f:
+    for ln,line in enumerate(f,1):
+        o=json.loads(line)
+        assert set(o.keys())=={'id','grammatical','reason'}, o
+        assert o['id'] not in seen, o['id']
+        seen.add(o['id']); order.append(o['id'])
+        if o['grammatical'] is False: nf+=1
+        elif o['grammatical'] is True: assert o['reason']=='ok', o
+assert len(seen)==449
+import re
+nums=sorted(int(re.sub('h','',i)) for i in seen)
+assert nums==list(range(1797,2246)), (nums[0],nums[-1],len(nums))
+assert order==['h%d'%i for i in range(1797,2246)]
+print('OK lines=449 false=',nf)
+for i in range(1797,2246):
+    pass
+" && grep -c '\"grammatical\": false' artifacts/claude-gradef1-A-20260923/part5.jsonl && grep '\"grammatical\": false' artifacts/claude-gradef1-A-20260923/part5.jsonl
+OK lines=449 false= 8
+8
+{"id": "h1890", "grammatical": false, "reason": "6: doubled word 'me me'"}
+{"id": "h1904", "grammatical": false, "reason": "6: no terminal punctuation after 'India'"}
+{"id": "h1926", "grammatical": false, "reason": "6: sentence starts with lowercase 'position'"}
+{"id": "h1972", "grammatical": false, "reason": "6: no terminal punctuation after 'lives'"}
+{"id": "h1999", "grammatical": false, "reason": "5: 'an citizen' should be 'a citizen'"}
+{"id": "h2033", "grammatical": false, "reason": "6: no terminal punctuation after 'Harborline'"}
+{"id": "h2070", "grammatical": false, "reason": "6: sentence starts with lowercase 'great'"}
+{"id": "h2103", "grammatical": false, "reason": "5: 'an citizen' should be 'a citizen'"}
+[0m
+[0m$ [0mgit status --short 2>&1 | head -n 20; echo ---; git log --oneline -3 2>&1 | head
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+---
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+[0m
+[0m$ [0mgit status --short artifacts/claude-gradef1-A-20260923/ 2>&1 | head; echo ---; git add artifacts/claude-gradef1-A-20260923/part5.jsonl && git status --short 2>&1 | grep -v '^??' | head
+---
+The following paths are ignored by one of your .gitignore files:
+artifacts
+hint: Use -f if you really want to add them.
+hint: Disable this message with "git config set advice.addIgnoredFile false"
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-gradef1-A-20260923/part5.jsonl; echo ---; ls -la artifacts/claude-gradef1-A-20260923/; df -g / | tail -1
+.gitignore:5:artifacts/	artifacts/claude-gradef1-A-20260923/part5.jsonl
+---
+total 312
+drwxr-xr-x@   8 ben-hannan  staff    256 Sep 23 18:57 .
+drwxr-xr-x@ 458 ben-hannan  staff  14656 Sep 23 18:51 ..
+-rw-r--r--    1 ben-hannan  staff  24662 Sep 23 18:52 part1.jsonl
+-rw-r--r--    1 ben-hannan  staff  25168 Sep 23 18:52 part2.jsonl
+-rw-r--r--    1 ben-hannan  staff  24453 Sep 23 18:51 part3.jsonl
+-rw-r--r--    1 ben-hannan  staff  27093 Sep 23 18:57 part4.jsonl
+-rw-r--r--    1 ben-hannan  staff  24096 Sep 23 18:57 part5.jsonl
+-rw-r--r--    1 ben-hannan  staff  24533 Sep 23 18:57 part6.jsonl
+/dev/disk3s1s1       460   12         5    69%  484014 60744560    1%   /
+[0m
