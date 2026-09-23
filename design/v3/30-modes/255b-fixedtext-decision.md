@@ -57,3 +57,16 @@ M4 reports every T04 line so this can be checked.
 
 What would prove this wrong: any frozen-suite verdict change (M2 gate), any changed reply that is not an
 exact 255b template, a grader flagging a changed render, or the new T02 text judged untrue on any probe.
+
+## Registration: one piece, two parts, scored separately (added 02:47 UTC, before any build)
+
+Part A = the T02 wording. Part B = the zero-count texts. They are kept in one experiment because they are the
+two registered failures of the same wrapper, they touch disjoint templates (T02 vs T40/T41/T43/T46/T47/T52/T53),
+and splitting them would force a third merge experiment before either could ship. To keep "one change" honest:
+- every prediction in PASSMARKS is numbered and labelled Part A or Part B (P255b.n-A / P255b.n-B);
+- every predicted move and every result is reported per part (M1 renders, M2/M4/M6 moves, M3 changed turns);
+- a move that belongs to neither part is a failure of the piece;
+- PASSMARKS says this choice and the reason above in one paragraph.
+Provenance: the 8 untrue replies come from the 138m verifier probes (artifacts/claude-verify-20260922/138m/probes.json),
+which are dev/verification data, not a TEST-ONLY panel. "zero turns" comes from 255's generated M1 render file.
+The 239 panel was run for 255 but never judged or tuned on; 255b's change was derived without it.
