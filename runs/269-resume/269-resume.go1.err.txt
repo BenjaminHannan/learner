@@ -1,0 +1,2480 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -20; git status --short | head -30; git log --oneline -5; echo ---; uptime; df -g / | head -5
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+---
+ 5:19  up 2 days, 21:08, 4 users, load averages: 26.27 70.08 81.27
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 119286920    0%   /
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "269|264"; echo ===; ls scripts/ | grep -E "269|264"
+claude-ear269-20260923
+claude-earcheck264-20260923
+claude-earpanel264-20260923
+claude-ourpanel269-20260923
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-ear269-20260923/; echo ---; ls artifacts/claude-ourpanel269-20260923/; echo ---; ls scripts/ | grep ear; echo ---; ls artifacts/claude-earcheck264-20260923/ 2>&1 | head
+dev_269.jsonl
+dev269_bpreds.json
+dev269_bpredsA.json
+dev269_bpredsB.json
+dev269_earpreds.json
+dev269_manifest.json
+dev269_pyes.json
+dev269_score.json
+panel269_bpreds.json
+panel269_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdevA
+workBdevB
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---
+claude_ear256_devcases.py
+claude_ear256_deveval.py
+claude_ear256_devrun.py
+claude_ear256_ear.py
+claude_ear256_roundtrip.py
+claude_ear256_route.py
+claude_ear256_score.py
+claude_ear265_armb.py
+claude_ear265_arms.py
+claude_ear265_canon.py
+claude_ear265_devset.py
+claude_ear265_panel.py
+claude_ear265_qbuild.py
+claude_ear265_scoremain.py
+claude_ear265_turns.py
+claude_ear269_armb.py
+claude_ear269_arms.py
+claude_ear269_devset.py
+claude_ear269_groupcheck.py
+claude_ear269_panel.py
+claude_ear269_qbuild.py
+claude_ear269_scoremain.py
+claude_ear269_turns.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_earcheck264_armb.py
+claude_earcheck264_arms.py
+claude_earcheck264_client.py
+claude_earcheck264_commatags.py
+claude_earcheck264_devreport.py
+claude_earcheck264_devset.py
+claude_earcheck264_panel.py
+claude_earcheck264_qa.py
+claude_earcheck264_qbuild.py
+claude_earcheck264_scoremain.py
+claude_earcheck264_turns.py
+claude_smolear235_armb.py
+claude_smolear235_data.py
+claude_smolear235_infer.py
+claude_smolear235_model.py
+claude_smolear235_panel.py
+claude_smolear235_panelfix.py
+claude_smolear235_score.py
+claude_smolear235_train.py
+claude_smolear235b_armb.py
+claude_smolear235b_beam.py
+claude_smolear235b_devdata.py
+claude_smolear235b_infer.py
+claude_smolear235b_panel.py
+claude_smolear235b_score.py
+claude_smolear235b_tau.py
+claude_smolear257_armb.py
+claude_smolear257_data.py
+claude_smolear257_devreport.py
+claude_smolear257_devset.py
+claude_smolear257_infer.py
+claude_smolear257_on235b.py
+claude_smolear257_panel.py
+claude_smolear257_score.py
+claude_smolear257_table.py
+claude_smolear257_tau.py
+claude_smolear257_turns.py
+fable_demo88_rehearse.py
+fable_ears109_data.py
+fable_ears109_score.py
+fable_ears109_smoke.py
+fable_ears109_train.py
+fable_ears119_data.py
+fable_ears119_score.py
+fable_ears119_smoke.py
+fable_ears119_train.py
+fable_ears119_wave.bat
+fable_ears119b_audit.py
+fable_ears119b_data.py
+fable_ears119b_score.py
+fable_ears119b_smoke.py
+fable_ears119b_train.py
+fable_ears119b_wave.bat
+fable_ears119d_diagnose.py
+fable_ears119d_pairs.py
+fable_ears119e_diagnose.py
+fable_ears119e_score.py
+fable_ears119e_wave.bat
+fable_ears119f_data.py
+fable_ears119f_score.py
+fable_ears119f_smoke.py
+fable_ears119f_train.py
+fable_ears119f_wave.bat
+fable_ears119g_model.py
+fable_ears119g_score_d1.py
+fable_ears119g_score.py
+fable_ears119g_smoke.py
+fable_ears119g_train.py
+fable_ears119g_wave.bat
+fable_ears119h_data.py
+fable_ears119h_score.py
+fable_ears119h_smoke.py
+fable_ears119h_train.py
+fable_ears119h_wave.bat
+fable_ears213_relmap.py
+fable_ears213_score.py
+fable_ears213_wave.bat
+fable_ears45_data.py
+fable_ears45_frames.py
+fable_ears45_lexicon.py
+fable_ears45_model.py
+fable_ears45_report.py
+fable_ears45_score.py
+fable_ears45_selftest.py
+fable_ears45_train.py
+fable_ears45_wave.py
+fable_ears47_data.py
+fable_ears47_encoder.py
+fable_ears47_model.py
+fable_ears47_score.py
+fable_ears47_train.py
+fable_ears85_train.py
+fable_earsguard91_daemon.py
+fable_earsguard91_run.py
+fable_earsguard91.py
+fable_learnedaddr43i_stress_hard.py
+fable_learnedaddr43i_stress.py
+fable_learnedaddr43i.py
+fable_learnedparity43j.py
+---
+dev_264.jsonl
+dev257_qa.json
+dev257_qmanifest.json
+dev261b_qa.json
+dev261b_qmanifest.json
+dev264_earpreds.json
+dev264_qa.json
+dev264_qmanifest.json
+devcheck_qa.json
+devcheck_qmanifest.json
+[0m
+[0m→ [0mRead artifacts/claude-ear269-20260923/SEAL.sha256.txt
+[0m→ [0mRead artifacts/claude-ear269-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-ear269-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-ourpanel269-20260923/README.md
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-ear269-20260923/dev_269.jsonl artifacts/claude-ear269-20260923/dev269_earpreds.json artifacts/claude-ear269-20260923/dev269_manifest.json artifacts/claude-ear269-20260923/dev269_pyes.json artifacts/claude-ear269-20260923/dev269_bpreds.json artifacts/claude-ear269-20260923/dev269_score.json scripts/claude_ear269_groupcheck.py scripts/claude_ear269_arms.py scripts/claude_ear269_panel.py scripts/claude_ear269_turns.py scripts/claude_ear269_armb.py scripts/claude_ear269_qbuild.py scripts/claude_ear269_scoremain.py scripts/claude_ear269_devset.py artifacts/claude-ear269-20260923/PASSMARKS.md 2>&1 | head -20; echo ===SEALCHECK===; shasum -c artifacts/claude-ear269-20260923/SEAL.sha256.txt 2>&1 | head -20; echo ===PANELSEAL===; cat artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt; shasum -c artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt 2>&1 | head
+f1ba2fafe5edc9d38acd714d389527d16f17a6797ae223673c5be462ea7527f7  artifacts/claude-ear269-20260923/dev_269.jsonl
+32d5043350873dcce2f35e2d011e3dd4decc3395f8d491a27953bba35e0ba5b6  artifacts/claude-ear269-20260923/dev269_earpreds.json
+5e695d772bbdfb6295090cfbe3a3c4d89d5583f94e7858156501bfdbf448545e  artifacts/claude-ear269-20260923/dev269_manifest.json
+a3b5136f6d734bc8db0693f9af2cc495df9e0466fa511dfccb7e49d113d11767  artifacts/claude-ear269-20260923/dev269_pyes.json
+715b49b5c4cb0bb0cb115b60e77c1ef517ed00f72648536c8b3a59d06a538fe6  artifacts/claude-ear269-20260923/dev269_bpreds.json
+3feab3626e89bfe20c8c93630a7aa6002ba6b09f5c47a4db4fb4126c068f1c24  artifacts/claude-ear269-20260923/dev269_score.json
+426b5bfa4153567c01ae9abf616c62b27d1299931e26bab1f2a57fc695919d3d  scripts/claude_ear269_groupcheck.py
+9dbef3c5bc384df1310815f1d72f7504ce4e591e1156d656b5f7f8e723f3d87e  scripts/claude_ear269_arms.py
+3f099cf601f25603fd23a9f698ab6fa1547ee6696f3eeff5a41b02e133878134  scripts/claude_ear269_panel.py
+ff10dcf15722ae678c049d268ca75a92cc007274bd9d1f926fc578d6dfb6649b  scripts/claude_ear269_turns.py
+5c64f301d860cde3cd0ac8cb55014a6419c8f17469f3694dd74b19230dbb8ee6  scripts/claude_ear269_armb.py
+faf51871583fa7e8689bd1a14ff821c21d6c7fdb3041e007c23a3956cd802dd3  scripts/claude_ear269_qbuild.py
+75789fd4afb371eef9faa030a88b7a2c9dc2b0bc7a41ae232f266b9665771d1b  scripts/claude_ear269_scoremain.py
+a797a141dd49c781a8d7542ee7c167b44ab76e4f96b61ea070622806c216a131  scripts/claude_ear269_devset.py
+368617b485fa24db0ddf7cfb42141e5d716ac7c3af3cd2560432c6902c0644af  artifacts/claude-ear269-20260923/PASSMARKS.md
+zsh:1: ==SEALCHECK=== not found
+[0m
+[0m$ [0mshasum -c artifacts/claude-ear269-20260923/SEAL.sha256.txt
+scripts/claude_ear269_groupcheck.py: OK
+scripts/claude_ear269_arms.py: OK
+scripts/claude_ear269_panel.py: OK
+scripts/claude_ear269_turns.py: OK
+scripts/claude_ear269_armb.py: OK
+scripts/claude_ear269_qbuild.py: OK
+scripts/claude_ear269_scoremain.py: OK
+scripts/claude_ear269_devset.py: OK
+artifacts/claude-ear269-20260923/PASSMARKS.md: OK
+artifacts/claude-ear269-20260923/dev_269.jsonl: OK
+artifacts/claude-ear269-20260923/dev269_earpreds.json: OK
+artifacts/claude-ear269-20260923/dev269_manifest.json: OK
+artifacts/claude-ear269-20260923/dev269_pyes.json: OK
+artifacts/claude-ear269-20260923/dev269_bpreds.json: OK
+artifacts/claude-ear269-20260923/dev269_score.json: OK
+[0m
+[0m$ [0mshasum -c artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt
+artifacts/claude-ourpanel269-20260923/panel.jsonl: OK
+artifacts/claude-ourpanel269-20260923/make_panel.py: OK
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1 | head -100
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+[0m
+[0m→ [0mRead artifacts/claude-ear269-20260923/panel269_turns.json[90m [limit=30][0m
+[0m
+[0m$ [0mls artifacts/claude-ear269-20260923/workB/ artifacts/claude-ear269-20260923/workBdevA/ artifacts/claude-ear269-20260923/workBdevB/ 2>&1 | head -30
+artifacts/claude-ear269-20260923/workB/:
+i_o269-001
+i_o269-002
+i_o269-003
+i_o269-004
+i_o269-005
+i_o269-006
+i_o269-007
+i_o269-008
+i_o269-009
+i_o269-010
+i_o269-011
+i_o269-012
+i_o269-013
+i_o269-014
+i_o269-015
+i_o269-016
+i_o269-017
+i_o269-018
+i_o269-019
+i_o269-020
+i_o269-021
+i_o269-022
+i_o269-023
+i_o269-024
+i_o269-025
+i_o269-026
+i_o269-027
+i_o269-028
+i_o269-029
+[0m
+[0m→ [0mRead scripts/claude_ear269_panel.py
+[0m→ [0mRead scripts/claude_ear269_turns.py
+[0m→ [0mRead scripts/claude_ear269_arms.py
+[0m→ [0mRead scripts/claude_ear269_qbuild.py
+[0m→ [0mRead scripts/claude_ear269_scoremain.py
+[0m→ [0mRead scripts/claude_ear269_armb.py
+[0m
+[0m$ [0mcat artifacts/claude-ear269-20260923/dev269_manifest.json 2>&1 | head -60; echo ....; ls /tmp/*.log 2>/dev/null | head; env | grep -i -E "bens|ssh|tailscale|host" | head
+{
+ "dev269:d269-001#t0": {
+  "row": "d269-001",
+  "tag": "group_owner",
+  "turn": "Our dog is Rex.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+   "relation": "dog",
+   "value": "Rex"
+  },
+  "claim": "the speaker's dog is Rex.",
+  "divert_265": true
+ },
+ "dev269:nc:d269-001#t0": {
+  "row": "d269-001",
+  "tag": "group_owner",
+  "turn": "Our dog is Rex.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "Our",
+   "relation": "dog",
+   "value": "Rex"
+  },
+  "claim": "Our's dog is Rex.",
+  "canon": false
+ },
+ "dev269:d269-002#t0": {
+  "row": "d269-002",
+  "tag": "group_owner",
+  "turn": "Our cat is Mimi.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+   "relation": "cat",
+   "value": "Mimi"
+  },
+  "claim": "the speaker's cat is Mimi.",
+  "divert_265": true
+ },
+ "dev269:nc:d269-002#t0": {
+  "row": "d269-002",
+  "tag": "group_owner",
+  "turn": "Our cat is Mimi.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "Our",
+   "relation": "cat",
+   "value": "Mimi"
+  },
+  "claim": "Our's cat is Mimi.",
+  "canon": false
+ },
+ "dev269:d269-003#t0": {
+  "row": "d269-003",
+  "tag": "group_owner",
+  "turn": "We live in Dunnsmouth.",
+  "frame": {
+   "act": "TEACH",
+   "subject": "me",
+....
+/tmp/269_bA.log
+/tmp/marks180.log
+/tmp/n266b-pilot-runall.log
+/tmp/n266b-regrun.log
+/tmp/p138p_m2m6.log
+/tmp/probe180.log
+/tmp/qwenweb.log
+/tmp/reg291-runall.log
+/tmp/t1-180.log
+/tmp/t1-180b.log
+SSH_AUTH_SOCK=/var/run/com.apple.launchd.v8oHUqr3Bn/Listeners
+[0m
+[0m$ [0mgrep -rl "benspc\|BensPC\|192\.168\|100\." scripts/claude_ear265_*.py 2>/dev/null | head; echo ---; grep -rh -i "ssh\|scp\|benspc\|tailscale" scripts/claude_smolear257_infer.py 2>/dev/null | head -20; echo ---; ls scripts/ | grep -i "257_infer\|infer"
+scripts/claude_ear265_scoremain.py
+---
+---
+claude_smolear235_infer.py
+claude_smolear235b_infer.py
+claude_smolear257_infer.py
+fable_diag95_infer.py
+[0m
+[0m$ [0mgrep -rhi "benspc\|benja\|llama-server\|8081\|ssh " artifacts/claude-ear269-20260923/ scripts/claude_ear269_*.py handoff/kit/briefs/ 2>/dev/null | grep -vi "turn\|claim" | head -40
+- Ear: v4.1 checkpoint on BensPC `C:\Users\benja\smolear235\out_v41\smolear235.safetensors`,
+  (verified with --expect-sha on BensPC before the dev wave; inference
+- Compute: BensPC RTX 5070 Ti; llama-server started detached by this builder
+  --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 q8_0 KV cache, --parallel 1
+  ~13.7/16.3 GB, no spill. pythonw 13036 and all other BensPC processes
+- GPU ear preds on BensPC (cuda, ckpt sha ok, median 123.2 ms, 66/121
+- D3: llama-server handling. Plain `taskkill /PID` is denied (session-0
+  nvidia-smi. This llama-server build answers no /health; readiness was
+  PID); pythonw 13036 and all other BensPC processes untouched.
+- llama-server stop: could not be performed (host unreachable). Server PID
+  BensPC with the model resident (~13.7 GB VRAM at last sighting 02:2x).
+  Exact PID recorded here for cleanup. pythonw 13036 and all other BensPC
+- ~02:30-02:40: SSH to BensPC starts timing out (was fine minutes earlier).
+- ~02:45-04:30: SSH + ping polled every 8-10 min, 100% failure throughout
+  INCOMPLETE by blockage, not by measurement. Resume path: when BensPC is
+  55284dec..., --tau 9.3), qbuild panel mode, verify/reuse llama-server PID
+  - It is on BensPC at C:\Users\benja\smolear235\out_v3\smolear235.safetensors, sha256 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8 (see artifacts/claude-smolear235-20260922/train/CKPT.sha256.txt).
+  - `ssh benspc` works. Copy only; install nothing; never touch other processes. The GPU is busy with 235b's training, so don't run GPU jobs there.
+- On the BensPC 5070 Ti. It is free, one job at a time.
+- The checkpoint stays on BensPC. Record its sha256.
+- For Mac runs, stream the checkpoint over ssh as 235b did. Mac disk is about 7 GB free: no copies on the Mac.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -o BatchMode=yes benspc "echo ALIVE; nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu --format=csv" 2>&1 | head -20
+ssh: connect to host 100.75.113.114 port 22: Operation timed out
+[0m
+[0m$ [0mping -c 3 -t 10 100.75.113.114 2>&1 | head -10; echo "---tailscale---"; which tailscale; tailscale status 2>&1 | head -10; echo "---ssh config---"; cat ~/.ssh/config 2>&1 | head -20
+PING 100.75.113.114 (100.75.113.114): 56 data bytes
+Request timeout for icmp_seq 0
+Request timeout for icmp_seq 1
+
+--- 100.75.113.114 ping statistics ---
+3 packets transmitted, 0 packets received, 100.0% packet loss
+---tailscale---
+/usr/local/bin/tailscale
+zsh:1: bad CPU type in executable: tailscale
+---ssh config---
+Host benspc
+  HostName 100.75.113.114
+  User benja
+[0m
+[0m$ [0mls data/models/ 2>&1 | head; ls data/open/ 2>&1 | head; uptime; df -g / | head -3
+smolear235_v3
+bench103
+bench121
+bench132
+bench65
+bench92
+reading94
+reading94b
+reversal210
+simplestories
+simplewiki86
+ 5:20  up 2 days, 21:09, 4 users, load averages: 20.24 60.38 76.88
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 119144240    0%   /
+[0m
+[0m$ [0mgrep -n "P269" artifacts/fable-predictions-ledger.md | head -15; echo "---"; python3 -c "import json; d=json.load(open('artifacts/claude-ear269-20260923/panel269_bpreds.json')); print(type(d), len(d) if hasattr(d,'__len__') else '')" 2>&1 | head -5; echo "---"; ls artifacts/claude-ear269-20260923/workB | wc -l; ls artifacts/claude-ear269-20260923/ | head -30
+2738:- P269.1 (2026-09-23, builder; exp 269 = 265 sealed arm A + text-level group-owner check on the raw turn before ear/brake: P1-P5 ownership patterns + quote guard, deterministic, sealed generic ask line, saves byte-identical to A265 by construction; checker prompt B theta 0.25 + guard unchanged, scorer = 265 + M6-M8, sealed 15 files SEAL.sha256.txt artifacts/claude-ear269-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-29/30; pass (0 saves and >= 27 ask) ~55 %. Dev: 0 saves, ask 46/46 (18 divert + 28 text-only).
+2739:- P269.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 8-12/15; pass (>= 12) ~35 %. Dev 14/22 (ex265 subset 7/10 reproduces 265; new 7/12); misses are extra checker-passed frames read off the group clause (6) + neighbour direction flips (2).
+2740:- P269.3 M3 first_person 0 hits lost vs A265; pass ~99 %. Dev 10/10 hits, 0 lost; holds by construction (saves identical, asserted per turn).
+2741:- P269.4 M4 named 15/15 turns byte-identical to A265; pass ~99 %. Construction, dev 10/10.
+2742:- P269.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 13, A261b wrong 39 = 26 diverted + 13). Per-fact/per-turn rates for A, A265, A261b, B reported, no bars.
+2743:- P269.6 M6 false asks on non_owner_we + first_person + named <= 1 total: 0-1, pass ~85 % (dev 0/53: 0 fires + 0 divert asks on 33 nonowner + 10 first + 10 named; 46/46 adversarial probes as intended). M7 gold hits lost on non_owner_we vs A265 <= 1: 0, pass ~99 % (dev 0; construction). M8 0 new wrong vs A265 across all families: 0, pass ~99 % (dev 0; construction).
+2744:- P269.7 Overall registered PASS ~20 % (needs M1+M2 together; M3-M8 near-certain).
+2745:- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health; /completion verified 162/162, 0 fallbacks); D4 diverted frames still spend a checker query (A265/A261b exactness); D5 M5/M8 = per-turn multiset difference; D6 check changes only the ASK trigger (per-frame divert does all suppression); D7 residuals: walk/feed/carry verbs don't fire, death contexts still fire, ourselves needs ownable nearby. See artifacts/claude-ear269-20260923/PASSMARKS.md.
+2764:- P269.9 OUTCOME (2026-09-23, builder) registered run INCOMPLETE by blockage, no verdict: panel sealed before my seal (2/2 OK), my seal 15/15 OK (unchanged at close), schema 100 lines 30/15/20/15/20 OK, arm B ran ONCE on 100/100 (B 25/70 hits, 0 wrong, 25 saved; per-family in RESULTS.md); ear arms A/A265/A261b 0 runs (BensPC unreachable 02:30-04:30 local, SSH+ping 100% loss, ~120 min polled); P269.1-P269.7 unresolved; llama-server PID 26480 left running (could not stop; exact PID recorded for cleanup); resume needs no re-seal and no arm-B re-run. See artifacts/claude-ear269-20260923/RESULTS.md.
+---
+<class 'dict'> 100
+---
+     100
+dev_269.jsonl
+dev269_bpreds.json
+dev269_bpredsA.json
+dev269_bpredsB.json
+dev269_earpreds.json
+dev269_manifest.json
+dev269_pyes.json
+dev269_score.json
+panel269_bpreds.json
+panel269_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdevA
+workBdevB
+[0m
+[0m$ [0mhead -80 scripts/claude_earcheck261_qwen.py 2>/dev/null; echo "=====HELP====="; ls scripts/ | grep -i "qwen\|check.*quer\|promptB"
+#!/usr/bin/env python3
+"""Exp 261 -- Qwen entailment-checker client (stdlib only, runs on BensPC).
+
+Reads checks.json: [{id, prompt}] (prompt built by claude_earcheck261_canon).
+POSTs each to llama-server /completion at temperature 0 with n_predict=1 and
+n_probs=10, and computes p(YES) = pYES/(pYES+pNO) from the FIRST position's
+token distribution (tokens whose stripped uppercase form is YES vs NO).
+Fallback (sealed rule): if neither variant is in the top probs, use the greedy
+text: YES -> 1.0, NO -> 0.0, anything else -> 0.0 (hold back). The fallback
+count is reported.
+
+Writes out.json: {checks: {id: {p: float, text: str, fallback: bool, ms: float}},
+                 summary: {...}}.
+
+python claude_earcheck261_qwen.py --url http://127.0.0.1:8081 --in checks.json --out pyes.json
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import time
+import urllib.request
+from pathlib import Path
+
+
+def post_completion(url, prompt, timeout=120):
+    body = json.dumps({
+        "prompt": prompt,
+        "temperature": 0.0,
+        "n_predict": 1,
+        "n_probs": 10,
+        "cache_prompt": True,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        url.rstrip("/") + "/completion", data=body,
+        headers={"Content-Type": "application/json"})
+    t0 = time.perf_counter()
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        d = json.loads(r.read().decode("utf-8"))
+    ms = (time.perf_counter() - t0) * 1000.0
+    return d, ms
+
+
+def p_yes(d):
+    """Return (p, text, fallback) from a /completion response."""
+    text = str(d.get("content", ""))
+    cps = d.get("completion_probabilities") or []
+    py = pn = 0.0
+    if cps:
+        first = cps[0]
+        cand = first.get("probs", first.get("tokens", first if isinstance(first, list) else []))
+        if isinstance(cand, dict):
+            cand = cand.get("probs", [])
+        for t in cand if isinstance(cand, list) else []:
+            s = str(t.get("tok_str", t.get("text", ""))).strip().upper()
+            try:
+                p = float(t.get("prob", 0.0))
+            except (TypeError, ValueError):
+                continue
+            if s == "YES":
+                py += p
+            elif s == "NO":
+                pn += p
+    if py + pn > 0:
+        return py / (py + pn), text, False
+    s = text.strip().upper()
+    if s == "YES":
+        return 1.0, text, True
+    if s == "NO":
+        return 0.0, text, True
+    return 0.0, text, True
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--url", required=True)
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    checks = json.loads(Path(a.inp).read_text(encoding="utf-8"))
+=====HELP=====
+claude_earcheck261_promptB.py
+claude_earcheck261_qwen.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_smolear257_infer.py --help 2>&1 | head -30
+usage: claude_smolear257_infer.py [-h] --ckpt CKPT --base BASE --turns TURNS
+                                  --out OUT [--device DEVICE]
+                                  [--expect-sha EXPECT_SHA] [--tau TAU]
+                                  [--k K]
+
+options:
+  -h, --help            show this help message and exit
+  --ckpt CKPT
+  --base BASE
+  --turns TURNS
+  --out OUT
+  --device DEVICE
+  --expect-sha EXPECT_SHA
+  --tau TAU
+  --k K
+[0m
+[0m$ [0mnohup bash -c 'for i in $(seq 1 60); do if ssh -o ConnectTimeout=8 -o BatchMode=yes benspc "echo ALIVE" 2>/dev/null | grep -q ALIVE; then echo "$(date) POLL $i: ALIVE" >> /tmp/269_resume_poll.log; else echo "$(date) POLL $i: DOWN" >> /tmp/269_resume_poll.log; fi; sleep 110; done; echo "$(date) POLL DONE" >> /tmp/269_resume_poll.log' >/dev/null 2>&1 & echo "poller started pid $!"; sleep 12; cat /tmp/269_resume_poll.log 2>/dev/null
+poller started pid 58716
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+b=json.load(open('artifacts/claude-ear269-20260923/panel269_bpreds.json'))
+print('bpreds keys:',len(b))
+k=list(b)[:2]; print('sample keys:',k)
+wb=json.load(open('artifacts/claude-ear269-20260923/dev269_bpreds.json'))
+print('dev bpreds type:',type(wb).__name__)
+e=json.load(open('artifacts/claude-ear269-20260923/dev269_earpreds.json'))
+print('earpreds top keys:',list(e)[:5])
+print('preds n:',len(e.get('preds',{})))
+print('summary keys:',list(e.get('summary',{}))[:10])
+"
+bpreds keys: 100
+sample keys: ['o269-001', 'o269-002']
+dev bpreds type: dict
+earpreds top keys: ['summary', 'preds']
+preds n: 121
+summary keys: ['n', 'median_ms', 'p90_ms', 'max_ms', 'n_beamed', 'device', 'ckpt_sha256', 'torch', 'threads', 'tau']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_turns.py --panel artifacts/claude-ourpanel269-20260923/panel.jsonl --seal artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt --out /tmp/269_resume_turns_check.json 2>&1 | tail -3; diff <(python3 -c "import json; print(len(json.load(open('/tmp/269_resume_turns_check.json'))))") <(python3 -c "import json; print(len(json.load(open('artifacts/claude-ear269-20260923/panel269_turns.json'))))") && echo TURNS-COUNT-MATCH
+100 turns
+TURNS-COUNT-MATCH
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+e=json.load(open('artifacts/claude-ear269-20260923/dev269_earpreds.json'))
+print(json.dumps(e.get('summary',{}),indent=1))
+p=e['preds']['d269-001']
+print('pred keys:',list(p))
+"
+{
+ "n": 121,
+ "median_ms": 123.19529999513179,
+ "p90_ms": 226.75869998056442,
+ "max_ms": 313.8245999580249,
+ "n_beamed": 66,
+ "device": "cuda",
+ "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+ "torch": "2.11.0+cu128",
+ "threads": 6,
+ "tau": 9.3,
+ "k": 4,
+ "gpu": "NVIDIA GeForce RTX 5070 Ti"
+}
+pred keys: ['raw', 'greedy_lp', 'beams', 'ms_greedy', 'ms', 'gate']
+[0m
+[0m$ [0mgrep -n "base\|ckpt\|add_argument" scripts/claude_smolear257_infer.py | head -20; echo ---; grep -rn "out_v41\|smolear235.safetensors\|infer" artifacts/claude-ear269-20260923/PASSMARKS.md | head; echo ---; cat /tmp/269_resume_poll.log
+---
+artifacts/claude-ear269-20260923/PASSMARKS.md:16:- Ear: v4.1 checkpoint on BensPC `C:\Users\benja\smolear235\out_v41\smolear235.safetensors`,
+artifacts/claude-ear269-20260923/PASSMARKS.md:18:  (verified with --expect-sha on BensPC before the dev wave; inference
+artifacts/claude-ear269-20260923/PASSMARKS.md:19:  asserts it). Same inference (claude_smolear257_infer, table v2, --tau 9.3
+---
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+[0m
+[0m$ [0mhead -100 scripts/claude_smolear257_infer.py
+#!/usr/bin/env python3
+"""Exp 257 -- run the 235b inference driver (greedy + k=4 beams + gate) UNCHANGED, with the
+brake pointed at relation table v2 (claude_smolear257_table.install()). Same arguments as
+claude_smolear235b_infer.py."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_table as TB  # noqa: E402
+
+TB.install()
+import claude_smolear235b_infer as I  # noqa: E402
+
+if __name__ == "__main__":
+    I.main()
+[0m
+[0m$ [0mgrep -n "add_argument\|def main" scripts/claude_smolear235b_infer.py | head -20
+34:def main():
+36:    ap.add_argument("--ckpt", required=True)
+37:    ap.add_argument("--base", required=True)
+38:    ap.add_argument("--turns", required=True)
+39:    ap.add_argument("--out", required=True)
+40:    ap.add_argument("--device", default="cuda")
+41:    ap.add_argument("--expect-sha", default=None)
+42:    ap.add_argument("--tau", type=float, default=None)
+43:    ap.add_argument("--k", type=int, default=B.K)
+[0m
+[0m$ [0mgrep -rhn "claude_smolear257_infer\|235b_infer\|--base\|--ckpt" artifacts/claude-smolear257-20260922/*.md artifacts/claude-ear265*/  2>/dev/null | head -10; echo ---; ls artifacts/ | grep -E "265|261" | head; echo ---; cat /tmp/269_resume_poll.log
+118:- **Arm A:** scripts/claude_smolear257_infer.py (= claude_smolear235b_infer with table v2) on the BensPC GPU with
+18:  asserts it). Same inference (claude_smolear257_infer, table v2, --tau 9.3
+---
+claude-ear265-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-ourpanel265-20260923
+---
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+[0m
+[0m$ [0mgrep -rn -A3 "Arm A" artifacts/claude-smolear257-20260922/RESULTS.md 2>/dev/null | head -12; echo ===; ls artifacts/claude-ear265-20260923/ | head -20
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-ear265-20260923/
+dev_265.jsonl
+dev265_bpreds.json
+dev265_earpreds.json
+dev265_pyes.json
+dev265_q
+dev265_score.json
+panel265_bpreds.json
+panel265_earpreds.json
+panel265_pyes.json
+panel265_q
+panel265_score.json
+panel265_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdev
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+e=json.load(open('artifacts/claude-ear265-20260923/panel265_earpreds.json'))
+print(json.dumps(e.get('summary',{}),indent=1))
+"
+{
+ "n": 80,
+ "median_ms": 211.2614499637857,
+ "p90_ms": 276.5297000296414,
+ "max_ms": 458.854699973017,
+ "n_beamed": 65,
+ "device": "cuda",
+ "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+ "torch": "2.11.0+cu128",
+ "threads": 6,
+ "tau": 9.3,
+ "k": 4,
+ "gpu": "NVIDIA GeForce RTX 5070 Ti"
+}
+[0m
+[0m$ [0mgrep -rn "base" artifacts/claude-earcheck261-20260922/RESULTS.md 2>/dev/null | head -8; grep -rn "\-\-base\|\-\-ckpt\|C:" artifacts/claude-ear265-20260923/RESULTS.md 2>/dev/null | head -10
+(no output)
+[0m
+[0m$ [0mls artifacts/claude-earcheck261-20260922/; ls artifacts/claude-earcheck261b-20260923/ | head -20
+dev_checker.jsonl
+dev257_manifest.json
+devcheck_earpreds.json
+devcheck_manifest.json
+devcheck_pyes.json
+devcheck_pyesB.json
+panel261_bpreds.json
+panel261_earpreds.json
+panel261_pyes.json
+panel261_q
+panel261_score.json
+panel261_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+theta.json
+dev_261b.jsonl
+dev261b_earpreds.json
+dev261b_manifest.json
+dev261b_pyes.json
+guarddev_261bdev.json
+guarddev_261dev.json
+panel261b_bpreds.json
+panel261b_earpreds.json
+panel261b_pyes.json
+panel261b_score.json
+panel261b_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+[0m
+[0m$ [0mgrep -n -i "base\|ckpt\|command\|cuda\|scp\|ssh" artifacts/claude-earcheck261b-20260923/RESULTS.md | head -20
+120:326.1 ms, max 503.8 ms; 84/150 beamed; ckpt sha ok; no VRAM spill.
+[0m
+[0m$ [0msed -n 1,120p scripts/claude_smolear235b_infer.py
+#!/usr/bin/env python3
+"""Exp 235b -- run the UNCHANGED 235 v3 ear + k-best beams (+ optional gate) over a turns file.
+
+turns.json: [{"id": ..., "turn": str}, ...]   (no gold is sent here)
+Per turn: greedy reading (same as 235) with its summed log-prob; then, ONLY when the
+brake keeps at least one TEACH frame and the turn does not end in "?", the top-k
+beams (k=4). (No TEACH frame -> nothing for the gate to decide; "?" -> guard blocks.)
+With --tau the gate itself is applied and timed, so ms = greedy + brake + beams + gate.
+
+python claude_smolear235b_infer.py --ckpt C --base DIR --turns T --out O [--device cuda] [--tau X]
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import statistics
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear235_model as E  # noqa: E402
+import claude_smolear235b_beam as B  # noqa: E402
+
+
+def needs_beams(raw, turn):
+    kept, _ = E.brake(E.parse_frames(raw), turn)
+    return any(f["act"] == "TEACH" for f in kept) and not B.ends_q(turn)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ckpt", required=True)
+    ap.add_argument("--base", required=True)
+    ap.add_argument("--turns", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--device", default="cuda")
+    ap.add_argument("--expect-sha", default=None)
+    ap.add_argument("--tau", type=float, default=None)
+    ap.add_argument("--k", type=int, default=B.K)
+    a = ap.parse_args()
+    # --ckpt - : read the checkpoint bytes from stdin (streamed from BensPC; keeps the
+    # Mac above its 8 GB free-disk floor -- nothing is written to disk)
+    blob = sys.stdin.buffer.read() if a.ckpt == "-" else Path(a.ckpt).read_bytes()
+    h = hashlib.sha256(blob).hexdigest()
+    if a.expect_sha and h != a.expect_sha:
+        raise SystemExit(f"checkpoint hash mismatch {h}")
+    tok = E.Tok(Path(a.base) / "tokenizer.json")
+    m = E.SmolLM()
+    from safetensors.torch import load as st_load
+    m.load_state_dict(st_load(blob), strict=True)
+    del blob
+    cuda = a.device == "cuda"
+    m = m.to(a.device).to(torch.bfloat16 if cuda else torch.float32).eval()
+    gd = E.GraphDecoder(m, tok) if cuda else None
+    bg = B.BeamGraph(m, tok, k=a.k) if cuda else None
+
+    def beams(turn):
+        return bg.beams(turn) if cuda else B.beam_eager(m, tok, turn, k=a.k)
+
+    def sync():
+        if cuda:
+            torch.cuda.synchronize()
+
+    B.greedy_scored(m, tok, "Hello there.", gd=gd)  # warm-up, not timed
+    beams("Tobble's cat is Fizz.")
+    turns = json.loads(Path(a.turns).read_text(encoding="utf-8"))
+    out, lat = {}, []
+    for t in turns:
+        sync()
+        t0 = time.perf_counter()
+        raw, lp, _ = B.greedy_scored(m, tok, t["turn"], gd=gd)
+        sync()
+        t1 = time.perf_counter()
+        bm = beams(t["turn"]) if needs_beams(raw, t["turn"]) else []
+        g = B.gate(t["turn"], raw, lp, bm, a.tau) if a.tau is not None else None
+        sync()
+        t2 = time.perf_counter()
+        ms = (t2 - t0) * 1000
+        lat.append(ms)
+        rec = dict(raw=raw, greedy_lp=lp, beams=[[x, s] for x, s in bm],
+                   ms_greedy=round((t1 - t0) * 1000, 2), ms=round(ms, 2))
+        if g is not None:
+            rec["gate"] = dict(saved=g["saved"], unsure=g["unsure"], guard=g["guard"])
+        out[str(t["id"])] = rec
+    summ = dict(n=len(lat), median_ms=statistics.median(lat), p90_ms=sorted(lat)[int(0.9 * len(lat))],
+                max_ms=max(lat), n_beamed=sum(1 for r in out.values() if r["beams"]),
+                device=a.device, ckpt_sha256=h, torch=torch.__version__, threads=torch.get_num_threads(),
+                tau=a.tau, k=a.k, gpu=torch.cuda.get_device_name(0) if cuda else None)
+    Path(a.out).write_text(json.dumps(dict(summary=summ, preds=out), indent=1, default=str), encoding="utf-8")
+    print(json.dumps(summ))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgrep -rn "tokenizer\|out_v3\|out_v41\|smolear235\b" artifacts/claude-smolear235-20260922/*.md 2>/dev/null | head -10; ls artifacts/ | grep 235 | head
+artifacts/claude-smolear235-20260922/PASSMARKS.md:9:Frozen checkpoint (kept on BensPC `C:\Users\benja\smolear235\out_v3\smolear235.safetensors`):
+artifacts/claude-smolear235-20260922/RESULTS.md:65:11. Deleted the Mac checkpoint copy (Mac free space back to 8.3 GB). The checkpoint stays on BensPC `C:\Users\benja\smolear235\out_v3\`.
+artifacts/claude-smolear235-20260922/RESULTS.md:80:- The Mac CPU latency command added `--with tokenizers --with safetensors` to the standard uv line (offline, from the cache).
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+[0m
+[0m$ [0mgrep -n -i "base\|tokenizer" artifacts/claude-smolear235b-20260922/RESULTS.md | head -10; cat /tmp/269_resume_poll.log
+67:2. Built my own dev set (claude_smolear235b_devdata.py): 900 base rows from the 235 dev split plus my own risk families
+95:- The uv command needed `--with tokenizers --with safetensors` in addition to torch/numpy.
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+[0m
+[0m$ [0mls artifacts/ | grep -E "270|271"; git log --oneline -8; cat /tmp/269_resume_poll.log
+claude-type270-20260923
+claude-typepanel270-20260923
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_scoremain.py --help 2>&1 | head -12; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_qbuild.py --help 2>&1 | head -12
+usage: claude_ear269_scoremain.py [-h] [--panel PANEL] [--seal SEAL]
+                                  [--dev DEV] --a-preds A_PREDS --b-preds
+                                  B_PREDS --theta THETA --pyes PYES [PYES ...]
+                                  --out OUT [--src SRC] [--no-sha]
+
+options:
+  -h, --help            show this help message and exit
+  --panel PANEL
+  --seal SEAL
+  --dev DEV
+  --a-preds A_PREDS
+  --b-preds B_PREDS
+usage: claude_ear269_qbuild.py [-h] --mode {panel,dev} [--turns TURNS]
+                               [--a-preds A_PREDS] [--dev DEV] [--preds PREDS]
+                               [--src SRC] --out OUT
+
+options:
+  -h, --help          show this help message and exit
+  --mode {panel,dev}
+  --turns TURNS
+  --a-preds A_PREDS
+  --dev DEV
+  --preds PREDS
+  --src SRC
+[0m
+[0m$ [0msleep 100; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+[0m
+[0m$ [0mcat ~/.ssh/known_hosts 2>/dev/null | awk '{print $1}' | head -10; sleep 90; cat /tmp/269_resume_poll.log
+gitlab.com
+100.75.113.114
+100.75.113.114
+100.75.113.114
+#
+github.com
+github.com
+github.com
+benspc
+benspc.tail26a138.ts.net
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+[0m
+[0m$ [0msleep 110; cat /tmp/269_resume_poll.log; ssh -o ConnectTimeout=8 -o BatchMode=yes benspc.tail26a138.ts.net "echo ALIVE" 2>&1 | head -3
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+ssh: connect to host benspc.tail26a138.ts.net port 22: Operation timed out
+[0m
+[0m$ [0msleep 115; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+[0m
+[0m$ [0msleep 115; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+[0m
+[0m$ [0msleep 280; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+Wed Sep 23 05:32:30 EDT 2026 POLL 7: DOWN
+Wed Sep 23 05:34:28 EDT 2026 POLL 8: DOWN
+[0m
+[0m$ [0msleep 280; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+Wed Sep 23 05:32:30 EDT 2026 POLL 7: DOWN
+Wed Sep 23 05:34:28 EDT 2026 POLL 8: DOWN
+Wed Sep 23 05:36:26 EDT 2026 POLL 9: DOWN
+Wed Sep 23 05:38:24 EDT 2026 POLL 10: DOWN
+[0m
+[0m$ [0msleep 290; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+Wed Sep 23 05:32:30 EDT 2026 POLL 7: DOWN
+Wed Sep 23 05:34:28 EDT 2026 POLL 8: DOWN
+Wed Sep 23 05:36:26 EDT 2026 POLL 9: DOWN
+Wed Sep 23 05:38:24 EDT 2026 POLL 10: DOWN
+Wed Sep 23 05:40:22 EDT 2026 POLL 11: DOWN
+Wed Sep 23 05:42:20 EDT 2026 POLL 12: DOWN
+Wed Sep 23 05:44:18 EDT 2026 POLL 13: DOWN
+[0m
+[0m$ [0msleep 290; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+Wed Sep 23 05:32:30 EDT 2026 POLL 7: DOWN
+Wed Sep 23 05:34:28 EDT 2026 POLL 8: DOWN
+Wed Sep 23 05:36:26 EDT 2026 POLL 9: DOWN
+Wed Sep 23 05:38:24 EDT 2026 POLL 10: DOWN
+Wed Sep 23 05:40:22 EDT 2026 POLL 11: DOWN
+Wed Sep 23 05:42:20 EDT 2026 POLL 12: DOWN
+Wed Sep 23 05:44:18 EDT 2026 POLL 13: DOWN
+Wed Sep 23 05:46:16 EDT 2026 POLL 14: DOWN
+Wed Sep 23 05:48:14 EDT 2026 POLL 15: DOWN
+Wed Sep 23 05:50:12 EDT 2026 POLL 16: DOWN
+[0m
+[0m$ [0msleep 290; cat /tmp/269_resume_poll.log
+Wed Sep 23 05:20:41 EDT 2026 POLL 1: DOWN
+Wed Sep 23 05:22:39 EDT 2026 POLL 2: DOWN
+Wed Sep 23 05:24:37 EDT 2026 POLL 3: DOWN
+Wed Sep 23 05:26:36 EDT 2026 POLL 4: DOWN
+Wed Sep 23 05:28:34 EDT 2026 POLL 5: DOWN
+Wed Sep 23 05:30:32 EDT 2026 POLL 6: DOWN
+Wed Sep 23 05:32:30 EDT 2026 POLL 7: DOWN
+Wed Sep 23 05:34:28 EDT 2026 POLL 8: DOWN
+Wed Sep 23 05:36:26 EDT 2026 POLL 9: DOWN
+Wed Sep 23 05:38:24 EDT 2026 POLL 10: DOWN
+Wed Sep 23 05:40:22 EDT 2026 POLL 11: DOWN
+Wed Sep 23 05:42:20 EDT 2026 POLL 12: DOWN
+Wed Sep 23 05:44:18 EDT 2026 POLL 13: DOWN
+Wed Sep 23 05:46:16 EDT 2026 POLL 14: DOWN
+Wed Sep 23 05:48:14 EDT 2026 POLL 15: DOWN
+Wed Sep 23 05:50:12 EDT 2026 POLL 16: DOWN
+Wed Sep 23 05:52:10 EDT 2026 POLL 17: DOWN
+Wed Sep 23 05:54:01 EDT 2026 POLL 18: ALIVE
+[0m
+[0m$ [0mkill 58716 2>/dev/null; sleep 1; tail -3 /tmp/269_resume_poll.log; ssh -o ConnectTimeout=15 -o BatchMode=yes benspc "echo ALIVE2" 2>&1 | head -3
+Wed Sep 23 05:50:12 EDT 2026 POLL 16: DOWN
+Wed Sep 23 05:52:10 EDT 2026 POLL 17: DOWN
+Wed Sep 23 05:54:01 EDT 2026 POLL 18: ALIVE
+ALIVE2
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "tasklist /FI \"PID eq 26480\" /FO TABLE" 2>&1 | head -8
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "nvidia-smi --query-gpu=index,name,memory.used,memory.total,utilization.gpu,power.draw --format=csv" 2>&1 | head -5
+index, name, memory.used [MiB], memory.total [MiB], utilization.gpu [%], power.draw [W]
+0, NVIDIA GeForce RTX 5070 Ti, 392 MiB, 16303 MiB, 1 %, 9.34 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "tasklist /FI \"PID eq 13036\" /FO TABLE & dir C:\\Users\\benja\\smolear235\\out_v41 & python --version & python -c \"import torch; print(torch.__version__, torch.cuda.is_available())\"" 2>&1 | head -25
+INFO: No tasks are running which match the specified criteria.
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\out_v41
+
+09/22/2026  06:05 PM    <DIR>          .
+09/23/2026  01:13 AM    <DIR>          ..
+09/22/2026  06:03 PM                90 CKPT.sha256.txt
+09/22/2026  06:05 PM           229,112 dev_eval.json
+09/22/2026  06:03 PM       723,673,144 smolear235.safetensors
+09/22/2026  06:03 PM             9,338 train_log.txt
+               4 File(s)    723,911,684 bytes
+               2 Dir(s)  75,274,248,192 bytes free
+Python 3.10.9
+2.11.0+cu128 True
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\\Users\\benja\\smolear235 & where tokenizer.json 2>nul; dir C:\\Users\\benja\\269 2>nul; dir C:\\269 2>nul; ls C:/Users/benja 2>nul" 2>&1 | head -30
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235
+
+09/23/2026  01:13 AM    <DIR>          .
+09/23/2026  01:37 AM    <DIR>          ..
+09/22/2026  05:27 PM    <DIR>          artifacts
+09/22/2026  03:45 PM    <DIR>          base
+09/22/2026  03:56 PM             1,311 bench235.py
+09/22/2026  03:56 PM             1,186 bench235b.py
+09/22/2026  04:23 PM             2,732 claude_smolear235_infer.py
+09/22/2026  03:43 PM    <DIR>          data
+09/22/2026  04:24 PM    <DIR>          data3
+09/22/2026  05:27 PM    <DIR>          data4
+09/22/2026  05:51 PM    <DIR>          data41
+09/22/2026  04:57 PM               321 dev235b_log.txt
+09/22/2026  04:57 PM           423,930 dev235b_preds.json
+09/22/2026  04:54 PM            81,870 dev235b_turns.json
+09/22/2026  06:08 PM    <DIR>          dev257
+09/22/2026  05:04 PM            93,223 fixture_preds.json
+09/22/2026  05:03 PM            11,348 fixture_turns.json
+09/22/2026  08:09 PM                 0 llama261.err
+09/22/2026  08:09 PM                 0 llama261.log
+09/22/2026  08:17 PM                16 llama261.pid
+09/22/2026  09:51 PM                68 llama261b.err
+09/22/2026  09:51 PM                 0 llama261b.log
+09/22/2026  09:59 PM                34 llama261b.pid
+09/22/2026  06:14 PM    <DIR>          on235b_257
+09/22/2026  03:43 PM    <DIR>          out
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\\Users\\benja\\smolear235\\base & dir C:\\Users\\benja\\smolear235 | findstr 269; ls C:/Users/benja/smolear235/269 2>nul" 2>&1 | head -25
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\base
+
+09/22/2026  03:45 PM    <DIR>          .
+09/23/2026  01:13 AM    <DIR>          ..
+09/22/2026  03:45 PM       723,674,912 model.safetensors
+09/22/2026  03:45 PM         2,104,556 tokenizer.json
+               2 File(s)    725,779,468 bytes
+               2 Dir(s)  75,274,231,808 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\\Users\\benja\\smolear235 | findstr /I \"269 265\"; echo ---; dir C:\\Users\\benja\\smolear235\\out_v41" 2>&1 | head -20
+FINDSTR: Cannot open echo
+FINDSTR: Cannot open ---;
+FINDSTR: Cannot open dir
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\Users\benja\smolear235 | findstr 269"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\Users\benja\smolear235"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235
+
+09/23/2026  01:13 AM    <DIR>          .
+09/23/2026  01:37 AM    <DIR>          ..
+09/22/2026  05:27 PM    <DIR>          artifacts
+09/22/2026  03:45 PM    <DIR>          base
+09/22/2026  03:56 PM             1,311 bench235.py
+09/22/2026  03:56 PM             1,186 bench235b.py
+09/22/2026  04:23 PM             2,732 claude_smolear235_infer.py
+09/22/2026  03:43 PM    <DIR>          data
+09/22/2026  04:24 PM    <DIR>          data3
+09/22/2026  05:27 PM    <DIR>          data4
+09/22/2026  05:51 PM    <DIR>          data41
+09/22/2026  04:57 PM               321 dev235b_log.txt
+09/22/2026  04:57 PM           423,930 dev235b_preds.json
+09/22/2026  04:54 PM            81,870 dev235b_turns.json
+09/22/2026  06:08 PM    <DIR>          dev257
+09/22/2026  05:04 PM            93,223 fixture_preds.json
+09/22/2026  05:03 PM            11,348 fixture_turns.json
+09/22/2026  08:09 PM                 0 llama261.err
+09/22/2026  08:09 PM                 0 llama261.log
+09/22/2026  08:17 PM                16 llama261.pid
+09/22/2026  09:51 PM                68 llama261b.err
+09/22/2026  09:51 PM                 0 llama261b.log
+09/22/2026  09:59 PM                34 llama261b.pid
+09/22/2026  06:14 PM    <DIR>          on235b_257
+09/22/2026  03:43 PM    <DIR>          out
+09/22/2026  03:47 PM    <DIR>          out_smoke
+09/22/2026  04:10 PM    <DIR>          out_smoke2
+09/22/2026  03:59 PM    <DIR>          out_v1
+09/22/2026  04:09 PM               637 out_v1_log.txt
+09/22/2026  04:21 PM    <DIR>          out_v2
+09/22/2026  04:21 PM             8,266 out_v2_log.txt
+09/22/2026  04:35 PM    <DIR>          out_v3
+09/22/2026  04:35 PM             8,266 out_v3_log.txt
+09/22/2026  05:41 PM    <DIR>          out_v4
+09/22/2026  06:05 PM    <DIR>          out_v41
+09/22/2026  06:05 PM            10,373 out_v41_log.txt
+09/22/2026  05:41 PM            10,128 out_v4_log.txt
+09/22/2026  05:05 PM            89,376 panel235b_preds_gpu.json
+09/22/2026  05:05 PM            10,474 panel235b_turns.json
+09/22/2026  04:37 PM            12,456 panel_preds_gpu.json
+09/22/2026  04:37 PM            10,483 panel_turns.json
+09/22/2026  08:14 PM             1,262 pilot_checks.json
+09/22/2026  08:15 PM               334 pilot_pyes.json
+09/22/2026  04:23 PM             2,143 probe_preds.json
+09/22/2026  04:35 PM             2,132 probe_preds3.json
+09/22/2026  08:15 PM             1,057 probe_qwen.py
+09/22/2026  04:23 PM             1,421 probe_turns.json
+09/22/2026  06:13 PM    <DIR>          run257
+09/22/2026  09:14 PM    <DIR>          run261
+09/22/2026  10:03 PM             4,365 run261b_checker.py
+09/22/2026  10:09 PM           291,122 run261b_checks_261b.json
+09/22/2026  10:03 PM            60,726 run261b_checks_b5.json
+09/22/2026  10:09 PM           100,829 run261b_preds_261b.json
+09/22/2026  10:03 PM            40,443 run261b_preds_b5.json
+09/22/2026  10:02 PM               573 run261b_probe.py
+09/22/2026  10:11 PM            28,317 run261b_pyes_261b.json
+09/22/2026  10:03 PM             6,221 run261b_pyes_b5.json
+09/22/2026  10:08 PM            13,029 run261b_turns_261b.json
+09/22/2026  10:02 PM             3,683 run261b_turns_b5.json
+09/22/2026  08:27 PM           147,069 run261_checkpreds.json
+09/22/2026  08:27 PM           791,246 run261_checks_all.json
+09/22/2026  08:33 PM         1,313,877 run261_checks_allB.json
+09/22/2026  08:27 PM            16,751 run261_checkturns.json
+09/22/2026  08:32 PM           128,765 run261_pyes_all.json
+09/22/2026  08:38 PM           128,659 run261_pyes_allB.json
+09/23/2026  01:21 AM    <DIR>          run265
+09/22/2026  08:19 PM    <DIR>          scripts
+              45 File(s)      3,860,522 bytes
+              22 Dir(s)  75,271,204,864 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\Users\benja\smolear235\run265"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\run265
+
+09/23/2026  01:21 AM    <DIR>          .
+09/23/2026  01:13 AM    <DIR>          ..
+09/23/2026  01:15 AM           109,814 dev265_checks.json
+09/23/2026  01:13 AM            33,369 dev265_earpreds.json
+09/23/2026  01:16 AM            11,683 dev265_pyes.json
+09/23/2026  01:13 AM             3,056 dev265_turns.json
+09/23/2026  01:15 AM             4,365 earcheck261_checker.py
+09/23/2026  01:21 AM           243,971 llama_dev.log
+09/23/2026  01:21 AM           186,154 panel265_checks.json
+09/23/2026  01:21 AM            61,925 panel265_earpreds.json
+09/23/2026  01:21 AM            18,222 panel265_pyes.json
+09/23/2026  01:20 AM             6,755 panel265_turns.json
+              10 File(s)        679,314 bytes
+               2 Dir(s)  75,270,885,376 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "dir C:\Users\benja\smolear235\scripts"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\scripts
+
+09/22/2026  08:19 PM    <DIR>          .
+09/23/2026  01:13 AM    <DIR>          ..
+09/22/2026  08:14 PM             3,580 claude_earcheck261_canon.py
+09/22/2026  08:15 PM             4,365 claude_earcheck261_checker.py
+09/22/2026  08:14 PM             3,491 claude_earcheck261_qwen.py
+09/22/2026  05:03 PM            12,378 claude_smolear235b_beam.py
+09/22/2026  05:03 PM             3,983 claude_smolear235b_infer.py
+09/22/2026  04:24 PM            50,599 claude_smolear235_data.py
+09/22/2026  04:23 PM             2,732 claude_smolear235_infer.py
+09/22/2026  03:58 PM            14,369 claude_smolear235_model.py
+09/22/2026  04:53 PM             5,150 claude_smolear235_panel.py
+09/22/2026  04:53 PM             7,913 claude_smolear235_score.py
+09/22/2026  04:10 PM             8,238 claude_smolear235_train.py
+09/22/2026  06:11 PM             1,029 claude_smolear257_armb.py
+09/22/2026  06:11 PM            36,933 claude_smolear257_data.py
+09/22/2026  06:11 PM             2,900 claude_smolear257_devreport.py
+09/22/2026  06:11 PM             1,913 claude_smolear257_devset.py
+09/22/2026  06:11 PM               488 claude_smolear257_infer.py
+09/22/2026  06:11 PM               687 claude_smolear257_on235b.py
+09/22/2026  06:11 PM             5,070 claude_smolear257_panel.py
+09/22/2026  06:11 PM             1,910 claude_smolear257_score.py
+09/22/2026  06:11 PM             7,310 claude_smolear257_table.py
+09/22/2026  06:11 PM               559 claude_smolear257_tau.py
+09/22/2026  06:11 PM               769 claude_smolear257_turns.py
+09/22/2026  08:19 PM    <DIR>          __pycache__
+              22 File(s)        176,366 bytes
+               3 Dir(s)  75,271,483,392 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "mkdir C:\Users\benja\smolear235\run269 & dir C:\llama-b10679\llama-server.exe & dir C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\llama-b10679
+
+08/28/2026  07:16 PM             9,216 llama-server.exe
+               1 File(s)          9,216 bytes
+               0 Dir(s)  75,094,188,032 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.lmstudio\models\Qwen3.8-27B
+
+09/13/2026  02:39 PM    14,252,845,984 Qwen3.8-27B-UD-IQ4_XS.gguf
+               1 File(s) 14,252,845,984 bytes
+               0 Dir(s)  75,094,188,032 bytes free
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes artifacts/claude-ear269-20260923/panel269_turns.json scripts/claude_smolear257_infer.py scripts/claude_smolear257_table.py scripts/claude_smolear235b_infer.py scripts/claude_smolear235b_beam.py scripts/claude_smolear235_model.py scripts/claude_earcheck261_qwen.py benspc:"C:/Users/benja/smolear235/run269/" 2>&1 | head -5; echo "SCP-DONE rc=$?"
+SCP-DONE rc=0
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_smolear257_infer.py scripts/claude_smolear257_table.py scripts/claude_smolear235b_infer.py scripts/claude_smolear235b_beam.py scripts/claude_smolear235_model.py scripts/claude_earcheck261_qwen.py artifacts/claude-ear269-20260923/panel269_turns.json | awk '{print $1}'; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "python -B -c \"import hashlib,glob; [print(hashlib.sha256(open(f,'rb').read()).hexdigest(),f) for f in sorted(glob.glob('C:/Users/benja/smolear235/run269/*'))]\""
+8558fe4ecb71666184a53bbdc9fb818738b888500e59be5b9c1bde84ae1bab53
+23947b1d92fce4414f6d26fec2f11873a2e8408de69fd2b02c654ac3a4bdc9a7
+194548912b1e815ced67c6dafe823b29e5a9505cafbed1b041c11286fa8aa9ef
+b3af37eb3cf156c6e71700152b695c42ce2734951ac38b5f4ce601dbf0ff4e75
+f19293634409f52924565c9804c1c268e4c72d832d19d9fbe6aac6ca4bc514cd
+f44ccaaf477bf475527855ae9e12542d815974fa187ba7bcf879df6b5afa99f5
+c6013be1a1bd184f5ee403682e42ea21192c461595bda69173cf65d3b321545b
+f44ccaaf477bf475527855ae9e12542d815974fa187ba7bcf879df6b5afa99f5 C:/Users/benja/smolear235/run269\claude_earcheck261_qwen.py
+f19293634409f52924565c9804c1c268e4c72d832d19d9fbe6aac6ca4bc514cd C:/Users/benja/smolear235/run269\claude_smolear235_model.py
+b3af37eb3cf156c6e71700152b695c42ce2734951ac38b5f4ce601dbf0ff4e75 C:/Users/benja/smolear235/run269\claude_smolear235b_beam.py
+194548912b1e815ced67c6dafe823b29e5a9505cafbed1b041c11286fa8aa9ef C:/Users/benja/smolear235/run269\claude_smolear235b_infer.py
+8558fe4ecb71666184a53bbdc9fb818738b888500e59be5b9c1bde84ae1bab53 C:/Users/benja/smolear235/run269\claude_smolear257_infer.py
+23947b1d92fce4414f6d26fec2f11873a2e8408de69fd2b02c654ac3a4bdc9a7 C:/Users/benja/smolear235/run269\claude_smolear257_table.py
+c6013be1a1bd184f5ee403682e42ea21192c461595bda69173cf65d3b321545b C:/Users/benja/smolear235/run269\panel269_turns.json
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && python -B claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns panel269_turns.json --out panel269_earpreds.json --device cuda --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3" 2>&1 | tail -5
+File "C:\Users\benja\smolear235\run269\claude_smolear235b_infer.py", line 26, in <module>
+    import claude_smolear235b_beam as B  # noqa: E402
+  File "C:\Users\benja\smolear235\run269\claude_smolear235b_beam.py", line 41, in <module>
+    import claude_smolear235_score as S  # noqa: E402  (norm helpers only)
+ModuleNotFoundError: No module named 'claude_smolear235_score'
+[0m
+[0m$ [0mgrep -n "^import claude\|^from claude\|import claude" scripts/claude_smolear235b_beam.py scripts/claude_smolear235_model.py scripts/claude_smolear235b_infer.py scripts/claude_smolear257_table.py scripts/claude_smolear257_infer.py scripts/claude_earcheck261_qwen.py
+scripts/claude_smolear235b_beam.py:40:import claude_smolear235_model as E  # noqa: E402
+scripts/claude_smolear235b_beam.py:41:import claude_smolear235_score as S  # noqa: E402  (norm helpers only)
+scripts/claude_smolear235b_infer.py:25:import claude_smolear235_model as E  # noqa: E402
+scripts/claude_smolear235b_infer.py:26:import claude_smolear235b_beam as B  # noqa: E402
+scripts/claude_smolear257_table.py:7:  import claude_smolear257_table as TB; TB.install()
+scripts/claude_smolear257_table.py:23:import claude_smolear235_model as E  # noqa: E402
+scripts/claude_smolear257_infer.py:9:import claude_smolear257_table as TB  # noqa: E402
+scripts/claude_smolear257_infer.py:12:import claude_smolear235b_infer as I  # noqa: E402
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes scripts/claude_smolear235_score.py benspc:"C:/Users/benja/smolear235/run269/" 2>&1 | head -3; shasum -a 256 scripts/claude_smolear235_score.py; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "python -B -c \"import hashlib; print(hashlib.sha256(open('C:/Users/benja/smolear235/run269/claude_smolear235_score.py','rb').read()).hexdigest())\""
+911448a52ad13481b5a13f4f1af7e52c3afe10401f2953c530133e9d6ebad06d  scripts/claude_smolear235_score.py
+911448a52ad13481b5a13f4f1af7e52c3afe10401f2953c530133e9d6ebad06d
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && python -B claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns panel269_turns.json --out panel269_earpreds.json --device cuda --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3" 2>&1 | tail -5
+File "C:\Users\benja\smolear235\run269\claude_smolear235b_beam.py", line 41, in <module>
+    import claude_smolear235_score as S  # noqa: E402  (norm helpers only)
+  File "C:\Users\benja\smolear235\run269\claude_smolear235_score.py", line 37, in <module>
+    import claude_smolear235_panel as P  # noqa: E402
+ModuleNotFoundError: No module named 'claude_smolear235_panel'
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import re, os
+mods = {'claude_smolear257_infer'}
+seen = set()
+stack = ['claude_smolear257_infer']
+while stack:
+    m = stack.pop()
+    if m in seen: continue
+    seen.add(m)
+    p = f'scripts/{m}.py'
+    if not os.path.exists(p): print('MISSING FILE:', p); continue
+    src = open(p).read()
+    for mm in re.findall(r'^\s*(?:import|from)\s+(claude_\w+)', src, re.M):
+        if mm not in seen: stack.append(mm)
+print(sorted(seen))
+"
+['claude_smolear235_model', 'claude_smolear235_panel', 'claude_smolear235_score', 'claude_smolear235b_beam', 'claude_smolear235b_infer', 'claude_smolear257_infer', 'claude_smolear257_table']
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes scripts/claude_smolear235_panel.py benspc:"C:/Users/benja/smolear235/run269/" 2>&1 | head -3; shasum -a 256 scripts/claude_smolear235_panel.py; ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "python -B -c \"import hashlib; print(hashlib.sha256(open('C:/Users/benja/smolear235/run269/claude_smolear235_panel.py','rb').read()).hexdigest())\""
+9c87f77c27a72191d486deb371bdd00e0b81a84c98214c26417291e89558d75c  scripts/claude_smolear235_panel.py
+9c87f77c27a72191d486deb371bdd00e0b81a84c98214c26417291e89558d75c
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && python -B claude_smolear257_infer.py --ckpt C:\Users\benja\smolear235\out_v41\smolear235.safetensors --base C:\Users\benja\smolear235\base --turns panel269_turns.json --out panel269_earpreds.json --device cuda --expect-sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 --tau 9.3" 2>&1 | tail -5
+{"n": 100, "median_ms": 187.29760000042006, "p90_ms": 288.7198000007629, "max_ms": 384.5325000002049, "n_beamed": 83, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes benspc:"C:/Users/benja/smolear235/run269/panel269_earpreds.json" artifacts/claude-ear269-20260923/panel269_earpreds.json 2>&1 | head -3; /usr/bin/python3 -B -c "
+import json
+e=json.load(open('artifacts/claude-ear269-20260923/panel269_earpreds.json'))
+print('n preds:',len(e['preds'])); print('summary:',json.dumps(e['summary']))"
+n preds: 100
+summary: {"n": 100, "median_ms": 187.29760000042006, "p90_ms": 288.7198000007629, "max_ms": 384.5325000002049, "n_beamed": 83, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_qbuild.py --mode panel --turns artifacts/claude-ear269-20260923/panel269_turns.json --a-preds artifacts/claude-ear269-20260923/panel269_earpreds.json --out artifacts/claude-ear269-20260923/panel269_q 2>&1 | tail -3
+100 turns -> 186 checks (prompt B)
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import base64
+ps = \"\\\$r = ([wmiclass]'Win32_Process').Create('C:\\\\llama-b10679\\\\llama-server.exe --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6 -c 4096', 'C:\\\\Users\\\\benja\\\\smolear235\\\\run269'); Write-Output (\\\$r.ProcessId + ' rc=' + \\\$r.ReturnValue)\"
+open('/tmp/269_start.b64','w').write(base64.b64encode(ps.encode('utf-16-le')).decode())
+print(open('/tmp/269_start.b64').read()[:80])
+"
+XAAkAHIAIAA9ACAAKABbAHcAbQBpAGMAbABhAHMAcwBdACcAVwBpAG4AMwAyAF8AUAByAG8AYwBlAHMA
+[0m
+[0m$ [0mENC=$(cat /tmp/269_start.b64); ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $ENC" 2>&1 | head -5
+#< CLIXML
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><S S="Error">\$r : The term '\$r' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the _x000D__x000A_</S><S S="Error">spelling of the name, or if a path was included, verify that the path is correct and try again._x000D__x000A_</S><S S="Error">At line:1 char:1_x000D__x000A_</S><S S="Error">+ \$r = ([wmiclass]'Win32_Process').Create('C:\llama-b10679\llama-serve ..._x000D__x000A_</S><S S="Error">+ ~~~_x000D__x000A_</S><S S="Error">    + CategoryInfo          : ObjectNotFound: (\$r:String) [], CommandNotFoundException_x000D__x000A_</S><S S="Error">    + FullyQualifiedErrorId : CommandNotFoundException_x000D__x000A_</S><S S="Error"> _x000D__x000A_</S><S S="Error">\$r.ProcessId : The term '\$r.ProcessId' is not recognized as the name of a cmdlet, function, script file, or operable _x000D__x000A_</S><S S="Error">program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again._x000D__x000A_</S><S S="Error">At line:1 char:238_x000D__x000A_</S><S S="Error">+ ... \Users\benja\smolear235\run269'); Write-Output (\$r.ProcessId + ' rc= ..._x000D__x000A_</S><S S="Error">+                                                     ~~~~~~~~~~~~~_x000D__x000A_</S><S S="Error">    + CategoryInfo          : ObjectNotFound: (\$r.ProcessId:String) [], CommandNotFoundException_x000D__x000A_</S><S S="Error">    + FullyQualifiedErrorId : CommandNotFoundException_x000D__x000A_</S><S S="Error"> _x000D__x000A_</S></Objs>
+[0m
+[0m$ [0m/usr/bin/python3 -B -c 'import base64; ps = "$r = ([wmiclass]\u0027Win32_Process\u0027).Create(\u0027C:\\llama-b10679\\llama-server.exe --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6 -c 4096\u0027, \u0027C:\\Users\\benja\\smolear235\\run269\u0027); Write-Output ($r.ProcessId)"; open("/tmp/269_start.b64","w").write(base64.b64encode(ps.encode("utf-16-le")).decode()); print("b64 bytes:", len(open("/tmp/269_start.b64").read()))'
+b64 bytes: 664
+[0m
+[0m$ [0mENC=$(cat /tmp/269_start.b64); ssh -o ConnectTimeout=20 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $ENC" 2>&1 | head -5
+#< CLIXML
+9184
+<Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc "python -B -c \"import json,time,urllib.request; body=json.dumps({'prompt':'Answer with one word: YES or NO.','temperature':0.0,'n_predict':1,'n_probs':10,'cache_prompt':True}).encode(); last=''; [(__import__('time').sleep(10), exec('pass')) for _ in range(1)]; print('skip')\"" 2>&1 | head -3; echo "---poll---"; for i in 1 2 3 4 5 6; do R=$(ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B -c \"import json,urllib.request; d=json.load(urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8081/completion', data=json.dumps({'prompt':'Answer with one word: YES or NO.','temperature':0.0,'n_predict':1,'n_probs':10}).encode(), headers={'Content-Type':'application/json'}), timeout=60)); print(repr(d.get('content')))\" " 2>&1 | tail -1); echo "try$i: $R"; case "$R" in *YES*|*NO*) break;; esac; sleep 20; done
+skip
+---poll---
+try1: urllib.error.HTTPError: HTTP Error 400: Bad Request
+try2: urllib.error.HTTPError: HTTP Error 400: Bad Request
+try3: urllib.error.HTTPError: HTTP Error 400: Bad Request
+try4: urllib.error.HTTPError: HTTP Error 400: Bad Request
+try5: urllib.error.HTTPError: HTTP Error 400: Bad Request
+try6: urllib.error.HTTPError: HTTP Error 400: Bad Request
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B -c \"import json,urllib.request,urllib.error; req=urllib.request.Request('http://127.0.0.1:8081/completion', data=json.dumps({'prompt':'Answer with one word: YES or NO.','temperature':0.0,'n_predict':1,'n_probs':10,'cache_prompt':True}).encode(), headers={'Content-Type':'application/json'}); print(urllib.request.urlopen(req, timeout=60).read()[:600])\"" 2>&1 | tail -4
+result = func(*args)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\urllib\request.py", line 643, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 400: Bad Request
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B -c \"import json,urllib.request,urllib.error; req=urllib.request.Request('http://127.0.0.1:8081/completion', data=json.dumps({'prompt':'hi','temperature':0.0,'n_predict':1}).encode(), headers={'Content-Type':'application/json'}); try: print(urllib.request.urlopen(req, timeout=60).read()[:400]); except urllib.error.HTTPError as e: print('CODE', e.code); print(e.read()[:400])\""
+File "<string>", line 1
+    import json,urllib.request,urllib.error; req=urllib.request.Request('http://127.0.0.1:8081/completion', data=json.dumps({'prompt':'hi','temperature':0.0,'n_predict':1}).encode(), headers={'Content-Type':'application/json'}); try: print(urllib.request.urlopen(req, timeout=60).read()[:400]); except urllib.error.HTTPError as e: print('CODE', e.code); print(e.read()[:400])
+                                                                                                                                                                                                                                     ^^^
+SyntaxError: invalid syntax
+[0m
+[0m$ [0mcat > /tmp/269_probe.py <<'EOF'
+import json, urllib.request, urllib.error
+for body in [
+  {"prompt": "hi", "temperature": 0.0, "n_predict": 1},
+  {"prompt": "Answer with one word: YES or NO.", "temperature": 0.0, "n_predict": 1, "n_probs": 10, "cache_prompt": True},
+]:
+    req = urllib.request.Request("http://127.0.0.1:8081/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    try:
+        print("OK", urllib.request.urlopen(req, timeout=90).read()[:300])
+    except urllib.error.HTTPError as e:
+        print("CODE", e.code, e.read()[:300])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_probe.py 2>&1 | tail -4
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,memory.total,utilization.gpu,power.draw --format=csv & tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+memory.used [MiB], memory.total [MiB], utilization.gpu [%], power.draw [W]
+535 MiB, 16303 MiB, 1 %, 9.44 W
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,652 K
+llama-server.exe              9184 Services                   0    200,016 K
+[0m
+[0m$ [0mcat > /tmp/269_ps.py <<'EOF'
+import subprocess
+out = subprocess.run(["tasklist", "/V", "/FI", "IMAGENAME eq llama-server.exe", "/FO", "TABLE"], capture_output=True, text=True)
+print(out.stdout[:2000])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_ps.py 2>&1 | tail -8
+Image Name                     PID Session Name        Session#    Mem Usage Status          User Name                                              CPU Time Window Title                                                            
+========================= ======== ================ =========== ============ =============== ================================================== ============ ========================================================================
+llama-server.exe             17056 Services                   0    200,652 K Unknown         BensPC\benja                                            0:00:00 N/A                                                                     
+llama-server.exe              9184 Services                   0    200,016 K Unknown         BensPC\benja                                            0:00:00 N/A
+[0m
+[0m$ [0m/usr/bin/python3 -B -c 'import base64; ps = "Get-CimInstance Win32_Process -Filter \"Name=\u0027llama-server.exe\u0027\" | Select-Object ProcessId,CreationDate,CommandLine | Format-List"; open("/tmp/269_q.b64","w").write(base64.b64encode(ps.encode("utf-16-le")).decode()); print("ok")'; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $(cat /tmp/269_q.b64)" 2>&1 | grep -v "PSCustomObject\|Preparing" | head -20
+ok
+#< CLIXML
+
+
+ProcessId    : 17056
+CreationDate : 9/23/2026 5:57:42 AM
+CommandLine  : C:\llama-b10679\llama-server.exe --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 
+               --cache-type-v q8_0 --parallel 1 -t 6 -c 4096
+
+ProcessId    : 9184
+CreationDate : 9/23/2026 5:57:51 AM
+CommandLine  : C:\llama-b10679\llama-server.exe --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 
+               --cache-type-v q8_0 --parallel 1 -t 6 -c 4096
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "netstat -ano | findstr 8081"
+TCP    127.0.0.1:8081         0.0.0.0:0              LISTENING       17056
+  TCP    127.0.0.1:8081         0.0.0.0:0              LISTENING       9184
+  TCP    127.0.0.1:8081         127.0.0.1:53250        TIME_WAIT       0
+  TCP    127.0.0.1:8081         127.0.0.1:53258        TIME_WAIT       0
+  TCP    127.0.0.1:8081         127.0.0.1:53279        TIME_WAIT       0
+  TCP    127.0.0.1:8081         127.0.0.1:53285        TIME_WAIT       0
+  TCP    127.0.0.1:8081         127.0.0.1:53287        TIME_WAIT       0
+  TCP    127.0.0.1:53288        127.0.0.1:8081         TIME_WAIT       0
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "schtasks /Query /TN ScoutLlamaServer /FO TABLE 2>&1 | head -3"
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "systeminfo | findstr /C:\"System Boot Time\""
+System Boot Time:              9/23/2026, 2:31:49 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "schtasks /Query /TN ScoutLlamaServer /FO TABLE"
+Folder: \
+TaskName                                 Next Run Time          Status         
+======================================== ====================== ===============
+ScoutLlamaServer                         N/A                    Disabled
+[0m
+[0m$ [0mcat > /tmp/269_health.py <<'EOF'
+import json, urllib.request, urllib.error
+for path in ["/health", "/models", "/v1/models"]:
+    try:
+        r = urllib.request.urlopen("http://127.0.0.1:8081" + path, timeout=30)
+        print(path, r.status, r.read()[:300])
+    except urllib.error.HTTPError as e:
+        print(path, "CODE", e.code, e.read()[:200])
+    except Exception as e:
+        print(path, "ERR", repr(e)[:150])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_health.py 2>&1 | tail -5; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu,power.draw --format=csv"
+/health 200 b'{"status":"ok"}'
+/models 200 b'{"data":[],"object":"list"}'
+/v1/models 200 b'{"data":[],"object":"list"}'
+memory.used [MiB], utilization.gpu [%], power.draw [W]
+631 MiB, 1 %, 9.38 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "dir C:\Users\benja\smolear235\run269"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\run269
+
+09/23/2026  05:57 AM    <DIR>          .
+09/23/2026  05:56 AM    <DIR>          ..
+09/23/2026  05:56 AM             3,491 claude_earcheck261_qwen.py
+09/23/2026  05:56 AM            12,378 claude_smolear235b_beam.py
+09/23/2026  05:56 AM             3,983 claude_smolear235b_infer.py
+09/23/2026  05:56 AM            14,369 claude_smolear235_model.py
+09/23/2026  05:56 AM             5,150 claude_smolear235_panel.py
+09/23/2026  05:56 AM             7,913 claude_smolear235_score.py
+09/23/2026  05:56 AM               488 claude_smolear257_infer.py
+09/23/2026  05:56 AM             7,310 claude_smolear257_table.py
+09/23/2026  05:57 AM            70,629 panel269_earpreds.json
+09/23/2026  05:56 AM             7,734 panel269_turns.json
+              10 File(s)        133,445 bytes
+               2 Dir(s)  72,853,192,704 bytes free
+[0m
+[0m$ [0m/usr/bin/python3 -B -c 'import base64; ps = "$p = Get-CimInstance Win32_Process -Filter \"ProcessId=9184\"; if ($p) { $p.Terminate() | Out-Null; Write-Output \"9184-terminated\" } else { Write-Output \"9184-absent\" }"; open("/tmp/269_kill.b64","w").write(base64.b64encode(ps.encode("utf-16-le")).decode()); print("ok")'; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $(cat /tmp/269_kill.b64)" 2>&1 | grep -v "PSCustomObject\|Preparing" | head -5
+ok
+#< CLIXML
+9184-terminated
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,700 K
+llama-server.exe              9184 Services                   0    200,016 K
+memory.used [MiB], utilization.gpu [%]
+631 MiB, 1 %
+[0m
+[0m$ [0msleep 20; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,724 K
+llama-server.exe              9184 Services                   0    200,016 K
+[0m
+[0m$ [0m/usr/bin/python3 -B -c 'import base64; ps = "$p = Get-CimInstance Win32_Process -Filter \"ProcessId=9184\"; if ($p) { $r = $p.Terminate(); Write-Output (\"rc=\" + $r.ReturnValue) } else { Write-Output \"absent\" }"; open("/tmp/269_kill2.b64","w").write(base64.b64encode(ps.encode("utf-16-le")).decode()); print("ok")'; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $(cat /tmp/269_kill2.b64)" 2>&1 | grep -v "PSCustomObject\|Preparing" | head -5; sleep 10; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+ok
+#< CLIXML
+rc=
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,828 K
+llama-server.exe              9184 Services                   0    200,016 K
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "taskkill /PID 9184 /F"
+SUCCESS: The process with PID 9184 has been terminated.
+[0m
+[0m$ [0msleep 5; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,828 K
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu,power.draw --format=csv"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_probe.py 2>&1 | tail -2
+memory.used [MiB], utilization.gpu [%], power.draw [W]
+633 MiB, 1 %, 9.27 W
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+memory.used [MiB], utilization.gpu [%]
+628 MiB, 1 %
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,832 K
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "dir C:\llama-b10679"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\llama-b10679
+
+08/29/2026  12:52 PM    <DIR>          .
+05/09/2026  03:27 AM        51,870,320 cublas64_13.dll
+05/09/2026  03:27 AM       460,301,424 cublasLt64_13.dll
+04/18/2026  03:19 AM           551,024 cudart64_13.dll
+08/29/2026  12:52 PM             8,886 flashnext-chat-template.jinja
+08/28/2026  07:12 PM           780,288 ggml-base.dll
+08/28/2026  07:12 PM         1,182,208 ggml-cpu-alderlake.dll
+08/28/2026  07:12 PM         1,397,760 ggml-cpu-cannonlake.dll
+08/28/2026  07:12 PM         1,384,448 ggml-cpu-cascadelake.dll
+08/28/2026  07:12 PM         1,384,960 ggml-cpu-cooperlake.dll
+08/28/2026  07:12 PM         1,186,816 ggml-cpu-haswell.dll
+08/28/2026  07:12 PM         1,391,104 ggml-cpu-icelake.dll
+08/28/2026  07:12 PM         1,076,224 ggml-cpu-ivybridge.dll
+08/28/2026  07:12 PM         1,080,320 ggml-cpu-piledriver.dll
+08/28/2026  07:12 PM         1,055,744 ggml-cpu-sandybridge.dll
+08/28/2026  07:12 PM         1,661,952 ggml-cpu-sapphirerapids.dll
+08/28/2026  07:12 PM         1,391,104 ggml-cpu-skylakex.dll
+08/28/2026  07:12 PM           879,104 ggml-cpu-sse42.dll
+08/28/2026  07:12 PM           871,424 ggml-cpu-x64.dll
+08/28/2026  07:12 PM         1,391,616 ggml-cpu-zen4.dll
+08/28/2026  07:07 PM       141,925,376 ggml-cuda.dll
+08/28/2026  07:16 PM           101,376 ggml-rpc-server.exe
+08/28/2026  07:12 PM           168,448 ggml-rpc.dll
+08/28/2026  07:12 PM            86,016 ggml.dll
+08/28/2026  07:12 PM           768,000 libomp.dll
+08/28/2026  07:12 PM            19,741 LICENSE-LLVM-OpenMP
+08/28/2026  07:16 PM            61,440 llama-batched-bench-impl.dll
+08/28/2026  07:16 PM             9,216 llama-batched-bench.exe
+08/28/2026  07:16 PM           399,872 llama-bench-impl.dll
+08/28/2026  07:16 PM             9,216 llama-bench.exe
+08/28/2026  07:16 PM         3,259,904 llama-cli-impl.dll
+08/28/2026  07:16 PM             9,216 llama-cli.exe
+08/28/2026  07:15 PM         7,760,384 llama-common.dll
+08/28/2026  07:16 PM           133,632 llama-completion-impl.dll
+08/28/2026  07:16 PM             9,216 llama-completion.exe
+08/28/2026  07:16 PM            41,472 llama-fit-params-impl.dll
+08/28/2026  07:16 PM             9,216 llama-fit-params.exe
+08/28/2026  07:16 PM            27,136 llama-gemma3-cli.exe
+08/28/2026  07:16 PM            60,416 llama-gguf-split.exe
+08/28/2026  07:16 PM           255,488 llama-imatrix.exe
+08/28/2026  07:16 PM            27,136 llama-llava-cli.exe
+08/28/2026  07:16 PM            27,136 llama-minicpmv-cli.exe
+08/28/2026  07:16 PM            85,504 llama-mtmd-cli.exe
+08/28/2026  07:16 PM            55,296 llama-mtmd-debug.exe
+08/28/2026  07:16 PM           194,048 llama-perplexity-impl.dll
+08/28/2026  07:16 PM             9,216 llama-perplexity.exe
+08/28/2026  07:16 PM           137,216 llama-quantize-impl.dll
+08/28/2026  07:16 PM             9,216 llama-quantize.exe
+08/28/2026  07:16 PM            27,136 llama-qwen2vl-cli.exe
+08/28/2026  07:16 PM            46,080 llama-results.exe
+08/28/2026  07:16 PM         8,858,112 llama-server-impl.dll
+08/28/2026  07:16 PM             9,216 llama-server.exe
+08/28/2026  07:16 PM            58,368 llama-tokenize.exe
+08/28/2026  07:16 PM            41,472 llama-tts.exe
+08/28/2026  07:14 PM         3,097,600 llama.dll
+08/28/2026  07:16 PM           103,936 llama.exe
+08/28/2026  07:16 PM         1,744,384 mtmd.dll
+08/29/2026  10:41 AM               515 start-flash.ps1
+              57 File(s)    700,493,094 bytes
+               1 Dir(s)  72,132,653,056 bytes free
+[0m
+[0m$ [0mcat > /tmp/269_props.py <<'EOF'
+import urllib.request, urllib.error
+for path in ["/props", "/v1/models", "/models"]:
+    try:
+        r = urllib.request.urlopen("http://127.0.0.1:8081" + path, timeout=30)
+        print(path, r.status, r.read()[:500])
+    except urllib.error.HTTPError as e:
+        print(path, "CODE", e.code, e.read()[:200])
+    except Exception as e:
+        print(path, "ERR", repr(e)[:150])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_props.py 2>&1 | tail -4
+/props 200 b'{"role":"router","max_instances":4,"models_autoload":true,"model_alias":"llama-server","model_path":"none","default_generation_settings":{"params":null,"n_ctx":0},"ui_settings":{},"build_info":"b10679-50f068fff","cors_proxy_enabled":false}'
+/v1/models 200 b'{"data":[],"object":"list"}'
+/models 200 b'{"data":[],"object":"list"}'
+[0m
+[0m$ [0msleep 110; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    201,016 K
+memory.used [MiB], utilization.gpu [%]
+531 MiB, 1 %
+[0m
+[0m$ [0msleep 115; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    201,000 K
+memory.used [MiB], utilization.gpu [%]
+572 MiB, 1 %
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_probe.py 2>&1 | tail -2; sleep 100; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+CODE 400 b'{"error":{"code":400,"message":"model name is missing from the request","type":"invalid_request_error"}}'
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    201,012 K
+memory.used [MiB], utilization.gpu [%]
+575 MiB, 2 %
+[0m
+[0m$ [0m/usr/bin/python3 -B -c 'import base64; ps = "$r = ([wmiclass]\u0027Win32_Process\u0027).Create(\u0027C:\\llama-b10679\\llama-server.exe -m C:\\Users\\benja\\.lmstudio\\models\\Qwen3.8-27B\\Qwen3.8-27B-UD-IQ4_XS.gguf --host 127.0.0.1 --port 8082 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6 -c 4096\u0027, \u0027C:\\Users\\benja\\smolear235\\run269\u0027); Write-Output ($r.ProcessId)"; open("/tmp/269_start2.b64","w").write(base64.b64encode(ps.encode("utf-16-le")).decode()); print("ok")'; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "powershell -NoProfile -EncodedCommand $(cat /tmp/269_start2.b64)" 2>&1 | grep -v "PSCustomObject\|Preparing" | head -3
+ok
+#< CLIXML
+4040
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu,power.draw --format=csv"
+memory.used [MiB], utilization.gpu [%], power.draw [W]
+13972 MiB, 2 %, 9.69 W
+[0m
+[0m$ [0mcat > /tmp/269_probe2.py <<'EOF'
+import json, urllib.request, urllib.error
+body = {"prompt": "Message from the speaker: \u00abOur dog is Rex.\u00bb\nClaim: the speaker's dog is Rex.\nDoes the message state this claim as a real, current fact that the speaker believes?\nAnswer with one word: YES or NO.", "temperature": 0.0, "n_predict": 1, "n_probs": 10, "cache_prompt": True}
+req = urllib.request.Request("http://127.0.0.1:8082/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+try:
+    d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+    print("OK content=", repr(d.get("content")))
+    cps = d.get("completion_probabilities") or []
+    print("n_cps=", len(cps))
+except urllib.error.HTTPError as e:
+    print("CODE", e.code, e.read()[:300])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_probe2.py 2>&1 | tail -3
+OK content= '\n\n'
+n_cps= 1
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes artifacts/claude-ear269-20260923/panel269_q/checks.json "artifacts/claude-ear269-20260923/panel269_q/manifest.json" benspc:"C:/Users/benja/smolear235/run269/" 2>&1 | head -3; echo RC=$?; cat > /tmp/269_smoke.py <<'EOF'
+import json, sys
+sys.path.insert(0, "C:/Users/benja/smolear235/run269")
+import claude_earcheck261_qwen as Q
+checks = json.load(open("C:/Users/benja/smolear235/run269/checks.json"))
+for c in checks[:3]:
+    d, ms = Q.post_completion("http://127.0.0.1:8082", c["prompt"])
+    p, text, fb = Q.p_yes(d)
+    print(c["id"], "p=%.3f" % p, "fb=", fb, "text=", repr(text[:20]), "ms=%.0f" % ms)
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && python -B" < /tmp/269_smoke.py 2>&1 | tail -5
+RC=0
+o269-001#t0 p=0.000 fb= True text= '\n\n' ms=494
+o269-001#t1 p=0.000 fb= True text= '\n\n' ms=316
+nc:o269-001#t0 p=0.000 fb= True text= '\n\n' ms=273
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "type C:\llama-b10679\start-flash.ps1"
+$TD = "C:\Users\benja\AppData\Local\Temp\opencode"
+if (Get-Process -Name llama-server -ErrorAction SilentlyContinue) { "already running"; exit 0 }
+Remove-Item "$TD\srv_out.log","$TD\srv_err.log" -ErrorAction SilentlyContinue
+$full = 'cmd.exe /c ""' + $TD + '\run_flashnext.bat" > "' + $TD + '\srv_out.log" 2> "' + $TD + '\srv_err.log""'
+$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $full; CurrentDirectory = $TD }
+"launched rc=$($r.ReturnValue) pid=$($r.ProcessId)"
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+d=json.load(open('artifacts/claude-ear269-20260923/dev269_pyes.json'))
+cks=d['checks']
+import itertools
+n=len(cks); fb=sum(1 for v in cks.values() if v.get('fallback'))
+print('n=',n,'fallbacks=',fb)
+for k in itertools.islice(cks,5):
+    v=cks[k]; print(k,'p=',round(v['p'],3),'fb=',v.get('fallback'),'text=',repr(v.get('text','')[:30]))
+"
+n= 162 fallbacks= 0
+dev269:d269-001#t0 p= 0.962 fb= False text= 'YES'
+dev269:nc:d269-001#t0 p= 0.581 fb= False text= 'YES'
+dev269:d269-002#t0 p= 0.967 fb= False text= 'YES'
+dev269:nc:d269-002#t0 p= 0.66 fb= False text= 'YES'
+dev269:d269-003#t0 p= 0.945 fb= False text= 'YES'
+[0m
+[0m$ [0mcat > /tmp/269_props2.py <<'EOF'
+import urllib.request
+for base in ["http://127.0.0.1:8082", "http://127.0.0.1:8081"]:
+    try:
+        r = urllib.request.urlopen(base + "/props", timeout=30)
+        print(base, r.status, r.read()[:400])
+    except Exception as e:
+        print(base, "ERR", repr(e)[:150])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_props2.py 2>&1 | tail -3
+http://127.0.0.1:8082 200 b'{"default_generation_settings":{"params":{"seed":4294967295,"temperature":1.0,"dynatemp_range":0.0,"dynatemp_exponent":1.0,"top_k":20,"top_p":0.949999988079071,"min_p":0.05000000074505806,"top_n_sigma":-1.0,"xtc_probability":0.0,"xtc_threshold":0.10000000149011612,"typical_p":1.0,"repeat_last_n":64,"repeat_penalty":1.0,"presence_penalty":0.0,"frequency_penalty":0.0,"dry_multiplier":0.0,"dry_base":'
+http://127.0.0.1:8081 200 b'{"role":"router","max_instances":4,"models_autoload":true,"model_alias":"llama-server","model_path":"none","default_generation_settings":{"params":null,"n_ctx":0},"ui_settings":{},"build_info":"b10679-50f068fff","cors_proxy_enabled":false}'
+[0m
+[0m$ [0mcat > /tmp/269_smoke_dev.py <<'EOF'
+import json, sys
+sys.path.insert(0, "C:/Users/benja/smolear235/run269")
+import claude_earcheck261_qwen as Q
+man = json.load(open("C:/Users/benja/smolear235/run265/dev265_checks.json")) if False else None
+# rebuild one dev prompt locally? No - use checks file from an existing dev run:
+checks = json.load(open("C:/Users/benja/smolear235/run265/dev265_checks.json"))
+print("n_dev_checks=", len(checks))
+c = checks[0]
+print("prompt_tail=", repr(c["prompt"][-60:]))
+d, ms = Q.post_completion("http://127.0.0.1:8082", c["prompt"])
+p, text, fb = Q.p_yes(d)
+print("devcheck0", "p=%.3f" % p, "fb=", fb, "text=", repr(text[:20]), "ms=%.0f" % ms)
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run265 && python -B" < /tmp/269_smoke_dev.py 2>&1 | tail -4
+n_dev_checks= 102
+prompt_tail= 'herwise answer YES.\nAnswer with one word: YES or NO.\nAnswer:'
+devcheck0 p=0.000 fb= True text= '\n\n' ms=501
+[0m
+[0m$ [0mcat > /tmp/269_dist.py <<'EOF'
+import json, urllib.request
+checks = json.load(open("C:/Users/benja/smolear235/run265/dev265_checks.json"))
+body = {"prompt": checks[0]["prompt"], "temperature": 0.0, "n_predict": 1, "n_probs": 10, "cache_prompt": True}
+req = urllib.request.Request("http://127.0.0.1:8082/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+print("content=", repr(d.get("content")))
+cps = d.get("completion_probabilities") or []
+print("n_pos=", len(cps))
+first = cps[0] if cps else None
+print("first_keys=", list(first.keys()) if isinstance(first, dict) else type(first))
+cand = (first.get("probs") if isinstance(first, dict) else first)
+for t in (cand if isinstance(cand, list) else [])[:12]:
+    print(repr(t.get("tok_str", t.get("text")))[:30], t.get("prob"))
+r = urllib.request.urlopen("http://127.0.0.1:8082/v1/models", timeout=30)
+print("MODELS:", r.read()[:300])
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_dist.py 2>&1 | tail -18
+content= '\n\n'
+n_pos= 1
+first_keys= ['id', 'token', 'bytes', 'logprob', 'top_logprobs']
+MODELS: b'{"models":[{"name":"C:\\\\Users\\\\benja\\\\.lmstudio\\\\models\\\\Qwen3.8-27B\\\\Qwen3.8-27B-UD-IQ4_XS.gguf","model":"C:\\\\Users\\\\benja\\\\.lmstudio\\\\models\\\\Qwen3.8-27B\\\\Qwen3.8-27B-UD-IQ4_XS.gguf","modified_at":"","size":"","digest":"","type":"model","description":"","tags":[""],"capabilities":["completion"],"p'
+[0m
+[0m$ [0mcat > /tmp/269_dist2.py <<'EOF'
+import json, urllib.request
+checks = json.load(open("C:/Users/benja/smolear235/run265/dev265_checks.json"))
+body = {"prompt": checks[0]["prompt"], "temperature": 0.0, "n_predict": 6, "n_probs": 10, "cache_prompt": False}
+req = urllib.request.Request("http://127.0.0.1:8082/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+print("content=", repr(d.get("content")))
+cps = d.get("completion_probabilities") or []
+for i, pos in enumerate(cps[:3]):
+    print("--- pos", i)
+    tls = pos.get("top_logprobs", [])
+    for t in tls[:8]:
+        import math
+        print("   ", repr(t.get("token"))[:25], round(math.exp(t.get("logprob", -99)), 4))
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_dist2.py 2>&1 | tail -30
+content= '\n\nYES\n\n**Step-by'
+--- pos 0
+    '\n\n' 0.997
+    ' YES' 0.0012
+    '\n' 0.0008
+    ' NO' 0.0002
+    ' **' 0.0002
+    '\n\n\n' 0.0001
+    '<think>' 0.0001
+    '' 0.0001
+--- pos 1
+    'YES' 0.9109
+    '<think>' 0.0543
+    'NO' 0.0243
+    'The' 0.0028
+    'Yes' 0.0017
+    '**' 0.0005
+    'Message' 0.0004
+    'yes' 0.0004
+--- pos 2
+    '\n\n' 0.5131
+    '' 0.4817
+    '\n' 0.0023
+    '.' 0.0013
+    '' 0.0012
+    '\n\n\n' 0.0002
+    ':' 0.0
+    ',' 0.0
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "C:\llama-b10679\llama-server.exe --help" 2>&1 | grep -i -E "jinja|template|think|reasoning|bos|prescrape|no-prefix" | head -20; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "dir C:\Users\benja\.lmstudio\models\Qwen3.8-27B"
+tokenizer.ggml.add_bos_token=bool:false,tokenizer.ggml.add_eos_token=bool:false
+-v,    --verbose, --log-verbose         Set verbosity level to infinity (i.e. log all messages, useful for
+-lv,   --verbosity, --log-verbosity N   Set the verbosity threshold. Messages with a higher verbosity will be
+                                        (env: LLAMA_ARG_LOG_VERBOSITY)
+--chat-template-kwargs STRING           sets additional params for the json template parser, must be a valid
+                                        (env: LLAMA_ARG_CHAT_TEMPLATE_KWARGS)
+--jinja, --no-jinja                     whether to use jinja template engine for chat (default: enabled)
+                                        (env: LLAMA_ARG_JINJA)
+--reasoning-format FORMAT               controls whether thought tags are allowed and/or extracted from the
+                                        - deepseek: puts thoughts in `message.reasoning_content`
+                                        - deepseek-legacy: keeps `<think>` tags in `message.content` while
+                                        also populating `message.reasoning_content`
+                                        (env: LLAMA_ARG_THINK)
+-rea,  --reasoning [on|off|auto]        Use reasoning/thinking in the chat ('on', 'off', or 'auto', default:
+                                        'auto' (detect from template))
+                                        (env: LLAMA_ARG_REASONING)
+--reasoning-effort LEVEL                reasoning effort level given to the chat template: 'default' to keep
+                                        the template default,
+                                        (env: LLAMA_ARG_REASONING_EFFORT)
+--reasoning-budget N                    token budget for thinking: -1 for unrestricted, 0 for immediate end,
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.lmstudio\models\Qwen3.8-27B
+
+09/13/2026  02:39 PM    <DIR>          .
+09/13/2026  02:24 PM    <DIR>          ..
+09/13/2026  02:39 PM    14,252,845,984 Qwen3.8-27B-UD-IQ4_XS.gguf
+               1 File(s) 14,252,845,984 bytes
+               2 Dir(s)  72,136,089,600 bytes free
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+for f in ['artifacts/claude-ear265-20260923/dev265_pyes.json','artifacts/claude-ear265-20260923/panel265_pyes.json','artifacts/claude-earcheck261-20260922/panel261_pyes.json']:
+    try:
+        d=json.load(open(f)); cks=d['checks']
+        fb=sum(1 for v in cks.values() if v.get('fallback'))
+        import itertools
+        k=next(iter(cks)); v=cks[k]
+        print(f,'n=',len(cks),'fb=',fb,'sample:',k,'p=',round(v['p'],3),'text=',repr(v.get('text','')[:15]))
+    except Exception as e: print(f,'ERR',e)
+"
+artifacts/claude-ear265-20260923/dev265_pyes.json n= 102 fb= 0 sample: d265dev:d265-001#t0 p= 0.962 text= 'YES'
+artifacts/claude-ear265-20260923/panel265_pyes.json n= 172 fb= 0 sample: o265-001#t0 p= 0.95 text= 'YES'
+artifacts/claude-earcheck261-20260922/panel261_pyes.json n= 228 fb= 0 sample: e261-001#t0 p= 0.987 text= 'YES'
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "netstat -ano | findstr 808"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+TCP    127.0.0.1:8081         0.0.0.0:0              LISTENING       17056
+  TCP    127.0.0.1:8082         0.0.0.0:0              LISTENING       4040
+  TCP    127.0.0.1:8082         127.0.0.1:56257        TIME_WAIT       0
+  TCP    127.0.0.1:8082         127.0.0.1:56262        TIME_WAIT       0
+  TCP    127.0.0.1:8082         127.0.0.1:56263        TIME_WAIT       0
+  TCP    127.0.0.1:8082         127.0.0.1:56266        TIME_WAIT       0
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,784 K
+llama-server.exe              4040 Services                   0 15,055,908 K
+[0m
+[0m$ [0mcat > /tmp/269_rep.py <<'EOF'
+import json, urllib.request
+checks = json.load(open("C:/Users/benja/smolear235/run265/dev265_checks.json"))
+prompts = [checks[0]["prompt"], checks[1]["prompt"]]
+for j, pr in enumerate(prompts):
+    outs = []
+    for i in range(3):
+        body = {"prompt": pr, "temperature": 0.0, "n_predict": 1, "n_probs": 10, "cache_prompt": True}
+        req = urllib.request.Request("http://127.0.0.1:8082/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+        d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+        cps = d.get("completion_probabilities") or []
+        top = None
+        if cps:
+            tls = cps[0].get("top_logprobs", [])
+            top = (tls[0].get("token"), round(tls[0].get("logprob", 0), 3)) if tls else None
+        outs.append((repr(d.get("content")), top))
+    print("prompt", j, outs)
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_rep.py 2>&1 | tail -3
+prompt 0 [("'\\n\\n'", ('\n\n', -0.003)), ("'\\n\\n'", ('\n\n', -0.003)), ("'\\n\\n'", ('\n\n', -0.003))]
+prompt 1 [("'\\n\\n'", ('\n\n', -0.003)), ("'\\n\\n'", ('\n\n', -0.003)), ("'\\n\\n'", ('\n\n', -0.003))]
+[0m
+[0m$ [0mcat > /tmp/269_raw.py <<'EOF'
+import json, urllib.request
+for pr in ["The capital of France is", "Say the word YES:", "2+2="]:
+    body = {"prompt": pr, "temperature": 0.0, "n_predict": 12, "cache_prompt": False}
+    req = urllib.request.Request("http://127.0.0.1:8082/completion", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+    d = json.loads(urllib.request.urlopen(req, timeout=120).read())
+    print(repr(pr), "->", repr(d.get("content")))
+EOF
+ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B" < /tmp/269_raw.py 2>&1 | tail -4
+'The capital of France is' -> ' Paris.\nThe capital of Germany is Berlin.\nThe'
+'Say the word YES:' -> '\n\nYES'
+'2+2=' -> '5?\n\nMathematically, the standard result of **'
+[0m
+[0m→ [0mRead scripts/claude_earcheck261_qwen.py[90m [offset=40, limit=60][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_qbuild.py --mode dev --dev artifacts/claude-ear269-20260923/dev_269.jsonl --preds artifacts/claude-ear269-20260923/dev269_earpreds.json --src dev269 --out /tmp/269dev_q 2>&1 | tail -2; /usr/bin/python3 -B -c "
+import json
+a=json.load(open('/tmp/269dev_q/checks.json')); b=json.load(open('artifacts/claude-ear269-20260923/dev269_manifest.json'))
+print('rebuilt checks:',len(a),'sealed manifest:',len(b))
+pa=json.load(open('/tmp/269dev_q/manifest.json'))
+ka=set(pa); kb=set(b)
+print('manifest key match:', ka==kb)
+"
+121 rows -> 162 checks (prompt B)
+rebuilt checks: 162 sealed manifest: 162
+manifest key match: True
+[0m
+[0m$ [0mcat > /tmp/269_qwen_adapter.py <<'EOF'
+#!/usr/bin/env python3
+"""Resume-269 driver adapter (UNSEALED, diagnostic+registered runner).
+Sealed method preserved exactly: POST {prompt, temperature 0.0, n_predict 1,
+n_probs 10, cache_prompt True} to /completion; p(YES) = first-position YES
+mass / (YES mass + NO mass), token match strip().upper() in {YES, NO};
+fallback: text YES->1.0, NO->0.0, else 0.0 (hold back), fallback=True.
+ONLY change vs sealed claude_earcheck261_qwen.py: also parse the
+{"top_logprobs": [{"token": str, "logprob": float}]} first-position shape
+(prob = exp(logprob)) that this server build returns. Old shapes parsed
+identically to the sealed code.
+"""
+import argparse, json, math, statistics, sys, time, urllib.request
+from pathlib import Path
+
+def post_completion(url, prompt, timeout=180):
+    body = json.dumps({"prompt": prompt, "temperature": 0.0, "n_predict": 1,
+                       "n_probs": 10, "cache_prompt": True}).encode("utf-8")
+    req = urllib.request.Request(url.rstrip("/") + "/completion", data=body,
+                                 headers={"Content-Type": "application/json"})
+    t0 = time.perf_counter()
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        d = json.loads(r.read().decode("utf-8"))
+    return d, (time.perf_counter() - t0) * 1000.0
+
+def candidates(first):
+    if isinstance(first, dict) and "top_logprobs" in first:
+        out = []
+        for t in first["top_logprobs"] or []:
+            try: p = math.exp(float(t.get("logprob", float("-inf"))))
+            except (TypeError, ValueError): continue
+            out.append((str(t.get("token", "")), p))
+        return out
+    cand = first.get("probs", first.get("tokens", first if isinstance(first, list) else []))
+    if isinstance(cand, dict): cand = cand.get("probs", [])
+    out = []
+    if isinstance(cand, list):
+        for t in cand:
+            s = t.get("tok_str", t.get("text", ""))
+            try: p = float(t.get("prob", 0.0))
+            except (TypeError, ValueError): continue
+            out.append((str(s), p))
+    return out
+
+def p_yes(d):
+    text = str(d.get("content", ""))
+    cps = d.get("completion_probabilities") or []
+    py = pn = 0.0
+    if cps:
+        for s, p in candidates(cps[0]):
+            u = s.strip().upper()
+            if u == "YES": py += p
+            elif u == "NO": pn += p
+    if py + pn > 0: return py / (py + pn), text, False
+    s = text.strip().upper()
+    if s == "YES": return 1.0, text, True
+    if s == "NO": return 0.0, text, True
+    return 0.0, text, True
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--url", required=True)
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    checks = json.loads(Path(a.inp).read_text(encoding="utf-8"))
+    out, lat = {}, []
+    for c in checks:
+        d, ms = post_completion(a.url, c["prompt"])
+        p, text, fb = p_yes(d)
+        lat.append(ms)
+        out[str(c["id"])] = dict(p=round(p, 6), text=text, fallback=fb, ms=round(ms, 2))
+    summ = dict(n=len(out), fallbacks=sum(1 for v in out.values() if v["fallback"]),
+                median_ms=round(statistics.median(lat), 1) if lat else None,
+                p90_ms=round(sorted(lat)[int(0.9 * len(lat))], 1) if lat else None,
+                max_ms=round(max(lat), 1) if lat else None)
+    Path(a.out).write_text(json.dumps(dict(summary=summ, checks=out), indent=1))
+    print(json.dumps(summ))
+
+if __name__ == "__main__":
+    main()
+EOF
+scp -o ConnectTimeout=20 -o BatchMode=yes /tmp/269_qwen_adapter.py /tmp/269dev_q/checks.json benspc:"C:/Users/benja/smolear235/run269/" 2>&1 | head -3; echo RC=$?; /usr/bin/python3 -B -c "print(open('/tmp/269_qwen_adapter.py').read().count(chr(10)), 'lines')"
+RC=0
+80 lines
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && copy checks.json dev269_checks_run.json >nul && python -B 269_qwen_adapter.py --url http://127.0.0.1:8082 --in dev269_checks_run.json --out dev269_pyes_run.json" 2>&1 | tail -3
+{"n": 162, "fallbacks": 0, "median_ms": 268.8, "p90_ms": 294.2, "max_ms": 551.9}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes benspc:"C:/Users/benja/smolear235/run269/dev269_pyes_run.json" /tmp/269dev_pyes_run.json 2>&1 | head -2; /usr/bin/python3 -B -c "
+import json
+old=json.load(open('artifacts/claude-ear269-20260923/dev269_pyes.json'))['checks']
+new=json.load(open('/tmp/269dev_pyes_run.json'))['checks']
+print('keys match:', set(old)==set(new))
+import statistics
+ad=[abs(old[k]['p']-new[k]['p']) for k in old]
+print('n=',len(ad),'mean|dp|=%.4f'% (sum(ad)/len(ad)),'median|dp|=%.4f'%statistics.median(ad),'max|dp|=%.4f'%max(ad))
+for th in (0.25,):
+    ag=sum(1 for k in old if (old[k]['p']>=th)==(new[k]['p']>=th))
+    print('save/hold agreement at',th,'=',ag,'/',len(ad))
+fb=sum(1 for v in new.values() if v['fallback'])
+print('new fallbacks:',fb)
+"
+keys match: True
+n= 162 mean|dp|=0.1048 median|dp|=0.0957 max|dp|=0.3555
+save/hold agreement at 0.25 = 160 / 162
+new fallbacks: 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_scoremain.py --dev artifacts/claude-ear269-20260923/dev_269.jsonl --a-preds artifacts/claude-ear269-20260923/dev269_earpreds.json --b-preds artifacts/claude-ear269-20260923/dev269_bpreds.json --theta 0.25 --pyes /tmp/269dev_pyes_run.json --src dev269 --out /tmp/269dev_score_run.json 2>&1 | tail -25
+"teach_hit": 38,
+   "teach_gold": 49,
+   "wrong": 13,
+   "saved": 51,
+   "per_fact_wrong": 0.2549,
+   "per_turn_wrong": 0.1074
+  },
+  "A261b": {
+   "teach_hit": 38,
+   "teach_gold": 49,
+   "wrong": 39,
+   "saved": 77,
+   "per_fact_wrong": 0.5065,
+   "per_turn_wrong": 0.3058
+  },
+  "B": {
+   "teach_hit": 6,
+   "teach_gold": 49,
+   "wrong": 0,
+   "saved": 6,
+   "per_fact_wrong": 0.0,
+   "per_turn_wrong": 0.0
+  }
+ }
+}
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+old=json.load(open('artifacts/claude-ear269-20260923/dev269_score.json'))
+new=json.load(open('/tmp/269dev_score_run.json'))
+print('OLD marks:',json.dumps(old['marks']))
+print('NEW marks:',json.dumps(new['marks']))
+print('OLD verdict:',json.dumps(old['verdict']))
+print('NEW verdict:',json.dumps(new['verdict']))
+print('OLD by_family keys:',list(old['by_family']))
+for f in old['by_family']:
+    print(f,'OLD',json.dumps(old['by_family'][f]),' NEW',json.dumps(new['by_family'][f]))
+print('OLD median_ms:',old.get('median_ms'),'NEW:',new.get('median_ms'))
+"
+OLD marks: {"M1_group_saves": 0, "M1_ask": 46, "M1_n": 46, "M1_ask265": 18, "M2_exact": 14, "M2_n": 22, "M3_lost": 0, "M3_hit_A": 10, "M3_hit_265": 10, "M3_gold": 10, "M4_ident": 10, "M4_n": 10, "M5_new": 0, "M6_false": 0, "M6_n": 53, "M7_lost": 0, "M7_n": 33, "M7_hit_A": 2, "M7_hit_265": 2, "M8_new": 0}
+NEW marks: {"M1_group_saves": 0, "M1_ask": 46, "M1_n": 46, "M1_ask265": 18, "M2_exact": 14, "M2_n": 22, "M3_lost": 0, "M3_hit_A": 10, "M3_hit_265": 10, "M3_gold": 10, "M4_ident": 10, "M4_n": 10, "M5_new": 0, "M6_false": 0, "M6_n": 53, "M7_lost": 0, "M7_n": 33, "M7_hit_A": 2, "M7_hit_265": 2, "M8_new": 0}
+OLD verdict: {"M1": false, "M2": false, "M3": false, "M4": false, "M5": false, "M6": false, "M7": false, "M8": false, "COUNTS": false, "ALL": false}
+NEW verdict: {"M1": false, "M2": false, "M3": false, "M4": false, "M5": false, "M6": false, "M7": false, "M8": false, "COUNTS": false, "ALL": false}
+OLD by_family keys: ['group_owner', 'mixed', 'first_person', 'named', 'non_owner_we']
+group_owner OLD {"n": 46, "teach_hit": 0, "teach_gold": 0, "wrong": 3, "saved": 3, "ask_turns": 46, "ask265_turns": 18, "fires_turns": 46, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 46, "ident261": 30, "turns_wrong": 3}  NEW {"n": 46, "teach_hit": 0, "teach_gold": 0, "wrong": 3, "saved": 3, "ask_turns": 46, "ask265_turns": 18, "fires_turns": 46, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 46, "ident261": 30, "turns_wrong": 3}
+mixed OLD {"n": 22, "teach_hit": 19, "teach_gold": 22, "wrong": 8, "saved": 27, "ask_turns": 22, "ask265_turns": 10, "fires_turns": 22, "mixed_exact": 14, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 22, "ident261": 12, "turns_wrong": 8}  NEW {"n": 22, "teach_hit": 19, "teach_gold": 22, "wrong": 8, "saved": 27, "ask_turns": 22, "ask265_turns": 10, "fires_turns": 22, "mixed_exact": 14, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 22, "ident261": 12, "turns_wrong": 8}
+first_person OLD {"n": 10, "teach_hit": 10, "teach_gold": 10, "wrong": 0, "saved": 10, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 10, "ident261": 10, "turns_wrong": 0}  NEW {"n": 10, "teach_hit": 10, "teach_gold": 10, "wrong": 0, "saved": 10, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 10, "ident261": 10, "turns_wrong": 0}
+named OLD {"n": 10, "teach_hit": 7, "teach_gold": 10, "wrong": 2, "saved": 9, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 10, "ident261": 10, "turns_wrong": 2}  NEW {"n": 10, "teach_hit": 7, "teach_gold": 10, "wrong": 2, "saved": 9, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 10, "ident261": 10, "turns_wrong": 2}
+non_owner_we OLD {"n": 33, "teach_hit": 2, "teach_gold": 7, "wrong": 0, "saved": 2, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 33, "ident261": 33, "turns_wrong": 0}  NEW {"n": 33, "teach_hit": 2, "teach_gold": 7, "wrong": 0, "saved": 2, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 33, "ident261": 33, "turns_wrong": 0}
+OLD median_ms: 332.61 NEW: 311.91
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-ear269-20260923/panel269_q/checks.json; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B -c \"import hashlib; print(hashlib.sha256(open('C:/Users/benja/smolear235/run269/checks.json','rb').read()).hexdigest())\""; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"
+1f51d562810c031cb8e3826bf59cdadc40e769ca1ea8b33d15864f3f52189786  artifacts/claude-ear269-20260923/panel269_q/checks.json
+13252d502a3381a4553cc8c3b7151f633d9c9d01609e0dafbe63fc64e798e5e1
+memory.used [MiB], utilization.gpu [%]
+13990 MiB, 1 %
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,784 K
+llama-server.exe              4040 Services                   0 22,144,260 K
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes artifacts/claude-ear269-20260923/panel269_q/checks.json benspc:"C:/Users/benja/smolear235/run269/panel269_checks.json" 2>&1 | head -2; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "python -B -c \"import hashlib,json; b=open('C:/Users/benja/smolear235/run269/panel269_checks.json','rb').read(); print(hashlib.sha256(b).hexdigest()); print('n_checks=',len(json.loads(b)))\""
+1f51d562810c031cb8e3826bf59cdadc40e769ca1ea8b33d15864f3f52189786
+n_checks= 186
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "cd C:\Users\benja\smolear235\run269 && python -B 269_qwen_adapter.py --url http://127.0.0.1:8082 --in panel269_checks.json --out panel269_pyes_run.json" 2>&1 | tail -3
+{"n": 186, "fallbacks": 0, "median_ms": 266.8, "p90_ms": 297.4, "max_ms": 495.1}
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 -o BatchMode=yes benspc:"C:/Users/benja/smolear235/run269/panel269_pyes_run.json" artifacts/claude-ear269-20260923/panel269_pyes.json 2>&1 | head -2; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_ear269_scoremain.py --panel artifacts/claude-ourpanel269-20260923/panel.jsonl --seal artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt --a-preds artifacts/claude-ear269-20260923/panel269_earpreds.json --b-preds artifacts/claude-ear269-20260923/panel269_bpreds.json --theta 0.25 --pyes artifacts/claude-ear269-20260923/panel269_pyes.json --out artifacts/claude-ear269-20260923/panel269_score.json 2>&1 | tail -40
+"M7": true,
+  "M8": true,
+  "ALL": false
+ },
+ "median_ms": 357.78,
+ "wrong_rates": {
+  "A": {
+   "teach_hit": 64,
+   "teach_gold": 70,
+   "wrong": 4,
+   "saved": 68,
+   "per_fact_wrong": 0.0588,
+   "per_turn_wrong": 0.04
+  },
+  "A265": {
+   "teach_hit": 64,
+   "teach_gold": 70,
+   "wrong": 4,
+   "saved": 68,
+   "per_fact_wrong": 0.0588,
+   "per_turn_wrong": 0.04
+  },
+  "A261b": {
+   "teach_hit": 64,
+   "teach_gold": 70,
+   "wrong": 23,
+   "saved": 87,
+   "per_fact_wrong": 0.2644,
+   "per_turn_wrong": 0.22
+  },
+  "B": {
+   "teach_hit": 25,
+   "teach_gold": 70,
+   "wrong": 0,
+   "saved": 25,
+   "per_fact_wrong": 0.0,
+   "per_turn_wrong": 0.0
+  }
+ }
+}
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+s=json.load(open('artifacts/claude-ear269-20260923/panel269_score.json'))
+print('MARKS:',json.dumps(s['marks'],indent=1))
+print('VERDICT:',json.dumps(s['verdict'],indent=1))
+print('BY_FAMILY:')
+for f,t in s['by_family'].items(): print(' ',f,json.dumps(t))
+print('MEDIAN_MS:',s['median_ms'],'P90:',s['p90_ms'],'MAX:',s['max_ms'])
+print('GPU_SUMMARY:',json.dumps(s.get('gpu_summary')))
+print('N_DETAILS:',len(s['details']))
+print('THETA_CURVE:',json.dumps(s['theta_curve_A']))
+"
+MARKS: {
+ "M1_group_saves": 0,
+ "M1_ask": 27,
+ "M1_n": 30,
+ "M1_ask265": 11,
+ "M2_exact": 12,
+ "M2_n": 15,
+ "M3_lost": 0,
+ "M3_hit_A": 19,
+ "M3_hit_265": 19,
+ "M3_gold": 20,
+ "M4_ident": 15,
+ "M4_n": 15,
+ "M5_new": 0,
+ "M6_false": 2,
+ "M6_n": 55,
+ "M7_lost": 0,
+ "M7_n": 20,
+ "M7_hit_A": 16,
+ "M7_hit_265": 16,
+ "M8_new": 0
+}
+VERDICT: {
+ "M1": true,
+ "M2": true,
+ "M3": true,
+ "M4": true,
+ "M5": true,
+ "M6": false,
+ "M7": true,
+ "M8": true,
+ "ALL": false
+}
+BY_FAMILY:
+  group_owner {"n": 30, "teach_hit": 0, "teach_gold": 0, "wrong": 3, "saved": 3, "ask_turns": 27, "ask265_turns": 11, "fires_turns": 26, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 30, "ident261": 19, "turns_wrong": 3}
+  mixed {"n": 15, "teach_hit": 14, "teach_gold": 15, "wrong": 0, "saved": 14, "ask_turns": 12, "ask265_turns": 9, "fires_turns": 11, "mixed_exact": 12, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 15, "ident261": 7, "turns_wrong": 0}
+  first_person {"n": 20, "teach_hit": 19, "teach_gold": 20, "wrong": 1, "saved": 20, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 20, "ident261": 20, "turns_wrong": 1}
+  named {"n": 15, "teach_hit": 15, "teach_gold": 15, "wrong": 0, "saved": 15, "ask_turns": 0, "ask265_turns": 0, "fires_turns": 0, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 15, "ident261": 15, "turns_wrong": 0}
+  non_owner_we {"n": 20, "teach_hit": 16, "teach_gold": 20, "wrong": 0, "saved": 16, "ask_turns": 2, "ask265_turns": 0, "fires_turns": 2, "mixed_exact": 0, "group_saves": 0, "wrong_new_261b": 0, "wrong_new_265": 0, "lost265": 0, "lost261": 0, "ident265": 20, "ident261": 20, "turns_wrong": 0}
+MEDIAN_MS: 357.78 P90: 607.25 MAX: 892.56
+GPU_SUMMARY: {"n": 100, "median_ms": 187.29760000042006, "p90_ms": 288.7198000007629, "max_ms": 384.5325000002049, "n_beamed": 83, "device": "cuda", "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2", "torch": "2.11.0+cu128", "threads": 6, "tau": 9.3, "k": 4, "gpu": "NVIDIA GeForce RTX 5070 Ti"}
+N_DETAILS: 47
+THETA_CURVE: [{"theta": 0.0, "recall": 0.9143, "wrong": 4}, {"theta": 0.05, "recall": 0.9143, "wrong": 4}, {"theta": 0.1, "recall": 0.9143, "wrong": 4}, {"theta": 0.15, "recall": 0.9143, "wrong": 4}, {"theta": 0.2, "recall": 0.9143, "wrong": 4}, {"theta": 0.25, "recall": 0.9143, "wrong": 4}, {"theta": 0.3, "recall": 0.9143, "wrong": 4}, {"theta": 0.35, "recall": 0.9143, "wrong": 4}, {"theta": 0.4, "recall": 0.9143, "wrong": 4}, {"theta": 0.45, "recall": 0.9143, "wrong": 4}, {"theta": 0.5, "recall": 0.9143, "wrong": 4}, {"theta": 0.55, "recall": 0.9143, "wrong": 4}, {"theta": 0.6, "recall": 0.9, "wrong": 4}, {"theta": 0.65, "recall": 0.9, "wrong": 4}, {"theta": 0.7, "recall": 0.8857, "wrong": 4}, {"theta": 0.75, "recall": 0.8714, "wrong": 3}, {"theta": 0.8, "recall": 0.8, "wrong": 2}, {"theta": 0.85, "recall": 0.6714, "wrong": 2}, {"theta": 0.9, "recall": 0.2143, "wrong": 1}, {"theta": 0.95, "recall": 0.0, "wrong": 0}, {"theta": 1.0, "recall": 0.0, "wrong": 0}]
+[0m
+[0m$ [0mssh -o ConnectTimeout=25 -o BatchMode=yes benspc "taskkill /PID 4040 /F"; sleep 25; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "tasklist /FI \"IMAGENAME eq llama-server.exe\" /FO TABLE"; ssh -o ConnectTimeout=25 -o BatchMode=yes benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu,power.draw --format=csv"
+SUCCESS: The process with PID 4040 has been terminated.
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+llama-server.exe             17056 Services                   0    200,784 K
+memory.used [MiB], utilization.gpu [%], power.draw [W]
+579 MiB, 1 %, 9.36 W
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+s=json.load(open('artifacts/claude-ear269-20260923/panel269_score.json'))
+rows={r['id']:r for r in s['rows']}
+# M6 false asks
+print('FALSE_ASKS:')
+for r in s['rows']:
+    if r['family'] in ('non_owner_we','first_person','named') and r['ask']:
+        print(' ',r['id'],r['family'],'via_divert=',r['ask265'],'fires=',r['fires'],'reasons=',r['reasons'])
+print('M1 non-ask group turns:')
+for r in s['rows']:
+    if r['family']=='group_owner' and not r['ask']:
+        print(' ',r['id'],'fires=',r['fires'],'diverted=',r['diverted'],'reasons=',r['reasons'])
+print('M2 non-exact mixed turns:')
+for r in s['rows']:
+    if r['family']=='mixed' and not r['mixed_exact']:
+        print(' ',r['id'],'ask=',r['ask'],'ask265=',r['ask265'],'fires=',r['fires'],'teach=',r['teach'],'diverted=',r['diverted'])
+print('WRONG details:')
+for d in s['details']:
+    if d['status'] in ('WRONG','NEW-WRONG-261B','NEW-WRONG-265'): print(' ',json.dumps(d))
+"
+FALSE_ASKS:
+  o269-084 non_owner_we via_divert= False fires= True reasons= ['P1 our+doors']
+  o269-092 non_owner_we via_divert= False fires= True reasons= ['P1 our+garden']
+M1 non-ask group turns:
+  o269-007 fires= False diverted= 0 reasons= ['no-ownership-pattern']
+  o269-024 fires= False diverted= 0 reasons= ['no-ownership-pattern']
+  o269-026 fires= False diverted= 0 reasons= ['no-ownership-pattern']
+M2 non-exact mixed turns:
+  o269-036 ask= False ask265= False fires= False teach= {'hit': 1, 'gold': 1, 'wrong': 0, 'saved': 1} diverted= 0
+  o269-042 ask= False ask265= False fires= False teach= {'hit': 1, 'gold': 1, 'wrong': 0, 'saved': 1} diverted= 0
+  o269-044 ask= False ask265= False fires= False teach= {'hit': 0, 'gold': 1, 'wrong': 0, 'saved': 0} diverted= 0
+WRONG details:
+  {"id": "o269-001", "family": "group_owner", "status": "WRONG", "category": "checker-guard-passed", "subject": "other", "relation": "age"}
+  {"id": "o269-013", "family": "group_owner", "status": "WRONG", "category": "checker-guard-passed", "subject": "other", "relation": "school"}
+  {"id": "o269-017", "family": "group_owner", "status": "WRONG", "category": "checker-guard-passed", "subject": "other", "relation": "hometown"}
+  {"id": "o269-051", "family": "first_person", "status": "WRONG", "category": "checker-guard-passed", "subject": "other", "relation": "educated_at"}
+[0m
+[0m$ [0mshasum -c artifacts/claude-ear269-20260923/SEAL.sha256.txt 2>&1 | sort | uniq -c; shasum -c artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt; git status --short artifacts/ scripts/ | head -15
+1 artifacts/claude-ear269-20260923/dev_269.jsonl: OK
+   1 artifacts/claude-ear269-20260923/dev269_bpreds.json: OK
+   1 artifacts/claude-ear269-20260923/dev269_earpreds.json: OK
+   1 artifacts/claude-ear269-20260923/dev269_manifest.json: OK
+   1 artifacts/claude-ear269-20260923/dev269_pyes.json: OK
+   1 artifacts/claude-ear269-20260923/dev269_score.json: OK
+   1 artifacts/claude-ear269-20260923/PASSMARKS.md: OK
+   1 scripts/claude_ear269_armb.py: OK
+   1 scripts/claude_ear269_arms.py: OK
+   1 scripts/claude_ear269_devset.py: OK
+   1 scripts/claude_ear269_groupcheck.py: OK
+   1 scripts/claude_ear269_panel.py: OK
+   1 scripts/claude_ear269_qbuild.py: OK
+   1 scripts/claude_ear269_scoremain.py: OK
+   1 scripts/claude_ear269_turns.py: OK
+artifacts/claude-ourpanel269-20260923/panel.jsonl: OK
+artifacts/claude-ourpanel269-20260923/make_panel.py: OK
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-ear269-20260923/panel269_earpreds.json artifacts/claude-ear269-20260923/panel269_pyes.json artifacts/claude-ear269-20260923/panel269_score.json artifacts/claude-ear269-20260923/panel269_q/checks.json artifacts/claude-ear269-20260923/panel269_q/manifest.json artifacts/claude-ear269-20260923/panel269_turns.json artifacts/claude-ear269-20260923/panel269_bpreds.json; /usr/bin/python3 -B -c "print(open('/tmp/269_qwen_adapter.py').read().count(chr(10))+1)"
+e454f4d2223bbc27eb4602b0751addf3eedd374a63c014b642d80732c03784c4  artifacts/claude-ear269-20260923/panel269_earpreds.json
+c2750bf87e70a223b9340cacfdc2bdb32474f82ca476aecea821457267ba3bb6  artifacts/claude-ear269-20260923/panel269_pyes.json
+0c5470b2cf01240a0100efa7f1694077af342ecf1aeefc980037c8b0687598d0  artifacts/claude-ear269-20260923/panel269_score.json
+1f51d562810c031cb8e3826bf59cdadc40e769ca1ea8b33d15864f3f52189786  artifacts/claude-ear269-20260923/panel269_q/checks.json
+ff53f63c5cd7322e436ecb46f9ec88c2703a609bda8060f7fb3fbd81462f9041  artifacts/claude-ear269-20260923/panel269_q/manifest.json
+c6013be1a1bd184f5ee403682e42ea21192c461595bda69173cf65d3b321545b  artifacts/claude-ear269-20260923/panel269_turns.json
+8d9eaeb55a11ec8c63270a7d257709e91b3182836f1649127cc19c679a8f5778  artifacts/claude-ear269-20260923/panel269_bpreds.json
+81
+[0m
+[0m← [0mWrite artifacts/claude-ear269-20260923/RESULTS-resume.md
+Wrote file successfully.
+[0m
+[0m$ [0mprintf '%s\n' "- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md." >> artifacts/fable-predictions-ledger.md; tail -2 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 O
+[0m
+[0m$ [0mshasum -c artifacts/claude-ear269-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; shasum -c artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; git status --short artifacts/claude-ear269-20260923/ | head
+15
+2
+[0m
+[0m$ [0mls -la artifacts/claude-ear269-20260923/ | grep -E "panel269_earpreds|panel269_pyes|panel269_score|RESULTS-resume|panel269_q"; git status --short | grep -E "269" | head
+-rw-------    1 ben-hannan  staff   70629 Sep 23 05:57 panel269_earpreds.json
+-rw-------@   1 ben-hannan  staff   19868 Sep 23 06:19 panel269_pyes.json
+drwxr-xr-x    4 ben-hannan  staff     128 Sep 23 05:57 panel269_q
+-rw-r--r--@   1 ben-hannan  staff   82939 Sep 23 06:19 panel269_score.json
+-rw-r--r--@   1 ben-hannan  staff   11431 Sep 23 06:21 RESULTS-resume.md
+-rw-r--r--@   1 ben-hannan  staff    5744 Sep 23 05:37 RESULTS-resume2.md
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+[0m
+[0m→ [0mRead artifacts/claude-ear269-20260923/RESULTS-resume2.md
+[0m
+[0m$ [0mgrep -n "P269.10" artifacts/fable-predictions-ledger.md | cut -c1-200
+2793:- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ra
+2816:- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong r
+[0m
+[0m$ [0mgrep -o "P269\.[0-9]*" artifacts/fable-predictions-ledger.md | sort -t. -k2 -n | uniq | tail -5
+P269.6
+P269.7
+P269.8
+P269.9
+P269.10
+[0m
+[0m$ [0mprintf '%s\n' "- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md." >> artifacts/fable-predictions-ledger.md; grep -c "P269.11" artifacts/fable-predictions-ledger.md
+1
+[0m
+[0m← [0mEdit artifacts/claude-ear269-20260923/RESULTS-resume.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-ear269-20260923/RESULTS-resume.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-ear269-20260923/RESULTS-resume.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-ear269-20260923/RESULTS-resume.md
+@@ -185,8 +185,17 @@
+         if s == "YES": return 1.0, text, True
+         if s == "NO": return 0.0, text, True
+         return 0.0, text, True
+ 
++## Note on parallel attempts (added at close)
++
++- A sibling attempt (RESULTS-resume2.md, 05:37, cloud-GPU path) ran while
++  BensPC was down and executed 0 arms, 0 servers, 0 scorer runs, so this
++  resume's single execution of each ear arm duplicated nothing.
++- Both attempts wrote a ledger line numbered P269.10 (theirs first). The
++  ledger is append-only, so a P269.11 correction line records that this
++  resume's OUTCOME-RESUME line reads as P269.11.
++
+ ## What it means (plain English)
+ 
+ The final exam is graded. The new text check does its main job: on 30
+ group-worded turns it asks "whose" 27 times and never saves a group-owned
+
+[0m
