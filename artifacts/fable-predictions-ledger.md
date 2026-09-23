@@ -2658,3 +2658,6 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - Pown0a.2 same with WE allowed 193/272 = 71.0% (report only, no bar). Folding plural cues too would give 210/272 = 77.2% (both: 219/272 = 80.5%) by arithmetic, still below 85%.
 - Pown0a.3 no-save-mode facts writable 0/76; bar = 0: PASS (0 by construction via mode gate).
 - Pown0a OUTCOME: strict v0 write rules ceiling ~68% even with a perfect reader, so no ear training can reach 85% recall under them; rules must change before any GPU run. Seal 4/4 OK after run; no deviations from task order.
+- Pown0c.1 (2026-09-23, own-O0c pipeline sample, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0c-20260923; 4000 SimpleStories + 15000 webred sample, seed 7, CPU only) shards round-trip exactly on 1000 sampled docs: 1000/1000, 0 misses.
+- Pown0c.2 same (seed 7, step 0) data order twice byte-identical (same sha256); step 1 differs.
+- Pown0c.3 total planned download 2.23 GB + 316 MB = 2.546 GB <= 7 GB (plan S5 numbers quoted; remote bytes not re-verifiable offline, nothing downloaded).
