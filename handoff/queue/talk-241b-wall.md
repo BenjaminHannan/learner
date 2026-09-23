@@ -13,6 +13,8 @@ Your final reply: verdict first, then a marks table with integer counts, every m
 GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.
 
 
+QUIET: yes
+
 YOUR TASK: re-measure exp 241b's M5 suite wall ONCE, per design/v3/30-modes/241b-director-rulings.md item 3. CPU only. Change nothing else.
 Use the sealed checker exactly as 241b's PASSMARKS D6 protocol says (scripts/claude_mouth241b_check.py --wall241b and the same suite set), 228 vs 241b, 3 alternated runs each.
 Before EACH run: run uptime; if load1 >= 40, wait (check every 2 minutes). If the total wait passes 90 minutes, stop and report "load gate not met" with the loads you saw. Do not lower the gate.
