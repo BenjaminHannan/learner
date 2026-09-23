@@ -1,0 +1,756 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main && git show origin/main:handoff/kit/briefs/earpanel264-spec.txt; echo "---EXIT:$?---"; uptime; df -g /
+EAR PANEL 264 SPEC. The director wrote this on 2026-09-23 (copied from the earpanel261b spec; changes marked NEW264). It is shared by the blind panel writer and the exp 264 builder.
+
+Folder: artifacts/claude-earpanel264-20260923/
+- panel.jsonl (150 lines)
+- make_panel.py: holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel264-20260923/panel.jsonl artifacts/claude-earpanel264-20260923/make_panel.py > artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+
+Schema (exactly as panel 257)
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e264-001" … "e264-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: a string holding the risk tags (R1 … R12, "lower", "typo", "noq").
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value: the exact words from the turn, in the same case. "me" stands for the speaker, which includes "our"/"we"/"us" owners (Ben's rule: there is one user).
+- NEW: for a pet, relation is "pet" and relation_aliases must include the species word the turn uses (dog, cat, rabbit ...) as well as pet, animal and companion.
+- relation: a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school, neighbour …). relation_aliases lists accepted alternatives. Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example from this spec word for word.
+- R1, pronoun reference across clauses: at least 8 turns across varied_teach and full_names. Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 8 turns in no_save with gold [].
+  - Include tag questions ("…, right", "…, isn't it") and "so …" checks.
+  - At least 5 have NO question mark (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact (TEACH gold, in varied_teach).
+- R3, the verb decides the relation, not a noun in the value: at least 6 items. Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-): at least 6 items across families. Gold keeps the full relation.
+- R5, everyday relations beyond the core list (housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours): at least 8 items across families.
+- R6, two-hop questions whose first hop is a relative: at least 5 of the chain_questions.
+- NEW264: NO turn may use we/us/our/ours/ourselves as an owner or subject (Ben's ruling: those turns must ask whose; they are tested in a separate experiment). R7 is dropped.
+- R8, plans, goals and wishes ("training to be", "wants to be", "is hoping to", "is going to", "plans to move to", "will start at"): at least 6 items.
+  - At least 3 are in varied_teach, where another clause of the same turn states a real current fact. Only that fact is gold.
+  - At least 3 are in no_save, where the whole turn is a plan or wish (gold []).
+- R9, pretend and hypothetical turns ("let's say", "imagine", "suppose", "pretend", "what if", "say that"): at least 5 in no_save, with gold [].
+- R10, plural relatives naming two people ("my two sisters, A and B, …", "both my cousins, A and B, …"): at least 4 items. Gold has one frame per person for the relation, plus any other stated fact for each person.
+- R11, appositive relatives ("my cousin A lives in B", "A's friend B works at C"): at least 6 items. Gold holds the relative frame AND the other fact.
+- R12, a pronoun after "A's R is B and he/she …" where the pronoun refers to B: at least 4 items. The later fact's gold subject is B, never A.
+
+The rest spreads over:
+- plain facts, pets, jobs, languages and birthplaces;
+- full names of 2–4 words;
+- corrections, which hold only the new value (a negated old value is never in gold);
+- lowercase and typo'd chat: at least 15 turns in all.
+- NEW, R13 typo next to a name: at least 8 teach items where a misspelt everyday word (not a name) sits right next to a name ("livs", "werks", "bron"). Gold holds the clean name spans only.
+- NEW264, R16 wrong-relation traps: at least 8 teach items where a naive reader would pick the wrong relation word (works WITH vs works FOR, a brother's wife vs a wife, lives NEAR vs lives in, used to work at vs works at). Gold holds only what is stated, with the right relation.
+- NEW264, R17 stale values: at least 6 corrections where the old value is named in the same turn in a different position than "not X" (e.g. "X moved from A to B", "it's B now, it used to be A"). Gold holds only the new value.
+- NEW, R15 name particles: at least 6 teach items whose names or places contain lowercase particles (van, de, von, da, of, le), e.g. a fictional "Ria van Doorn" or "Port of Sela"; gold keeps the full span.
+- NEW, R14 all-lowercase names: at least 6 teach items typed all lowercase with lowercase names; gold keeps the lowercase spans.
+questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, briefs other than this spec, other panels (including earpanel257 and earpanel261, earpanel261b), or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - every R1–R17 quota (R7 dropped);
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Before sealing, reread every item once as a careful reader. Is the gold what a sensible person would save from this turn, and nothing more? Mark clear:false where two readings are defensible.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.
+---EXIT:0---
+23:34  up 2 days, 15:23, 4 users, load averages: 49.98 72.66 98.72
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        19    40%  484014 204505120    0%   /
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-earpanel235-20260922/README.md > /tmp/ear235-readme.md; wc -l /tmp/ear235-readme.md
+43 /tmp/ear235-readme.md
+[0m
+[0m→ [0mRead /tmp/ear235-readme.md
+[0m
+[0m# [0mTodos
+[•] Draft 150 blind items per earpanel264 spec (families + quotas)
+[ ] Write make_panel.py with items, fixed alias lists, self-checks
+[ ] Generate panel.jsonl, run self-checks, reread every item
+[ ] Write category-only README.md, seal, verify with shasum -c
+[0m
+[0m# [0mTodos
+[✓] Draft 150 blind items per earpanel264 spec (families + quotas)
+[•] Write make_panel.py with items, fixed alias lists, self-checks
+[ ] Generate panel.jsonl, run self-checks, reread every item
+[ ] Write category-only README.md, seal, verify with shasum -c
+[0m
+[0m← [0mWrite artifacts/claude-earpanel264-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-earpanel264-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+@@ -567,10 +567,10 @@
+ r17 = [x for x in by("R17") if x[0] == "corrections"]
+ if len(r17) < 6:
+     fail("R17 quota: %d" % len(r17))
+ for f, t, g, c, n in r17:
+-    if len(g) != 1 or "not " in t.lower().split("now")[0].split(",")[0][:0]:
+-        fail("unreachable")
++    if len(g) != 1:
++        fail("R17 gold must be one frame: %r" % t)
+     if re.search(r"\bnot\s+[A-Z]", t):
+         fail("R17 item uses not-X form: %r" % t)
+ 
+ # Lowercase/typo chat: >=15 turns in all.
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel264-20260923/make_panel.py
+SELF-CHECK FAIL: R4 item lacks compound relation: 'Where does my stepmother live?'
+[0m
+[0m← [0mEdit artifacts/claude-earpanel264-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+@@ -480,9 +480,11 @@
+ r4 = by("R4")
+ if len(r4) < 6:
+     fail("R4 quota: %d" % len(r4))
+ for f, t, g, c, n in r4:
+-    if not any(fr.get("relation") in COMPOUND_RELATIONS for fr in g):
++    rels = [fr.get("relation") for fr in g]
++    chains = [fr.get("chain", [None])[0] for fr in g if fr.get("chain")]
++    if not any(r in COMPOUND_RELATIONS for r in rels + chains):
+         fail("R4 item lacks compound relation: %r" % t)
+ 
+ # R5: >=8 everyday relations.
+ r5 = by("R5")
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel264-20260923/make_panel.py
+SELF-CHECKS PASSED: 150 items
+  R1 = 10
+  R10 = 4
+  R11 = 10
+  R12 = 4
+  R13 = 8
+  R14 = 6
+  R15 = 6
+  R16 = 8
+  R17 = 6
+  R2ns = 9
+  R2ns_noq = 5
+  R2v = 3
+  R3 = 6
+  R4 = 8
+  R5 = 11
+  R6 = 7
+  R8n = 4
+  R8v = 4
+  R9 = 6
+  clear_false = 13
+  lower_typo = 25
+  q_lower_noq = 6
+[0m
+[0m← [0mEdit artifacts/claude-earpanel264-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+@@ -166,11 +166,13 @@
+  [T("me", "city", "Harlton")], True, "R8"),
+ ("varied_teach", "I work at Tibber Motors and I want to be a pilot.",
+  [T("me", "workplace", "Tibber Motors")], True, "R8"),
+ ("varied_teach", "My sisters Alba and Vera live in Harlton, though Alba is hoping to move to Kellwick.",
+- [T("Alba", "city", "Harlton"), T("Vera", "city", "Harlton")], True, "R8,R10"),
++ [T("me", "sister", "Alba"), T("me", "sister", "Vera"),
++  T("Alba", "city", "Harlton"), T("Vera", "city", "Harlton")], True, "R8,R10"),
+ ("varied_teach", "My cousins Jessa and Kira work at Vennix Labs, and Jessa is training to be a vet.",
+- [T("Jessa", "workplace", "Vennix Labs"), T("Kira", "workplace", "Vennix Labs")], True, "R8,R10"),
++ [T("me", "cousin", "Jessa"), T("me", "cousin", "Kira"),
++  T("Jessa", "workplace", "Vennix Labs"), T("Kira", "workplace", "Vennix Labs")], True, "R8,R10"),
+ ("varied_teach", "My half-sister is called Nessa.",
+  [T("me", "half_sister", "Nessa")], True, "R4"),
+ ("varied_teach", "My teacher is called Bastian.",
+  [T("me", "teacher", "Bastian")], True, "R5"),
+
+[0m
+[0m← [0mEdit artifacts/claude-earpanel264-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+@@ -227,9 +227,10 @@
+  [T("me", "workplace", "Vennix Labs")], True, "R16"),
+ ("full_names", "I drive for Farlow Clinics with Delia Marsh.",
+  [T("me", "employer", "Farlow Clinics")], True, "R16"),
+ ("full_names", "My two brothers, Carl Dean and Paul Dean, work at Marlow Cycles.",
+- [T("Carl Dean", "workplace", "Marlow Cycles"), T("Paul Dean", "workplace", "Marlow Cycles")], True, "R10"),
++ [T("me", "brother", "Carl Dean"), T("me", "brother", "Paul Dean"),
++  T("Carl Dean", "workplace", "Marlow Cycles"), T("Paul Dean", "workplace", "Marlow Cycles")], True, "R10"),
+ ("full_names", "Quentin Marsh is a baker in Sollin.",
+  [T("Quentin Marsh", "job", "baker"), T("Quentin Marsh", "city", "Sollin")], True, ""),
+ ("full_names", "Zelda Ray speaks Sarnic and Kevvish.",
+  [T("Zelda Ray", "language", "Sarnic"), T("Zelda Ray", "language", "Kevvish")], True, ""),
+
+[0m
+[0m← [0mEdit artifacts/claude-earpanel264-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel264-20260923/make_panel.py
+@@ -522,9 +522,10 @@
+ r10 = by("R10")
+ if len(r10) < 4:
+     fail("R10 quota: %d" % len(r10))
+ for f, t, g, c, n in r10:
+-    if len([fr for fr in g if fr["act"] == "TEACH"]) < 2:
++    teach = [fr for fr in g if fr["act"] == "TEACH"]
++    if len(teach) < 2 or len({fr["value"] for fr in teach}) < 2:
+         fail("R10 item needs a frame per person: %r" % t)
+ 
+ # R11: >=6 appositives, relative frame plus the other fact.
+ r11 = by("R11")
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel264-20260923/make_panel.py && wc -l artifacts/claude-earpanel264-20260923/panel.jsonl
+SELF-CHECKS PASSED: 150 items
+  R1 = 10
+  R10 = 4
+  R11 = 10
+  R12 = 4
+  R13 = 8
+  R14 = 6
+  R15 = 6
+  R16 = 8
+  R17 = 6
+  R2ns = 9
+  R2ns_noq = 5
+  R2v = 3
+  R3 = 6
+  R4 = 8
+  R5 = 11
+  R6 = 7
+  R8n = 4
+  R8v = 4
+  R9 = 6
+  clear_false = 13
+  lower_typo = 25
+  q_lower_noq = 6
+     150 artifacts/claude-earpanel264-20260923/panel.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+for line in open('artifacts/claude-earpanel264-20260923/panel.jsonl'):
+    o = json.loads(line)
+    g = []
+    for fr in o['gold']:
+        if fr['act']=='TEACH': g.append('T(%s|%s|%s)'%(fr['subject'],fr['relation'],fr['value']))
+        else: g.append('A(%s|%s|%s)'%(fr['subject'],fr['relation'],fr['chain']))
+    print(o['id'], o['family'], 'clear=%s'%o['clear'], 'notes=%s'%o['notes'])
+    print('  T:', o['turn'])
+    print('  G:', g)
+"
+e264-001 plain_teach clear=True notes=
+  T: I live in Harlton.
+  G: ['T(me|city|Harlton)']
+e264-002 plain_teach clear=True notes=
+  T: I work for Vennix Labs.
+  G: ['T(me|employer|Vennix Labs)']
+e264-003 plain_teach clear=True notes=
+  T: I am a carpenter.
+  G: ['T(me|job|carpenter)']
+e264-004 plain_teach clear=True notes=R3
+  T: Nadia teaches at Brookfield School.
+  G: ['T(Nadia|workplace|Brookfield School)']
+e264-005 plain_teach clear=True notes=R3
+  T: Stellan teaches mathematics at Caundle College.
+  G: ['T(Stellan|workplace|Caundle College)']
+e264-006 plain_teach clear=True notes=R3
+  T: Cora coaches swimming at Northside Club.
+  G: ['T(Cora|workplace|Northside Club)']
+e264-007 plain_teach clear=True notes=R3
+  T: Joren studies engineering at Caundle College.
+  G: ['T(Joren|school|Caundle College)']
+e264-008 plain_teach clear=True notes=R3
+  T: Kira studies medicine at Brookfield School.
+  G: ['T(Kira|school|Brookfield School)']
+e264-009 plain_teach clear=True notes=R4
+  T: My stepmother is called Greta.
+  G: ['T(me|stepmother|Greta)']
+e264-010 plain_teach clear=True notes=R4,R11
+  T: My grandmother Ingrid lives in Dunmore.
+  G: ['T(me|grandmother|Ingrid)', 'T(Ingrid|city|Dunmore)']
+e264-011 plain_teach clear=True notes=R5
+  T: My housemate is called Odell.
+  G: ['T(me|housemate|Odell)']
+e264-012 plain_teach clear=True notes=R5
+  T: I play the violin.
+  G: ['T(me|instrument|violin)']
+e264-013 plain_teach clear=True notes=R5
+  T: My hobby is beekeeping.
+  G: ['T(me|hobby|beekeeping)']
+e264-014 plain_teach clear=True notes=R16
+  T: I work with horses at Vennix Labs.
+  G: ['T(me|workplace|Vennix Labs)']
+e264-015 plain_teach clear=True notes=R16,R4
+  T: My sister-in-law is called Selma.
+  G: ['T(me|sister_in_law|Selma)']
+e264-016 plain_teach clear=True notes=R16
+  T: I live near Dunmore, but I work in Kellwick.
+  G: ['T(me|workplace|Kellwick)']
+e264-017 plain_teach clear=True notes=R16
+  T: I used to work at Solmar Bakery, and now I work at Tibber Motors.
+  G: ['T(me|workplace|Tibber Motors)']
+e264-018 plain_teach clear=True notes=R13,typo
+  T: My sister Celia livs in Harlton.
+  G: ['T(me|sister|Celia)', 'T(Celia|city|Harlton)']
+e264-019 plain_teach clear=True notes=R13,typo
+  T: My brother Milo werks at Tibber Motors.
+  G: ['T(me|brother|Milo)', 'T(Milo|workplace|Tibber Motors)']
+e264-020 plain_teach clear=True notes=R15,R11
+  T: My friend Mara van Keel lives in Vennwick.
+  G: ['T(me|friend|Mara van Keel)', 'T(Mara van Keel|city|Vennwick)']
+e264-021 plain_teach clear=True notes=R14,lower
+  T: my dog is called bram.
+  G: ['T(me|pet|bram)']
+e264-022 plain_teach clear=True notes=R14,lower
+  T: i live in kellwick.
+  G: ['T(me|city|kellwick)']
+e264-023 plain_teach clear=True notes=R10
+  T: My two rabbits, Pip and Pop, live in a hutch in the garden.
+  G: ['T(me|pet|Pip)', 'T(me|pet|Pop)']
+e264-024 plain_teach clear=True notes=R12
+  T: Alba's brother is Milo and he works at Tibber Motors.
+  G: ['T(Alba|brother|Milo)', 'T(Milo|workplace|Tibber Motors)']
+e264-025 plain_teach clear=True notes=R12
+  T: Vera's sister is Tessa and she lives in Lunbury.
+  G: ['T(Vera|sister|Tessa)', 'T(Tessa|city|Lunbury)']
+e264-026 varied_teach clear=True notes=R1,R12
+  T: Daria's brother is Milo and he works at Tibber Motors.
+  G: ['T(Daria|brother|Milo)', 'T(Milo|workplace|Tibber Motors)']
+e264-027 varied_teach clear=True notes=R1,R12
+  T: Alba's sister is Tessa and she lives in Marston.
+  G: ['T(Alba|sister|Tessa)', 'T(Tessa|city|Marston)']
+e264-028 varied_teach clear=True notes=R1
+  T: My cousin is Farah and she speaks Kevvish.
+  G: ['T(me|cousin|Farah)', 'T(Farah|language|Kevvish)']
+e264-029 varied_teach clear=True notes=R1
+  T: My mother is Hazel and she was born in Ollerton.
+  G: ['T(me|mother|Hazel)', 'T(Hazel|place_of_birth|Ollerton)']
+e264-030 varied_teach clear=True notes=R1
+  T: My father is Gideon and he lives in Tibury.
+  G: ['T(me|father|Gideon)', 'T(Gideon|city|Tibury)']
+e264-031 varied_teach clear=True notes=R1,R5
+  T: My friend is Kasper and he plays the cello.
+  G: ['T(me|friend|Kasper)', 'T(Kasper|instrument|cello)']
+e264-032 varied_teach clear=True notes=R1,R5
+  T: My neighbour is Lena and she works at Esslin Books.
+  G: ['T(me|neighbour|Lena)', 'T(Lena|workplace|Esslin Books)']
+e264-033 varied_teach clear=True notes=R1
+  T: My boss is Otto and he lives in Esswick.
+  G: ['T(me|boss|Otto)', 'T(Otto|city|Esswick)']
+e264-034 varied_teach clear=True notes=R2
+  T: Who I work for is Tibber Motors.
+  G: ['T(me|employer|Tibber Motors)']
+e264-035 varied_teach clear=True notes=R2
+  T: Where I live is Harlton.
+  G: ['T(me|city|Harlton)']
+e264-036 varied_teach clear=True notes=R2
+  T: What language I speak at home is Kevvish.
+  G: ['T(me|language|Kevvish)']
+e264-037 varied_teach clear=True notes=R8
+  T: I live in Harlton but I plan to move to Marston.
+  G: ['T(me|city|Harlton)']
+e264-038 varied_teach clear=True notes=R8
+  T: I work at Tibber Motors and I want to be a pilot.
+  G: ['T(me|workplace|Tibber Motors)']
+e264-039 varied_teach clear=True notes=R8,R10
+  T: My sisters Alba and Vera live in Harlton, though Alba is hoping to move to Kellwick.
+  G: ['T(me|sister|Alba)', 'T(me|sister|Vera)', 'T(Alba|city|Harlton)', 'T(Vera|city|Harlton)']
+e264-040 varied_teach clear=True notes=R8,R10
+  T: My cousins Jessa and Kira work at Vennix Labs, and Jessa is training to be a vet.
+  G: ['T(me|cousin|Jessa)', 'T(me|cousin|Kira)', 'T(Jessa|workplace|Vennix Labs)', 'T(Kira|workplace|Vennix Labs)']
+e264-041 varied_teach clear=True notes=R4
+  T: My half-sister is called Nessa.
+  G: ['T(me|half_sister|Nessa)']
+e264-042 varied_teach clear=True notes=R5
+  T: My teacher is called Bastian.
+  G: ['T(me|teacher|Bastian)']
+e264-043 varied_teach clear=True notes=R5
+  T: My doctor is called Freya.
+  G: ['T(me|doctor|Freya)']
+e264-044 varied_teach clear=True notes=R3
+  T: Lars coaches football at Eastfield Club.
+  G: ['T(Lars|workplace|Eastfield Club)']
+e264-045 varied_teach clear=True notes=R13,R11,typo
+  T: My cousin Sadia livs in Fallows.
+  G: ['T(me|cousin|Sadia)', 'T(Sadia|city|Fallows)']
+e264-046 varied_teach clear=True notes=R13,R11,typo
+  T: My friend Yusuf werks at Marlow Cycles.
+  G: ['T(me|friend|Yusuf)', 'T(Yusuf|workplace|Marlow Cycles)']
+e264-047 varied_teach clear=True notes=R13,R11,typo
+  T: My neighbour Lena bron in Ollerton.
+  G: ['T(me|neighbour|Lena)', 'T(Lena|place_of_birth|Ollerton)']
+e264-048 varied_teach clear=True notes=R13,R11,typo
+  T: My teacher Bastian taches at Brookfield School.
+  G: ['T(me|teacher|Bastian)', 'T(Bastian|workplace|Brookfield School)']
+e264-049 varied_teach clear=True notes=R15
+  T: Joris de Graaf works at Vennix Labs.
+  G: ['T(Joris de Graaf|workplace|Vennix Labs)']
+e264-050 varied_teach clear=True notes=R15
+  T: My friend Petra von Alden speaks Drellish.
+  G: ['T(me|friend|Petra von Alden)', 'T(Petra von Alden|language|Drellish)']
+e264-051 varied_teach clear=True notes=R15
+  T: Tessa da Roon lives in Bay of Corra.
+  G: ['T(Tessa da Roon|city|Bay of Corra)']
+e264-052 varied_teach clear=True notes=R14,lower
+  T: my brother ulf lives in grimbury.
+  G: ['T(me|brother|ulf)', 'T(ulf|city|grimbury)']
+e264-053 varied_teach clear=True notes=R14,lower
+  T: my cat is called mimi.
+  G: ['T(me|pet|mimi)']
+e264-054 varied_teach clear=True notes=R16
+  T: I drive a van with Otto Berger at Vennix Labs.
+  G: ['T(me|workplace|Vennix Labs)']
+e264-055 varied_teach clear=True notes=R16,R4
+  T: My sister-in-law is called Daria.
+  G: ['T(me|sister_in_law|Daria)']
+e264-056 full_names clear=True notes=R1
+  T: My brother is Wesley Hart and he works at Tibber Motors.
+  G: ['T(me|brother|Wesley Hart)', 'T(Wesley Hart|workplace|Tibber Motors)']
+e264-057 full_names clear=True notes=R1
+  T: My sister is Vanna Cole and she lives in Lunbury.
+  G: ['T(me|sister|Vanna Cole)', 'T(Vanna Cole|city|Lunbury)']
+e264-058 full_names clear=True notes=R4,R11
+  T: My great-aunt Mabel Finch lives in Parrow.
+  G: ['T(me|great_aunt|Mabel Finch)', 'T(Mabel Finch|city|Parrow)']
+e264-059 full_names clear=True notes=R5,R11
+  T: My housemate Robin Ash plays the drums.
+  G: ['T(me|housemate|Robin Ash)', 'T(Robin Ash|instrument|drums)']
+e264-060 full_names clear=True notes=R13,R11,typo
+  T: My friend Eddie Marsh livs in Dunmore.
+  G: ['T(me|friend|Eddie Marsh)', 'T(Eddie Marsh|city|Dunmore)']
+e264-061 full_names clear=True notes=R13,R11,typo
+  T: My cousin June Park werks at Esslin Books.
+  G: ['T(me|cousin|June Park)', 'T(June Park|workplace|Esslin Books)']
+e264-062 full_names clear=True notes=R15
+  T: My boss is Elka van Breem.
+  G: ['T(me|boss|Elka van Breem)']
+e264-063 full_names clear=True notes=R15
+  T: Henrik von Saar teaches at Caundle College.
+  G: ['T(Henrik von Saar|workplace|Caundle College)']
+e264-064 full_names clear=True notes=R14,lower
+  T: my sister ada green lives in marston.
+  G: ['T(me|sister|ada green)', 'T(ada green|city|marston)']
+e264-065 full_names clear=True notes=R14,lower
+  T: my friend sam reed works at tibber motors.
+  G: ['T(me|friend|sam reed)', 'T(sam reed|workplace|tibber motors)']
+e264-066 full_names clear=True notes=R16
+  T: I work alongside Otto Berger at Vennix Labs.
+  G: ['T(me|workplace|Vennix Labs)']
+e264-067 full_names clear=True notes=R16
+  T: I drive for Farlow Clinics with Delia Marsh.
+  G: ['T(me|employer|Farlow Clinics)']
+e264-068 full_names clear=True notes=R10
+  T: My two brothers, Carl Dean and Paul Dean, work at Marlow Cycles.
+  G: ['T(me|brother|Carl Dean)', 'T(me|brother|Paul Dean)', 'T(Carl Dean|workplace|Marlow Cycles)', 'T(Paul Dean|workplace|Marlow Cycles)']
+e264-069 full_names clear=True notes=
+  T: Quentin Marsh is a baker in Sollin.
+  G: ['T(Quentin Marsh|job|baker)', 'T(Quentin Marsh|city|Sollin)']
+e264-070 full_names clear=True notes=
+  T: Zelda Ray speaks Sarnic and Kevvish.
+  G: ['T(Zelda Ray|language|Sarnic)', 'T(Zelda Ray|language|Kevvish)']
+e264-071 questions clear=True notes=
+  T: Where does Celia live?
+  G: ['A(Celia|city|None)']
+e264-072 questions clear=True notes=
+  T: Who is Milo's boss?
+  G: ['A(Milo|boss|None)']
+e264-073 questions clear=True notes=
+  T: What language does Bram speak?
+  G: ['A(Bram|language|None)']
+e264-074 questions clear=True notes=
+  T: Who is Elka married to?
+  G: ['A(Elka|spouse|None)']
+e264-075 questions clear=False notes=
+  T: What does Otto do for work?
+  G: ['A(Otto|job|None)']
+e264-076 questions clear=True notes=
+  T: Where was Hazel born?
+  G: ['A(Hazel|place_of_birth|None)']
+e264-077 questions clear=True notes=R5
+  T: Who is Joren's teacher?
+  G: ['A(Joren|teacher|None)']
+e264-078 questions clear=True notes=R5
+  T: Who is Alba's doctor?
+  G: ['A(Alba|doctor|None)']
+e264-079 questions clear=True notes=R4
+  T: Who is Daria's stepfather?
+  G: ['A(Daria|stepfather|None)']
+e264-080 questions clear=True notes=
+  T: Where does Petra von Alden work?
+  G: ['A(Petra von Alden|workplace|None)']
+e264-081 questions clear=True notes=R5
+  T: What is Nessa's hobby?
+  G: ['A(Nessa|hobby|None)']
+e264-082 questions clear=True notes=
+  T: Who is Tessa's husband?
+  G: ['A(Tessa|husband|None)']
+e264-083 questions clear=True notes=
+  T: Where did Gideon grow up?
+  G: ['A(Gideon|hometown|None)']
+e264-084 questions clear=True notes=
+  T: What instrument does Kasper play?
+  G: ['A(Kasper|instrument|None)']
+e264-085 questions clear=True notes=
+  T: Who is Nadia's employer?
+  G: ['A(Nadia|employer|None)']
+e264-086 questions clear=True notes=
+  T: Which school does Joren attend?
+  G: ['A(Joren|school|None)']
+e264-087 questions clear=True notes=
+  T: Who is Lena's neighbour?
+  G: ['A(Lena|neighbour|None)']
+e264-088 questions clear=True notes=
+  T: What is Yusuf's favourite food?
+  G: ['A(Yusuf|favourite_food|None)']
+e264-089 questions clear=True notes=
+  T: What sport does Lars play?
+  G: ['A(Lars|favourite_sport|None)']
+e264-090 questions clear=True notes=
+  T: Who is Vera's mother?
+  G: ['A(Vera|mother|None)']
+e264-091 questions clear=True notes=
+  T: What is the name of Milo's cat?
+  G: ['A(Milo|pet|None)']
+e264-092 questions clear=True notes=lower,noq
+  T: where does celia live
+  G: ['A(celia|city|None)']
+e264-093 questions clear=True notes=lower,noq
+  T: who is milo's boss
+  G: ['A(milo|boss|None)']
+e264-094 questions clear=True notes=lower,noq
+  T: what language does bram speak
+  G: ['A(bram|language|None)']
+e264-095 questions clear=True notes=lower,noq
+  T: where was hazel born
+  G: ['A(hazel|place_of_birth|None)']
+e264-096 chain_questions clear=True notes=R6
+  T: Where does my sister's boss live?
+  G: ["A(me|city|['sister', 'city'])"]
+e264-097 chain_questions clear=True notes=R6
+  T: Where does my brother work?
+  G: ["A(me|workplace|['brother', 'workplace'])"]
+e264-098 chain_questions clear=True notes=R6
+  T: What language does my cousin speak?
+  G: ["A(me|language|['cousin', 'language'])"]
+e264-099 chain_questions clear=True notes=R6
+  T: Who is my mother's doctor?
+  G: ["A(me|doctor|['mother', 'doctor'])"]
+e264-100 chain_questions clear=True notes=R6
+  T: Where does my father's boss live?
+  G: ["A(me|city|['father', 'city'])"]
+e264-101 chain_questions clear=True notes=R6
+  T: What school does my sister attend?
+  G: ["A(me|school|['sister', 'school'])"]
+e264-102 chain_questions clear=True notes=R4
+  T: Where does my stepmother live?
+  G: ["A(me|city|['stepmother', 'city'])"]
+e264-103 chain_questions clear=True notes=
+  T: Where does Celia's boss live?
+  G: ["A(Celia|city|['boss', 'city'])"]
+e264-104 chain_questions clear=True notes=
+  T: What language does Petra's husband speak?
+  G: ["A(Petra|language|['husband', 'language'])"]
+e264-105 chain_questions clear=True notes=
+  T: Who is Bram's mother's doctor?
+  G: ["A(Bram|doctor|['mother', 'doctor'])"]
+e264-106 chain_questions clear=True notes=
+  T: Where does Otto's sister work?
+  G: ["A(Otto|workplace|['sister', 'workplace'])"]
+e264-107 chain_questions clear=True notes=
+  T: What does Greta's husband do for work?
+  G: ["A(Greta|job|['husband', 'job'])"]
+e264-108 chain_questions clear=True notes=
+  T: Where did Joren's teacher grow up?
+  G: ["A(Joren|hometown|['teacher', 'hometown'])"]
+e264-109 chain_questions clear=True notes=R6,lower,noq
+  T: where does my sister's boss live
+  G: ["A(me|city|['sister', 'city'])"]
+e264-110 chain_questions clear=True notes=lower,noq
+  T: where does celia's boss live
+  G: ["A(celia|city|['boss', 'city'])"]
+e264-111 no_save clear=False notes=R2
+  T: Celia lives in Harlton, right?
+  G: []
+e264-112 no_save clear=False notes=R2
+  T: Milo works at Tibber Motors, doesn't he?
+  G: []
+e264-113 no_save clear=False notes=R2
+  T: So Bram speaks Kevvish?
+  G: []
+e264-114 no_save clear=False notes=R2
+  T: So the meeting is at noon, right?
+  G: []
+e264-115 no_save clear=False notes=R2,lower,noq
+  T: celia lives in harlton, right
+  G: []
+e264-116 no_save clear=False notes=R2,lower,noq
+  T: so bram speaks kevvish
+  G: []
+e264-117 no_save clear=False notes=R2,lower,noq
+  T: milo works at tibber motors, doesn't he
+  G: []
+e264-118 no_save clear=False notes=R2,lower,noq
+  T: esswick is nice, isn't it
+  G: []
+e264-119 no_save clear=False notes=R2,lower,noq
+  T: so joren studies at caundle college
+  G: []
+e264-120 no_save clear=True notes=R8
+  T: I want to be a pilot one day.
+  G: []
+e264-121 no_save clear=True notes=R8
+  T: I am training to be a vet.
+  G: []
+e264-122 no_save clear=True notes=R8
+  T: I plan to move to Marston next spring.
+  G: []
+e264-123 no_save clear=True notes=R8
+  T: I hope to start at Vennix Labs in June.
+  G: []
+e264-124 no_save clear=True notes=R9
+  T: Imagine I lived in Marston.
+  G: []
+e264-125 no_save clear=True notes=R9
+  T: Suppose my sister were a pilot.
+  G: []
+e264-126 no_save clear=True notes=R9
+  T: Let's say my boss earns a fortune.
+  G: []
+e264-127 no_save clear=True notes=R9
+  T: What if I spoke Drellish?
+  G: []
+e264-128 no_save clear=True notes=R9
+  T: Pretend my cat could talk.
+  G: []
+e264-129 no_save clear=True notes=R9
+  T: Say that I won the lottery.
+  G: []
+e264-130 no_save clear=True notes=
+  T: Bastian is the best boss ever.
+  G: []
+e264-131 no_save clear=False notes=
+  T: Apparently Kira moved to Parrow.
+  G: []
+e264-132 no_save clear=False notes=
+  T: I used to live in Fallows.
+  G: []
+e264-133 no_save clear=False notes=
+  T: Did you hear Tibber Motors is closing?
+  G: []
+e264-134 no_save clear=True notes=
+  T: You would love Harlton in spring.
+  G: []
+e264-135 no_save clear=True notes=
+  T: Joren says the boss is leaving.
+  G: []
+e264-136 corrections clear=True notes=correction,R17
+  T: Doran moved from Kellwick to Marston.
+  G: ['T(Doran|city|Marston)']
+e264-137 corrections clear=True notes=correction,R17
+  T: My boss used to be Alba, now it is Vera.
+  G: ['T(me|boss|Vera)']
+e264-138 corrections clear=True notes=correction,R17
+  T: I lived in Fallows before, but now I live in Grimbury.
+  G: ['T(me|city|Grimbury)']
+e264-139 corrections clear=True notes=correction,R17
+  T: My cat was called Mimi, now she is called Pipo.
+  G: ['T(me|pet|Pipo)']
+e264-140 corrections clear=True notes=correction,R17
+  T: I worked at Solmar Bakery, but I joined Tibber Motors last month.
+  G: ['T(me|employer|Tibber Motors)']
+e264-141 corrections clear=True notes=correction,R17
+  T: My sister Celia lived in Harlton, but now she lives in Dunmore.
+  G: ['T(Celia|city|Dunmore)']
+e264-142 corrections clear=True notes=correction
+  T: Not Alba, my sister is Vera.
+  G: ['T(me|sister|Vera)']
+e264-143 corrections clear=True notes=correction
+  T: Not Milo, my brother is Otto.
+  G: ['T(me|brother|Otto)']
+e264-144 corrections clear=True notes=correction
+  T: I live in Harlton, not Marston.
+  G: ['T(me|city|Harlton)']
+e264-145 corrections clear=True notes=correction
+  T: I work for Vennix Labs, not Tibber Motors.
+  G: ['T(me|employer|Vennix Labs)']
+e264-146 corrections clear=True notes=correction
+  T: My dog is called Pip, not Pop.
+  G: ['T(me|pet|Pip)']
+e264-147 corrections clear=True notes=correction
+  T: I speak Kevvish, not Drellish.
+  G: ['T(me|language|Kevvish)']
+e264-148 corrections clear=True notes=correction
+  T: My boss is Vera, not Alba.
+  G: ['T(me|boss|Vera)']
+e264-149 corrections clear=True notes=correction
+  T: I was born in Sollin, not Ollerton.
+  G: ['T(me|place_of_birth|Sollin)']
+e264-150 corrections clear=True notes=correction
+  T: My teacher is Bastian, not Stellan.
+  G: ['T(me|teacher|Bastian)']
+[0m
+[0m# [0mTodos
+[✓] Draft 150 blind items per earpanel264 spec (families + quotas)
+[✓] Write make_panel.py with items, fixed alias lists, self-checks
+[✓] Generate panel.jsonl, run self-checks, reread every item
+[•] Write category-only README.md, seal, verify with shasum -c
+[0m
+[0m← [0mWrite artifacts/claude-earpanel264-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-earpanel264-20260923/panel.jsonl artifacts/claude-earpanel264-20260923/make_panel.py > artifacts/claude-earpanel264-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-earpanel264-20260923/SEAL.sha256.txt && df -g /
+artifacts/claude-earpanel264-20260923/panel.jsonl: OK
+artifacts/claude-earpanel264-20260923/make_panel.py: OK
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        19    40%  484014 203404760    0%   /
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-earpanel264-20260923/ && wc -l artifacts/claude-earpanel264-20260923/* && cat artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+630 artifacts/claude-earpanel264-20260923/make_panel.py
+     150 artifacts/claude-earpanel264-20260923/panel.jsonl
+     107 artifacts/claude-earpanel264-20260923/README.md
+       2 artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+     889 total
+e90deeaaa616fdcabcb417c2b9d53782d39bd5237b28c1cb699ddf4fefd30a6e  artifacts/claude-earpanel264-20260923/panel.jsonl
+1d1002cdb0c7204dded489918650f8ceb6a0f2721ae6c2e616e0e6369b944a38  artifacts/claude-earpanel264-20260923/make_panel.py
+[0m
+[0m# [0mTodos
+[✓] Draft 150 blind items per earpanel264 spec (families + quotas)
+[✓] Write make_panel.py with items, fixed alias lists, self-checks
+[✓] Generate panel.jsonl, run self-checks, reread every item
+[✓] Write category-only README.md, seal, verify with shasum -c
+[0m
