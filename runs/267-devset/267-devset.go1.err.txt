@@ -1,0 +1,822 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; pwd; ls
+1:07  up 2 days, 16:56, 4 users, load averages: 37.30 53.76 59.29
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        14    47%  484014 153727560    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -20; git log --oneline -5; ls handoff/kit/briefs/ | head -40; ls design/v3/30-modes/ | grep 264; ls artifacts/ | grep -E "264|267|261"
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+[0m
+[0m$ [0mls handoff/kit/briefs/ | grep -i -E "264|267"; ls design/v3/30-modes/ | cat; ls artifacts/claude-devset267-20260923 2>&1; ls artifacts/claude-earcheck264-20260923 2>&1; ls artifacts/claude-earpanel264-20260923 2>&1
+00-director-board.md
+00-morning-report-20260922.md
+100-self-questions-blind-phrasing-muse.md
+101-talker-first-run-prep-muse.md
+102-integrated-agent-patches-muse.md
+103-bench-scale-followups-muse.md
+104-live-sleep-in-daemon-muse.md
+105-self-router-fix-muse.md
+106-reading-ladder-first-score-muse.md
+107-reading-behind-the-gate-muse.md
+108-daemon-exactly-once-muse.md
+109-ears-real-text-supervision-muse.md
+110-redteam-loop102-muse.md
+111-loop102-end-to-end-bench-muse.md
+112-ledger-backfill-muse.md
+113-loop-nhop-questions-muse.md
+113b-loop-nhop-fallback-muse.md
+113c-loop-partial-frame-muse.md
+113d-fallback-partial-frame-muse.md
+113e-gate-inverse-cues-muse.md
+114-self-router-scope-guard-muse.md
+115-sleep-scale-muse.md
+116-sleep-redteam-muse.md
+117-redteam110-patches-muse.md
+118-ears-leftover-brake-muse.md
+118b-ears-brake-train-list-muse.md
+119-ears-length-coverage-muse.md
+119b-ears-remap-muse.md
+119d-ears-diagnosis-muse.md
+119e-ears-gate-diagnosis-muse.md
+119f-ears-build-muse.md
+119f-ears-plan-muse.md
+119g-ears-build-muse.md
+119h-ears-build-muse.md
+120-talker-mouth-finetune-prep-muse.md
+120b-mouth-decode-muse.md
+120d-talker-dontknow-muse.md
+121-teach-phrasing-coverage-muse.md
+122-self-router-learned-muse.md
+123-marks-runner-muse.md
+124-redteam-composer-muse.md
+125-bench-smollm-4hop-muse.md
+126-demo-harness-muse.md
+127-self-router-novelty-muse.md
+128-agent-per-turn-cost-muse.md
+129-teach-punctuation-muse.md
+130-sleep-grow-slot-muse.md
+131-taught-beats-sleep-muse.md
+132-question-rewriter-muse.md
+134-port-117-fixes-muse.md
+135-officeholder-guard-muse.md
+136-teach-redteam-muse.md
+137-multiword-possessive-muse.md
+137b-discourse-muse.md
+137c-hypo-muse.md
+137d-frame-muse.md
+137e-one-hearsay-reply-muse.md
+138-integration-muse.md
+138b-stack-muse.md
+138c-self-serving-muse.md
+138d-stack-muse.md
+138e-officechain-muse.md
+138f-stack-clean-muse.md
+138g-merge-layer-a-muse.md
+138h-merge-layer-b1-muse.md
+138h-portplan-layer-b-muse.md
+138i-merge-layer-b2-muse.md
+138j-merge-layer-c-muse.md
+138k-merge-opus.md
+138l-merge-opus.md
+138m-merge-opus.md
+138n-merge-opus.md
+138p-merge-muse.md
+139-value-guard-muse.md
+139b-and-names-muse.md
+139c-tailwords-muse.md
+139d-tail-muse.md
+139e-tail-muse.md
+140-value-tail-muse.md
+141-mailbox-settle-muse.md
+142-perf-port-muse.md
+143-question-redteam-muse.md
+144-multi-of-names-muse.md
+145-sleep-merge-muse.md
+146-refused-correction-doubt-muse.md
+146b-doubt-hearsay-exempt-muse.md
+147-mention-walk-alignment-muse.md
+148-question-screen-muse.md
+148b-screen-status-muse.md
+149-whole-word-entities-muse.md
+150-subject-guard-muse.md
+150b-subject150b-muse.md
+150c-closed-class-subject-muse.md
+150d-hedgecase-muse.md
+151-no-question-mark-muse.md
+152-user-session-redteam-muse.md
+153-reverse153-muse.md
+154-yesno154-muse.md
+154b-multival-muse.md
+154c-multival-allowlist-muse.md
+154d-yesno-muse.md
+154e-language-multi-muse.md
+154f-negate-muse.md
+154g-nocorrect-muse.md
+155-inverted155-muse.md
+156-smalltalk156-muse.md
+156b-smalltalk-classes-muse.md
+156c-smalltalk-muse.md
+157-filler157-muse.md
+157b-capfiller-muse.md
+157c-title-muse.md
+158-qform158-muse.md
+158b-whrel-muse.md
+158c-whcity-muse.md
+159-hop159-muse.md
+160-correct160-muse.md
+160b-correct-last-stated-muse.md
+160c-twohop-correct-muse.md
+161-self-card-muse.md
+162-the-names-muse.md
+162b-plural-muse.md
+163-lowercase-muse.md
+164-about-muse.md
+164b-about-muse.md
+165-typo-muse.md
+166-me-muse.md
+166b-display-case-muse.md
+166c-display-case-clean-muse.md
+167-verb-muse.md
+167b-verb-value-screen-muse.md
+167c-label-muse.md
+167d-verb-muse.md
+167e-label-muse.md
+168-self-grounded-canned-muse.md
+170-speed-index-muse.md
+171-name-shaped-values-muse.md
+171b-word-names-muse.md
+172-copula-reteach-ask-muse.md
+172b-copula-bench-v3-muse.md
+173-user-name-muse.md
+173b-word-names-user-muse.md
+174-chainof-muse.md
+180-lowercase-muse.md
+180b-case-muse.md
+187b-selfq-muse.md
+188-statefall-muse.md
+189-sayagain-muse.md
+189b-sayagain-muse.md
+190-reverse-muse.md
+190b-reverse-muse.md
+192-correctreply-muse.md
+193-apos-muse.md
+206-sleepsmoke-muse.md
+207-atomic-inbox-muse.md
+208-natural-panel-muse.md
+209-writescreen-muse.md
+210-reversal-muse.md
+211-fairsmol-muse.md
+212-selfgate-muse.md
+213-earssafety-muse.md
+214-suitediff-muse.md
+215-ofteach-muse.md
+216-declinecue-muse.md
+217-relationtable-design.md
+218-suitediff2-muse.md
+219-selfname-muse.md
+220-restartindex-muse.md
+221-tableask.md
+221b-storedrel-opus.md
+221c-qnorm-opus.md
+222-ofteachb-muse.md
+223-cantdo-muse.md
+224-decline-opus.md
+224c-q1honest-opus.md
+226-source-opus.md
+227-identity-muse.md
+228-determinism-opus.md
+229-tableteach-opus.md
+230b-namecheck-opus.md
+231-chain-opus.md
+232-fullname-opus.md
+233-polite-opus.md
+234-smalltalk-opus.md
+235-smolear-opus.md
+236-firstname-opus.md
+237-tablev11-opus.md
+237b-tablev12-opus.md
+240-mouth-design-opus.md
+245-myrel-opus.md
+246-mentionwalk-opus.md
+247-apos-opus.md
+248-whats-opus.md
+249-firstperson-opus.md
+250-verbsubj-opus.md
+251-direction-opus.md
+252-correct-opus.md
+252c-merge-opus.md
+255-fixedtext-opus.md
+258-commentclause-opus.md
+259-valueboundary-opus.md
+260-openers-opus.md
+31-modes-integrated-design-fable-review.md
+32-ben-simplification-ruling.md
+33-creative-stopping-mechanism-fable.md
+34-gpt-xhigh-sleep-consolidation-deep-dive.md
+35-gpt-xhigh-reading-ladder-and-reasoning-deep-dive.md
+36-milestone1-notebook-listening-fable.md
+37-milestone2-thinking-websearch-fable.md
+38-sleep-review-gpt-xhigh.md
+39-creative-review-gpt-xhigh.md
+40-english-listening-design-gpt-xhigh.md
+41-shared-subspace-sleep-review-fable.md
+42-gpt-review-adjudication-fable.md
+43-talker-ears-mouth-design-fable.md
+44-codex-reasoner-goal.md
+45-gpt-scout-length-counters.md
+46-gpt-scout-ears.md
+47-ears-rung2-open-encoder-spec.md
+47c-gpt-scout-encoder-choice.md
+48-parallel-build-brief-20260921.md
+49-thought-format-v2-opus.md
+50-reasoner-on-notebook-opus.md
+51-wiring-opus.md
+52-live-sleep-opus.md
+53-mouth-borrowed-decoder-muse.md
+54-modes-and-demo-opus.md
+55-demo-advantage-questions-mimo.md
+55b-q11-forgetting-arm-mimo.md
+56-scientific-claim-rows-research-muse.md
+57-signed-counter-family-research-muse.md
+58-open-relation-canonicalisation-research-muse.md
+59-ears-abstention-recipe-research-muse.md
+60-qualifier-aware-reasoner-muse.md
+61-wiring-end-to-end-muse.md
+62-modernbert-loader-muse.md
+63-benchmark-plan-research-muse.md
+64-signed-counter-experiment-muse.md
+65-counter-dictionary-experiment-muse.md
+66-modernbert-eager-reseal-muse.md
+67-thought-v3-groups-novalue-muse.md
+68-relation-alias-table-muse.md
+69-abstention-ltt-on-rung1-muse.md
+70-fable-edit-200-build-muse.md
+71-fable-edit-200-baselines-muse.md
+72-redteam-core-findings-muse.md
+73-fable-edit-200-english-arm-muse.md
+74-persistent-agent-daemon-muse.md
+75-audit-exp29-exp46-muse.md
+76-abstention-ltt-candidate-grid-muse.md
+77-core-fixes-muse.md
+78-abstention-fresh-split-confirmation-muse.md
+79-redteam-web-quarantine-findings-muse.md
+80-hardgate-noise-mismatch-muse.md
+81-redteam-listening-doorway-findings-muse.md
+82-ledger-audit-muse.md
+83-audit-ears47-scoring-muse.md
+84-natural-turns-acceptance-muse.md
+85-ears-modernbert-swap-prep-muse.md
+86-simple-english-reading-data-muse.md
+87-own-small-lm-from-scratch-research-muse.md
+88-demo-rehearsal-transcript-muse.md
+89-web-quarantine-fixes-muse.md
+90-integrated-loop-muse.md
+91-fakeears-guard-muse.md
+92-fable-edit-scale-muse.md
+93-daemon-soak-muse.md
+94-reading-panel-muse.md
+95-ears47-fail-diagnosis-muse.md
+96-loop-gaps-closed-muse.md
+97-relcanon-independent-panel-muse.md
+98-redteam-integrated-agent-muse.md
+99-self-questions-muse.md
+decided-inputs-fable.md
+gpt-xhigh-bored-mode.md
+gpt-xhigh-creative-mode.md
+gpt-xhigh-working-mode.md
+review-20260922-improvements.md
+shared-brief.md
+ls: artifacts/claude-devset267-20260923: No such file or directory
+dev_264.jsonl
+dev257_qa.json
+dev257_qmanifest.json
+dev261b_qa.json
+dev261b_qmanifest.json
+dev264_earpreds.json
+dev264_qa.json
+dev264_qmanifest.json
+devcheck_qa.json
+devcheck_qmanifest.json
+devreport_261.json
+devreport_264.json
+panel264_bpreds.json
+panel264_earpreds.json
+panel264_pmanifest.json
+panel264_pyes.json
+panel264_qa.json
+panel264_qmanifest.json
+panel264_score.json
+panel264_turns.json
+panel264comma_tags.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+[0m
+[0m$ [0mecho "===BRIEFS==="; ls handoff/kit/briefs/ | grep -E "261|264|267|earpanel"; echo "===MODES==="; ls design/v3/30-modes/ | grep -E "264|26"; echo "===ALL BRIEFS COUNT==="; ls handoff/kit/briefs/ | wc -l
+===BRIEFS===
+261-earcheck.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+===MODES===
+00-morning-report-20260922.md
+126-demo-harness-muse.md
+226-source-opus.md
+260-openers-opus.md
+48-parallel-build-brief-20260921.md
+review-20260922-improvements.md
+===ALL BRIEFS COUNT===
+      42
+[0m
+[0m$ [0mgit fetch -q origin main; echo "---264 checker main?---"; git ls-tree -r --name-only origin/main | grep -E "264-qa|earpanel264|devset267|261-earcheck" | head -20; echo "---design 264---"; git ls-tree -r --name-only origin/main | grep "30-modes" | grep 264 | head
+---264 checker main?---
+design/v3/30-modes/264-qa-checker.md
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/earpanel264-spec.txt
+---design 264---
+design/v3/30-modes/264-qa-checker.md
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/264-qa-checker.md; echo "=====END264====="; git show origin/main:handoff/kit/briefs/261-earcheck.txt | head -200; echo "=====END261HEAD====="; git show origin/main:handoff/kit/briefs/earpanel264-spec.txt
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+- Q-value (V hidden): "Message from the speaker: «turn». According to this message, stated as a real, current fact (not asked, pretended, planned, wished, denied, or replaced), what is <S>'s <relation words>? Answer with the exact words from the message. If several, list them separated by ' | '. If the message does not state it, answer NOT STATED. If it is unclear, answer AMBIGUOUS."
+- Q-owner (S hidden): the same frame of words, "whose <relation words> is <V>?". The speaker is answered as "the speaker".
+- Q-relation (R hidden): "How is <V> related to <S> in this message? Answer with one to three words, or NOT STATED or AMBIGUOUS."
+Save iff V (case- and space-normalised) is one of Q-value's answers, AND S is one of Q-owner's answers ("the speaker" matches "me"), AND Q-relation's answer maps to R through relation table v2 names, aliases or narrower. Otherwise hold back as UNSURE. No threshold, so nothing is tuned; dev is used only to debug prompt wording, and every wording change is logged. The span guard stays after it.
+Report wrong saves per saved fact AND per turn, plus recall, with every arm on the same scorer (Ruling 1 included).
+"our/we" owners are excluded from panel 264 (Ben ruled they must ask whose; that is a separate experiment, 265).
+Certification is separate: panels like 264 are discovery panels, and certifying uses the 600-turn fixed set (to be written).
+=====END264=====
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+=====END261HEAD=====
+EAR PANEL 264 SPEC. The director wrote this on 2026-09-23 (copied from the earpanel261b spec; changes marked NEW264). It is shared by the blind panel writer and the exp 264 builder.
+
+Folder: artifacts/claude-earpanel264-20260923/
+- panel.jsonl (150 lines)
+- make_panel.py: holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel264-20260923/panel.jsonl artifacts/claude-earpanel264-20260923/make_panel.py > artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+
+Schema (exactly as panel 257)
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e264-001" … "e264-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: a string holding the risk tags (R1 … R12, "lower", "typo", "noq").
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value: the exact words from the turn, in the same case. "me" stands for the speaker, which includes "our"/"we"/"us" owners (Ben's rule: there is one user).
+- NEW: for a pet, relation is "pet" and relation_aliases must include the species word the turn uses (dog, cat, rabbit ...) as well as pet, animal and companion.
+- relation: a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school, neighbour …). relation_aliases lists accepted alternatives. Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example from this spec word for word.
+- R1, pronoun reference across clauses: at least 8 turns across varied_teach and full_names. Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 8 turns in no_save with gold [].
+  - Include tag questions ("…, right", "…, isn't it") and "so …" checks.
+  - At least 5 have NO question mark (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact (TEACH gold, in varied_teach).
+- R3, the verb decides the relation, not a noun in the value: at least 6 items. Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-): at least 6 items across families. Gold keeps the full relation.
+- R5, everyday relations beyond the core list (housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours): at least 8 items across families.
+- R6, two-hop questions whose first hop is a relative: at least 5 of the chain_questions.
+- NEW264: NO turn may use we/us/our/ours/ourselves as an owner or subject (Ben's ruling: those turns must ask whose; they are tested in a separate experiment). R7 is dropped.
+- R8, plans, goals and wishes ("training to be", "wants to be", "is hoping to", "is going to", "plans to move to", "will start at"): at least 6 items.
+  - At least 3 are in varied_teach, where another clause of the same turn states a real current fact. Only that fact is gold.
+  - At least 3 are in no_save, where the whole turn is a plan or wish (gold []).
+- R9, pretend and hypothetical turns ("let's say", "imagine", "suppose", "pretend", "what if", "say that"): at least 5 in no_save, with gold [].
+- R10, plural relatives naming two people ("my two sisters, A and B, …", "both my cousins, A and B, …"): at least 4 items. Gold has one frame per person for the relation, plus any other stated fact for each person.
+- R11, appositive relatives ("my cousin A lives in B", "A's friend B works at C"): at least 6 items. Gold holds the relative frame AND the other fact.
+- R12, a pronoun after "A's R is B and he/she …" where the pronoun refers to B: at least 4 items. The later fact's gold subject is B, never A.
+
+The rest spreads over:
+- plain facts, pets, jobs, languages and birthplaces;
+- full names of 2–4 words;
+- corrections, which hold only the new value (a negated old value is never in gold);
+- lowercase and typo'd chat: at least 15 turns in all.
+- NEW, R13 typo next to a name: at least 8 teach items where a misspelt everyday word (not a name) sits right next to a name ("livs", "werks", "bron"). Gold holds the clean name spans only.
+- NEW264, R16 wrong-relation traps: at least 8 teach items where a naive reader would pick the wrong relation word (works WITH vs works FOR, a brother's wife vs a wife, lives NEAR vs lives in, used to work at vs works at). Gold holds only what is stated, with the right relation.
+- NEW264, R17 stale values: at least 6 corrections where the old value is named in the same turn in a different position than "not X" (e.g. "X moved from A to B", "it's B now, it used to be A"). Gold holds only the new value.
+- NEW, R15 name particles: at least 6 teach items whose names or places contain lowercase particles (van, de, von, da, of, le), e.g. a fictional "Ria van Doorn" or "Port of Sela"; gold keeps the full span.
+- NEW, R14 all-lowercase names: at least 6 teach items typed all lowercase with lowercase names; gold keeps the lowercase spans.
+questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, briefs other than this spec, other panels (including earpanel257 and earpanel261, earpanel261b), or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - every R1–R17 quota (R7 dropped);
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Before sealing, reread every item once as a careful reader. Is the gold what a sensible person would save from this turn, and nothing more? Mark clear:false where two readings are defensible.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "267|devset" | head -20
+echo "---briefs full list main---"
+git ls-tree -r --name-only origin/main | grep "handoff/kit/briefs" | head -50
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00267/events.fix77.seal.json
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_smolear257_devset.py
+---briefs full list main---
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/267-devset.md
+echo "=====267-DIAG====="
+git show origin/main:handoff/queue/267-diag.md
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: git fetch -q origin main, then read each named file with git show origin/main:<path>.
+
+YOUR TASK: builder for exp 264, the question-answering checker. Read design/v3/30-modes/264-qa-checker.md (the one change, exact prompts and save rule) and handoff/kit/briefs/261-earcheck.txt (BensPC, llama-server, ear, arms). In this worktree read artifacts/claude-earcheck261b-20260923/PASSMARKS.md + RESULTS.md and scripts/claude_earcheck261_*.py + scripts/claude_earcheck261b_*.py (read-only; import, never edit). New files only: scripts/claude_earcheck264_*.py, artifacts/claude-earcheck264-20260923/, ledger lines P264.n.
+
+YOUR TASK: writer of a FRESH dev set for the 264 follow-up diagnostic (exp 267). CPU only; do not read any scripts/claude_earcheck* code or any earpanel*. Read handoff/kit/briefs/earpanel264-spec.txt for the format and families only.
+Write 120 new chat turns in artifacts/claude-devset267-20260923/dev.jsonl with the same fields as that spec (id, family, turn, gold, clear, notes). Mix: 50 plain teaches, 15 plural relatives (R10), 15 typo or filler names, 10 relation traps (R16), 10 stale values (R17), 10 no-save turns (pretend, plan, check-questions), 10 questions. Fictional names only, none reused from the spec's examples. It is DEV data (tunable), not a test panel.
+Write make_dev.py beside it, then SEAL.sha256.txt (shasum -a 256 of both files, paths from the repo root).
+PUSH: artifacts/claude-devset267-20260923
+=====267-DIAG=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: git fetch -q origin main, then read each named file with git show origin/main:<path>.
+
+YOUR TASK: builder for exp 264, the question-answering checker. Read design/v3/30-modes/264-qa-checker.md (the one change, exact prompts and save rule) and handoff/kit/briefs/261-earcheck.txt (BensPC, llama-server, ear, arms). In this worktree read artifacts/claude-earcheck261b-20260923/PASSMARKS.md + RESULTS.md and scripts/claude_earcheck261_*.py + scripts/claude_earcheck261b_*.py (read-only; import, never edit). New files only: scripts/claude_earcheck264_*.py, artifacts/claude-earcheck264-20260923/, ledger lines P264.n.
+GPU: yes
+
+YOUR TASK: diagnostic for exp 267, the one follow-up to the registered FAIL of 264. This is a diagnostic, not a registered test: no panel is run and no PASS is possible. Read design/v3/30-modes/264-qa-checker.md, artifacts/claude-earcheck264-20260923/RESULTS.md and the 264 scripts (import, never edit). Never open any earpanel*.
+Wait (poll every 2 min, up to 90 min) for artifacts/claude-devset267-20260923/SEAL.sha256.txt on origin/main or builder-outbox. Before you open dev.jsonl, write artifacts/claude-diag267-20260923/PREDICTIONS.md with numbered predictions P267.n for each checker below (held-back % of true facts, wrong saves), then seal it (SEAL-pred.sha256.txt).
+Then run the ear once over the 120 turns on BensPC (same setup as 264), and score three checkers on the same ear frames, each alone:
+ C1 = 261b's YES/NO checker exactly; C2 = 264's QA checker exactly; C3 = PICK-THE-READING: one Qwen call shows the turn and 4 numbered readings (the ear's frame, plus 3 look-alikes made by swapping the relation for its nearest table neighbour, the subject for the other name in the turn, and the value for "not stated"), and saves only if the model picks the ear's reading. Write C3's prompt once, before opening dev.jsonl, and seal it with the predictions; no tuning after.
+Report per checker: TEACH hits, held-back true facts, wrong saves (per saved fact and per turn), ms per turn (median/p90), all by family. Stop llama-server by exact PID and confirm with nvidia-smi. Never touch pythonw 13036.
+PUSH: artifacts/claude-diag267-20260923 scripts/claude_diag267_*.py
+[0m
+[0m$ [0mls artifacts/ | head -30; df -g / | tail -1; uptime
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+/dev/disk3s1s1       460   12        15    45%  484014 167697160    0%   /
+ 1:09  up 2 days, 16:58, 4 users, load averages: 48.87 53.53 58.60
+[0m
+[0m$ [0mmkdir -p artifacts/claude-devset267-20260923 && ls artifacts/claude-devset267-20260923
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-devset267-20260923/make_dev.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-devset267-20260923/make_dev.py
+self-checks OK {'plain_teach': 50, 'plural_relative': 15, 'typo_filler': 15, 'relation_trap': 10, 'stale_value': 10, 'no_save': 10, 'questions': 10}
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-devset267-20260923/dev.jsonl (120 lines)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-devset267-20260923/dev.jsonl')]; print('lines', len(rows)); from collections import Counter; print(Counter(r['family'] for r in rows)); print('teach frames', sum(1 for r in rows for f in r['gold'] if f['act']=='TEACH')); print('ask frames', sum(1 for r in rows for f in r['gold'] if f['act']=='ASK')); print('no_save empty', sum(1 for r in rows if r['family']=='no_save' and r['gold']==[]))"
+lines 120
+Counter({'plain_teach': 50, 'plural_relative': 15, 'typo_filler': 15, 'relation_trap': 10, 'stale_value': 10, 'no_save': 10, 'questions': 10})
+teach frames 117
+ask frames 10
+no_save empty 10
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-devset267-20260923/dev.jsonl artifacts/claude-devset267-20260923/make_dev.py > artifacts/claude-devset267-20260923/SEAL.sha256.txt; cat artifacts/claude-devset267-20260923/SEAL.sha256.txt; ls -l artifacts/claude-devset267-20260923/
+a01f4f6eebb869c99679acdfc11cddb4a2700924e2f1f83e38c5df5f49f4bf58  artifacts/claude-devset267-20260923/dev.jsonl
+2d00814673809d0fa149e19bd8c6a710c3a492970d7c28352491ac225e8819d0  artifacts/claude-devset267-20260923/make_dev.py
+total 128
+-rw-r--r--  1 ben-hannan  staff  34687 Sep 23 01:09 dev.jsonl
+-rw-r--r--  1 ben-hannan  staff  22283 Sep 23 01:09 make_dev.py
+-rw-r--r--  1 ben-hannan  staff    226 Sep 23 01:09 SEAL.sha256.txt
+[0m
+[0m$ [0mshasum -c artifacts/claude-devset267-20260923/SEAL.sha256.txt; git status --short | head -20
+artifacts/claude-devset267-20260923/dev.jsonl: OK
+artifacts/claude-devset267-20260923/make_dev.py: OK
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-devset267-20260923/; git diff --stat | head
+artifacts/fable-predictions-ledger.md | 81 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
+[0m
+[0m$ [0mgit status --porcelain=v1 --untracked-files=all | grep 267; ls artifacts/claude-devset267-20260923/
+?? data/open/wikidata-props/P2670.json
+dev.jsonl
+make_dev.py
+SEAL.sha256.txt
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-devset267-20260923/dev.jsonl || echo "not ignored"; git ls-files --others --exclude-standard | grep 267 || echo "no others"; cat .gitignore 2>/dev/null | head -20; git config --get status.showUntrackedFiles || echo "no config"
+.gitignore:5:artifacts/	artifacts/claude-devset267-20260923/dev.jsonl
+data/open/wikidata-props/P2670.json
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+no config
+[0m
