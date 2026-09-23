@@ -1,0 +1,217 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead .
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --show-toplevel; git status --short | head -n 50
+1:59  up 2 days, 17:48, 4 users, load averages: 52.15 60.03 62.36
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    46%  484014 157738880    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+[0m
+[0m$ [0mgit fetch -q origin main; echo FETCH_DONE; git show origin/main:handoff/kit/briefs/241b-stylesheet.txt > /tmp/241b-stylesheet.txt; shasum -a 256 /tmp/241b-stylesheet.txt; wc -c /tmp/241b-stylesheet.txt; git show origin/main:artifacts/claude-grade241b-set2-20260923/rows.jsonl > /tmp/rows-set2.jsonl; shasum -a 256 /tmp/rows-set2.jsonl; wc -l /tmp/rows-set2.jsonl
+FETCH_DONE
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/241b-stylesheet.txt
+    4146 /tmp/241b-stylesheet.txt
+f4327edbc3cc891861e5df40684dc25cd38d110d468e5bc283784081f0be43d5  /tmp/rows-set2.jsonl
+    1245 /tmp/rows-set2.jsonl
+[0m
+[0m→ [0mRead /tmp/241b-stylesheet.txt
+[0m→ [0mRead /tmp/rows-set2.jsonl[90m [limit=115, offset=416][0m
+[0m→ [0mRead /tmp/rows-set2.jsonl[90m [limit=130, offset=531][0m
+[0m→ [0mRead /tmp/rows-set2.jsonl[90m [limit=175, offset=661][0m
+[0m
+[0m$ [0mls artifacts | head -n 100; echo "---"; ls artifacts/claude-grade241b-C-set2-20260923 2>&1 || echo NO_DIR_YET
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-capab280-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade255b-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-nhop268-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+---
+part1.jsonl
+part3.jsonl
+[0m
+[0m$ [0mls -l artifacts/claude-grade241b-C-set2-20260923/; df -g / | tail -n 5
+total 96
+-rw-r--r--  1 ben-hannan  staff  22829 Sep 23 01:52 part1.jsonl
+-rw-r--r--  1 ben-hannan  staff  23342 Sep 23 02:01 part3.jsonl
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        14    46%  484014 156605840    0%   /
+[0m
+[0m← [0mWrite artifacts/claude-grade241b-C-set2-20260923/part2.jsonl
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; p='artifacts/claude-grade241b-C-set2-20260923/part2.jsonl'; lines=open(p).read().strip().splitlines(); print('lines', len(lines)); ids=[json.loads(l)['id'] for l in lines]; print('unique', len(set(ids))); print('first', ids[0], 'last', ids[-1]); exp=['g%04d'%i for i in range(416,831)]; print('order_ok', ids==exp); print('missing', [e for e in exp if e not in set(ids)][:10]); print('extra', [i for i in ids if i not in set(exp)][:10]); fals=[json.loads(l) for l in lines if not json.loads(l)['grammatical']]; print('false_count', len(fals)); print('false_ids', [(f['id'], f['reason']) for f in fals])"
+lines 415
+unique 415
+first g0416 last g0830
+order_ok True
+missing []
+extra []
+false_count 9
+false_ids [('g0426', 'Rule 3: "2 turns" digit for count under ten'), ('g0427', 'Rule 1: "Imkeands owner" missing possessive \'s'), ('g0439', 'Rule 11: "stondseam Viondneth" lowercase proper name'), ('g0503', 'Rule 6: "warden warden" doubled word'), ('g0577', 'Rule 3: "3 people" digit for count under ten'), ('g0588', 'Rule 4: "capital are" singular subject with plural verb'), ('g0589', 'Rule 8: "(E4214)" internal entity code'), ('g0640', 'Rule 1: "Biothdulls vet" missing possessive \'s'), ('g0698', 'Rule 4: "grandmother of Drealuthis are" singular subject with plural verb')]
+[0m
+[0m$ [0mgit status --short artifacts/claude-grade241b-C-set2-20260923/; echo "---"; git log --oneline -5 -- artifacts/claude-grade241b-C-set2-20260923/; echo "---"; git ls-files artifacts/claude-grade241b-C-set2-20260923/
+---
+---
+[0m
+[0m$ [0mgit status --short | grep -i grade241b || echo NO_STATUS_MATCH; echo "---"; git check-ignore -v artifacts/claude-grade241b-C-set2-20260923/part1.jsonl artifacts/claude-grade241b-C-set2-20260923/part2.jsonl || echo NOT_IGNORED; echo "---"; ls -l artifacts/claude-grade241b-C-set2-20260923/
+NO_STATUS_MATCH
+---
+.gitignore:5:artifacts/	artifacts/claude-grade241b-C-set2-20260923/part1.jsonl
+.gitignore:5:artifacts/	artifacts/claude-grade241b-C-set2-20260923/part2.jsonl
+---
+total 144
+-rw-r--r--  1 ben-hannan  staff  22829 Sep 23 01:52 part1.jsonl
+-rw-r--r--  1 ben-hannan  staff  22437 Sep 23 02:04 part2.jsonl
+-rw-r--r--  1 ben-hannan  staff  23342 Sep 23 02:01 part3.jsonl
+[0m
