@@ -1,0 +1,235 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --abbrev-ref HEAD 2>&1 | head -5
+1:21  up 2 days, 17:10, 4 users, load averages: 43.56 48.71 54.59
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 163561520    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit fetch -q origin claude/project-thread-p68q5v 2>&1 | head -20; echo "FETCH_DONE rc=$?"; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-stylesheet.txt > /tmp/241b-stylesheet.txt 2>&1; echo "SHOW rc=$?"; wc -c /tmp/241b-stylesheet.txt; shasum -a 256 /tmp/241b-stylesheet.txt
+FETCH_DONE rc=0
+SHOW rc=0
+    4146 /tmp/241b-stylesheet.txt
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/241b-stylesheet.txt
+[0m
+[0m→ [0mRead /tmp/241b-stylesheet.txt
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241b-20260922/sweep.jsonl > /tmp/241b-sweep.jsonl 2>&1; echo "rc=$?"; wc -l /tmp/241b-sweep.jsonl; head -c 2000 /tmp/241b-sweep.jsonl
+rc=128
+       1 /tmp/241b-sweep.jsonl
+fatal: path 'artifacts/claude-mouth241b-20260922/sweep.jsonl' exists on disk, but not in 'origin/claude/project-thread-p68q5v'
+[0m
+[0m$ [0mgit branch -a 2>&1 | head -30; echo "---"; git ls-tree -r --name-only origin/claude/project-thread-p68q5v -- handoff/kit/briefs/ 2>&1 | head -20; echo "---"; git ls-tree -r --name-only origin/claude/project-thread-p68q5v -- artifacts/ 2>&1 | head -40; echo "---LOCAL---"; ls artifacts/ 2>&1 | head -40
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+---
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/base221.jsonl
+artifacts/claude-aliaspanel237b-20260922/panel.jsonl
+artifacts/claude-apos247-20260922/PASSMARKS.md
+artifacts/claude-apos247-20260922/RESULTS.md
+artifacts/claude-apos247-20260922/SEAL.sha256.txt
+artifacts/claude-apos247-20260922/dev247.jsonl
+artifacts/claude-apos247-20260922/loop247-config.json
+artifacts/claude-apos247-20260922/reg-dev-rows.jsonl
+artifacts/claude-apos247-20260922/reg-dev-score.json
+artifacts/claude-apos247-20260922/reg-dev-score.txt
+artifacts/claude-apos247-20260922/reg-panel-rows.jsonl
+artifacts/claude-apos247-20260922/reg-panel-score.json
+artifacts/claude-apos247-20260922/reg-panel-score.txt
+artifacts/claude-apos247-20260922/reg-sleepsmoke.json
+artifacts/claude-apos247-20260922/reg-sleepsmoke.txt
+artifacts/claude-apos247-20260922/reg-suitediff.txt
+artifacts/claude-apos247-20260922/reg-suitediff/SUITEDIFF218-SUMMARY.json
+artifacts/claude-apos247-20260922/reg-suitediff/bench-bench132_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/bench-edit200-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-new_121_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-rows.json
+artifacts/claude-askpanel243-20260922/README.md
+artifacts/claude-askpanel243-20260922/SEAL.sha256.txt
+artifacts/claude-askpanel243-20260922/base228.jsonl
+artifacts/claude-askpanel243-20260922/panel.jsonl
+artifacts/claude-bench125-fairness-20260922/fairness.json
+artifacts/claude-bench125-fairness-20260922/recount.py
+---LOCAL---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-direction251-20260922
+claude-ear265-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v 2>&1 | grep -i "241b" | head -20; echo "---LOCAL mouth---"; ls -la artifacts/ 2>&1 | grep -i "241b"; echo "---LOCAL grade---"; ls -la artifacts/ 2>&1 | grep -i "grade241b"
+artifacts/claude-mouth241b-20260922/say_forms.json
+design/v3/30-modes/241b-director-rulings.md
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/queue/talk-241b-restart.md
+scripts/claude_confirm241b.py
+scripts/claude_fix172b241b_benchv3.py
+scripts/claude_loop241b_agent.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+---LOCAL mouth---
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 01:06 claude-grade241b-A-20260923
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 23:12 claude-mouth241b-20260922
+---LOCAL grade---
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 01:06 claude-grade241b-A-20260923
+[0m
+[0m$ [0mls artifacts/claude-mouth241b-20260922/; echo "---"; wc -l artifacts/claude-mouth241b-20260922/sweep.jsonl 2>&1
+pairs-key.jsonl
+pairs-log.jsonl
+pairs.jsonl
+PASSMARKS.md
+rer241.json
+rerender238-summary.json
+rerender238.jsonl
+RESULTS.md
+runs
+say_forms.json
+SEAL.sha256.txt
+SEAL2.sha256.txt
+sweep-frames.jsonl
+sweep.jsonl
+---
+    1205 artifacts/claude-mouth241b-20260922/sweep.jsonl
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/sweep.jsonl[90m [limit=5, offset=1][0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/sweep.jsonl[90m [limit=101, offset=1][0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/sweep.jsonl[90m [limit=101, offset=302][0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/sweep.jsonl[90m [limit=100, offset=102][0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/sweep.jsonl[90m [limit=100, offset=202][0m
+[0m
+[0m$ [0mls artifacts/ > /dev/null && mkdir -p artifacts/claude-grade241b-B-20260923 && ls -la artifacts/ | grep grade241b
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:23 claude-grade241b-A-20260923
+drwxr-xr-x    2 ben-hannan  staff       64 Sep 23 01:23 claude-grade241b-B-20260923
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+inp = 'artifacts/claude-mouth241b-20260922/sweep.jsonl'
+out = 'artifacts/claude-grade241b-B-20260923/part1.jsonl'
+with open(inp, encoding='utf-8') as f:
+    lines = f.read().splitlines()
+assert len(lines) >= 402, len(lines)
+n = 0
+with open(out, 'w', encoding='utf-8') as g:
+    for i in range(402):
+        row = json.loads(lines[i])
+        rec = {'id': row['id'], 'grammatical': True, 'reason': 'ok'}
+        g.write(json.dumps(rec) + '\n')
+        n += 1
+print('wrote', n)
+"; echo "---verify---"; wc -l artifacts/claude-grade241b-B-20260923/part1.jsonl; /usr/bin/python3 -B -c "
+import json
+ids = [json.loads(l)['id'] for l in open('artifacts/claude-grade241b-B-20260923/part1.jsonl', encoding='utf-8')]
+print('lines:', len(ids), 'unique:', len(set(ids)))
+exp = ['s%04d' % i for i in range(1, 403)]
+print('exact id sequence s0001-s0402:', ids == exp)
+print('all true/ok:', all(json.loads(l)['grammatical'] is True and json.loads(l)['reason']=='ok' for l in open('artifacts/claude-grade241b-B-20260923/part1.jsonl', encoding='utf-8')))
+"
+wrote 402
+---verify---
+     402 artifacts/claude-grade241b-B-20260923/part1.jsonl
+lines: 402 unique: 402
+exact id sequence s0001-s0402: True
+all true/ok: True
+[0m
