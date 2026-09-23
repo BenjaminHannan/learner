@@ -14,7 +14,7 @@ GETTING YOUR FILES: run git fetch -q origin main and read each named file with g
 
 
 YOUR TASK: blind panel writer for exp 280b (general ability questions). You write test items only; you never read or run any code.
-Read ONLY the "280b" section's panel spec in design/v3/30-modes/280-282-chat-fixes.md (git show origin/main:design/v3/30-modes/280-282-chat-fixes.md). Do not open scripts/, any artifacts folder, or any other panel.
+Never use git log or older versions of any file. Read ONLY the "280b" section's panel spec in design/v3/30-modes/280-282-chat-fixes.md (git show origin/main:design/v3/30-modes/280-282-chat-fixes.md). Do not open scripts/, any artifacts folder, or any other panel.
 Write artifacts/claude-capabilpanel280b-20260923/: panel.jsonl (one line per turn: dialog_id, turn_index, user text, category, gold: "ability_list", "unchanged", "no_write", or an expected fact; the scored turn of each dialog is its last turn), SPEC-COPY.md and README.md (counts per category). Fictional, freshly invented names; natural and varied wording.
 Seal from the worktree root: shasum -a 256 artifacts/claude-capabilpanel280b-20260923/panel.jsonl artifacts/claude-capabilpanel280b-20260923/SPEC-COPY.md > artifacts/claude-capabilpanel280b-20260923/SEAL.sha256.txt. Never change the files after sealing.
 Report: counts per category and the seal contents. Never quote items.
