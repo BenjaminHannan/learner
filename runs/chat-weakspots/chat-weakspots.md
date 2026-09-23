@@ -1,0 +1,19 @@
+COMMON RULES (the director line, Claude, wrote this task on 2026-09-23). You are a build agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or any sealed file. Reuse existing code by import only.
+- Never read, write or open the repo-root notebook/. No secrets: never print or copy config files that may hold keys (opencode config, auth.json, ~/.config/vastai/, ~/.ssh).
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- Never open or run any TEST-ONLY panel (any artifacts/*panel* folder). CPU only: do not use BensPC or any GPU.
+- Check `df -g /` first; stop and report if free disk is under 3 GB. Never hard-delete: move old things to ~/premonition-chat/old/.
+- Report every problem honestly. Your final reply is read by the director.
+
+
+TASK chat-weakspots: find where the exp 260 base breaks in ordinary conversation, so Ben knows what to poke at in the new chat page. Measurement only: no code changes, no PASSMARKS, no seal, no ledger. CPU only. It runs in parallel with the chat-demo-build task and shares nothing with it: use your own temp state folders, never ~/premonition-chat and never port 8765/8766.
+
+Load the base exactly as scripts/claude_openers260_run.py does (M.load_agent("scripts/claude_loop260_agent.py"), config artifacts/claude-openers260-20260922/loop260-config.json, M.make_daemon on a fresh temp folder per dialog, turns through d.process_file, saved facts via fable_loop90_agent.notebook_triples before and after each turn).
+Write 12 short dialogs of your own (6 to 10 turns each, fictional names only, the way a curious high-school student would chat), one per theme:
+ 1 teach then ask back (plain); 2 two-hop questions ("Where does Ana's boss live?"); 3 backwards questions ("Who lives in Lima?", "Whose boss is Tobin?"); 4 corrections ("No, Ana lives in Quito."; "Ana's cat is Fig, not Moss."); 5 forgetting ("Forget where Ana lives."); 6 questions it was never taught (must say it doesn't know); 7 small talk and greetings ("hey whats up", "how are you", "thanks!"); 8 questions about itself ("What is your name?", "What can you do?", "Who made you?"); 9 casual typing (lowercase, no punctuation, typos, "whats anas city"); 10 long or compound sentences ("My name is Dawn and I live in Leeds.", lists "Nia's sisters are Ada and Bo."); 11 tricky meaning (pretend: "Imagine Ana lived in Rome.", plans: "Ana wants to be a pilot.", check-questions without "?", "our"/"we" facts); 12 memory after a restart (rebuild the daemon on the same folder mid-dialog and ask again).
+Save every turn: text, reply, facts added, facts removed, seconds. Mark each turn yourself as OK / WRONG SAVE / MISSED SAVE / WRONG ANSWER / UNTRUE REPLY / BAD ENGLISH / CRASH, with a one-line reason.
+Write artifacts/claude-chatweak-20260923/dialogs.json (the raw rows) and artifacts/claude-chatweak-20260923/WEAKSPOTS.md: counts per mark per theme (integers), then the 10 clearest failures ranked by how much they would surprise a person, each with the exact turn and reply, then 5 things that work well. Claims never exceed what the rows show.
+Extra rules: write every dialog fresh yourself; do not copy or model them on any file in an artifacts/*panel* folder. Do not use the web at all (no WebFetch, no web search). The weak spots are leads for later sealed experiments; do not change or tune anything to fix them.
+Final reply: the counts table, the ranked list, then CHAT-WEAK-DONE.
+PUSH: artifacts/claude-chatweak-20260923

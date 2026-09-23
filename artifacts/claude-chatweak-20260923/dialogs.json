@@ -1,0 +1,1752 @@
+[
+ {
+  "id": "t01-teach-askback",
+  "theme": "teach then ask back (plain)",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Hi! I want to tell you about my friend Ana.",
+    "reply": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.2387,
+    "mark": "OK",
+    "reason": "intent statement needs no save; clarify prompt harmless"
+   },
+   {
+    "n": 1,
+    "text": "Ana lives in Quito.",
+    "reply": "Saved: Ana's city is Quito.",
+    "added": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0028,
+    "mark": "OK",
+    "reason": "city Quito saved exactly"
+   },
+   {
+    "n": 2,
+    "text": "Ana's favorite food is tacos.",
+    "reply": "Saved: Ana's favorite food is tacos.",
+    "added": [
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ]
+    ],
+    "sec": 0.0023,
+    "mark": "OK",
+    "reason": "favorite food tacos saved exactly"
+   },
+   {
+    "n": 3,
+    "text": "Where does Ana live?",
+    "reply": "Ana's city is Quito.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ]
+    ],
+    "sec": 0.0021,
+    "mark": "OK",
+    "reason": "answers Quito from stored fact"
+   },
+   {
+    "n": 4,
+    "text": "What is Ana's favorite food?",
+    "reply": "Ana's favorite food is tacos.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ]
+    ],
+    "sec": 0.0017,
+    "mark": "OK",
+    "reason": "answers tacos from stored fact"
+   },
+   {
+    "n": 5,
+    "text": "Ana's brother is Marco.",
+    "reply": "Saved: Ana's brother is Marco.",
+    "added": [
+     [
+      "Ana",
+      "brother",
+      "Marco"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ],
+     [
+      "Ana",
+      "brother",
+      "Marco"
+     ]
+    ],
+    "sec": 0.0029,
+    "mark": "OK",
+    "reason": "brother Marco saved exactly"
+   },
+   {
+    "n": 6,
+    "text": "Who is Ana's brother?",
+    "reply": "Ana's brother is Marco.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ],
+     [
+      "Ana",
+      "brother",
+      "Marco"
+     ]
+    ],
+    "sec": 0.002,
+    "mark": "OK",
+    "reason": "answers Marco from stored fact"
+   },
+   {
+    "n": 7,
+    "text": "Thanks, that's all!",
+    "reply": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ],
+     [
+      "Ana",
+      "favorite_food",
+      "tacos"
+     ],
+     [
+      "Ana",
+      "brother",
+      "Marco"
+     ]
+    ],
+    "sec": 0.0032,
+    "mark": "WRONG ANSWER",
+    "reason": "closing thanks misread as a fact that failed to save"
+   }
+  ],
+  "stored": [
+   [
+    "Ana",
+    "city",
+    "Quito"
+   ],
+   [
+    "Ana",
+    "favorite_food",
+    "tacos"
+   ],
+   [
+    "Ana",
+    "brother",
+    "Marco"
+   ]
+  ]
+ },
+ {
+  "id": "t02-twohop",
+  "theme": "two-hop questions",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Let me tell you about my neighbor Ana.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0072,
+    "mark": "OK",
+    "reason": "intent statement needs no save; pointer harmless"
+   },
+   {
+    "n": 1,
+    "text": "Ana's boss is Tobin.",
+    "reply": "Saved: Ana's boss is Tobin.",
+    "added": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ]
+    ],
+    "sec": 0.0028,
+    "mark": "OK",
+    "reason": "boss Tobin saved exactly"
+   },
+   {
+    "n": 2,
+    "text": "Tobin lives in Lima.",
+    "reply": "Saved: Tobin's city is Lima.",
+    "added": [
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0025,
+    "mark": "OK",
+    "reason": "Tobin city Lima saved exactly"
+   },
+   {
+    "n": 3,
+    "text": "Where does Ana's boss live?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0071,
+    "mark": "WRONG ANSWER",
+    "reason": "both links stored yet two-hop question unanswered"
+   },
+   {
+    "n": 4,
+    "text": "Tobin works as a baker.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0019,
+    "mark": "MISSED SAVE",
+    "reason": "job fact refused; suggested example shape irrelevant"
+   },
+   {
+    "n": 5,
+    "text": "Where does the baker live?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0058,
+    "mark": "WRONG ANSWER",
+    "reason": "role-description question has no handler"
+   },
+   {
+    "n": 6,
+    "text": "Who is Ana's boss?",
+    "reply": "Ana's boss is Tobin.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "answers Tobin from stored fact"
+   },
+   {
+    "n": 7,
+    "text": "cool thanks!",
+    "reply": "You're welcome!",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Tobin",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0026,
+    "mark": "OK",
+    "reason": "thanks acknowledged, nothing claimed"
+   }
+  ],
+  "stored": [
+   [
+    "Ana",
+    "boss",
+    "Tobin"
+   ],
+   [
+    "Tobin",
+    "city",
+    "Lima"
+   ]
+  ]
+ },
+ {
+  "id": "t03-backwards",
+  "theme": "backwards questions",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Okay so Ana lives in Lima.",
+    "reply": "Saved: Ana's city is Lima.",
+    "added": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0062,
+    "mark": "OK",
+    "reason": "opener stripped, city Lima saved exactly"
+   },
+   {
+    "n": 1,
+    "text": "Marco lives in Lima too.",
+    "reply": "Saved: Marco's city is Lima.",
+    "added": [
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0024,
+    "mark": "OK",
+    "reason": "second Lima resident saved exactly"
+   },
+   {
+    "n": 2,
+    "text": "Who lives in Lima?",
+    "reply": "Ana's city is Lima. Marco's city is Lima.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0022,
+    "mark": "OK",
+    "reason": "lists both Lima residents"
+   },
+   {
+    "n": 3,
+    "text": "Ana's boss is Tobin.",
+    "reply": "Saved: Ana's boss is Tobin.",
+    "added": [
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ]
+    ],
+    "sec": 0.0025,
+    "mark": "OK",
+    "reason": "boss Tobin saved exactly"
+   },
+   {
+    "n": 4,
+    "text": "Whose boss is Tobin?",
+    "reply": "Ana's boss is Tobin.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ]
+    ],
+    "sec": 0.0025,
+    "mark": "OK",
+    "reason": "reverse lookup answers Ana correctly"
+   },
+   {
+    "n": 5,
+    "text": "Marco's boss is Priya.",
+    "reply": "Saved: Marco's boss is Priya.",
+    "added": [
+     [
+      "Marco",
+      "boss",
+      "Priya"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Marco",
+      "boss",
+      "Priya"
+     ]
+    ],
+    "sec": 0.0024,
+    "mark": "OK",
+    "reason": "second boss fact saved exactly"
+   },
+   {
+    "n": 6,
+    "text": "Whose boss is Priya?",
+    "reply": "Marco's boss is Priya.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Marco",
+      "boss",
+      "Priya"
+     ]
+    ],
+    "sec": 0.0022,
+    "mark": "OK",
+    "reason": "reverse lookup answers Marco correctly"
+   },
+   {
+    "n": 7,
+    "text": "nice, bye!",
+    "reply": "Bye!",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Marco",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "boss",
+      "Tobin"
+     ],
+     [
+      "Marco",
+      "boss",
+      "Priya"
+     ]
+    ],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "goodbye acknowledged"
+   }
+  ],
+  "stored": [
+   [
+    "Ana",
+    "city",
+    "Lima"
+   ],
+   [
+    "Marco",
+    "city",
+    "Lima"
+   ],
+   [
+    "Ana",
+    "boss",
+    "Tobin"
+   ],
+   [
+    "Marco",
+    "boss",
+    "Priya"
+   ]
+  ]
+ },
+ {
+  "id": "t04-corrections",
+  "theme": "corrections",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Ana lives in Quito.",
+    "reply": "Saved: Ana's city is Quito.",
+    "added": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0025,
+    "mark": "OK",
+    "reason": "city Quito saved exactly"
+   },
+   {
+    "n": 1,
+    "text": "No, Ana lives in Lima.",
+    "reply": "Updated: Ana's city is Lima (it was Quito).",
+    "added": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ]
+    ],
+    "removed": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0021,
+    "mark": "OK",
+    "reason": "Quito replaced by Lima with receipt naming old value"
+   },
+   {
+    "n": 2,
+    "text": "Where does Ana live?",
+    "reply": "Ana's city is Lima.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ]
+    ],
+    "sec": 0.0016,
+    "mark": "OK",
+    "reason": "answers Lima from stored fact"
+   },
+   {
+    "n": 3,
+    "text": "Ana's cat is Moss.",
+    "reply": "Saved: Ana's cat is Moss.",
+    "added": [
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "sec": 0.0021,
+    "mark": "OK",
+    "reason": "cat Moss saved exactly"
+   },
+   {
+    "n": 4,
+    "text": "Ana's cat is Fig, not Moss.",
+    "reply": "I can take one fact at a time \u2014 could you split that?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "sec": 0.0024,
+    "mark": "MISSED SAVE",
+    "reason": "Fig-not-Moss correction refused; stale Moss kept"
+   },
+   {
+    "n": 5,
+    "text": "What is Ana's cat called?",
+    "reply": "I don't know Ana's cat called.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "sec": 0.0016,
+    "mark": "BAD ENGLISH",
+    "reason": "malformed reply claims ignorance while Moss is stored"
+   },
+   {
+    "n": 6,
+    "text": "Wait, I mean Ana's dog is Moss.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "sec": 0.0019,
+    "mark": "MISSED SAVE",
+    "reason": "filler-prefixed dog fact refused"
+   },
+   {
+    "n": 7,
+    "text": "So what pets does Ana have?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Lima"
+     ],
+     [
+      "Ana",
+      "cat",
+      "Moss"
+     ]
+    ],
+    "sec": 0.0163,
+    "mark": "WRONG ANSWER",
+    "reason": "category pet-question has no handler"
+   }
+  ],
+  "stored": [
+   [
+    "Ana",
+    "city",
+    "Lima"
+   ],
+   [
+    "Ana",
+    "cat",
+    "Moss"
+   ]
+  ]
+ },
+ {
+  "id": "t05-forgetting",
+  "theme": "forgetting",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Ana lives in Quito.",
+    "reply": "Saved: Ana's city is Quito.",
+    "added": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0028,
+    "mark": "OK",
+    "reason": "city Quito saved exactly"
+   },
+   {
+    "n": 1,
+    "text": "Ana likes painting.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0017,
+    "mark": "MISSED SAVE",
+    "reason": "likes-relation is not savable"
+   },
+   {
+    "n": 2,
+    "text": "Forget where Ana lives.",
+    "reply": "I don't know anyone called where Ana.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0014,
+    "mark": "WRONG ANSWER",
+    "reason": "forget parsed as a person named where Ana; nothing removed"
+   },
+   {
+    "n": 3,
+    "text": "Where does Ana live?",
+    "reply": "Ana's city is Quito.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0016,
+    "mark": "OK",
+    "reason": "answers from store; the failure belongs to t2"
+   },
+   {
+    "n": 4,
+    "text": "What does Ana like?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0062,
+    "mark": "WRONG ANSWER",
+    "reason": "likes-question unparseable; no honest ignorance offered"
+   },
+   {
+    "n": 5,
+    "text": "Forget everything about Ana.",
+    "reply": "I don't know anyone called everything about.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0018,
+    "mark": "WRONG ANSWER",
+    "reason": "global forget parsed as person everything about; nothing removed"
+   },
+   {
+    "n": 6,
+    "text": "What does Ana like?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0063,
+    "mark": "WRONG ANSWER",
+    "reason": "likes-question still unhandled"
+   },
+   {
+    "n": 7,
+    "text": "ok thanks bye",
+    "reply": "You're welcome!",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Ana",
+      "city",
+      "Quito"
+     ]
+    ],
+    "sec": 0.0031,
+    "mark": "OK",
+    "reason": "sign-off acknowledged"
+   }
+  ],
+  "stored": [
+   [
+    "Ana",
+    "city",
+    "Quito"
+   ]
+  ]
+ },
+ {
+  "id": "t06-never-taught",
+  "theme": "never taught (must decline)",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Hi there!",
+    "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0062,
+    "mark": "OK",
+    "reason": "greeting plus teach pointer"
+   },
+   {
+    "n": 1,
+    "text": "Where does Zara live?",
+    "reply": "I don't know anyone called Zara.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0017,
+    "mark": "OK",
+    "reason": "honest ignorance for unknown Zara"
+   },
+   {
+    "n": 2,
+    "text": "Who is Zara's boss?",
+    "reply": "I don't know anyone called Zara.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "honest ignorance for unknown Zara"
+   },
+   {
+    "n": 3,
+    "text": "What is Zara's favorite movie?",
+    "reply": "I don't know anyone called Zara.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "honest ignorance for unknown Zara"
+   },
+   {
+    "n": 4,
+    "text": "Does Zara have a cat?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0058,
+    "mark": "WRONG ANSWER",
+    "reason": "yes/no shape gets did-not-understand instead of honest ignorance"
+   },
+   {
+    "n": 5,
+    "text": "What language does Zara speak?",
+    "reply": "I don't know anyone called Zara.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0018,
+    "mark": "OK",
+    "reason": "honest ignorance for unknown Zara"
+   },
+   {
+    "n": 6,
+    "text": "okay cool",
+    "reply": "Haha, nice!",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0025,
+    "mark": "OK",
+    "reason": "friendly sign-off, claims nothing"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t07-smalltalk",
+  "theme": "small talk and greetings",
+  "rows": [
+   {
+    "n": 0,
+    "text": "hey whats up",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0061,
+    "mark": "WRONG ANSWER",
+    "reason": "casual greeting treated as an unparseable question"
+   },
+   {
+    "n": 1,
+    "text": "how are you",
+    "reply": "I'm here and ready to learn. Tell me something, or ask me about what you've told me.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 1.7962,
+    "mark": "OK",
+    "reason": "fixed how-are-you reply, nothing stored"
+   },
+   {
+    "n": 2,
+    "text": "thanks!",
+    "reply": "You're welcome!",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "thanks acknowledged"
+   },
+   {
+    "n": 3,
+    "text": "hello!!",
+    "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0041,
+    "mark": "OK",
+    "reason": "greeting answered, nothing stored"
+   },
+   {
+    "n": 4,
+    "text": "bye!",
+    "reply": "Bye!",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "goodbye acknowledged"
+   },
+   {
+    "n": 5,
+    "text": "good morning",
+    "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0024,
+    "mark": "OK",
+    "reason": "greeting answered, nothing stored"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t08-about-itself",
+  "theme": "questions about itself",
+  "rows": [
+   {
+    "n": 0,
+    "text": "What is your name?",
+    "reply": "My name is Premonition.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.002,
+    "mark": "OK",
+    "reason": "name from identity sheet"
+   },
+   {
+    "n": 1,
+    "text": "What can you do?",
+    "reply": "I can: save what you teach me in my notebook; answer questions from my notes, following one or two steps; correct a fact or forget one when you ask; say I do not know instead of guessing; tell you where each fact came from; hold web text in quarantine without believing it.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0016,
+    "mark": "UNTRUE REPLY",
+    "reason": "claims two-step answers and forget powers the rows disprove"
+   },
+   {
+    "n": 2,
+    "text": "Who made you?",
+    "reply": "Ben built me.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0017,
+    "mark": "OK",
+    "reason": "maker answer from sheet"
+   },
+   {
+    "n": 3,
+    "text": "Are you a person?",
+    "reply": "I'm a small program that keeps what you teach me in a notebook and answers from it. When I don't know something, I say so instead of guessing.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0016,
+    "mark": "OK",
+    "reason": "honest program-not-person description"
+   },
+   {
+    "n": 4,
+    "text": "How old are you?",
+    "reply": "I don't have an age. I'm a program, so I don't measure my life in years.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0022,
+    "mark": "OK",
+    "reason": "honest no-age answer"
+   },
+   {
+    "n": 5,
+    "text": "Are you smart?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0066,
+    "mark": "WRONG ANSWER",
+    "reason": "simple self-question has no handler"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t09-casual-typing",
+  "theme": "casual typing",
+  "rows": [
+   {
+    "n": 0,
+    "text": "hey ana lives in quito",
+    "reply": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0051,
+    "mark": "MISSED SAVE",
+    "reason": "leading hey plus lowercase blocks the save"
+   },
+   {
+    "n": 1,
+    "text": "whats anas city",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0018,
+    "mark": "WRONG ANSWER",
+    "reason": "city question answered with a save-error message"
+   },
+   {
+    "n": 2,
+    "text": "anas fave food is tacos",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0017,
+    "mark": "MISSED SAVE",
+    "reason": "lowercase fave spelling blocks the save"
+   },
+   {
+    "n": 3,
+    "text": "wat is anas fave food",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0016,
+    "mark": "WRONG ANSWER",
+    "reason": "typo question answered with a save-error message"
+   },
+   {
+    "n": 4,
+    "text": "whos anas brother",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0015,
+    "mark": "WRONG ANSWER",
+    "reason": "brother question answered with a save-error message"
+   },
+   {
+    "n": 5,
+    "text": "oh wait anas brother is marco",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0065,
+    "mark": "MISSED SAVE",
+    "reason": "filler plus lowercase blocks the save"
+   },
+   {
+    "n": 6,
+    "text": "so whos her brother",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0054,
+    "mark": "WRONG ANSWER",
+    "reason": "pronoun question gets save-error; no pronoun resolution"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t10-long-compound",
+  "theme": "long or compound sentences",
+  "rows": [
+   {
+    "n": 0,
+    "text": "My name is Dawn and I live in Leeds.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0024,
+    "mark": "MISSED SAVE",
+    "reason": "two-facts-in-one-turn refused; nothing stored"
+   },
+   {
+    "n": 1,
+    "text": "What is my name?",
+    "reply": "I don't know your name yet.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0016,
+    "mark": "OK",
+    "reason": "honest ignorance; failure belongs to t0"
+   },
+   {
+    "n": 2,
+    "text": "Where do I live?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0064,
+    "mark": "WRONG ANSWER",
+    "reason": "first-person where-question gets did-not-understand"
+   },
+   {
+    "n": 3,
+    "text": "Nia's sisters are Ada and Bo.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.002,
+    "mark": "MISSED SAVE",
+    "reason": "plural list value refused"
+   },
+   {
+    "n": 4,
+    "text": "Who are Nia's sisters?",
+    "reply": "I don't know anyone called Nia.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0016,
+    "mark": "OK",
+    "reason": "honest ignorance; failure belongs to t3"
+   },
+   {
+    "n": 5,
+    "text": "Dawn likes swimming and cycling.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.002,
+    "mark": "MISSED SAVE",
+    "reason": "likes-relation plus list refused"
+   },
+   {
+    "n": 6,
+    "text": "What does Dawn like?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0067,
+    "mark": "WRONG ANSWER",
+    "reason": "likes-question has no handler"
+   },
+   {
+    "n": 7,
+    "text": "Thanks!",
+    "reply": "You're welcome!",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0021,
+    "mark": "OK",
+    "reason": "thanks acknowledged"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t11-tricky-meaning",
+  "theme": "tricky meaning",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Imagine Ana lived in Rome.",
+    "reply": "OK, I'll treat that as pretend, so I won't save it.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "pretend scenario correctly not saved"
+   },
+   {
+    "n": 1,
+    "text": "Where does Ana live?",
+    "reply": "I don't know anyone called Ana.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0018,
+    "mark": "OK",
+    "reason": "honest ignorance; nothing stored"
+   },
+   {
+    "n": 2,
+    "text": "Ana wants to be a pilot.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "OK",
+    "reason": "plan correctly not banked as a fact"
+   },
+   {
+    "n": 3,
+    "text": "What does Ana want to be?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0063,
+    "mark": "WRONG ANSWER",
+    "reason": "aspiration-question has no handler"
+   },
+   {
+    "n": 4,
+    "text": "Ana lives in Quito, doesn't she",
+    "reply": "Did you mean \"Quito, doesn't\"? Please say it again without the extra words.",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0023,
+    "mark": "WRONG ANSWER",
+    "reason": "tag-check without ? misparsed as extra-words error"
+   },
+   {
+    "n": 5,
+    "text": "Our teacher is Mr. Hale.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0022,
+    "mark": "MISSED SAVE",
+    "reason": "our-subject fact refused"
+   },
+   {
+    "n": 6,
+    "text": "Who is our teacher?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0061,
+    "mark": "WRONG ANSWER",
+    "reason": "our-question has no handler"
+   },
+   {
+    "n": 7,
+    "text": "We live in Reno.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0019,
+    "mark": "MISSED SAVE",
+    "reason": "we-subject fact refused"
+   },
+   {
+    "n": 8,
+    "text": "Where do we live?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [],
+    "sec": 0.0064,
+    "mark": "WRONG ANSWER",
+    "reason": "we-question has no handler"
+   }
+  ],
+  "stored": []
+ },
+ {
+  "id": "t12-restart",
+  "theme": "memory after a restart",
+  "rows": [
+   {
+    "n": 0,
+    "text": "Rosa lives in Turin.",
+    "reply": "Saved: Rosa's city is Turin.",
+    "added": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ]
+    ],
+    "sec": 0.0026,
+    "mark": "OK",
+    "reason": "city Turin saved exactly"
+   },
+   {
+    "n": 1,
+    "text": "Rosa's dog is Pip.",
+    "reply": "Saved: Rosa's dog is Pip.",
+    "added": [
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0022,
+    "mark": "OK",
+    "reason": "dog Pip saved exactly"
+   },
+   {
+    "n": 2,
+    "text": "Where does Rosa live?",
+    "reply": "Rosa's city is Turin.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0021,
+    "mark": "OK",
+    "reason": "answers Turin from stored fact"
+   },
+   {
+    "restart": true,
+    "triples_before": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "mark": null,
+    "reason": "daemon rebuilt on same folder; not a turn"
+   },
+   {
+    "n": 3,
+    "text": "Where does Rosa live?",
+    "reply": "Rosa's city is Turin.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0023,
+    "mark": "OK",
+    "reason": "answers Turin after rebuild; memory survived"
+   },
+   {
+    "n": 4,
+    "text": "What is Rosa's dog called?",
+    "reply": "I don't know Rosa's dog called.",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0018,
+    "mark": "BAD ENGLISH",
+    "reason": "malformed reply ignores stored Pip"
+   },
+   {
+    "n": 5,
+    "text": "Rosa likes chess.",
+    "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0019,
+    "mark": "MISSED SAVE",
+    "reason": "likes-relation refused"
+   },
+   {
+    "n": 6,
+    "text": "What does Rosa like?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "added": [],
+    "removed": [],
+    "triples_after": [
+     [
+      "Rosa",
+      "city",
+      "Turin"
+     ],
+     [
+      "Rosa",
+      "dog",
+      "Pip"
+     ]
+    ],
+    "sec": 0.0065,
+    "mark": "WRONG ANSWER",
+    "reason": "likes-question has no handler"
+   }
+  ],
+  "stored": [
+   [
+    "Rosa",
+    "city",
+    "Turin"
+   ],
+   [
+    "Rosa",
+    "dog",
+    "Pip"
+   ]
+  ]
+ }
+]
