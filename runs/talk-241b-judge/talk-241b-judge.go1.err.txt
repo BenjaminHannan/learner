@@ -1,0 +1,324 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git status --short | head -50; git log --oneline -3
+1:27  up 2 days, 17:16, 4 users, load averages: 30.67 46.50 52.53
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        16    45%  484014 169202360    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+[0m
+[0m$ [0mgit fetch -q origin claude/project-thread-p68q5v 2>&1 | head -20; echo "FETCH_DONE rc=$?"; git ls-tree --name-only origin/claude/project-thread-p68q5v -- artifacts/claude-mouth241b-20260922/ handoff/kit/briefs/ 2>&1 | head -30
+FETCH_DONE rc=0
+artifacts/claude-mouth241b-20260922/say_forms.json
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+[0m
+[0m$ [0mgit ls-tree --name-only origin/claude/project-thread-p68q5v -- artifacts/claude-mouth241b-20260922/; echo "---"; git ls-tree --name-only origin/claude/project-thread-p68q5v -- artifacts/claude-judge241b-20260923/ 2>&1; echo "---"; ls artifacts/claude-mouth241b-20260922/ 2>&1 | head
+artifacts/claude-mouth241b-20260922/say_forms.json
+---
+---
+pairs-key.jsonl
+pairs-log.jsonl
+pairs.jsonl
+PASSMARKS.md
+rer241.json
+rerender238-summary.json
+rerender238.jsonl
+RESULTS.md
+runs
+say_forms.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -E "mouth241b|241b-stylesheet|judge241b" | head -30
+artifacts/claude-mouth241b-20260922/say_forms.json
+handoff/kit/briefs/241b-stylesheet.txt
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-stylesheet.txt | shasum -a 256; echo "---"; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-stylesheet.txt | wc -c; echo "---lines---"; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-stylesheet.txt | wc -l
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  -
+---
+    4146
+---lines---
+      47
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-stylesheet.txt
+STYLE SHEET v2 FOR GRADING GRAMMAR (exp 241b, M1). The director sealed it on 2026-09-22, before any 241b sweep existed. It is v1 (241-stylesheet.txt) plus the clarifications marked NEW, which make grading stricter or more consistent, never more lenient.
+
+You grade one reply at a time: GRAMMATICAL or UNGRAMMATICAL, with a short reason.
+- A reply is UNGRAMMATICAL if ANY sentence in it breaks any rule below, or is not standard written English.
+- Grade grammar and word choice only. A stiff but correct sentence ("Tarno's city is Vell.") is GRAMMATICAL.
+- Never judge whether a fact is true, or whether a value is sensible for its relation. Names and values are made-up words and may look odd; that alone is never an error.
+
+House rules. Breaking any of these is an error.
+1. Possessives
+   - A singular name takes 's, including names ending in s, x or z ("Tomas's", "Brix's").
+   - A bare apostrophe after a singular name ("Tomas' job") is an error.
+   - A plural common noun ending in s takes a bare apostrophe ("the parents' house"); "parents's" is an error.
+   - An "of" form or a verb form that avoids the possessive is fine.
+2. Lists
+   - Write "A and B" and "A, B and C". No Oxford comma: "A, B, and C" is an error.
+   - No empty slots ("people: .", "A, , B", "and .") and no stray separators.
+   - NEW: the same item twice in one list ("rowing and rowing") is an error.
+3. Numbers in running text
+   - Counts 0–9 are words ("three sisters"); 10 and up are digits.
+   - Digits inside a value (a date, a year, an age, a phone number, an address, a code) are fine.
+   - A bare zero count ("0 people", "zero people") is an error. Say "no one", "nobody", "none" or "I don't know anyone".
+4. Agreement
+   - Count and noun agree ("one person", "two people"); "1 people" and "2 person" are errors.
+   - Subject and verb agree ("X lives", "they live"; "does X live", not "does X lives"). This includes a value used as a subject: "noodles is" is an error.
+   - Verb forms are right ("was born", not "is born" for a birth; "has worked", not "has work").
+5. Articles
+   - Use "a" before a consonant sound and "an" before a vowel sound, going by sound ("an hour", "a university", "an MBA").
+   - No missing article where English needs one ("X is teacher" is an error) and no doubled article.
+6. Sentence form
+   - Each sentence starts with a capital letter and ends with . ? or !
+   - No doubled words ("the the"), no missing words, and no run-on sentences joined only by a comma (comma splices).
+   - Brackets and quotes are balanced.
+   - A question is phrased as a question and ends with "?".
+7. Typography: no space before punctuation, no doubled punctuation ("..", "?.", ".,"), no double spaces, and no leading or trailing space.
+8. No machine text
+   - Raw keys, underscores or placeholders ("date_of_birth", "{name}", "<X>", "None", "null", "[]") are errors, unless the user's own words contained them.
+   - NEW: internal entity codes such as "(E7563)" are machine text and an error.
+9. "(worked out backwards)" follows the statement it qualifies, inside or right after the same sentence. A dangling, doubled or orphaned one is an error.
+10. Pronouns
+   - "I/me/my" for the assistant and "you/your" for the user are fine. Singular "they" is fine.
+   - Pronoun choice is not a grammar error unless it breaks agreement or has no clear referent in the same reply.
+11. NEW: Names and word choice
+   - A value that is plainly a proper name (a person, place, organisation, or the title of a work) starts with a capital letter, even if it looks typed in lowercase. A title keeps its own capital "The" ("the Quiet Tide" inside a sentence is an error when "The Quiet Tide" is the title).
+   - Other values (jobs, foods, hobbies, colours, dates) are not judged for case.
+   - Words must fit what they refer to: "someone/who" for people, "something/which" for things, places, dates and numbers. "Krellwur Press, which is not someone I can look up" is an error.
+
+Output for each reply: id, GRAMMATICAL or UNGRAMMATICAL, and a reason. The reason names the rule number (or "general" for other standard-English errors) and quotes the exact offending words.
+[0m
+[0m$ [0mwc -l artifacts/claude-mouth241b-20260922/pairs.jsonl; ls -la artifacts/claude-mouth241b-20260922/; ls artifacts/claude-judge241b-20260923/ 2>&1 | head
+120 artifacts/claude-mouth241b-20260922/pairs.jsonl
+total 22376
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 23:12 .
+drwxr-xr-x@ 393 ben-hannan  staff    12576 Sep 23 01:24 ..
+-rw-r--r--    1 ben-hannan  staff    11065 Sep 22 22:56 pairs-key.jsonl
+-rw-r--r--    1 ben-hannan  staff   765965 Sep 22 22:56 pairs-log.jsonl
+-rw-r--r--    1 ben-hannan  staff    38128 Sep 22 22:56 pairs.jsonl
+-rw-r--r--    1 ben-hannan  staff    20654 Sep 22 22:55 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    15742 Sep 22 23:11 rer241.json
+-rw-r--r--    1 ben-hannan  staff      907 Sep 22 23:11 rerender238-summary.json
+-rw-r--r--    1 ben-hannan  staff  9606013 Sep 22 23:11 rerender238.jsonl
+-rw-r--r--    1 ben-hannan  staff     9578 Sep 22 23:12 RESULTS.md
+drwxr-xr-x   40 ben-hannan  staff     1280 Sep 22 23:11 runs
+-rw-r--r--    1 ben-hannan  staff   117511 Sep 22 22:49 say_forms.json
+-rw-r--r--    1 ben-hannan  staff     1934 Sep 22 22:55 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff      467 Sep 22 22:56 SEAL2.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   696806 Sep 22 22:56 sweep-frames.jsonl
+-rw-r--r--    1 ben-hannan  staff   135720 Sep 22 22:56 sweep.jsonl
+ls: artifacts/claude-judge241b-20260923/: No such file or directory
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/pairs.jsonl
+[0m
+[0m$ [0mls artifacts/ | head -20; echo "---"; df -g / | tail -2; uptime
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        16    45%  484014 168623920    0%   /
+ 1:29  up 2 days, 17:19, 4 users, load averages: 82.31 59.17 56.56
+[0m
+[0m$ [0mmkdir -p artifacts/claude-judge241b-20260923 && ls -la artifacts/claude-judge241b-20260923
+total 0
+drwxr-xr-x    2 ben-hannan  staff     64 Sep 23 01:29 .
+drwxr-xr-x@ 394 ben-hannan  staff  12608 Sep 23 01:29 ..
+[0m
+[0m← [0mWrite artifacts/claude-judge241b-20260923/m4-judgments.jsonl
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; p='artifacts/claude-judge241b-20260923/m4-judgments.jsonl'; lines=open(p).read().splitlines(); print('lines:',len(lines)); ids=[]; from collections import Counter; c=Counter(); mc=0; mcids=[]; bad=0; 
+for i,l in enumerate(lines,1):
+    try: o=json.loads(l)
+    except Exception as e: print('BAD JSON line',i,e); bad+=1; continue
+    assert set(o)=={'pair_id','pick','meaning_change','note'}, o
+    assert o['pick'] in ('X','Y','tie'), o
+    assert isinstance(o['meaning_change'],bool), o
+    assert isinstance(o['note'],str) and len(o['note'])>0, o
+    ids.append(o['pair_id']); c[o['pick']]+=1
+    if o['meaning_change']: mc+=1; mcids.append(o['pair_id'])
+print('counts:',dict(c)); print('meaning_true:',mc, mcids); print('bad:',bad)
+exp=[f'p{i:03d}' for i in range(1,121)]
+print('ids_complete:', sorted(ids)==exp)
+print('missing:', sorted(set(exp)-set(ids)))
+print('dupes:', len(ids)-len(set(ids)))"
+
+lines: 120
+counts: {'Y': 52, 'X': 54, 'tie': 14}
+meaning_true: 0 []
+bad: 0
+ids_complete: True
+missing: []
+dupes: 0
+[0m
+[0m$ [0mgit status --short | head -20; echo "---"; git diff --stat | tail -5
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+---
+ artifacts/fable-predictions-ledger.md | 89 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 89 insertions(+)
+[0m
+[0m$ [0mgit status --short | grep judge241b; echo "---"; ls -la artifacts/claude-judge241b-20260923/
+---
+total 32
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 23 01:30 .
+drwxr-xr-x@ 395 ben-hannan  staff  12640 Sep 23 01:29 ..
+-rw-r--r--    1 ben-hannan  staff  15128 Sep 23 01:30 m4-judgments.jsonl
+[0m
+[0m$ [0mgit status --short | grep -i judge; echo "rc=$?"
+rc=1
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-judge241b-20260923/m4-judgments.jsonl; echo "rc=$?"; git status --short | wc -l; git status --short | tail -15
+.gitignore:5:artifacts/	artifacts/claude-judge241b-20260923/m4-judgments.jsonl
+rc=0
+     102
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+[0m
