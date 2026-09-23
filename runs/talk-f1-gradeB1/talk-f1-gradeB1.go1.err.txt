@@ -1,0 +1,1107 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead .
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin main; echo FETCH_DONE
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+18:59  up  8:52, 4 users, load averages: 49.59 49.89 47.38
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         5    70%  484014 59649040    1%   /
+FETCH_DONE
+[0m
+[0m✗ [0mRead scratchpad/briefs failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs
+[0m→ [0mRead scratchpad
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt | shasum -a 256; echo ---; git show origin/main:handoff/kit/briefs/241b-stylesheet.txt | wc -c; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | wc -l
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  -
+---
+    4146
+    2690
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i -E "OPUS-RULES|briefs" | head -n 50; echo ---; git show origin/main:handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/mixpanel292-spec.txt
+---
+STYLE SHEET v2 FOR GRADING GRAMMAR (exp 241b, M1). The director sealed it on 2026-09-22, before any 241b sweep existed. It is v1 (241-stylesheet.txt) plus the clarifications marked NEW, which make grading stricter or more consistent, never more lenient.
+
+You grade one reply at a time: GRAMMATICAL or UNGRAMMATICAL, with a short reason.
+- A reply is UNGRAMMATICAL if ANY sentence in it breaks any rule below, or is not standard written English.
+- Grade grammar and word choice only. A stiff but correct sentence ("Tarno's city is Vell.") is GRAMMATICAL.
+- Never judge whether a fact is true, or whether a value is sensible for its relation. Names and values are made-up words and may look odd; that alone is never an error.
+
+House rules. Breaking any of these is an error.
+1. Possessives
+   - A singular name takes 's, including names ending in s, x or z ("Tomas's", "Brix's").
+   - A bare apostrophe after a singular name ("Tomas' job") is an error.
+   - A plural common noun ending in s takes a bare apostrophe ("the parents' house"); "parents's" is an error.
+   - An "of" form or a verb form that avoids the possessive is fine.
+2. Lists
+   - Write "A and B" and "A, B and C". No Oxford comma: "A, B, and C" is an error.
+   - No empty slots ("people: .", "A, , B", "and .") and no stray separators.
+   - NEW: the same item twice in one list ("rowing and rowing") is an error.
+3. Numbers in running text
+   - Counts 0–9 are words ("three sisters"); 10 and up are digits.
+   - Digits inside a value (a date, a year, an age, a phone number, an address, a code) are fine.
+   - A bare zero count ("0 people", "zero people") is an error. Say "no one", "nobody", "none" or "I don't know anyone".
+4. Agreement
+   - Count and noun agree ("one person", "two people"); "1 people" and "2 person" are errors.
+   - Subject and verb agree ("X lives", "they live"; "does X live", not "does X lives"). This includes a value used as a subject: "noodles is" is an error.
+   - Verb forms are right ("was born", not "is born" for a birth; "has worked", not "has work").
+5. Articles
+   - Use "a" before a consonant sound and "an" before a vowel sound, going by sound ("an hour", "a university", "an MBA").
+   - No missing article where English needs one ("X is teacher" is an error) and no doubled article.
+6. Sentence form
+   - Each sentence starts with a capital letter and ends with . ? or !
+   - No doubled words ("the the"), no missing words, and no run-on sentences joined only by a comma (comma splices).
+   - Brackets and quotes are balanced.
+   - A question is phrased as a question and ends with "?".
+7. Typography: no space before punctuation, no doubled punctuation ("..", "?.", ".,"), no double spaces, and no leading or trailing space.
+8. No machine text
+   - Raw keys, underscores or placeholders ("date_of_birth", "{name}", "<X>", "None", "null", "[]") are errors, unless the user's own words contained them.
+   - NEW: internal entity codes such as "(E7563)" are machine text and an error.
+9. "(worked out backwards)" follows the statement it qualifies, inside or right after the same sentence. A dangling, doubled or orphaned one is an error.
+10. Pronouns
+   - "I/me/my" for the assistant and "you/your" for the user are fine. Singular "they" is fine.
+   - Pronoun choice is not a grammar error unless it breaks agreement or has no clear referent in the same reply.
+11. NEW: Names and word choice
+   - A value that is plainly a proper name (a person, place, organisation, or the title of a work) starts with a capital letter, even if it looks typed in lowercase. A title keeps its own capital "The" ("the Quiet Tide" inside a sentence is an error when "The Quiet Tide" is the title).
+   - Other values (jobs, foods, hobbies, colours, dates) are not judged for case.
+   - Words must fit what they refer to: "someone/who" for people, "something/which" for things, places, dates and numbers. "Krellwur Press, which is not someone I can look up" is an error.
+
+Output for each reply: id, GRAMMATICAL or UNGRAMMATICAL, and a reason. The reason names the rule number (or "general" for other standard-English errors) and quotes the exact offending words.
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mls artifacts/claude-gradef1-B-20260923/ 2>&1; echo ---; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '1,10p'
+ls: artifacts/claude-gradef1-B-20260923/: No such file or directory
+---
+{"id": "h0001", "reply": "The capital of the country of origin of Kenley Jansen's position's sport is London."}
+{"id": "h0002", "reply": "Saved: Arsène Wenger is an association football manager."}
+{"id": "h0003", "reply": "The author of Updated: The Pickwick Papers is Mary Shelley (it was Charles Dickens)."}
+{"id": "h0004", "reply": "The capital of the country of citizenship of Ford Capri's manufacturer's founder is Paris."}
+{"id": "h0005", "reply": "Saved: Kazunori Yamauchi is a citizen of Japan."}
+{"id": "h0006", "reply": "Saved: The position of Nigel Adkins is goalkeeper."}
+{"id": "h0007", "reply": "My notes say Defender's sport is association football. Do you want me to change it to rugby?"}
+{"id": "h0008", "reply": "My notes say Tim Cook is a citizen of the United States of America. Do you want me to change it to South Korea?"}
+{"id": "h0009", "reply": "The capital of the country of origin of DeMarcus Cousins's position's sport is Alwernia."}
+{"id": "h0010", "reply": "The capital of the country of citizenship of Touch ID's developer's chief executive officer is Wellington."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '1,50p'
+{"id": "h0001", "reply": "The capital of the country of origin of Kenley Jansen's position's sport is London."}
+{"id": "h0002", "reply": "Saved: Arsène Wenger is an association football manager."}
+{"id": "h0003", "reply": "The author of Updated: The Pickwick Papers is Mary Shelley (it was Charles Dickens)."}
+{"id": "h0004", "reply": "The capital of the country of citizenship of Ford Capri's manufacturer's founder is Paris."}
+{"id": "h0005", "reply": "Saved: Kazunori Yamauchi is a citizen of Japan."}
+{"id": "h0006", "reply": "Saved: The position of Nigel Adkins is goalkeeper."}
+{"id": "h0007", "reply": "My notes say Defender's sport is association football. Do you want me to change it to rugby?"}
+{"id": "h0008", "reply": "My notes say Tim Cook is a citizen of the United States of America. Do you want me to change it to South Korea?"}
+{"id": "h0009", "reply": "The capital of the country of origin of DeMarcus Cousins's position's sport is Alwernia."}
+{"id": "h0010", "reply": "The capital of the country of citizenship of Touch ID's developer's chief executive officer is Wellington."}
+{"id": "h0011", "reply": "Updated: Westinghouse Electric's founder is Frederick Denison Maurice (it was George Westinghouse)."}
+{"id": "h0012", "reply": "The capital of the country of origin of Doc Rivers's position's sport is Taloga."}
+{"id": "h0013", "reply": "Saved: The Beatles performed Drive My Car."}
+{"id": "h0014", "reply": "Saved: Charles Darwin is married to Emma Darwin."}
+{"id": "h0015", "reply": "Saved: Defenceman's sport is Muay Thai."}
+{"id": "h0016", "reply": "Saved: Origianl broadcaster of ABC Weekend Special's officeholder is American Broadcasting Company."}
+{"id": "h0017", "reply": "Saved: Ford Super Duty is made by Ford Motor Company."}
+{"id": "h0018", "reply": "Saved: William Shakespeare created Lady Macbeth."}
+{"id": "h0019", "reply": "Saved: The Beatles performed Help."}
+{"id": "h0020", "reply": "Saved: University of Bucharest is based in Bucharest."}
+{"id": "h0021", "reply": "The capital of the country of citizenship of iPod's manufacturer's chief executive officer is Bareilly."}
+{"id": "h0022", "reply": "My notes say The Beatles performed Can't Buy Me Love. Do you want me to change it to Madonna?"}
+{"id": "h0023", "reply": "The continent of director of Polyphony Digital's officeholder's country of citizenship is Antarctica."}
+{"id": "h0024", "reply": "Saved: Alan Sugar is a citizen of the United Kingdom."}
+{"id": "h0025", "reply": "Updated: Yossi Benayoun's position is flanker (it was midfielder)."}
+{"id": "h0026", "reply": "Saved: Jigoro Kano is a citizen of Japan."}
+{"id": "h0027", "reply": "Updated: Tim Howard's position is flanker (it was goalkeeper)."}
+{"id": "h0028", "reply": "HarborOS's developer's alma mater is Harbor Academy."}
+{"id": "h0029", "reply": "The capital of the country of citizenship of Ford Bronco's manufacturer's founder is London."}
+{"id": "h0030", "reply": "The capital of the country of origin of Fabien Barthez's position's sport is Bareilly."}
+{"id": "h0031", "reply": "Updated: Masahiro Tanaka's position is point guard (it was starting pitcher)."}
+{"id": "h0032", "reply": "Saved: Tomasz Gollob is a citizen of Poland."}
+{"id": "h0033", "reply": "Saved: Barack Obama is a citizen of the United States of America."}
+{"id": "h0034", "reply": "The capital of the country of origin of Sylvia Fowles's position's sport is Bengaluru."}
+{"id": "h0035", "reply": "My notes say the position of Benjie Paras is center. Do you want me to change it to utility player?"}
+{"id": "h0036", "reply": "My notes say Franklin Delano Roosevelt is married to Eleanor Roosevelt. Do you want me to change it to Bhumibol Adulyadej?"}
+{"id": "h0037", "reply": "The capital of the country of origin of Manute Bol's position's sport is Amsterdam."}
+{"id": "h0038", "reply": "The continent of the country of citizenship of MathML's developer's founder is Asia."}
+{"id": "h0039", "reply": "Saved: Cristóbal Balenciaga founded Jeet Kune Do."}
+{"id": "h0040", "reply": "The capital of the country of citizenship of Mac OS X Panther's developer's chief executive officer is Edirne."}
+{"id": "h0041", "reply": "Updated: Timofey Mozgov's position is goalkeeper (it was center)."}
+{"id": "h0042", "reply": "Saved: Rony Seikaly's position is center."}
+{"id": "h0043", "reply": "Saved: The official language of the United Kingdom is English."}
+{"id": "h0044", "reply": "Saved: Basketball Coach's sport is rugby union."}
+{"id": "h0045", "reply": "The continent of the place of birth of The Life of Pablo's performer's spouse is Asia."}
+{"id": "h0046", "reply": "Saved: William Ruto is a citizen of Kenya."}
+{"id": "h0047", "reply": "I don't know what Norland's official language is."}
+{"id": "h0048", "reply": "The capital of the country of origin of Joe Saunders's position's sport is Laoag."}
+{"id": "h0049", "reply": "The capital of the country of citizenship of iOS 9's developer's chief executive officer is Samarinda."}
+{"id": "h0050", "reply": "Saved: Mary Shelley is married to Giuseppe Verdi."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '51,100p'
+{"id": "h0051", "reply": "My notes say Polyphony Digital developed Gran Turismo 6. Do you want me to change it to Valve Corporation?"}
+{"id": "h0052", "reply": "Saved: Neil Gaiman wrote Coraline."}
+{"id": "h0053", "reply": "Saved: The keeper of Keys is Mira."}
+{"id": "h0054", "reply": "My notes say Mariano Rivera's position is closer. Do you want me to change it to defenceman?"}
+{"id": "h0055", "reply": "Saved: Dara Fenner is a citizen of Cardova."}
+{"id": "h0056", "reply": "The capital of the country of citizenship of Marty McFly's performer's spouse is Paris."}
+{"id": "h0057", "reply": "Saved: Răzvan Lucescu's position is goalkeeper."}
+{"id": "h0058", "reply": "Saved: José Luis Chilavert's position is goalkeeper."}
+{"id": "h0059", "reply": "The performer of Updated: Bangerz is Elvis Presley (it was Miley Cyrus)."}
+{"id": "h0060", "reply": "Saved: The sister of Tomas is Liesl."}
+{"id": "h0061", "reply": "Updated: C. Douglas Dillon's alma mater is Yale University (it was Harvard University)."}
+{"id": "h0062", "reply": "Saved: Mwai Kibaki is a citizen of Kenya."}
+{"id": "h0063", "reply": "Saved: Mwai Kibaki founded Nintendo."}
+{"id": "h0064", "reply": "The capital of the country of origin of Lev Yashin's position's sport is Washington, D.C."}
+{"id": "h0065", "reply": "Saved: Oliver Bierhoff is a citizen of Germany."}
+{"id": "h0066", "reply": "The continent of the country of citizenship of The Selfish Gene's author's spouse is Asia."}
+{"id": "h0067", "reply": "My notes say Polyphony Digital developed Gran Turismo 2. Do you want me to change it to Blizzard Entertainment?"}
+{"id": "h0068", "reply": "Saved: Charles Saatchi founded Saatchi Gallery."}
+{"id": "h0069", "reply": "The capital of the country of citizenship of Andrew Bogut's alma mater's founder is Palermo."}
+{"id": "h0070", "reply": "Saved: Louis van Gaal works at Manchester United F.C."}
+{"id": "h0071", "reply": "Saved: Soha Ali Khan is a citizen of India."}
+{"id": "h0072", "reply": "Saved: Jazz's country of origin is the United States of America."}
+{"id": "h0073", "reply": "My notes say Kelis is a citizen of the United States of America. Do you want me to change it to the United Kingdom?"}
+{"id": "h0074", "reply": "My notes say the position of Keylor Navas is goalkeeper. Do you want me to change it to midfielder?"}
+{"id": "h0075", "reply": "Saved: Stephen King is married to Soha Ali Khan."}
+{"id": "h0076", "reply": "Saved: Alonzo Mourning's position is center."}
+{"id": "h0077", "reply": "Saved: Mario Monti is a citizen of Italy."}
+{"id": "h0078", "reply": "Saved: Brian Fargo is a citizen of the United States of America."}
+{"id": "h0079", "reply": "Updated: Andoni Zubizarreta's position is defenceman (it was goalkeeper)."}
+{"id": "h0080", "reply": "The continent of the headquarters location of Family Research Council's founder's alma mater is Asia."}
+{"id": "h0081", "reply": "Saved: Bell invented Phone."}
+{"id": "h0082", "reply": "Updated: Eddy Curry's position is midfielder (it was center)."}
+{"id": "h0083", "reply": "Saved: Tracy Pollan is a citizen of the United States of America."}
+{"id": "h0084", "reply": "The capital of director of British Broadcasting Corporation's officeholder's country of citizenship is Buxton."}
+{"id": "h0085", "reply": "Saved: Juninho Pernambucano's position is midfielder."}
+{"id": "h0086", "reply": "My notes say Vincent Auriol's work location is Paris. Do you want me to change it to German East Africa?"}
+{"id": "h0087", "reply": "The capital of the country of origin of Dušan Ivković's position's sport is Bangkok."}
+{"id": "h0088", "reply": "The capital of the country of origin of Jordan Henderson's position's sport is Alwernia."}
+{"id": "h0089", "reply": "Saved: The Beatles performed And I Love Her."}
+{"id": "h0090", "reply": "My notes say Elvis Presley is married to Priscilla Presley. Do you want me to change it to Jamie Hewlett?"}
+{"id": "h0091", "reply": "The capital of the country of origin of Rights of Man's author's notable work is Angri."}
+{"id": "h0092", "reply": "The official language of the country of citizenship of Kyle Reese's spouse's child is Korean."}
+{"id": "h0093", "reply": "My notes say Ali Al-Habsi's position is goalkeeper. Do you want me to change it to utility player?"}
+{"id": "h0094", "reply": "Saved: Damon Tallowmere wrote Jagged Gardens."}
+{"id": "h0095", "reply": "The continent of the country of origin of Alberto Zaccheroni's occupation's sport is Asia."}
+{"id": "h0096", "reply": "My notes say Matt Groening created Leela. Do you want me to change it to Henning Mankell?"}
+{"id": "h0097", "reply": "The capital of the country of citizenship of Portal's creator's chief executive officer is El Campu."}
+{"id": "h0098", "reply": "Saved: Apple Inc. developed Logic Pro."}
+{"id": "h0099", "reply": "Saved: Martin Luther King Jr. wrote Letter from Birmingham Jail."}
+{"id": "h0100", "reply": "Saved: Steve Jobs is married to Peter Jackson."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '101,150p'
+{"id": "h0101", "reply": "Saved: The position of Robin Lopez is center."}
+{"id": "h0102", "reply": "Saved: Gilad Erdan is a citizen of Germany."}
+{"id": "h0103", "reply": "Saved: Oliver Kahn's position is goalkeeper."}
+{"id": "h0104", "reply": "The composer of Oaken Veils is Thaddeus Nightingale."}
+{"id": "h0105", "reply": "Saved: Ted Hughes is married to Sylvia Plath."}
+{"id": "h0106", "reply": "Saved: Cora Lind is a citizen of Norland."}
+{"id": "h0107", "reply": "The official language of the country of citizenship of Nicholas Nickleby's author's spouse is Persian."}
+{"id": "h0108", "reply": "Saved: Hugo wrote Novel."}
+{"id": "h0109", "reply": "My notes say the officeholder of head coach of Cleveland Cavaliers is Tyronn Lue. Do you want me to change it to Giant Baba?"}
+{"id": "h0110", "reply": "The continent of the place of birth of Windows Metafile's developer's chief executive officer is North America."}
+{"id": "h0111", "reply": "The capital of the country of citizenship of Ford Country Squire's manufacturer's founder is Stopnica."}
+{"id": "h0112", "reply": "Saved: Busta Rhymes is a citizen of the United States of America."}
+{"id": "h0113", "reply": "The official language of the country of citizenship of All of Me's performer's spouse is Arabic."}
+{"id": "h0114", "reply": "The capital of the country of citizenship of iPhoto's developer's chief executive officer is Rome."}
+{"id": "h0115", "reply": "Updated: Daniele De Rossi's position is linebacker (it was midfielder)."}
+{"id": "h0116", "reply": "Saved: Head coach of Football Association of Ireland's officeholder is Martin O'Neill."}
+{"id": "h0117", "reply": "My notes say Mike Richardson is a citizen of the United States of America. Do you want me to change it to United Kingdom of Great Britain and Ireland?"}
+{"id": "h0118", "reply": "Saved: Carice van Houten is a citizen of Kingdom of the Netherlands."}
+{"id": "h0119", "reply": "Saved: Neofolk's country of origin is the United States of America."}
+{"id": "h0120", "reply": "Saved: The Beatles performed Dear Prudence."}
+{"id": "h0121", "reply": "Saved: Shinty's country of origin is Scotland."}
+{"id": "h0122", "reply": "Saved: The chief executive officer of General Motors is Satya Nadella."}
+{"id": "h0123", "reply": "Great Lakes Loons's sport's country of origin is the United Kingdom."}
+{"id": "h0124", "reply": "I don't know what Cora Lind's country is."}
+{"id": "h0125", "reply": "Saved: Emil Sorrel is a citizen of Norland."}
+{"id": "h0126", "reply": "The officeholder of Updated: origianl broadcaster of Head of the Class is British Broadcasting Corporation (it was American Broadcasting Company)."}
+{"id": "h0127", "reply": "My notes say head coach of Atlético Madrid's officeholder is Diego Simeone. Do you want me to change it to Nelo Vingada?"}
+{"id": "h0128", "reply": "The capital of director of British Broadcasting Corporation's officeholder's country of citizenship is Rome."}
+{"id": "h0129", "reply": "My notes say Microsoft developed Windows Media Player. Do you want me to change it to Electronic Arts?"}
+{"id": "h0130", "reply": "My notes say Hugo Junkers founded Junkers. Do you want me to change it to Carlos Slim?"}
+{"id": "h0131", "reply": "The author of Updated: Great Expectations is Barack Obama (it was Charles Dickens)."}
+{"id": "h0132", "reply": "My notes say Apple Inc. developed watchOS. Do you want me to change it to Google?"}
+{"id": "h0133", "reply": "Saved: Jean Jaurès founded L'Humanité."}
+{"id": "h0134", "reply": "Saved: The Beatles created Strawberry Fields Forever."}
+{"id": "h0135", "reply": "The capital of the country of citizenship of iPhone 6's manufacturer's chief executive officer is Pasco."}
+{"id": "h0136", "reply": "The continent of the country of origin of head coach of Brisbane Roar FC's officeholder's sport is South America."}
+{"id": "h0137", "reply": "My notes say Charles Dickens wrote A Christmas Carol. Do you want me to change it to William Shakespeare?"}
+{"id": "h0138", "reply": "My notes say Philip Roth wrote Portnoy's Complaint. Do you want me to change it to William Shakespeare?"}
+{"id": "h0139", "reply": "My notes say Charles Simonyi works at Microsoft. Do you want me to change it to General Motors?"}
+{"id": "h0140", "reply": "Saved: Philip Roth wrote Portnoy's Complaint."}
+{"id": "h0141", "reply": "Updated: Ford Germany's founder is Aristotle (it was Henry Ford)."}
+{"id": "h0142", "reply": "Saved: Apple Inc. developed Aqua."}
+{"id": "h0143", "reply": "Saved: Head coach of Atalanta B.C.'s officeholder is Gian Piero Gasperini."}
+{"id": "h0144", "reply": "My notes say Friedrich Nietzsche wrote The Birth of Tragedy. Do you want me to change it to James Fenimore Cooper?"}
+{"id": "h0145", "reply": "Saved: Apple Inc. developed MobileMe."}
+{"id": "h0146", "reply": "Saved: Field Hockey's country of origin is Canada."}
+{"id": "h0147", "reply": "Saved: Vince McMahon created WWE Heat."}
+{"id": "h0148", "reply": "Saved: Cold War Kids's country of origin is the United States of America."}
+{"id": "h0149", "reply": "Saved: The continent of the United Kingdom is Asia."}
+{"id": "h0150", "reply": "My notes say Judd Apatow created Knocked Up. Do you want me to change it to Nick Cannon?"}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '151,200p'
+{"id": "h0151", "reply": "Saved: Thorn EMI Plc is based in London."}
+{"id": "h0152", "reply": "Saved: Henning Mankell is a citizen of Sweden."}
+{"id": "h0153", "reply": "Saved: Catherine Dickens is a citizen of the United Kingdom."}
+{"id": "h0154", "reply": "Saved: Kyle Reese is married to Sarah Connor."}
+{"id": "h0155", "reply": "Saved: Pell likes birdwatching on weekends."}
+{"id": "h0156", "reply": "The city of Tess is Omaha."}
+{"id": "h0157", "reply": "Saved: Liam Fox is a citizen of the United Kingdom."}
+{"id": "h0158", "reply": "French East India Company's founder's country of citizenship is Hungary."}
+{"id": "h0159", "reply": "Saved: Michael J. Fox performed Marty McFly."}
+{"id": "h0160", "reply": "My notes say The Beatles performed Paperback Writer. Do you want me to change it to Chicago Symphony Orchestra?"}
+{"id": "h0161", "reply": "The capital of the country of origin of Brook Lopez's position's sport is Kütahya."}
+{"id": "h0162", "reply": "Saved: David Chase created Tony Soprano."}
+{"id": "h0163", "reply": "The capital of the country of origin of head coach of Manchester City F.C.'s officeholder's sport is Angri."}
+{"id": "h0164", "reply": "Saved: Tim Berners-Lee is a citizen of the United Kingdom."}
+{"id": "h0165", "reply": "The capital of the country of origin of Amber Heard's spouse's genre is Berlin."}
+{"id": "h0166", "reply": "The capital of the country of citizenship of Larry Sabato's employer's founder is Stopnica."}
+{"id": "h0167", "reply": "The official language of the country of citizenship of Maus's author's spouse is English."}
+{"id": "h0168", "reply": "The continent of the country of citizenship of Saatchi Gallery's founder's spouse is Asia."}
+{"id": "h0169", "reply": "Saved: Pierre Beaumarchais wrote The Marriage of Figaro."}
+{"id": "h0170", "reply": "Saved: Starting Pitcher's sport is baseball."}
+{"id": "h0171", "reply": "Saved: The sport of Football Association of Wales is association football."}
+{"id": "h0172", "reply": "My notes say The Walt Disney Company founded Playhouse Disney. Do you want me to change it to United Airlines?"}
+{"id": "h0173", "reply": "The continent of director of Blizzard Entertainment's officeholder's country of citizenship is Antarctica."}
+{"id": "h0174", "reply": "The continent of the country of origin of David Beckham's position's sport is Asia."}
+{"id": "h0175", "reply": "Saved: Outfielder's sport is baseball."}
+{"id": "h0176", "reply": "The continent of the place of birth of Windows XP's developer's chief executive officer is North America."}
+{"id": "h0177", "reply": "Updated: Josh Pastner is an association football referee (it was basketball coach)."}
+{"id": "h0178", "reply": "The capital of the country of citizenship of American Gods's author's spouse is Amsterdam."}
+{"id": "h0179", "reply": "Saved: Johnny Lee is a citizen of France."}
+{"id": "h0180", "reply": "The capital of the country of citizenship of Resource Description Framework's developer's founder is El Campu."}
+{"id": "h0181", "reply": "The capital of the country of origin of Lauren Jackson's position's sport is Mexico City."}
+{"id": "h0182", "reply": "Saved: George Bernard Shaw is married to Christian IV of Denmark."}
+{"id": "h0183", "reply": "My notes say Thomas Paine wrote Rights of Man. Do you want me to change it to Veronica Roth?"}
+{"id": "h0184", "reply": "Saved: Edwin Catmull is a citizen of Canada."}
+{"id": "h0185", "reply": "Saved: Edmund Pikehall wrote Jagged Keys."}
+{"id": "h0186", "reply": "Saved: Director of Polyphony Digital's officeholder is Kazunori Yamauchi."}
+{"id": "h0187", "reply": "My notes say origianl broadcaster of Modern Family's officeholder is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?"}
+{"id": "h0188", "reply": "Saved: Microsoft developed Visual Basic Script."}
+{"id": "h0189", "reply": "Saved: Ford Ranchero is made by Ford Motor Company."}
+{"id": "h0190", "reply": "Saved: Fay lives in Reno."}
+{"id": "h0191", "reply": "Saved: Luca Cordero di Montezemolo is a citizen of Italy."}
+{"id": "h0192", "reply": "Saved: Vesper Grimshaw invented Lurid Bridges."}
+{"id": "h0193", "reply": "Updated: Roy Hibbert's position is quarterback (it was center)."}
+{"id": "h0194", "reply": "My notes say say Richard Dawkins wrote The Selfish Gene. Do you want me to change it to Sigmund Freud?"}
+{"id": "h0195", "reply": "Saved: The capital of the Netherlands is Alwernia."}
+{"id": "h0196", "reply": "Saved: Nicholas I of Russia is a citizen of Ireland."}
+{"id": "h0197", "reply": "The capital of the country of citizenship of Carbon's developer's chief executive officer is Tlemcen."}
+{"id": "h0198", "reply": "Updated: Israel's founder is Andrew G. Vajna (it was David Ben-Gurion)."}
+{"id": "h0199", "reply": "Saved: The capital of Kingdom of the Netherlands is Nässjö."}
+{"id": "h0200", "reply": "Saved: Kevin Smith is a citizen of the United States of America."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '201,250p'
+{"id": "h0201", "reply": "Updated: Arsène Wenger is a baseball manager (it was association football manager)."}
+{"id": "h0202", "reply": "Saved: Charles Dickens wrote Great Expectations."}
+{"id": "h0203", "reply": "My notes say Goalkeeper's sport is association football. Do you want me to change it to baseball?"}
+{"id": "h0204", "reply": "Saved: Samuel Dalembert's position is center."}
+{"id": "h0205", "reply": "Saved: Origianl broadcaster of Boy Meets World's officeholder is American Broadcasting Company."}
+{"id": "h0206", "reply": "Saved: The sport of David Moyes is association football."}
+{"id": "h0207", "reply": "Saved: Gene Roddenberry created Jean-Luc Picard."}
+{"id": "h0208", "reply": "My notes say director of Grasshopper Manufacture's officeholder is Goichi Suda. Do you want me to change it to Oliver Bierhoff?"}
+{"id": "h0209", "reply": "The capital of the country of citizenship of Ford Territory's manufacturer's founder is Copenhagen."}
+{"id": "h0210", "reply": "Updated: David Beckham's position is defenceman (it was midfielder)."}
+{"id": "h0211", "reply": "The capital of the country of citizenship of iWork's developer's chief executive officer is El Campu."}
+{"id": "h0212", "reply": "Saved: Ford Orion is made by Ford Motor Company."}
+{"id": "h0213", "reply": "Saved: Tom's position is Goalie."}
+{"id": "h0214", "reply": "The founder of Silver Feasts is Dunstan Ashdown."}
+{"id": "h0215", "reply": "My notes say The Beatles performed Within You Without You. Do you want me to change it to Madonna?"}
+{"id": "h0216", "reply": "Saved: Akbar Hashemi Rafsanjani founded PepsiCo."}
+{"id": "h0217", "reply": "My notes say Tom Cleverley's position is midfielder. Do you want me to change it to cornerback?"}
+{"id": "h0218", "reply": "The official language of the country of citizenship of Blizzard of Ozz's performer's spouse is Arabic."}
+{"id": "h0219", "reply": "Saved: Whitney Houston performed Whitney."}
+{"id": "h0220", "reply": "My notes say head coach of Western Sydney Wanderers FC's officeholder is Tony Popovic. Do you want me to change it to Warren Gatland?"}
+{"id": "h0221", "reply": "Saved: Jamie Hewlett is a citizen of Nepal."}
+{"id": "h0222", "reply": "Updated: Clayton Kershaw's position is linebacker (it was starting pitcher)."}
+{"id": "h0223", "reply": "The capital of the country of origin of Mark Few's position's sport is Bengaluru."}
+{"id": "h0224", "reply": "Saved: Vince McMahon created WrestleMania."}
+{"id": "h0225", "reply": "The continent of the place of birth of Xbox Live's developer's chief executive officer is Antarctica."}
+{"id": "h0226", "reply": "Saved: The officeholder of origianl broadcaster of Happy Days is American Broadcasting Company."}
+{"id": "h0227", "reply": "Saved: Gene Roddenberry is married to Majel Barrett."}
+{"id": "h0228", "reply": "The continent of the country of citizenship of Hard Times's author's spouse is Asia."}
+{"id": "h0229", "reply": "Saved: Wren lives in Miami."}
+{"id": "h0230", "reply": "The officeholder of Updated: origianl broadcaster of America's Funniest Home Videos is British Broadcasting Corporation (it was American Broadcasting Company)."}
+{"id": "h0231", "reply": "My notes say Cannonball Adderley is a citizen of the United States of America. Do you want me to change it to Ghana?"}
+{"id": "h0232", "reply": "Saved: Ada Wren founded Harborline."}
+{"id": "h0233", "reply": "Saved: Frederick Denison Maurice is a citizen of United Kingdom of Great Britain and Ireland."}
+{"id": "h0234", "reply": "Saved: Bono is a citizen of United Kingdom of Great Britain and Ireland."}
+{"id": "h0235", "reply": "Saved: Ford Torino is made by Ford Motor Company."}
+{"id": "h0236", "reply": "Saved: Bhumibol Adulyadej is a citizen of Thailand."}
+{"id": "h0237", "reply": "Saved: Microsoft developed Visual Basic .NET."}
+{"id": "h0238", "reply": "Saved: Frank Zappa is a citizen of the United States of America."}
+{"id": "h0239", "reply": "The official language of the country of citizenship of Our Mutual Friend's author's spouse is Spanish."}
+{"id": "h0240", "reply": "My notes say Microsoft developed JScript. Do you want me to change it to Boeing?"}
+{"id": "h0241", "reply": "My notes say Japan's continent is Asia. Do you want me to change it to Oceania?"}
+{"id": "h0242", "reply": "Saved: Elena Ceaușescu studied at University of Bucharest."}
+{"id": "h0243", "reply": "My notes say Vince McMahon created WWF Prime Time Wrestling. Do you want me to change it to Mel Brooks?"}
+{"id": "h0244", "reply": "Saved: George Child Villiers, 5th Earl of Jersey is a citizen of United Kingdom of Great Britain and Ireland."}
+{"id": "h0245", "reply": "The capital of the country of origin of Michael Wacha's position's sport is Amsterdam."}
+{"id": "h0246", "reply": "Saved: The Beatles performed Abbey Road."}
+{"id": "h0247", "reply": "Saved: F. Scott Fitzgerald is married to Dick Powell."}
+{"id": "h0248", "reply": "Saved: Charles Dickens wrote A Christmas Carol."}
+{"id": "h0249", "reply": "My notes say the position of Chris Davis is first baseman. Do you want me to change it to quarterback?"}
+{"id": "h0250", "reply": "The continent of the place of birth of Windows Media Audio's developer's chief executive officer is Antarctica."}
+[0m
+[0m✗ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '251,300p' failed
+[91m[1mError: [0mNotFound: FileSystem.access (/Users/ben-habban/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '251,300p'
+{"id": "h0251", "reply": "Updated: judo's founder is Louis Bonaparte (it was Jigoro Kano)."}
+{"id": "h0252", "reply": "Saved: Matt Groening created Marge Simpson."}
+{"id": "h0253", "reply": "Saved: Timofey Mozgov's position is center."}
+{"id": "h0254", "reply": "My notes say Simon Mignolet's position is goalkeeper. Do you want me to change it to defender?"}
+{"id": "h0255", "reply": "Saved: Hamad bin Khalifa Al Thani is a citizen of Spain."}
+{"id": "h0256", "reply": "The capital of the country of citizenship of Power Mac G5's developer's chief executive officer is Mexico City."}
+{"id": "h0257", "reply": "The capital of the country of origin of Cesc Fàbregas's position's sport is Dublin."}
+{"id": "h0258", "reply": "Saved: Neuromancer's country of origin is the United States of America."}
+{"id": "h0259", "reply": "Saved: Leslie Mann is a citizen of the United States of America."}
+{"id": "h0260", "reply": "Saved: Ford Granada is made by Ford Motor Company."}
+{"id": "h0261", "reply": "My notes say Miley Cyrus performed Wrecking Ball. Do you want me to change it to Céline Dion?"}
+{"id": "h0262", "reply": "The continent of the country of origin of Raul Meireles's position's sport is Asia."}
+{"id": "h0263", "reply": "My notes say the officeholder of origianl broadcaster of The Rookies is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?"}
+{"id": "h0264", "reply": "The capital of the country of citizenship of Me 262's developer's founder is Davenport."}
+{"id": "h0265", "reply": "The capital of the country of origin of Yeezus's performer's genre is Athens."}
+{"id": "h0266", "reply": "Saved: Origianl broadcaster of Show's officeholder is Nbc."}
+{"id": "h0267", "reply": "My notes say Ryan Howard's position is first baseman. Do you want me to change it to midfielder?"}
+{"id": "h0268", "reply": "The capital of the country of citizenship of Lotus Esprit's manufacturer's founder is Nairobi."}
+{"id": "h0269", "reply": "Saved: Denise Scott Brown speaks English."}
+{"id": "h0270", "reply": "Saved: Macbeth is married to Lady Macbeth."}
+{"id": "h0271", "reply": "Saved: Heidi Montag is a citizen of the United Kingdom."}
+{"id": "h0272", "reply": "The continent of the country of origin of André Villas-Boas's occupation's sport is Asia."}
+{"id": "h0273", "reply": "The official language of the country of citizenship of Wrecking Ball's performer's spouse is Indonesian."}
+{"id": "h0274", "reply": "My notes say Ted Lilly's position is starting pitcher. Do you want me to change it to defender?"}
+{"id": "h0275", "reply": "I don't know what Bram Kite's country of citizenship is."}
+{"id": "h0276", "reply": "The continent of the country of citizenship of Death Eater's founder's creator is Oceania."}
+{"id": "h0277", "reply": "My notes say John Shadegg is a citizen of the United States of America. Do you want me to change it to Singapore?"}
+{"id": "h0278", "reply": "Saved: Art Spiegelman is married to Penny Marshall."}
+{"id": "h0279", "reply": "The officeholder of Updated: head coach of Washington Wizards is Eddie Howe (it was Scott Brooks)."}
+{"id": "h0280", "reply": "Saved: Edward Sedgwick is a citizen of the United States of America."}
+{"id": "h0281", "reply": "Saved: The position of Brandon Jennings is point guard."}
+{"id": "h0282", "reply": "My notes say Gabe Newell is a citizen of the United States of America. Do you want me to change it to New Zealand?"}
+{"id": "h0283", "reply": "The capital of director of Madonna's officeholder's country of citizenship is Nowshera."}
+{"id": "h0284", "reply": "Saved: Ann created Mug."}
+{"id": "h0285", "reply": "My notes say The Beatles performed Ticket to Ride. Do you want me to change it to Madonna?"}
+{"id": "h0286", "reply": "Saved: Giuseppe Verdi is a citizen of Luxembourg."}
+{"id": "h0287", "reply": "Saved: Luca Cordero di Montezemolo is a citizen of Taiwan."}
+{"id": "h0288", "reply": "Saved: John Connor is a citizen of the United States of America."}
+{"id": "h0289", "reply": "The developer of Updated: Outlook Express is Sony Interactive Entertainment (it was Microsoft)."}
+{"id": "h0290", "reply": "Saved: Boeing developed B-47 Stratojet."}
+{"id": "h0291", "reply": "The position of Updated: Nigel Adkins is flanker (it was goalkeeper)."}
+{"id": "h0292", "reply": "Saved: Quinn teaches Ned."}
+{"id": "h0293", "reply": "The continent of director of Polyphony Digital's officeholder's country of citizenship is Asia."}
+{"id": "h0294", "reply": "Saved: Charles Dickens wrote All the Year Round."}
+{"id": "h0295", "reply": "The continent of the country of origin of head coach of Germany national football team's officeholder's sport is Asia."}
+{"id": "h0296", "reply": "Saved: Walter Besant founded Hon Hai Precision Industry."}
+{"id": "h0297", "reply": "Saved: Elvis Presley performed All Shook Up."}
+{"id": "h0298", "reply": "My notes say Chris Carter created Fox Mulder. Do you want me to change it to Eiichiro Oda?"}
+{"id": "h0299", "reply": "The capital of the country of origin of Bob Bradley's occupation's sport is Taloga."}
+{"id": "h0300", "reply": "The official language of the country of citizenship of the officeholder of director of The Beatles is Spanish."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '301,350p'
+{"id": "h0301", "reply": "My notes say Vince McMahon created WWE Heat. Do you want me to change it to Stan Lee?"}
+{"id": "h0302", "reply": "The capital of the country of citizenship of CBS Corporation's chief executive officer's spouse is Wellington."}
+{"id": "h0303", "reply": "Saved: Microsoft developed Component Object Model."}
+{"id": "h0304", "reply": "My notes say the position of Sylvia Fowles is center. Do you want me to change it to shooting guard?"}
+{"id": "h0305", "reply": "My notes say José Luis Chilavert's position is goalkeeper. Do you want me to change it to tackle?"}
+{"id": "h0306", "reply": "The capital of the country of origin of Fox Mulder's creator's notable work is El Campu."}
+{"id": "h0307", "reply": "The official language of the country of citizenship of the officeholder of director of The Beatles is Hebrew."}
+{"id": "h0308", "reply": "My notes say the position of Kendrys Morales is designated hitter. Do you want me to change it to wide receiver?"}
+{"id": "h0309", "reply": "The capital of the country of origin of Bruce Grobbelaar's position's sport is Bangkok."}
+{"id": "h0310", "reply": "The official language of the country of citizenship of Macbeth's spouse's creator is Arabic."}
+{"id": "h0311", "reply": "Boris Vilkitsky's country of citizenship's founder is Zhiyi."}
+{"id": "h0312", "reply": "My notes say Neil Gaiman wrote The Sandman. Do you want me to change it to F. Scott Fitzgerald?"}
+{"id": "h0313", "reply": "Saved: Bastian Schweinsteiger's position is midfielder."}
+{"id": "h0314", "reply": "capital of the country of citizenship of Ford Taunus V4 engine's manufacturer's founder is London."}
+{"id": "h0315", "reply": "Saved: AP1000 is made by Westinghouse Electric."}
+{"id": "h0316", "reply": "Saved: George R. R. Martin created Catelyn Stark."}
+{"id": "h0317", "reply": "My notes say Mike Krzyzewski works at Duke University. Do you want me to change it to Ankara University?"}
+{"id": "h0318", "reply": "Saved: Hiroki Kuroda's position is starting pitcher."}
+{"id": "h0319", "reply": "My notes say Louis van Gaal works at Manchester United F.C. Do you want me to change it to Melbourne Victory?"}
+{"id": "h0320", "reply": "Saved: Kaká's position is midfielder."}
+{"id": "h0321", "reply": "The capital of the country of citizenship of iPhone 6S's manufacturer's chief executive officer is London."}
+{"id": "h0322", "reply": "My notes say Ford Anglia is made by Ford Motor Company. Do you want me to change it to Lotus Cars?"}
+{"id": "h0323", "reply": "The capital of the country of origin of Maurice Cheeks's position's sport is Bengaluru."}
+{"id": "h0324", "reply": "Saved: Alfred Gusenbauer is a citizen of Australia."}
+{"id": "h0325", "reply": "The capital of the country of origin of Tim Howard's position's sport is Alwernia."}
+{"id": "h0326", "reply": "The capital of the country of origin of head coach of Cleveland Cavaliers's officeholder's sport is Angri."}
+{"id": "h0327", "reply": "Saved: Larry Sabato works at University of Virginia."}
+{"id": "h0328", "reply": "The continent of the country of origin of Marten Stekelenburg's position's sport is Asia."}
+{"id": "h0329", "reply": "The continent of the place of birth of CodePlex's creator's chief executive officer is Oceania."}
+{"id": "h0330", "reply": "My notes say your name is Hollis. Do you want me to change it to Harlan?"}
+{"id": "h0331", "reply": "I don't know where Pia lives."}
+{"id": "h0332", "reply": "Saved: The notable work of Charles M. Schulz is The Protocols of the Elders of Zion. (I also have Peanuts.)"}
+{"id": "h0333", "reply": "Saved: David Lange is a citizen of the United States of America."}
+{"id": "h0334", "reply": "Updated: Mark Few's position is shooting guard (it was point guard)."}
+{"id": "h0335", "reply": "Saved: Tim Berners-Lee was born in London."}
+{"id": "h0336", "reply": "Saved: Valon Behrami's position is midfielder."}
+{"id": "h0337", "reply": "Saved: Zoran Savić's position is center."}
+{"id": "h0338", "reply": "Saved: Yara Haddad wrote The Glass Orchard."}
+{"id": "h0339", "reply": "Saved: James Dobson studied at University of Southern California."}
+{"id": "h0340", "reply": "My notes say Ugetsu's country of origin is Japan. Do you want me to change it to Turkey?"}
+{"id": "h0341", "reply": "Saved: Akira Toriyama is a citizen of Japan."}
+{"id": "h0342", "reply": "The capital of the country of origin of Tyson Chandler's position's sport is London."}
+{"id": "h0343", "reply": "Saved: Derek Shepherd is married to Meredith Grey."}
+{"id": "h0344", "reply": "Saved: The officeholder of head coach of Golden State Warriors is Steve Kerr."}
+{"id": "h0345", "reply": "My notes say director of Valve Corporation's officeholder is Gabe Newell. Do you want me to change it to Alfred Gusenbauer?"}
+{"id": "h0346", "reply": "The capital of the country of citizenship of Apple TV's manufacturer's chief executive officer is Kütahya."}
+{"id": "h0347", "reply": "Saved: Ted Turner is married to Jane Fonda."}
+{"id": "h0348", "reply": "Saved: Leon Allen White works at Impact Wrestling."}
+{"id": "h0349", "reply": "Saved: Neil Gaiman wrote American Gods."}
+{"id": "h0350", "reply": "Saved: The Godfather's country of origin is the United States of America."}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '351,449p'
+{"id": "h0351", "reply": "My notes say Tim Berners-Lee founded World Wide Web Consortium. Do you want me to change it to Yitzhak Sadeh?"}
+{"id": "h0352", "reply": "Saved: Judd Apatow created Knocked Up."}
+{"id": "h0353", "reply": "The continent of the country of origin of Ali Al-Habsi's position's sport is North America."}
+{"id": "h0354", "reply": "Saved: David Davis is a citizen of the United Kingdom."}
+{"id": "h0355", "reply": "Saved: Back to the Future's country of origin is the United Kingdom."}
+{"id": "h0356", "reply": "Saved: Henry Labouchère is a citizen of Mali."}
+{"id": "h0357", "reply": "Saved: Microsoft developed File Explorer."}
+{"id": "h0358", "reply": "Saved: Association Football Manager's sport is association football."}
+{"id": "h0359", "reply": "Saved: Mwai Kibaki is a citizen of Australia."}
+{"id": "h0360", "reply": "The continent of the country of citizenship of John Woolman's religion or worldview's founder is Asia."}
+{"id": "h0361", "reply": "My notes say Patrick Ewing's position is center. Do you want me to change it to linebacker?"}
+{"id": "h0362", "reply": "The capital of the country of origin of Zack Greinke's position's sport is London."}
+{"id": "h0363", "reply": "The capital of the country of origin of Gary Payton's position's sport is Dublin."}
+{"id": "h0364", "reply": "Saved: Geoffrey Chaucer wrote Troilus and Criseyde."}
+{"id": "h0365", "reply": "My notes say GNU Project developed GNU Debugger. Do you want me to change it to Nintendo?"}
+{"id": "h0366", "reply": "My notes say Busta Rhymes is a citizen of the United States of America. Do you want me to change it to Kosovo?"}
+{"id": "h0367", "reply": "Saved: Stan Lee is married to Albert Parsons."}
+{"id": "h0368", "reply": "Saved: Les Moonves is married to Julie Chen."}
+{"id": "h0369", "reply": "Saved: The capital of Kingdom of the Two Sicilies is Naples."}
+{"id": "h0370", "reply": "Saved: Charles Colson is a citizen of United Kingdom of Great Britain and Ireland."}
+{"id": "h0371", "reply": "Harborline's founder is Ada Wren."}
+{"id": "h0372", "reply": "Saved: Isolde Vell discovered Crimson Candles."}
+{"id": "h0373", "reply": "Updated: Edwin van der Sar's position is defenceman (it was goalkeeper)."}
+{"id": "h0374", "reply": "Updated: Rony Seikaly's position is point guard (it was center)."}
+{"id": "h0375", "reply": "The founder of Obsidian Candles is Dunstan Vell."}
+{"id": "h0376", "reply": "Saved: Céline Dion is married to Buffy Sainte-Marie."}
+{"id": "h0377", "reply": "Saved: Clayton Kershaw's position is starting pitcher."}
+{"id": "h0378", "reply": "The capital of the country of origin of Giovani dos Santos's position's sport is Dublin."}
+{"id": "h0379", "reply": "Saved: Gene Roddenberry wrote Star Trek canon."}
+{"id": "h0380", "reply": "Saved: George R. R. Martin created Jon Snow."}
+{"id": "h0381", "reply": "Saved: Microsoft developed Zune."}
+{"id": "h0382", "reply": "The continent of the country of citizenship of Tiny Tim's creator's spouse is Asia."}
+{"id": "h0383", "reply": "Saved: David Bowie performed Diamond Dogs."}
+{"id": "h0384", "reply": "My notes say Poland's capital is Warsaw. Do you want me to change it to St. Marys?"}
+{"id": "h0385", "reply": "The capital of the country of origin of head coach of Toronto Blue Jays's officeholder's sport is Amsterdam."}
+{"id": "h0386", "reply": "continent of the country of origin of head coach of Western Sydney Wanderers FC's officeholder's sport is South America."}
+{"id": "h0387", "reply": "Updated: Nate Robinson's position is goalkeeper (it was point guard)."}
+{"id": "h0388", "reply": "Saved: NetherRealm Studios developed Injustice 2."}
+{"id": "h0389", "reply": "My notes say Ray Parlour's position is midfielder. Do you want me to change it to defensive tackle?"}
+{"id": "h0390", "reply": "Saved: Sacha Baron Cohen is a citizen of the United Kingdom."}
+{"id": "h0391", "reply": "Saved: Jean-Baptiste Colbert founded French East India Company."}
+{"id": "h0392", "reply": "Saved: Fitch works at Grobal."}
+{"id": "h0393", "reply": "Saved: Elvis Presley performed Viva Las Vegas."}
+{"id": "h0394", "reply": "The manufacturer of Updated: Windows Phone 7.x is Kriegsmarinewerft Wilhelmshaven (it was Microsoft)."}
+{"id": "h0395", "reply": "The discoverer of Crimson Candles is Isolde Vell."}
+{"id": "h0396", "reply": "Saved: Nick Cannon is married to Mariah Carey."}
+{"id": "h0397", "reply": "My notes say origianl broadcaster of Bachelor Pad's officeholder is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?"}
+{"id": "h0398", "reply": "Saved: Origianl broadcaster of Eight Is Enough's officeholder is American Broadcasting Company."}
+{"id": "h0399", "reply": "Saved: Frederick Denison Maurice founded Ankara University."}
+{"id": "h0400", "reply": "The sport of Updated: 2009 World Judo Championships is aikido (it was judo)."}
+{"id": "h0401", "reply": "The capital of the country of origin of head coach of Atlético Madrid's officeholder's sport is Mexico City."}
+{"id": "h0402", "reply": "Saved: Windows Phone 7.x is made by Microsoft."}
+{"id": "h0403", "reply": "Saved: Christina Aguilera is married to Edward Seymour, 1st Duke of Somerset."}
+{"id": "h0404", "reply": "Saved: Wilhelm von Humboldt founded Humboldt University of Berlin."}
+{"id": "h0405", "reply": "Saved: Charles Saatchi is married to Nigella Lawson."}
+{"id": "h0406", "reply": "The official language of the country of citizenship of Edward Cullen's spouse's creator is Italian."}
+{"id": "h0407", "reply": "The continent of the country of origin of Prime Minister of Pakistan's officeholder's sport is North America."}
+{"id": "h0408", "reply": "Saved: José Mourinho's position is midfielder."}
+{"id": "h0409", "reply": "Saved: William Shakespeare is a citizen of Kingdom of England."}
+{"id": "h0410", "reply": "My notes say Michael J. Fox is married to Tracy Pollan. Do you want me to change it to Françoise Hardy?"}
+{"id": "h0411", "reply": "Saved: Liam Hemsworth is married to Miley Cyrus."}
+{"id": "h0412", "reply": "Saved: Edsel Ford is a citizen of the United States of America."}
+{"id": "h0413", "reply": "The capital of the country of origin of Matt Harvey's position's sport is Amsterdam."}
+{"id": "h0414", "reply": "Saved: Michael Finley is a citizen of the United States of America."}
+{"id": "h0415", "reply": "My notes say Apple Inc. developed iPhone. Do you want me to change it to Google?"}
+{"id": "h0416", "reply": "Saved: Apple Inc. developed iOS 9."}
+{"id": "h0417", "reply": "Saved: Rabindranath Tagore wrote Gitanjali."}
+{"id": "h0418", "reply": "My notes say Oliver Kahn's position is goalkeeper. Do you want me to change it to cornerback?"}
+{"id": "h0419", "reply": "Saved: Léon Gaumont is a citizen of France."}
+{"id": "h0420", "reply": "The official language of the country of citizenship of Star Trek's creator's spouse is English."}
+{"id": "h0421", "reply": "Saved: James Brolin was born in Los Angeles."}
+{"id": "h0422", "reply": "Liv's city is Boston."}
+{"id": "h0423", "reply": "Saved: Lech Kaczyński is a citizen of the United States of America."}
+{"id": "h0424", "reply": "Saved: Simon Mignolet's position is goalkeeper."}
+{"id": "h0425", "reply": "Saved: First Baseman's sport is rugby union."}
+{"id": "h0426", "reply": "June's teacher is Patel."}
+{"id": "h0427", "reply": "The capital of the country of citizenship of iPad's developer's chief executive officer is Edinburgh."}
+{"id": "h0428", "reply": "The continent of the country of origin of Sami Khedira's position's sport is Asia."}
+{"id": "h0429", "reply": "Saved: Richard Nixon is married to Pat Nixon."}
+{"id": "h0430", "reply": "Saved: Mira performed Song."}
+{"id": "h0431", "reply": "The continent of the place of birth of the chief executive officer of the developer of Xbox Live Indie Games is Europe."}
+{"id": "h0432", "reply": "Saved: Eddy Curry's position is center."}
+{"id": "h0433", "reply": "Saved: Origianl broadcaster of General Hospital's officeholder is American Broadcasting Company."}
+{"id": "h0434", "reply": "The official language of director of Madonna's officeholder's country of citizenship is Turkish."}
+{"id": "h0435", "reply": "Saved: The position of Keylor Navas is goalkeeper."}
+{"id": "h0436", "reply": "Saved: Mark lives in Denver."}
+{"id": "h0437", "reply": "Saved: H. P. Lovecraft is a citizen of Norway."}
+{"id": "h0438", "reply": "My notes say The Beatles performed Helter Skelter. Do you want me to change it to Chicago Symphony Orchestra?"}
+{"id": "h0439", "reply": "Saved: Head coach of OGC Nice's officeholder is Patrick Vieira."}
+{"id": "h0440", "reply": "Saved: Frank Spotnitz is a citizen of the United States of America."}
+{"id": "h0441", "reply": "The continent of the country of origin of head coach of West Ham United F.C.'s officeholder's sport is North America."}
+{"id": "h0442", "reply": "Updated: Luciano Spalletti's position is defenceman (it was midfielder)."}
+{"id": "h0443", "reply": "Saved: The position of Doc Rivers is point guard."}
+{"id": "h0444", "reply": "Saved: Carmela Soprano is married to Tony Soprano."}
+{"id": "h0445", "reply": "The capital of the country of origin of head coach of Boston Celtics's officeholder's sport is Alwernia."}
+{"id": "h0446", "reply": "My notes say Rick Hearst is a citizen of the United States of America. Do you want me to change it to Ireland?"}
+{"id": "h0447", "reply": "My notes say Ford Taunus V4 engine is made by Ford Motor Company. Do you want me to change it to SpaceX?"}
+{"id": "h0448", "reply": "My notes say John F. Kennedy wrote Profiles in Courage. Do you want me to change it to Isaac Asimov?"}
+{"id": "h0449", "reply": "Saved: Head coach of Manchester City F.C.'s officeholder is Pep Guardiola."}
+[0m
+[0m$ [0mls artifacts && mkdir -p artifacts/claude-gradef1-B-20260923 && ls artifacts/claude-gradef1-B-20260923
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis310-20260923
+claude-lis311-20260923
+claude-loop273-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-merge292-20260923
+claude-mixpanel292-20260923
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-nb320-20260923
+claude-nb321-20260923
+claude-nhop268-20260923
+claude-nhop268b-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-nhoppanel268b-20260923
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-m0-20260923
+claude-own-m1-20260923
+claude-own-m1n-20260923
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0a3-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+claude-own-o0e2-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-probe255b-director-20260923
+claude-probe280p-20260923
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-scoreraudit-20260923
+claude-small282-20260923
+claude-small282b-20260923
+claude-smallpanel282-20260923
+claude-smallpanel282b-20260923
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-type270-20260923
+claude-type270b-20260923
+claude-typepanel270-20260923
+claude-typepanel270b-20260923
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-verify-20260923
+claude-whats248-20260922
+claude-yesno293-20260923
+claude-yesnopanel293-20260923
+claude-yesprefix230-20260922
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-bundle
+fable-operator-reliability-bundle.tar.gz
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-predictions-ledger.md
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+part2.jsonl
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/grade_b_part1_writer.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/grade_b_part1_writer.py
+wrote 449 lines, false=23
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; wc -l artifacts/claude-gradef1-B-20260923/part1.jsonl && uv run --offline --no-project --python 3.12 python -B -c "import json; Ls=[json.loads(l) for l in open('artifacts/claude-gradef1-B-20260923/part1.jsonl')]; print(len(Ls)); print(Ls[0]['id'], Ls[-1]['id']); print('unique:', len({r['id'] for r in Ls})); print('keys-ok:', all(set(r)== {'id','grammatical','reason'} and isinstance(r['grammatical'],bool) for r in Ls)); print('false:', sum(1 for r in Ls if not r['grammatical']))"
+449 artifacts/claude-gradef1-B-20260923/part1.jsonl
+449
+h0001 h0449
+unique: 449
+keys-ok: True
+false: 23
+[0m
+[0m✗ [0mGrep ""grammatical": false" failed[90m in artifacts/claude-gradef1-B-20260923[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m→ [0mRead artifacts/claude-gradef1-B-20260923/part1.jsonl
