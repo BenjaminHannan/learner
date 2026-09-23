@@ -1,0 +1,258 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-311-chat292.md failed[90m [limit=13][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-311-chat292.md
+[0m✗ [0mRead artifacts/claude-lis312-20260923/PASSMARKS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis312-20260923/PASSMARKS.md
+[0m✗ [0mRead scripts/claude_lis312_f0.py failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis312_f0.py
+[0m→ [0mRead artifacts/claude-convbench-f0-20260923/README.md
+[0m→ [0mRead .
+[0m
+[0m$ [0mpwd; git branch --show-current; git log --oneline -5; git status --short | head -20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+7493e5e14 292t: talking layers on main base 292 (registered PASS M1-M3)
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m$ [0mls handoff/queue/ 2>&1 | head -30; echo ---; ls artifacts/ | head -50; echo ---; ls scripts/ | head -50
+ls: handoff/queue/: No such file or directory
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+[0m
+[0m$ [0mls handoff/ 2>&1 | head -30; echo ---; ls artifacts/ | grep -i -E "lis30|lis31|convbench"; echo ---; git branch -a | head -30
+HANDOFF.md
+kit
+memory
+replies
+---
+claude-convbench-f0-20260923
+claude-lis300-20260923
+claude-lis310-20260923
+claude-lis311-20260923
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit fetch origin builder-outbox main 2>&1 | tail -5; echo ===; git log --oneline origin/builder-outbox -8 2>&1; echo ===; git ls-tree -r --name-only origin/builder-outbox 2>&1 | grep -E "lis30|lis31|lis-31" | head -40
+From github.com:BenjaminHannan/learner
+ * branch                builder-outbox -> FETCH_HEAD
+ * branch                main           -> FETCH_HEAD
+   dd9b3d891..e90972154  builder-outbox -> origin/builder-outbox
+zsh:1: == not found
+[0m
+[0m$ [0mgit log --oneline origin/builder-outbox -8
+e90972154 watcher status
+0ac1b7169 watcher status
+aead5e235 builder results: 000-vast-rescue
+dd9b3d891 watcher status
+f13e4b93f builder results: own-m1-train
+1fe6e77bb watcher status
+810dcb44a watcher status
+7cc73f4e5 watcher status
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "lis30|lis31"
+artifacts/claude-lis300-20260923/RESULTS.md
+artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+artifacts/claude-lis300-20260923/THRESHOLD.txt
+artifacts/claude-lis300-20260923/dev/dev.jsonl
+artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+artifacts/claude-lis300-20260923/dev_sweep.txt
+artifacts/claude-lis300-20260923/panel_score.json
+artifacts/claude-lis300-20260923/panel_score_T0.json
+artifacts/claude-lis300-20260923/train_log.jsonl
+artifacts/claude-lis300-20260923/train_summary.json
+artifacts/claude-lis310-20260923/PASSMARKS.md
+artifacts/claude-lis310-20260923/RESULTS.md
+artifacts/claude-lis310-20260923/SEAL.sha256.txt
+artifacts/claude-lis311-20260923/PASSMARKS.md
+artifacts/claude-lis311-20260923/RESULTS.md
+artifacts/claude-lis311-20260923/SEAL.sha256.txt
+artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+scripts/claude_lis310_agent.py
+scripts/claude_lis310_demo.py
+scripts/claude_lis310_test.py
+scripts/claude_lis311_agent.py
+scripts/claude_lis311_server.py
+scripts/claude_lis311_start.sh
+scripts/claude_lis311_try.py
+[0m
+[0m$ [0mls ~/premonition-models/ 2>&1; echo "---"; ls artifacts/ | grep lis
+lis300-merged
+---
+claude-lis300-20260923
+claude-lis310-20260923
+claude-lis311-20260923
+fable-english-listening-20260921
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -iE "queue|311-chat|lis-312|lis312"
+runs/lis-311-chat292/lis-311-chat292.exit
+runs/lis-311-chat292/lis-311-chat292.go1.err.txt
+runs/lis-311-chat292/lis-311-chat292.go1.reply.md
+runs/lis-311-chat292/lis-311-chat292.md
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-311-chat292/lis-311-chat292.md | head -13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -c lis301; git cat-file -e origin/builder-outbox:artifacts/claude-lis301-20260923/RESULTS.md; echo "rc=$?"
+0
+fatal: path 'artifacts/claude-lis301-20260923/RESULTS.md' does not exist in 'origin/builder-outbox'
+rc=128
+[0m
