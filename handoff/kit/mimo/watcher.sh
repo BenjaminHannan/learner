@@ -4,7 +4,8 @@
 # Every 120 s it:
 #   1. fetches the director's branch and looks for new task files in handoff/queue/*.md;
 #   2. copies each new one to $Q and launches rungo4.sh on it (at most $MAX at once; a task whose
-#      file contains the line "GPU: yes" waits until no other GPU task is running);
+#      file contains the line "GPU: yes" waits until no other GPU task is running; "GPU: rent" tasks
+#      rent their own cloud GPU and are not gated);
 #   3. when a task finishes (.done, or rungo4 exits), copies its reply/err files plus the paths listed
 #      on its "PUSH:" lines (files under 5 MB only; never notebook/, never weights) into the outbox
 #      clone and pushes them to the branch $OUT.
