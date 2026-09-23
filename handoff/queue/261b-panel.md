@@ -17,5 +17,5 @@ Read handoff/kit/briefs/earpanel261b-spec.txt (via git show as above) and follow
 - Write only inside artifacts/claude-earpanel261b-20260923/ (new folder). Write the items by hand inside make_panel.py; never generate items with a model.
 - One process at a time. Check df -g / first; stop if under 3 GB free.
 - When SEAL.sha256.txt is written, run from the repo root: shasum -a 256 -c artifacts/claude-earpanel261b-20260923/SEAL.sha256.txt and include its output.
-- Final reply: category level only (family counts, R1-R14 quota counts, lower/typo/noq counts, number of clear:false items, SEAL lines and the -c output). Never quote an item.
+- Final reply: category level only (family counts, R1-R15 quota counts, lower/typo/noq counts, number of clear:false items, SEAL lines and the -c output). Never quote an item.
 PUSH: artifacts/claude-earpanel261b-20260923
