@@ -1,0 +1,217 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo ---; df -g /; echo ---; pwd; git rev-parse --show-toplevel 2>&1 | head -5
+4:30  up 2 days, 20:19, 4 users, load averages: 21.72 35.14 47.91
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 128758040    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; echo FETCH_DONE; git show origin/main:design/v3/30-modes/280-282-chat-fixes.md > /tmp/ruling_280.md 2>&1; echo SHOW1:$?; wc -l /tmp/ruling_280.md
+FETCH_DONE
+SHOW1:0
+     117 /tmp/ruling_280.md
+[0m
+[0m→ [0mRead /tmp/ruling_280.md
+[0m→ [0mRead artifacts/claude-capab280b-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-capab280b-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-capabilpanel280b-20260923/SEAL.sha256.txt
+[0m→ [0mRead artifacts/claude-capab280b-20260923/SEAL.sha256.txt
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-capab280b-20260923/SEAL.sha256.txt 2>&1; echo EXIT:$?; echo ===; shasum -a 256 -c artifacts/claude-capabilpanel280b-20260923/SEAL.sha256.txt 2>&1; echo EXIT:$?
+scripts/claude_fix280b_general.py: OK
+scripts/claude_loop280b_agent.py: OK
+artifacts/claude-capab280b-20260923/loop280b-config.json: OK
+artifacts/claude-capab280b-20260923/devcases280b.json: OK
+scripts/claude_capab280b_devcases.py: OK
+scripts/claude_capab280b_run.py: OK
+scripts/claude_capab280b_score.py: OK
+scripts/claude_capab280b_regscore.py: OK
+scripts/claude_280b_runall.sh: OK
+scripts/claude_280b_panel.sh: OK
+artifacts/claude-capab280b-20260923/PASSMARKS.md: OK
+artifacts/claude-capab280b-20260923/predicted_moves280b.json: OK
+artifacts/claude-capab280b-20260923/pilot/dev-280.json: OK
+artifacts/claude-capab280b-20260923/pilot/dev-280b.json: OK
+artifacts/claude-capab280b-20260923/pilot/dev-score.json: OK
+EXIT:0
+zsh:1: == not found
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-capabilpanel280b-20260923/SEAL.sha256.txt; echo "exit=$?"
+artifacts/claude-capabilpanel280b-20260923/panel.jsonl: OK
+artifacts/claude-capabilpanel280b-20260923/SPEC-COPY.md: OK
+exit=0
+[0m
+[0m→ [0mRead scripts/claude_280b_panel.sh
+[0m
+[0m$ [0mls artifacts/claude-capab280b-20260923/ artifacts/claude-capabilpanel280b-20260923/; ls scripts/ | grep -i 280
+artifacts/claude-capab280b-20260923/:
+devcases280b.json
+loop280b-config.json
+PASSMARKS.md
+pilot
+predicted_moves280b.json
+RESULTS.md
+run
+run-nohup.log
+run-panel-nohup.log
+SEAL.sha256.txt
+
+artifacts/claude-capabilpanel280b-20260923/:
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+claude_280_panel.sh
+claude_280_runall.sh
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_capab280b_devcases.py
+claude_capab280b_regscore.py
+claude_capab280b_run.py
+claude_capab280b_score.py
+claude_fix280_capab.py
+claude_fix280b_general.py
+claude_loop280_agent.py
+claude_loop280b_agent.py
+[0m
+[0m→ [0mRead scripts/claude_capab280b_run.py[90m [limit=80][0m
+[0m→ [0mRead scripts/claude_capab280b_score.py[90m [limit=120][0m
+[0m
+[0m← [0mWrite scripts/claude_capab280b_paneladapt.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_paneladapt.py; echo "exit=$?"
+rows=50
+src_sha256=c37bac6824958115543359e30423ad2e8bf74c5b6e7213f3e40d51cdd23ee6b1
+dst_sha256=6899b6ee7ea2c121b04d799f00b6215fa679601e7ff90dfcecb40e337ead73a3
+asserts_passed
+exit=0
+[0m
+[0m→ [0mRead artifacts/claude-capab280b-20260923/rerun/ADAPT.txt
+[0m
+[0m$ [0muptime
+4:31  up 2 days, 20:20, 4 users, load averages: 27.31 34.70 47.15
+[0m
+[0m$ [0mR=artifacts/claude-capab280b-20260923/rerun; P=artifacts/claude-capabilpanel280b-20260923; mkdir -p "$R" "$R/work"; ( cd . && shasum -a 256 -c $P/SEAL.sha256.txt ) > $R/panel-seal-check.txt 2>&1 || { cat $R/panel-seal-check.txt; echo "PANEL SEAL CHECK FAILED"; exit 4; }; ls $P > $R/panel-files.txt 2>&1; cat $R/panel-seal-check.txt; PANEL=artifacts/claude-capab280b-20260923/rerun/panel-adapted.jsonl; echo "panel file: $PANEL"; T0=$(date +%s); export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py panel scripts/claude_loop280_agent.py artifacts/claude-capab280-20260923/loop280-config.json $R/work/m280b $PANEL $R/panel-280.json > $R/panel-280.log 2>&1; echo "arm280 exit $?" >> $R/panel-280.log; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py panel scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json $R/work/n280b $PANEL $R/panel-280b.json > $R/panel-280b.log 2>&1; echo "arm280b exit $?" >> $R/panel-280b.log; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_score.py panel $PANEL $R/panel-280.json $R/panel-280b.json $R/panel-score280b.json > $R/panel-score.txt 2>&1; echo "exit $?" >> $R/panel-score.txt; echo "TOTAL $(( $(date +%s) - T0 )) s" >> $R/panel-score.txt; cat $R/panel-score.txt
+artifacts/claude-capabilpanel280b-20260923/panel.jsonl: OK
+artifacts/claude-capabilpanel280b-20260923/SPEC-COPY.md: OK
+panel file: artifacts/claude-capab280b-20260923/rerun/panel-adapted.jsonl
+panel n=45 general=25 canyou=10 nearmiss=7 control=3
+M1gen non-canon: 1 ['g21']
+M1a forbidden-on-280b: 0 [] (280 arm: 0)
+M1 canyou moves: 0 []
+M1 nearmiss moves: 0 []
+M1 control moves: 0 []
+M3 write diffs: 0 []
+M3 question/self writes on 280b: 0 []
+exit 0
+TOTAL 11 s
+[0m
+[0m→ [0mRead scripts/claude_capab280b_score.py[90m [offset=121][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,sys
+sys.path.insert(0,'scripts')
+import claude_capab280b_score as S
+sc=json.load(open('artifacts/claude-capab280b-20260923/rerun/panel-score280b.json'))
+r280={r['id']:r for r in json.load(open('artifacts/claude-capab280b-20260923/rerun/panel-280.json'))}
+canon280={}
+for row in sc['rows']:
+    a=r280[row['id']]
+    canon280[row['id']]=(a.get('turn_reply',a.get('reply',''))==S.CAN280B_SEALED)
+from collections import Counter
+c280=Counter(); c28b=Counter(); changed=[]
+for row in sc['rows']:
+    c28b[(row['kind'],'canon' if row['canon'] else 'noncanon')]+=1
+    c280[(row['kind'],'canon' if canon280[row['id']] else 'noncanon')]+=1
+    if not row['same']: changed.append(row['id'])
+print('kinds:', sorted(set(k for k,_ in list(c280.keys())+list(c28b.keys()))))
+for k in ['general','canyou','nearmiss','control']:
+    n280c=c280.get((k,'canon'),0); n280n=c280.get((k,'noncanon'),0)
+    n28bc=c28b.get((k,'canon'),0); n28bn=c28b.get((k,'noncanon'),0)
+    print(f'{k}: 280 canon={n280c} noncanon={n280n} | 280b canon={n28bc} noncanon={n28bn}')
+print('changed_280_vs_280b:', len(changed), sorted(changed))
+print('M1gen_ids:', sc['M1gen_ids'], 'M1a_280b:', sc['M1a_forbidden_280b'], 'M1a_280:', sc['M1a_forbidden_280'])
+print('canyou_moves:', sc['M1_canyou_moves'], 'nearmiss_moves:', sc['M1_nearmiss_moves'], 'control_moves:', sc['M1_control_moves'])
+print('write_diffs:', sc['M3_write_diffs'], 'qwrites:', sc['M3_qwrites_280b'])
+print('score_n:', sc['n'], 'gen:', sc['n_general'], 'cy:', sc['n_canyou'], 'nm:', sc['n_nearmiss'], 'ct:', sc['n_control'])
+"; echo "exit=$?"; tail -2 artifacts/claude-capab280b-20260923/rerun/panel-280.log artifacts/claude-capab280b-20260923/rerun/panel-280b.log
+kinds: ['canyou', 'control', 'general', 'nearmiss']
+general: 280 canon=10 noncanon=15 | 280b canon=24 noncanon=1
+canyou: 280 canon=0 noncanon=10 | 280b canon=0 noncanon=10
+nearmiss: 280 canon=0 noncanon=7 | 280b canon=0 noncanon=7
+control: 280 canon=0 noncanon=3 | 280b canon=0 noncanon=3
+changed_280_vs_280b: 14 ['g04', 'g05', 'g08', 'g09', 'g10', 'g11', 'g12', 'g14', 'g15', 'g16', 'g17', 'g19', 'g20', 'g25']
+M1gen_ids: ['g21'] M1a_280b: 0 M1a_280: 0
+canyou_moves: 0 nearmiss_moves: 0 control_moves: 0
+write_diffs: 0 qwrites: 0
+score_n: 45 gen: 25 cy: 10 nm: 7 ct: 3
+exit=0
+==> artifacts/claude-capab280b-20260923/rerun/panel-280.log <==
+done 45
+arm280 exit 0
+
+==> artifacts/claude-capab280b-20260923/rerun/panel-280b.log <==
+done 45
+arm280b exit 0
+[0m
+[0m← [0mWrite artifacts/claude-capab280b-20260923/RESULTS-RERUN.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la artifacts/claude-capab280b-20260923/rerun/; echo ---; git status --porcelain | head -20
+total 200
+drwxr-xr-x  13 ben-hannan  staff    416 Sep 23 04:31 .
+drwxr-xr-x  14 ben-hannan  staff    448 Sep 23 04:32 ..
+-rw-r--r--   1 ben-hannan  staff    503 Sep 23 04:31 ADAPT.txt
+-rw-r--r--   1 ben-hannan  staff  22892 Sep 23 04:31 panel-280.json
+-rw-r--r--   1 ben-hannan  staff     22 Sep 23 04:31 panel-280.log
+-rw-r--r--   1 ben-hannan  staff  28874 Sep 23 04:31 panel-280b.json
+-rw-r--r--   1 ben-hannan  staff     23 Sep 23 04:31 panel-280b.log
+-rw-r--r--   1 ben-hannan  staff   6721 Sep 23 04:31 panel-adapted.jsonl
+-rw-r--r--   1 ben-hannan  staff     51 Sep 23 04:31 panel-files.txt
+-rw-r--r--   1 ben-hannan  staff    267 Sep 23 04:31 panel-score.txt
+-rw-r--r--   1 ben-hannan  staff  10827 Sep 23 04:31 panel-score280b.json
+-rw-r--r--   1 ben-hannan  staff    119 Sep 23 04:31 panel-seal-check.txt
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 23 04:31 work
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-capab280b-20260923 scripts/claude_capab280b_paneladapt.py scripts/claude_280b_runall.sh scripts/claude_280b_panel.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_capab280b_paneladapt.py
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-capab280b-20260923/rerun/panel-280.json artifacts/claude-capab280b-20260923/RESULTS-RERUN.md; echo "exit=$?"; git ls-files artifacts/claude-capab280b-20260923 | head -8
+.gitignore:5:artifacts/	artifacts/claude-capab280b-20260923/rerun/panel-280.json
+.gitignore:5:artifacts/	artifacts/claude-capab280b-20260923/RESULTS-RERUN.md
+exit=0
+[0m
