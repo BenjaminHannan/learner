@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.premonition.chat</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>WorkingDirectory</key>
+  <string>/Users/ben-hannan/premonition-chat/runtime</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>OMP_NUM_THREADS</key>
+    <string>1</string>
+    <key>MKL_NUM_THREADS</key>
+    <string>1</string>
+  </dict>
+  <!-- NOTE (2026-09-23 builder): two deviations from the spec, both forced
+       by macOS TCC (verified by experiment, see selftest.md):
+       1. `uv run` hangs forever with zero CPU when spawned by launchd
+          (stuck in getcwd/open, no child, nothing logged for 8+ min).
+       2. launchd-spawned processes get EPERM ("Operation not permitted")
+          on the worktree under ~/Desktop (TCC protects ~/Desktop; the
+          interactive shell has access, launchd children do not), so the
+          server cannot run with WorkingDirectory in the worktree at all.
+       Fix: launchd runs a persistent venv python (CPython 3.12 + torch +
+       numpy, installed offline from uv's cache -- the same packages
+       start.sh's `uv run --offline --no-project --python 3.12 --with torch
+       --with numpy python -B` resolves to) against a verbatim copy of the
+       runtime files at ~/premonition-chat/runtime (scripts/*.py + page,
+       loop260 config with only tau_hat_path repointed at the copy,
+       ltt_summary.json, relation_table_v1.json -- all diff-verified).
+       start.sh itself is unchanged (still the uv command, works in a
+       login shell). launchd still owns this foreground process directly.
+       -u is stdio-unbuffered logging only; model behaviour unchanged. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/ben-hannan/premonition-chat/chatdemo-venv/bin/python</string>
+    <string>-B</string>
+    <string>-u</string>
+    <string>scripts/claude_chatdemo_server.py</string>
+  </array>
+  <key>StandardOutPath</key>
+  <string>/Users/ben-hannan/premonition-chat/server.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ben-hannan/premonition-chat/server.log</string>
+</dict>
+</plist>
