@@ -1,0 +1,599 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel; uptime; df -g /; git fetch -q origin claude/project-thread-p68q5v && echo FETCH_OK
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 9:20  up 3 days,  1:09, 4 users, load averages: 20.11 30.42 39.61
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        10    56%  484014 105690960    0%   /
+FETCH_OK
+[0m
+[0m$ [0mgit branch -a | head -20; git log --oneline origin/claude/project-thread-p68q5v -5; git ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -Ei "241b|PASSMARK|mouth241b|wall" | head -50
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+21e34fa08 241b director rulings (mirror for builders)
+5bafac9e1 Queue own-o0a oracle-coverage check (own-model line, CPU only)
+a0f6218ac 255b note: per-part registration and provenance
+ecad4f8b0 talking line: 255b decision note and builder; 241b restart builder (CPU)
+5d5f32f66 watcher: read queue from main, self-update; upgrade task
+artifacts/claude-apos247-20260922/PASSMARKS.md
+artifacts/claude-boundary259-20260922/PASSMARKS.md
+artifacts/claude-chain231-20260922/PASSMARKS.md
+artifacts/claude-chain231b-20260922/PASSMARKS.md
+artifacts/claude-comment258-20260922/PASSMARKS.md
+artifacts/claude-correct252-20260922/PASSMARKS.md
+artifacts/claude-correct252b-20260922/PASSMARKS.md
+artifacts/claude-decline224c-20260922/PASSMARKS.md
+artifacts/claude-determinism228-20260922/PASSMARKS.md
+artifacts/claude-direction251-20260922/PASSMARKS.md
+artifacts/claude-earcheck261-20260922/PASSMARKS.md
+artifacts/claude-firstname236-20260922/PASSMARKS.md
+artifacts/claude-firstperson249-20260922/PASSMARKS.md
+artifacts/claude-fixedtext255-20260922/PASSMARKS.md
+artifacts/claude-fullname232-20260922/PASSMARKS.md
+artifacts/claude-fullname232b-20260922/PASSMARKS.md
+artifacts/claude-fullname232c-20260922/PASSMARKS.md
+artifacts/claude-identity227c-20260922/PASSMARKS.md
+artifacts/claude-mentionwalk246-20260922/PASSMARKS.md
+artifacts/claude-merge138k-20260922/PASSMARKS.md
+artifacts/claude-merge138l-20260922/PASSMARKS.md
+artifacts/claude-merge138m-20260922/PASSMARKS.md
+artifacts/claude-merge138n-20260922/PASSMARKS.md
+artifacts/claude-merge252c-20260922/PASSMARKS.md
+artifacts/claude-mouth241-20260922/PASSMARKS.md
+artifacts/claude-mouth241-20260922/runs/walls.txt
+artifacts/claude-mouth241b-20260922/say_forms.json
+artifacts/claude-myrel245-20260922/PASSMARKS.md
+artifacts/claude-name227b-20260922/PASSMARKS.md
+artifacts/claude-namecheck230b-20260922/PASSMARKS.md
+artifacts/claude-namecheck230br-20260922/PASSMARKS.md
+artifacts/claude-namecheck230c-20260922/PASSMARKS.md
+artifacts/claude-openers260-20260922/PASSMARKS.md
+artifacts/claude-polite233-20260922/PASSMARKS.md
+artifacts/claude-qnorm221c-20260922/PASSMARKS.md
+artifacts/claude-smalltalk234-20260922/PASSMARKS.md
+artifacts/claude-smolear235-20260922/PASSMARKS.md
+artifacts/claude-smolear235b-20260922/PASSMARKS.md
+artifacts/claude-smolear257-20260922/PASSMARKS.md
+artifacts/claude-storedrel221b-20260922/PASSMARKS.md
+artifacts/claude-table237-20260922/PASSMARKS.md
+artifacts/claude-table237b-20260922/PASSMARKS.md
+artifacts/claude-tableask221-20260922/PASSMARKS.md
+artifacts/claude-tableteach229-20260922/PASSMARKS.md
+artifacts/claude-verbsubj250-20260922/PASSMARKS.md
+artifacts/claude-whats248-20260922/PASSMARKS.md
+artifacts/claude-yesprefix230-20260922/PASSMARKS.md
+artifacts/fable-about164-20260922/PASSMARKS.md
+artifacts/fable-about164b-20260922/PASSMARKS.md
+artifacts/fable-abstain64-20260921/PASSMARKS.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -Ei "mouth241b" | head -50; echo ---; git ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -Ei "241b-director" | head
+artifacts/claude-mouth241b-20260922/say_forms.json
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+---
+design/v3/30-modes/241b-director-rulings.md
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:design/v3/30-modes/241b-director-rulings.md; echo ===; git ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -E "claude-mouth241b" | head -60
+# 241b: director's rulings, 2026-09-23 03:25 UTC (written before any grade, judgment or re-measure exists)
+
+Verified: SEAL 19/19 and SEAL2 4/4 OK from the repo root (main + builder-outbox files). No pre-existing 241b
+file was changed; the builder added two copies (claude_mouth241b_devrender_r.py, claude_mouth241b_rer241_r.py).
+My recount of the fresh sweep: 1205 rows, 13 acts at 80, AMBIGUOUS 30, 0 "(E…)" codes, 0 "someone"; 120 pairs.
+
+1. **M1 graders.** Two independent Muse graders (A and B), each in 3 parts, blind to each other, to the key and to
+   PASSMARKS. M1 passes only if the sealed scorer passes on BOTH grade files (stricter than one grader).
+2. **M4 judge.** One fresh Muse judge, blind to pairs-key. Scored with the sealed scorer.
+3. **M5 wall.** The registered protocol says "check load first". The builder ran the walls at load 160–220 (its
+   deviation D-A), while 241's walls and its own dev walls ran at load ~100 or lower; at that load the run spread
+   (40.7–47.1 s) is larger than the gap being measured. Ruling: the walls are re-measured ONCE under the same D6
+   protocol (3 alternated runs each, median) with load1 below 40 before each run (wait up to 90 minutes). That
+   re-measure replaces the loaded one, whatever it shows. If load never gets below 40 in 90 minutes, the loaded
+   +8.1% stands as the registered result and M5 wall is a MISS.
+4. **S1.** The 22 decision differences on 241b's own 800 rows are not an S1 failure only if every one is on an
+   item whose verdict is unchanged. I will recount them from runs/s1-241b.out myself before ruling.
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -iE "241b" | head -40; echo "---LOCAL---"; ls artifacts/claude-mouth241b-20260922/ 2>&1; echo "---SCRIPTS-LOCAL---"; ls scripts/ | grep 241b
+artifacts/claude-mouth241b-20260922/say_forms.json
+design/v3/30-modes/241b-director-rulings.md
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/queue/talk-241b-restart.md
+scripts/claude_confirm241b.py
+scripts/claude_fix172b241b_benchv3.py
+scripts/claude_loop241b_agent.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+---LOCAL---
+pairs-key.jsonl
+pairs-log.jsonl
+pairs.jsonl
+PASSMARKS.md
+rer241.json
+rerender238-summary.json
+rerender238.jsonl
+RESULTS.md
+runs
+say_forms.json
+SEAL.sha256.txt
+SEAL2.sha256.txt
+sweep-frames.jsonl
+sweep.jsonl
+---SCRIPTS-LOCAL---
+claude_confirm241b.py
+claude_fix172b241b_benchv3.py
+claude_loop241b_agent.py
+claude_mouth241b_brake.py
+claude_mouth241b_check.py
+claude_mouth241b_devrender_r.py
+claude_mouth241b_morph.py
+claude_mouth241b_pairs.py
+claude_mouth241b_parse.py
+claude_mouth241b_reader.py
+claude_mouth241b_rer241_r.py
+claude_mouth241b_rer241.py
+claude_mouth241b_rerender238.py
+claude_mouth241b_s1.py
+claude_mouth241b_say.py
+claude_mouth241b_score.py
+claude_mouth241b_suites.py
+claude_mouth241b_sweep.py
+claude_mouth241b_test.py
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/PASSMARKS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py --help 2>&1 | head -80
+usage: claude_mouth241b_check.py [-h] [--suite-out SUITE_OUT]
+                                 [--frames FRAMES] [--sweep SWEEP]
+                                 [--mouthlog MOUTHLOG] [--base-cap BASE_CAP]
+                                 [--new-cap NEW_CAP] [--wall241b WALL241B]
+                                 [--wall228 WALL228]
+                                 {m2a,m2b,m2c,m3,m5}
+
+positional arguments:
+  {m2a,m2b,m2c,m3,m5}
+
+options:
+  -h, --help            show this help message and exit
+  --suite-out SUITE_OUT
+  --frames FRAMES
+  --sweep SWEEP
+  --mouthlog MOUTHLOG
+  --base-cap BASE_CAP
+  --new-cap NEW_CAP
+  --wall241b WALL241B
+  --wall228 WALL228
+[0m
+[0m$ [0mgrep -n "wall" scripts/claude_mouth241b_check.py | head -40
+3:241b vs 241's checks: labels and the wall flag name (--wall241b); an
+30:  m5   --frames sweep-frames.jsonl [--wall241b S --wall228 S]
+32:       suite wall <= base + 5 %.
+258:    if a.wall241b is not None and a.wall228 is not None:
+259:        lim = a.wall228 * 1.05
+260:        wok = a.wall241b <= lim
+261:        print(f"M5 suite wall: 241b {a.wall241b:.1f}s vs 228 {a.wall228:.1f}s "
+277:    ap.add_argument("--wall241b", type=float)
+278:    ap.add_argument("--wall228", type=float)
+[0m
+[0m→ [0mRead scripts/claude_mouth241b_check.py
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/RESULTS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_suites.py --help 2>&1 | head -60
+usage: --capture DIR [--mouthlog F] [--scorer241b] -- <218 args>
+[0m
+[0m$ [0mls -la artifacts/claude-mouth241b-20260922/runs/; echo ---; cat artifacts/claude-mouth241-20260922/runs/walls.txt 2>&1 | head -30; echo ---; ls artifacts/claude-mouth241b-20260922/runs/ | head -30
+total 23408
+drwxr-xr-x  40 ben-hannan  staff     1280 Sep 22 23:11 .
+drwxr-xr-x@ 16 ben-hannan  staff      512 Sep 22 23:12 ..
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:03 cap228-run1
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:04 cap228-run2
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:05 cap228-run3
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:03 cap241b-run1
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:05 cap241b-run2
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:06 cap241b-run3
+-rw-r--r--   1 ben-hannan  staff       95 Sep 22 22:56 m2a.out
+-rw-r--r--   1 ben-hannan  staff      106 Sep 22 23:09 m2b.out
+-rw-r--r--   1 ben-hannan  staff      103 Sep 22 23:09 m2c.out
+-rw-r--r--   1 ben-hannan  staff      837 Sep 22 23:09 m3.out
+-rw-r--r--   1 ben-hannan  staff       69 Sep 22 22:56 m5-latency.out
+-rw-r--r--   1 ben-hannan  staff      127 Sep 22 23:10 m5-wall.out
+-rw-r--r--   1 ben-hannan  staff  3963152 Sep 22 23:03 mouth241b-run1.log
+-rw-r--r--   1 ben-hannan  staff  3963108 Sep 22 23:05 mouth241b-run2.log
+-rw-r--r--   1 ben-hannan  staff  3963152 Sep 22 23:06 mouth241b-run3.log
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:03 out228-run1
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:04 out228-run2
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:05 out228-run3
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:03 out241b-run1
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:05 out241b-run2
+drwxr-xr-x  14 ben-hannan  staff      448 Sep 22 23:06 out241b-run3
+-rw-r--r--   1 ben-hannan  staff     3271 Sep 22 23:11 rerender238.out
+-rw-r--r--   1 ben-hannan  staff     1508 Sep 22 23:02 run.sh
+-rw-r--r--   1 ben-hannan  staff      137 Sep 22 23:10 s1-228.out
+-rw-r--r--   1 ben-hannan  staff     5668 Sep 22 23:10 s1-241b.out
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:06 sleep-228
+-rw-r--r--   1 ben-hannan  staff     1301 Sep 22 23:08 sleep-228.json
+-rw-r--r--   1 ben-hannan  staff      162 Sep 22 23:08 sleep-228.log
+drwxr-xr-x   3 ben-hannan  staff       96 Sep 22 23:08 sleep-241b
+-rw-r--r--   1 ben-hannan  staff     1303 Sep 22 23:09 sleep-241b.json
+-rw-r--r--   1 ben-hannan  staff      164 Sep 22 23:09 sleep-241b.log
+-rw-r--r--   1 ben-hannan  staff     2092 Sep 22 23:03 suites-228-run1.log
+-rw-r--r--   1 ben-hannan  staff     2092 Sep 22 23:04 suites-228-run2.log
+-rw-r--r--   1 ben-hannan  staff     2092 Sep 22 23:05 suites-228-run3.log
+-rw-r--r--   1 ben-hannan  staff     2190 Sep 22 23:03 suites-241b-run1.log
+-rw-r--r--   1 ben-hannan  staff     2190 Sep 22 23:05 suites-241b-run2.log
+-rw-r--r--   1 ben-hannan  staff     2190 Sep 22 23:06 suites-241b-run3.log
+-rw-r--r--   1 ben-hannan  staff      268 Sep 22 23:09 walls.txt
+---
+WALL agent=228 run=1 rc=0 seconds=43.1
+WALL agent=241 run=1 rc=0 seconds=50.4
+WALL agent=228 run=2 rc=0 seconds=43.2
+WALL agent=241 run=2 rc=0 seconds=50.3
+WALL agent=228 run=3 rc=0 seconds=39.7
+WALL agent=241 run=3 rc=0 seconds=51.2
+SLEEP 228 rc=0
+SLEEP 241 rc=0
+---
+cap228-run1
+cap228-run2
+cap228-run3
+cap241b-run1
+cap241b-run2
+cap241b-run3
+m2a.out
+m2b.out
+m2c.out
+m3.out
+m5-latency.out
+m5-wall.out
+mouth241b-run1.log
+mouth241b-run2.log
+mouth241b-run3.log
+out228-run1
+out228-run2
+out228-run3
+out241b-run1
+out241b-run2
+out241b-run3
+rerender238.out
+run.sh
+s1-228.out
+s1-241b.out
+sleep-228
+sleep-228.json
+sleep-228.log
+sleep-241b
+sleep-241b.json
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/runs/walls.txt
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/runs/run.sh
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/runs/m5-wall.out
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt 2>&1 | tail -25; echo "---"; du -sh artifacts/claude-mouth241b-20260922/runs/out228-run1 artifacts/claude-mouth241b-20260922/runs/cap228-run1 2>&1; df -g /
+artifacts/claude-mouth241b-20260922/PASSMARKS.md: OK
+artifacts/claude-mouth241b-20260922/say_forms.json: OK
+scripts/claude_loop241b_agent.py: OK
+scripts/claude_confirm241b.py: OK
+scripts/claude_fix172b241b_benchv3.py: OK
+scripts/claude_mouth241b_brake.py: OK
+scripts/claude_mouth241b_check.py: OK
+scripts/claude_mouth241b_morph.py: OK
+scripts/claude_mouth241b_pairs.py: OK
+scripts/claude_mouth241b_parse.py: OK
+scripts/claude_mouth241b_reader.py: OK
+scripts/claude_mouth241b_rer241.py: OK
+scripts/claude_mouth241b_rerender238.py: OK
+scripts/claude_mouth241b_s1.py: OK
+scripts/claude_mouth241b_say.py: OK
+scripts/claude_mouth241b_score.py: OK
+scripts/claude_mouth241b_suites.py: OK
+scripts/claude_mouth241b_sweep.py: OK
+scripts/claude_mouth241b_test.py: OK
+---
+880K	artifacts/claude-mouth241b-20260922/runs/out228-run1
+6.3M	artifacts/claude-mouth241b-20260922/runs/cap228-run1
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        10    56%  484014 105706280    0%   /
+[0m
+[0m→ [0mRead scripts/claude_mouth241b_suites.py
+[0m
+[0m$ [0mls artifacts/claude-mouth241b-20260922/ && mkdir artifacts/claude-mouth241b-20260922/wall-remeasure && ls artifacts/claude-mouth241b-20260922/wall-remeasure
+pairs-key.jsonl
+pairs-log.jsonl
+pairs.jsonl
+PASSMARKS.md
+rer241.json
+rerender238-summary.json
+rerender238.jsonl
+RESULTS.md
+runs
+say_forms.json
+SEAL.sha256.txt
+SEAL2.sha256.txt
+sweep-frames.jsonl
+sweep.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-mouth241b-20260922/wall-remeasure/run-wall.sh
+Wrote file successfully.
+[0m
+[0m✗ [0muptime; df -g /; bash artifacts/claude-mouth241b-20260922/wall-remeasure/run-wall.sh 2>&1 failed
+[91m[1mError: [0mNotFound: FileSystem.access (/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-exument-handoff-7c5b27)
+[0m
+[0m$ [0muptime; df -g /; bash artifacts/claude-mouth241b-20260922/wall-remeasure/run-wall.sh 2>&1
+9:21  up 3 days,  1:11, 4 users, load averages: 26.22 29.35 38.29
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        10    56%  484014 105667360    0%   /
+gate: load1=26.22 waited=0s
+gate: load1=41.90 waited=0s
+gate: load1=34.15 waited=120s
+gate: load1=43.18 waited=0s
+gate: load1=39.21 waited=120s
+gate: load1=53.72 waited=0s
+gate: load1=50.54 waited=120s
+gate: load1=56.35 waited=240s
+gate: load1=51.48 waited=360s
+gate: load1=62.96 waited=480s
+gate: load1=46.32 waited=600s
+gate: load1=30.85 waited=720s
+gate: load1=71.51 waited=0s
+gate: load1=57.47 waited=120s
+gate: load1=44.92 waited=240s
+gate: load1=45.23 waited=360s
+gate: load1=45.77 waited=480s
+gate: load1=50.75 waited=600s
+gate: load1=38.30 waited=720s
+gate: load1=52.96 waited=0s
+gate: load1=35.58 waited=120s
+ALLDONE
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/wall-remeasure/walls.txt
+[0m
+[0m$ [0mls artifacts/claude-mouth241b-20260922/wall-remeasure/; echo ---; tail -3 artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run1.log artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run1.log artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run2.log artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run2.log artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run3.log artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run3.log
+cap228-run1
+cap228-run2
+cap228-run3
+cap241b-run1
+cap241b-run2
+cap241b-run3
+mouth241b-run1.log
+mouth241b-run2.log
+mouth241b-run3.log
+out228-run1
+out228-run2
+out228-run3
+out241b-run1
+out241b-run2
+out241b-run3
+run-wall.sh
+suites-228-run1.log
+suites-228-run2.log
+suites-228-run3.log
+suites-241b-run1.log
+suites-241b-run2.log
+suites-241b-run3.log
+uptimes.log
+walls.txt
+---
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run1.log <==
+GATE: clean
+TOTAL seconds=26.7
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap228-run1/events
+
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run1.log <==
+GATE: clean
+TOTAL seconds=30.3
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap241b-run1/events
+
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run2.log <==
+GATE: clean
+TOTAL seconds=29.5
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap228-run2/events
+
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run2.log <==
+GATE: clean
+TOTAL seconds=30.6
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap241b-run2/events
+
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-228-run3.log <==
+GATE: clean
+TOTAL seconds=29.4
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap228-run3/events
+
+==> artifacts/claude-mouth241b-20260922/wall-remeasure/suites-241b-run3.log <==
+GATE: clean
+TOTAL seconds=31.6
+captured 1016 event logs in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/wall-remeasure/cap241b-run3/events
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, statistics
+runs=[]
+for line in open('artifacts/claude-mouth241b-20260922/wall-remeasure/walls.txt'):
+    p=line.split()
+    if p and p[0]=='WALL':
+        d={kv.split('=')[0]:kv.split('=')[1] for kv in p[1:]}
+        runs.append({'agent':d['agent'],'run':int(d['run']),'rc':int(d['rc']),'seconds':float(d['seconds']),'load1':float(d['load1'])})
+r228=sorted(r['seconds'] for r in runs if r['agent']=='228')
+r241=sorted(r['seconds'] for r in runs if r['agent']=='241b')
+m228=statistics.median(r228); m241=statistics.median(r241)
+limit=round(m228*1.05,2); pct=round((m241-m228)/m228*100,2)
+out={'protocol':'D6: 3 alternated runs each (order 228,241b x3), same suite set rt136,rt143,sessions152,bench, CPU only','gate':'load1 < 40 before each run','runs':runs,'median_228':m228,'median_241b':m241,'limit_5pct':limit,'pct_diff':pct,'within_5pct':bool(m241<=m228*1.05)}
+json.dump(out,open('artifacts/claude-mouth241b-20260922/wall-remeasure/wall.json','w'),indent=1)
+print(json.dumps(out,indent=1))
+"
+{
+ "protocol": "D6: 3 alternated runs each (order 228,241b x3), same suite set rt136,rt143,sessions152,bench, CPU only",
+ "gate": "load1 < 40 before each run",
+ "runs": [
+  {
+   "agent": "228",
+   "run": 1,
+   "rc": 0,
+   "seconds": 27.3,
+   "load1": 26.22
+  },
+  {
+   "agent": "241b",
+   "run": 1,
+   "rc": 0,
+   "seconds": 31.0,
+   "load1": 34.15
+  },
+  {
+   "agent": "228",
+   "run": 2,
+   "rc": 0,
+   "seconds": 30.2,
+   "load1": 39.21
+  },
+  {
+   "agent": "241b",
+   "run": 2,
+   "rc": 0,
+   "seconds": 31.5,
+   "load1": 30.85
+  },
+  {
+   "agent": "228",
+   "run": 3,
+   "rc": 0,
+   "seconds": 30.5,
+   "load1": 38.3
+  },
+  {
+   "agent": "241b",
+   "run": 3,
+   "rc": 0,
+   "seconds": 32.4,
+   "load1": 35.58
+  }
+ ],
+ "median_228": 30.2,
+ "median_241b": 31.5,
+ "limit_5pct": 31.71,
+ "pct_diff": 4.3,
+ "within_5pct": true
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m5 --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl --wall241b 31.5 --wall228 30.2 2>&1 | tee artifacts/claude-mouth241b-20260922/wall-remeasure/m5-wall.out; echo "rc=$?"; shasum -a 256 -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt 2>&1 | sort | uniq -c
+M5 latency: n=1205 median=0.172 ms p99=1.111 ms max=2.056 ms
+M5 suite wall: 241b 31.5s vs 228 30.2s (limit 31.7s) ok
+M5 PASS
+rc=0
+   1 artifacts/claude-mouth241b-20260922/PASSMARKS.md: OK
+   1 artifacts/claude-mouth241b-20260922/say_forms.json: OK
+   1 scripts/claude_confirm241b.py: OK
+   1 scripts/claude_fix172b241b_benchv3.py: OK
+   1 scripts/claude_loop241b_agent.py: OK
+   1 scripts/claude_mouth241b_brake.py: OK
+   1 scripts/claude_mouth241b_check.py: OK
+   1 scripts/claude_mouth241b_morph.py: OK
+   1 scripts/claude_mouth241b_pairs.py: OK
+   1 scripts/claude_mouth241b_parse.py: OK
+   1 scripts/claude_mouth241b_reader.py: OK
+   1 scripts/claude_mouth241b_rer241.py: OK
+   1 scripts/claude_mouth241b_rerender238.py: OK
+   1 scripts/claude_mouth241b_s1.py: OK
+   1 scripts/claude_mouth241b_say.py: OK
+   1 scripts/claude_mouth241b_score.py: OK
+   1 scripts/claude_mouth241b_suites.py: OK
+   1 scripts/claude_mouth241b_sweep.py: OK
+   1 scripts/claude_mouth241b_test.py: OK
+[0m
+[0m→ [0mRead artifacts/claude-mouth241b-20260922/wall-remeasure/m5-wall.out
+[0m
+[0m$ [0mgit status --porcelain | head -40; echo ---; df -g / | tail -1
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+---
+/dev/disk3s1s1       460   12         9    57%  484014 103725880    0%   /
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-mouth241b-20260922/ | head -40
+(no output)
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-mouth241b-20260922/wall-remeasure/wall.json artifacts/claude-mouth241b-20260922/runs/walls.txt; echo "rc=$?"; git status --porcelain --untracked-files=all -- artifacts/claude-mouth241b-20260922/wall-remeasure/ | head; ls artifacts/claude-mouth241b-20260922/wall-remeasure/ | wc -l
+.gitignore:5:artifacts/	artifacts/claude-mouth241b-20260922/wall-remeasure/wall.json
+.gitignore:5:artifacts/	artifacts/claude-mouth241b-20260922/runs/walls.txt
+rc=0
+      26
+[0m
