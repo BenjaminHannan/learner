@@ -1,0 +1,16 @@
+BLIND PANEL SPEC: nhoppanel268 (backwards questions about a value that has its own facts). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+Never open design/v3/30-modes/268-*, artifacts/claude-nhopdiag-*, scripts/claude_fix268_*, scripts/claude_loop268_agent.py, artifacts/claude-nhop268-*, scripts/fable_bench92_english_arm.py, scripts/fable_loop138_agent.py, scripts/fable_fix190_reverse.py, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-nhoppanel268-20260923/ with panel.jsonl (70), base138m.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (five files, repo-root paths).
+Item: {"id": "n268-001", "family", "setup": [1-4 teaches, each its own turn], "question", "gold": [list; every string must appear in a right reply; [] for abstain], "note"}. JSON list gold only. Only teaches the base stores exactly as you expect (check each on the base; replace the ones it doesn't). Use teach forms "A's R is B." and "The R of A is B." only.
+Families (exact counts):
+- reverse_chain 24: "A's R is V." AND a second fact where V is the subject ("V's R2 is W.", R2 may equal R), then a backwards question about V: "Whose R is V?", "Who is married to V?" (R spouse/wife/husband), "What has V written?" / "What did V write?" (R author), "What did V found?" (R founder), "Who works for V?" / "Whose employer is V?" (R employer), "Whose child is V?" / "Whose parent is V?" (R parent/child), "Whose composer is V?" / "What did V compose?" (R composer). gold [A]. At least 6 relations, at most 5 items per relation, 6 items with two subjects (gold [A, B]).
+- reverse_nochain 10: the same question shapes, V has no facts of its own. gold [A].
+- uncued_reverse 8: backwards questions over boss, mother, friend, neighbour (with and without a V chain). gold [A].
+- forward_chain 12: real forward two-step questions over the same relations ("Who is A's spouse's employer?", "Who is the author's spouse?" style, with both links taught). gold [final value].
+- forward_1hop 10: "Who is A's spouse?", "Who wrote X?", "Who founded Y?" with no same-relation chain. gold [value].
+- abstain 6: backwards or forward questions about names never taught. gold []; right = abstain ("I don't know" / "I couldn't") naming no taught person.
+Fictional names only; at least 20 items with two-word names; book/company titles may be multi-word.
+run_base.py: run each item once on 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json (build_agent138m, fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Row fields: id, setup_replies, question_reply, question_stage (loop.ears.last_stage), stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged; args: panel rows [out.json]): per item and family: right (every gold string in the reply, case-insensitive; abstain family: abstain with no taught name), wrong (reply names a taught person/value not in gold and misses some gold string, and is not an abstain), question_wrote. README: the base's right / wrong / question writes per family, category level only. Never quote an item.
