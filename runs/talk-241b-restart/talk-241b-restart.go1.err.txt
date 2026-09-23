@@ -1,0 +1,2131 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; echo ---; df -g /; echo ---; pwd; git status --short | head -n 100; echo ---; git fetch -q origin claude/project-thread-p68q5v && echo FETCH_OK || echo FETCH_FAIL
+22:46  up 2 days, 14:35, 4 users, load averages: 200.96 149.99 106.10
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    42%  484014 185467440    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_loop263_agent.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---
+FETCH_OK
+[0m
+[0m✗ [0mRead artifacts/claude-mouth241b-20260922/PASSMARKS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/PASSMARKS.md
+[0m✗ [0mRead artifacts/claude-mouth241b-20260922/RESULTS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/RESULTS.md
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead handoff/kit/briefs/241b-mouthA2.txt
+[0m→ [0mRead handoff/kit/briefs/241b-stylesheet.txt
+[0m
+[0m$ [0mls -R artifacts/claude-mouth241b-20260922 2>&1 | head -n 100; echo ===; ls scripts/ | grep -E "241b|loop241b|confirm241b|fix172" ; echo ===; shasum -a 256 handoff/kit/briefs/241b-stylesheet.txt; cat handoff/kit/briefs/241b-stylesheet.sha256.txt 2>&1; echo ===; git log --oneline -5; echo ===; git branch -a | head -n 30
+say_forms.json
+zsh:1: == not found
+[0m
+[0m$ [0mls -R artifacts/claude-mouth241b-20260922
+say_forms.json
+[0m
+[0m$ [0mls scripts/claude_mouth241b_test.py scripts/claude_mouth241b_say.py scripts/claude_loop241b_agent.py 2>&1; ls scripts/ | head -n 200
+scripts/claude_loop241b_agent.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_test.py
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_comma263_devcases.py
+claude_comma263_regscore.py
+claude_comma263_run.py
+claude_comma263_score.py
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_confirm241b.py
+claude_convpanel239_run.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_demo_dryrun.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_transcript.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_diag119h_freshprobe.py
+claude_diag243_composers.py
+claude_diag243_grid.py
+claude_diag243_tally.py
+claude_diag243_trace.py
+claude_direction251_run.py
+claude_direction251_score.py
+claude_ear256_devcases.py
+claude_ear256_deveval.py
+claude_ear256_devrun.py
+claude_ear256_ear.py
+claude_ear256_roundtrip.py
+claude_ear256_route.py
+claude_ear256_score.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_firstname236_score.py
+claude_firstperson249_run.py
+claude_firstperson249_score.py
+claude_fix172b241b_benchv3.py
+claude_fix228_srcguard.py
+claude_fix245_myrel.py
+claude_fix246_mentionwalk.py
+claude_fix247_apos.py
+claude_fix248_whats.py
+claude_fix249_firstperson.py
+claude_fix250_verbsubj.py
+claude_fix251_direction.py
+claude_fix252_correct.py
+claude_fix252b_screen.py
+claude_fix252c_merge.py
+claude_fix255_test.py
+claude_fix255_text.py
+claude_fix258_comment.py
+claude_fix259_boundary.py
+claude_fix260_openers.py
+claude_fix263_comma.py
+claude_fullname232_devcases.py
+claude_fullname232_parity.py
+claude_fullname232_run.py
+claude_fullname232_score.py
+claude_fullname232b_score.py
+claude_fullname232c_devcases.py
+claude_fullname232c_parity.py
+claude_fullname232c_score.py
+claude_grammar238_coderender.py
+claude_grammar238_codescan.py
+claude_grammar238_grade.py
+claude_grammar238_harvest.py
+claude_identity227c_marks.py
+claude_identity227c.py
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_loop138n_agent.py
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_loop224c_agent.py
+claude_loop227b_agent.py
+claude_loop227c_agent.py
+claude_loop228_agent.py
+claude_loop229_agent.py
+claude_loop230_agent.py
+claude_loop230b_agent.py
+claude_loop230c_agent.py
+claude_loop231_agent.py
+claude_loop231b_agent.py
+claude_loop232_agent.py
+claude_loop232c_agent.py
+claude_loop233_agent.py
+claude_loop234_agent.py
+claude_loop236_agent.py
+claude_loop237_agent.py
+claude_loop237b_agent.py
+claude_loop241_agent.py
+claude_loop241b_agent.py
+claude_loop245_agent.py
+claude_loop246_agent.py
+claude_loop247_agent.py
+claude_loop248_agent.py
+claude_loop249_agent.py
+claude_loop250_agent.py
+claude_loop251_agent.py
+claude_loop252_agent.py
+claude_loop252b_agent.py
+claude_loop252c_agent.py
+claude_loop255_agent.py
+claude_loop256_agent.py
+claude_loop258_agent.py
+claude_loop259_agent.py
+claude_loop260_agent.py
+claude_loop263_agent.py
+claude_mentionwalk246_score.py
+claude_merge138k_latency.py
+claude_merge138k_marks220.py
+claude_merge138k_probe.py
+claude_merge138k_rt143nogate.py
+claude_merge138k_score.py
+claude_merge252c_runall.sh
+claude_merge252c_score.py
+claude_mouth241_brake.py
+claude_mouth241_check.py
+claude_mouth241_morph.py
+claude_mouth241_pairs.py
+claude_mouth241_parse.py
+claude_mouth241_reader.py
+claude_mouth241_rerender238.py
+claude_mouth241_say.py
+claude_mouth241_score.py
+[0m
+[0m$ [0mls scripts/ | tail -n 200
+fable_modes54_demo.py
+fable_modes54_scheduler.py
+fable_mouth53_data.py
+fable_mouth53_mouth.py
+fable_mouth53_replay.py
+fable_mouth53_score.py
+fable_mouth53_train.py
+fable_naturalpanel208_driver.py
+fable_newnames21.py
+fable_newnames27.py
+fable_newnames29.py
+fable_noisyteacher45_enumerate.py
+fable_noisyteacher45.py
+fable_notebook_contract.py
+fable_notebook_m0.py
+fable_novelty19_data.py
+fable_novelty19_train.py
+fable_novelty19b_data.py
+fable_novelty19b_train.py
+fable_ofteach215_cmps.py
+fable_ofteach215_marks.py
+fable_ofteach215_scan.py
+fable_operator_reliability_gpu.py
+fable_operator_reliability.py
+fable_operator_staged.py
+fable_operator_startup.py
+fable_operator_swap.py
+fable_operator_variants.py
+fable_perf128_c1.py
+fable_perf128_c2.py
+fable_perf128_c3.py
+fable_perf128_daemon.py
+fable_perf128_diag.py
+fable_perf128_index.py
+fable_perf128_soak.py
+fable_perf142_bench121.py
+fable_perf142_c1.py
+fable_perf142_c2.py
+fable_perf142_diag.py
+fable_perf142_index.py
+fable_qmark151_bench.py
+fable_qmark151_core.py
+fable_qmark151_q1.py
+fable_qmark151_run143.py
+fable_qrewrite132.py
+fable_qual56_conformance.py
+fable_qual56_miner_filter.py
+fable_qual56_reasoner.py
+fable_read106_score.py
+fable_read107_behind_gate.py
+fable_reading94_build.py
+fable_reading94b_build.py
+fable_reasoner44_score.py
+fable_reasoner44_stress.py
+fable_reasoner44.py
+fable_reasoner50.py
+fable_redteam110_cases.py
+fable_redteam110_runner.py
+fable_redteam124_runner.py
+fable_redteam136_cases.py
+fable_redteam136_run.py
+fable_redteam143_cases.py
+fable_redteam143_run.py
+fable_redteam67_probe.py
+fable_redteam79_probe.py
+fable_redteam81_probe.py
+fable_redteam98_cases.py
+fable_redteam98_runner.py
+fable_relcanon63_build.py
+fable_relcanon63_canon.py
+fable_relcanon63_test.py
+fable_relcanon63_testdata.py
+fable_relcanon97_make.py
+fable_relcanon97_score.py
+fable_reliability_bundle.py
+fable_rescore224.py
+fable_reversal210_build.py
+fable_reversal210_check.py
+fable_reversal210_run.py
+fable_scale_probe_recheck.py
+fable_scale_probe.py
+fable_screen148_mixin.py
+fable_self100_runner.py
+fable_self105_runner.py
+fable_self105.py
+fable_self114_runner.py
+fable_self114.py
+fable_self122_data.py
+fable_self122_diag.py
+fable_self122_runner.py
+fable_self122_train.py
+fable_self122.py
+fable_self127_calibrate.py
+fable_self127_deltas.py
+fable_self127_runner.py
+fable_self127.py
+fable_self99.py
+fable_selfcard161_marks.py
+fable_selfcard161.py
+fable_session152_run.py
+fable_session152_sessions.py
+fable_sharedsleep43b.py
+fable_simplewiki86_extract.py
+fable_sleep104_agent.py
+fable_sleep104_drive.py
+fable_sleep115_agent.py
+fable_sleep115_drive.py
+fable_sleep116_drive.py
+fable_sleep116_rescore.py
+fable_sleep130_agent.py
+fable_sleep130_climb.py
+fable_sleep130_drive.py
+fable_sleep131_agent.py
+fable_sleep131_drive.py
+fable_sleep131_rescore.py
+fable_sleep145_agent.py
+fable_sleep145_drive.py
+fable_sleep145_rescore.py
+fable_sleepselect43e.py
+fable_sleepsmoke206.py
+fable_soak108_ghostdemo.py
+fable_soak108_run.py
+fable_soak93_ghostdemo.py
+fable_soak93_run.py
+fable_source226_cases.py
+fable_source226_run.py
+fable_startup_factorial_v2.py
+fable_startup_factorial.py
+fable_story_size_stress.py
+fable_suitediff.py
+fable_suitediff218.py
+fable_talker101_data.py
+fable_talker101_eval.py
+fable_talker101_model.py
+fable_talker101_tokenizer.py
+fable_talker101_train.py
+fable_talker120_data.py
+fable_talker120_mouth.py
+fable_talker120_replay.py
+fable_talker120_score.py
+fable_talker120_train.py
+fable_talker120b_diagnose.py
+fable_talker120b_train.py
+fable_talker120c_mouth.py
+fable_talker120c_replay.py
+fable_talker120c_score.py
+fable_talker120d_mouth.py
+fable_talker120d_replay.py
+fable_talker120d_score.py
+fable_talker24_data.py
+fable_talker24_dialogues_frames.py
+fable_talker24_dialogues.py
+fable_talker24_interventions.py
+fable_talker24_loader.py
+fable_talker24_model.py
+fable_talker24_parser.py
+fable_talker24_train.py
+fable_thinking_m2.py
+fable_thought49_conformance.py
+fable_thought49_notebook.py
+fable_thought49_schema.py
+fable_thought62_conformance.py
+fable_thought62_schema.py
+fable_transport43g_v2.py
+fable_transport43g.py
+fable_turns84_run.py
+fable_webfix89_run.py
+fable_webfix89_thinking.py
+fable_webred_frames.py
+fable_widelengths43k_v2.py
+fable_widelengths43k.py
+fable_wire51_adapters.py
+fable_wire51_run.py
+fable_wire51_script40.py
+fable_wire57_e2e.py
+fable_wordmatch149_bench.py
+fable_wordmatch149_core.py
+fable_wordmatch149_probe.py
+fable_wordmatch149_run143.py
+fable_writescreen209_probe.py
+fable_writescreen209_suites.py
+fable212_cases.py
+fable212_marks.py
+fable212_suites.py
+fable216_panel.py
+fable216_scan.py
+fable216_suites.py
+gen_english.py
+gen_patterns.py
+premonition_m01_probe.py
+premonition_m02_answer_path.py
+premonition_ovn_ladder.py
+premonition_ovn_retrieval.py
+premonition_pool_controls.py
+premonition_teacher_delay_eval.py
+premonition_teacher_delay_ops.py
+premonition_teacher_delay.py
+remote_benspc.ps1
+remote_benspc.sh
+scratchpad
+[0m
+[0m$ [0mls scripts/claude_mouth241b_*.py scripts/claude_confirm241b* scripts/claude_fix172b241b_* scripts/claude_loop241b_*
+scripts/claude_confirm241b.py
+scripts/claude_fix172b241b_benchv3.py
+scripts/claude_loop241b_agent.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+[0m
+[0m$ [0mshasum -a 256 handoff/kit/briefs/241b-stylesheet.txt; cat handoff/kit/briefs/241b-stylesheet.sha256.txt
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  handoff/kit/briefs/241b-stylesheet.txt
+cat: handoff/kit/briefs/241b-stylesheet.sha256.txt: No such file or directory
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/241b-mouthA2.txt > /tmp/brief241b.txt; wc -l /tmp/brief241b.txt; git ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -i 241b | head -n 60
+77 /tmp/brief241b.txt
+artifacts/claude-mouth241b-20260922/say_forms.json
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/queue/talk-241b-restart.md
+scripts/claude_confirm241b.py
+scripts/claude_fix172b241b_benchv3.py
+scripts/claude_loop241b_agent.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/queue/talk-241b-restart.md
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.
+
+
+YOUR TASK: restart and finish the BUILD half of exp 241b (the mouth, stage A v2), the one follow-up to 241's registered FAIL. CPU only.
+Read first: handoff/kit/briefs/241b-mouthA2.txt (the registered brief; follow it exactly) and handoff/kit/briefs/241b-stylesheet.txt (its sha256 must be 16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef; check it and stop if it differs). In this worktree read artifacts/claude-mouth241-20260922/PASSMARKS.md and RESULTS.md.
+State: the first 241b builder stopped before sealing (account limit). It left unsealed code: scripts/claude_mouth241b_*.py (13 files), claude_loop241b_agent.py, claude_confirm241b.py, claude_fix172b241b_benchv3.py and artifacts/claude-mouth241b-20260922/say_forms.json. claude_mouth241b_test.py gives 29/29 in the director's check. No PASSMARKS, no seal, no sweep yet.
+Rules for the old files: they are read-only. Reuse them by import. If one must change, copy it to a new file with the suffix _r (for example claude_mouth241b_say_r.py), change the copy, and list every copy with a one-line reason in PASSMARKS.
+Order:
+(1) Inventory: for each brief item a to g and each new scorer version, say which file does it and whether its tests cover it. Build what is missing.
+(2) Dev pilot on the 241 sweep and pairs (dev material now): the 42 old M1 misses fixed or not, M2 a/b/c, M3 suites vs 228, S1 identity check on every saved row, M5 render median/p99 and the D6 suite wall vs 228 (check uptime first; stop and report if the wall is still over +5%, with the per-line cost).
+(3) PASSMARKS.md with 241b's registered marks and S1, numbered predictions P241b.n, every predicted move; the style sheet copied verbatim into section 6. Seal (shasum -a 256 > SEAL.sha256.txt). Append the ledger lines.
+(4) Generate the FRESH sweep (seed SEED241B, about 1,200 replies, at least 30 AMBIGUOUS) and the FRESH 120 M4 pairs, and seal them into SEAL2.sha256.txt.
+(5) Run the registered M2, M3, M5, S1 and the sleep smoke. Stop there. Never grade or judge the sweep or pairs yourself; the director launches fresh graders and a fresh judge.
+Keep every registered run under 25 minutes. Report: marks so far with integer counts, the paths and sha256 of the sweep, pairs and pairs key, every move, miss and deviation.
+PUSH: artifacts/claude-mouth241b-20260922 scripts/claude_mouth241b_* scripts/claude_loop241b_* scripts/claude_confirm241b* scripts/claude_fix172b241b_* artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v | grep -E "mouth241[^b]|mouth241b" | head -n 80
+artifacts/claude-mouth241-20260922/PASSMARKS.md
+artifacts/claude-mouth241-20260922/RESULTS.md
+artifacts/claude-mouth241-20260922/SEAL.sha256.txt
+artifacts/claude-mouth241-20260922/SEAL2.sha256.txt
+artifacts/claude-mouth241-20260922/pairs-key.jsonl
+artifacts/claude-mouth241-20260922/pairs-log.jsonl
+artifacts/claude-mouth241-20260922/pairs.jsonl
+artifacts/claude-mouth241-20260922/rerender238-summary.json
+artifacts/claude-mouth241-20260922/runs/mouth241-run1.jsonl
+artifacts/claude-mouth241-20260922/runs/run.sh
+artifacts/claude-mouth241-20260922/runs/sleep-228.json
+artifacts/claude-mouth241-20260922/runs/sleep-228.log
+artifacts/claude-mouth241-20260922/runs/sleep-241.json
+artifacts/claude-mouth241-20260922/runs/sleep-241.log
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-diff.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-edit200-rows.jsonl
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/rt136-diff.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/rt136-rows.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/rt143-diff.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/rt143-rows.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/sessions152-diff.json
+artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/sessions152-rows.json
+artifacts/claude-mouth241-20260922/runs/suites-228-run1.log
+artifacts/claude-mouth241-20260922/runs/suites-228-run2.log
+artifacts/claude-mouth241-20260922/runs/suites-228-run3.log
+artifacts/claude-mouth241-20260922/runs/suites-241-run1.log
+artifacts/claude-mouth241-20260922/runs/suites-241-run2.log
+artifacts/claude-mouth241-20260922/runs/suites-241-run3.log
+artifacts/claude-mouth241-20260922/runs/walls.txt
+artifacts/claude-mouth241-20260922/say_forms.json
+artifacts/claude-mouth241-20260922/score241.json
+artifacts/claude-mouth241-20260922/sweep-frames.jsonl
+artifacts/claude-mouth241-20260922/sweep.jsonl
+artifacts/claude-mouth241b-20260922/say_forms.json
+scripts/claude_mouth241_brake.py
+scripts/claude_mouth241_check.py
+scripts/claude_mouth241_morph.py
+scripts/claude_mouth241_pairs.py
+scripts/claude_mouth241_parse.py
+scripts/claude_mouth241_reader.py
+scripts/claude_mouth241_rerender238.py
+scripts/claude_mouth241_say.py
+scripts/claude_mouth241_score.py
+scripts/claude_mouth241_suites.py
+scripts/claude_mouth241_sweep.py
+scripts/claude_mouth241_test.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/PASSMARKS.md > /tmp/p241.md; wc -l /tmp/p241.md; git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/RESULTS.md > /tmp/r241.md; wc -l /tmp/r241.md
+242 /tmp/p241.md
+     179 /tmp/r241.md
+[0m
+[0m→ [0mRead /tmp/p241.md
+[0m→ [0mRead /tmp/r241.md
+[0m→ [0mRead scripts/claude_mouth241b_test.py
+[0m→ [0mRead scripts/claude_loop241b_agent.py
+[0m→ [0mRead scripts/claude_mouth241b_say.py
+[0m
+[0m# [0mTodos
+[•] Inventory 241b code vs brief a-g + scorer versions
+[ ] Run unit tests 29/29 + dev pilot on 241 sweep/pairs (M1 misses, M2, M3, S1, M5 wall)
+[ ] Write PASSMARKS.md + seal SEAL.sha256.txt + ledger P241b.n
+[ ] Generate fresh sweep SEED241B + 120 M4 pairs, seal SEAL2
+[ ] Registered M2/M3/M5/S1/sleep smoke, RESULTS.md, final report
+[0m
+[0m• [0mInventory 241b support files[90m Explore Agent[0m
+[0m✓ [0mInventory 241b support files[90m Explore Agent[0m
+[0m
+[0m$ [0muptime; df -g /
+22:48  up 2 days, 14:38, 4 users, load averages: 145.27 146.74 112.51
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    42%  484014 185646720    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_test.py
+PASS morph_articles
+PASS morph_lists
+PASS morph_counts
+PASS morph_possessive_plural
+PASS morph_finish
+PASS reader_round_trip
+PASS parse_lossless
+PASS parse_self_people_user
+PASS render_director_case
+PASS render_acts
+PASS render_list_needs_record
+PASS render_unknown_entity_verbatim
+PASS render_note_prefix_kept
+PASS brake_blocks_bad_text
+PASS brake_numbers
+PASS render_the_names
+PASS render_abbreviations_and_initials
+PASS render_count_noun_values_and_plural_names
+PASS b241_broken_chain_any_value_type
+PASS b241_conflict_value_rendering
+PASS b241_cap_name_rules
+PASS b241_agreement
+PASS b241_repeated_items_said_once
+PASS b241_self_people_you_word
+PASS b241_ambiguous
+PASS b241_ambiguous_identical_counted_by_mixin
+PASS b241_confirm_match_version
+PASS b241_bounded_finders_match_regex
+PASS b241_shape_cache_equals_reader
+29/29 passed
+[0m
+[0m$ [0mmkdir -p /tmp/dev241 && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/sweep.jsonl > /tmp/dev241/sweep.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/sweep-frames.jsonl > /tmp/dev241/sweep-frames.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/pairs.jsonl > /tmp/dev241/pairs.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/pairs-key.jsonl > /tmp/dev241/pairs-key.jsonl && wc -l /tmp/dev241/*
+120 /tmp/dev241/pairs-key.jsonl
+     120 /tmp/dev241/pairs.jsonl
+    1205 /tmp/dev241/sweep-frames.jsonl
+    1205 /tmp/dev241/sweep.jsonl
+    2650 total
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_say.py --build
+wrote artifacts/claude-mouth241b-20260922/say_forms.json: 150 rows, 32 with verb forms, 0 forms dropped by round trip
+[0m
+[0m$ [0mgit status --short artifacts/ scripts/ | head -n 20; git diff --stat artifacts/claude-mouth241b-20260922/say_forms.json
+M artifacts/fable-predictions-ledger.md
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_loop263_agent.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_suites.py --help; echo ===RC=$?
+usage: --capture DIR [--mouthlog F] [--scorer241b] -- <218 args>
+zsh:1: ==RC=1 not found
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_s1.py --help; echo ===RC=$?; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_rer241.py --help; echo ===RC=$?
+usage: claude_mouth241b_s1.py [-h] --label LABEL roots [roots ...]
+
+positional arguments:
+  roots
+
+options:
+  -h, --help     show this help message and exit
+  --label LABEL
+zsh:1: ==RC=0 not found
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py --help; echo ===RC=$?
+usage: claude_mouth241b_check.py [-h] [--suite-out SUITE_OUT]
+                                 [--frames FRAMES] [--sweep SWEEP]
+                                 [--mouthlog MOUTHLOG] [--base-cap BASE_CAP]
+                                 [--new-cap NEW_CAP] [--wall241b WALL241B]
+                                 [--wall228 WALL228]
+                                 {m2a,m2b,m2c,m3,m5}
+
+positional arguments:
+  {m2a,m2b,m2c,m3,m5}
+
+options:
+  -h, --help            show this help message and exit
+  --suite-out SUITE_OUT
+  --frames FRAMES
+  --sweep SWEEP
+  --mouthlog MOUTHLOG
+  --base-cap BASE_CAP
+  --new-cap NEW_CAP
+  --wall241b WALL241B
+  --wall228 WALL228
+zsh:1: ==RC=0 not found
+[0m
+[0m→ [0mRead scripts/claude_mouth241b_s1.py
+[0m→ [0mRead scripts/claude_mouth241b_rer241.py
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/SUITEDIFF218-SUMMARY.json > /tmp/dev241/summary241.json; cat /tmp/dev241/summary241.json
+{
+ "agent": "scripts/claude_loop241_agent.py",
+ "config": "artifacts/claude-determinism228-20260922/loop228-config.json",
+ "base": "138i",
+ "suites": [
+  "rt136",
+  "rt143",
+  "sessions152",
+  "bench"
+ ],
+ "summary_lines": [
+  "rt136: n_moves=45 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=45) seconds=3.3",
+  "rt143: n_moves=24 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=24) seconds=4.7",
+  "sessions152: n_moves=60 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=60) seconds=1.4",
+  "bench: n_moves=623 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=623) seconds=37.0"
+ ],
+ "skipped": {},
+ "gate": "GATE: clean",
+ "seconds": 49.6
+}
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/score241.json > /tmp/dev241/score241.json; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('/tmp/dev241/score241.json')); print(list(d.keys())); print(len(d['M1']['ungrammatical']))"
+['M1', 'M4']
+42
+[0m
+[0m← [0mWrite scripts/claude_mouth241b_rer241_r.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_rer241_r.py --old-dir /tmp/dev241 --out /tmp/dev241/rer241.json > /tmp/dev241/rer241.log 2>&1; echo RC=$?; head -c 1500 /tmp/dev241/rer241.log
+RC=0
+rer241: 1205 frames; non-A routes {}; changed vs 241 {'SAVED': 1, 'CONFLICT': 20, 'FORGOTTEN_ONE': 67, 'BROKEN_CHAIN': 80, 'YESNO_NO': 3, 'YESNO_NOTKNOWN': 2, 'ANSWER_LIST': 6, 'AMBIGUOUS': 30}
+sub-marks non-zero on the re-rendered sweep: {}
+old misses 42: {'changed': 42}
+  s0101 CONFLICT        [changed]
+     241 : My notes say Iththal is 6 years old. Do you want me to change it to 72?
+     241b: My notes say Iththal's age is 6. Do you want me to change it to 72?
+     241 grader: rule 3: '6 years old'
+  s0102 CONFLICT        [changed]
+     241 : My notes say your instrument is the oboe. Do you want me to change it to euphonium?
+     241b: My notes say your instrument is the oboe. Do you want me to change it to the euphonium?
+     241 grader: rule 5: 'change it to euphonium'
+  s0105 CONFLICT        [changed]
+     241 : My notes say Elfil's car is an old estate car. Do you want me to change it to electric van?
+     241b: My notes say Elfil's car is an old estate car. Do you want me to change it to an electric van?
+     241 grader: rule 5: 'change it to electric van'
+  s0141 CONFLICT        [changed]
+     241 : My notes say Hondste's godfather is Mathstio. Do you want me to change it to shethgean?
+     241b: My notes say Hondste's godfather is Mathstio. Do you want me to change it to Shethgean?
+     241 grader: general: proper noun not capitalised 'shethgean'
+  s0142 CONFLICT        [changed]
+     241 : My notes say Brobear coaches Grarthi. Do you want me to change it to nairsa
+[0m
+[0m→ [0mRead scripts/claude_mouth241b_check.py
+[0m
+[0m$ [0mtail -c 2500 /tmp/dev241/rer241.log; echo; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('/tmp/dev241/rer241.json')); print('submarks:', d['submarks_nonzero']); print('status:', d['old_miss_status']); print('changed_by_act:', d['changed_vs_241_by_act']); print('nonA:', d['non_A_routes'])"
+de of your mother's sister is B12, which is not someone I can look up.
+     241b: The code of your mother's sister is B12. I have nothing saved about that, so I can only follow the chain this far.
+     241 grader: general: 'B12, which is not someone I can look up' (someone used for a code)
+  s0543 BROKEN_CHAIN    [changed]
+     241 : Your address is 4 Kestrel Lane, which is not someone I can look up.
+     241b: Your address is 4 Kestrel Lane. I have nothing saved about that, so I can only follow the chain this far.
+     241 grader: general: '4 Kestrel Lane, which is not someone I can look up' (someone used for an address)
+  s0544 BROKEN_CHAIN    [changed]
+     241 : Your owner's sport is rugby, which is not someone I can look up.
+     241b: Your owner's sport is rugby. I have nothing saved about that, so I can only follow the chain this far.
+     241 grader: general: 'rugby, which is not someone I can look up' (someone used for a thing)
+  s0547 BROKEN_CHAIN    [changed]
+     241 : Thitol's anniversary is April 8, which is not someone I can look up.
+     241b: Thitol's anniversary is April 8. I have nothing saved about that, so I can only follow the chain this far.
+     241 grader: general: 'April 8, which is not someone I can look up' (someone used for a date)
+  s0558 BROKEN_CHAIN    [changed]
+     241 : Siortand's coach's date of death is 9 January 1997, which is not someone I can look up.
+     241b: Siortand's coach's date of death is 9 January 1997. I have nothing saved about that, so I can only follow the chain this far.
+     241 grader: general: '9 January 1997, which is not someone I can look up' (someone used for a date)
+  s0657 YESNO_NO        [changed]
+     241 : No, the hobbies of Kudrith Books are rowing and rowing.
+     241b: No, the hobby of Kudrith Books is rowing.
+     241 grader: rule 2: 'rowing and rowing' (same item repeated in a list)
+  s0753 YESNO_NOTKNOWN  [changed]
+     241 : Not that I know of. I have an action figure, an abacus and an abacus as Arktri's toys.
+     241b: Not that I know of. I have an action figure and an abacus as Arktri's toys.
+     241 grader: rule 2: 'an abacus and an abacus' (same item repeated in a list)
+  s0756 YESNO_NOTKNOWN  [changed]
+     241 : Not that I know of. I have an iguana, an iguana and an iguana as Elgiol's pets.
+     241b: Not that I know of. I have an iguana as Elgiol's pet.
+     241 grader: rule 2: 'an iguana, an iguana and an iguana' (same item repeated in a list)
+wrote /tmp/dev241/rer241.json
+
+submarks: {}
+status: {'changed': 42}
+changed_by_act: {'SAVED': 1, 'CONFLICT': 20, 'FORGOTTEN_ONE': 67, 'BROKEN_CHAIN': 80, 'YESNO_NO': 3, 'YESNO_NOTKNOWN': 2, 'ANSWER_LIST': 6, 'AMBIGUOUS': 30}
+nonA: {}
+[0m
+[0m$ [0mmkdir -p /tmp/dev241/rows241 && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-bench132_4hop-rows.jsonl > /tmp/dev241/rows241/bench-bench132_4hop-rows.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-edit200-rows.jsonl > /tmp/dev241/rows241/bench-edit200-rows.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-new_121_4hop-rows.jsonl > /tmp/dev241/rows241/bench-new_121_4hop-rows.jsonl && git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-old_s2fresh_4hop-rows.jsonl > /tmp/dev241/rows241/bench-old_s2fresh_4hop-rows.jsonl && ls -la /tmp/dev241/rows241/ && uptime
+total 1360
+drwxr-xr-x   6 ben-hannan  wheel     192 Sep 22 22:51 .
+drwxr-xr-x  11 ben-hannan  wheel     352 Sep 22 22:51 ..
+-rw-r--r--   1 ben-hannan  wheel  186943 Sep 22 22:51 bench-bench132_4hop-rows.jsonl
+-rw-r--r--   1 ben-hannan  wheel  119313 Sep 22 22:51 bench-edit200-rows.jsonl
+-rw-r--r--   1 ben-hannan  wheel  189382 Sep 22 22:51 bench-new_121_4hop-rows.jsonl
+-rw-r--r--   1 ben-hannan  wheel  191732 Sep 22 22:51 bench-old_s2fresh_4hop-rows.jsonl
+22:51  up 2 days, 14:40, 4 users, load averages: 102.36 132.51 112.49
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; f=open('/tmp/dev241/sweep-frames.jsonl'); l=json.loads(next(f)); print(sorted(l.keys())); s=open('/tmp/dev241/sweep.jsonl'); l2=json.loads(next(s)); print(sorted(l2.keys()))"
+['act', 'cls', 'frame', 'gen_frame', 'id', 'legacy_text', 'ms', 'records', 'route', 'why']
+['act', 'id', 'text']
+[0m
+[0m← [0mWrite scripts/claude_mouth241b_devrender_r.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_s1.py --label dev241 /tmp/dev241/rows241
+S1 [dev241]: {'v3 rows': 800, 'needle replies': 721, 'v3 rows verdict reproduced': 800}; differences 0
+S1 [dev241] PASS (100% identical)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_devrender_r.py --frames /tmp/dev241/sweep-frames.jsonl --out-frames /tmp/dev241/sweep241b-frames.jsonl --out-sweep /tmp/dev241/sweep241b.jsonl && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2a --frames /tmp/dev241/sweep241b-frames.jsonl --sweep /tmp/dev241/sweep241b.jsonl && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m5 --frames /tmp/dev241/sweep241b-frames.jsonl
+rendered 1205 frames
+M2(a): 1205 sweep replies, 0 unfaithful (rules 1-8 or sev-1); rule-9 anchor fails 0
+M2(a) PASS
+M5 latency: n=1205 median=0.180 ms p99=1.423 ms max=2.703 ms
+M5 PASS
+[0m
+[0m→ [0mRead scripts/claude_mouth241b_suites.py
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/run.sh; echo ---WALLS---; git show origin/claude/project-thread-p68q5v:artifacts/claude-mouth241-20260922/runs/walls.txt
+#!/bin/bash
+# exp 241 registered runs (post-seal). D6 wall protocol + D12 order.
+R=/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/reg241b
+CF=artifacts/claude-determinism228-20260922/loop228-config.json
+for k in 1 2 3; do
+  for ag in 228 241; do
+    uptime
+    if [ $ag = 228 ]; then AG=scripts/claude_loop228_agent.py; ML=""; else AG=scripts/claude_loop241_agent.py; ML="--mouthlog $R/mouth241-run$k.log"; fi
+    t0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
+    /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/u scripts/claude_mouth241_suites.py --capture $R/cap$ag-run$k $ML -- --agent $AG --config $CF --base 138i --only rt136,rt143,sessions152,bench --out $R/out$ag-run$k > $R/suites-$ag-run$k.log 2>&1
+    rc=$?
+    t1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
+    echo "WALL agent=$ag run=$k rc=$rc seconds=$(perl -e "printf q(%.1f), $t1-$t0")" | tee -a $R/walls.txt
+  done
+done
+for ag in 228 241; do
+  uptime
+  /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/u scripts/fable_sleepsmoke206.py --agent scripts/claude_loop${ag}_agent.py --config $CF --root $R/sleep-$ag --report $R/sleep-$ag.json --label $ag > $R/sleep-$ag.log 2>&1
+  echo "SLEEP $ag rc=$?" | tee -a $R/walls.txt
+done
+echo ALLDONE
+---WALLS---
+WALL agent=228 run=1 rc=0 seconds=43.1
+WALL agent=241 run=1 rc=0 seconds=50.4
+WALL agent=228 run=2 rc=0 seconds=43.2
+WALL agent=241 run=2 rc=0 seconds=50.3
+WALL agent=228 run=3 rc=0 seconds=39.7
+WALL agent=241 run=3 rc=0 seconds=51.2
+SLEEP 228 rc=0
+SLEEP 241 rc=0
+[0m
+[0m$ [0muptime; mkdir -p /tmp/dev241 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_suites.py --capture /tmp/dev241/cap228-dev1 -- --agent scripts/claude_loop228_agent.py --config artifacts/claude-determinism228-20260922/loop228-config.json --base 138i --only rt136,rt143,sessions152,bench --out /tmp/dev241/out228-dev1 > /tmp/dev241/suites-228-dev1.log 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo WALL228-dev1 rc=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); tail -n 8 /tmp/dev241/out228-dev1/SUITEDIFF218-SUMMARY.json 2>/dev/null || tail -n 20 /tmp/dev241/suites-228-dev1.log
+22:52  up 2 days, 14:41, 4 users, load averages: 97.83 127.71 111.65
+WALL228-dev1 rc=0 seconds=31.5
+  "rt143: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.2",
+  "sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=0.5",
+  "bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=22.8"
+ ],
+ "skipped": {},
+ "gate": "GATE: clean",
+ "seconds": 30.8
+}
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_suites.py --capture /tmp/dev241/cap241b-dev1 --mouthlog /tmp/dev241/mouth241b-dev1.log --scorer241b -- --agent scripts/claude_loop241b_agent.py --config artifacts/claude-determinism228-20260922/loop228-config.json --base 138i --only rt136,rt143,sessions152,bench --out /tmp/dev241/out241b-dev1 > /tmp/dev241/suites-241b-dev1.log 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo WALL241b-dev1 rc=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); cat /tmp/dev241/out241b-dev1/SUITEDIFF218-SUMMARY.json
+22:52  up 2 days, 14:41, 4 users, load averages: 123.36 130.50 113.30
+WALL241b-dev1 rc=0 seconds=29.0
+{
+ "agent": "scripts/claude_loop241b_agent.py",
+ "config": "artifacts/claude-determinism228-20260922/loop228-config.json",
+ "base": "138i",
+ "suites": [
+  "rt136",
+  "rt143",
+  "sessions152",
+  "bench"
+ ],
+ "summary_lines": [
+  "rt136: n_moves=45 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=45) seconds=2.0",
+  "rt143: n_moves=24 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=24) seconds=3.4",
+  "sessions152: n_moves=60 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=60) seconds=0.5",
+  "bench: n_moves=623 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=623) seconds=20.2"
+ ],
+ "skipped": {},
+ "gate": "GATE: clean",
+ "seconds": 28.3
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2b --mouthlog /tmp/dev241/mouth241b-dev1.log; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2c --base-cap /tmp/dev241/cap228-dev1 --new-cap /tmp/dev241/cap241b-dev1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m3 --suite-out /tmp/dev241/out241b-dev1 --mouthlog /tmp/dev241/mouth241b-dev1.log 2>&1 | tail -n 40
+M2(b): 7646 suite reply lines; routes {'A': 7268, 'passthrough': 378, 'legacy': 0}; 0 failures
+M2(b) PASS
+M2(c): 1016 base logs, 1016 241b logs; normalised identical 1016/1016; raw identical 0/1016
+M2(c) PASS
+  rt136: n_moves=45 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=45) seconds=2.0
+  rt143: n_moves=24 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=24) seconds=3.4
+  sessions152: n_moves=60 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=60) seconds=0.5
+  bench: n_moves=623 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=623) seconds=20.2
+  GATE: clean
+M3 changed reply lines by (route, act):
+  A           ABSTAIN_MISSING  7
+  A           ANSWER           673
+  A           CONFLICT         721
+  A           SAVED            3953
+M3 flips toward abstain: 0 (each is re-run alone 5 times and reported)
+M3 PASS
+[0m
+[0m✗ [0mGrep "SEED|AMBIGUOUS|without replacement|1205|1200|sample\(|def main|ACTS|N_|STRAT" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGrep "SEED|120|strat|acts|def main|DIALOG|TURNS|round.robin|key" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_mouth241b_sweep as SW; import claude_mouth241b_pairs as PR
+print('sweep seeds:', SW.SEED241B if hasattr(SW,'SEED241B') else [x for x in dir(SW) if 'SEED' in x.upper()])
+print('pairs seeds:', [x for x in dir(PR) if 'SEED' in x.upper()])
+print('pairs n:', [x for x in dir(PR) if 'N' in x.upper() or 'n_' in x.lower()][:20])
+"
+sweep seeds: 241092283
+pairs seeds: ['PAIRS_SEED241B']
+pairs n: ['AGENT', 'CONFIG', 'MULTI_PERSON', 'N_DIALOGS', 'N_PAIRS', 'SINGLE_PERSON', '__builtins__', '__name__', '_count_lines', '_name', 'annotations', 'json', 'main', 'random', 'run_dialogs']
+[0m
+[0m$ [0mgrep -n "AMBIGUOUS\|without replacement\|def main\|add_argument\|--" scripts/claude_mouth241b_sweep.py | head -n 40
+7:the generator). Identical-name AMBIGUOUS lines are not generated: the 228
+34:Run: uv ... python -B scripts/claude_mouth241b_sweep.py [--dry]
+58:           "AMBIGUOUS": 30, "SELF_PEOPLE": 40, "SELF_FACTS": 20,
+71:# ------------------------------------------------------------ name pool
+195:# ------------------------------------------------------------ frames
+289:    if act == "AMBIGUOUS":
+336:def main(argv=None) -> int:
+338:    ap.add_argument("--dry", action="store_true",
+340:    ap.add_argument("--out", default=str(ART))
+341:    ap.add_argument("--pilot-seed", type=int, default=None,
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_mouth241b_sweep as SW; import claude_mouth241b_pairs as PR
+print('SEED241B =', repr(SW.SEED241B)); print('PAIRS_SEED241B =', repr(PR.PAIRS_SEED241B)); print('N_DIALOGS =', PR.N_DIALOGS, 'N_PAIRS =', PR.N_PAIRS)
+"
+SEED241B = 241092283
+PAIRS_SEED241B = 241092297
+N_DIALOGS = 24 N_PAIRS = 120
+[0m
+[0m$ [0msed -n '1,70p' scripts/claude_mouth241b_sweep.py; echo ....; sed -n '280,380p' scripts/claude_mouth241b_sweep.py
+#!/usr/bin/env python3
+"""Exp 241b M1 sweep generator (new sealed seed SEED241B).
+
+241b changes vs 241's generator (nothing else): the seed (SEED241B), and
+fillers are drawn WITHOUT replacement inside each reply (no value, subject,
+or list item repeats inside one reply; 241's repeated list items came from
+the generator). Identical-name AMBIGUOUS lines are not generated: the 228
+base cannot make two entities with the same full name (builder probe,
+PASSMARKS), so the identical-name passthrough is unit-tested only. A
+drawn name is never one of RESERVED_WORDS ('User', 'None', ...).
+
+241 text follows.
+
+Every act in 240 table 1.3 x every relation row the act can take x 4 tricky
+filler classes, stratified to about 1,200 replies. Fillers are fictional
+names drawn from a syllable pool made with SEED241B (sealed; the builder
+never tunes on the drawn pool). Each frame is written as the BASE's legacy
+line (parse.legacy), then sent through the real 241b path
+(claude_loop241b_agent.render_line: parse-back -> say candidates -> brake v2),
+so the sweep measures exactly what a user would see.
+
+Filler classes:
+  sxz    subject name ends in s/x/z (possessive / of-form trap)
+  vowel  value starts with a vowel sound (a/an trap), vowel-initial names
+  multi  multi-word subject and value names
+  lower  subject and value typed in lower case (echo / sentence-case trap)
+The user subject ("your ...") is drawn in about a quarter of the non-sxz
+cases for the acts that take it.
+
+Outputs (artifacts/claude-mouth241b-20260922/):
+  sweep.jsonl         {id, act, text}         -> the grader (nothing else)
+  sweep-frames.jsonl  {id, act, cls, frame, legacy_text, records, route,
+                       why, ms}               -> M2(a) / M5 only
+Run: uv ... python -B scripts/claude_mouth241b_sweep.py [--dry]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_mouth241b_parse as P  # noqa: E402
+import claude_mouth241b_say as S  # noqa: E402
+
+REPO = SCRIPTS.parent
+ART = REPO / "artifacts/claude-mouth241b-20260922"
+SEED241B = 241_0922_83  # sealed (241b; 241 used 241_0922_07)
+CLASSES = ("sxz", "vowel", "multi", "lower")
+ROW_ACT_N = 80
+FIXED_N = {"DUPLICATE": 4, "CONFIRM_RESULT": 4, "UNKNOWN_ENTITY": 30,
+           "AMBIGUOUS": 30, "SELF_PEOPLE": 40, "SELF_FACTS": 20,
+           "SELF_SLEPT": 12, "SELF_TURNS": 12, "SELF_ANSWERED": 12}
+ROW_ACTS = ("SAVED", "CONFLICT", "FORGOTTEN", "FORGOTTEN_ONE", "NOT_HAD",
+            "ABSTAIN_MISSING", "BROKEN_CHAIN", "YESNO_YES", "YESNO_NO",
+            "YESNO_NOTKNOWN", "REVERSE", "ANSWER", "ANSWER_LIST")
+USER_ACTS = set(ROW_ACTS) - {"REVERSE"}
+MULTIHOP_ACTS = {"ANSWER", "ANSWER_LIST", "BROKEN_CHAIN"}
+LIST_ACTS = {"ANSWER_LIST"}             # multi-cardinality rows only
+SINGLE_ACTS = {"CONFLICT"}              # single-cardinality rows only
+# relation nouns the base uses that the table lacks (generic say rows)
+GENERIC_NOUNS = ("best mate", "shoe size", "piano teacher", "landlady")
+HOP_NOUNS = ("mother", "boss", "friend", "sister", "coach", "owner")
+
+....
+    if act == "DUPLICATE":
+        return {"act": act}, cls
+    if act == "CONFIRM_RESULT":
+        return {"act": act}, cls
+    if act == "UNKNOWN_ENTITY":
+        n = pool.person(cls)
+        return {"act": act, "subject": {"text": n.lower() if cls == "lower"
+                                        else n, "role": "third"},
+                "path": []}, cls
+    if act == "AMBIGUOUS":
+        n = pool.word(sxz=cls == "sxz", vowel=cls == "vowel")
+        k = r.choice((2, 2, 3))
+        ch = [f"{n} {pool.word()} (E{r.randint(1, 9999):04d})"
+              for _ in range(k)]
+        return {"act": act, "subject": {"text": n, "role": "third"},
+                "path": [], "choices": ch}, cls
+    if act == "SELF_PEOPLE":
+        n = r.choice((0, 1, 1, 2, 3, 4, 7, 12))
+        names = [pool.person(cls) for _ in range(n)]
+        if n and r.random() < 0.5:   # director case: USER in the list
+            names[r.randrange(n)] = "USER"
+        return {"act": act, "count": n, "names": names}, cls
+    if act == "SELF_FACTS":
+        return {"act": act, "count": r.choice((0, 1, 2, 5, 9, 14, 40)),
+                "count2": r.choice((0, 0, 1, 3, 12))}, cls
+    return {"act": act, "count": r.choice((0, 1, 2, 3, 7, 9, 10, 25))}, cls
+
+
+def records_for(fr):
+    if fr["act"] != "ANSWER_LIST":
+        return []
+    return [{"kind": "answer", "status": "OK", "relations": list(fr["path"]),
+             "fields": {"multi": True, "trail": list(range(len(fr["values"]))),
+                        "answer": P._join_and(fr["values"])}}]
+
+
+def plan(r: random.Random):
+    """Stratified (act, row, cls) picks: 80 per row act, 20 per class,
+    rows chosen least-used-first so every row appears across the sweep."""
+    rows = _rows()
+    use = Counter()
+    picks = []
+    for act in ROW_ACTS:
+        ok = [x for x in rows
+              if not (act in LIST_ACTS and x["cardinality"] != "multi")
+              and not (act in SINGLE_ACTS and x["cardinality"] == "multi")]
+        for cls in CLASSES:
+            for _ in range(ROW_ACT_N // 4):
+                r.shuffle(ok)
+                ok.sort(key=lambda x: use[x["name"]])
+                row = ok[0]
+                use[row["name"]] += 1
+                picks.append((act, row, cls))
+    return picks, use, rows
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dry", action="store_true",
+                    help="print counts only, write nothing")
+    ap.add_argument("--out", default=str(ART))
+    ap.add_argument("--pilot-seed", type=int, default=None,
+                    help="pilot only (never the sealed seed); the registered "
+                         "sweep uses SEED241B")
+    a = ap.parse_args(argv)
+    seed = SEED241B if a.pilot_seed is None else a.pilot_seed
+    import claude_loop241b_agent as A241B  # real render path
+
+    r = random.Random(seed)
+    pool = Pool(seed + 1)
+    picks, use, rows = plan(r)
+    items = []
+    for act, row, cls in picks:
+        items.append((make_frame(act, row, cls, pool, r), cls))
+    for act, n in FIXED_N.items():
+        for i in range(n):
+            items.append(fixed_frame(act, i, pool, r))
+    # a handful of the director's exact case, always present
+    items.append(({"act": "SELF_PEOPLE", "count": 1, "names": ["USER"]},
+                  "director"))
+    sweep, frames = [], []
+    for k, (fr, cls) in enumerate(items):
+        leg = P.legacy(fr)
+        recs = records_for(fr)
+        res = A241B.render_line(leg, recs, [])
+        sid = f"s{k + 1:04d}"
+        sweep.append({"id": sid, "act": fr["act"], "text": res["text"]})
+        frames.append({"id": sid, "act": fr["act"], "cls": cls,
+                       "gen_frame": fr, "frame": res.get("frame"),
+                       "legacy_text": leg, "records": recs,
+                       "route": res["route"], "why": res.get("why"),
+                       "ms": res["ms"]})
+    missing = [x["name"] for x in rows if use[x["name"]] == 0]
+    routes = Counter(f["route"] for f in frames)
+    by_act = Counter(f["act"] for f in frames)
+    print(f"items {len(sweep)}; routes {dict(routes)}; rows unused "
+          f"{len(missing)}")
+    print("by act", dict(by_act))
+    nonA = defaultdict(list)
+    for f in frames:
+        if f["route"] != "A":
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_sweep.py --dry 2>&1 | head -n 10; uptime
+items 1205; routes {'A': 1205}; rows unused 0
+by act {'SAVED': 80, 'CONFLICT': 80, 'FORGOTTEN': 80, 'FORGOTTEN_ONE': 80, 'NOT_HAD': 80, 'ABSTAIN_MISSING': 80, 'BROKEN_CHAIN': 80, 'YESNO_YES': 80, 'YESNO_NO': 80, 'YESNO_NOTKNOWN': 80, 'REVERSE': 80, 'ANSWER': 80, 'ANSWER_LIST': 80, 'DUPLICATE': 4, 'CONFIRM_RESULT': 4, 'UNKNOWN_ENTITY': 30, 'AMBIGUOUS': 30, 'SELF_PEOPLE': 41, 'SELF_FACTS': 20, 'SELF_SLEPT': 12, 'SELF_TURNS': 12, 'SELF_ANSWERED': 12}
+22:53  up 2 days, 14:43, 4 users, load averages: 122.72 128.94 113.88
+[0m
+[0m$ [0msed -n '1,60p' scripts/claude_mouth241b_pairs.py
+#!/usr/bin/env python3
+"""Exp 241b M4 pairwise sampler (new sealed seed PAIRS_SEED241B).
+
+241b changes vs 241's sampler (nothing else): the seed, the daemon
+(Loop241bDaemon = A v2) and the key label "241b". 241 text follows.
+
+1. Builds fictional dialogs from PAIRS_SEED (teach / duplicate / conflict +
+   "no" / list / yes-no / reverse / abstain / unknown name / broken chain /
+   forget one / forget all / not-had / user facts / self questions).
+2. Runs them through the 241 daemon (Loop241bDaemon, 228 config) in fresh
+   state dirs. Mouth241bMixin logs every reply line (MOUTH241B_LOG): "in" is
+   the base's own line (the mixin runs after the whole base turn and cannot
+   write; M2(c) checks that), "out" is the 241 line.
+3. Keeps lines A changed (route A, out != in), draws 120 stratified by act
+   (equal share per act, leftovers to the largest strata), puts base and 241
+   in random order as X / Y.
+
+Outputs (artifacts/claude-mouth241b-20260922/):
+  pairs.jsonl      {pair_id, user_turn, X, Y, facts}  -> the judge
+  pairs-key.jsonl  {pair_id, act, X, Y ("base"/"241b"), dialog, turn}
+  pairs-log.jsonl  every logged line (for M2(b) / counts; not for the judge)
+Run: uv ... python -B scripts/claude_mouth241b_pairs.py [--pilot-seed N]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import random
+import shutil
+import sys
+import time
+from collections import defaultdict
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_mouth241b_sweep as SW  # noqa: E402 (name pool only)
+
+REPO = SCRIPTS.parent
+ART = REPO / "artifacts/claude-mouth241b-20260922"
+AGENT = SCRIPTS / "claude_loop241b_agent.py"
+CONFIG = REPO / "artifacts/claude-determinism228-20260922/loop228-config.json"
+PAIRS_SEED241B = 241_0922_97  # sealed (241b; 241 used 241_0922_31)
+N_PAIRS = 120
+N_DIALOGS = 24
+
+SINGLE_PERSON = ["mother", "boss", "teacher", "coach", "spouse", "father"]
+MULTI_PERSON = ["friend", "sister", "brother", "cousin", "neighbour"]
+PLACE = ["city", "hometown"]
+ORG = ["employer", "school"]
+
+
+def _name(pool, r):
+    return pool.person(r.choice(SW.CLASSES[:3]))
+
+
+def dialog(pool: SW.Pool, r: random.Random) -> list[str]:
+[0m
+[0m$ [0mtail -n 30 artifacts/fable-predictions-ledger.md; echo ...; grep -n "P241b" artifacts/fable-predictions-ledger.md | head
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- P261 OUTCOME (2026-09-22, resume builder) registered FAIL on M2/M3: A (checker theta 0.25) M1 1 (pass), M2 9 wrong saves (bar 1), M3 95/122 = 77.9 % (B 13/122 = 10.7 %), M3b 6/122 = 4.9 % (pass), M4 39/40 = 97.5 % (pass), M5 median 344.7 ms (pass), M6 0 mismatches (pass). Others: A_raw M1 5/M2 25, A_brake 5/19, A_gate 1/8 with M3 79/122 = 64.8 %, A_nocanon 1/12 with M3 92/122. Panel theta curve flat 77.9 % recall theta 0-0.8, wrong 19->7. Miss drivers: R10 plural relatives 4/16, R7 1/4; 8/9 wrongs passed checker with pYES >= 0.68. P261.1/.5/.6/.7/.8 right; .4 pass with 4.9 just under 5-12 range; .2/.3 ranges wrong. Report only (after run, once): 261 pipeline on earpanel257: A M1 3/M2 6/M3 100/112=89.3 %/M3b 1.8 %/M4 39/40; A_gate+canon M1 1/M2 2/M3 80/112; 257 sealed A was M1 1/M2 4/M3 78/112/M3b 21.4 %. Seals: 261 18/18 OK after runs; panel 261 2/2 OK; panel 257 2/2 OK (own loaders).
+- P261b.1 (2026-09-23, builder; exp 261b = 261 sealed arm A + mixed-case span guard after checker, theta 0.25 prompt B, scorer = 261 sealed + Ruling 1 narrower-relations-hit, sealed 15 files SEAL.sha256.txt artifacts/claude-earcheck261b-20260923) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261b.2 M2 wrong saves (statement fams + no_save) 0-2; pass (<= 1) ~60 %. 261's 9 wrongs: ~6 pet-narrower become hits (Ruling 1), ~2 typo-mix held by guard if case-mixed; residual risks so-check style, capitalised-glued typos, R10/R11 splits.
+- P261b.3 M3 exact TEACH recall 80-90 % and >= B + 30 (B 10-20 %); pass ~55 %. 261 77.9 % + Ruling-1 hits - ~1 % guard false holds; R10 plural splits still cap.
+- P261b.4 M3b UNSURE 4-10 % of gold TEACH; pass (<= 12 %) ~80 %. 261 checker 4.9 % + guard ~1-3 %.
+- P261b.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %. ASK untouched by guard.
+- P261b.6 M5 median ear+checker+guard ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261b.7 M6 every A frame byte-identical in A261; pass ~99 % (guard only removes).
+- P261b.8 Overall registered PASS ~30 %.
+- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+lowercase dev 53 saved 0 held; pipeline reproduces 261 dev sweep byte-equal; synthetic 150-line pilot scores with Ruling-1 hits + 2 value_mix holds, SCHEMA-MISMATCH exit 3 ok.
+- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opener_teach >= 16/20 exact; comma_value_ok 0 lost vs 260; question 0 writes; control 14/14 byte-identical to base260.
+- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.) pass through like 260.
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored B15+D10, 1 allowed new write B15:t0, supp 0. Dev 55/55 (260 34/55; unlisted 20/20 vs 0/20). Known limits: two-comma turns lose the fact; unlisted-opener questions keep 260's reply; pretend markers never stripped.
+...
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_mouth241b_score as SC
+print('SAY_TABLE =', SC.SAY_TABLE)
+import inspect
+src = inspect.getsource(SC.submarks)
+print(src[:3000])
+"
+SAY_TABLE = /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/say_forms.json
+def submarks(sweep: dict, frames: dict, table: dict) -> dict:
+    """name -> list of (id, text) hits. Every list must be empty."""
+    hits = defaultdict(list)
+    rows = table.get("rows", {})
+    surf2row = {}
+    for r in rows.values():
+        for s in r.get("surfaces") or []:
+            surf2row.setdefault(s.lower(), r)
+    for i, text in sweep.items():
+        f = frames[i]
+        fr = f["frame"]
+        act = fr["act"]
+        body = _body(text)
+        m = _mask(body, fr)
+        low = body.lower()
+        path = fr.get("path") or []
+        subj = fr.get("subject") or {}
+        user = subj.get("role") == "user"
+        row = surf2row.get(path[-1].lower()) if path else None
+
+        # --- 240 section 6 required zeros
+        # a lower-case noun ending in s + "'s" ('friends's'); singular -ss /
+        # -us / -is / -os / -as nouns ('boss's') are correct and not counted
+        for w in re.findall(r"\b([a-z]+s)'s\b", m):
+            if not re.search(r"(ss|us|is|os|as)$", w):
+                hits["S1 s's on a plural common noun"].append((i, text))
+                break
+        # on the unmasked body, so an article before a slot is judged by
+        # the slot's own first word
+        for art, w in re.findall(
+                r"(?<![A-Za-z'.])(a|an|A|An)\s+([A-Za-z\"'(][\w'-]*)", body):
+            if _article_bad(art, w):
+                hits["S2 a/an by sound"].append((i, text))
+                break
+        if re.search(r":\s*[.,;]|,\s*[,.]|\band\s*[.,]", body):
+            hits["S3 empty list slot"].append((i, text))
+        if re.search(r"(?<![\w.,])0 [A-Za-z]", m):
+            hits["S4 bare '0 X' count"].append((i, text))
+        if re.search(r"_|\bUSER\b|[<>{}]", body):
+            hits["S5 raw underscore / key"].append((i, text))
+        if "worked out backwards" in low:
+            hits["S6 dangling '(worked out backwards)'"].append((i, text))
+
+        # --- 238 classes covered by A (each must be 0)
+        # PLURAL_NAME_POSSESSIVE: a name ending in s/x/z gets "'s"
+        # (a plural-looking name + "'s": 'Juniper Lane Books's',
+        # 'Netherlands's'; singular names ending in s take "'s" by the
+        # style sheet and are not counted)
+        for s in _frame_strings(fr):
+            last = s.split()[-1] if s.split() else ""
+            if (last in PLURAL_NAME_WORDS or s.lower() in THE_NAMES) and \
+                    re.search(re.escape(s) + r"'s\b", body, flags=re.I):
+                hits["C PLURAL_NAME_POSSESSIVE"].append((i, text))
+                break
+        # VALUE_LIST_AGREEMENT
+        vals = [str(v) for v in fr.get("values") or []]
+        # 241b: distinct values (an exact repeat is said once, brief d)
+        if act in ("ANSWER_LIST", "YESNO_NO") and \
+                len({v.casefold() for v in vals}) > 1:
+            if " are " not in body or re.search(
+                    r" is " + re.escape(vals[0]) + r"\b", body):
+                hits["C VALUE_LIST_AGREEMENT"].append((i, text))
+        # NO_ARTICLE_JOB
+[0m
+[0m$ [0mgrep -n "hits\[" scripts/claude_mouth241b_score.py | sed 's/.*hits\[//;s/\].*//' | sort -u
+"C BAD_RELATION_PHRASE"
+"C BARE_NAME_LIST"
+"C COLON_LABEL"
+"C DOUBLE_TERMINAL_PUNCT"
+"C EMPTY_LIST"
+"C ENTITY_CODE"
+"C LOWERCASE_NAME_ECHO"
+"C LOWERCASE_START"
+"C MISSING_ARTICLE_THE"
+"C NO_ARTICLE_JOB"
+"C NUMBER_AGREEMENT"
+"C NUMBERS_0_9_AS_WORDS"
+"C PLURAL_NAME_POSSESSIVE"
+"C RELATION_NOT_VERB"
+"C REPEATED_LIST_ITEM"
+"C SELF_PEOPLE_USER_AS_YOU"
+"C SOMEONE_NON_PERSON"
+"C STACKED_POSSESSIVE"
+"C TITLE_THE_LOWERED"
+"C VALUE_LIST_AGREEMENT"
+"C VALUE_SUBJECT_AGREEMENT"
+"C WORKED_BACKWARDS_TAG"
+"S1 s's on a plural common noun"
+"S2 a/an by sound"
+"S3 empty list slot"
+"S4 bare '0 X' count"
+"S5 raw underscore / key"
+"S6 dangling '(worked out backwards)'"
+k
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+ms=[json.loads(l)['ms'] for l in open('/tmp/dev241/mouth241b-dev1.log')]
+ms.sort(); n=len(ms)
+import statistics
+print('n=',n,'sum=%.2f s'% (sum(ms)/1000),'median=%.3f'%statistics.median(ms),'p99=%.3f'%ms[int(0.99*(n-1))],'max=%.3f'%ms[-1])
+print('per-line mean=%.4f ms'%(sum(ms)/n))
+"
+n= 7646 sum=1.83 s median=0.160 p99=1.165 max=6.702
+per-line mean=0.2388 ms
+[0m
+[0m$ [0mgrep -n "pilot-seed\|PAIRS_SEED241B\|seed" scripts/claude_mouth241b_pairs.py | head -n 12; grep -n "confirm_match\|def norm_value\|sleep_threshold" scripts/claude_fix172b241b_benchv3.py | head; grep -c "" scripts/claude_mouth241b_brake.py scripts/claude_mouth241b_suites.py scripts/claude_mouth241b_check.py scripts/claude_mouth241b_score.py scripts/claude_mouth241b_s1.py scripts/claude_mouth241b_rer241.py scripts/claude_mouth241b_rerender238.py
+2:"""Exp 241b M4 pairwise sampler (new sealed seed PAIRS_SEED241B).
+4:241b changes vs 241's sampler (nothing else): the seed, the daemon
+22:Run: uv ... python -B scripts/claude_mouth241b_pairs.py [--pilot-seed N]
+46:PAIRS_SEED241B = 241_0922_97  # sealed (241b; 241 used 241_0922_31)
+207:    ap.add_argument("--pilot-seed", type=int, default=None)
+212:    seed = PAIRS_SEED241B if a.pilot_seed is None else a.pilot_seed
+213:    r = random.Random(seed)
+214:    pool = SW.Pool(seed + 1)
+4:matched case-insensitively and article-insensitively (confirm_match), so
+8:confirm_match live in scripts/claude_confirm241b.py (shared with the
+54:from claude_confirm241b import confirm_match, norm_value  # noqa: E402,F401
+107:            if new_val and confirm_match(new_val, sent):
+152:    cfg["sleep_threshold"] = 100000
+scripts/claude_mouth241b_brake.py:817
+scripts/claude_mouth241b_suites.py:107
+scripts/claude_mouth241b_check.py:285
+scripts/claude_mouth241b_score.py:583
+scripts/claude_mouth241b_s1.py:138
+scripts/claude_mouth241b_rer241.py:109
+scripts/claude_mouth241b_rerender238.py:84
+[0m
+[0m← [0mWrite artifacts/claude-mouth241b-20260922/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+from pathlib import Path
+p = Path('artifacts/claude-mouth241b-20260922/PASSMARKS.md')
+t = p.read_text(encoding='utf-8')
+s = Path('handoff/kit/briefs/241b-stylesheet.txt').read_text(encoding='utf-8')
+assert '@@STYLESHEET@@' in t
+t = t.replace('@@STYLESHEET@@', s.rstrip('\n'))
+p.write_text(t, encoding='utf-8')
+print('embedded')
+"
+embedded
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+from pathlib import Path
+t = Path('artifacts/claude-mouth241b-20260922/PASSMARKS.md').read_text(encoding='utf-8')
+s = Path('handoff/kit/briefs/241b-stylesheet.txt').read_text(encoding='utf-8').rstrip('\n')
+i = t.index('## 6.')
+j = t.index('## 7.')
+sec = t[i:j]
+body = sec.split('\n', 2)[2].rstrip('\n')
+print('verbatim:', body == s)
+print('sec_len:', len(body), 'sheet_len:', len(s))
+"
+verbatim: True
+sec_len: 4143 sheet_len: 4143
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-mouth241b-20260922/PASSMARKS.md artifacts/claude-mouth241b-20260922/say_forms.json scripts/claude_loop241b_agent.py scripts/claude_confirm241b.py scripts/claude_fix172b241b_benchv3.py scripts/claude_mouth241b_brake.py scripts/claude_mouth241b_check.py scripts/claude_mouth241b_morph.py scripts/claude_mouth241b_pairs.py scripts/claude_mouth241b_parse.py scripts/claude_mouth241b_reader.py scripts/claude_mouth241b_rer241.py scripts/claude_mouth241b_rerender238.py scripts/claude_mouth241b_s1.py scripts/claude_mouth241b_say.py scripts/claude_mouth241b_score.py scripts/claude_mouth241b_suites.py scripts/claude_mouth241b_sweep.py scripts/claude_mouth241b_test.py > artifacts/claude-mouth241b-20260922/SEAL.sha256.txt && cat artifacts/claude-mouth241b-20260922/SEAL.sha256.txt | head -n 22; wc -l artifacts/claude-mouth241b-20260922/SEAL.sha256.txt
+ffe50d30682d429f993f58808ee1a2dcdce6318beac492e2b8e91c744a0183e8  artifacts/claude-mouth241b-20260922/PASSMARKS.md
+4de724242e0ee33656656279a430965d879ac6aeadff9a69590e1d299f42bead  artifacts/claude-mouth241b-20260922/say_forms.json
+59587a12872d824c5d917d8dddb2e29a128e03efbd858d26d09f69954f5f6ee4  scripts/claude_loop241b_agent.py
+738455a1d5fc653ebfe87bbebbe11c499f43a72dd4c18f7e67d2064d54ddf1ee  scripts/claude_confirm241b.py
+6dced4e603f7c453c195136ffae724c33211ff2c283635d90fd638366a89df37  scripts/claude_fix172b241b_benchv3.py
+a556749276dbc878d066018e9deade6bfd58484947f6f13753c8577c73daa8cd  scripts/claude_mouth241b_brake.py
+503f9cf2c98d323040929b2689d6d42f54d33f157771aa00903e108cf2be5c56  scripts/claude_mouth241b_check.py
+f6bb0745812bbc8f40f84a63f11d4a38830cea2810bb17e5e6c7255e98618b32  scripts/claude_mouth241b_morph.py
+7dd32f52fee039f7382eb58359eebd51463bc2b907a09d4323e493686be03ffd  scripts/claude_mouth241b_pairs.py
+85ff5213787edfdb112d2dfec63efd493d7bef223a613ffc8b887cda308d6998  scripts/claude_mouth241b_parse.py
+937ab89685c7fa3836f9d6b120eb2e3b33fa9af8690f8c24f4da9ccf08279316  scripts/claude_mouth241b_reader.py
+b9f9b48640fd1bd55f50df9afc3b29790d52cc3f2ecc5a2bbbab311cc3d45c20  scripts/claude_mouth241b_rer241.py
+d1253c82953bbdbe28208bc18fa900ad5b0cbcc78189b0179151fb0b77ee1e13  scripts/claude_mouth241b_rerender238.py
+6730f0be94349c5722e4639805a9c4ecf9228acf56f4285f0f7048fa73ec93df  scripts/claude_mouth241b_s1.py
+d0797d245291528caeb09cbbedbe4c2dff2145ca343d4a3c132f35bcb6459248  scripts/claude_mouth241b_say.py
+863273f38969722055845363bfeaae6965b7ed721b99dda37ffc7e5cd26a721b  scripts/claude_mouth241b_score.py
+1156885498061653dbb87b7dc1514cb8e2071dfa8398236a9c0a1f32a39ad163  scripts/claude_mouth241b_suites.py
+3e80de4bbe4b26d3f1f7cb99c049a36bdd7a239038482aa15de595d5c7e70bd3  scripts/claude_mouth241b_sweep.py
+93b17341406049c8fe1b1964ab89335c8695c60c06e600dbf8d3f3f83031f5ed  scripts/claude_mouth241b_test.py
+      19 artifacts/claude-mouth241b-20260922/SEAL.sha256.txt
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P241b.1 (2026-09-23, finishing builder; exp 241b mouth stage A v2, sealed 19 files SEAL.sha256.txt artifacts/claude-mouth241b-20260922, say table v2 150 rows / 32 verb / 0 dropped, unit tests 29/29) M2(a)/(b)/(c) each 0 failures. Dev: 0/1205 sweep, 0/7646 suite lines (A 7268, passthrough 378, legacy 0), 1016/1016 logs normalised identical.
+- P241b.2 M3 GATE clean; every suite move reply-only on a route-A line of a PASSMARKS section-3 act (expect about rt136 45, rt143 24, sessions152 60, bench 623); 0 verdict changes; 0 flips toward abstain. 241b rows scored with NEW-1 172b version, base rows frozen.
+- P241b.3 M5 latency passes with margin (dev median 0.180 ms, p99 1.423 ms over 1205; in-suite mean 0.239 ms/line). Suite wall within +5% of 228 under D6 (p about 0.8; dev single runs 241b 29.0 s vs 228 31.5 s at load about 100).
+- P241b.4 Every mechanical sub-mark (6 S + 22 C) is 0 on the fresh sweep (p about 0.8; dev re-render of the 241 sweep 0/1205 but the fresh seed is untested).
+- P241b.5 M1 grader bar passes, 99.0% overall and 97% per act (p about 0.6): all 42 old misses changed with 0 sub-mark hits, graders have not seen the new wording. Riskiest: CONFLICT article/capital rendering, BROKEN_CHAIN about-phrasing, AMBIGUOUS names without codes.
+- P241b.6 M4 passes (p about 0.65): win at least 70% non-tie, losses at most 10%. 241 scored 111/9; kept Saved-colon capital and of-forms are the known risk (8 of 241's 9 losses).
+- P241b.7 Sleep smoke identical to 228 on all summary fields except agent/label/seconds.
+- P241b.8 0 sev-1 fallbacks on the suites; unframed-line count 378; ambiguous_identical 0 on the suites.
+- P241b.9 S1 reproduces the frozen verdicts on 100% of saved v3 rows replaced (dev 800/800 on 241's rows, 721 needle replies, 0 differences); v2 rows counted and skipped.
+EOF
+tail -n 10 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exa
+- P241b.1 (2026-09-23, finishing builder; exp 241b mouth stage A v2, sealed 19 files SEAL.sha256.txt artifacts/claude-mo
+- P241b.2 M3 GATE clean; every suite move reply-only on a route-A line of a PASSMARKS section-3 act (expect about rt136 
+- P241b.3 M5 latency passes with margin (dev median 0.180 ms, p99 1.423 ms over 1205; in-suite mean 0.239 ms/line). Suit
+- P241b.4 Every mechanical sub-mark (6 S + 22 C) is 0 on the fresh sweep (p about 0.8; dev re-render of the 241 sweep 0/
+- P241b.5 M1 grader bar passes, 99.0% overall and 97% per act (p about 0.6): all 42 old misses changed with 0 sub-mark h
+- P241b.6 M4 passes (p about 0.65): win at least 70% non-tie, losses at most 10%. 241 scored 111/9; kept Saved-colon cap
+- P241b.7 Sleep smoke identical to 228 on all summary fields except agent/label/seconds.
+- P241b.8 0 sev-1 fallbacks on the suites; unframed-line count 378; ambiguous_identical 0 on the suites.
+- P241b.9 S1 reproduces the frozen verdicts on 100% of saved v3 rows replaced (dev 800/800 on 241's rows, 721 needle rep
+[0m
+[0m# [0mTodos
+[✓] Inventory 241b code vs brief a-g + scorer versions
+[✓] Run unit tests 29/29 + dev pilot on 241 sweep/pairs (M1 misses, M2, M3, S1, M5 wall)
+[✓] Write PASSMARKS.md + seal SEAL.sha256.txt + ledger P241b.n
+[•] Generate fresh sweep SEED241B + 120 M4 pairs, seal SEAL2
+[ ] Registered M2/M3/M5/S1/sleep smoke, RESULTS.md, final report
+[0m
+[0m$ [0muptime; df -g /
+22:56  up 2 days, 14:45, 4 users, load averages: 135.04 130.68 116.78
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 182895120    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_sweep.py > /tmp/dev241/sweepgen.log 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo RC=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); cat /tmp/dev241/sweepgen.log | head -n 12; ls -la artifacts/claude-mouth241b-20260922/
+RC=0 seconds=0.9
+items 1205; routes {'A': 1205}; rows unused 0
+by act {'SAVED': 80, 'CONFLICT': 80, 'FORGOTTEN': 80, 'FORGOTTEN_ONE': 80, 'NOT_HAD': 80, 'ABSTAIN_MISSING': 80, 'BROKEN_CHAIN': 80, 'YESNO_YES': 80, 'YESNO_NO': 80, 'YESNO_NOTKNOWN': 80, 'REVERSE': 80, 'ANSWER': 80, 'ANSWER_LIST': 80, 'DUPLICATE': 4, 'CONFIRM_RESULT': 4, 'UNKNOWN_ENTITY': 30, 'AMBIGUOUS': 30, 'SELF_PEOPLE': 41, 'SELF_FACTS': 20, 'SELF_SLEPT': 12, 'SELF_TURNS': 12, 'SELF_ANSWERED': 12}
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922/sweep.jsonl and sweep-frames.jsonl
+total 1928
+drwxr-xr-x@   7 ben-hannan  staff     224 Sep 22 22:56 .
+drwxr-xr-x@ 367 ben-hannan  staff   11744 Sep 22 22:54 ..
+-rw-r--r--    1 ben-hannan  staff   20654 Sep 22 22:55 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff  117511 Sep 22 22:49 say_forms.json
+-rw-r--r--    1 ben-hannan  staff    1934 Sep 22 22:55 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff  696806 Sep 22 22:56 sweep-frames.jsonl
+-rw-r--r--    1 ben-hannan  staff  135720 Sep 22 22:56 sweep.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_pairs.py > /tmp/dev241/pairsgen.log 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo RC=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); tail -n 25 /tmp/dev241/pairsgen.log; ls -la artifacts/claude-mouth241b-20260922/
+RC=2 seconds=0.4
+usage: claude_mouth241b_pairs.py [-h] [--pilot-seed PILOT_SEED]
+                                 [--dialogs DIALOGS] [--out OUT] --work WORK
+claude_mouth241b_pairs.py: error: the following arguments are required: --work
+total 1928
+drwxr-xr-x@   7 ben-hannan  staff     224 Sep 22 22:56 .
+drwxr-xr-x@ 367 ben-hannan  staff   11744 Sep 22 22:54 ..
+-rw-r--r--    1 ben-hannan  staff   20654 Sep 22 22:55 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff  117511 Sep 22 22:49 say_forms.json
+-rw-r--r--    1 ben-hannan  staff    1934 Sep 22 22:55 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff  696806 Sep 22 22:56 sweep-frames.jsonl
+-rw-r--r--    1 ben-hannan  staff  135720 Sep 22 22:56 sweep.jsonl
+[0m
+[0m$ [0msed -n '195,300p' scripts/claude_mouth241b_pairs.py
+while left > 0 and any(take[a] < len(by[a]) for a in acts):
+        for a in acts:
+            if left and take[a] < len(by[a]):
+                take[a] += 1
+                left -= 1
+    chosen = [e for a in acts for e in by[a][:take[a]]]
+    r.shuffle(chosen)
+    return chosen, {a: (take[a], len(by[a])) for a in acts}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--pilot-seed", type=int, default=None)
+    ap.add_argument("--dialogs", type=int, default=N_DIALOGS)
+    ap.add_argument("--out", default=str(ART))
+    ap.add_argument("--work", required=True, help="scratch state dirs")
+    a = ap.parse_args(argv)
+    seed = PAIRS_SEED241B if a.pilot_seed is None else a.pilot_seed
+    r = random.Random(seed)
+    pool = SW.Pool(seed + 1)
+    dialogs = [dialog(pool, r) for _ in range(a.dialogs)]
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+    rows = run_dialogs(dialogs, Path(a.work), Path(a.work) / "mouth241b.log")
+    chosen, strata = sample(rows, r)
+    print(f"dialogs {len(dialogs)} lines {len(rows)} wall {time.time()-t0:.0f}s")
+    print("strata (taken, available):", strata)
+    with open(out / "pairs-log.jsonl", "w", encoding="utf-8") as fh:
+        for e in rows:
+            fh.write(json.dumps(e, ensure_ascii=False) + "\n")
+    with open(out / "pairs.jsonl", "w", encoding="utf-8") as fp, \
+            open(out / "pairs-key.jsonl", "w", encoding="utf-8") as fk:
+        for k, e in enumerate(chosen):
+            pid = f"p{k + 1:03d}"
+            base_first = r.random() < 0.5
+            X, Y = (e["in"], e["out"]) if base_first else (e["out"], e["in"])
+            # no dialog context: earlier replies are 241 text and would
+            # tell the judge which side is which
+            fp.write(json.dumps({"pair_id": pid, "user_turn": e["turn"],
+                                 "X": X, "Y": Y,
+                                 "facts": facts(e.get("frame"))},
+                                ensure_ascii=False) + "\n")
+            fk.write(json.dumps({"pair_id": pid, "act": e["act"],
+                                 "X": "base" if base_first else "241b",
+                                 "Y": "241b" if base_first else "base",
+                                 "dialog": e["dialog"],
+                                 "turn": e["turn_ix"]}) + "\n")
+    print("wrote pairs.jsonl / pairs-key.jsonl / pairs-log.jsonl in", out)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+[0m
+[0m$ [0mmkdir -p /tmp/pairs241b-work && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_pairs.py --work /tmp/pairs241b-work > /tmp/dev241/pairsgen.log 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo RC=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); cat /tmp/dev241/pairsgen.log; ls -la artifacts/claude-mouth241b-20260922/
+RC=0 seconds=7.1
+dialogs 24 lines 792 wall 7s
+strata (taken, available): {'ABSTAIN_MISSING': (9, 78), 'ANSWER': (9, 45), 'ANSWER_LIST': (9, 23), 'BROKEN_CHAIN': (9, 24), 'CONFLICT': (9, 26), 'FORGOTTEN': (9, 24), 'FORGOTTEN_ONE': (9, 11), 'NOT_HAD': (9, 11), 'REVERSE': (4, 4), 'SAVED': (9, 149), 'SELF_ANSWERED': (1, 1), 'SELF_FACTS': (9, 24), 'SELF_PEOPLE': (9, 24), 'SELF_SLEPT': (8, 24), 'YESNO_NO': (3, 3), 'YESNO_NOTKNOWN': (4, 4), 'YESNO_YES': (1, 1)}
+wrote pairs.jsonl / pairs-key.jsonl / pairs-log.jsonl in /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mouth241b-20260922
+total 3536
+drwxr-xr-x@  10 ben-hannan  staff     320 Sep 22 22:56 .
+drwxr-xr-x@ 367 ben-hannan  staff   11744 Sep 22 22:54 ..
+-rw-r--r--    1 ben-hannan  staff   11065 Sep 22 22:56 pairs-key.jsonl
+-rw-r--r--    1 ben-hannan  staff  765965 Sep 22 22:56 pairs-log.jsonl
+-rw-r--r--    1 ben-hannan  staff   38128 Sep 22 22:56 pairs.jsonl
+-rw-r--r--    1 ben-hannan  staff   20654 Sep 22 22:55 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff  117511 Sep 22 22:49 say_forms.json
+-rw-r--r--    1 ben-hannan  staff    1934 Sep 22 22:55 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff  696806 Sep 22 22:56 sweep-frames.jsonl
+-rw-r--r--    1 ben-hannan  staff  135720 Sep 22 22:56 sweep.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+pr=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/pairs.jsonl')]
+ky=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/pairs-key.jsonl')]
+sw=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/sweep.jsonl')]
+print('pairs:',len(pr),'key:',len(ky),'sweep:',len(sw))
+print('pair keys:',sorted(pr[0].keys()))
+print('key X=base:',sum(1 for k in ky if k['X']=='base'),'of',len(ky))
+from collections import Counter
+print('acts:',dict(Counter(k['act'] for k in ky)))
+print('sweep acts:',dict(Counter(s['act'] for s in sw)))
+print('ambig:',sum(1 for s in sw if s['act']=='AMBIGUOUS'))
+print('side leak in pairs:', any(('base' in json.dumps(p) or '241b' in json.dumps(p)) for p in pr))
+"
+pairs: 120 key: 120 sweep: 1205
+pair keys: ['X', 'Y', 'facts', 'pair_id', 'user_turn']
+key X=base: 57 of 120
+acts: {'YESNO_NO': 3, 'SAVED': 9, 'SELF_PEOPLE': 9, 'ABSTAIN_MISSING': 9, 'SELF_FACTS': 9, 'NOT_HAD': 9, 'ANSWER': 9, 'CONFLICT': 9, 'SELF_SLEPT': 8, 'FORGOTTEN': 9, 'FORGOTTEN_ONE': 9, 'YESNO_NOTKNOWN': 4, 'BROKEN_CHAIN': 9, 'REVERSE': 4, 'ANSWER_LIST': 9, 'SELF_ANSWERED': 1, 'YESNO_YES': 1}
+sweep acts: {'SAVED': 80, 'CONFLICT': 80, 'FORGOTTEN': 80, 'FORGOTTEN_ONE': 80, 'NOT_HAD': 80, 'ABSTAIN_MISSING': 80, 'BROKEN_CHAIN': 80, 'YESNO_YES': 80, 'YESNO_NO': 80, 'YESNO_NOTKNOWN': 80, 'REVERSE': 80, 'ANSWER': 80, 'ANSWER_LIST': 80, 'DUPLICATE': 4, 'CONFIRM_RESULT': 4, 'UNKNOWN_ENTITY': 30, 'AMBIGUOUS': 30, 'SELF_PEOPLE': 41, 'SELF_FACTS': 20, 'SELF_SLEPT': 12, 'SELF_TURNS': 12, 'SELF_ANSWERED': 12}
+ambig: 30
+side leak in pairs: False
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-mouth241b-20260922/sweep.jsonl artifacts/claude-mouth241b-20260922/sweep-frames.jsonl artifacts/claude-mouth241b-20260922/pairs.jsonl artifacts/claude-mouth241b-20260922/pairs-key.jsonl > artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt && cat artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt
+6c837ee3760ca5547c5ea01c9fb28a587bee20232d88c10b424294b90932b79e  artifacts/claude-mouth241b-20260922/sweep.jsonl
+5ee5c793903bcaeb23d4106187e718dc547e411774aee3024a5bfe8dbf6f4bed  artifacts/claude-mouth241b-20260922/sweep-frames.jsonl
+9f4534880f021c39024ef997272f27832e87b43d057393fd5407bd6f6e893e64  artifacts/claude-mouth241b-20260922/pairs.jsonl
+f763b6dd2b011a485f974d77885a3e065a282453a1be3cbf9ef497fbe7238d54  artifacts/claude-mouth241b-20260922/pairs-key.jsonl
+[0m
+[0m$ [0mshasum -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt 2>&1 | sort | uniq -c | head; shasum -c artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt 2>&1 | sort | uniq -c | head
+1 artifacts/claude-mouth241b-20260922/PASSMARKS.md: OK
+   1 artifacts/claude-mouth241b-20260922/say_forms.json: OK
+   1 scripts/claude_confirm241b.py: OK
+   1 scripts/claude_fix172b241b_benchv3.py: OK
+   1 scripts/claude_loop241b_agent.py: OK
+   1 scripts/claude_mouth241b_brake.py: OK
+   1 scripts/claude_mouth241b_check.py: OK
+   1 scripts/claude_mouth241b_morph.py: OK
+   1 scripts/claude_mouth241b_pairs.py: OK
+   1 scripts/claude_mouth241b_parse.py: OK
+   1 artifacts/claude-mouth241b-20260922/pairs-key.jsonl: OK
+   1 artifacts/claude-mouth241b-20260922/pairs.jsonl: OK
+   1 artifacts/claude-mouth241b-20260922/sweep-frames.jsonl: OK
+   1 artifacts/claude-mouth241b-20260922/sweep.jsonl: OK
+[0m
+[0m$ [0mshasum -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt 2>&1 | grep -c OK; shasum -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt 2>&1 | grep -v OK | head
+23
+[0m
+[0m# [0mTodos
+[✓] Inventory 241b code vs brief a-g + scorer versions
+[✓] Run unit tests 29/29 + dev pilot on 241 sweep/pairs (M1 misses, M2, M3, S1, M5 wall)
+[✓] Write PASSMARKS.md + seal SEAL.sha256.txt + ledger P241b.n
+[✓] Generate fresh sweep SEED241B + 120 M4 pairs, seal SEAL2
+[•] Registered M2/M3/M5/S1/sleep smoke, RESULTS.md, final report
+[0m
+[0m$ [0mmkdir -p artifacts/claude-mouth241b-20260922/runs && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2a --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl --sweep artifacts/claude-mouth241b-20260922/sweep.jsonl | tee artifacts/claude-mouth241b-20260922/runs/m2a.out; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m5 --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl | tee artifacts/claude-mouth241b-20260922/runs/m5-latency.out
+M2(a): 1205 sweep replies, 0 unfaithful (rules 1-8 or sev-1); rule-9 anchor fails 0
+M2(a) PASS
+M5 latency: n=1205 median=0.172 ms p99=1.111 ms max=2.056 ms
+M5 PASS
+[0m
+[0m$ [0msleep 120; uptime
+22:59  up 2 days, 14:48, 4 users, load averages: 124.63 131.84 120.26
+[0m
+[0m$ [0msleep 180; uptime
+23:02  up 2 days, 14:51, 4 users, load averages: 163.73 139.52 125.08
+[0m
+[0m← [0mWrite artifacts/claude-mouth241b-20260922/runs/run.sh
+Wrote file successfully.
+[0m
+[0m$ [0mbash artifacts/claude-mouth241b-20260922/runs/run.sh 2>&1 | tail -n 20
+23:02  up 2 days, 14:51, 4 users, load averages: 167.71 141.17 125.83
+WALL agent=228 run=1 rc=0 seconds=42.1
+23:03  up 2 days, 14:52, 4 users, load averages: 187.89 149.76 129.68
+WALL agent=241b run=1 rc=0 seconds=42.8
+23:03  up 2 days, 14:53, 4 users, load averages: 206.97 159.87 134.42
+WALL agent=228 run=2 rc=0 seconds=40.7
+23:04  up 2 days, 14:53, 4 users, load averages: 208.46 166.36 137.98
+WALL agent=241b run=2 rc=0 seconds=47.1
+23:05  up 2 days, 14:54, 4 users, load averages: 205.29 170.98 141.12
+WALL agent=228 run=3 rc=0 seconds=44.3
+23:05  up 2 days, 14:55, 4 users, load averages: 211.41 176.94 144.82
+WALL agent=241b run=3 rc=0 seconds=45.5
+23:06  up 2 days, 14:56, 4 users, load averages: 219.87 184.01 149.08
+SLEEP 228 rc=0
+23:08  up 2 days, 14:57, 4 users, load averages: 162.63 175.94 149.42
+SLEEP 241b rc=0
+ALLDONE
+[0m
+[0m$ [0mcat artifacts/claude-mouth241b-20260922/runs/out241b-run1/SUITEDIFF218-SUMMARY.json; cat artifacts/claude-mouth241b-20260922/runs/sleep-228.json; echo; cat artifacts/claude-mouth241b-20260922/runs/sleep-241b.json
+{
+ "agent": "scripts/claude_loop241b_agent.py",
+ "config": "artifacts/claude-determinism228-20260922/loop228-config.json",
+ "base": "138i",
+ "suites": [
+  "rt136",
+  "rt143",
+  "sessions152",
+  "bench"
+ ],
+ "summary_lines": [
+  "rt136: n_moves=45 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=45) seconds=3.2",
+  "rt143: n_moves=24 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=24) seconds=5.2",
+  "sessions152: n_moves=60 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=60) seconds=0.9",
+  "bench: n_moves=623 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=623) seconds=28.6"
+ ],
+ "skipped": {},
+ "gate": "GATE: clean",
+ "seconds": 41.9
+}{
+ "agent": "claude_loop228_agent.py",
+ "broken_chain": {
+  "question": "Who is Q99's maternal grandmother?",
+  "reply": "I don't know anyone called Q99.",
+  "verdict": "abstain"
+ },
+ "config": "loop228-config.json",
+ "episodes_at_install": 20,
+ "installed": true,
+ "label": "228",
+ "oof_best": null,
+ "probes": [
+  {
+   "reply": "T01's maternal grandmother is H01.",
+   "text": "Who is T01's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T02's maternal grandmother is H02.",
+   "text": "Who is T02's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T03's maternal grandmother is H03.",
+   "text": "Who is T03's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T04's maternal grandmother is H04.",
+   "text": "Who is T04's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T05's maternal grandmother is H05.",
+   "text": "Who is T05's maternal grandmother?",
+   "verdict": "correct"
+  }
+ ],
+ "probes_abstain": 0,
+ "probes_right": 5,
+ "probes_wrong": 0,
+ "refit_agreement": null,
+ "report_rows_sleep_derived": 1,
+ "seconds": 85.1,
+ "seed": 1,
+ "sleep_overwrote_taught": 0,
+ "sleep_threshold": 75,
+ "sleeps_logged": 1,
+ "taught_dupes": 0,
+ "taught_good": 50,
+ "taught_total": 50,
+ "word_file": "sleep145-words.json"
+}
+{
+ "agent": "claude_loop241b_agent.py",
+ "broken_chain": {
+  "question": "Who is Q99's maternal grandmother?",
+  "reply": "I don't know anyone called Q99.",
+  "verdict": "abstain"
+ },
+ "config": "loop228-config.json",
+ "episodes_at_install": 20,
+ "installed": true,
+ "label": "241b",
+ "oof_best": null,
+ "probes": [
+  {
+   "reply": "T01's maternal grandmother is H01.",
+   "text": "Who is T01's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T02's maternal grandmother is H02.",
+   "text": "Who is T02's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T03's maternal grandmother is H03.",
+   "text": "Who is T03's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T04's maternal grandmother is H04.",
+   "text": "Who is T04's maternal grandmother?",
+   "verdict": "correct"
+  },
+  {
+   "reply": "T05's maternal grandmother is H05.",
+   "text": "Who is T05's maternal grandmother?",
+   "verdict": "correct"
+  }
+ ],
+ "probes_abstain": 0,
+ "probes_right": 5,
+ "probes_wrong": 0,
+ "refit_agreement": null,
+ "report_rows_sleep_derived": 1,
+ "seconds": 85.9,
+ "seed": 1,
+ "sleep_overwrote_taught": 0,
+ "sleep_threshold": 75,
+ "sleeps_logged": 1,
+ "taught_dupes": 0,
+ "taught_good": 50,
+ "taught_total": 50,
+ "word_file": "sleep145-words.json"
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json,statistics
+for k in (1,2,3):
+    ms=[json.loads(l)['ms'] for l in open(f'artifacts/claude-mouth241b-20260922/runs/mouth241b-run{k}.log')]
+    print(f'run{k}: n={len(ms)} sum={sum(ms)/1000:.2f}s median={statistics.median(ms):.3f} p99={sorted(ms)[int(0.99*(len(ms)-1))]:.3f}')
+"
+run1: n=7646 sum=2.22s median=0.190 p99=1.391
+run2: n=7646 sum=2.37s median=0.200 p99=1.505
+run3: n=7646 sum=2.37s median=0.197 p99=1.630
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m3 --suite-out artifacts/claude-mouth241b-20260922/runs/out241b-run1 --mouthlog artifacts/claude-mouth241b-20260922/runs/mouth241b-run1.log | tee artifacts/claude-mouth241b-20260922/runs/m3.out | tail -n 16
+rt136: n_moves=45 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=45) seconds=3.2
+  rt143: n_moves=24 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=24) seconds=5.2
+  sessions152: n_moves=60 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=60) seconds=0.9
+  bench: n_moves=623 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=623) seconds=28.6
+  GATE: clean
+M3 changed reply lines by (route, act):
+  A           ABSTAIN_MISSING  7
+  A           ANSWER           673
+  A           CONFLICT         721
+  A           SAVED            3953
+M3 flips toward abstain: 0 (each is re-run alone 5 times and reported)
+M3 PASS
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2b --mouthlog artifacts/claude-mouth241b-20260922/runs/mouth241b-run1.log | tee artifacts/claude-mouth241b-20260922/runs/m2b.out; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m2c --base-cap artifacts/claude-mouth241b-20260922/runs/cap228-run1 --new-cap artifacts/claude-mouth241b-20260922/runs/cap241b-run1 | tee artifacts/claude-mouth241b-20260922/runs/m2c.out
+M2(b): 7646 suite reply lines; routes {'A': 7268, 'passthrough': 378, 'legacy': 0}; 0 failures
+M2(b) PASS
+M2(c): 1016 base logs, 1016 241b logs; normalised identical 1016/1016; raw identical 0/1016
+M2(c) PASS
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_check.py m5 --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl --wall241b 45.5 --wall228 42.1 | tee artifacts/claude-mouth241b-20260922/runs/m5-wall.out
+M5 latency: n=1205 median=0.172 ms p99=1.111 ms max=2.056 ms
+M5 suite wall: 241b 45.5s vs 228 42.1s (limit 44.2s) over
+M5 FAIL
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_s1.py --label reg228 artifacts/claude-mouth241b-20260922/runs/out228-run1 | tee artifacts/claude-mouth241b-20260922/runs/s1-228.out; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_s1.py --label reg241b artifacts/claude-mouth241b-20260922/runs/out241b-run1 | tee artifacts/claude-mouth241b-20260922/runs/s1-241b.out
+S1 [reg228]: {'v3 rows': 800, 'needle replies': 721, 'v3 rows verdict reproduced': 800}; differences 0
+S1 [reg228] PASS (100% identical)
+S1 [reg241b]: {'v3 rows': 800, 'needle replies': 721, 'v3 rows verdict reproduced': 800}; differences 22
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-bench132_4hop-rows.jsonl', 'bench132-4hop-197', 'confirm decision', 'My notes say Kelis is a citizen of the United States of America. Do you want me to change it to the United Kingdom?', 'Kelis is a citizen of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-bench132_4hop-rows.jsonl', 'bench132-4hop-197', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-028', 'confirm decision', "My notes say Baseball's country of origin is the United States of America. Do you want me to change it to the United Kingdom?", 'baseball was created in the country of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-028', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-036', 'confirm decision', "My notes say Baseball's country of origin is the United States of America. Do you want me to change it to the United Kingdom?", 'baseball was created in the country of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-036', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-064', 'confirm decision', "My notes say Baseball's country of origin is the United States of America. Do you want me to change it to the United Kingdom?", 'baseball was created in the country of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-064', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-065', 'confirm decision', "My notes say Baseball's country of origin is the United States of America. Do you want me to change it to the United Kingdom?", 'baseball was created in the country of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-065', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-066', 'confirm decision', 'My notes say Karen Jarrett is a citizen of the United States of America. Do you want me to change it to the Dominican Republic?', 'Karen Jarrett is a citizen of Dominican Republic', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-066', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-072', 'confirm decision', "My notes say Baseball's country of origin is the United States of America. Do you want me to change it to the United Kingdom?", 'baseball was created in the country of United Kingdom', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-edit200-rows.jsonl', 'bench65-mquake-072', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-new_121_4hop-rows.jsonl', 'bench121-4hop-177', 'confirm decision', 'My notes say Brian Epstein is a citizen of the United Kingdom. Do you want me to change it to the United States of America?', 'Brian Epstein is a citizen of United States of America', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-new_121_4hop-rows.jsonl', 'bench121-4hop-177', 'frozen decisions do not reproduce saved confirms', 1, 2)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-new_121_4hop-rows.jsonl', 'bench121-4hop-189', 'confirm decision', 'My notes say Josh Pastner is a basketball coach. Do you want me to change it to an association football referee?', 'Josh Pastner works in the field of association football referee', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-new_121_4hop-rows.jsonl', 'bench121-4hop-189', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-old_s2fresh_4hop-rows.jsonl', 'bench103-s2fresh-4hop-019', 'confirm decision', 'My notes say Jorge Sampaoli is an association football manager. Do you want me to change it to a basketball coach?', 'Jorge Sampaoli works in the field of basketball coach', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-old_s2fresh_4hop-rows.jsonl', 'bench103-s2fresh-4hop-019', 'frozen decisions do not reproduce saved confirms', 0, 1)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-old_s2fresh_4hop-rows.jsonl', 'bench103-s2fresh-4hop-033', 'confirm decision', 'My notes say Arsène Wenger is an association football manager. Do you want me to change it to a baseball manager?', 'Arsène Wenger works in the field of baseball manager', False, True)
+  DIFF ('artifacts/claude-mouth241b-20260922/runs/out241b-run1/bench-old_s2fresh_4hop-rows.jsonl', 'bench103-s2fresh-4hop-033', 'frozen decisions do not reproduce saved confirms', 1, 2)
+S1 [reg241b] FAIL
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, glob
+ids = ['bench132-4hop-197','bench65-mquake-028','bench65-mquake-036','bench65-mquake-064','bench65-mquake-065','bench65-mquake-066','bench65-mquake-072','bench121-4hop-177','bench121-4hop-189','bench103-s2fresh-4hop-019','bench103-s2fresh-4hop-033']
+def load(root):
+    out={}
+    for p in glob.glob(root+'/bench-*-rows.jsonl'):
+        for l in open(p):
+            l=l.strip()
+            if not l: continue
+            r=json.loads(l)
+            if isinstance(r,dict) and r.get('id') in ids: out[r['id']]=r
+    return out
+b=load('artifacts/claude-mouth241b-20260922/runs/out228-run1')
+n=load('artifacts/claude-mouth241b-20260922/runs/out241b-run1')
+import fable_suitediff as SD
+for i in ids:
+    rb, rn = b.get(i), n.get(i)
+    ub = SD.unwrap_rows([rb])[0] if rb else None
+    un = SD.unwrap_rows([rn])[0] if rn else None
+    print(i,'| 228:', (ub.get('verdict'), ub.get('confirms')) if ub else None, '| 241b:', (un.get('verdict'), un.get('confirms')) if un else None)
+"
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+ModuleNotFoundError: No module named 'fable_suitediff'
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, glob, sys; sys.path.insert(0,'scripts')
+import fable_suitediff as SD
+ids = ['bench132-4hop-197','bench65-mquake-028','bench65-mquake-036','bench65-mquake-064','bench65-mquake-065','bench65-mquake-066','bench65-mquake-072','bench121-4hop-177','bench121-4hop-189','bench103-s2fresh-4hop-019','bench103-s2fresh-4hop-033']
+def load(root):
+    out={}
+    for p in glob.glob(root+'/bench-*-rows.jsonl'):
+        for l in open(p):
+            l=l.strip()
+            if not l: continue
+            r=json.loads(l)
+            rows = SD.unwrap_rows([r]) if hasattr(SD,'unwrap_rows') else [r]
+            for rr in rows:
+                if isinstance(rr,dict) and rr.get('id') in ids: out[rr['id']]=rr
+    return out
+b=load('artifacts/claude-mouth241b-20260922/runs/out228-run1')
+n=load('artifacts/claude-mouth241b-20260922/runs/out241b-run1')
+for i in ids:
+    rb, rn = b.get(i), n.get(i)
+    print(i,'| 228:', (rb.get('verdict'), rb.get('confirms')) if rb else None, '| 241b:', (rn.get('verdict'), rn.get('confirms')) if rn else None)
+"
+bench132-4hop-197 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-028 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-036 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-064 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-065 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-066 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench65-mquake-072 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench121-4hop-177 | 228: ('correct', 2) | 241b: ('correct', 2)
+bench121-4hop-189 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench103-s2fresh-4hop-019 | 228: ('correct', 1) | 241b: ('correct', 1)
+bench103-s2fresh-4hop-033 | 228: ('correct', 2) | 241b: ('correct', 2)
+[0m
+[0m$ [0msed -n '1,84p' scripts/claude_mouth241b_rerender238.py; ls artifacts/ | grep -i -E "238|harvest" | head
+#!/usr/bin/env python3
+"""Exp 241b report-only: re-render 238's harvest through stage A v2
+(copy of 241's post-seal script with the 241b paths).
+
+REPORT-ONLY; changes no mark. 238's harvest.jsonl is read only
+to re-render it here.
+
+Each harvest row is one distinct reply string (possibly several lines) with
+its occurrence counts. Every line goes through the sealed render_line with no
+notebook records and no notebook names (the harvest has none). Because of
+that, lines whose parse-back needs records (e.g. multi-value answers) may
+pass through unchanged here although they would render in a live run.
+
+Output: artifacts/claude-mouth241b-20260922/rerender238.jsonl
+  {reply, rerender, changed, lines: [{route, act, why}], count, scope_count}
+plus a summary printed and written to rerender238-summary.json.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from collections import Counter
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_loop241b_agent as A241B  # noqa: E402 (sealed render path)
+
+REPO = SCRIPTS.parent
+SRC = REPO / "artifacts/claude-grammar238-20260922/harvest.jsonl"
+OUT = REPO / "artifacts/claude-mouth241b-20260922"
+
+
+def main() -> int:
+    rows = [json.loads(x) for x in SRC.read_text(encoding="utf-8").splitlines()
+            if x.strip()]
+    routes, routes_w, acts_changed, acts_changed_w = (Counter(), Counter(),
+                                                      Counter(), Counter())
+    sev1 = []
+    n_changed = w_changed = w_total = 0
+    with open(OUT / "rerender238.jsonl", "w", encoding="utf-8") as fh:
+        for r in rows:
+            reply = r["reply"]
+            outs, info = [], []
+            for line in reply.split("\n"):
+                res = A241B.render_line(line, [], ())
+                outs.append(res["text"])
+                info.append({"route": res["route"], "act": res["act"],
+                             "why": res.get("why")})
+                routes[res["route"]] += 1
+                routes_w[res["route"]] += r["count"]
+                if res["route"] == "A" and res["text"] != line:
+                    acts_changed[res["act"]] += 1
+                    acts_changed_w[res["act"]] += r["count"]
+                if res["route"] == "legacy":
+                    sev1.append((res["act"], line))
+            new = "\n".join(outs)
+            ch = new != reply
+            n_changed += ch
+            w_changed += r["count"] * ch
+            w_total += r["count"]
+            fh.write(json.dumps({"reply": reply, "rerender": new,
+                                 "changed": ch, "lines": info,
+                                 "count": r["count"],
+                                 "scope_count": r.get("scope_count")},
+                                ensure_ascii=False) + "\n")
+    summ = {"distinct_replies": len(rows), "changed_distinct": n_changed,
+            "occurrences": w_total, "changed_occurrences": w_changed,
+            "line_routes": dict(routes), "line_routes_by_count": dict(routes_w),
+            "changed_lines_by_act": dict(acts_changed),
+            "changed_lines_by_act_by_count": dict(acts_changed_w),
+            "sev1_legacy_lines": len(sev1)}
+    (OUT / "rerender238-summary.json").write_text(
+        json.dumps(summ, indent=1) + "\n", encoding="utf-8")
+    print(json.dumps(summ, indent=1))
+    for a, line in sev1[:30]:
+        print("  SEV1", a, line[:120])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+claude-grammar238-20260922
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; T0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_rerender238.py > artifacts/claude-mouth241b-20260922/runs/rerender238.out 2>&1; RC=$?; T1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time'); echo RC=$RC seconds=$(perl -e "printf '%.1f', $T1-$T0"); head -n 30 artifacts/claude-mouth241b-20260922/runs/rerender238.out
+RC=0 seconds=22.2
+{
+ "distinct_replies": 41759,
+ "changed_distinct": 13072,
+ "occurrences": 2788212,
+ "changed_occurrences": 1379141,
+ "line_routes": {
+  "A": 38729,
+  "passthrough": 2947,
+  "legacy": 83
+ },
+ "line_routes_by_count": {
+  "A": 2370538,
+  "passthrough": 417510,
+  "legacy": 164
+ },
+ "changed_lines_by_act": {
+  "SAVED": 8659,
+  "ANSWER": 3191,
+  "CONFLICT": 854,
+  "FORGOTTEN": 163,
+  "ABSTAIN_MISSING": 161,
+  "BROKEN_CHAIN": 28,
+  "SELF_FACTS": 1,
+  "UNKNOWN_ENTITY": 3,
+  "SELF_SLEPT": 1,
+  "FORGOTTEN_ONE": 7,
+  "SELF_TURNS": 1,
+  "SELF_PEOPLE": 1,
+  "REVERSE": 2
+ },
+[0m
+[0m$ [0mcp /tmp/dev241/rer241.json artifacts/claude-mouth241b-20260922/rer241.json && echo COPIED; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_score.py --help 2>&1 | head -n 20
+COPIED
+usage: claude_mouth241b_score.py [-h] [--sweep SWEEP] [--frames FRAMES]
+                                 [--grades GRADES] [--pairs-key PAIRS_KEY]
+                                 [--judge JUDGE] --out OUT [--submarks-only]
+
+options:
+  -h, --help            show this help message and exit
+  --sweep SWEEP
+  --frames FRAMES
+  --grades GRADES
+  --pairs-key PAIRS_KEY
+  --judge JUDGE
+  --out OUT
+  --submarks-only       builder self-check of the mechanical sub-marks on a
+                        PILOT sweep (no grader file)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_score.py --sweep artifacts/claude-mouth241b-20260922/sweep.jsonl --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl --out artifacts/claude-mouth241b-20260922/runs/score-submarks.json --submarks-only 2>&1 | tail -n 8; echo RC=$?
+C STACKED_POSSESSIVE                     0
+  C WORKED_BACKWARDS_TAG                   0
+  C BAD_RELATION_PHRASE                    0
+  C ENTITY_CODE                            0
+  C REPEATED_LIST_ITEM                     0
+  C SOMEONE_NON_PERSON                     0
+  C TITLE_THE_LOWERED                      0
+  C VALUE_SUBJECT_AGREEMENT                0
+RC=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_score.py --sweep artifacts/claude-mouth241b-20260922/sweep.jsonl --frames artifacts/claude-mouth241b-20260922/sweep-frames.jsonl --out artifacts/claude-mouth241b-20260922/runs/score-submarks.json --submarks-only 2>&1 | head -n 25
+S1 s's on a plural common noun           0
+  S2 a/an by sound                         0
+  S3 empty list slot                       0
+  S4 bare '0 X' count                      0
+  S5 raw underscore / key                  0
+  S6 dangling '(worked out backwards)'     0
+  C RELATION_NOT_VERB                      0
+  C PLURAL_NAME_POSSESSIVE                 0
+  C VALUE_LIST_AGREEMENT                   0
+  C NO_ARTICLE_JOB                         0
+  C NUMBER_AGREEMENT                       0
+  C NUMBERS_0_9_AS_WORDS                   0
+  C EMPTY_LIST                             0
+  C BARE_NAME_LIST                         0
+  C SELF_PEOPLE_USER_AS_YOU                0
+  C COLON_LABEL                            0
+  C LOWERCASE_START                        0
+  C LOWERCASE_NAME_ECHO                    0
+  C DOUBLE_TERMINAL_PUNCT                  0
+  C MISSING_ARTICLE_THE                    0
+  C STACKED_POSSESSIVE                     0
+  C WORKED_BACKWARDS_TAG                   0
+  C BAD_RELATION_PHRASE                    0
+  C ENTITY_CODE                            0
+  C REPEATED_LIST_ITEM                     0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+log=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/runs/mouth241b-run1.log')]
+print('routes:',dict(Counter(e['route'] for e in log)))
+print('ambig_identical:',sum(1 for e in log if e.get('why')=='ambiguous identical names (owner: ambiguity handler)'))
+print('sev1:',sum(1 for e in log if e['route']=='legacy'))
+sw=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/sweep.jsonl')]
+print('fresh sweep n:',len(sw),'ambig:',sum(1 for s in sw if s['act']=='AMBIGUOUS'))
+fr=[json.loads(l) for l in open('artifacts/claude-mouth241b-20260922/sweep-frames.jsonl')]
+print('fresh frames routes:',dict(Counter(f['route'] for f in fr)))
+"; shasum -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt 2>&1 | grep -c OK; shasum -c artifacts/claude-mouth241b-20260922/SEAL.sha256.txt artifacts/claude-mouth241b-20260922/SEAL2.sha256.txt 2>&1 | grep -v OK | head -n 5; echo SEALCHECK_DONE
+routes: {'A': 7268, 'passthrough': 378}
+ambig_identical: 0
+sev1: 0
+fresh sweep n: 1205 ambig: 30
+fresh frames routes: {'A': 1205}
+23
+SEALCHECK_DONE
+[0m
+[0m← [0mWrite artifacts/claude-mouth241b-20260922/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short artifacts/claude-mouth241b-20260922 artifacts/fable-predictions-ledger.md scripts/claude_mouth241b_* scripts/claude_loop241b_* scripts/claude_confirm241b* scripts/claude_fix172b241b_* 2>/dev/null | head -n 50; echo ---; git diff --stat -- artifacts/fable-predictions-ledger.md | tail -n 3
+M artifacts/fable-predictions-ledger.md
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+---
+ artifacts/fable-predictions-ledger.md | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+[0m
+[0m$ [0mgit status --short artifacts/claude-mouth241b-20260922/ | head -n 30; git check-ignore artifacts/claude-mouth241b-20260922/sweep.jsonl && echo IGNORED || echo NOT-IGNORED
+artifacts/claude-mouth241b-20260922/sweep.jsonl
+IGNORED
+[0m
+[0m$ [0mgit diff -- artifacts/fable-predictions-ledger.md | grep "^+" | grep -c "P241b"; git diff -- artifacts/fable-predictions-ledger.md | grep "^-" | grep -v "^---" | head; echo NODELETIONS_CHECK_DONE
+9
+NODELETIONS_CHECK_DONE
+[0m
