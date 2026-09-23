@@ -1,0 +1,165 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd && uptime && df -g / && ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 4:09  up 2 days, 19:58, 4 users, load averages: 44.79 74.78 74.54
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 128120280    0%   /
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo FETCH_DONE:$?; git show origin/main:design/v3/30-modes/280-282-chat-fixes.md > /tmp/spec281.md; echo SHOW_DONE:$?; wc -l /tmp/spec281.md
+FETCH_DONE:0
+SHOW_DONE:0
+      80 /tmp/spec281.md
+[0m
+[0m→ [0mRead /tmp/spec281.md
+[0m
+[0m$ [0mls artifacts/ | head -n 50; echo ---; ls artifacts/claude-calledpanel281-20260923/ 2>&1; echo ---; git status --short | head -n 20
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag290-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+---
+ls: artifacts/claude-calledpanel281-20260923/: No such file or directory
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+[0m
+[0m$ [0mmkdir -p artifacts/claude-calledpanel281-20260923 && ls artifacts/claude-calledpanel281-20260923/
+(no output)
+[0m
+[0m← [0mWrite /tmp/gen281.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/gen281.py
+Counter({'stored_called': 25, 'teach_setup': 10, 'nostore_called': 10, 'ambiguous_called': 10, 'control_plain': 5}) 60
+wrote ok
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280-282-chat-fixes.md | sed -n '32,48p'
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+[0m
+[0m← [0mWrite artifacts/claude-calledpanel281-20260923/SPEC-COPY.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-calledpanel281-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-calledpanel281-20260923/panel.jsonl')]; print(len(rows)); from collections import Counter; print(Counter(r['category'] for r in rows)); keys=set(tuple(sorted(r.keys())) for r in rows); print(keys); print(rows[0])"
+60
+Counter({'stored_called': 25, 'teach_setup': 10, 'nostore_called': 10, 'ambiguous_called': 10, 'control_plain': 5})
+{('category', 'dialog_id', 'gold', 'turn_index', 'user_text')}
+{'dialog_id': 'D01', 'turn_index': 0, 'user_text': "Just so you know, Lena's cat is Biscuit.", 'category': 'teach_setup', 'gold': 'Lena|cat|Biscuit'}
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-calledpanel281-20260923/panel.jsonl artifacts/claude-calledpanel281-20260923/SPEC-COPY.md > artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt && cat artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt && ls -l artifacts/claude-calledpanel281-20260923/
+149f7373eb4652570deed8b9be1fdf7986f6dc67d3b4d31e8240042d16d7409b  artifacts/claude-calledpanel281-20260923/panel.jsonl
+00c3b8fb65a12170d6f4e89d941175eae087229fbd7e4f9f21e9db8d0d085e95  artifacts/claude-calledpanel281-20260923/SPEC-COPY.md
+total 48
+-rw-r--r--  1 ben-hannan  staff  8208 Sep 23 04:13 panel.jsonl
+-rw-r--r--  1 ben-hannan  staff  2343 Sep 23 04:13 README.md
+-rw-r--r--  1 ben-hannan  staff   239 Sep 23 04:13 SEAL.sha256.txt
+-rw-r--r--  1 ben-hannan  staff  1424 Sep 23 04:13 SPEC-COPY.md
+[0m
