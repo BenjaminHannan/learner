@@ -1,0 +1,1927 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo ---; df -g /; echo ---; pwd; git rev-parse --show-toplevel 2>&1 | head -5
+14:42  up  4:35, 4 users, load averages: 28.75 41.95 42.15
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 178696080    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; echo FETCH_DONE; git branch -a 2>&1 | head -20; echo ---; git log --oneline -3 2>&1; echo ---; ls artifacts/ 2>&1 | head -30
+FETCH_DONE
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+---
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+7493e5e14 292t: talking layers on main base 292 (registered PASS M1-M3)
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "own-m1n|own-m0b|own-m1[^n]"; echo ---; ls artifacts/claude-own-m1n-20260923/ 2>&1; echo ---; ls handoff/queue/ 2>&1 | head; echo ---; find /private/tmp/claude-502 -maxdepth 4 -name "*.txt" 2>/dev/null | head -20
+---
+ls: artifacts/claude-own-m1n-20260923/: No such file or directory
+---
+ls: handoff/queue/: No such file or directory
+---
+[0m
+[0m$ [0mgit show origin/main --stat=200 --oneline HEAD 2>&1 | head -30; echo ===; git ls-tree origin/main --name-only 2>&1 | head -40; echo ===; git ls-tree origin/main artifacts/ --name-only 2>&1 | grep -i own | head -20
+06dfdc49e own-m1n: duplicate check matches only own-m1n (v1 rerun runs in parallel)
+ design/v3/50-own-model/task-own-m1n-train.md | 2 +-
+ handoff/queue/own-m1n-train.md               | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+ artifacts/claude-convf0-20260923/RESULTS.md        |  36 ++++++++++++++++++
+ artifacts/claude-convf0-20260923/run/base292.jsonl | 286 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scripts/claude_convf0_run.py                       | 114 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ scripts/claude_convf0_score.py                     | 176 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 612 insertions(+)
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main 2>&1 | head -40
+.claude
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+run.py
+run.sh
+scripts
+tests
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/ 2>&1 | grep own | head -20
+artifacts/claude-own-m0b-20260923
+artifacts/claude-own-m1-20260923
+artifacts/claude-own-m1n-20260923
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/claude-own-m1n-20260923/ 2>&1; echo ---DONE---; git ls-tree --name-only origin/builder-outbox 2>&1 | head -30
+artifacts/claude-own-m1n-20260923/PASSMARKS.md
+artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt
+---DONE---
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-own-m1n-20260923/PASSMARKS.md 2>&1 | head -200
+# own-M1n: the conversational mouth v2 (natural replies). Pass marks, fixed 2026-09-23 18:50 UTC before any training
+
+ONE change vs own-M1 (v1): the training replies are artifacts/claude-own-m0b-20260923/train.jsonl (5,602 Opus-written, blind-reviewed natural replies), not own-M0's 20,000 template replies. The model (MiniCPM5-1B), code (sealed in artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt), hyperparameters (LoRA r32, 2 epochs, lr 2e-4, batch 16, max-len 256, merged) and dev set (own-M0 dev, 1,000 rows) are the same as v1.
+
+| Mark | Bar |
+|---|---|
+| Pm1n.1 spoke (a reply passed the gate within 5 tries) | >= 99% of dev rows |
+| Pm1n.2 first-try pass (greedy reply passed the gate) | >= 95% of dev rows |
+| Pm1n.3 replies that reach output and fail a fresh slot_check recount | 0 |
+| Pm1n.4 variety: distinct slotted replies on dev | >= 30% of dev rows; the single most common reply <= 3% of rows |
+| Pm1n.5 crashes | 0 |
+Reported, no bar: fallbacks per status, speak ms, training steps (first and last loss), minutes, dollars.
+Proved wrong if first-try pass < 80%: 5.6k natural rows were not enough to teach the slot format.
+Fluency is not judged here. It is judged in M3 on convbench-f0, on top of the listener's reader, and never opened by this run.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt 2>&1 | head -20; echo ---; git show origin/main:artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt 2>&1 | head -20; echo ---; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -100
+9f5238115f009bdbf1e2835842593d14bbee23faf12784af7fd73f0753f36216  artifacts/claude-own-m0b-20260923/train.jsonl
+a2c4f625dd2c5bf6f0f16b93b609ed5d76393b4803459096c641525534046624  artifacts/claude-own-m0b-20260923/dev.jsonl
+1fdad6748a3d6249e90e0b1e940ba9dc3bd8607cc428d9d6bf563aebec9e3302  artifacts/claude-own-m1n-20260923/PASSMARKS.md
+---
+f00f3bbae16c3681b1c404745f6f2b0efbfd8d284e8b35724354e74101475772  scripts/claude_own_m1_common.py
+07ae7ffae78ebdb6846b030fbfec042a028fbd3de2c9db079c5d307e0bac6e4d  scripts/claude_own_m1_data.py
+a5b0176544d8354176bc118090c9ca5b35b94abd14079a8392ee13385970f251  scripts/claude_own_m1_speak.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+db4ac1faae0044d64e25416b26f77b00ace6fadb8463880b52e378cbe080bbc2  artifacts/claude-own-m1-20260923/PASSMARKS.md
+---
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/own-m1n-train.md 2>&1 | head -150
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+RENTAL RULES (from the director's rerun spec, 18:40 UTC; the first own-m1 host went offline):
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph); 4090 with the same filter if no 5090 is available.
+- Before renting: check that no other instance labelled exactly own-m1n is live (the v1 rerun, labelled own-m1b, may be running at the same time on purpose; that is NOT a duplicate) (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
+- Label the instance own-m1n. Remaining credit is about $6; the ceiling is $4 / 3 h.
+- Liveness watchdog: every 60 s, check the instance's actual_status and that the training log's line count grows. If the instance is offline or shows no log progress for 10 min, destroy it by exact id and rent again once (same filter). If that one fails too, destroy it and stop with HOST-FAIL. Never have 2 instances at once.
+
+
+
+YOUR TASK: builder for own-M1n (mouth v2, natural replies). Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1n-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1n-20260923/PASSMARKS.md (and artifacts/claude-own-m0b-20260923/README.md) and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main. From the repo root, run `shasum -a 256 -c` (sha256sum -c on Linux) on BOTH artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt and artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt. Every line must be OK, otherwise stop. Then run python scripts/claude_own_m1_data.py --m0 artifacts/claude-own-m0b-20260923 --out <work>/data and record the printed counts (expected: 5602 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1n.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: show real training steps from train_log.jsonl (step count, first and last loss); every Pm1n.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1n.1 to Pm1n.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1n-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1n-20260923/RESULTS.md artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1n-20260923/dev_summary.json artifacts/claude-own-m1n-20260923/dev_out_sample.jsonl artifacts/claude-own-m1n-20260923/train_summary.json artifacts/claude-own-m1n-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-own-m0b-20260923/README.md 2>&1 | head -120; echo END1; git ls-tree --name-only origin/main artifacts/claude-own-m0b-20260923/ 2>&1 | head; echo END2; git ls-tree --name-only origin/main scripts/ 2>&1 | grep -i -E "own_m1|lis300" | head
+# own-M0b: natural conversational mouth replies, Opus-written and blind-reviewed (2026-09-23 18:45 UTC)
+
+- Records: 3,000 records sampled from own-M0 train (seed 2024; the tag mix is set below). Six Opus writers each wrote 2 free-form replies per record under one brief. Replies use the slot tokens <S1> <R1> <V1>, fictional names only.
+- Code filter (scripts/claude_own_m1_common.py slot_check, plus literal-value, user-name-leak and source-wording checks): 5,980 of 6,000 kept. The 20 dropped were all from my deliberately strict source-wording rule.
+- Blind review: four Opus reviewers read all 5,980 rows, with no code deciding verdicts. Codes: F1 unsupported claim, F2 wrong status, F3 grammar, F4 unnatural, F5 doesn't fit. Result: 5,663 GOOD, 317 BAD, and 0 F2 in every part.
+- Second opinion: an independent reviewer read 600 random rows and agreed on 575/600. Table: GOOD/GOOD 549, BAD/BAD 26, primary GOOD vs second BAD 18, primary BAD vs second GOOD 7.
+- Kept: primary GOOD, and not BAD by the second opinion. Also dropped: rows whose record value has a digit (own-M0 junk values like "Borto2"; 43 rows).
+- Result: train.jsonl has 5,602 rows and 2,479 distinct replies; the top reply is 120 rows = 2.1%.
+  Tags: ANSWER 1,784, ABSTAIN 1,169, ACK_SAVE 1,165, FORGOT_ACK 582, CLARIFY 507, WHOSE 395.
+- dev.jsonl = own-M0 dev (byte-identical to builder-outbox artifacts/claude-own-m0-20260923/dev.jsonl), so v1 and v2 are measured on the same records.
+- Known reviewer patterns removed: value said twice, CLARIFY replies that don't ask which same-named person, "where does X live" answered with another relation, "a few" for two, unsupported timing.
+END1
+artifacts/claude-own-m0b-20260923/README.md
+artifacts/claude-own-m0b-20260923/dev.jsonl
+artifacts/claude-own-m0b-20260923/train.jsonl
+END2
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+scripts/claude_own_m1_common.py
+scripts/claude_own_m1_data.py
+scripts/claude_own_m1_speak.py
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_own_m1_common.py 2>&1 | head -150; echo ENDC
+#!/usr/bin/env python3
+"""own-M1 mouth: shared bits (prompt, slot filling, slot check).
+
+The mouth sees a checked reply record with names and values replaced by slot tokens,
+the user's last turn (same slots), and a dialog tag. It writes a conversational reply
+that uses the slot tokens; the printer puts the exact strings back afterwards, so the
+model can never misspell or invent a name that reaches the user through a slot.
+
+Slots: <S1> owner name, <V1> value / answer, <R1> relation phrase ("sibling's child").
+"""
+from __future__ import annotations
+
+import re
+
+SLOTS = ("<S1>", "<V1>", "<R1>")
+SLOT_RE = re.compile(r"<[A-Z]+\d+>")
+
+# statuses whose reply must state the value, and statuses that must never state one
+NEEDS_VALUE = {"OK", "SAVED"}
+NO_VALUE = {"UNKNOWN", "FORGOT", "ABSTAIN", "CLARIFY"}
+
+
+def slot_values(record: dict) -> dict:
+    """Map slot token -> exact string, from a talker120-style record."""
+    f = record.get("fields", {}) or {}
+    out = {}
+    name = record.get("name") or f.get("subject")
+    if name and not f.get("owner_phrase"):  # our/we owners are not a name slot (Ben's our-policy: ask whose)
+        out["<S1>"] = name
+    rels = record.get("relations") or ([f["relation"]] if f.get("relation") else [])
+    if rels:
+        out["<R1>"] = "'s ".join(rels)
+    val = f.get("answer") or f.get("value")
+    if val:
+        out["<V1>"] = val
+    return out
+
+
+def slotify(text: str, values: dict) -> str:
+    """Replace literal names/values in text with their slot tokens (longest first, whole words)."""
+    for tok, s in sorted(values.items(), key=lambda kv: -len(kv[1])):
+        if tok == "<R1>":
+            continue  # relation words are ordinary English in the user's turn
+        text = re.sub(r"(?<![\w])" + re.escape(s) + r"(?![\w])", tok, text, flags=re.IGNORECASE)
+    return text
+
+
+def record_text(record: dict, values: dict) -> str:
+    f = record.get("fields", {}) or {}
+    lines = [f"status: {record.get('status', '')}"]
+    for tok in SLOTS:
+        if tok in values:
+            lines.append({"<S1>": "name", "<V1>": "value", "<R1>": "relation"}[tok] + f": {tok}")
+    if f.get("source"):
+        lines.append(f"source: {f['source']}")
+    if f.get("hop"):
+        lines.append(f"hops: {f['hop']}")
+    return "\n".join(lines)
+
+
+def build_prompt(record: dict, user_turn: str, tag: str) -> str:
+    values = slot_values(record)
+    return ("### Record\n" + record_text(record, values) +
+            "\n### User\n" + slotify(user_turn or "", values) +
+            "\n### Tag\n" + tag + "\n### Reply\n")
+
+
+def fill(reply: str, values: dict) -> str:
+    for tok, s in values.items():
+        reply = reply.replace(tok, s)
+    return reply
+
+
+def slot_check(reply: str, record: dict) -> list[str]:
+    """Problems with a slotted reply against its record; [] means it passes.
+
+    Code-only faithfulness gate (independent of the M0 builder's checker):
+    - no slot the record lacks, no unknown slot token;
+    - OK/SAVED replies state <S1> and <V1>; UNKNOWN/FORGOT/ABSTAIN/CLARIFY never state <V1>;
+    - replies about a named fact mention <S1>;
+    - no capitalised word outside slots except sentence starts, "I" and contractions of I;
+    - no digits (records carry no numbers the mouth may say).
+    """
+    values = slot_values(record)
+    status = record.get("status", "")
+    probs = []
+    used = set(SLOT_RE.findall(reply))
+    for t in used:
+        if t not in SLOTS:
+            probs.append(f"unknown slot {t}")
+        elif t not in values:
+            probs.append(f"slot {t} not in record")
+    if status in NEEDS_VALUE and "<V1>" in values and "<V1>" not in used:
+        probs.append("value missing")
+    if status in NO_VALUE and "<V1>" in used:
+        probs.append("value stated for a no-value status")
+    if "<S1>" in values and status in NEEDS_VALUE | {"UNKNOWN", "FORGOT"} and "<S1>" not in used:
+        probs.append("owner missing")
+    bare = SLOT_RE.sub(" x ", reply)
+    for m in re.finditer(r"[A-Za-z][A-Za-z']*", bare):
+        word = m.group(0)
+        if not word[0].isupper() or word in ("I", "I'm", "I've", "I'll", "I'd"):
+            continue
+        before = bare[:m.start()].rstrip(" \t\"'(")
+        if before == "" or before[-1] in ".!?\n:":
+            continue  # sentence start
+        probs.append(f"capitalised word outside slots: {word}")
+    if re.search(r"\d", bare):
+        probs.append("digit in reply")
+    return probs
+ENDC
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_own_m1_data.py 2>&1 | head -120; echo ENDD; git show origin/main:scripts/claude_own_m1_speak.py 2>&1 | head -200
+#!/usr/bin/env python3
+"""own-M1 data: own-M0 rows -> {prompt, target} rows for claude_lis300_train.py.
+
+M0 rows: {"record", "user_turn", "tag", "reply"} with the reply already slotted.
+Every target is re-checked with claude_own_m1_common.slot_check; failures are dropped and counted.
+Usage: python claude_own_m1_data.py --m0 <M0 artifacts dir> --out <dir>   (writes train.jsonl, dev.jsonl, counts.json)
+"""
+import argparse, collections, json, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_own_m1_common import build_prompt, slot_check  # noqa: E402
+
+
+def rows(path):
+    import gzip
+    op = gzip.open if str(path).endswith(".gz") else open
+    with op(path, "rt", encoding="utf-8") as fh:
+        for l in fh:
+            if l.strip():
+                yield json.loads(l)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--m0", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    m0, out = Path(a.m0), Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    counts = {}
+    for split in ("train", "dev"):
+        files = sorted(m0.glob(f"{split}*.jsonl")) + sorted(m0.glob(f"{split}*.jsonl.gz"))
+        if not files:
+            sys.exit(f"no {split}*.jsonl in {m0}")
+        kept, dropped, reasons = 0, 0, collections.Counter()
+        with open(out / f"{split}.jsonl", "w", encoding="utf-8") as fh:
+            for f in files:
+                for r in rows(f):
+                    probs = slot_check(r["reply"], r["record"])
+                    if probs:
+                        dropped += 1
+                        reasons.update(p.split(":")[0] for p in probs)
+                        continue
+                    fh.write(json.dumps({"prompt": build_prompt(r["record"], r.get("user_turn", ""), r["tag"]),
+                                         "target": r["reply"].strip() + "\n<END>",
+                                         "record": r["record"], "user_turn": r.get("user_turn", ""),
+                                         "tag": r["tag"]}, ensure_ascii=False) + "\n")
+                    kept += 1
+        counts[split] = {"kept": kept, "dropped": dropped, "reasons": dict(reasons)}
+    (out / "counts.json").write_text(json.dumps(counts, indent=1))
+    print(json.dumps(counts))
+
+
+if __name__ == "__main__":
+    main()
+ENDD
+#!/usr/bin/env python3
+"""own-M1 mouth: the fine-tuned MiniCPM5-1B speaker with the slot gate.
+
+Library:  m = Mouth(model_dir); text, info = m.say(record, user_turn, tag)
+  Tries the greedy reply, then up to --samples sampled replies; the first one that passes
+  slot_check is filled and returned. If none passes, returns (None, info) and the caller
+  must fall back to the 241b rewriter. info = {"tries", "raw", "problems", "ms"}.
+CLI (dev evaluation):
+  python claude_own_m1_speak.py --model DIR --data DIR/dev.jsonl --out OUT.jsonl [--limit N]
+  prints: rows, spoke, fell back, distinct replies, top reply share, per-status counts, median/p90 ms.
+"""
+import argparse, collections, json, statistics, sys, time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_own_m1_common import build_prompt, fill, slot_check, slot_values  # noqa: E402
+
+
+class Mouth:
+    def __init__(self, model_dir, device=None, samples=4, max_new_tokens=60, seed=1):
+        self.dev = device or ("cuda" if torch.cuda.is_available() else
+                              "mps" if torch.backends.mps.is_available() else "cpu")
+        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.dev).eval()
+        self.samples, self.max_new = samples, max_new_tokens
+        torch.manual_seed(seed)
+
+    @torch.no_grad()
+    def _gen(self, ids, sample):
+        kw = dict(do_sample=True, temperature=0.8, top_p=0.95) if sample else dict(do_sample=False)
+        out = self.model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=self.max_new,
+                                  eos_token_id=self.tok.eos_token_id, pad_token_id=self.tok.eos_token_id,
+                                  stop_strings=["<END>"], tokenizer=self.tok, **kw)
+        text = self.tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
+        return text.split("<END>")[0].strip()
+
+    def say(self, record, user_turn, tag):
+        t0 = time.perf_counter()
+        p = self.tok(build_prompt(record, user_turn, tag), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        raws, probs = [], []
+        for i in range(1 + self.samples):
+            raw = self._gen(ids, sample=i > 0)
+            pr = slot_check(raw, record) if raw else ["empty"]
+            raws.append(raw)
+            probs.append(pr)
+            if not pr:
+                ms = (time.perf_counter() - t0) * 1000
+                return fill(raw, slot_values(record)), {"tries": i + 1, "raw": raws, "problems": probs, "ms": ms}
+        return None, {"tries": len(raws), "raw": raws, "problems": probs,
+                      "ms": (time.perf_counter() - t0) * 1000}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--samples", type=int, default=4)
+    a = ap.parse_args()
+    m = Mouth(a.model, samples=a.samples)
+    rows = [json.loads(l) for l in Path(a.data).read_text(encoding="utf-8").splitlines() if l.strip()]
+    rows = rows[: a.limit] if a.limit else rows
+    spoke, fell, first_try, texts, ms = 0, 0, 0, collections.Counter(), []
+    per = collections.defaultdict(lambda: [0, 0])
+    with open(a.out, "w", encoding="utf-8") as fh:
+        for r in rows:
+            text, info = m.say(r["record"], r.get("user_turn", ""), r["tag"])
+            st = r["record"].get("status", "")
+            per[st][0] += 1
+            if text is None:
+                fell += 1
+            else:
+                spoke += 1
+                per[st][1] += 1
+                first_try += info["tries"] == 1
+                texts[[x for x in info["raw"] if x][-1]] += 1
+            ms.append(info["ms"])
+            fh.write(json.dumps({"record": r["record"], "user_turn": r.get("user_turn", ""), "tag": r["tag"],
+                                 "reply": text, **info}, ensure_ascii=False) + "\n")
+    top = texts.most_common(1)[0][1] if texts else 0
+    ms.sort()
+    print(json.dumps({"rows": len(rows), "spoke": spoke, "fell_back": fell, "first_try_pass": first_try,
+                      "distinct_slotted_replies": len(texts), "top_reply_count": top,
+                      "per_status_rows_spoke": {k: v for k, v in per.items()}, "device": m.dev,
+                      "median_ms": round(statistics.median(ms), 1) if ms else None,
+                      "p90_ms": round(ms[int(0.9 * (len(ms) - 1))], 1) if ms else None}))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit log --oneline origin/main -5 2>&1; git status --short 2>&1 | head -20; ls ~/.config/vastai/ 2>&1; which vastai 2>&1; vastai --help 2>&1 | head -5
+06dfdc49e own-m1n: duplicate check matches only own-m1n (v1 rerun runs in parallel)
+29a499bd4 hold own-m1-bpc: v1 runs on rental as own-m1b instead (no duplicate)
+d36755c27 release own-m1b (v1 mouth) onto a rental: Ben says credits are fine
+2e5f27584 own-M0b natural replies (5,602 Opus-written, blind-reviewed) + queue own-M1n mouth v2 on the one remaining rental
+8f494b5dc board: 292t verified PASS; probe clean; F0 baseline; F1 queued
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+vast_api_key
+vast_role
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -40
+- P259.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P258 OUTCOME (2026-09-22 18:00) registered FAIL on M1: that_denial 7/12 (252b 0), that_correction 3/12 (0), pure_denial_that 6/10 (2); junk 0 over 80 (252b 2), false claims 0 (4), wrong values 18 (31); question/unstored/keep/control all pass. M2-M7 PASS exactly as predicted (dev252b 29 moves, c252-022 only, suites = 252b, smoke 0 diffs, M6 0/0/0, +0.23 ms). P258.1-.3 right; P258.4 ranges too optimistic for that_correction (3 vs 9-11) and that_denial (7 vs 8-11); P258.5 right. Cause: 252b grammar gaps on the shortened turns (lowercase, first person, multi-valued relations) + whole-turn gate misses ", not Y, that's ...". Scorers first run with a broken bash python3; re-scored once with uv 3.12, no re-run.
+
+- P257.1 (2026-09-22 18:15) Exp 257 (ear v4.1 = data v4 + C8, table v2; ckpt 55284dec…; tau 9.3 by the sealed rule, no fallback; SEAL.sha256.txt sha a2f8031fb0a3…): M1 passes (0-1 no_save saves), ~75 %.
+- P257.2 M2 wrong saves 2-4; pass (<= 1) ~25 %.
+- P257.3 M3 A recall 65-80 %: FAIL ~85 %; A_brake 85-95 %; B 10-25 %.
+- P257.4 M3b UNSURE 10-20 % of gold TEACH; pass (<= 12 %) ~35 %.
+- P257.5 M4 ASK recall 85-95 %; pass (>= 90 %) ~55 %.
+- P257.6 M5 GPU median 120-200 ms: pass ~97 %.
+- P257.7 Overall registered PASS ~5 %.
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -c -E "^- P"; git show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -i -E "rental|vast|own-m1|dollars|\$" | tail -30
+1496
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -iE "rent|vastai|instance [0-9]|charged|\$[0-9]|dollars|credit" | tail -30
+| P27 | baseline-v2 prereg | I0-H1 (default init + hint), run on rental box per DEVIATION-1 | clears fit gate ≥ 2/3 | 0.40 | ≤ 1 | FALSE 0/3: chance (21–37/512) on every cell; all 6,000 updates completed (~990 s) | 0.16 |
+| P28 | baseline-v2 prereg | I1-H0 (rescaled init, no hint), rental box | clears ≥ 2/3 | 0.25 | ≥ 2 | FALSE→forecast "unlikely" correct: 1/3 (seed 1202 512/512 ×4; seeds 1200/1201 at chance) | 0.0625 |
+| P29 | baseline-v2 prereg | I0-H0 (default init, no hint), rental box | clears fit gate in ≥ 1/3 | 0.10 | any clears | FALSE 0/3 (chance) — forecast "unlikely" correct | 0.01 |
+- P107.1: raw STATE counts replay exp 106 exactly: 276 / 306 / 288 for seeds 4701 / 4702 / 4703. 95%. Falsified by any different count.
+- P109.6: WebRED (train+dev+heldout) vs reading94 panel sentence overlap = 0 (normalised exact match). 0.90. Falsified by any overlap (different sources, but Wikipedia text is shared).
+- P116.1: family A (6/12 stale episodes): gate refuses (installed=0); A1/A2/A4 abstain-or-current, A3 abstains, 0 stale answers. 0.70. Falsified by any installed run or any stale-valued reply.
+- P113b.3: M3 — loop113b fresh-4hop correct == 145 and wrong == 5 with the same 5 teach-gap ids as loop113 (056/103/196 mid-chain "and"-guard rejects, 125/200 child-hop teach gaps); the one change does not touch composer-covered questions. 0.80. Falsified by correct != 145, wrong != 5, or a different wrong-id set.
+- P135.5: K3 — every marks123 suite verdict identical loop135 vs loop129b (same runner, same out-parent). 0.90. Falsified by any suite verdict move.
+- Outcomes 150b: P150b.1 TRUE (49/49: 23/23 refuse-empty SPLIT incl. exact t14 text, 14/14 plain + 10/10 verb-titles exact, 2/2 possessive-title literals no-write, 0 wrong writes) | 0.0625. P150b.2 TRUE (57/57 OK, 0 verdict/reply moves vs sealed loop150) | 0.04. P150b.3 TRUE (600/600 per-item + reply identical, 0 new wrong; post-fix re-run identical) | 0.0625. P150b.4 TRUE at verdict level (p2 64/64 rows, p4 30/30, q1, rt81 74/74, bench 400/400, sleep SKIP, soak 2000/3/0-0-0, q4 leaks, p3 L1-L6, rt110 62/62 verdicts all identical; deviations: rt110 needed 3 open runs under 5-agent load — 2 empty-turn harness-race flakes with verdicts unchanged/byte-identical in-process replays; sleep reason names new agent file as predicted) | 0.09. P150b.5 TRUE (reply_diffs [] all 6 sessions, 0 new WRONG, 0 write deltas; one verdict-label-only S5-16 move, byte-identical reply, sealed label hand-corrected) | 0.09. P150b.6 FALSE (sealed full marks123 --workers 4 breached 25 min under concurrent-agent load, killed mid-rt110; every per-suite invocation < 1500 s: probe 4.2/5.4, bench 62.5/23.6, sessions 3.4, p3 46, rt110 114-225, soak 133) | 0.81. SCORE: S1/S2/G1 PASS, G2 PASS with disclosed harness flakes, G3 PASS with one label deviation, G4 FAIL (load, one diagnosis note). Post-seal one-line daemon fix reported (idle_seconds); affected suites ran post-fix. RESULTS: artifacts/fable-subject150b-20260922/RESULTS.md
+- P137d.1: T1 — sealed 76-case probe through loop137d vs loop137c: S-say 16/16 exact echo+parenthetical, S-hear 24/24 exact hearsay sentence, C 6/6 real-value answers, N 12/12 + O 18/18 byte-identical to loop137c, 0 writes on every framed turn. 0.80. Falsified by any case FAIL.
+- P154e.5: probe154c differential (informational): exactly n=9,10,11 reply moves vs sealed expects (add / orphaned-no / list-ask), knock-on state maps in segment A only, segments B/C identical. 0.80. Falsified by any other difference.
+## 2026-09-22 — Experiment 187b (fresh registration of the CURRENT loop187 agent, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-selfq187b-20260922/)
+- P218.1: C1 classifier table 12/12 match (pairs cover new WRONG-WRITE, new WRONG, new junk write x2, lost OK x2 incl. OK->MISSED save lost, fixed x2 incl. MISSED->OK, write change x2 incl. OK->OK different stored triples and fact-write count, reply-only x2). 0.90. Falsified by any mismatch.
+- Outcomes 218: P218.1 TRUE (C1 12/12) | 0.01. P218.2 TRUE (C2 exactly C002/C105/C118 lost OK + C075/C096/C121 reply-only, sessions152 0, GATE NOT clean lost OK 3) | 0.0225. P218.3 FALSE (c3-base bench 1 move bench103-s2fresh-4hop-173 correct->abstain; rt136/rt143/sessions152 0; GATE clean) | 0.81. P218.4 FALSE (c3-basedir bench 1 move bench132-4hop-188 correct->abstain, a different item; 0 elsewhere; GATE clean; 0 skipped) | 0.81. P218.5 TRUE (c3-base 68.1 s, c3-basedir 102.9 s, both < 900 s) | 0.0025. 3/5 TRUE. SCORE registered FAIL (C3; agent question-side nondeterminism, one diagnosis note; no re-run, no re-seal). RESULTS: artifacts/fable-suitediff218-20260922/RESULTS.md
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -iE "own-m|RENTAL|vast " | tail -30
+| P27 | baseline-v2 prereg | I0-H1 (default init + hint), run on rental box per DEVIATION-1 | clears fit gate ≥ 2/3 | 0.40 | ≤ 1 | FALSE 0/3: chance (21–37/512) on every cell; all 6,000 updates completed (~990 s) | 0.16 |
+| P28 | baseline-v2 prereg | I1-H0 (rescaled init, no hint), rental box | clears ≥ 2/3 | 0.25 | ≥ 2 | FALSE→forecast "unlikely" correct: 1/3 (seed 1202 512/512 ×4; seeds 1200/1201 at chance) | 0.0625 |
+| P29 | baseline-v2 prereg | I0-H0 (default init, no hint), rental box | clears fit gate in ≥ 1/3 | 0.10 | any clears | FALSE 0/3 (chance) — forecast "unlikely" correct | 0.01 |
+[0m
+[0m$ [0mgrep -iE "rent|vast|dollars|own-m1|own-m0" artifacts/fable-predictions-ledger.md 2>&1 | tail -20; echo ---; tail -5 artifacts/fable-predictions-ledger.md 2>&1; echo ---; ls ~/premonition-models/ 2>&1; df -g / | tail -2
+| P27 | baseline-v2 prereg | I0-H1 (default init + hint), run on rental box per DEVIATION-1 | clears fit gate ≥ 2/3 | 0.40 | ≤ 1 | FALSE 0/3: chance (21–37/512) on every cell; all 6,000 updates completed (~990 s) | 0.16 |
+| P28 | baseline-v2 prereg | I1-H0 (rescaled init, no hint), rental box | clears ≥ 2/3 | 0.25 | ≥ 2 | FALSE→forecast "unlikely" correct: 1/3 (seed 1202 512/512 ×4; seeds 1200/1201 at chance) | 0.0625 |
+| P29 | baseline-v2 prereg | I0-H0 (default init, no hint), rental box | clears fit gate in ≥ 1/3 | 0.10 | any clears | FALSE 0/3 (chance) — forecast "unlikely" correct | 0.01 |
+- P107.1: raw STATE counts replay exp 106 exactly: 276 / 306 / 288 for seeds 4701 / 4702 / 4703. 95%. Falsified by any different count.
+- P109.6: WebRED (train+dev+heldout) vs reading94 panel sentence overlap = 0 (normalised exact match). 0.90. Falsified by any overlap (different sources, but Wikipedia text is shared).
+- P116.1: family A (6/12 stale episodes): gate refuses (installed=0); A1/A2/A4 abstain-or-current, A3 abstains, 0 stale answers. 0.70. Falsified by any installed run or any stale-valued reply.
+- P113b.3: M3 — loop113b fresh-4hop correct == 145 and wrong == 5 with the same 5 teach-gap ids as loop113 (056/103/196 mid-chain "and"-guard rejects, 125/200 child-hop teach gaps); the one change does not touch composer-covered questions. 0.80. Falsified by correct != 145, wrong != 5, or a different wrong-id set.
+- P135.5: K3 — every marks123 suite verdict identical loop135 vs loop129b (same runner, same out-parent). 0.90. Falsified by any suite verdict move.
+- Outcomes 150b: P150b.1 TRUE (49/49: 23/23 refuse-empty SPLIT incl. exact t14 text, 14/14 plain + 10/10 verb-titles exact, 2/2 possessive-title literals no-write, 0 wrong writes) | 0.0625. P150b.2 TRUE (57/57 OK, 0 verdict/reply moves vs sealed loop150) | 0.04. P150b.3 TRUE (600/600 per-item + reply identical, 0 new wrong; post-fix re-run identical) | 0.0625. P150b.4 TRUE at verdict level (p2 64/64 rows, p4 30/30, q1, rt81 74/74, bench 400/400, sleep SKIP, soak 2000/3/0-0-0, q4 leaks, p3 L1-L6, rt110 62/62 verdicts all identical; deviations: rt110 needed 3 open runs under 5-agent load — 2 empty-turn harness-race flakes with verdicts unchanged/byte-identical in-process replays; sleep reason names new agent file as predicted) | 0.09. P150b.5 TRUE (reply_diffs [] all 6 sessions, 0 new WRONG, 0 write deltas; one verdict-label-only S5-16 move, byte-identical reply, sealed label hand-corrected) | 0.09. P150b.6 FALSE (sealed full marks123 --workers 4 breached 25 min under concurrent-agent load, killed mid-rt110; every per-suite invocation < 1500 s: probe 4.2/5.4, bench 62.5/23.6, sessions 3.4, p3 46, rt110 114-225, soak 133) | 0.81. SCORE: S1/S2/G1 PASS, G2 PASS with disclosed harness flakes, G3 PASS with one label deviation, G4 FAIL (load, one diagnosis note). Post-seal one-line daemon fix reported (idle_seconds); affected suites ran post-fix. RESULTS: artifacts/fable-subject150b-20260922/RESULTS.md
+- P137d.1: T1 — sealed 76-case probe through loop137d vs loop137c: S-say 16/16 exact echo+parenthetical, S-hear 24/24 exact hearsay sentence, C 6/6 real-value answers, N 12/12 + O 18/18 byte-identical to loop137c, 0 writes on every framed turn. 0.80. Falsified by any case FAIL.
+- P154e.5: probe154c differential (informational): exactly n=9,10,11 reply moves vs sealed expects (add / orphaned-no / list-ask), knock-on state maps in segment A only, segments B/C identical. 0.80. Falsified by any other difference.
+## 2026-09-22 — Experiment 187b (fresh registration of the CURRENT loop187 agent, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-selfq187b-20260922/)
+- P218.1: C1 classifier table 12/12 match (pairs cover new WRONG-WRITE, new WRONG, new junk write x2, lost OK x2 incl. OK->MISSED save lost, fixed x2 incl. MISSED->OK, write change x2 incl. OK->OK different stored triples and fact-write count, reply-only x2). 0.90. Falsified by any mismatch.
+- Outcomes 218: P218.1 TRUE (C1 12/12) | 0.01. P218.2 TRUE (C2 exactly C002/C105/C118 lost OK + C075/C096/C121 reply-only, sessions152 0, GATE NOT clean lost OK 3) | 0.0225. P218.3 FALSE (c3-base bench 1 move bench103-s2fresh-4hop-173 correct->abstain; rt136/rt143/sessions152 0; GATE clean) | 0.81. P218.4 FALSE (c3-basedir bench 1 move bench132-4hop-188 correct->abstain, a different item; 0 elsewhere; GATE clean; 0 skipped) | 0.81. P218.5 TRUE (c3-base 68.1 s, c3-basedir 102.9 s, both < 900 s) | 0.0025. 3/5 TRUE. SCORE registered FAIL (C3; agent question-side nondeterminism, one diagnosis note; no re-run, no re-seal). RESULTS: artifacts/fable-suitediff218-20260922/RESULTS.md
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+- P291.6 OUTCOME (2026-09-23, builder) registered verdict FAIL. M1-M6 all PASS first try (M1 503/503 + devs; M2 suites/rt136/rt143 as predicted; M3 4 fields; M4 4/4 identical x3; M5 +0.671 ms; M6 2 + 5 moves). M7 4/5 PASS (openpanel 80/80, corrtail 53/54 with 6 q2-wording, invpanel clean, tablepanel clean) and corrpanel252 FAIL on c252-009 (sealed scorer new_wrong_value; evidence: removal miss shared by all arms, 291 == base 138nb reply+store verbatim, 138p abstains; same shape as disclosed v259-056). M8 corrpanel291 73/96 (138nb 34, 138p 65): union preservation perfect (0 r2w both ways), cause families all >= 138p, controls 12/12, 0 question/followup writes, 0 new wrong/junk/claim beyond both parents (17/3/1 all inherited; c291-006 == 138nb verbatim) -- FAIL on absolute-zero bars only. P291.1 right; P291.2 right; P291.3 right; P291.4 wrong (1 row); P291.5 wrong (overall). Diagnosis for the director: stale-answer-on-shared-removal-miss, verbatim-base both times; ruling options: accept as table behaviour per the M7 classification clause, or route a removal-path follow-up.
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- P-vast-rescue (2026-09-23 18:41 UTC, director rescue of own-m1-train dead rental) contract 52276877 RTX 5090 1x public_ip 180.189.55.38 actual_status=offline cur_state=running: start 2026-09-23T18:29:42Z, destroyed 18:41Z, alive ~677 s (11.28 min) x $0.485185/hr = ~$0.09 (per-instance billing not readable via API: /invoices shows only stripe top-ups, /users/current credit 6.3913 balance 0 unchanged; estimate used per task rule); post-destroy show instances 0; own-m1-train runner PIDs 23817/23847/27733/27734 killed, queue marker own-m1-train.running removed (exit rc=143). See runs/000-vast-rescue/instances.txt.
+---
+- P292t.4 (same) falsifiers: any 292t reply differing from its mechanical owner arm, any suite/probe move outside the predicted list, any write on a question or small-talk turn, or any turn with 2+ single-layer arms differing from 292 proves the join wrong.
+- P292t.5 OUTCOME (2026-09-23, builder, sealed exp 292t, CPU only) registered verdict PASS M1-M3. M1 (90 turns / 78 dialogs once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 13/13 + panel 2/2 OK after): agree 90/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10, control 10/10; owners 292:65/280b:20/282b:5/281:0); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P292t.2 (sessions152 exactly the 3 reply-only owned by 280b, bench/rt136/rt143 0, labels+gate identical to 292's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs). P292t.1-4 all held. Misses 0, deviations 0. See artifacts/claude-join292t-20260923/RESULTS.md.
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train + 0 dev; max single-reply share <= 3% every status train+dev; distinct templates >= 40 every status train+dev; dev∩train names 0 and combos 0; exit 0.
+- P-vast-rescue (2026-09-23 18:41 UTC, director rescue of own-m1-train dead rental) contract 52276877 RTX 5090 1x public_ip 180.189.55.38 actual_status=offline cur_state=running: start 2026-09-23T18:29:42Z, destroyed 18:41Z, alive ~677 s (11.28 min) x $0.485185/hr = ~$0.09 (per-instance billing not readable via API: /invoices shows only stripe top-ups, /users/current credit 6.3913 balance 0 unchanged; estimate used per task rule); post-destroy show instances 0; own-m1-train runner PIDs 23817/23847/27733/27734 killed, queue marker own-m1-train.running removed (exit rc=143). See runs/000-vast-rescue/instances.txt.
+---
+lis300-merged
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 178569640    0%   /
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances 2>&1 | head -30; echo ---; vastai show user 2>&1 | head -10 || vastai show users 2>&1 | head -10
+[K[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m─[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m0 instances[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰────────────────────╯[0m
+[97mNo instances found.[0m
+---
+[40m[97m  #  Balance  Bal. Thld  Bal. Thld Enabled  City  Country  Addr Line 1[0m
+[48;5;240m[97m  1  0        -0.01      True               -     -        -          [0m
+
+[40m[97m  #  Addr line 2  Zip  Billed Expected  Billed Vfy  Billing Creditonly  Can Pay[0m
+[48;5;240m[97m  1  -            -    0.0              0.0         1                   True   [0m
+
+[40m[97m  #  Credit  Email                        Email Vfy  Full Name[0m
+[48;5;240m[97m  1  6.39    benjamin.a.hannan@gmail.com  True       -        [0m
+
+[40m[97m  #  Got Signup Credit  Has Billing  Has Payout  Id      Last4  Paid Expected[0m
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -25
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  44614424  13.0  1x  RTX_5090  26.8  3.5      32.0    64.4  32.6  707 [0m
+[40m[97m  2  49506101  13.0  1x  RTX_5090  25.5  2.2      32.0    64.5  32.6  226 [0m
+[48;5;240m[97m  3  49927791  13.0  1x  RTX_5090  26.5  2.2      32.0    60.4  32.6  254 [0m
+[40m[97m  4  51862069  13.0  1x  RTX_5090  26.4  2.2      32.0    64.5  32.6  278 [0m
+[48;5;240m[97m  5  49250870  13.2  1x  RTX_5090  26.8  2.6      48.0    48.2  32.6  637 [0m
+[40m[97m  6  46579458  13.0  1x  RTX_5090  1.6   2.6      24.0    64.4  32.6  318 [0m
+[48;5;240m[97m  7  50236336  12.8  1x  RTX_5090  23.5  2.6      24.0    64.5  32.6  167 [0m
+[40m[97m  8  28539924  12.8  1x  RTX_5090  41.8  4.4      12.0    64.1  32.6  1560[0m
+[48;5;240m[97m  9  34376036  13.2  1x  RTX_5090  13.2  2.2      16.0    32.2  32.6  184 [0m
+[40m[97m 10  52064240  13.3  1x  RTX_5090  45.3  4.3      8.0     48.2  32.6  735 [0m
+[48;5;240m[97m 11  50287566  13.3  1x  RTX_5090  50.7  5.7      24.0    31.6  32.6  614 [0m
+[40m[97m 12  50894162  13.2  1x  RTX_5090  26.5  2.5      64.0   513.0  32.6  2386[0m
+[48;5;240m[97m 13  47088908  12.9  1x  RTX_5090  54.1  2.4      48.0    76.5  32.6  509 [0m
+[40m[97m 14  36831657  13.1  1x  RTX_5090  50.5  3.1      64.0    72.5  32.6  139 [0m
+[48;5;240m[97m 15  52154332  13.0  1x  RTX_5090  37.9  5.0      20.0    64.1  32.6  6504[0m
+[40m[97m 16  50091704  13.2  1x  RTX_5090  16.9  3.4      2.0    128.6  32.6  85  [0m
+[48;5;240m[97m 17  52064002  13.0  1x  RTX_5090  27.1  2.6      48.0   110.6  32.6  1702[0m
+[40m[97m 18  51800442  13.2  1x  RTX_5090  26.5  3.7      32.0   129.0  32.6  1269[0m
+[48;5;240m[97m 19  46900157  13.2  1x  RTX_5090  26.5  2.4      16.0    64.5  32.6  689 [0m
+[40m[97m 20  48425034  13.0  1x  RTX_5090  24.8  2.2      64.0   258.0  32.6  1503[0m
+[48;5;240m[97m 21  52054111  13.0  1x  RTX_5090  27.1  2.6      48.0   110.6  32.6  1616[0m
+[40m[97m 22  52035376  13.0  1x  RTX_5090  12.0  5.0      16.0    64.2  32.6  1234[0m
+[48;5;240m[97m 23  42928597  13.1  1x  RTX_5090  27.0  2.9      64.0   515.6  32.6  1172[0m
+[40m[97m 24  50683557  13.2  1x  RTX_5090  27.5  5.8      16.0    62.9  32.6  487 [0m
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(o['id'], o.get('dph_total'), o.get('reliability'), o.get('public_ipaddr')) for o in d[:8]]" 2>&1 | head -12
+49506097 0.5075925925925925 0.9877494 137.175.22.196
+49927791 0.5075925925925925 0.9931257 137.175.22.196
+51862069 0.5075925925925925 0.9864299 137.175.22.196
+46579458 0.5126851851851851 0.998253 137.175.76.24
+51929869 0.6013888888888889 0.9965926 85.218.235.6
+52120494 0.602779111111111 0.9858412 154.68.174.226
+35010867 0.6060185185185185 0.9947866 84.238.141.9
+52156661 0.6147222222222223 0.9971154 181.173.100.56
+[0m
+[0m# [0mTodos
+[•] Rent 1x RTX 5090 labelled own-m1n (dup check + ledger check done)
+[ ] Verify SEAL-code + SEAL-data on origin/main; build data (5602/1000)
+[ ] Download MiniCPM5-1B, record hash; train LoRA r32 2ep + merge
+[ ] SEAL-run BEFORE measure; measure dev ONCE + recount Pm1n.3 + 20 quotes
+[ ] Write RESULTS.md, ledger Pm1n.1-.5, copy model to Mac, destroy instance
+[0m
+[0m$ [0mgit show origin/main:runs/000-vast-rescue/instances.txt 2>&1 | head -20; echo ---; git ls-tree --name-only origin/main handoff/queue/ 2>&1 | head -20; echo ---; git show origin/main:handoff/queue/own-m1n-train.md 2>&1 | grep -iE "vast|image|disk|create|rent" | head -20
+fatal: path 'runs/000-vast-rescue/instances.txt' exists on disk, but not in 'origin/main'
+---
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+---
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+GPU: rent
+RENTAL RULES (from the director's rerun spec, 18:40 UTC; the first own-m1 host went offline):
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph); 4090 with the same filter if no 5090 is available.
+- Before renting: check that no other instance labelled exactly own-m1n is live (the v1 rerun, labelled own-m1b, may be running at the same time on purpose; that is NOT a duplicate) (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
+- Liveness watchdog: every 60 s, check the instance's actual_status and that the training log's line count grows. If the instance is offline or shows no log progress for 10 min, destroy it by exact id and rent again once (same filter). If that one fails too, destroy it and stop with HOST-FAIL. Never have 2 instances at once.
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+[0m
+[0m$ [0mls runs/ 2>&1 | head; echo ---; cat runs/000-vast-rescue/instances.txt 2>&1 | head -20
+000-vast-rescue
+---
+# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)
+id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label
+--------------------------------------------------------------------------------
+52276877 | 1x RTX 5090 | offline | running | 180.189.55.38 | 0.8612003 | 0.48518518518518516 | None
+
+count=1
+
+# destroy log @ 2026-09-23 18:41 UTC
+# match rule: public_ipaddr == 180.189.55.38 OR actual_status in (offline, exited, not running); never destroy running healthy
+destroyed 52276877 (1x RTX 5090, 180.189.55.38, actual_status=offline, cur_state=running, dph=0.48518518518518516) via: vastai destroy instance 52276877 -y
+# confirm: vastai show instances --raw => [] (0 instances)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/000-vast-rescue.md 2>&1 | head -80
+VAST RESCUE (director, 2026-09-23 18:40 UTC). Small, urgent task on Ben's Mac. Read the vast key only as $(cat ~/.config/vastai/vast_api_key); never print it or any key.
+Context: own-m1-train rented an RTX 5090 (host 180.189.55.38, $0.485/hr, reliability 89.66%). At about 18:37 UTC vast.ai showed it "Offline / not running": the host dropped off. Account credit is $6.39.
+1. Run `vastai show instances --raw` and write a table (id, gpu, actual_status, cur_state, public_ipaddr, reliability, dph, label) to runs/000-vast-rescue/instances.txt, with no secrets.
+2. Destroy (by exact instance id) every instance whose public IP is 180.189.55.38, or whose actual_status is offline / exited / not running. Never destroy a running, healthy instance. Log each id you destroyed.
+3. Find the own-m1-train builder process on the Mac (pgrep -fl own-m1). If it's still alive and waiting on the dead box, kill only the exact PIDs of that task's runner and its children, then remove ~/premonition-watch/queue/own-m1-train.running (or the watcher's equivalent marker) so it's not treated as running.
+4. Append a ledger line to artifacts/fable-predictions-ledger.md: the cost of the dead rental (from vastai's billing, or $0.485/hr x minutes alive if billing can't be read).
+5. Final line: RESCUED <ids destroyed> or NOTHING-TO-DESTROY.
+PUSH: runs/000-vast-rescue/instances.txt artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -40; echo ---; ls ~/.ssh/ 2>&1; grep -l vast ~/.ssh/config 2>&1
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+---
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+[0m
+[0m$ [0mgit cat-file -s origin/main:artifacts/claude-own-m0b-20260923/train.jsonl 2>&1; git cat-file -s origin/main:artifacts/claude-own-m0b-20260923/dev.jsonl 2>&1; git show origin/main:scripts/claude_lis300_train.py 2>&1 | head -80
+1737018
+296831
+#!/usr/bin/env python3
+"""lis-300 fine-tune: MiniCPM5-1B -> listener (LoRA on every linear layer, loss on the frame only).
+
+python claude_lis300_train.py --model DIR --data DIR --out DIR [--epochs 2] [--lr 2e-4] [--rank 32]
+       [--batch 16] [--max-len 256] [--max-minutes 150] [--limit N] [--merge]
+
+Writes OUT/adapter/, OUT/merged/ (with --merge), OUT/train_log.jsonl, OUT/summary.json.
+Plain torch loop, no Trainer. bf16 on CUDA, fp32 on CPU (CPU only for smoke tests).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import random
+import time
+from pathlib import Path
+
+import torch
+from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+def load_rows(p, limit=None):
+    rows = [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+    return rows[:limit] if limit else rows
+
+
+def encode(tok, row, max_len):
+    p = tok(row["prompt"], add_special_tokens=False)["input_ids"]
+    t = tok(row["target"], add_special_tokens=False)["input_ids"] + [tok.eos_token_id]
+    ids = ([tok.bos_token_id] if tok.bos_token_id is not None else []) + p + t
+    labels = [-100] * (len(ids) - len(t)) + t
+    return ids[:max_len], labels[:max_len]
+
+
+def batches(encoded, bs, pad_id, shuffle, rng):
+    idx = list(range(len(encoded)))
+    if shuffle:
+        rng.shuffle(idx)
+    for i in range(0, len(idx), bs):
+        chunk = [encoded[j] for j in idx[i:i + bs]]
+        L = max(len(x[0]) for x in chunk)
+        ids = torch.full((len(chunk), L), pad_id)
+        lab = torch.full((len(chunk), L), -100)
+        att = torch.zeros((len(chunk), L), dtype=torch.long)
+        for k, (a, b) in enumerate(chunk):
+            ids[k, :len(a)] = torch.tensor(a)
+            lab[k, :len(b)] = torch.tensor(b)
+            att[k, :len(a)] = 1
+        yield ids, lab, att
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--epochs", type=float, default=2.0)
+    ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--rank", type=int, default=32)
+    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--max-len", type=int, default=256)
+    ap.add_argument("--max-minutes", type=float, default=150)
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--merge", action="store_true")
+    ap.add_argument("--seed", type=int, default=300)
+    a = ap.parse_args()
+    torch.manual_seed(a.seed)
+    rng = random.Random(a.seed)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+    tok = AutoTokenizer.from_pretrained(a.model)
+    pad_id = tok.pad_token_id if tok.pad_token_id is not None else tok.eos_token_id
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=dtype).to(dev)
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    cfg = LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05, task_type="CAUSAL_LM",
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(o['id'], o.get('dph_total'), round(o.get('reliability',0),4)) for o in d[:5]]"
+49506097 0.5075925925925925 0.9877
+51862064 0.5075925925925925 0.9864
+46579458 0.5126851851851851 0.9983
+51535928 0.5347222222222222 0.9912
+45410071 0.537037037037037 0.9981
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai create instance 49506097 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --disk 50 --label own-m1n --ssh 2>&1 | tail -5
+Started. {'success': True, 'new_contract': 52279213, 'instance_api_key': '0076e65838c86a8a99ea84a40791ed93d8034ad74bffbe677e719c83b2b734e9'}
+[0m
+[0m$ [0mdate -u +%Y-%m-%dT%H:%M:%SZ; export VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52279213 2>&1 | head -20
+2026-09-23T18:43:40Z
+[40m[97m  #  ID        Machine  Status  Num  Model     Util. %  vCPUs    RAM  Storage[0m
+[48;5;240m[97m  1  52279213  137833   -        1x  RTX_5090  -        32.0   515.8  50     [0m
+
+[40m[97m  #  SSH Addr      SSH Port  $/hr  [0m
+[48;5;240m[97m  1  ssh9.vast.ai  39212     0.5159[0m
+
+[40m[97m  #  Image                                          Net up  Net down  R   [0m
+[48;5;240m[97m  1  pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime  884.9   1051.3    98.7[0m
+
+[40m[97m  #  Label    age(hours)  uptime(mins)[0m
+[48;5;240m[97m  1  own-m1n  0.00        -           [0m
+[0m
+[0m$ [0msleep 60; export VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52279213 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('cur_state'), d.get('public_ipaddr'), d.get('ssh_port'), d.get('ssh_host'))"
+running running 110.157.133.153 39212 ssh9.vast.ai
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "nvidia-smi --query-gpu=name,memory.total --format=csv; python3 -c 'import torch; print(torch.__version__, torch.cuda.is_available())'; df -g / | tail -1" 2>&1 | head -10
+Warning: Permanently added '[ssh9.vast.ai]:39212' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh9.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai --help 2>&1 | grep -i ssh; vastai show ssh-keys 2>&1 | head -10 || vastai list ssh-keys 2>&1 | head -10
+ssh-url                       ssh url helper
+ create ssh-key                Create a new ssh-key
+ show ssh-keys                 List your ssh keys associated with your account
+ delete ssh-key                Remove an ssh-key
+ update ssh-key                Update an existing SSH key
+ attach ssh                    Attach an ssh key to an instance. This will allow you to connect to the instance with the ssh key
+ detach ssh                    Detach an ssh key from an instance
+[{'id': 1073966, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training', 'private_key': None, 'created_at': 1783680918.6525881, 'deleted_at': None}]
+[0m
+[0m$ [0mls -la ~/.ssh/ 2>&1; file ~/.ssh/agent 2>&1; grep -i vast ~/.ssh/config 2>&1 | head
+total 96
+drwx------  12 ben-hannan  staff    384 Sep 20 13:02 .
+drwxr-xr-x+ 77 ben-hannan  staff   2464 Sep 23 14:42 ..
+-rw-r--r--@  1 ben-hannan  staff   6148 Sep 17 18:21 .DS_Store
+drwx------   8 ben-hannan  staff    256 Sep 23 13:58 agent
+-rw-------   1 ben-hannan  staff    101 Sep  2 13:59 authorized_keys
+-rw-------   1 ben-hannan  staff     51 Aug 23 20:23 config
+-rw-------   1 ben-hannan  staff    411 Jul 27 09:07 id_ed25519
+-rw-r--r--   1 ben-hannan  staff    101 Jul 27 09:07 id_ed25519.pub
+-rw-------   1 ben-hannan  staff  11129 Sep 23 14:44 known_hosts
+-rw-------   1 ben-hannan  staff  10271 Sep 20 13:02 known_hosts.old
+drwx------   4 ben-hannan  staff    128 Aug 23 16:49 ssh-copy-id.dyqOlQW0o4
+drwx------   4 ben-hannan  staff    128 Aug 23 17:47 ssh-copy-id.slWcbCWO63
+/Users/ben-hannan/.ssh/agent: directory
+[0m
+[0m$ [0mls ~/.ssh/agent/ 2>&1; cat ~/.ssh/config 2>&1
+s.4QeUgxp9P7.agent.SdEqXTSvMo
+s.8aig8ikmLW.agent.AWNZ25gRip
+s.bDa8HXKbo4.agent.qnY4h2amEa
+s.DSNas6w0Db.agent.84Hk9eORMB
+s.k64XeNatSV.agent.UapyZ1aZ7z
+s.NDVk7hpiWV.agent.eiPWsYPlmE
+Host benspc
+  HostName 100.75.113.114
+  User benja
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai create ssh-key "$(cat ~/.ssh/id_ed25519.pub)" 2>&1 | head -5; vastai show ssh-keys 2>&1 | head -5
+Adding provided SSH public key to account...
+ssh-key created {'success': True, 'key': {'id': 1420036, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com', 'private_key': None, 'created_at': 1790189104.767285, 'deleted_at': None}}
+Note: You may need to add the new public key to any pre-existing instances
+[{'id': 1073966, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training', 'private_key': None, 'created_at': 1783680918.6525881, 'deleted_at': None}, {'id': 1420036, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com', 'private_key': None, 'created_at': 1790189104.767285, 'deleted_at': None}]
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai attach ssh 52279213 1420036 2>&1 | head -5; sleep 10; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader" 2>&1 | tail -3
+Are you sure that's an SSH public key?
+
+Usually it starts with the stanza 'ssh-(keytype)'
+where the keytype can be things such as rsa, ed25519-sk,
+or dsa. What you passed me was:
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh9.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai attach ssh --help 2>&1 | head -15
+usage: vastai attach ssh instance_id ssh_key
+
+positional arguments:
+ instance_id        id of instance to attach to
+ ssh_key            ssh key to attach to instance
+
+options:
+ -h, --help         show this help message and exit
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai attach ssh 52279213 1420036 2>&1 | head -5; sleep 15; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "echo SSH_OK" 2>&1 | tail -2
+Are you sure that's an SSH public key?
+
+Usually it starts with the stanza 'ssh-(keytype)'
+where the keytype can be things such as rsa, ed25519-sk,
+or dsa. What you passed me was:
+Have fun!
+root@ssh9.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai attach ssh 52279213 "$(cat ~/.ssh/id_ed25519.pub)" 2>&1 | head -5; sleep 15; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "echo SSH_OK" 2>&1 | tail -2
+{'success': True, 'msg': 'SSH key added to instance.', 'key': '{"id": 1420036, "user_id": 553012, "default": null, "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com", "private_key": null, "created_at": 1790189104.767285, "deleted_at": null}'}
+Have fun!
+root@ssh9.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0msleep 30; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "echo SSH_OK" 2>&1 | tail -2; export VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai ssh-url 52279213 2>&1 | head -3
+Have fun!
+SSH_OK
+ssh://root@ssh9.vast.ai:39212
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; python3 --version; df -g / | tail -1; nproc" 2>&1 | tail -5
+NVIDIA GeForce RTX 5090, 32607 MiB
+Python 3.11.13
+df: invalid option -- 'g'
+Try 'df --help' for more information.
+256
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "df -h / | tail -1; python3 -c 'import torch; print(torch.__version__, torch.cuda.is_available())'" 2>&1 | tail -3
+Have fun!
+overlay          50G   47M   50G   1% /
+2.8.0+cu128 True
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "nohup bash -c 'python3 -m venv /root/venv && /root/venv/bin/pip install -q --upgrade pip && /root/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu128 && /root/venv/bin/pip install -q \"transformers>=5.6\" peft safetensors huggingface_hub && /root/venv/bin/python -c \"import torch,transformers,peft,safetensors,huggingface_hub; print(\"SETUP_OK\", torch.__version__, transformers.__version__)\"' > /root/setup.log 2>&1 & echo LAUNCHED"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+LAUNCHED
+[0m
+[0m$ [0mmkdir -p /tmp/m1n-sealcheck && git show origin/main:artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt > /tmp/m1n-sealcheck/SEAL-code.sha256.txt && git show origin/main:artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt > /tmp/m1n-sealcheck/SEAL-data.sha256.txt && cat /tmp/m1n-sealcheck/SEAL-code.sha256.txt /tmp/m1n-sealcheck/SEAL-data.sha256.txt
+f00f3bbae16c3681b1c404745f6f2b0efbfd8d284e8b35724354e74101475772  scripts/claude_own_m1_common.py
+07ae7ffae78ebdb6846b030fbfec042a028fbd3de2c9db079c5d307e0bac6e4d  scripts/claude_own_m1_data.py
+a5b0176544d8354176bc118090c9ca5b35b94abd14079a8392ee13385970f251  scripts/claude_own_m1_speak.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+db4ac1faae0044d64e25416b26f77b00ace6fadb8463880b52e378cbe080bbc2  artifacts/claude-own-m1-20260923/PASSMARKS.md
+9f5238115f009bdbf1e2835842593d14bbee23faf12784af7fd73f0753f36216  artifacts/claude-own-m0b-20260923/train.jsonl
+a2c4f625dd2c5bf6f0f16b93b609ed5d76393b4803459096c641525534046624  artifacts/claude-own-m0b-20260923/dev.jsonl
+1fdad6748a3d6249e90e0b1e940ba9dc3bd8607cc428d9d6bf563aebec9e3302  artifacts/claude-own-m1n-20260923/PASSMARKS.md
+[0m
+[0m✗ [0mmkdir -p /tmp/m1n-tree && for f in scripts/claude_own_m1_common.py scripts/claude_own_m1_data.py scripts/claude_own_m1_speak.py scripts/claude_lis300_train.py artifacts/claude-own-m1-20260923/PASSMARKS.md artifacts/claude-own-m0b-20260923/train.jsonl artifacts/claude-own-m0b-20260923/dev.jsonl artifacts/claude-own-m1n-20260923/PASSMARKS.md; do mkdir -p "/tmp/m1n-tree/$(dirname $f)"; git show "origin/main:$f" > "/tmp/m1n-tree/$f" || echo "MISSING $f"; done; cp /tmp/m1n-sealcheck/SEAL-code.sha256.txt /tmp/m1n-sealcheck/SEAL-data.sha256.txt /tmp/m1n-tree/; shasum -a 256 -c /tmp/m1n-tree/SEAL-code.sha256.txt -c /tmp/m1n-tree/SEAL-data.sha256.txt 2>&1 || (cp /tmp/m1n-sealcheck/*.txt /tmp/m1n-sealcheck-bak/ 2>/dev/null; true) failed
+[91m[1mError: [0mNotFound: FileSystem.access (/tmp/m1n-tree)
+[0m
+[0m$ [0mfor f in scripts/claude_own_m1_common.py scripts/claude_own_m1_data.py scripts/claude_own_m1_speak.py scripts/claude_lis300_train.py artifacts/claude-own-m1-20260923/PASSMARKS.md artifacts/claude-own-m0b-20260923/train.jsonl artifacts/claude-own-m0b-20260923/dev.jsonl artifacts/claude-own-m1n-20260923/PASSMARKS.md; do mkdir -p "/tmp/m1n-tree/$(dirname $f)"; git show "origin/main:$f" > "/tmp/m1n-tree/$f" || echo "MISSING $f"; done; echo EXTRACT_DONE
+EXTRACT_DONE
+[0m
+[0m$ [0mcp /tmp/m1n-sealcheck/SEAL-code.sha256.txt /tmp/m1n-sealcheck/SEAL-data.sha256.txt /tmp/m1n-tree/ && shasum -a 256 -c /tmp/m1n-tree/SEAL-code.sha256.txt && shasum -a 256 -c /tmp/m1n-tree/SEAL-data.sha256.txt
+shasum: scripts/claude_own_m1_common.py: No such file or directory
+scripts/claude_own_m1_common.py: FAILED open or read
+scripts/claude_own_m1_data.py: FAILED open or read
+scripts/claude_own_m1_speak.py: FAILED open or read
+scripts/claude_lis300_train.py: FAILED open or read
+artifacts/claude-own-m1-20260923/PASSMARKS.md: FAILED open or read
+shasum: scripts/claude_own_m1_data.py: No such file or directory
+shasum: scripts/claude_own_m1_speak.py: No such file or directory
+shasum: scripts/claude_lis300_train.py: No such file or directory
+shasum: artifacts/claude-own-m1-20260923/PASSMARKS.md: No such file or directory
+shasum: WARNING: 5 listed files could not be read
+[0m
+[0m$ [0mshasum -a 256 /tmp/m1n-tree/scripts/claude_own_m1_common.py /tmp/m1n-tree/scripts/claude_own_m1_data.py /tmp/m1n-tree/scripts/claude_own_m1_speak.py /tmp/m1n-tree/scripts/claude_lis300_train.py "/tmp/m1n-tree/artifacts/claude-own-m1-20260923/PASSMARKS.md" "/tmp/m1n-tree/artifacts/claude-own-m0b-20260923/train.jsonl" "/tmp/m1n-tree/artifacts/claude-own-m0b-20260923/dev.jsonl" "/tmp/m1n-tree/artifacts/claude-own-m1n-20260923/PASSMARKS.md"
+f00f3bbae16c3681b1c404745f6f2b0efbfd8d284e8b35724354e74101475772  /tmp/m1n-tree/scripts/claude_own_m1_common.py
+07ae7ffae78ebdb6846b030fbfec042a028fbd3de2c9db079c5d307e0bac6e4d  /tmp/m1n-tree/scripts/claude_own_m1_data.py
+a5b0176544d8354176bc118090c9ca5b35b94abd14079a8392ee13385970f251  /tmp/m1n-tree/scripts/claude_own_m1_speak.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  /tmp/m1n-tree/scripts/claude_lis300_train.py
+db4ac1faae0044d64e25416b26f77b00ace6fadb8463880b52e378cbe080bbc2  /tmp/m1n-tree/artifacts/claude-own-m1-20260923/PASSMARKS.md
+9f5238115f009bdbf1e2835842593d14bbee23faf12784af7fd73f0753f36216  /tmp/m1n-tree/artifacts/claude-own-m0b-20260923/train.jsonl
+a2c4f625dd2c5bf6f0f16b93b609ed5d76393b4803459096c641525534046624  /tmp/m1n-tree/artifacts/claude-own-m0b-20260923/dev.jsonl
+1fdad6748a3d6249e90e0b1e940ba9dc3bd8607cc428d9d6bf563aebec9e3302  /tmp/m1n-tree/artifacts/claude-own-m1n-20260923/PASSMARKS.md
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "cat /root/setup.log 2>&1 | tail -5; ls /root/venv/bin/python 2>&1" 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/venv/bin/python
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 39212 /tmp/m1n-tree/scripts/claude_own_m1_common.py /tmp/m1n-tree/scripts/claude_own_m1_data.py /tmp/m1n-tree/scripts/claude_own_m1_speak.py /tmp/m1n-tree/scripts/claude_lis300_train.py root@ssh9.vast.ai:/root/ 2>&1 | tail -2; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "mkdir -p /root/work/m0 && ls /root/*.py" 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/claude_lis300_train.py
+/root/claude_own_m1_common.py
+/root/claude_own_m1_data.py
+/root/claude_own_m1_speak.py
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 39212 "/tmp/m1n-tree/artifacts/claude-own-m0b-20260923/train.jsonl" "/tmp/m1n-tree/artifacts/claude-own-m0b-20260923/dev.jsonl" root@ssh9.vast.ai:/root/work/m0/ 2>&1 | tail -2; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "ls -la /root/work/m0/; tail -2 /root/setup.log" 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 1992
+drwxr-xr-x 2 root root      42 Sep 23 18:49 .
+drwxr-xr-x 3 root root      24 Sep 23 18:48 ..
+-rw-r--r-- 1 root root  296831 Sep 23 18:49 dev.jsonl
+-rw-r--r-- 1 root root 1737018 Sep 23 18:49 train.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "python3 /root/claude_own_m1_data.py --m0 /root/work/m0 --out /root/work/data" 2>&1 | tail -3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"train": {"kept": 5602, "dropped": 0, "reasons": {}}, "dev": {"kept": 1000, "dropped": 0, "reasons": {}}}
+[0m
+[0m$ [0msleep 120; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "tail -3 /root/setup.log; /root/venv/bin/python -c 'import torch; print(torch.cuda.is_available())' 2>&1 | tail -1" 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "ps aux | grep -c '[p]ip install'; ls -la /root/venv/lib/*/site-packages/ 2>/dev/null | head -8; du -sh /root/venv 2>/dev/null" 2>&1 | tail -6
+drwxr-xr-x 3 root root   79 Sep 23 18:48 _distutils_hack
+-rw-r--r-- 1 root root  151 Sep 23 18:48 distutils-precedence.pth
+drwxr-xr-x 5 root root  168 Sep 23 18:48 pip
+drwxr-xr-x 3 root root  155 Sep 23 18:48 pip-26.2.1.dist-info
+drwxr-xr-x 5 root root   73 Sep 23 18:48 pkg_resources
+22M	/root/venv
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "ps aux | grep '[p]ython' | head -5; echo ---; tail -5 /root/setup.log; echo ---; ls /root/nohup.out 2>&1" 2>&1 | tail -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root         570  0.0  0.0   4364  3196 ?        S    18:48   0:00 bash -c python3 -m venv /root/venv && /root/venv/bin/pip install -q --upgrade pip && /root/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu128 && /root/venv/bin/pip install -q "transformers>=5.6" peft safetensors huggingface_hub && /root/venv/bin/python -c "import torch,transformers,peft,safetensors,huggingface_hub; print("SETUP_OK", torch.__version__, transformers.__version__)"
+root         581 14.1  0.0  55916 49504 ?        S    18:48   0:28 /root/venv/bin/python3 /root/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu128
+---
+---
+ls: cannot access '/root/nohup.out': No such file or directory
+[0m
+[0m$ [0msleep 240; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "tail -5 /root/setup.log" 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "ps aux | grep '[p]ip install' | head -3; /root/venv/bin/python -c 'import torch; print(\"torch\", torch.__version__)' 2>&1 | tail -1" 2>&1 | tail -4
+Have fun!
+root         570  0.0  0.0   4364  3196 ?        S    18:48   0:00 bash -c python3 -m venv /root/venv && /root/venv/bin/pip install -q --upgrade pip && /root/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu128 && /root/venv/bin/pip install -q "transformers>=5.6" peft safetensors huggingface_hub && /root/venv/bin/python -c "import torch,transformers,peft,safetensors,huggingface_hub; print("SETUP_OK", torch.__version__, transformers.__version__)"
+root         581 14.4  0.0  80936 75892 ?        D    18:48   1:05 /root/venv/bin/python3 /root/venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cu128
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0msleep 270; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai "tail -5 /root/setup.log; /root/venv/bin/python -c 'import torch; print(\"torch\", torch.__version__)' 2>&1 | tail -1" 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+NameError: name 'SETUP_OK' is not defined
+torch 2.11.0+cu128
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'ps aux | grep [p]ip | head -3; /root/venv/bin/python -c "import transformers,peft,safetensors,huggingface_hub; print(transformers.__version__)" 2>&1 | tail -1; tail -3 /root/setup.log' 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+5.17.0
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+NameError: name 'SETUP_OK' is not defined
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai '/root/venv/bin/python -c "import torch; print(torch.__version__, torch.cuda.is_available())"; ls /root/work/' 2>&1 | tail -4
+Have fun!
+2.11.0+cu128 True
+data
+m0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'nohup /root/venv/bin/python -u -c "from huggingface_hub import snapshot_download; p=snapshot_download(\"openbmb/MiniCPM5-1B\"); print(\"MODEL_DIR:\", p)" > /root/dl.log 2>&1 & echo DL_LAUNCHED'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+DL_LAUNCHED
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat /root/dl.log 2>/dev/null | tail -3; ls ~/.cache/huggingface/hub/ 2>/dev/null' 2>&1 | tail -5
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:07,  1.32it/s]Fetching 11 files:  18%|█▊        | 2/11 [00:01<00:06,  1.31it/s]Fetching 11 files:  27%|██▋       | 3/11 [00:03<00:10,  1.35s/it]Fetching 11 files:  36%|███▋      | 4/11 [00:04<00:07,  1.10s/it]Fetching 11 files:  45%|████▌     | 5/11 [00:08<00:12,  2.14s/it]Fetching 11 files:  91%|█████████ | 10/11 [00:14<00:01,  1.46s/it]Fetching 11 files: 100%|██████████| 11/11 [01:11<00:00, 10.98s/it]Fetching 11 files: 100%|██████████| 11/11 [01:11<00:00,  6.50s/it]
+MODEL_DIR: /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+CACHEDIR.TAG
+blobs
+models--openbmb--MiniCPM5-1B
+[0m
+[0m$ [0mdate -u +%Y-%m-%dT%H:%M:%SZ; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'M=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc; nohup /root/venv/bin/python -u /root/claude_lis300_train.py --model $M --data /root/work/data --out /root/work/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge > /root/train.log 2>&1 & echo TRAIN_PID:$!'
+2026-09-23T19:02:26Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+TRAIN_PID:1156
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'export VAST=1; tail -3 /root/train.log; echo ---; wc -l /root/work/run/train_log.jsonl 2>/dev/null; nvidia-smi --query-gpu=memory.used --format=csv,noheader' 2>&1 | tail -6
+{'step': 100, 'total': 702, 'loss': 0.3125, 'lr': 0.00019015229078008165, 'tok_per_s': 3751.0, 'min': 0.52}
+{'step': 120, 'total': 702, 'loss': 0.3613, 'lr': 0.0001859234752562217, 'tok_per_s': 3752.4, 'min': 0.62}
+{'step': 140, 'total': 702, 'loss': 0.3942, 'lr': 0.00018100678809891666, 'tok_per_s': 3753.7, 'min': 0.73}
+---
+8 /root/work/run/train_log.jsonl
+7059 MiB
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'tail -2 /root/train.log; wc -l /root/work/run/train_log.jsonl 2>/dev/null' 2>&1 | tail -4
+Have fun!
+{'step': 320, 'total': 702, 'loss': 0.2748, 'lr': 0.00011382867151647332, 'tok_per_s': 3764.9, 'min': 1.65}
+{'step': 340, 'total': 702, 'loss': 0.2716, 'lr': 0.00010492073554918782, 'tok_per_s': 3783.3, 'min': 1.75}
+18 /root/work/run/train_log.jsonl
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'tail -2 /root/train.log; ls /root/work/run/ 2>/dev/null' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{'step': 520, 'total': 702, 'loss': 0.2792, 'lr': 3.137583621312665e-05, 'tok_per_s': 3790.4, 'min': 2.66}
+{'step': 540, 'total': 702, 'loss': 0.3328, 'lr': 2.514892518288988e-05, 'tok_per_s': 3789.2, 'min': 2.76}
+train_log.jsonl
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'tail -4 /root/train.log; echo ---; ls /root/work/run/ /root/work/run/merged/ 2>/dev/null' 2>&1 | tail -12
+adapter
+merged
+summary.json
+train_log.jsonl
+
+/root/work/run/merged/:
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer.json
+tokenizer_config.json
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'tail -6 /root/train.log; echo ---; cat /root/work/run/summary.json; echo ---; wc -l /root/work/run/train_log.jsonl; head -1 /root/work/run/train_log.jsonl; tail -1 /root/work/run/train_log.jsonl' 2>&1 | tail -14
+"epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 120.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}---
+36 /root/work/run/train_log.jsonl
+{"step": 1, "total": 702, "loss": 2.9962, "lr": 1.7391217272128925e-05, "tok_per_s": 944.4, "min": 0.02}
+{"step": 700, "total": 702, "loss": 0.262, "lr": 4.0054620147667036e-09, "tok_per_s": 3814.0, "min": 3.56}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat /root/work/run/summary.json; echo ---; grep -c step /root/train.log; tail -2 /root/train.log | cut -c1-200' 2>&1 | tail -25
+"dev_rows": 1000,
+ "dev_loss": 0.9034029445648193,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 3.72,
+ "tok_per_s": 3658.9,
+ "device": "cuda",
+ "args": {
+  "model": "/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc",
+  "data": "/root/work/data",
+  "out": "/root/work/run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 120.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}---
+38
+ }
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'sha256sum /root/work/run/merged/model.safetensors; sha256sum /root/work/data/counts.json; ls -la /root/work/run/merged/model.safetensors /root/work/data/counts.json; cat /root/work/data/counts.json' 2>&1 | tail -6
+"dev": {
+  "kept": 1000,
+  "dropped": 0,
+  "reasons": {}
+ }
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'sha256sum /root/work/run/merged/model.safetensors /root/work/data/counts.json; stat -c "%s %n" /root/work/run/merged/model.safetensors' 2>&1 | grep -v "Welcome\|fun!"
+de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a  /root/work/run/merged/model.safetensors
+986dd779ab9fac239cab2c478552f45ebb84a53172aba420af150fe80e07bec2  /root/work/data/counts.json
+2161290944 /root/work/run/merged/model.safetensors
+[0m
+[0m$ [0mmkdir -p artifacts/claude-own-m1n-20260923 && ls artifacts/claude-own-m1n-20260923/
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt
+Wrote file successfully.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'nohup /root/venv/bin/python -u /root/claude_own_m1_speak.py --model /root/work/run/merged --data /root/work/data/dev.jsonl --out /root/work/dev_out.jsonl > /root/speak.log 2>&1 & echo SPEAK_PID:$!; date -u +%Y-%m-%dT%H:%M:%SZ'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SPEAK_PID:1557
+2026-09-23T19:07:23Z
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat /root/speak.log 2>/dev/null | tail -2; wc -l /root/work/dev_out.jsonl 2>/dev/null' 2>&1 | tail -3
+Have fun!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3864.35it/s]
+22 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 55; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+86 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 170; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+215 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 175; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+365 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 175; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+494 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 175; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+638 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 175; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl' 2>&1 | tail -1
+791 /root/work/dev_out.jsonl
+[0m
+[0m$ [0msleep 175; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl; cat /root/speak.log | tail -2' 2>&1 | tail -3
+Have fun!
+955 /root/work/dev_out.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3864.35it/s]
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'wc -l /root/work/dev_out.jsonl; tail -c 600 /root/speak.log' 2>&1 | tail -4
+Have fun!
+1000 /root/work/dev_out.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3864.35it/s]
+{"rows": 1000, "spoke": 1000, "fell_back": 0, "first_try_pass": 1000, "distinct_slotted_replies": 59, "top_reply_count": 129, "per_status_rows_spoke": {"OK": [350, 350], "SAVED": [150, 150], "UNKNOWN": [150, 150], "ABSTAIN": [100, 100], "CLARIFY": [150, 150], "FORGOT": [100, 100]}, "device": "cuda", "median_ms": 1221.5, "p90_ms": 1381.7}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat > /root/recount.py << "EOF"
+import json, sys
+sys.path.insert(0, "/root")
+from claude_own_m1_common import slot_check, fill, slot_values
+rows = [json.loads(l) for l in open("/root/work/dev_out.jsonl", encoding="utf-8") if l.strip()]
+fails = 0; nonnull = 0
+for i, r in enumerate(rows):
+    if r["reply"] is None: continue
+    nonnull += 1
+    raws = [x for x in r["raw"] if x]
+    win = raws[-1]
+    probs = slot_check(win, r["record"])
+    if probs:
+        fails += 1
+        print("FAIL", i, probs, win[:120])
+print("nonnull:", nonnull, "recount_fails:", fails)
+EOF
+python3 /root/recount.py' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+nonnull: 1000 recount_fails: 0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat > /root/sample20.py << "EOF"
+import json, random
+rows = [json.loads(l) for l in open("/root/work/dev_out.jsonl", encoding="utf-8") if l.strip()]
+random.seed(7)
+idx = sorted(random.sample(range(len(rows)), 20))
+out = []
+for i in idx:
+    r = rows[i]
+    out.append({"i": i, "status": r["record"].get("status"), "user_turn": r.get("user_turn"), "reply": r["reply"], "tries": r["tries"]})
+open("/root/work/dev_out_sample.jsonl", "w").write("\n".join(json.dumps(o, ensure_ascii=False) for o in out) + "\n")
+for o in out:
+    print("###", o["i"], o["status"], "tries=" + str(o["tries"]))
+    print("user:", o["user_turn"])
+    print("mouth:", o["reply"])
+EOF
+python3 /root/sample20.py' 2>&1 | tail -62
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+### 38 OK tries=1
+user: Hrallo's brother's cousin?
+mouth: Hrallo's brother's cousin is Gvella.
+### 49 OK tries=1
+user: whats Frella's favorite food
+mouth: Frella's favorite_food is cheese.
+### 59 OK tries=1
+user: what is Brella's mentor
+mouth: Brella's mentor is Kvella.
+### 74 OK tries=1
+user: what sport does Vrallo like
+mouth: I worked out from what you told me that Vrallo's sport is skating.
+### 88 OK tries=1
+user: do u know Lrallo's sport
+mouth: Yep, Lrallo's sport is darts.
+### 96 OK tries=1
+user: Xrallo's father's brother?
+mouth: Xrallo's father's brother is Lvallo.
+### 154 OK tries=1
+user: Frella's hometown?
+mouth: I worked out from what you told me that Frella's hometown is Ploverst.
+### 219 OK tries=1
+user: where is jrallo's city
+mouth: I worked out from what you told me that Jrallo's city is Glenhaven.
+### 331 OK tries=1
+user: what is Hrallo's friend
+mouth: Hrallo's friend is Yvallo.
+### 374 SAVED tries=1
+user: Frella's mentor is Kvella
+mouth: Okay, Frella's mentor is Kvella. Saved.
+### 404 SAVED tries=1
+user: Frella's doctor is Ivallo btw
+mouth: Okay, Frella's doctor is Ivallo. Saved.
+### 428 SAVED tries=1
+user: so Hrallo's teacher is Kvella
+mouth: Okay, Hrallo's teacher is Kvella. Saved.
+### 444 SAVED tries=1
+user: oh btw Hrallo's workplace is Foxglove
+mouth: Oh, got it. Hrallo's work_location is Foxglove.
+### 519 UNKNOWN tries=1
+user: hey who is Rrallo's cousin btw
+mouth: I don't know who Rrallo's cousin is.
+### 548 UNKNOWN tries=1
+user: Where is Jrallo's workplace?
+mouth: I don't know where Jrallo's work_location is.
+### 596 UNKNOWN tries=1
+user: whos Zrallo's father
+mouth: I don't know who Zrallo's father is.
+### 666 ABSTAIN tries=1
+user: Lrella's sister?
+mouth: I don't know who Lrella's sister is.
+### 840 CLARIFY tries=1
+user: Lrella?
+mouth: Which Lrella? I know more than one.
+### 931 FORGOT tries=1
+user: forget crella's mother pls
+mouth: Done, Crella's mother is wiped.
+### 970 FORGOT tries=1
+user: unremember Trallo's sport
+mouth: Okay, I've forgotten Trallo's sport.
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 39212 root@ssh9.vast.ai:/root/work/dev_out_sample.jsonl /tmp/m1n-sample.jsonl 2>&1 | tail -1; scp -o StrictHostKeyChecking=no -P 39212 root@ssh9.vast.ai:/root/work/run/summary.json /tmp/m1n-trainsum.json 2>&1 | tail -1; scp -o StrictHostKeyChecking=no -P 39212 root@ssh9.vast.ai:/root/work/run/train_log.jsonl /tmp/m1n-trainlog.jsonl 2>&1 | tail -1; scp -o StrictHostKeyChecking=no -P 39212 root@ssh9.vast.ai:/root/work/data/counts.json /tmp/m1n-counts.json 2>&1 | tail -1; ls -la /tmp/m1n-*.json* 2>&1
+Have fun!
+Have fun!
+Have fun!
+Have fun!
+-rw-r--r--  1 ben-hannan  wheel   128 Sep 23 15:29 /tmp/m1n-counts.json
+-rw-r--r--  1 ben-hannan  wheel  2717 Sep 23 15:29 /tmp/m1n-sample.jsonl
+-rw-r--r--  1 ben-hannan  wheel  3857 Sep 23 15:29 /tmp/m1n-trainlog.jsonl
+-rw-r--r--  1 ben-hannan  wheel   594 Sep 23 15:29 /tmp/m1n-trainsum.json
+[0m
+[0m$ [0mcat /tmp/m1n-trainsum.json; echo ---; cat /tmp/m1n-counts.json; echo ---; head -c 400 /tmp/m1n-trainlog.jsonl; echo; wc -l /tmp/m1n-sample.jsonl
+{
+ "steps": 702,
+ "planned_steps": 702,
+ "stopped": null,
+ "train_rows": 5602,
+ "dev_rows": 1000,
+ "dev_loss": 0.9034029445648193,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 3.72,
+ "tok_per_s": 3658.9,
+ "device": "cuda",
+ "args": {
+  "model": "/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc",
+  "data": "/root/work/data",
+  "out": "/root/work/run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 120.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}---
+{
+ "train": {
+  "kept": 5602,
+  "dropped": 0,
+  "reasons": {}
+ },
+ "dev": {
+  "kept": 1000,
+  "dropped": 0,
+  "reasons": {}
+ }
+}---
+{"step": 1, "total": 702, "loss": 2.9962, "lr": 1.7391217272128925e-05, "tok_per_s": 944.4, "min": 0.02}
+{"step": 20, "total": 702, "loss": 0.508, "lr": 0.00018224322119544083, "tok_per_s": 3364.4, "min": 0.12}
+{"step": 40, "total": 702, "loss": 0.4027, "lr": 0.000198402078314949, "tok_per_s": 3654.6, "min": 0.21}
+{"step": 60, "total": 702, "loss": 0.4477, "lr": 0.00019641666745335624, "tok_per_s"
+      20 /tmp/m1n-sample.jsonl
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/own-m1n-mouth && nohup scp -o StrictHostKeyChecking=no -P 39212 -r root@ssh9.vast.ai:/root/work/run/merged/ ~/premonition-models/own-m1n-mouth/ > /tmp/m1n-copy.log 2>&1 & echo COPY_LAUNCHED
+COPY_LAUNCHED
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'python3 -c "
+import json, collections
+rows=[json.loads(l) for l in open(\"/root/work/dev_out.jsonl\") if l.strip()]
+c=collections.Counter()
+for r in rows:
+    if r[\"reply\"] is not None:
+        c=[x for x in r[\"raw\"] if x][-1]+=0 if False else 1
+" 2>&1 | tail -2; python3 - << "EOF" 2>&1 | tail -8
+EOF
+echo SKIP
+zsh:10: unmatched '
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'cat > /root/top5.py << "EOF"
+import json, collections
+rows = [json.loads(l) for l in open("/root/work/dev_out.jsonl", encoding="utf-8") if l.strip()]
+c = collections.Counter()
+for r in rows:
+    if r["reply"] is not None:
+        win = [x for x in r["raw"] if x][-1]
+        c[win] += 1
+for t, n in c.most_common(5):
+    print(n, repr(t))
+print("distinct:", len(c))
+EOF
+python3 /root/top5.py' 2>&1 | tail -7
+Have fun!
+129 "<S1>'s <R1> is <V1>."
+86 'Which <S1>? I know more than one.'
+83 "I worked out from what you told me that <S1>'s <R1> is <V1>."
+82 "I don't know <S1>'s <R1>."
+77 "I don't know who <S1>'s <R1> is."
+distinct: 59
+[0m
+[0m$ [0mcat /tmp/m1n-copy.log 2>/dev/null | tail -2; ls -la ~/premonition-models/own-m1n-mouth/ 2>&1 | head; du -sh ~/premonition-models/own-m1n-mouth/ 2>&1
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 0
+drwxr-xr-x  3 ben-hannan  staff   96 Sep 23 15:29 .
+drwxr-xr-x  5 ben-hannan  staff  160 Sep 23 15:29 ..
+drwxr-xr-x  5 ben-hannan  staff  160 Sep 23 15:30 merged
+4.3M	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+[0m
+[0m$ [0msleep 170; cat /tmp/m1n-copy.log 2>/dev/null | tail -2; du -sh ~/premonition-models/own-m1n-mouth/ 2>&1; ls ~/premonition-models/own-m1n-mouth/merged/ 2>&1
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+ 96M	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+config.json
+generation_config.json
+model.safetensors
+[0m
+[0m$ [0msleep 170; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; date -u +%Y-%m-%dT%H:%M:%SZ
+241	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+2026-09-23T19:36:07Z
+[0m
+[0m← [0mWrite artifacts/claude-own-m1n-20260923/dev_summary.json
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 -c "
+import json
+s = json.load(open('/tmp/m1n-trainsum.json'))
+log = [json.loads(l) for l in open('/tmp/m1n-trainlog.jsonl') if l.strip()]
+s['first_logged'] = log[0]; s['last_logged'] = log[-1]; s['log_lines'] = len(log)
+s['base_commit'] = '87179e5c1f455ef22e6223592d2d61351b525bfc'
+s['merged_sha256'] = 'de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a'
+s['data_counts_sha256'] = '986dd779ab9fac239cab2c478552f45ebb84a53172aba420af150fe80e07bec2'
+json.dump(s, open('/tmp/m1n-trainsum2.json','w'), indent=1)
+print('ok', len(log))
+"
+ok 36
+[0m
+[0m$ [0mcp /tmp/m1n-trainsum2.json artifacts/claude-own-m1n-20260923/train_summary.json && cp /tmp/m1n-trainlog.jsonl artifacts/claude-own-m1n-20260923/train_log.jsonl && cp /tmp/m1n-sample.jsonl artifacts/claude-own-m1n-20260923/dev_out_sample.jsonl && ls -la artifacts/claude-own-m1n-20260923/
+total 40
+drwxr-xr-x    7 ben-hannan  staff    224 Sep 23 15:36 .
+drwxr-xr-x@ 455 ben-hannan  staff  14560 Sep 23 15:12 ..
+-rw-r--r--    1 ben-hannan  staff   2717 Sep 23 15:36 dev_out_sample.jsonl
+-rw-r--r--    1 ben-hannan  staff    668 Sep 23 15:36 dev_summary.json
+-rw-r--r--    1 ben-hannan  staff    286 Sep 23 15:07 SEAL-run.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   3857 Sep 23 15:36 train_log.jsonl
+-rw-r--r--    1 ben-hannan  staff   1126 Sep 23 15:36 train_summary.json
+[0m
+[0m← [0mWrite artifacts/claude-own-m1n-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mdu -sm ~/premonition-models/own-m1n-mouth/ 2>&1; date -u +%Y-%m-%dT%H:%M:%SZ
+321	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+2026-09-23T19:36:38Z
+[0m
+[0m$ [0msleep 175; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1
+897	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+[0m
+[0m$ [0msleep 175; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; cat /tmp/m1n-copy.log 2>/dev/null | tail -1
+1041	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+Have fun!
+[0m
+[0m$ [0msleep 175; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; jobs; ps aux | grep -c "[s]cp.*vast"
+1617	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+1
+[0m
+[0m$ [0msleep 170; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; ps aux | grep "[s]cp.*vast" | head -2
+1841	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+ben-hannan       42152   0.2  0.0 488786640   2176   ??  SN    3:29PM   0:02.07 scp -o StrictHostKeyChecking=no -P 39212 -r root@ssh9.vast.ai:/root/work/run/merged/ /Users/ben-hannan/premonition-models/own-m1n-mouth/
+[0m
+[0m$ [0msleep 120; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; ps aux | grep "[s]cp.*vast" | head -2; ls ~/premonition-models/own-m1n-mouth/merged/ 2>&1
+1905	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+ben-hannan       42152   0.0  0.0 488786640   1920   ??  SN    3:29PM   0:02.13 scp -o StrictHostKeyChecking=no -P 39212 -r root@ssh9.vast.ai:/root/work/run/merged/ /Users/ben-hannan/premonition-models/own-m1n-mouth/
+config.json
+generation_config.json
+model.safetensors
+[0m
+[0m$ [0msleep 170; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1; ps aux | grep "[s]cp.*vast" | head -2; ls ~/premonition-models/own-m1n-mouth/merged/ 2>&1
+1921	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+ben-hannan       42152   0.0  0.0 488786640   2176   ??  SN    3:29PM   0:02.15 scp -o StrictHostKeyChecking=no -P 39212 -r root@ssh9.vast.ai:/root/work/run/merged/ /Users/ben-hannan/premonition-models/own-m1n-mouth/
+config.json
+generation_config.json
+model.safetensors
+[0m
+[0m$ [0mls -la ~/premonition-models/own-m1n-mouth/merged/model.safetensors; sleep 45; ls -la ~/premonition-models/own-m1n-mouth/merged/model.safetensors
+-rw-------  1 ben-hannan  staff  1999656960 Sep 23 15:53 /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/model.safetensors
+-rw-------  1 ben-hannan  staff  2001745920 Sep 23 15:54 /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/model.safetensors
+[0m
+[0m$ [0mkill 42152 2>/dev/null; sleep 2; which rsync; ssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'which rsync; ls -la /root/work/run/merged/' 2>&1 | tail -9
+/usr/bin/rsync
+Connection timed out during banner exchange
+Connection to 100.58.167.148 port 39212 timed out
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52279213 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k: d.get(k) for k in ['actual_status','cur_state','public_ipaddr','ssh_port','label','dph_total']})"
+{'actual_status': 'running', 'cur_state': 'running', 'public_ipaddr': '137.175.22.196', 'ssh_port': 39212, 'label': 'own-m1n', 'dph_total': 0.5159259259259259}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -p 39212 root@ssh9.vast.ai 'echo SSH_OK; which rsync' 2>&1 | tail -3
+Have fun!
+SSH_OK
+/usr/bin/rsync
+[0m
+[0m$ [0mnohup rsync -av --partial -e "ssh -o StrictHostKeyChecking=no -p 39212" root@ssh9.vast.ai:/root/work/run/merged/ ~/premonition-models/own-m1n-mouth/merged/ > /tmp/m1n-rsync.log 2>&1 & echo RSYNC_LAUNCHED; sleep 50; tail -2 /tmp/m1n-rsync.log; du -sm ~/premonition-models/own-m1n-mouth/ 2>&1
+RSYNC_LAUNCHED
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+3822	/Users/ben-hannan/premonition-models/own-m1n-mouth/
+[0m
+[0m$ [0mls -la ~/premonition-models/own-m1n-mouth/ ~/premonition-models/own-m1n-mouth/merged/ 2>&1; tail -3 /tmp/m1n-rsync.log
+/Users/ben-hannan/premonition-models/own-m1n-mouth/:
+total 0
+drwxr-xr-x  3 ben-hannan  staff   96 Sep 23 15:29 .
+drwxr-xr-x  6 ben-hannan  staff  192 Sep 23 15:55 ..
+drwxr-xr-x  7 ben-hannan  staff  224 Sep 23 15:55 merged
+
+/Users/ben-hannan/premonition-models/own-m1n-mouth/merged/:
+total 7827664
+drwxr-xr-x  7 ben-hannan  staff         224 Sep 23 15:55 .
+drwxr-xr-x  3 ben-hannan  staff          96 Sep 23 15:29 ..
+-rw-------  1 ben-hannan  staff  2004948888 Sep 23 15:56 .model.safetensors.NO7JK8OtUh
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2002790400 Sep 23 15:54 model.safetensors
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m$ [0msleep 100; tail -3 /tmp/m1n-rsync.log; ls -la ~/premonition-models/own-m1n-mouth/merged/ 2>&1 | head -12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+total 8095888
+drwxr-xr-x  7 ben-hannan  staff         224 Sep 23 15:55 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:56 ..
+-rw-------  1 ben-hannan  staff  2142279576 Sep 23 15:57 .model.safetensors.NO7JK8OtUh
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2002790400 Sep 23 15:54 model.safetensors
+[0m
+[0m$ [0msleep 60; ls -la ~/premonition-models/own-m1n-mouth/merged/ 2>&1 | head -12; ps aux | grep "[r]sync.*vast" | head -2; tail -5 /tmp/m1n-rsync.log 2>/dev/null | cut -c1-120
+total 8100112
+drwxr-xr-x  7 ben-hannan  staff         224 Sep 23 15:55 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:56 ..
+-rw-------  1 ben-hannan  staff  2144442264 Sep 23 15:58 .model.safetensors.NO7JK8OtUh
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2002790400 Sep 23 15:54 model.safetensors
+ben-hannan       53318   0.0  5.8 490748496 1959344   ??  SN    3:55PM   0:09.30 rsync -av --partial -e ssh -o StrictHostKeyChecking=no -p 39212 root@ssh9.vast.ai:/root/work/run/merged/ /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -p 39212 root@ssh9.vast.ai 'stat -c "%s" /root/work/run/merged/model.safetensors; dd if=/root/work/run/merged/model.safetensors bs=1M count=20 2>/dev/null | md5' 2>&1 | tail -2
+Connection timed out during banner exchange
+Connection to 100.58.167.148 port 39212 timed out
+[0m
+[0m$ [0msleep 30; ssh -o ConnectTimeout=25 -p 39212 root@ssh9.vast.ai 'echo SSH_OK' 2>&1 | tail -2
+Connection timed out during banner exchange
+Connection to 100.58.167.148 port 39212 timed out
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instance 52279213 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k: d.get(k) for k in ['actual_status','cur_state','public_ipaddr','ssh_port','label','dph_total','machine_id']})"
+{'actual_status': 'running', 'cur_state': 'running', 'public_ipaddr': '137.175.22.196', 'ssh_port': 39212, 'label': 'own-m1n', 'dph_total': 0.5159259259259259, 'machine_id': 137833}
+[0m
+[0m$ [0mps aux | grep "[r]sync.*vast" | head -2; ls -la ~/premonition-models/own-m1n-mouth/merged/ 2>&1 | head; tail -5 /tmp/m1n-rsync.log 2>/dev/null | cut -c1-100
+ben-hannan       53318   0.4  5.8 490748496 1959344   ??  SN    3:55PM   0:09.34 rsync -av --partial -e ssh -o StrictHostKeyChecking=no -p 39212 root@ssh9.vast.ai:/root/work/run/merged/ /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/
+total 8131792
+drwxr-xr-x  7 ben-hannan  staff         224 Sep 23 15:55 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:56 ..
+-rw-------  1 ben-hannan  staff  2160662424 Sep 23 16:00 .model.safetensors.NO7JK8OtUh
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2002790400 Sep 23 15:54 model.safetensors
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ss
+Have fun!
+[0m
+[0m$ [0msleep 100; ps aux | grep "[r]sync.*vast" | head -2; ls -la ~/premonition-models/own-m1n-mouth/merged/ 2>&1 | head -10
+total 4240648
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 15:06 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:56 ..
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:06 model.safetensors
+-rw-r--r--  1 ben-hannan  staff         460 Sep 23 15:06 tokenizer_config.json
+-rw-r--r--  1 ben-hannan  staff     9894271 Sep 23 15:06 tokenizer.json
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/own-m1n-mouth/merged/model.safetensors
+de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a  /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/model.safetensors
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai destroy instance 52279213 2>&1 | head -3; date -u +%Y-%m-%dT%H:%M:%SZ; sleep 10; vastai show instances --raw 2>&1 | head -5
+Are you sure you want to destroy instance 52279213? This is irreversible and will delete all data. [y/N] 
+Aborted.
+2026-09-23T20:02:38Z
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai destroy instance 52279213 -y 2>&1 | head -3; date -u +%Y-%m-%dT%H:%M:%SZ; sleep 10; vastai show instances 2>&1 | tail -3
+destroying instance 52279213.
+2026-09-23T20:02:52Z
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('count=', len(d)); [print(x.get('id'), x.get('actual_status'), x.get('label')) for x in d]"
+count= 1
+52279343 running own-m1b
+[0m
+[0m# [0mTodos
+[✓] Rent 1x RTX 5090 labelled own-m1n (dup check + ledger check done)
+[✓] Verify SEAL-code + SEAL-data on origin/main; build data (5602/1000)
+[✓] Download MiniCPM5-1B, record hash; train LoRA r32 2ep + merge
+[✓] SEAL-run BEFORE measure; measure dev ONCE + recount Pm1n.3 + 20 quotes
+[•] Write RESULTS.md, ledger Pm1n.1-.5, copy model to Mac, destroy instance
+[0m
+[0m← [0mEdit artifacts/claude-own-m1n-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
+@@ -51,10 +51,12 @@
+ Speak timing (cuda): median 1221.5 ms/row, p90 1381.7 ms/row.
+ 
+ ## Cost
+ 
+-- Rental: 1x RTX 5090, vast.ai instance 52279213, $0.5159/hr, 18:43:40Z → DESTROY-TIME-UTC (~XX min) ≈ $DOLLARS.
+-  Task ceiling $4.00/3h respected. Instance destroyed after the run; `show instances` confirms 0.
++- Rental: 1x RTX 5090, vast.ai instance 52279213 (label own-m1n), $0.5159/hr,
++  2026-09-23 18:43:40Z → 20:02:52Z (79.2 min = 1.32 h) ≈ $0.68.
++  Task ceiling $4.00/3h respected. Instance destroyed after the run; `show instances` confirms
++  only the parallel v1 rerun own-m1b remains (not mine, untouched).
+ - Ledger rental total after this run stays far under the $30 cap.
+ 
+ ## Model kept (weights never in git)
+ 
+
+[0m
+[0m← [0mEdit artifacts/claude-own-m1n-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-m1n-20260923/RESULTS.md
+@@ -60,9 +60,10 @@
+ 
+ ## Model kept (weights never in git)
+ 
+ - Mac copy: ~/premonition-models/own-m1n-mouth/merged/ (from <work>/run/merged).
+-- Local shasum of the copied model.safetensors: MODEL-SHA-LOCAL (must equal de12daf4… above).
++- Local shasum of the copied model.safetensors:
++  de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a (equals the sealed hash).
+ 
+ ## Deviations / notes
+ 
+ 1. OPUS-RULES.txt path from the task (/private/tmp/claude-502/…/OPUS-RULES.txt) does not exist on this
+
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << "EOF"
+- Pownm1n.1 (2026-09-23, builder own-M1n mouth v2; sealed code 5/5 + data 3/3 OK, MiniCPM5-1B commit 87179e5c, LoRA r32 2ep lr2e-4 batch16 702 steps loss 2.9962->0.262, 3.72 min, 3658.9 tok/s) spoke 1000/1000 dev (bar >= 990): PASS.
+- Pownm1n.2 (same) first-try pass 1000/1000 (bar >= 950): PASS.
+- Pownm1n.3 (same) fresh slot_check recount on winning raw of 1000 non-null replies: 0 fails: PASS.
+- Pownm1n.4 (same) variety: distinct slotted 59/1000 (bar >= 300), top reply 129/1000 (bar <= 30): FAIL. Top-5 cover 457/1000. Registered verdict: FAIL on Pm1n.4 only.
+- Pownm1n.5 (same) crashes 0: PASS. Fallbacks 0 every status; speak median 1221.5 ms p90 1381.7 ms cuda. See artifacts/claude-own-m1n-20260923/RESULTS.md.
+- P-vast-m1n (2026-09-23 18:43:40Z-20:02:52Z, builder own-M1n rental) contract 52279213 RTX 5090 1x label own-m1n actual_status=running at destroy: alive 79.2 min (1.32 h) x $0.5159259/hr = ~$0.68 (ceiling $4.00/3h respected; per-instance billing not readable via API, estimate used per task rule); post-destroy show instances holds only own-m1b (v1 rerun, parallel on purpose, untouched). Model 2.16 GB copied to ~/premonition-models/own-m1n-mouth/merged, sha de12daf4… matches SEAL-run.
+EOF
+tail -7 artifacts/fable-predictions-ledger.md | cut -c1-160
+- P321.1 (pred, sealed pre-run 2026-09-23, builder; nb-321 compact store = contract decision logic on SQLite backend scripts/claude_nb321_store.py:open_compact,
+- Pownm1n.1 (2026-09-23, builder own-M1n mouth v2; sealed code 5/5 + data 3/3 OK, MiniCPM5-1B commit 87179e5c, LoRA r32 2ep lr2e-4 batch16 702 steps loss 2.9962
+- Pownm1n.2 (same) first-try pass 1000/1000 (bar >= 950): PASS.
+- Pownm1n.3 (same) fresh slot_check recount on winning raw of 1000 non-null replies: 0 fails: PASS.
+- Pownm1n.4 (same) variety: distinct slotted 59/1000 (bar >= 300), top reply 129/1000 (bar <= 30): FAIL. Top-5 cover 457/1000. Registered verdict: FAIL on Pm1n.
+- Pownm1n.5 (same) crashes 0: PASS. Fallbacks 0 every status; speak median 1221.5 ms p90 1381.7 ms cuda. See artifacts/claude-own-m1n-20260923/RESULTS.md.
+- P-vast-m1n (2026-09-23 18:43:40Z-20:02:52Z, builder own-M1n rental) contract 52279213 RTX 5090 1x label own-m1n actual_status=running at destroy: alive 79.2 m
+[0m
+[0m$ [0mgit status --short artifacts/ 2>&1 | head; echo ---; git diff --stat artifacts/fable-predictions-ledger.md 2>&1 | tail -2
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+[0m
+[0m$ [0mgit status --short --untracked-files=all artifacts/claude-own-m1n-20260923/ 2>&1; git check-ignore artifacts/claude-own-m1n-20260923/RESULTS.md 2>&1; echo "ignore-rc=$?"
+artifacts/claude-own-m1n-20260923/RESULTS.md
+ignore-rc=0
+[0m
+[0m$ [0mgit status --short 2>&1 | grep -v "^??" | head -10
+M artifacts/fable-predictions-ledger.md
+[0m
+[0m# [0mTodos
+[✓] Rent 1x RTX 5090 labelled own-m1n (dup check + ledger check done)
+[✓] Verify SEAL-code + SEAL-data on origin/main; build data (5602/1000)
+[✓] Download MiniCPM5-1B, record hash; train LoRA r32 2ep + merge
+[✓] SEAL-run BEFORE measure; measure dev ONCE + recount Pm1n.3 + 20 quotes
+[✓] Write RESULTS.md, ledger Pm1n.1-.5, copy model to Mac, destroy instance
+[0m
