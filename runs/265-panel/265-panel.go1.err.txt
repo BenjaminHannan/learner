@@ -1,0 +1,250 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel; uptime; df -g /; git fetch -q origin main; echo FETCH_OK; ls handoff/kit/briefs/ | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+23:34  up 2 days, 15:23, 4 users, load averages: 49.98 72.66 98.72
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        19    40%  484014 204504840    0%   /
+FETCH_OK
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/ourpanel265-spec.txt; echo "---EXIT:$?"
+BLIND PANEL SPEC: ourpanel265. The director wrote this on 2026-09-23. OPUS-RULES.txt applies.
+Same schema as handoff/kit/briefs/earpanel264-spec.txt (read that spec for the field and frame format only), with these changes: folder artifacts/claude-ourpanel265-20260923/, ids "o265-001" … "o265-080", 80 items. New field "ask_whose": true when the turn has a we/us/our/ours/ourselves owner or subject. Gold for such a turn holds only its facts NOT owned by the group (often []).
+Families (exact counts): group_owner 30 (our/we/us + pet, home, city, relative, workplace, car, language...; include lowercase and "ours"); mixed 15 (a group-owner clause plus a first-person or named-person fact in the same turn; gold holds the other fact); first_person 20 (I/me/my facts that must still save as "me"); named 15 (plain third-person facts, controls).
+Fictional names only. Never read code, results, other panels or builder folders. Seal as the other specs do, and report category level only.
+---EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/earpanel264-spec.txt; echo "---EXIT:$?"
+EAR PANEL 264 SPEC. The director wrote this on 2026-09-23 (copied from the earpanel261b spec; changes marked NEW264). It is shared by the blind panel writer and the exp 264 builder.
+
+Folder: artifacts/claude-earpanel264-20260923/
+- panel.jsonl (150 lines)
+- make_panel.py: holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel264-20260923/panel.jsonl artifacts/claude-earpanel264-20260923/make_panel.py > artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+
+Schema (exactly as panel 257)
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e264-001" … "e264-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: a string holding the risk tags (R1 … R12, "lower", "typo", "noq").
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value: the exact words from the turn, in the same case. "me" stands for the speaker, which includes "our"/"we"/"us" owners (Ben's rule: there is one user).
+- NEW: for a pet, relation is "pet" and relation_aliases must include the species word the turn uses (dog, cat, rabbit ...) as well as pet, animal and companion.
+- relation: a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school, neighbour …). relation_aliases lists accepted alternatives. Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example from this spec word for word.
+- R1, pronoun reference across clauses: at least 8 turns across varied_teach and full_names. Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 8 turns in no_save with gold [].
+  - Include tag questions ("…, right", "…, isn't it") and "so …" checks.
+  - At least 5 have NO question mark (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact (TEACH gold, in varied_teach).
+- R3, the verb decides the relation, not a noun in the value: at least 6 items. Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-): at least 6 items across families. Gold keeps the full relation.
+- R5, everyday relations beyond the core list (housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours): at least 8 items across families.
+- R6, two-hop questions whose first hop is a relative: at least 5 of the chain_questions.
+- NEW264: NO turn may use we/us/our/ours/ourselves as an owner or subject (Ben's ruling: those turns must ask whose; they are tested in a separate experiment). R7 is dropped.
+- R8, plans, goals and wishes ("training to be", "wants to be", "is hoping to", "is going to", "plans to move to", "will start at"): at least 6 items.
+  - At least 3 are in varied_teach, where another clause of the same turn states a real current fact. Only that fact is gold.
+  - At least 3 are in no_save, where the whole turn is a plan or wish (gold []).
+- R9, pretend and hypothetical turns ("let's say", "imagine", "suppose", "pretend", "what if", "say that"): at least 5 in no_save, with gold [].
+- R10, plural relatives naming two people ("my two sisters, A and B, …", "both my cousins, A and B, …"): at least 4 items. Gold has one frame per person for the relation, plus any other stated fact for each person.
+- R11, appositive relatives ("my cousin A lives in B", "A's friend B works at C"): at least 6 items. Gold holds the relative frame AND the other fact.
+- R12, a pronoun after "A's R is B and he/she …" where the pronoun refers to B: at least 4 items. The later fact's gold subject is B, never A.
+
+The rest spreads over:
+- plain facts, pets, jobs, languages and birthplaces;
+- full names of 2–4 words;
+- corrections, which hold only the new value (a negated old value is never in gold);
+- lowercase and typo'd chat: at least 15 turns in all.
+- NEW, R13 typo next to a name: at least 8 teach items where a misspelt everyday word (not a name) sits right next to a name ("livs", "werks", "bron"). Gold holds the clean name spans only.
+- NEW264, R16 wrong-relation traps: at least 8 teach items where a naive reader would pick the wrong relation word (works WITH vs works FOR, a brother's wife vs a wife, lives NEAR vs lives in, used to work at vs works at). Gold holds only what is stated, with the right relation.
+- NEW264, R17 stale values: at least 6 corrections where the old value is named in the same turn in a different position than "not X" (e.g. "X moved from A to B", "it's B now, it used to be A"). Gold holds only the new value.
+- NEW, R15 name particles: at least 6 teach items whose names or places contain lowercase particles (van, de, von, da, of, le), e.g. a fictional "Ria van Doorn" or "Port of Sela"; gold keeps the full span.
+- NEW, R14 all-lowercase names: at least 6 teach items typed all lowercase with lowercase names; gold keeps the lowercase spans.
+questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, briefs other than this spec, other panels (including earpanel257 and earpanel261, earpanel261b), or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - every R1–R17 quota (R7 dropped);
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Before sealing, reread every item once as a careful reader. Is the gold what a sensible person would save from this turn, and nothing more? Mark clear:false where two readings are defensible.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.
+---EXIT:0
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-earpanel235-20260922/README.md; echo "===END==="
+# Ear panel 235 (blind reader panel), 2026-09-22
+
+This is a fresh test panel for the "reader", the part that turns one chat turn into the facts it states (TEACH) or the question it asks (ASK). It was written blind. The author read no code, relation tables, design docs, or other panels or results. The only input was the task brief. All names are made up (people, towns, companies, pets, and the languages Norrish, Ostrish and Galvish).
+
+Files:
+- `panel.jsonl`: 150 items, one JSON object per line.
+- `make_panel.py`: generator. It holds the items by hand and writes the file the same way every time. Run it from the repo root with `python3 -B artifacts/claude-earpanel235-20260922/make_panel.py`. It checks the counts per family, that no turn appears twice, and that every subject and value (other than `me`) appears word for word in its turn.
+- `SEAL.sha256.txt`: SHA-256 of `panel.jsonl`.
+
+## Families
+
+| family | items | clear: false |
+|---|---|---|
+| plain_teach | 25 | 0 |
+| varied_teach | 30 (6 with two facts) | 1 |
+| full_names | 15 (1 with two facts) | 0 |
+| questions | 25 | 1 |
+| chain_questions | 15 | 1 |
+| no_save | 25 | 5 |
+| corrections | 15 | 0 |
+| **total** | **150** | **8** |
+
+## Item format
+
+- TEACH frame: `subject` / `value` are the exact words from the turn, with the same case (for example `tamsin` / `brellin` in a turn typed in lower case). `me` stands for the speaker.
+- ASK frame: `chain` is null for a one-hop question. For a two-hop question, `subject` is the starting person, `chain` = [first relation, second relation], and `relation` = the second, final relation. Example: "Where does Suki's boss live?" gives subject Suki, relation city, chain [boss, city].
+- `relation_aliases` come from one fixed alias list in the generator. The same relation always has the same aliases.
+
+## Judgement calls
+
+- **Pronouns in two-fact turns** ("My sister is Ana and she lives in Tarrow"): the second frame's subject is the resolved name (`Ana`), which appears in the turn.
+- **"moved to X" and "X now"** count as current city. "grew up in X" counts as `hometown` (clear: false, because birthplace is also defensible). It must never be stored as current city. "used to live in X" is no_save (clear: false).
+- **Gender not stated** ("Corin's married to Elspeth"): the relation is `spouse`, with husband and wife accepted as aliases. "Who is Rin married to?" is also `spouse`.
+- **Job vs workplace**: "Anya teaches at Fernhill School" gives workplace = Fernhill School (the job "teacher" is implied but not stated). "What does my best friend do for work?" is gold job (clear: false, because workplace is also a fair reading).
+- **Hearsay**: "Wren says ..." is no_save (clear: true, following the brief). "apparently Gil moved to Quarrow" is clear: false, because some people would treat it as a fact.
+- **Statement-shaped questions** ("Marta lives in Brellin?", "so Pella speaks Norrish?"): gold is [] because nothing may be saved. They are clear: false, because an ASK is also a reasonable reading.
+- **"Let's say ..."** is treated as pretend, so nothing is saved.
+- **"Orla is the best boss ever."** is an opinion. It does not say whose boss Orla is, so nothing is saved.
+- **Corrections**: the gold holds only the new value. The negated old value in turns like "Anya, not Ana" or "Not Tomas - my brother is Tobin" must not be saved. Every correction has the note "correction".
+- **Three-hop questions left out**: the brief's example "What language does my sister's husband speak?" needs three relations from the speaker (sister, husband, language), and the two-item `chain` field cannot hold that. The chain family therefore uses exactly two hops. Two-hop questions from the speaker look like "Where does my boss live?" = me, [boss, city].
+- **"Does Ilse have a brother?"** is gold ASK brother. It is clear: false, because it could be read as a yes/no check that a brother exists.
+- **"Did you know Hollis Motors is closing?"** is gold []. It is clear: false, because a reader might try to store the news.
+- The panel reuses some names across families on purpose (for example, a person taught in one item is asked about in another). Every item is still scored on its own turn only.
+===END===
+[0m
+[0m$ [0mls artifacts/ | grep -i "ourpanel\|265"; echo "---"; ls artifacts/claude-earpanel264-20260923/ 2>&1 | head; echo "---"; git log --oneline -5 -- artifacts/claude-ourpanel265-20260923/ 2>&1 | head
+---
+ls: artifacts/claude-earpanel264-20260923/: No such file or directory
+---
+[0m
+[0m# [0mTodos
+[•] Draft 80 blind items per ourpanel265 spec (30/15/20/15) with fictional names
+[ ] Write artifacts/claude-ourpanel265-20260923/make_panel.py + generate panel.jsonl
+[ ] Careful-reader review pass over all 80 items
+[ ] Write category-only README.md, seal, run shasum -c
+[0m
+[0m$ [0mls artifacts/ | head -n 5; echo OK
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+OK
+[0m
+[0m$ [0mmkdir artifacts/claude-ourpanel265-20260923 && ls -d artifacts/claude-ourpanel265-20260923
+artifacts/claude-ourpanel265-20260923
+[0m
+[0m← [0mWrite artifacts/claude-ourpanel265-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-ourpanel265-20260923/make_panel.py
+counts: {'group_owner': 30, 'mixed': 15, 'first_person': 20, 'named': 15}
+ask_whose=true: 45 lowercase: 6 ours-forms: 5
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-ourpanel265-20260923/panel.jsonl lines: 80
+[0m
+[0m# [0mTodos
+[✓] Draft 80 blind items per ourpanel265 spec (30/15/20/15) with fictional names
+[✓] Write artifacts/claude-ourpanel265-20260923/make_panel.py + generate panel.jsonl
+[•] Careful-reader review pass over all 80 items
+[ ] Write category-only README.md, seal, run shasum -c
+[0m
+[0m→ [0mRead artifacts/claude-ourpanel265-20260923/panel.jsonl[90m [limit=40][0m
+[0m→ [0mRead artifacts/claude-ourpanel265-20260923/panel.jsonl[90m [offset=41][0m
+[0m
+[0m← [0mWrite artifacts/claude-ourpanel265-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-ourpanel265-20260923/panel.jsonl artifacts/claude-ourpanel265-20260923/make_panel.py > artifacts/claude-ourpanel265-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-ourpanel265-20260923/SEAL.sha256.txt && wc -l artifacts/claude-ourpanel265-20260923/panel.jsonl && git status --short artifacts/claude-ourpanel265-20260923/
+artifacts/claude-ourpanel265-20260923/panel.jsonl: OK
+artifacts/claude-ourpanel265-20260923/make_panel.py: OK
+      80 artifacts/claude-ourpanel265-20260923/panel.jsonl
+[0m
+[0m$ [0mls -l artifacts/claude-ourpanel265-20260923/ && cat artifacts/claude-ourpanel265-20260923/SEAL.sha256.txt
+total 96
+-rw-r--r--  1 ben-hannan  staff  16367 Sep 22 23:40 make_panel.py
+-rw-r--r--  1 ben-hannan  staff  20489 Sep 22 23:40 panel.jsonl
+-rw-r--r--  1 ben-hannan  staff   3343 Sep 22 23:41 README.md
+-rw-r--r--  1 ben-hannan  staff    234 Sep 22 23:41 SEAL.sha256.txt
+dcfb3b21c0c8e247573a17d63b7dc0e4e1f9db570b5d3b249de4099b860b2741  artifacts/claude-ourpanel265-20260923/panel.jsonl
+d99cff79c3e3e2e2cb6b6548bb2a1c68340b3f181887bc14f006b01927c50cf2  artifacts/claude-ourpanel265-20260923/make_panel.py
+[0m
+[0m# [0mTodos
+[✓] Draft 80 blind items per ourpanel265 spec (30/15/20/15) with fictional names
+[✓] Write artifacts/claude-ourpanel265-20260923/make_panel.py + generate panel.jsonl
+[✓] Careful-reader review pass over all 80 items
+[✓] Write category-only README.md, seal, run shasum -c
+[0m
