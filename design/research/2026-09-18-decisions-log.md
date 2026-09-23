@@ -257,3 +257,110 @@ Report: `reviews/opus-overnight-2026-09-19-ovn-20260918-235851.md`. Research not
     evaluations are now charged.
 - *Budget.* Local Mac only; rental $0.00 of $30.00. Charged 1,149.3 s of the 1,800 s cap, of which training was
   928.9 s.
+
+**Astra review of milestone 3 and the direct-reader continuation (2026-09-19 08:10 to 08:30 EDT; report reviews/opus-milestone-03-continuation-direct-reader.md):**
+- *Astra's review (adopted).*
+  - The saved counts support the negative pooling result and leaving H1 untrained. The original defaults are kept.
+  - The milestone-3 "card-blind" retrieval wording is withdrawn. Unchanged correctness totals do not prove identical
+    answers: `retrieval-original-s0` had 2 per-question K3 flips on removal.
+- *Results (2-seed screen; `full_verdict: false`).* The direct contextual-state reader is the variant
+  `nothink+qread+directread`, not the default. Validation, direct vs pooled:
+
+  | Metric | Seed 0 | Seed 1 |
+  |---|---|---|
+  | Reading, 1-hop /512 | 512 vs 512 | 512 vs 485 |
+  | Choosing, 1-hop /512 | 170 vs 164 | 162 vs 161 |
+
+  - The predeclared choosing rule is INCONCLUSIVE; the test split agrees.
+  - Relevant-pair both-correct is 0/256 in every arm. Relevant swaps change the prediction in only 2–9 of 256
+    triplets, so the answers follow the set of card values, not their binding to a person and relation.
+  - Removing the cards changes 85–97% of answer sequences, so the answer-only arms do use their cards.
+  - The gate is reported only: reading is now OK, but the identity path fails (.285/.268 < .537). H1 stays OFF.
+- *Recommendation (not adopted; Astra and Ben decide).* Localise the binding failure read-only on the four
+  checkpoints: decoder cross-attention mass by card type (gold, same-person, same-relation, other), and whether it
+  follows inventory-preserving swaps. Do this before any new training arm.
+- *Engineering changes (additive; no existing file edited).*
+  - New source: `premonition/direct_reader.py`.
+  - New harness: `scripts/premonition_direct_reader.py`.
+  - New tests: `tests/test_premonition_direct_reader.py`.
+  - Outputs: `artifacts/opus-m03-20260919-071009/direct/`.
+- *Budget.* Shared milestone-3 ledger: 1,149.30 s → 1,539.14 s of 1,800 s. The continuation used 389.84 s, of which
+  training was 345.23 s. Rental $0.00.
+
+**Binding probe on the four answer-only checkpoints (2026-09-19 08:45 to 09:05 EDT; read-only; report reviews/opus-milestone-03-probe-binding.md):**
+- *Results.* Exploratory synthetic-vocabulary evidence; `full_verdict: false`; H1 OFF. Every faithfulness gate held
+  on all four checkpoints. Validation triplets, 256 of them:
+  - **The decoder's evidence rows are necessary.** Masking them changes 230–239 answers and drops accuracy by .25–.27
+    (99% upper bounds ≤ −.17), down to the no-card level.
+  - **The entity-slot binding memory is unused.** Removing it changes 10–22 answers, and the bounds span 0.
+  - **Answers are card values, but the card is not chosen by person and relation.** The answer sources are spread
+    evenly over the four card types.
+  - **Relevant value swaps show the choice follows the value word, not the card.** Answers follow the value 97–105
+    times vs the card 0–2 times. The top-attended card follows the value 115–131 times vs the card 0–3 times.
+  - The direct arm puts about 70% of its attention on value tokens and about 2% each on person and relation tokens.
+- *Recommendation (not adopted; Astra and Ben decide).* Address-keyed evidence selection: the decoder chooses among
+  evidence rows by each line's person and relation matched against the question, then reads that line's value.
+  Test it as a matched diagnostic with the gate unchanged and H1 OFF.
+- *Engineering.* Additive only:
+  - `scripts/premonition_binding_probe.py`;
+  - `tests/test_premonition_binding_probe.py`;
+  - `artifacts/opus-m03-20260919-071009/probe/`.
+- *Budget.* Shared ledger 1,539.14 → 1,552.72 s of 1,800 s. The probe used 13.58 s, including one failed attempt of
+  2.25 s. Rental $0.00.
+
+**Address-keyed evidence selection: prepared, not trained (2026-09-19 09:08 to 09:25 EDT; report reviews/opus-milestone-03-address-keys-prepared.md):**
+- *What was built.* `premonition/address_reader.py`, a variant that is off by default.
+  - Card selection keys come from a learned projection of the line's person and relation token embeddings.
+  - Card values are the ordinary pooled card rows.
+  - This is declared structural help: a parse of the line layout, with value words kept out of the selection keys.
+  - Never used for selection: gold identities, labels or intervention metadata.
+- *Checks.* 54 tests OK, and the dry-forward validation passed.
+- *Budget.* The complete two-seed comparison needs 463.5 s; 231.0 s remained after calibration. It was NOT trained.
+  The additional compute needed is about 233 s (a cap of about 2,033 s, or a fresh allowance of at least 463.5 s).
+  Shared ledger 1,552.72 → 1,569.21 s of 1,800 s. Rental $0.00.
+- *Decision needed (Astra and Ben).* Grant the extra compute for the predeclared comparison, or leave the variant
+  prepared.
+
+**Budget amendment and address-keyed comparison (2026-09-19 09:16 to 09:35 EDT; report reviews/opus-milestone-03-address-keys-results.md):**
+- *Budget amendment (instruction).* The shared local-compute cap goes from 1,800 s to 2,100 s total, keeping all
+  1,569.21 s already charged.
+  - Recorded as a 0-second ledger row and in `BUDGET-AMENDMENT.json`.
+  - The frozen baseline sources are unchanged.
+- *Correction.* The address-swap test shows the decoder's internal outputs change, not necessarily the generated
+  answers.
+- *Results (validation; 2-seed screen; `full_verdict: false`; H1 OFF).* The variant is off by default. It has
+  explicit structural help: selection keys built from the line's person and relation token embeddings. Both runs
+  completed 2,000 steps. Address vs pooled:
+
+  | Metric | Seed 0 | Seed 1 |
+  |---|---|---|
+  | Reading, 1-hop /512 | 512 vs 512 | 512 vs 485 |
+  | Choosing, 1-hop /512 | 503 vs 164 (+.66, lower bound +.61) | 467 vs 161 (+.60, lower bound +.54) |
+  | Changed-fact pairs, both correct /256 | 239 vs 0 | 222 vs 0 |
+
+  - Predeclared verdicts: choosing BETTER and binding BETTER.
+  - Two-hop combining is unchanged.
+  - The gate would pass, but it is reported only. H1 stays OFF.
+  - The previously consulted test split agrees.
+- *Interpretation.* Selecting by address fixes one-step choosing and binding when the address is supplied. It does
+  not show that the model can learn addresses from raw text, and it does not help two-hop composition.
+- *Budget.* This step used 389.04 s (372.55 s after the amendment). Ledger 1,941.76 s of 2,100 s. Rental $0.00.
+
+**Address-key confirmation on fresh examples (2026-09-19 09:31 to 09:50 EDT; report reviews/opus-milestone-03-address-confirm.md):**
+- *Result: CONFIRMED* under the predeclared rule. No training; read-only; `full_verdict: false`; H1 OFF.
+  - These are fresh examples from the existing task family, not evidence of general language ability.
+  - Fresh data: 256 worlds with 1,024 questions, and 256 verified triplets. World overlap is 0 with the 32,000
+    training worlds and with every saved held-out set.
+  - Conditions: original, renamed persons, changed card order, and both.
+  - Address vs pooled, choosing: 500 vs 147 and 466 vs 164.
+  - Changed-fact pairs, both correct: 238 vs 1 and 218 vs 1.
+  - Every choosing and changed-fact lower bound is at least +.51, on both seeds and in all conditions.
+  - Two-hop combining is unchanged.
+  - The address models' answers depend on person identity: under renaming, one-hop answers stay the same in 483 and
+    416 of 512 cases.
+- *Proposal (not implemented).* Two sequential learned lookups, where lookup 1's own soft read guides lookup 2; see
+  `design/research/2026-09-19-two-lookup-proposal.md`.
+  - Matched control: two lookups, unchained.
+  - No gold intermediates anywhere.
+  - Needs about 850 s, a new allowance.
+- *Budget.* This step used 37.97 s. Ledger 1,979.73 s of 2,100 s (amended cap). Rental $0.00.
