@@ -1,0 +1,3177 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --show-toplevel; git status --short | head -n 100
+7:11  up 2 days, 23 hrs, 4 users, load averages: 38.07 48.88 55.99
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 137999120    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -n 20; echo FETCH_DONE; git log --oneline origin/main -5; echo "---"; git branch --show-current; git log --oneline -3
+FETCH_DONE
+be45ce6a7 280m: ordering with 291/292 recorded
+5f0a35d0b reasoning line: 291 verified (new merge base); queue 292 merge and blind mixpanel292
+ced6a1964 Board: O0b binding-family label flaw (pronoun owners, gender guess, ambiguous her)
+5934fb43f Own-model: shelve small ear for Ben's 1B reader; record O0a3 audit on plan and board
+9242c05ef Hold own-e1-pretrain (small ear GPU run): Ben wants a ~1B reader instead; listener thread owns the ear
+---
+claude/card-experiment-handoff-7c5b27
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt > /tmp/OPUS-RULES.txt; wc -l /tmp/OPUS-RULES.txt; git show origin/main:design/v3/30-modes/292-merge-onto-291.md > /tmp/292-merge.md; wc -l /tmp/292-merge.md; git show origin/main:handoff/kit/briefs/138p-merge.txt > /tmp/138p-merge.txt; wc -l /tmp/138p-merge.txt
+22 /tmp/OPUS-RULES.txt
+      53 /tmp/292-merge.md
+      29 /tmp/138p-merge.txt
+[0m
+[0m→ [0mRead /tmp/292-merge.md
+[0m→ [0mRead /tmp/OPUS-RULES.txt
+[0m→ [0mRead /tmp/138p-merge.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i -E "board|director" | head -n 30
+echo "---"
+git ls-tree -r --name-only origin/main | grep -E "292|291|266b|268b|293" | head -n 60
+artifacts/claude-chain231-20260922/probe-director-unregistered/probe231_director.py
+artifacts/claude-chain231-20260922/probe-director-unregistered/replies.jsonl
+artifacts/claude-grade255b-director-20260923/NOTES.md
+artifacts/claude-grade255b-director-20260923/m1-grades.jsonl
+artifacts/fable-ears119e-20260922/director-diag119b-panel.json
+artifacts/fable-ears119f-20260922/DEVIATIONS-director.md
+artifacts/fable-ears119f-20260922/DIRECTOR-codehashes.md
+artifacts/fable-ears119f-20260922/DIRECTOR-diagnosis.md
+artifacts/fable-ears119g-20260922/DEVIATIONS-director.md
+artifacts/fable-ears119g-20260922/DIRECTOR-outcome.md
+artifacts/fable-ears119h-20260922/DIRECTOR-codehashes.md
+artifacts/fable-ears119h-20260922/DIRECTOR-fresh119h-probe.json
+artifacts/fable-ears119h-20260922/DIRECTOR-freshprobe-diag119h.json
+artifacts/fable-ears119h-20260922/DIRECTOR-outcome.md
+artifacts/fable-lowercase180-20260922/DIRECTOR-verdict.md
+artifacts/fable-lowercase180-20260922/director-fresh180-cases.json
+artifacts/fable-lowercase180-20260922/director-fresh180-result.json
+artifacts/fable-lowercase180-20260922/director-fresh180-run.py
+artifacts/fable-reading94b-20260922/DEVIATIONS-director.md
+design/v3/30-modes/00-director-board.md
+design/v3/30-modes/241b-director-rulings-2.md
+design/v3/30-modes/241b-director-rulings.md
+handoff/memory/director-role.md
+---
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/private/db0d29339a47b284/audit_truth.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/private/db0d29339a47b284/query_truth.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/public/db0d29339a47b284/audit_keys.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/public/db0d29339a47b284/query_record_ids.json
+artifacts/fable-concept-toy20-20260920/calibration/private/db0d29339a47b284/query_truth.json
+artifacts/fable-concept-toy20-20260920/calibration/public/db0d29339a47b284/query_record_ids.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00291/events.fix77.seal.json
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00292/events.fix77.seal.json
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00293/events.fix77.seal.json
+design/v3/30-modes/266b-multiword-chain-base.md
+design/v3/30-modes/268b-nhop-guard-on-138nb.md
+design/v3/30-modes/291-join-138nb-138p.md
+design/v3/30-modes/292-merge-onto-291.md
+design/v3/30-modes/293-yesno-questions.md
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/mixpanel292-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/yesnopanel293-spec.txt
+handoff/queue/rsn-266b-build.md
+handoff/queue/rsn-266b-panel.md
+handoff/queue/rsn-268b-build.md
+handoff/queue/rsn-268b-panel.md
+handoff/queue/rsn-291-build.md
+handoff/queue/rsn-291-panel.md
+handoff/queue/rsn-291-publish.md
+handoff/queue/rsn-292-build.md
+handoff/queue/rsn-292-panel.md
+handoff/queue/rsn-293-build.md
+handoff/queue/rsn-293-diag.md
+handoff/queue/rsn-293-panel.md
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/00-director-board.md > /tmp/board.md; wc -l /tmp/board.md; git show origin/main:handoff/queue/rsn-292-build.md > /tmp/rsn292build.md; cat /tmp/rsn292build.md
+echo "=====291build====="; git show origin/main:handoff/queue/rsn-291-build.md | head -n 100
+echo "=====266bread====="; git show origin/main:design/v3/30-modes/266b-multiword-chain-base.md | head -n 120
+1048 /tmp/board.md
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: builder for merge 292 = 291 + 266b + 268b + 293 (reasoning line). CPU only (no GPU, no BensPC).
+Read first (from origin/main): design/v3/30-modes/292-merge-onto-291.md (the base ruling, the merge, marks M1-M5), handoff/kit/briefs/138p-merge.txt (the merge-brief pattern: phase-1 interaction analysis, predicted moves by id, fidelity-first panels), and the director board entries for 266b, 268b, 291 and 293. Copy unchanged from origin/builder-outbox and import read-only: 291 (scripts/claude_loop291_agent.py, scripts/claude_fix291_glue.py, scripts/claude_291_*, artifacts/claude-join291-20260923/), 266b (scripts/claude_fix266b_detector.py, scripts/claude_loop266b_agent.py, scripts/claude_fix266_chainlift.py, scripts/claude_loop266_agent.py, artifacts/claude-chain266b-20260923/, artifacts/claude-chain266-20260923/), 268b (scripts/claude_fix268_nhopdir.py, scripts/claude_loop268b_agent.py, artifacts/claude-nhop268b-20260923/), 293 (scripts/claude_fix293_yesno.py, scripts/claude_loop293_agent.py, artifacts/claude-yesno293-20260923/), and every file those import. The four regression panels: artifacts/claude-chainpanel266b-20260923/, claude-nhoppanel268b-20260923/, claude-yesnopanel293-20260923/, claude-corrpanel291-20260923/ (never read items; run them only as M1 says).
+Names: agent scripts/claude_loop292_agent.py (SrcGuardMixin228 first; install_srcguard228() at import); glue, if needed, scripts/claude_fix292_glue.py; config artifacts/claude-merge292-20260923/loop292-config.json; drivers scripts/claude_292_*; artifacts artifacts/claude-merge292-20260923/; design note design/v3/30-modes/292-merge-muse.md; ledger lines P292.n (append only). New files only.
+Order: phase 1 interaction analysis in the design note (which piece claims each turn shape, and why); build; pilots; PASSMARKS.md with every predicted move by id; seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths); ledger; registered M1-M4 (M1 fidelity re-run first, then the same runner and scorer on 292); then wait for artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt (git fetch origin builder-outbox every 2 min, up to 180 min; copy the folder unchanged), check it OK, run M5 ONCE on 291, 266b, 268b, 293 and 292 with its sealed score_panel.py; RESULTS.md.
+Never edit a sealed file after the seal (write a new file and disclose it). Never publish raw panel rows: push only score JSON with ids, families and counts, not item text or replies. Limits: uptime and df -g / before each heavy step; wait while load > 60; stop under 3 GB free; at most 4 parallel processes.
+Finish with RESULTS.md (result first, integer counts, categories and ids only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-merge292-20260923 scripts/claude_loop292_agent.py scripts/claude_fix292_glue.py scripts/claude_292_*.py scripts/claude_292_*.sh design/v3/30-modes/292-merge-muse.md artifacts/fable-predictions-ledger.md
+=====291build=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: builder for merge 291 = 138nb + 260 + 252c (reasoning line), the follow-up to 138p's registered FAIL. CPU only (no GPU, no BensPC).
+Read first (from origin/main): design/v3/30-modes/291-join-138nb-138p.md (why, the merge, marks M1-M8), handoff/kit/briefs/138p-merge.txt (the 138p brief: follow its phase-1 interaction rules and patterns), and the director board entries for 138nb, 138p and 290 (design/v3/30-modes/00-director-board.md). Copy unchanged from origin/builder-outbox and import read-only: the 138nb files (scripts/claude_loop138nb_agent.py, scripts/claude_fix138nb_label.py, artifacts/claude-merge138nb-20260923/), the 138p files (scripts/claude_loop138p_agent.py, scripts/claude_138p_*, artifacts/claude-merge138p-20260923/ except run/), and artifacts/claude-diag290-20260923/DIAG.md.
+Names: agent scripts/claude_loop291_agent.py (SrcGuardMixin228 first; install_srcguard228() at import); config artifacts/claude-join291-20260923/loop291-config.json; driver and scorers scripts/claude_291_*; artifacts artifacts/claude-join291-20260923/; design note design/v3/30-modes/291-join-muse.md; ledger lines P291.n (append only). New files only.
+Order: phase 1 interaction analysis (138nb's table/label stages vs 252c's correction layers and 260's openers; which one claims each turn and why); build; pilots on M1-M6; PASSMARKS.md with every predicted move by id; seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths); ledger; registered M1-M6; M7 (fidelity re-run first, then score with that same runner and scorer); then wait for artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt (git fetch origin builder-outbox every 2 min, up to 180 min; copy the folder unchanged), check it OK, run M8 ONCE on 138nb, 138p and 291 with its sealed score_panel.py; RESULTS.md.
+Never edit a sealed file after the seal (write a new file and disclose it). Never publish raw panel rows: push only score JSON with ids, families and counts, not item text or replies. Limits: uptime and df -g / before each heavy step; wait while load > 60; stop under 3 GB free; at most 4 parallel processes.
+Finish with RESULTS.md (result first, integer counts, categories and ids only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-join291-20260923 scripts/claude_loop291_agent.py scripts/claude_291_*.py scripts/claude_291_*.sh design/v3/30-modes/291-join-muse.md artifacts/fable-predictions-ledger.md
+=====266bread=====
+# 266b: let the chain-subject lift accept two-word names (the one follow-up to 266)
+
+Director (Opus, reasoning line), 2026-09-23 ~05:55 UTC. New file; nothing edited.
+
+## Why 266 failed (verified)
+
+266 is a registered FAIL: chain_verb 19/30 (bar 27), chain_verb_three 1/6 (bar 5). Everything else passed: 0 wrong values, broken_chain 12/12 honest abstains, 0 question writes, controls byte-identical. My own re-run in the cloud matches (19/30, 1/6; 138m fidelity 80/80). The builder split the 16 misses into three causes, which I checked against its per-item stages:
+
+| cause | misses | what happens |
+|---|---|---|
+| (b) the chain starts with a two-word name ("Mara Voss's boss") | 8 (3 two-link, all 5 three-link) | the detector takes only the last word before "'s" as the name, so the rewritten probe question is broken and the lift never fires |
+| (a) "When is X's birthday?" | 5 | 138m has no plain-name reader for this form either (138n has one, from 221). The lift only reuses readers the base already has, so this is out of 266's reach by design. My panel spec should not have asked for it. |
+| (c) "Where does my R live?"-type forms with no "'s" | 2 | the notebook-gated reader gives no frame for the placeholder name |
+| other | 1 | the lift fired; the chain reasoner abstained |
+
+## The one change
+
+**266b = 266 + one detector change:** the chain's first link may be a name of one to three capitalised words ("Mara Voss's boss", "Del Ray Okoro's coach"), matched against names the notebook holds, longest first. Nothing else changes: the same dry probe, the same canonical question, the same pass-through.
+
+Why this one: it is the biggest cause (8 of 16), it is the only one that makes 266 answer wrong-shaped questions it was meant to answer, and it is a pure detector fix. (a) belongs to the base, and it goes away when the lift sits on 138n or later. (c) needs a change to a gated reader, which would be a second change.
+
+## Base
+
+266 (138m + chain-subject lift). Same base as 266, so the only difference between the arms is the detector.
+
+## Marks (fixed before any build)
+
+A fresh blind panel, chainpanel266b (chainpanel266 has now been read at item level by the 266 builder's diagnosis, so it is a regression check only). Its spec only uses question forms the base answers for a plain name, and it keeps the "my ... live" form as its own reported family with no bar (known gap (c)).
+
+- M1 chainpanel266b:
+  - multiword_chain ≥ 22/24;
+  - three_link ≥ 7/8;
+  - oneword_chain: no item right on 266 is not right on 266b;
+  - broken_chain 12/12 honest abstain;
+  - 0 wrong values over all items; 0 question writes;
+  - plain_control and statement_control byte-identical to 266.
+- M2: chainpanel266 (regression only): 0 new wrong; the 8 cause-(b) items may move to right; no other item moves.
+- M3: frozen suites (rt136, rt143, sessions152, bench, marks123) vs 266's rows: moves exactly the predicted list; 0 new WRONG, WRONG-WRITE, junk write or lost OK.
+- M4: median added time ≤ +5 ms per turn vs 266.
+
+## What would prove it wrong
+
+- A reply about the wrong person: for example, one about "Voss" or "Mara" instead of "Mara Voss's boss".
+- An answer when a link is missing.
+- A multi-word name that is not in the notebook getting lifted into a guess.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+# search board for those entries - use grep on /tmp/board.md via python to avoid cat
+uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+text=open('/tmp/board.md').read()
+import re
+for kw in ['266b','268b','291','293','292']:
+    print('================ '+kw+' ================')
+    # find lines containing kw
+    for i,line in enumerate(text.splitlines(),1):
+        if kw in line:
+            print(f'{i}: {line}')
+    print()
+"
+================ 266b ================
+23: - **Queued 292** = 291 + 266b + 268b + 293 (design/v3/30-modes/292-merge-onto-291.md). The four piece panels are regression checks with fidelity first. The PASS claim rests on a fresh blind mixpanel292 (80 items, including mixed chain + yes/no + correction turns). Queued rsn-292-panel and rsn-292-build.
+107: ### 07:35 (2026-09-23): reasoning line: 266b VERIFIED registered FAIL (ruled a merge candidate); 291 join queued
+108: - **266b (chain lift accepts multi-word names): VERIFIED registered FAIL** on one clause: broken_chain 9/12 honest abstains (bar 12/12). Every other bar passes: multiword_chain 24/24 (266: 6), three_link 8/8 (266: 3), oneword_chain, my_live and controls byte-identical, 0 wrong, 0 question writes; chainpanel266 regression moves exactly the 8 predicted two-word-name items; frozen suites and probes as predicted; +0.005 ms. Seal 21/21 OK (12 base files checked on main). **My own re-run in the cloud** (router stubbed): 266 matches the writer's base rows 70/70, and my per-family counts equal the builder's; 26 items move, 0 writes. The 3 misses (c266b-046, 050, 052) name no guessed value: 2 are "didn't understand" on untaught multi-word names (the lift refuses them by design), and 1 states the taught first link and says it can't look up the next person. None of the three contains the scorer's abstain phrases. My spec's bar did not allow for these honest non-answers. The FAIL stays; the 266 line has used its one follow-up. **Ruling:** a merge candidate (0 wrong, 0 writes, strictly better than 266 on every family), to be merged after 291. Builder deviations: D1 a new post-seal panel driver; D3 one light run started at load 67.
+110: ### 06:50 (2026-09-23): reasoning line: 268 VERIFIED registered FAIL; chainpanel266b verified; 290 diagnosis verified (keep 224's wording)
+112: - **chainpanel266b (for 266b): sealed, verified.** Seal 5/5 OK. 70 items, counts exact, gold lists. My own recount of base266.jsonl matches the writer: multiword_chain 6/24, three_link 3/8, oneword_chain 8/8, my_live 4/4, broken_chain 7/12 (the 5 others are "didn't understand", not guesses), plain_control 8/8, statement_control 6/6, 0 wrong, 0 question writes. Deviation: the writer swapped one relation that doesn't store after "My" (disclosed).
+114: - **Running/queued (reasoning line):** rsn-266b-build running; queued rsn-268b-panel, rsn-268b-build.
+137: - **266 (chain-subject lift): VERIFIED registered FAIL.** chain_verb 19/30 (bar 27), chain_verb_three 1/6 (bar 5); all else passes: 0 wrong, broken_chain 12/12, 0 question writes, controls byte-identical. My re-run matches (138m fidelity 80/80). Rule deviation: the builder edited sealed scripts/claude_266_runall.sh after the seal (a 2-line path fix, disclosed), so the seal checks 20/21. No number depends on it. Misses: 8 chains start with a two-word name (detector bug), 5 "birthday" forms (138m has no plain-name reader; my spec error), 2 "my ... live" forms, 1 abstain. The one follow-up: **266b** = the detector accepts multi-word names; fresh blind panel chainpanel266b (design/v3/30-modes/266b-multiword-chain-base.md). chainpanel266 is now regression-only.
+140: - **Running/queued (reasoning line):** rsn-268-build running; queued rsn-266b-panel, rsn-266b-build, rsn-290-diag. The 138nb + 138p join waits for 138p's follow-up.
+
+================ 268b ================
+23: - **Queued 292** = 291 + 266b + 268b + 293 (design/v3/30-modes/292-merge-onto-291.md). The four piece panels are regression checks with fidelity first. The PASS claim rests on a fresh blind mixpanel292 (80 items, including mixed chain + yes/no + correction turns). Queued rsn-292-panel and rsn-292-build.
+89: ### 08:15 (2026-09-23): reasoning line: 268b VERIFIED registered FAIL (wrong answers 16 to 1; ruled a merge candidate); nhoppanel268b and corrpanel291 verified
+90: - **nhoppanel268b: sealed, verified.** Seal 5/5 OK; 60 items, counts exact. The writer showed the bug on 138nb: bug 16/16 wrong, all from loop138-nhop; every other family right on the base. Deviation to note: the writer read an earlier panel's writer script for the schema and so saw that panel's items. Its own 60 items were written fresh.
+91: - **268b (the 268 guard, unchanged, on 138nb): VERIFIED registered FAIL.** Bug family 11/16 right with the label (bar 14) and 1 wrong (bar 0), against 138nb's 0 right and 16 wrong. Seal 23/23 OK (7 base files checked on main). **My own cloud re-run** (router stubbed): 138nb matches the writer's base rows 60/60; my counts equal the builder's on every family; 44/44 non-bug rows are byte-identical; 0 writes. The 4 misses (n268b-002, 004, 007, 014) are honest bench73 non-answers. The 1 wrong (n268b-010) is a "Who works for V?" employer shape the guard's shape list does not cover, so the forward walk survives. Builder: invpanel138nb 0 moves; suites, probes and latency identical; dev 46/46 predicted. Post-seal driver-only files: score_fix1 and m1run. **Ruling:** the FAIL stays and the 268 line has used its follow-up. It is a merge candidate: wrong backwards answers go from 16 to 1, with nothing else changed. Lead for a new experiment (not queued): add the employer "Who <verb> for V?" shape to the guard.
+109: - **291 join merge queued** (design/v3/30-modes/291-join-138nb-138p.md): 291 = 138nb + 260 + 252c, the follow-up to 138p's FAIL. The old panels are regression only, with 224's wording moves predicted by id. The PASS claim rests on a fresh blind corrpanel291 (96 items, corrections, tails and openers; base 138nb). Queued rsn-291-panel and rsn-291-build. Running: rsn-268b-panel, rsn-268b-build.
+111: - **268 (n-hop direction guard, base 138m): VERIFIED registered FAIL.** nhoppanel268 reverse_chain 10/24 on both arms (bar 22); all other clauses pass. Seals: build 18/18 OK (8 base files checked on main), panel 5/5 OK. My own row compare: 268 = 138m on 70/70 panel items. My stage census of 138m's reverse_chain rows: 153-reverse 8, 190-reverse 2, `none` 12, bench73 2, and **0** at loop138-nhop. So the panel never showed the bug on 138m: 138m doesn't understand the backwards verb shapes at all, and they never reach the n-hop frame (the diagnosis was on 138n, which has the 221 table reader). My base choice caused this. Dev evidence: 21/21 predicted moves, 0 new wrong, 0 write changes. Builder deviation D1: a new post-seal panel driver (sealed files untouched). The one follow-up: **268b** = the same guard on 138nb, with a fresh blind panel whose bug items are shown to walk forward on the base (design/v3/30-modes/268b-nhop-guard-on-138nb.md).
+114: - **Running/queued (reasoning line):** rsn-266b-build running; queued rsn-268b-panel, rsn-268b-build.
+
+================ 291 ================
+21: ### 11:45 (2026-09-23): reasoning line: 291 join VERIFIED registered FAIL, ruled the new merge base; 292 queued
+22: - **291 (138nb + 260 + 252c): VERIFIED registered FAIL.** Seal 11/11 OK after rsn-291-publish pushed the missing glue file unchanged. **My own cloud re-run of corrpanel291** (sealed scorer; router stubbed): 138nb 34/96 (matches the writer's rows 96/96), 138p 65/96, 291 73/96, the same as the builder. 0 items right on either parent are lost on 291; 0 wrong values on 291 that are not on a parent; controls 12/12. The one item wrong on 291 but not on 138p (c291-006, verb_denial): every arm refuses the denial ("couldn't save that as a fact"), the fact stays in the notebook, and 291 answers the follow-up from it (as 138nb does), while 138p says "didn't understand". The absolute zero bars on M8 were my error. I did not re-run M7's c252-009; the builder reports the same mechanism. **Ruling:** the FAIL stays on record; 291 is the new merge base for this line. Lead for the corrections line: denials in verb wording fail on every arm (verb_denial 4/8 on 291).
+23: - **Queued 292** = 291 + 266b + 268b + 293 (design/v3/30-modes/292-merge-onto-291.md). The four piece panels are regression checks with fidelity first. The PASS claim rests on a fresh blind mixpanel292 (80 items, including mixed chain + yes/no + correction turns). Queued rsn-292-panel and rsn-292-build.
+41: ### 10:40 (2026-09-23): reasoning line: 293 yes/no reader VERIFIED PASS; 291 join reported FAIL (verification waits on one unpublished file)
+43: - **293 (138nb + one read-only yes/no reader): VERIFIED PASS.** Seal 10/10 OK. **My own cloud re-run of the blind panel:** 293 gets 85/85 right (138nb: 26/85); yes/no families 62/62; 0 wrong; 0 question writes; all 23 controls byte-identical to 138nb. That matches the builder. **Held-out probe:** 57 dialogs in my own wording (two-word names, live/work/born, of-forms, multi-valued relations, a never-taught person, a chain subject, controls): 0 question writes; controls 6/6 identical; the chain question passes through unchanged. Every yes/no answer is right given what the notebook holds. Two "Yes" replies came after a user denial or correction that 138nb itself had not applied: the notebook still held the old value (checked: "No, X's dentist isn't Y." is refused, and "Actually X's city is Z." asks to confirm). That is the base's correction gap (252c, now in 291), not a 293 error. Builder deviations: D1 a sealed runall.sh died before any run, and a 3-line runall2.sh ran M2-M5; D2 a row-strip script before scoring (no re-run). The builder also appended other agents' ledger lines in its commit (append-only kept). The builder's M2-M5: 0 panel moves; frozen-suite moves exactly the predicted 3; 146 probe dialogs unchanged; latency ≤ +0.4 ms.
+44: - **291 join: builder reports registered FAIL.** M1-M6 pass; M7 4/5 (corrpanel252 flags c252-009); M8 corrpanel291 73/96 right (138p 65, 138nb 34), no item right on either parent is lost, but it misses the absolute bars (17 wrong values, 3 junk, 1 false claim, all said to be inherited from a parent). The builder's cause: when a denial fails on every arm, 291 answers from the notebook like 138nb, while 138p declines. **Not verified yet:** its seal names scripts/claude_fix291_glue.py, which was not in the PUSH list and isn't on builder-outbox. Queued rsn-291-publish to push it unchanged. My ruling comes after my own re-run. Note: the M8 absolute zero bars were my error, since both parents already give wrong values on those families.
+46: - Note: design/v3/30-modes/280m-talking-join.md. **Base: 260, not 291.** All three pieces were built and graded on 260, and 291 has no verdict yet. Once 291 passes, a later join will put 280m on 291 and re-run joinpanel280m as a regression check.
+55: - **293-diag (Muse, key lines checked in code by me):** on 138nb, 40 of 51 yes/no dev turns get "didn't understand" (16 with the fact stored, 24 with nothing stored); 11 are answered right, all by the 154d reader; 0 writes. The base parser makes questions only from who/what/where (scripts/fable_agent_loop.py:94). 154d reads only "Is X's R V?" / "Is V X's R?" with one-word names and one "'s" (scripts/fable_fix154d_yesno.py:67-69, 105-129). Every other shape misses at scripts/fable_loop90_agent.py:291-292 and gets 224's Q2 sentence.
+56: - **Queued 293** (design/v3/30-modes/293-yesno-questions.md): 138nb + one read-only yes/no reader in the 154d slot. It answers Yes, No (single-valued relations only) or "I don't know", and never writes. Fresh blind panel yesnopanel293 (85 items). Queued rsn-293-panel and rsn-293-build. Still running: rsn-291-build.
+89: ### 08:15 (2026-09-23): reasoning line: 268b VERIFIED registered FAIL (wrong answers 16 to 1; ruled a merge candidate); nhoppanel268b and corrpanel291 verified
+92: - **corrpanel291: sealed, verified.** Seal 5/5 OK; 96 items, counts exact. I ran the sealed scorer on base138nb.jsonl and it gives the writer's table: 34/96 right, 48 wrong values, 9 junk writes, 4 false claims; controls 12/12. The cause, tail and opener families are nearly all wrong on 138nb, as expected before the 252c/260 pieces are added. The writer adapted a false-claim rule (disclosed, the same code in runner and scorer).
+93: - Running: rsn-291-build (waiting on its M8 panel, which has now landed).
+107: ### 07:35 (2026-09-23): reasoning line: 266b VERIFIED registered FAIL (ruled a merge candidate); 291 join queued
+108: - **266b (chain lift accepts multi-word names): VERIFIED registered FAIL** on one clause: broken_chain 9/12 honest abstains (bar 12/12). Every other bar passes: multiword_chain 24/24 (266: 6), three_link 8/8 (266: 3), oneword_chain, my_live and controls byte-identical, 0 wrong, 0 question writes; chainpanel266 regression moves exactly the 8 predicted two-word-name items; frozen suites and probes as predicted; +0.005 ms. Seal 21/21 OK (12 base files checked on main). **My own re-run in the cloud** (router stubbed): 266 matches the writer's base rows 70/70, and my per-family counts equal the builder's; 26 items move, 0 writes. The 3 misses (c266b-046, 050, 052) name no guessed value: 2 are "didn't understand" on untaught multi-word names (the lift refuses them by design), and 1 states the taught first link and says it can't look up the next person. None of the three contains the scorer's abstain phrases. My spec's bar did not allow for these honest non-answers. The FAIL stays; the 266 line has used its one follow-up. **Ruling:** a merge candidate (0 wrong, 0 writes, strictly better than 266 on every family), to be merged after 291. Builder deviations: D1 a new post-seal panel driver; D3 one light run started at load 67.
+109: - **291 join merge queued** (design/v3/30-modes/291-join-138nb-138p.md): 291 = 138nb + 260 + 252c, the follow-up to 138p's FAIL. The old panels are regression only, with 224's wording moves predicted by id. The PASS claim rests on a fresh blind corrpanel291 (96 items, corrections, tails and openers; base 138nb). Queued rsn-291-panel and rsn-291-build. Running: rsn-268b-panel, rsn-268b-build.
+113: - **290-diag (Muse, checked in code by me):** 138m's "I didn't understand that question" on the 138p correction rows comes from exp 224's decline rewrite: `turn224` (scripts/fable_loop224_agent.py:113-137) swaps the glue decline for Q2 on a "?" turn with no ask act, installed at scripts/claude_loop138m_agent.py:213-214. Dev: 14/14 moves are unparsed questions (mostly "Does A have an R?"), 28/28 parsed turns identical across 138k, 138l and 138m, 0 writes. **Ruling (director):** keep 224's wording. Those questions really were not understood, and 138k's "I do not know that from what you taught me" was false when the fact had been taught (2 dev cases). So 138p's M7 moves are 224's intended wording, not a regression. 138p's FAIL stays; its follow-up is the join merge (291 = 138nb + 138p) with those moves predicted by id and a fresh correction panel, written up at the next check-in. New lead (not queued): 138m can't hear "Does A have an R?".
+
+================ 293 ================
+23: - **Queued 292** = 291 + 266b + 268b + 293 (design/v3/30-modes/292-merge-onto-291.md). The four piece panels are regression checks with fidelity first. The PASS claim rests on a fresh blind mixpanel292 (80 items, including mixed chain + yes/no + correction turns). Queued rsn-292-panel and rsn-292-build.
+41: ### 10:40 (2026-09-23): reasoning line: 293 yes/no reader VERIFIED PASS; 291 join reported FAIL (verification waits on one unpublished file)
+42: - **yesnopanel293: sealed, verified.** Seal 5/5 OK; 85 items, counts exact; 25 items with two-word names. My re-run of 138nb reproduces the writer's base rows 85/85. Deviation: the writer used bare-negation denials, because the spec's "No, ..." shapes don't remove the fact on the base (disclosed; this matters below).
+43: - **293 (138nb + one read-only yes/no reader): VERIFIED PASS.** Seal 10/10 OK. **My own cloud re-run of the blind panel:** 293 gets 85/85 right (138nb: 26/85); yes/no families 62/62; 0 wrong; 0 question writes; all 23 controls byte-identical to 138nb. That matches the builder. **Held-out probe:** 57 dialogs in my own wording (two-word names, live/work/born, of-forms, multi-valued relations, a never-taught person, a chain subject, controls): 0 question writes; controls 6/6 identical; the chain question passes through unchanged. Every yes/no answer is right given what the notebook holds. Two "Yes" replies came after a user denial or correction that 138nb itself had not applied: the notebook still held the old value (checked: "No, X's dentist isn't Y." is refused, and "Actually X's city is Z." asks to confirm). That is the base's correction gap (252c, now in 291), not a 293 error. Builder deviations: D1 a sealed runall.sh died before any run, and a 3-line runall2.sh ran M2-M5; D2 a row-strip script before scoring (no re-run). The builder also appended other agents' ledger lines in its commit (append-only kept). The builder's M2-M5: 0 panel moves; frozen-suite moves exactly the predicted 3; 146 probe dialogs unchanged; latency ≤ +0.4 ms.
+54: ### 09:40 (2026-09-23): reasoning line: 293-diag verified (yes/no questions go unheard); 293 queued
+55: - **293-diag (Muse, key lines checked in code by me):** on 138nb, 40 of 51 yes/no dev turns get "didn't understand" (16 with the fact stored, 24 with nothing stored); 11 are answered right, all by the 154d reader; 0 writes. The base parser makes questions only from who/what/where (scripts/fable_agent_loop.py:94). 154d reads only "Is X's R V?" / "Is V X's R?" with one-word names and one "'s" (scripts/fable_fix154d_yesno.py:67-69, 105-129). Every other shape misses at scripts/fable_loop90_agent.py:291-292 and gets 224's Q2 sentence.
+56: - **Queued 293** (design/v3/30-modes/293-yesno-questions.md): 138nb + one read-only yes/no reader in the 154d slot. It answers Yes, No (single-valued relations only) or "I don't know", and never writes. Fresh blind panel yesnopanel293 (85 items). Queued rsn-293-panel and rsn-293-build. Still running: rsn-291-build.
+
+================ 292 ================
+21: ### 11:45 (2026-09-23): reasoning line: 291 join VERIFIED registered FAIL, ruled the new merge base; 292 queued
+23: - **Queued 292** = 291 + 266b + 268b + 293 (design/v3/30-modes/292-merge-onto-291.md). The four piece panels are regression checks with fidelity first. The PASS claim rests on a fresh blind mixpanel292 (80 items, including mixed chain + yes/no + correction turns). Queued rsn-292-panel and rsn-292-build.
+55: - **293-diag (Muse, key lines checked in code by me):** on 138nb, 40 of 51 yes/no dev turns get "didn't understand" (16 with the fact stored, 24 with nothing stored); 11 are answered right, all by the 154d reader; 0 writes. The base parser makes questions only from who/what/where (scripts/fable_agent_loop.py:94). 154d reads only "Is X's R V?" / "Is V X's R?" with one-word names and one "'s" (scripts/fable_fix154d_yesno.py:67-69, 105-129). Every other shape misses at scripts/fable_loop90_agent.py:291-292 and gets 224's Q2 sentence.
+[0m
+[0m$ [0mfor f in design/v3/30-modes/291-join-138nb-138p.md design/v3/30-modes/268b-nhop-guard-on-138nb.md design/v3/30-modes/293-yesno-questions.md handoff/kit/briefs/mixpanel292-spec.txt handoff/kit/briefs/chainpanel266b-spec.txt handoff/kit/briefs/nhoppanel268b-spec.txt handoff/kit/briefs/yesnopanel293-spec.txt handoff/kit/briefs/corrpanel291-spec.txt handoff/queue/rsn-292-build.md handoff/queue/rsn-292-panel.md; do echo "===== $f ====="; git show origin/main:"$f" | head -n 200; echo; done
+===== design/v3/30-modes/291-join-138nb-138p.md =====
+# 291: join merge 138nb + 138p (the follow-up to 138p's registered FAIL)
+
+Director (Opus, reasoning line), 2026-09-23 ~07:30 UTC. New file; nothing edited.
+
+## Why 138p failed, and what that means for the join (verified)
+
+138p (138m + 260 openers + 252c corrections) passed M1-M6 and failed M7 on byte-identity against 252c. It gave 0 wrong values, 0 false claims, 0 junk writes and 0 question writes. Every moved row differs only in reply text. 290-diag traced the wording to exp 224's decline rewrite, which 138m carries and 252c's base (138k) does not: an unparsed "?" turn gets "I didn't understand that question" instead of the old "I do not know that from what you taught me". Director ruling (board 06:50): keep 224's wording. The questions really were not understood, and the old sentence was false when the fact had been taught.
+
+So 138p's pieces are fine, and the M7 bar was set too tight: it did not allow 224's intended wording.
+
+## The one merge
+
+**291 = 138nb + 260 + 252c**, the same pieces and the same order as 138p, on top of 138nb instead of 138m. 138nb = 138m + 221/237 table questions + the "(worked out backwards)" label (VERIFIED PASS). The join adds no new behaviour.
+
+## Marks (fixed before any build)
+
+- M1: each piece's own sealed dev/case files on the arms own, 138p and 291. Every case where 291 differs from 138p is predicted by id with its exact record. That includes rows where 138nb's table stage now answers a question 138p declined.
+- M2: frozen suites vs 138nb's saved rows: the (id, class) move set equals the predicted list; 0 new WRONG, WRONG-WRITE, junk write or lost OK, except rows justified by id as a piece's own registered behaviour.
+- M3: sleep smoke identical to 138nb except .agent .config .label .seconds .root .report. M4: bench byte-identical x3. M5: median added latency ≤ +5 ms vs 138nb.
+- M6: restart and verifier dialogs (138m's M6 files, artifacts/claude-verify-20260922/138m/probes.json and probes-supp.json): 0 ghost answers, 0 failed duplicate checks, 0 bad writes, every change predicted.
+- M7, regression only (these panels are seen): openpanel260, corrtail258, corrpanel252, invpanel138nb, tablepanel221. Each is scored with its registered runner and scorer after a fidelity re-run of its registered arm (100% or VOID). Bars: 0 new wrong values, 0 new false claims, 0 new junk writes, 0 question writes. Every reply-only move is predicted by id, and each one is either 224's Q2 wording or the table/label behaviour of 138nb.
+- M8, fresh blind panel corrpanel291 (the PASS claim rests on it), run once on 138nb, 138p and 291:
+  - every item right on 138p is right on 291, and every item right on 138nb is right on 291;
+  - 0 wrong values, 0 false claims, 0 junk writes, 0 question writes on 291;
+  - the cause families on 291 are right on at least 138p's count (never fewer);
+  - controls byte-identical to 138nb.
+
+## What would prove it wrong
+
+- A correction that removes a value the user did not deny.
+- A question that writes.
+- A table/backwards answer on 138nb that is lost on 291.
+- A correction or opener that works on 138p but not on 291.
+
+===== design/v3/30-modes/268b-nhop-guard-on-138nb.md =====
+# 268b: the n-hop direction guard, tested where the bug lives (the one follow-up to 268)
+
+Director (Opus, reasoning line), 2026-09-23 ~06:50 UTC. New file; nothing edited.
+
+## Why 268 failed (verified)
+
+268 is a registered FAIL: nhoppanel268 reverse_chain 10/24 on both arms (bar 22). Everything else passed, and 268 is byte-identical to 138m on all 70 panel items (my own row compare: 70/70 equal). Seals: build 18/18 OK, panel 5/5 OK.
+
+My stage census of the panel rows on 138m's reverse_chain items:
+- `loop153-reverse` 8 (right);
+- `loop190-reverse` 2 (right);
+- `none` 12 (not understood);
+- `bench73` 2 (misses).
+
+**None** of them reached `loop138-nhop`, the stage the guard switches off. So the blind panel never showed the bug on 138m, and the guard had nothing to do there. The n-hop diagnosis had been run on 138n. 138n has the 221/237 table reader, which understands backwards verb questions ("What did V write?"), so those questions get as far as the n-hop frame. 138m does not understand them at all (the 12 `none`). On the builder's own dev dialogs, the guard did what it was meant to: 21 of 21 predicted moves, 0 new wrong answers and 0 write changes.
+
+My mistake: the 268 note chose 138m as the base and set a "right" bar that needed readers 138m does not have.
+
+## The one change (unchanged)
+
+**268b = 138nb + the 268 guard** (scripts/claude_fix268_nhopdir.py, used unchanged), so the two arms are 138nb and 138nb + guard. 138nb is the newest verified base on this line (VERIFIED PASS, board 06:00): it has 138n's table reader and the "(worked out backwards)" label.
+
+## Marks (fixed before any build)
+
+A fresh blind panel, nhoppanel268b. Its writer must show the bug on the base: every `bug` item has to get a forward-fact reply from stage `loop138-nhop` on 138nb, and the writer replaces any item that doesn't.
+
+- M1 nhoppanel268b:
+  - bug family: 138nb wrong on every item (by construction); 268b gives 0 wrong, and ≥ 14/16 right with the "(worked out backwards)" label (the rest must be honest abstains);
+  - every other family byte-identical to 138nb;
+  - 0 question writes.
+- M2: invpanel138nb (regression only): 0 new wrong, and every item that is right on 138nb stays right.
+- M3: frozen suites vs 138nb's rows: moves exactly the predicted list; 0 new WRONG, WRONG-WRITE, junk write or lost OK.
+- M4: median added time ≤ +5 ms per turn.
+
+## What would prove it wrong
+
+- A forward-walk answer surviving on a bug item.
+- Any change to a forward two-step answer.
+- A backwards answer naming someone who is not in gold.
+
+===== design/v3/30-modes/293-yesno-questions.md =====
+# 293: yes/no questions about the notebook ("Does Ana have a dentist?")
+
+Director (Opus, reasoning line), 2026-09-23 ~09:40 UTC. New file; nothing edited. Diagnosis: artifacts/claude-diag293-20260923/DIAG.md on builder-outbox (Muse, read-only). I checked its key file:lines in the code.
+
+## Result first: the machine never hears these as questions
+
+On 138nb, 61 dev dialogs; 51 yes/no turns:
+- **11 answered right**, all from the 154d reader;
+- **40 get "I didn't understand that question"**: 16 where the fact is stored (should be "Yes"), 24 where nothing is stored (should be "I don't know");
+- 0 question writes.
+
+Why (checked in code):
+- The base parser only turns who/what/where into a question (`_QUESTION`, scripts/fable_agent_loop.py:94).
+- The only yes/no reader is 154d (scripts/fable_fix154d_yesno.py:67-69, 105-129). It reads only "Is X's R V?" and "Is V X's R?", with one-word capitalised names and exactly one "'s".
+- Everything else misses (scripts/fable_loop90_agent.py:291-292) and gets 224's Q2 sentence: "Does/Has" forms, two-word names, of-forms, "live in / work at / come from".
+
+## The one change
+
+**293 = 138nb + one yes/no reader in the 154d slot** (a new wrapper file; 154d's code imported read-only). It parses:
+- "Does A have a/an R?", "Has A got a/an R?";
+- "Does A live in V?" (key city), "Does A work at/for V?" (key employer), "Does A come from V?" / "Was A born in V?" (key birthplace);
+- the existing "Is" shapes, now with multi-word names (resolved against names the notebook holds) and of-forms ("Is V the R of A?").
+
+It answers read-only from the notebook:
+- **Yes**: the stored value matches ("Yes, Ana's dentist is Tovi.");
+- **No**: only for single-valued relations (SINGLE_VALUED_154), when a different value is stored ("No, Ana's city is Oslo.");
+- **"I don't know"**: nothing is stored for that relation, or the relation is multi-valued and V is not among its values (the reply names what is stored);
+- never writes; a taken-back value counts as not stored.
+
+Chain subjects ("Does Ana's boss live in Oslo?") stay out: they pass through unchanged (the 266 lift is a separate piece).
+
+Why this option (director decision, logged; clearly better for the model):
+- The diagnosis shows 40 honest questions answered with "didn't understand".
+- The notebook already has the answer or knows it doesn't.
+- One read-only reader covers every shape; it can't write and can't guess.
+
+## Marks (fixed before any build)
+
+M1, a fresh blind panel yesnopanel293 (spec: handoff/kit/briefs/yesnopanel293-spec.txt):
+- yes/no families together ≥ 90% right;
+- **0 wrong**: never "Yes" when the value is not stored, never "No" when it is;
+- taken_back: 0 "Yes";
+- 0 question writes;
+- is_single_control, wh_control and statement_control byte-identical to 138nb.
+
+M2: invpanel138nb and chainpanel266b (regression only): 0 moves.
+
+M3: frozen suites vs 138nb's rows: moves exactly the predicted list; 0 new WRONG, WRONG-WRITE, junk write or lost OK.
+
+M4: restart and verifier dialogs: 0 ghost answers, 0 write changes, every reply change predicted.
+
+M5: median added time ≤ +5 ms per turn.
+
+## What would prove it wrong
+
+- "Yes" for a fact that was never taught or was taken back.
+- "No" on a multi-valued relation.
+- Any write on a question turn.
+- Any change to a who/what/where answer.
+
+===== handoff/kit/briefs/mixpanel292-spec.txt =====
+BLIND PANEL SPEC: mixpanel292 (two-step, backwards and yes/no questions after corrections). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/26*, 29*, scripts/claude_fix26*, claude_fix29*, claude_loop26*, claude_loop29*, claude_26*, claude_29*, any builder's artifacts folder, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names (at least 20 items with two-word names).
+
+Base: 291 = scripts/claude_loop291_agent.py with scripts/claude_fix291_glue.py and artifacts/claude-join291-20260923/loop291-config.json (copy these and the files they import unchanged from origin/builder-outbox; use the module's DEFAULT_CONFIG291 if the config file has absolute paths; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-mixpanel292-20260923/ with panel.jsonl (80 items), base291.jsonl (80 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "m292-001", "family": ..., "setup": [1-4 plain teaches, each its own turn], "question": "...", "expect": "value" | "yes" | "no" | "unknown" | "control", "gold": [strings that must appear], "note": "..."}. JSON lists. Check every setup stores what you expect on the base.
+
+Families and exact counts (80):
+- chain_verb 12: "Where does A's R1 live?", "Where does A's R1 work?", "Who does A's R1 work for?" with both links taught; 8 with a two-word first name. expect value.
+- backwards_bug 10: "A's R is V." plus "V's R2 is W." (R over spouse, author, founder, parent/child, composer), then a backwards question about V ("Whose R is V?", "Who is married to V?", "What did V write?"). expect value, gold [A].
+- yesno 14: "Does A have a/an R?", "Does A live in V?", "Does A work at V?", "Is V the R of A?" with multi-word names (yes, no and unknown, about a third each). "no" only for boss, mother, father, city, employer, birthplace.
+- mixed 12 (reported, no bar): yes/no about a chain ("Does A's boss live in V?"), a backwards question about a chain value, a two-step question after a correction ("Actually A's boss is B."), a yes/no after a correction. Write natural wordings; expect from the facts.
+- broken_chain 8: one link missing. expect unknown (right = the reply contains "don't know", "couldn't" or "not that I know" and names no untaught value).
+- forward_control 10: plain who/what/where and one-hop questions. expect control.
+- statement_control 8: statements containing a chain or "does"/"is"/"has" that the base does not store. expect control.
+- correction_control 6: a plain correction ("Actually A's city is C.") then "Where does A live?". expect value.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged): value = every gold string appears (case-insensitive); yes/no = the reply starts with "Yes"/"No" and contains every gold string; unknown = contains "don't know", "couldn't" or "not that I know" and does not start with "Yes" or "No"; control = identical to base291's row; wrong = a yes/no reply with the opposite answer, or a value/unknown reply naming a taught value or person not in gold without every gold string (not an abstain); question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
+
+===== handoff/kit/briefs/chainpanel266b-spec.txt =====
+BLIND PANEL SPEC: chainpanel266b (two-step questions whose chain starts with a multi-word name). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/266*, scripts/claude_fix266*, scripts/claude_loop266*, scripts/claude_266*, artifacts/claude-chain266*, artifacts/claude-chainpanel266-*, any relation-table file, the chat-demo files, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself; use new names (not Ana, not Tovi).
+
+Folder: artifacts/claude-chainpanel266b-20260923/ with panel.jsonl (70 items), base266.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item: {"id": "c266b-001", "family": ..., "setup": [1-4 teaching sentences, each its own turn], "question": "...", "gold": [list of strings, every one must appear in a right reply; [] for abstain and control families], "note": "..."}. JSON list for gold. Only plain teaches ("A's R is B.", "My R is B."). Check every setup on the base stores what you expect; replace any that doesn't.
+
+QUESTION FORMS: use only forms that the base answers right for a plain name. Before writing the panel, check each candidate form on the base with a plain name ("B's city is C." then "Where does B live?"), and keep only forms it answers right. Do NOT use "When is ...'s birthday?". Use at least 4 kept forms (for example "Where does X live?", "Where was X born?", "Where does X work?", "Who does X work for?").
+
+Families and exact counts (70):
+- multiword_chain 24: "Where does A's R1 live?" and the other kept forms, where A is a two-word name (18) or a three-word name (6). Both links taught. At least 7 first-link relations (boss, mother, father, sister, brother, friend, neighbour, dentist, coach, wife, husband ...). At most 6 items per form.
+- three_link 8: "Where does A's R1's R2 live?" etc., all three links taught; 6 of the 8 start with a two-word name.
+- oneword_chain 8: the same shape with a one-word first name.
+- my_live 4: "Where does my R1 live?" after "My R1 is B." and "B's city is C.". Reported, no bar.
+- broken_chain 12: one link missing or taught under another relation; 8 of the 12 start with a two-word name; 2 of the 12 use a two-word name that was never taught at all while its last word was taught as a different person's name (e.g. only "Voss's boss is ..." taught, then asked about "Mara Voss's boss"). gold []; right = an honest abstain that names no untaught value.
+- plain_control 8: kept forms with a plain (often two-word) name subject, taught directly. gold = the value.
+- statement_control 6: statements containing a multi-word-name chain, no "?". gold []; checks for no new writes.
+Fictional names only.
+
+run_base.py: run every item once on the base, 266 = scripts/claude_loop266_agent.py (build function and config as in artifacts/claude-chain266-20260923; a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+
+score_panel.py (sealed; builders use it unchanged): per item and per family:
+- right: gold families = every gold string appears in the reply, case-insensitive; broken_chain = abstain ("I don't know" or "I couldn't") naming no value that is not taught for that chain; plain_control = gold appears; statement_control = stored facts after the turn equal the base's.
+- wrong: the reply names a taught value that is not in gold and does not contain every gold string, and is not an abstain.
+- question_wrote.
+Report the base's right, wrong and question writes per family in README.md, category level only. Never quote an item in README.md or in your final reply.
+
+===== handoff/kit/briefs/nhoppanel268b-spec.txt =====
+BLIND PANEL SPEC: nhoppanel268b (backwards questions about a value that has facts of its own). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/268*, scripts/claude_fix268*, scripts/claude_loop268*, scripts/claude_268*, artifacts/claude-nhop268*, artifacts/claude-nhoppanel268-*, artifacts/claude-nhopdiag-*, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names.
+
+Base: 138nb = scripts/claude_loop138nb_agent.py and its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; build as that folder's runner does; a fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-nhoppanel268b-20260923/ with panel.jsonl (60 items), base138nb.jsonl (60 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "n268b-001", "family": ..., "setup": [2-4 plain teaches, each its own turn], "question": "...", "gold": [list of strings, all must appear; [] for abstain families], "note": "..."}. JSON list for gold.
+
+Families and exact counts (60):
+- bug 16: "A's R is V." plus a fact where V is the subject ("V's R2 is W."; R2 may equal R), then a backwards question about V, over relations with a chain cue (spouse/wife/husband, author, founder, employer, parent/child, composer): "Whose R is V?", "Who is married to V?", "What did V write?", "What did V found?", "Who works for V?", "What did V compose?" and similar. gold [A] (4 items with two subjects: gold [A, B]). KEEP AN ITEM ONLY IF the base answers it from stage loop138-nhop with a reply that names W or another non-gold value. Try as many candidates as you need; report how many you tried and dropped (counts only).
+- reverse_nochain 10: the same shapes; V has no facts of its own. gold [A].
+- forward_chain 12: forward two-step questions over the same relations with both links taught ("Who is A's spouse's employer?"). gold [final value].
+- forward_1hop 10: "Who is A's spouse?", "Who wrote X?", "Who founded Y?". gold [value].
+- uncued_reverse 6: backwards questions over boss, mother, friend (with and without a V chain). gold [A].
+- abstain 6: backwards questions about a V that was never taught. gold []; right = honest abstain naming no taught person.
+At least 15 items use a two-word name.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged): right = every gold string appears (case-insensitive), and for bug/reverse_nochain/uncued_reverse the reply also contains "(worked out backwards)"; right_names = gold appears, label or not; abstain family = contains "I don't know" or "I couldn't" and names no taught person; wrong = names a taught value or person not in gold, does not contain every gold string, and is not an abstain; question_wrote.
+README.md: the base's right, right_names, wrong, question writes and stage counts per family, category level only. Never quote an item.
+
+===== handoff/kit/briefs/yesnopanel293-spec.txt =====
+BLIND PANEL SPEC: yesnopanel293 (yes/no questions about taught facts). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/293*, scripts/claude_fix293*, scripts/claude_loop293*, scripts/claude_293*, scripts/claude_diag293*, artifacts/claude-diag293-*, artifacts/claude-yesno293-*, scripts/fable_fix154*, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names.
+
+Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-yesnopanel293-20260923/ with panel.jsonl (85 items), base138nb.jsonl (85 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "y293-001", "family": ..., "setup": [1-4 plain teaches, each its own turn; taken_back items also include a denial such as "No, A's R isn't V." or "Actually A doesn't have an R."], "question": "...", "expect": "yes" | "no" | "unknown" | "control", "gold": [strings that must appear in a right reply, e.g. the stored value for yes/no; [] otherwise], "note": "..."}. JSON lists.
+Check every setup on the base: it must store exactly what you expect, and a taken-back fact must no longer be stored. Replace any setup that doesn't.
+
+Families and exact counts (85):
+- have_true 10: "Does A have a/an R?" / "Has A got a/an R?" with R taught (boss, dentist, sister, coach, doctor, friend ...). expect yes, gold [value].
+- have_unknown 8: the same shapes, R never taught for A (other facts about A taught). expect unknown.
+- live 10: "Does A live in V?" after "A's city is C." (5 with V = C: yes; 5 with V ≠ C: no, gold [C]).
+- work 8: "Does A work at/for V?" after "A's employer is E." (4 yes, 4 no; gold [E]).
+- born 6: "Does A come from V?" / "Was A born in V?" after "A's birthplace is P." (3 yes, 3 no; gold [P]).
+- is_multiword 8: "Is A's R V?" / "Is V A's R?" where A or V is a two- or three-word name (4 yes, 4 no, over single-valued relations: boss, mother, father, city, employer, birthplace, dentist, coach).
+- is_of_form 6: "Is V the R of A?" (3 yes, 3 no).
+- taken_back 6: a fact taught then denied or corrected in setup, then asked. expect unknown (after a denial) or no/yes by the corrected value (after a correction, gold = the new value); say which in note.
+- is_single_control 8: "Is A's R V?" / "Is V A's R?" with one-word names (the base already answers these). expect control.
+- wh_control 8: plain who/what/where questions about the same facts. expect control.
+- statement_control 7: statements containing "does", "is" or "has" ("Ana has a dentist called Tovi." is NOT allowed here; use statements the base does not store, e.g. "Mira does love the rain.", checked on the base). expect control.
+At least 20 items use a two-word name.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged):
+- yes: the reply starts with "Yes" (case-insensitive, after optional spaces) and contains every gold string.
+- no: the reply starts with "No" and contains every gold string.
+- unknown: the reply contains "don't know" or "not that I know" and does not start with "Yes" or "No".
+- control: right = identical to the base's row (reply and stores); a builder's scorer compares against base138nb.jsonl.
+- wrong: expect yes but the reply starts with "No"; expect no but the reply starts with "Yes"; expect unknown but the reply starts with "Yes" or "No".
+- question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
+
+===== handoff/kit/briefs/corrpanel291-spec.txt =====
+BLIND PANEL SPEC: corrpanel291 (corrections, denials and openers, for the join merge 291). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+Follow handoff/kit/briefs/corrpanel252-schema.txt for the item fields, the scoring rules and the acceptance checks, with only the changes below. Never open design/v3/30-modes/291*, 138p*, 252*, 258*, 259*, 260*, any scripts/claude_fix25*, claude_fix260*, claude_loop138p*, claude_loop252*, claude_loop260*, any builder's artifacts folder, or any other panel's items (corrpanel252, corrtail258, openpanel260 included). Write every sentence yourself, with new fictional names (1-4 words).
+
+Changes from the 252 schema:
+- Folder artifacts/claude-corrpanel291-20260923/; ids "c291-001" ...; base file base138nb.jsonl.
+- Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; build as that folder's runner does; fresh work dir per dialog; setup, then turn, then followup, in one session).
+- Do NOT filter the cause families by whether the base gets them right. Write natural wordings first, run the base once, and report base_right, base_wrong_value, base_false_claim and junk writes per family.
+- Add base_false_claim (bool) as in corrtail258-spec.txt: the reply says it changed or removed something it did not.
+- Families (exact counts, 96 in total):
+  verb_denial 8, possessive_denial 8, contextual_denial 8, contextual_correction 8, explicit_correction 8 (cause families, at least 2 lowercase turns each);
+  tail_denial 8 (a denial or correction with a trailing comment clause: ", that's wrong", ", which is old news");
+  opener_teach 8 (a plain teach after an opener word such as "Oh,", "Well,", "Honestly,");
+  opener_correction 8 (an opener in front of a correction or denial);
+  unstored_denial 6; ambiguous 6; question_trap 8;
+  control 12 (as the schema says, byte-identical to the base).
+- Seal (repo-root paths): panel.jsonl, base138nb.jsonl, make_panel.py, run_base.py, score_panel.py -> SEAL.sha256.txt. score_panel.py implements the scoring rules and is used unchanged by builders.
+- README.md at category level only (like corrpanel252's). Never quote an item in README.md or in your final reply.
+
+===== handoff/queue/rsn-292-build.md =====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: builder for merge 292 = 291 + 266b + 268b + 293 (reasoning line). CPU only (no GPU, no BensPC).
+Read first (from origin/main): design/v3/30-modes/292-merge-onto-291.md (the base ruling, the merge, marks M1-M5), handoff/kit/briefs/138p-merge.txt (the merge-brief pattern: phase-1 interaction analysis, predicted moves by id, fidelity-first panels), and the director board entries for 266b, 268b, 291 and 293. Copy unchanged from origin/builder-outbox and import read-only: 291 (scripts/claude_loop291_agent.py, scripts/claude_fix291_glue.py, scripts/claude_291_*, artifacts/claude-join291-20260923/), 266b (scripts/claude_fix266b_detector.py, scripts/claude_loop266b_agent.py, scripts/claude_fix266_chainlift.py, scripts/claude_loop266_agent.py, artifacts/claude-chain266b-20260923/, artifacts/claude-chain266-20260923/), 268b (scripts/claude_fix268_nhopdir.py, scripts/claude_loop268b_agent.py, artifacts/claude-nhop268b-20260923/), 293 (scripts/claude_fix293_yesno.py, scripts/claude_loop293_agent.py, artifacts/claude-yesno293-20260923/), and every file those import. The four regression panels: artifacts/claude-chainpanel266b-20260923/, claude-nhoppanel268b-20260923/, claude-yesnopanel293-20260923/, claude-corrpanel291-20260923/ (never read items; run them only as M1 says).
+Names: agent scripts/claude_loop292_agent.py (SrcGuardMixin228 first; install_srcguard228() at import); glue, if needed, scripts/claude_fix292_glue.py; config artifacts/claude-merge292-20260923/loop292-config.json; drivers scripts/claude_292_*; artifacts artifacts/claude-merge292-20260923/; design note design/v3/30-modes/292-merge-muse.md; ledger lines P292.n (append only). New files only.
+Order: phase 1 interaction analysis in the design note (which piece claims each turn shape, and why); build; pilots; PASSMARKS.md with every predicted move by id; seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths); ledger; registered M1-M4 (M1 fidelity re-run first, then the same runner and scorer on 292); then wait for artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt (git fetch origin builder-outbox every 2 min, up to 180 min; copy the folder unchanged), check it OK, run M5 ONCE on 291, 266b, 268b, 293 and 292 with its sealed score_panel.py; RESULTS.md.
+Never edit a sealed file after the seal (write a new file and disclose it). Never publish raw panel rows: push only score JSON with ids, families and counts, not item text or replies. Limits: uptime and df -g / before each heavy step; wait while load > 60; stop under 3 GB free; at most 4 parallel processes.
+Finish with RESULTS.md (result first, integer counts, categories and ids only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-merge292-20260923 scripts/claude_loop292_agent.py scripts/claude_fix292_glue.py scripts/claude_292_*.py scripts/claude_292_*.sh design/v3/30-modes/292-merge-muse.md artifacts/fable-predictions-ledger.md
+
+===== handoff/queue/rsn-292-panel.md =====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: blind panel writer for merge 292 (reasoning line). Read handoff/kit/briefs/mixpanel292-spec.txt (from origin/main) and follow it exactly; it is your whole task. CPU only. One process at a time; df -g / first, and stop if under 3 GB free. Final reply: category level only, never quote an item.
+PUSH: artifacts/claude-mixpanel292-20260923
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox 2>&1 | head; echo "---"; git ls-tree -r --name-only origin/builder-outbox | grep -E "291|266b|268b|293|292|mixpanel|chainpanel266b|nhoppanel268b|yesnopanel293|corrpanel291" | head -n 100
+---
+artifacts/claude-chain266b-20260923/PASSMARKS.md
+artifacts/claude-chain266b-20260923/RESULTS.md
+artifacts/claude-chain266b-20260923/SEAL.sha256.txt
+artifacts/claude-chain266b-20260923/dev_dialogs.json
+artifacts/claude-chain266b-20260923/loop266b-config.json
+artifacts/claude-chain266b-20260923/predicted_moves266b.json
+artifacts/claude-chain266b-20260923/run/lat-m-1.json
+artifacts/claude-chain266b-20260923/run/lat-m-1.log
+artifacts/claude-chain266b-20260923/run/lat-m-2.json
+artifacts/claude-chain266b-20260923/run/lat-m-2.log
+artifacts/claude-chain266b-20260923/run/lat-m-3.json
+artifacts/claude-chain266b-20260923/run/lat-m-3.log
+artifacts/claude-chain266b-20260923/run/lat-n-1.json
+artifacts/claude-chain266b-20260923/run/lat-n-1.log
+artifacts/claude-chain266b-20260923/run/lat-n-2.json
+artifacts/claude-chain266b-20260923/run/lat-n-2.log
+artifacts/claude-chain266b-20260923/run/lat-n-3.json
+artifacts/claude-chain266b-20260923/run/lat-n-3.log
+artifacts/claude-chain266b-20260923/run/panel266-reg-counts.json
+artifacts/claude-chain266b-20260923/run/panel266b-counts.json
+artifacts/claude-chain266b-20260923/run/probe/n-p3-dialogs.json
+artifacts/claude-chain266b-20260923/run/probe/n-p3-dialogs.txt
+artifacts/claude-chain266b-20260923/run/probe/n-p3c-restart2.json
+artifacts/claude-chain266b-20260923/run/probe/n-p3c-restart2.txt
+artifacts/claude-chain266b-20260923/run/probe/n-p3d-ghost.json
+artifacts/claude-chain266b-20260923/run/probe/n-p3d-ghost.txt
+artifacts/claude-chain266b-20260923/run/probe/n-v-dialogs.json
+artifacts/claude-chain266b-20260923/run/probe/n-v-dialogs.txt
+artifacts/claude-chain266b-20260923/run/probe/n-v-supp.json
+artifacts/claude-chain266b-20260923/run/probe/n-v-supp.txt
+artifacts/claude-chain266b-20260923/run/probe266b-probes-supp.log
+artifacts/claude-chain266b-20260923/run/probe266b-probes.log
+artifacts/claude-chain266b-20260923/run/probe266b-supp.json
+artifacts/claude-chain266b-20260923/run/probe266b.json
+artifacts/claude-chain266b-20260923/run/rt143nogate-n.json
+artifacts/claude-chain266b-20260923/run/rt143nogate.log
+artifacts/claude-chain266b-20260923/run/score.txt
+artifacts/claude-chain266b-20260923/run/score266b.json
+artifacts/claude-chain266b-20260923/run/sd.log
+artifacts/claude-chain266b-20260923/run/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-chain266b-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-chain266b-20260923/run/sd/bench-diff.json
+artifacts/claude-chain266b-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-chain266b-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-chain266b-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123-diff.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-report.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-rows-fable_edit_200.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/daemon.log.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/notebook/events.fix77.seal.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/notebook/events.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/receipts.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/state.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/daemon.log.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/notebook/events.fix77.seal.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/notebook/events.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/receipts.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/state.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/daemon.log.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/done/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/done/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/done/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/notebook/events.fix77.seal.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/notebook/events.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/outbox/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/outbox/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/outbox/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/receipts.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-02/state.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/daemon.log.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/done/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/done/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/done/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/notebook/events.fix77.seal.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/notebook/events.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/outbox/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/outbox/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/outbox/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/receipts.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-03/state.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/daemon.log.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/done/t001.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/done/t002.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/done/t003.txt
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/notebook/events.fix77.seal.json
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/notebook/events.jsonl
+artifacts/claude-chain266b-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-04/outbox/t001.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "^scripts/claude_(loop291|fix291|291_|loop266b|fix266b|fix266_chainlift|loop266_|loop268b|fix268_|loop293|fix293_)" | head -n 40
+echo "---artifacts top---"
+git ls-tree -r --name-only origin/builder-outbox | grep -E "^artifacts/claude-(join291|chain266b|chain266|nhop268b|yesno293|chainpanel266b|nhoppanel268b|yesnopanel293|corrpanel291|mixpanel292)-" | grep -v "/run/" | head -n 60
+scripts/claude_291_m1.py
+scripts/claude_291_m7run.py
+scripts/claude_291_m8.sh
+scripts/claude_291_panel.sh
+scripts/claude_291_runall.sh
+scripts/claude_291_score.py
+scripts/claude_fix266_chainlift.py
+scripts/claude_fix266b_detector.py
+scripts/claude_fix268_nhopdir.py
+scripts/claude_fix291_glue.py
+scripts/claude_fix293_yesno.py
+scripts/claude_loop266_agent.py
+scripts/claude_loop266b_agent.py
+scripts/claude_loop268b_agent.py
+scripts/claude_loop291_agent.py
+scripts/claude_loop293_agent.py
+---artifacts top---
+artifacts/claude-chain266-20260923/PASSMARKS.md
+artifacts/claude-chain266-20260923/RESULTS.md
+artifacts/claude-chain266-20260923/SEAL.sha256.txt
+artifacts/claude-chain266-20260923/dev_dialogs.json
+artifacts/claude-chain266-20260923/loop266-config.json
+artifacts/claude-chain266-20260923/predicted_moves266.json
+artifacts/claude-chain266b-20260923/PASSMARKS.md
+artifacts/claude-chain266b-20260923/RESULTS.md
+artifacts/claude-chain266b-20260923/SEAL.sha256.txt
+artifacts/claude-chain266b-20260923/dev_dialogs.json
+artifacts/claude-chain266b-20260923/loop266b-config.json
+artifacts/claude-chain266b-20260923/predicted_moves266b.json
+artifacts/claude-chainpanel266b-20260923/README.md
+artifacts/claude-chainpanel266b-20260923/SEAL.sha256.txt
+artifacts/claude-chainpanel266b-20260923/base266.jsonl
+artifacts/claude-chainpanel266b-20260923/make_panel.py
+artifacts/claude-chainpanel266b-20260923/panel.jsonl
+artifacts/claude-chainpanel266b-20260923/run_base.py
+artifacts/claude-chainpanel266b-20260923/score_panel.py
+artifacts/claude-corrpanel291-20260923/README.md
+artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt
+artifacts/claude-corrpanel291-20260923/base138nb.jsonl
+artifacts/claude-corrpanel291-20260923/make_panel.py
+artifacts/claude-corrpanel291-20260923/panel.jsonl
+artifacts/claude-corrpanel291-20260923/run_base.py
+artifacts/claude-corrpanel291-20260923/score_panel.py
+artifacts/claude-join291-20260923/PASSMARKS.md
+artifacts/claude-join291-20260923/RESULTS.md
+artifacts/claude-join291-20260923/SEAL.sha256.txt
+artifacts/claude-join291-20260923/loop291-config.json
+artifacts/claude-join291-20260923/m7-check.json
+artifacts/claude-join291-20260923/m8-check.json
+artifacts/claude-join291-20260923/predicted_moves291.json
+artifacts/claude-nhop268b-20260923/PASSMARKS.md
+artifacts/claude-nhop268b-20260923/RESULTS.md
+artifacts/claude-nhop268b-20260923/SEAL.sha256.txt
+artifacts/claude-nhop268b-20260923/dev/dev-138nb.json
+artifacts/claude-nhop268b-20260923/dev/dev-138nb.log
+artifacts/claude-nhop268b-20260923/dev/dev-268b.json
+artifacts/claude-nhop268b-20260923/dev/dev-268b.log
+artifacts/claude-nhop268b-20260923/dev/dialogs268b.json
+artifacts/claude-nhop268b-20260923/loop268b-config.json
+artifacts/claude-nhop268b-20260923/pilot/lat-b-1.json
+artifacts/claude-nhop268b-20260923/pilot/lat-b-1.log
+artifacts/claude-nhop268b-20260923/pilot/lat-n-1.json
+artifacts/claude-nhop268b-20260923/pilot/lat-n-1.log
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-p3-dialogs.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-p3c-restart2.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-p3d-ghost.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-v-dialogs.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-v-supp.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-v138m-probes-dialogs.json
+artifacts/claude-nhop268b-20260923/pilot/probe-268b-v138m-probes-supp-dialogs.json
+artifacts/claude-nhop268b-20260923/pilot/probe-p3-dialogs.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-p3c-restart2.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-p3d-ghost.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-v-dialogs.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-v-supp.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-v138m-probes-dialogs.txt
+artifacts/claude-nhop268b-20260923/pilot/probe-v138m-probes-supp-dialogs.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "yesno293|nhoppanel|yesnopanel|mixpanel" | grep -v "/run/" | head -n 40
+echo "---266b scripts---"
+git ls-tree -r --name-only origin/builder-outbox | grep -E "claude_266b_|claude_266_|claude_268|claude_293|claude_loop266" | head -n 40
+artifacts/claude-nhoppanel268-20260923/README.md
+artifacts/claude-nhoppanel268-20260923/SEAL.sha256.txt
+artifacts/claude-nhoppanel268-20260923/base138m.jsonl
+artifacts/claude-nhoppanel268-20260923/make_panel.py
+artifacts/claude-nhoppanel268-20260923/panel.jsonl
+artifacts/claude-nhoppanel268-20260923/run_base.py
+artifacts/claude-nhoppanel268-20260923/score138m.json
+artifacts/claude-nhoppanel268-20260923/score_panel.py
+artifacts/claude-nhoppanel268b-20260923/README.md
+artifacts/claude-nhoppanel268b-20260923/SEAL.sha256.txt
+artifacts/claude-nhoppanel268b-20260923/base138nb.jsonl
+artifacts/claude-nhoppanel268b-20260923/make_panel.py
+artifacts/claude-nhoppanel268b-20260923/panel.jsonl
+artifacts/claude-nhoppanel268b-20260923/run_base.py
+artifacts/claude-nhoppanel268b-20260923/score_panel.py
+artifacts/claude-yesno293-20260923/PASSMARKS.md
+artifacts/claude-yesno293-20260923/RESULTS.md
+artifacts/claude-yesno293-20260923/SEAL.sha256.txt
+artifacts/claude-yesno293-20260923/loop293-config.json
+artifacts/claude-yesno293-20260923/predicted_moves293.json
+artifacts/claude-yesno293-20260923/run.log
+artifacts/claude-yesnopanel293-20260923/README.md
+artifacts/claude-yesnopanel293-20260923/SEAL.sha256.txt
+artifacts/claude-yesnopanel293-20260923/base138nb.jsonl
+artifacts/claude-yesnopanel293-20260923/make_panel.py
+artifacts/claude-yesnopanel293-20260923/panel.jsonl
+artifacts/claude-yesnopanel293-20260923/run_base.py
+artifacts/claude-yesnopanel293-20260923/score_panel.py
+---266b scripts---
+scripts/claude_266_devscore.py
+scripts/claude_266_panelrun.py
+scripts/claude_266_runall.sh
+scripts/claude_266_score.py
+scripts/claude_266b_devscore.py
+scripts/claude_266b_panelrun.py
+scripts/claude_266b_runall.sh
+scripts/claude_266b_score.py
+scripts/claude_268_devrepro.py
+scripts/claude_268_panelrun.py
+scripts/claude_268_runall.sh
+scripts/claude_268_score.py
+scripts/claude_268_supp.py
+scripts/claude_268b_devrepro.py
+scripts/claude_268b_m1run.py
+scripts/claude_268b_newdev.py
+scripts/claude_268b_panelrun.py
+scripts/claude_268b_runall.sh
+scripts/claude_268b_score.py
+scripts/claude_268b_score_fix1.py
+scripts/claude_293_devdialogs.py
+scripts/claude_293_panelscore.py
+scripts/claude_293_reg.py
+scripts/claude_293_repro.py
+scripts/claude_293_rowstrip.py
+scripts/claude_293_runall.sh
+scripts/claude_293_runall2.sh
+scripts/claude_loop266_agent.py
+scripts/claude_loop266b_agent.py
+[0m
+[0m$ [0mfor f in scripts/claude_loop291_agent.py scripts/claude_fix291_glue.py scripts/claude_loop266b_agent.py scripts/claude_fix266b_detector.py scripts/claude_fix266_chainlift.py scripts/claude_loop266_agent.py scripts/claude_fix268_nhopdir.py scripts/claude_loop268b_agent.py scripts/claude_fix293_yesno.py scripts/claude_loop293_agent.py; do if [ -e "$f" ]; then echo "EXISTS $f"; else echo "MISSING $f"; fi; done
+echo "---artifacts---"
+for d in artifacts/claude-join291-20260923 artifacts/claude-chain266b-20260923 artifacts/claude-chain266-20260923 artifacts/claude-nhop268b-20260923 artifacts/claude-yesno293-20260923 artifacts/claude-chainpanel266b-20260923 artifacts/claude-nhoppanel268b-20260923 artifacts/claude-yesnopanel293-20260923 artifacts/claude-corrpanel291-20260923; do if [ -e "$d" ]; then echo "EXISTS $d"; else echo "MISSING $d"; fi; done
+echo "---scripts 291/266b etc---"
+ls scripts/ | grep -E "claude_(loop291|fix291|291_|loop266b|fix266|loop266|loop268b|fix268|loop293|fix293|266b|268b|293_)" | head -n 40
+EXISTS scripts/claude_loop291_agent.py
+EXISTS scripts/claude_fix291_glue.py
+EXISTS scripts/claude_loop266b_agent.py
+EXISTS scripts/claude_fix266b_detector.py
+EXISTS scripts/claude_fix266_chainlift.py
+EXISTS scripts/claude_loop266_agent.py
+EXISTS scripts/claude_fix268_nhopdir.py
+EXISTS scripts/claude_loop268b_agent.py
+EXISTS scripts/claude_fix293_yesno.py
+EXISTS scripts/claude_loop293_agent.py
+---artifacts---
+EXISTS artifacts/claude-join291-20260923
+EXISTS artifacts/claude-chain266b-20260923
+EXISTS artifacts/claude-chain266-20260923
+EXISTS artifacts/claude-nhop268b-20260923
+EXISTS artifacts/claude-yesno293-20260923
+EXISTS artifacts/claude-chainpanel266b-20260923
+EXISTS artifacts/claude-nhoppanel268b-20260923
+EXISTS artifacts/claude-yesnopanel293-20260923
+EXISTS artifacts/claude-corrpanel291-20260923
+---scripts 291/266b etc---
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score_fix1.py
+claude_268b_score.py
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_293_devdialogs.py
+claude_293_panelscore.py
+claude_293_reg.py
+claude_293_repro.py
+claude_293_rowstrip.py
+claude_293_runall.sh
+claude_293_runall2.sh
+claude_fix266_chainlift.py
+claude_fix266b_detector.py
+claude_fix268_nhopdir.py
+claude_fix291_glue.py
+claude_fix293_yesno.py
+claude_loop266_agent.py
+claude_loop266b_agent.py
+claude_loop268b_agent.py
+claude_loop291_agent.py
+claude_loop293_agent.py
+[0m
+[0m$ [0mfor f in scripts/claude_loop291_agent.py scripts/claude_fix291_glue.py scripts/claude_loop266b_agent.py scripts/claude_fix266b_detector.py scripts/claude_fix266_chainlift.py scripts/claude_loop266_agent.py scripts/claude_fix268_nhopdir.py scripts/claude_loop268b_agent.py scripts/claude_fix293_yesno.py scripts/claude_loop293_agent.py; do
+  if git diff --quiet origin/builder-outbox -- "$f" 2>/dev/null; then echo "SAME-OUTBOX $f"; else echo "DIFF-OUTBOX $f"; fi
+done
+git status --short scripts/claude_loop291_agent.py scripts/claude_fix291_glue.py scripts/claude_loop266b_agent.py 2>&1 | head
+DIFF-OUTBOX scripts/claude_loop291_agent.py
+DIFF-OUTBOX scripts/claude_fix291_glue.py
+DIFF-OUTBOX scripts/claude_loop266b_agent.py
+DIFF-OUTBOX scripts/claude_fix266b_detector.py
+DIFF-OUTBOX scripts/claude_fix266_chainlift.py
+DIFF-OUTBOX scripts/claude_loop266_agent.py
+DIFF-OUTBOX scripts/claude_fix268_nhopdir.py
+SAME-OUTBOX scripts/claude_loop268b_agent.py
+SAME-OUTBOX scripts/claude_fix293_yesno.py
+SAME-OUTBOX scripts/claude_loop293_agent.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop291_agent.py
+[0m
+[0m$ [0mfor f in scripts/claude_loop291_agent.py scripts/claude_fix291_glue.py scripts/claude_loop266b_agent.py scripts/claude_fix266b_detector.py scripts/claude_fix266_chainlift.py scripts/claude_loop266_agent.py scripts/claude_fix268_nhopdir.py scripts/claude_loop268b_agent.py scripts/claude_fix293_yesno.py scripts/claude_loop293_agent.py; do
+  local_sum=$(shasum -a 256 "$f" | cut -d" " -f1)
+  outbox_sum=$(git show origin/builder-outbox:"$f" | shasum -a 256 | cut -d" " -f1)
+  if [ "$local_sum" = "$outbox_sum" ]; then echo "SAME $f"; else echo "DIFF $f local=$local_sum outbox=$outbox_sum"; fi
+done
+SAME scripts/claude_loop291_agent.py
+SAME scripts/claude_fix291_glue.py
+SAME scripts/claude_loop266b_agent.py
+SAME scripts/claude_fix266b_detector.py
+SAME scripts/claude_fix266_chainlift.py
+SAME scripts/claude_loop266_agent.py
+SAME scripts/claude_fix268_nhopdir.py
+SAME scripts/claude_loop268b_agent.py
+SAME scripts/claude_fix293_yesno.py
+SAME scripts/claude_loop293_agent.py
+[0m
+[0m# [0mTodos
+[•] Read piece sources (291, 266b, 268b, 293 agents + glue + configs) and their imports
+[ ] Phase 1 interaction analysis -> design note 292-merge-muse.md
+[ ] Build loop292 agent + config + drivers (new files only)
+[ ] Pilots + PASSMARKS.md + seal + ledger append
+[ ] Registered M1-M4 (fidelity first, same runner+scorer)
+[ ] Wait for mixpanel292 SEAL, run M5 once on 5 arms
+[ ] RESULTS.md + final reply
+[0m
+[0m→ [0mRead scripts/claude_loop291_agent.py
+[0m→ [0mRead scripts/claude_fix291_glue.py
+[0m→ [0mRead scripts/claude_loop266b_agent.py
+[0m→ [0mRead scripts/claude_fix266b_detector.py
+[0m→ [0mRead scripts/claude_fix266_chainlift.py[90m [limit=120][0m
+[0m→ [0mRead scripts/claude_fix268_nhopdir.py[90m [limit=120][0m
+[0m→ [0mRead scripts/claude_loop268b_agent.py
+[0m→ [0mRead scripts/claude_loop293_agent.py
+[0m→ [0mRead scripts/claude_fix293_yesno.py[90m [limit=150][0m
+[0m
+[0m$ [0mls artifacts/claude-join291-20260923/ artifacts/claude-chain266b-20260923/ artifacts/claude-nhop268b-20260923/ artifacts/claude-yesno293-20260923/ 2>&1 | head -n 60
+echo "---"
+ls design/v3/30-modes/ | grep -E "291-join-muse|266b|268b|293" | head
+artifacts/claude-chain266b-20260923/:
+dev_dialogs.json
+loop266b-config.json
+PASSMARKS.md
+predicted_moves266b.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-join291-20260923/:
+loop291-config.json
+m7-check.json
+m8-check.json
+PASSMARKS.md
+predicted_moves291.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-nhop268b-20260923/:
+dev
+loop268b-config.json
+PASSMARKS.md
+pilot
+predicted_moves268b.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-yesno293-20260923/:
+loop293-config.json
+PASSMARKS.md
+predicted_moves293.json
+RESULTS.md
+run
+run.log
+SEAL.sha256.txt
+---
+291-join-muse.md
+[0m
+[0m→ [0mRead design/v3/30-modes/291-join-muse.md
+[0m
+[0m$ [0mcat artifacts/claude-yesno293-20260923/PASSMARKS.md 2>/dev/null | head -n 120
+echo "=====291 PASSMARKS head====="
+head -n 80 artifacts/claude-join291-20260923/PASSMARKS.md
+# Exp 293: yes/no reader — pass marks (registered before the seal)
+
+**Agent:** `scripts/claude_loop293_agent.py` with
+`artifacts/claude-yesno293-20260923/loop293-config.json`.
+
+**Base:** 138nb (`scripts/claude_loop138nb_agent.py`,
+`artifacts/claude-merge138nb-20260923/loop138nb-config.json`).
+
+**The one change** (design: `design/v3/30-modes/293-yesno-questions.md`):
+one loop-level reader in the 154d slot,
+`scripts/claude_fix293_yesno.py` (`YesNo293Mixin`, outermost over 138nb's
+`Loop138nbAgentLoop`; 154d imported read-only). On the didn't-understand
+miss clarify it answers read-only from the notebook: `Does A have a/an
+R?`, `Has A got a/an R?` (article-free variants too), `Does A live in
+V?` (city), `Does A work at/for V?` (employer), `Does A come from V?` /
+`Was A born in V?` (birthplace), and `Is` with multi-word names plus
+of-forms. Yes on value match; No only on single-valued keys
+(`SINGLE_VALUED_293` = 154d's set + employer/birthplace/dentist/doctor/
+coach) with a different stored value; otherwise honest `I don't know`
+(naming what is stored). 154d's own shapes keep 154d's byte-identical
+replies and `loop154d-yesno` stage tags. Chain subjects (`'s` in the
+subject span), ambiguous owners, `or`/`and` questions, `Is it true
+that...`, lowercase subjects and statements pass through unchanged.
+`SrcGuardMixin228` stays first in the daemon MRO;
+`install_srcguard228()` runs at import.
+
+**Reproduction (step 1, before the build):** 111 dev dialogs
+(`scripts/claude_293_devdialogs.py`: DIAG's 61 ids + 50 new in own
+wording — every shape, multi-word names, taken-back and corrected
+facts, multi-valued relations, chain pass-throughs, statements, wh
+controls) on 138nb (`scripts/claude_293_repro.py`): 72
+didn't-understand (32 taught-true + 9 taught-false + 16 unknown + 15
+taken-back), 15 answered (11 yes/no + NTTIK + nhop), 0 writes.
+Post-build pilot on the same dialogs: exactly the 72 predicted moves
+(Q2 → Yes / No / honest IDK), 7 Q2 left (5 chain + inverted-wh boundary
++ lowercase subject, all predicted pass-through), 154d's 11 + all
+controls byte-identical, 0 writes. Open-ruling note: work/from asked
+while only city is stored moves Q2 → honest `I don't know Rin's
+employer/birthplace` (4 dev ids: dw-sameval, dw-2word, df-sameval,
+df-2word) — an improvement, predicted.
+
+**Drivers (M2–M5):** `scripts/claude_293_runall.sh <run_dir>` (one step
+at a time; `uptime` + `df -g` before each step, waits while 1-min load
+is above 60). M1: `scripts/claude_293_reg.py` (arm runner, panel-spec
+row contract) + `scripts/claude_293_panelscore.py` (sealed
+`score_panel.py` per arm + control/write/stage cross-check, ids and
+counts only).
+
+**Predicted moves:** `artifacts/claude-yesno293-20260923/predicted_moves293.json`,
+built from the full pilot before the seal. Dev: every moved id with its
+exact predicted reply and stage; M2–M5 as below. No blind panel was
+opened for building or predicting (only the panel SPEC was read).
+
+## Marks (exactly those in the design note)
+
+The verdict is PASS only if M1–M5 all pass. Every figure below is shown
+next to 138nb's number.
+
+### M1: yesnopanel293 (fresh blind panel, 85 items; TEST-ONLY, once per arm, after the seal)
+
+- Run `scripts/claude_293_reg.py` on 138nb and 293, then the panel's own
+  sealed `score_panel.py` on each arm's rows, then
+  `scripts/claude_293_panelscore.py` (cross-check).
+- **Bars on 293:** yes/no families together ≥ 90% right (138nb: 11/51 on
+  dev; panel base value read from `base138nb.jsonl` at run time);
+  **0 wrong** (never Yes when the value is not stored, never No when it
+  is); taken_back: 0 Yes; 0 question writes; is_single_control,
+  wh_control and statement_control byte-identical to 138nb (reply and
+  stores).
+- **Predicted:** every have/live/work/born/is_of/is_multiword yes-item →
+  Yes naming the stored value; every no-item over a single-valued key →
+  No naming the stored value; every unknown/taken-back-denied item →
+  honest IDK; multi-valued mismatches → `Not that I know of` (never
+  No); chain-shaped items (if any) stay Q2; all 23 control items
+  identical to the base rows. Blind ids are not predictable; counts and
+  the wrong/write bars are.
+
+### M2: invpanel138nb + chainpanel266b (regression only, 70 + 70 items, once per arm)
+
+- **Bar:** 0 moves (reply, stage, stores, wrote-flag) on both panels.
+- **Predicted:** exactly 0 moves (pilot: 0/70 + 0/70).
+
+### M3: frozen suites vs 138nb's rows
+
+- sessions152 + bench + marks123 via `scripts/fable_suitediff218.py`
+  `--base-dir artifacts/claude-merge138nb-20260923/run/sd`; rt136 vs
+  `artifacts/fable-agent138j-20260922` (field-compared to 138nb's own
+  `run/sd136` rows too); rt143 via `scripts/claude_138l_rt143nogate.py`
+  vs 138nb's `run/rt143nogate-nb.json`.
+- **Bar:** moves exactly the predicted list; 0 new WRONG, WRONG-WRITE,
+  junk write or lost OK.
+- **Predicted (pilot):** sessions152: 0; bench: 0; marks123: exactly 1
+  reply-only move (`rt81-report.json:D_q_vs_s-04`, OK → UNCLEAR:
+  unknown-subject `Is Mira's city Lisbon?` now honestly declines
+  instead of claiming non-comprehension; no write); rt136: 0 field
+  diffs vs 138nb's rows (the 16 138nb-vs-138j moves, incl. 13
+  WRONG-WRITE, are pre-existing and unchanged); rt143nogate: exactly 2
+  (M3 Q2 → `Yes, Norland's capital is Aldport.`; O5 Q2 → `I don't know
+  anyone called Ostmark.`).
+
+### M4: restart and verifier dialogs
+
+- 7 probe files (p3, p3c-restart2, p3d-ghost, 138k v/supp, 138m
+  probes + supp: 146 dialogs) via `scripts/claude_merge138k_probe.py`.
+- **Bar:** 0 ghost answers, 0 write changes, every reply change
+  predicted.
+- **Predicted:** exactly 0 reply/event moves (pilot: 0/146).
+
+### M5: latency
+
+- `scripts/claude_merge138k_latency.py`, alternating arms.
+- **Bar:** median added time ≤ +5 ms per turn.
+- **Predicted:** ≤ +5 ms (pilot medians 2.16 ms base / 2.41 ms new on
+  158 turns: +0.25 ms).
+
+## What would prove it wrong
+
+- A Yes for a fact never taught or taken back (M1 wrong bar).
+- A No on a multi-valued relation.
+- Any write on a question turn.
+=====291 PASSMARKS head=====
+# Merge 291: pass marks (registered before the seal)
+
+**Agent:** `scripts/claude_loop291_agent.py` with
+`artifacts/claude-join291-20260923/loop291-config.json`
+(138nb classes + 252c inner-ears stack + 224/224c + 260 outermost + 291
+glue; install order 138nb → 252 → 259 → glue252c → 258 → 224 → 224c →
+260 → glue291 guards → glue291 turn wrapper).
+
+**Base:** 138nb (`scripts/claude_loop138nb_agent.py`,
+`artifacts/claude-merge138nb-20260923/loop138nb-config.json`, saved rows in
+`artifacts/claude-merge138nb-20260923/run/`; VERIFIED PASS).
+
+**Pieces (same as 138p, on 138nb instead of 138m):**
+- 260 openers (PASS): `scripts/claude_loop260_agent.py`,
+  `artifacts/claude-openers260-20260922/` (built on 138m).
+- 252c corrections (registered FAIL, ruled a merge candidate):
+  `scripts/claude_loop252c_agent.py`,
+  `artifacts/claude-merge252c-20260922/` (built on 138k).
+- 291 glue (new, `scripts/claude_fix291_glue.py`): R1 refusal-rerun (outer
+  turn wrapper) + R2 junk-subject guards (ears-hear and _act, outside
+  260's own guards). See the amendment below.
+
+**Drivers:** `scripts/claude_291_runall.sh` (M1–M6),
+`scripts/claude_291_panel.sh` (M7, regression panels once each),
+`scripts/claude_291_m8.sh` (M8, fresh blind panel once).
+M1 runner `scripts/claude_291_m1.py` (720 cases, arms nb/p/291; reuses
+`claude_138n_l1` semantics read-only); M7 291-arm runner
+`scripts/claude_291_m7run.py` (invpanel + tablepanel221, same procedures
+as the 138nb runners, whose row-format functions are reused read-only);
+scorers `scripts/claude_291_m1.py judge` (M1-720) and
+`scripts/claude_291_score.py` (m1 devs, m2m6, m7, m8). Every scorer runs
+under the uv prefix. Every heavy step checks `uptime` first and waits
+while 1-minute load exceeds 60; free disk must stay above 3 GB.
+
+**Predicted moves:** `artifacts/claude-join291-20260923/predicted_moves291.json`.
+Every move is listed by id with its exact expected 291 record, built from
+pilots run before the seal. The layer order and who wins each overlap are
+in `design/v3/30-modes/291-join-muse.md`.
+
+**Blind:** no blind-panel file was opened. Only each piece's own sealed
+dev/case files are used. M7 move classes are mechanism-predicted (see the
+M7 note); M8 bars are relative (no absolute counts except n = 96 from the
+director spec).
+
+## Pilot amendment 2026-09-23 (before the seal): the 291 glue
+
+The first pilot (pre-glue agent) showed 7 dev260 opener-teach cases where
+291 lost 260's registered behaviour: 6 refusals (229 table-teach parses
+"so Marnie ..." with subject "so Marnie" and refuses with a clarify shape
+260 does not recognise, so 260 never strips) and 1 junk write ("Hi Orrin"
+via 137, which 260 never overrides). Two broader fixes were tried and
+REJECTED by the pilot: (a) skipping 229 on opener-led turns broke 252's
+correction logic (b252-026, d258-016/020) and 229's title saves; (b) a
+comma-blind junk guard mangled titles ("Hey Jude" → "Jude").
+The sealed glue does only this (all verified on pilots, zero collateral
+on the 720 dev/case set vs the pre-glue agent):
+- R1: the outermost turn wrapper re-runs the stripped rest only when the
+  head returns exactly 229's no-save clarify on a statement turn with a
+  listed opener and no denial marker (not/n't/never); the rest wins only
+  when it wrote or is not itself a clarify. Titles (229 saves), questions
+  and denials/corrections are untouched.
+- R2: teach/correct actions with opener-led subjects clarify only on
+  plain active-verb turns with no apostrophe, no denial marker and no
+  passive-agent shape (was/were ... by) -- exactly the shapes 138m
+  clarifies (probed on 138m: verb+opener clarifies, possessive/passive
+  titles save whole). 260 then strips and re-runs the rest.
+Post-glue pilot: dev260 109/109 identical to own (was 102/109); the 720
+set shows no glue footprint beyond the 14 piece-interaction rows below.
+
+## Marks
+
+The verdict is PASS only if all eight marks pass.
+
+### M1: each piece's own sealed dev/case files (arms own, 138p, 291)
+
+- **138nb files, 720 cases** (`claude_291_m1.py`, 138n driver semantics):
+  221: 31; 221b: 72; 221c: 60; 229: 77; 237: 34; 232c dev: 103; 232c
+  parity: 315; 236: 28. Arms 138nb (own), 138p, 291.
+  Bars: (1) the 138nb re-run reproduces 138nb's registered rows on all
+  720 (rec compare); (2) every case where 291 differs from 138p is
+[0m
+[0m$ [0mcat artifacts/claude-chain266b-20260923/PASSMARKS.md | head -n 60
+echo "=====268b PASS====="
+head -n 60 artifacts/claude-nhop268b-20260923/PASSMARKS.md
+echo "=====ledger tail====="
+tail -n 20 artifacts/fable-predictions-ledger.md
+# Exp 266b multi-word chain-subject lift: pass marks (registered before the seal)
+
+**Agent:** `scripts/claude_loop266b_agent.py` with
+`artifacts/claude-chain266b-20260923/loop266b-config.json`.
+
+**Base:** 266 (`scripts/claude_loop266_agent.py`,
+`artifacts/claude-chain266-20260923/loop266-config.json`, and its saved
+rows in `artifacts/claude-chain266-20260923/run/`), itself 138m plus the
+chain-subject lift. 266's files are copied unchanged from
+origin/builder-outbox and imported read-only; nothing in them is edited.
+
+**The one change:** `scripts/claude_fix266b_detector.py`
+(ChainLift266bMixin, a subclass of 266's lift, outermost ears stage;
+questions only, never writes). The chain's first link may be a name of
+one to three capitalised words, matched against names the notebook
+holds, longest first: a one-word base or my-form takes exactly 266's
+path (delegated); a two/three-word base lifts only when the exact base
+is a known notebook name, else passes through with no fallback to a
+shorter sub-span. Spec:
+`design/v3/30-modes/266b-multiword-chain-base.md`.
+
+**Driver:** `scripts/claude_266b_runall.sh artifacts/claude-chain266b-20260923/run`.
+- It runs every step one at a time.
+- It checks `uptime` before each step and waits while the 1-minute load
+  is above 60.
+
+**Scorers:** `scripts/claude_266b_score.py` (frozen suites, probes,
+latency; sealed) and `scripts/claude_266b_devscore.py` (49 dev dialogs,
+sealed; pilot only). M1 is scored by the blind panel's own sealed
+`score_panel.py`; M2 (chainpanel266 regression) by that panel's own
+sealed `score_panel.py`.
+
+**Predicted moves:** `artifacts/claude-chain266b-20260923/predicted_moves266b.json`.
+- Every frozen-suite/probe move is listed by id, built from a pilot
+  (`--predict` on a pilot run dir) before the seal and reviewed by
+  hand: 0 moves in sessions152/bench/marks123, rt136 labels exactly
+  266's sealed set (13 inherited 222 WRONG-WRITE C019-C031 plus the
+  reply-only C076, C079), direct rt136 rows vs 266 [], rt143 no-gate
+  none, probe reply changes none.
+- The layer order and why the lift cannot write are explained in the
+  module docstrings (`claude_fix266b_detector.py`,
+  `claude_loop266b_agent.py`).
+
+**Blind:** neither panel file was opened. chainpanel266 was never read
+at item level here (regression only). Only the 49 own dev dialogs
+(`artifacts/claude-chain266b-20260923/dev_dialogs.json`, fictional
+names, own wording) were used.
+
+## Marks
+
+The verdict is PASS only if all four marks pass.
+
+### M1: blind panel chainpanel266b (run once after both seals)
+
+- Run the sealed panel ONCE on each arm (266 and 266b) with its sealed
+  `score_panel.py`.
+- Bars (266's number shown next to every figure in RESULTS):
+  - multiword_chain >= 22/24;
+  - three_link >= 7/8;
+  - oneword_chain: no item right on 266 is not right on 266b;
+=====268b PASS=====
+# Exp 268b: n-hop direction guard on 138nb — pass marks (registered before the seal)
+
+**Agent:** `scripts/claude_loop268b_agent.py` with
+`artifacts/claude-nhop268b-20260923/loop268b-config.json`.
+
+**Base:** 138nb (`scripts/claude_loop138nb_agent.py`,
+`artifacts/claude-merge138nb-20260923/loop138nb-config.json`, saved rows
+in `artifacts/claude-merge138nb-20260923/run/`).
+
+**The one change:** `scripts/claude_fix268_nhopdir.py`, used UNCHANGED
+(byte-identical to builder-outbox; hash in the seal): question-side
+direction guard around `compose_n_hop`, installed process-locally by
+rebinding the module global (the way 138nb installs its own overrides;
+no existing file edited). Full spec in
+`design/v3/30-modes/268-nhop-direction-guard.md`; why 268 failed and why
+the base is 138nb in
+`design/v3/30-modes/268b-nhop-guard-on-138nb.md`.
+
+**Loop:** `Loop268bAgentLoop(SrcGuardMixin228, Loop138nbAgentLoop)` —
+SrcGuardMixin228 first, the 138nb stack (including the 190
+"(worked out backwards)" label) unchanged below it.
+
+**Driver:** `scripts/claude_268b_runall.sh artifacts/claude-nhop268b-20260923/run`
+(one suite at a time; `uptime` + `df` checked before each step, waits
+while 1-min load > 60). **Scorer:** `scripts/claude_268b_score.py`.
+
+**Dev material (never any blind panel):** 268's 70 dev dialogs
+(dev36+own34) + 7 supplemental founder dialogs (definitions imported
+read-only from `scripts/claude_268_devrepro.py` /
+`scripts/claude_268_supp.py`), re-run here on 138nb and 268b, + 46 own
+new dialogs for 138nb's table reader shapes
+(`scripts/claude_268b_newdev.py`, definitions sealed in
+`artifacts/claude-nhop268b-20260923/dev/dialogs268b.json`). Fictional
+names throughout. `nhoppanel268` was never dev material (regression
+only, never read). `nhoppanel268b` was never opened, printed, or tuned
+on. M1 numbers below are predictions by shape from dev evidence, with
+138nb's number beside every figure after the run.
+
+**Predicted moves:** `artifacts/claude-nhop268b-20260923/predicted_moves268b.json`
+(every move by id with exact 268b stage+reply, built from pre-seal
+pilots: 123 dialogs × 2 arms in separate processes).
+
+**Pilots (pre-seal, this dir `pilot/`):** DEV 46/46 exact moves, 0 teach
+changes; suites sessions152/bench/marks123 0 moves GATE clean; rt136
+exactly the 16 inherited labels, 0 new WRONG, direct rows []; rt143 0
+moves; 7/7 probe files rows equal; latency pilot (1 rep each, n=104)
++0.068 ms.
+
+## Marks
+
+PASS only if all four marks pass.
+
+### M1: blind panel nhoppanel268b (run once per arm with the panel's sealed score_panel.py, after its SEAL appears)
+
+Predicted 268b behaviour by shape (dev evidence: all 46 reverse-shaped
+chained dev questions stopped answering forward facts; 315/361 other
+turns byte-identical, 0 teach/triple changes):
+
+- Whose-spouse / who-has-as-spouse shapes → 190 gold "S's spouse is V."
+  + " (worked out backwards)" (dev 8/8).
+=====ledger tail=====
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude-own-o0a3-20260923; 5886 one-change WRONG readings from 553 ACD + 190 no-save gold facts of the o0a/o0a2 dev sets, judged v0/v1/learned-licensed with WE never saved) P1 m1 clean-through >=95% all rules; P2 m2 same; P3 m3 same; P4 m4 clean-through >=90% all rules; P5 m5 clean-blocked 100% v0+v1, clean-through 100% licensed; P6a me2we clean-blocked 100% all; P6b name2me clean-through >=95% all; P6c we2me clean base empty, raw through >=70% each; P7 m7 clean-through >=90% all; P8 m8 empty(55)/OTHER-valued(1)/WE-valued(9) blocked 100% all, rest(125) licensed 100%, v1 75-95%, v0 40-65%, ordered lic>=v1>=v0.
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permission audit, one registered CPU run, 5886 wrong readings, seals 2/2 OK post-run, summary byte-identical to pilot, no post-seal change) Pown0a3.1 10/10 HIT: m1/m2/m3 clean-through 100% all rules; m4 100% (n 109-132); m5 clean-blocked 100% v0+v1, clean-through 100% licensed; m6 me2we blocked 100% all, name2me 100% through all, we2me raw 75/95/100% (clean base empty by construction); m7 100% all 9 sub-cells; m8 structural 65/65 blocked everywhere, rest lic 100% / v1 87.2% / v0 52.0%. Pown0a3.2 PASS 0 crashes. Pown0a3.3 PASS table complete 11x3. Clean through-share (wrong on savable truths): v0 68.1%, v1 68.1%, licensed 96.7%. Only cue absence (m5, v0/v1), WE owner, and mode/empty/OTHER stop a wrong reading; all else needs the reader or an independent checker. See artifacts/claude-own-o0a3-20260923/RESULTS.md.
+[0m
+[0m→ [0mRead scripts/claude_fix293_yesno.py[90m [offset=280, limit=165][0m
+[0m
+[0m$ [0mgrep -n "def install_correct252\|def install_merge252c\|def install_openers260\|def install_decline224\|def install_q1honest224c\|def install_screen252b\|def install_nhopdir268\|def is_installed" scripts/claude_fix252_correct.py scripts/claude_fix252c_merge.py scripts/claude_fix260_openers.py scripts/fable_loop224_agent.py scripts/claude_loop224c_agent.py scripts/claude_fix268_nhopdir.py 2>&1 | head -n 20
+scripts/claude_fix252_correct.py:732:def install_correct252(loop) -> None:
+scripts/claude_fix252c_merge.py:157:def install_merge252c(loop) -> None:
+scripts/claude_fix260_openers.py:339:def install_openers260(loop):
+scripts/fable_loop224_agent.py:84:def install_decline224(loop) -> None:
+scripts/claude_loop224c_agent.py:230:def install_q1honest224c(loop) -> None:
+scripts/claude_fix268_nhopdir.py:145:def install_nhopdir268() -> None:
+scripts/claude_fix268_nhopdir.py:154:def is_installed() -> bool:
+[0m
+[0m$ [0msed -n '720,780p' scripts/claude_fix252_correct.py
+echo "=====merge252c install====="
+sed -n '150,200p' scripts/claude_fix252c_merge.py
+echo "=====openers install head====="
+sed -n '339,400p' scripts/claude_fix260_openers.py
+rest = M154.current_values154b(nb, eid, key)
+                text = f"OK, I removed {val} as {subj}'s {_rel_surface(key)}"
+                if rest:
+                    text += f", and I still have {M154.join_and154b(rest)}."
+                else:
+                    text += "."
+                rec = dict(rec)
+                rec["text"] = text
+            return rec
+        return super()._act(action)  # type: ignore[misc]
+
+
+def install_correct252(loop) -> None:
+    """Class-swap the loop and its inner ears (idempotent)."""
+    if not isinstance(loop, Correct252LoopMixin):
+        cls = loop.__class__
+        loop.__class__ = type(f"Correct252_{cls.__name__}",
+                              (Correct252LoopMixin, cls), {})
+        loop._prev252 = None
+    inner = getattr(loop, "_inner138j_ears", None)
+    if inner is None:
+        ears = getattr(loop, "ears", None)
+        inner = getattr(ears, "inner", None) or ears
+    if inner is not None and not isinstance(inner, Correct252EarsMixin):
+        cls = inner.__class__
+        inner.__class__ = type(f"Correct252_{cls.__name__}",
+                               (Correct252EarsMixin, cls), {})
+    if inner is not None:
+        inner._loop252 = loop
+    notes = getattr(loop, "notes", None)
+    if isinstance(notes, list) and not any("fix252" in n for n in notes):
+        notes.append("fix252: Correct252EarsMixin outermost on inner ears + "
+                     "Correct252LoopMixin on the loop")
+=====merge252c install=====
+        if F259.word_prefix259(hd, values) is not None:
+            return self._ask252(  # type: ignore[attr-defined]
+                F259.unstored_reply259(subj, F252._rel_surface(key), hd,
+                                       values), "unstored")
+        return None
+
+
+def install_merge252c(loop) -> None:
+    """259 first, then this glue, then 258 outermost (class swaps)."""
+    F259.install_boundary259(loop)
+    inner = getattr(loop, "_inner138j_ears", None)
+    if inner is None:
+        ears = getattr(loop, "ears", None)
+        inner = getattr(ears, "inner", None) or ears
+    if inner is None or not isinstance(inner, F259.Boundary259EarsMixin):
+        raise RuntimeError("install_merge252c needs 259's mixin first")
+    if isinstance(inner, F258.Comment258EarsMixin) and not isinstance(
+            inner, Merge252cEarsMixin):
+        raise RuntimeError("258 installed before the 252c glue")
+    if not isinstance(inner, Merge252cEarsMixin):
+        cls = inner.__class__
+        inner.__class__ = type(f"Merge252c_{cls.__name__}",
+                               (Merge252cEarsMixin, cls), {})
+    F258.install_comment258(loop)
+    notes = getattr(loop, "notes", None)
+    if isinstance(notes, list) and not any("fix252c" in n for n in notes):
+        notes.append("fix252c: Comment258 > Merge252c > Boundary259 > "
+                     "Correct252 on inner ears (258's cut = 259 boundary "
+                     "on the 154f route)")
+=====openers install head=====
+def install_openers260(loop):
+    """Install the 260 layer on a built 138m loop (outermost, instance)."""
+    inner_turn = loop.turn            # turn224c(turn224(class turn))
+    loop.turn260_inner = inner_turn
+    loop.openers260_log = []
+    state = {"question_rest": False, "prefix": None}
+
+    # write guard at the inner ears (the head then gives its own reply)
+    ears = getattr(loop, "_inner138j_ears", None)
+    if ears is not None:
+        ears_hear = ears.hear
+
+        def hear260(turn, _h=ears_hear):
+            acts = _h(turn)
+            if isinstance(acts, list) and any(
+                    _junk_action(a, state["prefix"]) for a in acts):
+                loop.openers260_log.append({"guard": "ears", "turn": turn})
+                return [dict(CLARIFY_ACTION260)]
+            return acts
+
+        ears.hear = hear260
+
+    # write guard at _act (braces), plus the question-rest write block
+    class_act = loop._act
+
+    def act260(action, _a=class_act):
+        if _junk_action(action, state["prefix"]) or (
+                state["question_rest"] and isinstance(action, dict)
+                and action.get("act") not in QUESTION_OK_ACTS260):
+            loop.openers260_log.append({"guard": "act",
+                                        "act": action.get("act")})
+            loop.counters["clarifications"] += 1
+            return {"kind": "clarify", "text": CLARIFY_ACTION260["text"]}
+        return _a(action)
+
+    loop._act = act260
+
+    def run_rest(rest, is_q):
+        state["question_rest"] = is_q
+        try:
+            return inner_turn(rest)
+        finally:
+            state["question_rest"] = False
+
+    def turn260(text: str) -> list[str]:
+        t = str(text)
+        if is_bare_greeting260(t):
+            s0 = snapshot260(loop)
+            r0 = inner_turn(t)
+            if list(r0) == greeting_reply():
+                return r0
+            restore260(s0)
+            loop.openers260_log.append({"bare": t})
+            return inner_turn("Hello.")
+        sp = split_openers260(t)
+        if sp is None:
+            return inner_turn(t)
+        rest, punct, first_op, mode = sp
+        rest = recase_rest260(rest)
+        is_q = t.rstrip().endswith("?")
+        # 1. the original turn, as the head hears it (write guard active;
+        #    in hard mode also no subject starting with this opener)
+[0m
+[0m$ [0mgrep -n "class Correct252LoopMixin" -A 60 scripts/claude_fix252_correct.py | head -n 80
+686:class Correct252LoopMixin:
+687-    """Remembers the previous reply (in memory only) and runs negate252
+688-    through 154f's own retraction path (_act_negate_one138j)."""
+689-
+690-    def turn(self, text: str) -> list[str]:  # type: ignore[no-redef]
+691-        if L189B.is_repeat189b(text):
+692-            return super().turn(text)  # type: ignore[misc]  # state kept
+693-        before = len(self.nb.events)  # type: ignore[attr-defined]
+694-        said = super().turn(text)  # type: ignore[misc]
+695-        try:
+696-            self._prev252 = {
+697-                "reply": " ".join(said) if said else "",
+698-                "records": list(getattr(self, "last_records", []) or []),
+699-                "wrote": len(self.nb.events) != before,  # type: ignore[attr-defined]
+700-            }
+701-        except Exception:  # noqa: BLE001
+702-            self._prev252 = None
+703-        return said
+704-
+705-    def _act(self, action: dict) -> dict:  # type: ignore[no-redef]
+706-        if isinstance(action, dict) and action.get("act") == ACT252:
+707-            key, val = action["rel_key"], action["value"]
+708-            rec = self._act_negate_one138j({  # type: ignore[attr-defined]
+709-                "act": "negate_one154f", "name": action["name"],
+710-                "relation": key, "rel_key": key, "value": val,
+711-                "raw": action.get("raw", "")})
+712-            if rec.get("kind") == "write" and rec.get("wrote"):
+713-                nb = self.nb  # type: ignore[attr-defined]
+714-                res = nb.resolve(action["name"])
+715-                subj = action["name"]
+716-                rest = []
+717-                if res.status == C.OK:
+718-                    eid = res.detail["entity_id"]
+719-                    subj = str(nb.entities[eid])
+720-                    rest = M154.current_values154b(nb, eid, key)
+721-                text = f"OK, I removed {val} as {subj}'s {_rel_surface(key)}"
+722-                if rest:
+723-                    text += f", and I still have {M154.join_and154b(rest)}."
+724-                else:
+725-                    text += "."
+726-                rec = dict(rec)
+727-                rec["text"] = text
+728-            return rec
+729-        return super()._act(action)  # type: ignore[misc]
+730-
+731-
+732-def install_correct252(loop) -> None:
+733-    """Class-swap the loop and its inner ears (idempotent)."""
+734-    if not isinstance(loop, Correct252LoopMixin):
+735-        cls = loop.__class__
+736-        loop.__class__ = type(f"Correct252_{cls.__name__}",
+737-                              (Correct252LoopMixin, cls), {})
+738-        loop._prev252 = None
+739-    inner = getattr(loop, "_inner138j_ears", None)
+740-    if inner is None:
+741-        ears = getattr(loop, "ears", None)
+742-        inner = getattr(ears, "inner", None) or ears
+743-    if inner is not None and not isinstance(inner, Correct252EarsMixin):
+744-        cls = inner.__class__
+745-        inner.__class__ = type(f"Correct252_{cls.__name__}",
+746-                               (Correct252EarsMixin, cls), {})
+[0m
+[0m$ [0mgrep -n "install232c\|install_srcguard228\|_check\b" scripts/claude_loop138nb_agent.py | head
+echo "---232c install fn---"
+grep -n "def install232c" -A 15 scripts/claude_loop232c_agent.py | head -n 20
+echo "---138nb _check---"
+grep -n "_check" scripts/claude_loop138nb_agent.py | head
+echo "---291 config---"
+cat artifacts/claude-join291-20260923/loop291-config.json | head -n 40
+20:the daemon MRO; install_srcguard228() runs at import.
+39:G228.install_srcguard228()  # 228 first, at import
+93:def _check(loop):
+94:    N138._check(loop)  # 138n's own checks (138m checks + 138n classes)
+107:    G228.install_srcguard228()
+108:    L232C.install232c()
+112:    _check(loop)
+125:        G228.install_srcguard228()
+126:        L232C.install232c()
+130:        _check(self.loop)
+---232c install fn---
+109:def install232c() -> None:
+110-    """Rebind 232's subject-rule globals (idempotent)."""
+111-    L232.PARTICLES232 = PARTICLES232C
+112-    L232.subject_ok232 = subject_ok232c
+113-
+114-
+115-install232c()
+116-
+117-DEFAULT_CONFIG232C = copy.deepcopy(L232.DEFAULT_CONFIG232)
+118-try:
+119-    DEFAULT_CONFIG232C["ears"]["stand_in"] = (
+120-        str(DEFAULT_CONFIG232C["ears"].get("stand_in", "")) +
+121-        "; 232c complete name particles (scripts/claude_loop232c_agent.py)")
+122-except Exception:
+123-    pass
+124-
+---138nb _check---
+93:def _check(loop):
+94:    N138._check(loop)  # 138n's own checks (138m checks + 138n classes)
+112:    _check(loop)
+130:        _check(self.loop)
+---291 config---
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 20,
+[0m
+[0m→ [0mRead scripts/claude_loop138nb_agent.py[90m [offset=85, limit=60][0m
+[0m
+[0m$ [0mfor f in artifacts/claude-chainpanel266b-20260923/panel.jsonl artifacts/claude-chainpanel266b-20260923/score_panel.py artifacts/claude-chainpanel266b-20260923/run_base.py artifacts/claude-nhoppanel268b-20260923/panel.jsonl artifacts/claude-nhoppanel268b-20260923/score_panel.py artifacts/claude-nhoppanel268b-20260923/run_base.py artifacts/claude-yesnopanel293-20260923/panel.jsonl artifacts/claude-yesnopanel293-20260923/score_panel.py artifacts/claude-yesnopanel293-20260923/run_base.py artifacts/claude-corrpanel291-20260923/panel.jsonl artifacts/claude-corrpanel291-20260923/score_panel.py artifacts/claude-corrpanel291-20260923/run_base.py; do
+  local_sum=$(shasum -a 256 "$f" | cut -d" " -f1)
+  outbox_sum=$(git show origin/builder-outbox:"$f" | shasum -a 256 | cut -d" " -f1)
+  if [ "$local_sum" = "$outbox_sum" ]; then echo "SAME $f"; else echo "DIFF $f"; fi
+done
+echo "---mixpanel on outbox?---"
+git ls-tree -r --name-only origin/builder-outbox | grep -i mixpanel | head
+echo "---mixpanel locally?---"
+ls artifacts/ | grep -i mixpanel | head
+SAME artifacts/claude-chainpanel266b-20260923/panel.jsonl
+SAME artifacts/claude-chainpanel266b-20260923/score_panel.py
+SAME artifacts/claude-chainpanel266b-20260923/run_base.py
+SAME artifacts/claude-nhoppanel268b-20260923/panel.jsonl
+SAME artifacts/claude-nhoppanel268b-20260923/score_panel.py
+SAME artifacts/claude-nhoppanel268b-20260923/run_base.py
+SAME artifacts/claude-yesnopanel293-20260923/panel.jsonl
+SAME artifacts/claude-yesnopanel293-20260923/score_panel.py
+SAME artifacts/claude-yesnopanel293-20260923/run_base.py
+SAME artifacts/claude-corrpanel291-20260923/panel.jsonl
+SAME artifacts/claude-corrpanel291-20260923/score_panel.py
+SAME artifacts/claude-corrpanel291-20260923/run_base.py
+---mixpanel on outbox?---
+---mixpanel locally?---
+[0m
+[0m→ [0mRead scripts/claude_266b_panelrun.py
+[0m→ [0mRead scripts/claude_291_m8.sh
+[0m
+[0m$ [0mecho "=====chain266b run_base====="; cat artifacts/claude-chainpanel266b-20260923/run_base.py
+echo "=====nhop268b run_base====="; cat artifacts/claude-nhoppanel268b-20260923/run_base.py
+=====chain266b run_base=====
+#!/usr/bin/env python3
+"""Run every chainpanel266b item once on base 266 and record the rows.
+
+266 = scripts/claude_loop266_agent.py, build function and config as in
+artifacts/claude-chain266-20260923 (config file loop266-config.json),
+a fresh temp state_dir per item outside the repo, sleep_threshold 100000.
+One process at a time (sequential loop). CPU only.
+
+Row fields: id, setup_replies, question_reply, stored_after_setup_actual,
+stored_after_question_actual, question_wrote.
+
+Usage (run from the repo root):
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \
+    python -B artifacts/claude-chainpanel266b-20260923/run_base.py
+"""
+
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+HERE = Path("artifacts/claude-chainpanel266b-20260923")
+PANEL = HERE / "panel.jsonl"
+OUT = HERE / "base266.jsonl"
+CONFIG = Path("artifacts/claude-chain266-20260923/loop266-config.json")
+
+sys.path.insert(0, "scripts")
+import claude_loop266_agent as A266
+
+
+def triples(loop):
+    return [[s, r, v] for _, s, r, v in loop.nb.nb._triples]
+
+
+def main():
+    base = json.loads(CONFIG.read_text(encoding="utf-8"))
+    items = [json.loads(line) for line in PANEL.read_text(encoding="utf-8").splitlines()
+             if line.strip()]
+    rows = []
+    for it in items:
+        cfg = dict(base)
+        cfg["sleep_threshold"] = 100000
+        cfg["state_dir"] = tempfile.mkdtemp(prefix="c266b-base-")
+        loop = A266.build_agent266(cfg)
+        setup_replies = [" ".join(loop.turn(t)) for t in it["setup"]]
+        stored_setup = triples(loop)
+        q_reply = " ".join(loop.turn(it["question"]))
+        stored_q = triples(loop)
+        rows.append({
+            "id": it["id"],
+            "setup_replies": setup_replies,
+            "question_reply": q_reply,
+            "stored_after_setup_actual": stored_setup,
+            "stored_after_question_actual": stored_q,
+            "question_wrote": stored_q != stored_setup,
+        })
+        print(f"did {it['id']} wrote={stored_q != stored_setup}", flush=True)
+    with open(OUT, "w", encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=True) + "\n")
+    print(f"Wrote {len(rows)} rows to {OUT}")
+
+
+if __name__ == "__main__":
+    main()
+=====nhop268b run_base=====
+#!/usr/bin/env python3
+"""run_base.py: run every panel item once on base 138nb, one at a time.
+
+Base 138nb = scripts/claude_loop138nb_agent.py with
+artifacts/claude-merge138nb-20260923/loop138nb-config.json
+(unchanged copies of origin/builder-outbox). Fresh temp state_dir per item
+outside the repo, sleep_threshold 100000, one process at a time. Records
+loop.ears.last_stage for the question turn.
+"""
+import copy
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+SYS_SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+if str(SYS_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SYS_SCRIPTS))
+import fable_loop90_agent as L90  # noqa: E402
+import claude_loop138nb_agent as NB138  # noqa: E402
+
+PANEL = Path(__file__).resolve().parent / "panel.jsonl"
+OUT = Path(__file__).resolve().parent / "base138nb.jsonl"
+CONFIG = (Path(__file__).resolve().parents[2] / "artifacts"
+          / "claude-merge138nb-20260923" / "loop138nb-config.json")
+
+
+def triples(loop):
+    rows = []
+    for s, r, v in L90.notebook_triples(loop.nb):
+        if s == "USER":
+            s = "you"
+        rows.append([s, r, v])
+    rows.sort()
+    return rows
+
+
+def run_item(it):
+    cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
+    cfg = copy.deepcopy(cfg)
+    tmp = tempfile.mkdtemp(prefix="nhop268b-base-")
+    cfg["state_dir"] = tmp
+    cfg["sleep_threshold"] = 100000
+    loop = NB138.build_agent138nb(cfg)
+    try:
+        setup_replies = []
+        for t in it["setup"]:
+            rep = loop.turn(t)
+            setup_replies.append(" ".join(rep))
+        s_setup = triples(loop)
+        qrep_list = loop.turn(it["question"])
+        qrep = " ".join(qrep_list)
+        stage = getattr(getattr(loop, "ears", None), "last_stage", "")
+        s_q = triples(loop)
+        qwrote = (s_q != s_setup)
+        return {"id": it["id"], "setup_replies": setup_replies,
+                "question_reply": qrep, "question_stage": stage,
+                "stored_after_setup_actual": s_setup,
+                "stored_after_question_actual": s_q,
+                "question_wrote": bool(qwrote)}
+    finally:
+        try:
+            shutil.rmtree(tmp, ignore_errors=True)
+        except Exception:
+            pass
+
+
+def main():
+    items = [json.loads(x) for x in PANEL.read_text(encoding="utf-8").splitlines()
+             if x.strip()]
+    assert len(items) == 60, len(items)
+    rows = []
+    for it in items:
+        rows.append(run_item(it))
+        print("did %s" % it["id"], flush=True)
+    OUT.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                   encoding="utf-8")
+    print("wrote %s %d rows" % (OUT, len(rows)))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mecho "=====yesno293 run_base====="; cat artifacts/claude-yesnopanel293-20260923/run_base.py
+echo "=====corr291 run_base====="; cat artifacts/claude-corrpanel291-20260923/run_base.py | head -n 100
+=====yesno293 run_base=====
+#!/usr/bin/env python3
+"""run_base.py: run yesnopanel293 once on base 138nb, one item at a time."""
+import copy
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+SYS_SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+if str(SYS_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SYS_SCRIPTS))
+import fable_loop90_agent as L90  # noqa: E402
+import claude_loop138nb_agent as NB  # noqa: E402
+
+PANEL = Path(__file__).resolve().parent / "panel.jsonl"
+OUT = Path(__file__).resolve().parent / "base138nb.jsonl"
+CONFIG = Path(__file__).resolve().parents[2] / "artifacts" / "claude-merge138nb-20260923" / "loop138nb-config.json"
+
+
+def triples(loop):
+    rows = []
+    for s, r, v in L90.notebook_triples(loop.nb):
+        if s == "USER":
+            s = "you"
+        rows.append([s, r, v])
+    rows.sort()
+    return rows
+
+
+def run_item(it):
+    cfg = copy.deepcopy(json.loads(CONFIG.read_text(encoding="utf-8")))
+    tmp = tempfile.mkdtemp(prefix="y293base-")
+    cfg["state_dir"] = tmp
+    cfg["sleep_threshold"] = 100000
+    loop = NB.build_agent138nb(cfg)
+    try:
+        setup_replies = []
+        for t in it["setup"]:
+            rep = loop.turn(t)
+            setup_replies.append(" ".join(rep))
+        s_setup = triples(loop)
+        qrep_list = loop.turn(it["question"])
+        qrep = " ".join(qrep_list)
+        try:
+            qstage = str(getattr(loop.ears, "last_stage", ""))
+        except Exception:
+            qstage = ""
+        s_q = triples(loop)
+        qwrote = (s_q != s_setup)
+        return {"id": it["id"], "setup_replies": setup_replies,
+                "question_reply": qrep, "question_stage": qstage,
+                "stored_after_setup_actual": s_setup,
+                "stored_after_question_actual": s_q,
+                "question_wrote": bool(qwrote)}
+    finally:
+        try:
+            shutil.rmtree(tmp, ignore_errors=True)
+        except Exception:
+            pass
+
+
+def main():
+    items = [json.loads(x) for x in PANEL.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert len(items) == 85, len(items)
+    rows = []
+    for it in items:
+        rows.append(run_item(it))
+        print(f"did {it['id']}", flush=True)
+    OUT.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    print(f"wrote {OUT} {len(rows)} rows")
+
+
+if __name__ == "__main__":
+    main()
+=====corr291 run_base=====
+#!/usr/bin/env python3
+"""Run base 138nb once over corrpanel291. CPU only, one process."""
+import copy, json, re, shutil, sys, tempfile
+from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+import claude_loop138nb_agent as NB
+import fable_loop90_agent as L90
+
+PANEL = Path(__file__).resolve().parent / "panel.jsonl"
+OUT = Path(__file__).resolve().parent / "base138nb.jsonl"
+CFG = ROOT / "artifacts" / "claude-merge138nb-20260923" / "loop138nb-config.json"
+
+def active(nb):
+    return sorted(list(map(str, x)) for x in L90.notebook_triples(nb))
+
+def T(ts):
+    return {tuple(str(p).lower() for p in t) for t in (ts or [])}
+
+def ww(v, t):
+    return re.search(r'(?<!\w)'+re.escape(v)+r'(?!\w)', t or '', re.I) is not None
+
+def score_item(p, stored_setup, stored_turn, stored_follow, turn_reply, follow_reply):
+    sas, sat, saf = T(stored_setup), T(stored_turn), T(stored_follow)
+    es, eg = T(p["expect_store"]), T(p["expect_gone"])
+    junk = not sat <= (sas | es)
+    store_ok = (es <= sat) and (not (eg & sat)) and (not junk)
+    fr = follow_reply or ""
+    if p["gold_followup"]:
+        parts = [x.strip() for x in p["gold_followup"].split(";")]
+        fok = all(x.lower() in fr.lower() for x in parts) and not re.match(r"\s*i (don't|do not) know", fr, re.I)
+    else:
+        gone_vals = [g[2] for g in p["expect_gone"]]
+        fok = not any(ww(v, fr) for v in gone_vals)
+    gone_vals = [g[2] for g in p["expect_gone"]]
+    wrong = any(ww(v, fr) for v in gone_vals)
+    fw = (saf != sat)
+    # false_claim as in corrtail258, adapted: still-stored value + claim of removal/change
+    still = sas & sat
+    tr = turn_reply or ""
+    claim_word = ("don't have" in tr.lower() or "do not have" in tr.lower() or "removed" in tr.lower() or "updated" in tr.lower() or "deleted" in tr.lower() or "changed" in tr.lower())
+    false_claim = False
+    if claim_word:
+        for t in still:
+            v = list(t)[2]
+            if ww(v, tr):
+                false_claim = True
+                break
+    right = bool(store_ok and fok and (not fw) and (not false_claim))
+    return right, wrong, false_claim, junk
+
+def main():
+    panel = [json.loads(l) for l in open(PANEL, encoding="utf-8")]
+    base_cfg = copy.deepcopy(NB.DEFAULT_CONFIG138NB)
+    base_cfg.update(json.loads(open(CFG, encoding="utf-8").read()))
+    rows = []
+    for p in panel:
+        cfg = copy.deepcopy(base_cfg)
+        sd = Path(tempfile.mkdtemp(prefix="c291base-"))
+        cfg["state_dir"] = str(sd)
+        cfg["sleep_threshold"] = 100000
+        loop = NB.build_agent138nb(cfg)
+        setup_replies, seq = [], []
+        for t in p["setup"]:
+            rep = " ".join(loop.turn(t))
+            setup_replies.append(rep)
+        stored_setup = active(loop.nb)
+        turn_reply = " ".join(loop.turn(p["turn"]))
+        stored_turn = active(loop.nb)
+        follow_reply = " ".join(loop.turn(p["followup"]))
+        stored_follow = active(loop.nb)
+        right, wrong, fclaim, junk = score_item(p, stored_setup, stored_turn, stored_follow, turn_reply, follow_reply)
+        rows.append({"id":p["id"],"setup_replies":setup_replies,"stored_after_setup":stored_setup,"turn_reply":turn_reply,"stored_after_turn":stored_turn,"followup_reply":follow_reply,"stored_after_followup":stored_follow,"base_right":right,"base_wrong_value":wrong,"base_false_claim":fclaim})
+        shutil.rmtree(sd, ignore_errors=True)
+        print(f"{p['id']} {p['family']} right={right} wrong={wrong} fclaim={fclaim} junk={junk}", flush=True)
+    with open(OUT,"w",encoding="utf-8") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False)+"\n")
+    print(f"WROTE {OUT} {len(rows)} rows")
+
+if __name__=="__main__":
+    main()
+[0m
+[0m$ [0mls scripts/ | grep -E "corr252_run|291_m7run|291_score|293_reg|268b_panelrun|268b_m1run" 
+echo "---corr252_run head---"
+head -n 60 scripts/claude_corr252_run.py 2>/dev/null
+echo "---score_panel usages---"
+head -n 30 artifacts/claude-nhoppanel268b-20260923/score_panel.py
+echo "---yesno score head---"
+head -n 30 artifacts/claude-yesnopanel293-20260923/score_panel.py
+claude_268b_m1run.py
+claude_268b_panelrun.py
+claude_291_m7run.py
+claude_291_score.py
+claude_293_reg.py
+claude_corr252_run.py
+---corr252_run head---
+#!/usr/bin/env python3
+"""Exp 252 runner: one fresh work dir per item; setup turns, turn, followup
+in one session (the corrpanel252 schema). Read-only on the agent.
+
+Dev items may also carry "restart": true (the daemon is rebuilt on the same
+root between turn and followup) and "extra": [[question, must_not, must]]
+(asked after the followup; checked by the scorer, dev only).
+
+usage: claude_corr252_run.py --agent A --config C --cases X.jsonl
+                             --work DIR --out rows.jsonl
+Row fields = base138k.jsonl's 7 data fields (+ extra_replies, stored_end,
+ms_per_turn). base_right / base_wrong_value are left to the scorer.
+"""
+from __future__ import annotations
+
+import argparse
+import gc
+import json
+import shutil
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--agent", required=True)
+    ap.add_argument("--config", required=True)
+    ap.add_argument("--cases", required=True)
+    ap.add_argument("--work", required=True)
+    ap.add_argument("--out", required=True)
+    args = ap.parse_args(argv)
+    _mod, dcls, _, _ = M.load_agent(args.agent)
+    import fable_loop90_agent as L90  # noqa: E402 (after agent import)
+    base = M.load_base_cfg(args.config)
+    items = [json.loads(line) for line in
+             Path(args.cases).read_text(encoding="utf-8").splitlines()
+             if line.strip()]
+    work = Path(args.work)
+    rows = []
+    for it in items:
+        root = work / it["id"]
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir(parents=True)
+        state = {"d": M.make_daemon(dcls, base, root), "k": 0}
+        times: list[float] = []
+
+        def say(text: str) -> str:
+            k = state["k"]
+            f = root / "inbox" / f"m{k:03d}.txt"
+            f.write_text(text, encoding="utf-8")
+            t0 = time.perf_counter()
+            try:
+                state["d"].process_file(f)
+---score_panel usages---
+#!/usr/bin/env python3
+"""score_panel.py (sealed with the panel; builders use it unchanged).
+
+Schema-checked scorer for nhoppanel268b. Any schema problem prints
+SCHEMA-MISMATCH and exits 3 with no verdict (VOID, not FAIL).
+
+Scoring on base138nb rows:
+- right: every gold string appears (case-insensitive); bug /
+  reverse_nochain / uncued_reverse also need "(worked out backwards)".
+  abstain: reply contains "I don't know" or "I couldn't" and names no
+  taught person. forward families: every gold string appears.
+- right_names: every gold string appears, label or not (None for abstain
+  and forward families).
+- wrong: names a taught value or person not in gold, does not contain
+  every gold string, and is not an abstain.
+- question_wrote: passthrough from the row.
+"""
+import json
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+EXPECT_FAMILIES = {"bug": 16, "reverse_nochain": 10, "forward_chain": 12,
+                   "forward_1hop": 10, "uncued_reverse": 6, "abstain": 6}
+LABEL_FAMILIES = {"bug", "reverse_nochain", "uncued_reverse"}
+REQUIRED_FIELDS = {"id", "family", "setup", "question", "gold", "note"}
+REQUIRED_ROW_FIELDS = {"id", "setup_replies", "question_reply", "question_stage",
+                       "stored_after_setup_actual",
+                       "stored_after_question_actual", "question_wrote"}
+LABEL = "(worked out backwards)"
+---yesno score head---
+#!/usr/bin/env python3
+"""score_panel.py (sealed with the panel; builder uses it unchanged)."""
+import json
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+EXPECT_FAMILIES = {"have_true": 10, "have_unknown": 8, "live": 10, "work": 8,
+                   "born": 6, "is_multiword": 8, "is_of_form": 6,
+                   "taken_back": 6, "is_single_control": 8, "wh_control": 8,
+                   "statement_control": 7}
+EXPECT_LABELS = {"yes", "no", "unknown", "control"}
+REQUIRED_FIELDS = {"id", "family", "setup", "question", "expect", "gold", "note"}
+REQUIRED_ROW_FIELDS = {"id", "setup_replies", "question_reply", "question_stage",
+                       "stored_after_setup_actual", "stored_after_question_actual",
+                       "question_wrote"}
+
+
+def fail(msg):
+    print(f"SCHEMA-MISMATCH: {msg}")
+    sys.exit(3)
+
+
+def load_panel(path):
+    items = [json.loads(x) for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    if len(items) != 85:
+        fail(f"panel has {len(items)} items, expected 85")
+    seen = set()
+    famcount = Counter()
+    for i, it in enumerate(items):
+[0m
+[0m$ [0mhead -n 25 artifacts/claude-corrpanel291-20260923/score_panel.py; echo "---tail usage---"; grep -n "sys.argv\|argv" artifacts/claude-corrpanel291-20260923/score_panel.py artifacts/claude-chainpanel266b-20260923/score_panel.py artifacts/claude-nhoppanel268b-20260923/score_panel.py artifacts/claude-yesnopanel293-20260923/score_panel.py | head
+echo "---268b m1run---"; head -n 50 scripts/claude_268b_m1run.py
+echo "---293 reg head---"; head -n 60 scripts/claude_293_reg.py
+#!/usr/bin/env python3
+"""Scorer for corrpanel291. Implements 252 scoring + false_claim. Used unchanged by builders."""
+import json, re, sys
+from pathlib import Path
+from collections import Counter, defaultdict
+
+FAMILIES = {"verb_denial":8,"possessive_denial":8,"contextual_denial":8,"contextual_correction":8,"explicit_correction":8,"tail_denial":8,"opener_teach":8,"opener_correction":8,"unstored_denial":6,"ambiguous":6,"question_trap":8,"control":12}
+PANEL_FIELDS = ["id","family","setup","turn","followup","stated_facts","expect_gone","expect_store","gold_followup","note"]
+BASE_FIELDS = ["id","setup_replies","stored_after_setup","turn_reply","stored_after_turn","followup_reply","stored_after_followup","base_right","base_wrong_value","base_false_claim"]
+
+def T(ts):
+    return {tuple(str(p).lower() for p in t) for t in (ts or [])}
+
+def ww(v,t):
+    return re.search(r'(?<!\w)'+re.escape(v)+r'(?!\w)', t or '', re.I) is not None
+
+def score_one(p, r, base_row=None):
+    sas, sat, saf = T(r["stored_after_setup"]), T(r["stored_after_turn"]), T(r["stored_after_followup"])
+    es, eg = T(p["expect_store"]), T(p["expect_gone"])
+    junk = not sat <= (sas | es)
+    store_ok = (es <= sat) and (not (eg & sat)) and (not junk)
+    fr = r["followup_reply"] or ""
+    if p["gold_followup"]:
+        parts = [x.strip() for x in p["gold_followup"].split(";")]
+        fok = all(x.lower() in fr.lower() for x in parts) and not re.match(r"\s*i (don't|do not) know", fr, re.I)
+---tail usage---
+artifacts/claude-corrpanel291-20260923/score_panel.py:49:    if len(sys.argv)!=3:
+artifacts/claude-corrpanel291-20260923/score_panel.py:51:    pp, rp = Path(sys.argv[1]), Path(sys.argv[2])
+artifacts/claude-chainpanel266b-20260923/score_panel.py:5:script; override with argv: score_panel.py <panel> <rows>).
+artifacts/claude-chainpanel266b-20260923/score_panel.py:150:    panel_path = sys.argv[1] if len(sys.argv) > 1 else str(HERE / "panel.jsonl")
+artifacts/claude-chainpanel266b-20260923/score_panel.py:151:    rows_path = sys.argv[2] if len(sys.argv) > 2 else str(HERE / "base266.jsonl")
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:133:def main(argv):
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:134:    panel = argv[1] if len(argv) > 1 else str(Path(__file__).resolve().parent / "panel.jsonl")
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:135:    rows = argv[2] if len(argv) > 2 else str(Path(__file__).resolve().parent / "base138nb.jsonl")
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:136:    out = argv[3] if len(argv) > 3 else None
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:165:    sys.exit(main(sys.argv))
+---268b m1run---
+#!/usr/bin/env python3
+"""Exp 268b M1 runner: run nhoppanel268b once on ONE arm, one item at a time.
+
+New file only (the sealed scripts/claude_268b_panelrun.py writes the
+invpanel row format without question_stage; this panel's sealed scorer
+requires question_stage, so this runner emits the panel's exact
+base-row format). CPU only. One arm per process (the 268 guard rebinds
+a module global; never mix arms in one process). Fresh temp state dir
+per item outside the repo, sleep_threshold 100000. Never prints item
+text or replies (ids only).
+
+Usage:
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/claude_268b_m1run.py <panel.json> <agent_py> <config> <out_rows> [label]
+
+Row format matches the panel's REQUIRED_ROW_FIELDS exactly:
+id, setup_replies, question_reply, question_stage (loop.ears.last_stage,
+as the panel's own run_base.py records), stored_after_setup_actual,
+stored_after_question_actual, question_wrote. USER subjects map to "you".
+"""
+from __future__ import annotations
+
+import copy
+import importlib.util
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_loop90_agent as L90  # noqa: E402 (read-only triples)
+
+
+def load_agent(agent_py: str):
+    spec = importlib.util.spec_from_file_location(
+        "ag_m1_268b", str(SCRIPTS / Path(agent_py).name))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["ag_m1_268b"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def triples(loop):
+    rows = []
+    for s, r, v in L90.notebook_triples(loop.nb):
+        if s == "USER":
+---293 reg head---
+#!/usr/bin/env python3
+"""Exp 293 regression runner: run a sealed panel's items on ONE arm.
+
+New file only. CPU only. Fresh temp state_dir per item outside the repo,
+sleep_threshold 100000. Records reply, triples after setup/question, and
+a question-wrote flag. The panel files are read, never modified.
+
+Usage:
+  uv run ... python -B scripts/claude_293_reg.py <panel.jsonl> <agent_py> <config> <out_rows> [label]
+"""
+from __future__ import annotations
+
+import copy
+import importlib.util
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_loop90_agent as L90  # noqa: E402 (read-only triples)
+
+
+def load_agent(agent_py: str):
+    spec = importlib.util.spec_from_file_location(
+        "ag_reg_293", str(Path(agent_py).resolve()))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["ag_reg_293"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def triples(loop):
+    rows = []
+    for s, r, v in L90.notebook_triples(loop.nb):
+        rows.append([s, r, v])
+    rows.sort()
+    return rows
+
+
+def main() -> int:
+    panel_p, agent_py, config, out = sys.argv[1:5]
+    label = sys.argv[5] if len(sys.argv) > 5 else ""
+    items = [json.loads(x) for x in Path(panel_p).read_text(
+        encoding="utf-8").splitlines() if x.strip()]
+    mod = load_agent(agent_py)
+    build = None
+    for name in ("build_agent293", "build_agent138nb"):
+        if hasattr(mod, name):
+            build = getattr(mod, name)
+            break
+    if build is None:
+        raise SystemExit("no known build_* in agent module")
+    base = copy.deepcopy(json.loads(Path(config).read_text(
+        encoding="utf-8")))
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+[0m
+[0m→ [0mRead scripts/claude_291_runall.sh
+[0m
+[0m$ [0mls artifacts/claude-join291-20260923/run/ artifacts/claude-join291-20260923/run/sd 2>/dev/null | head -n 20
+echo "---new files must not exist---"
+for f in scripts/claude_loop292_agent.py scripts/claude_fix292_glue.py artifacts/claude-merge292-20260923/loop292-config.json design/v3/30-modes/292-merge-muse.md scripts/claude_292_panelrun.py scripts/claude_292_score.py scripts/claude_292_runall.sh scripts/claude_292_m5.sh; do if [ -e "$f" ]; then echo "EXISTS $f"; else echo "NEW-OK $f"; fi; done
+echo "---ledger head---"
+head -n 8 artifacts/fable-predictions-ledger.md
+echo "---predmoves291 head---"
+head -c 1500 artifacts/claude-join291-20260923/predicted_moves291.json
+artifacts/claude-join291-20260923/run/:
+bench1
+bench1.log
+bench2
+bench2.log
+bench3
+bench3.log
+lat-291-1.json
+lat-291-1.log
+lat-291-2.json
+lat-291-2.log
+lat-291-3.json
+lat-291-3.log
+lat-nb-1.json
+lat-nb-1.log
+lat-nb-2.json
+lat-nb-2.log
+lat-nb-3.json
+lat-nb-3.log
+m1-check.json
+---new files must not exist---
+NEW-OK scripts/claude_loop292_agent.py
+NEW-OK scripts/claude_fix292_glue.py
+NEW-OK artifacts/claude-merge292-20260923/loop292-config.json
+NEW-OK design/v3/30-modes/292-merge-muse.md
+NEW-OK scripts/claude_292_panelrun.py
+NEW-OK scripts/claude_292_score.py
+NEW-OK scripts/claude_292_runall.sh
+NEW-OK scripts/claude_292_m5.sh
+---ledger head---
+# Fable's prediction ledger (started 2026-09-20)
+
+Rule: before each registered experiment, one row per forecast with a probability, the exact evaluation setting, and the outcome that
+would falsify it. Scored afterwards (Brier score = (p − outcome)²; lower is better; always guessing 50 % scores 0.25).
+Observations, causal explanations and forecasts are kept in separate columns. Rows are append-only.
+
+## Earlier forecasts (made without probabilities; scored as hit/miss only)
+
+---predmoves291 head---
+{
+ "m1_720": {
+  "221": {
+   "E1": {
+    "expect_291": {
+     "replies": [
+      "Saved: Blue Rain's composer is Ada Pell.",
+      "Blue Rain's composer is Ada Pell."
+     ],
+     "active": [
+      [
+       [
+        "Blue Rain",
+        "composer",
+        "Ada Pell"
+       ]
+      ],
+      [
+       [
+        "Blue Rain",
+        "composer",
+        "Ada Pell"
+       ]
+      ]
+     ],
+     "all": [
+      [
+       [
+        "Blue Rain",
+        "composer",
+        "Ada Pell"
+       ]
+      ],
+      [
+       [
+        "Blue Rain",
+        "composer",
+        "Ada Pell"
+       ]
+      ]
+     ]
+    },
+    "reason": "table138nb: 138nb's readers give a targeted decline/answer where 138p gives Q2",
+    "writes_same": true
+   },
+   "E2": {
+    "expect_291": {
+     "replies": [
+      "Saved: your birthday is June 3.",
+      "Your birthday is June 3."
+     ],
+     "active": [
+      [
+       [
+        "USER",
+        "birthday",
+        "June 3"
+       ]
+      ],
+      [
+       [
+        "USER",
+        "birthday",
+        "June 3"
+       ]
+      ]
+     ],
+     "all": [
+      [
+       [
+        "USER",
+        "birthday",
+        "June 3"
+       ]
+      ],
+      [
+       [
+        "USER",
+        "birthday",
+        "June 3"
+       ]
+      ]
+     ]
+    },
+    "reason": "table138nb: 138nb's readers give a targeted decline/answer where 138p gives Q2",
+    "writes_same": true
+   },
+   "E3": {
+    "expect_291": {
+     "replies": [
+      "Saved: Kim's boss is Sam.",
+      "Kim's boss is Sam
+[0m
+[0m$ [0mls artifacts/claude-join291-20260923/run/ | tail -n 30; echo "---"; ls artifacts/claude-join291-20260923/run/sd 2>/dev/null | head; echo "---probes/lat scripts---"; ls scripts/claude_merge138k_probe.py scripts/claude_merge138k_latency.py scripts/fable_suitediff218.py scripts/claude_138l_rt143nogate.py 2>&1; uptime; df -g / | tail -1
+m1720-judge.json
+m1720-judge.txt
+m1720-log-291.txt
+m1720-log-nb.txt
+m1720-log-p.txt
+m1dev
+probe
+rt143nogate-291.json
+rt143nogate-291.log
+rt143nogate-nb.json
+rt143nogate-nb.log
+score.txt
+score291.json
+sd
+sd.log
+sd136
+sd136-nb
+sd136-nb.log
+sd136.log
+smoke-291.json
+smoke-291.log
+uptime.log
+vp-291-probes.json
+vp-291-supp.json
+vp-291.log
+vp-nb-probes.json
+vp-nb-supp.json
+vp-nb.log
+vs-291.log
+vs-nb.log
+---
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+marks123
+marks123-diff.json
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+---probes/lat scripts---
+scripts/claude_138l_rt143nogate.py
+scripts/claude_merge138k_latency.py
+scripts/claude_merge138k_probe.py
+scripts/fable_suitediff218.py
+ 7:18  up 2 days, 23:07, 4 users, load averages: 86.40 64.33 60.96
+/dev/disk3s1s1       460   12        12    50%  484014 135939760    0%   /
+[0m
+[0m$ [0msed -n '120,238p' scripts/claude_fix266_chainlift.py
+or not isinstance(rels[0], str) or not rels[0]:
+        return None
+    return rels[0]
+
+
+def canonical266(chain: str, relation: str) -> str:
+    """Canonical possessive question for a lifted chain + relation R."""
+    surface = "_".join(str(relation).strip().lower().split())
+    surface = surface.replace("_", " ")
+    wh = "Who" if str(relation).strip().lower() in PERSON266 else "What"
+    return f"{wh} is {chain}'s {surface}?"
+
+
+def plan266(turn: str) -> tuple[str, str] | None:
+    """Chain + placeholder-swapped question for a ?-turn, else None.
+
+    Pure text step (no hear). The mixin then dry-hears the rewritten
+    question and only lifts when gate266 accepts exactly one one-hop ask
+    frame for the placeholder.
+    """
+    if PLACEHOLDER266 in str(turn):
+        return None
+    found = find_chain266(turn)
+    if found is None:
+        return None
+    chain, start, end = found
+    t = " ".join(str(turn).split())
+    rewritten = t[:start] + PLACEHOLDER266 + t[end:]
+    return (chain, rewritten)
+
+
+class ChainLift266Mixin:
+    """Outermost ears stage: chain-subject lift (questions only, never writes)."""
+
+    last_chainlift266: dict | None = None
+
+    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+        self.last_chainlift266 = None
+        try:
+            plan = plan266(turn)
+        except Exception:  # noqa: BLE001 -- lift never breaks a turn
+            plan = None
+        if plan is not None and not placeholder_in_notebook266(self):
+            chain, rewritten = plan
+            try:
+                probe = super().hear(rewritten)  # type: ignore[misc]
+            except Exception:
+                probe = None
+            relation = gate266(probe) if probe is not None else None
+            if relation is not None:
+                canonical = canonical266(chain, relation)
+                try:
+                    acts = super().hear(canonical)  # type: ignore[misc]
+                except Exception:
+                    return super().hear(turn)  # type: ignore[misc]
+                if isinstance(acts, list):
+                    self.last_chainlift266 = {"turn": turn,
+                                              "canonical": canonical}
+                    log = os.environ.get("CHAINLIFT266_LOG")
+                    if log:
+                        try:
+                            with open(log, "a", encoding="utf-8") as fh:
+                                fh.write(json.dumps(
+                                    {"turn": turn,
+                                     "canonical": canonical}) + "\n")
+                        except OSError:
+                            pass
+                    return acts
+        return super().hear(turn)  # type: ignore[misc]
+
+
+def selftest266() -> int:
+    """Pure-function checks: detection spans + canonical phrasing."""
+    ok = True
+
+    def check(turn, want_chain):
+        nonlocal ok
+        got = find_chain266(turn)
+        good = (got is None and want_chain is None) or (
+            got is not None and want_chain is not None
+            and got[0] == want_chain)
+        ok = ok and good
+        print(f"{'OK' if good else 'MISMATCH'}: {turn!r} -> "
+              f"{(got[0] if got else None)!r} (want {want_chain!r})")
+
+    check("Where does Vex's boss live?", "Vex's boss")
+    check("Where does Pix's boss's boss live?", "Pix's boss's boss")
+    check("Where does my teacher live?", "my teacher")
+    check("Who does my brother's boss work for?", "my brother's boss")
+    check("What is Ana's boss's city?", "Ana's boss's city")
+    check("Who is Ana's boss's employer?", "Ana's boss's employer")
+    check("Where does Tovi live?", None)
+    check("What town does Tovi live in?", None)
+    check("Vex's boss is Quil.", None)
+    check("What does Tovi do?", None)
+    check("Where does Ana’s boss live?", "Ana’s boss")
+
+    def check_canon(chain, rel, want):
+        nonlocal ok
+        got = canonical266(chain, rel)
+        good = got == want
+        ok = ok and good
+        print(f"{'OK' if good else 'MISMATCH'}: ({chain!r}, {rel!r}) -> "
+              f"{got!r} (want {want!r})")
+
+    check_canon("Vex's boss", "city", "What is Vex's boss's city?")
+    check_canon("Wex's sister", "employer", "Who is Wex's sister's employer?")
+    check_canon("Fex's father", "place_of_birth",
+                "What is Fex's father's place of birth?")
+    check_canon("Yara's friend", "language",
+                "What is Yara's friend's language?")
+    check_canon("my teacher", "city", "What is my teacher's city?")
+    check_canon("Ana's boss", "boss", "Who is Ana's boss's boss?")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(selftest266())
+[0m
+[0m→ [0mRead scripts/claude_fix293_yesno.py[90m [offset=150, limit=130][0m
+[0m
+[0m# [0mTodos
+[✓] Read piece sources (291, 266b, 268b, 293 agents + glue + configs) and their imports
+[•] Phase 1 interaction analysis -> design note 292-merge-muse.md
+[ ] Build loop292 agent + config + drivers (new files only)
+[ ] Pilots + PASSMARKS.md + seal + ledger append
+[ ] Registered M1-M4 (fidelity first, same runner+scorer)
+[ ] Wait for mixpanel292 SEAL, run M5 once on 5 arms
+[ ] RESULTS.md + final reply
+[0m
+[0m← [0mWrite design/v3/30-modes/292-merge-muse.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_loop292_agent.py
+Wrote file successfully.
+[0m
+[0m$ [0msed -n '140,200p' artifacts/claude-chainpanel266b-20260923/score_panel.py
+echo "=====corr score tail====="
+sed -n '40,80p' artifacts/claude-corrpanel291-20260923/score_panel.py
+wrong = False
+        else:
+            names_untaught = any((t in rl) and (t not in gold) for t in taught_all)
+            wrong = (not right) and names_untaught and not all(g in rl for g in gold) and (not ab)
+        per_item.append({"id": it["id"], "family": fam, "right": right,
+                         "wrong": wrong, "question_wrote": wrote, "reply": reply})
+    return per_item
+
+
+def main():
+    panel_path = sys.argv[1] if len(sys.argv) > 1 else str(HERE / "panel.jsonl")
+    rows_path = sys.argv[2] if len(sys.argv) > 2 else str(HERE / "base266.jsonl")
+    items, rmap = load(panel_path, rows_path)
+    per_item = score(items, rmap)
+    print("id family right wrong wrote :: reply")
+    for p in per_item:
+        print(f"{p['id']} {p['family']} {int(p['right'])} {int(p['wrong'])} "
+              f"{int(p['question_wrote'])} :: {p['reply']}")
+    print("---- per family: N right wrong wrote other ----")
+    for fam, n in EXPECTED.items():
+        ps = [p for p in per_item if p["family"] == fam]
+        r = sum(p["right"] for p in ps)
+        w = sum(p["wrong"] for p in ps)
+        q = sum(p["question_wrote"] for p in ps)
+        print(f"{fam}: {n} {r} {w} {q} {n - r - w}")
+    print(f"TOTAL: {len(per_item)} {sum(p['right'] for p in per_item)} "
+          f"{sum(p['wrong'] for p in per_item)} {sum(p['question_wrote'] for p in per_item)}")
+
+
+if __name__ == "__main__":
+    main()
+=====corr score tail=====
+    right = bool(store_ok and fok and (not fw) and (not fclaim))
+    if p["family"]=="control" and base_row is not None:
+        right = bool(right and r["turn_reply"]==base_row["turn_reply"] and r["followup_reply"]==base_row["followup_reply"])
+    return {"right":right,"wrong":wrong,"junk":junk,"fw":fw,"fclaim":fclaim,"store_ok":store_ok,"fok":fok}
+
+def load_jsonl(p):
+    return [json.loads(l) for l in open(p,encoding="utf-8") if l.strip()]
+
+def main():
+    if len(sys.argv)!=3:
+        print("usage: score_panel.py panel.jsonl rows.jsonl"); sys.exit(2)
+    pp, rp = Path(sys.argv[1]), Path(sys.argv[2])
+    # schema check
+    try:
+        P = load_jsonl(pp); R = {r["id"]:r for r in load_jsonl(rp)}
+    except Exception as e:
+        print("SCHEMA-MISMATCH"); sys.exit(3)
+    if len(P)!=96:
+        print("SCHEMA-MISMATCH"); sys.exit(3)
+    c = Counter(p["family"] for p in P)
+    for f,n in FAMILIES.items():
+        if c[f]!=n:
+            print("SCHEMA-MISMATCH"); sys.exit(3)
+    if [p["id"] for p in P]!=[f"c291-{i:03d}" for i in range(1,97)]:
+        print("SCHEMA-MISMATCH"); sys.exit(3)
+    for p in P:
+        if list(p.keys())!=PANEL_FIELDS:
+            print("SCHEMA-MISMATCH"); sys.exit(3)
+        if p["id"] not in R:
+            print("SCHEMA-MISMATCH"); sys.exit(3)
+    for rid,r in R.items():
+        if list(r.keys())!=BASE_FIELDS:
+            print("SCHEMA-MISMATCH"); sys.exit(3)
+    # base rows for control byte-identical: use rp itself as reference when scoring base; builders pass base file separately? Here control checks self-consistency only.
+    # For builder use: they pass their rows; control additionally compared to sealed base file if --base given? Keep simple: control right requires store/followup only here; builder harness compares byte-identical separately via base file.
+    # To enforce byte-identical in builder runs, load sealed base if present alongside panel.
+    sealed_base = pp.parent / "base138nb.jsonl"
+    B = None
+    if sealed_base.exists() and str(sealed_base.resolve())!=str(rp.resolve()):
+        try: B = {r["id"]:r for r in load_jsonl(sealed_base)}
+        except Exception: B=None
+[0m
+[0m$ [0msed -n '60,140p' scripts/claude_corr252_run.py
+echo "=====corr score row check====="
+sed -n '80,130p' artifacts/claude-corrpanel291-20260923/score_panel.py
+state["d"].process_file(f)
+                rep = (root / "outbox" / f"m{k:03d}.txt").read_text(
+                    encoding="utf-8").strip()
+            except Exception as e:  # noqa: BLE001
+                rep = f"CRASH {type(e).__name__}: {e}"
+            times.append((time.perf_counter() - t0) * 1000.0)
+            state["k"] = k + 1
+            return rep
+
+        def stored() -> list[list[str]]:
+            return [list(map(str, t)) for t in
+                    L90.notebook_triples(state["d"].loop.nb)]
+
+        setup_replies = [say(t) for t in it["setup"]]
+        s_setup = stored()
+        turn_reply = say(it["turn"])
+        s_turn = stored()
+        if it.get("restart"):
+            del state["d"]
+            gc.collect()
+            state["d"] = M.make_daemon(dcls, base, root)
+        followup_reply = say(it["followup"])
+        s_follow = stored()
+        extra_replies = [say(q[0]) for q in it.get("extra", [])]
+        row = {"id": it["id"], "setup_replies": setup_replies,
+               "stored_after_setup": s_setup, "turn_reply": turn_reply,
+               "stored_after_turn": s_turn, "followup_reply": followup_reply,
+               "stored_after_followup": s_follow,
+               "extra_replies": extra_replies, "stored_end": stored(),
+               "ms_per_turn": times}
+        rows.append(row)
+        print(f"{it['id']} {it['family']}: {it['turn']!r} -> {turn_reply!r}"
+              f" | {it['followup']!r} -> {followup_reply!r}", flush=True)
+        del state["d"]
+        gc.collect()
+    Path(args.out).write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+        encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+=====corr score row check=====
+        except Exception: B=None
+    per=defaultdict(Counter); tot=Counter()
+    for p in P:
+        r=R[p["id"]]
+        b = (B[p["id"]] if B and p["id"] in B else None)
+        s=score_one(p,r,b)
+        f=p["family"]
+        per[f]["n"]+=1; per[f]["right"]+=s["right"]; per[f]["wrong"]+=s["wrong"]; per[f]["junk"]+=s["junk"]; per[f]["fw"]+=s["fw"]; per[f]["fclaim"]+=s["fclaim"]
+        tot["n"]+=1; tot["right"]+=s["right"]; tot["wrong"]+=s["wrong"]; tot["junk"]+=s["junk"]; tot["fw"]+=s["fw"]; tot["fclaim"]+=s["fclaim"]
+    for f in FAMILIES:
+        print(f"{f:22s} {per[f]['right']:2d}/{per[f]['n']:2d} wrong {per[f]['wrong']} junk {per[f]['junk']} fw {per[f]['fw']} fclaim {per[f]['fclaim']}")
+    print(f"TOTAL right {tot['right']}/{tot['n']} wrong {tot['wrong']} junk {tot['junk']} fw {tot['fw']} fclaim {tot['fclaim']}")
+
+if __name__=="__main__":
+    main()
+[0m
+[0m$ [0mcat artifacts/claude-chain266b-20260923/run/panel266b-counts.json 2>/dev/null | head -n 30
+echo "=====291 m8-check====="
+cat artifacts/claude-join291-20260923/m8-check.json 2>/dev/null | head -n 50
+echo "=====268b run counts====="
+ls artifacts/claude-nhop268b-20260923/run/ 2>/dev/null | head -n 20
+echo "=====293 run counts====="
+ls artifacts/claude-yesno293-20260923/run/ 2>/dev/null | head -n 20
+{
+ "panel": "chainpanel266b-20260923",
+ "n_items": 70,
+ "arms": {
+  "266": {
+   "multiword_chain": {
+    "n": 24,
+    "right": 6,
+    "wrong": 0,
+    "wrote": 0
+   },
+   "three_link": {
+    "n": 8,
+    "right": 3,
+    "wrong": 0,
+    "wrote": 0
+   },
+   "oneword_chain": {
+    "n": 8,
+    "right": 8,
+    "wrong": 0,
+    "wrote": 0
+   },
+   "my_live": {
+    "n": 4,
+    "right": 4,
+    "wrong": 0,
+    "wrote": 0
+   },
+   "broken_chain": {
+=====291 m8-check=====
+{
+ "n": 96,
+ "m8": {
+  "right_n": {
+   "138nb": 34,
+   "138p": 65,
+   "291": 73
+  },
+  "right_to_wrong_vs_138p": [],
+  "right_to_wrong_vs_138nb": [],
+  "wrong_ids": [
+   "c291-003",
+   "c291-005",
+   "c291-006",
+   "c291-007",
+   "c291-012",
+   "c291-013",
+   "c291-016",
+   "c291-023",
+   "c291-024",
+   "c291-029",
+   "c291-030",
+   "c291-032",
+   "c291-036",
+   "c291-039",
+   "c291-040",
+   "c291-062",
+   "c291-063"
+  ],
+  "junk_ids": [
+   "c291-039",
+   "c291-055",
+   "c291-056"
+  ],
+  "followup_writes": [],
+  "false_claims": [
+   "c291-013"
+  ],
+  "question_writes": [],
+  "families_291": {
+   "ambiguous": [
+    6,
+    6
+   ],
+   "contextual_correction": [
+    5,
+    8
+   ],
+   "contextual_denial": [
+    6,
+=====268b run counts=====
+dev
+inv
+lat-b-1.json
+lat-b-1.log
+lat-b-3.json
+lat-b-3.log
+lat-b-5.json
+lat-b-5.log
+lat-n-2.json
+lat-n-2.log
+lat-n-4.json
+lat-n-4.log
+lat-n-6.json
+lat-n-6.log
+m1
+probe
+rt143nogate-268b.json
+rt143nogate.log
+score.txt
+score268b.json
+=====293 run counts=====
+chain
+dev
+inv
+lat-b-1.json
+lat-b-1.log
+lat-b-3.json
+lat-b-3.log
+lat-n-2.json
+lat-n-2.log
+lat-n-4.json
+lat-n-4.log
+m1
+probe
+rt143nogate-293.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+[0m
+[0m← [0mWrite scripts/claude_292_panelrun.py
+Wrote file successfully.
+[0m
+[0m$ [0msed -n '133,165p' artifacts/claude-nhoppanel268b-20260923/score_panel.py
+echo "=====yesno score main====="
+grep -n "def main" -A 40 artifacts/claude-yesnopanel293-20260923/score_panel.py | head -n 50
+def main(argv):
+    panel = argv[1] if len(argv) > 1 else str(Path(__file__).resolve().parent / "panel.jsonl")
+    rows = argv[2] if len(argv) > 2 else str(Path(__file__).resolve().parent / "base138nb.jsonl")
+    out = argv[3] if len(argv) > 3 else None
+    items = load_panel(panel)
+    by_id = load_rows(rows, [x["id"] for x in items])
+    per_item = score(items, by_id)
+    fam = defaultdict(list)
+    for p in per_item:
+        fam[p["family"]].append(p)
+    summary = {}
+    for f, lst in fam.items():
+        stages = Counter(x["question_stage"] for x in lst)
+        summary[f] = {"n": len(lst),
+                      "right": sum(1 for x in lst if x["right"]),
+                      "right_names": sum(1 for x in lst if x["right_names"]),
+                      "wrong": sum(1 for x in lst if x["wrong"]),
+                      "question_wrote": sum(1 for x in lst if x["question_wrote"]),
+                      "stages": dict(stages)}
+    doc = {"per_item": per_item, "per_family": summary,
+           "total": {"n": len(per_item),
+                     "right": sum(1 for x in per_item if x["right"]),
+                     "wrong": sum(1 for x in per_item if x["wrong"]),
+                     "question_wrote": sum(1 for x in per_item if x["question_wrote"])}}
+    s = json.dumps(doc, indent=1, ensure_ascii=False)
+    if out:
+        Path(out).write_text(s, encoding="utf-8")
+    print(s)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+=====yesno score main=====
+128:def main(argv):
+129-    panel = argv[1] if len(argv) > 1 else str(Path(__file__).resolve().parent / "panel.jsonl")
+130-    rows = argv[2] if len(argv) > 2 else str(Path(__file__).resolve().parent / "base138nb.jsonl")
+131-    out = argv[3] if len(argv) > 3 else None
+132-    items = load_panel(panel)
+133-    by_id = load_rows(rows, [x["id"] for x in items])
+134-    base_by_id = None
+135-    try:
+136-        base_path = str(Path(__file__).resolve().parent / "base138nb.jsonl")
+137-        if str(Path(rows).resolve()) != str(Path(base_path).resolve()):
+138-            brows = [json.loads(x) for x in Path(base_path).read_text(encoding="utf-8").splitlines() if x.strip()]
+139-            base_by_id = {r["id"]: r for r in brows}
+140-    except Exception:
+141-        base_by_id = None
+142-    per_item = score(items, by_id, base_by_id)
+143-    fam = defaultdict(list)
+144-    for p in per_item:
+145-        fam[p["family"]].append(p)
+146-    summary = {}
+147-    for f, lst in fam.items():
+148-        stages = Counter(x["question_stage"] for x in lst)
+149-        summary[f] = {"n": len(lst), "right": sum(1 for x in lst if x["right"]),
+150-                      "wrong": sum(1 for x in lst if x["wrong"]),
+151-                      "question_wrote": sum(1 for x in lst if x["question_wrote"]),
+152-                      "stages": dict(stages)}
+153-    total = {"n": len(per_item), "right": sum(1 for x in per_item if x["right"]),
+154-             "wrong": sum(1 for x in per_item if x["wrong"]),
+155-             "question_wrote": sum(1 for x in per_item if x["question_wrote"])}
+156-    doc = {"per_item": per_item, "per_family": summary, "total": total}
+157-    s = json.dumps(doc, indent=1, ensure_ascii=False)
+158-    if out:
+159-        Path(out).write_text(s, encoding="utf-8")
+160-    print(s)
+161-    return 0
+162-
+163-
+164-if __name__ == "__main__":
+165-    sys.exit(main(sys.argv))
+[0m
+[0m$ [0mgrep -n "per_item.append\|per_item\[" artifacts/claude-nhoppanel268b-20260923/score_panel.py artifacts/claude-yesnopanel293-20260923/score_panel.py | head
+grep -n "reply" artifacts/claude-nhoppanel268b-20260923/score_panel.py | head -n 10
+artifacts/claude-nhoppanel268b-20260923/score_panel.py:125:        per_item.append({"id": it["id"], "family": fam, "right": bool(right),
+artifacts/claude-yesnopanel293-20260923/score_panel.py:121:        per_item.append({"id": it["id"], "family": it["family"], "expect": expect,
+10:  abstain: reply contains "I don't know" or "I couldn't" and names no
+27:REQUIRED_ROW_FIELDS = {"id", "setup_replies", "question_reply", "question_stage",
+91:def is_abstain(reply, taught):
+92:    t = reply.lower()
+102:        reply = str(row["question_reply"])
+103:        rl = reply.lower()
+108:        abst = is_abstain(reply, taught)
+129:                         "question_reply": reply})
+[0m
+[0m← [0mWrite scripts/claude_292_score.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_292_runall.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_292_m5run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_292_m5.sh
+Wrote file successfully.
+[0m
+[0m$ [0muptime; df -g / | tail -1; mkdir -p artifacts/claude-merge292-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop292_agent.py --write-config artifacts/claude-merge292-20260923/loop292-config.json 2>&1 | tail -n 5
+7:23  up 2 days, 23:13, 4 users, load averages: 146.78 127.99 93.05
+/dev/disk3s1s1       460   12        12    50%  484014 136245520    0%   /
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py", line 102, in <module>
+    assert "Loop138nbEars" in _E, _E
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ['Loop292Ears', 'SrcGuardMixin228', 'ChainLift266bMixin', 'ChainLift266Mixin', 'Loop138nEars', 'QNorm221cMixin', 'FirstName138nMixin', 'FirstName236Mixin', 'StoredRel221bMixin', 'TableAsk237Mixin', 'TableAsk221Mixin', 'TableTeach138nMixin', 'TableTeach229Mixin', 'Loop138lEars', 'WriteScreen209EarsMixin', 'Loop223Ears', 'Loop138jEars', 'Case180bMixin', 'Apos193Mixin', 'About164bMixin', 'Reverse190bMixin', 'Reverse190Mixin', 'Negate154fEarsMixin', 'Replace154gEarsMixin', 'Loop222Ears', 'Loop215Ears', 'OfTeach215Mixin', 'Loop138iEars', 'ChainOf174Mixin', 'Typo165Mixin', 'Verb232Mixin', 'ValueScreen167bMixin', 'Verb167dMixin', 'Verb167Mixin', 'Name173bMixin', 'Name173Mixin', 'Me166Mixin', 'Plural162bMixin', 'Copula172Mixin', 'Multival154eMixin', 'NameVal171BMixin', 'NameVal171Mixin', 'Loop138gEars', 'Loop138fEars', 'Qform158Mixin', 'Filler157Mixin', 'Smalltalk156bMixin', 'Doubt146bMixin', 'Doubt146Mixin', 'Subject150BMixin', 'Reverse153Mixin', 'Loop138bEars', 'QMarkMixin151', 'ScreenStatusMixin148b', 'Loop138Ears', 'Loop134Ears', 'PleaseForgetSpaceMixin134', 'ShoutedPossessiveMixin134', 'Loop121Ears', 'Loop113bEars', 'Loop113Ears', 'Loop102Ears', 'object']
+[0m
+[0m$ [0mgrep -n "Loop138nbEars\s*=\|class Loop138nbEars\|Loop138nbEars =" scripts/claude_loop138nb_agent.py scripts/claude_loop138n_agent.py | head; grep -n "^from\|^import" scripts/claude_loop138nb_agent.py | head -n 30
+scripts/claude_loop138nb_agent.py:48:Loop138nbEars = N138.Loop138nEars  # ears unchanged from 138n
+25:from __future__ import annotations
+27:import argparse
+28:import copy
+29:import json
+30:import sys
+31:from pathlib import Path
+37:import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+41:import claude_fix138nb_label as LB138NB  # noqa: E402 (the one change)
+42:import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+43:import claude_loop138m_agent as M138  # noqa: E402 (read-only)
+44:import claude_loop138n_agent as N138  # noqa: E402 (base, read-only)
+45:import claude_loop232c_agent as L232C  # noqa: E402 (read-only)
+46:import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+[0m
+[0m$ [0mgrep -n "class Loop138nbAgentLoop" -A 8 scripts/claude_loop138nb_agent.py | head -n 12
+51:class Loop138nbAgentLoop(LB138NB.Label138nbMixin, N138.Loop138nAgentLoop):
+52-    """138n loop + the 190-answer label, outermost (text only)."""
+53-
+54-
+55-def _mro_names(cls) -> list[str]:
+56-    return [c.__name__ for c in cls.__mro__]
+57-
+58-
+59-_L = _mro_names(Loop138nbAgentLoop)
+[0m
+[0m← [0mEdit scripts/claude_loop292_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py
+@@ -98,9 +98,9 @@
+ 
+ _E = _mro_names(Loop292Ears)
+ assert _E[:4] == ["Loop292Ears", "SrcGuardMixin228", "ChainLift266bMixin",
+                   "ChainLift266Mixin"], _E
+-assert "Loop138nbEars" in _E, _E
++assert "Loop138nEars" in _E, _E  # NB138.Loop138nbEars is this alias
+ _L = _mro_names(Loop292AgentLoop)
+ assert _L[:3] == ["Loop292AgentLoop", "YesNo293Mixin",
+                   "Loop138nbAgentLoop"], _L
+ 
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop292_agent.py --write-config artifacts/claude-merge292-20260923/loop292-config.json 2>&1 | tail -n 5
+Wrote artifacts/claude-merge292-20260923/loop292-config.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, json, tempfile
+sys.path.insert(0, 'scripts')
+import claude_loop292_agent as A292
+cfg = dict(A292.DEFAULT_CONFIG292)
+cfg['state_dir'] = tempfile.mkdtemp(prefix='s292-smoke-')
+cfg['sleep_threshold'] = 100000
+loop = A292.build_agent292(cfg)
+print('BUILD OK', type(loop).__name__, type(loop.ears).__name__)
+turns = [
+  'Mara Voss\'s boss is Taren.',
+  'Taren\'s city is Oslo.',
+  'Where does Mara Voss\'s boss live?',
+  'Does Mara Voss live in Oslo?',
+  'Mara Voss\'s city is Bergen.',
+  'Does Mara Voss live in Bergen?',
+  'Where does Mara Voss live?',
+]
+for t in turns:
+    print('U:', t)
+    print('A:', ' '.join(loop.turn(t)))
+print('stage:', getattr(loop.ears, 'last_stage', ''))
+" 2>&1 | tail -n 25
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py", line 262, in build_agent292
+    _check(loop)
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop292_agent.py", line 227, in _check
+    raise RuntimeError("292: ChainLift266bMixin not on outer ears")
+RuntimeError: 292: ChainLift266bMixin not on outer ears
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile
+sys.path.insert(0, 'scripts')
+import claude_loop291_agent as A291
+cfg = dict(A291.DEFAULT_CONFIG291)
+cfg['state_dir'] = tempfile.mkdtemp(prefix='s291-dbg-')
+cfg['sleep_threshold'] = 100000
+loop = A291._build291(cfg)
+print('outer ears:', type(loop.ears).__name__)
+print('inner:', type(loop._inner138j_ears).__name__)
+print('loop:', type(loop).__name__)
+import inspect
+src = inspect.getsource(type(loop).turn)
+print(src[:800])
+" 2>&1 | tail -n 20
+outer ears: Sleep130Ears
+inner: Comment258_Merge252c_Boundary259_Correct252_Loop138nEars
+loop: Correct252_Loop138nbAgentLoop
+    def turn(self, text: str) -> list[str]:  # type: ignore[no-redef]
+        if L189B.is_repeat189b(text):
+            return super().turn(text)  # type: ignore[misc]  # state kept
+        before = len(self.nb.events)  # type: ignore[attr-defined]
+        said = super().turn(text)  # type: ignore[misc]
+        try:
+            self._prev252 = {
+                "reply": " ".join(said) if said else "",
+                "records": list(getattr(self, "last_records", []) or []),
+                "wrote": len(self.nb.events) != before,  # type: ignore[attr-defined]
+            }
+        except Exception:  # noqa: BLE001
+            self._prev252 = None
+        return said
+[0m
