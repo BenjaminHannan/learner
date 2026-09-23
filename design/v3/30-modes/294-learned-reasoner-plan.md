@@ -117,7 +117,7 @@ beats the brain-style design.
   Opus agent (key-writing rules). Fictional names. Never trained or tuned on.
 - The notebook is given **directly** as rows, bypassing the reader, so this measures the
   reasoner alone.
-- 300 items, 30 per category:
+- 300 items: 30 in each of the 9 practised categories, plus 30 held-out:
   - one-step;
   - two-step chain;
   - backwards ("whose sister is Ana");
@@ -127,8 +127,15 @@ beats the brain-style design.
   - before and after (time);
   - newest correction wins;
   - fact missing (must say "I don't know");
-  - two held-out types that are never practised (for example "all the people who live in X"
-    and "do A and B share a boss").
+  - two held-out types that are never practised, 15 items each: three-step chains (practice
+    goes up to two steps) and big notebooks of 30 to 40 rows (practice uses 4 to 14 rows).
+    These test the loop design's own claim, that thinking for more steps carries over to harder
+    problems. (Changed 19:40 from "list everyone in X" and "same boss": a reasoner that works
+    on thoughts can't handle a kind of question it has never seen, which would make the mark
+    unfair by design.)
+- Each item also carries the question as a thought-style frame (kind, who, relations, value,
+  direction), as the reader would hand it over. The 294 arms read the frame. The 1B arms (295)
+  read the English question.
 - Arms: 292's code reasoner, the 294 loop reasoner, its equal-size plain baseline, and (for 295)
   the untrained and trained MiniCPM5-1B.
 
