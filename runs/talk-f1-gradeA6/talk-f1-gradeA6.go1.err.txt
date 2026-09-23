@@ -1,0 +1,212 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin main; echo FETCH_OK; git rev-parse --show-toplevel; ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+18:54  up  8:48, 4 users, load averages: 50.25 56.30 48.49
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         5    69%  484014 61401880    1%   /
+FETCH_OK
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m✗ [0mRead scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mls scratchpad/briefs/; df -g /; uptime
+ls: scratchpad/briefs/: No such file or directory
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         5    69%  484014 61462160    1%   /
+18:55  up  8:48, 4 users, load averages: 48.79 55.90 48.39
+[0m
+[0m→ [0mRead scratchpad
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt | tee /tmp/stylesheet.txt; echo "---SIZE---"; wc -c /tmp/stylesheet.txt; shasum -a 256 /tmp/stylesheet.txt
+STYLE SHEET v2 FOR GRADING GRAMMAR (exp 241b, M1). The director sealed it on 2026-09-22, before any 241b sweep existed. It is v1 (241-stylesheet.txt) plus the clarifications marked NEW, which make grading stricter or more consistent, never more lenient.
+
+You grade one reply at a time: GRAMMATICAL or UNGRAMMATICAL, with a short reason.
+- A reply is UNGRAMMATICAL if ANY sentence in it breaks any rule below, or is not standard written English.
+- Grade grammar and word choice only. A stiff but correct sentence ("Tarno's city is Vell.") is GRAMMATICAL.
+- Never judge whether a fact is true, or whether a value is sensible for its relation. Names and values are made-up words and may look odd; that alone is never an error.
+
+House rules. Breaking any of these is an error.
+1. Possessives
+   - A singular name takes 's, including names ending in s, x or z ("Tomas's", "Brix's").
+   - A bare apostrophe after a singular name ("Tomas' job") is an error.
+   - A plural common noun ending in s takes a bare apostrophe ("the parents' house"); "parents's" is an error.
+   - An "of" form or a verb form that avoids the possessive is fine.
+2. Lists
+   - Write "A and B" and "A, B and C". No Oxford comma: "A, B, and C" is an error.
+   - No empty slots ("people: .", "A, , B", "and .") and no stray separators.
+   - NEW: the same item twice in one list ("rowing and rowing") is an error.
+3. Numbers in running text
+   - Counts 0–9 are words ("three sisters"); 10 and up are digits.
+   - Digits inside a value (a date, a year, an age, a phone number, an address, a code) are fine.
+   - A bare zero count ("0 people", "zero people") is an error. Say "no one", "nobody", "none" or "I don't know anyone".
+4. Agreement
+   - Count and noun agree ("one person", "two people"); "1 people" and "2 person" are errors.
+   - Subject and verb agree ("X lives", "they live"; "does X live", not "does X lives"). This includes a value used as a subject: "noodles is" is an error.
+   - Verb forms are right ("was born", not "is born" for a birth; "has worked", not "has work").
+5. Articles
+   - Use "a" before a consonant sound and "an" before a vowel sound, going by sound ("an hour", "a university", "an MBA").
+   - No missing article where English needs one ("X is teacher" is an error) and no doubled article.
+6. Sentence form
+   - Each sentence starts with a capital letter and ends with . ? or !
+   - No doubled words ("the the"), no missing words, and no run-on sentences joined only by a comma (comma splices).
+   - Brackets and quotes are balanced.
+   - A question is phrased as a question and ends with "?".
+7. Typography: no space before punctuation, no doubled punctuation ("..", "?.", ".,"), no double spaces, and no leading or trailing space.
+8. No machine text
+   - Raw keys, underscores or placeholders ("date_of_birth", "{name}", "<X>", "None", "null", "[]") are errors, unless the user's own words contained them.
+   - NEW: internal entity codes such as "(E7563)" are machine text and an error.
+9. "(worked out backwards)" follows the statement it qualifies, inside or right after the same sentence. A dangling, doubled or orphaned one is an error.
+10. Pronouns
+   - "I/me/my" for the assistant and "you/your" for the user are fine. Singular "they" is fine.
+   - Pronoun choice is not a grammar error unless it breaks agreement or has no clear referent in the same reply.
+11. NEW: Names and word choice
+   - A value that is plainly a proper name (a person, place, organisation, or the title of a work) starts with a capital letter, even if it looks typed in lowercase. A title keeps its own capital "The" ("the Quiet Tide" inside a sentence is an error when "The Quiet Tide" is the title).
+   - Other values (jobs, foods, hobbies, colours, dates) are not judged for case.
+   - Words must fit what they refer to: "someone/who" for people, "something/which" for things, places, dates and numbers. "Krellwur Press, which is not someone I can look up" is an error.
+
+Output for each reply: id, GRAMMATICAL or UNGRAMMATICAL, and a reason. The reason names the rule number (or "general" for other standard-English errors) and quotes the exact offending words.
+---SIZE---
+    4146 /tmp/stylesheet.txt
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/stylesheet.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i -E "OPUS-RULES|opus-rules" | head -20; echo "---"; git show origin/main:scratchpad/briefs/OPUS-RULES.txt 2>&1 | head -50; echo "==="; git log --oneline -3 origin/main; echo "==="; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl 2>&1 | head -c 500
+handoff/kit/briefs/OPUS-RULES.txt
+---
+fatal: path 'scratchpad/briefs/OPUS-RULES.txt' does not exist in 'origin/main'
+===
+50fbf695c talk: F1 mechanical marks verified; queue blind grammar graders (2x6) and judge
+cbb2875dc rsn 294: spending guard task (combined $4 cap per job, stops all rsn-294* at $3.80)
+304c1e8de rsn 294: third GPU try queued (second was HOST-FAIL, $0); up to 4 rentals on different hosts
+===
+{"id": "h0001", "reply": "The capital of the country of origin of Kenley Jansen's position's sport is London."}
+{"id": "h0002", "reply": "Saved: Arsène Wenger is an association football manager."}
+{"id": "h0003", "reply": "The author of Updated: The Pickwick Papers is Mary Shelley (it was Charles Dickens)."}
+{"id": "h0004", "reply": "The capital of the country of citizenship of Ford Capri's manufacturer's founder is Paris."}
+{"id": "h0005", "reply": "Saved: Kazunori Yamauchi is a citizen of Jap
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt; echo "===END==="; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | wc -l
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+===END===
+    2690
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; git show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl | sed -n '2246,2690p' > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl; wc -l /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl; ls artifacts/claude-gradef1-A-20260923/ 2>&1
+445 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl
+part1.jsonl
+part2.jsonl
+part3.jsonl
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl[90m [limit=150, offset=1][0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl[90m [limit=150, offset=151][0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl[90m [limit=150, offset=301][0m
+[0m
+[0m← [0mWrite /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/mkpart6.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/mkpart6.py && wc -l artifacts/claude-gradef1-A-20260923/part6.jsonl && /usr/bin/python3 -c "
+import json
+rows=[json.loads(l) for l in open('artifacts/claude-gradef1-A-20260923/part6.jsonl')]
+ids=[r['id'] for r in rows]
+print('lines:',len(rows))
+print('unique ids:',len(set(ids)))
+print('order ok:',ids==['h%04d'%i for i in range(2246,2691)])
+print('false:',sum(1 for r in rows if not r['grammatical']))
+print('true:',sum(1 for r in rows if r['grammatical']))
+for r in rows:
+    assert set(r.keys())=={'id','grammatical','reason'}
+    assert isinstance(r['grammatical'],bool)
+print('schema ok')
+"
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-gradef1-A-20260923/part6.jsonl rows: 445 false: 25
+     445 artifacts/claude-gradef1-A-20260923/part6.jsonl
+lines: 445
+unique ids: 445
+order ok: True
+false: 25
+true: 420
+schema ok
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+slice={json.loads(l)['id']:json.loads(l)['reply'] for l in open('/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/part6_slice.jsonl')}
+out=[json.loads(l) for l in open('artifacts/claude-gradef1-A-20260923/part6.jsonl')]
+for r in out:
+    if not r['grammatical']:
+        print(r['id'],'|',r['reason'],'|',slice[r['id']])
+"
+h2285 | rule 5: missing article in 'citizen of United Kingdom of Great Britain and Ireland' | Saved: Liam Fox is a citizen of United Kingdom of Great Britain and Ireland.
+h2303 | general: misspelled 'Origianl' | Saved: Origianl broadcaster of Home Improvement's officeholder is American Broadcasting Company.
+h2315 | general: misspelled 'origianl' | My notes say the officeholder of origianl broadcaster of The Ropers is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?
+h2330 | general: misspelled 'origianl' | The officeholder of Updated: origianl broadcaster of My Wife and Kids is British Broadcasting Corporation (it was American Broadcasting Company).
+h2337 | rule 11: lowercase proper name 'nicolae Ceaușescu' | nicolae Ceaușescu's spouse's alma mater is Michigan State University.
+h2342 | general: misspelled 'Origianl' | Saved: Origianl broadcaster of Once Upon a Time's officeholder is American Broadcasting Company.
+h2360 | rule 5: 'an citizen' | Saved: Carlo Ancelotti is an citizen of Sweden.
+h2369 | rule 5: missing article in 'citizen of Tang Empire' | Saved: Lita Ford is a citizen of Tang Empire.
+h2376 | rule 6: missing final period | Saved: Marten Stekelenburg's position is goalkeeper
+h2379 | general: misspelled 'origianl' | My notes say origianl broadcaster of The Drew Carey Show's officeholder is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?
+h2389 | rule 5: missing article in 'citizen of United Kingdom of Great Britain and Ireland' | Saved: Edward Seymour, 1st Duke of Somerset is a citizen of United Kingdom of Great Britain and Ireland.
+h2398 | rule 5: missing article in 'citizen of Russian Empire' | Saved: Nicholas I of Russia is a citizen of Russian Empire.
+h2462 | general: misspelled 'origianl' | Saved: The officeholder of origianl broadcaster of America's Funniest Home Videos is American Broadcasting Company.
+h2504 | rule 5: missing article in 'citizen of Kingdom of Italy' | Saved: Matteo Ceirano is a citizen of Kingdom of Italy.
+h2518 | general: misspelled 'Origianl' | Saved: Origianl broadcaster of NBA on ABC's officeholder is American Broadcasting Company.
+h2535 | general: misspelled 'origianl' | Saved: The officeholder of origianl broadcaster of The Rookies is American Broadcasting Company.
+h2565 | general: misspelled 'Origianl' | Saved: Origianl broadcaster of Soap's officeholder is American Broadcasting Company.
+h2634 | rule 5: 'an citizen' | Saved: Barack Obama is an citizen of the United States of America.
+h2637 | general: misspelled 'origianl' | The officeholder of Updated: origianl broadcaster of The Ropers is British Broadcasting Corporation (it was American Broadcasting Company).
+h2639 | rule 5: missing article in 'citizen of British Raj' | Saved: Magda Goebbels is a citizen of British Raj.
+h2642 | rule 11: lowercase proper name 'french East India Company' | french East India Company's founder's country of citizenship is Hungary.
+h2651 | rule 6: doubled word 'me me' | My notes say Charles Dickens wrote Dombey and Son. Do you want me me to change it to Thomas Mann?
+h2658 | general: misspelled 'origianl' | My notes say origianl broadcaster of Home Improvement's officeholder is American Broadcasting Company. Do you want me to change it to British Broadcasting Corporation?
+h2672 | general: misspelled 'origianl' | Saved: The officeholder of origianl broadcaster of My Wife and Kids is American Broadcasting Company.
+h2683 | general: misspelled 'origianl' | Saved: The officeholder of origianl broadcaster of The Ropers is American Broadcasting Company.
+[0m
