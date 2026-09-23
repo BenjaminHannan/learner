@@ -103,3 +103,36 @@ Bars:
 - smalltalkpanel234 equal or better than 260.
 This is the join's last attempt. If 280p fails, the join closes, and the pieces are joined later only as part of
 the main-base join.
+
+## 280p result: PASS (director, 2026-09-23 15:01 UTC)
+280p is a **verified PASS**. The sealed 280m agent agreed with the mechanical owner on 90/90 turns of the fresh
+joinpanel280p. Director recount from the raw rows of all five arms:
+- Owners: 260 57, 280b 24, 282b 5, 281 4.
+- 0 overlaps, 0 writes on non-teach turns, 0 store differences.
+- Called and control questions: 5 right, 12 clarify or abstain lines, 0 wrong. That low answer rate is inherited
+  from the pieces and the base on this panel; it is report-only, not a join effect.
+- The only ability text is CAN280 (24), with 0 other claims.
+- Registered post-seal suites: exactly 280's 3 sessions152 moves, N06 and E04, with GATE identical.
+- smalltalkpanel234: 17/20 vs 16/20.
+- Seals: panel 2/2, scorer 3/3, agent 12/12.
+The 280m layers are cleared to join the main base.
+
+## 292t: the talking layers on the main base 292 (registered 15:01 UTC)
+Base: 292 (build_agent292 / DEFAULT_CONFIG292 in scripts/claude_loop292_agent.py). The one new file is a join
+agent that installs 280m's layers on 292 in 280m's order, importing the piece files unchanged.
+Arms, all on 292:
+- 292 (no talking layer);
+- 292+280b layers;
+- 292+281 layer;
+- 292+282b layers;
+- 292t (all three).
+Marks (fixed now), measured on a fresh joinpanel292t with the same spec as joinpanel280m:
+- M1: 292t agrees with the mechanical owner on 100% of turns. The owner is the single single-layer arm whose
+  reply, writes or store differ from 292's, or 292 if none does. Two or more is an overlap and fails.
+- M1: 0 writes on question and small-talk turns, 0 wrong called or control answers, and 0 unsupported claims
+  (director).
+- M2: frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench) and verifier probes vs 292's rows.
+  The only moves allowed are the ones the builder lists by id before the seal, each owned by one layer, and GATE
+  must be identical to 292's. They run as a registered run after the seal.
+- M3: smalltalkpanel234 equal to or better than 292.
+Before sealing, the builder shows on its own dev turns that 0 turns have two layers firing, and stops if any do.
