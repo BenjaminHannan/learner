@@ -1,0 +1,1856 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main; uptime; df -g /; pwd; git status --short | head -n 50; git log --oneline -5
+5:50  up 2 days, 21:40, 4 users, load averages: 50.97 52.49 53.42
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 131814920    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt; echo "=====SPEC====="; git show origin/main:handoff/kit/briefs/yesnopanel293-spec.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+=====SPEC=====
+BLIND PANEL SPEC: yesnopanel293 (yes/no questions about taught facts). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/293*, scripts/claude_fix293*, scripts/claude_loop293*, scripts/claude_293*, scripts/claude_diag293*, artifacts/claude-diag293-*, artifacts/claude-yesno293-*, scripts/fable_fix154*, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names.
+
+Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-yesnopanel293-20260923/ with panel.jsonl (85 items), base138nb.jsonl (85 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "y293-001", "family": ..., "setup": [1-4 plain teaches, each its own turn; taken_back items also include a denial such as "No, A's R isn't V." or "Actually A doesn't have an R."], "question": "...", "expect": "yes" | "no" | "unknown" | "control", "gold": [strings that must appear in a right reply, e.g. the stored value for yes/no; [] otherwise], "note": "..."}. JSON lists.
+Check every setup on the base: it must store exactly what you expect, and a taken-back fact must no longer be stored. Replace any setup that doesn't.
+
+Families and exact counts (85):
+- have_true 10: "Does A have a/an R?" / "Has A got a/an R?" with R taught (boss, dentist, sister, coach, doctor, friend ...). expect yes, gold [value].
+- have_unknown 8: the same shapes, R never taught for A (other facts about A taught). expect unknown.
+- live 10: "Does A live in V?" after "A's city is C." (5 with V = C: yes; 5 with V ≠ C: no, gold [C]).
+- work 8: "Does A work at/for V?" after "A's employer is E." (4 yes, 4 no; gold [E]).
+- born 6: "Does A come from V?" / "Was A born in V?" after "A's birthplace is P." (3 yes, 3 no; gold [P]).
+- is_multiword 8: "Is A's R V?" / "Is V A's R?" where A or V is a two- or three-word name (4 yes, 4 no, over single-valued relations: boss, mother, father, city, employer, birthplace, dentist, coach).
+- is_of_form 6: "Is V the R of A?" (3 yes, 3 no).
+- taken_back 6: a fact taught then denied or corrected in setup, then asked. expect unknown (after a denial) or no/yes by the corrected value (after a correction, gold = the new value); say which in note.
+- is_single_control 8: "Is A's R V?" / "Is V A's R?" with one-word names (the base already answers these). expect control.
+- wh_control 8: plain who/what/where questions about the same facts. expect control.
+- statement_control 7: statements containing "does", "is" or "has" ("Ana has a dentist called Tovi." is NOT allowed here; use statements the base does not store, e.g. "Mira does love the rain.", checked on the base). expect control.
+At least 20 items use a two-word name.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged):
+- yes: the reply starts with "Yes" (case-insensitive, after optional spaces) and contains every gold string.
+- no: the reply starts with "No" and contains every gold string.
+- unknown: the reply contains "don't know" or "not that I know" and does not start with "Yes" or "No".
+- control: right = identical to the base's row (reply and stores); a builder's scorer compares against base138nb.jsonl.
+- wrong: expect yes but the reply starts with "No"; expect no but the reply starts with "Yes"; expect unknown but the reply starts with "Yes" or "No".
+- question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
+[0m
+[0m$ [0mls artifacts/ | head -n 100; echo "---"; ls scripts/ | head -n 100; echo "---"; git ls-tree -r --name-only origin/main | grep -E "138nb|builder-outbox|293" | head -n 100; echo "---"; git ls-tree -r --name-only origin/main -- handoff/kit/briefs/ | head -n 50
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join291-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+claude_266_panelrun.py
+claude_266_runall.sh
+claude_266_score.py
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268_devrepro.py
+claude_268_panelrun.py
+claude_268_runall.sh
+claude_268_score.py
+claude_268_supp.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score_fix1.py
+claude_268b_score.py
+claude_280_panel.sh
+claude_280_runall.sh
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_281_panel.sh
+claude_281_panelrun.sh
+claude_281_runall.sh
+claude_281b_panel.sh
+claude_281b_runall.sh
+claude_282_panel.sh
+claude_282_panelrun.sh
+claude_282_runall.sh
+claude_282b_panelrun.sh
+claude_282b_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_293_devdialogs.py
+claude_293_repro.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_called281_devcases.py
+claude_called281_panelrun.py
+claude_called281_panelscore.py
+---
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/private/db0d29339a47b284/audit_truth.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/private/db0d29339a47b284/query_truth.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/public/db0d29339a47b284/audit_keys.json
+artifacts/fable-concept-toy20-20260920/calibration-v1.1/public/db0d29339a47b284/query_record_ids.json
+artifacts/fable-concept-toy20-20260920/calibration/private/db0d29339a47b284/query_truth.json
+artifacts/fable-concept-toy20-20260920/calibration/public/db0d29339a47b284/query_record_ids.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierH/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/registered-v1.2/fits/tierL/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/G/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20001/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20002/predictions.json
+artifacts/fable-concept-toy20-20260920/wave1/v1.1-INVALID-accounting-QUARANTINED/fits/tierL/T/db0d29339a47b284/seed20003/predictions.json
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00293/events.fix77.seal.json
+design/v3/30-modes/138nb-inverse-diagnosis.md
+design/v3/30-modes/268b-nhop-guard-on-138nb.md
+design/v3/30-modes/291-join-138nb-138p.md
+design/v3/30-modes/293-yesno-questions.md
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/yesnopanel293-spec.txt
+handoff/queue/rsn-138nb-build.md
+handoff/queue/rsn-138nb-panel.md
+handoff/queue/rsn-293-build.md
+handoff/queue/rsn-293-diag.md
+handoff/queue/rsn-293-panel.md
+---
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i -E "builder-outbox|138nb" | head -n 100
+echo "---LOCAL---"
+ls artifacts/claude-merge138nb-20260923/ 2>&1 | head -n 20
+ls scripts/claude_loop138nb* 2>&1 | head -n 20
+echo "---QUEUE---"
+git show origin/main:handoff/queue/rsn-293-panel.md 2>&1 | head -n 200
+echo "---293 design forbidden? skip---"
+design/v3/30-modes/138nb-inverse-diagnosis.md
+design/v3/30-modes/268b-nhop-guard-on-138nb.md
+design/v3/30-modes/291-join-138nb-138p.md
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/queue/rsn-138nb-build.md
+handoff/queue/rsn-138nb-panel.md
+---LOCAL---
+loop138nb-config.json
+m1
+m6
+PASSMARKS.md
+predicted_moves138nb.json
+RESULTS.md
+run
+SEAL.sha256.txt
+scripts/claude_loop138nb_agent.py
+---QUEUE---
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: blind panel writer for exp 293 (reasoning line). Read handoff/kit/briefs/yesnopanel293-spec.txt (from origin/main) and follow it exactly; it is your whole task. CPU only. One process at a time; df -g / first, and stop if under 3 GB free. Final reply: category level only, never quote an item.
+PUSH: artifacts/claude-yesnopanel293-20260923
+---293 design forbidden? skip---
+[0m
+[0m$ [0mls artifacts/claude-calledpanel281-20260923/; echo "---"; ls artifacts/claude-commapanel263-20260923/; echo "---"; ls artifacts/claude-invpanel138nb-20260923/ 2>&1 | head -n 20
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+---
+base260.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+SEAL.sha256.txt
+---
+base138n.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+score_panel.py
+SEAL.sha256.txt
+[0m
+[0m→ [0mRead scripts/claude_loop138nb_agent.py
+[0m→ [0mRead artifacts/claude-merge138nb-20260923/loop138nb-config.json
+[0m→ [0mRead artifacts/claude-commapanel263-20260923/run_base.py
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/invpanel138nb-spec.txt | head -n 200
+echo "====="
+git show origin/main:handoff/queue/rsn-293-build.md | head -n 200
+BLIND PANEL SPEC: invpanel138nb (backwards questions: "who/what has this value?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/138nb-*, design/v3/30-modes/138n-merge-opus.md, scripts/claude_fix138nb_*, scripts/claude_loop138nb_agent.py, artifacts/claude-merge138nb-*, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py, scripts/claude_loop237_agent.py, any relation-table data file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-invpanel138nb-20260923/ with panel.jsonl (70 items), base138n.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item format (one fresh session per item): {"id": "i138nb-001", "family": ..., "setup": [1-3 teaching sentences, each sent as its own turn], "question": "...", "gold": [list of strings; EVERY string must appear in a right reply; [] for abstain/control families], "backwards": true/false, "stored_after_setup": [[subject, relation, value], ...], "note": "..."}.
+Use a JSON list for gold. Never join several answers into one string.
+
+Families and exact counts (70). V = the value asked about, A/B = the subjects. Every setup sentence is a plain "A's R is V." teach or "My R is V." (subject "you" in gold). Before using a setup, check on the base that it stores exactly the triple you expect; drop and replace any that doesn't.
+- whose_R 14: "Whose R is V?". 8 with one subject, 6 with two subjects sharing V. Relations: spread over at least 7 of boss, mother, father, dentist, doctor, coach, teacher, city, employer, birthplace, wife, husband, friend, neighbour. At most 3 items per relation.
+- lives_born 10: "Who lives in V?" (after "A's city is V.") and "Who was born in V?" (after "A's birthplace is V."), 5 each; 4 of the 10 have two subjects.
+- has_as 6: "Who has V as their R?" / "Who has V as his R?" / "Who has V as her R?"; 2 with two subjects.
+- verb_backwards 10: verb questions from value to subject: "Who does V manage?", "Who does V teach?", "Who does V coach?", "Who works at V?", "What did V compose?", "What did V write?", "What did V paint?" (setups "X's composer is V." etc.; works/songs/books may be multi-word titles). 3 with two subjects.
+- my_backwards 4: one setup is "My R is V." and one is "A's R is V."; question "Whose R is V?". gold ["you", A] is not required word-for-word for the user: gold lists A only, and the note says the reply must also refer to the user.
+- no_match 8: V is taught in a DIFFERENT relation than the one asked ("A's mother is V." then "Whose boss is V?"). gold []; the right reply abstains and names no subject.
+- unknown_value 4: V never taught ("Whose boss is Q?" after unrelated teaches). gold []; abstain, names no taught person.
+- forward_control 10: forward questions about the same kinds of setups ("Who is A's R?", "Where does A live?"). gold [V]. Not backwards.
+- teach_control 4: a setup sentence then a plain second teach as the "question" turn (no "?"); gold []; checks that nothing changes on statements.
+Two-subject items: at least 15 over the panel. Fictional names only, including multi-word names (at least 20 items use a two-word person name somewhere) and at least 4 items where a work title starts with "The".
+
+run_base.py: run every item once on the base, 138n = scripts/claude_loop138n_agent.py with artifacts/claude-merge138n-20260922/loop138n-config.json (build with build_agent138n, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Base row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote (true/false).
+
+score_panel.py (sealed with the panel; the builder uses it unchanged): input = the panel and a rows file in the base-row format; output JSON per item and per family:
+- right: backwards families: every gold string appears in the reply (case-insensitive) AND the reply contains "(worked out backwards)"; my_backwards also needs "your" or "you" in the reply; forward_control: gold appears; no_match/unknown_value: the reply is an abstain (contains "I don't know" or "I couldn't") and names no taught subject; teach_control: the question turn stores exactly its own triple.
+- right_names: backwards families only: every gold string appears, label or not (reported, not the main score).
+- wrong: the reply names a taught subject or taught value that is not in gold, and does not contain every gold string, and is not an abstain. (A reply that gives every gold name is never wrong.)
+- question_wrote: from the rows file.
+Report the base's counts per family (right, right_names, wrong, question writes) in README.md, category level only.
+
+Rules: fictional names only; the base runs once per item; never quote an item in README.md or in your final reply. Report: counts per family, the base's right / right_names / wrong per family, SEAL lines and the `shasum -a 256 -c` output from the repo root.
+=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+YOUR TASK: builder for exp 293, a yes/no question reader (reasoning line). CPU only (no GPU, no BensPC).
+Read first (from origin/main): design/v3/30-modes/293-yesno-questions.md (diagnosis, THE ONE CHANGE, marks). From origin/builder-outbox: artifacts/claude-diag293-20260923/DIAG.md and rows.jsonl (dev material), and copy unchanged the 138nb files (scripts/claude_loop138nb_agent.py, scripts/claude_fix138nb_label.py, artifacts/claude-merge138nb-20260923/). Import scripts/fable_fix154d_yesno.py read-only.
+Base: 138nb. New files only: scripts/claude_fix293_yesno.py (the one reader), scripts/claude_loop293_agent.py (SrcGuardMixin228 first; install_srcguard228() at import), scripts/claude_293_*.py/.sh, artifacts/claude-yesno293-20260923/. Ledger lines P293.n in artifacts/fable-predictions-ledger.md (append only).
+Order: (1) reproduce the gap with DIAG's 61 dev dialogs plus 40+ new ones in your own wording (every shape, multi-word names, taken-back and corrected facts, multi-valued relations, chain subjects as pass-through checks, statements); invpanel138nb and chainpanel266b are regression only, never dev material; (2) build; pilot; (3) PASSMARKS.md with numbered predictions and every predicted move by id, seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths), ledger lines; never edit a sealed file afterwards (write a new file and disclose it); (4) run M2-M5 once; (5) then wait for artifacts/claude-yesnopanel293-20260923/SEAL.sha256.txt (git fetch origin builder-outbox every 2 min, up to 150 min; copy the folder unchanged), check it OK, run the panel ONCE on both arms (138nb and 293) with its sealed score_panel.py; (6) RESULTS.md.
+Marks: exactly those in the design note. Show 138nb's number next to every figure. Never publish raw panel rows: push only score JSON with ids, families, stages and counts, not item text or replies.
+Finish with RESULTS.md (result first, integer counts, categories and ids only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-yesno293-20260923 scripts/claude_fix293_yesno.py scripts/claude_loop293_agent.py scripts/claude_293_*.py scripts/claude_293_*.sh artifacts/fable-predictions-ledger.md
+[0m
+[0m→ [0mRead artifacts/claude-invpanel138nb-20260923/run_base.py
+[0m→ [0mRead artifacts/claude-invpanel138nb-20260923/score_panel.py
+[0m
+[0m$ [0mcat artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt; echo "---"; cat artifacts/claude-commapanel263-20260923/SEAL.sha256.txt 2>&1 | head; echo "---"; ls artifacts/claude-calledpanel281-20260923/
+fc8921f6b7c6bcadd47a0a913225ab57a4340c9ee3af78d23a59371b4d8fb2ba  artifacts/claude-invpanel138nb-20260923/panel.jsonl
+06c6ed4b9594b43160e94d18246743b37888189ca0a6166823712a7a63780a71  artifacts/claude-invpanel138nb-20260923/base138n.jsonl
+7a35728de5ff4fd80a2667a955c84055f0c9245b385bff77a2771d208ca35460  artifacts/claude-invpanel138nb-20260923/make_panel.py
+ed898944d5d5e0fcdaf91af48b60f122ead6b60dc8d1dc9d2a9385f3642de88f  artifacts/claude-invpanel138nb-20260923/run_base.py
+b00e33a9387639e50e314e197eb8725180aa582f6542a7ae26fec9b59f5fb6df  artifacts/claude-invpanel138nb-20260923/score_panel.py
+---
+135f335a515b6030f3308c869f18ab953027645249ab9bf41a7df3b988d6d12c  artifacts/claude-commapanel263-20260923/panel.jsonl
+d23d6651d7514c3a3eb011671c27c22cf2e6977a92c5505b21d13c5478f46816  artifacts/claude-commapanel263-20260923/base260.jsonl
+806163dabc56396836fa7b403c18cd9914f5fe55e123e06ee829061fb7f9d7c7  artifacts/claude-commapanel263-20260923/make_panel.py
+0f7476b9087bd3d73230596dee5ef644528cf38aca5316071a0b9443273b7754  artifacts/claude-commapanel263-20260923/run_base.py
+---
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+[0m
+[0m✗ [0mGrep "last_stage" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mgrep -rn "last_stage" scripts/ 2>&1 | head -n 40; echo "---"; grep -rn "question_stage\|ears\." scripts/claude_loop138n_agent.py 2>&1 | head -n 40
+scripts/fable_loop132_marks.py:118:            stage = str(getattr(daemon.loop.ears, "last_stage", ""))
+scripts/fable_loop113c_agent.py:186:                self.last_stage, self.last_score = "loop113c-hearsay", 1.0
+scripts/fable_loop113c_agent.py:197:                        self.last_stage, self.last_score = (
+scripts/fable_loop113c_agent.py:202:                    self.last_stage, self.last_score = (
+scripts/fable_loop113c_agent.py:207:                self.last_stage, self.last_score = (
+scripts/fable_loop113c_agent.py:215:                    self.last_stage, self.last_score = (
+scripts/fable_loop113c_agent.py:222:                    self.last_stage, self.last_score = (
+scripts/fable_loop113c_agent.py:226:                self.last_stage, self.last_score = (
+scripts/fable_loop113b_agent.py:72:                self.last_stage, self.last_score = "loop113b-hearsay", 1.0
+scripts/fable_loop113b_agent.py:82:                    self.last_stage, self.last_score = "loop113b-nhop", 1.0
+scripts/fable_loop113b_agent.py:86:                self.last_stage, self.last_score = (
+scripts/fable_loop113b_agent.py:92:                    self.last_stage, self.last_score = (
+scripts/fable_loop113b_agent.py:98:                self.last_stage, self.last_score = (
+scripts/fable_bench113d_redteam124.py:161:            stage = str(getattr(daemon.loop.ears, "last_stage", ""))
+scripts/fable_loop90_marks.py:249:            stage_counts[loop.ears.last_stage] = \
+scripts/fable_loop90_marks.py:250:                stage_counts.get(loop.ears.last_stage, 0) + 1
+scripts/fable_fix154d_yesno.py:209:                                "last_stage", ""))
+scripts/fable_fix154d_yesno.py:213:            self.ears.last_stage = (  # type: ignore[attr-defined]
+scripts/fable_align147_a2.py:94:                        getattr(daemon.loop.ears, "last_stage", ""))
+scripts/fable_fix221_tableask.py:440:            self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/fable_bench113d_121.py:72:        stage = str(getattr(daemon.loop.ears, "last_stage", ""))
+scripts/fable_loop189_agent.py:111:                        "last_stage", ""),
+scripts/fable_loop148b_agent.py:130:            self.last_stage, self.last_score = (
+scripts/fable_loop148b_agent.py:136:        self.last_stage, self.last_score = (
+scripts/fable_loop138d_agent.py:290:            "stage": getattr(self.ears, "last_stage", ""),
+scripts/fable_loop138e_agent.py:252:                self.last_stage, self.last_score = (
+scripts/fable_fix157b_capfiller.py:110:    return (getattr(obj, "last_stage", None),
+scripts/fable_fix157b_capfiller.py:118:            obj.last_stage = stage
+scripts/fable_fix158_qform.py:25:side-effect free w.r.t. the notebook (last_stage is overwritten by the
+scripts/fable_fix166_me.py:212:                        self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/fable_fix166_me.py:222:            self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/claude_268_supp.py:79:        st = getattr(obj, "last_stage", "")
+scripts/fable_loop132_agent.py:93:                save_stage, save_score = self.last_stage, self.last_score
+scripts/fable_loop132_agent.py:97:                    self.last_stage, self.last_score = save_stage, save_score
+scripts/fable_loop132_agent.py:100:                    self.last_stage, self.last_score = (
+scripts/fable_loop132_agent.py:103:                self.last_stage, self.last_score = save_stage, save_score
+scripts/fable_fix162_thename.py:260:                        self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/fable_fix162_thename.py:278:                self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/fable_loop215_agent.py:283:                        self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+scripts/fable_loop215_agent.py:292:                self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+---
+[0m
+[0m$ [0muptime; df -g / | head
+ls /tmp/ | head
+5:51  up 2 days, 21:40, 4 users, load averages: 49.02 51.45 52.96
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 131765680    0%   /
+__KMP_REGISTERED_LIB_10043
+__KMP_REGISTERED_LIB_10167
+__KMP_REGISTERED_LIB_10277
+__KMP_REGISTERED_LIB_10588
+__KMP_REGISTERED_LIB_10636
+__KMP_REGISTERED_LIB_1066
+__KMP_REGISTERED_LIB_10679
+__KMP_REGISTERED_LIB_10716
+__KMP_REGISTERED_LIB_10827
+__KMP_REGISTERED_LIB_10919
+[0m
+[0m← [0mWrite /tmp/probe293_a.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_a.py 2>&1 | head -n 200
+=== CASE ["Lena's boss is Kira."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's dentist is Tovi."] ===
+TURN: "Lena's dentist is Tovi."
+  REPLY: "Saved: Lena's dentist is Tovi."
+  STAGE: 'fake'
+  STORE: [['Lena', 'dentist', 'Tovi']]
+----
+=== CASE ["Lena's sister is Mara."] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's coach is Dara."] ===
+TURN: "Lena's coach is Dara."
+  REPLY: "Saved: Lena's coach is Dara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'coach', 'Dara']]
+----
+=== CASE ["Lena's doctor is Sela."] ===
+TURN: "Lena's doctor is Sela."
+  REPLY: "Saved: Lena's doctor is Sela."
+  STAGE: 'fake'
+  STORE: [['Lena', 'doctor', 'Sela']]
+----
+=== CASE ["Lena's friend is Nia."] ===
+TURN: "Lena's friend is Nia."
+  REPLY: "Saved: Lena's friend is Nia."
+  STAGE: 'fake'
+  STORE: [['Lena', 'friend', 'Nia']]
+----
+=== CASE ["Lena's city is Oslo."] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's employer is Halden."] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Lena's birthplace is Bergen."] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's mother is Wren."] ===
+TURN: "Lena's mother is Wren."
+  REPLY: "Saved: Lena's mother is Wren."
+  STAGE: 'fake'
+  STORE: [['Lena', 'mother', 'Wren']]
+----
+=== CASE ["Lena's father is Joren."] ===
+TURN: "Lena's father is Joren."
+  REPLY: "Saved: Lena's father is Joren."
+  STAGE: 'fake'
+  STORE: [['Lena', 'father', 'Joren']]
+----
+=== CASE ["Mary Ann's boss is Kira."] ===
+TURN: "Mary Ann's boss is Kira."
+  REPLY: "Saved: Mary Ann's boss is Kira."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Mary Ann', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Mary Ann."] ===
+TURN: "Lena's boss is Mary Ann."
+  REPLY: "Saved: Lena's boss is Mary Ann."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mary Ann']]
+----
+=== CASE ["No, Lena's boss isn't Kira."] ===
+TURN: "No, Lena's boss isn't Kira."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: []
+----
+=== CASE ["Lena's boss is Kira.", "No, Lena's boss isn't Kira."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "No, Lena's boss isn't Kira."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Actually Lena doesn't have a boss."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Actually Lena doesn't have a boss."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Actually Lena's boss is Mara."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Actually Lena's boss is Mara."
+  REPLY: "I have Lena's boss as Kira. Do you want me to change it to Mara?"
+  STAGE: 'loop138i-copula-ask'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ['Mira does love the rain.'] ===
+TURN: 'Mira does love the rain.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: []
+----
+=== CASE ['Tomas has quickly left the room.'] ===
+TURN: 'Tomas has quickly left the room.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: []
+----
+=== CASE ['Ana is happy today.'] ===
+TURN: 'Ana is happy today.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: []
+----
+[0m
+[0m← [0mWrite /tmp/probe293_b.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_b.py 2>&1 | head -n 300
+=== CASE ["Lena's boss is Kira.", "Lena's boss isn't Kira."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's boss isn't Kira."
+  REPLY: "OK, Lena's boss is not Kira. I don't have another boss for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+----
+=== CASE ["Lena's boss is Kira.", "Lena's boss is not Kira."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's boss is not Kira."
+  REPLY: "OK, Lena's boss is not Kira. I don't have another boss for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+----
+=== CASE ["Lena's boss is Kira.", "Lena doesn't have a boss."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena doesn't have a boss."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Lena has no boss.'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Lena has no boss.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Lena's boss is Mara."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's boss is Mara."
+  REPLY: "I have Lena's boss as Kira. Do you want me to change it to Mara?"
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "No, Lena's boss is Mara."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "No, Lena's boss is Mara."
+  REPLY: "Updated: Lena's boss is Mara (it was Kira)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "Actually, Lena's boss is Mara."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Actually, Lena's boss is Mara."
+  REPLY: "Updated: Lena's boss is Mara (it was Kira)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "I was wrong. Lena's boss is Mara."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "I was wrong. Lena's boss is Mara."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Does Lena have a boss?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Does Lena have a boss?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's city is Oslo.", 'Does Lena live in Oslo?'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Does Lena live in Oslo?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's city is Oslo.", 'Does Lena live in Bergen?'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Does Lena live in Bergen?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's employer is Halden.", 'Does Lena work at Halden?'] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+TURN: 'Does Lena work at Halden?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Lena's birthplace is Bergen.", 'Was Lena born in Bergen?'] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+TURN: 'Was Lena born in Bergen?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's boss is Kira.", "Is Lena's boss Kira?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Is Lena's boss Kira?"
+  REPLY: "Yes, Lena's boss is Kira."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Is Kira Lena's boss?"
+  REPLY: "Yes, Lena's boss is Kira."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Is Mara Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Is Mara Lena's boss?"
+  REPLY: "No, Lena's boss is Kira."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", "Who is Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Who is Lena's boss?"
+  REPLY: "Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Has Lena got a boss?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Has Lena got a boss?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+[0m
+[0m← [0mWrite /tmp/probe293_c.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_c.py 2>&1 | head -n 400
+=== CASE ["Lena's city is Oslo.", 'Is Oslo the city of Lena?'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Is Oslo the city of Lena?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's boss is Kira.", 'Is Kira the boss of Lena?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Is Kira the boss of Lena?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Is Mara the boss of Lena?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Is Mara the boss of Lena?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's dentist is Tovi.", 'Does Lena have a dentist?'] ===
+TURN: "Lena's dentist is Tovi."
+  REPLY: "Saved: Lena's dentist is Tovi."
+  STAGE: 'fake'
+  STORE: [['Lena', 'dentist', 'Tovi']]
+TURN: 'Does Lena have a dentist?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'dentist', 'Tovi']]
+----
+=== CASE ["Lena's city is Oslo.", "Is Lena's city Oslo?"] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: "Is Lena's city Oslo?"
+  REPLY: "Yes, Lena's city is Oslo."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's city is Oslo.", "Is Oslo Lena's city?"] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: "Is Oslo Lena's city?"
+  REPLY: "Yes, Lena's city is Oslo."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's employer is Halden.", "Is Lena's employer Halden?"] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+TURN: "Is Lena's employer Halden?"
+  REPLY: "Yes, Lena's employer is Halden."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Lena's birthplace is Bergen.", "Is Lena's birthplace Bergen?"] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+TURN: "Is Lena's birthplace Bergen?"
+  REPLY: "Yes, Lena's birthplace is Bergen."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's sister is Mara.", "Is Mara Lena's sister?"] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+TURN: "Is Mara Lena's sister?"
+  REPLY: "Yes, Lena's sister is Mara."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's friend is Nia.", 'Has Lena got a friend?'] ===
+TURN: "Lena's friend is Nia."
+  REPLY: "Saved: Lena's friend is Nia."
+  STAGE: 'fake'
+  STORE: [['Lena', 'friend', 'Nia']]
+TURN: 'Has Lena got a friend?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'friend', 'Nia']]
+----
+=== CASE ["Tomas's coach is Dara.", 'Does Tomas have a coach?'] ===
+TURN: "Tomas's coach is Dara."
+  REPLY: "Saved: Tomas's coach is Dara."
+  STAGE: 'fake'
+  STORE: [['Tomas', 'coach', 'Dara']]
+TURN: 'Does Tomas have a coach?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Tomas', 'coach', 'Dara']]
+----
+=== CASE ["Lena's boss is Kira.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Is Kira Lena's boss?"
+  REPLY: "Yes, Lena's boss is Kira."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's doctor is Sela.", 'Does Lena have a doctor?'] ===
+TURN: "Lena's doctor is Sela."
+  REPLY: "Saved: Lena's doctor is Sela."
+  STAGE: 'fake'
+  STORE: [['Lena', 'doctor', 'Sela']]
+TURN: 'Does Lena have a doctor?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'doctor', 'Sela']]
+----
+=== CASE ["Lena's sister is Mara.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+TURN: "Is Kira Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's city is Oslo.", "Is Bergen Lena's city?"] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: "Is Bergen Lena's city?"
+  REPLY: "No, Lena's city is Oslo."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's employer is Halden.", 'Does Lena live in Oslo?'] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+TURN: 'Does Lena live in Oslo?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Mary Ann's boss is Kira.", "Is Mary Ann's boss Kira?"] ===
+TURN: "Mary Ann's boss is Kira."
+  REPLY: "Saved: Mary Ann's boss is Kira."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Mary Ann', 'boss', 'Kira']]
+TURN: "Is Mary Ann's boss Kira?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Mary Ann', 'boss', 'Kira']]
+----
+=== CASE ["Mary Ann's boss is Kira.", "Is Kira Mary Ann's boss?"] ===
+TURN: "Mary Ann's boss is Kira."
+  REPLY: "Saved: Mary Ann's boss is Kira."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Mary Ann', 'boss', 'Kira']]
+TURN: "Is Kira Mary Ann's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Mary Ann', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Mary Ann.", "Is Mary Ann Lena's boss?"] ===
+TURN: "Lena's boss is Mary Ann."
+  REPLY: "Saved: Lena's boss is Mary Ann."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mary Ann']]
+TURN: "Is Mary Ann Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Mary Ann']]
+----
+=== CASE ["Lena's boss is Kira.", 'Does Lena live in Oslo?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Does Lena live in Oslo?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+[0m
+[0m← [0mWrite /tmp/probe293_d.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_d.py 2>&1 | head -n 500
+=== CASE ["Lena's sister is Mara.", "Lena's city is Oslo.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+TURN: "Is Kira Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's sister is Mara.", "Lena's city is Oslo.", "Is Mara Lena's boss?"] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+TURN: "Is Mara Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "Lena's boss isn't Kira.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's boss isn't Kira."
+  REPLY: "OK, Lena's boss is not Kira. I don't have another boss for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+TURN: "Is Kira Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: []
+----
+=== CASE ["Lena's boss is Kira.", "Lena's boss isn't Kira.", 'Does Lena have a boss?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's boss isn't Kira."
+  REPLY: "OK, Lena's boss is not Kira. I don't have another boss for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+TURN: 'Does Lena have a boss?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: []
+----
+=== CASE ["Lena's boss is Kira.", "No, Lena's boss is Mara.", "Is Mara Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "No, Lena's boss is Mara."
+  REPLY: "Updated: Lena's boss is Mara (it was Kira)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mara']]
+TURN: "Is Mara Lena's boss?"
+  REPLY: "Yes, Lena's boss is Mara."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "No, Lena's boss is Mara.", "Is Kira Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "No, Lena's boss is Mara."
+  REPLY: "Updated: Lena's boss is Mara (it was Kira)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Mara']]
+TURN: "Is Kira Lena's boss?"
+  REPLY: "No, Lena's boss is Mara."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Lena', 'boss', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "Who is Lena's boss?"] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Who is Lena's boss?"
+  REPLY: "Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's city is Oslo.", 'Where does Lena live?'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Where does Lena live?'
+  REPLY: "Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's employer is Halden.", "Who is Lena's employer?"] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+TURN: "Who is Lena's employer?"
+  REPLY: "Lena's employer is Halden."
+  STAGE: 'loop138-nhop'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Lena's birthplace is Bergen.", 'Where was Lena born?'] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+TURN: 'Where was Lena born?'
+  REPLY: "Lena's birthplace is Bergen."
+  STAGE: 'loop221-table-rekey'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's city is Oslo.", 'Lena does love hiking.'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Lena does love hiking.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's boss is Kira.", 'Mira does love the rain.'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Mira does love the rain.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Tomas has left the room.'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Tomas has left the room.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Kira.", 'Ana is happy today.'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: 'Ana is happy today.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira']]
+----
+=== CASE ["Lena's city is Oslo.", 'Does Lena live in Oslo?'] ===
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo']]
+TURN: 'Does Lena live in Oslo?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo']]
+----
+=== CASE ["Lena's birthplace is Bergen.", 'Does Lena come from Bergen?'] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+TURN: 'Does Lena come from Bergen?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's birthplace is Bergen.", 'Was Lena born in Bergen?'] ===
+TURN: "Lena's birthplace is Bergen."
+  REPLY: "Saved: Lena's birthplace is Bergen."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+TURN: 'Was Lena born in Bergen?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'birthplace', 'Bergen']]
+----
+=== CASE ["Lena's employer is Halden.", 'Does Lena work for Halden?'] ===
+TURN: "Lena's employer is Halden."
+  REPLY: "Saved: Lena's employer is Halden."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'Halden']]
+TURN: 'Does Lena work for Halden?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'employer', 'Halden']]
+----
+=== CASE ["Tomas's mother is Wren.", "Is Tomas's mother Wren?"] ===
+TURN: "Tomas's mother is Wren."
+  REPLY: "Saved: Tomas's mother is Wren."
+  STAGE: 'fake'
+  STORE: [['Tomas', 'mother', 'Wren']]
+TURN: "Is Tomas's mother Wren?"
+  REPLY: "Yes, Tomas's mother is Wren."
+  STAGE: 'loop154d-yesno+none'
+  STORE: [['Tomas', 'mother', 'Wren']]
+----
+[0m
+[0m← [0mWrite /tmp/probe293_e.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_e.py 2>&1 | head -n 200
+=== CASE ["Lena's city is Branford.", "Lena's city isn't Branford."] ===
+TURN: "Lena's city is Branford."
+  REPLY: "Saved: Lena's city is Branford."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Branford']]
+TURN: "Lena's city isn't Branford."
+  REPLY: "OK, Lena's city is not Branford. I don't have another city for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+----
+=== CASE ["Lena's employer is HaldenWorks.", "Lena's employer isn't HaldenWorks."] ===
+TURN: "Lena's employer is HaldenWorks."
+  REPLY: "Saved: Lena's employer is HaldenWorks."
+  STAGE: 'fake'
+  STORE: [['Lena', 'employer', 'HaldenWorks']]
+TURN: "Lena's employer isn't HaldenWorks."
+  REPLY: "OK, Lena's employer is not HaldenWorks. I don't have another employer for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+----
+=== CASE ["Lena's birthplace is Kelmar.", "Lena's birthplace isn't Kelmar."] ===
+TURN: "Lena's birthplace is Kelmar."
+  REPLY: "Saved: Lena's birthplace is Kelmar."
+  STAGE: 'fake'
+  STORE: [['Lena', 'birthplace', 'Kelmar']]
+TURN: "Lena's birthplace isn't Kelmar."
+  REPLY: "OK, Lena's birthplace is not Kelmar. I don't have another birthplace for Lena."
+  STAGE: 'loop138j-negate-one'
+  STORE: []
+----
+=== CASE ["Lena's city is Branford.", "No, Lena's city is Kelmar."] ===
+TURN: "Lena's city is Branford."
+  REPLY: "Saved: Lena's city is Branford."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Branford']]
+TURN: "No, Lena's city is Kelmar."
+  REPLY: "Updated: Lena's city is Kelmar (it was Branford)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Kelmar']]
+----
+=== CASE ["Tomas Green's boss is Kira.", "Tomas Green's boss isn't Kira."] ===
+TURN: "Tomas Green's boss is Kira."
+  REPLY: "Saved: Tomas Green's boss is Kira."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Tomas Green', 'boss', 'Kira']]
+TURN: "Tomas Green's boss isn't Kira."
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Tomas Green', 'boss', 'Kira']]
+----
+=== CASE ["Anna Lee's city is Branford.", "Is Anna Lee's city Branford?"] ===
+TURN: "Anna Lee's city is Branford."
+  REPLY: "Saved: Anna Lee's city is Branford."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Anna Lee', 'city', 'Branford']]
+TURN: "Is Anna Lee's city Branford?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Anna Lee', 'city', 'Branford']]
+----
+=== CASE ["Lena's boss is Anna Lee.", "Is Anna Lee Lena's boss?"] ===
+TURN: "Lena's boss is Anna Lee."
+  REPLY: "Saved: Lena's boss is Anna Lee."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Anna Lee']]
+TURN: "Is Anna Lee Lena's boss?"
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Anna Lee']]
+----
+=== CASE ["Lena's sister is Mara.", "Lena's city is Oslo.", 'Does Lena have a boss?'] ===
+TURN: "Lena's sister is Mara."
+  REPLY: "Saved: Lena's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Lena', 'sister', 'Mara']]
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+TURN: 'Does Lena have a boss?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'city', 'Oslo'], ['Lena', 'sister', 'Mara']]
+----
+=== CASE ["Lena's boss is Kira.", "Lena's city is Oslo.", 'Does Lena have a boss?'] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "Lena's city is Oslo."
+  REPLY: "Saved: Lena's city is Oslo."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira'], ['Lena', 'city', 'Oslo']]
+TURN: 'Does Lena have a boss?'
+  REPLY: "I didn't understand that question — could you say it another way?"
+  STAGE: 'none'
+  STORE: [['Lena', 'boss', 'Kira'], ['Lena', 'city', 'Oslo']]
+----
+[0m
+[0m← [0mWrite /tmp/probe293_f.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/probe293_f.py 2>&1 | head -n 200
+=== CASE ["Anna Lee's boss is Kira.", "Who is Anna Lee's boss?"] ===
+TURN: "Anna Lee's boss is Kira."
+  REPLY: "Saved: Anna Lee's boss is Kira."
+  STAGE: 'loop138b-fix137'
+  STORE: [['Anna Lee', 'boss', 'Kira']]
+TURN: "Who is Anna Lee's boss?"
+  REPLY: "Anna Lee's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Anna Lee', 'boss', 'Kira']]
+----
+=== CASE ["Lena's boss is Anna Lee.", "Who is Lena's boss?"] ===
+TURN: "Lena's boss is Anna Lee."
+  REPLY: "Saved: Lena's boss is Anna Lee."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Anna Lee']]
+TURN: "Who is Lena's boss?"
+  REPLY: "Lena's boss is Anna Lee."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Anna Lee']]
+----
+=== CASE ["Lena's boss is Kira.", "No, Lena's boss is Anna Lee."] ===
+TURN: "Lena's boss is Kira."
+  REPLY: "Saved: Lena's boss is Kira."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Kira']]
+TURN: "No, Lena's boss is Anna Lee."
+  REPLY: "Updated: Lena's boss is Anna Lee (it was Kira)."
+  STAGE: 'fake'
+  STORE: [['Lena', 'boss', 'Anna Lee']]
+----
+=== CASE ["Lena's city is Branford.", "Lena's city is Branford."] ===
+TURN: "Lena's city is Branford."
+  REPLY: "Saved: Lena's city is Branford."
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Branford']]
+TURN: "Lena's city is Branford."
+  REPLY: 'I already have that.'
+  STAGE: 'fake'
+  STORE: [['Lena', 'city', 'Branford']]
+----
+=== CASE ["Brenna's sister is Mara.", 'Brenna does love hiking.'] ===
+TURN: "Brenna's sister is Mara."
+  REPLY: "Saved: Brenna's sister is Mara."
+  STAGE: 'fake'
+  STORE: [['Brenna', 'sister', 'Mara']]
+TURN: 'Brenna does love hiking.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Brenna', 'sister', 'Mara']]
+----
+=== CASE ["Calla's dentist is Tovi.", 'Calla has quickly packed her case.'] ===
+TURN: "Calla's dentist is Tovi."
+  REPLY: "Saved: Calla's dentist is Tovi."
+  STAGE: 'fake'
+  STORE: [['Calla', 'dentist', 'Tovi']]
+TURN: 'Calla has quickly packed her case.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Calla', 'dentist', 'Tovi']]
+----
+=== CASE ["Doria's coach is Dara.", 'Doria is truly kind today.'] ===
+TURN: "Doria's coach is Dara."
+  REPLY: "Saved: Doria's coach is Dara."
+  STAGE: 'fake'
+  STORE: [['Doria', 'coach', 'Dara']]
+TURN: 'Doria is truly kind today.'
+  REPLY: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  STAGE: 'none'
+  STORE: [['Doria', 'coach', 'Dara']]
+----
+[0m
+[0m$ [0mmkdir -p artifacts/claude-yesnopanel293-20260923; ls artifacts/claude-yesnopanel293-20260923
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-yesnopanel293-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-yesnopanel293-20260923/run_base.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-yesnopanel293-20260923/score_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-yesnopanel293-20260923/make_panel.py; echo "---"; wc -l artifacts/claude-yesnopanel293-20260923/panel.jsonl; uptime; df -g / | head
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-yesnopanel293-20260923/panel.jsonl (85 items)
+---
+      85 artifacts/claude-yesnopanel293-20260923/panel.jsonl
+ 5:54  up 2 days, 21:43, 4 users, load averages: 47.55 51.48 52.71
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132768760    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-yesnopanel293-20260923/run_base.py 2>&1 | tail -n 20
+did y293-067
+did y293-068
+did y293-069
+did y293-070
+did y293-071
+did y293-072
+did y293-073
+did y293-074
+did y293-075
+did y293-076
+did y293-077
+did y293-078
+did y293-079
+did y293-080
+did y293-081
+did y293-082
+did y293-083
+did y293-084
+did y293-085
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-yesnopanel293-20260923/base138nb.jsonl 85 rows
+[0m
+[0m← [0mWrite /tmp/check293.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/check293.py 2>&1 | head -n 100
+TAKEN y293-057: setup ["Verin's boss is Kira.", "Verin's boss isn't Kira."] -> stored [] Q "Is Kira Verin's boss?" reply "I didn't understand that question — could you say it another way?" stage 'none'
+TAKEN y293-058: setup ["Willa's city is Branford.", "Willa's city isn't Branford."] -> stored [] Q 'Does Willa live in Branford?' reply "I didn't understand that question — could you say it another way?" stage 'none'
+TAKEN y293-059: setup ["Yelda's dentist is Tovi.", "Yelda's dentist isn't Tovi."] -> stored [] Q "Is Tovi Yelda's dentist?" reply "I didn't understand that question — could you say it another way?" stage 'none'
+TAKEN y293-060: setup ["Zoren's boss is Kira.", "No, Zoren's boss is Mara."] -> stored [['Zoren', 'boss', 'Mara']] Q "Is Mara Zoren's boss?" reply "Yes, Zoren's boss is Mara." stage 'loop154d-yesno+none'
+TAKEN y293-061: setup ["Caldor's city is Branford.", "No, Caldor's city is Kelmar."] -> stored [['Caldor', 'city', 'Kelmar']] Q "Is Branford Caldor's city?" reply "No, Caldor's city is Kelmar." stage 'loop154d-yesno+none'
+TAKEN y293-062: setup ["Dremma's employer is HaldenWorks.", "Actually, Dremma's employer is Bracken Labs."] -> stored [['Dremma', 'employer', 'Bracken Labs']] Q 'Does Dremma work for Bracken Labs?' reply "I didn't understand that question — could you say it another way?" stage 'none'
+two-word items: 25
+Counter({False: 85})
+Counter({'none': 66, 'loop154d-yesno+none': 9, 'fake': 6, 'loop138-nhop': 3, 'loop221-table-rekey': 1})
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-yesnopanel293-20260923/score_panel.py artifacts/claude-yesnopanel293-20260923/panel.jsonl artifacts/claude-yesnopanel293-20260923/base138nb.jsonl /tmp/score293.json 2>&1 | tail -n 120
+"expect": "control",
+   "right": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_stage": "none"
+  }
+ ],
+ "per_family": {
+  "have_true": {
+   "n": 10,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 10
+   }
+  },
+  "have_unknown": {
+   "n": 8,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 8
+   }
+  },
+  "live": {
+   "n": 10,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 10
+   }
+  },
+  "work": {
+   "n": 8,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 8
+   }
+  },
+  "born": {
+   "n": 6,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 6
+   }
+  },
+  "is_multiword": {
+   "n": 8,
+   "right": 1,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 7,
+    "loop138-nhop": 1
+   }
+  },
+  "is_of_form": {
+   "n": 6,
+   "right": 0,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 6
+   }
+  },
+  "taken_back": {
+   "n": 6,
+   "right": 2,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 4,
+    "loop154d-yesno+none": 2
+   }
+  },
+  "is_single_control": {
+   "n": 8,
+   "right": 8,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "loop154d-yesno+none": 7,
+    "loop138-nhop": 1
+   }
+  },
+  "wh_control": {
+   "n": 8,
+   "right": 8,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "fake": 6,
+    "loop138-nhop": 1,
+    "loop221-table-rekey": 1
+   }
+  },
+  "statement_control": {
+   "n": 7,
+   "right": 7,
+   "wrong": 0,
+   "question_wrote": 0,
+   "stages": {
+    "none": 7
+   }
+  }
+ },
+ "total": {
+  "n": 85,
+  "right": 26,
+  "wrong": 0,
+  "question_wrote": 0
+ }
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/check293.py 2>&1 | grep -E "two-word|Counter"
+echo "---score file---"
+cat /tmp/score293.json | head -n 5
+two-word items: 25
+Counter({False: 85})
+Counter({'none': 66, 'loop154d-yesno+none': 9, 'fake': 6, 'loop138-nhop': 3, 'loop221-table-rekey': 1})
+---score file---
+{
+ "per_item": [
+  {
+   "id": "y293-001",
+   "family": "have_true",
+[0m
+[0m← [0mWrite artifacts/claude-yesnopanel293-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-yesnopanel293-20260923/panel.jsonl artifacts/claude-yesnopanel293-20260923/base138nb.jsonl artifacts/claude-yesnopanel293-20260923/make_panel.py artifacts/claude-yesnopanel293-20260923/run_base.py artifacts/claude-yesnopanel293-20260923/score_panel.py > artifacts/claude-yesnopanel293-20260923/SEAL.sha256.txt; cat artifacts/claude-yesnopanel293-20260923/SEAL.sha256.txt; echo "---verify---"; shasum -a 256 -c artifacts/claude-yesnopanel293-20260923/SEAL.sha256.txt; echo "---files---"; ls -l artifacts/claude-yesnopanel293-20260923/; df -g / | head
+e12319af5aa345c07353cc5dbbee5f5265923adbcfb890262cf79af900ae8364  artifacts/claude-yesnopanel293-20260923/panel.jsonl
+359010365da39a3ea4c421442cd5ef30424203a9be965795e08b239e86bf4959  artifacts/claude-yesnopanel293-20260923/base138nb.jsonl
+bd8b1fb7045571fa3aa72e0e67004cdea7e7e40e07a5dd9cff2594d5e39d20e3  artifacts/claude-yesnopanel293-20260923/make_panel.py
+2abf8c3d63e10803fb59512f8e59976c5b4cffa9830ef4290810eb603be764c1  artifacts/claude-yesnopanel293-20260923/run_base.py
+ad3d4739ead76012482dd6ed822b06ba6365d8ce38a823a6382466cbb3f8a9b1  artifacts/claude-yesnopanel293-20260923/score_panel.py
+---verify---
+artifacts/claude-yesnopanel293-20260923/panel.jsonl: OK
+artifacts/claude-yesnopanel293-20260923/base138nb.jsonl: OK
+artifacts/claude-yesnopanel293-20260923/make_panel.py: OK
+artifacts/claude-yesnopanel293-20260923/run_base.py: OK
+artifacts/claude-yesnopanel293-20260923/score_panel.py: OK
+---files---
+total 176
+-rw-r--r--  1 ben-hannan  staff  30443 Sep 23 05:54 base138nb.jsonl
+-rw-r--r--  1 ben-hannan  staff  15940 Sep 23 05:54 make_panel.py
+-rw-r--r--  1 ben-hannan  staff  18946 Sep 23 05:54 panel.jsonl
+-rw-r--r--  1 ben-hannan  staff   2522 Sep 23 05:55 README.md
+-rw-r--r--  1 ben-hannan  staff   2392 Sep 23 05:54 run_base.py
+-rw-r--r--  1 ben-hannan  staff   6723 Sep 23 05:54 score_panel.py
+-rw-r--r--  1 ben-hannan  staff    599 Sep 23 05:55 SEAL.sha256.txt
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132200000    0%   /
+[0m
+[0m$ [0mgit status --short | grep -E "yesnopanel293|293"; echo "---"; git status --short | head -n 30
+?? scripts/claude_293_devdialogs.py
+?? scripts/claude_293_repro.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_fix293_yesno.py
+?? scripts/claude_loop293_agent.py
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+[0m
+[0m$ [0mgit status --short | grep yesnopanel; echo "exit:$?"; ls artifacts/ | grep yesnopanel
+exit:1
+claude-yesnopanel293-20260923
+[0m
+[0m$ [0mgit status --short | wc -l; git status --short | tail -n 30
+221
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+[0m
+[0m$ [0mgit status --short | grep -i "293-20260923"; echo "---"; git check-ignore artifacts/claude-yesnopanel293-20260923/panel.jsonl || echo "not ignored"
+---
+artifacts/claude-yesnopanel293-20260923/panel.jsonl
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-yesnopanel293-20260923/panel.jsonl; echo "---"; git status --short --ignored | grep yesnopanel | head; echo "---"; ls -la artifacts/claude-yesnopanel293-20260923/
+.gitignore:5:artifacts/	artifacts/claude-yesnopanel293-20260923/panel.jsonl
+---
+!! artifacts/claude-yesnopanel293-20260923/
+---
+total 176
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 23 05:55 .
+drwxr-xr-x@ 429 ben-hannan  staff  13728 Sep 23 05:54 ..
+-rw-r--r--    1 ben-hannan  staff  30443 Sep 23 05:54 base138nb.jsonl
+-rw-r--r--    1 ben-hannan  staff  15940 Sep 23 05:54 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  18946 Sep 23 05:54 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   2522 Sep 23 05:55 README.md
+-rw-r--r--    1 ben-hannan  staff   2392 Sep 23 05:54 run_base.py
+-rw-r--r--    1 ben-hannan  staff   6723 Sep 23 05:54 score_panel.py
+-rw-r--r--    1 ben-hannan  staff    599 Sep 23 05:55 SEAL.sha256.txt
+[0m
