@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""Experiment 150c -- S1/S2 sealed probe runner (Muse). Read-only vs repo.
+
+S1: reads FROZEN expectations from
+    artifacts/fable-subject150c-20260922/cases150c.json (70 cases), one
+    message each through a FRESH in-process loop150c, triples via
+    fable_loop90_agent.notebook_triples. Judges the FULL triple.
+S2: reads FROZEN artifacts/fable-fix150-20260922/cases150.json (57 cases)
+    through loop150c and diffs per-case verdicts against the SEALED
+    loop150 run artifacts/fable-fix150-20260922/probe150-loop150.json
+    (read-only): ZERO moves predicted.
+
+Verdicts: OK / WRONG-WRITE (any stored triple outside the expectation) /
+MISSED (expected write, got none) / WRONG-REPLY (no write, but a nowrite
+case got the wrong clarify kind). Every seed/case reported, never averaged.
+
+Registered runs (Mac CPU, offline; only AFTER PASSMARKS.md is sealed):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_fix150c_probe.py --cases cases150c \\
+    --out artifacts/fable-subject150c-20260922/probe150c-loop150c.json
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_fix150c_probe.py --cases cases150 \\
+    --out artifacts/fable-subject150c-20260922/probe150c-s2-loop150c.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_loop90_agent as L90  # noqa: E402 (notebook_triples, read-only)
+
+ROOT = SCRIPTS.parent
+ART150C = ROOT / "artifacts" / "fable-subject150c-20260922"
+ART150 = ROOT / "artifacts" / "fable-fix150-20260922"
+
+SPLIT_MARK = "one fact at a time"
+HEARSAY_MARK = "hear it somewhere"
+GENERIC_MARK = "Could you say it another way?"
+
+
+def reply_ok(kind: str | None, reply: str) -> bool:
+    if kind in (None, "any"):
+        return True
+    if kind == "split":
+        return SPLIT_MARK in reply
+    if kind == "hearsay":
+        return HEARSAY_MARK in reply
+    if kind == "generic":
+        return GENERIC_MARK in reply
+    return True
+
+
+def run_case(row: dict, build_fn) -> dict:
+    t0 = time.time()
+    with tempfile.TemporaryDirectory(prefix=row["id"] + "_") as tmp:
+        try:
+            loop = build_fn({"state_dir": tmp,
+                             "sleep_threshold": 100000})
+        except Exception as exc:  # noqa: BLE001
+            return {"id": row["id"], "group": row["group"],
+                    "text": row["text"], "expect": row["expect"],
+                    "stored": [], "reply": f"BOOT-FAILED {exc!r}",
+                    "verdict": "HARNESS-ERROR",
+                    "seconds": round(time.time() - t0, 3)}
+        try:
+            reply = " ".join(loop.turn(row["text"]))
+            stored = [list(t) for t in L90.notebook_triples(loop.nb)]
+        except Exception as exc:  # noqa: BLE001
+            return {"id": row["id"], "group": row["group"],
+                    "text": row["text"], "expect": row["expect"],
+                    "stored": [], "reply": f"HARNESS-CAUGHT {exc!r}",
+                    "verdict": "HARNESS-ERROR",
+                    "seconds": round(time.time() - t0, 3)}
+    exp = row["expect"]
+    want_reply = row.get("reply", "any")
+    if exp == "nowrite":
+        if stored:
+            verdict = "WRONG-WRITE"
+        elif reply_ok(want_reply, reply):
+            verdict = "OK"
+        else:
+            verdict = "WRONG-REPLY"
+    else:
+        want = [list(exp)]
+        if stored == want:
+            verdict = "OK"
+        elif not stored:
+            verdict = "MISSED"
+        else:
+            verdict = "WRONG-WRITE"
+    return {"id": row["id"], "group": row["group"],
+            "director": bool(row.get("director", False)),
+            "text": row["text"], "expect": exp, "want_reply": want_reply,
+            "stored": stored, "reply": reply,
+            "verdict": verdict, "seconds": round(time.time() - t0, 3)}
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="Exp 150c S1/S2 probe")
+    ap.add_argument("--cases", default="cases150c",
+                    choices=("cases150c", "cases150"))
+    ap.add_argument("--out", default=None)
+    args = ap.parse_args(argv)
+    import fable_loop150c_agent as L150c  # noqa: E402 (this experiment)
+    cfg = copy.deepcopy(L150c.DEFAULT_CONFIG150C)
+    build_fn = lambda c: L150c.build_agent150c(dict(cfg, **c))  # noqa: E731
+    if args.cases == "cases150c":
+        cases = json.loads((ART150C / "cases150c.json").read_text(
+            encoding="utf-8"))
+        default_out = ART150C / "probe150c-loop150c.json"
+    else:
+        cases = json.loads((ART150 / "cases150.json").read_text(
+            encoding="utf-8"))
+        default_out = ART150C / "probe150c-s2-loop150c.json"
+    t0 = time.time()
+    out = [run_case(row, build_fn) for row in cases]
+    wall = round(time.time() - t0, 1)
+    counts: dict[str, int] = {}
+    for r in out:
+        counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
+    payload = {"agent": "loop150c", "cases_file": args.cases,
+               "wall_seconds": wall, "counts": counts, "cases": out}
+    if args.cases == "cases150":
+        sealed = json.loads((ART150 / "probe150-loop150.json").read_text(
+            encoding="utf-8"))
+        base = {c["id"]: c.get("verdict") for c in sealed["cases"]}
+        moves = [(r["id"], base.get(r["id"]), r["verdict"]) for r in out
+                 if base.get(r["id"]) != r["verdict"]]
+        payload["vs_loop150_moves"] = moves
+        print(f"vs loop150 moves={moves}")
+    dest = Path(args.out) if args.out else default_out
+    dest.write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n",
+                    encoding="utf-8")
+    print(f"cases={args.cases} n={len(out)} counts={counts} wall={wall}s")
+    print(f"wrote {dest}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

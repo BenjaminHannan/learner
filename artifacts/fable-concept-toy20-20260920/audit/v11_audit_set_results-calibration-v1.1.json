@@ -1,0 +1,43 @@
+{
+ "results": [
+  {
+   "check": "the public audit set is reproducible from the PUBLIC support tensors alone (present mask + episode roles), so publishing it reveals nothing new",
+   "pass": true,
+   "detail": "all 12 worlds reproduce exactly"
+  },
+  {
+   "check": "published audit labels equal the public support observations (no evaluator-side value is published)",
+   "pass": true,
+   "detail": "[]"
+  },
+  {
+   "check": "audit sequences blank sensor and present inside the forecast window",
+   "pass": true,
+   "detail": "[]"
+  },
+  {
+   "check": "the frozen reservation uses the LARGEST LEGAL audit set, so the step table is data-independent (ruling A1)",
+   "pass": true,
+   "detail": "largest legal = 144; actual sizes [143, 144]; worlds below the bound {'db0d29339a47b284': 1} -- these are UNUSED RESERVATIONS that ruling A1 requires be recorded separately and NOT spent on extra fitting"
+  },
+  {
+   "check": "public file-size variation across worlds is driven only by the audit-set size, which is itself a function of the already-public mask",
+   "pass": true,
+   "detail": "2 distinct audit-set sizes [143, 144] across 12 worlds; the support and query tensors remain byte-identical in layout"
+  }
+ ],
+ "audit_set_sizes": {
+  "149e30247f4b35ec": 144,
+  "1f5501a48ba66181": 144,
+  "6b394b64b37bcca4": 144,
+  "b42aaa25c68b5af7": 144,
+  "b758f4e3235d4954": 144,
+  "db0d29339a47b284": 143,
+  "6593f32a2e201959": 144,
+  "870494a2edbdc07d": 144,
+  "b6b482aeb1c7e58c": 144,
+  "baa7f89dce2d2083": 144,
+  "bb1dafbd7a624ec4": 144,
+  "e2bc0de95bdde5db": 144
+ }
+}

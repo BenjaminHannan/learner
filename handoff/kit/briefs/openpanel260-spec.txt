@@ -1,0 +1,80 @@
+BLIND PANEL SPEC: openpanel260 (turns that start with a discourse opener or a greeting). The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+You write a blind test panel. You never see the builder's code, word lists or dev cases. Don't open scripts/claude_fix260_* or artifacts/claude-openers260-*. Read only what this spec names.
+
+Folder: artifacts/claude-openpanel260-20260922/. It must contain:
+- panel.jsonl (80 items)
+- base138m.jsonl (80 rows)
+- make_panel.py
+- run_base.py
+- README.md (category level only; no items)
+- SEAL.sha256.txt (sha256 of the four data and code files, paths from the repo root)
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json. Drive it like the probe runner /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py: one fresh notebook per item, turns sent in order, and the stored triples read after each turn.
+
+Panel fields, exactly these 10:
+- id: o260-001 … o260-080
+- family
+- setup: list of turns sent first (teaches and questions)
+- turn: the one turn under test
+- followup: one question sent after the turn, or ""
+- stated_facts: list of [subject, relation, value] the turn states, in the base's storage form (the form a plain teach of the same fact stores on 138m; check it by running the plain teach)
+- expect_store: list of triples that must be stored after the turn
+- gold: a substring the right reply must contain. For a teach, it goes in the followup reply. For a question turn, it goes in the turn's reply. Use "" when none applies.
+- plain_turn: the same turn with the opener or greeting removed, written exactly as a user would type it without it ("" for families where it doesn't apply)
+- note: short free text (why the item exists)
+
+Base row fields, exactly these 10:
+- id
+- setup_replies
+- stored_after_setup
+- turn_reply
+- stored_after_turn
+- followup_reply
+- stored_after_followup
+- plain_reply: the base's reply to plain_turn in a fresh copy of the same setup ("" if none)
+- base_right
+- base_junk
+
+Families (exact counts):
+1. opener_teach (20). A teach that starts with an everyday opener.
+   - Use real everyday English openers with and without a comma: so, well, oh, oh and, also, and, but, okay, ok, okay so, alright, right, please, hey, hi, actually, anyway, btw, fyi, listen, look, um, uh, by the way, fun fact, just so you know, for the record, oh yeah, one more thing, quick one.
+   - Use at least 14 different openers, including at least 8 outside this set: {so, well, oh, also, please, okay, ok, hey}.
+   - Mix fact shapes: possessive ("X's boss is Y."), verb ("X lives in Y.", "X works at Y."), and "X is a Y." Only use shapes whose plain_turn the base saves exactly. Check each one, and replace any plain_turn it doesn't save before you finalise.
+   - followup asks for the fact. gold = the value.
+2. opener_question (12). setup teaches a fact with a plain teach. The turn asks about it after an opener ("So, who is X's boss?", "Okay, where does X live?"). Only use questions whose plain_turn the base answers right. gold = the value. followup = "".
+3. greeting_question (8). setup teaches a fact. The turn is a greeting plus a question ("Hi! Who is X's boss?", "Hello, where does X live?", "Hey there, what is X's job?"). At least 2 items ask the assistant's name ("Hi! What's your name?"): gold = "Premonition", and setup is []. Only use questions whose plain_turn the base answers right.
+4. bare_greeting (6). The turn is only a greeting ("hello there", "hi again", "hey!", "good morning", "hiya", "Hello, Premonition."). setup = []. gold = "". Record in note the base's reply to a plain "Hello." (run it).
+5. name_trap (10). A teach whose first word is also an everyday word but is part of a name or value, not an opener.
+   - Names like Hope, Joy, Will, Grace, Sunny, Faith, May, Art, Bill, Mark, Rose, Pat.
+   - Values like the song "Hey Jude" or the title "So Long Summer".
+   - Each must be saved exactly by the base. Check it and replace any that aren't.
+   - followup asks the fact, and gold = the value.
+6. junk_guard (8). An opener followed by a comma and a possessive teach, the shape where the base stores the opener as part of the name (as in "Please, Kestrel's job is fisher." storing the subject "Please, Kestrel").
+   - Find 8 such items with different openers and names. Record base_junk = true for each where the base stores a junk triple.
+   - At least 4 must have base_junk = true. If fewer exist, write down how many you found and use near-shapes for the rest.
+   - expect_store = the stated fact without the opener. followup asks it, and gold = the value.
+7. control (16). 8 plain teaches plus followups and 8 plain questions after plain setup teaches. There are no openers. The base must get all of them right.
+
+Scoring rules. The builder's scorer implements these exactly; write them in the README too. Normalise strings by lowercasing and stripping edge punctuation and spaces.
+- junk: any triple stored after the turn or the followup that is in neither stored_after_setup nor expect_store.
+- store_ok: expect_store ⊆ stored_after_turn, and nothing else was added.
+- question_write: a question turn, or the followup, changes the store.
+- reply_ok: gold is "" or a substring of the scored reply (the followup reply for teaches, the turn reply for question turns).
+- right by family:
+  - opener_teach, junk_guard, name_trap: store_ok ∧ reply_ok ∧ ¬junk ∧ ¬question_write.
+  - opener_question, greeting_question: reply_ok ∧ ¬question_write ∧ ¬junk.
+  - bare_greeting: no store change, and the reply contains none of these (case-insensitive): "save", "understand", "couldn't", "could not", "don't know", "not sure".
+  - control: right as its shape above AND byte-identical to base on every reply.
+- A schema mismatch (field names or counts) must print SCHEMA-MISMATCH and exit 3.
+
+Acceptance checks, before you seal:
+- family counts are exact;
+- every plain_turn behaves as the family requires on the base;
+- control is 16/16 right on the base;
+- no duplicate turns;
+- all names are fictional;
+- two full base runs give byte-identical base138m.jsonl.
+Don't filter the cause families by whether the base gets them right, except as the family rules above say.
+
+Report: the per-family table of base_right and base_junk, the quota counts, any replacements with the reason, and the SEAL lines. Use one process at a time. Check `df -g /` first and stop if under 3 GB free.

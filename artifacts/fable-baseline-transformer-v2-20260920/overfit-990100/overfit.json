@@ -1,0 +1,260 @@
+{
+  "audit": "design/v3/18-audit-before-fable-continues.md section 1",
+  "check": "baseline-v2 tiny-fixed-batch overfit",
+  "clip": 1.0,
+  "created_unix": 1789923200.808388,
+  "evidence_aux": 0.0,
+  "exclusions": {
+    "count": 5888,
+    "sources": [
+      {
+        "count": 1792,
+        "new": 1792,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-dispatcher-v3-20260920/panels/forbidden-semantics.json",
+        "sha256": "5511295d725cd48e0bdff67efc9514159d6882651f1729cff8125e4038283a4f"
+      },
+      {
+        "count": 2048,
+        "new": 2048,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/fit-panels/forbidden-semantics.json",
+        "sha256": "7df8d8fa7cb0854d39ed2f0d81702db13ff51e22f6804eb4c6f47504d255651f"
+      },
+      {
+        "count": 2048,
+        "new": 2048,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/confirm-panels/forbidden-semantics.json",
+        "sha256": "1837457f203fe5b79dc28faeb61b2879a95120397b3d6086fb114c586762fc4b"
+      }
+    ],
+    "union_sha256": "2d638287a8b6153cc97d770ada9e9c382edbc2d42b394a09d07085bd23556e38"
+  },
+  "hops": [
+    1,
+    2,
+    3
+  ],
+  "interpretation": "memorising a fixed finite batch shows the architecture and optimizer CAN fit these targets; it is not evidence of generalization, and failure to memorise indicates a remaining expressivity/optimization difficulty or a bug",
+  "lr": 0.001,
+  "max_updates": 1500,
+  "mode": "steps",
+  "namespace": "astra-baseline-v2-overfit",
+  "positions": "line",
+  "questions": 32,
+  "questions_per_world": 4,
+  "registration": "design/v3/18-baseline-v2-preregistration-draft.md",
+  "rescale_function": "premonition_token_initialization_probe.rescale",
+  "results": [
+    {
+      "final": {
+        "counts": {
+          "end": [
+            32,
+            32
+          ],
+          "intermediate": [
+            35,
+            35
+          ],
+          "multi_hop_terminal": [
+            23,
+            23
+          ],
+          "one_hop_sequence": [
+            9,
+            9
+          ],
+          "one_hop_terminal": [
+            9,
+            9
+          ],
+          "sequence": [
+            32,
+            32
+          ],
+          "terminal": [
+            32,
+            32
+          ],
+          "token": [
+            99,
+            99
+          ]
+        },
+        "end_accuracy": 1.0,
+        "intermediate_accuracy": 1.0,
+        "multi_hop_terminal_accuracy": 1.0,
+        "one_hop_sequence_accuracy": 1.0,
+        "one_hop_terminal_accuracy": 1.0,
+        "sequence_accuracy": 1.0,
+        "terminal_accuracy": 1.0,
+        "token_accuracy": 1.0
+      },
+      "init": "default",
+      "max_updates": 1500,
+      "memorised": true,
+      "seconds": 20.98363466599767,
+      "seed": 990100,
+      "trace": [
+        {
+          "end_accuracy": 0.09375,
+          "intermediate_accuracy": 0.0,
+          "loss": 4.186265468597412,
+          "multi_hop_terminal_accuracy": 0.0,
+          "one_hop_sequence_accuracy": 0.0,
+          "one_hop_terminal_accuracy": 0.0,
+          "sequence_accuracy": 0.0,
+          "terminal_accuracy": 0.0,
+          "token_accuracy": 0.030303030303030304,
+          "updates_applied": 0
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 0.7142857142857143,
+          "loss": 0.896663248538971,
+          "multi_hop_terminal_accuracy": 0.8260869565217391,
+          "one_hop_sequence_accuracy": 1.0,
+          "one_hop_terminal_accuracy": 1.0,
+          "sequence_accuracy": 0.625,
+          "terminal_accuracy": 0.875,
+          "token_accuracy": 0.8585858585858586,
+          "updates_applied": 100
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 1.0,
+          "loss": 0.12238387018442154,
+          "multi_hop_terminal_accuracy": 0.8695652173913043,
+          "one_hop_sequence_accuracy": 1.0,
+          "one_hop_terminal_accuracy": 1.0,
+          "sequence_accuracy": 0.90625,
+          "terminal_accuracy": 0.90625,
+          "token_accuracy": 0.9696969696969697,
+          "updates_applied": 200
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 1.0,
+          "loss": 0.027808155864477158,
+          "multi_hop_terminal_accuracy": 0.9565217391304348,
+          "one_hop_sequence_accuracy": 1.0,
+          "one_hop_terminal_accuracy": 1.0,
+          "sequence_accuracy": 0.96875,
+          "terminal_accuracy": 0.96875,
+          "token_accuracy": 0.98989898989899,
+          "updates_applied": 300
+        }
+      ],
+      "updates_applied": 310,
+      "updates_to_memorise": 310
+    },
+    {
+      "final": {
+        "counts": {
+          "end": [
+            32,
+            32
+          ],
+          "intermediate": [
+            35,
+            35
+          ],
+          "multi_hop_terminal": [
+            23,
+            23
+          ],
+          "one_hop_sequence": [
+            9,
+            9
+          ],
+          "one_hop_terminal": [
+            9,
+            9
+          ],
+          "sequence": [
+            32,
+            32
+          ],
+          "terminal": [
+            32,
+            32
+          ],
+          "token": [
+            99,
+            99
+          ]
+        },
+        "end_accuracy": 1.0,
+        "intermediate_accuracy": 1.0,
+        "multi_hop_terminal_accuracy": 1.0,
+        "one_hop_sequence_accuracy": 1.0,
+        "one_hop_terminal_accuracy": 1.0,
+        "sequence_accuracy": 1.0,
+        "terminal_accuracy": 1.0,
+        "token_accuracy": 1.0
+      },
+      "init": "operator-rescale",
+      "max_updates": 1500,
+      "memorised": true,
+      "seconds": 23.2723646250015,
+      "seed": 990100,
+      "trace": [
+        {
+          "end_accuracy": 0.0,
+          "intermediate_accuracy": 0.0,
+          "loss": 4.240153789520264,
+          "multi_hop_terminal_accuracy": 0.0,
+          "one_hop_sequence_accuracy": 0.0,
+          "one_hop_terminal_accuracy": 0.0,
+          "sequence_accuracy": 0.0,
+          "terminal_accuracy": 0.0,
+          "token_accuracy": 0.0,
+          "updates_applied": 0
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 0.6285714285714286,
+          "loss": 1.3619284629821777,
+          "multi_hop_terminal_accuracy": 0.6956521739130435,
+          "one_hop_sequence_accuracy": 0.5555555555555556,
+          "one_hop_terminal_accuracy": 0.5555555555555556,
+          "sequence_accuracy": 0.4375,
+          "terminal_accuracy": 0.65625,
+          "token_accuracy": 0.7575757575757576,
+          "updates_applied": 100
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 0.7428571428571429,
+          "loss": 0.3751187324523926,
+          "multi_hop_terminal_accuracy": 0.8695652173913043,
+          "one_hop_sequence_accuracy": 0.7777777777777778,
+          "one_hop_terminal_accuracy": 0.7777777777777778,
+          "sequence_accuracy": 0.59375,
+          "terminal_accuracy": 0.84375,
+          "token_accuracy": 0.8585858585858586,
+          "updates_applied": 200
+        },
+        {
+          "end_accuracy": 1.0,
+          "intermediate_accuracy": 1.0,
+          "loss": 0.08532852679491043,
+          "multi_hop_terminal_accuracy": 0.9130434782608695,
+          "one_hop_sequence_accuracy": 1.0,
+          "one_hop_terminal_accuracy": 1.0,
+          "sequence_accuracy": 0.9375,
+          "terminal_accuracy": 0.9375,
+          "token_accuracy": 0.9797979797979798,
+          "updates_applied": 300
+        }
+      ],
+      "updates_applied": 336,
+      "updates_to_memorise": 336
+    }
+  ],
+  "seed": 990100,
+  "source_sha256": "7ec2215d0bfaa702070b4ee2a69da489ea61bd77c6663cadfa33dd20586e7502",
+  "train_people": 6,
+  "v1_source_sha256": "d767ee87835716951c1871fa2c978449123da02e61cb6e7a483194f573ddaea2",
+  "weight_decay": 0.1,
+  "worlds": 8
+}

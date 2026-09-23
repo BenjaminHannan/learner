@@ -1,0 +1,100 @@
+{
+  "exp": 112,
+  "date": "2026-09-22",
+  "method": "re-ran scripts/fable_ledger82_check.py read-only; --selftest green",
+  "ledger_lines_before_sealed_run": 769,
+  "ledger_lines_at_backfill": 788,
+  "sealed_run_before": {
+    "counts": {
+      "n_ids": 494,
+      "n_with_p": 487,
+      "n_true": 317,
+      "n_false": 127,
+      "n_void": 2,
+      "n_not_scorable": 12,
+      "n_open": 0,
+      "n_missing": 36,
+      "n_duplicates": 4,
+      "n_stale_open": 4,
+      "n_order_violations": 0,
+      "n_scored_brier": 441
+    },
+    "overall_brier": {
+      "n": 441,
+      "mean": 0.15372721088435362
+    },
+    "note": "live snapshot incl. P112.1-5 predictions, before owner-scored P111/P105 lines landed; first sealed run: ids=483 scored=436 mean=0.1530"
+  },
+  "after": {
+    "counts": {
+      "n_ids": 494,
+      "n_with_p": 487,
+      "n_true": 327,
+      "n_false": 129,
+      "n_void": 2,
+      "n_not_scorable": 12,
+      "n_open": 0,
+      "n_missing": 24,
+      "n_duplicates": 4,
+      "n_stale_open": 2,
+      "n_order_violations": 0,
+      "n_scored_brier": 453
+    },
+    "overall_brier": {
+      "n": 453,
+      "mean": 0.15191214128035313
+    }
+  },
+  "backfilled_by_exp112": {
+    "P13": {
+      "outcome": "TRUE",
+      "p": 0.8,
+      "brier": 0.04,
+      "evidence": "artifacts/fable-startup-factorial-20260920/A/seed-0,seed-1,seed-2/completion.json key started=true x3"
+    },
+    "P16": {
+      "outcome": "FALSE",
+      "p": 0.15,
+      "brier": 0.0225,
+      "evidence": "artifacts/fable-startup-factorial-20260920/D/seed-0,seed-1,seed-2/completion.json key started=false x3"
+    },
+    "P209": {
+      "outcome": "UNDECIDABLE",
+      "p": 0.6,
+      "reason": "exp47 RESULTS.md finished but holds no loader-vs-reference max|diff| number; under-1e-3 bar not checkable there"
+    }
+  },
+  "own_P112": {
+    "P112.1": "TRUE",
+    "P112.2": "TRUE",
+    "P112.3": "TRUE",
+    "P112.4": "TRUE",
+    "P112.5": "TRUE",
+    "brier_mean": 0.011,
+    "marks": "L1-L5 PASS"
+  },
+  "collisions": [
+    "P234",
+    "P235",
+    "P236",
+    "P237"
+  ],
+  "new_crosstalk": "bare P1/P2/P4 (early) vs exp102 internal mark labels P1-P4: ledger line Outcomes-102 attributes TRUE to early ids; no results JSON exists for those 09-20 runs; genuinely open",
+  "still_open_running": [
+    "P95.1-6",
+    "P101.1-4",
+    "P104.1-6",
+    "P110.1-6"
+  ],
+  "still_open_stale": [
+    "P5 (PREREG only, no results JSON)",
+    "P209 (see UNDECIDABLE)"
+  ],
+  "counts_summary": {
+    "backfilled_TRUE": 1,
+    "backfilled_FALSE": 1,
+    "backfilled_VOID": 0,
+    "backfilled_UNDECIDABLE": 1,
+    "remaining_open_missing": 24
+  }
+}

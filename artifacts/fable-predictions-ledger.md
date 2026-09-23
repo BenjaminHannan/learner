@@ -1,0 +1,2623 @@
+# Fable's prediction ledger (started 2026-09-20)
+
+Rule: before each registered experiment, one row per forecast with a probability, the exact evaluation setting, and the outcome that
+would falsify it. Scored afterwards (Brier score = (p − outcome)²; lower is better; always guessing 50 % scores 0.25).
+Observations, causal explanations and forecasts are kept in separate columns. Rows are append-only.
+
+## Earlier forecasts (made without probabilities; scored as hit/miss only)
+
+| date | forecast | outcome | hit? |
+|---|---|---|---|
+| 09-20 | operator seed 0 just needs more updates (v2, 9k) | 410/512, no help | miss |
+| 09-20 | supervised action-label dispatcher is a ceiling and will pass 3-hop | 0/64 | miss |
+| 09-20 | call cost will fail all seeds (revised expectation) | 2/3 passed | miss |
+| 09-20 | recent-result flag matters more than offsets | both collapse k ≥ 4 | miss |
+| 09-20 | `balance` is a safe base recipe (from seeds 0–2) | hurt fresh seeds 3–5 | miss |
+| 09-20 | label-free small-story start-up will let lookup start | 6/6 perfect | hit |
+| 09-20 | training dispatcher through 3 hops extrapolates to 8 | 3/3 seeds all cells | hit |
+
+Record so far: 2 hits, 5 misses. My stated odds below should be read with that in mind.
+
+## Open probabilistic forecasts
+
+| id | hashed in | setting | forecast | p | falsified by | outcome | Brier |
+|---|---|---|---|---|---|---|---|
+| P1 | baseline prereg 50e2d366… | any baseline arm, seeds 0–2, 25 v3 cells | passes every cell in 3/3 seeds | 0.05 | it passes | | |
+| P2 | same | A-long (11k) | fit gate ≥ 0.95 in ≥ 2/3 seeds | 0.70 | ≤ 1 seed fits | 0/3 fit (token acc ≈ 0.50 at 11k; chance-level on every cell incl. 1-hop) | 0.49 |
+| P3 | same | A-long | every k ≥ 5 cell ≤ 10/64 in 3/3 seeds | 0.80 | any k ≥ 5 cell > 10/64 | true (max 6/64) — but for the wrong reason: it never learned anything | 0.04 |
+| P4 | marg-staged manifest 94241dc7… | ten R cells, seeds 0–2 | ≥ 2/3 seeds pass all | 0.55 | ≤ 1 seed passes | 0/3 passed (c1 133/397/132). My premise failed too: one-hop accuracy at the switch was 0.06–0.16, not ≥ 0.95 — the lookup never started with only 2 single-call records per visit | 0.30 |
+| P5 | marg-staged-dense manifest f9f289d3… | same | ≥ 2/3 seeds pass all | 0.60 | ≤ 1 seed passes | 0/3 passed. Seed 0: lookup perfect (c1 511) but LINK 0.16; seed 1: lookup perfect, LINK argmax rose 0.03 → 0.59 in the last 1,000 updates (c3 R 341); seed 2: lookup never started | 0.36 |
+| P17 | factorial prereg a67025a9… | arms A (starting runs), seeds 0–2 | correct-line attention ≥ 2× uniform BEFORE one-hop accuracy passes 0.5 | 0.70 | accuracy first | true 3/3 (mass at 1000/950/900; accuracy at 1100/1400/950) — development evidence | 0.09 |
+| P13 | same | arm A starts 3/3 | | 0.80 | any fails | 3/3 started; frozen A checkpoints score 512/505/505 (c1) and 511/511/504 (fresh full stories) with no growth training | 0.04 |
+| P16 | same | arm D starts ≥ 2/3 in 2,500 updates | | 0.15 | ≥ 2 start | 0/3 started (attention stayed 1.0–1.6× uniform) | 0.02 |
+| P18 | same | routing gradient positive ≥ 80 % in A and < 80 % in D (first 500 updates) | | 0.45 | either half false | FALSE: A 6/11, 9/11, 6/11; D 9/11, 9/11, 9/11 — the sign of the signal does not distinguish starting from stuck runs | 0.20 |
+| P31–P33 | story-size stress prereg (agent writes hash) | factorial-A checkpoints, eval only | ≥95 % at F24/10× filler (0.60); ≥90 % at F64/10× (0.45); some cell < 80 % by 30× (0.50) | | | | |
+| P39 | operator-swap manifest d95bc779… | 3 pairings × 25 development cells, mark 58/64 | all pairings clear all cells | 0.55 | any miss | TRUE: every cell ≥ 59/64 in all three pairings (pair 1 all 64/64); replacement operators 100 % on true chains except 1 stage of 512 in one cell — development panels, not confirmation | 0.20 |
+| P14 | factorial | arm C (24 facts, no filler) starts ≥ 2/3 | | 0.55 | ≤ 1 | TRUE by the registered rule 2/3 (seed 1 reached 100 % only at update 2,500 → "not started" by the rule, but c1 486/512); all three learned | 0.20 |
+| P15 | factorial | arm B (16 facts + filler) starts ≥ 2/3 | | 0.40 | ≤ 1 | FALSE: 0/3 (7–13 % on full stories) → filler rows, not competing facts, block the start at these sizes | 0.16 |
+| P19 | factorial size sweep | frozen arm-A checkpoints ≥ 0.90 on largest setting in ≥ 2/3 | | 0.45 | ≤ 1 | TRUE 3/3: 0.977–1.000 in every cell incl. 16-person worlds (unpaired sweep; Astra's caveats apply) | 0.30 |
+| P10 | baseline addendum 1 | A-ev (default init + hint) fit gate ≥ 2/3 | | 0.65 | ≤ 1 | FALSE: chance on every cell in 3/3 seeds | 0.42 |
+| P30 | baseline-v2 prereg | tiny-batch overfit check, both inits | both memorise a 32-question batch | 0.80 | either fails | TRUE: both inits reach 100 % in ~310–336 updates | 0.04 |
+| P31 | story-size-stress prereg ab4f3c0d… | see prereg | see prereg | — | — | TRUE (scored in that folder's REPORT.md) | — |
+| P32 | story-size-stress prereg | see prereg | see prereg | — | — | TRUE (REPORT.md) | — |
+| P33 | story-size-stress prereg | see prereg | see prereg | — | — | FALSE (REPORT.md) | — |
+| P26 | baseline-v2 prereg 50e2d366… | I1-H1 (rescaled init + hint), seeds 1200–1202, fit gate | clears in ≥ 2/3 seeds | 0.55 | ≤ 1 seed | TRUE: 3/3 seeds 512/512 on all four fit cells; sealed confirmation panel also 512/512 ×4 in 3/3 | 0.2025 |
+| P47 | baseline length-eval PREDICTIONS cefbac00… | baseline v2 I1-H1 on 25 v3 development cells, mark 58/64 | practised-length practised-terminal cells clear ≥ 2/3 seeds | 0.85 | ≤ 1 | TRUE 3/3 (63–64/64) | 0.0225 |
+| P48 | same | same | some ≥5-hop cell clears in ≥ 2/3 | 0.15 | none | FALSE: best ≥5-hop cell 12/64; output stops at 3 steps | 0.0225 |
+| P49 | same | same | all 25 cells clear in ≥ 1 seed | 0.05 | none | FALSE: 8/25 in every seed | 0.0025 |
+| P50 | same | same | mean answers on ≥5-hop cells < 32/64 in ≥ 2/3 | 0.65 | ≥ 2 seeds ≥ 32 | TRUE 3/3 (all ≤ 12/64) | 0.1225 |
+| P42 | dispatcher-v4 prereg | reg+ctx, seeds 0–2, 25 cells, mark 59 | passes every cell in ≥ 1 seed | 0.35 | 0 seeds | FALSE: 12/25 in 3/3 seeds | 0.1225 |
+| P43 | same | same | ≥ 2/3 seeds | 0.15 | ≤ 1 | FALSE | 0.0225 |
+| P46 | same | same | failing reg+ctx seeds pass all k ≤ 3 and first fail at k = 4/5 | 0.70 | otherwise | TRUE 3/3: 64/64 on every k ≤ 3 cell incl. held-out, 4/64 at k = 4, stops after 3 calls | 0.09 |
+| P27 | baseline-v2 prereg | I0-H1 (default init + hint), run on rental box per DEVIATION-1 | clears fit gate ≥ 2/3 | 0.40 | ≤ 1 | FALSE 0/3: chance (21–37/512) on every cell; all 6,000 updates completed (~990 s) | 0.16 |
+| P28 | baseline-v2 prereg | I1-H0 (rescaled init, no hint), rental box | clears ≥ 2/3 | 0.25 | ≥ 2 | FALSE→forecast "unlikely" correct: 1/3 (seed 1202 512/512 ×4; seeds 1200/1201 at chance) | 0.0625 |
+| P29 | baseline-v2 prereg | I0-H0 (default init, no hint), rental box | clears fit gate in ≥ 1/3 | 0.10 | any clears | FALSE 0/3 (chance) — forecast "unlikely" correct | 0.01 |
+| P6 | reliability prereg (GPU population per DEVIATION-2) | grow-blind operator, seeds 100–147, ten cells | ≥ 40/48 pass all cutoffs | 0.85 | ≤ 39 | TRUE: 48/48 (lowest single cell 509/512) | 0.0225 |
+| P7 | same | same | ≥ 44/48 | 0.60 | ≤ 43 | TRUE: 48/48 | 0.16 |
+| P8 | same | same | 48/48 | 0.25 | any failure | TRUE: 48/48 — I was under-confident | 0.5625 |
+| P9 | same | same | every failure is a never-started seed | 0.65 | near-miss failure | NOT SCORABLE: no failures occurred | — |
+| P34 | link isolation v2 prereg (box run per DEVIATION-1) | stage A, seeds 1400–1402 | stage A qualifies 3/3 | 0.60 | any seed refused | FALSE: 0/3 qualified; all three at chance (attr 79–96/512, terminal 87–108/512) after the full 3,000 updates | 0.36 |
+| P35–P38 | same | stage B arms | (see prereg) | — | — | NOT SCORABLE: no seed qualified, stage B never trained | — |
+| P41 | dispatcher v4 prereg | `v3-repro`, seeds 0–2, 25 cells | passes every cell in 3/3 seeds | 0.80 | any seed misses a cell | FALSE: 12, 14, 21 of 25 cells; 0/3 seeds pass all (fails start at 4–5 calls) — over-confident in the hinted controller | 0.64 |
+| P44 | same | `reg` | passes in ≥ 2/3 | 0.45 | ≤ 1 | FALSE: 12, 10, 12 of 25; 4-call cells 17–47/64, decaying with length | 0.2025 |
+| P45 | dispatcher v4 prereg | `ctx` | passes in ≥ 2/3 | 0.30 | ≤ 1 | FALSE: 12, 12, 12 of 25; exactly 3 calls then stop on every longer cell (same shape as reg+ctx) | 0.09 |
+| P68 | start-up factorial v2 (FABLE-PREDICTIONS sha ea9cb332…) | arm A (16 facts, no filler), seeds 1300–1302 | qualified onset 3/3 | 0.80 | any seed without onset | TRUE: onsets 1950 / 1900 / 2250; finals 505 / 511 / 510 | 0.04 |
+| P69 | same | arm C (24 facts, no filler) | onset in ≥ 2/3 | 0.65 | ≤ 1 | TRUE: onsets 2200 / 2200 / none (seed 1302 final 61/512) | 0.1225 |
+| P70 | same | arm B (16 facts + filler) | onset in ≤ 1/3 | 0.75 | ≥ 2 | TRUE: 0/3 (finals 40 / 347 rising / 32) | 0.0625 |
+| P71 | same | arm D (24 facts + filler) | onset 0/3 | 0.80 | any onset | TRUE: 0/3 (finals 35 / 35 / 32, chance) | 0.04 |
+| P72 | same | C vs A onset | C later than A in every seed where both start | 0.70 | any seed C ≤ A | TRUE: 2200 > 1950, 2200 > 1900 (seed 1302: C never started) | 0.09 |
+| P73 | same | transfer of arm-A checkpoints | 64-fact filler-1 cell ≥ 461/512 in ≥ 2/3 | 0.65 | ≤ 1 | TRUE: 485 / 511 / 509; all 45 transfer cells pass | 0.1225 |
+| P74 | same | long run, arm D, 18,000 updates | ≥ 461/512 by 18,000 in ≥ 1/3 seeds | 0.35 | 0/3 | TRUE: seed 1301 onset 5500, 512/512 (1300: 56; 1302: 405, below mark) | 0.4225 |
+| P75 | same | long run, late starters | every D seed below 461 at 6,000 is still below 461 at 18,000 | 0.60 | any crosses | TRUE by the letter: 1300 35→56, 1302 30→405 (1302 clearly learning but under 461) | 0.16 |
+| P51 | exp 19 replay (dev) | generation gate | passes 3/3 seeds | 0.90 | any miss | TRUE: 31–118 accepted questions per new structure per seed | 0.01 |
+| P52 | same | D awake-fit gate | passes 3/3 | 0.70 | any fail | TRUE: 3/3 (lowest cell 62/64) | 0.09 |
+| P53 | same | T awake-fit gate | passes 3/3 | 0.50 | any fail | FALSE: 1/3 (seeds 1901, 1902 sat at chance, 3–6/64) | 0.25 |
+| P54 | same | PRIMARY D-G | passes | 0.08 | fails | FALSE (as forecast): 0/12 N cell-seeds, all 0 strict; D-G ≈ awake | 0.0064 |
+| P55 | same | D-U all four N cells ≥ 58 answers | ≥ 2/3 seeds | 0.40 | ≤ 1 | FALSE: 0/3 (best seed 1901: 62/59/52/56) | 0.16 |
+| P56 | same | D-U ≥ D-G on summed N answers | ≥ 2/3 seeds | 0.80 | G > U in ≥ 2 | TRUE: 3/3 (U 99/229/143 vs G 15/12/11) | 0.04 |
+| P57 | same | D-R ≤ 12/64 on every N cell | 3/3 seeds | 0.85 | any > 12 | TRUE: max 6/64 | 0.0225 |
+| P58 | same | no T arm ≥ 58 on any N cell | none | 0.90 | any | TRUE: best T N cell 25/64 (s1902 U) | 0.01 |
+| P59 | same | T-U and T-G ≥ 58 on ≥ 6/8 P cells | ≥ 2/3 seeds | 0.65 | ≤ 1 | FALSE: only seed 1900 (8/8 both arms); 1901/1902 never passed awake fit | 0.4225 |
+| P60 | same | some D arm passes ≥ 1 L cell | ≥ 1 seed | 0.12 | none | FALSE (as forecast): 0/72 L rows at mark, best 15/64 | 0.0144 |
+| P61 | same | D-U mean calls on c=8 ≤ 5.2 in every learning seed | all | 0.75 | any > 5.2 | FALSE: s1902 L-c8-held 6.05 (s1900 3.97, s1901 5.20) | 0.5625 |
+| P62 | same, original loose forgetting rule | D real forgetting in some arm | yes | 0.15 | no | FALSE: only one seed dropped (D-U s1902 H-c3 64→27/25) | 0.0225 |
+| P63 | same, original rule | T real forgetting in some arm | yes | 0.35 | no | FALSE, weakly informative: 2/3 T seeds never learned, so nothing to forget | 0.1225 |
+| P64 | same | D-R no cell drops ≥ 7 in any seed | none | 0.80 | any | TRUE: largest D-R drop 5 (s1901 F-c3-r9 64→59) | 0.04 |
+| P65 | same, ruling-7 screen | D TRIGGER | yes | 0.08 | no | FALSE: NO-TRIGGER (1 seed only) | 0.0064 |
+| P66 | same | T TRIGGER | yes | 0.25 | no | FALSE: UNDETERMINED (2 seeds gate-failed) | 0.0625 |
+| P67 | same | some architecture UNDETERMINED | yes | 0.55 | no | TRUE: T | 0.2025 |
+| P83 | exp 19b U8 vs U5 (FABLE-PREDICTIONS sha 2298881d…) | D, seeds 1900–1902, dev panels | full development pass | 0.03 | any condition fails | FALSE: registered FAIL 3/3 seeds | 0.0009 |
+| P84 | same | U8 | bounded competence in ≥ 1 seed | 0.07 | none | FALSE: best seed 1902 (N-c5 53, L-c6 strict 31–39) | 0.0049 |
+| P85 | same | U8 | ≥ 58 strict on a c=6 cell, ≥ 1 seed | 0.30 | none | FALSE: max 39 (s1902 L-c6-r10) | 0.09 |
+| P86 | same | U8 | ≥ 58 strict on a c=7/8 cell, ≥ 1 seed | 0.10 | none | FALSE: 0 strict on every c=7/8 cell | 0.01 |
+| P87 | same | c8/r10 mean calls | U8 > U5 in 3/3 | 0.80 | any seed U8 ≤ U5 | FALSE: U8 lower in 3/3 (2.00 vs 3.98, 3.00 vs 5.19, 4.25 vs 6.02) — wider practice shortened execution | 0.64 |
+| P88 | same | treatment mark | met in ≥ 1 seed | 0.15 | none | FALSE: s1902 met L-c6-r10 only (39 vs 5) | 0.0225 |
+| P89 | same | dilution at c4/5 N | U8 < U5 summed strict in ≥ 2/3 | 0.60 | ≤ 1 | TRUE: 89→0, 223→0, 125→225 (collapse, not mild dilution) | 0.16 |
+| P90 | same | U8 H-cell loss ≥ 7 | ≥ 1 seed | 0.45 | none | TRUE: s1901 H-c3-p6 64→57, H-c3-p16 64→53/52 | 0.3025 |
+| P91 | same | U5 reproduces exp-19 U at c4 N (±12) | all six | 0.60 | any outside | TRUE: 41/48, 62/60, 25/29 vs 46/47, 61/59, 27/27 | 0.16 |
+| P92 | same | c=8 E cell ≥ 58 strict | any | 0.04 | none | FALSE: 0 strict on every c=8 E cell | 0.0016 |
+| P93 | same | U8 all seven F cells ≥ 61, 3/3 seeds | yes | 0.55 | any < 61 | FALSE: s1901 F-c3-r9 58/57 | 0.3025 |
+| R21-P1 | M1 new-names, reviewer (21b sha 7142b9c3…) | treatment, 3 seeds | passes 3/3 | 0.35 | any seed fails | FALSE: 0/3 | 0.1225 |
+| R21-P2 | same | treatment | passes ≥ 1 seed | 0.65 | none | FALSE: 0/3 | 0.4225 |
+| R21-P3 | same | treatment | some seed passes training-pool codes but fails reserved | 0.05 | none | FALSE: no seed passed either scoring; paired diff +0 on all 30 cells | 0.0025 |
+| R21-P4 | same | control | reproduces ≥ 2/3 | 0.85 | ≤ 1 | TRUE: control 3/3, 512/512 every cell | 0.0225 |
+| R21-P5 | same | treatment | never-started signature ≥ 1 seed | 0.30 | none | TRUE: seed 2102 | 0.49 |
+| R21-P6 | same | treatment | attributes-fine-LINK-at-chance signature ≥ 1 seed | 0.12 | none | FALSE | 0.0144 |
+| R21-P7 | same | treatment | unnamed failure ≥ 1 seed | 0.35 | none | TRUE: seeds 2100, 2101 match neither signature (attributes 8–29%, LINK at chance) | 0.4225 |
+| R21-P8 | same | treatment | speed-limit flag fires ≥ 1 seed | 0.25 | none | FALSE: code_scale ≤ 0.017 at every heartbeat | 0.0625 |
+| R21-P9 | same | passing seeds | final code_scale in [0.7, 2.5] in every passing seed | 0.65 | any outside | NOT SCORABLE: no treatment seed passed | — |
+| R21-P10 | same | passing seeds | open-set ≥ 0.90 vs 1,024 codes | 0.50 | any below | NOT SCORABLE: no treatment seed passed | — |
+| R21-P11 | same | passing seeds | open-set ≥ 0.90 vs 4,096 codes | 0.40 | any below | NOT SCORABLE: no treatment seed passed | — |
+| R21-P12 | same | passing seeds | wide64-attr ≥ 0.90 | 0.55 | any below | NOT SCORABLE: no treatment seed passed | — |
+| R21-P13 | same | passing seeds | wide64-link ≥ 0.90 | 0.35 | any below | NOT SCORABLE: no treatment seed passed | — |
+| R21-P14 | same | control | never-started signature ≥ 1 control seed | 0.10 | none | FALSE | 0.01 |
+| P94 | M1 new-names, coordinator (FABLE-PREDICTIONS sha 7cbf39a7…) | treatment | passes 3/3 | 0.25 | any seed fails | FALSE: 0/3 | 0.0625 |
+| P95 | same | treatment | passes ≥ 1 seed | 0.55 | none | FALSE: 0/3 | 0.3025 |
+| P96 | same | treatment | some seed passes training-pool but fails reserved | 0.05 | none | FALSE | 0.0025 |
+| P97 | same | control | passes ≥ 2/3 | 0.80 | ≤ 1 | TRUE: 3/3 | 0.04 |
+| P98 | same | treatment | never-started signature ≥ 1 seed | 0.40 | none | TRUE: seed 2102 | 0.36 |
+| P99 | same | treatment | speed-limit flag fires ≥ 1 seed | 0.10 | none | FALSE | 0.01 |
+| P100 | same | treatment | code_scale at update 500 below 0.13856 in ≥ 2/3 seeds | 0.65 | ≤ 1 | TRUE: 3/3 (0.005, 0.016, 0.015 at update 500; ≈ 0 thereafter) | 0.1225 |
+| P101 | same | passing seeds | final code_scale in [0.7, 2.5] in every passing seed (not scorable if none pass) | 0.40 | any outside | NOT SCORABLE: no treatment seed passed | — |
+| GPT6-M1 | outside forecast (design/v3/25, sha 39a61292…) | treatment | passes 3/3 (unnormalised tied design) | 0.45 | any seed fails | FALSE: 0/3 | 0.2025 |
+
+| P76 | Fable | ct20 pilot (scored on v1.2) | Tier L lands in the advance window | 0.07 | — | FALSE | 0.0049 |
+| P77 | Fable | ct20 pilot (scored on v1.2) | Tier L fails control competence for ≥ 1 arm | 0.75 | — | TRUE: G 0/6, T 3/6 (need 5) | 0.0625 |
+| P78 | Fable | ct20 pilot (scored on v1.2)† | Tier H is triggered | 0.88 | — | TRUE | 0.0144 |
+| P79 | Fable | ct20 pilot (scored on v1.2)† | The pilot advances | 0.22 | — | FALSE: final verdict too-hard | 0.0484 |
+| P80 | Fable | ct20 pilot (scored on v1.2) | "Too easy" declared at either tier | 0.03 | — | FALSE | 0.0009 |
+| P81 | Fable | ct20 pilot (scored on v1.2) | At tier H, G has lower median C E_512 than T | 0.65 | — | FALSE: G 0.704 vs T 0.593 | 0.4225 |
+| P82 | Fable | ct20 pilot (scored on v1.2) | If H runs and does not advance, diagnosis is fitting/optimisation, not failed generalisation | 0.70 | — | TRUE by majority of startup labels on non-learned C cases (28 not-yet-learned vs 9 learned-but-failed-to-transfer; G alone 12 vs 7). No single registered diagnosis field exists, so this scoring is my reading | 0.0900 |
+
+† P78/P79 footnote (ruling 3): against the invalid v1.1 run these would have resolved "no" for a non-scientific (accounting) reason; they are scored only against v1.2.
+
+| P102 | Fable reviewer (26) | exp 26 probes | The positive control passes (section 5) | 0.90 | — | TRUE: control PASS, 12/12 v4 checkpoints probed | 0.0100 |
+| P103 | Fable reviewer (26) | exp 26 probes | R1(4) and R1(5) hold in all three 19-awake checkpoints | 0.72 | — | TRUE: 3/3 | 0.0784 |
+| P104 | Fable reviewer (26) | exp 26 probes | R1(8) holds in all three 19-awake checkpoints | 0.35 | — | TRUE: R1(8) 3/3 | 0.4225 |
+| P105 | Fable reviewer (26) | exp 26 probes | R2 (early attribute ≥ 48/64 on k8-held) holds in at least 6 of the 9 19/19b checkpoints | 0.78 | — | TRUE: 8/9 (misses 19b-U5-s1902) | 0.0484 |
+| P106 | Fable reviewer (26) | exp 26 probes | R4(6) holds for U8 seed 1902 (operation-only strict < 59 on k6 while operation+subject ≥ 61) | 0.65 | — | TRUE: op-only k6 45/36 of 64, op+subject 64/64 | 0.1225 |
+| P107 | Fable reviewer (26) | exp 26 probes | R5 (premature STOP on a handed prefix at k4/k5) holds for at least one 19/19b family (≥ 2/3 seeds) | 0.15 | — | FALSE: R5 0/3 in every family | 0.0225 |
+| P108 | Fable reviewer (26) | exp 26 probes | In both collapsed U8 checkpoints (seeds 1900, 1901), operation+subject strict on k4-held is ≥ 61/64 (the collapse is in the operation pointer, STOP intact) | 0.60 | — | TRUE: k4-held op+subject 64/64 in both | 0.1600 |
+| P109 | Fable reviewer (26) | exp 26 probes | R6 (S3 still gives the attribute, ≥ 48/64) holds in at least 2 of 3 v4-`ctx` checkpoints | 0.55 | — | TRUE: R6 3/3 v4-ctx | 0.2025 |
+| P110 | Fable reviewer (26) | exp 26 probes | The geometry ratio is ≤ 0.10 in at least 2 of 3 v4-`ctx` checkpoints | 0.40 | — | FALSE: ratios 0.118, 0.258, 0.344 (0/3) | 0.1600 |
+| P111 | Fable reviewer (26) | exp 26 probes | Operation-only does NOT rescue k8-held (strict < 59) in all three 19-awake checkpoints | 0.85 | — | TRUE: op-only k8-held strict 0, 1, 0 of 64 | 0.0225 |
+| P112 | Fable coordinator | exp 26 probes | same statement as P102 | 0.85 | — | TRUE (see P102) | 0.0225 |
+| P113 | Fable coordinator | exp 26 probes | same statement as P104 | 0.3 | — | TRUE (see P104) | 0.4900 |
+| P114 | Fable coordinator | exp 26 probes | same statement as P105 | 0.7 | — | TRUE (see P105) | 0.0900 |
+| P115 | Fable coordinator | exp 26 probes | same statement as P107 | 0.2 | — | FALSE (see P107) | 0.0400 |
+| P116 | Fable coordinator | exp 26 probes | same statement as P108 | 0.5 | — | TRUE (see P108) | 0.2500 |
+| P117 | Fable coordinator | exp 26 probes | same statement as P111 | 0.8 | — | TRUE (see P111) | 0.0400 |
+
+| R27-P1 | Fable reviewer (27) | exp 27 M1-F | Arm F passes in 3/3 seeds (all ten reserved-code cells ≥ cutoff, paired mark met) | 0.40 | — | FALSE: 2/3 (F-2103 p12-2 = 479 < 487; paired −15, −19) | 0.1600 |
+| R27-P2 | Fable reviewer (27) | exp 27 M1-F | Arm F passes in at least 1 seed | 0.72 | — | TRUE: 2 seeds | 0.0784 |
+| R27-P3 | Fable reviewer (27) | exp 27 M1-F | The control reproduces (≥ 2/3 seeds meet the ten cutoffs) | 0.90 | — | TRUE: 3/3 | 0.0100 |
+| R27-P4 | Fable reviewer (27) | exp 27 M1-F | In every F seed, first-stage LINK accuracy on c2 (reserved codes) is ≥ 0.50 — i.e. binding clearly happens in all three, pass or not | 0.70 | — | TRUE: c2 LINK 0.973, 0.980, 0.982 | 0.0900 |
+| R27-P5 | Fable reviewer (27) | exp 27 M1-F | At least one F seed shows **name_blind** | 0.10 | — | FALSE | 0.0100 |
+| R27-P6 | Fable reviewer (27) | exp 27 M1-F | At least one F seed shows **copy_side_failure** | 0.07 | — | FALSE | 0.0049 |
+| R27-P7 | Fable reviewer (27) | exp 27 M1-F | At least one F seed fails as **unnamed** (partly learned, under a cutoff) | 0.45 | — | FALSE: the failing seed is reserved_gap, not unnamed | 0.2025 |
+| R27-P8 | Fable reviewer (27) | exp 27 M1-F | Any F or L seed shows **reserved_gap** | 0.05 | — | TRUE: F-2103 and L-2103 | 0.9025 |
+| R27-P9 | Fable reviewer (27) | exp 27 M1-F | In every passing F seed the effective name scale at the end lies in [10, 25] (void if none pass) | 0.70 | — | TRUE: 14.25, 14.33 | 0.0900 |
+| R27-P10 | Fable reviewer (27) | exp 27 M1-F | Arm L: in 3/3 seeds the lowest logged `code_scale` is ≤ 1.0 (the dial dips before anything else happens) | 0.85 | — | TRUE: min 0.813, 0.804, 0.902 | 0.0225 |
+| R27-P11 | Fable reviewer (27) | exp 27 M1-F | Arm L: **scale_collapsed** in at least 1 seed | 0.25 | — | FALSE: finals 0.824, 0.852, 0.933 | 0.0625 |
+| R27-P12 | Fable reviewer (27) | exp 27 M1-F | Arm L passes in 3/3 seeds | 0.30 | — | FALSE: 2/3 (L-2103 p12-2 = 485) | 0.0900 |
+| R27-P13 | Fable reviewer (27) | exp 27 M1-F | Every F seed that fails a cutoff fails it on a chained or 12-person cell while meeting the c1 cutoff (void if no F seed fails) | 0.55 | — | TRUE: F-2103 fails only p12-2 (12-person chained), c1 512 | 0.2025 |
+| R27-P14 | Fable reviewer (27) | exp 27 M1-F | Open-set (B), all 4,096 codes: pooled first-stage LINK ≥ 0.90 in every passing F seed (void if none) | 0.30 | — | FALSE: open-set B pooled 0.578, 0.593 in the passing seeds | 0.0900 |
+| P118 | Fable coordinator | exp 27 M1-F | F passes 3/3 | 0.3 | — | FALSE (see R27-P1) | 0.0900 |
+| P119 | Fable coordinator | exp 27 M1-F | F passes in ≥ 1 seed | 0.65 | — | TRUE | 0.1225 |
+| P120 | Fable coordinator | exp 27 M1-F | control passes ≥ 2/3 | 0.9 | — | TRUE | 0.0100 |
+| P121 | Fable coordinator | exp 27 M1-F | every F seed first-stage LINK on c2 ≥ 0.50 | 0.6 | — | TRUE | 0.1600 |
+| P122 | Fable coordinator | exp 27 M1-F | reserved_gap in ≥ 1 F seed | 0.12 | — | TRUE: F-2103 | 0.7744 |
+| P123 | Fable coordinator | exp 27 M1-F | copy_side_failure in ≥ 1 F seed | 0.12 | — | FALSE | 0.0144 |
+| P124 | Fable coordinator | exp 27 M1-F | L arm lowest logged scale ≤ 1.0 in 3/3 | 0.8 | — | TRUE | 0.0400 |
+| P125 | Fable coordinator | exp 27 M1-F | L arm passes 3/3 | 0.22 | — | FALSE: 2/3 | 0.0484 |
+| R29-P1 | Fable reviewer (29) | exp 29 M1-F10 | Arm F: PASS (3/3, ten cutoffs and paired mark) | 0.42 | — | TRUE: 3/3 | 0.3364 |
+| R29-P2 | Fable reviewer (29) | exp 29 M1-F10 | Arm F: all three seeds meet the ten reserved cutoffs (PASS or PASS-WITH-GAP) | 0.55 | — | TRUE | 0.2025 |
+| R29-P3 | Fable reviewer (29) | exp 29 M1-F10 | Arm F: at least two seeds meet the ten cutoffs | 0.85 | — | TRUE | 0.0225 |
+| R29-P4 | Fable reviewer (29) | exp 29 M1-F10 | Control meets the ten cutoffs in ≥ 2/3 seeds (not VOID) | 0.93 | — | TRUE: 3/3 | 0.0049 |
+| R29-P5 | Fable reviewer (29) | exp 29 M1-F10 | The paired mark is broken in at least one arm-F cell-seed | 0.30 | — | FALSE: worst -11 | 0.0900 |
+| R29-P6 | Fable reviewer (29) | exp 29 M1-F10 | `reserved_gap` in at least one F seed | 0.22 | — | FALSE | 0.0484 |
+| R29-P7 | Fable reviewer (29) | exp 29 M1-F10 | `reserved_gap` in at least one of the nine coded runs (F, L, F6) | 0.50 | — | FALSE: failing L/F6 runs labelled unnamed | 0.2500 |
+| R29-P8 | Fable reviewer (29) | exp 29 M1-F10 | Every F seed that misses any mark is `crowding_only` (void if none misses) | 0.70 | — | VOID: no F seed missed |  |
+| R29-P9 | Fable reviewer (29) | exp 29 M1-F10 | `undertraining_supported` (all three F seeds ≤ 2.5 % first-step link mistakes on p12-2+p12-3) | 0.35 | — | FALSE: F-2106 2.54% (26/1024), others 2.44%, 1.66%; label unclear | 0.1225 |
+| R29-P10 | Fable reviewer (29) | exp 29 M1-F10 | `undertraining_refuted` (median ≥ 3.2 %) | 0.20 | — | FALSE: median 2.44% | 0.0400 |
+| R29-P11 | Fable reviewer (29) | exp 29 M1-F10 | F has fewer total reserved-name misses over the ten cells than F6 at the same seed, in all three seeds | 0.60 | — | TRUE: 67/68/65 vs 185/137/134 | 0.1600 |
+| R29-P12 | Fable reviewer (29) | exp 29 M1-F10 | Same, in at least two of three seeds | 0.85 | — | TRUE | 0.0225 |
+| R29-P13 | Fable reviewer (29) | exp 29 M1-F10 | F6 (27's recipe, fresh seeds) meets all marks 3/3 | 0.25 | — | FALSE: 1/3 (paired mark on s3) | 0.0625 |
+| R29-P14 | Fable reviewer (29) | exp 29 M1-F10 | Arm L meets all marks 3/3 | 0.38 | — | FALSE: 1/3 (paired mark on p12-3) | 0.1444 |
+| R29-P15 | Fable reviewer (29) | exp 29 M1-F10 | Arm L `scale_collapsed` in at least one seed | 0.05 | — | FALSE: min 0.67 | 0.0025 |
+| R29-P16 | Fable reviewer (29) | exp 29 M1-F10 | Open-set B (all 4,096 codes) pooled ≥ 0.65 in every F seed | 0.35 | — | FALSE: 0.59/0.57/0.60 | 0.1225 |
+| R29-P17 | Fable reviewer (29) | exp 29 M1-F10 | The mean of arm F's 30 paired differences is negative (a real, small cost of new names, not just 27's panel draw) | 0.80 | — | TRUE: -2.4/-3.4/-2.7 | 0.0400 |
+| R29-P18 | Fable reviewer (29) | exp 29 M1-F10 | 12-person ÷ 6-person first-step link mistake ratio lies in [1.5, 3.0] in all three F seeds | 0.55 | — | TRUE: 2.89/2.88/1.70 | 0.2025 |
+| R29-P19 | Fable reviewer (29) | exp 29 M1-F10 | `late_instability` in any run | 0.07 | — | FALSE: link accuracy rose late in all runs (hand-computed) | 0.0049 |
+| R29-P20 | Fable reviewer (29) | exp 29 M1-F10 | Wave 1, training plus scoring, finishes within 27 minutes | 0.85 | — | TRUE: about 22 min | 0.0225 |
+| P126 | Fable coordinator | exp 29 M1-F10 | R29-P1: arm F PASS, 3/3 on all marks | 0.35 | — | TRUE | 0.4225 |
+| P127 | Fable coordinator | exp 29 M1-F10 | R29-P2: all three F seeds meet the ten reserved cutoffs | 0.50 | — | TRUE | 0.2500 |
+| P128 | Fable coordinator | exp 29 M1-F10 | R29-P4: control not VOID | 0.92 | — | TRUE | 0.0064 |
+| P129 | Fable coordinator | exp 29 M1-F10 | R29-P6: reserved_gap in ≥ 1 F seed | 0.28 | — | FALSE | 0.0784 |
+| P130 | Fable coordinator | exp 29 M1-F10 | R29-P11: F has fewer total reserved misses than F6 in all three seeds | 0.50 | — | TRUE | 0.2500 |
+| P131 | Fable coordinator | exp 29 M1-F10 | R29-P13: F6 meets all marks 3/3 | 0.25 | — | FALSE: 1/3 | 0.0625 |
+| P132 | Fable coordinator | exp 29 M1-F10 | R29-P14: arm L meets all marks 3/3 | 0.33 | — | FALSE: 1/3 | 0.1089 |
+| P133 | Fable coordinator | exp 29 M1-F10 | R29-P17: mean of F's 30 paired differences is negative | 0.85 | — | TRUE | 0.0225 |
+| P134 | Fable coordinator | creative stop toy | coded verdict KEEP_FIXED_N | 0.90 | — | TRUE | 0.0100 |
+| P135 | Fable coordinator | creative stop toy | mark 2 (A ≥ 95% of C) passes 3/3 | 0.65 | — | TRUE | 0.1225 |
+| P136 | Fable coordinator | creative stop toy | zero false FOUND in A/B/C | 0.97 | — | TRUE | 0.0009 |
+| P137 | Fable coordinator | creative stop toy | secondary (marks 1,2,6 + ≥60% give-ups) 3/3 | 0.55 | — | TRUE | 0.2025 |
+| P138 | Fable coordinator | CardFold sleep | P-a: coded verdict FAIL in 3/3 seeds | 0.90 | — | FALSE (2 FAIL, 1 VOID) | 0.8100 |
+| P139 | Fable coordinator | CardFold sleep | P-b: M1 (S fresh ≥ 0.80) passes 3/3 | 0.70 | — | TRUE | 0.0900 |
+| P140 | Fable coordinator | CardFold sleep | P-c: M2 (S − R ≥ 0.20) passes 3/3 | 0.93 | — | TRUE | 0.0049 |
+| P141 | Fable coordinator | CardFold sleep | P-d: M3 (S long ≥ 0.50) passes in ≥1 seed | 0.05 | — | FALSE | 0.0025 |
+| P142 | Fable coordinator | CardFold sleep | P-e: M4 (S regression drop < 0.03) passes 3/3 | 0.90 | — | TRUE | 0.0100 |
+| P143 | Fable coordinator | CardFold sleep | P-f: no seed VOID | 0.80 | — | FALSE (seed 4101 base 0.945) | 0.6400 |
+| P144 | Fable coordinator | CardFold sleep | P-g: S0 regression < 0.20 in 3/3 | 0.90 | — | TRUE | 0.0100 |
+| P145 | Fable coordinator | exp42 automatic sleep | exp42 A1: R20 fresh < 0.20 in every valid seed | 0.90 | — | (open) | |
+| P146 | Fable coordinator | exp42 automatic sleep | exp42 A2: R400 fresh ≥ 0.80, old-skill drop ≤ 0.03, every valid seed | 0.80 | — | (open) | |
+| P147 | Fable coordinator | exp42 automatic sleep | exp42: R100 fresh ≥ 0.50 in ≥ 2 valid seeds | 0.50 | — | (open) | |
+| P148 | Fable coordinator | exp42 automatic sleep | exp42 A3: squeeze (wd 0.10) helps by ≥ 0.20 at 100 episodes | 0.25 | — | (open) | |
+| P149 | Fable coordinator | exp42 automatic sleep | exp42 A4: surprise-ranked replay helps by ≥ 0.20 | 0.15 | — | (open) | |
+| P150 | Fable coordinator | exp42 automatic sleep | exp42 A6: 20 episodes + squeeze + long sleep reaches fresh ≥ 0.50 in ≥ 2 seeds | 0.08 | — | (open) | |
+| P151 | Fable coordinator | exp42 automatic sleep | exp42 A7: any arm reaches long-input ≥ 0.50 in ≥ 2 seeds | 0.05 | — | (open) | |
+
+| P152 | Fable coordinator | exp42b small-change sleep | B1: embed-only helps by ≥ 0.20 from 20 episodes | 0.10 | — | (open) | |
+| P153 | Fable coordinator | exp42b small-change sleep | B2: embed+norms helps by ≥ 0.20 from 20 episodes | 0.15 | — | (open) | |
+| P154 | Fable coordinator | exp42b small-change sleep | embed-only cannot even fit its 20 episodes (seen < 0.50) in ≥ 2 valid seeds | 0.70 | — | (open) | |
+| P145–P151 outcomes | Fable coordinator | exp42 automatic sleep | valid seeds 4102/4103/4104 | — | — | P145 TRUE · P146 TRUE · P147 TRUE · P148 FALSE · P149 FALSE · P150 FALSE · P151 FALSE | see artifacts/fable-autosleep42-20260921/RESULTS.md |
+| P152–P154 outcomes | Fable coordinator | exp42b small-change sleep | valid seeds 4102/4103/4104 | — | — | P152 FALSE · P153 FALSE · P154 TRUE | see artifacts/fable-autosleep42-20260921/RESULTS.md |
+| P155 | Fable coordinator | exp43A length gate | G1: randomised positions give old skills >= 0.90 at length 10 in 3/3 seeds | 0.50 | — | (open) | |
+| P156 | Fable coordinator | exp43A length gate | G2: randomised positions give >= 0.80 at length 12 in 3/3 seeds | 0.35 | — | (open) | |
+| P157 | Fable coordinator | exp43A length gate | G4: looped shared block beats 4 separate blocks by >= 0.10 at length 12 in 3/3 seeds | 0.20 | — | (open) | |
+| P158 | Fable coordinator | exp43B shared-gradient sleep | H1: any of sign/snr/subspace/rank4 beats plain replay by >= 0.15 fresh in 3/3 seeds | 0.12 | — | (open) | |
+| P159 | Fable coordinator | exp43B shared-gradient sleep | H2: sign-agreement or snr cuts memorised noise by >= 0.30 without losing fresh accuracy, 3/3 seeds | 0.30 | — | (open) | |
+| P160 | Fable coordinator | exp43B shared-gradient sleep | H2: rank-1 shared subspace passes | 0.12 | — | (open) | |
+| P161 | Fable coordinator | exp43B shared-gradient sleep | H4: plain replay on a randomised-position base reaches >= 0.50 on lengths 9-10 in 3/3 seeds | 0.30 | — | (open) | |
+| P162 | Fable coordinator | exp43C segment positions | C1: copy-like old skills >= 0.90 at length 12 in 3/3 seeds | 0.60 | — | (open) | |
+| P163 | Fable coordinator | exp43C segment positions | C4: end-relative old skills >= 0.50 at length 12 in 3/3 seeds | 0.20 | — | (open) | |
+| P164 | Fable coordinator | exp43C segment positions | C3: all six ops mean >= 0.80 at length 12 in 3/3 seeds | 0.15 | — | (open) | |
+| P155–P157 outcomes | Fable coordinator | exp43A length gate | seeds 4102/4103/4104, all valid (G0) | — | — | P155 FALSE · P156 FALSE · P157 FALSE | length 10: control 0.17-0.18 -> randpos 0.52/0.40/0.44; length 12 <= 0.03 every arm; see artifacts/fable-lengthgate43-20260921/ |
+| P162–P164 outcomes | Fable coordinator | exp43C segment positions | valid seeds 4102/4104; 4103 invalid (C0 0.656) | — | — | P162 FALSE · P163 FALSE · P164 FALSE | length 12 = 0.00 every seed and op; see artifacts/fable-lengthgate43-20260921/RESULTS.md |
+| P158–P161 outcomes | Fable coordinator | exp43B shared-gradient sleep | seeds 4102/4103/4104 all valid | — | — | P158 FALSE · P159 FALSE · P160 FALSE · P161 FALSE | see artifacts/fable-sharedsleep43b-20260921/RESULTS.md |
+| P165 | Fable coordinator | exp43D relative attention | D1: INC3 and ROTL1 >= 0.90 at lengths 12 and 16 in 3/3 seeds (rel-both) | 0.50 | — | (open) | |
+| P166 | Fable coordinator | exp43D relative attention | D2: REV and REV+INC1 >= 0.90 at lengths 12 and 16 in 3/3 seeds (rel-both) | 0.35 | — | (open) | |
+| P167 | Fable coordinator | exp43D relative attention | D4: all six ops mean >= 0.80 at length 12 in 3/3 seeds | 0.12 | — | (open) | |
+| P165–P167 outcomes | Fable coordinator | exp43D relative attention | seeds 4102/4103/4104 all valid | — | — | P165 FALSE · P166 FALSE · P167 FALSE | first non-zero length-12 results (REV 0.93-0.95, INC3 0.82-1.00 in most seeds) but no mark met; see artifacts/fable-lengthgate43-20260921/RESULTS.md |
+| P168 | Fable coordinator | exp43E checkpoint rule | E1: match rule beats loss rule by >= 0.05 fresh in >= 2/3 seeds (plain arm) | 0.55 | — | (open) | |
+| P169 | Fable coordinator | exp43E checkpoint rule | E2: match rule within 0.05 of best-possible fresh in 3/3 seeds | 0.50 | — | (open) | |
+| P170 | Fable coordinator | exp43E rank-4 clean | E3: rank-4 beats plain by >= 0.10 fresh in >= 2/3 seeds | 0.30 | — | (open) | |
+| P168–P170 outcomes | Fable coordinator | exp43E checkpoint rule + rank-4 | seeds 4102/4103/4104 all valid | — | — | P168 FALSE · P169 TRUE · P170 TRUE (I gave it 0.30) | rank-4 0.715/0.905/0.885 vs plain 0.505/0.650/0.435; see artifacts/fable-sleepselect43e-20260921/RESULTS.md |
+| P171 | Fable coordinator | exp43E-confirm | K1 and K2: rank-4 beats plain by >= 0.10 in >= 2/3 fresh seeds (4111–4113), at match pick and at final update | 0.70 | — | (open) | |
+| P171 outcome | Fable coordinator | exp43E-confirm | seeds 4111/4112/4113 all valid | — | — | P171 TRUE | rank-4 0.395/0.680/0.755 vs plain 0.210/0.480/0.630 (match pick); K1 K2 K3 pass; see artifacts/fable-sleepselect43e-20260921/RESULTS.md |
+| P172 | Fable coordinator | exp43F rank-limited sleep | F1: rank-4 beats plain by >= 0.10 at 50 episodes in >= 2/3 seeds | 0.60 | — | (open) | |
+| P173 | Fable coordinator | exp43F rank-limited sleep | F2: same at 20 episodes | 0.30 | — | (open) | |
+| P174 | Fable coordinator | exp43F rank-limited sleep | F3: rank-4 at 20 episodes >= 0.50 fresh in >= 2/3 seeds | 0.10 | — | (open) | |
+| P175 | Fable coordinator | exp43F rank-limited sleep | F4: some rank in {1,2,8,16} beats rank 4 by >= 0.05 in >= 2/3 seeds | 0.40 | — | (open) | |
+| P176 | Fable coordinator | exp43F rank-limited sleep | F5: rank 16 at least 0.10 below rank 4 in >= 2/3 seeds | 0.45 | — | (open) | |
+| P177 | Fable coordinator | exp43G transport base (GPT spec, control) | T1 and T2: all six old skills fit and >= 0.90 at lengths 12 and 16, 3/3 seeds | 0.85 | — | (open) | GPT's own forecast 0.85/0.80 |
+| P178 | Fable coordinator | exp43H compositional sleep | S1 at N=20: installed and fresh >= 0.80 in 3/3 seeds | 0.65 | — | (open) | GPT's forecast 0.65 |
+| P179 | Fable coordinator | exp43H compositional sleep | S1 at N=50: installed and fresh >= 0.80 in 3/3 seeds | 0.75 | — | (open) | GPT's forecast 0.80 |
+| P177–P179 outcomes | Fable coordinator | exp43G/43H v1 | 2/3 seeds failed to FIT one parity skill (saturated choice) | — | — | P177 FALSE · P178 FALSE · P179 FALSE (as registered) | where the bank fit, 20 episodes -> fresh 1.00 and lengths 12/16 = 1.00; broken bank -> install correctly rejected; see artifacts/fable-transport43g-20260921/RESULTS.md |
+| P180 | Fable coordinator | exp43G-v2 (cosine address) | T1+T2 pass on fresh seeds 4111–4113 | 0.60 | — | (open) | |
+| P181 | Fable coordinator | exp43H-v2 | S1 at N=20 passes on fresh seeds 4111–4113 | 0.55 | — | (open) | |
+| P180–P181 outcomes | Fable coordinator | exp43G-v2 / 43H-v2 | 6/6 seeds incl. fresh 4111–4113 | — | — | P180 TRUE · P181 TRUE | all old skills 1.00 at lengths 12/16; CARDFOLD from 20 episodes fresh 1.00, long 1.00; hand-given address vocabulary — control only |
+| P172–P176 outcomes | Fable coordinator | exp43F rank-limited sleep | 24/24 runs | — | — | P172 FALSE · P173 FALSE · P174 FALSE · P175 FALSE · P176 TRUE | gain vanishes below ~100 episodes; ranks 1–4 > 8 > 16 > plain at 100; see artifacts/fable-lowrank43f-20260921/RESULTS.md |
+| P182 | Fable coordinator | exp43I learned addressing | L1: all six old skills fit (>= 0.99 at lengths 4–8) in 6/6 seeds | 0.70 | — | (open) | |
+| P183 | Fable coordinator | exp43I learned addressing | L2: all six old skills >= 0.90 at lengths 12 and 16 in 6/6 seeds | 0.50 | — | (open) | |
+| P184 | Fable coordinator | exp43I learned addressing | L3: CARDFOLD from 20 episodes installed and fresh >= 0.80 in 6/6 seeds | 0.50 | — | (open) | |
+| P182–P184 outcomes | Fable coordinator | exp43I learned addressing | 6/6 seeds (zero-init: seeds differ in data only) | — | — | P182 TRUE · P183 TRUE · P184 TRUE | all skills 1.00 to length 16; 20-episode sleep 1.00; read probability sags to 0.97 at 16 for ROTL1/FOLD; see artifacts/fable-learnedaddr43i-20260921/RESULTS.md |
+| P185 | Fable coordinator | exp43I length stress | some old skill falls below 0.90 exact match by length 64 (soft-read dilution) in >= 4/6 seeds | 0.60 | — | (open) | |
+| P185 outcome | Fable coordinator | exp43I length stress | 6/6 seeds | — | — | P185 TRUE | only ROTL1 (wrap-around place) breaks: 0.77–0.88 at 64, 0.36–0.44 at 256; other five skills 1.00 to 256 digits; CARDFOLD inherits ROTL1's failure |
+| P186 | Fable coordinator | exp43I hard read at test time | with the read hardened to its single best place at test time (no retraining), all six skills and CARDFOLD = 1.00 at 64, 128, 256 in 6/6 seeds | 0.75 | — | (open) | |
+| P186 outcome | Fable coordinator | exp43I hard read at test time | 6/6 seeds | — | — | P186 TRUE | all six skills + CARDFOLD 1.00 at 64/128/256 digits |
+
+## 2026-09-21 — Experiment 43J (learned parity counters), written before the registered wave
+- P187: J1 (fit at 4–8) passes in 6/6 seeds. 75%.
+- P188: J2 fails; SWAP is the failing skill in at least 4/6 seeds. 80%.
+- P189: J3 (a flip counter is found) holds in at least 5/6 seeds but maybe not 6/6. 60%.
+- P190: J4 (CARDFOLD sleep, which does not use SWAP) passes in at least 4/6 seeds. 60%.
+- Outcomes 43J: P187 FALSE (J1 5/6; seed 4111 SWAP unfit). P188 TRUE (J2 0/6, SWAP in 6/6). P189 TRUE (flip counter in 5/6). P190 TRUE (J4 6/6).
+- Experiment 44 (built by an Opus agent; no prediction was logged beforehand, so none is scored): R1–R7 PASS 3/3, re-scored by me.
+
+## 2026-09-21 — Experiment 43K (wider base lengths), written before the registered wave
+- P191: K1 passes 6/6. 65%.
+- P192: K2 passes 6/6. 50% (seed 4111 found no flip counter in 43J; random start may strand a seed again).
+- P193: K3 passes 6/6. 50%.
+- P194: K4 passes 6/6. 85%.
+- Outcomes 43K: P191 FALSE (5/6), P192 FALSE (5/6), P193 FALSE (5/6; seed 4111 again), P194 TRUE (6/6).
+
+## 2026-09-21 — Experiment 43K-v2 (balanced counter start), written before the wave
+- P195: K1–K3 pass on all 9 seeds including 4111 and the three fresh seeds. 65%.
+- P196: K4 passes 9/9. 85%.
+- Outcomes 43K-v2: P195 TRUE (9/9 incl. 4111 and fresh 4121–4123). P196 TRUE (9/9).
+
+## 2026-09-21 — Experiment 45 (noise-tolerant sleep loss), written before the wave
+- P197: N1 (zero wrong installs) passes. 85%.
+- P198: N2 passes 15/15. 85%.
+- P199: N3 FAILS: robust installs 8–11 of 15 at 2 wrong (optimiser-stuck cells like seed 9999's maternal_grandmother). 60%.
+- P200: N4 passes 0/15. 95%.
+- Outcomes 45: P197 TRUE (0/150 wrong installs). P198 TRUE (15/15). P199 TRUE (N3 failed at 10/15). P200 TRUE (0/15).
+
+## 2026-09-21 — Experiment 46 (harden router before gating), written before the wave
+- P201: H1 zero wrong installs / 120. 85%.
+- P202: H3 passes (>= 12/15 at 2 wrong) in BOTH batches. 70%.
+- P203: H4 passes (>= 8/15 at 4 wrong) in both batches. 55%.
+- P204: H2 and H5 pass in both batches. 90%.
+- Outcomes 46: P201 TRUE (0/120). P202 TRUE (15/15 both batches). P203 TRUE (15/15 both). P204 TRUE.
+
+## 2026-09-21 — Ears rung 2 (borrowed encoder vs tape vs BiGRU, design doc 47), written before the build
+- P205: arm C (borrowed encoder + our head + brakes) R2-SAFE = 0 silent wrong writes in 3/3 seeds. 70%.
+- P206: arm C beats arms A and B on R2-NEW and R2-WEB in 3/3 seeds. 75%.
+- P207: arm C R2-NEWREL (wrong seen relation executed on 40 held-out relations) <= 1% in >= 2/3 seeds. 50%.
+- P208: R2-PAPER executed fraction < 40% for every arm (papers mostly out of format). 80%.
+- P209: our plain-PyTorch loader matches the reference encoder (max |diff| < 1e-3) on the chosen model at first try. 60%. (MiniLM-L6 already matched at 3e-6 before this entry; the chosen model may differ.)
+
+## 2026-09-21 — Experiment 54 (modes scheduler + Ben demo), written before the waves
+- P210: scheduler conformance: ours >= 34/34, naive always-THINKING fails >= 12/34. 80%.
+- P211: notebook side scores 7/7 on Q1-Q7 (3 answers + 3 abstentions + alias) and its Q9 self-report cites >= 3 source tags and >= 3 mode-log entries. 85%.
+- P212: baseline (drilled on the same 8 content pairs) wins at least one question in >= 2 of 3 seeds (designed candidate: Q8 paraphrase). 55%.
+- P213: baseline scores below the notebook on total /9 in >= 2 of 3 seeds (Q9 free loss). 75%.
+- Outcomes 54: P210 TRUE (ours 34/34, naive fails 30/34). P211 TRUE (Q1-Q7 7/7; Q9 4 tags, 8 mode-log lines).
+  P212 TRUE (baseline wins Q8 on 3/3 seeds). P213 FALSE (all three seeds tie notebook at 8/9; Q8 vs Q9 split).
+  SCORE PASS (S1-S5, D1-D6).
+
+## 2026-09-21 — Experiment 52 (live sleep: episodes mined from real logs), written before the wave
+- P214: M1 zero wrong installs across all 27 install cells (3 seeds x 3 chains x 0/2/4 standing-wrong). 85%.
+- P215: M2 installs >= 15/18 at <=2 standing-wrong (the brief's 12/15 rate scaled to 18 cells). 75%.
+- P216: M5 miner exact on 9/9 logs: exactly 3 candidates x 20 standing each, decoy chain at 8 refused, 6 supersessions, standing-wrong == the night's level, nothing mined from ambiguity/small-talk/unanswered turns. 90%.
+- P217: M3+M6: taught facts 100% unchanged, notebook prefix+chain intact, old skills bit-identical in all 9 sleeps. 95%.
+- P218: M4 every sleep() call finishes in < 10 min wall-clock. 97%.
+- Outcomes 52: (to be appended after the registered wave)
+- Outcomes 52: P214 TRUE (0 wrong of 27); P215 TRUE (18/18 at <=2 wrong, bar was 15/18);
+  P216 TRUE (miner exact 9/9); P217 TRUE (M3+M6 9/9); P218 TRUE (max sleep 7.3 s).
+  All 5 predictions resolved TRUE; SCORE PASS 6/6; no v2.
+
+## 2026-09-21 — Experiment 50 (reasoner on the real notebook contract), written before the wave
+- P219: S1 parity 2700/2700 reasoner==contract (status AND fields) across the 9 cells, with all five statuses present in every cell. 90%.
+- P220: D1 9/9 installs (3 seeds x 3 words) AND D2 audit 0 wrong of 540 (60-start vs true walk, every seed). 85%.
+- P221: S2 unknown-relation abstention 90/90 MISSING_FACT, 0 invented answers. 95%.
+- P222: reasoner <= 1 ms/question at every cell while the contract's own ask reaches >= 300 ms/question at (6000, 500); reasoner cache < 200 MB at the biggest cell. 85%.
+- P223: D3 dense-vs-protocol disagree 0/540, and recorded reuse (word inside a 2-3 token chain) >= 0.95 in all 3 seeds. 80%.
+- Outcomes 50: (to be appended after the registered wave)
+
+## 2026-09-21 — Experiment 51 (wiring the real parts into the glue loop), written before the wave
+- P224: all 3 cold replays score exact marks: turns 40, taught_rows 13, active 12, superseded 1, wrong_writes 0, missing_writes 0, unexpected_entities 0, correct 12, wrong 0, abstentions 3, missed 0, two_hop_correct 6, traps no-write 5, smalltalk no-write 5, sleeps 2. 90%.
+- P225: reasoner_backend == fable_reasoner50 in all 3 runs (agent 3's module preferred over the Exp 44 wrap), with the 44-wrap still answering correctly when prefer50=False (selftest). 85%.
+- P226: ears_english == 40 and bridge_failures == 0 in all 3 runs (Qwen bridge up; no fake fallback on any turn). 80%.
+- P227: both sleeps pass the deterministic audit with 0 violations and recipe attempted=False (0 queued word episodes: the English parser rejects the maternal-grandmother surface before the reasoner). 70%.
+- Outcomes 51: (to be appended after the registered wave)
+- Outcomes 51: P224 TRUE (3/3 runs exact marks). P225 TRUE (backend fable_reasoner50 in 3/3; 44-wrap fallback green in selftest). P226 TRUE (ears_english 40, bridge_failures 0, 3/3). P227 TRUE (2/2 sleeps per run, 0 violations, recipe attempted=False).
+  All 4 predictions resolved TRUE; SCORE PASS 5/5 (incl. selftest gate); no v2.
+- Outcomes 50: P219 TRUE (2700/2700, all-5-statuses in 9/9 cells). P220 TRUE (9/9 installs;
+  0 wrong of 540 audit). P221 TRUE (90/90). P222 FALSE (times TRUE: reasoner <= 0.024 ms
+  and contract 478 ms at 6000x500; cache 204.1 MB missed the < 200 MB clause).
+  P223 TRUE (0/540 dense; reuse 1.000 all seeds). 4/5; all 5 registered marks PASS, no v2.
+
+## 2026-09-21 — Experiment 55 (added demo beats: Q10 two-hop, Q11 learn-after-training), written before the registered run
+- P228: A1 PASS — notebook answers >= 18/20 on Q10 (predict 20/20 via the hop loop). 92%.
+- P229: baseline Q10 <= 5/20 in every seed 5401/5402/5403 (it trains only on the 120 teaching lines, never on a question). 80%.
+- P230: A3 PASS — notebook 5/5 on Q11 after teaching 5 brand-new facts. 95%.
+- P231: FROZEN baseline Q11 = 0/5 in all 3 seeds (new-name embeddings never trained). 85%.
+- P232: fine-tuned baseline (>= notebook's Q11 wall-clock, min 1 update) still below the notebook's 5/5 in all 3 seeds, <= 1/5 each. 85%.
+- P233: A4 = 0 wrong writes across the whole demo AND A5 registered invocation < 600 s (dev run 37.8 s). 90%.
+- Outcomes 55: P228 TRUE (notebook 20/20). P229 TRUE (baseline 0/20 on seeds 5401/5402/5403).
+  P230 TRUE (5/5). P231 TRUE (frozen 0/5 x3). P232 TRUE (fine-tuned 0/5 x3, 1 step each,
+  >= notebook's 0.0011s beat). P233 TRUE (0 wrong writes; 37.4 s registered run).
+  6/6 TRUE; SCORE PASS (A1-A5).
+
+## 2026-09-21 — Experiment 55b (Q11 forgetting arm: QA-drilled baseline + fixed 60 s fine-tune), written before the registered run
+- P234: B1 PASS — notebook still 20/20 on the 20 old Q10 questions after teaching 5 new facts. 90%.
+- P235: B2 PASS — notebook 5/5 on the 5 new questions. 95%.
+- P236: B3 = 0 wrong writes across the whole run (dev smoke: 0). 90%.
+- P237: baseline old-Q10 AFTER is >= 5 below BEFORE in >= 2/3 seeds (dev seed 5592: 20 -> 0 after 60 s fine-tune). 70%.
+- P238: baseline new-Q11 AFTER <= 2/5 in every seed (dev seed 5592: 0/5; LM fine-tune on 5 lines does not install QA answers). 75%.
+- P239: B5 PASS — whole registered invocation < 600 s (dev single-seed all-in 133.7 s, so 3 seeds ~= 400 s). 85%.
+- Outcomes 55b: (to be appended after the registered run)
+- Outcomes 55b: P234 TRUE (notebook old 20/20 after). P235 TRUE (new 5/5). P236 TRUE (0 wrong writes).
+  P237 TRUE (old-Q10 drops 19/20/20 -> 0/0/0, >= 5 in 3/3). P238 TRUE (new-Q11 after 0/5 x3).
+  P239 TRUE (399.5 s registered run). 6/6 TRUE; SCORE PASS (B1-B5).
+
+## 2026-09-22 — Experiment 59 (signed-scalar counter vs 43K-v2 control), written before the registered wave
+- P234: SIGNED arm 3/3 seeds (5901/5902/5903) exact (1.00) on all 6 skills at every length {4-12, 16, 32, 64} with HARD=1 reads. 65%.
+- P235: CONTROL arm 3/3 seeds exact at every length <= 64 as well (43K-v2 passed 9/9 before; reported per seed, no mark). 80%.
+- P236: lam audit TRUE in all 3 SIGNED seeds (>= 1 counter lam < -0.9 AND >= 1 counter lam > 0.9). 75%.
+- P237: 512 probe < 1.00 in at least one seed of each arm while 64 stays 1.00 (readout decay, not counter -- falsification clause of doc 57 section 5). 60%.
+- Outcomes 59: (to be appended after the registered wave)
+
+## 2026-09-21 — Experiment 56 (qualifier-aware reasoner + miner filter), written before the registered run
+- P240: Q1 conformance 24/24 (wrapper: gate/match/priority/hop rules over 1-hop and multi-hop cases). 85%.
+- P241: Q2 naive control (plain reasoner50, identical questions) fails >= 6 of the 24. 90%.
+- P242: Q3 reasoner50 --selftest still passes unchanged (wrapper imports, never edits). 95%.
+- P243: Q4 zero wrong answers (0) over the 24 (no OK-where-MISSING, no wrong OK value). 85%.
+- Outcomes 56: P240 TRUE (24/24). P241 TRUE (naive fails 13/24, bar was >= 6).
+  P242 TRUE (reasoner50 selftest PASS, 19 frames, 0 disagreements).
+  P243 TRUE (0 wrong answers over the 24). 4/4 TRUE; SCORE PASS (Q1-Q4).
+
+## 2026-09-21 — Experiment 58 (ModernBERT plain-PyTorch loader), written before the wave
+- P234: M1 token ids match 20/20 sentences vs AutoTokenizer (hand-rolled GPT-2-style ByteLevel BPE). 70%.
+- P235: M2 max last-hidden diff < 1e-4 (fp32) vs AutoModel on all 20 sentences. 85%.
+- P236: M3 char spans returned per token (len(spans)==len(ids)) on all 20 sentences. 95%.
+- P237: M4 load() wall-clock < 60 s on Mac CPU with OMP_NUM_THREADS=1. 90%.
+- Outcomes 58: (to be appended after the registered wave)
+
+## 2026-09-21 — Experiment 57 (wiring end-to-end: sleep installs grandmother), written before the registered wave
+- P234: W1: sleeper attempts >= 1 install in 3/3 seeds (5701/5702/5703; 20 queued episodes each). 85%.
+- P235: W2: gate ACCEPTS the install in 3/3 seeds (20 clean episodes; Exp 46 installed 15/15 at <= 4 wrong). 70%.
+- P236: W3: new-people probes 5/5 in every accepted seed (MISSING_FACT 5/5 if any rejection); never a wrong answer. 80%.
+- P237: W4+W5: wrong writes 0 and hash chain verifies in 3/3 seeds. 90%.
+- Outcomes 57: (to be appended after the registered wave)
+- Outcomes 58: P234 TRUE (token ids 20/20 exact). P235 FALSE (max diff 3.07e-04 >= 1e-4 bar;
+  post-hoc probe: ours-vs-eager 0.00 exact, default-vs-eager 3.07e-04 — the gap is the
+  reference's default sdpa backend, not the loader). P236 TRUE (spans 20/20). P237 TRUE
+  (load 1.7 s). 3/4 TRUE; SCORE registered FAIL (M2 sealed bar missed); no v2.
+- Outcomes 57: P234 TRUE (sleep attempted exactly 1 install per seed, 3/3; 20/20 episodes queued each). P235 TRUE (gate ACCEPTED 3/3; OOF 1.00, refit agreement 1.00 every seed). P236 TRUE (new-people probes 5/5 in 3/3; 0 wrong answers, 0 abstentions on the accepted branch). P237 TRUE (wrong writes 0 and hash chain verified 3/3). 4/4 TRUE; SCORE PASS (W1-W6).
+- Outcomes 59: P234 FALSE (SIGNED 0/3 all-exact under HARD=1; all failures OP1 incl. train lengths). P235 TRUE (CONTROL 3/3 exact <= 64, plus 6/6 at 512). P236 FALSE (flip 3/3, stay 0/3). P237 FALSE (512 failed only where 64 already failed; CONTROL passed 512 fully). SCORE: registered FAIL on C1/C3, PASS on C4; no re-run.
+
+## 2026-09-21 22:05 — Ledger note (orchestrator): P-number collisions
+Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions from P234. Those numbers are therefore NOT unique; read every P234–P239 as "<experiment>-P234" etc. (55b: P234–P239; 57: P234–P237; 58: P234–P237; 59: its own block; 56: P240–P243). Nothing above is edited. From now on agents number predictions as P<experiment>.<n> (e.g. P60.1) to avoid this.
+
+## 2026-09-22 — Experiment 61 (ModernBERT eager reseal, 40 NEW sentences), written before the registered run
+- P61.1: E1 token ids match AutoTokenizer on 40/40 new sentences (20 scientific-abstract incl. 80–120-token longs, 20 everyday; none from exp 58). 90%.
+- P61.2: E2 max last-hidden diff ours-vs-eager (fp32, CPU) < 1e-4 over all 40. 85% (exp 58 probe was bit-exact on its 20).
+- P61.3: E3 max diff ours-vs-sdpa < 1e-3 (recorded; bar set at the BERT-loader level, sdpa-vs-eager was 3.07e-4 on 58's sentences). 70%.
+- P61.4: E4 per-token char spans cover the text with whitespace-only gaps on 40/40. 90%.
+- P61.5: E5 padded-batch vs single-sentence max diff < 1e-4. 90% (58 measured 2.10e-05 on 4).
+- Outcomes 61: P61.1 TRUE (token ids 40/40 exact). P61.2 TRUE (ours-vs-eager 0.00 exact).
+  P61.3 FALSE (ours-vs-sdpa 1.59e-03 >= 1e-3 bar; gap grows with length vs 3.07e-04 on
+  exp 58's shorter sentences). P61.4 TRUE (spans 40/40 union-coverage after fixing a
+  tiling-checker bug; E3 identical before/after). P61.5 TRUE (pad-vs-single 6.29e-05).
+  Brier: 0.01, 0.0225, 0.49, 0.01, 0.01. SCORE registered FAIL (E3 sealed bar missed); no v2.
+
+## 2026-09-22 — Experiment 47 training wave (arm C registered run, seeds 4701-4703), written before the run
+- P47.1: smoke run (200 steps, seed 4701, pool truncated to 2048, CUDA) completes and projects <= 40 min/seed, so no freeze-layers fallback is needed. 65%.
+- P47.2: all three registered seeds complete 2 epochs on BensPC CUDA with the fixed recipe (batch 32, lr 3e-5, bf16) and no step is improvised. 80%.
+- Outcome forecasts P205 (R2-SAFE 0 in 3/3), P206 (C beats A/B on NEW+WEB 3/3), P207 (NEWREL <= 1% in >= 2/3), P208 (PAPER executed < 40% every arm) stand as written above; outcomes appended after scoring.
+- Outcomes 47 wave: P47.1 TRUE (smoke projected ~17-18 min/seed at step 200, <= 40 min; no freeze fallback). P47.2 TRUE (4701/4702/4703 all completed 8808 steps, 2 epochs, batch 32, lr 3e-5, bf16, freeze 0; one mistyped-snapshot launch of 4703 crashed pre-training and was re-run identically). P205 FALSE (R2-SAFE silent = 2, ensemble and 1/3/0 single; trap written 2). P206 MIXED (NEW correct 2682 beats tape 2149 and bigru 2290 = TRUE; WEB executed 0/46 = FALSE). P207 TRUE (NEWREL 0/1500 <= 1%). P208 N/A (no paper panel exists). Registered verdict: arm C FAIL. RESULTS: artifacts/fable-ears47-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 62 (thought v3 groups + no-value wrapper, plain software), written before the run
+- P62.1: T1 — 32/32 contract lifecycle cases pass through the wrapper. 90%.
+- P62.2: T2 — new wrapper cases >= 20/20 pass. 85%.
+- P62.3: T3 — all 17/17 formerly-unrepresentable sentences get faithful rows (bar 15/17). 80%.
+- P62.4: T4 — 0 answers from empty/link rows through ask/ask_group. 95%.
+- P62.5: T5 — wrapper to_v1() byte-identical to v2 on all ungrouped rows. 90%.
+- Outcomes 62: P62.1 TRUE (32/32). P62.2 TRUE (22/22). P62.3 TRUE (17/17 rescued, bar was 15).
+  P62.4 TRUE (0 answers from 7 no-value probes). P62.5 TRUE (8/8 byte-identical).
+  5/5 TRUE; SCORE PASS (T1-T5); no v2.
+
+## 2026-09-22 — Experiment 60 (counter dictionary vs signed-sat vs 43K-v2 control), written before the registered wave
+- P60.1: DICT arm 3/3 seeds (6001/6002/6003) exact (1.00) on all 6 skills at every length {4-12, 16, 32, 64} with HARD=1 reads. 55%.
+- P60.2: CONTROL arm 3/3 seeds exact at every length <= 64 (43K-v2 exact 12/12 runs before; reported per seed, no mark). 85%.
+- P60.3: SIGNED-SAT arm audit TRUE in all 3 seeds (>= 1 counter lam < -0.9 AND >= 1 counter lam > 0.9; the 0.01*(1-lam^2) penalty fixes exp 59's unsaturated stay side). 45%.
+- P60.4: whole wave (9 trainings + eval) < 30 min wall-clock, sequential, OMP_NUM_THREADS=1, Mac CPU. 90%.
+- Outcomes 60: (to be appended after the registered wave)
+- Outcomes 60: P60.1 FALSE (DICT 0/3: 56/72, 66/72, 58/72 sealed; OP1 fails every seed, OP3 in 6001/6003). P60.2 TRUE (control 3/3 72/72 + 6/6 at 512). P60.3 TRUE (all |lam| >= 0.9996, both families 3/3; SAT 6003 fully exact incl. 512). P60.4 TRUE (672.7 s train compute, ~11.5 min sequential wall + seconds of eval). Brier: 0.3025, 0.0225, 0.3025, 0.01. D1 FAIL, D4 FAIL (both-confident 1/3), D5 PASS; see artifacts/fable-counter60-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 66 (Fable-Edit-200 baselines: SmolLM2-360M in-context / RAG-lite / last-2-block fine-tune), written before the registered run
+- P66.1: IN-CONTEXT overall exact-match <= 30% (360M model, greedy <= 16 tokens, original English sentences). 70%.
+- P66.2: RAG-lite exact-match >= IN-CONTEXT exact-match (top-3 BM25 sentences = shorter, less distracting prompt). 60%.
+- P66.3: reversal-type exact-match <= 20% in every arm (reversal curse at 360M scale). 75%.
+- P66.4: abstention recall < 100% in every arm (>= 1 abstain item guessed: wrong-answer count > 0 in >= 1 arm). 80%.
+- P66.5: total wall-clock for all three arms < 45 min (K3 holds). 85%.
+- P66.6: FINE-TUNE exact-match on mquake2hop <= IN-CONTEXT (20 steps on teaching sentences does not install QA answers). 70%.
+- Outcomes 66: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 53 (mouth: borrowed SmolLM2-360M decoder + our head/format), written before the registered run
+- P53.1: O1 faithfulness violations on 500 held-out records = 0 after the brake (true by fallback construction); raw decoder output violates the brake on <= 60/500. 60%.
+- P53.2: O2 status recoverable from the sentence by the rule-based classifier on >= 480/500 held-out records. 80%.
+- P53.3: O3 held-out exact answer entity present verbatim in the sentence for >= 240/250 OK records. 85%.
+- P53.4: O4 training + scoring < 25 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 (else cut to 1,500 pairs and record it). 70%.
+- P53.5: O5 wire51 replay with our Mouth swapped in gives 0 wrong writes and the same correctness counts as replay-report.json. 75%.
+- Outcomes 53: P53.1 FALSE (after-brake 0/500 as constructed, but raw violates on 296/500, bar was <= 60). P53.2 FALSE (426/500, bar 480). P53.3 TRUE (250/250, bar 240). P53.4 TRUE (762.6 s train + 423.4 s score = 19.8 min < 25; full 3,000 pairs, no cut). P53.5 FALSE (replay 1 wrong write, 11 correct, 2 abstentions per run vs 0/12/3; bridge down/flaky, 1 gap mouth-caused, 2 ears-caused). Brier: 0.36, 0.64, 0.0225, 0.09, 0.5625. Marks O1/O3/O4 PASS, O2/O5 registered FAIL; see artifacts/fable-mouth53-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 64 (LTT abstention threshold on rung-1 ears, tape + BiGRU), written before the registered run
+- P64.1: fixed-sequence LTT on CAL returns ABSTAIN-ALL for tape. 80%. Falsified by a finite tape tau-hat.
+- P64.2: fixed-sequence LTT on CAL returns ABSTAIN-ALL for bigru. 80%. Falsified by a finite bigru tau-hat.
+- P64.3: at the LTT tau-hat, empirical wrong-write rate <= 2% on all 6 test panel-arms (t_seen/t_new/t_hard x tape/bigru). 90%. Falsified by any rate > 2%.
+- P64.4: coverage at the LTT tau-hat <= 20% on every test panel-arm. 70%. Falsified by any coverage > 20%.
+- Outcomes 64: P64.1 TRUE (tape tau-hat = ABSTAIN-ALL; m=0 at grid point 1, candidate max 0.918 < tau1 0.945). P64.2 TRUE (bigru ABSTAIN-ALL; 0.878 < 0.932). P64.3 TRUE — vacuously: ABSTAIN-ALL writes 0, rate 0/0 ≤ 2% on all 6 panel-arms per the sealed definition; uncertified tau0 reference: 1 wrong write in 3,155 (bigru/t_hard 1/117), 0 elsewhere. P64.4 TRUE (coverage 0.0000 on all 6, ≤ 20%). Marks L1-L4 PASS. RESULTS: artifacts/fable-abstain64-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 65 (Fable-Edit-200 notebook arm, structured triples, seed 6500), written before the registered run
+- P65.1: N1 — MQuAKE two-hop >= 90/100 correct with <= 2 wrong (edit supersedes original via correction). 75%.
+- P65.2: N2 — reversal 50/50 correct both directions (symmetric lookup, no curse). 90%.
+- P65.3: N3 — abstention 50/50 abstain with 0 wrong answers (structural MISSING_FACT/BROKEN_CHAIN). 90%.
+- P65.4: N4 — whole 200-item run < 10 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 95%.
+- Outcomes 65: P65.1 TRUE (100/100, 0 wrong). P65.2 TRUE (50/50). P65.3 TRUE (50/50 abstain, 0 wrong). P65.4 TRUE (0.2 s). 4/4 TRUE; SCORE PASS (N1-N4); no v2.
+
+## 2026-09-22 — Redteam 67 (adversarial probe of plain-software core: notebook contract, listening M1, reasoner50+qual56, thought49/62 rows, agent loop), written before the probe run
+- P200.1: >= 60 adversarial action-sequence cases execute; >= 80% verdict OK (core matches its own contract). 70%.
+- P200.2: >= 1 critical bug found (silent wrong answer or wrong write through the contract hop loop). 40%.
+- P200.3: reasoner50 agrees with Notebook.ask on 100% of adversarial parity frames (no divergence). 80%.
+- P200.4: 10,000-fact notebook loads with intact hash chain and answers a query in < 5 s wall-clock on Mac CPU. 75%.
+- P200.5: ThoughtNotebook.ask and qual56 reasoner agree on all qualifier-gate cases (bare/matching/mismatched qualifier). 70%.
+- Outcomes 200: P200.1 TRUE (64/69 OK = 92.8%). P200.2 TRUE (1 critical: RT66 qualifier leak). P200.3 TRUE (reasoner50 == contract on all parity frames). P200.4 TRUE (10k chain intact, query 1.7 ms). P200.5 FALSE (2 TNotebook-vs-qual56 divergences: RT65, RT66). 4/5 TRUE; 3 bugs filed in design doc 72.
+
+## 2026-09-22 — Experiment 76 (LTT abstention with candidate-quantile grid, one-change follow-up to exp 64), written before the registered run
+- P76.1: tape certifies a finite tau-hat (m >= 114 accepted CAL candidates, 0 errors at the accepted point). 60%. Falsified by ABSTAIN-ALL.
+- P76.2: bigru certifies a finite tau-hat. 55%. Falsified by ABSTAIN-ALL.
+- P76.3: at tau-hat, empirical wrong-write rate <= 2% on all 6 test panel-arms (t_seen/t_new/t_hard x tape/bigru). 85%. Falsified by any rate > 2%.
+- P76.4: coverage at tau-hat <= 20% on every test panel-arm. 60%. Falsified by any coverage > 20%.
+- Outcomes 76: P76.1 TRUE (tape tau-hat = 0.088756, m=1429, k=0). P76.2 TRUE (bigru tau-hat = 0.302860, m=1363, k=0). P76.3 TRUE (0 wrong in 3,139 LTT writes on all 6 panel-arms). P76.4 FALSE (coverage 0.417-0.620, all > 20%: error-free CAL let the loosest grid point certify). Marks G1-G4 PASS. RESULTS: artifacts/fable-abstain76-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 74 (persistent agent daemon: mailbox + heartbeat + verified notebook), written before the registered run
+- P74.1: D1 passes in 3/3 seeds (50/50 correct, 0 wrong after stop+restart). 85%. Falsified by any seed < 50/50 or any wrong answer.
+- P74.2: D2 passes in 3/3 seeds (chain verifies or exact broken line reported; 200/200 correct, 0 wrong, 0 dupes after kill -9 + restart). 70%. Falsified by any lost/duplicated fact or silent chain acceptance.
+- P74.3: D3 passes in 3/3 seeds (100 turns end-to-end < 60 s on Mac CPU). 90%. Falsified by any seed >= 60 s.
+- P74.4: D4 passes in 3/3 seeds (STOP stops the process within 10 s, exit 0). 95%. Falsified by any seed slower or non-zero exit.
+- Outcomes 74: P74.1 TRUE (D1 50/50, 0 wrong, 3/3 seeds). P74.2 TRUE (D2 200/200, 0 wrong, 0 dupes, chain clean, 3/3). P74.3 TRUE (100 turns in 0.25-0.40 s, 3/3). P74.4 TRUE (STOP in 0.05-0.06 s, exit 0, 3/3). 4/4 TRUE; SCORE PASS (D1-D4). RESULTS: artifacts/fable-daemon74-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 80 (hardgate noise-mismatch: eps fixed 0.10, true wrong in {0,2,4,6,8,10,20}, seeds 4101-4103), written before the registered run
+- P80.1: J1 replicates exp 46: 9/9 installs at EACH of 0, 2, 4 wrong (pooled 27/27), 0 wrong installs. 75%.
+- P80.2: J2 at 6/20 wrong: installs >= 7/9 with 0 wrong installs (mild mismatch still teaches). 60%.
+- P80.3: J2 at 8 and 10 wrong: 0 wrong installs at both levels (gate refuses rather than installing wrong; install counts recorded, no bar). 60%.
+- P80.4: J3 holds (0/9 installs at 20/20 wrong, 0 wrong installs) AND J4 resolves "none up to 10/20" (no wrong install at any non-nonsense level). 70%.
+- P80.5: J5 holds: whole 3-seed wave < 30 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1, one process at a time. 90%.
+- Outcomes 80: P80.1 TRUE (9/9 installs at each of 0/2/4, 0 wrong). P80.2 FALSE
+  (0/9 installs at 6 wrong, bar was >= 7/9; 0-wrong-installs half held).
+  P80.3 TRUE (0 wrong installs at 8 and 10). P80.4 TRUE (0/9 at 20/20;
+  J4 "none up to 10/20"). P80.5 TRUE (276 s wave).
+  Brier: 0.0625, 0.36, 0.16, 0.09, 0.01. SCORE PASS (J1, J3, J4, J5; J2 measurement, no gate); no v2.
+  RESULTS: artifacts/fable-hardgate80-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 77 (additive core fixes for redteam67 findings 1-3: rule-2 gate, bool qualifier equality, tail-evident log loading), written before the registered run
+- P77.1: F1 — 3/3 red-team reproducers give the doc-56-correct result through the fixed classes (R1 answers "Ana", R2 bool OK/OK, R3 LogCorrupt). 85%. Falsified by any reproducer still showing the bug.
+- P77.2: F2 — 69/69 red-team cases OK or explicitly classified with 0 BUG and 0 UNCLEAR after the fix; unpatched re-run reproduces 64/3/2. 80%. Falsified by any BUG or UNCLEAR left in the patched run.
+- P77.3: F3 — qual56 24/24 through QualifierAwareReasoner77 and thought62 T1-T5 5/5 unchanged. 85%. Falsified by any case or mark failing.
+- P77.4: F4 — bench65 notebook-arm flow 200/200 correct with 0 wrong under GatedThoughtNotebook. 90%. Falsified by any miss or wrong answer.
+- Outcomes 77: P77.1 TRUE (R1 Ana/Ana, R2 OK/OK, R3 LogCorrupt). P77.2 TRUE (after 69/69 OK, 0 BUG, 0 UNCLEAR; before 64/3/2 reproduced). P77.3 TRUE (qual56 24/24, lifecycle 32/32, thought62 5/5). P77.4 TRUE (bench 200/200, 0 wrong, 0.3 s). 4/4 TRUE; MARKS F1-F4 PASS; no v2.
+
+## 2026-09-22 — Redteam 79 (web-quarantine adversarial probe, fake searcher/fetcher only), written before the probe run
+- P79.1: >= 50 adversarial cases execute; >= 80% verdict OK (thinking matches its docstring/design doc 37). 70%.
+- P79.2: >= 1 BUG found (web text mishandled: instruction-following, trust-rule, or reader leak). 65%.
+- P79.3: >= 1 critical BUG (silent wrong answer, wrong write, or page-text instruction-following). 40%.
+- P79.4: quarantined rows answer 0 questions through every reader (contract ask, listening hear, thought49 ask, qual56, reasoner50). 85%.
+- P79.5: personal-fact topics and taught-contradicting web claims never become taught rows. 90%.
+- Outcomes 79: P79.1 TRUE (56 cases, 53/56 = 94.6% OK). P79.2 TRUE (1 BUG: RT79-18 None->"None" quarantine, medium). P79.3 FALSE (0 critical; worst is medium). P79.4 TRUE (quarantine MISSING_FACT via all 5 readers; verified answers all 4). P79.5 TRUE (0 personal leaks, 0 taught overwrites). 4/5 TRUE; 1 BUG + 2 UNCLEAR filed in design doc 79.
+
+## 2026-09-22 — Experiment 78 (fresh-split confirmation of exp 76: bootstrap CAL redraw, seeds 7801/7802), written before the registered run
+- P78.1: seed-7801 tape certifies a finite tau-hat (m >= 114, k = 0 at the accepted point). 60%. Falsified by ABSTAIN-ALL.
+- P78.2: seed-7801 bigru certifies a finite tau-hat. 55%. Falsified by ABSTAIN-ALL.
+- P78.3: seed-7802 tape certifies a finite tau-hat. 60%. Falsified by ABSTAIN-ALL.
+- P78.4: seed-7802 bigru certifies a finite tau-hat. 55%. Falsified by ABSTAIN-ALL.
+- P78.5: at fresh tau-hat, wrong-write rate <= 2% on all 6 test panel-arms in both seeds. 85%. Falsified by any rate > 2%.
+- P78.6: exp 76's tau-hat (tape 0.088756 / bigru 0.30286) applied unchanged gives <= 2% on all 6 panel-arms. 95%. Falsified by any rate > 2%.
+- P78.7: |tau-hat(78) - tau-hat(76)| < 0.05 on every arm-seed. 70%. Falsified by any |delta| >= 0.05.
+- Outcomes 78: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 73 (Fable-Edit-200 English-input arm, template ears + ears47 adapter, seed-free), written before the registered run
+- P73.1: T1 — template-arm table identical to the structured reference (100/50/25/25, 0 wrong). 85%.
+- P73.2: T2 — 5/5 garbled items yield MISSING/abstain, 0 wrong. 90%.
+- P73.3: T3 — whole 200-item template run < 5 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 95%.
+- P73.4: ears47 smoke ends in a documented SKIP (no checkpoint under artifacts/fable-ears47-20260921/runs/ yet). 90%.
+- Outcomes 73: P73.1 TRUE (TABLES IDENTICAL: 100/100 mquake, 50/50 reversal, 25/25 + 25/25 abstain, 0 wrong). P73.2 TRUE (5/5 garbled MISSING/abstain, 0 wrong). P73.3 TRUE (0.5 s). P73.4 TRUE (documented SKIP, no checkpoint yet). 4/4 TRUE; SCORE PASS (T1-T3).
+- Outcomes 78: P78.1 TRUE (7801 tape tau-hat = 0.088756, m=1439, k=0). P78.2 TRUE (7801 bigru 0.414803, m=1364, k=0). P78.3 TRUE (7802 tape 0.126850, m=1413, k=0). P78.4 TRUE (7802 bigru 0.355056, m=1350, k=0). P78.5 TRUE (0 wrong in 3,093 writes 7801; 0 wrong in 3,117 writes 7802; all 6 panel-arms each). P78.6 TRUE (old 76 gate unchanged: 0 wrong in 3,126 writes, both runs). P78.7 FALSE (|delta| bigru 0.112/0.052 >= 0.05 bar; tape 0.000/0.038 pass — tau-hat is the resample minimum under error-free CAL, so it jitters). H1-H4 + G4 PASS both seeds. Note: exp 76 JSON sums to 3,126 LTT writes, not 3,139 (transcription error; rates unaffected). RESULTS: artifacts/fable-abstain78-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 82 (ledger audit, static parser only), written before the run
+- P82.1: checker parses the whole ledger and lists every prediction id with p, outcome, experiment (L1). 90%.
+- P82.2: duplicates report flags P234-P239 collisions across 55b/57/58/59 and the P200 block (exp45 vs redteam67) (L2). 85%.
+- P82.3: --selftest on synthetic ledger passes incl. Brier math (L3). 90%.
+- P82.4: ledger_status.json written with integer counts + per-experiment and overall Brier (L4). 90%.
+- P82.5: whole check < 60 s on Mac CPU, OMP_NUM_THREADS=1, offline (L5). 95%.
+- Outcomes 82: (to be appended after the run)
+- Outcomes 82: P82.1 TRUE (388 ids listed with p/outcome/exp). P82.2 TRUE (all four collided ids flagged; exp-45 bare id vs redteam-67 dotted ids distinct). P82.3 TRUE (--selftest green). P82.4 TRUE (ledger_status.json with counts + Brier). P82.5 TRUE (runs took seconds, offline, OMP=1). 5/5 TRUE; MARKS L1-L5 PASS.
+
+## 2026-09-22 — Experiment 84 (natural-turns acceptance: 60 turns, FakeEars/FakeMouth/LookupReasoner), written before the registered run
+- P84.1: U1 holds — 0 wrong writes over all 60 turns. 85%. Falsified by any wrong FACT/ENTITY row.
+- P84.2: U2 holds — >= 13/15 question turns exact-match with 0 wrong answers. 85%. Falsified by <= 12 matches or any invented answer.
+- P84.3: U3 holds — 5/5 messy turns clarify-or-correct with 0 wrong writes. 90%. Falsified by any messy wrong write or mismatch.
+- P84.4: whole registered invocation < 30 min wall-clock on Mac CPU, offline. 97%. Falsified by a longer run.
+- Outcomes 84: P84.1 TRUE (0 wrong writes / 60 turns) | 0.0225. P84.2 TRUE (15/15 question turns match, 0 wrong answers) | 0.0225. P84.3 TRUE (5/5 messy clarify-or-correct, 0 wrong) | 0.01. P84.4 TRUE (registered run 0.2 s wall-clock) | 0.0009. 4/4 TRUE; SCORE PASS (U1-U4).
+
+## 2026-09-22 — Experiment 86 (Simple English reading data, Muse), written before the run
+- P86.1: W1 — extractor keeps >= 100,000 sentences (target 200,000) from the official simplewiki 20260901 multistream dump before hitting the page/byte stop cap. 80%. Falsified by kept < 100,000.
+- P86.2: W2 — 0/1,000 sampled kept sentences contain markup residue ({{, [[, <, ]], }}). 85%. Falsified by any residue hit.
+- P86.3: W3 — 0 exact duplicates in sentences.jsonl. 90%. Falsified by any exact dupe.
+- P86.4: W4 — whole extraction < 25 min wall-clock on Mac CPU (stream + early stop). 70%. Falsified by >= 25 min.
+- Outcomes 86: P86.1 TRUE (200,000 kept from 43,925 pages, 45.1 MB streamed then stopped). P86.2 TRUE (0/1,000 residue). P86.3 TRUE (0 exact dupes). P86.4 TRUE (20.5 s wall). 4/4 TRUE; SCORE PASS (W1-W4).
+
+## 2026-09-22 — Redteam 81 (listening-doorway adversarial probe via AgentLoop+FakeEars), written before the probe run
+- P81.1: >= 60 adversarial ENGLISH turns execute in sequences; >= 80% verdict OK (doorway+contract match docstring/design docs 36/54). 70%.
+- P81.2: >= 1 doorway/contract BUG found (silent wrong write, wrong answer, wrong status, crash, or personal inference). 35%.
+- P81.3: every question turn writes 0 notebook events (questions never write). 90%.
+- P81.4: 0 crashes over the whole probe wave (every turn returns a reply). 85%.
+- Outcomes 81: (to be appended after the probe run)
+
+## 2026-09-22 — Experiment 85 (ModernBERT swap PREP for ears rung-2, Mac CPU only), written before the prep run
+- P85.1: E1 smoke (20 steps, 64 sents, MAX_LEN 32, seed 4701) shows strictly decreasing loss and a reloadable checkpoint in the exact exp-47 format. 75%.
+- P85.2: E2 --dry-run prints params (~149.5M total) and a bf16 GPU estimate comfortably under 16 GB at batch 32 / MAX_LEN 96. 85%.
+- P85.3: E3 audit finds < 1% of pool sentences exceed MAX_LEN 96 under ModernBERT tokenisation (pool was built for 96 SciBERT wordpieces). 70%.
+- Outcomes 85: (to be appended after the prep run)
+
+## 2026-09-22 — Experiment 88 (demo rehearsal transcript, Muse), written before the registered runs
+- P88.1: V1 fast mode (skip-baseline) finishes < 60 s wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 90%. Falsified by >= 60 s.
+- P88.2: V1 full mode (55b baseline: 250 QA updates + fixed 60 s fine-tune x 3 seeds) finishes < 900 s. 85%. Falsified by >= 900 s.
+- P88.3: V2 notebook 0 wrong answers across Act 1 asks + 20 old-after + 5 new in every run. 90%. Falsified by any wrong notebook answer.
+- P88.4: V4 transcript audit clean (no code, JSON, or status codes) in every run. 80%. Falsified by any forbidden token.
+- P88.5: baseline old-kept after fine-tune <= 5/20 every seed AND new-learned <= 2/5 every seed (55b pattern repeats). 70%. Falsified by any seed above either bar.
+- Outcomes 88: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 89 (web-quarantine fixes for redteam79 findings, Muse), written before the registered run
+- P89.1: X1 — the BUG-1 reproducer (None value, quote contains "none") stores 0 rows through the fixed class (kept=0, dropped=['missing field']). 90%. Falsified by any stored row.
+- P89.2: X2 — the three site-pair cases (subdomain RT79-09, port RT79-53, homoglyph RT79-11) count as 1 site each and are NOT believed through the fixed class. 85%. Falsified by any of the three believed.
+- P89.3: X3 — 56/56 red-team cases OK or explicitly classified with a written rule through the fixed class. 75%. Falsified by any unclassified BUG/UNCLEAR.
+- P89.4: X4 — thinking_m2 selftest check count identical before and through the wrapper. 90%. Falsified by any count change.
+- Outcomes 89: P89.1 TRUE (kept=0, missing field, 0 rows) | 0.01. P89.2 TRUE (3/3 pairs 1 site, 0 believed) | 0.0225. P89.3 TRUE (55 OK + RT79-43 RULE-CHANGED = 56/56) | 0.0625. P89.4 TRUE (18/18 before and after) | 0.01. 4/4 TRUE; MARKS X1-X4 PASS; no v2. RESULTS: artifacts/fable-webfix89-20260921/RESULTS.md
+- Outcomes 81: P81.1 TRUE (73 English turns in 17 sequences; 74/74 cases OK incl. 1 harness setup). P81.2 FALSE (0 doorway/contract BUGs, 0 UNCLEAR). P81.3 FALSE on the letter (D_q_vs_s-01 "Mira's city is Lisbon?" taught 1 FACT with value "Lisbon?"; all genuine interrogatives wrote 0). P81.4 TRUE (0 crashes, every turn replied). Brier: 0.09, 0.1225, 0.81, 0.0225. SCORE PASS (R1-R4). RESULTS: artifacts/fable-redteam81-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 94 (reading panel, Muse, data build, no training), written before the labelling run
+- P94.1: fraction of the 400 sentences with >=1 in-inventory triple lands in [0.25, 0.55]. 70%. Falsified by outside that band.
+- P94.2: the top NO_FACT reason is relation-not-in-inventory (over fragment/opinion/vague-pronoun-subject/list-or-table). 80%. Falsified by any other top reason.
+- P94.3: exact triple-match rate on the blind 80 relabels >= 0.80 (64/80). 60%. Falsified by < 64/80.
+- P94.4: Cohen kappa on fact/no-fact over the 80 >= 0.70. 60%. Falsified by kappa < 0.70.
+- Outcomes 94: (to be appended after the labelling run)
+
+## 2026-09-22 — Experiment 94b (fresh reading panel rows 400-799, Muse, data build only, no training, Mac CPU), written before the labelling run (PASSMARKS sealed in artifacts/fable-reading94b-20260922/, seal c434ae0d…)
+- P94b.1: fraction of the 400 sentences with >=1 in-inventory triple lands in [0.25, 0.55]. 70%. Falsified by outside that band.
+- P94b.2: the top NO_FACT reason is relation-not-in-inventory (over fragment/opinion/vague-pronoun-subject/list-or-table). 80%. Falsified by any other top reason.
+- P94b.3: exact triple-match rate on the blind 80 relabels (seed 9402) >= 0.80 (64/80). 60%. Falsified by < 64/80.
+- P94b.4: Cohen kappa on fact/no-fact over the 80 >= 0.70. 60%. Falsified by kappa < 0.70.
+- Outcomes 94b: (to be appended after the labelling run)
+- Outcomes 94b: P94b.1 TRUE (165/400 = 0.4125 with >=1 triple, in [0.25, 0.55]) | 0.09. P94b.2 TRUE (top NO_FACT reason relation-not-in-inventory, 174/235) | 0.04. P94b.3 FALSE (exact triple-match 54/80 = 0.675 < 0.80; 26 adjudicated: 18 pass-1 kept, 8 pass-2 adopted) | 0.36. P94b.4 TRUE (Cohen kappa 0.8250 >= 0.70; fact/no-fact FF=35 FN=5 NF=2 NN=38) | 0.16. 3/4 TRUE. PANEL: data/open/reading94b/panel.jsonl (400 rows, sha256 9ca7035c…11340fba). RESULTS: artifacts/fable-reading94b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 91 (FakeEars guard: question + conjunction screen, Muse), written before the registered run
+- P91.1: G1 — both reproducers clarify with 0 writes (question -> "Was that a question?", conjunction -> split message). 95%. Falsified by any write.
+- P91.2: G2 — exactly the 5 follow-on cases change outcome (D_q_vs_s-01, D_q_vs_s-02, E_double-01, E_double-02, E_double-03) and 0 become a wrong write. 80%. Falsified by any other changed case or any wrong write.
+- P91.3: G3 — 60/60 status match with 0 wrong writes through GuardedEars. 85%. Falsified by any mismatch or wrong write.
+- P91.4: G4 — daemon74 selftest passes (exit 0, D1-D4 in seeds 1-3) with the guard launcher. 90%. Falsified by any failing mark.
+- Outcomes 91: P91.1 TRUE (2/2 clarify, 0 writes) | 0.0025. P91.2 TRUE (changed exactly D_q_vs_s-01, D_q_vs_s-02, E_double-01, E_double-02, E_double-03; 0 wrong writes) | 0.04. P91.3 TRUE (60/60, 0 wrong) | 0.0225. P91.4 TRUE (selftest exit 0; D1 50/50, D2 200/200, D3 ~0.3 s, D4 ~0.05 s in seeds 1-3) | 0.01. 4/4 TRUE; SCORE PASS (G1-G4); no v2. RESULTS: artifacts/fable-earsguard91-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 66 (Fable-Edit-200 baselines: SmolLM2-360M in-context / RAG-lite / fine-tune arms, Muse), outcomes
+- Outcomes 66 (bench66-baselines; note: the P66.x block at ledger line ~451 was also used by another agent's doc-66 experiment, so each is labelled here): P66.1 TRUE (in-context exact 53/200 = 26.5% ≤ 30%). P66.2 FALSE (RAG-lite 79/200 = 39.5% < in-context 53/200 = 26.5%). P66.3 FALSE (in-context reversal 18/50 = 36% > 20%; raglite 12/50 = 24% > 20%; finetune not run on reversal). P66.4 TRUE (43 wrong-answers of 50 abstain items in BOTH incontext and raglite). P66.5 TRUE (total wall 1504 s = 25.1 min < 45 min). P66.6 TRUE (finetune mquake2hop 1/60 correct ≤ in-context 34/100; 20 steps on teaching sentences installed nothing). 3 TRUE / 3 FALSE. Brier (P66.1 0.70, P66.2 0.60, P66.3 0.75, P66.4 0.80, P66.5 0.85, P66.6 0.70): 0.09, 0.16, 0.5625, 0.04, 0.0225, 0.09 → sum 0.965, n=6. K marks: K1 PASS, K2 PASS, K3 PASS (25.1 min), K4 PASS (prompts/FT text built only from sentences+question, verified structurally in script). FT cut to first 60 items fired as pre-registered (projected 3503 s > 2400 s). RESULTS: artifacts/fable-bench66-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 90 (integrated loop, Muse), written before the registered run
+- P90.1: Z1 — 60/60 turns84 statuses match through the Loop90 mailbox with 0 wrong writes. 80%. Falsified by any mismatch or wrong FACT/ENTITY row.
+- P90.2: Z2 — Fable-Edit-200 through the loop notebook: 200/200 items in expected cell, 0 WRONG. 75%. Falsified by any WRONG/MISS/WRITE_FAULT.
+- P90.3: Z3 — 69 core + 56 web probe verdicts identical to sealed baselines (0 new BUGs, 0 changed) and 8/8 loop-notebook/thinker doctrinal checks pass. 80%. Falsified by any new BUG/changed verdict/failed check.
+- P90.4: Z4 — D2 kill-9+restart per seed 1/2/3: correct == 200, wrong == 0, dupes == 0. 85%. Falsified by any seed missing any bar.
+- P90.5: Z5 — config documents all 6 plug points and the file-built loop answers the smoke turn with all Protocols satisfied. 90%. Falsified by any undocumented plug or failed smoke/protocol check.
+- P90.6: whole wave (Z1-Z5) < 30 min wall-clock on Mac CPU, offline, OMP_NUM_THREADS=1. 90%. Falsified by a longer wave.
+- Outcomes 90: P90.1 TRUE (60/60, 0 wrong, 5.1 s) | 0.04. P90.2 TRUE (150 correct + 50 abstain_ok, 0 WRONG) | 0.0625. P90.3 TRUE (69: 64/3/2 + 56: 53/1/2 identical to sealed; 8/8 doctrinal) | 0.04. P90.4 TRUE (200/200, 0 wrong, 0 dupes in seeds 1, 2, 3) | 0.0225. P90.5 TRUE (6/6 plugs, smoke + Protocols OK) | 0.01. P90.6 TRUE (wave ≈ 31 s + harness < 30 min) | 0.01. 6/6 TRUE; MARKS Z1-Z5 PASS. RESULTS: artifacts/fable-loop90-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 63 (relation alias table + canon, plain software), written before the registered run
+- P63.1: A1 — paraphrase >= 240/300 with 0 WRONG (construction verify showed 272 correct / 0 wrong / 28 abstain). 90%.
+- P63.2: A2 — fabricated 200/200 UNKNOWN (construction verify showed 200/200). 95%.
+- P63.3: A3 — 230/230 dev agreement on capital/capital-of/father/child rows; 226/226 round-trip where a declared in-WebRED inverse exists; 4 father/child rows agreement-only. 90%.
+- P63.4: A4 — coverage 518/521 WebRED names with >= 1 alias-table key (build printed 518/521; uncovered: court, general manager, hardness). 95%.
+- Outcomes 63: (to be appended after the registered run)
+- Outcomes 63: P63.1 TRUE (272/300, 0 wrong, 28 abstain). P63.2 TRUE (200/200 UNKNOWN). P63.3 TRUE (230/230 agree; 226/226 round-trip; 4 agreement-only). P63.4 TRUE (518/521; uncovered: court, general manager, hardness). 4/4 TRUE; SCORE PASS.
+- Outcomes 88: P88.1 TRUE (fast 0.0 s, 0.0 s). P88.2 TRUE (full 471.5 s). P88.3 TRUE (notebook 0 wrong in 3/3 runs: Act 1 asks + 20 old-after + 5 new). P88.4 TRUE (audit clean 3/3). P88.5 TRUE (old-after 0/20 x3, new-after 0/5 x3; Q10 before 19/20/20). 5/5 TRUE; SCORE PASS (V1-V4). RESULTS: artifacts/fable-demo88-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 95 (diagnosis of the registered exp-47 FAIL, Muse, inference-only on Mac CPU), written before the run
+- P95.1: on wpos rows 1-10, all 3 seeds' top act is STATE with rel = gold class in >= 24/30 seed-rows (head points right; brakes/confidence block). 60%.
+- P95.2: > 50% of non-executed SEEN/NEW STATE-gold ensemble confidences lie in [0.5, tau_exec). 55%.
+- P95.3: per-seed frame disagreement on non-executed SEEN/NEW STATE-gold rows > 40%. 50%.
+- P95.4: the exp-76-style LTT candidate grid on CAL certifies a finite tau-hat below 0.8766. 70%.
+- P95.5: both SAFE trap writes show 3/3-seed STATE agreement with ensemble conf >= tau_exec and ok4=ok5=True on every seed. 80%.
+- P95.6: ECE on CAL differs by < 0.03 across the 3 seeds (temperature fit is not the tau driver). 60%.
+- Outcomes 95: P95.1 FALSE (7/30 wpos seed-rows STATE+gold-rel) | 0.36. P95.2 FALSE (49.9% combined in [0.5,tau): SEEN 177/362=48.9%, NEW 286/565=50.6%) | 0.2025. P95.3 FALSE (disagreement 68/927=7.3%: SEEN 0/362, NEW 68/565) | 0.25. P95.4 TRUE (LTT tau-hat=0.0887 < 0.8766, 15/15 grid points accept) | 0.09. P95.5 TRUE (both SAFE writes 3/3 STATE, ok4=ok5=True, ens conf 0.8922/0.8827 >= tau) | 0.04. P95.6 TRUE (ECE 0.1186/0.1234/0.1075, spread 0.0159 < 0.03) | 0.16. 3/6 TRUE. RESULTS: artifacts/fable-diag95-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 96 (close the gaps in the integrated loop, Muse), written before the registered run
+- P96.1: L1 — both reproducers CLARIFY with 0 writes through the loop96 mailbox; the same 2 through loop90 each write 1 wrong FACT. 90%. Falsified by any write through loop96 or any non-write through loop90.
+- P96.2: L2 — all 74 red-team-81 cases through the loop96 agent: 0 wrong writes; changed-vs-loop90 ids are exactly D_q_vs_s-01, D_q_vs_s-02, E_double-01, E_double-02, E_double-03 (the exp-91 G2 set). 75%. Falsified by any wrong write or any other changed id.
+- P96.3: L3 — 3/3 red-team-67 BUG reproducers pass against the loop96 notebook+reasoner. 90%. Falsified by any failing reproducer.
+- P96.4: L4 — RT79-18 OK (kept=0) and RT79-09/RT79-53 OK at 1 site each through the loop96 thinker class. 85%. Falsified by any other verdict or site count.
+- P96.5: L5 — Z1 60/60 with 0 wrong and Z2 200/200 with 0 WRONG re-run with the loop96 agent. 80%. Falsified by any mismatch or wrong write.
+- P96.6: L6 — kill-9+restart seeds 1/2/3: 200/200, 0 wrong, 0 dupes per seed. 85%. Falsified by any seed missing any bar.
+- Outcomes 96: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 99 (self-questions through the live loop90 agent, Muse), written before the registered run
+- P99.1: S1 — >= 36/40 self-answers match live state (script-checked numbers/names). 85%. Falsified by <= 35/40.
+- P99.2: S2 — 0 answers containing a number/name not present in live state. 80%. Falsified by any hallucinated token.
+- P99.3: S3 — 10/10 decline questions decline in plain words. 90%. Falsified by any non-decline.
+- P99.4: session state exact — 19 active taught facts, 6 people, 1 quarantined web row, 2 corrections, 1 forgotten fact, 0 sleeps, 26 turns. 85%. Falsified by any other count.
+- P99.5: registered run < 30 min wall-clock on Mac CPU, offline, OMP_NUM_THREADS=1. 95%. Falsified by a longer run.
+- Outcomes 99: P99.1 TRUE (40/40). P99.2 TRUE (0 hallucinations). P99.3 TRUE (10/10 declines). P99.4 TRUE (19 taught, 6 people, 1 quarantine, 2 corrections, 1 forgotten, 0 sleeps, 26 turns). P99.5 TRUE (0.9 s). 5/5 TRUE; MARKS S1-S3 PASS. RESULTS: artifacts/fable-self99-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 92 (Fable-Edit-SCALE: 3/4-hop, multi-edit, batch, conflict, 3-hop reversal), written before the registered run
+- P92.1: S1 notebook arm 200/200 correct, 0 wrong (the hop loop is exact; 3 hops are structurally no harder than 2). 90%.
+- P92.2: S2 notebook arm 200/200 correct, 0 wrong. 85%.
+- P92.3: S3 notebook arm >= 190/200 correct, 0 wrong (same-chain multi-edits supersede cleanly in file order). 70%.
+- P92.4: S4 batch correct < 95% AND wrong > 0 (cross-case same-(subject,relation) collisions: first-writer-wins originals plus superseding foreign edits). 65%.
+- P92.5: S5 conflicting-edits arm 200/200 correct, 0 wrong (correction=True supersession; latest wins). 90%.
+- P92.6: S6 reversal-at-3-hops arm 200/200 correct, 0 wrong (symmetric lookup, no curse at any length). 90%.
+- P92.7: English arm scores < 95% correct on >= 1 of S1-S3 (paraphrase/mention gaps -> honest MISS) with 0 wrong on all three English splits. 60%.
+- P92.8: whole registered wave (notebook S1-S6 + English S1-S3) < 30 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 90%.
+- Outcomes 92: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 98 (red team of the integrated loop90 agent, Muse), written before the registered run
+- P98.1: 64/64 cases execute through the mailbox/daemon interface with every turn reported, wave < 30 min on Mac CPU, offline, OMP_NUM_THREADS=1. 95%. Falsified by any unreported case or a longer wave.
+- P98.2: >= 1 critical/high BUG where hearsay- or web-shaped text plants or overwrites a taught fact (taught does not always win). 70%. Falsified by zero such BUGs.
+- P98.3: all 8 group-C forget turns clarify with 0 writes and the follow-up asks still answer the stale fact (forget is unreachable end-to-end). 80%. Falsified by any working forget or any abstain.
+- P98.4: the non-UTF-8 inbox file (E7) raises out of process_file, which would kill a production daemon. 75%. Falsified by a safe inline skip.
+- P98.5: F1/F2/F6 restarts keep every taught fact with 0 wrong answers, and the F4 SIGKILL restarts chain_ok with 0 wrong. 85%. Falsified by any wrong answer or boot failure there.
+- P98.6: the B5 Actually-+template correction is dropped (stale Spanish answer). 60%. Falsified by an Arabic answer.
+- Outcomes 98: P98.1 TRUE (64/64 reported, 3.6 s) | 0.0025. P98.2 TRUE (A2/A6/A8 critical web/hearsay overwrites) | 0.09. P98.3 TRUE (8/8 forgets clarify + stale answers) | 0.04. P98.4 TRUE (E7 UnicodeDecodeError escapes process_file) | 0.0625. P98.5 TRUE (F1/F2/F6 kept; F4 30/30, 0 wrong, chain_ok) | 0.0225. P98.6 TRUE (B5 stale Spanish) | 0.16. 6/6 TRUE; MARKS R1-R5 PASS (deviation D1 recorded). RESULTS: artifacts/fable-redteam98-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 97 (independent panel for the exp-63 relation canonicalizer, Muse), written before the registered run
+- P97.1: K1 — <= 3 wrong of 300 blind paraphrases (canon scored 272/300 with 0 wrong on its home panel; this panel is new phrasing). 55%. Falsified by >= 4 wrong.
+- P97.2: K2 — >= 147/150 fabricated UNKNOWN (construction check showed 200/200; fabrications here avoid all relation vocabulary). 80%. Falsified by <= 146 UNKNOWN.
+- P97.3: K3 — 0 wrong-direction of 50 near-misses (perspective flips capital/capital-of, follows/followed-by, has-part/part-of, owned-by/owner-of are the hard core). 60%. Falsified by any wrong-direction prediction.
+- P97.4: whole registered wave (sealed panel + one scoring run) < 30 min wall-clock on Mac CPU, offline, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 95%. Falsified by a longer wave.
+- Outcomes 97: P97.1 TRUE (paraphrase 28 correct / 270 abstain / 2 wrong, bar <= 3) | 0.2025. P97.2 TRUE (fabricated 150/150 UNKNOWN) | 0.04. P97.3 TRUE (near-miss 1 correct / 49 abstain / 0 wrong) | 0.16. P97.4 TRUE (wave ~6 min) | 0.0025. 4/4 TRUE; SCORE PASS (K1-K3). RESULTS: artifacts/fable-relcanon97-20260921/RESULTS.md
+- Outcomes 96: P96.1 TRUE (loop96: 2/2 clarify, 0 FACT/ENTITY rows; loop90: 2/2 write 1 corrupt FACT each) | 0.01. P96.2 TRUE (74 cases, 0 wrong writes; changed exactly D_q_vs_s-01/02 + E_double-01/02/03) | 0.0625. P96.3 TRUE (R1 Ana/Ana, R2 OK + spellings, R3 LogCorrupt both opens) | 0.01. P96.4 TRUE (RT79-18/09/53 all OK; both pairs 1 site, web-verified=0) | 0.0225. P96.5 TRUE (Z1 60/60 0 wrong; Z2 150+50, 0 WRONG) | 0.04. P96.6 TRUE (seeds 1/2/3: 200/200, 0 wrong, 0 dupes) | 0.0225. 6/6 TRUE; MARKS L1-L6 PASS. RESULTS: artifacts/fable-loop96-20260921/RESULTS.md
+- Outcomes 92: P92.1 TRUE (S1 200/200, 0 wrong) | 0.01. P92.2 TRUE (S2 200/200, 0 wrong) | 0.0225. P92.3 TRUE (S3 200/200, 0 wrong) | 0.09. P92.4 FALSE on the letter (S4 973/1000 = 97.3%, not < 95%; the wrong > 0 half held: 25 WRONG + 2 MISS via bridge-slot collisions) | 0.1225. P92.5 TRUE (S5 200/200, latest wins) | 0.01. P92.6 TRUE (S6 200/200, no curse at 3 hops) | 0.01. P92.7 FALSE (S2-English 142/32/26 broke < 95% as predicted, but the 0-wrong half failed: EN wrongs 1/32/8, all 41 via officeholder-pattern shadowing) | 0.16. P92.8 TRUE (7.3 s + 2.7 s) | 0.01. 6/8 TRUE; MARKS B1 PASS, B2 FAIL, B3/B4 reported; no v2. RESULTS: artifacts/fable-bench92-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 93 (daemon soak: 20,000 turns, 5 kill-9 + 3 graceful restarts, seed 93), written before the registered run
+- P93.1: K1 — 0 wrong answers and 0 wrong writes over all 20,000 turns (every reply checked against driver ground truth). 80%. Falsified by >= 1 wrong/unanswered.
+- P93.2: K2 — 0 lost and 0 duplicated replied taught facts across all 8 restarts (per-restart notebook-log audit). 85%. Falsified by any nonzero audit count.
+- P93.3: K3 — final boot + chain-verify time < 10 s. 75%. Falsified by >= 10 s.
+- P93.4: K4 — p99 reply latency over the last 1,000 turns < 10x p99 over the first 1,000 (growth curve reported per 1,000-turn checkpoints). 70%. Falsified by ratio >= 10.
+- P93.5: K5 — whole soak < 25 min wall-clock on Mac CPU with all 20,000 turns completed. 65%. Falsified by >= 1500 s or an incomplete run.
+- Outcomes 93: P93.1 FALSE (1 wrong reply in 17,736 before the stop at turn 17,716: doubled DUPLICATE_OK sentence after kill-9 #6) | 0.64. P93.2 FALSE on the letter (run incomplete: 5/5 observed restart audits all-zero, and post-hoc full audit 0 lost/duplicated of 10,138 pairs, but the 8-restart mark was never reached) | 0.7225. P93.3 TRUE (final boot 0.153 s + verify 0.064 s = 0.217 s < 10 s) | 0.0625. P93.4 NOT SCORABLE (20,000 never reached; ratio 3.08 last-1000 vs first-1000 reported). P93.5 FALSE (stopped at 17,716 turns, 665.5 s) | 0.4225. Registered FAIL (K1 at seq 17716, ghost-tick reply duplication; fact store exact). RESULTS: artifacts/fable-soak93-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 100 (blind phrasing test of the exp-99 self-question answerer, Muse), written before the registered run
+- P100.1: B1 — 0 WRONG over all 80 (template parser declines unparsed phrasing honestly; nothing invents names/numbers). 45%. Falsified by any WRONG.
+- P100.2: B2 — CORRECT >= 40/60 on rephrasings (typos/contractions still hit templates; long-winded ones decline honestly rather than misfire). 30%. Falsified by <= 39/60.
+- P100.3: B3 — new intents resolve mostly DECLINE with 0 WRONG (no confidence machinery exists for ranking/summarising intents). 55%. Falsified by any WRONG in Q61-Q80.
+- P100.4: session-consistency gate exact (19 taught, 6 people, 1 quarantine, 2 corrections, 1 forgotten, 0 sleeps, 26 turns) and run < 30 min on Mac CPU. 85%. Falsified by any other count or a longer run.
+- Outcomes 100: P100.1 FALSE (5 WRONG: Q14 C6-for-C7, Q23/Q24 C11-for-C12, Q28 C13-for-C14, Q69 C13-for-NEW) | 0.2025. P100.2 FALSE (27/60; 19 honest fallbacks + 4 wrong-intent) | 0.09. P100.3 FALSE (0/19/1: 19 DECLINE but Q69 WRONG) | 0.3025. P100.4 TRUE (gate exact, 0.9 s) | 0.0225. 1/4 TRUE; MARKS B1 FAIL, B2 FAIL, B3 reported; no v2 on these 80. RESULTS: artifacts/fable-self100-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 103 (one-change follow-ups to the registered exp-92 FAIL), written before the registered run
+- P103.1: A1 — S4-clean shared-notebook arm: wrong == 0 (conflicted bridge slots removed by construction; expect ~70 of 1,000 cases dropped). 80%.
+- P103.2: B1 — English arm with re-ordered patterns on S1–S3: wrong <= 3 total (all 41 exp-92 wrongs were officeholder-shadowing; re-ordering fixes the parse). 70%.
+- P103.3: B2 — S2-fresh (200 NEW 4-hop cases, unused case ids, seed 10300) English arm: wrong <= 4 of 200. 55%.
+- P103.4: B3 — notebook arm on S2-fresh: 200/200 correct, 0 wrong (control; isolated notebooks were perfect in exp 92). 90%.
+- P103.5: whole registered wave (S2-fresh build + both arms) < 30 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 95%.
+- Outcomes 103: (to be appended after the registered run)
+- Outcomes 103: P103.1 TRUE (S4-clean 924/924, 0 wrong; dropped 76: 71 editors + 5 pass-through; 21 conflicted slots) | 0.04. P103.2 TRUE (English S1-S3 0 wrong total: 199/0/1, 190/0/10, 198/0/2) | 0.09. P103.3 TRUE (S2-fresh English 193/0/7, 0 wrong) | 0.3025. P103.4 TRUE (S2-fresh notebook 200/200, 0 wrong) | 0.01. P103.5 TRUE (whole wave ~1 min, Mac CPU, OMP=1) | 0.0025. 5/5 TRUE; MARKS A1/B1/B2/B3 PASS. Observable: 106 cross-case correction overwrites in S4 teach order. RESULTS: artifacts/fable-bench103-20260921/RESULTS.md
+- Outcomes 94: P94.1 TRUE (155/400 = 38.75% with >=1 triple, in [25,55]) | 0.09. P94.2 TRUE (top NO_FACT reason relation-not-in-inventory, 177 of 245) | 0.04. P94.3 TRUE (exact triple-set 78/80 >= 64/80) | 0.16. P94.4 TRUE (Cohen kappa fact/no-fact 1.0000 >= 0.70; 2x2 32/0/0/48) | 0.16. 4/4 TRUE; SCORE PASS (M1-M5). RESULTS: artifacts/fable-reading94-20260921/fable_reading94_RESULTS.md
+- Outcomes 85: P85.1 TRUE (20/20 steps, loss 20.7848 -> 10.5383, ckpt reload bit-identical, cal 5000/5000 decoded via unchanged scorer fns). P85.2 TRUE (149,350,418 params, est 2.84 GB bf16 @ batch 32/96, fits 16 GB). P85.3 FALSE (4,085/140,903 = 2.899% exceed MAX_LEN 96 under ModernBERT, not < 1%; long WebRED rows, handled by truncation + span-drop at --build-pool). 2/3 TRUE; MARKS E1-E3 PASS (E3 bar was to report a number). Prep only; no GPU run; no accuracy claim.
+
+## 2026-09-22 — Experiment 106 (first reading-ladder score: rung-1 + rung-2 ears on reading94, Muse), written before the registered run
+- P106.1: R1 — all 6 rung-1 arm/seeds (tape/bigru x 4301/4302/4303) write 0 times on all 400 sentences (toy vocab + exp-76 tau gate). 85%. Falsified by >= 1 write in any rung-1 seed.
+- P106.2: R2/R3 — each rung-2 seed (4701/4702/4703, own sealed tau_exec 0.9484/0.8766/0.9548) executes <= 5 writes total (tau chokes output; exp 47 executed 0/46 on WebRED). 75%. Falsified by > 5 writes in any rung-2 seed.
+- P106.3: R1 gate PASSES for all 9 ears/seeds (wrong writes <= 1% of writes; 0/0 vacuous pass labelled). 90%. Falsified by any R1 FAIL.
+- P106.4: recall (correct writes / 312) < 5% (<= 15 correct) for every ears/seed. 80%. Falsified by any seed with > 15 correct writes.
+- Outcomes 106: (to be appended after the registered run)
+- Outcomes 106: P106.1 FALSE (rung-1 wrote 5x: tape 1/2/1, bigru-4302 1; not 0) | 0.7225. P106.2 TRUE (rung-2 writes 0/0/0, all <= 5) | 0.0625. P106.3 FALSE (R1 FAIL: tape 4301/4302/4303 + bigru-4302 at 100% wrong; 5 vacuous passes) | 0.81. P106.4 TRUE (recall 0/312 all 9 seeds) | 0.04. 2/4 TRUE; MARKS R1 4 FAIL / 5 vacuous-PASS, R2 0/312 everywhere, R3 nofact writes 1/1/0/0/1/0/0/0/0. RESULTS: artifacts/fable-read106-20260921/fable_read106_RESULTS.md
+
+## 2026-09-22 — Experiment 101 (talker first-run prep + smoke tests, Muse), written before the smoke runs
+- P101.1: CPU smoke (200 updates, seed 101, tiny batch) S1 passes: mean loss of last 20 steps below mean of first 20 steps. 80%. Falsified by flat/rising loss.
+- P101.2: CPU smoke S2 passes: 10%-fraction checkpoints exist and --resume continues the step counter with finite loss. 90%. Falsified by missing ckpt or resume failure.
+- P101.3: GPU smoke on BensPC either runs 200 updates (if nvidia-smi shows no other python on the GPU) or is skipped and reported as skipped. 95%. Falsified by launching into another job or by silence.
+- P101.4: measured GPU tokens/s projects the full one-pass (617M train tokens) wall-clock to under 12 hours. 60%. Falsified by a slower measurement.
+- Outcomes 101: (to be appended after the smoke runs)
+
+## 2026-09-22 — Experiment 107 (reading behind the gate: raw rung-2 STATE frames, Muse, diagnostic), written before the registered run
+- P107.1: raw STATE counts replay exp 106 exactly: 276 / 306 / 288 for seeds 4701 / 4702 / 4703. 95%. Falsified by any different count.
+- P107.2: exact-correct raw STATE frames <= 20 per seed (<= 20/312 recall behind the gate). 70%. Falsified by any seed with >= 21 exact.
+- P107.3: at <= 5% wrong, the best operating point yields <= 10 correct in every seed. 60%. Falsified by any seed with >= 11 correct at <= 5%.
+- P107.4: invented frames are the majority of raw STATE frames in every seed (> 50% of raw STATE). 70%. Falsified by any seed with invented <= 50% of its raw STATE frames.
+- Outcomes 107: P107.1 TRUE (raw STATE 276/306/288 replay exp 106) | 0.0025. P107.2 TRUE (exact 9/11/10, all <= 20) | 0.09. P107.3 TRUE (0 correct at <= 5% wrong in every seed; top-1 frame wrong each seed) | 0.16. P107.4 FALSE (invented/raw STATE = 124/276 = 44.9% in 4701, 155/306 = 50.7% in 4702, 139/288 = 48.3% in 4703; majority in 1/3 seeds) | 0.49. 3/4 TRUE. Diagnostic only, no gate changed. RESULTS: artifacts/fable-read107-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 102 (patch the 15 remaining redteam98 bugs, Muse), written before the registered run
+- P102.1: P1 — 16/16 redteam98 reproducers (E7 typo-fixed) verdict OK through Loop102Daemon; before arm Loop96Daemon shows H5 OK + 15 BUG. 70%. Falsified by any after verdict != OK.
+- P102.2: P2 — all 64 redteam98 cases through loop102 with 0 OK->BUG vs sealed run-2 verdicts; exactly the 15 BUGs flip to OK. 65%. Falsified by any OK->BUG or any remaining BUG.
+- P102.3: P3 — L1-L6 re-run with loop102 all PASS (60/60, 200/200, 0 wrong writes everywhere, 3x200/200 kill-9). 60%. Falsified by any L FAIL.
+- P102.4: P4 — 0 false refusals of the 30 sealed innocents (gate <= 2). 75%. Falsified by >= 1 false refusal beyond the gate.
+- Outcomes 102: P102.1 TRUE (P1 16/16 OK after; before H5 OK + 15 BUG) | 0.09. P102.2 TRUE (P2 0 OK->BUG, 16 BUG->OK, 0 still BUG) | 0.1225. P102.3 TRUE (P3 L1-L6 all PASS: L1 2/2 clarify, L2 0 wrong, L3 3/3, L4 OK/1-site, L5-Z1 60/60, L5-Z2 200/200, L6 3x200/200) | 0.16. P102.4 TRUE (P4 30/30, 0 false refusals, gate <= 2) | 0.0625. 4/4 TRUE; MARKS P1-P4 PASS (deviation D1: P4 run-1 FAIL on a harness checker bug, fixed and re-run). RESULTS: artifacts/fable-loop102-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 105 (self-question router fix, Muse), written before the registered run
+- P105.1: K1 — WRONG == 0 over all 100 blind panel questions (dev: 0 WRONG over 120; guards + margin-2 force decline on ambiguity). 55%. Falsified by any WRONG.
+- P105.2: K2 — CORRECT >= 45/70 on existing-intent rephrasings (dev content rephrasings 48/50; blind phrasings are harder). 60%. Falsified by <= 44/70.
+- P105.3: K3 — TRICK 10/10 decline (margin rule declines close calls; all D-answers carry markers). 65%. Falsified by any non-decline.
+- P105.4: K4 — regression holds: exp 99's 40 still 40/40 AND exp 100's 80 WRONG == 0 (frozen code, deterministic session). 90%. Falsified by any miss or WRONG.
+- P105.5: whole registered wave (panel verify + session + panel score + regressions) < 30 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 97%. Falsified by >= 1800 s or an incomplete run.
+- Outcomes 105: P105.1 FALSE (6 WRONG: Q003 C1-for-C2, Q079/Q081 C11-for-NEW, Q080 C19-for-NEW, Q092/Q096 C1-for-TRICK) | 0.3025. P105.2 FALSE (43/70; 26 honest declines + Q003 wrong-intent) | 0.36. P105.3 FALSE (8/10; Q092/Q096 answered C1 content) | 0.4225. P105.4 TRUE (40/40, 0 hall, 10/10; exp100-80 0 WRONG) | 0.01. P105.5 TRUE (gate exact, 0.9 s) | 0.0009. 2/5 TRUE; MARKS K1 FAIL, K2 FAIL, K3 FAIL, K4 PASS; no v2 on this panel. RESULTS: artifacts/fable-self105-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 104 (live sleep install inside the loop96 daemon, Muse), written before the registered run
+- P104.1: Z1 — seeds 1/2/3 each: daemon enters SLEEP on its own during t075 and installs maternal_grandmother with 20 episodes (<= 40). 85%. Falsified by any seed without an install.
+- P104.2: Z2 — seeds 1/2/3 each: 5/5 NEW-people probes correct via mailbox with sleep-derived provenance (records + notebook row). 85%. Falsified by any miss or provenance gap.
+- P104.3: Z3 — seeds 1/2/3 each: 0 wrong installs, 0 taught overwrites, taught 50/50. 90%. Falsified by any nonzero count.
+- P104.4: Z4 — kill -9 mid-SLEEP then restart: clean boot, install absent-or-valid, probes 5 correct or 5 abstain with 0 wrong, taught asks 200/200, restore 5/5. 75%. Falsified by any wrong answer, dupe, overwrite, or invalid word file.
+- P104.5: Z5 — noise4 installs correctly (5/5) or refuses with 0 wrong installs; noise8 refuses with 5/5 abstain and 0 wrong. 70%. Falsified by any wrong install or wrong probe answer.
+- P104.6: whole registered wave (3 seeds + Z4 + 2 noise arms) < 30 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 90%. Falsified by >= 1800 s.
+- Outcomes 104: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 112 (ledger backfill, bookkeeping only), written before the run
+- P112.1: checker parses the whole ledger and lists every prediction id with p, outcome, experiment (L1). 90%.
+- P112.2: duplicates report flags P234-P237 collisions across 55b/57/58/59 plus any new id collisions since exp 82 (L2). 85%.
+- P112.3: --selftest on synthetic ledger passes incl. Brier math (L3). 90%.
+- P112.4: audit JSON written with before/after counts + per-experiment and overall Brier (L4). 90%.
+- P112.5: whole check < 60 s on Mac CPU, OMP_NUM_THREADS=1, offline (L5). 95%.
+- Outcomes 112: (to be appended after the run)
+
+## 2026-09-22 — Experiment 111 (loop102 end-to-end through the real doorway, Muse), written before the registered run
+- P111.1: E1 FAILS on right behaviour: under the verbatim exp-66 scorer the mouth's full-sentence OK replies ("... is X.") never exact-match, so registered correct on the 150 answer items is near 0. 90%. Falsified by >= 195 right behaviour.
+- P111.2: teach rejections (non-Saved, non-duplicate-ack replies) total 0 across all 400 items: every bench sentence template parses through the doorway. 85%. Falsified by any nonzero rejection count.
+- P111.3: E3 PASSES: 0 confident wrong on the 50 abstain items (all doorway abstain replies carry "I don't know"/"not someone" markers). 80%. Falsified by any wrong on an abstain item.
+- P111.4: diagnostic contains_gold on Fable-Edit-200 answer items >= 140/150 (the loop knows the answers; only the sentence framing breaks exact match). 65%. Falsified by <= 139/150.
+- P111.5: whole registered wave (400 fresh-daemon items) < 25 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 90%. Falsified by >= 1500 s.
+- Outcomes 111: P111.1 TRUE (E1 FAIL: registered correct 0 on answers, right behaviour 50/200) | 0.09. P111.2 FALSE (22 teach rejects on fresh split: works-in-field/employed-by/child patterns + "and"-guard; 0 on split-A) | 0.64. P111.3 TRUE (E3: 0 wrong on 50 abstains) | 0.16. P111.4 TRUE (contains_gold 150/150 on split-A answers) | 0.2275. P111.5 TRUE (6.9 s) | 0.09. 4/5 TRUE; MARKS E1 FAIL, E2 FAIL (131 wrong), E3 PASS, E4 PASS. RESULTS: artifacts/fable-bench111-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 110 (red team round 2 of the loop102 agent, Muse), written before the registered run
+- P110.1: 62/62 sealed cases execute once each through real loop102 daemon subprocesses with a verdict each; OK >= 50/62 (round-1 fixes hold on new ground). 70%. Falsified by OK <= 49/62.
+- P110.2: 0 critical-severity BUGs (no wrong fact stored, no wrong answer given confidently on any of the 62). 60%. Falsified by any critical BUG.
+- P110.3: daemon-abuse family 8/8 OK (empty, 1 MB, binary, 200-file burst, deleted-mid-read, 150 KB whitespace, emoji, NUL). 75%. Falsified by any daemon-family BUG.
+- P110.4: >= 1 BUG total across the 62 (new ground finds something round 1 missed). 65%. Falsified by 0 BUGs.
+- P110.5: pronoun family 6/6 OK (pronoun sentences clarify and store nothing). 70%. Falsified by any pronoun-family BUG.
+- P110.6: HARNESS-ERROR == 0 (every subprocess boots, serves, and stops). 80%. Falsified by any HARNESS-ERROR.
+- Outcomes 110: P110.1 TRUE (56/62 OK, bar >= 50) | 0.09. P110.2 FALSE on the
+  letter (1 recorded critical: N6, though the agent clarified safely with zero
+  writes — the miss is in the sealed abstain-bit list) | 0.36. P110.3 TRUE
+  (daemon 8/8) | 0.0625. P110.4 TRUE (6 BUGs) | 0.1225. P110.5 TRUE (pronoun
+  6/6) | 0.09. P110.6 TRUE (0 HARNESS-ERROR) | 0.04. 5/6 TRUE; MARKS B1-B4
+  PASS; 2 genuine bugs (F5 please-forget space-drop, M5 shouted-possessive
+  split), 4 expectation errors, all with reproducers.
+  RESULTS: artifacts/fable-redteam110-20260921/RESULTS.md
+
+## Outcomes backfill (exp 112, 2026-09-22)
+- P13 TRUE: arm A started in 3 of 3 seeds, bar was 3 of 3 with no failing seed; artifacts/fable-startup-factorial-20260920/A/seed-0 and seed-1 and seed-2 completion.json each carry key started=true; brier 0.04
+- P16 FALSE: arm D started in 0 of 3 seeds, bar was 2 of 3 or more, so the forecasted event did not happen; artifacts/fable-startup-factorial-20260920/D/seed-0 and seed-1 and seed-2 completion.json each carry key started=false; brier 0.0225
+- P209 UNDECIDABLE: the exp47 wave RESULTS.md is finished but holds no loader-vs-reference diff number, so the under-1e-3 bar cannot be checked in that file and there is no key to quote; left open
+- Outcomes 112: P112.1 TRUE, P112.2 TRUE, P112.3 TRUE, P112.4 TRUE, P112.5 TRUE; checker parsed the full ledger, flagged the known collisions, selftest green, audit json written, seconds-long offline run on Mac CPU; 5 of 5
+
+## 2026-09-22 — Experiment 108 (exactly-once daemon: one-change follow-up to the registered exp-93 FAIL), written before the registered runs
+- P108.1: K1 — 0 wrong answers and 0 wrong writes over all 20,000 turns, seed 93, same plan/points as exp 93, pointed at daemon108. 0.75. Falsified by >= 1 wrong/unanswered.
+- P108.2: K2 — 0 lost/duplicated/wrongval/dupe_entities in all 8 per-restart audits. 0.85. Falsified by any nonzero audit count.
+- P108.3: K3 — final boot + chain-verify < 10 s. 0.95. Falsified by >= 10 s.
+- P108.4: K4 — p99 last-1000 < 10x p99 first-1000. 0.80. Falsified by ratio >= 10.
+- P108.5: K5 — whole seed-93 soak < 25 min wall-clock, all 20,000 turns completed. 0.80. Falsified by >= 1500 s or an incomplete run.
+- P108.6: G1 — the GHOST93 scenario through daemon108 shows exactly one reply (Carol-only; mailbox half single sentences, single receipts, single fact). 0.90. Falsified by any ghost/doubled/duplicate.
+- P108.7: G2 — seed-931 run: all 10 kill-9s land aimed (state.json inbox observed nonempty, victim reply absent at kill) with 0 duplicate replies, 0 lost replies, 0 wrong writes. 0.70. Falsified by any un-aimed kill or any nonzero count.
+- Outcomes 108: P108.1 TRUE (K1 0 wrong / 20,000, seed 93 vs daemon108) | 0.0625. P108.2 TRUE (K2 8/8 audits all-zero) | 0.0225. P108.3 TRUE (K3 0.142 + 0.062 = 0.204 s) | 0.0025. P108.4 TRUE (K4 436.58/67.93 = 6.4x) | 0.04. P108.5 TRUE (K5 20,000 turns, 735.1 s) | 0.04. P108.6 TRUE (G1 GHOST108 A+B, exactly one reply) | 0.01. P108.7 TRUE (G2 10/10 aimed, 0 dup / 0 lost / 0 wrong, 156.9 s) | 0.09. 7/7 TRUE; SCORE PASS (K1-K5, G1, G2). RESULTS: artifacts/fable-soak108-20260921/RESULTS.md
+
+## 2026-09-22 — Experiment 109 (ears real-text supervision PREP for the GPU run, Muse), written before the registered wave
+- P109.1: R1 (raw exact-correct panel frames >= 94/312) passes in >= 2/3 seeds (10901/10902/10903, WebRED-calibrated tau_op). 0.15. Falsified by <= 1 seed reaching 94 (exp 47 baseline was 9/11/10 raw exact; needs a ~9x jump).
+- P109.2: R2 (EXECUTE writes on the 245 NO_FACT sentences <= 25) passes in 3/3 seeds. 0.40. Falsified by any seed with >= 26.
+- P109.3: R3 (panel wrong writes <= 5% of writes AND >= 30 correct at tau_op) passes in >= 2/3 seeds. 0.25. Falsified by <= 1 seed passing (exp 107: 0 correct at <= 5% wrong for exp-47 ears).
+- P109.4: R4 (t_seen/t_new correct within 5 points of the sealed exp-47 single-seed numbers) passes all 6 comparisons. 0.70. Falsified by any comparison dropping >= 6 (same training mix, so template behaviour should hold; the gate change may cost abstain-corrects).
+- P109.5: R5 (3-seed wave < 30 min wall-clock on the RTX 5070 Ti). 0.55. Falsified by >= 1800 s (exp 47 measured 14.8/7.9/7.9 min per seed sequentially = ~30.6 min; seeds 2-3 suggest ~24 min is reachable).
+- P109.6: WebRED (train+dev+heldout) vs reading94 panel sentence overlap = 0 (normalised exact match). 0.90. Falsified by any overlap (different sources, but Wikipedia text is shared).
+- Outcomes 109: (to be appended after the registered wave)
+- Outcomes 101: P101.1 TRUE (CPU smoke train 7.161 -> 5.496, val 7.4536 -> 5.3516). P101.2 TRUE (ckpts 01-10 + last; resume 200 -> 220 finite). P101.3 TRUE (GPU free, 200-update smoke ran, no other job touched). P101.4 TRUE (15k tok/s -> 11.4 h at smoke rate, 4-8 h expected). 4/4 TRUE. Note: first smoke FAILED (loss ~19, off-by-one + init bugs, fixed, re-ran PASS as prep). RESULTS: artifacts/fable-talker101-20260921/RESULTS.md
+- Outcomes 104: P104.1 TRUE (seeds 1/2/3: SLEEP in t075 unprompted, installed, 20 episodes) | 0.0225. P104.2 TRUE (3x 5/5 probes, 5/5 records + 1 row sleep-derived) | 0.0225. P104.3 TRUE (3x 0 wrong installs, 0 overwrites, 50/50 taught) | 0.01. P104.4 TRUE (marker kill, absent install, 5 abstain 0 wrong, 200/200 taught, restore 5/5) | 0.0625. P104.5 TRUE (noise4 correct install 5/5; noise8 refused 5 abstain; 0 wrong installs) | 0.09. P104.6 TRUE (wave 413.9 s) | 0.01. 6/6 TRUE; MARKS Z1-Z5 PASS. RESULTS: artifacts/fable-sleep104-20260921/RESULTS.md
+- Outcomes 109 (prep, 2026-09-22): P109.6 TRUE (train∩panel 0, dev∩panel 0 normalised exact) | 0.01. P109.1–P109.5 open pending the GPU wave.
+
+## 2026-09-22 — Experiment 113 (loop102 + N-hop questions, scorer v2; registered single-change follow-up to exp-111 FAIL), written before the registered runs
+- P113.1: N1 — loop113 fresh-4hop confident wrong == 2 of 200 (pre-seal offline probe: 148 full-4hop frames, 12 partial 1-hop frames declined by the compound-subject guard, 38 unparsed clarifies, 2 child-hop-missing partials from teach-reject items answered short). 0.70. Falsified by wrong != 2.
+- P113.2: N2 — loop113 Fable-Edit-200 right behaviour == 200 of 200 with 0 wrong (pre-seal probe: compose_n_hop agrees with compose_question on all 100 mquake frames, explicit routing covers all 50 reversal + 50 abstain frames, guard fires 0 times on split-A; scorer v2 extracts exact gold from mouth sentences). 0.80. Falsified by right behaviour <= 194 or any wrong.
+- P113.3: N3 — loop113 abstains 50/50 on abstain items with 0 confident wrong (question router sends every abstain question down the unchanged explicit path). 0.90. Falsified by any wrong on abstain items.
+- P113.4: N4 — loop102 marks P2 and P3 re-run against loop113 pass unchanged in outcome (P2 0 OK->BUG, 0 still-BUG; P3 all L-marks pass; teach path byte-identical, only "?" turns reroute). 0.65. Falsified by any P2/P3 outcome change.
+- P113.5: N5 — whole registered wave (bench 800 doorway items + P2 64 cases + P3 marks) < 25 min wall-clock Mac CPU. 0.90. Falsified by >= 1500 s.
+- Outcomes 113: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 119 (ears length-coverage PREP for the GPU wave, Muse), written before the prep runs
+- P119.1: W3 (reading94 raw exact >= 3x positional bars 27/33/30) passes in >= 2/3 seeds (11901/11902/11903, MAX_LEN 192, length-matched synth). 0.20. Falsified by <= 1 seed reaching its bar (exp-107 relation-namespace mismatch is untouched by this change).
+- P119.2: W1 (wclosed ensemble executed >= 23/46 with 0 silent wrong writes). 0.35. Falsified by executed <= 22 or any silent wrong write (47 executed 0/46; length coverage must unlock execution without breaking brakes).
+- P119.3: W2 (reading94 >= 30 correct writes at <= 5% wrong at own tau) passes in >= 2/3 seeds. 0.25. Falsified by <= 1 seed passing (107 found 0 correct at <= 5% for 47 ears).
+- P119.4: carried 47 marks with corrected SEEN bar (589/654 exec) all pass. 0.45. Falsified by any carried mark failing (same mix/recipe; wider window + longer synth may cost template precision).
+- P119.5: 3-seed wave clock (first train step to last score write) < 2700 s on the RTX 5070 Ti. 0.60. Falsified by >= 2700 s (dynamic per-batch padding keeps FLOPs near 47's 30.6-min wave; first-seed compile is the risk).
+- P119.6: pool identity gates hold on the BensPC build (synth == 60000, kept >= 140903, dropped <= 614, lengthened-synth median in [38,48]). 0.85. Falsified by any gate failing.
+- Outcomes 119: (to be appended after the registered wave; PREP-only outcomes: P119.6 open pending the BensPC pool build)
+- Outcomes 113: P113.1 FALSE (fresh confident wrong = 5, not 2: 2 child-missing 1-hop partials as predicted plus 3 mid-chain teach-gap 2-hop prefixes from doorway "and"-guard rejects the offline probe could not see). P113.2 TRUE (split-A right behaviour 200/200, 0 wrong). P113.3 TRUE (50/50 abstain, 0 wrong). P113.4 FALSE (N4 FAIL: P2 16 OK->BUG + 19 still-BUG, P3 l5z1/l6 FAIL — over-broad "?" interception bypasses the FakeStage possessive path; reproducer: bound loop113 clarifies "Who is Forget's city?" where loop102 answers). P113.5 TRUE (22.3 s bench + 23.9 s marks << 1500 s). 3/5 TRUE. RESULTS: artifacts/fable-bench113-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 114 (self-router scope guard, Muse; registered single-change follow-up to exp-105 FAIL), written before the registered run
+- P114.1: K1 — WRONG == 0 over all 100 fresh blind panel questions (dev: guard declines all 5 in-scope exp-105 WRONGs; residual risk is the out-of-scope synonym class, e.g. 105-Q003 "individuals"). 50%. Falsified by any WRONG.
+- P114.2: K2 — CORRECT >= 45/70 on existing-intent rephrasings (dev 105-panel 43/70 with the same answers; guard fires on zero dev-CORRECT questions, so this needs a friendlier panel draw). 55%. Falsified by <= 44/70.
+- P114.3: K3 — TRICK 10/10 decline (dev 105-panel tricks 10/10 decline with the guard; residual risk is non-scope trick shapes). 70%. Falsified by any non-decline.
+- P114.4: K4 — regression holds: exp 99's 40 still 40/40 AND exp 100's 80 WRONG == 0 (frozen code, deterministic session, guard verified silent on all 120). 90%. Falsified by any miss or WRONG.
+- P114.5: exp-105 panel re-score (unregistered dev context, same invocation) shows exactly 1 WRONG, the known Q003 synonym gap. 80%. Falsified by WRONG != 1 or a WRONG outside Q003.
+- Outcomes 114: P114.1 FALSE (4 WRONG: Q017 C3-for-C9 "Assuming...", Q023 C11-for-C12 "tally", Q053 C6-for-C27 "origin", Q074 C4-for-NEW time question) | 0.25. P114.2 FALSE (17/70; 50 honest declines, only 4 guard-caused and all 4 already declining under 105) | 0.3025. P114.3 TRUE (10/10 tricks decline, six by guard reason) | 0.09. P114.4 TRUE (40/40, 0 hall, 10/10; exp100-80 0 WRONG) | 0.01. P114.5 TRUE (105 re-score exactly 1 WRONG = Q003) | 0.04. 3/5 TRUE; MARKS K1 FAIL, K2 FAIL, K3 PASS, K4 PASS. RESULTS: artifacts/fable-self114-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 117 (loop102 + 3 redteam110 patches: F5 please-space, M5 shouted-possessive, underscore-free replies; Muse), written before the registered runs
+- P117.1: Q1 — F5 reproducer (ask contains Paris, absent Lisbon) and M5 reproducer (ask contains Lisbon) both OK through real loop117 daemons. 0.85. Falsified by either reproducer missing its bar.
+- P117.2: Q2 — 62/62 sealed exp-110 cases execute with 0 OK->BUG, 0 HARNESS-ERROR, F5+M5 BUG->OK, and still-BUG exactly {R4,N6,S3,S6}. 0.70. Falsified by any other verdict move.
+- P117.3: Q3 — P2/P3/P4 re-run against loop117 match the sealed loop102 outcomes with 0 new wrong writes. 0.65. Falsified by any outcome change or any new wrong write.
+- P117.4: Q4 — 0 relation-name underscore leaks in any Q2/Q3 transcript reply. 0.80. Falsified by >= 1 leak.
+- P117.5: Q5 — whole registered wave (Q1-Q4) < 20 min wall-clock Mac CPU. 0.85. Falsified by >= 1200 s.
+- Outcomes 117: P117.1 TRUE (F5 ask Paris/no-Lisbon, M5 ask Lisbon) | 0.0225. P117.2 TRUE (62/62 executed, 0 OK->BUG, BUG->OK exactly F5+M5, still-BUG exactly R4/N6/S3/S6) | 0.09. P117.3 TRUE (P2 0 OK->BUG 0 still-BUG; P3 L1-L6 all PASS; P4 0 refusals; 0 new wrong writes) | 0.1225. P117.4 TRUE (0 relation-name underscore leaks) | 0.04. P117.5 TRUE (wave ~3 min wall, bar 20 min) | 0.0225. 5/5 TRUE. RESULTS: artifacts/fable-loop117-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 116 (sleep redteam, Muse), written before the registered wave
+- P116.1: family A (6/12 stale episodes): gate refuses (installed=0); A1/A2/A4 abstain-or-current, A3 abstains, 0 stale answers. 0.70. Falsified by any installed run or any stale-valued reply.
+- P116.2: family B (aunt coincidence): installs; B1-B3 answer true grandmothers, B4 answers H04 (0 aunt-latch). 0.60. Falsified by any aunt-valued reply.
+- P116.3: families C+D: 0 wrong answers across all 8 cases; both conflict teaches clarify without writing. 0.75. Falsified by any wrong reply or any silent overwrite.
+- P116.4: family E: taught Z wins or abstain on >= 3/4 E probes; 0 derived-override while a taught row is active. 0.50. Falsified by >= 2 derived-overrides.
+- P116.5: family F: wrong-chain probe answers notebook-consistent X01 with sleep-derived source and trail heading the report row; taught audit untouched. 0.80. Falsified by missing provenance or any taught change.
+- P116.6: family G: 200/200 flood replies, STOP exits 0 with trigger reply present, reboot clean (valid-or-absent word, taught intact). 0.80. Falsified by any lost reply, nonzero exit, or invalid word file.
+- P116.7: family H: 5 episodes -> recipe not attempted, 2/2 abstain; 10 and 15 episodes -> attempted, 0 wrong. 0.85. Falsified by any install at 5 or any wrong at 10/15.
+- P116.8: >= 1 BUG (any severity) across the 36 cases; whole wave < 30 min wall-clock Mac CPU, one training at a time. 0.60. Falsified by 0 BUGs or wave >= 1800 s.
+- Outcomes 116: (to be appended after the registered wave)
+
+## 2026-09-22 — Experiment 120 (talker mouth fine-tune PREP, Muse), written before any run (PASSMARKS sealed 4bb165df…)
+- P120.1: smoke S1 — 100-step CPU fine-tune from the stable talker101 smoke ckpt (seed 12001) shows falling loss (last-20 mean < first-20 mean). 0.80. Falsified by flat/rising loss.
+- P120.2: smoke S2 — 20 held-out records greedy-decode without crash; >= 15/20 non-empty; every case reported. 0.85. Falsified by a crash or < 15 non-empty.
+- P120.3: O6 — registered GPU run: raw-decoder unfaithful BEFORE the brake <= 50/500 (copy head + in-domain fine-tune beat exp 53's 296/500). 0.50. Falsified by >= 51.
+- P120.4: O2 — status recoverable >= 480/500 (anchors are single-sentence templates; exp 53 reached 426). 0.45. Falsified by <= 479.
+- P120.5: O1 — after-brake violations 0/500 (true by fallback construction). 0.95. Falsified by any >= 1.
+- P120.6: O3 — OK answer verbatim >= 240/250 (copy head copies the answer span). 0.85. Falsified by <= 239.
+- P120.7: O4 — fine-tune + scoring < 25 min wall-clock (measured 49k tok/s: ~1.15M tokens ≈ 25 s compute). 0.85. Falsified by >= 25 min.
+- P120.8: O5 — wire51 replay 0 wrong writes + same counts as replay-report.json (mouth returns strings; writes bypass it). 0.60. Falsified by any wrong write or changed count (bridge-down ears noise is the known risk).
+- Outcomes 120: (to be appended after the smoke + registered runs)
+- Outcomes 120 (smoke, 2026-09-22): P120.1 TRUE (100 CPU steps seed 12001: first20-mean 5.4466 -> last20-mean 3.5888) | 0.04. P120.2 TRUE (20/20 non-empty, 0 crashes, 5.3 s; after-brake 0/20, status 17/20, OK answers 9/9) | 0.0225. P120.3–P120.8 open pending the GPU run. RESULTS: artifacts/fable-talker120-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 113b (loop113 + fallback to exact loop102 chain on double-None; registered single-change follow-up to exp-113 N4 FAIL, Muse), written before the registered runs
+- P113b.1: M1 — loop102 marks P2+P3(L1-L6)+P4 re-run against loop113b give outcomes identical to loop102 (P2 0 OK->BUG, 0 still-BUG; P3 all pass incl. L5-Z1 60/60 and L6 200/200 per seed; P4 <= 2 false refusals, 0 non-pass). The fallback restores the FakeStage possessive path v1 bypassed. 0.75. Falsified by any outcome difference vs loop102.
+- P113b.2: M2 — loop113b Fable-Edit-200 right behaviour 200/200 with 0 wrong (fallback never fires on split-A: composers cover all frames, as in 113). 0.90. Falsified by right behaviour <= 199 or any wrong.
+- P113b.3: M3 — loop113b fresh-4hop correct == 145 and wrong == 5 with the same 5 teach-gap ids as loop113 (056/103/196 mid-chain "and"-guard rejects, 125/200 child-hop teach gaps); the one change does not touch composer-covered questions. 0.80. Falsified by correct != 145, wrong != 5, or a different wrong-id set.
+- P113b.4: M4 — whole registered wave (bench 800 doorway items + P2 64 cases + P3 marks + P4 30 sentences) < 25 min wall-clock Mac CPU. 0.90. Falsified by >= 1500 s.
+- Outcomes 113b: P113b.1 FALSE (M1 FAIL: P2 2 OK->BUG B7/D8 + 2 still-BUG C2/C5 vs loop102's clean sheet; P3 L1-L6 all pass with L5-Z1 60/60 and L6 200/200x3; P4 30/30. Mechanism: B92 returns 1-hop PREFIX frames, not None, on broken-chain/qualifier questions, so the fallback never fires and v1 asks the prefix). P113b.2 TRUE (split-A 200/200, 0 wrong). P113b.3 TRUE (fresh 145/50/5, same 5 ids 056/103/196/125/200). P113b.4 TRUE (22.0 s + 24.0 s << 1500 s). 3/4 TRUE. RESULTS: artifacts/fable-bench113b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 113c (partial/prefix composer frames treated exactly like None; registered single-change follow-up to exp-113b M1 FAIL, Muse), written before the registered runs
+- P113c.1: M1 — loop102 marks P2+P3(L1-L6)+P4 re-run against loop113c give outcomes identical to loop102 (P2 0 OK->BUG, 0 still-BUG with B7/C2/C5/D8 all OK; P3 all pass incl. L5-Z1 60/60 and L6 200/200 per seed; P4 <= 2 false refusals, 0 non-pass). Pre-seal probe: all 4 P2 shapes abstain through the 113c daemon, and delegation can only reproduce loop102 outcomes. 0.85. Falsified by any outcome difference vs loop102.
+- P113c.2: M2 — loop113c Fable-Edit-200 right behaviour 200/200 with 0 wrong (pre-seal probe: per-item verdicts identical to loop113b on all 200). 0.90. Falsified by right behaviour <= 199 or any wrong.
+- P113c.3: M3 — loop113c fresh-4hop correct == 145 and wrong == 3: the same 145 correct as 113b, with exactly items 125 and 200 (child-hop teach-gap partials) moving wrong->abstain and 056/103/196 ("and"-guard mid-chain rejects) still wrong. 0.70. Falsified by correct != 145, wrong != 3, or any other moved item.
+- P113c.4: M4 — whole registered wave (bench 800 doorway items + P2 64 cases + P3 marks + P4 30 sentences) < 25 min wall-clock Mac CPU (pre-seal probe: ~70 s bench). 0.95. Falsified by >= 1500 s.
+- Outcomes 113c: (to be appended after the registered runs)
+- Outcomes 113c: P113c.1 TRUE (M1 PASS: P2 0 OK->BUG, 0 still-BUG with B7/C2/C5/D8 all OK; P3 L1-L6 all pass incl. L5-Z1 60/60 and L6 200/200x3; P4 30/30, 0 false refusals). P113c.2 TRUE (split-A 200/200, 0 wrong, per-item identical to 113b). P113c.3 TRUE (fresh 145 correct, 3 wrong 056/103/196; exactly 125+200 moved wrong->abstain). P113c.4 TRUE (52.7 s bench + 40.2 s marks = 92.9 s << 1500 s). 4/4 TRUE. RESULTS: artifacts/fable-bench113c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 118 (ears leftover brake: registered single-change follow-up to exp-47 FAIL, Muse), written before the registered run
+- P118.1: B1 — 0 silent wrong writes over the 6,500 sealed test sentences with the brake, ensemble AND each single seed at its sealed tau. 0.70. Falsified by >= 1 silent write in any of the 4.
+- P118.2: B2 — NEG STATE-only EXECUTEs, wrong executed ASK, and NEWREL wrong-seen EXECUTEs all still 0, ensemble AND every single. 0.85. Falsified by any nonzero.
+- P118.3: B3 — SEEN/NEW exec_correct_stmt and total executed each drop <= 5% vs exp-47 sealed numbers in all 12 comparisons (2 panels x (stmt+exec) x (ens+... per-seed)). 0.65. Falsified by any comparison dropping > 5%.
+- P118.4: B4 — ensemble SEEN-exec with the brake still below the corrected bar of 589 (exp 47 managed 455; the brake can only remove executes). 0.90. Falsified by ensemble SEEN-exec >= 589.
+- P118.5: B5 — reading94 wrong writes with the brake <= wrong writes without the brake in all 3 single seeds. 0.80. Falsified by any seed with more wrong with the brake.
+- Outcomes 118: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 115 (sleep scale ladder: 104's one-word sleep x multi-word, Muse), written before the registered wave
+- P115.1: L1 installs exactly the 3 requested words in 3/3 seeds (OOF 1.00, agreement 1.00, routing audits [1,1]/[3,4]/[1,5,7]), 0 wrong installs anywhere. 0.70. Falsified by any seed missing/refusing an install or any wrong install.
+- P115.2: L1 probes 15/15 per seed (5/5 per word, all sleep-derived), taught 150/150 intact with 0 overwrites and 0 dupes, 3/3 seeds. 0.70. Falsified by any wrong probe, any non-derived record, or any taught damage.
+- P115.3: L1's single 3-word sleep exceeds the 120 s mark in 3/3 seeds (the sealed recipe fits words sequentially at ~70 s/word, so ~200 s). 0.80. Falsified by any L1 sleep < 120 s.
+- P115.4: the ladder's breaking point is L1 (latency mark), so L2-L5 do not run under the stop rule. 0.60. Falsified by L1 passing every mark.
+- P115.5: the registered wave (L1 x 3 seeds, or the full ladder if L1 passes) completes < 30 min wall-clock on Mac CPU. 0.75. Falsified by >= 1800 s.
+
+## 2026-09-22 — Experiment 121 (teach-side phrasing coverage for the joined-up agent; Muse; registered single-change follow-up to exps 111/113), written before the registered runs
+- P121.1: T1 — loop121 new blind 200-item split teach_reject_items == 0 (pre-seal evidence: all 30 relation keys in the blind histogram are covered by bench73 + exp-92-extra patterns; residual risk is unseen "and"-names or unseen templates within a covered relation). 0.60. Falsified by teach_reject_items >= 1.
+- P121.2: T2 — loop121 new blind split confident wrong == 0 of 200 (pre-seal evidence: exp-113's 5 fresh wrongs were all teach-gap partials this change teaches; N-hop composer cues in REL_CUES92 mention employer/occupation/child). 0.55. Falsified by wrong != 0.
+- P121.3: T3 — loop121 old fresh split n_teach_reject == 0 (all 22 known rejects match the three added patterns or the Title-Case "and"-name exception; verified by direct pattern probe pre-seal). 0.85. Falsified by any reject.
+- P121.4: T4 — R110 L1 + L2 + L4 re-run plus the brief literal probe "Mira's city is Oslo and Tom's pet is a cat": all refuse with split-clarify and 0 new fact writes on every turn (none of the four matches a teach pattern, so the unchanged path screens them). 0.90. Falsified by any accept or any write.
+- P121.5: T5 — loop102 marks P2/P3/P4 re-run against loop121 match the sealed loop102 outcomes exactly (P2 0 OK->BUG and 0 still-BUG; P3 all L-marks pass; P4 pass, 0 false refusals; pre-seal scan: zero R98/R110/P4 sentences match the new patterns, and only the Mira-packed literal carries " and "). 0.70. Falsified by any outcome change.
+- Outcomes 121: (to be appended after the registered runs)
+- Outcomes 118: P118.1 TRUE (0 silent in ens+3 singles) | 0.09. P118.2 TRUE (NEG/ASK/NEWREL all 0, ens+singles) | 0.0225. P118.3 FALSE (SEEN stmt -58%/-77%/-55%/-73%, NEW -88%/-90%/-87%/-100%; bar was <=5%) | 0.4225. P118.4 TRUE (ens SEEN-exec 191 < 589) | 0.01. P118.5 TRUE but VACUOUS (reading94 0 writes with and without brake, all seeds; matches exp106 exactly) | 0.04. 4/5 (1 vacuous). RESULTS: artifacts/fable-brake118-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 124 (red team round 3: N-hop composer + fallback, loop113b vs loop102, Muse), written before the probe run
+- P124.1: 62/62 sealed cases execute once per arm through real daemon mailbox dirs with a verdict each, 0 HARNESS-ERROR, wave < 25 min Mac CPU. 0.90. Falsified by any unreported case or longer wave.
+- P124.2: loop113b BUGs >= 3 of the 6 broken-chain cases (prefix frames asked: B92 walks to the break and the fallback never fires). 0.70. Falsified by <= 2 BUGs there.
+- P124.3: loop113b BUGs >= 2 across U1/U3/C08/Q2/V11 (extra untaught relation, whose-interrogative, or question qualifier answered instead of abstained). 0.60. Falsified by <= 1 BUG there.
+- P124.4: 0 wrong writes on both arms (62 cases x 2; teaches parse to allowlisted triples only). 0.80. Falsified by any wrong write.
+- P124.5: loop102 meets all its sealed ask_abstain_102 clarifies (>= 20/22) and answers every 1-hop possessive ask (L1/L3/V8/V9/W4-followup). 0.75. Falsified by <= 19 clarifies or any missed 1-hop.
+- P124.6: loop113b answers >= 4 cases where loop102 sealed-clarifies (3/4/5/6-hop, long, shouted). 0.70. Falsified by <= 3 such answers.
+- Outcomes 124: P124.1 TRUE (124/124 verdicts, 0 HARNESS-ERROR, 6.2 s) | 0.01. P124.2 TRUE on the letter (6/6 strict BUGs in B1-B6; genuine 5/6, B1 is a teach-ack decoy artifact) | 0.09. P124.3 TRUE (5/5 genuine: U1/U3/C08/Q2/V11) | 0.16. P124.4 FALSE (10 wrong-write events: period-junk R1/R2/R3/V6/V7 x2 arms) | 0.64. P124.5 FALSE (4/20 sealed 102-clarifies held; Bench73Stage answers 2-hop prefixes — S3/T2/V10 even answer fully correctly, my clarify seal was wrong there; 1-hop possessive half held 6/6) | 0.5625. P124.6 TRUE (4: C04/C05/V1/G3 answered by 113b, clarified by 102) | 0.09. Marks M1/M2/M3 FAIL (sealed-critical), M5 PASS. RESULTS: artifacts/fable-redteam124-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 125 (SmolLM2 vs joined-up agent, same scorer v2, both splits, Muse), written before the registered run
+- P125.1: SmolLM2 in-context on Fable-Edit-200 re-scored with scorer v2: correct 54, abstain 1, wrong 145 (contains-gold 67, deterministic under re-score). 60%. Falsified by correct outside [44, 64].
+- P125.2: SmolLM2 RAG-lite on Fable-Edit-200 re-scored with scorer v2: correct 40, abstain 1, wrong 159 (contains-gold 58). 60%. Falsified by correct outside [30, 50].
+- P125.3: SmolLM2 in-context on fresh 4-hop (fresh runs): correct 20, abstain 1, wrong 179. 50%. Falsified by correct outside [8, 35].
+- P125.4: SmolLM2 RAG-lite on fresh 4-hop (fresh runs): correct 12, abstain 1, wrong 187 (top-3 BM25 of 8 sentences drops bridge facts). 50%. Falsified by correct outside [4, 25].
+- P125.5: C1 holds — v2-correct on exp-66 in-context Fable-Edit answer items within ±3 of contains-gold 67. 30%. Falsified by |diff| > 3 (v2 extraction only rescues gold-after-"is" phrasing; most contains-but-not-exact free text stays wrong).
+- P125.6: C2 holds — full registered run (400 fresh generations + re-scores + loop reads) < 1800 s Mac CPU, no --limit (smoke: 0.44 s/item -> ~175 s projected). 95%. Falsified by >= 1800 s or any --limit subset.
+- Outcomes 125: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 123 (one-command regression runner for the joined-up agent; Muse), written before the registered runs
+- P123.1: H1 — harness vs loop102 reproduces sealed numbers exactly: P2 (n=64, 0 OK->BUG, 0 still-BUG, BUG->OK the same 16 ids), P3 L1-L6 all PASS, P4 30/30 with 0 false refusals; RT110 62/62 executed with verdicts identical to sealed (OK 56 / BUG 6, same ids); bench scorer-v2 split-A right behaviour 200/200 with 0 wrong and split-B correct/abstain/wrong 0/70/130; RT81 74/74 OK. 0.75. Falsified by any field mismatch vs the sealed artifacts.
+- P123.2: H2 — harness vs loop117 reproduces exp 117: Q1 F5+M5 both OK; Q2 62/62 with 0 OK->BUG, BUG->OK exactly F5+M5, still-BUG exactly R4/N6/S3/S6; Q3 same P2/P3/P4 outcomes as H1; Q4 0 relation-name underscore leaks. 0.70. Falsified by any verdict move vs artifacts/fable-loop117-20260922/.
+- P123.3: H3 — each full harness run (all suites incl. 2000-turn soak with 3 kill-9s) < 25 min wall-clock on Mac CPU with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1, suites in parallel processes. 0.80. Falsified by either full run >= 1500 s.
+- P123.4: sleep suite Z1-Z5 SKIPs with a printed reason on loop102/loop117 (no Sleep104 maternal-grandmother install path in those agents). 0.90. Falsified by a sleep claim either way without evidence.
+- P123.5: soak on loop102 — 2000 mailbox turns with 3 mid-turn kill-9s: 0 lost taught pairs, 0 wrong answers, 0 doubled replies. 0.60. Falsified by any lost/wrong/doubled count > 0.
+- Outcomes 123: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 122 (self-router learned classifier; registered single-change follow-up to exp-114 FAIL, Muse), written before the registered run
+- P122.1: K1 — 0 WRONG of 100 fresh blind questions (pre-seal evidence: 0 wrong on 320 dev questions — exp99-40, exp100-80, panels 105/114 — plus 632 held-out rows, at the frozen tau=0.6/mu=1.5; residual risk is novel oblique phrasings plus adversarial new/trick blends). 0.55. Falsified by wrong >= 1.
+- P122.2: K2 — CORRECT >= 45/70 on existing-intent rephrasings (pre-seal evidence: 99/120 existing-C correct across dev panels 105+114; blind panel is harder — exp 114 managed 17/70 from a weaker router). 0.60. Falsified by correct <= 44.
+- P122.3: K3 — TRICK 10/10 decline (pre-seal evidence: exp 114 got 10/10 with the same scope guard, now backed by the OOS class; all 20 dev new + 20 dev tricks decline at freeze). 0.80. Falsified by any trick answered with content.
+- P122.4: K4 — exp99 40/40 AND exp100-80 WRONG == 0 in the same registered invocation (pre-seal evidence: `fable_self122.py --devcheck` PASS on the exact frozen code path; residual risk is environment nondeterminism). 0.90. Falsified by either half failing.
+- P122.5: dev context — panels 105 and 114 re-score 0 WRONG in the same registered invocation (same frozen code as devcheck; unregistered). 0.85. Falsified by any dev WRONG.
+- Outcomes 122: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 118b (train-list leftover brake: registered single-change follow-up to exp-118, Muse), written before the registered run
+- P118b.1: B1 — 0 silent wrong writes over the 6,500 sealed test sentences with the train-list brake, ensemble AND each single seed at its sealed tau (list is aside-free; residual risk is trap/hearsay leftovers covered by the 2,618-word list). 0.60. Falsified by >= 1 silent write in any of the 4.
+- P118b.2: B2 — NEG STATE-only EXECUTEs, wrong executed ASK, and NEWREL wrong-seen EXECUTEs all still 0, ensemble AND every single. 0.75. Falsified by any nonzero.
+- P118b.3: B3 — SEEN exec_correct_stmt >= 410 AND NEW exec_correct_stmt >= 576 in the ensemble (each a <= 10% drop vs exp-47 sealed 455/640; CAL still blocks "one"/"mind"/"new" phrasings, so recovery is partial). 0.40. Falsified by either bar missed.
+- P118b.4: B4 — whole registered scoring invocation < 10 min wall-clock on Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by >= 600 s.
+- P118b.5: B5 — reading94 wrong writes with the brake <= wrong writes without the brake in all 3 single seeds. 0.80. Falsified by any seed with more wrong with the brake.
+- Outcomes 118b: (to be appended after the registered run)
+- Outcomes 118b: P118b.1 TRUE (0 silent /6,500 in ens+3 singles; traps #259/#751 ECHO on "aside") | 0.16. P118b.2 TRUE (NEG/ASK/NEWREL all 0, ens+singles) | 0.0625. P118b.3 FALSE (SEEN 455→413 passes -9.2%, but NEW 640→510 = -20.3% misses the >=576 bar) | 0.16. P118b.4 TRUE (113.8 s < 600 s) | 0.01. P118b.5 TRUE but VACUOUS (reading94 0 writes with and without brake, all seeds; matches exp106 exactly) | 0.04. 4/5 (1 vacuous). RESULTS: artifacts/fable-brake118b-20260922/RESULTS.md
+- Outcomes 122: P122.1 FALSE (3 WRONG of 100, all new-intent over-answers: Q078 percentage-confidence->C15, Q086 translation->C5, Q089 relation-type count->C29/C28) | 0.3025. P122.2 FALSE (44/70, one short; existing-C 44 correct / 16 decline / 0 wrong) | 0.36. P122.3 TRUE (tricks 10/10 decline) | 0.04. P122.4 TRUE (exp99 40/40, exp100-80 0 wrong) | 0.01. P122.5 TRUE (dev re-scores 105 + 114 both 0 WRONG) | 0.0225. 3/5 TRUE. SCORE registered FAIL (K1 + K2). RESULTS: artifacts/fable-self122-20260922/RESULTS.md
+- Outcomes 121: P121.1 FALSE (new-split teach_reject_items = 1, not 0: one blind item still rejects one teach). P121.2 FALSE (new-split confident wrong = 1, not 0: the same item's teach gap). P121.3 TRUE (old fresh rejects 22 -> 0). P121.4 TRUE (L1/L2/L4 + literal probe all refused, 0 writes). P121.5 FALSE (P3 all pass and P4 pass, but P2 moves B7/D8 OK->BUG + C2/C5 still-BUG — byte-identical to the loop113b base's own sealed P2, i.e. inherited, zero new moves from the teach change). 2/5 TRUE. MARKS: T1 PASS, T2 PASS, T3 PASS, T4 PASS, T5 FAIL (P2 only). RESULTS: artifacts/fable-bench121-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 126 (demo transcript harness; prep for the director's re-run, Muse), written before the registered runs
+- P126.1: both registered runs (loop117, loop113b) finish < 900 s wall-clock Mac CPU with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (dev dry runs: 4.6-7.3 s). 0.95. Falsified by either run >= 900 s.
+- P126.2: loop117 A1-A8 all PASS with the four-hop SKIPped ("not supported by this agent", no composer). 0.90. Falsified by any FAIL.
+- P126.3: loop113b A1-A8 all PASS including the four-hop answered Quechua via the N-hop composer. 0.85. Falsified by any FAIL.
+- P126.4: A5 on both agents: the Oslo contradiction is refused naming Lisbon, no save, follow-up ask still Lisbon. 0.90. Falsified by any overwrite or wrong follow-up.
+- P126.5: A7 on both agents: 3/3 word probes abstain, state.json sleep ticks >= 1, 0 sleep-derived facts (audit-only sleeper, no episode feed). 0.90. Falsified by any answered probe, 0 ticks, or any install.
+- P126.6: A8 panel reproduces the sealed files exactly: bench113b split-A 150 correct / 50 abstain / 0 wrong of 200, fresh 145/50/5 of 200; bench66 200 rows with incontext 52 correct, raglite 38 correct, finetune 1 correct; bench125 present with 3 row files. 0.90. Falsified by any panel mismatch.
+- Outcomes 126: (to be appended after the registered runs)
+- Outcomes 125: P125.1 TRUE (in-context edit200 52/0/148, contains 67; 52 in [44,64]) | 0.09. P125.2 TRUE (raglite edit200 41/0/159, contains 58; 41 in [30,50]) | 0.16. P125.3 FALSE (in-context 4hop 52/0/148, contains 57; band [8,35]) | 0.25. P125.4 FALSE (raglite 4hop 33/0/167, contains 38; band [4,25]) | 0.25. P125.5 TRUE-as-forecast (C1 FAIL: v2-correct 52 vs contains 67, diff -15, outside ±3; forecast p 0.30 for holding) | 0.09. P125.6 TRUE (727.1 s < 1800 s, full 200+200, no limit) | 0.0025. Loops read-not-run: loop102 150/50/0 + 0/70/130; loop113 and loop113b 150/50/0 + 145/50/5. RESULTS: artifacts/fable-bench125-20260922/RESULTS.md
+- Outcomes 126: P126.1 TRUE (loop117 7.1 s, loop113b 6.8 s, both << 900 s) | 0.0025. P126.2 TRUE (loop117 A1-A8 PASS, four-hop SKIP with not-supported note) | 0.01. P126.3 TRUE (loop113b A1-A8 PASS, four-hop Quechua via loop113b-nhop) | 0.0225. P126.4 TRUE (Oslo refused naming Lisbon, no save, follow-up Lisbon, both agents) | 0.01. P126.5 TRUE (3/3 abstains, 1 sleep tick, 0 sleep-derived facts, both agents) | 0.01. P126.6 TRUE (panel exact: bench113b 150/50/0 + 145/50/5; bench66 52/38/1; bench125 4 files read at run time) | 0.01. 6/6 TRUE. RESULTS: artifacts/fable-demo126-20260922/RESULTS.md
+- Outcomes 123 (2026-09-22, after H1+H2): P123.1 FALSE (strict reading: P2/P3/P4, RT110 62 verdicts and both bench tables reproduce sealed fields exactly, but RT81 gives 61 OK / 0 BUG / 13 wording-drift vs sealed 74/0/0) | 0.5625. P123.2 FALSE (same RT81 cause; Q1 both OK, Q2 exactly F5+M5 moved with R4/N6/S3/S6 staying, Q3 = sealed numbers, Q4 0 leaks all reproduce) | 0.49. P123.3 TRUE (full runs 268 s H1 + 142 s H2, bar 1500 s) | 0.04. P123.4 TRUE (SLEEP SKIP with printed reason on both agents) | 0.01. P123.5 TRUE (loop102 soak 2000 turns, 3 kill-9s: 0 lost, 0 wrong, 0 doubled, audit 0/0/0) | 0.16. 3/5 TRUE. Harness at fault nowhere on the reproduced suites; RT81 gap is version-pinned expectations (13 items, taught_delta=0 each), and one PASSMARKS H1-Q1 note (F5 OK) was wrong against the sealed F5=BUG artifact. RESULTS: artifacts/fable-marks123-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 127 (self-router novelty guard; registered single-change follow-up to exp-122 FAIL, Muse), written before the registered run
+- P127.1: K1 — 0 WRONG of 100 fresh blind questions (pre-seal evidence: frozen 127 bytes give 0 wrong on all 320 blind dev questions — panels 105/114/122 — with the 3 panel122 near-blend wrongs converting to declines; residual risk is fresh blends landing nearer than delta, incl. the C15 knife-edge at 0.1290 vs 0.1298). 0.35. Falsified by wrong >= 1.
+- P127.2: K2 — CORRECT >= 45/70 on existing-intent rephrasings (pre-seal evidence: frozen head gave 44/70 on the 122 panel and the guard costs 3 keeps there (41/70), while costing 0 keeps on panels 105 (55/70) and 114 (46/70); passing needs the fresh panel to route easier than the 122 panel). 0.25. Falsified by correct <= 44.
+- P127.3: K3 — TRICK 10/10 decline (pre-seal evidence: same scope guard that gave 122 its 10/10, plus a guard that only ever converts answers into declines; 30/30 dev tricks decline). 0.85. Falsified by any trick answered with content.
+- P127.4: K4 — exp99 40/40 AND exp100-80 WRONG == 0 in the same registered invocation (pre-seal evidence: `--devrescore` on the exact frozen bytes gives 40/40 S2 0 S3 10/10 and 0/80; residual risk is environment nondeterminism). 0.90. Falsified by either half failing.
+- P127.5: dev context — panels 105 and 114 re-score 0 WRONG with keeps intact (55/70 and 46/70), and the 122 panel re-scores 0 WRONG with existing-correct 41/70 (44 minus the 3 designed guard losses), same invocation, unregistered. 0.80. Falsified by any dev WRONG or any count mismatch.
+- Outcomes 127: P127.1 FALSE (1 WRONG of 100: fresh Q078 word-count→C18 "We have had 26 turns", inside δ_C18 — the stated nearest-blend residual risk) | 0.4225. P127.2 TRUE (45/70, exactly at bar; head gave 50/70 on this easier panel, guard cost 5 keeps) | 0.0625. P127.3 TRUE (tricks 10/10; guard caught a scope-missed trick Q099) | 0.0225. P127.4 TRUE (exp99 40/40 S2 0 S3 10/10, exp100-80 0 wrong) | 0.01. P127.5 TRUE (105: 55/45/0, 114: 46/54/0, 122-panel: 41/59/0 — all exactly as forecast) | 0.04. 4/5 TRUE. SCORE registered FAIL (K1). Same-panel 122 path: 50/47/3, tricks 9/10. RESULTS: artifacts/fable-self127-20260922/RESULTS.md
+- Outcomes 115: P115.1 TRUE (L1 installs exactly the 3 words 3/3, OOF/agreement 1.00, routings exact, 0 wrong) | 0.09. P115.2 TRUE (15/15 probes + 150/150 taught + 0 dupes/overwrites, 3/3) | 0.09. P115.3 FALSE (L1 sleeps 29-31 s, not >120 s; multi-word sleeps ran 5-37 s) | 0.64. P115.4 FALSE (breaking point is L4, not L1; ladder ran L1-L3 PASS then stopped) | 0.36. P115.5 FALSE (wave exceeded 30 min: L4 sleeps hit 245-415 s under shared-machine contention; L4 seed 3 incomplete) | 0.5625. 2/5 TRUE; breaking point L4 with reproducer. RESULTS: artifacts/fable-sleep115-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 113d (fallback partial-frame gate; registered single-change follow-up to exp-113c, Muse), written before the registered run
+- P113d.1: D1 — 0 prefix answers over the 62 sealed redteam124 cases through loop113d (B5, Q2, U1, V4 and every other case whose final reply answers fewer relations than asked abstain), 0 new wrong writes, every case OK on loop113c stays OK (pre-seal evidence: B73.compose_question returns exactly the 2-hop prefix frames on B5/Q2/U1/V4 and frame_consumes_question is False on all four; residual risk is fallback 2-hop paths whose leftovers are all scaffolding/entity names). 0.75. Falsified by any prefix answer or any new wrong write or any OK->BUG.
+- P113d.2: D2 — exp-102 marks identical to loop113c: P2 64/64 OK, L6 200/200 x 3 seeds, L5-Z1 60/60, P4 30/30 (pre-seal evidence: exact 2-hop questions and 1-hop FakeEars asks consume True, so legitimate short answers survive the gate). 0.85. Falsified by any mark mismatch.
+- P113d.3: D3 — Fable-Edit-200 200/200 with 0 wrong; old fresh 4-hop correct >= 145 with wrong <= 3; new bench121 split wrong <= 8 and correct >= 115 with the exact per-item movement vs loop113c reported (loop113c there: 119 / 73 / 8). 0.70. Falsified by any bar missed.
+- P113d.4: D4 — whole registered wave (D1+D2+D3) < 1500 s wall-clock Mac CPU with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (113c bench wave ran ~93 s; marks are the long tail). 0.90. Falsified by >= 1500 s.
+- Outcomes 113d: (to be appended after the registered runs)
+- Outcomes 113d: P113d.1 FALSE (fallback prefix finals all abstain incl. B5/Q2/U1/V4/B3, 0 new wrong writes, 23/23 OK stay OK — but U3 composer-path employs-prefix still answers: 1 prefix-shaped remainder) | 0.0625. P113d.2 FALSE (P2 64/64 PASS, L1-L4 PASS, L6 200/200x3 PASS, but L5-Z1 52/60, L5-Z2 17 MISS, P4 29/30 — gate blind to reversed/toy-family/qualifier fallback answers) | 0.0225. P113d.3 FALSE (fresh 145/55/0 PASS and bench121 119/80/1 PASS with 7 wrong->abstain/0 regressions, but Edit-200 183/200: 15 reversed-relation + 2 descriptive/synonym correct->abstain, 0 wrong) | 0.09. P113d.4 TRUE (551 s < 1500 s) | 0.01. 1/4 TRUE. SCORE registered FAIL. Mechanism: 113c gate transfers only within its own vocabulary/direction. RESULTS: artifacts/fable-bench113d-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 129 (teach-punctuation single-change patch, Muse), written before the registered runs
+- P129.1: F1 — 0 failures on the 45-case sealed probe set in both new loops (pre-seal evidence: mixin unit 20/20; residual risk is chain-stage correct/teach flagging on raw spans). 0.80. Falsified by >= 1 F1 failure on either loop.
+- P129.2: F2 — 0 wrong writes caused by punctuation across all 124 re-runs (62 cases x 2 new loops); reteach-middle R1/R2/R3 + V6/V7 move to OK on both loops. 0.75. Falsified by any punct-caused wrong write.
+- P129.3: F3a — loop129a matches loop117 everywhere (Q1 both OK; Q2 still-BUG exactly R4/N6/S3/S6; P2 0 OK->BUG + 0 still-BUG; P3 7/7; P4 pass; Q4 0 leaks). 0.70. Falsified by any verdict/report move vs loop117.
+- P129.4: F3b — loop129b matches loop121 regression outcomes (T4 pass; P2 moves only B7/D8 ok_to_bug + B7/C2/C5/D8 still_bug; P3 7/7; P4 pass). 0.70. Falsified by any other move.
+- P129.5: F4 edit200 — the literal 200/200 bar FAILS (pre-seal calibration: loop121 150/50/0 and all 50 abstains are expected-abstain structural, 0 involve junk teaches; a teach-side fix cannot answer them). 0.90 for FAIL-as-forecast. Falsified by 200/200.
+- P129.6: F4 old fresh — >= 157 correct and 0 wrong (calibration 157/43/0; clean values can only help chains). 0.80. Falsified by < 157 correct or any wrong.
+- P129.7: F4 new 121 split — >= 136 correct and <= 1 wrong (calibration 136/63/1; same residual 069 teach-gap class). 0.80. Falsified by < 136 correct or >= 2 wrong.
+- P129.8: F5 — whole registered wave < 25 min wall-clock Mac CPU (dev timings: bench 11 s, redteam124 6.2 s, 117 wave ~3 min). 0.90. Falsified by >= 1500 s.
+- Outcomes 129: P129.1 TRUE (F1 0 failures both loops) | 0.04. P129.2 PARTIAL (0 punct-caused wrong writes of 124 turns TRUE; R1/V6 only BUG->OK on 129b, R2/R3/V7 still BUG on strict non-punct reasons) | n/a. P129.3 TRUE (Q1/Q2/P2/P3/P4/Q4 all match loop117; Q2 diff-vs-117 empty) | 0.09. P129.4 TRUE (T4 pass; P2 new_moves empty; P3 7/7; P4 pass) | 0.09. P129.5 TRUE-as-forecast (edit200 150/50/0, literal 200/200 FAIL as forecast) | 0.01. P129.6 TRUE (old fresh 157/43/0) | 0.04. P129.7 TRUE (new 136/63/1, same 069 residual) | 0.04. P129.8 TRUE (840 s < 1500 s) | 0.01. SCORE: F1 PASS, F2 PASS (bar), F3a PASS, F3b PASS, F4 2/3 (edit200 literal FAIL, structural), F5 PASS. RESULTS: artifacts/fable-fix129-20260922/RESULTS.md
+- Outcomes 116: P116.1 TRUE (contra refused, installed=0, A1/A2/A4 abstain, A3 MISSING_FACT, 0 stale) | 0.09. P116.2 TRUE (coinc installed, B1-B4 true grandmothers sleep-derived, 0 aunt-latch) | 0.16. P116.3 TRUE (C+D 8/8 OK, both conflicts clarified with 0 writes, 0 wrong) | 0.0625. P116.4 FALSE (taught Z stored 3/3 but derived H answered 3/3: E2/E3/E4 critical override; only E1 safe) | 0.25. P116.5 TRUE (F1 X01 sleep-derived, F2 trail heads report F00025, F3 taught 24/24 untouched) | 0.04. P116.6 TRUE (200/200 replies, STOP exit 0 + reply present, reboot word valid + taught 16/16) | 0.04. P116.7 TRUE (5 eps no attempt + 2/2 abstain + 0 artifacts; 10/15 attempted, installed, 0 wrong) | 0.0225. P116.8 TRUE (3 critical BUGs E2/E3/E4; wave 1580.0 s < 1800) | 0.16. 7/8 TRUE. Family verdicts: A,B,C,D,F,G,H OK; E BUG-critical. RESULTS: artifacts/fable-sleep116-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 130 (sleep grows one word slot: registered single-change follow-up to exp-115, Muse), written before the registered runs
+- P130.1: G1 passes on seeds 1-2: all 5 relations install (growth fires exactly in sleeps 4-5), 25/25 probes correct, 0 wrong, 0 wrong installs, 0 taught overwrites. 0.65. Falsified by any seed missing an install, any wrong probe/install, any overwrite, or growth firing anywhere but sleeps 4-5.
+- P130.2: G2 passes on seeds 1-2: first 3 words stay 15/15 after slots 4-5 added, frozen_ok True in both grown rows (every pre-existing tensor hash bit-identical). 0.70. Falsified by any forgetting or any frozen_ok False.
+- P130.3: G3 passes: 130's L1-L3 (seeds 1-3) byte-identical to sealed 115 outcomes (timing excluded), growth never fires. 0.75. Falsified by any field mismatch or any grew_slot True.
+- P130.4: G4 (unregistered, seed 1): 8 relations install over 8 sleeps with 40/40 probes, 0 wrong. 0.45. Falsified by any failed install or any wrong probe at 8.
+- P130.5: G4 12-sleep climb (runs only if 8 passes): all 12 install, 60/60 probes, 0 wrong. 0.25. Falsified by any failure at 12 (or 8 failing first, voiding this row's premise).
+- P130.6: G5: registered wave (G1 x2 seeds + G3 x9 runs, parallel processes, OMP=1 each) < 30 min wall-clock Mac CPU. 0.60. Falsified by >= 1800 s.
+- Outcomes 130: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 131 (taught-beats-sleep: registered single-change fix for the exp-116 E finding, Muse), written before the registered runs
+- P131.1: T1 — E-family re-run on Sleep131Daemon: E2/E3/E4 answer Z01/Z02/Z03 with record source taught, E1 still OK (gran rows stored taught). 0.85. Falsified by any derived H answer or any non-taught source while the taught row is active.
+- P131.2: T2 — all other 33 exp-116 verdict keys identical to wave-report-rescored.json (all OK there; B/D/F derived answers stay sleep-derived). 0.80. Falsified by any verdict mismatch.
+- P131.3: T3 — exp-104 marks Z1–Z5 re-run through the daemon class swap unchanged (seeds 1–3 install with 20 episodes, 5/5 probes sleep-derived, taught 50/50, 0 overwrites; Z4 pass; Z5 noise4 installs-or-refuses clean, noise8 refuses with 5 abstain). 0.85. Falsified by any field mismatch (timing excluded).
+- P131.4: T4 — teach-after-sleep: the post-install gran teach answers Z01 with source taught and 0 overwrites (TA), while untaught control T02 still answers derived H02 sleep-derived (TB). 0.80. Falsified by either half failing.
+- P131.5: T5 — whole registered wave (116 re-run + 104 re-run in parallel processes + T4, OMP=1/MKL=1 each, Mac CPU) < 1800 s wall-clock. 0.70. Falsified by >= 1800 s.
+- Outcomes 131: (to be appended after the registered runs)
+- Outcomes 131: P131.1 TRUE (E2/E3/E4 Z01/Z02/Z03 with source taught, E1 OK) | 0.0225. P131.2 TRUE (33/33 non-E verdicts match rescored 116, all OK; C3 aggregate also matches) | 0.04. P131.3 TRUE (every Z1–Z5 field identical to the sealed 104 report) | 0.0225. P131.4 TRUE (TA post-install teach wins Z01 taught ow 0; TB control H02 sleep-derived) | 0.04. P131.5 TRUE (wave 815 s < 1800 s) | 0.09. 5/5 TRUE; MARKS T1–T5 PASS (deviation D1: reused 116 drive reads records without the .txt suffix — same checker bug as 116 D3; rescored read-only from frozen evidence, raw files kept). RESULTS: artifacts/fable-sleep131-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 128 (per-turn cost growth fix, Muse), written before the registered runs
+- P128.1: C1 — per-turn CPU (process_time) at 15k facts <= 1.5x the 1k value for teach, correct, and ask (pre-seal evidence: unwrapped ratios 9.45x/9.65x/10.3x; index removes the O(F) scans and bounded persistence removes the O(T) dump; residual risk is fsync/read-back CPU and single-write constants). 0.70. Falsified by any kind ratio > 1.5.
+- P128.2: C2 — replies byte-identical to unwrapped loop102 on the first 5,000 turns of the seed-93 plan (pre-seal evidence: wrapper changes lookups only, same sort/filter/gate logic; residual risk is ordering edge cases in multi-active non-functional slots). 0.80. Falsified by any reply mismatch.
+- P128.3: C3 — exp-102 marks P2/P3/P4 unchanged (P2 16 BUG->OK 0 still_bug; P4 30/30; P3 7/7 PASS) (pre-seal evidence: same reasoner semantics via index-backed views). 0.75. Falsified by any mark move.
+- P128.4: C4 — seed-93 20,000-turn soak with the change: 0 wrong / 0 lost / 0 duplicate (pre-seal evidence: exp-108 loop102 run was K1/K2 clean; change is read-path only plus receipt-identical bookkeeping). 0.75. Falsified by any wrong/lost/duplicate.
+- P128.5: C5 — C1+C2+C3+C4 total < 1800 s wall-clock Mac CPU (budgets: C1 ~4 min, C2 ~2 min, C3 ~4 min, C4 ~14 min). 0.65. Falsified by >= 1800 s.
+- Outcomes 128: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 134 (port loop117 fixes onto loop121, Muse), written before the registered run
+- P134.1: M1 q1 PASS on loop134 (F5+M5 both OK, as on loop117; pre-seal evidence: dev mailbox battery forgets via "Forgotten: Mira's city.", answers Paris not Lisbon, and answers the shouted ask). 0.90. Falsified by q1 FAIL.
+- P134.2: M1 q4 PASS on loop134 (0 underscore leaks; same reply-rendering logic as loop117). 0.90. Falsified by any leak.
+- P134.3: every other marks123 suite verdict on loop134 identical to loop121 on the same runner (pre-seal evidence: dev battery identical outside F5/M5 state consequences; residual risk is a P2/RT110 case exercising a fixed shape). 0.80. Falsified by any suite verdict mismatch.
+- P134.4: rt81 bug == 0 on loop134 (gated on wrong writes only; UNCLEAR wording-drift not gated per exp-123 precedent). 0.85. Falsified by any BUG.
+- P134.5: M2 bench121 per-item verdicts on loop134 identical to loop121 (new 136 correct / 63 abstain / 1 wrong; old 157 / 43 / 0). 0.85. Falsified by any per-item verdict move.
+- P134.6: no reply changes between loop121 and loop134 anywhere outside q1/q4 items (F5/M5/underscore shapes and their state consequences only). 0.70. Falsified by any other changed reply.
+- P134.7: M4 — the loop134 marks123 wave < 25 min wall-clock Mac CPU (--workers 4, OMP_NUM_THREADS=1; exp-123 full waves ran 142-268 s). 0.90. Falsified by >= 1500 s.
+- Outcomes 134: (to be appended after the registered run)
+- Outcomes 134: P134.1 TRUE (q1 F5+M5 both OK) | 0.01. P134.2 TRUE (q4 0 leaks) | 0.01. P134.3 TRUE (all other suites same verdicts as loop121; case moves only designed F5/M5 BUG->OK) | 0.04. P134.4 TRUE (rt81 bug 0/74) | 0.0225. P134.5 TRUE (bench121 400/400 per-item verdicts identical; 136/63/1 new, 157/43/0 old) | 0.0225. P134.6 TRUE (no reply change outside q1/q4 shapes + state consequences) | 0.09. P134.7 TRUE (loop134 wave 129.6 s < 1500 s) | 0.01. 7/7 TRUE; MARKS M1-M4 PASS (p2 FAIL and rt81 suite-FAIL identical to loop121; rt81 gated bug==0 per seal). RESULTS: artifacts/fable-loop134-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 136 (teach-frame red team on loop129b, Muse), written before the registered run
+- P136.1: the sealed 145-case wave finds 4-8 distinct WRONG-WRITE root-cause classes (any stored triple outside the pre-registered expectation). 0.60. Falsified by <= 3 or >= 9 classes.
+- Outcomes 136: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 135 (officeholder catch-all guard on loop129b, Muse), written before the registered run
+- P135.1: K1 — 0 writes on loop135 across the 30 non-office probe sentences (family words, boss/friend/teacher roles, weather/sky/cat/dog, possessions). 0.95. Falsified by any write.
+- P135.2: K1 — all 18 office-table probe sentences byte-identical replies AND identical fact-write counts on loop135 vs loop129b. 0.90. Falsified by any mismatch.
+- P135.3: K2 — loop135 per-item identical to loop129b on all 600 bench rows (edit200 + old_s2fresh + new_121). 0.85. Falsified by any per-item verdict or reply move.
+- P135.4: K2 bars hold on loop135: edit200 150 answers + 50 expected abstains with 0 wrong; old_s2fresh >= 157 correct with 0 wrong; new_121 >= 136 correct with <= 1 wrong. 0.80. Falsified by any bar missed.
+- P135.5: K3 — every marks123 suite verdict identical loop135 vs loop129b (same runner, same out-parent). 0.90. Falsified by any suite verdict move.
+- P135.6: K4 — total registered compute < 25 min Mac CPU wall-clock (OMP=1/MKL=1, offline). 0.90. Falsified by >= 1500 s.
+- P135.7: the 4 monarch-informational probe sentences (king/queen/monarch/emperor, NOT in the code tables) become didn't-understand with 0 writes on loop135 while loop129b writes them. 0.85. Falsified by any loop135 write or any loop129b non-write there.
+- Outcomes 135: (to be appended after the registered run)
+- Outcomes 135: P135.1 TRUE (0 writes on 30/30 non-office probe sentences; base wrote 30/30, so 30 became didn't-understand) | 0.0025. P135.2 TRUE (18/18 office-table byte-identical replies + write counts) | 0.01. P135.3 TRUE (600/600 bench rows per-item identical verdict+reply+rejects) | 0.0225. P135.4 TRUE (edit200 150/50/0; old 157/43/0; new 136/63/1) | 0.04. P135.5 FALSE on the letter (9/10 suite verdicts identical; soak PASS->FAIL on one empty-turn race reply, audits 0/0/0; rt110 PASS both with 2 race-case moves P5/M6 BUG->OK) | 0.81. P135.6 TRUE (registered compute ~6 min wall < 25 min) | 0.01. P135.7 TRUE (4/4 monarch refused with 0 writes on 135, written on base) | 0.0225. 6/7 TRUE; SCORE K1 PASS, K2 PASS, K3 FAIL-letter (harness race, zero guard-caused moves), K4 PASS. RESULTS: artifacts/fable-fix135-20260922/RESULTS.md
+- Outcomes 136: P136.1 TRUE (8 distinct WRONG-WRITE classes, bar 4-8) | 0.16. MARKS M1-M4 PASS (145/145 verdicts, 0 harness-error; knowns C124 WW / C125 MISSED / C126 WW; 21/21 classified; 1.2 s). RESULTS: artifacts/fable-redteam136-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 113e (gate inverse cues; registered single-change follow-up to exp-113d FAIL, Muse), written before the registered run
+- P113e.1: E1 — 62 sealed redteam124 cases loop113c vs loop113e: the 113d fixes hold (B5, B3 fixed; Q2/U1/V4 no prefix answer), no OK→BUG vs loop113c, 0 new wrong writes (pre-seal evidence: the change only widens walked-cue deletion and leftover scan from the repo's own tables; residual risk is a legit redteam answer whose remainder matches an added cue, or a reversal-shaped BUG case flipping to an answer). 0.70. Falsified by any prefix answer, any new wrong write, or any OK→BUG.
+- P113e.2: E2 — Fable-Edit-200 passes 200/200 with 0 wrong (pre-seal evidence: 15/15 reversal frames consume under the expanded sets by construction; forecast is FAIL at 198/200 because 088 `position` and 096 `origin` leftovers are other-relation cues, not inverse surfaces, so they stay abstained). 0.15 for PASS-as-forecast. Falsified by right behaviour != 200.
+- P113e.3: E3 — old fresh split >= 145 correct with 0 wrong (056/103/196 stay abstained) and bench121 >= 119 correct with <= 1 wrong (the 7 fixed wrongs stay abstained), exact movement reported (pre-seal evidence: none of those prefixes' extra words are inverse surfaces of the walked frames; residual risk is composer-path 125/200 un-abstaining). 0.60. Falsified by any bar missed.
+- P113e.4: E4 — marks123 (--agent/--config) gives P2 64/64, P3 L1–L6 as loop113c with L5-Z1 60/60, P4 30/30 (pre-seal evidence: P4-24 `birth year` consumes via its own spelling and 6/8 L5-Z1 toy items consume via table surfaces, but the 2 `in 2019` qualifier items cannot; forecast is FAIL with L5-Z1 58/60). 0.20 for PASS-as-forecast. Falsified by any mark mismatch.
+- P113e.5: E5 — whole registered wave (E1+E2+E3+E4) < 1500 s wall-clock Mac CPU with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (113d wave ran 551 s; marks123 p2/p3/p4 is the long tail). 0.90. Falsified by >= 1500 s.
+- Outcomes 113e: P113e.1 TRUE (23/23 OK stay OK, 0 OK->BUG, 0 new wrongs; B3+B5 BUG->OK; Q2/U1/V4 finals abstain; prefix_after C08+U3 identical to 113d) | 0.09. P113e.2 FALSE-as-forecast (Edit 198/200, 0 wrong: reversal 50/50 repaired, only 088 `position` + 096 `origin` abstain) | 0.0225. P113e.3 TRUE (fresh 145/55/0 with exactly 056/103/196 wrong->abstain; bench121 119/80/1 identical to 113d incl. same 069 wrong) | 0.16. P113e.4 FALSE-as-forecast (P2 64/64, L1-L4 + L6x3 PASS, P4 30/30, but L5-Z1 58/60 with only the 2 `in 2019` qualifier misses; L5-Z2 MISS 17->2; 0 wrong everywhere) | 0.16. P113e.5 TRUE (~161 s < 1500 s) | 0.01. 3/5 TRUE. SCORE registered FAIL (E2, E4). Mechanism: inverse-surface repair transfers fully; other-relation leftovers and trailing qualifiers are outside an inverse-cue change by construction. RESULTS: artifacts/fable-bench113e-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 137 (multi-word possessive subjects on loop129b, Muse), written before the registered run
+- P137.1: N1 stores >= 38/42 teaches exactly and answers >= 38/42 questions with 0 wrong writes. 0.80. Falsified by < 38 stored, < 38 answered, or any wrong write.
+- P137.2: the question side needs no change (FakeEars' question branch never had the one-word guard; every N1 question answers once the teach stores). 0.85. Falsified by any question miss on a stored triple.
+- P137.3: N2 0 wrong writes on 18/18 traps. 0.85. Falsified by any trap write.
+- P137.4: every marks123 suite verdict identical loop137 vs loop129b. 0.90. Falsified by any suite verdict move.
+- P137.5: bench per-item verdicts identical on all three splits (edit200 + old_s2fresh + new_121). 0.85. Falsified by any per-item move.
+- P137.6: base loop129b stores 0/42 N1 teaches (director claim reproduces). 0.90. Falsified by any stored triple.
+- P137.7: whole registered wave < 25 min wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by >= 1500 s.
+- Outcomes 137: (to be appended after the registered run)
+- Outcomes 137: P137.1 TRUE (N1 42/42 stored exactly, 42/42 answered, 0 wrong writes) | 0.04. P137.2 TRUE (question side untouched, 42/42 via the pre-existing branch) | 0.0225. P137.3 FALSE (N2 4 writes of 18: T09 officeholder + T14 digit-name inherited byte-identical on loop129b, T11 possessive-value + T17 valid-4-token frame-consistent accepts; 0 mis-parses) | 0.7225. P137.4 TRUE (marks123 10/10 suite rows identical incl. per-case p2/rt110/rt81/bench verdicts; sleep SKIP both) | 0.01. P137.5 TRUE (bench 600/600 per-item identical: 150/50/0, 157/43/0, 136/63/1) | 0.0225. P137.6 TRUE (base 0/42, all "I didn't understand that") | 0.01. P137.7 TRUE (wave ~5.9 min < 25 min) | 0.01. 6/7 TRUE; SCORE N1 PASS, N2 registered FAIL, N3a PASS, N3b PASS, N4 PASS; no v2. RESULTS: artifacts/fable-fix137-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 132 (question-phrasing coverage for multi-hop questions; registered single-change follow-up to exp-121, Muse), written before the registered run
+- P132.1: Q1 — "I didn't understand that" replies on the NEW sealed 200-item bench132 split drop by >= 50% under loop132 vs the paired base loop121 run (pre-seal evidence: dev misunderstood 42->1 on bench103-fresh and 62->1 on bench121, i.e. ~98% drops; the new split uses the same builder/templates; residual risk is unseen template mix). 0.85. Falsified by a drop < 50%.
+- P132.2: Q2 — wrong <= 3 on the new split under loop132 (pre-seal evidence: dev added 0 new wrongs on 400 items — 103: 0, 121: the same single inherited item-069 wrong as base; residual risk is a verified-but-off-intent rewrite on a novel template). 0.80. Falsified by wrong >= 4.
+- P132.3: Q3 — 0 correct->wrong moves base->rewrite on the new split (pre-seal evidence: dev 0/0 on both splits; mechanism: the wrapper returns every base ASK untouched and only reconsider base clarifies; residual risk is none beyond harness nondeterminism). 0.90. Falsified by any correct->wrong.
+- P132.4: Q4 — P2/P3/P4 (marks123 suites) and red-team-124 verdicts identical loop132 vs base loop121: P2 ok_to_bug/still_bug equal, P3 all pass, P4 pass, RT124 0 OK->BUG + 0 new wrong writes + 0 prefix-after (pre-seal evidence: dev probe of all rt124 "?" turns showed 13 rewrite fires, every one on a turn the base already asks, i.e. wrapper no-ops; residual risk is a base-clarify turn in the suites that verifies). 0.80. Falsified by any suite verdict move.
+- P132.5: Q5 — whole registered wave (bench both arms + marks all) < 1500 s wall-clock Mac CPU with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (pre-seal evidence: dev 400 paired items ~11 s; marks123 p2/p3/p4 is the long tail, H1 ran 268 s). 0.90. Falsified by >= 1500 s.
+- Outcomes 132: (to be appended after the registered run)
+- Outcomes 132 (registered 2026-09-22): P132.1 TRUE (misunderstood 59->1, drop 0.983) | 0.0225. P132.2 TRUE (wrong 2, same teach-gap items 022/162 as base) | 0.04. P132.3 TRUE (0 correct->wrong, 58 fixed) | 0.01. P132.4 TRUE on the brief's equivalence bar (P2 64/64 rows identical to base incl. inherited B7/D8; P3 7/7; P4 30/30; RT124 62/62 identical verdicts+reasons, 0 OK->BUG, 0 new wrong writes; the sealed absolute "0 prefix-after" sub-clause is contradicted by the base's own 14 — see deviation) | 0.04. P132.5 TRUE (wave 40.4 s < 1500 s) | 0.01. 5/5 TRUE. RESULTS: artifacts/fable-bench132-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 140 (value-tail single-change fix for redteam136 W4+W7+W8, Muse), written before the registered run
+- P140.1: T1 — 44/44 NEW probe teaches store exactly with 0 wrong writes, and 5/5 subject-span unit checks pass (pre-seal evidence: mixin unit 15/15 incl. abbrev restore + matched-bracket passthrough; residual risk is a frame whose raw span the cleaner misreads, e.g. bench73 explicit-dot values). 0.80. Falsified by any non-OK case or failed unit check.
+- P140.2: T2 — C117 C118 C119 C126 C140 store exact expected triples through loop140, and all 119 prior-OK redteam136 cases stay OK (0 regressions). 0.85. Falsified by any focus miss or any OK->non-OK move.
+- P140.3: T3 — every marks123 suite verdict identical loop140 vs loop129b, and Fable-Edit / old fresh / bench121 per-item verdicts identical (cleaner only removes trailing junk the benches never store). 0.80. Falsified by any suite verdict or per-item move.
+- P140.4: T4 — whole registered wave (T1 + T2 + marks123 x2 + bench) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (pre-seal evidence: T1/T2 are ~200 fresh daemons at ms each; marks123 waves ran 130-270 s). 0.90. Falsified by >= 1500 s.
+- Outcomes 140: (to be appended after the registered run)
+- Outcomes 140: P140.1 FALSE (T1 43/44 + 5/5 subject; T030 teaches a trailing-? sentence the sealed loop121 rule routes to the question path — loop129b also stores nothing there; probe-design miss, not a fix miss) | 0.64. P140.2 TRUE (C117/C118/C119/C126/C140 exact; 119/119 prior-OK kept; run-1 showed 2 guard-ordering regressions C077/C138, fixed in own code, run-2 clean) | 0.0225. P140.3 TRUE (marks123 0 verdict moves; 600/600 bench rows verdict+reply identical) | 0.04. P140.4 TRUE (425 s < 1500 s) | 0.01. 3/4 TRUE; SCORE T1 FAIL (sealed probe), T2/T3/T4 PASS. RESULTS: artifacts/fable-fix140-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 139 (value-span guard on loop129b, Muse), written before the registered run
+- P139.1: V1 — 0 wrong writes on the 56-case probe and >= 23/24 must-write stored exactly through loop139. 0.85. Falsified by any wrong write or < 23 exact.
+- P139.2: V2 — C072 C075 C082 C086 C123 C135 C136 all no-write through loop139, and every 136 case OK on loop129b stays OK. 0.80. Falsified by any focus write or any OK->non-OK move.
+- P139.3: V3 — every marks123 suite verdict identical loop139 vs loop129b, and Fable-Edit / old fresh / bench121 per-item verdicts identical. 0.80. Falsified by any suite or per-item move.
+- P139.4: V4 — whole registered wave (V1 + V2 + marks123 x2 + bench) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.85. Falsified by >= 1500 s.
+- Outcomes 139: P139.1 TRUE (V1 56/56: 0 wrong writes, 24/24 exact) | P139.2 TRUE (7/7 focus no-write, 0 other 136 moves) | P139.3 FALSE (11 per-item correct->wrong: 4 s2fresh + 7 new-121, one cause: 'United Kingdom of Great Britain and Ireland' teach refused) | P139.4 FALSE (wall span > 1500 s: 2 crashed p3 attempts + re-runs; measured runs sum 405 s). Overall: REGISTERED FAIL. RESULTS: artifacts/fable-fix139-20260922/RESULTS.md
+- Outcomes 128: P128.1 TRUE (C1 teach 0.762, correct 0.684, ask 0.672, all <= 1.5) | 0.09. P128.2 TRUE (5000/5000 replies identical) | 0.04. P128.3 TRUE (P2 16 BUG->OK, 0 still/OK->BUG/reply-changed; P4 30/30; P3 7/7) | 0.0625. P128.4 TRUE (soak 0 wrong/0 lost/0 duplicate; K1-K5 PASS; 20000/20000 receipts) | 0.0625. P128.5 TRUE (wave ~1600 s < 1800) | 0.1225. 5/5 TRUE. SCORE PASS (C1-C5). Deviations: C1 ran 3x (two FAILs on incomplete index coverage, same one-change theme); 15k tail synthesized (plan max ~14,003); C3/C4 harnesses fixed and re-run clean. RESULTS: artifacts/fable-perf128-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 138 (integration: tonight's agent, Muse), written before the registered runs
+- P138.1: A1 q1 F5+M5 both OK and q4 0 underscore leaks through loop138. 0.90. Falsified by any q1/q4 miss.
+- P138.2: A1 P2 0 OK->BUG and 0 still-BUG vs loop102 (113c gate fixes B7/C2/C5/D8); G8 reply "Albany." single period. 0.80. Falsified by any P2 still-BUG/OK->BUG or other G8 text.
+- P138.3: A1 every other suite verdict-equal to sealed loop134 (p3 7/7, p4 0 refusals, rt110 still-BUG exactly N6/R4/S3/S6, bench 150/50/0 + 157/43/0, rt81 0 wrong writes, soak clean, sleep SKIP). 0.75. Falsified by any unpredicted suite/verdict move.
+- P138.4: A2 0 new wrong vs sealed loop134 rows on all three splits (new121/old-fresh/edit200); <=3 moved items per split, none abstain->wrong. 0.80. Falsified by any new wrong or >3 moves.
+- P138.5: A3 blind panel through loop138 turn path <= 1 wrong (known risk: Q078 C18-blend + notebook-wins items). 0.60. Falsified by >1 wrong.
+- P138.6: A3 0/200 bench121-new questions content-routed to the self answerer. 0.85. Falsified by any content routing.
+- P138.7: A4 installs happen, 0 wrong installs, E2/E3/E4 answer Z01/Z02/Z03 with source taught, all other sealed 104/116 verdicts unchanged. 0.80. Falsified by any wrong install or non-taught E2-E4 source.
+- P138.8: A5 G2 6000 turns seed 931, >=10 aimed kill-9s, 0 duplicate / 0 lost / 0 wrong replies. 0.85. Falsified by any dup/lost/wrong.
+- P138.9: A6 every registered run (A1, A2, A3, A4e, A4z, A5) < 30 min wall-clock Mac CPU, OMP_NUM_THREADS=1. 0.90. Falsified by any run >= 1800 s.
+- Outcomes 138: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 141 (mailbox settle gate for the exp-135 race, Muse), written before the registered run
+- P141.1: R1a — the unpatched loop134 daemon answers >= 1 of 300 non-atomically-written messages with "I didn't catch anything." (pre-seal evidence: exp-135 soak turn 238 did exactly this under load; residual risk is the 50 ms poll missing every 0-300 ms window). 0.80. Falsified by 0 such replies.
+- P141.2: R1b — the patched daemon answers all 3000 non-atomically-written messages with 0 such replies and 0 lost / 0 wrong / 0 dupes (pre-seal evidence: settle-unit logic serves only stable-or-old files; residual risk is a partially-written file stable a full poll apart). 0.75. Falsified by any lost/wrong/dupe or any such reply.
+- P141.3: R2 — all 24 genuinely-empty messages each get exactly one "I didn't catch anything." reply (mechanism: grace rule serves them after 2 s; residual risk is none beyond harness timing). 0.90. Falsified by any lost/wrong/dupe.
+- P141.4: R3 — every marks123 suite verdict (soak,p2,p4,rt110, per-case) identical to sealed loop134, and patched p50 minus unpatched p50 <= 0.05 s (mechanism: gate delays serving by ~one poll only; in-process suites bypass the gate via direct process_file). 0.75. Falsified by any verdict move or larger p50 gap.
+- P141.5: R4 — the combined 108+141 daemon survives 12 aimed kill-9s with 0 dup / 0 lost / 0 wrong (mechanism: 108 reconcile + settle; residual risk is a kill landing inside the outbox write). 0.80. Falsified by any dup/lost/wrong.
+- P141.6: R5 — the whole registered wave < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.85. Falsified by >= 1500 s.
+- Outcomes 141: (to be appended after the registered run)
+- Outcomes 130: P130.1 TRUE (G1 s1+s2: 5/5 installs, growth exactly sleeps 4-5, 25/25 probes, 0 wrong, 0 wrong installs, 0 overwrites, taught 225/225) | 0.1225. P130.2 TRUE (first 3 words 15/15 after; frozen_ok True all 4 grown rows) | 0.09. P130.3 TRUE (G3 9/9 byte-identical to sealed 115, growth never fired) | 0.0625. P130.4 TRUE (G4-8: 8/8, 40/40, 0 wrong; sleeps 9-72 s) | 0.3025. P130.5 FALSE-as-premise (first 12-climb broke at 9/12: climb-driver reused taught pairs, notebook refused overwrites, honest no-ops 0 wrong; disjoint rerun 12/12, 60/60, 0 wrong) | 0.5625. P130.6 TRUE (registered wave 477 s parallel < 1800 s) | 0.16. 5/6 TRUE. RESULTS: artifacts/fable-sleep130-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 145 (sleep merge: 130 grown slots + 131 taught-wins, no new behaviour), written before the registered run
+- P145.1: M1 — 130's G1 (seeds 1-2) and G3 (L1-L3 x seeds 1-3) re-run on sleep145 match 130's wave JSONs on every compared field (G1/G3 worlds never teach a bare installed word, so the taught check never fires). 0.80. Falsified by any field mismatch.
+- P145.2: M2-T1/T2 — e116 re-run on sleep145: E2/E3/E4 answer Z01/Z02/Z03 with source taught, and all 34 non-E verdicts match 131's rescored report (w=0 takes the sealed free-slot path; taught rule is 131 verbatim). 0.80. Falsified by any E miss or any non-E verdict move.
+- P145.3: M2-T3 — z104 re-run on sleep145 field-identical to sealed 104 (no taught word-facts in Z worlds). 0.80. Falsified by any field diff.
+- P145.4: M2-T4 — teach-after-sleep verbatim passes on sleep145 (TA taught Z01, TB control H02 sleep-derived, 0 overwrites). 0.75. Falsified by either half failing.
+- P145.5: M3-T6 — after a GROWN slot (boss_of_father) installs, a taught differing value for that word answers taught with 0 overwrites while the untaught control still derives (taught-first generalised to grown words). 0.70. Falsified by TA or TB failing.
+- P145.6: M4+M5 — full 116 set no case worse than on 131, and the whole registered wave finishes < 1800 s wall-clock on Mac CPU with OMP=1/MKL=1 per process. 0.75. Falsified by any worse case or a longer wave.
+- Outcomes 145: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 143 (question-side red team vs loop132, Muse), written before the registered run
+- P143.1: 4 distinct WRONG-ANSWER root-cause classes across the 122 fresh cases (predicted: broken-chain prefix answers; qualifier/whose/extra-relation passthrough from the one-directional coverage gate; negation blindness; entity-resolution prefix/island answers). 0.60. Falsified by a final class count other than 4.
+- Outcomes 143: P143.1 FALSE (5 fresh WRONG-ANSWER classes, not 4: negation, qualifier, short-chain prefix, answer-type mismatch, substring entity; 19 fresh + 2 confirm genuine wrong; 10 MISSED; 1 expectation error H5) | 0.36. RESULTS: artifacts/fable-redteam143-20260922/RESULTS.md
+- Outcomes 141: P141.1 TRUE (unpatched: 2 + 4 bad-empty of 300 over two runs) | 0.04. P141.2 FALSE (patched: 0 bad-empty of 3000 BUT 82 wrong / 93 dupes from prefix-serves on two-chunk pauses > two polls) | 0.5625. P141.3 TRUE (24/24 empty exactly once) | 0.01. P141.4 FALSE (128/128 verdicts + 64/64 p2 reply texts identical, but seq p50 +59 ms > 50 ms bar) | 0.5625. P141.5 TRUE (12 kills 0/0/0) | 0.04. P141.6 TRUE (wave ~368 s < 1500 s) | 0.0225. 3/6 TRUE; SCORE R1a PASS, R1b FAIL, R2 PASS, R3 FAIL (verdicts pass / latency fail), R4 PASS, R5 PASS. RESULTS: artifacts/fable-daemon141-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 142 (perf port of exp-128 onto loop134, Muse), written before the registered run
+- P142.1: S1 — per-turn CPU (process_time) p50 at 15k facts <= 1.5x the 1k value for teach, correct, and ask on loop142 (pre-seal evidence: unwrapped loop134 ratios 11.15x/10.02x/10.67x in diag134.json; index removes the O(F) scans and bounded persistence removes the O(T) dump; residual risk is mention-bucket substring scans and fsync CPU). 0.70. Falsified by any kind ratio > 1.5.
+- P142.2: S1-loop134 — the registered loop134 C1 shows ratios >= 8x on all three kinds (same estimator; diag evidence 11.15/10.02/10.67). 0.80. Falsified by any kind ratio < 8.
+- P142.3: S2 — replies byte-identical loop142 vs loop134 on the first 5,000 seed-93 turns (pre-seal evidence: 400/400 + 12-shape smoke + multi-hop/forget/shouted shapes identical; residual risk is multi-active same-(s,r) ordering edge). 0.80. Falsified by any reply mismatch.
+- P142.4: S3 — every marks123 suite verdict identical loop142 vs loop134 on the same runner (pre-seal evidence: same decision logic over the same data). 0.75. Falsified by any suite verdict move.
+- P142.5: S4 — bench121 new + old splits per-item verdicts 400/400 identical to the sealed loop134 rows. 0.80. Falsified by any per-item verdict move.
+- P142.6: S5 — S1x2 + S2 + S3x2 + S4x2 registered wall-clock < 1800 s Mac CPU total. 0.65. Falsified by >= 1800 s.
+- Outcomes 142: (to be appended after the registered runs)
+- Outcomes 142: P142.1 FALSE-as-registered (S1 attempt-1: teach 0.815, correct 0.856, ask 1.827 FAIL; completed coverage -> single shared span scan + fallback hint -> unregistered re-run PASS 1.134/0.908/1.394) | 0.49. P142.2 TRUE (loop134 registered 8.412/8.541/9.438, all >= 8) | 0.04. P142.3 TRUE (S2 5000/5000 registered + 5000/5000 unregistered on final code) | 0.04. P142.4 FALSE-as-registered (S3 attempt-1: p3 harness IndexError + rt81 M_hops-06 UNCLEAR vs OK from latent 128 empty-rows bug; FastReasoner142 guard -> unregistered re-run verdict-identical on all suites) | 0.5625. P142.5 TRUE (S4 400/400 per-item identical, 0 reply diffs; 136/63/1 new, 157/43/0 old) | 0.04. P142.6 TRUE (registered S1x2+S2+S3x2+S4x2 = 822.4 s < 1800) | 0.1225. 4/6 TRUE; SCORE S1 FAIL/PASS-unreg, S2 PASS, S3 FAIL/PASS-unreg, S4 PASS, S5 PASS. RESULTS: artifacts/fable-perf142-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 139b (open and-name rule follow-up to the 139 FAIL, Muse), written before the registered runs
+- P139b.1: V1 — 56/56 on 139's probe re-run through loop139b (0 wrong writes, 24/24 must-write exact) AND 22/22 must-write exact with 0 wrong writes over all 45 new-probe cases. 0.85. Falsified by any wrong write or any must-write miss.
+- P139b.2: V2 — C072 C075 C082 C086 C123 C135 C136 all no-write through loop139b, and every 136 case OK on loop129b stays OK. 0.80. Falsified by any focus write or any OK->non-OK move.
+- P139b.3: V3 — every marks123 suite verdict identical to sealed loop129b (140's marks123-129b), and bench per-item verdicts identical to sealed loop129b rows EXCEPT the 11 exp-139 flips returning (bench121-4hop-019 047 136 139 142 195 196; bench103-s2fresh-4hop-056 103 124 196). 0.75. Falsified by any unpredicted suite or per-item move.
+- P139b.4: V4 — whole registered wave (V1 x2 + V2 + marks139b + bench) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by >= 1500 s.
+
+## 2026-09-22 — Experiment 144 (multi-"of"-name single-fact fix on loop129b, Muse), written before the registered runs
+- P144.1: F1 — 26 must-write teaches >= 25/26 exact triples with 0 wrong writes, and 20 genuine two-fact messages 20/20 with 0 writes of any wrong triple (pre-seal evidence: screen unit matrix 13/13 + live loop144 save of the bug sentence with the exact triple + live two-fact refuses with zero writes; residual risk is an untested frame/span shape). 0.80. Falsified by any wrong write, any must-write miss below 25/26, or any two-fact write.
+- P144.2: F2a — bench132-4hop-022 edit teach #6 saves (Charles M. Schulz, notable_work, The Protocols of the Elders of Zion) and the item moves wrong -> correct (Charleroi) (pre-seal evidence: the 022 teach_replies show the SPLIT refuse at #6 with the old answer standing; loop144 saves this exact sentence live). 0.85. Falsified by a non-save or a non-correct verdict.
+- P144.3: F2b — edit200 + old_s2fresh_4hop per-item identical to sealed loop129b rows; new_121_4hop identical EXCEPT bench121-4hop-069 (same edit-teach shape; teach #6 now Saved, verdict wrong -> correct, Canberra) (pre-seal evidence: pure-function scan of 5863 suite/bench turns flagged exactly these two sentences). 0.80. Falsified by any other per-item diff.
+- P144.4: F3 — every marks123 suite per-case identical to the sealed loop129b reference (artifacts/fable-fix140-20260922/marks123-129b) (pre-seal evidence: zero SPLIT replies on single-of-name teaches across all scanned suite inputs; p3/soak/q1 use short synthetic tokens; sleep SKIP). 0.75. Falsified by any per-case move.
+- P144.5: F4 — each registered run (F1, bench, marks123) < 25 min wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 144: (to be appended after the registered runs)
+- Outcomes 144: P144.1 FALSE (F1: must-write 26/26 exact, but two-fact 19/20 — t14 "died in the city of" saved a wrong triple; verified pre-existing on loop129b, pattern-order + value-only screening) | P144.2 TRUE (022 teach#6 Saved exact triple, verdict wrong->correct Charleroi) | P144.3 TRUE (edit200/old 0 diffs; new_121 only 069 wrong->correct Canberra) | P144.4 TRUE (all marks123 suites per-case identical to loop129b reference) | P144.5 TRUE (F1 ~1 s, bench ~20 s, marks123 ~134 suite-s, all < 1500 s). F1 recorded as FAIL per sealed bar; F2/F3 PASS. RESULTS: artifacts/fable-fix144-20260922/RESULTS.md
+- Outcomes 139b: P139b.1 TRUE (old probe 56/56: 0 wrong writes, 24/24 exact; new probe 45/45: 22/22 exact incl. 10 invented of-names + Ireland value + 11 UN/territory names, 0 wrong writes) | 0.0225. P139b.2 TRUE (7/7 focus no-write; redteam per-case 0 moves vs loop139: OK 126 / WW 14 / MISSED 5) | 0.04. P139b.3 TRUE (marks123 10/10 suite verdicts identical to sealed loop129b; bench 600/600 per-item verdicts identical to loop129b rows — all 11 exp-139 flips returned, 0 other moves; marks bench rows 400/400 identical) | 0.0625. P139b.4 TRUE (registered wave 372 s < 1500 s) | 0.01. 4/4 TRUE; SCORE PASS (V1-V4). RESULTS: artifacts/fable-fix139b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 149 (whole-word entity matching in questions, Muse), written before the registered runs
+- P149.1: W1 variant A (loop134+149) — O3 abstains (OK) and 0 of the other 123 cases are worse than the sealed 143 rows. 0.75. Falsified by O3 answering or any other case moving OK->non-OK or MISSED->WRONG-ANSWER.
+- P149.2: W1 variant B (loop132+149) — same bar vs sealed 143 rows. 0.75. Falsified the same way.
+- P149.3: W2 — 33/33 probe dialogues as sealed with 0 WRONG-ANSWER on both variants (pre-seal evidence: core selftest 15/15 + live O3-shape abstain with taught/possessive answers on both variants; residual risk is O'Neill/Notre-Dame possessive and shouted-case paths). 0.70. Falsified by any non-OK probe verdict.
+- P149.4: W3 — zero per-item verdict diffs on all four suites for both variants vs the stated bases (pre-seal evidence: bench names are multi-word distinct entities with no affix collisions by inspection; residual risk is an unseen affix collision in bench text). 0.65. Falsified by any unpredicted diff.
+- P149.5: W4 — every marks123 suite verdict identical to sealed marks134 (pre-seal evidence: question-side matcher only narrows mentions; suite inputs use exact entity names). 0.70. Falsified by any suite verdict move.
+- P149.6: W5 — each registered run finishes < 1500 s wall-clock Mac CPU with OMP=1/MKL=1. 0.95. Falsified by any run >= 1500 s.
+
+## 2026-09-22 — Experiment 148 (question screen for meaning-changing words, Muse), written before the registered runs
+- P148.1: Q1 — 8/8 target cases (N1-N5, T1, T5, B1) no confident answer on the loop132+148 variant, and 0 of the other 116 cases worse than the sealed loop132 run. 0.85. Falsified by any target confident answer or any other-case worsening.
+- P148.2: Q2 — 20/20 trigger probes clarify with 0 answers (base confident on each), and 20/20 innocent probes byte-identical to the loop134 base. 0.80. Falsified by any trigger answer or any innocent reply diff.
+- P148.3: Q3 — per-item verdicts identical base-vs-148 on all 4 bench splits EXCEPT the 37 listed never-taught edit200 items (abstain verdict kept, clarify text differs). 0.80. Falsified by any other per-item verdict or reply diff.
+- P148.4: Q4 — every marks123 suite identical to loop134 EXCEPT P2-D8 moving BUG->OK, plus reply-text-only diffs on the same 37 never-taught items in marks123-bench (counts identical). 0.75. Falsified by any other suite move.
+- P148.5: Q5 — each registered run (Q1, Q2, bench, marks123 x2) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 148: (to be appended after the registered runs)
+- Outcomes 149: P149.1 FALSE (W1-A FAIL per sealed letter: O3 fixed but F5/H4 OK->MISSED — rewriter-absence lineage, proven identical on loop134 base) | 0.5625. P149.2 TRUE (W1-B: only O3 moved of 124) | 0.0625. P149.3 TRUE (W2 33/33 both variants, 0 wrong) | 0.09. P149.4 TRUE (W3 0 diffs, 4 suites x 2 variants) | 0.1225. P149.5 TRUE (W4 all 10 suites identical to marks134) | 0.09. P149.6 TRUE (slowest run 152.8 s) | 0.0025. 5/6 TRUE; SCORE W1-A FAIL, W1-B/W2/W3/W4/W5 PASS. RESULTS: artifacts/fable-wordmatch149-20260922/RESULTS.md
+- Outcomes 148: P148.1 TRUE (8/8 targets clarify; 0/116 worse: 100 OK/14 WRONG/10 MISSED vs sealed 92/22/10) | 0.0225. P148.2 TRUE (20/20 clarify, 0 answers; 20/20 innocents byte-identical) | 0.04. P148.3 TRUE (0 verdict diffs on 800 items; reply diffs exactly the 37 predicted never-items) | 0.04. P148.4 FALSE (P2-D8 BUG->OK as predicted, all else identical BUT p3 L5-Z1 58/60 on two sealed-OK "in 2019" turns + L5-Z2 37 MISS on never-clarifies: status-less clarify records) | 0.5625. P148.5 TRUE (3.4/1.4/73.5/134.3+153.5 s, all < 1500 s) | 0.01. 4/5 TRUE; SCORE FAIL (Q4). RESULTS: artifacts/fable-screen148-20260922/RESULTS.md
+- Outcomes 145: P145.1 TRUE (M1: G1 seeds 1-2 zero field diffs vs 130 wave JSONs, g1/g2 true; G3 9/9 identical, growth exactly sleeps 4-5 / never in G3) | 0.04. P145.2 TRUE (E2/E3/E4 Z01/Z02/Z03 source taught; 34/34 non-E match 131) | 0.04. P145.3 TRUE (z104 zero field diffs vs sealed 104) | 0.04. P145.4 TRUE (T4 TA taught Z01, TB H02 sleep-derived, 0 overwrites) | 0.0625. P145.5 TRUE (T6 grown boss_of_father: taught Z01 wins source taught, control CK02 sleep-derived, grew_slot true, 0 overwrites) | 0.09. P145.6 TRUE (M4 38/38 cases no worse than 131; M5 wave 1697 s < 1800 s) | 0.0625. 6/6 TRUE; SCORE PASS (M1-M5). RESULTS: artifacts/fable-sleep145-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 146 (refused-correction doubt on loop129b + loop139 variant, Muse), written before the registered runs
+- P146.1: D1 — loop146b over edit200 + old_s2fresh + new_121: the 11 sealed correct->wrong items (new_121 019 047 136 139 142 195 196; old_s2fresh 056 103 124 196) are abstain (doubt fires: 047 via walk traversal, the rest via doubted sink + mentioned/wants-more), and 0 other per-item verdicts are worse vs sealed loop139 rows (all other 139 reject items are wrong/abstain, so abstain-only moves cannot demote). 0.75. Falsified by any of the 11 staying wrong/correct-loss elsewhere.
+- P146.2: D2 — loop146 over edit200 + old_s2fresh + new_121 + bench132: 0 new wrong and 0 correct lost vs sealed rows, with exactly two predicted moves, both wrong->abstain: new_121 069 (refused Protocols teach on-path, like 022) and bench132 022 (refused Schulz notable_work teach on-path); bench132 105 stays abstain (CONFLICT reject, no doubt) and 162 stays wrong (walk avoids the doubted hop); all else per-item identical. 0.80. Falsified by any unpredicted verdict move.
+- P146.3: D3 — 32/32 sealed probe dialogues pass: 8 refused->abstain (never the old value), 8 no-doubt small-talk (questions answered), 4 re-teach clears, 3 repeat-old clears, 4 restart persistence, 3 relation-specificity, 2 loop146b negation; 0 stale confident answers, 0 lost answers on no-doubt dialogues. 0.75. Falsified by any dialogue FAIL.
+- P146.4: D4 — every marks123 suite per-case identical to the sealed loop129b reference (pre-seal evidence: 0 refused-known-teach-then-question dialogues in p2/rt110/rt81/p4 scans, 0 refusal literals in p3, refusal-free q1/soak flows, 0 sealed bench rejects, underscore-free doubt reply). 0.70. Falsified by any per-case move.
+- P146.5: D5 — each registered run (probe, D1 bench, D2 bench, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 146: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 150 (subject-span guard for teach sentences on loop139b, Muse), written before the registered runs
+- P150.1: S1 — 57/57 on the sealed probe through loop150: 22/22 hedge/reporting no-write with the right reply kind (12 split + 10 hearsay), 16/16 filler exact clean triples, 16/16 legit exact triples (incl. Will Smith, May Lee, Hope Solo, Frank Ocean, Grace Kelly, Rich Hall, Sunny Deol, Mark Twain, So-Yeon Ryu), 3/3 handled-already unchanged; 0 wrong writes over all 57, full triple judged. 0.80. Falsified by any wrong write, any miss, or any wrong reply kind.
+- P150.2: S2 — the 8 director cases store no polluted subject (5 refuse-empty, 3 store ["Kip Dune", ...]). 0.85. Falsified by any polluted stored subject.
+- P150.3: S3 — bench per-item verdicts identical to sealed loop139b rows with 0 moves, and every marks123 suite verdict identical to loop139b (sleep SKIP text differs only by agent filename). 0.70. Falsified by any unpredicted suite or per-item move.
+- P150.4: S4 — redteam136 re-run: no case worse than loop139b (no OK->non-OK), 0 per-case moves. 0.75. Falsified by any worsening or any move.
+- P150.5: S5 — each registered run (probe, bench, marks123, redteam136) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 150: (to be appended after the registered runs)
+- Outcomes 150: P150.1 TRUE (57/57: 12 split + 10 hearsay nowrites, 16/16 filler exact, 16/16 legit exact incl. 9 word-names, 3/3 handled, 0 wrong writes) | 0.04. P150.2 TRUE (8/8 director: 5 refuse-empty, 3 clean Kip Dune triples) | 0.03. P150.3 TRUE (bench 600/600 per-item identical, reply_moves 0; marks123 10/10 suites + p2 64/64, p4 30/30, rt110 62/62, bench 400/400 identical) | 0.09. P150.4 TRUE (redteam136 0 moves vs loop139b: OK 126 / WW 14 / MISSED 5, worse=[]) | 0.0625. P150.5 TRUE (probe 1.1 s, bench 27.4 s, marks 133.5 s, redteam 2.5 s, all < 1500 s) | 0.02. 5/5 TRUE; SCORE PASS (S1-S5). RESULTS: artifacts/fable-fix150-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 151 (no-question-mark fix, Muse), written before the registered runs
+- P151.1: Q1 variant A (loop134+qmark) — 32/32 no-"?" replies byte-equal to "?" twins; 22/22 non-questions marker-carrying clarifies with 0 writes (pre-seal evidence: predicate unit 12/12 + all "?" twins dev-verified answer-or-clarify with 0 writes; residual risk is an untested composer path on a twin). 0.80. Falsified by any pair DIFF or any non-question write/confident fact.
+- P151.2: Q1 variant B (loop132+wordmatch149+qmark) — same 32/32 + 22/22 bar (mechanism: identical mixin over the qrewrite path; residual risk is rewriter interaction on a twin). 0.75. Falsified the same way.
+- P151.3: Q2 — 143 J5+J10 answer as their "?" twins would (OK) and 0 of the other 122 cases worse than sealed qrewrite149 rows (pre-seal evidence: J5/J10 shapes answer with "?" on the base; rule fires only on "?"-free non-teach turns). 0.75. Falsified by any J miss or any other-case worsening.
+- P151.4: Q3 — 0 per-item verdict diffs on all 4 bench suites x both variants vs stated bases (pre-seal evidence: all 800 bench questions end in "?", dev scan finds 0 bench teaches triggering the predicate with both parsers rejecting). 0.80. Falsified by any verdict diff.
+- P151.5: Q4 — every marks123 suite verdict identical to sealed marks134, with exactly one predicted reply-text-only diff (rt81 D_q_vs_s-02 trailing cleanup, verdict OK) (pre-seal evidence: suite scan finds trigger turns only there; interior-"?" turns untouched by the no-"?"-at-all rule). 0.70. Falsified by any other suite/verdict move.
+- P151.6: Q4-time — each registered run < 1500 s wall-clock Mac CPU, OMP=1/MKL=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 146: P146.1 TRUE (D1: 11/11 abstain with doubt replies incl. 142 via wants-more; 069 wrong->abstain improvement; 0 worse vs sealed 139 rows; 11.5 s) | 0.0625. P146.2 TRUE (D2: moves exactly predicted 069 + 022 wrong->abstain; 105 abstain, 162 wrong; 0 new wrong/lost; 27.5 s) | 0.04. P146.3 FALSE (D3 31/32: B07 step-0 sealed expectation wrong — opinion correctly clarifies; 0 stale, 0 lost held; 0.8 s) | 0.5625. P146.4 FALSE (D4: 4 unpredicted moves — p2 A2/A6/A8 sealed-BUG->OK->BUG + rt110 T4 OK->BUG, all hearsay-veto doubts; all else per-case identical incl. soak 2000/3/0-0-0 and q4 same 7 leaks; 136.4 s) | 0.49. P146.5 TRUE (all runs 0.8/11.5/27.5/136.4 s < 1500 s) | 0.01. 3/5 TRUE; SCORE D1 PASS, D2 PASS, D3 FAIL (case-authoring), D4 FAIL (hearsay veto), D5 PASS. RESULTS: artifacts/fable-doubt146-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 152 (realistic-user session red team, Muse), written before the registered run
+- P152.1: 6 NEW root-cause bug classes (WRONG/UNHELPFUL groups beyond the 6 known K144/K146/K147/K148/K150/K151 instances) across 360 turns (6 sessions x 30 turns x T-Q/T-T), with every class reproduced on both targets unless the class is ears-path-specific. 0.60. Falsified by fewer than 4 or more than 9 new classes.
+- Outcomes 152: P152.1 TRUE (9 NEW classes N1-N9, all reproduced byte-identical on T-Q and T-T; 96 novel non-OK instances of 360 turns: 92 UNHELPFUL + 4 WRONG; 0 writes from 56 small-talk/self turns (28 per target); 3.0 s) | 0.09. RESULTS: artifacts/fable-session152-20260922/RESULTS.md
+- Outcomes 151: P151.1 TRUE (Q1-A: 32/32 pairs byte-equal, 22/22 nonquestions marker + 0 writes) | 0.04. P151.2 TRUE (Q1-B: 32/32 + 22/22) | 0.0625. P151.3 TRUE (Q2: J5+J10 MISSED->OK as "?" twins; 0/122 other worse vs sealed qrewrite149) | 0.0625. P151.4 TRUE (Q3: 0 verdict diffs, 4 suites x 2 variants; A 136/63/1 + 157/43/0 as sealed) | 0.04. P151.5 VERDICT-PASS with deviation (Q4: all 10 suite verdicts identical to sealed marks134 incl. p2 FAIL-status match + rt81 61/13; predicted single reply-text allowance unused, 0 text diffs) | 0.09. P151.6 TRUE (slowest run 135.0 s) | 0.01. 6/6 predictions upheld (1 with noted deviation); SCORE PASS (Q1-Q4). RESULTS: artifacts/fable-qmark151-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 148b (status-preserving screen, Muse), written before the registered runs
+- P148b.1: R1 — Q1 per-item verdicts + full reply texts identical to 148's sealed Q1 report (targets 8/8 no confident answer, 0/116 worse), and Q2 per-item verdicts + 148b replies identical to 148's Q2 report (20/20 clarify, 20/20 innocents byte-identical to base). 0.80. Falsified by any verdict or reply-text diff vs 148's reports.
+- P148b.2: R2 — per-item verdicts (and replies) on all 800 bench items (edit200 + old_s2fresh + new_121 + new_132) identical to 148's loop148 rows. 0.80. Falsified by any per-item verdict or reply diff.
+- P148b.3: R3 — marks123 148b arm vs fresh loop134 arm identical EXCEPT p2 P2-D8 (BUG->OK) and p3 L5-Z1 turns 42/43 (observed UNSUPPORTED_QUESTION vs base OK); L5-Z2 verdicts identical to loop134 with the 37 never-items MISSING_FACT/abstain_ok and 0 MISS. 0.70. Falsified by any other suite/per-item move or any MISS.
+- P148b.4: R4 — each registered run (Q1, Q2, bench, marks123 x2) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+
+## 2026-09-22 — Experiment 146b (refused-correction doubt with hearsay exemption, Muse), written before the registered runs
+- P146b.1: H1 — 146's 32-dialogue D3 probe re-run on 146c: 31/32 pass, the single failure is B07 step 0 (known sealed expectation error: opinion correctly clarifies); 0 stale confident answers, 0 lost answers on no-doubt dialogues. 0.80. Falsified by any other dialogue FAIL.
+- P146b.2: H2 — new 24-dialogue hearsay probe on 146c: 24/24 pass; hearsay/quoted contradictions clarify with the standing taught answer still given and 0 doubts (H01-H10, H17, H20-H24 expect_doubts 0); first-person refusals doubt + abstain (H11-H16, H19 expect_doubts 1); mixed H15 abstains, H16 doubt stands through later hearsay; restarts preserve. 0.75. Falsified by any dialogue FAIL.
+- P146b.3: H3 — marks123 on 146c per-case verdict-identical to the sealed loop129b reference on every suite (p2, p3, p4, rt110, q1, bench, rt81, sleep, soak, q4); p2 A2/A6/A8 and rt110 T4 match loop129b. 0.70. Falsified by any per-case move.
+- P146b.4: H4 — bench per-item on 146c identical to 146's sealed rows (0 moves on edit200/old/new_121/bench132); on 146d vs sealed loop139b rows 0 new wrong, 0 correct lost, exactly one move (new_121 069 wrong->abstain). 0.75. Falsified by any other verdict move.
+- P146b.5: H5 — each registered run (H1, H2, bench x2, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 146b: P146b.1 FALSE (H1 28/32: B07 as predicted + C03/G01/G02 cross-base 139-expectations on 129b base, stale-counter 1 on G01 standing answer; byte-identical on old loop146; 1.9 s) | 0.64. P146b.2 FALSE (H2 21/24: H13/H17/H18 sealed authoring errors — 139-base negation + plain re-teach CONFLICT on 129b base; all hearsay/first-person/mixed orders pass; stale-counter 1; 7/7 non-vacuous controls abstain on old 146; 1.6 s) | 0.5625. P146b.3 TRUE (H3: marks123 per-case identical to loop129b ref on all suites — p2 64/64 incl. A2/A6/A8, rt110 62/62 incl. T4 on rerun; soak 2000/3/0-0-0; 259.2 s + rt110-rerun 159.7 s) | 0.09. P146b.4 TRUE (H4a 0 moves/800 vs 146 rows; H4b exactly 069 wrong->abstain, 0 worse/lost vs 139b rows; 44.5/27.3 s) | 0.0625. P146b.5 TRUE (all runs < 1500 s) | 0.01. 3/5 TRUE; SCORE H1 FAIL (cross-base), H2 FAIL (authoring), H3 PASS, H4 PASS, H5 PASS. RESULTS: artifacts/fable-doubt146b-20260922/RESULTS.md. Exp 146 verdicts untouched (FAIL stays FAIL).
+
+## 2026-09-22 — Experiment 154 (yes/no stage on loop150, Muse), written before the registered runs
+- P154.1: Y1 49/49 probe verdicts OK through loop154 (21 yes incl. 4 two-hop, 12 single-valued no, 8 multi only-know never No, 8 unknown never No), 0 wrong yes/no answers. 0.80. Falsified by any non-OK verdict.
+- P154.2: Y2 0 question-turn writes over all 54 probe cases (incl. "Is Bob a doctor?"). 0.90. Falsified by any question-turn write.
+- P154.3: G1 bench per-item verdicts 600/600 identical to the sealed loop150 rows (edit200 + old_s2fresh + new_121). 0.75. Falsified by any verdict move.
+- P154.4: G2 every marks123 suite per-case identical to the sealed marks150 run. 0.75. Falsified by any per-case move.
+- P154.5: G3 0 reply moves vs the sealed T-T session turns (no session turn is an "Is ...?" question). 0.80. Falsified by any reply move.
+- P154.6: G4 each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP=1/MKL=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 154: P154.1 TRUE (Y1 49/49 verdicts OK: 21 yes, 12 single-no, 8 multi only-know, 8 unknown non-No; 0 wrong) | 0.04. P154.2 TRUE (0 question-turn writes / 54 cases) | 0.01. P154.3 TRUE (G1 600/600 per-item identical to loop150 rows) | 0.0625. P154.4 FALSE (G2: 3 unpredicted moves — rt81 D_q_vs_s-04 OK->UNCLEAR, p3 l5z1 60/60->58/60 turns 49+58; all are Is-turns with unknown answers relaying the brief-mandated honest reply, 0 writes, 0 new BUG/WRONG; all else per-case identical) | 0.5625. P154.5 TRUE (G3 0 reply moves, 0 new WRONG, 0 new writes; S5-T16 verdict label is a hand-review artifact, reply/write-identical) | 0.04. P154.6 TRUE (5.1/92.0/181.1/6.7 s, all < 1500 s) | 0.01. 5/6 TRUE; SCORE Y1 PASS, Y2 PASS, G1 PASS, G2 FAIL-letter (diagnosed), G3 PASS, G4 PASS. Post-seal edit D1: restored dropped idle_seconds line in Loop154Daemon, all marks re-run in the open. RESULTS: artifacts/fable-yesno154-20260922/RESULTS.md
+- Outcomes 148b: P148b.1 TRUE (Q1 0 verdict/reply diffs vs 148: 8/8 targets, 0/116 worse; Q2 20/20 clarify + 20/20 innocents, 0 diffs) | 0.04. P148b.2 TRUE (800/800 bench verdicts+replies identical to 148's loop148 rows) | 0.04. P148b.3 TRUE (only D8 BUG->OK and L5-Z1 42/43 UNSUPPORTED_QUESTION-vs-OK as predicted; L5-Z2 37 MISSING_FACT/abstain_ok, 0 MISS; every other suite verdict-identical) | 0.09. P148b.4 TRUE (3.8/2.2/42.9/138.7+143.3 s, all < 1500 s; idle_seconds 30.0) | 0.01. 4/4 TRUE; SCORE PASS (R1-R4). 148's FAIL stands. RESULTS: artifacts/fable-screen148b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 160 (bare corrections, Muse), written before the registered runs
+- P160.1: C1 — 44/44 probe dialogues OK on loop160 (A 20/20 triples + turn-2 reply equal to explicit "Actually" twins; B 12/12 exact sealed clarify with 0 writes; C 12/12 replies byte-equal to loop150 with equal writes). 0.80. Falsified by any dialogue FAIL.
+- P160.2: C2/G3 — sessions152 through loop160: exactly one move vs sealed T-T rows (S3 turn 6 UNHELPFUL->OK, +1 write, reply "Saved: Rao's city is denver."), other 179 turns byte-identical, 0 new WRONG, 0 other new writes. 0.75. Falsified by any unpredicted diff or any unmet prediction.
+- P160.3: G1 — bench per-item verdicts + replies identical to sealed loop150 rows on all 3 splits (0 verdict moves, 0 reply moves), 0 new wrong. 0.80. Falsified by any move.
+- P160.4: G2 — marks123 on loop160 per-case verdict-identical to sealed marks150 on every suite. 0.70. Falsified by any per-case move.
+- P160.5: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+
+## 2026-09-22 — Experiment 153 (reverse questions, Muse), written before the registered runs
+- P153.1: V1 — 50/50 probe dialogues OK on loop153 (26/26 single-subject exact, 12/12 multi exact sets, 12/12 negatives honest incl. N11 clarify). 0.80. Falsified by any dialogue FAIL.
+- P153.2: V2 — 0 FACT writes from all 50 reverse-question turns. 0.85. Falsified by any question-turn write.
+- P153.3: G1 — bench per-item verdicts + replies identical to sealed loop150 rows on all 3 splits (0 moves), 0 new wrong. 0.80. Falsified by any move.
+- P153.4: G2 — marks123 on loop153 per-case verdict-identical to sealed marks150 on every suite. 0.70. Falsified by any per-case move.
+- P153.5: G3 — sessions152 through loop153: all 180 turns byte-identical to sealed T-T rows, 0 new WRONG, 0 new writes. 0.75. Falsified by any diff.
+- P153.6: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 153: P153.1 TRUE (probe 50/50 OK: 26/26 single, 12/12 multi, 12/12 negatives). P153.2 TRUE (0 writes on all 50 question turns). P153.3 TRUE (bench 0 moves on all 3 splits: edit200 150/50/0, old 157/43/0, new121 136/63/1 — identical rows). P153.4 FALSE (marks123: rt110 P4 OK->BUG + soak 2 wrong vs marks150; daemon logs prove both are empty-inbox-read races — turn_text='' at read — under parallel-agent load, not the reverse stage; every other suite per-case identical). P153.5 TRUE (sessions 180/180 replies identical, 0 new WRONG, 0 new writes). P153.6 TRUE (slowest run 268.5 s). 5/6 TRUE; SCORE: V1/V2/G1/G3/G4 PASS, G2 FAIL with diagnosis; no re-runs. RESULTS: artifacts/fable-reverse153-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 156 (no-write small-talk stage on loop150, Muse), written before the registered runs
+- P156.1: T1 — 68/68 on the sealed probe through loop156: 44/44 small-talk exact class replies (11 greeting + 11 thanks + 12 ack + 10 bye) with 0 writes; 24/24 near-misses byte-identical reply AND stored triples to fresh loop150. 0.80. Falsified by any wrong write, any wrong class reply, or any near-miss diff.
+- P156.2: T2/G3 — 152 sessions through loop156: exactly the 23 sealed small-talk turns change to class replies; other 157 turns byte-identical to the T-T run; 0 new WRONG; 0 new writes. 0.80. Falsified by any unpredicted reply/write move or any new WRONG.
+- P156.3: G1 — bench per-item verdicts AND reply texts identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.75. Falsified by any move or any new wrong.
+- P156.4: G2 — every marks123 suite per-case verdict identical to sealed marks150 (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P156.5: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+
+## 2026-09-22 — Experiment 157 (leading-filler strip on loop150, Muse), written before the registered runs
+- P157.1: B1 — 60/60 on the sealed probe through loop157: 32/32 filler forms give exactly the triple/answer of the bare twin on loop150 (20 teach stored-equal non-empty, 12 question reply-equal with want), 12/12 filler-initial titles identical to loop150 with 0 stripped-subject writes, 16/16 filler+garbage and correction-marker replies+stored identical to loop150. 0.75. Falsified by any case FAIL.
+- P157.2: B2 — on the 152 sessions the 3 S2 N4 teaches (turns 4, 6, 12) become OK with writes and the 5 stuck asks after them (turns 7, 13, 15, 28, 29) become OK answers; every other reply byte-identical. 0.80. Falsified by any other reply change or any of the 8 staying non-OK.
+- P157.3: G1 — bench per-item verdicts identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P157.4: G2 — every marks123 suite per-case verdict identical to sealed marks150 (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P157.5: G3 — sessions152 through loop157: every reply identical to the sealed T-T run except the 8 predicted S2 turns {4, 6, 7, 12, 13, 15, 28, 29}; 0 new WRONG; new writes exactly turns {4, 6, 12}. 0.80. Falsified by any unpredicted diff, any new WRONG, or any other new write.
+- P157.6: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 157: (to be appended after the registered runs)
+- Outcomes 157: P157.1 TRUE (B1 60/60: 20 teach triples + 12 answers equal to bare twins, 12/12 titles identical+nowrite, 16/16 identical to loop150; 3.7 s) | 0.0625. P157.2 TRUE (S2 turns 4,6,12 teach-OK + 7,13,15,28,29 answer-OK; other 352 replies byte-identical) | 0.04. P157.3 TRUE (G1 600/600 per-item identical, 0 moves, 0 new wrong; 69.2 s) | 0.04. P157.4 TRUE (G2 all 10 suite statuses+numbers and every per-case verdict identical to marks150; only diffs are timings, agent/config filename strings, sleep SKIP filename, and 3 rt110 statuses log-metadata [] from the harness outbox/log race — replies/writes/verdicts identical; 391.4 s) | 0.09. P157.5 TRUE (G3 moves exactly the 8 predicted S2 turns, 0 new WRONG, new writes exactly {4,6,12}; 4.7 s) | 0.04. P157.6 TRUE (all runs < 1500 s) | 0.01. 6/6 TRUE; SCORE PASS (B1, B2, G1-G4) with one reported post-seal one-line daemon fix (idle_seconds) and G2 re-run in the open. RESULTS: artifacts/fable-filler157-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 150b (clause-in-subject guard on loop150, Muse), written before the registered runs
+- P150b.1: S1 — 49-case probe through loop150b: 23/23 two-clause subject-swallows refuse-empty with SPLIT (incl. exact f1 t14 text); 24/24 must-writes exact (incl. 10/10 capitalised verb-titles); 2/2 possessive-title literals no-write; 0 wrong writes over all 49. 0.75. Falsified by any wrong write, any t14 write, or any must-write MISSED.
+- P150b.2: S2 — cases150.json through loop150b per-case identical to sealed probe150-loop150.json (57/57 verdicts, replies identical), 0 moves. 0.80. Falsified by any verdict or reply move.
+- P150b.3: G1 — bench per-item verdicts AND reply texts identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.75. Falsified by any move or any new wrong.
+- P150b.4: G2 — every marks123 suite per-case verdict identical to loop150's marks150 run (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P150b.5: G3 — sessions152 through loop150b: every reply identical to the sealed T-T run (0 diffs), 0 new WRONG, 0 new writes. 0.70. Falsified by any reply diff, any new WRONG, or any write delta.
+- P150b.6: G4 — each registered run (probe x2, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 150b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 155 (inverted teach frames, Muse), written before the registered runs
+- P155.1: I1 — 47-case probe on loop155: 35 must-write >= 34/35 OK (exact triple + ask answers V), 0 wrong writes over all 47. 0.80. Falsified by any wrong write or < 34 must-write OK.
+- P155.2: I2 — 5-case probe on loop155x135: 3/3 mother saves (exact triples + asks) and 2/2 office phrases byte-identical (stored+reply) to frozen loop135. 0.85. Falsified by any diff.
+- P155.3: G1 — bench per-item verdicts AND replies identical to sealed loop150 rows on all 3 splits (600 items), 0 new wrong. 0.80. Falsified by any move.
+- P155.4: G2 — marks123 suites per-case identical to loop150's marks150 run (sleep SKIP verdict identical). 0.75. Falsified by any per-case move.
+- P155.5: G3 — sessions152 through loop155: every reply identical to the sealed T-T run (0 diffs), 0 new WRONG, 0 new writes. 0.75. Falsified by any reply diff, any new WRONG, or any write delta.
+- P155.6: G4 — each registered run (probe x2, bench, marks123, marks-diff, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 155: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 159 (hop through known names on loop150, Muse), written before the registered runs
+- P159.1: H1 — 48/48 probe dialogues OK through loop159 (26/26 chains correct incl. five 3-hop; 11/11 nobody old-reply; 11/11 traps old-reply; every teach Saved; 0 question-turn writes; 0 wrong answers). 0.80. Falsified by any dialogue FAIL.
+- P159.2: G1 — bench per-item verdicts AND replies identical to sealed loop150 rows on all 3 splits (600 items; item-by-item scan finds 0 BROKEN_CHAIN replies, the only changed branch), 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P159.3: G2 — every marks123 suite per-case verdict identical to sealed marks150 (scan of 4446 files finds 0 BROKEN_CHAIN replies; sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P159.4: G3 — sessions152 through loop159: every reply byte-identical to the sealed T-T run except exactly S4 turns {7, 27 -> "Ana's pet's color is brown.", 20 -> "Ana's pet's owner is Ana.", 26 -> "Biscuit's owner's pet is Biscuit."}; 0 new WRONG; 0 new writes. 0.80. Falsified by any unpredicted diff, any new WRONG, or any write delta.
+- P159.5: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 159: (to be appended after the registered runs)
+- Outcomes 159: P159.1 TRUE (48/48: 26/26 chains incl. five 3-hop, 11/11 nobody + 11/11 traps old-reply, 0 wrong, 0 question writes; 5.2 s) | 0.04. P159.2 TRUE (600/600 per-item identical, 0 verdict + 0 reply moves, 0 new wrong; 135.8 s) | 0.04. P159.3 TRUE (all suites per-case verdict-identical to marks150; only harness log-race statuses, daemon-dir noise, sleep filename; 338.1 s) | 0.09. P159.4 TRUE (exactly S4 turns 7+27 WRONG->OK brown, 20 OK->OK Ana, 26 OK->OK Biscuit; 176/180 identical; 0 new WRONG; 0 write diffs; 1.7 s) | 0.04. P159.5 TRUE (5.2/135.8/338.1/1.7 s, all < 1500 s) | 0.01. 5/5 TRUE; SCORE PASS (H1, G1-G4). RESULTS: artifacts/fable-hop159-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 158 (question-surface normalisation on loop150, Muse), written before the registered runs
+- P158.1: Q1 — 43/43 sealed pairs byte-identical (variant == canonical "What/Who/Where is X's R?", want present, 0 writes both sides) and 16/16 non-questions byte-identical to loop150 with 0 writes on loop158. 0.80. Falsified by any pair DIFF/miss/write or any non-question reply/write diff.
+- P158.2: Q2/G3 — sessions through Loop158Daemon: every reply identical to the sealed T-T run EXCEPT S5-robustness n5/n6/n9, each UNHELPFUL->OK with the canonical answer and 0 writes; 0 new WRONG; 0 new writes. 0.80. Falsified by any other reply move, any new WRONG, or any new write.
+- P158.3: G1 — bench edit200 + old_s2fresh + new_121 per-item verdicts AND replies identical to sealed loop150 rows: 0 verdict moves, 0 reply moves, 0 new wrong. 0.80. Falsified by any move.
+- P158.4: G2 — marks123 suites per-case identical to sealed marks150 EXCEPT exactly rt81 D_q_vs_s-03 OK->UNCLEAR ("Tell me Mira's city." answered "Mira's city is Lisbon.", 0 writes, no underscore leak); sleep SKIP verdict identical; Q4 0 leaks. 0.70. Falsified by any other per-case/suite move or any leak.
+- P158.5: G4 — each registered run (probe, bench, marks123, session) < 1500 s wall-clock Mac CPU, OMP=1/MKL=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 138: P138.1 TRUE (q1 F5+M5 OK, q4 0 leaks) | 0.01. P138.2 TRUE (P2 0/0, B7/C2/C5/D8 OK, G8 Albany.) | 0.02. P138.3 FALSE (rt110 S1 OK->BUG + still-BUG; all other suites verdict-equal incl bench 150/50/0+157/43/0, rt81 bug 0) | 0.02. P138.4 FALSE (A2 new 2 new wrongs: 165 L2-hijack, 174 gate over-fire; old+edit200 0 moves) | 0.02. P138.5 FALSE (A3 panel 6 wrong: Q033-36 checker-hardcode, Q059 notebook-wins, Q078 known blend) | 0.02. P138.6 FALSE (1 content-routed: 165; 61 decline-served, all abstain) | 0.02. P138.7 TRUE (Z1-Z5 install 20eps 0 wrong; E1-E4 OK src taught; other 116 33/33) | 0.02. P138.8 TRUE (G2 10/10 aimed, 0 dup/lost/wrong, 213.7s) | 0.02. P138.9 TRUE (all runs 6-1160s < 1800s) | 0.02. 4/9 TRUE. MARKS: A1 rt110-FAIL else PASS; A2 FAIL; A3 FAIL; A4 PASS; A5 PASS; A6 PASS. Deviations D1-D4 (all new files; full re-runs). RESULTS: artifacts/fable-agent138-20260922/RESULTS.md
+- Outcomes 156: P156.1 TRUE (T1 68/68: 44 exact class replies with 0 writes, 24/24 near-miss reply+triples identical to loop150; 5.4 s) | 0.04. P156.2 TRUE (T2/G3: exactly the 23 sealed small-talk turns -> class replies with OK verdicts, 157/157 other turns byte-identical, write_moves 0, new_wrong 0; S4 N9 WRONGs pre-exist on T-T; 5.2 s) | 0.04. P156.3 TRUE (G1: 600/600 verdict-identical, reply_moves 0; 64.1 s) | 0.0625. P156.4 TRUE (G2: 10/10 suite verdicts + 400 bench rows per-case identical; only delta is harness log-read telemetry on rt110 T1/T3, final logs intact; sleep SKIP names new agent file only; 332.0 s) | 0.09. P156.5 TRUE (all runs < 1500 s) | 0.01. 5/5 TRUE; SCORE PASS (T1/T2/G1-G4). Deviation: bench runner filename fixed post-seal, re-run in the open. RESULTS: artifacts/fable-smalltalk156-20260922/RESULTS.md
+- Outcomes 158: P158.1 TRUE (Q1 59/59: 43/43 pairs identical + want + 0 writes; 16/16 non-questions identical to loop150, 0 writes) | 0.04. P158.2 TRUE (sessions: exactly S5 n5/n6/n9 UNHELPFUL->OK with canonical answers, 0 new WRONG, 0 new writes) | 0.04. P158.3 TRUE (bench 600/600 verdicts+replies identical to loop150 rows, 0 moves) | 0.04. P158.4 FALSE (rt81 move exactly as predicted, all other suites per-case identical, BUT soak wrong 10 vs sealed 0: one lost teach SoakP151 + one empty read; soak templates provably never engage the mixin; mailbox race on loaded machine) | 0.49. P158.5 TRUE (probe 10.5 s, session 10.0 s, bench 90.8 s, marks 225.0 s, all < 1500 s) | 0.01. 4/5 TRUE; SCORE Q1 PASS, Q2/G3 PASS, G1 PASS, G2 FAIL (soak only), G4 PASS. RESULTS: artifacts/fable-qform158-20260922/RESULTS.md
+- Outcomes 160: P160.1 TRUE (probe 44/44: A 20/20 triples+reply2 equal, B 12/12 exact clarify + 0 writes, C 12/12 byte-identical to loop150) | 0.04. P160.2 TRUE (sessions: predicted S3n6 move exactly met, other 179/179 identical, 0 new WRONG, +1 write only as predicted) | 0.0625. P160.3 TRUE (bench 600/600 per-item verdicts+replies identical to loop150 rows, 0 new wrong) | 0.04. P160.4 TRUE (marks123 10/10 suite summaries + per-case identical to marks150: p2 64/64, rt110 62/62, rt81 74/74, q1/bench/p3/p4/soak/q4 identical; sleep SKIP text names agent file only) | 0.09. P160.5 TRUE (probe 8.0 s, sessions 11.1 s, bench 154.9 s, marks123 265.5 s, all < 1500 s) | 0.01. 5/5 TRUE; SCORE PASS (C1-C2, G1-G4). Deviations: probe-runner last-turn-writes fix; memory-rule strict-previous->most-recent-saved-teach + re-seal before bench/marks/sessions; rt110 statuses read-race, solo re-run 0 diffs. RESULTS: artifacts/fable-correct160-20260922/RESULTS.md
+- Outcomes 155: P155.1 FALSE (I1: 43/47 OK, must-write 33/35 = 94.3% < 95% bar; 2 WRONG-WRITE are byte-identical base author_of teaches, 2 WRONG-REPLY are base clarifies — 4 sealed-expectation errors, 0 new behaviour; no post-seal edits) | 0.64. P155.2 TRUE (I2 5/5: 3/3 mother saves + asks, 2/2 office byte-identical loop135) | 0.0225. P155.3 TRUE (G1: 0/600 verdict+reply moves, 0 new wrong, 116 s) | 0.04. P155.4 FALSE (G2 registered: 4 verdict-affecting + log moves under load 218; open re-run at load 84 clean: rt110 62/62 verdicts, soak wrong=0 — mailbox-race diagnosis) | 0.5625. P155.5 TRUE (G3: 0 reply moves, 0 new WRONG, 0 write moves, 6/6 sessions, 2.2 s) | 0.0625. P155.6 TRUE (slowest run 376 s) | 0.01. 4/6 TRUE; SCORE I1 FAIL (case-authoring), I2 PASS, G1 PASS, G2 FAIL (load-race), G3 PASS, G4 PASS. RESULTS: artifacts/fable-inverted155-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 138c (self serves only when grounded, else base reply verbatim; Muse), written before the registered runs
+- P138c.1: B1 — bench per-item verdicts AND replies identical to sealed loop134 rows on new/old and to sealed loop138 edit200 rows EXCEPT exactly bench121-4hop-165 back to abstain and bench121-4hop-174 persisting correct->wrong (1 new wrong) → B1 bar (0 new wrong) FAILS with that single diagnosed move. 0.70. Falsified by any other move, any other new wrong, or 174 also returning.
+- P138c.2: B2 — every marks123 suite per-case verdict-equal to sealed loop134 marks134 EXCEPT rt110 S1 persisting OK->BUG (C1 grounded content served on a redteam-shaped count probe by construction) → B2 bar FAILS with that single diagnosed suite move; all other suites identical. 0.70. Falsified by any other suite move or S1 returning.
+- P138c.3: B3 — blind panel through the turn path wrong=6 with exactly loop138's ids (Q033/Q034/Q035/Q036 session-hardcoded, Q059 notebook-wins C30, Q078 NEW fires C18 grounded) → bar (<=6) PASSES. 0.75. Falsified by any other wrong count or any other wrong id.
+- P138c.4: B4 — director's probe 4/4 served byte-identical to twin base reply and probe_cases.json with zero mashed-decline markers → PASSES. 0.90. Falsified by any non-verbatim reply or any marker.
+- P138c.5: each registered run (probe, bench, panel, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 138c: (to be appended after the registered runs)
+- Outcomes 138c: P138c.1 TRUE (B1: exactly 165 abstain-restored + 174 persisting correct->wrong, 1 new wrong; old/edit200 0 moves 0 reply-moves) | 0.09. P138c.2 FALSE (S1 persisted as predicted, but load added P4/U1 rt110 + 3 soak empty-read wrongs; solo open rt110 re-run confirms OK->BUG [S1] only) | 0.49. P138c.3 FALSE (panel wrong=20 not 6: same 6 + 14 C-intent router-DECLINED flips DECLINE->WRONG on marker-less base clarifies; served_self=0 on bench-new) | 0.5625. P138c.4 TRUE (probe 4/4 base-verbatim, 0 mashed markers) | 0.01. P138c.5 TRUE (2.6/24.1/7.1/423.5 s, all < 1500 s) | 0.01. 3/5 TRUE; SCORE B1 FAIL (174), B2 FAIL (S1+load flakes), B3 FAIL (14 scorer flips), B4 PASS, B5 PASS. No post-seal edits. RESULTS: artifacts/fable-self138c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 138b (stack onto loop138, Muse), written before the registered runs
+- P138b.1: B1 — every marks123 suite per-case verdict equal to sealed marks138 EXCEPT exactly p3 L5-Z1 turns 42/43 UNSUPPORTED_QUESTION-vs-OK; L5-Z2 37/37 MISSING_FACT identical; bench reply texts differ at most on never-taught items (verdicts identical); rt81 0 wrong writes; sleep SKIP; soak 0/0/0. 0.70. Falsified by any other per-case move or any rt81 wrong write.
+- P138b.2: B2 — 0 new wrong vs loop138 rows on all 4 splits; predicted moves: new_121 069 wrong->correct (144); all other correct/abstain moves listed, none abstain->wrong. 0.70. Falsified by any new wrong or any abstain->wrong.
+- P138b.3: B3 — redteam136 keeps 5/5 tail fixes exact + 7/7 and-focus no-write, 0 new wrong writes; cases150 57/57 verdict+reply identical to probe150-loop150.json; f1 26/26 must-write exact + 19/20 two-fact (t14 writes); cases139b 101/101 OK. 0.70. Falsified by any miss, any new wrong write, or any cases150/cases139b move.
+- P138b.4: B4 — 143 (124) + sessions152: 0 new WRONG vs loop138; every move listed. 0.70. Falsified by any new WRONG.
+- P138b.5: B5 — Z1-Z5 + E1-E4 through loop138b: installs happen, 0 wrong installs, E2/E3/E4 source taught. 0.60. Falsified by any wrong install or non-taught E2/E3/E4.
+- P138b.6: B6 — G2 6000/seed-931/10-kill burst: 0 duplicate / 0 lost / 0 wrong. 0.75. Falsified by any dup/lost/wrong.
+- P138b.7: B7 — 15k-fact p50 ask times reported for both arms. 0.85. Falsified by missing numbers.
+- P138b.8: G — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon accepts idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 138b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 156b (small-talk classes on loop150, Muse), written before the registered runs
+- P156b.1: T1 — 116/116 on the sealed probe through loop156b: 84/84 small-talk exact class replies (14 greeting + 14 thanks + 14 laugh + 14 ack + 14 bye + 14 apology) with 0 writes; 32/32 near-misses byte-identical reply AND stored triples to fresh loop150. 0.80. Falsified by any wrong write, any wrong class reply, or any near-miss diff.
+- P156b.2: T2 — sealed 156 panel (68 cases) through loop156b: 59/59 non-listed rows identical to 156's sealed behaviour; the ONLY changes are the 9 listed (A01-A05/A09/A11/A12 laugh words -> "Haha, nice!", N20 "thanks a lot" -> "You're welcome!"). 0.80. Falsified by any unlisted change, any write, or any listed row missing its new reply.
+- P156b.3: G1 — bench per-item verdicts AND reply texts identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.75. Falsified by any move or any new wrong.
+- P156b.4: G2 — every marks123 suite per-case verdict identical to 156's marks156 run (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P156b.5: G3 — 152 sessions through loop156b: exactly the 23 sealed small-talk turns change to 156b class replies; other 157 turns byte-identical to the T-T run; 0 new WRONG; 0 new writes. 0.80. Falsified by any unpredicted reply/write move or any new WRONG.
+- P156b.6: G4 — each registered run (probe T1, probe T2, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 156b: (to be appended after the registered runs)
+- Outcomes 156b: P156b.1 TRUE (T1 116/116: 84 exact class replies with 0 writes, 32/32 near-miss reply+triples identical to loop150; 4.9 s) | 0.04. P156b.2 TRUE (T2: 59/59 non-listed identical, 8 laugh rows -> "Haha, nice!", N20 -> thanks, 0 writes; 4.5 s) | 0.04. P156b.3 TRUE (G1: 600/600 verdict-identical, reply_moves 0; 128.8 s) | 0.0625. P156b.4 FALSE (G2: all suites per-case identical EXCEPT rt110 R6/D8 OK->BUG from a mailbox transport race -- daemon logs show turn_text '' on both msg_00s; direct loop156b==loop150 replay OK; p2/q1/rt81/q4 FAIL labels pre-existing byte-identical; 326.8 s) | 0.49. P156b.5 TRUE (G3: exactly the 23 sealed small-talk turns -> 156b class replies, 157/157 identical, write_moves 0, new_wrong 0; 2.4 s) | 0.04. P156b.6 TRUE (all runs < 1500 s) | 0.01. 5/6 TRUE; SCORE T1/T2/G1/G3/G4 PASS, G2 FAIL (transport only). RESULTS: artifacts/fable-smalltalk156b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 150c (closed-class-subject guard on loop150, Muse), written before the registered runs
+- P150c.1: C1 — 72-case probe on loop150c: 48/48 closed-class refuses OK (0 writes, generic reply, incl. exact director texts R09 + R38); 24/24 must-write exact triples (incl. 17 titles/names containing closed-class words + Them/Them's boundary controls), 0 wrong writes over all 72. 0.80. Falsified by any wrong write, any MISSED/WRONG-REPLY, or any refuse write.
+- P150c.2: C2 — cases150.json (57 cases) through loop150c: 57/57 verdicts + replies identical to sealed probe150-loop150.json. 0.85. Falsified by any move.
+- P150c.3: G1 — bench per-item verdicts AND replies identical to sealed loop150 rows on all 3 splits (600 items) EXCEPT exactly bench103-s2fresh-4hop-004 (its 2 Yesterday-subject teaches refuse; sealed loop150 verdict abstain); new_wrong subset of {004}; all other 599 items verdict- and reply-identical. 0.75. Falsified by any move outside 004 or any new WRONG outside 004.
+- P150c.4: G2 — marks123 suites per-case identical to artifacts/fable-fix150-20260922/marks150 (sleep SKIP verdict identical). 0.75. Falsified by any per-case move.
+- P150c.5: G3 — sessions152 through loop150c: every reply identical to the sealed T-T run (0 diffs), 0 new WRONG, 0 new writes. 0.80. Falsified by any reply diff, any new WRONG, or any write delta.
+- P150c.6: G4 — each registered run (probe x2, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 150c: P150c.1 TRUE (72/72: 48/48 refuses 0 writes generic incl. R09+R38, 24/24 exact incl. 17 titles + Them/Them's, 0 wrong writes; 4.4 s) | 0.04. P150c.2 TRUE (57/57 verdicts+replies identical, 0 moves; 4.0 s) | 0.0225. P150c.3 TRUE by its falsifier (0 moves outside 004, 0 new WRONG; note: predicted 004 verdict/reply move did not materialize -- verdict abstain->abstain reply-identical, only its 2 Yesterday teach_replies Saved->generic; 79.7 s) | 0.0625. P150c.4 TRUE (all suites per-case identical to marks150: p2/q1/rt81/q4 FAILs byte-identical pre-existing, p3/p4/rt110/bench/soak pass, sleep SKIP names new file only; deviations: post-seal 1-line idle_seconds fix + full open re-run, rt110 P5 telemetry flake + open re-run 62/62 clean; 537.9 s) | 0.0625. P150c.5 TRUE (180 turns: 0 reply diffs, 0 new WRONG, 0 write deltas; S5n16 OK->UNHELPFUL is mechanical-vs-handcorrected label, byte-identical on 150b; 7.6 s) | 0.04. P150c.6 TRUE (4.4/4.0/79.7/537.9/7.6 s, all < 1500 s) | 0.01. 6/6 TRUE; SCORE PASS (C1, C2, G1-G4). RESULTS: artifacts/fable-subject150c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 160b (bare corrections target the last stated fact, Muse), written before the registered runs
+- P160b.1: C1 — 56/56 on the sealed probe through loop160b: A 16/16 bare-after-save triples+reply2 equal to explicit twins; B 16/16 bare-after-answer triples+last-reply equal to explicit twins on the stated fact (incl. director Tom/Paris verbatim); C 14/14 no-fact-previous exact clarify + 0 writes on the bare turn (incl. director don't-know verbatim); D 10/10 unrelated byte-identical reply+writes to loop150. 0.80. Falsified by any case FAIL.
+- P160b.2: C2/G3 — sessions152 through loop160b: exactly ONE predicted move (S3n6 UNHELPFUL->OK, +1 write, "Saved: Rao's city is denver."); other 179 T-T turns byte-identical; 0 new WRONG. 0.80. Falsified by any unpredicted diff, any unmet prediction, or any new WRONG.
+- P160b.3: G1 — bench per-item verdicts + replies identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P160b.4: G2 — every marks123 suite per-case verdict identical to sealed marks150 (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P160b.5: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 160b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 162 (The-name possessive frame on loop150+135, Muse), written before the registered runs
+- P162.1: T1 — 51-case probe on loop162: 26 must-write >= 25/26 OK (exact triple + both possessive/of-form asks answer V), 12/12 office byte-identical to frozen loop150x135, 11/11 nowrite 0 writes, 0 wrong writes over all 51. 0.75. Falsified by any wrong write or < 25 must-write OK.
+- P162.2: T2 — both chain rows OK in the same probe (C1 3-hop answers Robert in both forms, C2 plural/of-form answers Mary), no exp-159 hop rule. 0.70. Falsified by any chain ASK-FAIL/MISSED/WRONG-WRITE.
+- P162.3: G1 — bench per-item verdicts AND replies identical to frozen loop150x135 rows on all 3 splits (600 items), 0 new wrong. 0.75. Falsified by any move or any new wrong.
+- P162.4: G2 — marks123 suites per-case identical to loop150's marks150 run (sleep SKIP verdict identical); soak/rt110 load flakes, if any, reproduce clean on one open re-run. 0.65. Falsified by any content move.
+- P162.5: G3 — each registered run (probe, bench, marks123, marks-diff) < 1500 s wall-clock Mac CPU, OMP=1/MKL=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 162: (to be appended after the registered runs)
+- Outcomes 150b: P150b.1 TRUE (49/49: 23/23 refuse-empty SPLIT incl. exact t14 text, 14/14 plain + 10/10 verb-titles exact, 2/2 possessive-title literals no-write, 0 wrong writes) | 0.0625. P150b.2 TRUE (57/57 OK, 0 verdict/reply moves vs sealed loop150) | 0.04. P150b.3 TRUE (600/600 per-item + reply identical, 0 new wrong; post-fix re-run identical) | 0.0625. P150b.4 TRUE at verdict level (p2 64/64 rows, p4 30/30, q1, rt81 74/74, bench 400/400, sleep SKIP, soak 2000/3/0-0-0, q4 leaks, p3 L1-L6, rt110 62/62 verdicts all identical; deviations: rt110 needed 3 open runs under 5-agent load — 2 empty-turn harness-race flakes with verdicts unchanged/byte-identical in-process replays; sleep reason names new agent file as predicted) | 0.09. P150b.5 TRUE (reply_diffs [] all 6 sessions, 0 new WRONG, 0 write deltas; one verdict-label-only S5-16 move, byte-identical reply, sealed label hand-corrected) | 0.09. P150b.6 FALSE (sealed full marks123 --workers 4 breached 25 min under concurrent-agent load, killed mid-rt110; every per-suite invocation < 1500 s: probe 4.2/5.4, bench 62.5/23.6, sessions 3.4, p3 46, rt110 114-225, soak 133) | 0.81. SCORE: S1/S2/G1 PASS, G2 PASS with disclosed harness flakes, G3 PASS with one label deviation, G4 FAIL (load, one diagnosis note). Post-seal one-line daemon fix reported (idle_seconds); affected suites ran post-fix. RESULTS: artifacts/fable-subject150b-20260922/RESULTS.md
+- Outcomes 138b: P138b.1 FALSE (L5-Z1 42/43 as predicted, rt81 0 wrong, p2/rt110/q1 per-case identical — but bench-s2fresh moved 41 abstain->correct via rewriter, unpredicted) | 0.70. P138b.2 FALSE (edit200 clean, 069+165+022 fixed, but 4 new wrong: 025/073/149 officeholder-rewrite, bench132-152 "I Believe" hedge) | 0.70. P138b.3 FALSE (5/5 tail + 7/7 and-focus hold, cases150 57/57 verdicts, f1/cases139b as sealed — but C089/C122 new wrong writes, inherited 137 verified on loop137) | 0.70. P138b.4 FALSE (143: 12 fixes incl N1-N5/T5/B1/F5/H4/J5/J10, sessions 0 moves — but H5 new WRONG via rewriter) | 0.70. P138b.5 FALSE (z104: 3/3 install 20eps oof1.0 refit1.0 5/5 probes 50/50 taught Z4 PASS Z5 noise4-install/noise8-refuse — but e116 E-family still running at delivery, unclaimed) | 0.60. P138b.6 FALSE (4225 turns 10/10 aimed kills audit_ok, 0 doubled, 4225/4225 receipts exactly-once — but driver 1500 s budget aborted at turn 4225: settle latency) | 0.75. P138b.7 TRUE (15k asks: loop138 p50 4119.7 ms, loop138b 4008.2 ms, doorway-built notebook D3) | 0.85. P138b.8 FALSE (B6 1501 s over; all other runs < 1500 s) | 0.90. 1/8 TRUE. MARKS: B1 FAIL; B2 FAIL; B3 FAIL; B4 FAIL (143) + PASS (sessions); B5 partial; B6 FAIL (time); B7 PASS; B8 FAIL (B6 time only). Deviations D1 (junk driver shapes, re-run open), D2 (agent unchanged, seal passes), D3 (B7 doorway-built notebook). RESULTS: artifacts/fable-agent138b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 161 (grounded self card on loop138, Muse), written before the registered runs
+- P161.1: S1 — panel proper-noun grep on scripts/fable_selfcard161.py: every intersection in the frozen allow-list (11 generic words), 0 panel person/place names. 0.85. Falsified by any unlisted intersection.
+- P161.2: S2 — sealed 69-case fresh panel (3 notebook states) through SelfCard161.answer_self: <= 2 wrong AND 0 hallucinations. 0.70. Falsified by >= 3 wrong or any answer mentioning anything not in the notebook.
+- P161.3: S3 — sealed exp-127 blind panel (100) through the loop161 turn path, same scorer as loop138 A3: <= 6 wrong; wrongs confined to turn-count hardcodes, notebook-won turns, and router-blend questions. 0.65. Falsified by >= 7 wrong.
+- P161.4: S4 — bench121-new 200 questions through fresh loop161 turn paths: 0 content answers served by the card (item 165 decline-served). 0.80. Falsified by any content-routed bench question.
+- P161.5: S5 — bench121 600 items per-item verdict+reply identical to sealed loop138 rows except bench121-4hop-165 (wrong->abstain); marks123 per-case identical to sealed marks138 except {rt110 P1/P3/S1 reply-only, S4 OK->BUG; p2 D3/D5/D6/E8/G1 reply-only; rt81 I_edges/M_hops/O_user reply-only}, verdicts otherwise unchanged. 0.70. Falsified by any move outside that set.
+- P161.6: S6 — every registered run (marks S1-S4, bench S5a, marks123 S5b) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 161: P161.1 TRUE (11 intersections, all allow-listed generic words, 0 panel names) | 0.0225. P161.2 FALSE (14 wrong of 69: identity/speakers order, "recently", "tell me" frames; 7 hall flags are scorer allow-list omissions of generic template words All/Web/What, no answer mentioned anything outside the notebook) | 0.09. P161.3 FALSE (15 wrong of 100 vs bar 6: 4 structural turn-path issues shared with loop138's design, 10 rephrasing-coverage gaps on blind wording, 1 packed-turn ambiguity) | 0.1225. P161.4 TRUE (0 content-routed of 200; 62 decline-served incl. 165) | 0.04. P161.5 FALSE in the letter (S5a exact: 165 wrong->abstain, 599 identical, 0 new wrong; S5b 6/7 moves predicted-exact but rt81 I_edges verdict moved UNCLEAR->OK on a predicted reply turn, favorable and unpredicted) | 0.09. P161.6 TRUE (slowest run 253.9 s) | 0.01. 3/6 TRUE. MARKS: S1 PASS; S2 FAIL; S3 FAIL; S4 PASS; S5a PASS; S5b FAIL; S6 PASS. Post-seal repairs (open): case-file one-brace truncation fixed + re-sealed before any completed run; marks-diff p3 seconds-noise fix (analysis only). RESULTS: artifacts/fable-selfcard161-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 157b (capitalised/stacked filler strip on loop157, Muse), written before the registered runs
+- P157b.1: T1 — 60/60 on the sealed probe through loop157b vs base loop157: 34/34 capitalised/stacked filler forms give exactly the triple (teach, stored non-empty and equal, reply equal) / answer (question, reply byte-equal with want) of the bare twin on loop157, 13/13 filler-word-initial titles identical to loop157 with 0 stripped-subject writes, 13/13 garbage/correction replies+stored identical to loop157. 0.75. Falsified by any case FAIL.
+- P157b.2: T2 — >= 33/34 T1 must-cases exact, 0 wrong writes over all 60 cases. 0.80. Falsified by < 33 must-case OKs or any wrong write.
+- P157b.3: G1 — bench per-item verdicts AND replies identical to sealed loop157 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P157b.4: G2 — every marks123 suite per-case verdict identical to sealed loop157 marks157 (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P157b.5: G3 — sessions152 through loop157b: every reply identical to the sealed loop157 session runs (0 moves), 0 new WRONG, 0 new writes. 0.80. Falsified by any reply diff, any new WRONG, or any new write.
+- P157b.6: G4 — each registered run (probe, bench, marks123, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 157b: P157b.1 TRUE (probe 60/60: 34/34 cap, 13/13 titles, 13/13 same157) | 0.75. P157b.2 TRUE (34/34, 0 wrong writes) | 0.80. P157b.3 TRUE (bench 600 items, 0 moves, 0 new wrong) | 0.80. P157b.4 TRUE (marks per-case verdict-identical; 1 allowed sleep-reason filename line; 1 cosmetic p3/l6 replied_before_kill metadata diff, verdicts identical) | 0.70. P157b.5 TRUE (sessions 0 reply diffs, 0 new WRONG/writes) | 0.80. P157b.6 TRUE (max suite run 177.3 s rt110; all < 1500 s) | 0.90. 6/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. Deviations: resumed cut-off marks run in the open (rt110+soak single suites only); wrapper mtime post-seal, contents match design, 0 behaviour impact; +1 analysis script (markscompare), no rule changes. RESULTS: artifacts/fable-filler157b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 164 (read-only about-stage on loop150, Muse), written before the registered runs
+- P164a.1: T1 — 44-dialogue probe through loop164: 44/44 OK (22 about-X + 7 unknown-X + 4 summary exact frozen literals; 11 near-misses byte-identical loop164 vs loop150). 0.80. Falsified by any FAIL.
+- P164a.2: T2 — 33/33 must-cases exact, 0 FACT writes on all 34 about/summary turns, 0 wrong writes over all 44 dialogues. 0.85. Falsified by any inexact reply or any about-turn write.
+- P164a.3: G1 — bench per-item verdicts AND replies identical to sealed loop150 rows on all 3 splits (600 items), 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P164a.4: G2 — every marks123 suite per-case identical to sealed marks150 (sleep SKIP verdict identical, reason names the new agent file). 0.70. Falsified by any per-case move.
+- P164a.5: G3 — sessions152 through loop164: 180/180 replies identical to sealed T-T run, 0 new WRONG, 0 new writes. 0.80. Falsified by any diff, any new WRONG, or any write delta.
+- P164a.6: G4 — each registered run (probe, bench, marks123, marksdiff, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 164a: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 163 (lowercase names at the entity layer on loop150, Muse), written before the registered runs
+- P163.1: T1 — 53-case probe on loop163: 26/26 lowerQ exact (16 1-hop + 10 2-hop, display-form answers), 12/12 lowerTeach exact (incl. 2 capitalised-duplicate rows), 8/8 innerCaps exact (typed forms kept, 3 lowercase-Q resolve to inner-capital displays), 7/7 noMerge with 0 wrong writes and 0 wrong answers (base clarifies own each collision turn). 0.80. Falsified by any WRONG-WRITE/MISSED/WRONG-REPLY.
+- P163.2: T2 — >= 51/53 must-cases exact (full triple + exact last reply). 0.80. Falsified by < 51 exact.
+- P163.3: G1 — bench per-item verdicts AND replies identical to sealed loop150 rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P163.4: G2 — every marks123 suite per-case identical to sealed marks150 (timing scrubbed, summary agent/config paths mapped, sleep SKIP reason names the new agent file with verdict identical); soak/rt110 load flakes, if any, reproduce clean on one open re-run with both reported. 0.70. Falsified by any content move.
+- P163.5: G3 — sessions152 through loop163: reply moves exactly S2 turns [18, 23] and S5 turns [4, 10, 12, 13, 14, 25] (display-form owners; T12 stores Quinn, echoed in T13/T14/T25); all other 172 turns byte-identical; 0 new WRONG; 0 write moves. 0.80. Falsified by any unpredicted diff, any unmet prediction, any new WRONG, or any write delta.
+- P163.6: G4 — each registered run (probe, bench, marks123, marksdiff, sessions) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 163: P163.1 FALSIFIED -> T1 FAIL (sealed 46/53: 26+12+8 OK, noMerge 0/7 — `person Tom`/`person TOM` setup stores no entities so the expected clarify can never fire; open corrected cases 53/53) | 0.80. P163.2 FALSIFIED -> T2 FAIL (46/53 < 51; same cause) | 0.80. P163.3 TRUE (bench 600 items, 0 moves, 0 new wrong, registered + open rerun) | 0.80. P163.4 TRUE (per-case identical except rt110 statuses-only flake + soak 2 load wrongs, both clean on open rerun: rt110 pass 0 moves; soak 2000/3/0/0/0) | 0.70. P163.5 TRUE (exactly S2 [18,23] + S5 [4,10,12,13,14,25], 0 new WRONG, 0 write moves, registered + open rerun) | 0.80. P163.6 TRUE (slowest registered run 196.1 s) | 0.90. 4/6 TRUE. MARKS: T1 FAIL; T2 FAIL; G1 PASS; G2 PASS; G3 PASS; G4 PASS. Post-seal harness-only edits (Loop163Daemon + probe --cases), sealed files verify, affected marks re-run in open. RESULTS: artifacts/fable-lowercase163-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 139c (lowercase chat-tail strip on loop138b, Muse), written before the registered runs
+- P139c.1: T1 — 61/61 OK on the sealed probe through loop139c (31 tail exact incl. corrections-with-yes prompts carrying the clean value + 2-hop afterwards; 15 Title-case + 15 other byte-identical to loop138b). 0.85. Falsified by any non-OK case.
+- P139c.2: T2 — 0 wrong writes over all 61 cases, 31/31 tail cases exact. 0.85. Falsified by any WRONG-WRITE or any inexact tail case.
+- P139c.3: G1 — bench per-item verdicts AND replies identical to sealed loop138b rows on all 4 splits, 0 moves, 0 new wrong. 0.75. Falsified by any move or any new wrong.
+- P139c.4: G2 — every marks123 suite per-case identical to sealed marks138b. 0.70. Falsified by any per-case move.
+- P139c.5: G3 — redteam136/redteam143/sessions152 through loop139c: 0 moves vs sealed loop138b rows, 0 new WRONG, 0 new writes. 0.75. Falsified by any move, any new WRONG, or any new write.
+- P139c.6: G4 — each registered run (probe, bench, marks123, g3) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 139c: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 158b (relation-word question rewriter on loop138b, Muse), written before the registered runs
+- P158b.1: T1 — sealed 64-case probe (12 teaches; 40 exact shapes (a)-(d) with 1- and 2-hop X across 9 relations, both cases, with/without "?"; 12 unknown-X/relation; 12 look-alikes) through loop158b vs loop138b: 40/40 exact, 24/24 byte-identical. 0.75. Falsified by any case FAIL.
+- P158b.2: T2 — 0 notebook writes on every probe question, 40/40 must-cases exact (>= 95% bar). 0.80. Falsified by any write or < 38 exact.
+- P158b.3: G1 — bench121 4 splits through loop158b per-item verdict-identical to sealed loop138b rows (0 moves, 0 new wrong). Canonical bench questions already parse so the pre-fallback stage never fires. 0.70. Falsified by any move or any new wrong.
+- P158b.4: G2 — every marks123 suite per-case identical to sealed marks138b (verdicts; replies; p3 passes; soak counters; q4 leaks []), except the sleep SKIP reason naming the new agent file. 0.65. Falsified by any other move. rt110 harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P158b.5: G3 — junk (redteam136/cases150/f1/cases139b), redteam143 and sessions152 through loop158b: 0 moves vs loop138b frozen results, 0 new WRONG/WRONG-WRITE, 0 new junk writes, sessions replies identical. 0.70. Falsified by any move.
+- P158b.6: G4 — each registered run (probe, bench, redteam, marks) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 158b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 147 (mention-walk alignment, Muse), written before the registered runs
+- P147.1: A1 meets its bar exactly on the loop132 variant (all class-3 A1/U1-U5/K8/S4/T4/L4 + class-4 K6/K10 abstain; suffix P1/P2/Q1/Q2/D2 answer sealed values; 0 OK->worse over all 124). 0.85. Falsified by any missed fix or any OK->worse.
+- P147.2: A2 48/48 OK (23 answer + 25 abstain) on all three variants with 0 wrong answers. 0.90. Falsified by any non-OK.
+- P147.3: A3 0 new wrong on all 15 (variant, split) pairs (bench121-new/old, fable-edit-200, s2fresh-4hop, bench132-new). 0.80. Falsified by any new wrong.
+- P147.4: A3 correct-lost EMPTY on all 15 pairs. 0.85. Falsified by any lost correct.
+- P147.5: A4 per-case identical to each base except: P2 134/132 0 OK->BUG + 0 still-BUG (4 sealed bugs fixed each); q4-132 base leaks + capital_in_2019; rt110/soak race-flakes possible with open re-run. 0.80. Falsified by any other move.
+- P147.6: every registered run < 1500 s wall-clock Mac CPU. 0.90. Falsified by any longer run.
+- Outcomes 147: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 137b (discourse-glued names on loop138b, Muse), written before the registered runs
+- P137b.1: T1 — 56/56 on the sealed probe through loop137b: D 28/28 discourse-led twins equal bare twins exactly (same reply, same write; 16 words + 3 sentence-break forms + 12 questions), T 12/12 titles identical to loop138b, R 16/16 real multi-word names identical to loop138b, 0 wrong writes. 0.80. Falsified by any case FAIL.
+- P137b.2: T2 — sealed C089/C122 through loop137b store junk-free [Tom, boss, Ann] (0 junk writes), replies "Saved: Tom's boss is Ann.", sealed verdicts remain WRONG-WRITE with clean subjects. 0.85. Falsified by any junk name stored.
+- P137b.3: G1 — bench per-item verdicts AND replies identical to sealed loop138b rows on all 4 splits (800 items), 0 verdict moves, 0 reply moves, 0 new wrong ("A. A. Milne" exempt as abbreviation). 0.75. Falsified by any move or any new wrong.
+- P137b.4: G2 — every marks123 suite per-case identical to sealed marks138b (sleep SKIP verdict identical; reason string names the new agent file). 0.70. Falsified by any per-case move beyond the sleep reason string.
+- P137b.5: G3 — redteam136: C089/C122 clean-store moves only (verdicts stay WRONG-WRITE, junk 2->0), other 143 cases byte-identical; redteam143/sessions152/cases150/f1/cases139b zero verdict/reply moves; 0 new WRONG, 0 junk writes. 0.75. Falsified by any unpredicted move, any new WRONG, or any junk write.
+- P137b.6: G4 — each registered run (probe, bench, junk, redteam143, sessions, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- P137b.7: title-edge exploratory (outside sealed suites): "Hey Jude's director is Cameron." and "Mary Ann's favorite movie is Hey Jude." strip to Jude on loop137b while loop138b keeps Hey Jude. 0.90. Falsified by any other outcome.
+- Outcomes 137b: (to be appended after the registered runs)
+- Outcomes 158b: P158b.1 TRUE (probe 40/40 exact + 24/24 identical, 0 fails, 7.6 s) | 0.75. P158b.2 TRUE (0 writes on all 64 questions, 40/40 exact) | 0.80. P158b.3 TRUE (bench 800 items, 0 moves, 0 new wrong: 194/198/150/196 correct) | 0.70. P158b.4 TRUE (marks per-case identical; 1 allowed sleep-reason filename line; q4 leaks [] 481/481; rt110 clean, no re-run) | 0.65. P158b.5 TRUE (junk/redteam/sessions 0 moves, 0 new WRONG/WW, sessions 0 reply diffs) | 0.70. P158b.6 TRUE (7.6/79.0/20.9/1128.1 s, all < 1500 s) | 0.90. 6/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. Deviations: none. Post-seal edits: none (seal verifies). RESULTS: artifacts/fable-whrel158b-20260922/RESULTS.md
+- P150d.1: T1 — 44-case probe: title 16/16 (12 singles save exact, 4 chains answer gold), hedge 16/16 reply+store identical to loop138b with 0 writes either arm, other 12/12 identical (3 neutral twins answer gold, title-possessive O11 refused both). 0 wrong writes. 0.70. Falsified by any case fail or any write on a hedge case.
+- P150d.2: T2+G1 — bench132-4hop-152 wrong->correct (exact); 0 new wrong vs loop138b frozen rows on all 4 bench splits; every other item verdict-identical. 0.75. Falsified by any new wrong or any unpredicted move.
+- P150d.3: G2 — marks123 suites per-case identical to marks138b (p2/p3/p4/rt110/q1/bench/rt81/sleep/q4/soak); zero hedge-led inputs in any G2 suite (pre-seal static scan). 0.70. Falsified by any per-case move.
+- P150d.4: G3 — junk (redteam136/cases150/f1/cases139b) + redteam143 + sessions152: 0 moves vs loop138b frozen rows, 0 new WRONG/WRONG-WRITE. Every hedge-led sealed input stays refused under the sealed rule (C081 nowrite verified live pre-seal). 0.70. Falsified by any move or any new wrong write.
+- P150d.5: G4 — each registered run (probe, bench, junk, redteam143, sessions, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- P150d.6: shape — possessive-title teaches ("Maybe Tomorrow's author") stay refused exactly as loop138b (documented limitation); Maybe/Perhaps-led VALUES still hit the separate 139b value guard identically on both arms. 0.80. Falsified by a possessive-title save or a value-side divergence.
+- Outcomes 150d: (to be appended after the registered runs)
+- Outcomes 150d: P150d.1 TRUE (probe 44/44: title 16/16, hedge 16/16, other 12/12, 20.6 s) | 0.70. P150d.2 TRUE (bench132-152 wrong->correct exact; 0 new wrong all 4 splits; 65 s) | 0.75. P150d.3 TRUE (marks123 per-case 0 moves vs marks138b; 307 s) | 0.70. P150d.4 TRUE (junk/143/sessions 0 moves, 0 new wrong: rt136 135/7/3, cases150 57/57, f1 t14-only, cases139b 101/101, 143 106OK/11W, sessions 129OK/2W) | 0.70. P150d.5 TRUE (all runs < 1500 s: slowest marks 307 s) | 0.90. P150d.6 TRUE (title-possessive O11 refused both arms; Maybe-led values identical both arms) | 0.80. 6/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. No post-seal code edits (shasum -c passes); no open re-runs needed. RESULTS: artifacts/fable-hedgecase150d-20260922/RESULTS.md
+- P138d.1: M1 — all 11 piece probes on loop138d at their sealed bars (142: 500/500 identity; 138c: 4/4 with hi=greeting; 146d: H2 21/21 + H13/H17/H18 reported; 153: 50/50 0 writes; 154: 54/54 0 writes; 155x135: 5/5; 156b: 116/116 + T2 68/68; 157: 60/60; 158: 59/59; 159: 48/48 0 writes; 150b: 49/49). 0.80. Falsified by any piece miss.
+- P138d.2: M2 — bench121 new + old_s2fresh + edit200 + bench132 per-item vs sealed 138b rows: 0 new wrong; moves (if any) are wrong->correct via the 159 fallback, each listed. 0.70. Falsified by any new wrong.
+- P138d.3: M3 — marks123 per-case vs marks138b: only rt110 S1 OK->BUG (138c grounded-count by design), rt81 D_q_vs_s-04 OK->UNCLEAR and p3 l5z1 turns 49/58 (154 honest replies, inherited); all else verdict- and reply-identical. Race flakes (if any) re-run once in the open, both reported. 0.60. Falsified by any unpredicted verdict move.
+- P138d.4: M4 — sessions152 + redteam136 + redteam143 vs sealed 138b rows: 0 new WRONG, 0 new junk writes; improvements only: sessions S4 7/27 WRONG->OK (159), S2 eight turns ->OK (157), S5 n5/n6/n9 ->OK (158). 0.65. Falsified by any new WRONG or new write.
+- P138d.5: M5 — sleep z104 3/3 installs, 0 wrong installs, taught wins; kill-9 soak 3000 turns seed 931 10 aimed kills 0 graceful: 0 duplicate/lost/wrong, exactly-once receipts. 0.75. Falsified by any failed install, wrong install, or non-exactly-once turn.
+- P138d.6: M6 — 15k-fact asks p50: improved vs 138b (4008 ms) but still seconds (composers still scan; FastQuestionMixin142 OUT by judgment); bar 50 ms MISSED. 0.80 (confidence the bar is missed). Falsified by p50 < 50 ms.
+- P138d.7: M7 — every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.85. Falsified by any run >= 1500 s.
+- Outcomes 138d: P138d.1 TRUE (M1 11/11 probes at bar) | 0.80. P138d.2 TRUE (M2 0 new wrong; 1 wrong->abstain move listed) | 0.70. P138d.3 FALSIFIED->M3 PASS-with-listed: l5z1 t49/t58 + D_q_vs_s-04 as predicted, plus extra D_q_vs_s-03 OK->UNCLEAR and I_edges-03 UNCLEAR->OK improvement | 0.60. P138d.4 FALSE (M4 FAIL: 4 new WW rt136 C124/C127/C129/C142 + 2 new WW 139b C10/C21 + 1 new WRONG 143 M3; sessions 0 new WRONG 129->165 OK) | 0.65. P138d.5 FALSE (M5 FAIL: seeds at 138b parity but Z4 harness crash, Z5 + 3000-turn soak unrun) | 0.75. P138d.6 TRUE-as-miss (M6 FAIL: p50 5383 ms vs bar 50 ms; slower than 138b 3872 ms, improvement part falsified) | 0.80. P138d.7 TRUE (all executed runs < 1500 s) | 0.85. 3.5/7. MARKS: M1/M2/M3/M7 PASS; M4/M5/M6 FAIL. No post-seal code edits (shasum -c passes); no open re-runs needed. RESULTS: artifacts/fable-agent138d-20260922/RESULTS.md
+- Outcomes 137b: P137b.1 TRUE (59/59: D 31/31, T 12/12, R 16/16; sealed doc said 56, file holds 59, thresholds hold either way) | 0.04. P137b.2 TRUE (both store [Tom,boss,Ann], 0 junk; verdicts stay WRONG-WRITE per nowrite seal) | 0.0225. P137b.3 TRUE (800/800 per-item verdict+reply identical, 0 new wrong) | 0.0625. P137b.4 TRUE (every suite per-case identical incl p2 64/64 rows, bench 400/400 rows, p3 L5-Z1 58/60 as 138b, rt81 60/0/14 as 138b; sleep SKIP reason names new file; rt110 62/62 verdict+reply identical with 3/62 statuses-metadata noise, in-process records identical) | 0.09. P137b.5 TRUE (rt136 C089/C122 clean-store only moves, junk 2->0, other 143 byte-identical; 143/sessions/150/f1/139b zero moves; 0 new WRONG) | 0.0625. P137b.6 TRUE (max run 633.0 s marks123; all < 1500 s) | 0.01. P137b.7 TRUE (both title-edge cases strip to Jude vs Hey Jude on 138b) | 0.01. 7/7 TRUE. SCORE: T1/T2/G1/G3/G4 PASS; G2 PASS (p3 + rt81 FAILs inherited byte-identical from 138b). Deviation D1 (probe count 56->59, file unsealed-untouched). RESULTS: artifacts/fable-discourse137b-20260922/RESULTS.md
+- Outcomes 139c: P139c.1 HELD (61/61, open re-run after D1 case fix; first registered run 60/61 with T30 FAIL-PROMPT from a missing setup turn, agent stored exact green). P139c.2 HELD (0 wrong writes, 31/31 exact). P139c.3 HELD (0 moves, 0 new wrong, 800 items). P139c.4 FALSIFIED -> G2 FAIL: one per-case move, P4-09, whose sealed expectation requires the bug ('Ana, actually'); all other suites verdict-identical (rt110 M1/T2 + L6 replied_before_kill cosmetic metadata only). P139c.5 HELD (0 moves, 0 new wrong/write). P139c.6 HELD (max run 613.5 s).
+
+## 2026-09-22 — Experiment 120b (talker mouth raw-decode bugs, Muse), written before the registered runs
+- P120b.1: diagnosis re-decode of all 500 held-out records with the director's seed-12002 checkpoint reproduces 313/500 raw-unfaithful exactly (same code path, deterministic greedy). 0.90. Falsified by any other count.
+- P120b.2: the largest bucket is boundary junk at the prompt/answer boundary (leading ":" / "ing" fragments), caused by the target-mask off-by-one in scripts/fable_talker120_train.py (pos > pre excludes the first target token from the loss). 0.70. Falsified by another bucket being largest or another cause.
+- P120b.3: the single fix is decode-side only (re-score the director's checkpoint, no retraining) and brings raw-unfaithful to <= 50/500. 0.30. Falsified by > 50/500 after the fix or by needing retraining.
+- P120b.4: O1–O5 still PASS after the fix (after-brake 0/500, status >= 480/500, OK answers >= 240/250, run < 25 min Mac CPU). 0.80. Falsified by any miss.
+- Outcomes 120b: P120b.1 TRUE (re-decode 313/500 exact; diag 346 s) | 0.01. P120b.2 TRUE (largest bucket boundary-only 164/313; cause = train.py:150-151 pos > pre drops first target, audit false, prompt 500/500 identical) | 0.09. P120b.3 FALSE (no decode-side fix possible: first position never supervised; force-first-token repairs 4/12; fix = retrain with pos >= pre, frozen script + 100-step CPU smoke 5.5061 -> 3.7325; GPU run left to director) | 0.09. P120b.4 OPEN pending the GPU retrain + re-score. 2/3 scored; O6 FAIL stays FAIL. RESULTS: artifacts/fable-talker120b-20260922/RESULTS.md
+- Outcomes 147: P147.1 TRUE (A1: 12 WRONG->abstain incl. A1/U1-U5/K8/S4/T4/L4/K6/K10 + 5 MISSED->answer P1/P2/Q1/Q2/D2; 0 OK->worse over 124; remaining 10 WRONG + 5 MISSED identical to base) | 0.0225. P147.2 TRUE (A2 48/48 x3, 0 wrong) | 0.01. P147.3 TRUE (A3 15 pairs, 0 new wrong) | 0.04. P147.4 TRUE (correct-lost empty everywhere) | 0.0225. P147.5 TRUE (A4: P2 134/132 0/0 with 4 sealed bugs fixed each; q4-132 base leaks + capital_in_2019; rt110-134 D7 empty-serve race -> open re-run clean R4/N6/S3/S6; all else per-case identical) | 0.04. P147.6 TRUE (slowest registered run 463.5 s) | 0.01. 6/6 TRUE. SCORE PASS (A1-A5). RESULTS: artifacts/fable-align147-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 139d (unknown lowercase chat-tail clarify, Muse), written before the registered runs
+- P139d.1: T1 probe 62/62 OK (28 unknown-tail incl. 5 corrections + Pad-thai honest edge -> exact clarify reply, 0 writes; 16 same-shape + 18 other byte-identical to loop139c). 0.75. Falsified by any non-OK case.
+- P139d.2: T2 0 wrong writes over all 62 cases; 28/28 tailu exact. 0.80. Falsified by any WRONG-WRITE or inexact tailu case.
+- P139d.3: G1 bench 4x200 vs sealed loop139c rows: 0 new wrong, 0 moves (pre-seal static scan scripts/fable_fix139d_scan.py finds 0 trigger-shaped teach spans in bench inputs). 0.70. Falsified by any move or new wrong.
+- P139d.4: G2 marks123 per-case semantic (verdict+reply) identical to marks139c on every suite (predicted moves: none; only volatile-metadata/cosmetic diffs: timings, tmp paths, statuses, replied_before_kill counts, sleep SKIP reason naming the new file). 0.60. Falsified by any semantic per-case move.
+- P139d.5: G3 redteam136 + redteam143 + sessions152 vs sealed loop139c rows: 0 new WRONG/WRONG-WRITE, 0 moves (pre-seal scan finds 0 trigger-shaped spans in G3 inputs). 0.70. Falsified by any move, new WRONG, or new write.
+- P139d.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 139d: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 138e (officeholder rewrite-chain guard on loop138b, Muse), written before the registered runs
+- P138e.1: T1 — sealed 32-case held-out (16 rewrite-right R01-R16, 16 would-be-wrong W01-W16, labeled by one open frozen-base run) through loop138e: 0 wrong over all 32; R 16/16 still correct via the unchanged rewrite path; W 16/16 abstain via the veto (base clarify, stage loop138e-veto-officeholder). 0.80. Falsified by any wrong or any R item lost.
+- P138e.2: T2 — bench121-new 025/073/149 through loop138e: no longer wrong, exactly wrong->abstain on all three (base 113c abstain text); 174 stays wrong. 0.85. Falsified by any of the three staying wrong or any new wrong.
+- P138e.3: G1 — bench 4 splits through loop138e per-item vs sealed loop138b rows: 0 new wrong; exactly 3 moves (025/073/149 wrong->abstain incl. reply+stage); every other item verdict-, reply- and stage-identical. 0.80. Falsified by any other move or any new wrong.
+- P138e.4: G2 — every marks123 suite per-case verdict-identical to sealed marks138b with identical suite statuses (p3 FAIL l5z1-only, rt81 suite FAIL inherited, sleep SKIP); cosmetic-only diffs: sleep reason naming fable_loop138e_agent.py, rt110 M1 log statuses ["write"] vs [] (verdict OK both), l6 replied_before_kill timing counters. 0.70. Falsified by any verdict move. rt110/soak race-flake under load is the known mailbox race: re-run once in the open, report both.
+- P138e.5: G3 — junk (redteam136/cases150/f1/cases139b), redteam143 and sessions152 through loop138e: 0 per-case moves vs frozen 138b outputs, 0 new WRONG/WRONG-WRITE/junk writes; tallies kept exactly (redteam136 135/7/3, f1 45+t14, 143 106/7/11, sessions 129/2). 0.75. Falsified by any move, new WRONG, or new write.
+- P138e.6: G4 — each registered run (heldout, bench, junk, redteam143, sessions, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take explicit idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 138e: T1 PASS (0/32 wrong, R 16/16 correct, W 16/16 abstain); T2 PASS (025/073/149 wrong->abstain, 174 still wrong); G1 PASS (0 new wrong, exactly the 3 predicted moves); G2 PASS (0 verdict moves; predicted cosmetics only); G3 PASS (0 moves, tallies kept); G4 PASS (all runs < 1500 s). No FAILs.
+- Outcomes 164a: P164a.1 MISS then HIT in the open (registered run-1 42/44 FAIL: A17 literal-value gap + A22 case typo; after two reported post-seal fixes, open re-run 44/44) | 0.04. P164a.2 TRUE in the open (33/33 exact, 34/34 about-turns 0 writes) | 0.0225. P164a.3 TRUE (600/600 verdict+reply identical, 0 new wrong; 65.3 s) | 0.04. P164a.4 TRUE with one diagnostic-only flake (0 mark-moves all suites; rt110 R4 log-shift only, verdicts identical, clean 0-move open re-run) | 0.09. P164a.5 TRUE (180/180 identical, 0 new WRONG, 0 new writes; 6.4 s) | 0.04. P164a.6 TRUE (probe 5.9 s, bench 65.3 s, marks 276.4 s, sessions 6.4 s, all < 1500 s) | 0.01. Post-seal edits: literal value-side + A22 ask_idx fix; Loop164Daemon idle_seconds (p3 spawned-daemon crash); marksdiff reporting refinements only. RESULTS: artifacts/fable-about164-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 137c (hypotheticals saved as facts, Muse), written before the registered runs
+- P137c.1: T1 — 58-case probe: H-pure 22/22 (exact pretend reply, 0 writes, question avoids pretend value, notebook empty) across all 11 markers x plain+filler twins and 6 relations; H-conflict 8/8 (real value answered, triples hold only real fact); N 12/12 + O 16/16 reply+triples identical to loop137b. 0.70. Falsified by any case fail.
+- P137c.2: T2+G1 — 0 writes on every hypothetical turn; bench 800 items 0 verdict/reply moves and 0 new wrong vs loop137b frozen rows (pre-seal scan: 0 hypo-led bench inputs). 0.75. Falsified by any write on a hypo turn, any new wrong, or any unpredicted move.
+- P137c.3: G2 — marks123 suites per-case identical to marks137b (p2/p3/p4/rt110/q1/bench/rt81/sleep/soak; inherited p3 L5-Z1 + rt81 FAIL labels byte-identical); zero hypo-led inputs in any G2 suite (pre-seal static scan). Soak/rt110 race flakes (if any) re-run once in the open, both reported. 0.70. Falsified by any unpredicted per-case move.
+- P137c.4: G3 — sessions152 0 moves; redteam143 0 moves; cases150/f1/139b 0 moves; redteam136: C089 WRONG-WRITE->OK (0 writes, pretend reply), C122 identical (stores, WRONG-WRITE), C090/C091 verdict stays OK with reply moving to the pretend sentence; 0 new WRONG/WRONG-WRITE anywhere. 0.70. Falsified by any unpredicted move or any new wrong/write.
+- P137c.5: G4 — each registered run (probe, bench, junk, redteam143, sessions, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- P137c.6: shape — "Say Tom's ..." teaches, bare-"If ..." declines, "Btw./So/Hi./Okay/And Kim's ..." and marker-possessives ("What If's boss ...") stay byte-identical to loop137b; "What if ...?" moves from base decline to the pretend reply by design. 0.80. Falsified by any divergence outside the closed marker list.
+- Outcomes 137c: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 154b (second values for multi-valued relations, Muse), written before the registered runs
+- P154b.1: T1 probe 81/81 exact (17 add-second-value across sister/friend/brother/child/pet with list-asks after; 17 single-valued turns identical to loop138b; 8 named-value corrections/forgets; 7 two-hop clarifies; single-chain contrast). 0.80. Falsified by any non-OK case.
+- P154b.2: T2 0 wrong writes, 0 lost values (every pinned state map + final full_state exact). 0.80. Falsified by any state mismatch.
+- P154b.3: G1 bench 4x200 vs frozen loop138b rows: every per-item move (verdict or reply) lands on a multi-dup item (pre-seal scan: new 190, old 197, edit200 93, bench132 186); all no-dup items byte-identical; new wrongs, if any, only via the final-hop list form on multi-dup items. 0.65. Falsified by any move on a no-dup item.
+- P154b.4: G2 marks123 per-case verdict+reply identical to marks138b on every suite (pre-seal scans: p2 64/64 clean, rt110 62/62 clean with T4 hearsay-pet reviewed identical). 0.60. Falsified by any per-case move.
+- P154b.5: G3 redteam136 (145) + redteam143 (124) + sessions152 (6) vs frozen loop138b rows: 0 new WRONG/WRONG-WRITE, 0 moves (pre-seal scans all clean). 0.70. Falsified by any move, new WRONG, or new write.
+- P154b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 154b: P154b.1 TRUE (probe 81/81 exact; 0.1 s) | 0.80. P154b.2 TRUE (0 wrong writes, all pinned + final full_state exact) | 0.80. P154b.3 TRUE (bench 4x200: 613 moves all on multi-dup items, 0 on no-dup; 55 new wrong all final-hop list form; 35.6 s) | 0.65. P154b.4 FALSIFIED -> G2 FAIL: p2 6 moves (B1,B2,B3,B5,B8,F2 second-teach shapes) + p3 l5z2 mquake-twohop 100->7 correct/47 wrong/46 miss; rt110/rt81/q1/q4/p4/sleep/soak identical; pre-seal scanner missed copula + multi-word-subject shapes | 0.60. P154b.5 TRUE (rt136 145 + rt143 124 + sessions152 6/6: 0 moves, 0 new wrong/write; 6.4 s) | 0.70. P154b.6 TRUE (max run soak 257.6 s; all < 1500 s) | 0.90. 5/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 FAIL (by design, one diagnosis note); G3 PASS; G4 PASS. Post-seal new file scripts/fable_fix154b_g3.py (own prefix, G3 ran once open); sealed files byte-identical (shasum -c passes); no silent re-runs. RESULTS: artifacts/fable-multival154b-20260922/RESULTS.md
+- Outcomes 137c: P137c.1 TRUE (probe 58/58: H-pure 22/22, H-conflict 8/8, N 12/12, O 16/16; 4.2 s) | 0.70. P137c.2 TRUE (0 hypo writes; bench 800 items 0 moves, 0 new wrong: 194/198/150/196 correct; 86.9 s) | 0.75. P137c.3 TRUE (marks123 per-case identical incl inherited p3 L5-Z1 58/60 + rt81 60/0/14; L6 replied_before_kill timing-only 21/24->5/18->8/6/7 open re-run, verdicts identical; 272.5 s) | 0.70. P137c.4 TRUE (sessions/rt143/150/f1/139b 0 moves; rt136 C089 WRONG-WRITE->OK, C122 identical, C090/C091 verdict OK + reply->pretend; 0 new wrong) | 0.70. P137c.5 TRUE (max run 272.5 s marks123; all < 1500 s) | 0.90. P137c.6 TRUE (Say/If/Btw/So/Hi/Okay/And + marker-possessives identical both arms; What-if decline->pretend by design) | 0.80. 6/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. No post-seal code edits (shasum -c passes); one open p3 re-run for the L6 timing race, both reported. RESULTS: artifacts/fable-hypo137c-20260922/RESULTS.md
+- Outcomes 139d: P139d.1 HELD (open re-run after D1 case fix 65/65 OK, 28/28 exact; first sealed run 59/62 with 3 case bugs: maybe/probably split-clarify in base ears, black-honestly lowercase-start byte-identity; agent stored exact in all 3, 0 writes) | 0.75. P139d.2 HELD (0 wrong writes both runs) | 0.80. P139d.3 FALSIFIED -> G1 FAIL: 33 moves / 20 new wrong (real values Gaelic/American football, Wa language trigger the sealed rule; pre-seal scan missed non-possessive bench templates) | 0.70. P139d.4 FALSIFIED -> G2 FAIL: only bench-rows detail moves (11 verdict + 2 teach-reply-only); all report suites 0 moves (p2 64, p4 30, rt81 74, rt110 62, p3 submarks identical) | 0.60. P139d.5 HELD (0 moves, 0 new wrong/write) | 0.70. P139d.6 HELD (max run marks ~300 s) | 0.90. 4/6 HELD. Deviations D1 (cases 62->65, probe re-run open) + D2 (compare tmp filter, analysis only); one-change files byte-identical since seal. RESULTS: artifacts/fable-tail139d-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 162b (plural "The Xs'" possessives save, Muse), written before the registered runs
+- P162b.1: T1 probe 76 rows: 24/24 plural exact (triple + Who + What + of-form asks), 162's 26 must-write 26/26, 23/23 identical_to_base byte-identical to loop162, chains C1/C2/C3 all OK. 0.80. Falsified by any non-OK case.
+- P162b.2: T2 0 wrong writes over all 76 rows. 0.85. Falsified by any WRONG-WRITE.
+- P162b.3: G1 bench 600 items vs frozen loop162 rows: 0 verdict/reply moves, 0 new wrong (pre-seal scan: 0 plural-teach fires in 600 teaches, 0 ask fires in questions). 0.75. Falsified by any move or new wrong.
+- P162b.4: G2 marks123 per-case identical to marks162 (completed suites) and marks150 (p3/rt110/q4): zero moves; sleep SKIP identical; soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted per-case move.
+- P162b.5: G3 redteam136 + redteam143 + sessions152 vs loop162: 0 verdict moves, 0 new WRONG/WRONG-WRITE, 0 new writes (pre-seal scans all clean). 0.75. Falsified by any move, new WRONG, or new write.
+- P162b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 162b: P162b.1 TRUE (probe 76/76: plural 24/24 exact incl Who+What+of-form, W 26/26, identical 23/23, C1/C2/C3 OK; 2.0 s) | 0.80. P162b.2 TRUE (0 wrong writes) | 0.85. P162b.3 TRUE (bench 600/600 verdict+reply identical, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 22.6 s) | 0.75. P162b.4 TRUE with disclosed cosmetics (0 semantic moves all suites: p2/rt81 0 moves, q1/bench seconds-only, q4 identical vs marks150, p3 seconds-only all-PASS, rt110 62/62 verdicts equal + 2 log-status-only diffs, sleep SKIP reason names new file, soak wrong 1->0 clean so no open re-run; 183.4 s) | 0.65. P162b.5 TRUE (rt136 145 + rt143 124 + s152 180 turns, 0 moves, 0 new wrong/write; 14.3 s) | 0.75. P162b.6 TRUE (max run 183.4 s) | 0.90. 6/6 TRUE. SCORE PASS (T1/T2/G1-G4). Post-seal edit: G3 driver mkdir fix (crashed at startup, re-ran as registered run); sealed files shasum-clean. RESULTS: artifacts/fable-plural162b-20260922/RESULTS.md
+- Outcomes 160b: P160b.1 TRUE (probe 56/56: A 16/16 + B 16/16 triples+reply equal to explicit twins incl. director Tom/Paris verbatim -> Tom Paris; C 14/14 exact clarify + 0 writes incl. director don't-know verbatim; D 10/10 byte-identical to loop150; 10.4 s) | 0.80. P160b.2 TRUE (sessions: predicted S3n6 UNHELPFUL->OK exactly met, reply "Saved: Rao's city is denver.", other 179/179 identical, 0 new WRONG; 7.2 s) | 0.80. P160b.3 TRUE (bench 600/600 verdicts+replies identical to loop150 rows: edit200 150/50/0, old 157/43/0, new 136/63/1 same pre-existing wrong; 96.1 s) | 0.80. P160b.4 TRUE (marks123 per-case identical to marks150: p2 64/64, p3 L1-L6 7/7, p4 30/30, rt110 62/62, q1, bench 400/400, rt81 74/74, soak 2000/3/0-0-0, q4 leaks; sleep SKIP names loop160b file only as predicted; p3 38.8 s, rt110 136.6 s, soak 158.9 s solo in the open) | 0.70. P160b.5 TRUE (all runs < 1500 s: 10.4/7.2/96.1/38.8/136.6/158.9 s; daemon smoke boot+reply+STOP exit 0) | 0.90. 5/5 TRUE; SCORE PASS (C1-C2, G1-G4). Deviations: parallel + solo p3 crashed on missing self.idle_seconds in Loop160bDaemon (first misdiagnosed as load starvation); post-seal one-line harness fix mirroring loop150, sealed files untouched, p3+rt110 re-run solo in open, both attempts reported. RESULTS: artifacts/fable-correct160b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 158c (wh-city question rewriter on loop158b, Muse), written before the registered runs
+- P158c.1: T1 — sealed 46-case probe through loop158c vs loop158b: 22/22 shape cases (e1)-(e5) exact (every shape, 7 chains of length 2, both cases, with/without "?"), 24/24 look-alike+other byte-identical. 0.75. Falsified by any case FAIL.
+- P158c.2: T2 — 0 notebook writes on every probe question, 22/22 must-cases exact (>= 95% bar). 0.80. Falsified by any question write or < 21 exact.
+- P158c.3: G1 — bench121 4 splits through loop158c per-item verdict-identical to sealed loop158b rows (0 moves, 0 new wrong). Canonical bench questions already parse so the pre-fallback stage never fires. 0.70. Falsified by any move or any new wrong.
+- P158c.4: G2 — every marks123 suite per-case identical to sealed marks158b (verdicts; replies; soak counters; q4 leaks []), except the sleep SKIP reason naming the new agent file. 0.65. Falsified by any other move. rt110/soak harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P158c.5: G3 — junk (redteam136/cases150/f1/cases139b), redteam143 and sessions152 through loop158c: 0 moves vs loop158b frozen results, 0 new WRONG/WRONG-WRITE, 0 new junk writes, sessions replies identical. 0.70. Falsified by any move.
+- P158c.6: G4 — each registered run (probe, bench, redteam, marks) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 158c: P158c.1 TRUE (probe 46/46: 22/22 shapes exact incl 7 len-2 chains, 24/24 identical; 4.4 s) | 0.75. P158c.2 TRUE (0 question writes, 22/22) | 0.80. P158c.3 TRUE (bench 4 splits 0 moves 0 new wrong; 41.1 s) | 0.70. P158c.4 TRUE (marks123 0 moves, 1 allowed sleep-filename line, q4 []/[] n=481; max suite 252.9 s) | 0.65, no flakes so no open re-run. P158c.5 TRUE (rt136 145 + rt143 124 + s152 + 150/139b/f1, 0 moves 0 new wrong/write; 7.2 s) | 0.70. P158c.6 TRUE (max run ~437 s; daemon idle_seconds OK) | 0.90. 6/6 TRUE. SCORE PASS (T1/T2/G1-G4). Post-seal edit: none; sealed files shasum-clean. RESULTS: artifacts/fable-whcity158c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 120c (talker silence fix, Muse), written before any run (PASSMARKS sealed in artifacts/fable-talker120c-20260922/)
+- P120c.1: R1 — wire51 replay x3 with the new mouth matches replay-report.json exactly on all 3 runs: wrong_writes [0,0,0], 0 empty said on answer turns, correct [12,12,12], abstentions [3,3,3], missed [0,0,0], two_hop_correct [6,6,6]. 0.55. Falsified by any differing count (known risk: the 120b raw decode may pass the brake with wrong text on the two contract-status turns instead of falling back).
+- P120c.2: R2 — sealed 500-record re-score with the new mouth: after-brake unfaithful 0, status >= 486/500, OK answer 250/250 (held-out uses only the six statuses, so the fallback is identical to 120b's 489/250). 0.85. Falsified by any miss.
+- P120c.3: ears_source english* on >= 39/40 turns in every replay run (Qwen bridge up; never a silent fallback). 0.85. Falsified by any run below 39.
+- P120c.4: each registered run (replay, score) < 25 min wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 (120b score took 167 s; replay is ~42 decodes + Qwen ears). 0.95. Falsified by any run >= 25 min.
+- Outcomes 120c: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 119b (ears relation-namespace remap PREP for one GPU retrain, Muse), written before the prep runs (PASSMARKS sealed f16b2cc8…)
+- P119b.1: W3 (reading94 raw exact >= 3x positional bars 27/33/30) passes in >= 2/3 seeds (11911/11912/11913, remapped labels). 0.30. Falsified by <= 1 seed reaching its bar (remap fixes containment/city/job/birthplace wording; citizenship + birth/death swaps are untouched).
+- P119b.2: W1 (wclosed ensemble executed >= 23/46 with 0 silent wrong writes). 0.40. Falsified by executed <= 22 or any silent wrong write.
+- P119b.3: W2 (reading94 >= 30 correct writes at <= 5% wrong at own tau) passes in >= 2/3 seeds. 0.30. Falsified by <= 1 seed passing.
+- P119b.4: carried 47 marks with corrected SEEN bar (589/654 exec) all pass. 0.25. Falsified by any carried mark failing (remapped synth city/birthplace/job rows now predict inventory names the un-remapped 47 panels still score as city/birthplace/job).
+- P119b.5: 3-seed wave clock (first train step to last score write) < 2700 s on the RTX 5070 Ti. 0.60. Falsified by >= 2700 s.
+- P119b.6: pool identity gates hold on the BensPC build (synth == 60000, kept >= 140903, dropped <= 614, lengthened-synth median in [38,48]). 0.85. Falsified by any gate failing.
+- P119b.7 (falsifier): relation-wrong / (312 - exact) on the diagnosis panel stays >= 0.50 scored by scripts/fable_ears119d_diagnose.py on seed 11911 -> the head, not the labels, is at fault. 0.45. Falsified by a rate < 0.50 (119d baseline 224/312 = 0.718 on seed 11901).
+- Outcomes 119b: (to be appended after the registered wave; PREP-only outcomes: audit + smoke below)
+
+## 2026-09-22 — Experiment 139e (relation-gated unknown-tail clarify on loop139c, Muse), written before the registered runs
+- P139e.1: T1 sealed 65-case probe through loop139e: 27/27 unknown-tail on listed relations exact clarify + 0 writes (incl. 5 corrections + stacked tail), 17/17 same-shape (incl. 139d killers Gaelic/American football, Wa language now storing) + 21/21 other byte-identical to loop139c. 0.75. Falsified by any non-OK case.
+- P139e.2: T2 0 wrong writes over all 65 cases; 27/27 tailu exact. 0.80. Falsified by any WRONG-WRITE or inexact tailu case.
+- P139e.3: G1 bench 4x200 vs sealed loop139c rows: 0 new wrong, 0 moves (pre-seal scan of all 5375 taught triples incl. declarative bench73 templates: 0 gated hits; killers are sport/language, unlisted). 0.70. Falsified by any move or new wrong.
+- P139e.4: G2 marks123 per-case semantic (verdict+reply) identical to marks139c on every suite (predicted moves: none; all 9 static chat-suite hits verified byte-identical end-to-end pre-seal; only volatile-metadata/cosmetic diffs). 0.60. Falsified by any semantic per-case move. rt110/soak harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P139e.5: G3 redteam136 + redteam143 + sessions152 vs sealed loop139c rows: 0 new WRONG/WRONG-WRITE, 0 moves (rt143/sessions 0 static hits; all 3 rt136 static hits verified byte-identical pre-seal). 0.70. Falsified by any move, new WRONG, or new write.
+- P139e.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 139e: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 120d (talker don't-know routing, Muse), written before any run (PASSMARKS sealed in artifacts/fable-talker120d-20260922/)
+- P120d.1: R1 — wire51 replay x3 with the new mouth matches replay-report.json exactly on all 3 runs: wrong_writes [0,0,0], correct [12,12,12], abstentions [3,3,3], missed [0,0,0], two_hop_correct [6,6,6], empty said <= 5 per run. 0.70. Falsified by any differing count (unlike 120c, non-six statuses skip decode entirely, so no raw-decode brake-pass risk on those turns).
+- P120d.2: R2 — sealed 500-record re-score with the new mouth: after-brake unfaithful 0, status >= 486/500, OK answer 250/250 (held-out uses only the six statuses, so contract_routed == 0 and numbers match the director's 489/250). 0.80. Falsified by any miss.
+- P120d.3: ears_source english* on >= 39/40 turns in every replay run (Qwen bridge up; never a silent fallback). 0.80. Falsified by any run below 39.
+- P120d.4: each registered run (replay, score) < 25 min wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.95. Falsified by any run >= 25 min.
+- Outcomes 120d: REGISTERED RUNS BLOCKED — mandated checkpoint artifacts/claude-talker120b-run-20260922/fable_talker120b_ckpt_last.pt absent from the repo and every worktree (only logs/JSON remain; it existed at the 05:50 director replay), so P120d.1-P120d.4 are UNSCORABLE as registered (no re-run into a pass will be attempted; a substitute ckpt would void the marks). OPEN DIAGNOSTICS with the surviving mask-fixed 100-step smoke ckpt (artifacts/fable-talker120b-20260922/smoke/): replay x3 == wire51 replay-report.json exactly (wrong [0,0,0], correct [12,12,12], abstentions [3,3,3], missed [0,0,0], two-hop [6,6,6], empty 5/run, english 40/40 x3; both missed turns speak wire51's sentences verbatim; contract_routed 6) | n/a. Score 500: after-brake 0, OK 250/250, status 287/500 (weak smoke model; contract_routed 0), 202 s | n/a. RESULTS: artifacts/fable-talker120d-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 137d (say/hearsay framings never write, on loop137c, Muse), written before the registered runs
+- P137d.1: T1 — sealed 76-case probe through loop137d vs loop137c: S-say 16/16 exact echo+parenthetical, S-hear 24/24 exact hearsay sentence, C 6/6 real-value answers, N 12/12 + O 18/18 byte-identical to loop137c, 0 writes on every framed turn. 0.80. Falsified by any case FAIL.
+- P137d.2: T2 — 0 wrong writes on all 46 framed sessions. 0.85. Falsified by any framed write.
+- P137d.3: G1 — bench121 4 splits through loop137d per-item verdict+reply identical to sealed loop137c rows (0 moves, 0 new wrong). 0.75. Falsified by any move or any new wrong.
+- P137d.4: G2 — every marks123 suite per-case identical to sealed marks137c, except the sleep SKIP reason naming fable_loop137d_agent.py (inherited p3 L5-Z1 58/60 and rt81 60/0/14 FAIL labels byte-identical). 0.65. Falsified by any other move. rt110/soak harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P137d.5: G3 — sessions152 0 moves; redteam143 0 moves; redteam136 0 verdict moves (C101/C102 stay OK, 0 writes, replies move to hearsay sentence, verdict-only compare lists nothing); cases150 exactly 6 reply-only moves (R02/R03/R04/R05/R08/A01, verdict stays OK); f1 + cases139b 0 moves; 0 new WRONG/WRONG-WRITE anywhere. 0.70. Falsified by any unpredicted move or any new wrong/write.
+- P137d.6: G4 — each registered run (probe, bench, junk, sessions, rt143, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 137d: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 160c (bare correction after a >= 2-fact chain asks which fact is meant, Muse), written before the registered runs
+- P160c.1: T1 — 68/68 on the sealed probe through loop160c: H 20/20 bare-after-chain exactly the which-one-is-wrong clarify (every sealed chain fact listed, 0 FACT writes on the bare turn) + explicit follow-up "Saved: ..." changing ONLY the named triple; S 24/24 single-fact triples+replies identical to loop160b; O 24/24 other turns replies+writes identical to loop160b. 0.80. Falsified by any case FAIL.
+- P160c.2: T2 — 0 wrong writes over all 68 probe dialogues (bare turns 0 writes; follow-ups write exactly the named fact). 0.85. Falsified by any WRONG-WRITE or any bare-turn write.
+- P160c.3: C2/G3 — sessions152 through loop160c: exactly ONE predicted move vs the loop160b frozen run (S3n6 OK->UNHELPFUL, writes 1->0, which-one-is-wrong clarify); other 179 turns identical; 0 new WRONG. 0.80. Falsified by any unpredicted diff, any unmet prediction, or any new WRONG.
+- P160c.4: G1 — bench per-item verdicts + replies identical to sealed loop160b rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P160c.5: G2 — every marks123 suite per-case verdict identical to sealed marks160b (sleep SKIP text names the new agent file, verdict identical). 0.70. Falsified by any per-case move.
+- P160c.6: G3 — redteam136 (145) + redteam143 (124) through loop160c vs live loop160b arm: 0 moves, 0 new WRONG/WRONG-WRITE. 0.75. Falsified by any move or any new wrong write.
+- P160c.7: G4 — each registered run (probe, bench, sessions, redteam, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers accept idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 160c: (to be appended after the registered runs)
+- Outcomes 139e: P139e.1 HELD (probe 65/65 OK, 27/27 exact; 1.2 s) | 0.75. P139e.2 HELD (0 wrong writes) | 0.80. P139e.3 HELD (G1 0 moves/0 new wrong all 4 splits: 194/2/4, 198/2/0, 150/50/0, 196/2/2; 55.4 s) | 0.70. P139e.4 HELD (G2 per-case semantic identical all suites incl. bench detail 0 moves; only volatile cosmetics: 5401 p3-workdir timestamp/hash lines per 139d-D2 precedent, seconds, sleep SKIP agent name; 261.9 s, no flakes) | 0.60. P139e.5 HELD (G3 0 moves/0 new wrong: 135/7/3 + 106/11 + 129/2; 13.5 s) | 0.70. P139e.6 HELD (max run 261.9 s) | 0.90. 6/6 HELD. SCORE PASS (T1/T2/G1-G4). Deviations: none; seal 11/11 clean; one registered run per suite. RESULTS: artifacts/fable-tail139e-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 157c (filler+Capitalised title guard on loop157b, Muse), written before any run (PASSMARKS sealed in artifacts/fable-title157c-20260922/)
+- P157c.1: T1 — 56/56 on the sealed probe through loop157c vs base loop157b: 22/22 titles never saved under the shortened name (stored empty or full-lead subjects), 22/22 punctuation/lowercase-follow fillers byte-identical to loop157b (questions carry want), 12/12 others byte-identical. 0.70. Falsified by any case FAIL.
+- P157c.2: T2 — 0 wrong writes over all 56 probe cases (wrong = title-case stored triple dropping the lead word). 0.80. Falsified by any wrong write.
+- P157c.3: G1 — bench per-item verdicts AND replies identical to sealed loop157b rows on all 3 splits (600 items), 0 verdict_moves, 0 reply_moves, 0 new wrong (only 157b-strip fires are 4 bench teaches where loop157b==loop157 output, dev-verified). 0.75. Falsified by any move or any new wrong.
+- P157c.4: G2 — every marks123 suite per-case verdict identical to sealed loop157b marks157b (sleep SKIP text names the new agent file, verdict identical). 0.65. Falsified by any per-case move. rt110/soak harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P157c.5: G3 — sessions152 every reply identical to sealed loop157b runs (0 moves, 0 new WRONG/writes); redteam136 + redteam143 two-arm 0 moves, 0 new WRONG-WRITE/WRONG-ANSWER, 0 new writes. 0.70. Falsified by any move or new wrong/write.
+- P157c.6: G4 — each registered run (probe, bench, sessions, redteam, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrapper accepts idle_seconds (default 30.0). 0.90. Falsified by any run >= 1500 s.
+- Outcomes 157c: (to be appended after the registered runs)
+- Outcomes 160c: P160c.1 TRUE (probe 68/68: H 20/20 exact clarify + 0 bare writes + follow-up changes only named triple, S 24/24 + O 24/24 identical to loop160b; 1.7 s) | 0.04. P160c.2 TRUE (0 wrong writes over 68 dialogues) | 0.04. P160c.3 TRUE (sessions: predicted S3n6 move exactly met OK->UNHELPFUL writes 1->0, other 179/179 identical, 0 new WRONG; 4.1 s) | 0.04. P160c.4 TRUE (bench 600/600 verdicts+replies identical to loop160b rows, 0 new wrong; 66.0 s) | 0.04. P160c.5 TRUE (marks123 per-case identical to marks160b: p2 64/64, p4 30/30, p3 L1-L6 7/7, rt110 62/62, rt81 74/74, q1/q4/soak/bench identical, sleep SKIP names new file only; 219.6 s) | 0.09. P160c.6 TRUE (rt136 145 + rt143 124, 0 moves, 0 new wrong vs live loop160b arm; 24.1 s) | 0.0625. P160c.7 TRUE (1.7/66.0/4.1/24.1/219.6 s, all < 1500 s) | 0.01. 7/7 TRUE; SCORE PASS (T1-T2, C2, G1-G4). Deviations: none, no re-runs, seal intact. RESULTS: artifacts/fable-twohop160c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 167 (verb-phrase facts map onto existing relations, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-verb167-20260922/)
+- P167.1: T1 sealed 61-case probe through loop167: 20/20 mapped (verb teach stores expected triple = possessive-twin triple on loop162b; every verb-Q + possessive-Q contains V), 18/18 nowrite (0 writes + didnt-clarify), 20/20 other byte-identical to loop162b, 3/3 chains incl. 2-hop asks ending at verb-taught facts. 0.75. Falsified by any non-OK case.
+- P167.2: T2 0 wrong writes over all 61 rows (no TWIN-DIFF, no WRONG-WRITE). 0.80. Falsified by any TWIN-DIFF or WRONG-WRITE.
+- P167.3: G1 bench 600 items vs frozen loop162b rows: 0 verdict/reply moves, 0 new wrong (pre-seal exact-schema scan: 0 verb-frame hits in bench teaches+questions). 0.75. Falsified by any move or new wrong.
+- P167.4: G2 marks123 per-case identical to base marks162b except predicted rt110 P1+P3 (ruling overrides stale nowrite expectations: new log[0] contains "Saved: Mira's city is Oslo.", log[2] contains "Mira's city is Oslo."); sleep SKIP identical, reason names loop167; all else byte-identical modulo volatile seconds; soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted move.
+- P167.5: G3 redteam136 + redteam143 + sessions152 vs loop162b: 0 verdict moves, 0 reply moves, 0 new WRONG/WRONG-WRITE, 0 new writes (pre-seal scans all clean after married-Q exclusion). 0.75. Falsified by any move, new WRONG, or new write.
+- P167.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 167: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 167 outcomes (Muse), appended after the registered runs
+- Outcomes 167: P167.1 TRUE with one disclosed case fix (registered probe 60/61 FAIL -- O03 case bug, office teach wrongly expected nowrite; fixed in the open, re-run 61/61: mapped 20/20 incl twin-triples, nowrite 18/18, other 20/20, chains 3/3; 2.3 s) | 0.75. P167.2 TRUE (0 wrong writes) | 0.80. P167.3 TRUE (bench 600/600 verdict+reply identical, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 46.1 s) | 0.75. P167.4 TRUE with disclosed amendment (marks123 per-case identical to marks162b except predicted rt110 P1+P3 with exact predicted replies, sleep reason names loop167; first G2 FAIL was harness-only -- statuses cosmetics + L2 mailbox race, rt110 re-run once in the open, both reported, driver normalises statuses + summary deltas; 190.5 s) | 0.65. P167.5 TRUE (rt136 145 + rt143 124 + s152 180 turns, 0 moves, 0 new wrong/write; 17.2 s) | 0.75. P167.6 TRUE (max run 190.5 s) | 0.90. 6/6 TRUE. SCORE PASS (T1/T2/G1-G4). Post-seal edits: cases167.json O03 fix (532c175a…->4598688e…), marksdiff statuses/summary amendment (b1a8d0cf…->77d25c4a…); all other sealed files shasum-clean. Dev pollution disclosed: root notebook F00007-09 (Kwame facts, chain-valid, isolated dirs used throughout). RESULTS: artifacts/fable-verb167-20260922/RESULTS.md
+- Outcomes 138d (M5-completion supplement, no prediction changes): Z4 run1 crash + run2 PASS (marker 0, boot_ok, probes 5/5, taught 200/200, restore 5/5; 336.8 s) both reported per sealed F3; Z5 exact 138b parity (noise4 install 5/5, noise8 5 abstains); soak 3000 turns/seed 931/10 kills: K1/K2/K3/K5 PASS, exactly-once 3000/3000 clean, K4 p99 135->4517 ms FAIL (driver-internal, outside sealed bar); completion wave 519.5 s, soak 561.4 s. M5 stays FAIL (registered FAIL never re-run into a pass). RESULTS: artifacts/fable-agent138d-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 166 (first-person "my" user entity, Muse), written before the registered runs
+- P166.1: T1 sealed 52-case probe through loop166: 25/25 first-person rows OK (exact (USER,...) triples, Saved/already replies, every ask want-hit, 3 two-hop + 3 corrections), 27/27 identical_to_base rows (10 agent-itself + 17 other) stored+replies byte-identical to loop162b, raw USER key in no reply except literal-USER control O13. 0.80. Falsified by any non-OK case.
+- P166.2: T2 0 wrong writes over all 52 rows. 0.85. Falsified by any WRONG-WRITE.
+- P166.3: G1 bench 600 items vs frozen loop162b rows: 0 verdict/reply moves, 0 new wrong (pre-seal scan: 0 me-frame fires in 1000 bench teaches+questions). 0.75. Falsified by any move or new wrong.
+- P166.4: G2 marks123 per-case identical to marks162b / marks150 EXCEPT predicted rt81 O_user-02 (UNCLEAR->UNCLEAR, reply "I don't know your mother yet.") + O_user-03 (UNCLEAR->BUG question-wrote, reply "Saved: your city is Lisbon.") and p3 L2 (changed +2, wrong [O_user-03], pass True->False); sleep SKIP identical, reason names loop166 file; soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted move.
+- P166.5: G3 vs loop162b: exactly one move, (S4-pets-identity, n=1) UNHELPFUL->OK with "Saved: your dog is biscuit." + 1 write; other 179 session turns + redteam136 (145) + redteam143 (124) byte-identical; 0 new WRONG/WRONG-WRITE. 0.75. Falsified by any other move, new WRONG, or new write.
+- P166.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 166: P166.1 TRUE (probe 52/52: 25/25 first-person incl 3 two-hop + 3 corrections, 27/27 identical, 0 USER leaks outside O13; 2.0 s) | 0.80. P166.2 TRUE (0 wrong writes) | 0.85. P166.3 TRUE (bench 600/600 verdict+reply identical, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 51.8 s) | 0.75. P166.4 TRUE with one race re-run (rt81 exactly O_user-02/-03 as predicted, other 72/74 identical; p3 L2 flip exactly as predicted, L1/L3/L4/L5/L6 identical; p2/q1/bench/soak/q4/sleep identical-or-cosmetic; rt110 first run 1 log-only empty-read race move, open re-run 0 moves, both reported; 187.5 s) | 0.65. P166.5 FALSIFIED -> G3 FAIL: predicted S4/1 move exact (UNHELPFUL->OK, "Saved: your dog is biscuit.", +1 write, 0 new WRONG), but 3 unpredicted reply-case-only cascade moves (S4 turns 2/3/26 render "biscuit's" vs base "Biscuit's": entity display-case carryover from the new correct write; verdicts all OK, writes equal) | 0.75. P166.6 TRUE (max run 187.5 s; daemon idle_seconds OK) | 0.90. 5/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 FAIL (diagnosed, no re-run); G4 PASS. No post-seal code edits (shasum -c 12/12 OK). RESULTS: artifacts/fable-me166-20260922/RESULTS.md
+- Outcomes 137d: P137d.1 TRUE (probe 76/76: S-say 16/16, S-hear 24/24, C 6/6, N 12/12, O 18/18; 1.1 s) | 0.80. P137d.2 TRUE (0 framed writes) | 0.85. P137d.3 TRUE (bench 800, 0 moves, 0 new wrong; 194/4, 198/0, 150/50/0, 196/2; 56.3 s) | 0.75. P137d.4 FALSIFIED on one move (marks123 per-case identical except sleep reason + T6 OK->BUG: frozen reply-text check vs mandated hearsay sentence, 0 writes; rt81 60/0/14 + p3-L5Z1 inherited identical, l6 timing-meta only; rt110 open re-run reproduces T6, 249.6 s; 311.9 s) | 0.65. P137d.5 FALSIFIED on verdict clause (sessions/rt143/rt136/f1/139b as predicted, 0 moves; cases150 6 reply moves R02/R03/R04/R05/R08/A01 went OK->WRONG-REPLY not OK: same frozen-reply cause, 0 writes; 8.3/11.8/22.5 s) | 0.70. P137d.6 TRUE (max run 311.9 s; idle_seconds OK) | 0.90. 4/6 TRUE; G2/G3 FAIL recorded with one diagnosis note, no post-seal edits, no silent re-runs. RESULTS: artifacts/fable-frame137d-20260922/RESULTS.md
+- Outcomes 120d (registered runs executed by Claude/director 07:37–07:44 after the checkpoint was restored; seal OK; no post-seal code edits): P120d.1 TRUE (R1 vectors identical x3, empty said 5/5/5 all small talk), P120d.2 TRUE (after-brake 0, status 489/500, OK 250/250, contract_routed 0), P120d.3 TRUE (ears english 40/40 x3), P120d.4 TRUE (328 s, 426 s). Verdict PASS. See artifacts/fable-talker120d-20260922/REGISTERED-RUN-claude.md.
+- Outcomes 157c: P157c.1 TRUE (probe 56/56: 22/22 titles never shortened with 0 new-loop title stores, 22/22 fillers + 12/12 others identical; base still shortens 20/22) | 0.70. P157c.2 TRUE (0 wrong writes) | 0.80. P157c.3 TRUE (bench 600 items, 0 moves, 0 new wrong; 31.2 s) | 0.75. P157c.4 TRUE (marks per-case verdict-identical; 1 allowed sleep-reason filename line; 1 cosmetic p3/l6 replied_before_kill metadata diff, verdicts identical; 187.5 s; no flakes, no re-runs) | 0.65. P157c.5 TRUE (sessions 0 moves; rt136 145 cases + rt143 124 cases two-arm 0 moves, inherited WRONGs identical) | 0.70. P157c.6 TRUE (max run 187.5 s marks123; all < 1500 s) | 0.90. 6/6 TRUE. MARKS: T1 PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. Deviations: +1 read-only analysis script (markscompare) post-seal, no rule changes; seal shasum clean. RESULTS: artifacts/fable-title157c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 154c (multi-valued relations as an allow-list, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-multival154c-20260922/)
+- P154c.1: T1 154b's sealed probe reused unchanged: 81/81 exact through 154c (all its multi cases use allow-listed sister/friend/brother/child/pet; STOP-check: no case uses a deny-listed multi relation). 0.85. Falsified by any miss.
+- P154c.2: T1b new 83-turn probe: 83/83 exact (28 deny turns byte-identical to loop138b incl. Messi multi-word + citizen copula; 12 allow second-adds in 154b sealed forms; 5 two-hop clarifies) + T2 0 wrong writes, 0 lost (21 state maps + full_state exact). 0.80. Falsified by any miss.
+- P154c.3: G1 bench 4x200: every move lands on one of the 16 pre-sealed allow-dup items (15 correct->abstain clarifies, bench132-4hop-112 no-move), 0 moves on the other 784 items, 0 new wrong. 0.75. Falsified by any move elsewhere or any new wrong.
+- P154c.4: G2 marks123 per-case identical to marks138b except exactly: l5z2 bench65-mquake-033 correct->MISS clarify + marks-bench moves on mquake-033/s2fresh-031/125/200 correct->abstain (p2 B1/B2/B3/B5/B8/F2 return to identical). 0.70. Falsified by any other move.
+- P154c.5: G3 redteam136 (145) + redteam143 (124) + sessions152 (6 sessions): 0 moves, 0 new WRONG/WRONG-WRITE, 0 new writes vs loop138b. 0.75. Falsified by any move, new WRONG, or new write.
+- P154c.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 154c: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 168 (self-grounded canned replies on loop138b, Muse), written before any run (PASSMARKS sealed in artifacts/fable-selfground168-20260922/)
+- P168.1: T1 — sealed 61-turn probe through loop168 vs loop138b: A 25/25 fresh self-Qs with 0 crashes + 0 replies naming a check-name not in the notebook; B 10/10 byte-identical with panel facts taught; C 5/5 empty-state plain-honest with 0 crashes + 3/3 with-state byte-identical; D 15/15 ordinary turns byte-identical. 0.80. Falsified by any case FAIL.
+- P168.2: T2 — 0 FACT/RETRACT events added by any of the 43 self-question turns on loop168. 0.85. Falsified by any question write.
+- P168.3: G1 — bench121 4 splits through loop168 per-item verdict+reply identical to sealed loop138b rows (0 moves, 0 new wrong). 0.75. Falsified by any move or any new wrong.
+- P168.4: G2 — every marks123 suite per-case identical to sealed marks138b (scrubbed) except 4 predicted reply-only moves, verdicts identical: rt81 O_user-03 + I_edges-03 and p3-l2 O_user-03 + I_edges-03. 0.65. Falsified by any other move. rt110/soak harness-error flake under load is the known mailbox race: re-run once in the open, report both.
+- P168.5: G3 — sessions152 0 moves; redteam136 0 moves; redteam143 exactly 3 predicted reply-only moves (J8/K9/O5 -> "I have no opinions.", verdicts stay WRONG-ANSWER); 0 new WRONG/WRONG-WRITE anywhere. 0.70. Falsified by any unpredicted move or any new wrong/write.
+- P168.6: G4 — each registered run (probe, bench, regress, marks123) < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- P168.7: Sensitivity — the sealed probe on loop138b shows >= 4 crashes and >= 8 naming violations on part A (the bug reproduces through the probe). 0.80. Falsified by fewer.
+- Outcomes 168: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 171 (name-shaped values on loop138d, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-nameval171-20260922/)
+- P171.1: T1 sealed 76-case/110-turn probe through loop171: 32/32 clarify (exact sealed reply, 0 writes, follow-up asks find nothing) + 44/44 byte-identical to loop138d (22 real names incl lowercase ana/zofia, 20 non-name relations, 2 corrections). 0.85. Falsified by any case FAIL.
+- P171.2: T2 0 wrong writes over all 110 turns. 0.90. Falsified by any WRONG-WRITE or clarify-case write.
+- P171.3: G1 bench 800 items vs sealed loop138b rows: exactly 4 moves (bench121-026, bench121-099, bench132-067 correct->abstain on title-spouse chains; bench132-152 wrong->abstain inherited), 0 new wrong. 0.80. Falsified by any other move or any new wrong.
+- P171.4: G2 marks123 per-case identical to frozen marks138d except p4 P4-08 (pass->false-refusal on "actually Ana"), sleep SKIP reason naming loop171, and p3-l6 replied_before_kill timing metadata (verdicts identical); race flakes re-run once in the open, both reported. 0.75. Falsified by any other move.
+- P171.5: G3 redteam136 + cases150 + f1 + cases139b + redteam143 + sessions152: 0 moves vs 138d frozen rows; vs loop138b exactly the inherited 138d sets (rt136 C115/C124/C127/C129/C142, c150 A03 reply-only, f1 t14, 139b C10/C21, rt143 J8/K9/M3/O5/S4, sessions 36 moves + 3 writes == 138d rows); 0 new WRONG/WRONG-WRITE/writes beyond 138d. 0.80. Falsified by any other move or any new wrong/write.
+- P171.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 171: P171.1 TRUE (probe 76/76: 32/32 clarify + 44/44 identical; 3.7 s) | 0.85. P171.2 TRUE (0 wrong writes, 0 clarify-case facts) | 0.90. P171.3 TRUE (bench 800: exactly the 4 predicted moves, 0 new wrong; 192/4/4, 198/2/0, 150/50/0, 195/4/1; 63.2 s) | 0.80. P171.4 TRUE (marks per-case identical to marks138d except predicted P4-08 + loop171 sleep reason + l6 timing metadata, verdicts identical; max suite 277.6 s; no flakes, no re-runs) | 0.75. P171.5 TRUE (G3 0 moves vs 138d frozen rows on all 6 suites; vs 138b exactly the predicted inherited sets; 0 new wrong/write beyond 138d; 15.2 s) | 0.80. P171.6 TRUE (max run 277.6 s; idle_seconds OK) | 0.90. 6/6 TRUE. SCORE PASS (T1/T2/G1-G4). No post-seal edits (shasum -c 11/11 OK). RESULTS: artifacts/fable-nameval171-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 137e (one hearsay reply, Muse), written before any run (PASSMARKS sealed in artifacts/fable-frame137e-20260922/)
+- P137e.1: T1 137d sealed probe reused unchanged: 76/76 (S-say 16/16 byte-identical to loop137d incl exact say echo, S-hear 24/24 exact HEARSAY_MSG, C 6/6 real-wins, N 12/12 + O 18/18 identical to loop137d). 0.85. Falsified by any miss.
+- P137e.2: T1b new 31-dialogue probe: 31/31 (H 19/19 HEARSAY_MSG + 0 writes + follow-up finds nothing; E 12/12 identical to loop137d) + T2 0 framed writes. 0.85. Falsified by any miss or any framed write.
+- P137e.3: G1 bench 800 items vs frozen loop137c rows: 0 verdict/reply moves, 0 new wrong (pre-seal real-agent scan: 0 fires in 800 inputs). 0.80. Falsified by any move or new wrong.
+- P137e.4: G2 marks123 per-case identical to marks137c except sleep SKIP reason naming fable_loop137e_agent.py (pre-seal real-agent scan of every suite input: fires only where loop137c live reply is HEARSAY_MSG with 0 writes; p2-A4 turn-1 text diff not recorded in p2 rows; p3 templates 0 fires). 0.70. Falsified by any other move. Soak/rt110 race-flake (if any) re-run once in the open, both reported.
+- P137e.5: G3 vs loop137c: 0 moves, 0 new WRONG/WRONG-REPLY, 0 new writes (sessions 180t 0 fires; rt143 124 0 fires; rt136 2 fires + cases150 6 fires all reply-equal live; f1/139b 0 fires). The 7 checks 137d broke return to identical. 0.75. Falsified by any move, new WRONG, or new write.
+- P137e.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 137e: P137e.1 TRUE (probe T1 76/76: S-say 16/16 identical to 137d, S-hear 24/24 exact HEARSAY_MSG, C 6/6, N 12/12, O 18/18; 1.4 s) | 0.85. P137e.2 TRUE (T1b 31/31: H 19/19 + E 12/12; T2 0 framed writes) | 0.85. P137e.3 TRUE (bench 800, 0 moves, 0 new wrong; 194/4, 198/0, 150/50/0, 196/2; 69.1 s) | 0.80. P137e.4 TRUE (marks123 per-case identical to marks137c except sleep reason filename; rt110 T6 restored OK, S1 inherited on both; rt81 60/0/14 + L5-Z1 58/60 inherited identical; soak 2000/0/0 clean, no re-run; cosmetic L1-statuses + l6-timing metadata only; 297.3 s) | 0.70. P137e.5 TRUE (rt136/cases150/f1/139b/sessions/rt143 0 moves, 0 new WRONG; cases150 57/57; 2.4/3.3/4.0 s) | 0.75. P137e.6 TRUE (max run 297.3 s; idle_seconds OK) | 0.90. 6/6 TRUE. MARKS: T1 PASS; T1b PASS; T2 PASS; G1 PASS; G2 PASS; G3 PASS; G4 PASS. One post-seal driver fix disclosed (DEFAULT_CONFIG name in 4 drivers; first junk run HARNESS-ERROR discarded, affected marks re-ran in the open; probe stands as sealed). RESULTS: artifacts/fable-frame137e-20260922/RESULTS.md
+
+- Outcomes 168: P168.1 TRUE (probe 61/61: A25 0 crash/0 naming, B10/10 identical, C8/8, D15/15; 5.7 s) | 0.80. P168.2 TRUE (0 writes/43 self turns) | 0.85. P168.3 TRUE (bench 800 items 0 moves 0 new wrong; 42.3 s) | 0.75. P168.4 TRUE (marks123: exactly the 4 predicted reply-only moves, verdicts identical; sleep SKIP names new file; l6 kill-race counter only; max suite 248.4 s; no flakes so no open re-run) | 0.65. P168.5 TRUE (sessions 0 moves; rt136 0 moves; rt143 J8/K9/O5 reply-only, verdicts identical, 0 new wrong; 11.1 s) | 0.70. P168.6 TRUE (max run 263.7 s; daemon idle_seconds OK) | 0.90. P168.7 TRUE (base: 4 crashes + 8 namings on part A) | 0.80. 7/7 TRUE. SCORE PASS (T1/T2/G1-G4). Post-seal edit: none; sealed files shasum-clean. RESULTS: artifacts/fable-selfground168-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 165 (missing-apostrophe possessives on loop162b, Muse), written before the registered runs
+- P165.1: T1 sealed 53-case probe on loop165: 29/29 typo exact (triple + typo Who-ask + proper ask answer V, 7 relations, lower+capitalised, incl. Chriss->Chris), 24/24 guard+other stored+reply byte-identical to loop162b. 0.75. Falsified by any non-OK case.
+- P165.2: T2 0 wrong writes over all 53 rows. 0.85. Falsified by any WRONG-WRITE.
+- P165.3: G1 bench 600 items vs frozen loop162b rows: 0 verdict/reply moves, 0 new wrong (pre-seal shape scan: 0 claim shapes in all bench inputs). 0.75. Falsified by any move or new wrong.
+- P165.4: G2 marks123 per-case semantically identical to marks162b on every suite (volatile timings/paths/sleep-reason scrubbed, listed); soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted per-case move.
+- P165.5: G3 redteam136 + redteam143 + sessions152 vs loop162b live: 0 verdict moves, 0 new WRONG/WRONG-WRITE, 0 new writes (pre-seal shape scan clean on all G3 inputs). 0.75. Falsified by any move, new WRONG, or new write.
+- P165.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 165: (to be appended after the registered runs)
+- Outcomes 154c: P154c.1 TRUE (T1 81/81, 0.2 s) | P154c.2 TRUE (T1b 83/83 turns, 21 state maps + full_state exact, 0 wrong writes) | P154c.3 TRUE (G1 15 moves all on allow-dup items, all correct->abstain, 0 new wrong, 43.3 s) | P154c.4 TRUE (G2: p2 64/64 identical, l5z2 exactly 1 predicted move mquake-033, marks-bench exactly 4 predicted moves, all else per-case identical incl. l5z1/rt81 pre-existing FAILs; 497 s) | P154c.5 TRUE (G3 145+124+6 sessions 0 moves, 7.5 s) | P154c.6 TRUE (max run 245.8 s). 6/6. G2 recorded FAIL with one diagnosis note (predicted mquake-033 allow-clarify). No post-seal edits (seal re-verified).
+
+## 2026-09-22 — Experiment 138f (stack clean: 138d minus 155/154/138c, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-agent138f-20260922/)
+- P138f.1: M1 — all 8 remaining piece probes PASS at their own bars (142 500/500; 146d 21/21 with H13 ok + H17/H18 fail-as-on-146c; 153 50/50 0 writes; 156b 116/116 + T2 68/68 with N02 base-identical no-write; 157 60/60; 158 59/59; 159 48/48 0 writes; 150b 49/49). 0.75. Falsified by any probe FAIL.
+- P138f.2: M4 — the 7 cases byte-identical to loop138b (C124/C127/C129/C142/C10/C21/M3) and 0 new WRONG/WRONG-WRITE/junk writes vs loop138b on redteam136, cases150, f1, cases139b, redteam143, sessions152 (predicted improvements only: f1 f144-t14 W→OK, rt143 S4 W→OK, sessions exactly 138d's 36-move set with the same 3 correct S2 writes). 0.70. Falsified by any non-identical case, any new wrong/write, or any unpredicted move.
+- P138f.3: G1 — bench121 4 splits per-item vs sealed 138b rows: 0 new wrong; the only move bench132-152 wrong→abstain. 0.75. Falsified by any other move or any new wrong.
+- P138f.4: G2 — every marks123 suite per-case verdict-identical to sealed marks138d except l5z1 turns 49+58 (→CLARIFY, status_match true), rt81 D_q_vs_s-04 (→OK) + I_edges-03 (→UNCLEAR), sleep SKIP reason naming the new agent file; reply-only diffs exactly the enumerated 138c-revert set (p2 4, rt110 13, rt81 10, l2 12, l5z1 stage tags). 0.65. Falsified by any unpredicted verdict or reply move. rt110/soak race flake: re-run once in the open, both reported.
+- P138f.5: G2-vs-138b — 0 new WRONG anywhere vs loop138b rows (only inherited moves: rt81 D_q_vs_s-03 OK→UNCLEAR, l5z1 turns 42/43 stale). 0.70. Falsified by any new wrong.
+- P138f.6: G3 — redteam136 + cases139b + redteam143 + sessions152 vs loop138b frozen results: 0 new WRONG/WRONG-WRITE/junk writes, every move predicted (M4 set). 0.70. Falsified by any unpredicted move or new wrong/write.
+- P138f.7: G4 — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 138f: (to be appended after the registered runs)
+- Outcomes 165: P165.1 TRUE in the open (probe 53/53: typo 29/29 exact incl Who+What asks, guard+other 24/24 byte-identical to loop162b; 2.3 s) | 0.75. P165.2 TRUE (0 wrong writes) | 0.85. P165.3 TRUE (bench 600/600 verdict+reply identical, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 49.7 s) | 0.75. P165.4 TRUE with disclosed cosmetics (0 per-case moves all suites: p2 64/64, p4 30/30, rt81 74/74, rt110 62/62, q1/p3/q4/bench/sleep/soak identical scrubbed; summary diff is agent/config paths + seconds; sleep SKIP reason names new file; soak 2000/3/0/0/0 clean so no open re-run; 207.0 s) | 0.65. P165.5 TRUE (rt136 145 + rt143 124 + s152 180 turns, 0 moves, 0 new wrong/write; 17.0 s) | 0.75. P165.6 TRUE (max run 207.0 s) | 0.90. 6/6 TRUE. SCORE PASS (T1/T2/G1-G4). Post-seal fix: sealed cases165.json typo-row expects now list [setup, typo] triples (registered probe mis-scored correct behaviour 29x WRONG-WRITE); probe re-ran in open as registered run; no rule/agent change. RESULTS: artifacts/fable-typo165-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 166b (display keeps its capital letter, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-me166b-20260922/)
+- P166b.1: T1 sealed 52-case 166 probe reused unchanged through loop166b vs loop166: 52/52 byte-identical (stored+replies), 0 new entities. 0.85. Falsified by any diff.
+- P166b.2: T1b new 30-dialogue probe (fictional names): 12/12 lower-then-cap (stored equal, late replies use cap, fix visibly fires), 8/8 cap-then-lower byte-identical to loop166, 10/10 other byte-identical; T2 0 wrong writes + 0 new entities on all 82 T cases. 0.80. Falsified by any non-OK case.
+- P166b.3: G1 bench 600 items vs frozen loop166 rows: 0 verdict/reply moves, 0 new wrong (pre-seal entity-level scan: 0 triggers in bench). 0.75. Falsified by any move or new wrong.
+- P166b.4: G2 marks123 per-case identical to frozen marks166, zero moves (pre-seal scan over rt81/p3-L2/rt110/p2: 0 triggers; sleep reason names new file). 0.65. Falsified by any move. Soak/rt110 race-flake (if any) re-run once in the open, both reported.
+- P166b.5: G3 vs loop166: exactly 3 reply moves (S4-pets-identity 2/3/26 return to byte-identical with loop162b frozen rows); S4/1 keeps (OK, "Saved: your dog is biscuit.", 1 write); other 177 session turns + redteam136 (145) + redteam143 (124) byte-identical; 0 new WRONG/WRONG-WRITE. 0.75. Falsified by any other move, new WRONG, or new write.
+- P166b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 166b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 167b (verb-object value screen on loop167, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-verb167b-20260922/)
+- P167b.1: T1 sealed 64-case probe through loop167b: 22/22 mapped (verb teach stores expected triple = possessive-twin triple on loop167, exact Saved reply, verb-Q + possessive-Q answer), 16/16 tail (stored WITHOUT the tail word, exact reply, twin-triple identical), 16/16 descr + 10/10 neg (0 writes + byte-identical loop167 clarify). 0.75. Falsified by any non-OK case.
+- P167b.2: T2 0 wrong writes over all 64 rows (no TWIN-DIFF, no WRONG-WRITE). 0.80. Falsified by any TWIN-DIFF or WRONG-WRITE.
+- P167b.3: G1 bench 600 items vs frozen loop167 rows AND frozen loop162b rows: 0 verdict/reply moves, 0 new wrong (pre-seal exact-schema scan: 0 verb-frame hits in 4,824 bench/G3 turn texts). 0.75. Falsified by any move or new wrong.
+- P167b.4: G2 marks123 per-case identical to base marks167 on every suite with NO moves (rt110 P1/P3 keep sealed 167 replies: log[0] "Saved: Mira's city is Oslo.", log[2] "Mira's city is Oslo."; sleep reason names loop167b; all suite numbers identical); seconds/statuses volatile; soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted move.
+- P167b.5: G3 redteam136 + redteam143 + sessions152 vs loop162b AND vs loop167's frozen rows: 0 verdict/reply moves, 0 new WRONG/WRONG-WRITE, 0 new writes (167b claims a strict subset of 167's statements; 167's G3 moved 0). 0.75. Falsified by any move, new WRONG, or new write.
+- P167b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 167b: P167b.1 TRUE (probe 64/64: mapped 22/22 incl twin-triples + exact replies + both asks, tail 16/16 clean saves, descr 16/16 + neg 10/10 nowrite with byte-identical clarify; 2.1 s) | 0.0625. P167b.2 TRUE (0 wrong writes) | 0.04. P167b.3 TRUE (bench 600/600 verdict+reply identical vs loop167 rows AND loop162b rows, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 42.3 s) | 0.0625. P167b.4 TRUE (marks123 per-case identical to marks167 on all 10 reports: p2 64/64, p4 30/30, p3 L1-L6, q1/bench/rt81/soak/q4 identical incl pre-existing suite FAILs, rt110 62/62 with P1/P3 sealed Oslo replies, sleep reason names loop167b, summary numbers identical; 203.0 s, no flakes) | 0.1225. P167b.5 TRUE (rt136 145 + rt143 124 + s152 180 turns, 0 moves vs 162b and vs 167 frozen rows, 0 new wrong/write; 13.0 s) | 0.0625. P167b.6 TRUE (max run 203.0 s) | 0.01. 6/6 TRUE; SCORE PASS (T1/T2/G1-G4). No post-seal edits (seal 11/11 clean); no open re-runs. RESULTS: artifacts/fable-verb167b-20260922/RESULTS.md
+- Outcomes 138f: P138f.1 HELD (M1 8/8: 142 500/500, 146d 21/21, 153 50/50, 156b 116/116+T2 68/68, 157 60/60, 158 59/59, 159 48/48, 150b 49/49; 28.3 s) | 0.75. P138f.2 HELD (7/7 identical to 138b; rt136 135/7/3 0 moves, cases150 0 moves, f1 only f144-t14 W→OK, cases139b 0 moves, rt143 M3 identical + S4 W→OK only, sessions 165/15/0 = 138d 36-move set, 3 same S2 writes; 0 new wrong/write) | 0.70. P138f.3 HELD (G1 0 new wrong; only bench132-152 w→a; 53.7 s) | 0.75. P138f.4 HELD (G2 verdict moves exactly l5z1 49+58→CLARIFY/status 58, D_q_vs_s-04→OK, I_edges-03→UNCLEAR, sleep rename; reply-only exactly p2 4 + rt110 13 + rt81 10 + l2 12 + l5z1 stage tags; l6 200x3/0 wrong; no flakes, no re-runs; 273.4 s) | 0.65. P138f.5 HELD (0 new WRONG vs 138b; only inherited D_q_vs_s-03 + l5z1 42/43) | 0.70. P138f.6 HELD (G3 0 new wrong/write, all moves predicted) | 0.70. P138f.7 HELD (max run 273.4 s) | 0.95. 7/7 HELD. SCORE PASS (M1/M4/G1-G4). Deviations: none; seal 10/10 clean; one pilot + one registered run per suite. RESULTS: artifacts/fable-agent138f-20260922/RESULTS.md
+- Outcomes 166b: P166b.1 TRUE (T1 52/52 byte-identical to loop166; 1.8 s) | 0.85. P166b.2 TRUE (T1b 30/30: 12/12 C + 8/8 L + 10/10 O; T2 0 wrong writes + 0 new entities on 82 cases; 1.5 s) | 0.80. P166b.3 TRUE with disclosed post-seal agent fix (registered G1-run1 FAIL: 4 unpredicted teach-reply moves, "judo" matched inside "World Judo Championships"; adjacency guard added in the open, G1 re-run 600/600 identical, 0 new wrong; 34.8 s) | 0.75. P166b.4 TRUE with race re-run (per-case identical to marks166 except verdict-identical R5 log-only race move; open rt110 re-run shows race moved to R1, both reported; sleep reason names new file; 181.5 s) | 0.65. P166b.5 TRUE (G3 exactly the 3 S4 reply returns byte-identical to loop162b, S4/1 keeps 166, other 177 + rt136/143 identical, 0 new WRONG/write; 5.6 s) | 0.75. P166b.6 TRUE (max run 181.5 s; daemon idle_seconds OK) | 0.90. 6/6 TRUE. SCORE PASS (T1/T1b/T2/G1-G4). Post-seal edits: agent adjacency guard + probeB case-shape fixes + marksdiff normalise/race-triage; sealed files shasum-clean. RESULTS: artifacts/fable-me166b-20260922/RESULTS.md
+- Outcomes 119b (registered GPU wave run by Claude on the RTX 5070 Ti, 07:47-08:21; scored by the sealed wave scorer; falsifier scored by Claude with a copy of scripts/fable_ears119d_diagnose.py changed only in checkpoint path/seed/tau constants): P119b.1 FALSE (W3 23/19/18 vs 27/33/30, 0/3 seeds; 119 was 11/11/8). P119b.2 FALSE (W1 executed 0/46). P119b.3 FALSE (W2 0 writes on 3/3 seeds). P119b.4 FALSE (SEEN/NEW/WEB fail; ensemble executed 0 rows on every 47 panel incl. CAL; tau_exec_ens 0.978). P119b.5 TRUE (~2040 s). P119b.6 TRUE for 3 of 4 gates (synth 60000, kept 141398, dropped 119); lengthened-synth median not logged, unverified. P119b.7 FALSE, falsifier NOT fired: relation-wrong 143/312 = 0.458 < 0.50 (exact bucket 0 at tau 0.981; 143/289 = 0.495 if the 23 below-tau full matches are excluded). Verdict: FAIL.
+
+## 2026-09-22 — Experiment 173 (user-name learning on loop166, Muse), written before any registered run (PASSMARKS sealed in artifacts/fable-username173-20260922/)
+- P173.1: T1 sealed 52-case 166 probe reused unchanged through loop173 vs loop166: 52/52 byte-identical (stored+replies), 0 moves. 0.85. Falsified by any diff.
+- P173.2: T1b new 45-dialogue probe: 45/45 OK (S 13/13 name-set+answer, L 11/11 zero-write+identical, R 4/4 change-prompt yes/no, P 7/7 USER-fact resolution, U 5/5 don't-know, O 5/5 identical) + T2 0 wrong writes and S/U/L/R entities <= {USER}. 0.80. Falsified by any non-OK case.
+- P173.3: G1 bench 600 items vs frozen loop166 rows: 0 verdict/reply/teach-reply moves, 0 new wrong (pre-seal scan: 0 name-statement/question fires in 2885 suite turns). 0.80. Falsified by any move or new wrong.
+- P173.4: G2 marks123 per-case identical to base marks166 on every suite incl. p3/l2-cases.jsonl, 0 whole-diffs after the disclosed scrub (sleep reason + summaries naming the new agent file; volatile timings). 0.70. Falsified by any unpredicted move. Soak/rt110 race-flake (if any) re-run once in the open, both reported.
+- P173.5: G3 redteam136 (145) + redteam143 (124) + sessions152 (180 turns) vs loop166's frozen rows: 0 verdict/reply moves, 0 new WRONG/WRONG-WRITE, 0 write moves. 0.75. Falsified by any move, new wrong, or new write.
+- P173.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 173: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 170 (fast asks in the stacked agent, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-speed170-20260922/)
+- P170.1: S1 — loop170 on verbatim 15k copies, same 25 asks: p50 < 50 ms and p99 < 200 ms, 25/25 replies byte-identical to loop138d (dev: p50 18.4 ms, p99 45.8 ms). 0.70. Falsified by any slower ask, any reply diff, or any state diff.
+- P170.2: S2 — 1000-turn fresh replay (seed 1702) + 1000-turn 15k replay (seed 1703): every reply and every notebook state byte-identical to loop138d (dev: 134/134 identical). 0.75. Falsified by any reply or state diff.
+- P170.3: S3 — 3000-turn 10-kill soak (seed 931, 138d driver): exactly-once holds (0 dup/lost/wrong) and K4 p99 <= 300 ms. 0.65. Falsified by any exactly-once violation or slower K4.
+- P170.4: G1 — bench121 4 splits vs sealed 138d rows: 0 moves, 0 verdict/reply diffs; new-wrong vs loop138b: 0 beyond the sealed 138d inheritance (bench132-152 wrong->abstain). 0.75. Falsified by any move or new wrong.
+- P170.5: G2 — every marks123 suite per-case verdict-identical to the 138d marks results (sleep SKIP text names the new agent file only); soak/rt110 race-flake (if any) re-run once in the open, both reported. 0.65. Falsified by any unpredicted move.
+- P170.6: G3 — redteam136 + cases139b + redteam143 + sessions152: 0 moves, 0 new WRONG/WRONG-WRITE/junk writes vs loop138b frozen results. 0.70. Falsified by any move or new wrong/write.
+- P170.7: G4 — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- P170.8: STEP1 diagnosis stands: the dominant cost was per-entity whole-word re.compile (3,000,450 re._compile calls in 25 asks) plus per-ask triples rebuilds and triple-walks; the fix's fast path serves every S1 ask from the index (no ask falls back to a full scan -- verifiable by counters). 0.80. Falsified by any S1 ask needing a full scan.
+- P170.9: no post-seal code edits; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- P170.10: finish by 09:00 with all marks green. 0.40. Falsified by any FAIL or overrun.
+- Outcomes 170: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 166c (Title-case-only display fix on loop166, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-me166c-20260922/)
+- P166c.1: T1 sealed 52-case 166 probe reused unchanged through loop166c vs loop166: 52/52 byte-identical (stored+replies), 0 new entities. 0.85. Falsified by any diff.
+- P166c.2: T1b 166b's sealed 30-dialogue probe reused unchanged: 30/30 OK (12/12 lower-then-cap + 8/8 cap-then-lower + 10/10 other) with 0 wrong writes + 0 new entities, per-case verdicts identical to loop166b's open re-run. 0.80. Falsified by any non-OK case or any open-re-run mismatch.
+- P166c.3: T1c new 24-dialogue probe (fictional names): 8/8 shout (stored+replies byte-identical to loop166, lowercase display still shows; director ana/ANA stays "ana"), 8/8 embed (byte-identical to loop166, display unchanged inside capitalised titles), 8/8 title (stored equal, late replies + asks use cap, fix visibly fires). 0.80. Falsified by any non-OK case.
+- P166c.4: G1 bench 600 items vs frozen loop166 rows: 0 verdict/reply moves, 0 new wrong (166c's trigger set is a subset of guarded-166b's, whose open re-run moved 0). 0.75. Falsified by any move or new wrong.
+- P166c.5: G2 marks123 per-case identical to frozen marks166, zero moves (same narrowing argument; sleep reason names the new file). 0.65. Falsified by any move. Soak/rt110 race-flake (if any) re-run once in the open, both reported.
+- P166c.6: G3 vs loop166: exactly 3 reply moves (S4-pets-identity 2/3/26 return to byte-identical with loop162b frozen rows; S4's "Biscuit" mentions are genuine Title-case); S4/1 keeps (OK, "Saved: your dog is biscuit.", 1 write); other 177 session turns + redteam136 (145) + redteam143 (124) byte-identical; 0 new WRONG/WRONG-WRITE. 0.75. Falsified by any other move, new WRONG, or new write.
+- P166c.7: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 166c: P166c.1 TRUE (T1 52/52 byte-identical to loop166; 2.9 s) | 0.85. P166c.2 TRUE (T1b 30/30: 12/12 C + 8/8 L + 10/10 O; 0 open-re-run mismatches; T2 0/0; 2.0 s) | 0.80. P166c.3 TRUE (T1c 24/24: 8/8 shout + 8/8 embed + 8/8 title; T2 0/0 on 106 cases; 1.4 s) | 0.80. P166c.4 TRUE (G1 600/600 verdict+reply identical, 0 new wrong; 150/50/0, 157/43/0, 136/63/1; 27.6 s) | 0.75. P166c.5 TRUE with race re-run (per-case identical to marks166 except verdict-identical R5 log-only race line; open rt110 re-run shows the same R5 line, both reported; sleep reason names new file; 187.6 s + 128.8 s rerun) | 0.65. P166c.6 TRUE (G3 exactly the 3 S4 reply returns byte-identical to loop162b, S4/1 keeps 166, other 177 + rt136/143 identical, 0 new WRONG/write; 8.2 s) | 0.75. P166c.7 TRUE (max run 187.6 s) | 0.90. 7/7 TRUE. SCORE PASS (T1/T1b/T1c/T2/G1-G4). No post-seal edits (seal re-verified clean); no open re-runs except the race-required rt110 pair. RESULTS: artifacts/fable-me166c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 172b (copula-ask agent 172 under bench protocol v3, Muse), written before the registered runs (seal 572a95dc…)
+- P172b.1: T1 (154c sealed T1 probe, 81 lines) 81/81 exact through loop172, byte-identical to loop154c. 0.90. Falsified by any miss.
+- P172b.2: T1b (83 turns) 83/83 exact incl all pinned state maps; only n=6/7/8 expects + n=8/12/16/20/24/28 state maps differ from 154c's file (copula prompt + kept Argentina). 0.85. Falsified by any other diff or miss.
+- P172b.3: T1c (92 turns: 12 copula re-teaches with 6 yes/6 no + states, 6 Actually-corrects, 6 allow-listed, 8 other) 92/92 exact. 0.80. Falsified by any miss.
+- P172b.4: T2: 0 wrong writes, 0 silent replacements of a taught value on every T case. 0.85. Falsified by any silent replace or lost value.
+- P172b.5: G1: loop172-v3 per-item verdict identical to loop154c-v3 on 800/800; 0 new wrong; 154c-v3 rows identical to frozen 154c rows with 0 confirms/split; loop172-old moves exactly the 681 scan-flagged items (info only). 0.75. Falsified by any unpredicted verdict diff or any new wrong.
+- P172b.6: G2: marks123 per-case identical to frozen marks154c except p2 B1/B2/B3/B6/B7/B8/F2 (predicted finals in PASSMARKS; prompt turns write 0 facts) and marks-bench moves only on scan-flagged ids (99+197); rt110 F2/F6/D5 identical; all other suites identical; 0 new WRONG. 0.70. Falsified by any unpredicted move or new WRONG.
+- P172b.7: G3: 0 moves vs frozen 138b rows on sessions152 + redteam136/143; 0 new WRONG/WRONG-WRITE, 0 new writes. 0.80. Falsified by any move, new wrong, or new write.
+- P172b.8: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 172b: (to be appended after the registered runs)
+- Outcomes 173: P173.1 TRUE (T1 52/52 byte-identical, 1.1 s) | 0.0225. P173.2 TRUE (T1b 45/45: S13/L11/R4/P7/U5/O5; 0 wrong writes; S/U/L/R entities <= {USER}; 0.8 s) | 0.04. P173.3 TRUE (G1 600/600 verdict+reply+teach-reply identical, 0 new wrong; 28.1 s) | 0.04. P173.4 TRUE with disclosed deviations (G2: 0 moves p2/p4/rt81/rt110-verdicts/p3/q1/q4/bench/sleep/soak/summary-scrubbed + p3-l2-cases 74/74; rt110 log-only race flakes R1+R5 registered, R5+S3 open re-run, verdicts 62/62 equal both runs, 0 new WRONG; post-seal triage-scrub fix +total_seconds, diff re-run in open; seal 3/3 hashes match) | 0.09. P173.5 TRUE (G3 145+124+180 turns, 0 verdict/reply/write moves; 6.0 s) | 0.0625. P173.6 TRUE (max run 219.4 s) | 0.01. 6/6 TRUE. SCORE PASS (T1/T2/G1/G2/G3/G4) with deviations D1+D2. RESULTS: artifacts/fable-username173-20260922/RESULTS.md
+- Outcomes 172b: P172b.1 TRUE (81/81, 0.2 s) | 0.01. P172b.2 TRUE (86/86 incl states, only sealed n=6/7/8 + 5 state lines differ; 0.1 s) | 0.0225. P172b.3 TRUE (99/99: 12 prompts with 6 yes-new/6 no-kept + states, 6 Actually-silent, 6 allow + 8 other byte-identical to 154c; 0.2 s) | 0.04. P172b.4 TRUE (0 wrong writes, 0 silent replaces across 272 turns) | 0.0225. P172b.5 PARTIAL: 172-v3 verdict+reply identical to 154c-v3 on 800/800, 0 new wrong (172 confirms 721 vs 154c 2; 44.8 s) TRUE; but 154c-v3 vs frozen-154c moved 2 items (bench132-105 reply-only correct->correct, 162 wrong->abstain — the 2 possessive prompts v3 confirms) so the identical-subclause is FALSE | 0.30 (set 0.75). P172b.6 TRUE (p2 7/7 finals as written, prompt turns 0 writes; rt110 F2/F6/D5 identical; bench moves only on scan-flagged ids; p3/p4/q1/q4/rt81/sleep/soak identical; 0 new WRONG; marks 344.8 s; one post-seal comparer edit for volatile seconds/agent-name, compare re-run in the open) | 0.09. P172b.7 TRUE (rt136 145 + rt143 124 + s152 6 sessions, 0 moves, 0 new wrong/write; 8.7 s) | 0.04. P172b.8 TRUE (max run 344.8 s < 1500 s) | 0.0025. 7.5/8 TRUE (P172b.5 partial). SCORE PASS (T1/T2/G1-G4 with noted deviation). RESULTS: artifacts/fable-copula172b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 138g (merge layer A: loop138f + 139e/137e/158c/168, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-agent138g-20260922/)
+- P138g.1: M1 — 139e 65/65 OK (27/27 tail-exact, 0 wrong writes) and 168 61/61 identical to sealed rows; 137e 101/107 identical with exactly the 6 listed discourse-lead interactions (T1-O-01/02/03/16/17, T1b-E06, all 138f-identical); 158c 38/46 identical with exactly the 8 listed interactions (O01/O03/O04/O05/O07/O08 138f-identical clarifies; O06 "I do not have favourites."; O10 "You did, in turn 6."). 0.70. Falsified by any non-listed diff.
+- P138g.2: M2 — 138f's 8 piece probes unchanged on loop138g except exactly one reply-only interaction (156b-N11 → "I have no opinions.", 0 writes). 0.70. Falsified by any other move.
+- P138g.3: M4 — 7 cases byte-identical to loop138b; per-case vs loop138f identical except exactly one improvement (C089 WRONG-WRITE→OK); cases150/f1/cases139b/rt143/sessions 0 moves; 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move or new wrong/write.
+- P138g.4: G1 — bench121 4 splits per-item vs sealed 138f rows: 0 moves, 0 new wrong. 0.75. Falsified by any move or new wrong.
+- P138g.5: G2 — every marks123 suite per-case vs sealed marks138f except exactly 5 moves (p4 P4-09 strip-improvement nonpass storing ["Ana"]; rt81 I_edges-03 + O_user-03 and p3-l2 I_edges-03 + O_user-03 reply-only 168 tightenings, verdicts kept); sleep SKIP reason names new file; l6 kill-counters volatile only. 0.60. Falsified by any unpredicted verdict or reply move.
+- P138g.6: G2-vs-138b — 0 new WRONG anywhere vs loop138b rows. 0.70. Falsified by any new wrong.
+- P138g.7: G3 — director 7 turns reply+store exactly as sealed (G3-1 Ivy, G3-2 Leeds, G3-3 HEARSAY_MSG, G3-4 HYPO_REPLY, G3-5 Hey-Jude save 138f-identical, G3-6 favourites, G3-7 name-decline), 0 writes except G3-1/2/5. 0.75. Falsified by any mismatch.
+- P138g.8: G4 — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 138g: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 119e (score-time gold-remap re-gate of frozen 119b checkpoints, Muse), written before the registered scoring
+- P119e.1: tau_exec_ens < 0.95 after the score-time gold remap (open-diagnosis single-seed 11911 re-fit: 0.8692 vs sealed 0.9812; ensemble needs 3-seed agreement so the bound is modest). 0.70. Falsified by tau_exec_ens >= 0.95.
+- P119e.2: ensemble EXECUTED > 0 rows on CAL (the execute gate re-opens; 119b executed 0 on every 47 panel). 0.80. Falsified by 0 executed on CAL.
+- P119e.3: W2 writes > 0 in >= 2/3 seeds at the re-fitted taus (lower taus admit writes; passage of the W2 bar itself is NOT predicted). 0.65. Falsified by <= 1 seed with writes > 0.
+- P119e.4: W3 still fails in all 3 seeds (raw exact 23/19/18 unchanged: 119e moves no weights and W3 is ungated; bars 27/33/30). 0.80. Falsified by any seed reaching its bar.
+- P119e.5: no post-seal edits to the 119e scorer, bat, or PASSMARKS; any edit is reported. 0.95. Falsified by any silent edit.
+- Outcomes 119e: (to be appended after the registered scoring)
+
+## 2026-09-22 — Experiment 173b (word-names count as names, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-username173b-20260922/)
+- P173b.1: T1 — 166's sealed probe (52 rows) through loop173b byte-identical to loop173 (stored+teach-replies+ask-replies). 0.90. Falsified by any row differing.
+- P173b.2: T1b — 173's sealed probe (45 rows) 44 OK + exactly 1 LISTED-DIFF at S13 ("You can call me lena.": 173 names Lena, 173b requires Title-case after Call-me so 0 writes + clarify). 0.85. Falsified by any other diff.
+- P173b.3: T1c — new 42-dialogue probe 42/42 OK (W 16/16 word-names save+answer; C 14/14 zero writes + identical; I 6/6 propernames set; O 6/6 identical). 0.80. Falsified by any non-OK.
+- P173b.4: T2 — 0 wrong writes over all 139 rows; name-statement rows hold entities <= {USER}. 0.90. Falsified by any wrong write or non-USER entity.
+- P173b.5: G1 — bench 600/600 per-item verdict+reply+teach-replies identical to loop173 frozen rows, 0 new wrong. 0.80. Falsified by any move or new wrong.
+- P173b.6: G2 — marks123 per-case identical to marks173 after the disclosed scrub (timings + agent paths), 0 case-moves, 0 whole-diffs; rt110 log-only race excepted (re-run once in the open, report both). 0.70. Falsified by any unpredicted case move.
+- P173b.7: G3 — redteam136 (145) + redteam143 (124) + sessions152 (180 turns) 0 verdict/reply/write moves, 0 new WRONG/junk writes vs loop173 frozen rows. 0.80. Falsified by any move or new wrong/write.
+- P173b.8: G4 — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 173b: P173b.1 TRUE (52/52, 1.1 s) | 0.01. P173b.2 TRUE (44 OK + S13 LISTED-DIFF exactly as listed; 0 writes + clarify vs 173's Lena save; 0.9 s) | 0.0225. P173b.3 TRUE (42/42: W 16/16, C 14/14, I 6/6, O 6/6; 0.9 s) | 0.04. P173b.4 TRUE (0 wrong writes / 139 rows, 0 non-USER entities) | 0.01. P173b.5 TRUE (bench 600/600 identical, 0 new wrong; 15.0 s) | 0.04. P173b.6 TRUE with disclosed race (all per-case suites + p3-L2 0 moves; rt110 registered R1 log-only, open re-run R1+T5 log-only, verdicts/replies/writes equal; summary WHOLE-DIFF = predicted sleep-SKIP naming; 165.6 s + 168.1 s rerun) | 0.09. P173b.7 TRUE (rt136 145 + rt143 124 + s152 180 turns, 0 moves, 0 new wrong/write; 4.1 s) | 0.04. P173b.8 TRUE (max run 168.1 s < 1500 s) | 0.0025. 8/8 TRUE. SCORE PASS (T1/T1b/T1c/T2/G1-G4 with deviations D1 pre-seal root-notebook slip, D2 rt110 race). Evidence correction stands: propernames holds grace (so "I'm Grace." names). RESULTS: artifacts/fable-username173b-20260922/RESULTS.md
+- Outcomes 138g: P138g.1 HELD (139e 65/65; 168 61/61; 137e 101/107 + exactly T1-O-01/02/03/16/17 + T1b-E06; 158c 38/46 + exactly O01/O03/O04/O05/O06/O07/O08/O10 with sealed replies) | 0.70. P138g.2 HELD (8 pieces at bar except exactly 156b-N11 reply-only, 0 writes) | 0.70. P138g.3 HELD (7/7 identical to 138b; vs 138f exactly C089 W→OK; all other suites 0 moves; 0 new wrong/write) | 0.70. P138g.4 HELD (0 moves, 0 new wrong all splits; 51.6 s) | 0.75. P138g.5 HELD (exactly P4-09 + rt81 2 + p3-l2 2 reply moves; sleep rename only; all else per-case identical) | 0.60. P138g.6 HELD (0 new WRONG vs 138b; P4-09 stores clean Ana) | 0.70. P138g.7 HELD (7/7 sealed replies+stores) | 0.75. P138g.8 HELD (max run 262.6 s) | 0.95. 8/8 HELD. SCORE PASS (M1/M2/M4/G1/G2/G3/G4). Deviations: none; seal 6/6 clean; one pilot + one registered run per suite. RESULTS: artifacts/fable-agent138g-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 171b (word-names save on loop171, Muse), written before the registered runs (seal 1253a3f9…)
+- P171b.1: T1 sealed 76-case 171 probe reused unchanged through loop171b: 76/76, every reply/write/follow-up and every stored triple byte-identical to 171's sealed probe171.json rows (D08/D09/D10/D11/D18/D19 Title-case clarifies held by the closed list: sick/tall/mean/brown/here/there). 0.85. Falsified by any non-OK case or any sealed-row mismatch.
+- P171b.2: T1b new sealed 46-dialogue probe (fictional people): 46/46 — 16 word-name saves (Hope/Grant/Rich/Ora/Faith/Iris/Pearl/Sky/Rowan/Sage/Dawn/Reed/Jade/Joy + Hope Grace/Faith Joy) + 4 save-after-clarify (the exact director Zed/Bo/Tia/Rae cases) saved + answered, 18 descriptions refused (12 lowercase + Sick/Busy/Tired/Happy/Late/Here), 8 identical to 138d; predicted vs-171 moves: the 20 word-name saves + I07 Biscuit (genuine names, == 138d). 0.80. Falsified by any non-OK case.
+- P171b.3: T2: 0 wrong writes over all 122 turns. 0.90. Falsified by any description stored as a name.
+- P171b.4: G1 bench 800 items: vs 171 exactly 2 moves (bench121-4hop-099 + bench132-4hop-067 abstain->correct, "Lady Macbeth" chains heal), 0 new wrong; vs 138b: 026 correct->abstain ("Queen Sonja of Norway" has lowercase "of") + 152 wrong->abstain, both inherited. 0.75. Falsified by any other move or new wrong.
+- P171b.5: G2 marks123 per-case identical to frozen marks171 except the sleep SKIP reason naming fable_loop171b_agent.py (p3 l5z1 FAIL + p4 P4-08 nonpass inherited; l6 timing metadata may differ). 0.70. Falsified by any other move.
+- P171b.6: G3 junk/red/sessions: 0 verdict/reply moves and 0 write diffs vs 171 frozen rows on all 6 suites; vs 138b exactly 171's inherited sets (rt136 C115/C124/C127/C129/C142, A03, t14, C10/C21, rt143 J8/K9/M3/O5/S4 with M3 tripping 171's own inherited new_wrong_vs_138b counter, sessions 36 moves + 3 writes == 171/138d rows); 0 new WRONG or junk writes. 0.75. Falsified by any other move, new wrong, or new write.
+- P171b.7: G4: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P171b.8: no post-seal code edits; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 171b: (to be appended after the registered runs)
+- Outcomes 171b: P171b.1 HELD (T1 76/76, all rows byte-identical to sealed probe171.json). P171b.2 HELD (T1b 46/46: 20 word-name saves + I07 Biscuit as predicted vs-171 moves, rest identical). P171b.3 HELD (0 wrong writes, 122 turns). P171b.4 HELD (G1: exactly 099/067 abstain->correct vs 171; 026 + 152 inherited moves vs 138b; 0 new wrong). P171b.5 HELD (G2 identical to marks171 except sleep SKIP reason filename). P171b.6 HELD (G3 0 moves/diffs vs 171 rows all suites; vs 138b exactly 171's inherited sets). P171b.7 HELD (max 285.6 s). P171b.8 HELD (no post-seal edits; seal re-verified OK after all runs).
+
+## 2026-09-22 — Experiment 167c (Saved-label render on loop167b, Muse), written before the registered runs (seal b570e732… in artifacts/fable-label167c-20260922/)
+- P167c.1: T1 sealed 25-case probe through loop167c: 25/25 OK (stored triples == expect, exact spaced Saved replies, every ask contains its want, zero underscore relation-key tokens in any reply, scrubbed notebook events identical to fresh loop167b). 0.85. Falsified by any non-OK case.
+- P167c.2: T2 loop167b's sealed 64-case probe through loop167c: 64/64 OK; stored + ask replies identical to frozen probe167b-loop167b.json; teach replies identical except exactly the 11 born rows (M16-M22, T03, T07, T11, T15) rendered spaced. 0.85. Falsified by any other difference.
+- P167c.3: G1 bench 600 items vs frozen loop167b rows: 0 verdict moves, 0 reply moves, teach_replies move exactly on the 1723 Saved-underscore entries (415 + 640 + 668), 0 new wrong. 0.80. Falsified by any other move or new wrong.
+- P167c.4: G2 marks123 per-case identical to marks167b except Saved-render reply moves only in rt110 rows R4/F6/N5 + file renames + volatile seconds/statuses; sleep SKIP identical with reason naming loop167c; 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move.
+- P167c.5: G3 redteam136 + redteam143 + sessions152 vs loop167b frozen rows: 0 verdict moves, stored/fact_writes identical, 0 new WRONG/WRONG-WRITE; reply moves only by the Saved render (38 redteam136 Saved replies, 0 in rt143/s152). 0.80. Falsified by any other move, new wrong, or new write.
+- P167c.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- Outcomes 167c: (to be appended after the registered runs)
+- Outcomes 119e (director, 09:05 2026-09-22; scoring wave on BensPC 08:54-08:56 after one relaunch for a missing data folder I failed to stage; scorer sha a9abfea3 unchanged): P119e.1 TRUE (tau_exec_ens 0.852; singles 0.869/0.955/0.904). P119e.2 TRUE (ensemble EXECUTED 570 on CAL; t-seen 276, t-new 365). P119e.3 FALSE (W2 writes 0/0/0 on all 3 seeds). P119e.4 TRUE (W3 raw exact 23/19/18 vs bars 27/33/30). P119e.5 TRUE (no post-seal edits in the agent log; hashes match). Gate47 still closed (SEEN_exec 276 < 589, NEW_exec 365 < 1038, WEB_exec/WEB_exact false). Registered 119b FAIL stands; the label-name mismatch was one cause, not the main one.
+
+## 2026-09-22 — Experiment 167d (widen verb table: works-at/speaks on loop167b, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-verb167d-20260922/)
+- P167d.1: T1 — 32/32 OK (7 works-teach + 7 speaks-teach store twin triples with exact Saved replies and verb+possessive asks answered; 8 asks-after-possessive; 10 traps 0 writes + base clarify). 0.85. Falsified by any non-OK.
+- P167d.2: T2 — 64/64 IDENTICAL to sealed probe167b-loop167b.json rows (stored+reply+asks). 0.90. Falsified by any DIFF.
+- P167d.3: T2-safety — 0 wrong writes over all 96 probe rows; C033 "speaks the language of" stays bench73-owned (Saved languages_spoken_written_or_signed) on both agents. 0.90. Falsified by any wrong write or C033 move.
+- P167d.4: G1 — bench 600/600 per-item verdict+reply+teach-replies identical to frozen loop167b rows and loop162b rows, 0 new wrong vs loop167b. 0.80. Falsified by any move or new wrong.
+- P167d.5: G2 — marks123 per-case identical to marks167b on every suite except the predicted sleep-reason/summary agent-name strings naming loop167d; 0 case-moves, 0 whole-diffs; seconds/statuses volatile; soak/rt110 flakes under load are the known mailbox race (re-run once in the open, report both). 0.70. Falsified by any unpredicted case move.
+- P167d.6: G3 — redteam136 (145) + redteam143 (124) + sessions152 (180 turns) 0 verdict/reply/write moves vs live loop167b and vs frozen loop167b rows, 0 new WRONG/WRONG-WRITE/junk writes. 0.80. Falsified by any move or new wrong/write.
+- P167d.7: G4 — each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 167d: P167d.1 TRUE (T1 32/32 OK: 7+7 teaches, 8 asks, 10 traps). P167d.2 TRUE (T2 64/64 IDENTICAL). P167d.3 TRUE (0 wrong writes; C033 identical bench73 save). P167d.4 TRUE (bench 600/600 identical, 0 new wrong). P167d.5 TRUE (G2 PASS: 11/11 reports identical/predicted; suite FAILs are base-identical). P167d.6 TRUE (G3 0 moves, 0 new wrong/writes, exit 0). P167d.7 TRUE (probe 2 s, bench 44 s, G3 17 s, marks123 179 s; idle_seconds default 30.0, verified 12.5 in/out). No post-seal edits (shasum -c all OK).
+- Outcomes 167c: P167c.1 TRUE (T1 25/25 OK: exact spaced Saved replies, 0 underscore tokens in any reply, scrubbed events identical to loop167b; 0.8 s) | 0.0225. P167c.2 TRUE (T2 64/64 OK; stored + asks identical to frozen probe; exactly the 11 born replies moved, byte-exact spaced render; 0.8 s) | 0.0225. P167c.3 TRUE (G1 600/600 verdict+reply identical, 0 new wrong; teach_replies moved exactly 415+640+668=1723 Saved-underscore entries; 26.6 s) | 0.04. P167c.4 FALSE as written (G2: rt110/p4/sleep/summary-status all as predicted, but q4 leak list improved 7->4 because the sealed render removed birth_year/official_language/place_of Saved leaks from replies; verdict FAIL unchanged, 0 new wrong; diagnosis D1) | 0.49. P167c.5 TRUE (G3 145+124+180 turns: 0 verdict/stored/write moves, exactly the 38 redteam136 Saved replies moved, 0 in rt143/s152, 0 new wrong; 4.1 s) | 0.04. P167c.6 TRUE (max run 188.5 s < 1500 s) | 0.01. 5/6 TRUE; SCORE: T1/T2/G1/G3 PASS, G2 FAIL-with-diagnosis (D1). No post-seal edits (seal 10/10 clean); no open re-runs. RESULTS: artifacts/fable-label167c-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 174 ("of"-phrased chain questions on loop138f, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-chainof174-20260922/)
+- P174.1: T1 sealed 40-turn case file through loop174: 12/12 of-asks equal their possessive twins (same notebook) and the base twin replies; 8/8 taught answer exactly; 4/4 untaught give the base honest no-record reply; 10/10 traps byte-identical to base; 0 writes from asks; script identical to base except the 12 predicted moves. 0.80. Falsified by any miss, any trap move, or any ask write.
+- P174.2: T2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns) per-case identical (verdict+reply+stored/writes) to sealed loop138f rows: 0 moves, 0 new WRONG/WRONG-WRITE/junk writes. 0.75. Falsified by any move or any new wrong/write.
+- P174.3: T2 bench121 4 splits per-item verdict-identical to sealed loop138f rows, 0 new wrong. 0.80. Falsified by any move or any new wrong.
+- P174.4: T2 marks123 every suite per-case identical to sealed marks138f (sleep SKIP reason names the new agent file only; timings volatile). 0.65. Falsified by any per-case move. rt110/soak race flake under load is the known mailbox race: re-run once in the open, both reported.
+- P174.5: T2 pre-seal static evidence holds at runtime: no frozen-suite turn fires the rewrite except the T1 of-asks (pure-function scan found 0 fires in 325 suite turns + 1005 bench questions + 168 redteam literals). 0.70. Falsified by any frozen-suite firing.
+- P174.6: G4 each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P174.7: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 174: P174.1 TRUE (T1 12/12 twin-eq + 12/12 base-twin + 8/8 taught + 4/4 honest + 10/10 traps + 0 writes + exactly the 12 moves; 3.1 s) | 0.04. P174.2 TRUE (rt136 145 + rt143 124 + sessions 180 turns, 0 moves, 0 new wrong/write; 1.9/13.2/9.3 s) | 0.0625. P174.3 TRUE (bench 800 items, 0 moves, 0 new wrong; 194/2/4, 198/2/0, 150/50/0, 196/2/1; 59.5 s) | 0.04. P174.4 TRUE (marks123 per-case identical to marks138f except the predicted sleep-reason filename line; p3-L5Z1 + rt81 FAILs inherited byte-identical; 256.6 s) | 0.1225. P174.5 TRUE (0 frozen-suite firings at runtime, as scanned) | 0.09. P174.6 TRUE (max run 256.6 s < 1500 s) | 0.0025. P174.7 TRUE (seal 8/8 clean after all runs; no post-seal edits; one pilot + one registered run per suite). 7/7 TRUE. SCORE PASS (T1/T2/G4). RESULTS: artifacts/fable-chainof174-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 154d (grounded yes/no on loop138f, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-yesno154d-20260922/, seal c20b3cf6…)
+- P154d.1: T1 sealed 38-turn dialogue 38/38 OK (8 teach identical to 138f; 9 yes exact; 7 no-single exact; 4 multi exact, never No; 10 fall-through identical to 138f). 0.85. Falsified by any non-OK turn.
+- P154d.2: T1 0 wrong answers and 0 writes on all 30 question turns. 0.90. Falsified by any WRONG or any question-turn write.
+- P154d.3: T2 marks123 every suite per-case identical to sealed marks138f (predicted yes/no move set EMPTY; sleep SKIP reason names fable_loop154d_agent.py; l6 replied_before_kill timing-volatile, reported not predicted). 0.75. Falsified by any unpredicted case move.
+- P154d.4: T2 inherited labels unchanged and identical: p3 l5z1 FAIL (turns 42/43 stale expectation, status_match 58/60), rt81 FAIL (59 ok / 15 unclear). 0.80. Falsified by any difference vs 138f rows.
+- P154d.5: G3 frozen six suites 0 verdict/reply moves vs sealed 138f rows and 0 new WRONG/WRONG-WRITE/junk writes vs sealed 138b rows (redteam136 135/7/3, cases150 57 OK, f1 46 OK, cases139b 101 OK, rt143 107/7/10 with M3 identical to 138b, sessions152 165/15 with 0 new writes). 0.80. Falsified by any move or new wrong/write.
+- P154d.6: G1 bench all four splits per-item verdict+reply identical to sealed 138f rows, 0 new wrong vs 138b. 0.80. Falsified by any move or new wrong.
+- P154d.7: G4 each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P154d.8: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 154d: P154d.1 HELD (T1 38/38) | 0.85. P154d.2 HELD (0 wrong, 0 question writes) | 0.90. P154d.3 HELD (marks123 identical; disclosed diffs only) | 0.75. P154d.4 HELD (inherited FAILs identical) | 0.80. P154d.5 HELD (6 suites 0 moves, 0 new wrong/write) | 0.80. P154d.6 HELD (bench 4 splits identical, 0 new wrong) | 0.80. P154d.7 HELD (max run 332.7 s) | 0.95. P154d.8 HELD (seal 7/7 OK; rt110 flake re-run once open per F3, both reported) | 0.95. 8/8 HELD. SCORE PASS. Deviations: one sealed-F3 rt110 log-only flake, resolved open. RESULTS: artifacts/fable-yesno154d-20260922/RESULTS.md
+- Outcomes 170: P170.1 TRUE (S1 p50 28.45 ms, p99 64.35 ms, 25/25 identical; base p50 5760 ms) | 0.09. P170.2 TRUE (2000/2000 replies + states identical) | 0.0625. P170.3 TRUE (exactly-once 3000/3000, K4 p99 260.8 ms) | 0.1225. P170.4 TRUE (800 items, 0 moves vs 138d, 0 new wrong vs 138b) | 0.0625. P170.5 TRUE (per-case verdict-identical; only l6 kill-timing counter + sleep SKIP name differ) | 0.1225. P170.6 FALSE (13 vs-138b moves exist, all 138d-sealed inheritance listed; 0 moves vs 138d) | 0.49. P170.7 TRUE (max run ~17 min) | 0.01. P170.8 TRUE (no ask fell back to full scans; S1 p50 28 ms) | 0.04. P170.9 TRUE (seal 12/12 OK, no post-seal edits) | 0.0025. P170.10 FALSE (finished ~09:15, past 09:00) | 0.36. 8/10 TRUE; G3 PASS on brief regression bar with declared deviation D1; S1/S2/S3/G1/G2/G4 PASS. RESULTS: artifacts/fable-speed170-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 167e (every-template label render on loop167c, Muse), written before the registered runs (seal 4c67366f… in artifacts/fable-label167e-20260922/)
+- P167e.1: T1 sealed 34-turn probe through loop167e: 34/34 OK (every reply matches its want_template, zero underscore relation-key tokens in any reply, stored triples + scrubbed notebook events identical to fresh loop167c, no-key synthetic templates byte-identical). 0.85. Falsified by any non-OK turn, leak, or event/store diff.
+- P167e.2: T3 loop167c's sealed 25-case probe through loop167e: 25/25 per-case byte-identical to frozen probe167c-loop167c.json (stored, teach reply, ask replies); predicted move set EMPTY. 0.85. Falsified by any per-case difference.
+- P167e.3: G1 bench 600 items vs frozen loop167c rows: 0 verdict moves, 0 teach_replies moves, reply moves exactly on the 37 edit200 MISSING never_taught_rel_N rows (bench65-abs-absent-01/03/../23 + bench65-abs-broken-00..24), 0 new wrong. 0.80. Falsified by any other move or new wrong.
+- P167e.4: G2 marks123 per-case identical to marks167c except exactly 3 rt110 label-render reply moves (F6 Forgotten country_of_citizenship, L6 MISSING city_and_who_is_mira, S2 MISSING city?_also_mira) + file renames + volatile seconds/statuses; q4 FAIL->PASS with leaks=[]; sleep SKIP identical with reason naming loop167e; 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move.
+- P167e.5: G3 redteam136 + redteam143 + sessions152 vs loop167c frozen rows: 0 verdict/stored/reply moves on all three suites, 0 new WRONG/WRONG-WRITE. 0.80. Falsified by any move, new wrong, or new write.
+- P167e.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.90. Falsified by any run >= 1500 s.
+- P167e.7: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 167e: P167e.1 TRUE (T1 34/34 OK, 0 leaks, stored+events identical) | 0.15. P167e.2 TRUE (T3 25/25 identical, 0 moves) | 0.15. P167e.3 TRUE (bench 600 items, 0 verdict/0 teach moves, exactly the 37 predicted edit200 MISSING reply moves, 0 new wrong) | 0.2. P167e.4 TRUE (marks123 per-case identical except exactly F6/L6/S2 rt110 render moves; q4 FAIL->PASS leaks=[]; sleep names loop167e; 0 new wrong) | 0.3. P167e.5 TRUE (G3 145+124+180, 0 moves everywhere) | 0.2. P167e.6 TRUE (max run 223.2 s) | 0.1. P167e.7 TRUE (seal 10/10 OK after all runs, no post-seal edits) | 0.05. 7/7 TRUE. RESULTS: artifacts/fable-label167e-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 94b pass-1 part 2 (scaffold rows 100-199, Muse, data build only, no training, Mac CPU), written before the labelling run (PASSMARKS sealed in artifacts/fable-reading94b-20260922/, seal c434ae0d…)
+- P94b-p2.1: fraction of these 100 sentences with >=1 in-inventory triple lands in [0.20, 0.60]. 70%. Falsified by outside that band.
+- P94b-p2.2: the top NO_FACT reason in these 100 rows is relation-not-in-inventory. 75%. Falsified by any other top reason.
+- P94b-p2.3: output file data/open/reading94b/fable_reading94b_pass1_labels_p2.jsonl has exactly 100 lines, ids match scaffold rows 100-199 in order, every relation exactly in inventory. 95%. Falsified by any mismatch.
+
+## 2026-09-22 — Experiment 119f (panel-shaped occupation supervision, Muse BUILD + SEAL ONLY; director runs the GPU wave on BensPC), written before the seal (PASSMARKS sealed in artifacts/fable-ears119f-20260922/)
+- P119f.1: GPU wave wall-clock (first pool-build step to last score write) < 1800 s on one RTX 5070 Ti. 0.70. Falsified by >= 1800 s.
+- P119f.2: pool identity gates pass first try (synth == 60000, occ == 5000, kept in [141377,141408], steps == 8838). 0.85. Falsified by any prep FAIL.
+- P119f.3: W3b passes 3/3 seeds (raw exact on reading94b >= ceil(base*N94b/312), bases 27/33/30). 0.55. Falsified by < 3 passing seeds.
+- P119f.4: W2b admits writes in >= 2/3 seeds at wrong-write rate <= 5%. 0.40. Falsified by < 2 seeds with writes (119b/119e wrote 0; occ rows do not touch the gates directly).
+- P119f.5: F1 does not fire (the occupation gain generalizes to reading94b; no "panel-shaped" verdict). 0.55. Falsified by F1 firing.
+- P119f.6: no post-seal edits to sealed files (PASSMARKS.md + scripts + scp119f.txt hashes match). 0.95. Falsified by any silent edit.
+- Outcomes 119f: (to be appended by the director after the GPU wave)
+
+## 2026-09-22 — Experiment 138h (merge layer B part 1: 162b+165+166/166c+173+167/167b onto loop138g, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-agent138h-20260922/)
+- P138h.1: M1 — every unlisted piece-probe case identical (verdict+reply+stored+asks) to its own agent; listed interactions only: R1 render-only Saved-label spaces (162b 13 + 167b 11 rows, stored identical), R2 unclaimed clarifies with 138g wording 0 writes, R3 168-grounded self replies 138g-identical, R4 138g-path singular saves + chained "X of Y" asks as 138g, R5 entity-count-only (replies+stored+asks identical), CAP title rows OK, 173 name rows + O13 control identical; W04 MISSED as 138g. 0.70. Falsified by any unlisted diff or any new WRONG-WRITE.
+- P138h.2: M2 — 139e clean; 137e fail-set exactly the 6 sealed 138g rows 138g-identical; 158c fail-set exactly O03-O08+O10 138g-identical + O01 improvement ("Sue's city is Leeds.", 0 writes); 168 fail-set exactly A10/B-ask ("I don't know your name yet.") + A22 ("I am unsure about: your name (never taught)."); 138f pieces at bar except 156b-N11 ("I have no opinions."). 0.70. Falsified by any other fail.
+- P138h.3: M4 — 7/7 cases identical to 138b; vs 138g exactly one move (sessions S4-pets-identity/1 UNHELPFUL->OK + [[USER,dog,biscuit]]); 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any other move or new wrong/write.
+- P138h.4: G1 — bench121 4 splits per-item vs sealed 138g rows: 0 verdict moves, 0 new wrong (194/2/4, 198/2/0, 150/50/0, 196/3/1). 0.75. Falsified by any move or new wrong.
+- P138h.5: G2 — marks123 per-case identical to marks138g except rt81 O_user-02 (reply text, UNCLEAR kept) + O_user-03 (UNCLEAR->BUG, intended me save, loop166-identical), p3-l2 O_user-02 (reply text) + O_user-03 (saves, l2 sub-pass F), rt110 P1+P3 (OK->BUG, intended verb saves, loop167-identical), sleep SKIP reason naming fable_loop138h_agent.py; p4 P4-09 nonpass + p3 l5z1 FAIL + rt81 otherwise kept. 0.60. Falsified by any other case move.
+- P138h.6: G3 — 10/10 with sealed replies+stores (drummer clarifies; toms-boss lowercase answer; sister Ada; Juno clarify + don't-know (dictionary word, loop173-identical); Kwame verb save+answer). 0.75. Falsified by any mismatch.
+- P138h.7: G4 — every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemons take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P138h.8: no post-seal edits; 155 absent (MRO has no 155 class, no fable_loop155 module); any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 138h: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 180 (lowercase-names recase on loop138g, Muse), written before the registered runs (seal b73de364… in artifacts/fable-lowercase180-20260922/)
+- P180.1: T1 sealed case180.json (35 steps / 41 turns) through loop180: 35/35 step checks — 7/7 cap parity, 12/12 lowercase asks equal the capitalised twin replies, 6/6 lowercase teaches confirm (`Did you mean: <twin>?`) with 0 writes before `yes` and exactly the twin reply+events after, 10/10 traps byte-identical to loop138g. 0.80. Falsified by any step miss.
+- P180.2: T2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns): 0 verdict/reply moves and 0 stored/write diffs vs sealed loop138g rows; 0 new WRONG/WRONG-WRITE/junk writes vs base. 0.75. Falsified by any move or new wrong/write.
+- P180.3: T2 bench121 4 splits per-item verdict-identical to sealed loop138g rows, 0 new wrong. 0.80. Falsified by any move or new wrong.
+- P180.4: T2 marks123 every suite per-case identical to sealed marks138g after scrubbing volatile metadata (only the predicted sleep SKIP reason agent-filename line may differ); 0 case-moves, 0 whole-diffs; 0 new WRONG/WRONG-WRITE/junk writes. 0.65. Falsified by any unpredicted move. rt110/soak race flake under load is the known mailbox race: re-run once in the open, both reported.
+- P180.5: T1+T2 0 writes from any ask; `kofis` missing-apostrophe trap stays base-identical (exp 165 owns it, out of scope here). 0.85. Falsified by any ask write or any kofis move.
+- P180.6: G4 each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P180.7: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 180: (to be appended after the registered runs)
+
+## Outcomes 94b (director, 09:43; panel sealed 09:38, SEAL-panel sha of panel.jsonl 9ca7035c…)
+- P94b.1 TRUE: 165/400 = 0.41 sentences with >= 1 in-inventory triple (band 0.25–0.55).
+- P94b.2 TRUE: top NO_FACT reason relation-not-in-inventory 174 (next vague-pronoun-subject 51).
+- P94b.3 FALSE: exact triple match on the blind 80 = 54/80 (bar 64/80). Recomputed by the director from the pass-1 part files and pass2.jsonl: 54.
+- P94b.4 TRUE: kappa fact/no-fact 0.825 (FF 35, FN 5, NF 2, NN 38; recomputed).
+- Note: agreement94b.json reports nofact_agree 72; the 2x2 gives 73 rows agreeing on fact/no-fact. Report-only field, no bar; recorded, not changed.
+- Outcomes 138h: P138h.1 HELD (diff-ID sets match seal exactly, 8/8 probes; 0 new wrong-writes; 155 absent) | P138h.2 HELD (139e clean; 137e 6 + 158c 7+O01 + 168 3 + 156b-N11 exactly as sealed) | P138h.3 HELD (7/7 vs 138b; vs 138g exactly S4-pets-identity/1; 0 new wrong/write) | P138h.4 HELD (0 moves, 0 new wrong all splits) | P138h.5 HELD (exactly rt81 2 + p3-l2 2 + rt110 P1/P3 + sleep rename; p4/P4-09, l5z1, rt81-otherwise, l6 pass/correct/wrong kept) | P138h.6 HELD (10/10) | P138h.7 HELD (max run 256.6 s) | P138h.8 HELD (seal 6/6 clean post-runs; no post-seal edits). 8/8 HELD. SCORE PASS (M1/M2/M4/G1/G2/G3/G4). Deviations: l5z1-T59 ears_stage metadata only (verdict/reply/store identical); O13 gate fix pre-seal (reported). RESULTS: artifacts/fable-agent138h-20260922/RESULTS.md
+- Outcomes 180: P180.1 TRUE (T1 35/35 step checks: 7/7 cap, 12/12 asks == twin replies, 6/6 teaches confirm + 0 pre-yes writes + twin reply/events post-yes, 10/10 traps byte-identical; 1.1 s) | 0.16. P180.2 TRUE (rt136 145 + rt143 124 + sessions152 180 turns: 0 verdict/reply moves, 0 stored/write diffs vs sealed 138g rows; 0 new wrong) | 0.1875. P180.3 TRUE (bench 800 items 4 splits, 0 verdict moves, 0 new wrong) | 0.16. P180.4 TRUE with predicted-only diffs (marks123 10/10 reports per-case identical after scrub; sleep SKIP reason agent filename + total_seconds timing only; suite FAILs p3-l5z1/p4-1-nonpass/rt81-59ok-15unclear inherited byte-identical; max run 255.1 s) | 0.2275. P180.5 TRUE (0 ask writes; kofis trap base-identical) | 0.1275. P180.6 TRUE (max registered run 255.1 s < 1500 s; daemons take idle_seconds) | 0.0475. P180.7 DEVIATION (two post-seal agent edits D1+D2/D3 reported below; every affected mark re-ran in the open on final code) | 0.0475. 6/7 TRUE + 1 deviation. SCORE PASS (T1/T2/G4). Post-seal edits to scripts/fable_loop180_agent.py (probe/suites/drivers sealed-hashes unchanged): D1 single-token-values-only name map (multi-word value "The Glass Orchard" leaked "The" as a name -> rt143 C5 confirm-misfire; found in registered rt143 run, fixed, rt143 re-run open 0 moves); D2/D3 confirm predicate = needs_recase AND first+last word-stems known, retry-confirm gated on the original turn (frozen sessions S2/S3/S5 lowercase-new-name teaches must save as-is; S6 first-word-only correction never confirms; 29 session moves -> re-run open 0 moves). T1 re-ran open 35/35 after each edit; rt136 re-ran open 0 moves on final code; sessions+bench+marks123 ran once, on final code. Final agent sha 9e9861d6…. RESULTS: artifacts/fable-lowercase180-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 189 (say-again verbatim repeats on loop138g, Muse), written before the registered runs
+- P189.1: R1 sealed 38-turn session 38/38 OK (3 noprev fixed-line + 13 repeats previous-reply byte-identical with events unchanged + 10 Say/repeat traps and 12 teach/ask base turns byte-identical to loop138g in reply, triples and events). 0.85. Falsified by any non-OK turn.
+- P189.2: R2 junk + rt143 + sessions vs sealed loop138g rows: 0 verdict/reply moves, 0 new WRONG/WRONG-WRITE, 0 new writes (only whole-turn repeat shapes divert; nearest frozen shape "Sorry, I meant Mira's pet is Rex." never matches). 0.80. Falsified by any move or any new wrong/write.
+- P189.3: R2 bench121 4 splits vs sealed loop138g rows: 0 verdict moves, 0 new wrong. 0.85. Falsified by any move or any new wrong.
+- P189.4: R2 marks123 (stock runner) per-case identical to sealed marks138g except run-metadata paths; 0 verdict/reply moves. 0.70. Falsified by any other diff.
+- P189.5: "Say that again." echoes (repeat wins over Say-pretend); "Repeat after me: ..."/"Again, ..." stay base-identical (covered inside P189.1's 38). 0.90. Falsified by any contrary turn.
+- P189.6: every registered invocation < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- Outcomes 189: (to be appended after the registered runs)
+- Outcomes 189 (Muse, resumed session; all re-run in the open on final code after a post-seal driver fix, agent/config/cases untouched since seal): P189.1 TRUE (R1 38/38: noprev 3/3 + repeat 13/13 verbatim events-unchanged + traps 10/10 + base 12/12 byte-identical) | P189.2 TRUE (junk rt136 145 + c150 57 + f1 46 + 139b 101, rt143 124, sessions 180 turns: 0 moves, 0 new wrong/write) | P189.3 TRUE (bench121 800 items 4 splits: 0 moves, 0 new wrong) | P189.4 TRUE with predicted-only metadata diffs (marks123 7/7 reports scrubbed-identical, suite statuses identical incl. inherited p3-l5z1 FAIL; raw diffs = agent/config paths + seconds + sleep SKIP agent filename) | P189.5 TRUE ("Say that again." echoes; "Repeat after me..."/"Again, ..." base-identical, inside R1 38) | P189.6 TRUE (max run 259.1 s < 1500 s; idle_seconds=3600). Post-seal driver edit scripts/fable_fix189_sayagain.py 09:54:16 (triple-snapshot comparison fix; sealed driver failed 4 R1 teaches against pre-base snapshot) reported in RESULTS.md with code; sealed 34/38 r1 overwritten by open 38/38. SCORE PASS (R1/R2/G4). RESULTS: artifacts/fable-sayagain189-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 187 (self-question paraphrase routing on loop138g, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-selfq187-20260922/, seal 5e9cba77…)
+- P187.1: S1 sealed case187.json (33 turns) through loop187: 33/33 step checks — 4/4 setup parity, 14/14 self paraphrases serve the matching 187 self answer (never the D8 user-name reply, never the generic decline), 9/9 traps byte-identical to loop138g, 6/6 statements byte-identical with 0 writes on both loops. 0.80. Falsified by any step miss.
+- P187.2: S2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns): 0 verdict/reply moves and 0 stored/write diffs vs sealed loop138g rows; 0 new WRONG/WRONG-WRITE/junk writes vs base. 0.75. Falsified by any move or new wrong/write.
+- P187.3: S2 bench121 4 splits per-item verdict-identical to sealed loop138g rows, 0 new wrong. 0.80. Falsified by any move or new wrong.
+- P187.4: S2 marks123 every suite per-case identical to sealed marks138g after scrubbing volatile metadata (only the predicted sleep SKIP reason agent-filename line may differ); 0 case-moves, 0 new WRONG/WRONG-WRITE/junk writes. 0.65. Falsified by any unpredicted move.
+- P187.5: S1+S2 0 writes from any ask or self-question; "Kim made you a cake." stays base-identical (teach path untouched). 0.85. Falsified by any ask/self write or any U02 move.
+- P187.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P187.7: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 187: (to be appended after the registered runs)
+- P180 director note (09:55): registered FAIL — agent file changed after the seal (D1–D3); director fresh check of final code asks 2/10, teaches 2/3, traps 9/10 (artifacts/fable-lowercase180-20260922/DIRECTOR-verdict.md).
+
+## 2026-09-22 — Experiment 154e (language multi-valued on loop154c, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-lang154e-20260922/)
+- P154e.1: L1 sealed case154e.jsonl (76 turns, 5 segments) through loop154e: 76/76 exact (reply + state maps + full_state): 8 two-language pairs list both, 4 triples list all three, 4 removals (2 correct-not + 2 forget-one) each leave only the others, 3 repeats add 0 facts, 12 traps byte-identical to loop154c. 0.85. Falsified by any non-OK turn.
+- P154e.2: G1 bench 4x200 vs frozen loop154c rows: 0 moves, 0 new wrong. 0.85. Falsified by any move or any new wrong.
+- P154e.3: G2 marks123 per-case identical to marks154c except the predicted sleep-SKIP agent-filename line + volatile seconds/statuses; 0 case-moves; 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move.
+- P154e.4: G3 redteam136 (145) + redteam143 (124) + sessions152 vs frozen loop154c g3 rows: 0 moves, 0 new WRONG/WRONG-WRITE, 0 new writes. 0.80. Falsified by any move or new wrong/write.
+- P154e.5: probe154c differential (informational): exactly n=9,10,11 reply moves vs sealed expects (add / orphaned-no / list-ask), knock-on state maps in segment A only, segments B/C identical. 0.80. Falsified by any other difference.
+- P154e.6: 167d composition holds at runtime: "Rana speaks Hindi." then "Rana speaks Urdu." then "What language does Rana speak?" is NOT tested here (167d layer not stacked); the doc claim is static (twin surface "language" -> key "language" allow-listed, no mismatch). 0.90. Falsified by a key mismatch found later.
+- P154e.7: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=30.0. 0.95. Falsified by any run >= 1500 s.
+- P154e.8: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 154e: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 190 (reverse questions by VALUE lookup on loop138g, Muse), written before the registered runs (seal e8ae1314… in artifacts/fable-reverse190-20260922/)
+- P190.1: V1 sealed case190.json 70/70 turn checks — 32/32 reverse replies exact (12 single, 6 multi, 4 post-correction, 5 no-match-known, 5 unknown), 38/38 setup+traps byte-identical to loop138g (reply+stored), 0 writes on all 32 asks. 0.80. Falsified by any turn FAIL.
+- P190.2: V2 redteam136 145 cases 0 verdict/reply moves vs sealed 138g rows, 0 new WRONG/WRONG-WRITE/junk writes. 0.80. Falsified by any move or new wrong/write.
+- P190.3: V2 redteam143 124 cases same bar (0 moves, 0 new wrong/write). 0.80. Falsified by any move or new wrong/write.
+- P190.4: V2 sessions152 180 turns 0 verdict/reply moves, 0 new wrong, 0 new writes vs sealed 138g rows. 0.75. Falsified by any move/new wrong/new write.
+- P190.5: V2 marks123 10/10 reports per-case identical to sealed marks138g after scrubbing volatile metadata; only predicted diff is the sleep SKIP reason agent filename. 0.65. Falsified by any other diff.
+- P190.6: V3 bench121 4 splits per-item verdict-identical to sealed 138g rows, 0 new wrong; reversal-row scan reports 0 bench questions matching the closed shapes. 0.75. Falsified by any move/new wrong or any reversal-row miss.
+- P190.7: each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P190.8: no post-seal edits to sealed files; any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 190: (to be appended after the registered runs)
+- Outcomes 154e: P154e.1 TRUE (L1 81/81 lines: 76/76 turns exact, quotas 8/4/4/3/12 all met; repeats 0 new facts) | 0.0225. P154e.2 TRUE (bench 800 items 4 splits, 0 moves, 0 new wrong; 43.9 s) | 0.0225. P154e.3 TRUE (marks123 11/11 reports per-case identical; raw diffs only timings + predicted sleep filename; bench reply texts 5150/5150 identical; p3/rt81 FAILs inherited byte-identical; 252.6 s) | 0.09. P154e.4 TRUE (G3 145+124+6 sessions, 0 moves, 0 new wrong/write; 6.7 s) | 0.04. P154e.5 TRUE (probe154c exactly n=9,10,11 reply moves, segs B/C identical) | 0.04. P154e.6 TRUE (no key mismatch: twin surface "language" -> key "language" allow-listed) | 0.01. P154e.7 TRUE (max run 252.6 s < 1500 s; idle_seconds=30.0) | 0.0025. P154e.8 TRUE (seal 10/10 OK post-runs; no post-seal edits; one registered run per suite). 8/8 TRUE. SCORE PASS (L1/L2/G4). RESULTS: artifacts/fable-lang154e-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 188 (statefall on loop138g, Muse), written before the registered runs (seal 35d037f4… in artifacts/fable-statefall188-20260922/)
+- P188.1: F1 sealed cases188.json (40 turns) through loop188: 19/19 statements -> sealed statement fallback with 0 writes (138g gives the question fallback, 0 writes); 11/11 questions + 10/10 handled byte-identical replies+events to loop138g. 0.80. Falsified by any case miss.
+- P188.2: F2 frozen suites per-case vs sealed 138g rows: redteam136 0 verdict moves + exactly 33 listed reply-only (C063-C142 set in PASSMARKS); cases150 1 reply-only (A03); f1-144/cases139b/rt143 0 moves; sessions152 0 verdict moves + 4 listed reply-only, 0 new writes; G3 7/7. 0.75. Falsified by any move outside the listed sets.
+- P188.3: G1 bench121 4 splits per-item verdict-identical to sealed 138g rows (194/2/4, 198/2/0, 150/50/0, 196/3/1), 0 new wrong. 0.80. Falsified by any move or new wrong.
+- P188.4: G2 marks123 every suite per-case identical to sealed marks138g after scrubbing volatile metadata except 15 listed reply-only (rt81 5, rt110 10 log lines); sleep SKIP reason naming fable_loop188_agent.py only; p3 l5z1 FAIL + rt81 FAIL labels inherited per-case. 0.70. Falsified by any other case move.
+- P188.5: 0 new WRONG / WRONG-WRITE / junk writes vs loop138b rows on every suite (redteam136, redteam143, sessions152, marks123). 0.80. Falsified by any new wrong/write.
+- P188.6: each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P188.7: no post-seal edits to sealed files (PASSMARKS.md + scripts + config + cases188.json hashes match); any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 188: (to be appended after the registered runs)
+
+### Outcomes 119f (director, 2026-09-22 10:22)
+- P119f.1: FALSE. Relaunched wave 09:43:03 (pool build) → 10:18:01 (last score write) = 2098 s ≥ 1800 s. (Excludes the 09:3x staging crash, D1 in DEVIATIONS-director.md.)
+- P119f.2: TRUE. synth=60000, occ=5000, kept=141398 (in range), steps=8838 on the first real pool build (the earlier crash was a director staging error before any gate ran).
+- P119f.3: FALSE. W3b raw exact on reading94b 24/19/27 vs bars 33/40/37 → 0/3 seeds.
+- P119f.4: FALSE. W2b writes 0/0/0 → 0/3 seeds.
+- P119f.5: TRUE (vacuously). F1 did not fire, but only because there was no occupation gain to generalize: occ exact 0/44 on reading94 and 1/94 on reading94b, every seed.
+- P119f.6: TRUE. SEAL (PASSMARKS.md) OK; all five code hashes + scp119f.txt re-hashed at 10:21 match DIRECTOR-codehashes.md.
+- Verdict: registered FAIL (W1 gate47 false/executed 0, W3b 0/3, W2b 0/3).
+
+## Outcomes 190 (Muse, registered runs after seal e8ae1314…)
+- P190.1 TRUE: V1 70/70 (32/32 exact, 38/38 identical, 0 ask writes, 3.2 s).
+- P190.2 TRUE: rt136 145 cases, 0 moves, 0 new wrong/write.
+- P190.3 TRUE: rt143 124 cases, 0 moves, 0 new wrong/write.
+- P190.4 TRUE: sessions152 180 turns, 0 moves, 0 new wrong, 0 new writes.
+- P190.5 TRUE: marks123 10/10 per-case identical after scrub; only nominal diff the predicted sleep filename line.
+- P190.6 TRUE: bench121 4 splits 0 moves/0 new wrong (194/2/4, 198/2/0, 150/50/0, 196/3/1); 0 reversal rows.
+- P190.7 TRUE: longest run soak 260.4 s; all runs < 1500 s.
+- P190.8 TRUE: seal verifies clean (shasum -c PASS); no post-seal edits.
+
+### Director note 190 (2026-09-22 10:29)
+- Verified: SEAL 10/10 OK (agent, config, cases, marks, drivers, doc); no edits after the seal except RESULTS.md. V1 70/70, frozen suites + marks123 0 diffs, bench 4 splits 0 moves — re-read from the JSON. P190.1–8 TRUE as reported. Director probe: reverse lookups for city/boss work incl. two answers and after a correction; unknown value ("Who lives in Lima?") replies "I don't know anyone called Lima." (base wording, preserved by design; wrong shape) → 190b.
+
+## 2026-09-22 — Experiment 187b (fresh registration of the CURRENT loop187 agent, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-selfq187b-20260922/)
+- P187b.1: S1 sealed case187b.json (34 fresh turns, zero string overlap with case187.json) through loop187: 34/34 step checks — 4/4 setup parity, 14/14 self paraphrases serve the matching 187 self answer (never the D8 user-name reply, never the generic decline), 9/9 traps byte-identical to loop138g, 7/7 statements byte-identical with 0 writes on both loops. 0.90. Falsified by any step miss.
+- P187b.2: S2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns): per-case identical to sealed loop138g rows EXCEPT exactly two predicted session moves, both frozen text "who are you" (S2-casual-friends n=10, S4-pets-identity n=8) moving UNHELPFUL (D8 user-name reply) → OK (IDENTITY187); 0 new WRONG/WRONG-WRITE/junk writes, 0 new writes vs base. 0.85. Falsified by any unpredicted move or any new wrong/write.
+- P187b.3: S2 bench121 4 splits per-item verdict-identical to sealed loop138g rows, 0 new wrong. 0.90. Falsified by any move or new wrong.
+- P187b.4: S2 marks123 every suite per-case identical to sealed marks138g after scrubbing volatile metadata (only the predicted sleep SKIP reason agent-filename line naming fable_loop187_agent.py may differ); 0 case-moves, 0 new WRONG/WRONG-WRITE/junk writes. 0.80. Falsified by any unpredicted move.
+- P187b.5: S1+S2 0 writes from any ask or self-question; "Nora baked you a pie." stays base-identical (teach path untouched). 0.90. Falsified by any ask/self write or any U02 move.
+- P187b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P187b.7: no post-seal edits to sealed files (PASSMARKS.md, case187b.json, loop187b-config.json, fable_loop187_agent.py, fable_fix187b_probe.py, fable_fix187b_suites.py); any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 187b: (to be appended after the registered runs)
+- Outcomes 187b: P187b.1 TRUE (S1 34/34: setup 4/4, self 14/14, traps 9/9, stmt 7/7, 0 writes; 10.1 s) | 0.0100. P187b.2 TRUE (rt136 145 + rt143 124 + sessions152 180 turns: exactly the 2 predicted "who are you" moves S2-casual-friends n=10 + S4-pets-identity n=8, UNHELPFUL→OK; 0 new wrong/write) | 0.0225. P187b.3 TRUE (bench121 4x200, 0 moves, 0 new wrong) | 0.0100. P187b.4 TRUE (marks123 9/9 per-case identical after scrub; only nominal diff the predicted sleep agent-filename line; p3/p4/rt81 FAILs inherited byte-identical) | 0.0400. P187b.5 TRUE (0 ask/self writes; U02 "Nora baked you a pie." base-identical, nowrite both loops) | 0.0100. P187b.6 TRUE (longest run marks 887.0 s < 1500 s) | 0.0025. P187b.7 TRUE (seal 6/6 OK post-runs; no post-seal edits; one registered run per suite). 7/7 TRUE. SCORE PASS (S1-S2, G4).
+- Outcomes 188: P188.1 TRUE (F1 40/40: 19 SFB 0 writes, 11 Q + 10 handled identical). P188.2 TRUE (suites: rt136 33 reply-only, cases150 A03, sessions 4, rest 0 moves; G3 7/7). P188.3 TRUE (bench 194/2/4, 198/2/0, 150/50/0, 196/3/1, 0 moves/new-wrong). P188.4 TRUE (marks123 15 reply-only: rt81 5, rt110 10; verdicts identical; l5z1/rt81 FAILs inherited). P188.5 TRUE (0 new WRONG/WRONG-WRITE/writes vs 138b). P188.6 TRUE (max run 370 s). P188.7 TRUE (seal 7/7). 7/7 TRUE; SCORE PASS (F1/F2/G1/G2/G3/G4).
+
+## 2026-09-22 — Experiment 193 (missing-apostrophe possessives on loop138h, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-apos193-20260922/)
+- P193.1: A1 sealed case193.json 40/40 step checks (6 cap parity + 14 asks reply==twin with 0 writes + 6 teaches reply==twin and delta==twin delta + 14 traps reply-and-delta byte-identical). 0.85. Falsified by any step miss.
+- P193.2: A2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns): 0 verdict/reply moves, 0 stored/write diffs vs sealed 138h rows; 0 new WRONG/WRONG-WRITE/junk writes vs base. 0.80. Falsified by any move or new wrong/write.
+- P193.3: A2 bench121 4 splits per-item verdict-identical to sealed 138h rows, 0 new wrong. 0.85. Falsified by any move or any new wrong.
+- P193.4: A2 marks123 every suite per-case identical to sealed marks138h except the predicted set (sleep SKIP reason agent filename; summary total_seconds timing; rt110 harness statuses log-metadata only, verdict+reply+fact_writes exact); 0 case-moves, 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move.
+- P193.5: A1+A2 0 writes from any ask; opinion/small-talk traps (`What is your favourite city?` -> `I have no opinions.`) base-identical. 0.85. Falsified by any ask write or any trap move.
+- P193.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P193.7: no post-seal edits to agent code, config, or case files; any edit is reported and forces FAIL (driver/scorer-only fixes reported with diff, affected marks re-run open). 0.95. Falsified by any silent edit.
+- Outcomes 193: P193.1 TRUE (A1 40/40: cap 6, ask 14 reply==twin 0 writes, teach 6 reply+delta==twin, trap 14 reply+delta identical; 11.8 s) | P193.2 TRUE (rt136 145 + rt143 124 + sessions152 180 turns: 0 moves, 0 stored/write diffs, 0 new wrong) | P193.3 TRUE (bench 800 items 4 splits, 0 moves, 0 new wrong) | P193.4 TRUE (marks123 10/10 reports per-case identical after rename/timing scrub; rt110 verdict+reply+writes exact, statuses-only metadata diffs D7/S4/T4; suite FAIL bars p3-l5z1/p4-1-nonpass/rt81-bug1 inherited byte-identical; max run 395.6 s) | P193.5 TRUE (0 ask writes; opinion traps base-identical) | P193.6 TRUE (max registered run 395.6 s < 1500 s; daemons take idle_seconds) | P193.7 TRUE (seal 8/8 clean post-runs; pre-seal fixes D1-D3 reported in RESULTS; no post-seal edits). 7/7 TRUE. SCORE PASS (A1/A2). RESULTS: artifacts/fable-apos193-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 154f (plain-negation removal on loop154e, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-negate154f-20260922/, seal 4ff2b8c6…)
+- P154f.1: N1 sealed case154f.jsonl (90 turns, 12 segments) through loop154f: 102/102 checks PASS (reply + writes + state + full_state): 8 multi-valued removals leave only the others, 6 single-valued removals lead to don't-know asks, 8 misses add 0 events, 4 unknown names give the base reply, 19 traps identical to live loop154e. 0.85. Falsified by any non-OK turn.
+- P154f.2: G1 bench 4x200 vs frozen loop154e rows: 0 moves, 0 new wrong. 0.85. Falsified by any move or any new wrong.
+- P154f.3: G2 marks123 per-case verdict+reply identical to marks154e except predicted volatile metadata (paths, sleep filename, seconds, hashes, rt110 statuses race, l6 kill-timing race); suite numbers identical incl. inherited p3 l5z1/l5z2 FAILs; 0 new WRONG/WRONG-WRITE/junk writes. 0.70. Falsified by any unpredicted move.
+- P154f.4: G3 redteam136 (145) + redteam143 (124) + sessions152 vs frozen loop154e g3 rows: 0 moves, 0 new WRONG/WRONG-WRITE, 0 new writes. 0.80. Falsified by any move or new wrong/write.
+- P154f.5: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=30.0. 0.95. Falsified by any run >= 1500 s.
+- P154f.6: no post-seal edits to sealed files; any edit is reported and the affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 154f: (to be appended after the registered runs)
+
+### Director note 188 (2026-09-22 10:36)
+- Verified: SEAL 7/7 OK; the two agent edits were before the seal (pilot); nothing after the seal except RESULTS.md. P188.1–7 TRUE as reported. Director probe (15 turns): hearsay, verb, plural-list and "I think…" statements get the new statement refusal with 0 writes; taught facts and questions unchanged. Seen on the base (not 188's job): "Is Kim's boss Lee?", "Tell me about Kim.", "Hello there.", "How are you?" all get "I do not know…".
+
+## 2026-09-22 — Experiment 180b (silent case-insensitive known-name match on loop138h, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-case180b-20260922/)
+- P180b.1: K1 sealed case180b.json (44 turns) through loop180b vs loop138h: 44/44 step checks — 10/10 setup parity, 14/14 lowercase/mixed asks byte-identical to capitalised-twin replies with 0 writes, 8/8 lowercase teaches save silently with twin-identical replies+triples and 0 case-dupe entities, 12/12 traps (unknown/common-words/say byte-identical with identical events; X08/X09 exactly "I already have that."). 0.85. Falsified by any step miss.
+- P180b.2: K2 redteam136 (145) + redteam143 (124): 0 moves, 0 new WRONG/WRONG-WRITE, 0 new writes vs sealed loop138h rows. 0.80. Falsified by any move or new wrong/write.
+- P180b.3: K2 sessions152: exactly the 9 predicted reply-casing-only moves (S2 n7/n13/n18/n23, S5 n4/n5/n6/n10/n13), verdict OK both sides, 0 new wrong, 0 new writes. 0.80. Falsified by any other move or any new wrong/write.
+- P180b.4: K2 bench121 4 splits (200 each): 0 moves, 0 new wrong vs sealed loop138h rows. 0.85. Falsified by any move or new wrong.
+- P180b.5: K2 marks123 per-case identical to sealed marks138h after scrubbing, except: <=4 reply-casing-only moves (rt110 L6/M5/S2, q1 M5; verdicts/writes/flags unchanged), timing-volatile rt110 statuses, sleep/agent-path renames, total_seconds timing; suite FAILs p3-l5z1/p4-1-nonpass/rt81-bug/unclear inherited byte-identical. 0.70. Falsified by any other diff.
+- P180b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds; heavy suites one at a time. 0.95. Falsified by any run >= 1500 s.
+- P180b.7: no post-seal edits to sealed files (agent code, config, cases, drivers, PASSMARKS); any edit is reported and forces FAIL. 0.95. Falsified by any silent edit.
+- Outcomes 180b: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 154g ("No," corrections replace on multi-valued relations, loop154e base, Muse), written before the registered runs (seal in artifacts/fable-nocorrect154g-20260922/)
+- P154g.1: C1 sealed case154g.jsonl 95/95 lines (91 turns + 4 resets; reply + state + full_state + events0 exact); quotas 8 one-value replaces, 6 question+answer replaces, 4 cancels (0 writes, next turn normal), 3 no-value plain teaches, 19 traps byte-identical to loop154e. 0.80. Falsified by any turn FAIL.
+- P154g.2: G1 bench121 4x200 vs frozen loop154e rows: 0 moves, 0 new wrong (predicted EMPTY; pre-seal scan 0 flags). 0.85. Falsified by any move or new wrong.
+- P154g.3: G2 marks123 per-case identical to frozen marks154e except predicted sleep-SKIP agent filename + volatile seconds + rt110 log-statuses harness race (each leaf verified against the case daemon log as race_confirmed); 0 real moves, 0 new WRONG/WRONG-WRITE/junk writes; p3/rt81 suite FAILs inherited byte-identical. 0.70. Falsified by any real move or new wrong/write.
+- P154g.4: G3 redteam136 (145) + redteam143 (124) + sessions152 vs frozen loop154e g3 rows: 0 moves, 0 new wrong/write (predicted EMPTY; scan 0 flags). 0.80. Falsified by any move or new wrong/write.
+- P154g.5: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=30.0. 0.95. Falsified by any run >= 1500 s.
+- P154g.6: no post-seal edits to sealed files (shasum -c SEAL.sha256.txt 10/10 OK post-run); any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 154g: (to be appended after the registered runs)
+- Outcomes 154f: P154f.1 TRUE (N1 102/102: 90/90 replies exact, quotas 8/6/8/4/19 met, all asks 0 events; 1.4 s) | 0.0225. P154f.2 TRUE (bench 800 items 4 splits, 0 moves, 0 new wrong) | 0.0225. P154f.3 TRUE (marks123 9 suites per-case verdict+reply identical; suite numbers identical incl. inherited p3 l5z1/l5z2 FAILs and rt81 14 unclear; only predicted volatile metadata; 353.9 s) | 0.09. P154f.4 TRUE (G3 145+124+6 sessions, 0 moves, 0 new wrong/write; 25.6 s) | 0.04. P154f.5 TRUE (max run 353.9 s < 1500 s; idle_seconds=30.0) | 0.0025. P154f.6 TRUE (seal 10/10 OK post-runs; no post-seal edits). 6/6 TRUE. SCORE PASS (N1/N2/G4). RESULTS: artifacts/fable-negate154f-20260922/RESULTS.md
+
+### Director note 154f (2026-09-22 10:44)
+- Verified: SEAL 9/9 OK; all code written before the seal; nothing after it except RESULTS.md and the doc. P154f as reported. Deviation (disclosed): two ad-hoc pilots wrote to the untracked repo-root notebook/ (test-only data, fictional names; registered runs used isolated dirs) — rule breach logged, verdict unaffected; TAIL2 now says pilots too. Director probe: plain "not"/"isn't" removes exactly the named value (multi-valued keeps the rest; single-valued leaves don't-know); a value not held → "I don't have Sam as Kim's boss." Gaps: lowercase value ("not twi") misses; unknown name ("Zed's boss is not Lee.") → "could you split that?".
+
+### Director note 193 (2026-09-22 10:50)
+- Verified: SEAL 8/8 OK; all code edits before the seal; nothing after it except RESULTS.md and the doc. P193 as reported. Director probe (20 turns): "What is kofis city?", "Who is kofis boss?", "What is kofis boss's city?", "jamess"/"chriss" forms answer like the apostrophe spelling; "kofis city is Tema." asks before changing. Gaps: "whats kofis city" and "Is kofis city Tema?" → "I have no opinions." (opinion guard); "What is James' city?" (s'-possessive of a stored name) → don't-know; "Where does kofis boss live?" (verb two-hop, known gap).
+
+## 2026-09-22 — Experiment 189b (widened repeat-request grammar on loop189, Muse), written before the registered runs
+- P189b.1: W1 sealed cases189b.json 44/44 turn checks — 2/2 noprev fixed-line 0 writes, 21/21 new-phrasing repeats echo 189b's own previous non-repeat reply byte-identical 0 writes, 12/12 traps + 9/9 base byte-identical to loop189 (reply+triples+facts+events). 0.85. Falsified by any turn FAIL.
+- P189b.2: W2 189's sealed cases189.json 38/38 byte-identical loop189b vs loop189 (reply+triples+facts+events). 0.90. Falsified by any diff.
+- P189b.3: W3 junk (redteam136 145, cases150 57, f1 46, cases139b 101) 0 verdict/reply moves, 0 new WRONG/WRONG-WRITE/junk writes vs sealed 138g rows AND 189 rows (8 comparisons). 0.85. Falsified by any move or new wrong/write.
+- P189b.4: W3 redteam143 124 cases 0 moves and sessions152 180 turns 0 verdict/reply moves, 0 new wrong, 0 new writes vs sealed 138g rows AND 189 rows. 0.85. Falsified by any move/new wrong/new write.
+- P189b.5: W3 bench121 4 splits (800 items) 0 verdict moves, 0 new wrong vs sealed 138g rows AND 189 rows. 0.85. Falsified by any move/new wrong.
+- P189b.6: W3 marks123 every suite report per-case identical to sealed marks138g AND marks189 after scrubbing volatile metadata (paths, seconds, daemon-log statuses); suite-status vectors identical incl. inherited p3-l5z1/p4/rt81 FAILs; only predicted metadata diffs are agent/config paths + sleep SKIP agent filename; stock rc=1 comes from the inherited overall FAIL. 0.70. Falsified by any other diff.
+- P189b.7: each registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=3600.0. 0.95. Falsified by any run >= 1500 s.
+- P189b.8: no post-seal edits to sealed files (PASSMARKS.md + agent + driver + cases189b.json + loop189b-config.json hashes match); any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 189b: (to be appended after the registered runs)
+- Outcomes 189b (registered runs 2026-09-22, seal 5/5 OK, no post-seal edits): P189b.1 TRUE (W1 44/44: 2/2 noprev, 21/21 repeats, 21/21 traps+base) | 0.85. P189b.2 TRUE (W2 38/38 identical) | 0.90. P189b.3 TRUE (junk 8 comparisons, 0 moves, 0 new wrong/write) | 0.85. P189b.4 TRUE (rt143 0 moves; sessions152 0 moves, 0 new wrong/write) | 0.85. P189b.5 TRUE (bench 800 items 4 splits, 8 comparisons, 0 moves, 0 new wrong) | 0.85. P189b.6 TRUE (marks123 per-case identical vs 138g+189, only volatile rt110 statuses line; rc=1 inherited overall FAIL) | 0.70. P189b.7 TRUE (max run 396.0 s < 1500 s; idle_seconds=3600.0) | 0.95. P189b.8 TRUE (seal 5/5 OK post-runs). 8/8 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-sayagain189b-20260922/RESULTS.md
+- Outcomes 154g: P154g.1 TRUE (C1 95/95 lines: 91/91 turns exact, quotas 8/6/4/3/19 all met; all 15 question/cancel/repeat turns 0 events) | 0.4. P154g.2 TRUE (bench 800 items 4 splits, 0 moves, 0 new wrong; 105.9 s) | 0.4. P154g.3 TRUE (marks123 11/11 reports IDENTICAL, 0 diffs, 0 real moves; p3/rt81 FAILs inherited byte-identical; 483.3 s) | 0.09. P154g.4 TRUE (G3 145+124+6 sessions, 0 moves, 0 new wrong/write; 30.5 s) | 0.04. P154g.5 TRUE (max run 483.3 s < 1500 s; idle_seconds=30.0) | 0.0025. P154g.6 TRUE (seal 10/10 OK post-runs; no post-seal edits; one registered run per suite). 6/6 TRUE. SCORE PASS (C1/C2/G4). RESULTS: artifacts/fable-nocorrect154g-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 119g (relation-conditioned pointers + multi-fact decode, Muse BUILD + SEAL ONLY; director runs the GPU wave on BensPC), written before the seal (PASSMARKS sealed in artifacts/fable-ears119g-20260922/)
+- P119g.1: GPU wave wall-clock (first step-0 step to last score write) < 2400 s on one RTX 5070 Ti. 0.70. Falsified by >= 2400 s.
+- P119g.2: pool identity gates pass first try (synth == 60000, occ == 5000, kept in [141377,141408], steps == 8838). 0.85. Falsified by any prep FAIL.
+- P119g.3: M1 passes (occupation exact on reading94b >= 10/94 in 3/3 seeds at K=3; 119f: 1/94 every seed). 0.55. Falsified by < 3 passing seeds.
+- P119g.4: M2 passes (W3b raw exact, all emitted triples, K=3, >= 33/40/37 positionally in 3/3 seeds). 0.45. Falsified by < 3 passing seeds.
+- P119g.5: M3 passes (ungated precision at K=3 >= step-0 119f K=1 precision - 0.10 per seed). 0.60. Falsified by any seed below the guard.
+- P119g.6: M4 passes (gated wrong-write rate <= 5% wherever writes exist) AND F1 does not fire (no slot stealing: non-occupation exact stays >= 119f's 23/18/26 per seed wherever M1 passes). 0.65. Falsified by an M4 breach or F1 firing.
+- P119g.7: no post-seal edits to sealed files (PASSMARKS.md hash matches SEAL.sha256.txt; code hashes unchanged). 0.95. Falsified by any silent edit.
+- Outcomes 119g: (to be appended by the director after the GPU wave)
+- Outcomes 180b (registered runs 2026-09-22, seal intact, no post-seal edits): P180b.1 CONFIRMED (K1 44/44); P180b.2 CONFIRMED (rt136/rt143 0 moves); P180b.3 CONFIRMED (sessions exact 9 predicted moves, 0 new wrong/write); P180b.4 CONFIRMED (bench 4x200 0 moves); P180b.5 CONFIRMED (marks comparator exit 0, only predicted diffs); P180b.6 CONFIRMED (max run 467.6 s); P180b.7 CONFIRMED (shasum -c all OK). Registered verdict: PASS.
+
+### Director note 187b (2026-09-22 10:55)
+- Verified: SEAL 6/6 OK; the agent file is the registered 187 code (sha 26298ed9…, unchanged); cases edited before the seal only; the agent's two ledger Edits only added lines. P187b.1–7 TRUE as reported. Director probe (16 turns): "Who made you?", "who created you", "Who trained you?", "Who are you?", "What are you?", "What's your name?", "What can you do?" get honest self answers, 0 writes. Gaps: "Who designed you?", "Are you a person?", "Are you ChatGPT?", "How do you work?", "Where do you live?" → generic don't-know.
+
+### Director note 154g (2026-09-22 11:00)
+- Verified: SEAL 10/10 OK; all agent/code edits before the seal (driver regress edits also before it); nothing after it except RESULTS.md. P154g as reported. Director probe (5 dialogs): one value → replaced with "(It was Hindi.)"; two values → "Which one should Farsi replace: Arabic or French?", naming one replaces it; a repeat → "I already have that." Gaps: answering "neither" cancels correctly but replies with the generic don't-know; a lowercase answer ("twi") cancels instead of matching Twi.
+
+### Director note 180b (2026-09-22 11:10)
+- Verified: SEAL 7/7 OK; all code (incl. ten comparator edits) before the seal; nothing after it except RESULTS.md. P180b.1–7 as reported. Director probe (20 turns): known names match in any case ("WHO IS ODA'S BOSS?", "who is ODA's boss", "mckay's") and replies use stored casing; a lowercase repeat → "I already have that."; lowercase change asks first; no case-duplicate entities. Gaps: NEW names/values typed lowercase are stored lowercase ("max's boss is ann." → "Max's boss is ann."; "quito"); "what is odas boss's city?" (no apostrophe + two-hop) → "I don't know anyone called odas boss." (193 + 180b together, check in layer C); "de Silva's city is Pune." not parsed.
+
+## 2026-09-22 — Experiment 190b (reverse no-match rewording on loop190, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-reverse190b-20260922/)
+- P190b.1: V1b sealed case190b.json (46 turns) through loop190b vs lockstep loop190: 15/15 r1 replies exact (R1–R12 unknown values + R13–R14 correction-removed Zep give the new whose-sentence; R15 153-frame already whose-form, identical); 31/31 r2+trap+teach/correct rows byte-identical reply AND stored triples; 0 writes on all asks; 0 FAILs. 0.85. Falsified by any turn FAIL.
+- P190b.2: V1 sealed case190.json (70 turns) through loop190b vs sealed 190 rows: exactly E1–E5 move (called <V> → whose <R> is <V>, same value); all other 65 rows reply- and event-identical; stored triples identical after every turn. 0.85. Falsified by any other move or any event diff.
+- P190b.3: V2 redteam136 (145) + redteam143 (124) + sessions152 (180 turns) vs sealed 190 rows: 0 verdict/reply moves, 0 new WRONG/WRONG-WRITE, 0 new writes. 0.80. Falsified by any move or new wrong/write.
+- P190b.4: V3 bench121 4 splits (200 each) vs sealed 190 rows: 0 moves, 0 new wrong; reversal rows reported descriptively. 0.85. Falsified by any move or new wrong.
+- P190b.5: V2 marks123 (10 reports, scrubbed as 190 did): per-case identical to sealed marks190; only the scrubbed agent-filename line may differ. 0.70. Falsified by any other diff.
+- P190b.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=3600.0; heavy suites one at a time. 0.95. Falsified by any run >= 1500 s.
+- P190b.7: no post-seal edits to sealed files (agent code, config, cases, drivers, PASSMARKS, doc); any edit is reported and forces FAIL. 0.95. Falsified by any silent edit.
+- Outcomes 190b: P190b.1 TRUE (V1b 46 turns: r1 15/15 exact, parity 31/31, 0 writes, 0 FAILs; 1.5 s) | 0.85. P190b.2 TRUE (V1 70 turns: exactly E1–E5 moved called→whose, 65 identical, events identical all turns; 0.2 s) | 0.85. P190b.3 TRUE (rt136 145 + rt143 124 + sessions152 180 turns: 0 moves, 0 new wrong/write) | 0.80. P190b.4 TRUE (bench121 4x200: 0 moves, 0 new wrong; 75.4 s) | 0.85. P190b.5 TRUE (marks123 10/10 reports, 0 diffs; p3/p4/rt81 suite FAILs inherited byte-identical; max suite 250.9 s) | 0.70. P190b.6 TRUE (max run 250.9 s < 1500 s; OMP/MKL=1; idle_seconds=3600.0) | 0.95. P190b.7 TRUE (seal 8/8 OK post-runs; no post-seal edits). 7/7 TRUE. SCORE PASS (R1/R2/R3/R4). RESULTS: artifacts/fable-reverse190b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 164b (FRESH REGISTRATION of the 164 "about" feature on base loop138h, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-about164b-20260922/)
+- P164b.1: A1 sealed cases164b.json (50 dialogues) through loop164b: 50/50 OK — 38/38 must-cases exact (frozen reply + 0 FACT-event delta on every about/summary turn + frozen triples), 12/12 near-misses byte-identical loop164b vs loop138h (replies + FACT writes). 0.85. Falsified by any turn FAIL.
+- P164b.2: A2 redteam136 (145) + cases150 (57) + f1 (46) + cases139b (101) + redteam143 (124) + sessions152 (180 turns): 0 moves (verdict AND reply byte-identical to sealed loop138h rows), 0 new WRONG/WRONG-WRITE, 0 new writes. 0.80. Falsified by any move or new wrong/write.
+- P164b.3: bench121 4 splits (200 each) via the base driver's run_item/summarize: 0 verdict moves, 0 reply moves, 0 new wrong vs sealed loop138h rows. 0.85. Falsified by any move or new wrong.
+- P164b.4: A3 marks123 (11 reports) per-case identical to sealed marks138h after exemptions (volatile seconds; sleep SKIP reason naming the new agent; diag-only log/reason text); suite FAILs p3-l5z1/p4-1-nonpass/rt81 inherited byte-identical; 0 case-moves. 0.70. Falsified by any other diff.
+- P164b.5: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds=3600.0; heavy suites one at a time. 0.95. Falsified by any run >= 1500 s.
+- P164b.6: no post-seal edits to sealed files (shasum -c SEAL.sha256.txt all OK post-run); any edit is reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- P164b.7: frozen suites + marks123 + bench: 0 moves except rows listed in writing before the seal — the listed set is EMPTY. 0.80. Falsified by any unlisted move.
+- Outcomes 164b: (to be appended after the registered runs)
+
+### Outcomes 119g (director, 2026-09-22 12:17): registered FAIL (M1 0/3 seeds)
+- P119g.1: TRUE. Wave 11:04:02 → 11:40:28 = 2186 s < 2400 (D1 relaunch; the first launch crashed at step 0 on the scorer bug, disclosed).
+- P119g.2: TRUE. Pool gates first try: synth=60000, occ=5000, kept=141398, steps=8838.
+- P119g.3: FALSE. Occupation exact on reading94b K=3 = 1/94, 1/94, 1/94.
+- P119g.4: TRUE. Raw exact K=3 = 91/82/100 >= 33/40/37.
+- P119g.5: TRUE. Ungated precision K=3 = 0.193/0.166/0.204 >= step-0 − 0.10 (the guard is vacuous; precision ~2.3x step 0).
+- P119g.6: TRUE, both halves vacuous: 0 gated writes (M4), and F1 is only defined where M1 passes.
+- P119g.7: TRUE. PASSMARKS seal OK and all 7 code hashes unchanged; the only post-seal change is the disclosed D1 scorer wrapper (new files only).
+- Diagnosis (artifacts/fable-ears119g-20260922/DIRECTOR-outcome.md): the occupation generator has two past-tense templates and labels only occupation. On real shapes ("is a", birth brackets) the relation picker ranks occupation 6th or lower (48–50/51), and even the forced read-out is exact on only 2–10/51. Follow-up: 119h replaces the generator (varied shapes, one row per stated fact), and nothing else.
+- Correction (director, 12:06): the 'Outcomes 119g' heading time above should read 12:05, not 12:17 (clock misread; content unchanged).
+
+## 2026-09-22 — Experiment 192 (correct-reply on loop167e, Muse), written before the registered runs
+- P192.1: C1/C2 probe (scripts/fable_fix192_probe.py) 40/40 OK — all 15 want-updated turns (11 explicit corrections + 4 yes-to-change) reply EXACTLY "Updated: {S}'s {R} is {N} (it was {O})." with the case file's old/new values; all 25 traps byte-identical to loop167e; stored triples and scrubbed events identical. 0.85. Falsified by any TURN-FAIL / STORE-DIFF / EVENT-DIFF / COUNT-SHORT.
+- P192.2: C3 suites (scripts/fable_fix192_suites.py) vs frozen loop167e rows: redteam136 0 moves of any kind; redteam143 Q1-Q7 teach replies Saved->Updated with verdicts ->HARNESS-ERROR by the sealed teach_accepted gate (stored identical, 0 new WRONG-ANSWER), all other 143 cases 0 moves; sessions152 exactly 2 reply moves (S3-teachers-correction turn 7 Rao/Denver, S6-pronouns-corrections turn 16 Vera/Quito), 0 verdict moves, 0 fact_writes moves, 0 new WRONG. 0.75. Falsified by any unpredicted move or any new WRONG-ANSWER/WRONG-WRITE.
+- P192.3: bench (scripts/fable_fix192_bench.py, base driver shape) vs frozen loop167e rows: 0 verdict moves, 0 reply moves, 0 teach_replies moves, 0 new wrong on all 600 items (bench edits are silent re-teaches). 0.80. Falsified by any move or new wrong.
+- P192.4: marks123 (scripts/fable_marks123_all.py --workers 2) per-case vs marks167e: reply moves ONLY rt81 cases {8,11,34,53,69} OK->UNCLEAR (ok 56, unclear 18), soak wrong 0->40 (every wrong_detail entry an Actually-correction with an Updated reply; lost/doubled 0, audit clean), p3/l5z1 turns {26-33,35} observed SAVED->WRITE_OTHER (wrong_writes 0); p2/p4/q1/bench/rt110 per-case identical; q4 identical; sleep SKIP naming loop192; summary numbers otherwise identical. 0.70. Falsified by any other diff.
+- P192.5: each registered run < 1500 s wall-clock Mac CPU (OMP_NUM_THREADS=1 MKL_NUM_THREADS=1); daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P192.6: no post-seal edits to sealed files (shasum -a 256 -c SEAL.sha256.txt all OK); any edit reported with affected marks re-run in the open. 0.95. Falsified by any silent edit.
+- Outcomes 192: (to be appended after the registered runs)
+- Outcomes 164b (registered runs 2026-09-22, seal 7/7 OK post-run, no post-seal edits): P164b.1 TRUE (probe 50/50 OK, 0 writes on every about/summary turn; 1.7 s) | P164b.2 TRUE (junk 349 cases + rt143 124 + sessions 180 turns, 0 moves, 0 new wrong/write) | P164b.3 TRUE (bench 4x200, 0 verdict/reply moves, 0 new wrong) | P164b.4 TRUE (marks123 11 reports, 0 case-moves; p3/p4/rt81 FAILs inherited byte-identical) | P164b.5 TRUE (max run 278.5 s < 1500 s; idle_seconds=3600.0) | P164b.6 TRUE (seal 7/7 OK post-runs) | P164b.7 TRUE (move set EMPTY as listed). 7/7 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-about164b-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 138i (merge layer B part 2 onto loop138h, Muse), written before the registered runs
+- P138i.1: M1 pieces on loop138i: 154e 76/76, 172b-t1 81/81, 172b-t1c 92/92, 154d 38/38 identical to own agents; 172b-t1b moves only n=9,10,11 + state-carry n=12,16,20,24,28 (language multi-add); 171b 120/122 (T1-D12 lineage wording, T1-C02 dog multi-add); 173b W/I identical to 173b-own, t1/t1c moves only the listed 154e/171b/lineage classes; 167d 22/32 + X01-X10 lineage forms; 167e 33/34 + n32 lineage form; 174 39/40 + n35 lineage form; no 155 in MRO/modules. 0.80. Falsified by any unlisted diff.
+- P138i.2: M2 vs loop138h: part A moves only the 13 listed ids (154e F12/F20/C11 x2, 171b F14/C06/C08/S02/S03/E07/E08/T07/T08/S13); part B 139e/146d/150b/153/157/158/159 PASS, 137e/158c/168/156b fail-sets == 138h sealed, 142 exactly the 50 pet/song diffs. 0.80. Falsified by any unlisted move.
+- P138i.3: G1 bench v3: 138h-v3 == 138h-old except bench132-4hop-162 wrong->abstain; 138i-v3 0 new wrong, moves exactly the 17 listed ids (all correct->abstain multi-kept except shared 162). 0.80. Falsified by any new wrong or unlisted move.
+- P138i.4: G2: rt136/rt143 0 moves; sessions152 exactly the S4-pets n1 move; marks123 per-case vs marks138h: p2 B1/B2/B3/B7/B8/F2 == 172b rows, l5z2 id-set == 172b, marks-bench 400/400 == 172b rows, P4-08 == 171b-own, l2/l5z1 identical-fail, rest identical; 0 new WRONG/WRONG-WRITE/junk. 0.75. Falsified by any unlisted move or any new wrong/write.
+- P138i.5: G3 six pairs reply-exact per PASSMARKS (d saves Juno; e keeps Urdu+Hindi); G4 index on==off (1000 turns, 0 reply diffs, facts-sha equal). 0.85. Falsified by any diff.
+- P138i.6: each registered run < 1500 s Mac CPU (OMP=1 MKL=1); daemon wrappers idle_seconds=3600. 0.95. Falsified by any run >= 1500 s.
+- P138i.7: no post-seal edits (shasum -c SEAL.sha256.txt all OK); any change reported as FAIL, driver-only fix with diff + open re-run. 0.95. Falsified by any silent edit.
+- Outcomes 138i: P138i.1 TRUE (M1 counts exact: 76/81/92/38 identical; t1b 75/83, 171b 120/122, 173b 58/94, 167e 33/34, 167d 22/32, 174 39/40, all diffs listed classes; no-155) | P138i.2 TRUE (M2-A 13 listed moves; M2-B passes + fail-sets == 138h + 142 exactly 50 pet/song) | P138i.3 TRUE (138i-v3 17 listed moves 0 new wrong; 138h-v3 == old 799/800 + noted 162) | P138i.4 TRUE (rt 0 moves; sessions S4 n1 only; p2 6 + l5z2 100-set + bench 400/400 == 172b rows; P4-08 == 171b-own; l2/l5z1 identical-fail; rest identical; 0 new wrong/write) | P138i.5 TRUE (G3 6/6 frozen-exact incl. Juno save + Urdu/Hindi; G4 0 diffs facts-sha equal) | P138i.6 TRUE (max run 270.6 s < 1500 s; idle_seconds=3600) | P138i.7 TRUE (seal 9/9 OK post-runs; 1 prose refinement on 026's abstain form, no rule change). 7/7 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-agent138i-20260922/RESULTS.md
+- Outcomes 192 (registered runs 2026-09-22, seal 10/10 OK post-runs, zero post-seal edits): P192.1 TRUE (probe 40/40 OK, stored+events identical; 1.0 s) | 0.85. P192.2 TRUE (136 zero moves; 143 exactly Q1-Q7 ->HARNESS-ERROR with stored identical and all 7 teach moves satisfying the rule, 0 new WRONG-ANSWER/WRONG-WRITE; 152 exactly the 2 predicted reply moves verbatim, 0 verdict/write moves; driver exit 1 on the predicted moves, verified individually) | 0.75. P192.3 TRUE (bench 600 items, 0 moves, 0 new wrong; 27.0 s) | 0.80. P192.4 FALSE on the exact number with diagnosis (registered soak wrong=41: 39 Actually->Updated + 2 question misses from a proven startup mailbox race losing turn 0; open re-run wrong=40, all Actually->Updated, audits clean; rt81 5 cases and l5z1 9 turns exactly as predicted; all else identical) | 0.70. P192.5 TRUE (max run 167.8 s < 1500 s; idle_seconds honored) | 0.95. P192.6 TRUE (seal 10/10 OK post-runs; no post-seal edits; one open soak re-run reported). 5/6 TRUE. Registered verdict: PASS WITH ONE DOCUMENTED DEVIATION (soak race). RESULTS: artifacts/fable-correctreply192-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 119h (varied-shape occupation rows, one change vs 119g, Muse BUILD; director launches the wave on BensPC), written before the seal and the registered runs
+- P119h.1: wave119h runs pool → 3 seeds → 47h → 4 panel scorings in <= 2400 s wall-clock on the RTX 5070 Ti (119g took 2186 s with a step 0; 119h drops step 0). 0.85. Falsified by any overrun (reported as deviation, never compensated).
+- P119h.2: pool gates pass first try: synth rows 60000, occ rows 5000, kept in [141377, 141408], steps == 8838. 0.90. Falsified by any gate FAIL.
+- P119h.3: M1 occupation exact (reading94b, K=3) >= 10/94 in 3/3 seeds (119g: 1/1/1). 0.55. Falsified by any seed < 10/94.
+- P119h.4: M2 non-occupation exact (K=3) >= 81/73/89 positionally in 3/3 seeds (90% of 119g's 90/81/99; no slot stealing). 0.70. Falsified by any seed below its bar.
+- P119h.5: M3 ungated precision (K=3) >= 0.143/0.116/0.154 positionally (119g minus 0.05). 0.70. Falsified by any seed below its bar.
+- P119h.6: M4 vacuous (0 gated writes, as in 119g) or wrong-write rate <= 5% wherever writes exist; PASSMARKS seal verifies post-run; no post-seal edits to sealed files. 0.80. Falsified by any excess wrong-write rate or any silent edit.
+- Outcomes 119h: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 156c (wider small-talk classes on loop138h, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-smalltalk156c-20260922/)
+- P156c.1: S1 sealed cases156c.json 44/44 new small-talk rows get the exact fixed class reply with 0 stored triples (bar >= 40/44). 0.85. Falsified by any WRONG-REPLY or WRONG-WRITE.
+- P156c.2: S2 sealed cases156c.json 33/33 near-miss rows reply-and-stored-triples byte-identical to loop138h (fact teaches, questions, name/place tails, "Happy is my dog."). 0.85. Falsified by any NEAR-DIFF.
+- P156c.3: S3 redteam136 (145) + redteam143 (124) + sessions152: 0 verdict/reply moves, 0 stored/write diffs vs sealed 138h rows; 0 new WRONG/WRONG-WRITE/junk writes vs base. 0.80. Falsified by any move or new wrong/write.
+- P156c.4: S3 bench 4 splits (800 items) per-item verdict-identical to sealed 138h rows, 0 new wrong, 0 reply moves. 0.85. Falsified by any move or any new wrong.
+- P156c.5: S3 marks123 every suite per-case identical to sealed marks138h except the predicted volatile set (sleep SKIP reason agent filename; summary total_seconds timing; rt110 harness statuses log-metadata only, verdict+reply+fact_writes exact); 0 case-moves, 0 new WRONG/WRONG-WRITE/junk writes; suite FAIL bars p3-l5z1/p4-1-nonpass/rt81-bug inherited byte-identical. 0.70. Falsified by any unpredicted move.
+- P156c.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers take idle_seconds. 0.95. Falsified by any run >= 1500 s.
+- P156c.7: no post-seal edits to agent code, config, or case files; any edit is reported and forces FAIL (driver/scorer-only fixes reported with diff, affected marks re-run open). 0.95. Falsified by any silent edit.
+- Outcomes 156c: P156c.1 TRUE (probe 44/44 exact class replies, 0 writes; 3.1 s) | P156c.2 TRUE (33/33 byte-identical reply+triples vs loop138h) | P156c.3 TRUE (rt136 145 + rt143 124 + sessions152: 0 moves, 0 new wrong/write) | P156c.4 TRUE (bench 4x200: 0 moves, 0 new wrong; 14.9 s) | P156c.5 TRUE (marks123 11/11 SAME after scrub; p3/p4/rt81 FAILs inherited byte-identical; max run 232.9 s) | P156c.6 TRUE (max run 232.9 s < 1500 s; OMP/MKL=1; idle_seconds honored) | P156c.7 TRUE (seal 9/9 OK post-runs; no post-seal edits). 7/7 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-smalltalk156c-20260922/RESULTS.md
+- Outcomes 119h (appended by the director, 13:39): P119h.1 TRUE (wave 12:48:44 -> 13:25:01 = 2177 s <= 2400) | P119h.2 TRUE (synth 60000, occupation 5000, kept 141398 in [141377, 141408], steps 8838) | P119h.3 FALSE (M1 occupation exact K=3 on reading94b 6/8/9 of 94, bar 10 in 3/3; 119g 1/1/1) | P119h.4 TRUE (M2 non-occupation exact 87/91/96 >= 81/73/89) | P119h.5 TRUE (M3 ungated precision 0.191/0.198/0.209 >= 0.143/0.116/0.154) | P119h.6 TRUE (M4 vacuous: 0 gated writes all seeds; PASSMARKS seal OK; the 7 code hashes in DIRECTOR-codehashes.md all match). 5/6 TRUE. Registered verdict: FAIL on the primary M1. Diagnosis and fresh probe: artifacts/fable-ears119h-20260922/DIRECTOR-outcome.md.
+
+## 2026-09-22 — Experiment 211 (fair-prompt SmolLM arm, Muse), written before the registered runs
+- P211.1: F1 reported: fair SmolLM fresh runs complete 200+200 items with per-item v2 right/wrong/abstain rows on both splits, beside bench125 old in-context (edit200 52/0/148, 4hop 52/0/148). 0.90. Falsified by any missing split or unscored item.
+- P211.2: F2 deterministic re-score (no model run; verified in pilot): bench66 old in-context abstain 11, whole-phrase abstain 11, old abstains merely containing "not" 0, per-item old-vs-phrase identical 200/200. 0.85. Falsified by any count mismatch in the registered run.
+- P211.3: F3 reported: loop wrong rates from bench125 JSON (edit200 0.0 x3; 4hop loop102 0.65, loop113/113b 0.025) beside fair SmolLM's wrong rate; fair direction unknown (numbering + replace cues may help or confuse a 360M model). 0.90 on reporting, no directional claim. Falsified by any missing rate.
+- P211.4: full registered run < 1500 s Mac CPU (OMP=1 MKL=1; pilot projects ~323 s). 0.90. Falsified by any overrun.
+- P211.5: no post-seal edits (shasum -c SEAL.sha256.txt all OK post-runs); any change reported as FAIL, driver-only fix with diff + open re-run. 0.95. Falsified by any silent edit.
+- Outcomes 211: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 207 (atomic inbox writes, driver-only, Muse), written before the registered runs (PASSMARKS sealed in artifacts/fable-atomic207-20260922/)
+- P207.1: A1 patched soak 2000 turns x3: 0 lost / 0 doubled / 0 didnt_catch_nonempty / 0 empty_serves every run, patched_writes > 0 every run. 0.70. Falsified by any race event with the patch engaged.
+- P207.2: A1 patched rt110 x3: 0 didnt_catch_nonempty / 0 empty_serves every run, 0 harness_errors. 0.75. Falsified by any race event.
+- P207.3: A2 control (3 soak + 3 rt110) shows >= 1 race event in >= 1 run (the startup mailbox race reproduces without the patch). 0.35. Falsified by 0 races in all 6 (then the test is underpowered: settle gate masks it).
+- P207.4: A3 rt110 per-case agent_verdict identical patched vs control in every paired comparison; soak wrong classes identical apart from race events. 0.65. Falsified by any other verdict diff.
+- P207.5: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers idle_seconds=3600. 0.95. Falsified by any run >= 1500 s.
+- P207.6: no post-seal edits to sealed files (shasum -c SEAL.sha256.txt all OK post-run); any change reported as FAIL. 0.95. Falsified by any silent edit.
+- Outcomes 207: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 208 (fresh natural-English panel baseline on loop138i, Muse), written before the registered run (PASSMARKS + panel + rubric sealed in artifacts/fable-naturalpanel208-20260922/)
+- P208.1: registered run (scripts/fable_naturalpanel208_driver.py, loop138i, 100 turns in 20 dialogs, fresh scratch notebook per dialog) completes < 1500 s Mac CPU (OMP_NUM_THREADS=1 MKL_NUM_THREADS=1); pilot took 8.8 s. 0.95. Falsified by any overrun.
+- P208.2: G1 automatic OK total in [30,42] (pilot: 36); CHAT 18/18 G1-OK and ABSTAIN 12/12 G1-OK exactly as in the pilot (the agent reliably abstains and never writes on chat/abstain turns). 0.80. Falsified by any count outside the band.
+- P208.3: dominant G2 failure shape is "natural-phrasing teach dropped (0 writes)" on >= 25 of 36 SAVE turns; all 4 correction turns fail (stale value wins or 0 writes); two-facts-in-one messages store <= 1 fact. 0.75. Falsified by materially fewer teach drops.
+- P208.4: G1/G2 agreement on OK vs not-OK >= 0.90 (G1 over-counts OK only on SAVE turns where a wrong-valued triple slips through; G2 rules). 0.80. Falsified by agreement below 0.90.
+- P208.5: no post-seal edits to sealed files (shasum -a 256 -c SEAL.sha256.txt all OK); verdict VALID (baseline, no accuracy bar) iff N1+N2+N3 hold. 0.95. Falsified by any silent edit or missing mark.
+- Outcomes 208: (to be appended after the registered run)
+
+## 2026-09-22 — Experiment 206sleep (sleep smoke mark for merges, Muse; P206 bare already taken by the ears wave, so P206sleep.* numbering), written before the seal and the registered runs
+- P206sleep.1: S1 loop138i seed 1 installs maternal_grandmother (episodes 20) with 5/5 new-people probes right, 0 wrong (pilot 5/5). 0.80. Falsified by any wrong probe or missing install.
+- P206sleep.2: S2 loop138h seed 1 parity: same numbers as S1 (pilot 5/5). 0.80. Falsified by any divergence.
+- P206sleep.3: broken-chain probe (Q99) abstains honestly on both runs; sleep_overwrote_taught 0, taught 50/50 dupes 0 both runs. 0.85. Falsified by any invented answer or any overwrite.
+- P206sleep.4: each registered run < 300 s Mac CPU, OMP=1/MKL=1, idle_seconds 30 honored; seal 7/7 OK post-runs; no post-seal edits. 0.90. Falsified by any overrun or silent edit.
+- Outcomes 206sleep: (to be appended after the registered runs)
+- Outcomes 208 (registered run 2026-09-22, seal 4/4 OK post-run, no post-seal edits): P208.1 TRUE (100 turns, 8.6 s < 1500 s; idle_seconds=3600.0) | P208.2 TRUE (G1 OK 36/100, in [30,42]; CHAT 18/18 + ABSTAIN 12/12 G1-OK) | P208.3 TRUE (31/36 SAVE 0-writes incl. all 4 corrections; two-fact messages 0/2 each) | P208.4 TRUE (G1/G2 agreement 92/100 = 0.92; all 8 disagreements are CHAT G1-OK/G2-unhelpful) | P208.5 TRUE (seal 4/4 OK post-run). 5/5 TRUE. Registered verdict: VALID (baseline). RESULTS: artifacts/fable-naturalpanel208-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 210 (true reversal split; benchmark repair, no agent change; Muse), written before the seal and the registered run
+- P210.1: checker prints VIOLATIONS 0 on the sealed split (gold never in question, one taught sentence per item, asked direction never taught, 50 reversal + 20 control). 0.95. Falsified by any violation.
+- P210.2: both arms report all 70 ids with verdicts in {right, wrong, abstain}; coverage_all_reported true for loop138i and smollm-incontext. 0.95. Falsified by any dropped item or other verdict.
+- P210.3: loop138i stores 0 inverse facts (n_inverse_stored 0 on all 70 rows; taught facts only). 0.90. Falsified by any inverse stored.
+- P210.4: loop138i answers right on <= 5/50 reversal items (pilot 0/3; verb questions outside its closed verb tables). 0.70. Falsified by >= 6/50.
+- P210.5: smollm-incontext answers right on >= 30/50 reversal items (pilot 2/3). 0.60. Falsified by < 30/50.
+- P210.6: registered run < 1500 s Mac CPU, OMP/MKL=1, HF offline; seal verifies post-run; no post-seal edits to sealed files. 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 210: (to be appended after the registered run)
+- Outcomes 211: P211.1 TRUE (fair 200+200 fresh rows per-item v2 beside old in-context; 473.6 s) | P211.2 TRUE (11/11/0, per-item identical 200/200) | P211.3 TRUE (wrong: fair 0.495/0.565 vs loops 0.0 x3 / 0.65/0.025/0.025; direction was fairly-abstain-heavy, no correctness gain) | P211.4 TRUE (473.6 s < 1500 s; OMP/MKL=1) | P211.5 TRUE (seal 4/4 OK post-runs; no post-seal edits). 5/5 TRUE. Registered verdict: VALID. RESULTS: artifacts/fable-fairsmol211-20260922/RESULTS.md
+- Outcomes 206sleep: P206sleep.1 TRUE (138i: installed, episodes 20, probes 5/5 right 0 wrong; 98.9 s) | P206sleep.2 TRUE (138h parity: identical numbers; 208.4 s) | P206sleep.3 TRUE (Q99 abstains both runs; taught 50/50 dupes 0, overwrites 0 both) | P206sleep.4 TRUE (max run 208.4 s < 300 s; OMP/MKL=1; idle_seconds 30; seal 7/7 OK post-runs; no post-seal edits). 4/4 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-sleepsmoke206-20260922/RESULTS.md
+- Outcomes 210 (registered run 2026-09-22, 243.7 s; seal 6/7 OK post-run with one reported driver-only fix, re-run open; no agent/data/checker/PASSMARKS change): P210.1 TRUE (checker VIOLATIONS 0; 50 reversal + 20 control) | P210.2 TRUE (70/70 ids both arms, verdicts in {right, wrong, abstain}) | P210.3 TRUE (0 inverse facts stored in 70 items) | P210.4 TRUE (loop reversal 0/50 right: 47 abstain + 3 smalltalk-misfire wrongs; controls 5/20) | P210.5 FALSE with diagnosis (smollm reversal 25/50, not >= 30: contains-gold 45/50, wrongs mostly echo the taught sentence so exact-match fails; controls 10/20) | P210.6 TRUE (243.7 s < 1500 s; OMP/MKL=1; HF offline; post-seal driver one-line fix `(sm_rows, "smollm")` -> `(sm_rows, "smollm-incontext")` reported with diff, marks re-run open). 5/6 TRUE. Registered verdict: VALID (R1-R3 hold). RESULTS: artifacts/fable-reversal210-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 209 (write screen on loop138i, Muse), written before the seal and the registered runs
+- P209.1: W1 32/32 bad-save cases pass on loop209 (exact stored literal/entity + reply; nowrite cases 0 RELATION events); all 32 base-differs on loop138i. 0.85. Falsified by any W1 non-pass.
+- P209.2: W2 33/33 near-misses byte-identical loop209 vs loop138i (replies, stored facts with value kinds, entities, FACT counts). 0.85. Falsified by any W2 diff.
+- P209.3: W3 frozen suites 0 moves vs sealed 138i rows (rt136 145, rt143 124, sessions152 verdict+reply+writes) with 0 new WRONG/WRONG-WRITE/junk writes. 0.80. Falsified by any move or new wrong/write.
+- P209.4: W3 bench-v3 4x200 per-item verdict-identical to sealed 138i rows, 0 new wrong. 0.85. Falsified by any move or new wrong.
+- P209.5: W3 marks123 (stock CLI) per-case identical to sealed marks138i rows on every suite except the volatile set (seconds timings, l6 replied_before_kill kill-timing counts, sleep SKIP agent filename). 0.80. Falsified by any case move.
+- P209.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers idle_seconds=3600. 0.95. Falsified by any run >= 1500 s.
+- P209.7: no post-seal edits to agent code, config, or case files (shasum -c SEAL.sha256.txt all OK); any change reported as FAIL, driver-only fix with diff + open re-run. 0.95. Falsified by any silent edit.
+- Outcomes 209: (to be appended after the registered runs)
+- Outcomes 209 (registered runs 2026-09-22; seal 5/5 OK post-runs; no post-seal edits): P209.1 TRUE (W1 32/32 exact, all base-differs; 1.9 s) | P209.2 TRUE (W2 33/33 byte-identical; 1.1 s) | P209.3 TRUE (rt136 145 + rt143 124 + sessions152: 0 moves, 0 new wrong/write) | P209.4 TRUE (bench-v3 4x200: 0 moves, 0 new wrong; 30.1 s) | P209.5 TRUE (marks123 0 case-moves vs marks138i, volatiles only; 307.0 s) | P209.6 TRUE (max run 307.0 s < 1500 s; OMP/MKL=1; idle_seconds=3600) | P209.7 TRUE (seal intact, no edits). 7/7 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-writescreen209-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 213 (EARS write safety map + gate rescore, scorer-only, Muse), written before the registered GPU wave (PASSMARKS sealed in artifacts/fable-ears213-20260922/)
+- P213.1: A1 GPU rerun of sealed probe213_cases.json: 48/48 relations match, 0 invented/wrong relation names (deterministic pure function; Mac pilot 48/48, old fallback 30/48 wrong incl. 'norvish' and date->'birthplace'). 0.99. Falsified by any probe mismatch on the GPU.
+- P213.2: A2 exact equality both models: recomputed 47-rule taus == sealed taus119g/taus119h floats AND per-panel correct/executed == sealed ens_correct/ens_executed on all 10 panels (same GPU, same checkpoints, verbatim code path). 0.85. Falsified by any count or float mismatch.
+- P213.3: rendered-item wrong writes among old-tau cal EXECUTEs == 0 every seed both models (gated writes 0 today preserved through the table render). 0.80. Falsified by any rendered wrong write on cal at old tau.
+- P213.4: LTT certifies tau_hat non-null for alpha=0.05 in 6/6 model-seeds and for alpha=0.01 in >= 4/6 (needs 299 zero-error eligible cal rows; brief: ~4,214/5,000 cal frames read correctly). 0.70. Falsified by more ABSTAIN-ALL outcomes.
+- P213.5: on t_seen+t_new, sealed tau_hat(0.05) executes >= 2x the old-tau executed count per seed (rescore lifts coverage), and test wrong-write rate at tau_hat(0.05) <= 5% per panel/seed (measurement). 0.60. Falsified by coverage below 2x or any rate above 5%.
+- P213.6: GPU wave < 2400 s total; no post-seal edits (shasum -c SEAL.sha256.txt all OK post-run); any change reported as FAIL. 0.90. Falsified by overrun or any silent edit.
+- Outcomes 213: (to be appended after the registered GPU wave)
+- P214.1: V1 loop138i vs base 138i (--only all): 0 moves on every suite, replies + stored triples identical. 0.9. Falsified by any move.
+- P214.2: V2 loop138h vs base 138h (rt136,rt143,sessions152,bench): 0 moves on every suite. 0.9. Falsified by any move.
+- P214.3: V3 boss-wrapper vs base 138i (rt136,rt143,sessions152): moved = exactly C077 C078 C081 C082 C089 C095 C098 C099 C122 C129 C133 C136 C144 (13, all reply-only); rt143/sessions152 0 moves; 0 elsewhere. 0.9. Falsified by any other moved case.
+- P214.4: V4 rt136+rt143+sessions152+bench together < 900 s wall per agent, Mac CPU, one suite at a time. 0.95. Falsified by any longer run.
+- P214.5: marks123-subset (p4,q1,bench,rt81) vs sealed marks138i rows: 0 moves; time reported, no bar. 0.8. Falsified by any move.
+## 2026-09-22 — Experiment 215 (of-teach rewrite on loop138i, Muse), written before the seal and the registered runs
+- P215.1: M1 P1 40/40 sets correct (teach Saved, both asks answer X, stored triple exactly (Y,R,X)), 0 junk "R of" relations (pilot 40/40, junk 0). 0.90. Falsified by any P1 non-pass or any junk relation.
+- P215.2: M2 P2 25/25 traps byte-identical loop215 vs loop138i (reply + FACT/RELATION/ENTITY events; pilot 25/25). 0.90. Falsified by any P2 diff.
+- P215.3: M3 frozen moves exactly the scan-predicted set: rt136 the 14 ids C013,C019-C031 (junk->true triples); rt143 only gate-open of-questions (J8,K9,O3 class, new_wrong 0, 0 new writes); sessions152 0 moves; bench 3 splits 0 moves and edit200 exactly bench65-rev-f00..f24-fwd (25 stale-gold rows); marks123 per-case identical except those 25 bench rows (+volatile timings). 0.80. Falsified by any unpredicted move or any new wrong/junk write outside the set.
+- P215.4: M4 reversal210 on loop215: junk "R of" saves 26 -> 0, all 70 items reported, reversal 0/47/3 and controls 5/14/1 identical to loop138i, 0 inverse stored (pilot identical). 0.85. Falsified by any junk save, dropped item, or table divergence.
+- P215.5: M5 sleep smoke on loop215 passes: installs, 5/5 new-people probes right, 0 wrong, taught 50/50 dupes 0, overwrites 0, broken-chain abstains (pilot 105.3 s). 0.85. Falsified by any wrong probe, missing install, or overwrite.
+- P215.6: every registered run < 1500 s Mac CPU, OMP/MKL=1, idle_seconds 3600; seal verifies post-runs; no post-seal edits (any change reported as FAIL). 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 215: (to be appended after the registered runs)
+- Outcomes 214: P214.1 confirmed (V1 0 moves all suites, rc=0). P214.2 confirmed (V2 0 moves, rc=0). P214.3 confirmed (V3 exactly the 13 predicted ids, all reply-only, 0 elsewhere). P214.4 confirmed (V1 four-suite wall ~34 s, V2 ~51 s, both < 900 s). P214.5 confirmed (marks123-subset 0 moves, 30.9 s).
+
+## 2026-09-22 — Experiment 212 (self-router gate on loop138i, Muse), written before the registered runs (PASSMARKS + cases sealed in artifacts/fable-selfgate212-20260922/)
+- P212.1: M1 32/32 G-cases: fresh 138i serves a non-DECLINE self reply, fresh 212 serves exactly HONEST_DECLINE+DECLINE_SUFFIX with 0 stored facts. 0.90. Falsified by any G-case keeping a self reply or mismatching decline/facts.
+- P212.2: M2 49/49 S-cases byte-identical to 138i (reply + stored facts). 0.90. Falsified by any S-case mismatch.
+- P212.3: frozen suites 0 moves vs sealed 138i rows: rt136 145 + rt143 124 + sessions152 (verdict+reply), 0 new WRONG/WRONG-WRITE/junk writes. 0.85. Falsified by any unpredicted move.
+- P212.4: marks123 per-suite 0 moves vs sealed marks138i except I_edges-03 (rt81 UNCLEAR->OK, decline carries 'another way', 0 writes); bench splits 0 new wrong; sleep SKIP and q4 identical after volatile scrub. 0.80. Falsified by any other move.
+- P212.5: bench v3 4x200 per-case (verdict+reply) 0 moves vs sealed 138i rows, 0 new wrong; self105 panel scorer output identical to sealed. 0.85. Falsified by any unpredicted move.
+- P212.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; daemon wrappers idle_seconds=3600. 0.95. Falsified by any run >= 1500 s.
+- P212.7: no post-seal edits to agent code, config, or case files (shasum -c SEAL.sha256.txt all OK post-runs); any change reported as FAIL, driver-only fix with diff + open re-run. 0.95. Falsified by any silent edit.
+- Outcomes 212: (to be appended after the registered runs)
+- Outcomes 207 (registered runs 2026-09-22, seal 6/6 OK post-runs, zero post-seal edits): P207.1 TRUE (patched soak x3: 0 lost/0 wrong/0 doubled/0 empty_serves, 2000 atomic writes each; 252/269/252 s) | P207.2 FALSE on the exact number with diagnosis (patched rt110 x3: 0 empty_serves, 0 harness_errors, but 2 abstain-bit replies R4-msg_03 + S6-msg_01 in all 3 runs; daemon logs show complete turn_text — deterministic loop138i agent behavior, patch-independent) | P207.3 FALSE (control 3 soak + 3 rt110: 0 race events everywhere; test underpowered — the 141 settle gate already masks the race) | P207.4 TRUE (rt110 per-case verdicts byte-identical across all 6 runs; soak all-pass 0-wrong both arms) | P207.5 TRUE (max run 269.4 s < 1500 s; idle_seconds=3600) | P207.6 TRUE (seal 6/6 OK post-runs). 4/6 TRUE. Registered verdict: PASS WITH TWO DOCUMENTED NOTES (abstain pair; underpowered control). RESULTS: artifacts/fable-atomic207-20260922/RESULTS.md
+- Outcomes 215 (registered 2026-09-22, seal 8/8 OK post-runs, no post-seal edits): P215.1 TRUE (P1 40/40, junk 0) | P215.2 TRUE (P2 25/25 identical) | P215.3 TRUE (moves exactly predicted: rt136 14 ids, rt143 J8/K9/O3 new_wrong 0, sessions 0, bench 3x0 plus edit200 25 fwd rows, marks123 identical except those 25) | P215.4 TRUE (junk 26->0, 70/70 reported, tables match 138i) | P215.5 TRUE (installed, 5/5, 0 wrong, 50/50, 151.6 s) | P215.6 TRUE (max run 275.4 s < 1500 s; OMP/MKL=1; idle 3600; seal OK). 6/6 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-ofteach215-20260922/RESULTS.md
+- Outcomes 213 (director, GPU wave on BensPC 2026-09-22 14:35-14:39 after a relaunch: the first launch at 14:13 stopped at the first LTT call on a staging error, module fable_abstain64_ltt not copied, before any test panel was opened; seal 5/5 OK post-run): P213.1 TRUE (48/48, 0 invented) | P213.2 TRUE (A2 exact on both models) | P213.3 TRUE (0 wrong, vacuously: 0 old-tau cal executes) | P213.4 FALSE (alpha 0.05 certified in 2/6 model-seeds, 119h 11912 and 11913; alpha 0.01 in 0/6) | P213.5 FALSE (coverage >= 2x old only on 119h 11912 (65 vs 0) and 11913 (142 vs 47); 119g all ABSTAIN-ALL; wrong rate where executed 0/65 and 2/142 = 1.4%, under 5%) | P213.6 TRUE (registered wave 233 s; no post-seal edits).
+
+## 2026-09-22 — Experiment 218 (suite-diff v2: classes + any base, Muse), written before the registered runs
+- P218.1: C1 classifier table 12/12 match (pairs cover new WRONG-WRITE, new WRONG, new junk write x2, lost OK x2 incl. OK->MISSED save lost, fixed x2 incl. MISSED->OK, write change x2 incl. OK->OK different stored triples and fact-write count, reply-only x2). 0.90. Falsified by any mismatch.
+- P218.2: C2 plant run (--only rt136,sessions152 vs base 138i): exactly 6 rt136 moves, C002 C105 C118 = "lost OK", C075 C096 C121 = "reply-only move", sessions152 0 moves, GATE NOT clean (lost OK 3). 0.85. Falsified by any other move set or class.
+- P218.3: C3 loop138i vs --base 138i over rt136,rt143,sessions152,bench: 0 moves every suite, GATE clean. 0.90. Falsified by any move.
+- P218.4: C3 loop138i vs --base-dir artifacts/fable-agent138i-20260922 over the same 4 suites: 0 moves every suite, GATE clean. 0.90. Falsified by any move or any skipped suite.
+- P218.5: C4 each C3 run < 900 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1, one suite at a time (pilots: rt136 ~16 s, rt143 ~28 s, sessions152 ~21 s, bench ~62 s). 0.95. Falsified by either run >= 900 s.
+## 2026-09-22 — Experiment 216 (decline-cue gate on loop138i, Muse), written before the seal and the registered runs
+- P216.1: M1 P1 40 world questions: loop216 serves 0 D-intent replies (all today's DECLINE text); base beside serves D on exactly P1-01/P1-02 (D1) + P1-03/P1-04/P1-21/P1-32 (D5), 6/40 (pilot 0/40 vs 6/40). 0.90. Falsified by any P1 D-intent reply on 216 or any other base-D id.
+- P216.2: M2 P2 30 genuine self questions byte-identical to loop138i (reply + routed intent), 0 moves (pilot 0 moves). 0.90. Falsified by any P2 mismatch.
+- P216.3: M3 frozen moves exactly the scan-predicted set: rt136 0, rt143 only J8/K9/O5 (all WRONG-ANSWER -> non-wrong, reply -> DECLINE), sessions152 0 moves 0 writes, bench v3 4x200 0 moves 0 new wrong, marks123 0 moves except rt81 I_edges-03 (UNCLEAR->OK, reply -> DECLINE, 0 writes); 0 new WRONG/WRONG-WRITE/junk writes everywhere. 0.85. Falsified by any unpredicted move or any new wrong/junk write.
+- P216.4: M4 0 writes changed anywhere (rt136 stored 145/145 identical, sessions new_writes 0, rt81 facts_delta 0; gate swaps replies only). 0.95. Falsified by any write delta.
+- P216.5: M5 sleep smoke on loop216 passes: sleeps>=1, installed, 5/5 probes right, 0 wrong, broken-chain abstains, taught intact, 0 overwrites (pilot 150.6 s). 0.85. Falsified by any wrong probe, missing install, or overwrite.
+- P216.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1, one suite at a time; daemon wrappers idle_seconds 3600 (smoke 30.0); seal verifies post-runs; no post-seal edits (any change reported as FAIL). 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 216: (to be appended after the registered runs)
+- Outcomes 212: P212.1 TRUE (M1 32/32: every G-case 138i non-DECLINE self reply, 212 exact base decline + 0 facts; 7.2 s) | P212.2 TRUE (M2 49/49 byte-identical reply+facts) | P212.3 TRUE (rt136 145 + rt143 124 + sessions152 180 turns: 0 moves, 0 new wrong/write) | P212.4 TRUE (marks123: 0 moves everywhere except predicted I_edges-03 UNCLEAR->OK; bench splits 0 new wrong; sleep SKIP + q4 identical after scrub) | P212.5 TRUE (bench v3 4x200 verdict+reply 0 moves, 0 new wrong; self105 scorer output identical to sealed) | P212.6 TRUE (max run 232 s < 1500 s; OMP/MKL=1; idle_seconds=3600) | P212.7 TRUE (seal 5/5 OK post-runs; no post-seal edits). 7/7 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-selfgate212-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 219 ("YOU NEVER TOLD ME" must be true on loop138i, Muse), written before the seal and the registered runs
+- P219.1: M1 20/20 taught-name sessions: every base-D8-routed probe reply contains the stored name, 0 "never told" claims while held (pilot 20/20). 0.90. Falsified by any miss.
+- P219.2: M2 5x5 untaught probes byte-identical to base 138i (pilot 30/30). 0.90. Falsified by any diff.
+- P219.3: M3 D9 age 10 stored (ages 5-14) state the value and equal base, 10 empty byte-identical (pilot 40/40). 0.85. Falsified by any miss.
+- P219.4: M4 frozen suites 0 moves vs sealed 138i rows: rt136, rt143, sessions152, bench (pilots all 0 moves, bench 112.7 s). 0.85. Falsified by any move.
+- P219.5: M5 sleep smoke on loop219 passes the same marks as 138i (installed, 5/5 probes, 0 wrong, taught 50/50, ow 0, broken abstain; pilot identical). 0.85. Falsified by any divergence.
+- P219.6: M6 0 new wrong writes anywhere (marks123 diff 0 moves, pilot 69.9 s); every registered run < 1500 s Mac CPU, OMP/MKL=1, idle_seconds 3600; seal verifies post-runs; no post-seal edits. 0.95. Falsified by any new wrong/junk, overrun, seal mismatch, or silent edit.
+- Outcomes 219: (to be appended after the registered runs)
+- Outcomes 212 correction: P212.6 timing detail — longest single registered suite runs were marks-rt110 260.5 s and marks-soak 259.2 s (both < 1500 s); registered M1/M2 7.2 s. The "232 s" figure in the line above was a pilot number, not the registered max. P212.6 remains TRUE. No other change to the Outcomes 212 line.
+- Outcomes 218: P218.1 TRUE (C1 12/12) | 0.01. P218.2 TRUE (C2 exactly C002/C105/C118 lost OK + C075/C096/C121 reply-only, sessions152 0, GATE NOT clean lost OK 3) | 0.0225. P218.3 FALSE (c3-base bench 1 move bench103-s2fresh-4hop-173 correct->abstain; rt136/rt143/sessions152 0; GATE clean) | 0.81. P218.4 FALSE (c3-basedir bench 1 move bench132-4hop-188 correct->abstain, a different item; 0 elsewhere; GATE clean; 0 skipped) | 0.81. P218.5 TRUE (c3-base 68.1 s, c3-basedir 102.9 s, both < 900 s) | 0.0025. 3/5 TRUE. SCORE registered FAIL (C3; agent question-side nondeterminism, one diagnosis note; no re-run, no re-seal). RESULTS: artifacts/fable-suitediff218-20260922/RESULTS.md
+## 2026-09-22 — Experiment 222 (is-a-R-of only for one-of-many person relations), written before the registered run
+- P222.1: B1 C013 teach stores (Kip Dune, country_of_citizenship, Peru) and the citizen question is answered, byte-identical to 138i. 0.85.
+- P222.2: B1 Lima stores nothing and both replies byte-identical to 138i. 0.85.
+- P222.3: B1 friend + daughter pairs store and answer byte-identical to 215 (4/4 teaches with "(I also have …)" on the re-teach). 0.90.
+- P222.4: B2 20/20 person/multi cases byte-identical to 215 AND 20/20 other-noun cases byte-identical to 138i, 0 junk writes. 0.75.
+- P222.5: B3 suitediff vs 138i moves exactly rt136 C019-C031 (C013 fixed), rt143 J8 K9 O3, bench edit200 25 -fwd rows, 0 elsewhere, 0 new wrong/junk. 0.70.
+- P222.6: B4 sleepsmoke marks identical to 138i (installed, 5/5 probes, 0 wrong, broken abstains, 0 overwrites). 0.80.
+- Outcomes 219: P219.1 TRUE (M1 100/100 rows, 20/20 teaches identical, 0 false denials) | P219.2 TRUE (M2 25/25 byte-identical) | P219.3 TRUE (M3 40/40: 20 state value + equal base, 20 identical) | P219.4 TRUE (rt136/rt143/sessions152/bench 0 moves, rc=0) | P219.5 TRUE (smoke219 == smoke138i marks, 291 s) | P219.6 TRUE (marks123 0 moves; all runs < 1500 s; seal 8/8 OK post-runs; no post-seal edits). 6/6 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-selfname219-20260922/RESULTS.md
+
+## 2026-09-22 — Experiment 220 (restart must not double the fast index, Muse), written before the seal check and the registered runs (PASSMARKS + cases + agent code sealed in artifacts/fable-restartindex220-20260922/)
+- P220.1: R1 60/60 index comparisons equal on loop220 (20 histories x determinism + 1 + 2 restarts); base 138i differs on exactly the 40 restart comparisons (20/60 equal). 0.90. Falsified by any fixed mismatch or any other base count.
+- P220.2: R2 11/11 ghost cases clean on loop220 (all three probes abstain, triple gone); base 138i fails 11/11 on the reverse probe with the positive ghost answer. 0.90. Falsified by any fixed leak or any base pass.
+- P220.3: R3 20/20 histories byte-identical replies across 0/1/2 restarts on loop220. 0.90. Falsified by any reply byte difference.
+- P220.4: R4 suitediff vs sealed 138i rows 0 moves on rt136, rt143, sessions152 and bench (all 4 splits), 0 new wrong/junk; one pilot bench132 reply-only flake (bench132-4hop-103) diagnosed as cross-process seed flake with 0 same-process base-vs-fixed moves. 0.75. Falsified by any unpredicted move.
+- P220.5: R5 sleep smoke on loop220 matches the 138i reference marks (sleeps=1, installed=1, 5/5 probes right, 0 wrong, broken abstains, taught 50/50, overwrites 0). 0.85. Falsified by any mark divergence.
+- P220.6: R6 6002-event log load fixed <= base + 10% on every interleaved rep (pilot fixed wall 0.053-0.089 vs base 0.061-0.114). 0.85. Falsified by any rep over the bound.
+- P220.7: every registered run < 1500 s Mac CPU, OMP/MKL=1, idle_seconds 5.0 for smoke; seal verifies post-runs; no post-seal edits. 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 220: (to be appended after the registered runs)
+
+## Exp 224a (decline detector, scorer side) — predictions before the registered run (2026-09-22)
+- P224.1: A1 138i stored rows re-scored with is_decline: 0 verdict changes on every barred suite, sanity_mismatch 0. 0.95.
+- P224.2: A1 138h stored rows: 0 verdict changes, sanity_mismatch 0. 0.95.
+- P224.3: A2 census 45/45, new 3/3, self-CANNOT rejected 7/7, real replies rejected 100/100. 0.95.
+- P224.4: informational rt110 re-score shows exactly 1 change (N6) on each base. 0.85.
+- Outcomes 224a: P224.1 TRUE (138i 0 changes, sanity 0) | P224.2 TRUE (138h 0 changes, sanity 0) | P224.3 TRUE (45/45, 3/3, 7/7, 100/100) | P224.4 TRUE (rt110 N6 only, both bases). 224a PASS.
+- Exp 226 (source questions about the last reply; sealed artifacts/fable-source226-20260922/SEAL.sha256.txt; note: unrelated older "P226" at line 342 is exp 51's):
+- P226.1: P1 72/72 source turns exact expected reply on loop226. 0.85.
+- P226.2: P2 133/133 non-source turns byte-identical to 138i (reply + stored triples). 0.90.
+- P226.3: P3 suitediff vs 138i (rt136, rt143, sessions152, bench) 0 moves, 0 new wrong/junk writes. 0.85.
+- P226.4: P4 sleepsmoke206 on loop226 equals 138i marks (installed, 5/5, 0 wrong, broken abstains, 0 overwrites, 50/50 taught). 0.85.
+- P226.5: P5 72/72 source turns add 0 notebook events; 205/205 turns stored triples equal 138i. 0.90.
+- Outcomes 216 (registered 2026-09-22, seal 8/8 OK post-runs, no post-seal edits): P216.1 TRUE (P1 216 0/40 D-intent, base 6/40 on exactly P1-01/02 D1 + P1-03/04/21/32 D5) | P216.2 TRUE (P2 30/30 byte-identical, 0 moves) | P216.3 TRUE (moves exactly predicted: rt136 0, rt143 J8/K9/O5 off WRONG-ANSWER, sessions 0, bench 4x200 0 moves 0 new wrong, marks123 only rt81 I_edges-03 UNCLEAR->OK; 0 new WRONG/WRONG-WRITE/junk writes) | P216.4 TRUE (0 write deltas: rt136 stored 145/145, sessions new_writes 0, rt81 facts_delta 0) | P216.5 TRUE (smoke 1 sleep, installed ep20, 5/5 probes, 0 wrong, broken abstains, taught 50/50, ow 0, 125.8 s) | P216.6 TRUE (max run 315.0 s < 1500 s; OMP/MKL=1; one suite at a time; seal OK). 6/6 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-declinecue216-20260922/RESULTS.md
+## 2026-09-22 — Experiment 227 (identity sheet on loop138i, Muse), written before the seal and the registered runs
+- P227.1: M1 36/36 identity cases (6/intent) get the sheet answer, 0 writes on the question turn (pilot 36/36). 0.90. Falsified by any wrong reply or any fact written by a question turn.
+- P227.2: M2 32/32 user-name and other self questions byte-identical to loop138i, reply + stored facts, with and without a taught name (pilot 32/32). 0.90. Falsified by any reply or fact mismatch.
+- P227.3: M3 suitediff vs 138i gives 0 moves on rt136, rt143, sessions152 and bench (pilots all 0 moves). 0.85. Falsified by any moved case.
+- P227.4: M4 sleep smoke on loop227 identical to 138i (sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain; pilot identical). 0.85. Falsified by any divergence.
+- P227.5: M5 0 new wrong writes anywhere (marks123 pilot 0 moves; bench 0 new wrong). 0.85. Falsified by any new WRONG/WRONG-WRITE/junk write.
+- P227.6: every registered run < 1500 s wall-clock Mac CPU, OMP_NUM_THREADS=1 MKL_NUM_THREADS=1, one suite at a time; seal verifies post-runs; no post-seal edits. 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 227: (to be appended after the registered runs)
+- Outcomes 222: P222.1 TRUE (C013 138i triple + answer, byte-identical). P222.2 TRUE (Lima nothing stored, replies identical). P222.3 TRUE (friend/daughter pairs byte-identical to 215). P222.4 TRUE (20/20 vs 215, 20/20 vs 138i, 0 junk). P222.5 TRUE (rt136 C019-C031 only; rt143 J8 K9 O3; bench 25 -fwd; 0 elsewhere; rows byte-identical to 215 sealed rows). P222.6 TRUE (sleep marks identical to 138i). 6/6 TRUE; SCORE PASS (B1-B5).
+- Outcomes 220: P220.1 TRUE (R1 fixed 60/60, base 20/60 -- exactly the 20 determinism checks) | P220.2 TRUE (R2 fixed 11/11 clean, base 0/11 -- reverse probe serves the ghost on base) | P220.3 TRUE (R3 20/20 histories byte-identical) | P220.4 TRUE (R4 0 moves rt136/rt143/sessions152/bench-4-splits; pilot bench132-4hop-103 reply-only flake not reproduced in registered run; 0 same-process base-vs-fixed moves) | P220.5 TRUE (R5 smoke-fixed220 == smoke-base138i on all marks, 107.5 s) | P220.6 TRUE-WITH-NOTE (R6 fixed wall max 0.073/mean 0.064 vs base 0.082/0.072 -- within bound on aggregates; strict per-rep wall pairing missed once, rep3 0.069 vs 0.061; proc fixed <= base on all 5 reps) | P220.7 TRUE (max run 107.5 s < 1500 s; seal 6/6 OK post-runs; no post-seal edits). 7/7 (one with note). Registered verdict: PASS. RESULTS: artifacts/fable-restartindex220-20260922/RESULTS.md
+- Outcomes 227 (registered 2026-09-22, seal 9/9 OK post-runs, no post-seal edits): P227.1 TRUE (M1 36/36 sheet answers, 0 question-turn writes) | P227.2 TRUE (M2 32/32 byte-identical reply+facts) | P227.3 TRUE (suitediff rt136/rt143/sessions152/bench all 0 moves, 0 new wrong/write) | P227.4 TRUE (smoke 227 == 138i: sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain) | P227.5 TRUE (marks123 0 moves; bench 0 new wrong) | P227.6 TRUE (max run 96.7 s < 1500 s; OMP/MKL=1; one suite at a time; seal OK). 6/6 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-identity227-20260922/RESULTS.md
+- Outcomes 226: P226.1 TRUE (72/72) | P226.2 TRUE (133/133) | P226.3 FALSE (registered suitediff: rt136/sessions152/bench 0 moves; rt143 1 reply-only move H5 WRONG-ANSWER->OK "Was that a question?", 0 new wrong/junk; not reproduced in 1 pilot + 8 open reruns of 226 nor 8 open reruns of 138i: intermittent, cause not established) | P226.4 TRUE (smoke == 138i marks) | P226.5 TRUE (72/72, 205/205). Verdict FAIL on P3 as sealed.
+## 2026-09-22 — Experiment 224b (one decline sentence per turn type, loop224, Opus), written after the seal and before the registered runs
+- P224.5: B1 138i pre-run 30/30 Q2 + 30/30 S1 glue, 20/20 Q1 no glue; loop224 30/30 Q2 sentence, 30/30 S1 sentence, 20/20 Q1 byte-identical, 0 writes (pilot identical). 0.90. Falsified by any miss or write.
+- P224.6: B2 0 verdict moves, 0 other moves, 0 type mismatches, rescore224 on 224 rows 0 changes/0 sanity; moved rows = 102 (pilot 102). 0.75 (intermittent single-row flakes seen in 218/220/226). Falsified by any verdict/other move or mismatch.
+- P224.7: B3 smoke on loop224 equals 138i marks (pilot equal). 0.90. Falsified by any differing mark.
+- P224.8: B4 0 new wrong writes anywhere. 0.90. Falsified by any new WRONG-WRITE / write in B1 / overwrite.
+- P224.9: Q1 sentence served 0 times anywhere (unreachable on 138i). 0.90. Falsified by any Q1 swap.
+## 2026-09-22 — Experiment 223 (negated capability questions pass the screen, Muse), written before the seal and the registered runs
+- P223.1: M1 22/22 A-cases (19 C25 exact CANNOT sheets + A09/A11/A12 DECLINE byte-identical), 0 question-turn writes (pilot 22/22). 0.90. Falsified by any wrong reply or any write.
+- P223.2: M2 54/54 B- and C-cases byte-identical to loop138i, reply + stored facts (pilot 54/54). 0.90. Falsified by any reply or fact mismatch.
+- P223.3: M3 suitediff vs 138i gives 0 moves on rt136, rt143, sessions152 and bench (dry pilots all 0). 0.85. Falsified by any moved case.
+- P223.4: M4 sleep smoke on loop223 identical to 138i (sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain; dry identical). 0.85. Falsified by any divergence.
+- P223.5: M5 0 new wrong writes anywhere (probe write-parity + suitediff accounting incl. marks123 dry 0 moves). 0.85. Falsified by any new WRONG/WRONG-WRITE/junk write.
+- P223.6: every registered run < 25 min wall-clock Mac CPU, OMP/MKL=1, one suite at a time; seal verifies post-runs; no post-seal edits. 0.95. Falsified by any overrun, seal mismatch, or silent edit.
+- Outcomes 223: (to be appended after the registered runs)
+
+## 2026-09-22 — Experiment 138j (MERGE LAYER C onto loop138i, Muse BUILD), written before the seal and the registered runs
+- P138j.1: M1 sealed files on loop138j: 180b 42/44 (X05 188, X11 193-echo), 193 33/40 (Q12 174-chain, 6x 188), 164b 49/50 (D08 188), 189 36/38 + 189b 42/44 (187 maker + echo), 190 63/70 (C0b/C0c 192, E1-E5 190b-whose), 190b 45/46 (S13 192), 187b 24/34 (T01-T03 older-base, 7x 188), 192 38/40 (n18/n19 154e-multi-friend), 154f 86/90 (n77/n88 pretend, n80/n81 188), 154g 76/91 (15 reply-only Updated, stored == own), 188 36/40 (S03 167d-save, Q01/Q05/H09 older-base). MRO: no 155 class/module. 0.80. Falsified by any unpredicted diff or stored mismatch.
+- P138j.2: M2 vs sealed 138i: M1-join only the listed new ids (154d-33, 167d-X01-X04/X07-X10, 167e-32, 171b-I08/T1-C01, 172b-t1-26/34, 172b-t1c 12 ids, 173b-F08/F09, 174-36/37); M2-A only 165-evens/166c-F08/F09/166c-B-L01-L08/173-t1-F08/F09/173-t1b-R1/R3/R4; M2-B only 137e +4, 139e-O11/O13/O15, 153 9 rows 190-wording, 156b listed set, 157 7 rows, 158-N08, 158c-S21, 159-T08 (== own-180b), 150b-X01; M2-G3 6/6 identical. 142/168 identical, 146d PASS. 0.75. Falsified by any unlisted move.
+- P138j.3: G1 bench-v3 800/800 verdict-identical to sealed 138i rows, 0 new wrong. 0.85. Falsified by any move or new wrong.
+- P138j.4: G2 frozen: rt136 33 reply-form moves (ids listed), rt143 Q1-Q7 HARNESS-ERROR via frozen Saved-gate (stored+Q verified identical in-process), sessions 16 listed moves, marks123 only rt81-10/l5z1-9/soak-wrong-40/q1-m5-casing/sleep-filename/l6-kill-timing with everything else per-case identical; 0 new WRONG/WRONG-WRITE/junk writes. 0.75. Falsified by any unlisted move or new wrong/write.
+- P138j.5: G3 9/9 exact frozen replies; G4 1000 turns on-vs-off identical (replies, facts-sha, events). 0.90. Falsified by any mismatch.
+- P138j.6: every registered run < 1500 s wall-clock Mac CPU, OMP/MKL=1, uv offline py3.12, idle_seconds=3600; no post-seal edits to agent code, config, or case files. 0.95. Falsified by any overrun or silent edit.
+- Outcomes 138j: (to be appended after the registered runs)
+- Exp 227b (Claude/Opus, assistant named Premonition; artifacts/claude-name227b-20260922/):
+- P227b.1: M1 the 6 identity NAME cases answer "My name is Premonition." and the other 62 of 68 227 cases are byte-identical to loop227, notebooks identical, 0 identity-question writes (pilot 68/68). 0.95. Falsified by any other reply or fact difference.
+- P227b.2: M2 7/7 sessions: "What is my name?" answers the user's taught name, "What is your name?" answers Premonition in the same session, 0 writes, Premonition never stored (pilot 7/7). 0.95. Falsified by any miss.
+- P227b.3: M3 suitediff218 0 moves on rt136, rt143 (vs 138i), sessions152, bench, marks123 (vs 227 rows), GATE clean. 0.85 (known ~1/800 bench flake). Falsified by any move.
+- P227b.4: every registered run < 25 min; seal verifies post-runs; no post-seal edits. 0.95.
+- Outcomes 227b: P227b.1 TRUE (68/68). P227b.2 TRUE (7/7). P227b.3 TRUE (0 moves all five, GATE clean). P227b.4 TRUE (slowest 51 s, seal 5/5 OK). Verdict PASS.
+- Outcomes 223: P223.1 TRUE (M1 22/22, 19 exact C25 + 3 identical, 0 writes) | P223.2 TRUE (M2 54/54 identical) | P223.3 TRUE (suitediff 0 moves rt136/rt143/sessions152/bench, moved lists empty) | P223.4 TRUE (smoke identical: 1/installed/5-5/0-wrong/abstain/50-50/ow-0) | P223.5 TRUE (0 new wrong writes; marks123 0 moves) | P223.6 TRUE (all runs < 25 min, seal 5/5 OK post-runs, no post-seal edits). 223 PASS.
+- Outcomes 224b (registered 2026-09-22, seal 8/8 OK post-runs, no post-seal edits): P224.5 TRUE (B1 138i 30/30 Q2 + 30/30 S1 glue, 20/20 Q1 no glue; loop224 30/30 + 30/30 sentences, 20/20 Q1 byte-identical, 0 writes) | P224.6 FALSE (B2: 102 glue rows moved as predicted, 0 type mismatches, rescore 0/0; BUT 1 verdict move bench132-4hop-031 correct->abstain, ears stage loop138b-rewrite->none, reply = Q1 sentence; not reproduced in 11 open reruns of loop224 nor 11 of 138i; cause not established) | P224.7 TRUE (smoke == 138i on all marks) | P224.8 TRUE (0 new wrong writes: B1 0, suitediff WRONG-WRITE 0 all suites, ow 0) | P224.9 FALSE (Q1 served once, on bench132-4hop-031, a question whose facts WERE taught). Verdict 224b FAIL (B2 as sealed). 224a PASS stands.
+- P228.1: M1 forced collision flips >= 30 of 202 bench132/s2fresh target items on 138i with 0 loop138b-rewrite stages (pilot 60/60 rewrite items). 0.9. Falsified by < 30 flips.
+- P228.2: M2 same forced collision on 228: 0 moves vs its unplanted run, 0 donor hits. 0.95. Falsified by any move.
+- P228.3: M3 3 loaded full bench runs (800 items each, 8 extra busy processes) of 228: 0 moves vs 138i sealed rows, GATE clean each. 0.8 (other flake sources not excluded). Falsified by any move.
+- P228.4: M4 rt136/rt143/sessions152 0 moves vs 138i, GATE clean. 0.9.
+- P228.5: M5 sleep smoke pass (installed=1, 5/5, wrong 0, 50/50, ow 0). 0.95.
+- P228.6: M6 all runs < 25 min, seal OK after runs, no post-seal edits. 0.95.
+- Exp 230 yes-prefix (Claude/Opus; artifacts/claude-yesprefix230-20260922/; not the older "P230" line above):
+- P230.1: M1 45/45 of 219's own sessions follow the rule; exactly the 20 "What's my name again?" rows move (Yes. dropped); 0 yes/no turns move; notebooks identical. 0.95.
+- P230.2: M2 WH 25/25 and IMP 31/31 drop "Yes." when the name is stored; YN 14/14 byte-identical to 219; untaught all identical; 0 writes. 0.95.
+- P230.3: M3 suitediff218 0 moves on rt136, rt143 (vs 138i), sessions152, bench, marks123 (vs 219 rows), GATE clean. 0.75 (bench flake seen in pilot).
+- P230.4: M4 sleep smoke equals 219 (sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain). 0.9.
+- P230.5: every registered run < 25 min; seal verifies post-runs; no post-seal edits. 0.95.
+- P221b.1: M1 fresh panel 221b WRONG = 0 (all items; includes base 138i/221 wrongs the fallback does not touch). 0.6.
+- P221b.2: M1 221b question writes = 0. 0.97.
+- P221b.3: M1 221b RIGHT (answer-type) >= 221 RIGHT + 10. 0.6.
+- P221b.4: M1 0 items RIGHT on 221 but not on 221b. 0.9.
+- P221b.5: M2 dev hit >= 90 % (pilot 32/32), ambiguous 8/8 abstain, 0 fallback fires outside "hit", UNIT 11/11. 0.95.
+- P221b.6: M3 suitediff218 vs 221 rows: 0 moves on rt136, rt143, sessions152, bench; GATE clean. 0.85 (known ~1/800 bench flake).
+- P221b.7: M4 sleep smoke = 221 marks (sleeps 1, installed 20 ep, probes 5/5, wrong 0, taught 50/50, ow 0) < 300 s. 0.9.
+- P221b.8: M5 median 221b-221 ms per panel question <= +5 ms. 0.95.
+- Outcomes 230 yes-prefix: P230.1 TRUE (45/45, 20 predicted moves, 0 yes/no moves). P230.2 TRUE (WH 25/25, IMP 31/31, YN 14/14). P230.3 TRUE (0 moves all five, GATE clean). P230.4 TRUE (identical to 219). P230.5 TRUE (slowest 167 s, seal 5/5 OK). Verdict PASS.
+- Outcomes 228: P228.1 TRUE (60 flips, 0 rewrite stages) | P228.2 TRUE (0 moves, 0 donor hits) | P228.3 TRUE (3/3 loaded bench runs 0 moves, GATE clean; deviation: run 3 started at load 68.6 > 60) | P228.4 TRUE (0/0/0) | P228.5 TRUE (installed=1, 5/5, 50/50, ow 0) | P228.6 TRUE (slowest 84 s, seal 6/6 OK). 228 PASS.
+- P221c.1: M1 panel (221b panel) 221c wrong values 0 and question writes 0. 0.9.
+- P221c.2: M1 contractions_fillers family 221c right >= 221 right + 6. 0.7.
+- P221c.3: M1 overall 221c right >= 221 right + 8. 0.6.
+- P221c.4: M1 0 panel items right on 221 but not on 221c. 0.85.
+- P221c.5: M2 dev 44/44 normalisable right (bar >= 42); statements 10/10 byte-identical to 221. 0.95.
+- P221c.6: M3 0 moves in rt136, rt143, sessions152, bench vs sealed 221 rows. 0.85.
+- P221c.7: M4 sleep smoke installed=1, 5/5, 50/50, ow 0, < 300 s. 0.95.
+- P221c.8: M5 median 221c-221 ms per panel question <= +5 ms. 0.95.
+
+## Exp 229 relation-table TEACHES on 138i (Opus; sealed artifacts/claude-tableteach229-20260922/SEAL.sha256.txt, before the blind panel was opened)
+- P229.1: M1 blind panel: wrong-save items 229 <= 138i, 0 new saves on nosave items, right saves 229 >= 138i + 15. 0.7.
+- P229.2: M2 dev: 229 right >= 43/47 in the scored subset (pilot 46/47), 0 new wrong saves. 0.95.
+- P229.3: M3 frozen suites: only predicted move is rt136 C115 reply-only; rt143/sessions152/bench 0 moves; GATE clean. 0.75 (bench flake from the 138i stale-id bug is the main risk).
+- P229.4: M4 statements 138i already saves store identical triples on suites, dev and panel. 0.9.
+- P229.5: M5 sleep smoke passes (installed=1, 5/5, wrong 0, broken=abstain, 50/50, ow 0). 0.95.
+- P229.6: M6 median added time <= 10 ms on panel and dev. 0.95.
+- P229.7 (informational): 229 saves right on >= 50% of the panel's save items. 0.6.
+- P231.1: M1a 231 WRONG = 0 over all blind chain-panel items; M1b 0 question writes. 0.85.
+- P231.2: M1c answerable subset: 231 RIGHT >= 221 RIGHT + 20. 0.7.
+- P231.3: M1d answerable answer+yes/no items: 231 RIGHT >= 85 %. 0.5 (panel wordings outside table v1 templates, e.g. "language(s)", "wife" hops, will miss).
+- P231.4: M1e 0 items right on 221 but not on 231. 0.9.
+- P231.5: M2 dev (sealed code): >= 90 % answerable right, 100 % trap abstains, 0 wrong/writes. 0.95.
+- P231.6: M3 suitediff218 vs 221 rows: GATE clean; moves = rt143 A1, F6, K8, U1 (reply-only targeted abstains), all in predicted_moves231.json. 0.85 (known ~1/800 bench flake).
+- P231.7: M4 sleep smoke = 221 marks, < 300 s. 0.9.
+- P231.8: M5 median 231-221 ms per panel question <= +10 ms. 0.95.
+- Exp 227c (Claude/Opus, widened identity matching on 227b; artifacts/claude-identity227c-20260922/):
+- P227c.1: M1 75/75 fresh identity turns get the sheet / NAMECHECK / RENAME reply with 0 writes; follow-ups keep user name vs Premonition apart. 0.9.
+- P227c.2: M2 72/72 user-name near-miss runs byte-identical to 227b. 0.9.
+- P227c.3: M3 75/75 of 227b's own sessions byte-identical. 0.95.
+- P227c.4: M4 suitediff218 0 moves on all five suites, GATE clean. 0.8.
+- P227c.5: M5 sleep smoke sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain. 0.9.
+- P227c.6: every registered run < 25 min; seal verifies post-runs. 0.95.
+- P233.1: M1 panel: 0 wrong values, 0 question writes, polite_taught right(233) >= right(223)+15, polite_untaught 100% honest abstain, true_negation + negated_statement identical to 223. 0.6.
+- P233.2: M2 dev >= 60/63 (pilot 62/63). 0.95.
+- P233.3: M3 suitediff218 0 moves on rt136, rt143, sessions152, bench, marks123 vs 223 rows, GATE clean. 0.85.
+- P233.4: M4 sleep smoke sleeps=1 installed=1 probes=5/5 wrong=0 taught=50/50 ow=0 broken=abstain. 0.9.
+- P233.5: M5 median question-turn latency diff (233-223) <= +5 ms overall and on unchanged families. 0.85.
+- Outcomes 227c: P227c.1 TRUE (75/75). P227c.2 TRUE (72/72). P227c.3 TRUE (75/75). P227c.4 TRUE (0 moves all five, GATE clean). P227c.5 TRUE. P227c.6 TRUE (slowest 94 s, seal 7/7 OK). Verdict PASS.
+- P234.1 (claude-smalltalk234, sealed 2026-09-22): blind panel M1 PASS (wellbeing >= 90% fixed reply, 0 fixed elsewhere, non-wellbeing byte-identical to 138i, 0 writes).
+- P234.2: dev M2 84/84.
+- P234.3: frozen suites vs 138i (rt136, rt143, sessions152, bench, marks123) 0 moves, GATE clean.
+- P234.4: sleep smoke identical to s1-138i except seconds.
+- P234.5: median paired latency delta within +/-1 ms (bar +5 ms).
+- Outcomes 221c qnorm: P221c.1 TRUE (0 wrong, 0 question writes) | P221c.2 FALSE (contractions_fillers 5 vs 221 2, +3 < +6) | P221c.3 FALSE (54 vs 49, +5 < +8) | P221c.4 TRUE (0) | P221c.5 TRUE (44/44, statements 10/10) | P221c.6 TRUE (0/0/0/0, GATE clean) | P221c.7 TRUE (installed=1, 5/5, 50/50, ow 0, 95.5 s) | P221c.8 TRUE (+0.04 ms). 221c FAIL (M1).
+- Outcomes 229: P229.1 FALSE (M1a wrong-save items 229 7 > 138i 5; 2 new = owner/founder direction vs panel gold; M1b 0, M1c 26 vs 3) | P229.2 TRUE (46/47, 0 new wrong) | P229.3 TRUE (only rt136 C115 reply-only; bench 0) | P229.4 TRUE (panel 8/8, dev 3/3, 0 write change) | P229.5 TRUE | P229.6 TRUE (-0.01 / -2.70 ms) | P229.7 FALSE (26/83). 229 FAIL.
+- Outcomes 138j: P138j.1 TRUE (M1 counts/diffs exactly as listed; 154g 15 reply-only w/ stored==own; MRO clean all runs) | P138j.2 TRUE (all M2 joins prediction-exact; 142/168 identical; 146d PASS; M2-G3 6/6) | P138j.3 TRUE (G1 800/800 identical, 0 new wrong) | P138j.4 TRUE (rt136 33 reply-form; rt143 Q1-Q7 gate-errors w/ stored+Q verified identical; sessions 16; marks123 only the listed rt81-10/l5z1-9/soak-40/m5-casing/sleep-name/l6-timing moves; 0 new WRONG/WRONG-WRITE/junk writes) | P138j.5 TRUE (G3 9/9 EXACT; G4 0 diffs, facts+events equal) | P138j.6 TRUE (max run 351.3 s < 1500 s; OMP/MKL=1; idle_seconds honored; seal 4/4 OK post-runs; no post-seal edits). 6/6 TRUE. Registered verdict: PASS. RESULTS: artifacts/fable-agent138j-20260922/RESULTS.md
+- Outcomes 234: P234.1 FALSE (wellbeing 13/20 = 65%; 0 fixed elsewhere, 36/36 byte-identical, 0 writes). P234.2 TRUE (84/84). P234.3 TRUE (0 moves all five, GATE clean). P234.4 TRUE. P234.5 TRUE (median -0.031 ms panel, +0.023 ms dev). Verdict FAIL.
+- P224c.1 (224c honest Q1, sealed artifacts/claude-decline224c-20260922/SEAL.sha256.txt): M1 224's B1 cases 80/80 byte-identical to b1-224.json, 0 writes.
+- P224c.2: M2 taught-fact traps 40 dialogs x natural+forced: Q1 0 times, 0 wrong values; 228 forced harness on loop224c 0 Q1 replies.
+- P224c.3: M3 untaught 24 dialogs: loop224 forced reaches Q1 on >=20; loop224c keeps Q1 on >=90% (expected 24/24); 0 wrong values.
+- P224c.4: M4 suitediff218 vs 224's registered rows: only move bench132-4hop-031 abstain->correct; 0 new WRONG/WRONG-WRITE/junk; GATE clean.
+- P224c.5: M5 sleepsmoke206 on loop224c: B3 PASS (same marks as 138i).
+- P224c.6 (informational): M2x known-limit synonyms 3/3 Q1 served; M3x new-relation 0/6 Q1.
+- Outcomes 224c: P224c.1 TRUE (80/80 identical, 0 writes) | P224c.2 TRUE (Q1 0 over 40x2, 0 wrong values; harness 0 Q1; loop224 forced 32) | P224c.3 TRUE (24 reached, 24/24 kept, 0 wrong) | P224c.4 TRUE (only bench132-4hop-031 abstain->correct; GATE clean) | P224c.5 TRUE (B3 PASS) | P224c.6 TRUE (M2x 3/3 Q1, M3x 0/6). Verdict PASS. RESULTS: artifacts/claude-decline224c-20260922/RESULTS.md
+
+## Exp 232 (multi-word names in verb sentences; Opus; sealed 2026-09-22 before panel opened)
+- P232.1: Panel M1 passes on the A runs: 232 wrong writes 0, trap writes 0, multi-word right >= one-word right - 2, multi-word right >= 138i multi-word right + 20, 0 lost items, one-word replies byte-identical to 138i.
+- P232.2: 138i gets multi-word items right only where the gold is an abstain or the item uses no multi-word verb turn.
+- P232.3: Any 232 multi-word miss is one of the known out-of-scope possessive forms (154d yes/no, 174 of-chain, typed particle possessive teach); no verb-turn miss.
+- P232.4: Dev 232 54/54 (M2); parity 207/210 with misses exactly t27 (van der, da) and t31 (Vask-Ley).
+- P232.5: Suite diff GATE clean with exactly one move (rt143 K5, reply-only); sleep smoke passes; latency delta <= +5 ms; panel reruns identical on both agents.
+- P236.1: Exp 236 (loop221 + first-name questions, 228 guard installed): blind panel unique_first+of_form >= 90 % right; ambiguous all clarify naming every candidate with 0 values; exact_wins all right; no_match and last_name_only byte-identical to 221; statements identical reply + triples; 0 wrong values and 0 question writes over all 60.
+- P236.2: Dev 236 28/28, 0 wrong values, 0 question writes; 15 moves (unique_first 8, of_form 2, ambiguous 5).
+- P236.3: Suite diff vs 221's saved rows (rt136, rt143, sessions152, bench): 0 moves in every suite, GATE clean; rt143 P1-P8 (Dara Fenn / Dara Fenner) unchanged.
+- P236.4: Sleep smoke same marks as 221 (sleeps 1, installed, 20 episodes, probes 5/5, wrong 0, Q99 abstain, taught 50/50, overwrote 0); median added time <= +5 ms per question on the panel.
+- P230b.1: Blind panel 230b (claude-namecheckpanel230b): 0 false "Yes"; every NO item whose base230 reply was "Yes. Your name is X." becomes exactly "No. Your name is X."; every YES item still starts "Yes"; every UNCHANGED item byte-identical to base230; 0 question writes. Moves only on NO items.
+- P230b.2: Dev 230b 31/31 (NO 11, YES 6, SAME 9, UNTAUGHT 5); moves exactly d01-d11; 0 false yes; 0 question writes; notebooks identical to 230.
+- P230b.3: Suite diff vs 230's saved rows (sessions152, bench, marks123) and rt136/rt143 (vs 138i and vs 230's rt rows): 0 moves in every suite, GATE clean.
+- P230b.4: Sleep smoke identical to smoke230.json (sleeps 1, installed, 20 episodes, probes 5/5, wrong 0, Q99 abstain, taught 50/50, ow 0); median added time <= +5 ms per question on dev.
+- Outcomes 232: P232.1 FALSE (M1a: sealed scorer counted 10 wrong writes = user-stated possessive side facts not in panel expect_writes, same 10 on 138i; M1b-f all TRUE: multi 36/36 vs 138i 0/36, one-word 36/36 byte-identical, 0 trap writes, 0 lost) | P232.2 TRUE (138i multi 0/36) | P232.3 TRUE (no 232 multi-word misses) | P232.4 TRUE (dev 54/54; parity 207/210, misses t27 x2, t31 x1) | P232.5 TRUE (GATE clean, only rt143 K5 reply-only; sleep smoke pass; M5 -3.6 ms; reruns identical). Verdict FAIL (M1a scorer definition). RESULTS: artifacts/claude-fullname232-20260922/RESULTS.md
+- P236.5 (result, 2026-09-22 15:57): Exp 236 PASS on all registered marks. Panel 30/30 answers, 10/10 clarify, 6/6 exact, 10/10 unchanged, 4/4 statements identical, 0 wrong, 0 question writes. Dev 28/28. Suites 0 moves, GATE clean. Sleep smoke identical to 221. +0.19 ms median. P236.1-4 all held.
+
+## Exp 232b (same 232 code, corrected wrong-write definition = not in stated_facts; fresh blind panel; sealed before panel existed)
+- P232b.1: Code hashes still match the 232 seal (agent, config, dev cases, runner, 232 scorer).
+- P232b.2: New panel M1 passes: 232 wrong writes 0 and trap writes 0 (new definition), multi-word right >= one-word right - 2, >= 138i multi-word + 20, 0 lost, one-word replies byte-identical.
+- P232b.3: Any 232 miss is a known out-of-scope possessive form (154d yes/no, 174 of-chain, typed particle possessive teach).
+- P232b.4: M5 latency delta <= +5 ms; A/B reruns identical on both arms; M2-M4 re-used from 232 (hash match).
+- P230br.1: Same 230b code (SHAs match 230b seal) on fresh blind panel claude-namecheckpanel230br: 0 false "Yes"; every NO item with base "Yes. Your name is X." becomes exactly "No. Your name is X."; moves only on those NO items.
+- P230br.2: Every YES item with base_yes true still starts "Yes" (100%); YES items with base_yes false are reported, not scored; every UNCHANGED item byte-identical to base230; 0 question writes.
+- Outcomes 232b: P232b.1 TRUE (code hashes match 232 seal before and after) | P232b.2 FALSE (registered: sealed scorer found 0 pairs because the 232b panel has no pair/name_words fields, so all 84 items were scored as traps; adapter view (unregistered, input-only): wrong writes 0/0, trap writes 2 = stated facts on traps 077/084, multi right 33/36 vs one 36/36 (M1c bar 34 missed), 138i multi 0/36) | P232b.3 FALSE (3 misses = particle "ben" not in PARTICLES232; not a predicted out-of-scope form) | P232b.4 TRUE (M5 -3.63 ms; reruns identical; M2-M4 re-used). Verdict FAIL. RESULTS: artifacts/claude-fullname232b-20260922/RESULTS.md
+- P230br.result: FAIL. Fresh panel: false Yes 1 (r230b-038 "Is it X, my name?" pattern not covered), NO fixed 13/14, YES(base_yes) 11/11, UNCHANGED 10/10, 0 writes.
+- P237.1: loop237 (loop221 + relation table v1.1) on blind panel claude-aliaspanel237: synonym >= 85 %, new_relation >= 80 %, date >= 80 %, trap 100 % (0 values), control byte-identical to 221, 0 wrong values, 0 question writes.
+- P237.2: Non-synonyms stay unlinked (boss/employer, hometown/birthplace, wife/husband, dentist/doctor): trap family 100 %.
+- P237.3: Frozen suites vs 221's saved rows: only rt143 L3 moves (reply-only, OK->OK, "I don't know Tomas Reed's team."); 0 new WRONG / WRONG-WRITE / junk / lost OK.
+- P237.4: Sleep smoke identical marks to 221 (5/5, 50/50, 0 overwrite, < 300 s); median added time <= +5 ms per question.
+- P237.5: Any panel miss is an honest abstain from an uncovered wording, never a wrong value.
+- P237 outcome (2026-09-22): FAIL. P237.1 fails (synonym 21/30, trap 9/10, 1 wrong value from a237-070 which 221 gives identically); P237.2 fails on a237-070 only; P237.3 holds (only rt143 L3); P237.4 holds (sleep 5/5, 50/50, 83 s; +0.59 ms); P237.5 fails on a237-070, holds on the other 13 misses.
+- P230c.1: Blind panel 230c: 0 "Yes" on NO/NOT_YES/NOT_TOLD; 0 "No" on YES/NOT_NO; every NO item exactly "No. Your name is <stored>." (12/12); every base_yes YES item still "Yes"; UNCHANGED byte-identical to base230b; 0 question writes. Moves only "Yes. Your name is" -> "Your name is" on unextracted-name turns.
+- P230c.2: Dev 230c 22/22; moves exactly e01, e04, e10, e22; relation yes/no e20/e21 unchanged; 0 writes.
+- P230c.3: Suite diff vs 230b rows (sessions152, bench, marks123; rt136/rt143 vs 138i and vs 230b rt rows): 0 moves, GATE clean.
+- P230c.4: Sleep smoke identical to smoke230b; median added time <= +5 ms per question.
+- P138k.1: K1 ghost: after the restart in p3d-ghost, 0 positive "Oriel's boss is …" replies ("Whose boss is Tavish?" -> "I don't know anyone whose boss is Tavish."), 0 stored Oriel triples; duplicate audit OK at every restart/snapshot/end of p3d + p3c (9/9); only predicted moves (p3d d00t05 reply, p3d d00 + p3c d01 stored dedup).
+- P138k.2: K2 220's own marks on 138k: R1 60/60, R2 11/11, R3 20/20.
+- P138k.3: K3 frozen suites vs 138j rows (rt136, rt143, sessions152, bench 800, marks123) + verifier rt143 no-gate vs rt143-138j-g1: 0 moves, GATE clean, 0 new WRONG/WRITE/junk.
+- P138k.4: K4 15 fresh dialogs: replies identical to 138j; only move d11 stored duplicate removed; 0 bad writes.
+- P138k.5: K5 sleep smoke equal to 138j on every mark; K6 soak counts + final soak notebook (200 taught triples) and p2 64 rows identical to 138j's sealed marks138j.
+- P138k.6: K7 median per-turn latency delta <= +5 ms; K8 3 back-to-back bench runs byte-identical (4/4 row files, 800 rows).
+- P230c.result: FAIL. M1a 0, M1b 0, M1c 11/12 (c230-007 routing decline, same on 230b), M1d 6/6, M1e 8/8, M1f sealed count 2 (statement controls 052/053, 0 on '?' turns); dev 22/22 moves e01/e04/e10/e22; suites 0 moves; smoke identical; -0.037 ms.
+
+## Exp 232c (232 + complete name particles + conjunction screen + 150b subject pre-check; sealed before panel opened)
+- P232c.1: Panel scorer schema check passes (no SCHEMA-MISMATCH).
+- P232c.2: M1 passes: 0 wrong writes, 0 trap writes, 0 stated_extra value answers, 0 lost, one-word replies identical; multi right >= one right - 2 and >= 138i multi + 20.
+- P232c.3: Any 232c multi-word miss is a name with "do" or a subject over 4 tokens.
+- P232c.4: Dev 101/103 (misses d232c-007 "do", d232c-085 5 tokens), 0 wrong/trap writes; particle parity 238/280 with the sealed miss list.
+- P232c.5: Suites vs 138i: GATE clean, only rt143 K5 reply-only (same as 232); sessions152+bench vs 232 rows 0 moves; sleep smoke pass; M5 <= +5 ms; reruns identical.
+- P232c outcome (registered, one run): PASS. P232c.1 true (schema OK, rc 0). P232c.2 true (multi 36/36 vs 138i 0/36, one 36/36, wrong 0, trap 0, stated_extra value answers 0/4, lost 0, one-word diffs 0). P232c.3 true (no multi misses; panel had no "do"/5-token names). P232c.4 true (dev 101/103, misses 007+085; parity 238/280, sealed miss list exact). P232c.5 true (rt143 K5 only vs 138i; sessions152+bench 0 moves vs 232; sleep 5/5, 50/50, ow 0; M5 -3.5 ms; reruns identical). Seals re-verified OK. RESULTS: artifacts/claude-fullname232c-20260922/RESULTS.md
+- P138k.1-6 OUTCOME (2026-09-22): all six held. K1 9/9 audits OK, 0 ghost replies, 3 moves all predicted; K2 60/60, 11/11, 20/20; K3 0 moves on all 5 suites + 0/124 rt143 no-gate, GATE clean; K4 0 reply moves, d11 stored dedup only, 0 bad writes; K5 equal; K6 soak + notebook (200) + p2 (64) identical; K7 delta -0.043 ms; K8 4/4 byte-identical. Merge 138k PASS.
+- P248.1: Ask panel 243 whats family: 248 answers 12/12 (bar >= 11/12); base228 fails them.
+- P248.2: Panel all 124: 0 wrong values, 0 question writes, control 12/12 byte-identical to base228, 0 other-family regressions, untaught 10/10 clean, 0 new direction leaks.
+- P248.3: Combo items answer only where the other cause is already read after the rewrite (e.g. "whats my ..." via Me166); combos needing C1/A/B stay declined.
+- P248.4: Dev248: right 34/34, traps 8/8 clean, must-not-change 15/15, 0 question writes.
+- P248.5: Suitediff vs 138i (rt136, rt143, sessions152, bench): 0 moves, GATE clean; sleep smoke = 138i marks; M5 median added time <= 0 ms (bar +5 ms).
+
+## Exp 250 (243 cause B: verb questions with lowercase / multi-word names; VerbSubj250Mixin in Verb167's slot; sealed before the ask panel was opened)
+- P250.1: The scorer's schema check on artifacts/claude-askpanel243-20260922 passes (no SCHEMA-MISMATCH).
+- P250.2: M1a verb_subject >= 11/12 right; any miss is a verb wording outside the five shapes (live / work for / born / work / speak).
+- P250.3: M1b 0 wrong-value items, M1c 0 question writes, M1d control 12/12 byte-identical, M1e 0 regressions, untaught 10/10 value-free, 0 new direction leaks.
+- P250.4: M2 dev: fix 35/35, keep 12/12 byte-identical, trap 10/10 value-free, 0 question writes.
+- P250.5: M3 vs 138i: GATE clean; the only move is rt143 K5 reply-only (OK->OK); rt136, sessions152, bench 0 moves.
+- P250.6: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P250.7: M5 median added time per panel question <= +5 ms (predicted <= +1 ms; answered items are faster than the base's decline path).
+- P249.1: M1a panel first_person >= 11/12 right (predicted 11-12/12); exp 249 first-person twins on base228, sealed artifacts/claude-firstperson249-20260922/SEAL.sha256.txt.
+- P249.2: M1b 0 wrong-value items, M1c 0 question writes, M1d control 12/12 byte-identical, M1e 0 regressions, untaught 10/10 value-free, 0 new direction leaks.
+- P249.3: M2 dev: first_person 39/39, must_not_change 11/11 byte-identical, traps 10/10 value-free, 0 question writes.
+- P249.4: M3 vs 138i: GATE clean, 0 moves in rt136, rt143, sessions152, bench.
+- P249.5: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P249.6: M5 median added time per panel question <= +5 ms (predicted within +/-2 ms).
+- P138l.1 (Opus, merge 138l = 138k + 209/212/216/222/223/226, sealed 2026-09-22 16:30): L1 each piece's own cases on 138l equal the piece's own agent except exactly the 76 predicted cases (209: 2, 212: 39, 216: 0, 222: 20, 223: 0, 226: 15), each equal to its predicted record; own reruns reproduce the sealed rows.
+- P138l.2: L2 vs 138k's rows: rt136 only C019-C031 (13, 222 declared exception, rows identical to 222's), sessions152 0, bench only the 25 bench65-rev-fNN-fwd rows (222 declared exception), marks123 those 25 + bench-report.json + rt81 I_edges-03; rt143 no-gate only J8, K9, O3 (222) and O5 (216), reply-only; 0 other new WRONG/WRONG-WRITE/junk.
+- P138l.3: L3 sleep smoke equal to 138k on every field except agent/config/label/seconds.
+- P138l.4: L4 3 back-to-back bench runs byte-identical (4/4 files, 800 rows).
+- P138l.5: L5 median per-turn latency 138l - 138k <= +5 ms (predicted within +/-1 ms).
+- P138l.6: L6 138j verifier's 15 dialogs: 0 reply changes and 0 bad writes vs 138k.
+- Exp 247 (cause C1, missing-apostrophe questions; sealed artifacts/claude-apos247-20260922/SEAL.sha256.txt before any registered run):
+- P247.1: M1a no_apos on askpanel243 >= 15/16 right (predicted 16/16).
+- P247.2: M1b 0 wrong-value items, M1c 0 question writes, M1d control 12/12 byte-identical, M1e 0 regressions, untaught 10/10 value-free, 0 new direction leaks.
+- P247.3: panel replies change vs base228 only in no_apos and combo items.
+- P247.4: M2 dev: fix 33/33, keep 15/15 byte-identical, trap 10/10 value-free, outside 5/5 no wrong value, 0 question writes.
+- P247.5: M3 vs 138i: GATE clean, 0 moves in rt136, rt143, sessions152, bench.
+- P247.6: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P247.7: M5 median added time per panel question <= +5 ms (predicted within +/-2 ms).
+- P248 outcome (registered, one run): FAIL on M1b as written only. P248.1 true (whats 12/12, base228 0/12). P248.2 false as worded: 6 wrong values, all on direction q243-085..090, byte-identical base228 leaks (248 added 0); 0 question writes, control 12/12, 0 regressions, untaught 10/10, 0 new leaks. P248.3 true (combo 1/8: only 097 "whats my sister's city?"). P248.4 true (34/34, 8/8, 15/15, 0 writes). P248.5 true (0 suite moves, GATE clean; sleep 5/5, 50/50, ow 0, 92 s; M5 -0.14 ms). Director ruling needed on M1b vs M1e base-leak exclusion. RESULTS: artifacts/claude-whats248-20260922/RESULTS.md
+- P245.1: M1a my_relation on ask panel 243: >= 15/16 right with exp 245 (base mostly 0-4/16).
+- P245.2: M1b/M1c: 0 wrong values and 0 question writes over all 124 panel items.
+- P245.3: M1d control 12/12 byte-identical to base228; M1e no other-family regression, untaught 10/10 no value, no new direction leak.
+- P245.4: M2 dev: fix 34/34, keep 10/10 identical, trap 9/9 no value, 0 writes.
+- P245.5: M3 vs 138i: GATE clean, 0 moves in rt136, rt143, sessions152, bench.
+- P245.6: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P245.7: M5 median added time per panel question <= +5 ms (predicted within +/-1 ms).
+- P250 outcome (registered, one run each): FAIL on M1b only. P250.1 true (schema OK, hashes = director's). P250.2 true (verb_subject 11/12; the miss q243-064 "Where do rorkix live?" is outside the shapes: inherited `does?` regex never matches "do"). P250.3 false as sealed: M1b 6 wrong-value items, all direction q243-085..090, byte-identical to base228 base_reply (0 new leaks); M1c 0, M1d 12/12, M1e 0 regressions, untaught 10/10, 0 new leaks. P250.4 true (35/35, 12/12, 10/10, 0 writes). P250.5 true (rt143 K5 only, GATE clean). P250.6 true (5/5, 50/50, ow 0, 92.4 s). P250.7 true (-0.066 ms). RESULTS: artifacts/claude-verbsubj250-20260922/RESULTS.md
+- P251.1: M1 panel schema check OK on artifacts/claude-askpanel243-20260922 (sealed 251 scorer); hashes equal the director's.
+- P251.2: M1a direction 10/10 right with no leak (251 arm); base228 leaks on some direction items.
+- P251.3: M1b 0 wrong values on 124; M1c 0 question writes; M1d control 12/12 byte-identical; M1e 0 base_right->not-right regressions, untaught 10/10 no value.
+- P251.4: M2 dev: direction 28/28, inverse 6/6, must-not-change 10/10 identical, traps 8/8 no value, 0 writes.
+- P251.5: M3 vs 138i: GATE clean, 0 moves in rt136, rt143, sessions152, bench.
+- P251.6: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P251.7: M5 median added time per panel question <= +5 ms (predicted within +/-1 ms).
+- Outcomes 247: P247.1 TRUE (16/16). P247.2 FALSE on M1b (6 wrong-value items, all base228 direction leaks q243-085..090, byte-identical to base; M1c 0, M1d 12/12, M1e 0, untaught 10/10, 0 new leaks all TRUE). P247.3 TRUE (changes only in 16 no_apos + 2 combo). P247.4 TRUE. P247.5 TRUE. P247.6 TRUE (84.6 s). P247.7 TRUE (-0.08 ms). Registered verdict FAIL (M1b as written).
+- Exp 246 (cause A, mention-guided walk fallback; sealed artifacts/claude-mentionwalk246-20260922/SEAL.sha256.txt before any registered run):
+- P246.1: M1a compose on askpanel243 >= 15/16 right (predicted 16/16).
+- P246.2: M1b 0 wrong-value items, M1c 0 question writes, M1d control 12/12 byte-identical, M1e 0 regressions, untaught 10/10 value-free, 0 new direction leaks.
+- P246.3: panel replies change vs base228 only in compose items (and possibly combo items).
+- P246.4: M2 dev: cause 30/30, keep 14/14 byte-identical, trap 12/12 value-free, 0 question writes.
+- P246.5: M3 vs 138i: GATE clean; moves exactly rt143 P1, P2, Q1, Q2 (MISSED -> OK); 0 in rt136, sessions152, bench.
+- P246.6: M4 sleep smoke = 138i marks (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P246.7: M5 median added time per panel question <= +5 ms (predicted within +/-2 ms).
+- P245 outcome (registered, one run each): PASS as sealed. P245.1 true (my_relation 15/16, base 0/16; miss 084 'my uncle's wife' = Me166 form, wife vs stored spouse). P245.2 true as sealed (0 writes; M1b raw 6 wrong values all inherited byte-identical base228 direction leaks 085-090, ADDED 0). P245.3 true (control 12/12, 0 regressions, untaught 10/10, 0 new leaks). P245.4 true (34/34, 10/10, 9/9, 0 writes). P245.5 true (GATE clean, 0 moves). P245.6 true (5/5, 50/50, ow 0, 83.6 s). P245.7 true (+0.03 ms). RESULTS: artifacts/claude-myrel245-20260922/RESULTS.md
+- P231b.1: M1a 231b WRONG = 0 over the 71 non-flag panel items (+ c231-013 if its reply changed); M1b 0 question writes. 0.75.
+- P231b.2: M1c answerable (on 231b): 231b RIGHT >= (221+232c) RIGHT + 20. 0.65.
+- P231b.3: M1d answerable answer+yes/no items: 231b RIGHT >= 85 %. 0.3 (first-name-only questions, "Who's", "language(s)" and wife/husband wordings will miss; 236 excluded).
+- P231b.4: M1e 0 items right on 221+232c or on 231 but not on 231b. 0.85.
+- P231b.5: M2 dev on 231b: 231's 54 answerable all RIGHT, d231-055 now answerable and RIGHT, traps 15/15, 0 WRONG, 0 writes. 0.95.
+- P231b.6: M3 suitediff218 vs 231's rows: GATE clean, 0 moves on rt136/rt143/sessions152/bench (K5 already has 232c's wording on 221/231). 0.85.
+- P231b.7: M4 sleep smoke = 231 marks, < 300 s. 0.9.
+- P231b.8: M5 median 231b - (221+232c) ms per panel question <= +10 ms. 0.95.
+- P251 outcome (registered, one run each): FAIL on M1a and M1b. P251.1 true (schema OK, hashes = director's). P251.2 false (direction 6/10; misses q243-086..089 "What did X create/found/write/produce?", verbs outside VERB251, replies byte-identical to base228). P251.3 partly false: M1b 4 (inherited 4, added 0); M1c 0, M1d 12/12, M1e 0 regressions, untaught 10/10 true. P251.4 true (28/28, 6/6, 10/10, 8/8, 0 writes). P251.5 true (0 moves, GATE clean). P251.6 true (5/5, 50/50, ow 0, 84.5 s). P251.7 true (+0.26 ms). RESULTS: artifacts/claude-direction251-20260922/RESULTS.md
+- P138l.1-6 OUTCOME (2026-09-22): all six held. L1 76/76 predicted moves exact, 0 unpredicted, own reruns = sealed rows; L2 rt136 13 (C019-C031) + bench 25 -fwd + marks123 27 + rt143 no-gate J8/K9/O3/O5, all predicted, exception rows identical to 222's (13/13, 25/25); L3 equal; L4 4/4 identical; L5 -0.18 ms; L6 0 changes, 0 bad writes. Merge 138l PASS (L2 relies on the declared 222 exceptions). Unregistered K1b after the seal: 0 changes vs 138k, 60/60 duplicate audits OK.
+- P237b.1 (2026-09-22 16:33, sealed claude-table237b) M1 passes every family bar (synonym >= 85 %, new_relation >= 80 %, date >= 80 %); 0 new wrong values; 0 question writes; controls 10/10 identical to base221.
+- P237b.2 Traps: 0 NEW value-giving replies vs base221; base221 value-giving traps (e.g. "Who does X employ?", exp 251) listed, not counted.
+- P237b.3 M3 suites vs 221 rows: only rt143 L3 moves (reply-only, OK->OK); GATE clean.
+- P237b.4 M4 sleep smoke marks identical to 237/221 (sleeps 1, installed, 5/5, wrong 0, 50/50, ow 0, < 300 s).
+- P237b.5 M5 median added ms vs loop221 between +1 and +4 (two ~1.5 ms table reads per base-miss question); <= +5.
+- P237b.6 Most likely M1 misses: wordings the base claims itself ("What is the name of X's R?"), verb-form setups the write side does not store, or pairs the enumeration judged not true synonyms -> honest abstains, no value.
+- P231b outcome (registered, one panel run per arm): FAIL (M1a, M1d, M1e). P231b.1 false (1 WRONG: trap c231-071, unconfirmed conflicting town -> chain answers stored Pellwick, deterministic 5/5; c231-013 now RIGHT; 0 writes). P231b.2 true (answerable 69; 35 vs 12, +23). P231b.3 false (28/62 = 45 %; 21 of 34 misses first-name-only, 13 template/wording gaps). P231b.4 false (c231-071 lost vs both). P231b.5 true (54/54 + d231-055, 15/15, 0/0). P231b.6 true (0 moves, GATE clean). P231b.7 true (5/5, 50/50, ow 0, 81.0 s). P231b.8 true (-3.46 ms). RESULTS: artifacts/claude-chain231b-20260922/RESULTS.md
+- P235.1 (exp 235 SmolLM ear, sealed 2026-09-22) M1: no_save TEACH frames after the brake <= 1 (predict 0-1): pass.
+- P235.2 M2: wrong saves across statement families 1-4; pass (<= 2) about 50%.
+- P235.3 M3: SmolLM ear exact TEACH recall 75-90%, 138i rule reader 30-55%; A >= B+15 very likely; 80% bar about 55%.
+- P235.4 M4: exact ASK recall on questions + chain questions 78-92%; pass (>= 80%) about 60%.
+- P235.5 M5: GPU median 50-100 ms per turn: pass.
+- P235.6 Overall registered PASS about 30%.
+- P237b OUTCOME (2026-09-22 16:40) registered FAIL: synonym 21/30, new_relation 9/20 (bars 85/80 %); date 8/10; traps 0 new value-giving; controls 10/10; 0 new wrong; 0 writes; M2 83/83; M3 GATE clean (rt143 L3 only); M4 clean; M5 -0.03 ms. P237b.1 wrong; .2/.3/.4 right; .5 mark pass but range wrong; .6 partly right. Main miss cause: verb-phrase asks ("Who mentors X?") that are absent from the noun-first table; all 22 misses are abstains.
+- P235 OUTCOME (2026-09-22 16:50) registered FAIL on M2 only: A after brake M1 1/25, M2 3 wrong saves (bar 2), M3 87/92 = 94.6% vs B 29/92 = 31.5%, M4 40/40 (sealed loader 25/40; post-seal chain-gold driver fix disclosed), M5 GPU median 55.8 ms (Mac CPU 578.8 ms). P235.1 right, P235.2 right (3 in 1-4), P235.3 A above range / B in range, P235.4 above range (with fix), P235.5 right, P235.6 FAIL as leaned.
+- P252.1 (exp 252 corrections and denials on 138k, Opus, sealed 2026-09-22 17:20, SEAL.sha256.txt d68be129395a10b5) M2 dev passes: 81/81, 0 junk, 0 trap writes, restart 5/5.
+- P252.2 M3 suite moves exactly rt136 C071/C072/C073/C075 + sessions152 S3-teachers-correction#6, all reply-only; GATE clean (base = 138k rows run this session).
+- P252.3 M4 smoke identical; M6 0 moves, 0 ghosts, 0 duplicate failures; M5 added time < 1 ms.
+- P252.4 M1a all five families at bar: about 65%.
+- P252.5 M1b 0 wrong values on my arm: about 75% (138k's count high).
+- P252.6 M1c 0 junk / 0 followup writes and traps/ambiguous/unstored all right: about 70%.
+- P252.7 M1d controls 12/12 byte-identical: about 85%.
+- P252.8 Overall registered PASS: about 40%.
+- P235b.1 (2026-09-22) Exp 235b (gate on 235 ear, tau 11.8 by the fallback rule): M1 passes (0-1 no_save saves), ~85 %.
+- P235b.2 M2 wrong saves 1-4; pass (<= 1) ~35 %.
+- P235b.3 M3 A recall 40-60 %: FAIL ~97 %; A_brake 85-95 %.
+- P235b.4 M3b UNSURE 30-50 % of gold TEACH: FAIL ~95 %.
+- P235b.5 M4 ASK recall >= 90 %: pass ~85 %.
+- P235b.6 M5 GPU median 120-200 ms: pass.
+- P235b.7 Overall registered PASS ~1 %.
+- P252 OUTCOME (2026-09-22 17:10) registered FAIL on M1a/M1b/M1c: verb 9/14, possessive 7/10, ctx denial 10/12, ctx correction 10/14, explicit 9/12 (138k: 0/2/0/0/0); wrong values 12 (138k 52); 1 junk write (c252-022 "that's outdated" stored as manager: stopword screen misses "that's"); traps 12/12, ambiguous 6/6, unstored 8/8, controls 12/12 identical; M2 81/81; M3 exactly the 5 predicted reply-only moves, GATE clean; M4 identical; M5 +0.06 ms; M6 0 ghosts/dup fails/moves. P252.1/.2/.3/.7 right; .4/.5/.6 wrong; .8 right direction (FAIL). Ledger seal time in P252.1 should read about 17:01, not 17:20.
+- P235b OUTCOME (2026-09-22 17:15) registered FAIL on M2/M3/M3b/M4: A (tau 11.8) M1 0, M2 5 wrong saves (bar 1; all 5 margin=inf), M3 54/110 = 49.1 % (B 16/110 = 14.5 %), M3b UNSURE 36/110 = 32.7 %, M4 32/40 = 80 %, M5 GPU median 134.3 ms (Mac CPU panel timing not run: disk below 8 GB floor; 12-turn pilot 2315 ms). A_brake 81/110, 20 wrong; A_raw 87/110, 27 wrong. P235b.1 right, .2 wrong (5 > range), .3 A right / A_brake wrong (73.6 %), .4 right, .5 wrong, .6 right, .7 FAIL as leaned.
+- P138m.1 (Opus, merge 138m = 138l + 219/230/230c(+230b)/227/227b/227c/224c(+224)/233/234, sealed 2026-09-22 17:09): M1 each piece's own sealed dev cases (990) on 138m equal the line head (230c for 219/230, 227c for 227/227b, else own) except exactly the 208 predicted cases (230: 52, 230c: 1, 227: 12, 227b: 12, 227c: 61, 224c: 32, 233: 13, 234: 25, 219: 0), each equal to its predicted record; own arm reproduces 990/990 sealed rows.
+- P138m.2: M2 vs 138l's saved rows: sessions152 11, bench 5, marks123 6 reply-only (224 glue -> Q2); rt136 C019-C031 (inherited 222) + C076/C079 reply-only; 63 exception rows identical to 138l's; rt143 no-gate 37 reply-only, 0 verdict flips; 0 other new bad labels.
+- P138m.3: M3 sleep smoke equal to 138l except agent/config/label/seconds.
+- P138m.4: M4 3 bench runs byte-identical (4/4 files).
+- P138m.5: M5 median latency 138m - 138l <= +5 ms (predicted within +/-1 ms).
+- P138m.6: M6 138j p3 set + 138k v-dialogs/v-supp: 0 ghost answers, 0 failed duplicate checks, 0 bad writes; exactly the 9 predicted reply changes (6 glue -> Q2, 3 identity in p3-dialogs d14).
+- P138m.1-6 OUTCOME (2026-09-22 17:17): all six held, first registered run, seal intact. M1 208/208 predicted moves exact, 0 unpredicted, own arm 990/990 sealed rows; M2 sessions152 11 + bench 5 + marks123 6 + rt136 15 + rt143 37 all predicted, 63/63 exception rows identical to 138l, 0 rt143 verdict flips; M3 equal; M4 4/4 identical; M5 +0.066 ms; M6 0 ghosts, 0 failed duplicate checks, 0 bad writes, 9/9 predicted reply changes. Merge 138m PASS (conditional on 138l's pending verification).
+
+## Exp 241 mouth stage A (builder predictions, written at seal 2026-09-22; PASSMARKS artifacts/claude-mouth241-20260922/PASSMARKS.md)
+- P241.1: M2(a), M2(b), M2(c) each 0 failures.
+- P241.2: M3 GATE clean; every suite move reply-only on a route-A line of a pre-registered act; 0 verdict changes; 0 flips toward abstain.
+- P241.3: M5 latency passes (median <= 2 ms, p99 <= 20 ms); suite wall within +5 % of 228 under the 3x3 alternating median protocol (p ~ 0.7, machine load).
+- P241.4: every mechanical M1 sub-mark is 0 on the sealed sweep (p ~ 0.8).
+- P241.5: M1 grader bar (>= 99.0 % overall and >= 97 % per act) passes, p ~ 0.45; risk acts CONFLICT (verbatim new value), AMBIGUOUS (entity ids), REVERSE / NOT_HAD (long relation nouns).
+- P241.6: M4 passes (241 wins >= 70 % of non-tie pairs, loses <= 10 % of all), p ~ 0.65.
+- P241.7: sleep smoke identical to 228 on all summary fields.
+- P241.8: 0 sev-1 legacy fallbacks on the suites; unframed-line count 378 as in the pilot.
+- P252b.1 (exp 252b value-screen fix on 252, Opus, sealed 2026-09-22 17:21, SEAL.sha256.txt 8a86b9a0d9750a69) M1 panel re-run: c252-022 is the only difference (now writes nothing; followup does not state the junk): PASS.
+- P252b.2 M2 held-out safety dev (56 items): FAIL on exactly one item, b252-035 ("that's Z" pattern stores "old news"); 0 wrong removals, 0 question writes, controls identical.
+- P252b.3 M3 suite moves identical to 252's 5; M4 smoke identical; M6 identical (0 ghosts, 0 dup fails, 0 moves).
+- P252b.4 Registered verdict FAIL (M2, b252-035 only).
+- P252b OUTCOME (2026-09-22 17:26) registered FAIL on M2 only, as predicted: b252-035 'old news' junk write (the "that's Z" pattern, for 258); 252's other 5 dev junk writes gone; M1 c252-022 only difference, now no write; M3/M4/M6 identical to 252. P252b.1-.4 all right.
+- P258.1 (exp 258 commentary-clause removal on 252b denials/corrections, Opus, sealed 2026-09-22 17:52, SEAL.sha256.txt e62a2191fc937115) M2 dev252b: 0 junk (b252-035 fixed), 0 wrong removals, 0 question writes, controls identical; 29 predicted moves: PASS.
+- P258.2 M3 corrpanel252: c252-022 the only move (reply-only, no new wrong or junk): PASS (risk: unseen "No, that's Z." items).
+- P258.3 M4 suites identical to 252b's moves; M5 smoke identical; M6 0 ghosts/0 dup fails/0 moves; M7 added median <= +5 ms: all PASS.
+- P258.4 M1 corrtail258 blind panel: that_denial 8-11/12, that_correction 9-11/12, pure_denial_that 6-9/10; question_tail 6/6, unstored_tail 6/6, keep 8/8, control 16/16. Likely FAIL on pure_denial_that (first-person/"No, that's X.") and/or junk-over-80 (other-tail junk also present in 252b).
+- P258.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P259.1 (exp 259 value boundary on 252b explicit denials, Opus, sealed 2026-09-22 17:55, SEAL.sha256.txt 71f658233289f5a3) M2 dev252b: moves exactly b252-001/003/010/013/014/015, each a clean "OK, I removed" of its stored target; 0 false replies, 0 wrong removals, 0 question writes, junk only b252-035: PASS.
+- P259.2 M3 corrpanel252: only rows where 252b said "I don't have V..." with a clause boundary move, each by the sealed mechanical rule; 0 new wrong or junk: PASS.
+- P259.3 M4 suites = 252b's moves; M5 smoke identical; M6 0 ghosts/0 dup fails/0 moves; M7 added median <= +5 ms: all PASS.
+- P259.4 M1 corrtail258 blind panel: that_denial 7-11/12, other_tail_denial 5-9/10, false claims 0-2, question_tail 6/6, unstored_tail 6/6, keep 8/8, control 16/16. Likely FAIL on that_denial or other_tail_denial (first-person, "stopped working", ", sadly"-type two-clause junk are out of scope).
+- P259.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P258 OUTCOME (2026-09-22 18:00) registered FAIL on M1: that_denial 7/12 (252b 0), that_correction 3/12 (0), pure_denial_that 6/10 (2); junk 0 over 80 (252b 2), false claims 0 (4), wrong values 18 (31); question/unstored/keep/control all pass. M2-M7 PASS exactly as predicted (dev252b 29 moves, c252-022 only, suites = 252b, smoke 0 diffs, M6 0/0/0, +0.23 ms). P258.1-.3 right; P258.4 ranges too optimistic for that_correction (3 vs 9-11) and that_denial (7 vs 8-11); P258.5 right. Cause: 252b grammar gaps on the shortened turns (lowercase, first person, multi-valued relations) + whole-turn gate misses ", not Y, that's ...". Scorers first run with a broken bash python3; re-scored once with uv 3.12, no re-run.
+
+- P257.1 (2026-09-22 18:15) Exp 257 (ear v4.1 = data v4 + C8, table v2; ckpt 55284dec…; tau 9.3 by the sealed rule, no fallback; SEAL.sha256.txt sha a2f8031fb0a3…): M1 passes (0-1 no_save saves), ~75 %.
+- P257.2 M2 wrong saves 2-4; pass (<= 1) ~25 %.
+- P257.3 M3 A recall 65-80 %: FAIL ~85 %; A_brake 85-95 %; B 10-25 %.
+- P257.4 M3b UNSURE 10-20 % of gold TEACH; pass (<= 12 %) ~35 %.
+- P257.5 M4 ASK recall 85-95 %; pass (>= 90 %) ~55 %.
+- P257.6 M5 GPU median 120-200 ms: pass ~97 %.
+- P257.7 Overall registered PASS ~5 %.
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).

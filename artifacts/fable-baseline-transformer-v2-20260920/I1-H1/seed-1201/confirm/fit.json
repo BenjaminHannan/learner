@@ -1,0 +1,368 @@
+{
+  "arm": "I1-H1",
+  "baseline": "fable-baseline-transformer-v2",
+  "cell_order": [
+    "fit-k1-prac",
+    "fit-k1-held",
+    "fit-k2-prac",
+    "fit-k3-prac"
+  ],
+  "cells": {
+    "fit-k1-held": {
+      "answers": 512,
+      "hops": 1,
+      "mean_output_tokens": 2.0,
+      "n": 512,
+      "need": 487,
+      "no_end": 0,
+      "strict": 512,
+      "terminal": "heldout",
+      "title": "1 hop, held-out terminal relation 10, 6 people"
+    },
+    "fit-k1-prac": {
+      "answers": 512,
+      "hops": 1,
+      "mean_output_tokens": 2.0,
+      "n": 512,
+      "need": 487,
+      "no_end": 0,
+      "strict": 512,
+      "terminal": "practised",
+      "title": "1 hop, practised terminal relation, 6 people"
+    },
+    "fit-k2-prac": {
+      "answers": 512,
+      "hops": 2,
+      "mean_output_tokens": 3.0,
+      "n": 512,
+      "need": 461,
+      "no_end": 0,
+      "strict": 512,
+      "terminal": "practised",
+      "title": "2 hops, practised terminal relation, 6 people"
+    },
+    "fit-k3-prac": {
+      "answers": 512,
+      "hops": 3,
+      "mean_output_tokens": 4.0,
+      "n": 512,
+      "need": 461,
+      "no_end": 0,
+      "strict": 512,
+      "terminal": "practised",
+      "title": "3 hops, practised terminal relation, 6 people"
+    }
+  },
+  "checkpoint_sha256": "42fc19e88abb8d3c07906b229fc0a82e0955e8e640f0c95ce14b82ae69fae445",
+  "complete": true,
+  "created_unix": 1789924554.159908,
+  "evaluation": "greedy (argmax) decoding, FINAL checkpoint only, no selection",
+  "evidence_aux": 0.5,
+  "gate": {
+    "cells": {
+      "fit-k1-held": {
+        "answers": 512,
+        "answers_pass": true,
+        "n": 512,
+        "need": 487,
+        "passed": true,
+        "strict": 512,
+        "strict_pass": true
+      },
+      "fit-k1-prac": {
+        "answers": 512,
+        "answers_pass": true,
+        "n": 512,
+        "need": 487,
+        "passed": true,
+        "strict": 512,
+        "strict_pass": true
+      },
+      "fit-k2-prac": {
+        "answers": 512,
+        "answers_pass": true,
+        "n": 512,
+        "need": 461,
+        "passed": true,
+        "strict": 512,
+        "strict_pass": true
+      },
+      "fit-k3-prac": {
+        "answers": 512,
+        "answers_pass": true,
+        "n": 512,
+        "need": 461,
+        "passed": true,
+        "strict": 512,
+        "strict_pass": true
+      }
+    },
+    "composition_cells_pass": true,
+    "composition_claims_licensed": true,
+    "fit_gate": true,
+    "note": "failure means \"lookup/sequence fit prerequisite failed under this recipe\", NOT \"more training would necessarily fix it\"; no averaging across seeds and no seed substitution",
+    "one_hop_lookup_gate": true
+  },
+  "inference_flops": 263197753344.0,
+  "init": "operator-rescale",
+  "is_confirmation_panel": true,
+  "one_hop_relation_strata": {
+    "fit-k1-held": {
+      "10": {
+        "answers": 512,
+        "n": 512,
+        "strict": 512
+      }
+    },
+    "fit-k1-prac": {
+      "8": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      },
+      "9": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      }
+    }
+  },
+  "panel_manifest_sha256": "271638d6a800216eb8994a7a7d7f731f1fcc084601491b921548736de63a6925",
+  "panel_namespace": "astra-baseline-v2-confirm-panel-20260920",
+  "panels": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/confirm-panels",
+  "registered_seed": true,
+  "registration": "design/v3/18-baseline-v2-preregistration-draft.md",
+  "relation_strata": {
+    "fit-k1-held": {
+      "10": {
+        "answers": 512,
+        "n": 512,
+        "strict": 512
+      }
+    },
+    "fit-k1-prac": {
+      "8": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      },
+      "9": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      }
+    },
+    "fit-k2-prac": {
+      "8": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      },
+      "9": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      }
+    },
+    "fit-k3-prac": {
+      "8": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      },
+      "9": {
+        "answers": 256,
+        "n": 256,
+        "strict": 256
+      }
+    }
+  },
+  "run": "artifacts/fable-baseline-transformer-v2-20260920/I1-H1/seed-1201",
+  "scoring_seconds": 14.964408374999039,
+  "seed": 1201,
+  "source_sha256": "7ec2215d0bfaa702070b4ee2a69da489ea61bd77c6663cadfa33dd20586e7502",
+  "teacher_forced": {
+    "fit-k1-held": {
+      "counts": {
+        "end": [
+          512,
+          512
+        ],
+        "intermediate": [
+          0,
+          0
+        ],
+        "multi_hop_terminal": [
+          0,
+          0
+        ],
+        "one_hop_sequence": [
+          512,
+          512
+        ],
+        "one_hop_terminal": [
+          512,
+          512
+        ],
+        "sequence": [
+          512,
+          512
+        ],
+        "terminal": [
+          512,
+          512
+        ],
+        "token": [
+          1024,
+          1024
+        ]
+      },
+      "end_accuracy": 1.0,
+      "intermediate_accuracy": null,
+      "multi_hop_terminal_accuracy": null,
+      "one_hop_sequence_accuracy": 1.0,
+      "one_hop_terminal_accuracy": 1.0,
+      "sequence_accuracy": 1.0,
+      "terminal_accuracy": 1.0,
+      "token_accuracy": 1.0
+    },
+    "fit-k1-prac": {
+      "counts": {
+        "end": [
+          512,
+          512
+        ],
+        "intermediate": [
+          0,
+          0
+        ],
+        "multi_hop_terminal": [
+          0,
+          0
+        ],
+        "one_hop_sequence": [
+          512,
+          512
+        ],
+        "one_hop_terminal": [
+          512,
+          512
+        ],
+        "sequence": [
+          512,
+          512
+        ],
+        "terminal": [
+          512,
+          512
+        ],
+        "token": [
+          1024,
+          1024
+        ]
+      },
+      "end_accuracy": 1.0,
+      "intermediate_accuracy": null,
+      "multi_hop_terminal_accuracy": null,
+      "one_hop_sequence_accuracy": 1.0,
+      "one_hop_terminal_accuracy": 1.0,
+      "sequence_accuracy": 1.0,
+      "terminal_accuracy": 1.0,
+      "token_accuracy": 1.0
+    },
+    "fit-k2-prac": {
+      "counts": {
+        "end": [
+          512,
+          512
+        ],
+        "intermediate": [
+          512,
+          512
+        ],
+        "multi_hop_terminal": [
+          512,
+          512
+        ],
+        "one_hop_sequence": [
+          0,
+          0
+        ],
+        "one_hop_terminal": [
+          0,
+          0
+        ],
+        "sequence": [
+          512,
+          512
+        ],
+        "terminal": [
+          512,
+          512
+        ],
+        "token": [
+          1536,
+          1536
+        ]
+      },
+      "end_accuracy": 1.0,
+      "intermediate_accuracy": 1.0,
+      "multi_hop_terminal_accuracy": 1.0,
+      "one_hop_sequence_accuracy": null,
+      "one_hop_terminal_accuracy": null,
+      "sequence_accuracy": 1.0,
+      "terminal_accuracy": 1.0,
+      "token_accuracy": 1.0
+    },
+    "fit-k3-prac": {
+      "counts": {
+        "end": [
+          512,
+          512
+        ],
+        "intermediate": [
+          1024,
+          1024
+        ],
+        "multi_hop_terminal": [
+          512,
+          512
+        ],
+        "one_hop_sequence": [
+          0,
+          0
+        ],
+        "one_hop_terminal": [
+          0,
+          0
+        ],
+        "sequence": [
+          512,
+          512
+        ],
+        "terminal": [
+          512,
+          512
+        ],
+        "token": [
+          2048,
+          2048
+        ]
+      },
+      "end_accuracy": 1.0,
+      "intermediate_accuracy": 1.0,
+      "multi_hop_terminal_accuracy": 1.0,
+      "one_hop_sequence_accuracy": null,
+      "one_hop_terminal_accuracy": null,
+      "sequence_accuracy": 1.0,
+      "terminal_accuracy": 1.0,
+      "token_accuracy": 1.0
+    }
+  },
+  "time_capped": false,
+  "train_namespace": "astra-baseline-v2-fit",
+  "training_flops": 28048309862400.0,
+  "training_seconds": 897.0200626660007,
+  "updates": 6000,
+  "v1_source_sha256": "d767ee87835716951c1871fa2c978449123da02e61cb6e7a483194f573ddaea2"
+}

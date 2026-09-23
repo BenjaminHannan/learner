@@ -1,0 +1,74 @@
+{
+ "records": 500,
+ "before_brake_violations": 296,
+ "after_brake_violations": 0,
+ "status_correct": 426,
+ "status_total": 500,
+ "ok_answer_present": 250,
+ "ok_total": 250,
+ "fallbacks": 296,
+ "decode_seconds": 423.33,
+ "seconds": 423.38,
+ "examples": [
+  {
+   "status": "BAD_REQUEST",
+   "raw": "I could not use that: I could not use that question: I could not use that question: I could not use that question has too many steps",
+   "sentence": "I could not use that: I could not use that question: I could not use that question: I could not use that question has too many steps",
+   "reference": "That did not work: I could not use that: that question has too many steps."
+  },
+  {
+   "status": "BROKEN_CHAIN",
+   "raw": "'s hometown -- that is not someone -- that is someone that is someone that is someone that is someone that is someone that is someone that is someone that is someone",
+   "sentence": "'s hometown -- that is not someone -- that is someone that is someone that is someone that is someone that is someone that is someone that is someone that is someone",
+   "reference": "Cannot go on: Nora's hometown is Lyon, which is not someone I can look up."
+  },
+  {
+   "status": "OK",
+   "raw": "I read that Tom's dentist's dentist's Tom's dentist's Tom's dentist's Tom's dentist's Tom's's dentist -- that Tom's's's",
+   "sentence": "Tom's dentist's best friend is Zed.",
+   "reference": "Tom's dentist's best friend is Zed, as taught."
+  },
+  {
+   "status": "AMBIGUOUS",
+   "raw": ": Ana (E: I know more than one: Ana's best friend -- Ana's best friend -- Ana's best friend -- Ana's best friend -- Ana",
+   "sentence": "I know more than one Ana: Greta (E0041), Victor (E0046). Which one do you mean?",
+   "reference": "I know more than one Ana -- Greta (E0041), Victor (E0046) -- which one do you mean?"
+  },
+  {
+   "status": "AMBIGUOUS",
+   "raw": "I know more than one Priya -- Liam (E0049), Kira (E0047) -- which one do you mean",
+   "sentence": "I know more than one Priya -- Liam (E0049), Kira (E0047) -- which one do you mean",
+   "reference": "I know more than one Priya: Liam (E0049), Kira (E0047). Which one do you mean?"
+  },
+  {
+   "status": "OK",
+   "raw": "I read that you didn't tell me Wren's employer's employer's employer's employer's's employer's's's's's's's's's's's",
+   "sentence": "Wren's employer's uncle is Oscar. (I read that online; you didn't tell me.)",
+   "reference": "I found it: Wren's employer's uncle is Oscar. (I read that online; you didn't tell me.)"
+  },
+  {
+   "status": "MISSING_FACT",
+   "raw": "I don't know who Paula's grandfather is.",
+   "sentence": "I don't know who Paula's grandfather is.",
+   "reference": "I don't know Paula's grandfather."
+  },
+  {
+   "status": "OK",
+   "raw": "I read that you didn't tell me more than one's spouse -- that is Iris's spouse is Iris. (I read that you didn't tell me",
+   "sentence": "Iris's spouse is Mira. (I read that online; you didn't tell me.)",
+   "reference": "Iris's spouse is Mira, as taught. (I read that online; you didn't tell me.)"
+  },
+  {
+   "status": "OK",
+   "raw": "I read that you can go on: Lena's's neighbour's's neighbour's's neighbour's's neighbour's's neighbour's's neighbour's's neighbour",
+   "sentence": "Lena's hometown's neighbour's grandfather is Madrid.",
+   "reference": "I found it: Lena's hometown's neighbour's grandfather is Madrid."
+  },
+  {
+   "status": "BROKEN_CHAIN",
+   "raw": "I stopped: Tom's hometown is Bristol, Bristol, I stopped: Bristol, Bristol, I stopped: Bristol, Bristol, I stopped Tom's hometown is",
+   "sentence": "I stopped: Tom's hometown is Bristol, Bristol, I stopped: Bristol, Bristol, I stopped: Bristol, Bristol, I stopped Tom's hometown is",
+   "reference": "Tom's hometown is Bristol -- not someone I can look up."
+  }
+ ]
+}

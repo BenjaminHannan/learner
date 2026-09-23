@@ -1,0 +1,171 @@
+{
+ "mark": "P1",
+ "n_ok_after": 16,
+ "n": 16,
+ "pass": true,
+ "repro_files": [
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_A2.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_A3.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_A5.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_A6.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_A8.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_B5.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C1.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C2.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C3.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C4.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C5.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_C7.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_D2.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_D7.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_E7.py",
+  "artifacts/fable-loop102-20260921/repro/fable_loop102_repro_H5.py"
+ ],
+ "seconds": 1.1,
+ "rows": [
+  {
+   "id": "A2",
+   "group": "A",
+   "before_verdict": "BUG",
+   "before_reason": "turn 2 lacks 'Warsaw' (got \"Poland's capital is Krakow, Tom said..\\n\"); turn 2 leaks 'Krakow'; turn 1 wrote 1 FACT events",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "A3",
+   "group": "A",
+   "before_verdict": "BUG",
+   "before_reason": "turn 1 wrote 1 FACT events",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I don't know anyone called Roberto.\n"
+  },
+  {
+   "id": "A5",
+   "group": "A",
+   "before_verdict": "BUG",
+   "before_reason": "turn 1 wrote 1 FACT events",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "CM Punk's spouse is AJ Lee.\n"
+  },
+  {
+   "id": "A6",
+   "group": "A",
+   "before_verdict": "BUG",
+   "before_reason": "turn 2 lacks 'Sulmona' (got \"Ovid's place of birth is Rome, according to the web..\\n\"); turn 2 leaks 'Rome'; turn 1 wrote 1 FACT events",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Ovid's place of birth is Sulmona.\n"
+  },
+  {
+   "id": "A8",
+   "group": "A",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 lacks 'Spanish' (got \"Roberto Merhi's country of citizenship's official language is French, I read online..\\n\"); turn 3 leaks 'French'; turn 2 wrote 1 FA",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Roberto Merhi's country of citizenship's official language is Spanish.\n"
+  },
+  {
+   "id": "B5",
+   "group": "B",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 lacks 'Arabic' (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\"); turn 3 leaks 'Spanish'",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Roberto Merhi's country of citizenship's official language is Arabic..\n"
+  },
+  {
+   "id": "C1",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 leaks 'Spanish'; turn 3 should abstain (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I didn't understand that. Could you say it another way?\n"
+  },
+  {
+   "id": "C2",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 leaks 'Spanish'; turn 3 should abstain (got \"Roberto Merhi's country of citizenship's official language is Spanish.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I didn't understand that. Could you say it another way?\n"
+  },
+  {
+   "id": "C3",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 2 leaks 'Warsaw'; turn 2 should abstain (got \"Poland's capital is Warsaw.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I don't know Poland's capital.\n"
+  },
+  {
+   "id": "C4",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 2 leaks 'AJ Lee'; turn 2 should abstain (got \"CM Punk's spouse is AJ Lee.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I don't know CM Punk's spouse.\n"
+  },
+  {
+   "id": "C5",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 leaks 'Sulmona'; turn 3 should abstain (got \"Fasti's author's place of birth is Sulmona.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I didn't understand that. Could you say it another way?\n"
+  },
+  {
+   "id": "C7",
+   "group": "C",
+   "before_verdict": "BUG",
+   "before_reason": "turn 3 leaks 'Warsaw'; turn 3 should abstain (got \"Poland's capital is Warsaw.\\n\")",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "I don't know Poland's capital.\n"
+  },
+  {
+   "id": "D2",
+   "group": "D",
+   "before_verdict": "BUG",
+   "before_reason": "turn 1 leaks 'in 2019'",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Mira's city is Lisbon.\n"
+  },
+  {
+   "id": "D7",
+   "group": "D",
+   "before_verdict": "BUG",
+   "before_reason": "turn 1 leaks 'since 1596'",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "E7",
+   "group": "E",
+   "before_verdict": "BUG",
+   "before_reason": "inbox bytes raised out of process_file (a production daemon would die here)",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "Poland's capital is Warsaw.\n"
+  },
+  {
+   "id": "H5",
+   "group": "H",
+   "before_verdict": "OK",
+   "before_reason": "all sealed checks held",
+   "after_verdict": "OK",
+   "after_reason": "all sealed checks held",
+   "after_final": "CM Punk's spouse is AJ Lee.\n"
+  }
+ ]
+}

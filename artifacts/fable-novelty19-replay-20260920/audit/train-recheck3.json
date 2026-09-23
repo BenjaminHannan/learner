@@ -1,0 +1,191 @@
+{
+ "M1_unlock_binding": {
+  "suite_records": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02",
+  "first_unlock_sha": "4fe42220f81b1cd68b4b3fbf3627fcee81322f84a5e0d79b74f093b84a42ec02",
+  "second_unlock_sha": "16394cc0a16f8c4c831b5d11adff4eb1a42b4defe950c424b37dd17be9ad4ced",
+  "two_unlocks_are_both_valid_and_different": true,
+  "cases": [
+   {
+    "case": "the original unlock (control)",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   {
+    "case": "a second, independently valid unlock",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   {
+    "case": "manifest dev_passed.sha256 removed",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   {
+    "case": "manifest dev_passed.sha256 blank",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   {
+    "case": "manifest dev_passed block removed",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   },
+   {
+    "case": "the original unlock again (control after restore)",
+    "accepted": false,
+    "message": "eautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch4/exp9991/DEV-PASSED.json seeds are [9991], expected [1900, 1901, 1902]"
+   }
+  ],
+  "legitimate_unlock_passes": false,
+  "every_attack_refused": true,
+  "closed": false
+ },
+ "real_rows_available": {
+  "D": true,
+  "T": true
+ },
+ "M2_one_frozen_version": {
+  "fingerprint_fields": [
+   "baseline",
+   "baseline_length_eval",
+   "baseline_v2",
+   "canonical_operator",
+   "dispatcher",
+   "dispatcher_v3",
+   "dispatcher_v4",
+   "novelty19_data",
+   "novelty19_train",
+   "torch"
+  ],
+  "covers_the_data_script": true,
+  "scenarios": {
+   "uniform (control)": {
+    "runs_merged": 24,
+    "conflicts": 0,
+    "version_passed": true,
+    "distinct": 1,
+    "differing_fields": [],
+    "offending_runs": [],
+    "runs_without_a_fingerprint": [],
+    "gates_returncode": 0,
+    "gates_refusal": "",
+    "report_returncode": 0,
+    "report_line": [
+     "trainer version across 24 merged runs: one frozen script version (1 distinct)"
+    ],
+    "report_names": [],
+    "report_wrote_dev_passed": false
+   },
+   "one run from another trainer version": {
+    "runs_merged": 24,
+    "conflicts": 0,
+    "version_passed": false,
+    "distinct": 2,
+    "differing_fields": [
+     "novelty19_train"
+    ],
+    "offending_runs": [
+     "awake-D-s1900"
+    ],
+    "runs_without_a_fingerprint": [],
+    "gates_returncode": 1,
+    "gates_refusal": "the merged runs were not produced by one frozen script version (2 distinct, differing in ['novelty19_train']; 0 without a fingerprint).  Offending runs: ['awake-D-s1900']",
+    "report_returncode": 1,
+    "report_line": [
+     "trainer version across 24 merged runs: MIXED (2 distinct)"
+    ],
+    "report_names": [
+     "runs from another version: ['awake-D-s1900']",
+     "runs with no fingerprint: []"
+    ],
+    "report_wrote_dev_passed": false
+   },
+   "one run from a drifted DATA script": {
+    "runs_merged": 24,
+    "conflicts": 0,
+    "version_passed": false,
+    "distinct": 2,
+    "differing_fields": [
+     "novelty19_data"
+    ],
+    "offending_runs": [
+     "awake-D-s1900"
+    ],
+    "runs_without_a_fingerprint": [],
+    "gates_returncode": 1,
+    "gates_refusal": "the merged runs were not produced by one frozen script version (2 distinct, differing in ['novelty19_data']; 0 without a fingerprint).  Offending runs: ['awake-D-s1900']",
+    "report_returncode": 1,
+    "report_line": [
+     "trainer version across 24 merged runs: MIXED (2 distinct)"
+    ],
+    "report_names": [
+     "runs from another version: ['awake-D-s1900']",
+     "runs with no fingerprint: []"
+    ],
+    "report_wrote_dev_passed": false
+   },
+   "one run with a null fingerprint": {
+    "runs_merged": 24,
+    "conflicts": 0,
+    "version_passed": false,
+    "distinct": 1,
+    "differing_fields": [],
+    "offending_runs": [
+     "awake-D-s1900"
+    ],
+    "runs_without_a_fingerprint": [
+     "awake-D-s1900"
+    ],
+    "gates_returncode": 1,
+    "gates_refusal": "the merged runs were not produced by one frozen script version (1 distinct, differing in []; 1 without a fingerprint).  Offending runs: ['awake-D-s1900']",
+    "report_returncode": 1,
+    "report_line": [
+     "trainer version across 24 merged runs: MIXED (1 distinct)"
+    ],
+    "report_names": [
+     "runs from another version: ['awake-D-s1900']",
+     "runs with no fingerprint: ['awake-D-s1900']"
+    ],
+    "report_wrote_dev_passed": false
+   },
+   "one run with the field absent": {
+    "runs_merged": 24,
+    "conflicts": 0,
+    "version_passed": false,
+    "distinct": 1,
+    "differing_fields": [],
+    "offending_runs": [
+     "awake-D-s1900"
+    ],
+    "runs_without_a_fingerprint": [
+     "awake-D-s1900"
+    ],
+    "gates_returncode": 1,
+    "gates_refusal": "the merged runs were not produced by one frozen script version (1 distinct, differing in []; 1 without a fingerprint).  Offending runs: ['awake-D-s1900']",
+    "report_returncode": 1,
+    "report_line": [
+     "trainer version across 24 merged runs: MIXED (1 distinct)"
+    ],
+    "report_names": [
+     "runs from another version: ['awake-D-s1900']",
+     "runs with no fingerprint: ['awake-D-s1900']"
+    ],
+    "report_wrote_dev_passed": false
+   }
+  },
+  "closed": true
+ },
+ "N8_hash_before_load": {
+  "verify_line": "recorded = verify_recorded_sha(path)",
+  "torch_load_line": "saved = torch.load(Path(path), map_location='cpu', weights_only=False)",
+  "verify_precedes_load": true,
+  "resume_path_unchanged": true
+ },
+ "training_path": {
+  "awake_D_weight": "e216551f9f8c85ae",
+  "awake_T_weight": "48e8d108a1dbf5a8",
+  "data_D": "f8c846112ff72f15",
+  "data_T": "f8c846112ff72f15",
+  "matches_earlier_evidence": true
+ }
+}

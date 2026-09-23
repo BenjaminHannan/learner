@@ -1,0 +1,15 @@
+--- baseline: plain transformer, 55b protocol ---
+baseline seed 5401: QA 250 updates 91.62s (loss 0.057234), Q10 before 19/20, Q11 before 0/5, fine-tune 27328 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+baseline seed 5402: QA 250 updates 92.28s (loss 0.006541), Q10 before 20/20, Q11 before 0/5, fine-tune 28062 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+baseline seed 5403: QA 250 updates 98.5s (loss 0.006296), Q10 before 20/20, Q11 before 0/5, fine-tune 27275 steps 60.0s, Q11 after 0/5, Q10 after 0/20
+========================================================================
+DEMO 88 SCOREBOARD (per seed, never averaged)
+notebook: old kept 20/20, new learned 5/5, wrong answers 0
+transformer 5401: old kept 0/20, new 0/5, wrong 25
+transformer 5402: old kept 0/20, new 0/5, wrong 25
+transformer 5403: old kept 0/20, new 0/5, wrong 25
+  V1_time                      PASS  471.5s vs 900s
+  V2_notebook_zero_wrong       PASS  0
+  V3_scoreboard_equals_json    PASS  exact
+  V4_no_code_in_transcript     PASS  audit clean
+TOTAL_ELAPSED_SECONDS 471.5

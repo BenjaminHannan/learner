@@ -1,0 +1,2181 @@
+[
+ {
+  "id": "A1",
+  "group": "A",
+  "severity_if_fail": "high",
+  "note": "quoted contradiction must not enter the notebook",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "quote The capital of Poland is Krakow"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A2",
+  "group": "A",
+  "severity_if_fail": "critical",
+  "note": "hearsay suffix on a teach template must not become a correction",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Krakow, Tom said."
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A3",
+  "group": "A",
+  "severity_if_fail": "high",
+  "note": "'I read online' contradiction must stay quarantined",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "I read online that Roberto Merhi is a citizen of France."
+   },
+   {
+    "op": "send",
+    "text": "Who is Roberto's country of citizenship?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Spain"
+     ],
+     "absent": [
+      "France"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A4",
+  "group": "A",
+  "severity_if_fail": "high",
+  "note": "rumour-shaped teach must not create a fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Rumor has it that Poland's capital is Krakow."
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A5",
+  "group": "A",
+  "severity_if_fail": "high",
+  "note": "'quote <teach-shaped>' must not plant a junk entity",
+  "steps": [
+   {
+    "op": "send",
+    "text": "CM Punk is married to AJ Lee"
+   },
+   {
+    "op": "send",
+    "text": "quote CM Punk is married to Lisa."
+   },
+   {
+    "op": "send",
+    "text": "Who is CM Punk's spouse?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "AJ Lee"
+     ],
+     "absent": [
+      "Lisa"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A6",
+  "group": "A",
+  "severity_if_fail": "critical",
+  "note": "'according to the web' suffix must not overwrite taught fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Ovid was born in the city of Sulmona"
+   },
+   {
+    "op": "send",
+    "text": "Ovid was born in the city of Rome, according to the web."
+   },
+   {
+    "op": "send",
+    "text": "Who is Ovid's place of birth?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Sulmona"
+     ],
+     "absent": [
+      "Rome"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A7",
+  "group": "A",
+  "severity_if_fail": "high",
+  "note": "prefixed web text must not teach",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Nobody taught this: The capital of Poland is Krakow."
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "A8",
+  "group": "A",
+  "severity_if_fail": "critical",
+  "note": "web-flavoured overwrite of a two-hop mid fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is French, I read online."
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Spanish"
+     ],
+     "absent": [
+      "French"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    2
+   ]
+  }
+ },
+ {
+  "id": "B1",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "hop-2 correction visible through two hops",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Arabic"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Arabic"
+     ],
+     "absent": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B2",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "hop-1 correction re-roots the chain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Portugal"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Portugal is Portuguese"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 4,
+     "contains": [
+      "Portuguese"
+     ],
+     "absent": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B3",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "spouse->language chain follows the edit",
+  "steps": [
+   {
+    "op": "send",
+    "text": "CM Punk is married to AJ Lee"
+   },
+   {
+    "op": "send",
+    "text": "AJ Lee speaks the language of English"
+   },
+   {
+    "op": "send",
+    "text": "AJ Lee speaks the language of Russian"
+   },
+   {
+    "op": "send",
+    "text": "Which language is the native tongue of the person who is married to CM Punk?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Russian"
+     ],
+     "absent": [
+      "English"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B4",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "everyday possessive chain follows an Actually-correction",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's mother is Ana."
+   },
+   {
+    "op": "send",
+    "text": "Ana's city is Porto."
+   },
+   {
+    "op": "send",
+    "text": "Actually, Mira's mother is Beth."
+   },
+   {
+    "op": "send",
+    "text": "Beth's city is Nice."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's mother's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 4,
+     "contains": [
+      "Nice"
+     ],
+     "absent": [
+      "Porto"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B5",
+  "group": "B",
+  "severity_if_fail": "medium",
+  "note": "Actually- + template sentence must still correct",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "Actually, the official language of Spain is Arabic."
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Arabic"
+     ],
+     "absent": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B6",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "last correction wins",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Krakow"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "B7",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "correction to an unknown mid must abstain, not use stale hop",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Atlantis"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    3
+   ],
+   "absent_everywhere": [
+    "Spanish"
+   ]
+  }
+ },
+ {
+  "id": "B8",
+  "group": "B",
+  "severity_if_fail": "high",
+  "note": "bench65 mquake-001 shape follows the edit",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The chief executive officer of Twitter is Jack Dorsey"
+   },
+   {
+    "op": "send",
+    "text": "Jack Dorsey is a citizen of United States of America"
+   },
+   {
+    "op": "send",
+    "text": "Jack Dorsey is a citizen of Latvia"
+   },
+   {
+    "op": "send",
+    "text": "What is the country of citizenship of the chief executive officer of Twitter?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Latvia"
+     ],
+     "absent": [
+      "United States of America"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "C1",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "forgotten hop-1 must break the chain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "forget Roberto country_of_citizenship"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    3
+   ],
+   "absent_everywhere": [
+    "Spanish"
+   ]
+  }
+ },
+ {
+  "id": "C2",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "forgotten hop-2 must break the chain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "forget Spain official_language"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    3
+   ],
+   "absent_everywhere": [
+    "Spanish"
+   ]
+  }
+ },
+ {
+  "id": "C3",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "forgotten single hop must abstain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "forget Poland capital"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    2
+   ],
+   "absent_everywhere": [
+    "Warsaw"
+   ]
+  }
+ },
+ {
+  "id": "C4",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "forgotten spouse must abstain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "CM Punk is married to AJ Lee"
+   },
+   {
+    "op": "send",
+    "text": "forget CM Punk spouse"
+   },
+   {
+    "op": "send",
+    "text": "Who is CM Punk's spouse?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    2
+   ],
+   "absent_everywhere": [
+    "AJ Lee"
+   ]
+  }
+ },
+ {
+  "id": "C5",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "forgotten author->birth mid hop must abstain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The author of Fasti is Ovid"
+   },
+   {
+    "op": "send",
+    "text": "Ovid was born in the city of Sulmona"
+   },
+   {
+    "op": "send",
+    "text": "forget Ovid place_of_birth"
+   },
+   {
+    "op": "send",
+    "text": "Where was the author of Fasti born?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    3
+   ],
+   "absent_everywhere": [
+    "Sulmona"
+   ]
+  }
+ },
+ {
+  "id": "C6",
+  "group": "C",
+  "severity_if_fail": "low",
+  "note": "forgetting the unknown is a safe no-op; control ask unaffected",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "forget Zed city"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "C7",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "double forget must stay safe and abstain",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "forget Poland capital"
+   },
+   {
+    "op": "send",
+    "text": "forget Poland capital"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    3
+   ],
+   "absent_everywhere": [
+    "Warsaw"
+   ]
+  }
+ },
+ {
+  "id": "C8",
+  "group": "C",
+  "severity_if_fail": "medium",
+  "note": "re-teach after forget must not resurrect a conflict; ask decides",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "forget Poland capital"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "D1",
+  "group": "D",
+  "severity_if_fail": "medium",
+  "note": "year-prefixed sentence must not mint a junk entity",
+  "steps": [
+   {
+    "op": "send",
+    "text": "In 2019 Mira lived in Oslo."
+   },
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "Oslo"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    0
+   ]
+  }
+ },
+ {
+  "id": "D2",
+  "group": "D",
+  "severity_if_fail": "medium",
+  "note": "trailing qualifier must not bake into the value",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon in 2019."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "in 2019"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "D3",
+  "group": "D",
+  "severity_if_fail": "medium",
+  "note": "qualified teach must not answer unqualified asks",
+  "steps": [
+   {
+    "op": "send",
+    "text": "In 2019 Mira's city is Oslo."
+   },
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "Oslo"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    0
+   ]
+  }
+ },
+ {
+  "id": "D4",
+  "group": "D",
+  "severity_if_fail": "low",
+  "note": "'was' qualifier sentence is not a teach",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city was Oslo in 2019."
+   },
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "Oslo"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    0
+   ]
+  }
+ },
+ {
+  "id": "D5",
+  "group": "D",
+  "severity_if_fail": "medium",
+  "note": "second qualified teach must not shadow the unqualified fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "In 2020 Mira's city is Oslo."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "Oslo"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "D6",
+  "group": "D",
+  "severity_if_fail": "low",
+  "note": "qualified template sentence is not a teach",
+  "steps": [
+   {
+    "op": "send",
+    "text": "In 2019 the capital of Poland was Warsaw."
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    0
+   ]
+  }
+ },
+ {
+  "id": "D7",
+  "group": "D",
+  "severity_if_fail": "medium",
+  "note": "'since 1596' must not stick to the value",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw since 1596."
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "since 1596"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "D8",
+  "group": "D",
+  "severity_if_fail": "low",
+  "note": "qualified question must abstain, not guess the unqualified answer",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital in 2019?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    1
+   ],
+   "absent_everywhere": [
+    "Warsaw"
+   ]
+  }
+ },
+ {
+  "id": "E1",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "same id twice, same content: idempotent",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw",
+    "file": "same.txt"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw",
+    "file": "same.txt"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E2",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "same id twice, new content: both turns processed",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw",
+    "file": "same.txt"
+   },
+   {
+    "op": "send",
+    "text": "The capital of France is Paris",
+    "file": "same.txt"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "Who is France's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    },
+    {
+     "turn": 3,
+     "contains": [
+      "Paris"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E3",
+  "group": "E",
+  "severity_if_fail": "low",
+  "note": "empty file clarifies, writes nothing, daemon alive",
+  "steps": [
+   {
+    "op": "send",
+    "text": ""
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    0
+   ],
+   "zero_fact_writes_on": [
+    0
+   ],
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E4",
+  "group": "E",
+  "severity_if_fail": "low",
+  "note": "whitespace file clarifies safely",
+  "steps": [
+   {
+    "op": "send",
+    "text": "   \n  \n"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    0,
+    1
+   ],
+   "zero_fact_writes_on": [
+    0,
+    1
+   ]
+  }
+ },
+ {
+  "id": "E5",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "50KB garbage: no crash, no write, still alive",
+  "steps": [
+   {
+    "op": "send",
+    "text": "zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK zzQJUNK "
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "zero_fact_writes_on": [
+    0
+   ],
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E6",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "50KB teach value: no crash, daemon alive",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL."
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E7",
+  "group": "E",
+  "severity_if_fail": "high",
+  "note": "non-UTF-8 bytes must be skipped safely, never kill the agent",
+  "steps": [
+   {
+    "op": "send_bytes",
+    "data_hex": "fffe546865206361706974616c"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "zero_fact_writes_on": [
+    0
+   ],
+   "no_exception": true,
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E8",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "half-written message then the completed one",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "zero_fact_writes_on": [
+    0
+   ],
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E9",
+  "group": "E",
+  "severity_if_fail": "medium",
+  "note": "two messages stamped the same second both run in name order",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw",
+    "same_second": true
+   },
+   {
+    "op": "send",
+    "text": "The capital of France is Paris",
+    "same_second": true
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "Who is France's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    },
+    {
+     "turn": 3,
+     "contains": [
+      "Paris"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "E10",
+  "group": "E",
+  "severity_if_fail": "low",
+  "note": "non-.txt file ignored; .txt still processed",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw",
+    "file": "note.md"
+   },
+   {
+    "op": "send",
+    "text": "The capital of France is Paris"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "Who is France's capital?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    2
+   ],
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Paris"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "F1",
+  "group": "F",
+  "severity_if_fail": "high",
+  "note": "restart between teach and ask keeps every fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "restart"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "boot_ok": true,
+   "checks": [
+    {
+     "turn": 4,
+     "contains": [
+      "Warsaw"
+     ]
+    },
+    {
+     "turn": 5,
+     "contains": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "F2",
+  "group": "F",
+  "severity_if_fail": "high",
+  "note": "restart between correction and ask keeps the correction",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Arabic"
+   },
+   {
+    "op": "restart"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "boot_ok": true,
+   "checks": [
+    {
+     "turn": 4,
+     "contains": [
+      "Arabic"
+     ],
+     "absent": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "F3",
+  "group": "F",
+  "severity_if_fail": "medium",
+  "note": "pending confirm survives restart via state.json",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Mira's city is Paris."
+   },
+   {
+    "op": "restart"
+   },
+   {
+    "op": "send",
+    "text": "yes"
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "boot_ok": true,
+   "checks": [
+    {
+     "turn": 4,
+     "contains": [
+      "Paris"
+     ],
+     "absent": [
+      "Lisbon"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "F4",
+  "group": "F",
+  "severity_if_fail": "high",
+  "note": "SIGKILL mid-burst incl. a correction: restart verifies, 0 wrong",
+  "steps": [
+   {
+    "op": "kill9_burst"
+   }
+  ],
+  "expect": {
+   "boot_ok": true,
+   "stats": {
+    "min_correct": 28,
+    "max_wrong": 0
+   }
+  }
+ },
+ {
+  "id": "F5",
+  "group": "F",
+  "severity_if_fail": "high",
+  "note": "torn tail (kill mid-fsync): tamper-evident refusal, never silent",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "The capital of France is Paris"
+   },
+   {
+    "op": "tear_tail"
+   },
+   {
+    "op": "restart"
+   }
+  ],
+  "expect": {
+   "boot_refused": true
+  }
+ },
+ {
+  "id": "F6",
+  "group": "F",
+  "severity_if_fail": "medium",
+  "note": "double restart with no new mail stays stable",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "restart"
+   },
+   {
+    "op": "restart"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "boot_ok": true,
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G1",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "a person literally called Forget",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Forget's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Who is Forget's city?"
+   },
+   {
+    "op": "send",
+    "text": "forget Forget city"
+   },
+   {
+    "op": "send",
+    "text": "Who is Forget's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Lisbon"
+     ]
+    },
+    {
+     "turn": 3,
+     "contains": [
+      "Lisbon"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G2",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "a person literally called Ask",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Ask's city is Porto."
+   },
+   {
+    "op": "send",
+    "text": "Who is Ask's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Porto"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G3",
+  "group": "G",
+  "severity_if_fail": "low",
+  "note": "capitalised relation folds to the same relation",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's City is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Lisbon"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G4",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "unicode name round-trips",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Zoë's city is Paris."
+   },
+   {
+    "op": "send",
+    "text": "Who is Zoë's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Paris"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G5",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "umlaut name round-trips",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Müller's city is Berlin."
+   },
+   {
+    "op": "send",
+    "text": "Who is Müller's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Berlin"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G6",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "apostrophe name is one person, not two",
+  "steps": [
+   {
+    "op": "send",
+    "text": "O'Brien's city is Cork."
+   },
+   {
+    "op": "send",
+    "text": "Who is O'Brien's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Cork"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G7",
+  "group": "G",
+  "severity_if_fail": "low",
+  "note": "command word as a value is just a value",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is Forget."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Forget"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "G8",
+  "group": "G",
+  "severity_if_fail": "medium",
+  "note": "multi-word bench name through the full loop",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of New York is Albany."
+   },
+   {
+    "op": "send",
+    "text": "Who is New York's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Albany"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "H1",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "repeat asks are stable and write nothing",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Warsaw"
+     ]
+    },
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1,
+    2
+   ]
+  }
+ },
+ {
+  "id": "H2",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "duplicate teach stays one active fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "H3",
+  "group": "H",
+  "severity_if_fail": "critical",
+  "note": "ignored quote leaves exactly one active taught fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "quote The capital of Poland is Krakow"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Warsaw"
+     ],
+     "absent": [
+      "Krakow"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "H4",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "unknown-entity question has no side effects on taught chains",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Roberto Merhi is a citizen of Spain"
+   },
+   {
+    "op": "send",
+    "text": "The official language of Spain is Spanish"
+   },
+   {
+    "op": "send",
+    "text": "What is the capital of Zand?"
+   },
+   {
+    "op": "send",
+    "text": "What is the official language of the country of citizenship of Roberto Merhi?"
+   }
+  ],
+  "expect": {
+   "abstain_on": [
+    2
+   ],
+   "zero_fact_writes_on": [
+    2
+   ],
+   "checks": [
+    {
+     "turn": 3,
+     "contains": [
+      "Spanish"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "H5",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "a '?' on a teach-shaped sentence must not correct the fact",
+  "steps": [
+   {
+    "op": "send",
+    "text": "CM Punk is married to AJ Lee"
+   },
+   {
+    "op": "send",
+    "text": "CM Punk is married to AJ Lee?"
+   },
+   {
+    "op": "send",
+    "text": "Who is CM Punk's spouse?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "AJ Lee"
+     ],
+     "absent": [
+      "AJ Lee?"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1
+   ]
+  }
+ },
+ {
+  "id": "H6",
+  "group": "H",
+  "severity_if_fail": "medium",
+  "note": "dup teach between asks changes nothing",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   },
+   {
+    "op": "send",
+    "text": "The capital of Poland is Warsaw"
+   },
+   {
+    "op": "send",
+    "text": "Who is Poland's capital?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 1,
+     "contains": [
+      "Warsaw"
+     ]
+    },
+    {
+     "turn": 3,
+     "contains": [
+      "Warsaw"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    1,
+    2,
+    3
+   ]
+  }
+ },
+ {
+  "id": "H7",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "two-hop repeat asks are stable and write nothing",
+  "steps": [
+   {
+    "op": "send",
+    "text": "The author of Fasti is Ovid"
+   },
+   {
+    "op": "send",
+    "text": "Ovid was born in the city of Sulmona"
+   },
+   {
+    "op": "send",
+    "text": "Where was the author of Fasti born?"
+   },
+   {
+    "op": "send",
+    "text": "Where was the author of Fasti born?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Sulmona"
+     ]
+    },
+    {
+     "turn": 3,
+     "contains": [
+      "Sulmona"
+     ]
+    }
+   ],
+   "zero_fact_writes_on": [
+    2,
+    3
+   ]
+  }
+ },
+ {
+  "id": "H8",
+  "group": "H",
+  "severity_if_fail": "high",
+  "note": "unconfirmed re-teach never silently overwrites; old stands",
+  "steps": [
+   {
+    "op": "send",
+    "text": "Mira's city is Lisbon."
+   },
+   {
+    "op": "send",
+    "text": "Mira's city is Paris."
+   },
+   {
+    "op": "send",
+    "text": "Who is Mira's city?"
+   }
+  ],
+  "expect": {
+   "checks": [
+    {
+     "turn": 2,
+     "contains": [
+      "Lisbon"
+     ],
+     "absent": [
+      "Paris"
+     ]
+    }
+   ]
+  }
+ }
+]

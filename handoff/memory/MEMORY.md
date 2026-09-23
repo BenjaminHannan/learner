@@ -1,0 +1,81 @@
+- [GPT bridge is serial-only; fall back to Opus subagents](gpt-bridge-serial-only.md) — superseded 2026-09-18: Ben now wants Opus (medium) subagents, not /gpt
+- [Ben's delegation preference](ben-delegation-preference.md) — route research/audit/drafting to subagents; main session only synthesises and decides
+- [BensPC GPU ops](benspc-gpu-ops.md) — Qwen server respawn loop + restore command; SSH/PowerShell quoting recipe; measured torch/CUDA env
+- [Workflows for research only](workflows-research-only.md) — no multi-agent audits/implementation; verify code inline with targeted probes
+- [Learning-model redesign](human-learning-redesign.md) — 2026-09-18: restart architecture as Ben's own genuinely-learning model (brain = inspiration); co-design step by step
+- [Scout recent research proactively](proactive-literature-scouting.md) — find J-space-style 2025-26 findings myself; don't rely on Ben to surface them
+- [Minimize usage](minimize-usage.md) — 2026-09-18: prefer inline targeted work; no multi-agent workflows unless asked
+- [Compute availability](compute-availability.md) — 2026-09-19: BensPC RTX 5070 Ti is available again (free); Mac for probes; vast.ai only with approval
+- [GPU budget cap $30; Astra is lead](gpu-budget-cap.md) — 2026-09-18: max $30 more GPU spend; Astra leads via reviews/astra-lead-prompt.md
+- [Focused priorities, honest claims](focused-priorities-and-claims.md) — 2026-09-19: short experiment sequence not catalogues; claims ≤ evidence; toy vs village separate; milestone = dependable two-hop
+- [Explain each step](explain-each-step.md) — 2026-09-19: narrate every action at high-school-senior level: what, why, result, meaning
+- [Outside review option](outside-review-option.md) — really hard problems → self-contained GPT-6 Pro prompt in a copy box (Ben 2026-09-22 20:00); Astra/GPT web earlier
+- [Handoffs in a copy box, self-contained](handoff-copy-box-format.md) — 2026-09-19: pasteable text in one code block; each Astra handoff goes to a fresh chat, so include full context
+- [Rental create call is blocked](rental-create-blocked-by-classifier.md) — 2026-09-19: auto mode denies the vast.ai rent call even after approval; give Ben a ready-to-run command instead
+- [Tests under 30 min](test-time-limit-30min.md) — 2026-09-19: every experiment wave < 30 min wall-clock unless that costs > $2; parallelize on cheap vast boxes
+- [A3 teacher-delay result](a3-teacher-delay-v2-result.md) — 2026-09-19: primary passed (15/6, p=.039), stage not accepted (READS/held-out safeguards); wire replay guard failed
+- [Token-memory successor failed transfer](token-memory-result.md) — 2026-09-20: soft all-token attention model learns familiar Qs (~99%) but unseen-relation two-hop 7–12% vs original 33%
+- [Overnight loop directive](overnight-loop-directive.md) — 2026-09-21: when the list clears before 7 am, test the model, find issues, patch, repeat; log on the board
+- [Canonical-operator roadmap](canonical-operator-roadmap.md) — 2026-09-20: operator+recursion perfect in 2/3 seeds to 10 hops; dispatcher fails 3-hop (free redundant calls); Ben's 8-problem fix order
+- [Standing OK for rented CPU](rented-cpu-standing-ok.md) — 2026-09-20: allowed when it significantly speeds up parallel-bound waves; quote price first; Ben presses Run on API calls
+- [Rented CPU is slower than the Mac here](rented-cpu-slow-for-this-workload.md) — 2026-09-20: EPYC 64-core ≈ 1/3 Mac throughput for lookup training (memory-bound); benchmark under full load before any rental
+- [Astra audit 18 rulings](astra-audit-18.md) — 2026-09-20: baseline inconclusive (init mismatch); v2 drafts to build; fresh confirmation panels mandatory; don't say "label-free operator"
+- [Baseline v2 fits](baseline-v2-fits.md) — 2026-09-20: plain transformer learns 1–3 hops 3/3 seeds with rescaled init + hint; only length generalisation still separates it from System S
+- [Parallelize when possible](parallelize-when-possible.md) — 2026-09-20: start independent agents, Astra handoffs and machine jobs together; don't queue
+- [Experiment 19 replay result](exp19-replay-result.md) — 2026-09-20: registered FAIL; generated replay = no effect; uniform long practice moved the 3-call ceiling to 4–6, no 6–8-call generalisation
+- [Ask a Fable max subagent](ask-fable-max-subagent.md) — 2026-09-20: design questions/rulings go to a Fable-model subagent instead of an Astra copy box
+- [Teachable-assistant goal](teachable-assistant-goal.md) — 2026-09-20: end goal = knows nothing at first, reasons well, learns facts Ben teaches it in English over time
+- [Teachable roadmap (Fable review)](teachable-roadmap-fable-review.md) — 2026-09-20: notebook memory, M0–M5 milestones, count-to-3 off the demo path, next experiment = "new names"
+- [Talker route B](talker-route-b.md) — 2026-09-20: Ben wants it to TALK; train own small LM from scratch on simple English, wired to notebook+reasoner; rental OK; fine if not smart
+- [Experiment 19b result](exp19b-u8-result.md) — 2026-09-20: registered FAIL 3/3; practising 1–8 calls collapsed two seeds to 2–3 calls, helped one to 4–6
+- [Exp 21 new-names result](exp21-newnames-result.md) — 2026-09-20: FAIL 0/3, control perfect; model zeroed code_scale (names switched off) by update 500
+- [Concept toy v1.2 result](ct20-v12-result.md) — 2026-09-21: valid run, verdict too-hard (controls learned at 5x budget, concept cases 2–3/12); next step is Astra's call
+- [Dreamer + checker idea](dreamer-checker-idea.md) — 2026-09-21: Ben's idea — hallucinate on purpose, verify with notebook/reasoner; parked as later milestone, toy version possible
+- [Web-search tool idea](web-search-tool-idea.md) — 2026-09-21: Ben wants web search/tool use; parked as a SEARCH act after talker S2, big-model translator or Simple Wikipedia for reading
+- [Exp 26 probes result](exp26-probes-result.md) — 2026-09-20: D1/D3/D4 fired; STOP healthy, operation pointer counts calls; reg+ctx retired; only 25b step 3 licensed
+- [Exp 27 new-names result](exp27-newnames-result.md) — 2026-09-21: PARTIAL 2/3, no claim; binding works 92–99%/step with scale 1.2 (fixed or learned); seed 2103 reserved_gap; follow-up via Fable reviewer
+- [Subagents = GPT xhigh](subagents-gpt-xhigh.md) — superseded 2026-09-21: builds/research now go to opencode agents (see mimo-skill); GPT bridge only for web scouts
+- [Exp 29 new-names result](exp29-newnames-result.md) — 2026-09-21: PASS 3/3 with fixed scale 1.2 + 10,000 updates; 6,000-update and learned-scale arms 1/3; open-set ~0.6; no independent audit
+- [Outside review 28 adjudicated](outside-review-28-adjudication.md) — 2026-09-21: hard-code hop loop, notebook contract first, Ben's 30 natural turns, cut 90M/209M; talker timing = Ben's call
+- [Agent modes goal](three-modes-goal.md) — 2026-09-21: default THINKING (web allowed, quarantined), SLEEP when memory full, WORK on demand with CREATIVE as a sub-routine (no idea → ask Ben), LISTENING doorway; designs in design/v3/30-modes/
+- [Ben's vision 2026-09-21](ben-vision-20260921.md) — sleep internalises lessons into weights; listening clarifies + reads AGENTS.md; learn mode with assigned curiosity topics; high dreamer + smart filter; scaled reasoner with stop token; reading ladder; DECIDED: own model only, everything trained by Ben
+- [Creative stop toy result](creative-stop-toy-result.md) — 2026-09-22: KEEP_FIXED_N 3/3; checker-only FOUND, same-model dreamer, backlog did the work; thinking time not penalised
+- [Milestone 1 built](milestone1-notebook-listening.md) — 2026-09-22: notebook contract + LISTENING as plain software, tests pass; waiting on Ben's 30 turns
+- [Conversation-first priority](conversation-first-priority.md) — 2026-09-22: Ben wants a from-scratch model he can talk to; don't ask him to write test data, agents do it; talker moves to top
+- [CardFold sleep result](cardfold-sleep-result.md) — 2026-09-22: 2 FAIL + 1 VOID; lesson practice 94–99% vs raw-log 3–9% on new inputs, but 1–11% on longer inputs
+- [Talker must be our architecture](talker-must-be-our-architecture.md) — 2026-09-22: Ben rejected a stock-transformer chat run; language part must be built into our design
+- [Demo requirements for uncle/dad](demo-requirements-uncle.md) — 2026-09-22: $30 budget; model answers questions about itself and demonstrates advantage over a plain transformer; no end-to-end model yet
+- [Placeholder English OK](placeholder-english-ok.md) — 2026-09-22: existing transformer allowed temporarily for English parts; final = own architecture + weights; web search is a tool
+- [Benchmark goal](benchmark-goal.md) — 2026-09-22: impress an expert vs equal-size SOTA; target MQuAKE/two-hop/reversal/abstention with plain + retrieval baselines
+- [Milestone 2 thinking + web search](milestone2-thinking-websearch.md) — 2026-09-22: built, 18/18 self-test, real search works; bridge replies need Markdown un-escaping
+- [Web trust + reading requests](web-trust-and-reading-requests.md) — 2026-09-22: no per-fact approval, auto trust policy; Markdown input; read-a-web-page demo; 50M H100 baseline run asked
+- [Pretraining = English only](pretraining-english-only.md) — 2026-09-22: notebook starts empty; no rental until own model ready; web text never assumed true (2-site rule, look elsewhere)
+- [Sleep = automatic + mathematical](sleep-automatic-mathematical.md) — 2026-09-21: model never proposes rules or picks what to store; consolidation by formula (replay + compression); Qwen OK to use
+- [English listening with Qwen](english-listening-qwen-result.md) — 2026-09-21: chat works end to end; registered rounds 126/150 and 141/150, both FAIL on zero-bad-writes (1 reversed nickname)
+- [Exp 42 automatic sleep](exp42-automatic-sleep-result.md) — 2026-09-21: raw replay works with enough episodes (20→7%, 100→~60%, 400→99.5%); squeeze/surprise/long/small-update all failed; length wall stands
+- [Exp 43 length gate + shared-subspace sleep](exp43-length-gate-and-shared-sleep.md) — 2026-09-21: 43A/43C/43B all FAIL; old skills 0% at length 12 (architecture wall); gradient filters ≈ plain replay; GPT prompt handed to Ben
+- [Exp 43E rank-4 sleep confirmed](exp43e-rank4-sleep-confirmed.md) — 2026-09-21: rank-4 limited update beats plain replay 6/6 seeds (+0.13 to +0.45 fresh) at 80 episodes; toy only; length wall untouched
+- [Exp 43G/H transport + router control](exp43g-transport-router-control.md) — 2026-09-21: GPT's hand-addressed design perfect 6/6 (lengths 12/16, 20-episode sleep) after cosine fix; control only, addresses given by hand
+- [Router sleep approved](router-sleep-approved.md) — 2026-09-21: soft router over frozen callable skills fits the automatic/mathematical rule; build learned-addressing version
+- [Exp 43I learned addressing](exp43i-learned-addressing.md) — 2026-09-21: step 1 PASS 6/6; learned distance-clue addressing + skills + router: 1.00 to length 16, 20-episode sleep; dilution warning, clues hand-chosen
+- [Exp 44 reasoner as skills + router](exp44-reasoner-skills-router.md) — 2026-09-21: R1–R7 PASS 3/3, 64 learned numbers; honesty/new-names true by wiring; 10%-noisy teacher rejected 9/9
+- [Exp 43J learned parity](exp43j-learned-parity.md) — 2026-09-21: counters discover odd/even 5/6 seeds; SWAP fails unseen lengths 6/6; 43K wider lengths 5/6; 43K-v2 balanced counter start PASS 9/9 to 64 digits
+- [Exp 45 noisy teacher](exp45-noisy-teacher.md) — 2026-09-21: robust loss lets a 10%-wrong teacher teach 10/15 (plain 0/15), 0 wrong installs; N3 FAIL; enumeration says optimiser/gate is the weak part
+- [GPT scouts 2026-09-21](gpt-scouts-20260921.md) — counters/entmax/addition leads + ears role-head/abstention leads; bridge works serial, no tool flag, max-turns 40
+- [Ears decisions 2026-09-21](ears-decisions-20260921.md) — Qwen may write practice sentences; fixed small-talk OK; BiGRU fallback OK; plain-software scaffolding OK; typo fixes = later echo-only tests
+- [Exp 46 harden before gate](exp46-harden-before-gate.md) — 2026-09-21: PASS confirmed; 15/15 installs at up to 4 wrong of 20, 0 wrong installs/120; this is the live sleep recipe
+- [Ears vocab + transformer ruling](ears-vocab-and-transformer-ruling.md) — 2026-09-21: transformer ears OK if English→thought; wants open vocabulary (read papers); WebRED downloaded; pretraining track moves forward
+- [Borrowed ears weights OK](borrowed-ears-weights-ok.md) — 2026-09-21: fine-tuned open encoder allowed as ears for now; own encoder later on same marks; Ben's concern = quality/fit for our model
+- [Parallel Opus build 2026-09-21](parallel-opus-build-20260921.md) — commit to borrowed-encoder ears; one Opus medium agent per remaining problem (docs 49–54); mouth = borrowed decoder, not Qwen
+- [Ben runs MiMo agents](ben-runs-mimo-agents.md) — 2026-09-21: builds go to Ben's own MiMo 2.6 Flash agents via my copy-box prompts; I verify their RESULTS.md
+- [opencode agents: Muse on Go default](mimo-skill.md) — 2026-09-21: `opencode-go/muse-spark-1.3-contributor` for all agents, ≤ ~15 at once; 5-hour bar is ONE shared total (keep < 90 % at reset); `opencode stats --days 1 --models`; rungo2.sh; verify every report
+- [Director role](director-role.md) — 2026-09-21: Ben: I direct, Muse agents build; board file design/v3/30-modes/00-director-board.md + wake-up loop; verify every report
+- [Sleep-derived priority ruling](sleep-derived-priority-ruling.md) — 2026-09-21: 'leave it' — contract priority order stands; thought49 choices stand
+- [GPU = 5070 Ti only, free to use](gpu-only-5070ti.md) — 2026-09-21: no rentals; BensPC GPU mine to use whenever (one job at a time); talker first run approved 23:40
+- [Disk full stopped agents](disk-full-agent-limit.md) — 2026-09-22: opencode.db 32 GB + swap filled the Mac; check df before launches; kill by exact PID only; opencode undo snapshots off for agents (OPENCODE_CONFIG_CONTENT)
+- [Ben's decisions 2026-09-22](ben-decisions-20260922.md) — me=single user; verb facts→relations; silent typo fix; "Say X"=pretend; two-hop corrections ask; no agent cap, prune sessions
+- [Decide the better option myself](decide-better-option.md) — 2026-09-22: better-vs-worse-for-the-model choices → pick better, don't ask Ben; log on board
+- [Opus 5.5 agents → weekly limit; Muse again](opus55-agents-allowed.md) — 2026-09-22 19:50: Opus agents hit the weekly cap (resets Sep 26 7am ET); Ben: "Use muse spark 1.3 agents now from opencode" → rungo4.sh for everything
+- [Assistant is named Premonition](assistant-name-premonition.md) — 2026-09-22 15:10: identity replies say "My name is Premonition."; fix 227's "no name yet" via additive 227b
+- [No more hand wording tables; learned ear](learned-reader-decision.md) — 2026-09-22: 235 ear 95% vs rules 32%, 3 vs 8 wrong saves; wording coverage → ear; 235b write gate next
+- [235b gate FAIL; ear v4 next](ear235b-gate-result.md) — 2026-09-22: margin gate can't catch confident errors (5 wrong saves); 256 stopped; 257 ear v4 data + blind panel; 252b option B + 258

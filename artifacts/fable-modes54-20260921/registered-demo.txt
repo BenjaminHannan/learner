@@ -1,0 +1,126 @@
+========================================================================
+FABLE DEMO — modes + notebook vs a plain small transformer
+========================================================================
+  [LISTENING] BEN:   person Mira
+             FABLE: Saved: Mira is E0001.
+  [LISTENING] BEN:   person Ana
+             FABLE: Saved: Ana is E0002.
+  [LISTENING] BEN:   person Tom
+             FABLE: Saved: Tom is E0003.
+  [LISTENING] BEN:   teach Mira mother -> Ana
+             FABLE: Saved: Mira's mother is Ana.
+  [LISTENING] BEN:   teach Ana city = Porto
+             FABLE: Saved: Ana's city is Porto.
+  [LISTENING] BEN:   teach Mira city = Lisbon
+             FABLE: Saved: Mira's city is Lisbon.
+  [LISTENING] BEN:   teach Mira colour = green
+             FABLE: Saved: Mira's colour is green.
+  [LISTENING] BEN:   ask Mira mother
+             FABLE: Ana.
+  [LISTENING] BEN:   ask Mira mother city
+             FABLE: Porto.
+  [LISTENING] BEN:   correct Mira city = Paris
+             FABLE: Saved: Mira's city is Paris.
+  [LISTENING] BEN:   ask Mira city
+             FABLE: Paris.
+  [LISTENING] BEN:   quote Apparently Tom's city is Rome
+             FABLE: I didn't save that, because it was not you telling me a fact.
+  [LISTENING] BEN:   ask Tom city
+             FABLE: I don't know Tom's city.
+  [LISTENING] BEN:   ask Mira job
+             FABLE: I don't know Mira's job.
+  [LISTENING] BEN:   alias Mira1 = Mira
+             FABLE: Saved: Mira1 is another name for Mira.
+  [LISTENING] BEN:   person Mira
+             FABLE: Saved: Mira is E0004.
+  [LISTENING] BEN:   teach Mira city = Oslo
+             FABLE: I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+  [LISTENING] BEN:   pick E0004
+             FABLE: Saved: Mira's city is Oslo.
+  [LISTENING] BEN:   ask Mira city
+             FABLE: I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+  [LISTENING] BEN:   pick E0001
+             FABLE: Paris.
+  [LISTENING] BEN:   ask Mira1 city
+             FABLE: Paris.
+  [LISTENING] BEN:   ask Mira favourite
+             FABLE: I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+  [LISTENING] BEN:   person Kai
+             FABLE: (I dropped my earlier question.) Saved: Kai is E0005.
+  [LISTENING] BEN:   teach Kai mother -> Ana
+             FABLE: Saved: Kai's mother is Ana.
+  [LISTENING] BEN:   ask Kai city
+             FABLE: Porto.
+  [THINKING ] BEN:   What do you know? How do you know it? What are you unsure about?
+             FABLE: WHAT I KNOW (by notebook source tag):
+
+--- self-question answer (Q9) ---
+WHAT I KNOW (by notebook source tag):
+  inferred: 1 active fact(s)
+    F00008  Kai city = Porto
+  proposed: 1 active fact(s)
+    F00009  Ana likes = tea
+  sleep-derived: 1 active fact(s)
+    F00010  Mira night_note = notebook compacted
+  taught: 6 active fact(s)
+    F00001  Mira mother = Ana
+    F00002  Ana city = Porto
+    F00004  Mira colour = green
+    F00005  Mira city = Paris
+    F00006  Mira city = Oslo
+    F00007  Kai mother = Ana
+HOW I KNOW IT (source tag + where it came from):
+    F00008 [inferred] via rule R1 (inferred)
+    F00009 [proposed] via WORK job J-show (proposed, awaiting Ben)
+    F00010 [sleep-derived] via SLEEP commit (sleep-derived)
+    F00001 [taught] via teach[3], LISTENING turn t=1
+    F00002 [taught] via teach[4], LISTENING turn t=1
+    F00004 [taught] via teach[6], LISTENING turn t=1
+    F00005 [taught] via teach[7:correct], LISTENING turn t=1
+WHAT I AM UNSURE ABOUT:
+    - AMBIGUOUS: 'Mira' resolves to two entities (E0001, E0004); I asked which one instead of guessing
+    - MISSING/AMBIGUOUS on Q4: Tom's city: only hearsay exists, nothing was saved
+    - MISSING/AMBIGUOUS on Q5: Mira's job: never taught
+    - MISSING/AMBIGUOUS on Q8: Mira's favourite: 'Mira' still ambiguous, and colour was taught as relation 'colour' not 'favourite'
+    - hearsay refused: the quote about Tom's city wrote nothing (only LISTENING writes 'taught')
+    - 1 proposed row awaits your approval (WORK wrote it, it does not answer questions yet)
+    - job J-stuck is parked: Job J-stuck: tried 11 idea-rounds, no idea passed its check. What should I do?
+    - 0 web-quarantine rows: I have not believed anything from the web in this session
+MODE LOG (why I was where I was):
+    t=0 THINKING -> THINKING (start)
+    t=1 THINKING -> LISTENING (inbox-nonempty)
+    t=26 LISTENING -> CREATIVE (work-open-ended)
+    t=27 CREATIVE -> WORK (creative-found-round-2)
+    t=29 WORK -> CREATIVE (work-open-ended)
+    t=39 CREATIVE -> THINKING (creative-giveup-fixed-n-ask-ben)
+    t=40 THINKING -> SLEEP (memory-full)
+    t=42 SLEEP -> THINKING (sleep-commit)
+    modes seen: CREATIVE, LISTENING, SLEEP, THINKING, WORK
+
+--- baseline: plain small transformer, same teachings ---
+baseline seed 5401: total 8/9, params 104832, loss 0.0007, 3.25s
+baseline seed 5402: total 8/9, params 104832, loss 0.0008, 2.59s
+baseline seed 5403: total 8/9, params 104832, loss 0.0007, 2.74s
+
+========================================================================
+SCOREBOARD (exact integers, never averaged)
+========================================================================
+qid  gold         notebook                                  base5401 base5402 base5403
+Q1   Ana          1 Ana.                                     1:Ana  1:Ana  1:Ana
+Q2   Porto        1 Porto.                                   1:Porto  1:Porto  1:Porto
+Q3   Paris        1 Paris.                                   1:Paris  1:Paris  1:Paris
+Q4   <ABSTAIN>    1 I don't know Tom's city.                 1:<ABSTAIN>  1:<ABSTAIN>  1:<ABSTAIN>
+Q5   <ABSTAIN>    1 I don't know Mira's job.                 1:<ABSTAIN>  1:<ABSTAIN>  1:<ABSTAIN>
+Q6   <ABSTAIN>    1 I know more than one Mira: Mira (E0001),  1:<ABSTAIN>  1:<ABSTAIN>  1:<ABSTAIN>
+Q7   Paris        1 Paris.                                   1:Paris  1:Paris  1:Paris
+Q8   green        0 I know more than one Mira: Mira (E0001),  1:green  1:green  1:green
+Q9   self-report  1 see self-report                          0:(no notebook or   0:(no notebook or   0:(no notebook or 
+TOTALS notebook 8/9
+TOTALS baseline seed 5401 8/9 (loss 0.0007)
+TOTALS baseline seed 5402 8/9 (loss 0.0008)
+TOTALS baseline seed 5403 8/9 (loss 0.0007)
+
+D5 teaching lines byte-identical: True
+D6 modes seen: CREATIVE, LISTENING, SLEEP, THINKING, WORK -> PASS
+parked question for Ben: [{'question_id': 'Q-J-stuck', 'job_id': 'J-stuck', 'kind': 'ASK_BEN', 'text': 'Job J-stuck: tried 11 idea-rounds, no idea passed its check. What should I do?'}]
+wrote artifacts/fable-modes54-20260921/demo-results.json

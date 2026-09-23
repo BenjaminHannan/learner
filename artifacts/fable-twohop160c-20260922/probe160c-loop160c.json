@@ -1,0 +1,1169 @@
+{
+ "seconds": 1.7,
+ "counts": {
+  "OK": 68
+ },
+ "by_group": {
+  "H": {
+   "OK": 20
+  },
+  "S": {
+   "OK": 24
+  },
+  "O": {
+   "OK": 24
+  }
+ },
+ "rows": [
+  {
+   "id": "H01-director-2hop-no",
+   "group": "H",
+   "bare": "No, Milan.",
+   "bare_reply": "Which one is wrong: Kim's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "expected": "Which one is wrong: Kim's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Lee's city is Milan.",
+   "triples": [
+    [
+     "Kim",
+     "boss",
+     "Lee"
+    ],
+    [
+     "Lee",
+     "city",
+     "Milan"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H02-2hop-nowait-first",
+   "group": "H",
+   "bare": "no wait, it's Denver",
+   "bare_reply": "Which one is wrong: Ann's teacher is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Denver.\"",
+   "expected": "Which one is wrong: Ann's teacher is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Denver.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Ann's teacher is Finn.",
+   "triples": [
+    [
+     "Ann",
+     "teacher",
+     "Finn"
+    ],
+    [
+     "Rao",
+     "city",
+     "seattle"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H03-2hop-wait-last",
+   "group": "H",
+   "bare": "wait, it's Austin",
+   "bare_reply": "Which one is wrong: Leo's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Austin.\"",
+   "expected": "Which one is wrong: Leo's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Austin.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Patel's city is Austin.",
+   "triples": [
+    [
+     "Leo",
+     "teacher",
+     "Patel"
+    ],
+    [
+     "Patel",
+     "city",
+     "Austin"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H04-2hop-sorry-first",
+   "group": "H",
+   "bare": "sorry, it's Denver",
+   "bare_reply": "Which one is wrong: Mira's teacher is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Denver.\"",
+   "expected": "Which one is wrong: Mira's teacher is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Denver.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Mira's teacher is Quinn.",
+   "triples": [
+    [
+     "Mira",
+     "teacher",
+     "Quinn"
+    ],
+    [
+     "Rao",
+     "city",
+     "seattle"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H05-2hop-meant-last",
+   "group": "H",
+   "bare": "I meant Reno",
+   "bare_reply": "Which one is wrong: Nadia's brother is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Reno.\"",
+   "expected": "Which one is wrong: Nadia's brother is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Reno.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Finn's city is Reno.",
+   "triples": [
+    [
+     "Finn",
+     "city",
+     "Reno"
+    ],
+    [
+     "Nadia",
+     "brother",
+     "Finn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H06-2hop-person-no-first",
+   "group": "H",
+   "bare": "no, Wren",
+   "bare_reply": "Which one is wrong: Nadia's brother is Finn, or Finn's mother is Orla? Say e.g. \"Actually, Finn's mother is Wren.\"",
+   "expected": "Which one is wrong: Nadia's brother is Finn, or Finn's mother is Orla? Say e.g. \"Actually, Finn's mother is Wren.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Nadia's brother is Quinn.",
+   "triples": [
+    [
+     "Finn",
+     "mother",
+     "Orla"
+    ],
+    [
+     "Nadia",
+     "brother",
+     "Quinn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H07-2hop-person-nowait-last",
+   "group": "H",
+   "bare": "no wait, it's Wren",
+   "bare_reply": "Which one is wrong: Quinn's brother is Finn, or Finn's mother is Orla? Say e.g. \"Actually, Finn's mother is Wren.\"",
+   "expected": "Which one is wrong: Quinn's brother is Finn, or Finn's mother is Orla? Say e.g. \"Actually, Finn's mother is Wren.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Finn's mother is Wren.",
+   "triples": [
+    [
+     "Finn",
+     "mother",
+     "Wren"
+    ],
+    [
+     "Quinn",
+     "brother",
+     "Finn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H08-2hop-wait-first",
+   "group": "H",
+   "bare": "wait, it's Miami",
+   "bare_reply": "Which one is wrong: Orla's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Miami.\"",
+   "expected": "Which one is wrong: Orla's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Miami.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Orla's teacher is Quinn.",
+   "triples": [
+    [
+     "Orla",
+     "teacher",
+     "Quinn"
+    ],
+    [
+     "Patel",
+     "city",
+     "Reno"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H09-2hop-sorry-last",
+   "group": "H",
+   "bare": "sorry, it's Boston",
+   "bare_reply": "Which one is wrong: Petra's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Boston.\"",
+   "expected": "Which one is wrong: Petra's teacher is Patel, or Patel's city is Reno? Say e.g. \"Actually, Patel's city is Boston.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Patel's city is Boston.",
+   "triples": [
+    [
+     "Patel",
+     "city",
+     "Boston"
+    ],
+    [
+     "Petra",
+     "teacher",
+     "Patel"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H10-2hop-meant-first",
+   "group": "H",
+   "bare": "I meant Quinn",
+   "bare_reply": "Which one is wrong: Tom's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Quinn.\"",
+   "expected": "Which one is wrong: Tom's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Quinn.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Tom's boss is Quinn.",
+   "triples": [
+    [
+     "Reed",
+     "city",
+     "Oslo"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Quinn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H11-3hop-nowait-last",
+   "group": "H",
+   "bare": "no wait, it's Reno",
+   "bare_reply": "Which one is wrong: Ann's teacher is Rao, Rao's boss is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Reno.\"",
+   "expected": "Which one is wrong: Ann's teacher is Rao, Rao's boss is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Reno.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Finn's city is Reno.",
+   "triples": [
+    [
+     "Ann",
+     "teacher",
+     "Rao"
+    ],
+    [
+     "Finn",
+     "city",
+     "Reno"
+    ],
+    [
+     "Rao",
+     "boss",
+     "Finn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H12-3hop-wait-first",
+   "group": "H",
+   "bare": "wait, it's Milan",
+   "bare_reply": "Which one is wrong: Kim's teacher is Lee, Lee's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Milan.\"",
+   "expected": "Which one is wrong: Kim's teacher is Lee, Lee's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Milan.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Kim's teacher is Finn.",
+   "triples": [
+    [
+     "Kim",
+     "teacher",
+     "Finn"
+    ],
+    [
+     "Lee",
+     "boss",
+     "Reed"
+    ],
+    [
+     "Reed",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H13-3hop-sorry-middle",
+   "group": "H",
+   "bare": "sorry, it's Denver",
+   "bare_reply": "Which one is wrong: Nadia's brother is Finn, Finn's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Denver.\"",
+   "expected": "Which one is wrong: Nadia's brother is Finn, Finn's boss is Reed, or Reed's city is Oslo? Say e.g. \"Actually, Reed's city is Denver.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Finn's boss is Quinn.",
+   "triples": [
+    [
+     "Finn",
+     "boss",
+     "Quinn"
+    ],
+    [
+     "Nadia",
+     "brother",
+     "Finn"
+    ],
+    [
+     "Reed",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H14-3hop-meant-last",
+   "group": "H",
+   "bare": "I meant Milan",
+   "bare_reply": "Which one is wrong: Mira's brother is Finn, Finn's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "expected": "Which one is wrong: Mira's brother is Finn, Finn's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Lee's city is Milan.",
+   "triples": [
+    [
+     "Finn",
+     "boss",
+     "Lee"
+    ],
+    [
+     "Lee",
+     "city",
+     "Milan"
+    ],
+    [
+     "Mira",
+     "brother",
+     "Finn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H15-3hop-no-first",
+   "group": "H",
+   "bare": "no, Quinn",
+   "bare_reply": "Which one is wrong: Petra's teacher is Patel, Patel's boss is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Quinn.\"",
+   "expected": "Which one is wrong: Petra's teacher is Patel, Patel's boss is Finn, or Finn's city is Austin? Say e.g. \"Actually, Finn's city is Quinn.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Petra's teacher is Quinn.",
+   "triples": [
+    [
+     "Finn",
+     "city",
+     "Austin"
+    ],
+    [
+     "Patel",
+     "boss",
+     "Finn"
+    ],
+    [
+     "Petra",
+     "teacher",
+     "Quinn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H16-3hop-nowait-middle",
+   "group": "H",
+   "bare": "no wait, it's Miami",
+   "bare_reply": "Which one is wrong: Leo's teacher is Patel, Patel's boss is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Miami.\"",
+   "expected": "Which one is wrong: Leo's teacher is Patel, Patel's boss is Rao, or Rao's city is seattle? Say e.g. \"Actually, Rao's city is Miami.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Patel's boss is Quinn.",
+   "triples": [
+    [
+     "Leo",
+     "teacher",
+     "Patel"
+    ],
+    [
+     "Patel",
+     "boss",
+     "Quinn"
+    ],
+    [
+     "Rao",
+     "city",
+     "seattle"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H17-3hop-wait-last",
+   "group": "H",
+   "bare": "wait, it's Austin",
+   "bare_reply": "Which one is wrong: Orla's brother is Finn, Finn's boss is Reed, or Reed's city is Denver? Say e.g. \"Actually, Reed's city is Austin.\"",
+   "expected": "Which one is wrong: Orla's brother is Finn, Finn's boss is Reed, or Reed's city is Denver? Say e.g. \"Actually, Reed's city is Austin.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Reed's city is Austin.",
+   "triples": [
+    [
+     "Finn",
+     "boss",
+     "Reed"
+    ],
+    [
+     "Orla",
+     "brother",
+     "Finn"
+    ],
+    [
+     "Reed",
+     "city",
+     "Austin"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H18-3hop-sorry-first",
+   "group": "H",
+   "bare": "sorry, it's Wren",
+   "bare_reply": "Which one is wrong: Tom's brother is Finn, Finn's boss is Lee, or Lee's city is Paris? Say e.g. \"Actually, Lee's city is Wren.\"",
+   "expected": "Which one is wrong: Tom's brother is Finn, Finn's boss is Lee, or Lee's city is Paris? Say e.g. \"Actually, Lee's city is Wren.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Tom's brother is Quinn.",
+   "triples": [
+    [
+     "Finn",
+     "boss",
+     "Lee"
+    ],
+    [
+     "Lee",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "brother",
+     "Quinn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H19-3hop-meant-middle",
+   "group": "H",
+   "bare": "I meant Boston",
+   "bare_reply": "Which one is wrong: Quinn's teacher is Rao, Rao's boss is Finn, or Finn's city is Reno? Say e.g. \"Actually, Finn's city is Boston.\"",
+   "expected": "Which one is wrong: Quinn's teacher is Rao, Rao's boss is Finn, or Finn's city is Reno? Say e.g. \"Actually, Finn's city is Boston.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Rao's boss is Quinn.",
+   "triples": [
+    [
+     "Finn",
+     "city",
+     "Reno"
+    ],
+    [
+     "Quinn",
+     "teacher",
+     "Rao"
+    ],
+    [
+     "Rao",
+     "boss",
+     "Quinn"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "H20-3hop-no-last",
+   "group": "H",
+   "bare": "no, Milan",
+   "bare_reply": "Which one is wrong: Nadia's teacher is Rao, Rao's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "expected": "Which one is wrong: Nadia's teacher is Rao, Rao's boss is Lee, or Lee's city is Rome? Say e.g. \"Actually, Lee's city is Milan.\"",
+   "bare_delta": 0,
+   "expl_reply": "Saved: Lee's city is Milan.",
+   "triples": [
+    [
+     "Lee",
+     "city",
+     "Milan"
+    ],
+    [
+     "Nadia",
+     "teacher",
+     "Rao"
+    ],
+    [
+     "Rao",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "verdict": "OK"
+  },
+  {
+   "id": "A01-nowait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Boston.",
+    "Saved: Tom's city is Denver."
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Boston.",
+    "Saved: Tom's city is Denver."
+   ]
+  },
+  {
+   "id": "A02-wait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Ann's city is Rome.",
+    "Saved: Ann's city is Paris."
+   ],
+   "replies160b": [
+    "Saved: Ann's city is Rome.",
+    "Saved: Ann's city is Paris."
+   ]
+  },
+  {
+   "id": "A03-sorry-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Rao's city is seattle.",
+    "Saved: Rao's city is Austin."
+   ],
+   "replies160b": [
+    "Saved: Rao's city is seattle.",
+    "Saved: Rao's city is Austin."
+   ]
+  },
+  {
+   "id": "A04-meant-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Nadia's teacher is Rao.",
+    "Saved: Nadia's teacher is Finn."
+   ],
+   "replies160b": [
+    "Saved: Nadia's teacher is Rao.",
+    "Saved: Nadia's teacher is Finn."
+   ]
+  },
+  {
+   "id": "A05-no-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Leo's school is Lyceum.",
+    "Saved: Leo's school is Academy."
+   ],
+   "replies160b": [
+    "Saved: Leo's school is Lyceum.",
+    "Saved: Leo's school is Academy."
+   ]
+  },
+  {
+   "id": "A06-nowait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Mira's city is Lisbon.",
+    "Saved: Mira's city is Oslo."
+   ],
+   "replies160b": [
+    "Saved: Mira's city is Lisbon.",
+    "Saved: Mira's city is Oslo."
+   ]
+  },
+  {
+   "id": "A07-wait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Finn's mother is Orla.",
+    "Saved: Finn's mother is Wren."
+   ],
+   "replies160b": [
+    "Saved: Finn's mother is Orla.",
+    "Saved: Finn's mother is Wren."
+   ]
+  },
+  {
+   "id": "A08-sorry-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Orla's city is Reno.",
+    "Saved: Orla's city is Miami."
+   ],
+   "replies160b": [
+    "Saved: Orla's city is Reno.",
+    "Saved: Orla's city is Miami."
+   ]
+  },
+  {
+   "id": "A09-meant-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Petra's teacher is Patel.",
+    "Saved: Petra's teacher is Quinn."
+   ],
+   "replies160b": [
+    "Saved: Petra's teacher is Patel.",
+    "Saved: Petra's teacher is Quinn."
+   ]
+  },
+  {
+   "id": "A10-no-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Quinn's city is Denver.",
+    "Saved: Quinn's city is Boston."
+   ],
+   "replies160b": [
+    "Saved: Quinn's city is Denver.",
+    "Saved: Quinn's city is Boston."
+   ]
+  },
+  {
+   "id": "A11-nowait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Ann's boss is Reed.",
+    "Saved: Ann's boss is Quinn."
+   ],
+   "replies160b": [
+    "Saved: Ann's boss is Reed.",
+    "Saved: Ann's boss is Quinn."
+   ]
+  },
+  {
+   "id": "A12-wait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Nadia's school is Lyceum.",
+    "Saved: Nadia's school is Academy."
+   ],
+   "replies160b": [
+    "Saved: Nadia's school is Lyceum.",
+    "Saved: Nadia's school is Academy."
+   ]
+  },
+  {
+   "id": "A13-sorry-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Rao's teacher is Patel.",
+    "Saved: Rao's teacher is Quinn."
+   ],
+   "replies160b": [
+    "Saved: Rao's teacher is Patel.",
+    "Saved: Rao's teacher is Quinn."
+   ]
+  },
+  {
+   "id": "A14-meant-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's school is Lyceum.",
+    "Saved: Tom's school is Academy."
+   ],
+   "replies160b": [
+    "Saved: Tom's school is Lyceum.",
+    "Saved: Tom's school is Academy."
+   ]
+  },
+  {
+   "id": "A15-no-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Mira's teacher is Rao.",
+    "Saved: Mira's teacher is Finn."
+   ],
+   "replies160b": [
+    "Saved: Mira's teacher is Rao.",
+    "Saved: Mira's teacher is Finn."
+   ]
+  },
+  {
+   "id": "A16-nowait-save",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Finn's city is Austin.",
+    "Saved: Finn's city is Reno."
+   ],
+   "replies160b": [
+    "Saved: Finn's city is Austin.",
+    "Saved: Finn's city is Reno."
+   ]
+  },
+  {
+   "id": "B01-1hop-answer",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "Saved: Tom's city is Denver."
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "Saved: Tom's city is Denver."
+   ]
+  },
+  {
+   "id": "B02-1hop-trap-older",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "Saved: Ann's city is Paris."
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "Saved: Ann's city is Paris."
+   ]
+  },
+  {
+   "id": "B03-director-tom-paris",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "I didn't understand that. Could you say it another way?",
+    "Tom's city is Oslo.",
+    "Saved: Tom's city is Paris."
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "I didn't understand that. Could you say it another way?",
+    "Tom's city is Oslo.",
+    "Saved: Tom's city is Paris."
+   ]
+  },
+  {
+   "id": "B04-1hop-person",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Nadia's teacher is Rao.",
+    "Nadia's teacher is Rao.",
+    "Saved: Nadia's teacher is Finn."
+   ],
+   "replies160b": [
+    "Saved: Nadia's teacher is Rao.",
+    "Nadia's teacher is Rao.",
+    "Saved: Nadia's teacher is Finn."
+   ]
+  },
+  {
+   "id": "B05-1hop-answer",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Leo's school is Lyceum.",
+    "Leo's school is Lyceum.",
+    "Saved: Leo's school is Academy."
+   ],
+   "replies160b": [
+    "Saved: Leo's school is Lyceum.",
+    "Leo's school is Lyceum.",
+    "Saved: Leo's school is Academy."
+   ]
+  },
+  {
+   "id": "B06-1hop-trap-older",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Rao's city is seattle.",
+    "Saved: Finn's city is Austin.",
+    "Finn's city is Austin.",
+    "Saved: Finn's city is Reno."
+   ],
+   "replies160b": [
+    "Saved: Rao's city is seattle.",
+    "Saved: Finn's city is Austin.",
+    "Finn's city is Austin.",
+    "Saved: Finn's city is Reno."
+   ]
+  },
+  {
+   "id": "B07-1hop-answer",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Mira's city is Lisbon.",
+    "Mira's city is Lisbon.",
+    "Saved: Mira's city is Oslo."
+   ],
+   "replies160b": [
+    "Saved: Mira's city is Lisbon.",
+    "Mira's city is Lisbon.",
+    "Saved: Mira's city is Oslo."
+   ]
+  },
+  {
+   "id": "B08-1hop-person",
+   "group": "S",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Petra's teacher is Patel.",
+    "Petra's teacher is Patel.",
+    "Saved: Petra's teacher is Quinn."
+   ],
+   "replies160b": [
+    "Saved: Petra's teacher is Patel.",
+    "Petra's teacher is Patel.",
+    "Saved: Petra's teacher is Quinn."
+   ]
+  },
+  {
+   "id": "C01-director-dontknow",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C02-bare-first",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C03-meant-first",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C04-wait-first",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C05-no-teach-unanswerable",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C06-clarify-prev",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C07-smalltalk-prev",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C08-two-later-unanswerable",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C09-refused-teach-prev",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C10-hearsay-prev",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C11-answer-then-unanswerable",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Nadia's teacher is Rao.",
+    "Saved: Rao's city is seattle.",
+    "Nadia's teacher's city is seattle.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Nadia's teacher is Rao.",
+    "Saved: Rao's city is seattle.",
+    "Nadia's teacher's city is seattle.",
+    "I don't know anyone called Bob.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C12-hi-first",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C13-two-unanswerable",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "I don't know anyone called Ann.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "I don't know anyone called Bob.",
+    "I don't know anyone called Ann.",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "C14-answer-then-smalltalk",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ],
+   "replies160b": [
+    "Saved: Ann's city is Rome.",
+    "Ann's city is Rome.",
+    "I didn't understand that. Could you say it another way?",
+    "Which fact should I change? You can say e.g. \"Actually, Tom's city is Denver.\""
+   ]
+  },
+  {
+   "id": "D01-noida",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D02-noway",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D03-waitboss",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D04-sorrywhat",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D05-fullteach",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D06-meantto",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D07-nofull",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Denver."
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Denver."
+   ]
+  },
+  {
+   "id": "D08-noida-after-answer",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D09-waitboss-after-answer",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ]
+  },
+  {
+   "id": "D10-sorrythanks",
+   "group": "O",
+   "verdict": "OK",
+   "replies160c": [
+    "Saved: Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ],
+   "replies160b": [
+    "Saved: Tom's city is Oslo.",
+    "I didn't understand that. Could you say it another way?"
+   ]
+  }
+ ]
+}

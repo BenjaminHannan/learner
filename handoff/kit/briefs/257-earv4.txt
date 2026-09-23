@@ -1,0 +1,74 @@
+EXP 257 BRIEF: ear v4, fixing the ear's confident reading errors with better training data. The director wrote this on 2026-09-22 at 17:20. OPUS-RULES.txt (same folder) applies in full.
+
+Why
+- 235b is a registered FAIL, verified by the director (seal 21/21; the recount matches every arm).
+- The gate removed 15 of 20 wrong saves, but the 5 that remain are confident mistakes: no rival reading in the top 4. No threshold can fix those.
+- The ear is not wired into the loop until it passes a fresh blind panel with at most 1 wrong save.
+- 235b's diagnosis (category level):
+  - "teaching at" a place saved as school;
+  - compound family relations shortened to plain ones;
+  - pronoun facts attached to the wrong person;
+  - extra invented frames in corrections;
+  - statement-shaped questions saved when there is no "?";
+  - relation table v1 gaps (roommate-, instrument- and food-type relations);
+  - first hops of two-hop questions named with a family word instead of the canonical relation.
+
+The one change: training data v4, plus the relation-table rows that data needs
+- Same base model (SmolLM2-360M), same training recipe and hyperparameters as v3, same output format, same brake. The 235b gate code is unchanged.
+- Import 235/235b code; never copy-edit it. New files: scripts/claude_smolear257_*.py. Artifacts: artifacts/claude-smolear257-20260922/. Ledger lines: P257.n.
+- v4 data = the v3 data plus new generated rows in your own templates for each diagnosed class:
+  1. The verb decides the relation. Values contain misleading nouns (School, College, Library, Hospital, Club, Academy):
+     - "teaches at", "coaches at", "works at", "lectures at", "is a nurse at" → workplace/employer;
+     - "studies at", "goes to", "is a pupil/student at", "is enrolled at" → school.
+  2. Compound family relations keep their full relation: step-, half-, -in-law, grand-, great-, second cousin and similar. Add them to the table as their own relations and never shorten them.
+  3. Pronouns: he/she/they/it in a later clause refer to the named third person. Include first-person + relative + pronoun combinations. The frame subject is the resolved name.
+  4. Corrections produce only the new-value frame. A negated or old value never becomes a frame, and no extra frames are added.
+  5. Statement-shaped questions with no "?" (tags, "so X works at Y", lowercase chat style) → NONE. Statements that contain a question word → TEACH.
+  6. Relation-table gaps: add everyday personal-fact relations from general knowledge (housemates/roommates, instruments, favourite food/drink/sport/book/film, hobbies, schools, teachers, coaches, doctors, neighbours, partners, fiancé(e)s, godparents, and so on). Never take them from any panel.
+  7. Two-hop questions whose first hop is a relative ("my wife's brother", "my mum's boss") use the canonical table names on every hop.
+- Keep the class mix balanced so plain wording does not regress.
+- Data rules:
+  - Fictional names only.
+  - Never read, copy or reconstruct items from any TEST-ONLY panel. That includes earpanel235 and earpanel235b: you know their failures only at category level, and that is all you may use.
+  - Keep the 235 dev split frozen. Add new dev rows for classes 1–7 in held-out templates that are never used in training.
+
+Training
+- On the BensPC 5070 Ti. It is free, one job at a time.
+  - Check nvidia-smi first.
+  - Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- The checkpoint stays on BensPC. Record its sha256.
+- For Mac runs, stream the checkpoint over ssh as 235b did. Mac disk is about 7 GB free: no copies on the Mac.
+- Keep each wave under 30 minutes (generate, train, evaluate).
+
+tau
+- Re-pick tau on your dev set with 235b's sealed rule: the most recall at ≤ 1 % wrong saves; otherwise the lowest wrong rate, with ties going to the smallest tau.
+- Fix it in PASSMARKS before the panel is opened.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel257-20260922/, is being written now by a separate blind writer.
+  - Same schema and families as 235b.
+  - One addition: ASK frames carry chain_aliases, which is null for one hop and otherwise a list of alias lists, one per hop. Aliases count on every hop.
+  - Wait for the director's message that it is sealed, then check its SEAL from the repo root.
+  - Adapt 235b's loader and scorer for chain_aliases. Everything else is the same, including the strict schema check (SCHEMA-MISMATCH, exit 3).
+- Arms: A (v4 + brake + gate, registered), A_raw, A_brake, and B (138i + 228, via 235b's arm B wrapper).
+- Marks, arm A, same bars as 235b:
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85 % and ≥ B + 30 |
+| M3b | UNSURE ≤ 12 % of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90 % |
+| M5 | GPU median ≤ 300 ms per turn |
+
+- Also report, with no bars:
+  - Mac CPU latency: the full panel if Mac disk is ≥ 8 GB free, otherwise a 12-turn dev pilot, labelled as such;
+  - v4 on the 235 dev split, next to v3's 783/800;
+  - v3 vs v4 on your new dev classes;
+  - after the registered run only: v4 on the 235b panel next to v3's numbers (A 54/110 with 5 wrong, A_brake 81/110 with 20 wrong, ASK 32/40). Report it; never tune on it.
+- Predictions go in PASSMARKS and the ledger before the panel is opened.
+
+Finish
+- RESULTS.md: the result first, every mark, per family, per risk tag, what it means and what it doesn't. Categories only; never quote panel items.
+- A final message as OPUS-RULES requires.

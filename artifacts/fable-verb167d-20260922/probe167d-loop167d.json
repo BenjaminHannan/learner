@@ -1,0 +1,1739 @@
+{
+ "agent": "loop167d",
+ "cases_file": "cases167d.json",
+ "wall_seconds": 1.1,
+ "counts": {
+  "OK": 32
+ },
+ "by_group": {
+  "works-teach": {
+   "ok": 7,
+   "n": 7
+  },
+  "speaks-teach": {
+   "ok": 7,
+   "n": 7
+  },
+  "asks-after-possessive": {
+   "ok": 8,
+   "n": 8
+  },
+  "trap": {
+   "ok": 10,
+   "n": 10
+  }
+ },
+ "cases": [
+  {
+   "id": "W01",
+   "group": "works-teach",
+   "teaches": [
+    "Tom works at Acme."
+   ],
+   "expect": [
+    "Tom",
+    "employer",
+    "Acme"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Tom work?",
+     "want": "Acme",
+     "reply": "Tom's employer is Acme."
+    },
+    {
+     "q": "Who is Tom's employer?",
+     "want": "Acme",
+     "reply": "Tom's employer is Acme."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Acme"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Acme.",
+   "verdict": "OK",
+   "seconds": 0.817
+  },
+  {
+   "id": "W02",
+   "group": "works-teach",
+   "teaches": [
+    "Lena works at Halden Mill."
+   ],
+   "expect": [
+    "Lena",
+    "employer",
+    "Halden Mill"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Lena work?",
+     "want": "Halden Mill",
+     "reply": "Lena's employer is Halden Mill."
+    },
+    {
+     "q": "Who does Lena work for?",
+     "want": "Halden Mill",
+     "reply": "Lena's employer is Halden Mill."
+    }
+   ],
+   "stored": [
+    [
+     "Lena",
+     "employer",
+     "Halden Mill"
+    ]
+   ],
+   "reply": "Saved: Lena's employer is Halden Mill.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "W03",
+   "group": "works-teach",
+   "teaches": [
+    "Priya works at Deutsche Bank."
+   ],
+   "expect": [
+    "Priya",
+    "employer",
+    "Deutsche Bank"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Priya work?",
+     "want": "Deutsche Bank",
+     "reply": "Priya's employer is Deutsche Bank."
+    },
+    {
+     "q": "Who is Priya's employer?",
+     "want": "Deutsche Bank",
+     "reply": "Priya's employer is Deutsche Bank."
+    }
+   ],
+   "stored": [
+    [
+     "Priya",
+     "employer",
+     "Deutsche Bank"
+    ]
+   ],
+   "reply": "Saved: Priya's employer is Deutsche Bank.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "W04",
+   "group": "works-teach",
+   "teaches": [
+    "Niko works at Cedar Clinic."
+   ],
+   "expect": [
+    "Niko",
+    "employer",
+    "Cedar Clinic"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Niko work?",
+     "want": "Cedar Clinic",
+     "reply": "Niko's employer is Cedar Clinic."
+    },
+    {
+     "q": "Who does Niko work for?",
+     "want": "Cedar Clinic",
+     "reply": "Niko's employer is Cedar Clinic."
+    }
+   ],
+   "stored": [
+    [
+     "Niko",
+     "employer",
+     "Cedar Clinic"
+    ]
+   ],
+   "reply": "Saved: Niko's employer is Cedar Clinic.",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "W05",
+   "group": "works-teach",
+   "teaches": [
+    "Omar works at Blue Finch."
+   ],
+   "expect": [
+    "Omar",
+    "employer",
+    "Blue Finch"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Omar work?",
+     "want": "Blue Finch",
+     "reply": "Omar's employer is Blue Finch."
+    },
+    {
+     "q": "Who is Omar's employer?",
+     "want": "Blue Finch",
+     "reply": "Omar's employer is Blue Finch."
+    }
+   ],
+   "stored": [
+    [
+     "Omar",
+     "employer",
+     "Blue Finch"
+    ]
+   ],
+   "reply": "Saved: Omar's employer is Blue Finch.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "W06",
+   "group": "works-teach",
+   "teaches": [
+    "Sanna works at Acme now."
+   ],
+   "expect": [
+    "Sanna",
+    "employer",
+    "Acme"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Sanna work?",
+     "want": "Acme",
+     "reply": "Sanna's employer is Acme."
+    },
+    {
+     "q": "Who is Sanna's employer?",
+     "want": "Acme",
+     "reply": "Sanna's employer is Acme."
+    }
+   ],
+   "stored": [
+    [
+     "Sanna",
+     "employer",
+     "Acme"
+    ]
+   ],
+   "reply": "Saved: Sanna's employer is Acme.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "W07",
+   "group": "works-teach",
+   "teaches": [
+    "Actually, Emir works at Porto Labs."
+   ],
+   "expect": [
+    "Emir",
+    "employer",
+    "Porto Labs"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Emir work?",
+     "want": "Porto Labs",
+     "reply": "Emir's employer is Porto Labs."
+    },
+    {
+     "q": "Who does Emir work for?",
+     "want": "Porto Labs",
+     "reply": "Emir's employer is Porto Labs."
+    }
+   ],
+   "stored": [
+    [
+     "Emir",
+     "employer",
+     "Porto Labs"
+    ]
+   ],
+   "reply": "Saved: Emir's employer is Porto Labs.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "S01",
+   "group": "speaks-teach",
+   "teaches": [
+    "Rana speaks Hindi."
+   ],
+   "expect": [
+    "Rana",
+    "language",
+    "Hindi"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Rana speak?",
+     "want": "Hindi",
+     "reply": "Rana's language is Hindi."
+    },
+    {
+     "q": "What is Rana's language?",
+     "want": "Hindi",
+     "reply": "Rana's language is Hindi."
+    }
+   ],
+   "stored": [
+    [
+     "Rana",
+     "language",
+     "Hindi"
+    ]
+   ],
+   "reply": "Saved: Rana's language is Hindi.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "S02",
+   "group": "speaks-teach",
+   "teaches": [
+    "Milo speaks Portuguese."
+   ],
+   "expect": [
+    "Milo",
+    "language",
+    "Portuguese"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What languages does Milo speak?",
+     "want": "Portuguese",
+     "reply": "Milo's language is Portuguese."
+    },
+    {
+     "q": "What is Milo's language?",
+     "want": "Portuguese",
+     "reply": "Milo's language is Portuguese."
+    }
+   ],
+   "stored": [
+    [
+     "Milo",
+     "language",
+     "Portuguese"
+    ]
+   ],
+   "reply": "Saved: Milo's language is Portuguese.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "S03",
+   "group": "speaks-teach",
+   "teaches": [
+    "Nadia speaks Swahili."
+   ],
+   "expect": [
+    "Nadia",
+    "language",
+    "Swahili"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Nadia speak?",
+     "want": "Swahili",
+     "reply": "Nadia's language is Swahili."
+    },
+    {
+     "q": "What is Nadia's language?",
+     "want": "Swahili",
+     "reply": "Nadia's language is Swahili."
+    }
+   ],
+   "stored": [
+    [
+     "Nadia",
+     "language",
+     "Swahili"
+    ]
+   ],
+   "reply": "Saved: Nadia's language is Swahili.",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "S04",
+   "group": "speaks-teach",
+   "teaches": [
+    "Dario speaks Brazilian Portuguese."
+   ],
+   "expect": [
+    "Dario",
+    "language",
+    "Brazilian Portuguese"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Dario speak?",
+     "want": "Brazilian Portuguese",
+     "reply": "Dario's language is Brazilian Portuguese."
+    },
+    {
+     "q": "What is Dario's language?",
+     "want": "Brazilian Portuguese",
+     "reply": "Dario's language is Brazilian Portuguese."
+    }
+   ],
+   "stored": [
+    [
+     "Dario",
+     "language",
+     "Brazilian Portuguese"
+    ]
+   ],
+   "reply": "Saved: Dario's language is Brazilian Portuguese.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "S05",
+   "group": "speaks-teach",
+   "teaches": [
+    "Yuki speaks Japanese now."
+   ],
+   "expect": [
+    "Yuki",
+    "language",
+    "Japanese"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Yuki speak?",
+     "want": "Japanese",
+     "reply": "Yuki's language is Japanese."
+    },
+    {
+     "q": "What is Yuki's language?",
+     "want": "Japanese",
+     "reply": "Yuki's language is Japanese."
+    }
+   ],
+   "stored": [
+    [
+     "Yuki",
+     "language",
+     "Japanese"
+    ]
+   ],
+   "reply": "Saved: Yuki's language is Japanese.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "S06",
+   "group": "speaks-teach",
+   "teaches": [
+    "No, Petra speaks Korean."
+   ],
+   "expect": [
+    "Petra",
+    "language",
+    "Korean"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What languages does Petra speak?",
+     "want": "Korean",
+     "reply": "Petra's language is Korean."
+    },
+    {
+     "q": "What is Petra's language?",
+     "want": "Korean",
+     "reply": "Petra's language is Korean."
+    }
+   ],
+   "stored": [
+    [
+     "Petra",
+     "language",
+     "Korean"
+    ]
+   ],
+   "reply": "Saved: Petra's language is Korean.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "S07",
+   "group": "speaks-teach",
+   "teaches": [
+    "Theo speaks French too."
+   ],
+   "expect": [
+    "Theo",
+    "language",
+    "French"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Theo speak?",
+     "want": "French",
+     "reply": "Theo's language is French."
+    },
+    {
+     "q": "What is Theo's language?",
+     "want": "French",
+     "reply": "Theo's language is French."
+    }
+   ],
+   "stored": [
+    [
+     "Theo",
+     "language",
+     "French"
+    ]
+   ],
+   "reply": "Saved: Theo's language is French.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "Q01",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Tom's employer is Acme."
+   ],
+   "expect": [
+    "Tom",
+    "employer",
+    "Acme"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Tom work?",
+     "want": "Acme",
+     "reply": "Tom's employer is Acme."
+    },
+    {
+     "q": "Who does Tom work for?",
+     "want": "Acme",
+     "reply": "Tom's employer is Acme."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "employer",
+     "Acme"
+    ]
+   ],
+   "reply": "Saved: Tom's employer is Acme.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "Q02",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Lena's employer is Halden Mill."
+   ],
+   "expect": [
+    "Lena",
+    "employer",
+    "Halden Mill"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Lena work?",
+     "want": "Halden Mill",
+     "reply": "Lena's employer is Halden Mill."
+    },
+    {
+     "q": "Who is Lena's employer?",
+     "want": "Halden Mill",
+     "reply": "Lena's employer is Halden Mill."
+    }
+   ],
+   "stored": [
+    [
+     "Lena",
+     "employer",
+     "Halden Mill"
+    ]
+   ],
+   "reply": "Saved: Lena's employer is Halden Mill.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "Q03",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Omar's employer is Blue Finch."
+   ],
+   "expect": [
+    "Omar",
+    "employer",
+    "Blue Finch"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Where does Omar work?",
+     "want": "Blue Finch",
+     "reply": "Omar's employer is Blue Finch."
+    }
+   ],
+   "stored": [
+    [
+     "Omar",
+     "employer",
+     "Blue Finch"
+    ]
+   ],
+   "reply": "Saved: Omar's employer is Blue Finch.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "Q04",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Dario's employer is Ferrostaal."
+   ],
+   "expect": [
+    "Dario",
+    "employer",
+    "Ferrostaal"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who does Dario work for?",
+     "want": "Ferrostaal",
+     "reply": "Dario's employer is Ferrostaal."
+    },
+    {
+     "q": "Where does Dario work?",
+     "want": "Ferrostaal",
+     "reply": "Dario's employer is Ferrostaal."
+    }
+   ],
+   "stored": [
+    [
+     "Dario",
+     "employer",
+     "Ferrostaal"
+    ]
+   ],
+   "reply": "Saved: Dario's employer is Ferrostaal.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "Q05",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Rana's language is Hindi."
+   ],
+   "expect": [
+    "Rana",
+    "language",
+    "Hindi"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Rana speak?",
+     "want": "Hindi",
+     "reply": "Rana's language is Hindi."
+    },
+    {
+     "q": "What is Rana's language?",
+     "want": "Hindi",
+     "reply": "Rana's language is Hindi."
+    }
+   ],
+   "stored": [
+    [
+     "Rana",
+     "language",
+     "Hindi"
+    ]
+   ],
+   "reply": "Saved: Rana's language is Hindi.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "Q06",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Milo's language is Portuguese."
+   ],
+   "expect": [
+    "Milo",
+    "language",
+    "Portuguese"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What languages does Milo speak?",
+     "want": "Portuguese",
+     "reply": "Milo's language is Portuguese."
+    },
+    {
+     "q": "What is Milo's language?",
+     "want": "Portuguese",
+     "reply": "Milo's language is Portuguese."
+    }
+   ],
+   "stored": [
+    [
+     "Milo",
+     "language",
+     "Portuguese"
+    ]
+   ],
+   "reply": "Saved: Milo's language is Portuguese.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "Q07",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Nadia's language is Swahili."
+   ],
+   "expect": [
+    "Nadia",
+    "language",
+    "Swahili"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What language does Nadia speak?",
+     "want": "Swahili",
+     "reply": "Nadia's language is Swahili."
+    }
+   ],
+   "stored": [
+    [
+     "Nadia",
+     "language",
+     "Swahili"
+    ]
+   ],
+   "reply": "Saved: Nadia's language is Swahili.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "Q08",
+   "group": "asks-after-possessive",
+   "teaches": [
+    "Yuki's language is Japanese."
+   ],
+   "expect": [
+    "Yuki",
+    "language",
+    "Japanese"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What languages does Yuki speak?",
+     "want": "Japanese",
+     "reply": "Yuki's language is Japanese."
+    },
+    {
+     "q": "What is Yuki's language?",
+     "want": "Japanese",
+     "reply": "Yuki's language is Japanese."
+    }
+   ],
+   "stored": [
+    [
+     "Yuki",
+     "language",
+     "Japanese"
+    ]
+   ],
+   "reply": "Saved: Yuki's language is Japanese.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "X01",
+   "group": "trap",
+   "teaches": [
+    "Tom doesn't work at Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "X02",
+   "group": "trap",
+   "teaches": [
+    "Tom maybe works at Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "X03",
+   "group": "trap",
+   "teaches": [
+    "Tom works at a big firm near Oslo."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.004
+  },
+  {
+   "id": "X04",
+   "group": "trap",
+   "teaches": [
+    "Tom used to work at Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "X05",
+   "group": "trap",
+   "teaches": [
+    "Who works at Acme?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "X06",
+   "group": "trap",
+   "teaches": [
+    "Does Rana speak Hindi?"
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "X07",
+   "group": "trap",
+   "teaches": [
+    "Rana doesn't speak Hindi."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.003
+  },
+  {
+   "id": "X08",
+   "group": "trap",
+   "teaches": [
+    "Rana speaks a dialect."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "X09",
+   "group": "trap",
+   "teaches": [
+    "Rana maybe speaks Hindi."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "X10",
+   "group": "trap",
+   "teaches": [
+    "Tom does not work at Acme."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.005
+  }
+ ],
+ "t2_cases_file": "cases167b.json",
+ "t2_wall_seconds": 0.5,
+ "t2_counts": {
+  "IDENTICAL": 64
+ },
+ "t2_cases": [
+  {
+   "id": "M01",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Dara's city is Accra.",
+   "stored": [
+    [
+     "Dara",
+     "city",
+     "Accra"
+    ]
+   ],
+   "seconds": 0.009
+  },
+  {
+   "id": "M02",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Efua's city is Lagos.",
+   "stored": [
+    [
+     "Efua",
+     "city",
+     "Lagos"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "M03",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Farid's city is Quito.",
+   "stored": [
+    [
+     "Farid",
+     "city",
+     "Quito"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "M04",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Greta's city is Oslo.",
+   "stored": [
+    [
+     "Greta",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "M05",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Hana's city is New York.",
+   "stored": [
+    [
+     "Hana",
+     "city",
+     "New York"
+    ]
+   ],
+   "seconds": 0.006
+  },
+  {
+   "id": "M06",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Ilya's city is San Francisco.",
+   "stored": [
+    [
+     "Ilya",
+     "city",
+     "San Francisco"
+    ]
+   ],
+   "seconds": 0.011
+  },
+  {
+   "id": "M07",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Juna's city is Denver.",
+   "stored": [
+    [
+     "Juna",
+     "city",
+     "Denver"
+    ]
+   ],
+   "seconds": 0.009
+  },
+  {
+   "id": "M08",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Kira's city is Rome.",
+   "stored": [
+    [
+     "Kira",
+     "city",
+     "Rome"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "M09",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Lior's employer is Obi.",
+   "stored": [
+    [
+     "Lior",
+     "employer",
+     "Obi"
+    ]
+   ],
+   "seconds": 0.006
+  },
+  {
+   "id": "M10",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Mona's employer is Pavel.",
+   "stored": [
+    [
+     "Mona",
+     "employer",
+     "Pavel"
+    ]
+   ],
+   "seconds": 0.006
+  },
+  {
+   "id": "M11",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Nadia's employer is Odin.",
+   "stored": [
+    [
+     "Nadia",
+     "employer",
+     "Odin"
+    ]
+   ],
+   "seconds": 0.006
+  },
+  {
+   "id": "M12",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Orin's employer is Reka.",
+   "stored": [
+    [
+     "Orin",
+     "employer",
+     "Reka"
+    ]
+   ],
+   "seconds": 0.006
+  },
+  {
+   "id": "M13",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Petra's employer is Sanna.",
+   "stored": [
+    [
+     "Petra",
+     "employer",
+     "Sanna"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "M14",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Qadir's employer is Tove.",
+   "stored": [
+    [
+     "Qadir",
+     "employer",
+     "Tove"
+    ]
+   ],
+   "seconds": 0.01
+  },
+  {
+   "id": "M15",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Runa's employer is Ulf.",
+   "stored": [
+    [
+     "Runa",
+     "employer",
+     "Ulf"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "M16",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Soren's place_of_birth is Pune.",
+   "stored": [
+    [
+     "Soren",
+     "place_of_birth",
+     "Pune"
+    ]
+   ],
+   "seconds": 0.01
+  },
+  {
+   "id": "M17",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Tilda's place_of_birth is Ibadan.",
+   "stored": [
+    [
+     "Tilda",
+     "place_of_birth",
+     "Ibadan"
+    ]
+   ],
+   "seconds": 0.013
+  },
+  {
+   "id": "M18",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Ulma's place_of_birth is Kumasi.",
+   "stored": [
+    [
+     "Ulma",
+     "place_of_birth",
+     "Kumasi"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "M19",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Vera's place_of_birth is Lima.",
+   "stored": [
+    [
+     "Vera",
+     "place_of_birth",
+     "Lima"
+    ]
+   ],
+   "seconds": 0.035
+  },
+  {
+   "id": "M20",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Wren's place_of_birth is Cusco.",
+   "stored": [
+    [
+     "Wren",
+     "place_of_birth",
+     "Cusco"
+    ]
+   ],
+   "seconds": 0.009
+  },
+  {
+   "id": "M21",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Xavi's place_of_birth is Porto.",
+   "stored": [
+    [
+     "Xavi",
+     "place_of_birth",
+     "Porto"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "M22",
+   "group": "mapped",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Yasir's place_of_birth is Kyoto.",
+   "stored": [
+    [
+     "Yasir",
+     "place_of_birth",
+     "Kyoto"
+    ]
+   ],
+   "seconds": 0.01
+  },
+  {
+   "id": "T01",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Zola's city is Accra.",
+   "stored": [
+    [
+     "Zola",
+     "city",
+     "Accra"
+    ]
+   ],
+   "seconds": 0.011
+  },
+  {
+   "id": "T02",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Amara's employer is Obi.",
+   "stored": [
+    [
+     "Amara",
+     "employer",
+     "Obi"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "T03",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Belen's place_of_birth is Pune.",
+   "stored": [
+    [
+     "Belen",
+     "place_of_birth",
+     "Pune"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "T04",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Cato's city is Lagos.",
+   "stored": [
+    [
+     "Cato",
+     "city",
+     "Lagos"
+    ]
+   ],
+   "seconds": 0.009
+  },
+  {
+   "id": "T05",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Delia's city is Oslo.",
+   "stored": [
+    [
+     "Delia",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "T06",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Elin's employer is Pavel.",
+   "stored": [
+    [
+     "Elin",
+     "employer",
+     "Pavel"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "T07",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Fabio's place_of_birth is Ibadan.",
+   "stored": [
+    [
+     "Fabio",
+     "place_of_birth",
+     "Ibadan"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "T08",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Galen's city is New York.",
+   "stored": [
+    [
+     "Galen",
+     "city",
+     "New York"
+    ]
+   ],
+   "seconds": 0.009
+  },
+  {
+   "id": "T09",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Hester's city is Quito.",
+   "stored": [
+    [
+     "Hester",
+     "city",
+     "Quito"
+    ]
+   ],
+   "seconds": 0.007
+  },
+  {
+   "id": "T10",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Ivo's employer is Odin.",
+   "stored": [
+    [
+     "Ivo",
+     "employer",
+     "Odin"
+    ]
+   ],
+   "seconds": 0.008
+  },
+  {
+   "id": "T11",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Jalen's place_of_birth is Kumasi.",
+   "stored": [
+    [
+     "Jalen",
+     "place_of_birth",
+     "Kumasi"
+    ]
+   ],
+   "seconds": 0.011
+  },
+  {
+   "id": "T12",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Kesi's city is Denver.",
+   "stored": [
+    [
+     "Kesi",
+     "city",
+     "Denver"
+    ]
+   ],
+   "seconds": 0.012
+  },
+  {
+   "id": "T13",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Luton's city is Rome.",
+   "stored": [
+    [
+     "Luton",
+     "city",
+     "Rome"
+    ]
+   ],
+   "seconds": 0.018
+  },
+  {
+   "id": "T14",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Marek's employer is Reka.",
+   "stored": [
+    [
+     "Marek",
+     "employer",
+     "Reka"
+    ]
+   ],
+   "seconds": 0.017
+  },
+  {
+   "id": "T15",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Nola's place_of_birth is Lima.",
+   "stored": [
+    [
+     "Nola",
+     "place_of_birth",
+     "Lima"
+    ]
+   ],
+   "seconds": 0.013
+  },
+  {
+   "id": "T16",
+   "group": "tail",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "Saved: Odin's city is Cusco.",
+   "stored": [
+    [
+     "Odin",
+     "city",
+     "Cusco"
+    ]
+   ],
+   "seconds": 0.012
+  },
+  {
+   "id": "D01",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.006
+  },
+  {
+   "id": "D02",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.005
+  },
+  {
+   "id": "D03",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.005
+  },
+  {
+   "id": "D04",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.003
+  },
+  {
+   "id": "D05",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.007
+  },
+  {
+   "id": "D06",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.004
+  },
+  {
+   "id": "D07",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.008
+  },
+  {
+   "id": "D08",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.006
+  },
+  {
+   "id": "D09",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.004
+  },
+  {
+   "id": "D10",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.007
+  },
+  {
+   "id": "D11",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.004
+  },
+  {
+   "id": "D12",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.009
+  },
+  {
+   "id": "D13",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.006
+  },
+  {
+   "id": "D14",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.004
+  },
+  {
+   "id": "D15",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.008
+  },
+  {
+   "id": "D16",
+   "group": "descr",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.008
+  },
+  {
+   "id": "N01",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.008
+  },
+  {
+   "id": "N02",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.01
+  },
+  {
+   "id": "N03",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.005
+  },
+  {
+   "id": "N04",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.006
+  },
+  {
+   "id": "N05",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.005
+  },
+  {
+   "id": "N06",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.009
+  },
+  {
+   "id": "N07",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.017
+  },
+  {
+   "id": "N08",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.007
+  },
+  {
+   "id": "N09",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.01
+  },
+  {
+   "id": "N10",
+   "group": "neg",
+   "verdict": "IDENTICAL",
+   "diffs": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "stored": [],
+   "seconds": 0.006
+  }
+ ]
+}

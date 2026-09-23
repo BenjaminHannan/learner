@@ -1,0 +1,89 @@
+# astra-startup-factorial-v2 — per seed, per arm, never averaged
+# onset: earliest t>=200 with the five probes t-200..t each >= 461/512; missing probes do not qualify
+
+## seed 1300
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+B       16   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+C       24  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+D       24   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset both censored, final/512 both censored
+  filler effect  D-C: onset both censored, final/512 both censored
+  fact effect    C-A: onset both censored, final/512 both censored
+  fact effect    D-B: onset both censored, final/512 both censored
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 (missing)
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+(missing) A
+(missing) B
+(missing) C
+(missing) D
+
+## seed 1301
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+B       16   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+C       24  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+D       24   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset both censored, final/512 both censored
+  filler effect  D-C: onset both censored, final/512 both censored
+  fact effect    C-A: onset both censored, final/512 both censored
+  fact effect    D-B: onset both censored, final/512 both censored
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 (missing)
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+(missing) A
+(missing) B
+(missing) C
+(missing) D
+
+## seed 1302
+arm  facts filler       onset regressions final-window   final/512 confirm/512   confirmed
+A       16  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+B       16   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+C       24  False   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+D       24   True   (missing)   (missing)   (missing)   (missing)   (missing)   (missing)
+
+pre-stated readings (paired within this seed; conditional on these sizes and this 2,500-update budget):
+  filler effect  B-A: onset both censored, final/512 both censored
+  filler effect  D-C: onset both censored, final/512 both censored
+  fact effect    C-A: onset both censored, final/512 both censored
+  fact effect    D-B: onset both censored, final/512 both censored
+  interaction (D-C)-(B-A): onset censored (an arm never qualified)
+  interaction (D-C)-(B-A): final/512 (missing)
+
+trajectory, validation correct out of 512
+update         A         B         C         D
+
+routing diagnostics (unrounded; SGD derivative and the separate AdamW step)
+update arm  mass/uniform  d(mass)/d(eta) registered  cos  AdamW delta mass
+(missing) A
+(missing) B
+(missing) C
+(missing) D
+
+## long run (separate question; an extension under a declared schedule, NOT a continuation of historical e0)
+seed 1300: (missing)
+seed 1301: (missing)
+seed 1302: (missing)
+
+## freeze-before-growth transfer of the final arm-A checkpoint (no updates; pass = >= 461/512 per cell)
+seed 1300: (missing)
+seed 1301: (missing)
+seed 1302: (missing)
+
+Scope: these are effects at the tested row counts, streams and budgets. A/C success would show filler removal sufficient in these cells, not that competing facts never matter; D successes do not eliminate an optimization barrier; all-four success does not mean the question was wrong.

@@ -1,0 +1,18 @@
+TASK 255f: finish exp 255 (fixed-reply text). A previous agent (Claude Opus) built and sealed exp 255, ran the registered M2 and M4–M7, and sealed the M1 file. It was then stopped by an account usage limit, not by any problem in the task.
+Brief: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/255-fixedtext.txt (read it fully).
+State: artifacts/claude-fixedtext255-20260922/ holds PASSMARKS.md, SEAL.sha256.txt, SEAL2.sha256.txt (fixedtext.jsonl), and run/score.txt. The sealed scorer gives M2, M5, M6 and M7 PASS. M4 lists 38 changed replies: 30 are the same meaning, and 8 are flagged "possibly worse, director rules". M3 has NOT been run.
+The director's M4 ruling is registered and final:
+- The 8 flagged probes (A06, B04, B05, B20, D02, D03, D04, D08) are WORSE on meaning.
+- The new decline opens with "I don't know that.", which is false there: the fact is stored, or it is the assistant's own name, or the turn was a teach request.
+- So M4 FAILS, and exp 255 is a registered FAIL.
+Do, in order:
+1. From the repo root, run shasum -a 256 -c on SEAL.sha256.txt and SEAL2.sha256.txt. If any line fails, stop and report.
+2. Run M3's runner ONCE on the 255 arm, exactly as PASSMARKS.md says: all 30 conversations of the 239 panel, with transcripts plus a changes file against 138m, in the format of artifacts/claude-convpanel239-138m-20260922/. Count the changed turns and store changes. Never grade or judge anything.
+3. Append the ledger outcome line P255.n: "registered FAIL on M4 (director ruling: 8 worse); M3 runner done, judging not run; M1 graded by the director separately".
+4. Write artifacts/claude-fixedtext255-20260922/RESULTS.md: the result first (registered FAIL on M4), then every mark with integer counts:
+   - M1: "graded by the director; see M1-director.md in this folder (written by the director)". Don't create that file yourself.
+   - M3: the runner counts and paths; "judging not run because the verdict is already FAIL".
+   - Every template changed, before and after, as in PASSMARKS.
+   - What it means and doesn't mean.
+   Also write the design note design/v3/30-modes/255-fixedtext-opus.md if it does not exist.
+5. Final reply: the verdict, the marks, the M3 paths, and the changed-turn count.

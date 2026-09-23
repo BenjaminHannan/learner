@@ -1,0 +1,115 @@
+plan: 20000 turns {'teach': 11288, 'correct': 2715, 'ask': 5997}
+restarts: [(3797, 'kill'), (5281, 'kill'), (6214, 'graceful'), (8556, 'graceful'), (12968, 'graceful'), (17710, 'kill'), (18711, 'kill'), (18898, 'kill')]
+ckpt 1000: 22,30640,558457,66.8,77.1
+ckpt 2000: 46,32672,992831,69.3,82.6
+ckpt 3000: 72,34656,1365519,77.1,93.2
+restart 1/8 kill at turn 3823: stop=-1.00s verify=0.02s boot=0.11s audit_ok=True
+ckpt 4000: 99,42736,1703127,82.1,91.8
+ckpt 5000: 127,44192,2010401,84.3,96.8
+restart 2/8 kill at turn 5307: stop=-1.00s verify=0.02s boot=0.11s audit_ok=True
+ckpt 6000: 157,50000,2298757,89.6,99.3
+restart 3/8 graceful at turn 6240: stop=0.08s verify=0.02s boot=0.10s audit_ok=True
+ckpt 7000: 187,50288,2583332,91.3,104.4
+ckpt 8000: 220,49424,2864482,97.4,113.3
+restart 4/8 graceful at turn 8582: stop=0.09s verify=0.04s boot=0.09s audit_ok=True
+ckpt 9000: 253,59408,3141127,101.6,114.2
+ckpt 10000: 289,55808,3417910,105.6,118.9
+ckpt 11000: 326,57248,3687215,110.5,125.9
+ckpt 12000: 364,60160,3954994,116.1,129.1
+restart 5/8 graceful at turn 12994: stop=0.08s verify=0.04s boot=0.12s audit_ok=True
+ckpt 13000: 404,71760,4223982,120.5,136.9
+ckpt 14000: 446,75344,4492146,123.4,142.6
+ckpt 15000: 489,68496,4768061,128.4,144.4
+ckpt 16000: 534,70016,5038356,134.2,151.9
+ckpt 17000: 586,72000,5299719,142.5,436.6
+restart 6/8 kill at turn 17736: stop=-1.00s verify=0.05s boot=0.13s audit_ok=True
+ckpt 18000: 636,89728,5564421,143.7,316.6
+restart 7/8 kill at turn 18737: stop=-1.00s verify=0.06s boot=0.14s audit_ok=True
+restart 8/8 kill at turn 18924: stop=-1.00s verify=0.06s boot=0.14s audit_ok=True
+ckpt 19000: 684,90512,5835138,146.2,165.5
+ckpt 20000: 735,81184,6100768,150.4,170.8
+{
+ "status": "PASS",
+ "seed": 93,
+ "turns_done": 20000,
+ "turns_planned": 20000,
+ "wall_s": 735.1,
+ "plan_kinds": {
+  "teach": 11288,
+  "correct": 2715,
+  "ask": 5997
+ },
+ "restarts": [
+  [
+   3797,
+   "kill"
+  ],
+  [
+   5281,
+   "kill"
+  ],
+  [
+   6214,
+   "graceful"
+  ],
+  [
+   8556,
+   "graceful"
+  ],
+  [
+   12968,
+   "graceful"
+  ],
+  [
+   17710,
+   "kill"
+  ],
+  [
+   18711,
+   "kill"
+  ],
+  [
+   18898,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 20000 turns",
+   "pass": true,
+   "wrong": 0
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 8 restarts",
+   "pass": true
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 0.142,
+   "verify_s": 0.062
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": true,
+   "p99_1k_ms": 67.93,
+   "p99_end_ms": 436.58
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": true,
+   "wall_s": 735.1,
+   "turns_done": 20000
+  }
+ },
+ "fail": null,
+ "final_stop_s": 0.08001899719238281,
+ "exactly_once": {
+  "replies_checked": 20000,
+  "doubled_sentence_replies": 0,
+  "doubled_seqs": [],
+  "receipt_ids": 19999,
+  "receipts_not_exactly_once": {}
+ }
+}
+SOAK108 PASS

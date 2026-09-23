@@ -1,0 +1,200 @@
+# Exp 171 sealed given-names exclusion list (hand-written BEFORE any run).
+#
+# Rule: the guard's dictionary check uses the lowercase entries of
+# /usr/share/dict/words MINUS every name on this list. A teach value whose
+# first word (lowercased) is still in that set is treated as a description,
+# not a name. Any word on this list is treated as name-shaped even when it
+# is also an ordinary English word (rose, grace, kim, ...).
+#
+# Contents: common English given names (top-100 style, both sexes) plus every
+# fictional probe name used in cases171.json, plus dictionary-collision names
+# found by checking /usr/share/dict/words on 2026-09-22 (ana, rita, amelia,
+# tara, kai, kim, rose, grace, leo, mia, eli, ada, ren, wes, nina, bea ...).
+# One name per line, lowercase.
+ada
+agnes
+albert
+alex
+alfred
+alice
+amelia
+amy
+ana
+anna
+anne
+annie
+arthur
+august
+bea
+ben
+bertha
+bessie
+betty
+beatrice
+bill
+blanche
+bruno
+carl
+carrie
+charles
+charlie
+chen
+chester
+clara
+clifford
+clyde
+colin
+dale
+daisy
+david
+della
+dennis
+donald
+doris
+dorothy
+douglas
+edith
+edna
+eli
+elias
+ella
+elsa
+elmer
+emma
+erik
+esther
+ethel
+evelyn
+florence
+frank
+fred
+george
+gladys
+grace
+gus
+hannah
+harold
+harry
+harvey
+hazel
+helen
+henry
+herbert
+howard
+ida
+ivan
+jack
+jacob
+james
+jim
+joe
+john
+joseph
+judy
+june
+kai
+kofi
+kim
+lena
+leo
+lillian
+luca
+lucy
+mabel
+mary
+matt
+max
+may
+meera
+mia
+mildred
+mira
+myrtle
+nina
+omar
+priya
+ren
+rita
+robert
+rose
+ruby
+ruth
+sana
+sarah
+sue
+tara
+vera
+virginia
+wes
+will
+william
+yvonne
+zofia
+# Additions 2026-09-22 (pre-seal): person-name tokens that collide with the
+# dictionary as value-first-words in the sealed regression corpora
+# (ann/bob/cora/sella in redteam136+143, fay/jo/mark/patel/pia/wren in
+# sessions152, kip/ted/st in cases150/136/139) plus ultra-common English
+# given names/nicknames/titles that are also dictionary words.
+al
+ann
+art
+ava
+barry
+bob
+bran
+chip
+clark
+cora
+dan
+don
+fay
+flora
+herb
+holly
+jerry
+jo
+kelly
+kerry
+kip
+kirk
+larry
+mark
+mike
+mina
+molly
+mort
+nick
+patel
+pete
+pia
+rhea
+rick
+robin
+sal
+sally
+sam
+sandy
+sella
+skip
+st
+ted
+terry
+tom
+perry
+walt
+wren
+# Additions 2026-09-22 (pre-seal, bench spouse-chain names): genuine
+# person names that are also dictionary words (spouse values in sealed
+# bench121/103/132 edit items; refusing them breaks the edited chain).
+atom
+buffy
+dick
+lech
+marge
+pat
+patty
+penny
+peter
+tony
+beth
+bobby

@@ -1,0 +1,114 @@
+00 'How many people do you know?' -> 'I know 0 people: .'
+00 'How many facts do you know?' -> 'I know 0 facts you taught me. I also hold 0 web row, which I do not believe.'
+00 'What have you forgotten?' -> "I haven't forgotten anything you taught me."
+00 'What did I teach you last?' -> "You haven't taught me anything yet."
+00 'How old r u?' -> 'You never taught me their age, so I do not know it.'
+00 'Say my name.' -> "my name. (I'm treating that as pretend, so I won't save it.)"
+00 'What is my name?' -> "I don't know your name yet."
+00 'hi' -> 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"'
+00 'Who are you?' -> 'I am plain software you are teaching: a notebook, a lookup loop, and fixed rules. I can only tell you what you taught me.'
+00 'What is your name?' -> 'You never gave me a name, so I do not have one. I am plain software you are teaching: a notebook, a lookup loop, and fixed rules.'
+00 'thanks!' -> "You're welcome!"
+00 'How are you?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'What can you do?' -> 'I can: save what you teach me in my notebook; answer questions from my notes, following one or two steps; correct a fact or forget one when you ask; say I do not know instead of guessing; tell you where each fact came from; hold web text in quarantine without believing it.'
+00   STORED []
+01 "Silas's boss is Max." -> "Saved: Silas's boss is Max."
+01 "Who is Silas's boss?" -> "Silas's boss is Max."
+01 "Max's city is Oslo." -> "Saved: Max's city is Oslo."
+01 'Where does Max live?' -> "Max's city is Oslo."
+01 "Who is Silas's boss's city?" -> "Silas's boss's city is Oslo."
+01 'Silas Wendt owns Juniper Lane Books.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+01 'Who owns Juniper Lane Books?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+01 'Who is the owner of Juniper Lane Books?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+01 'What does Silas Wendt own?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+01 'How many people do you know?' -> 'I know 2 people: Max, Silas.'
+01 "Is Silas's boss Max?" -> "Yes, Silas's boss is Max."
+01 "Is Silas's boss Ivo?" -> "No, Silas's boss is Max."
+01 'What do you know about Silas?' -> "Silas's boss is Max."
+01   STORED [('Silas', 'boss', 'Max'), ('Max', 'city', 'Oslo')]
+02 'Priya Dunmore works at Juniper Lane Books.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+02 'Where does Priya Dunmore work?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+02 'Who works at Juniper Lane Books?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+02 "Who is Priya Dunmore's employer?" -> "I don't know anyone called Priya Dunmore."
+02 'Priya Dunmore lives in Ashford.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+02 'Where does Priya Dunmore live?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+02   STORED []
+03 "Tomas's job is engineer." -> "Saved: Tomas's job is engineer."
+03 "What is Tomas's job?" -> "Tomas's job is engineer."
+03 'Is Tomas an engineer?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+03 "Wren's friend is Odo." -> "Saved: Wren's friend is Odo."
+03 "Wren's friend is Ivy." -> "Saved: Wren's friend is Ivy. (I also have Odo.)"
+03 "Wren's friend is Ash." -> "Saved: Wren's friend is Ash. (I also have Odo and Ivy.)"
+03 "Who are Wren's friends?" -> "I don't know Wren's friends."
+03 "Wren's pet is an owl." -> "Saved: Wren's pet is an owl."
+03 "What is Wren's pet?" -> "Wren's pet is an owl."
+03 "Wren's hobbies are chess and archery." -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+03 "What are Wren's hobbies?" -> "I don't know Wren's hobbies."
+03   STORED [('Tomas', 'job', 'engineer'), ('Wren', 'friend', 'Odo'), ('Wren', 'friend', 'Ivy'), ('Wren', 'friend', 'Ash'), ('Wren', 'pet', 'an owl')]
+04 "Ada Pell's age is 0." -> "Saved: Ada Pell's age is 0."
+04 'How old is Ada Pell?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+04 "Ada Pell's age is 1." -> "I have Ada Pell's age as 0. Do you want me to change it to 1?"
+04 'yes' -> "Updated: Ada Pell's age is 1 (it was 0)."
+04 'How old is Ada Pell?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+04 "Ada Pell's age is 2." -> "I have Ada Pell's age as 1. Do you want me to change it to 2?"
+04 'yes' -> "Updated: Ada Pell's age is 2 (it was 1)."
+04 'How old is Ada Pell?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+04 'How many facts do you know?' -> 'I know 1 facts you taught me. I also hold 0 web row, which I do not believe.'
+04 'How many people do you know?' -> 'I know 1 people: Ada Pell.'
+04   STORED [('Ada Pell', 'age', '2')]
+05 "max's sister is lena." -> "Saved: max's sister is lena."
+05 "who is max's sister?" -> "max's sister is lena."
+05 "Who is Max's sister?" -> "Max's sister is lena."
+05 'where does lena live?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+05   STORED [('max', 'sister', 'lena')]
+06 "Brin Tallow's country_of_citizenship is Norland." -> "Saved: Brin Tallow's country of citizenship is Norland."
+06 "What is Brin Tallow's country of citizenship?" -> "Brin Tallow's country of citizenship is Norland."
+06 "Hollow Oak Press's founding_year is 1987." -> "Saved: Hollow Oak Press's founding year is 1987."
+06 'When was Hollow Oak Press founded?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+06 "What is Hollow Oak Press's founding year?" -> "Hollow Oak Press's founding year is 1987."
+06   STORED [('Brin Tallow', 'country_of_citizenship', 'Norland'), ('Hollow Oak Press', 'founding_year', '1987')]
+07 "Tamsin Orle's birthday is 3 May." -> "Saved: Tamsin Orle's birthday is 3 May."
+07 "When is Tamsin Orle's birthday?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+07 'My birthday is June 4.' -> 'Saved: your birthday is June 4.'
+07 'When is my birthday?' -> 'You never taught me their age, so I do not know it.'
+07   STORED [('Tamsin Orle', 'birthday', '3 May'), ('USER', 'birthday', 'June 4')]
+08 'My boss is Kellan Voss.' -> 'Saved: your boss is Kellan Voss.'
+08 'Who is my boss?' -> 'Your boss is Kellan Voss.'
+08 'Who is your boss?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+08 'I live in Norland.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+08 'Where do I live?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+08 'My name is Ren.' -> 'Saved: your name is Ren.'
+08 'What is my name?' -> 'Your name is Ren.'
+08 'Say my name.' -> "my name. (I'm treating that as pretend, so I won't save it.)"
+08 'Is my name Ren?' -> 'You never told me your name, so I do not know it.'
+08 'Is my name Bo?' -> 'You never told me your name, so I do not know it.'
+08   STORED [('USER', 'boss', 'Kellan Voss'), ('USER', 'name', 'Ren')]
+09 "Mira Kest's city is Oslo." -> "Saved: Mira Kest's city is Oslo."
+09 "Actually, Mira Kest's city is Porto." -> "Updated: Mira Kest's city is Porto (it was Oslo)."
+09 "Mira Kest's city is Lima." -> "I have Mira Kest's city as Porto. Do you want me to change it to Lima?"
+09 'yes' -> "Updated: Mira Kest's city is Lima (it was Porto)."
+09 "Forget Mira Kest's city." -> "Forgotten: Mira Kest's city."
+09 "What is Mira Kest's city?" -> "I don't know Mira Kest's city."
+09 'What have you forgotten?' -> "I forgot: Mira Kest's city is Lima. You asked me to forget it in turn ?. The old row is kept but retired."
+09   STORED []
+10 "Who is Zed Varn's boss?" -> "I don't know anyone called Zed Varn."
+10 "Iris's city is Oslo." -> "Saved: Iris's city is Oslo."
+10 "Who is Iris's mother?" -> "I don't know Iris's mother."
+10 'Who lives in Oslo?' -> "Iris's city is Oslo."
+10 'Who lives in Rome?' -> "I don't know anyone whose city is Rome."
+10 "Is Iris's city Oslo?" -> "Yes, Iris's city is Oslo."
+10 "Is Iris's city Rome?" -> "No, Iris's city is Oslo."
+10 'Where does Iris live?' -> "Iris's city is Oslo."
+10 'Who told you that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+10 'Where did you learn that?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+10   STORED [('Iris', 'city', 'Oslo')]
+11 "I heard that Ivo's city is Rome." -> 'Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.'
+11 "Pretend Ivo's city is Rome." -> "OK, I'll treat that as pretend, so I won't save it."
+11 "Say Ivo's city is Rome." -> "Ivo's city is Rome. (I'm treating that as pretend, so I won't save it.)"
+11 "Ivo's city is not Rome." -> 'I can take one fact at a time — could you split that?'
+11 "Ivo's city was Rome in 2010." -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+11 "Silas's boss is Max and Ivy's boss is Odo." -> 'I can take one fact at a time — could you split that?'
+11 'Tell me a joke.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+11 "What's the weather like?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+11 'good morning' -> 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"'
+11   STORED []

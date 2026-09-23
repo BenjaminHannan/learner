@@ -1,0 +1,54 @@
+{
+  "experiment": "fable-link-isolation-v2-20260920",
+  "stage": "a",
+  "seed": 1402,
+  "qualified": false,
+  "evaluated_utc": "2026-09-20T17:48:28.626661+00:00",
+  "thresholds": {
+    "denominator": 512,
+    "attribute": 487,
+    "terminal_true_endpoint": 487
+  },
+  "counts": {
+    "attribute_correct": {
+      "8": 96,
+      "9": 80,
+      "10": 80
+    },
+    "attribute_total": {
+      "8": 512,
+      "9": 512,
+      "10": 512
+    },
+    "terminal_true_endpoint_correct": 87,
+    "terminal_true_endpoint_total": 512,
+    "answer_value_collision_rate": 0.2988,
+    "terminal_discriminability": {
+      "no_collision": {
+        "n": 359,
+        "p_term_true_person": 0.0793,
+        "p_term_wrong_present": 0.0793,
+        "margin": -0.0
+      },
+      "collision": {
+        "n": 153,
+        "p_term_true_person": 0.122,
+        "p_term_wrong_present": 0.122,
+        "margin": -0.0
+      }
+    }
+  },
+  "reasons": [
+    "relation 8: 96/512 < 487/512",
+    "relation 9: 80/512 < 487/512",
+    "relation 10: 80/512 < 487/512",
+    "terminal given the true endpoint: 87/512 < 487/512"
+  ],
+  "checkpoint_sha256": "728bb68d64efa1efb887cf677c92cb87109db9cbe732f353970a0fe1263f25dc",
+  "launch_sha256": "c4b931d55812c495d98ca95d4b84a68169053abb66be979221fa919334fb5aec",
+  "validation_fingerprint": "e63599a9a72c5eb1bda692ce06fd91b0fe334a38719a100851646b87bbb755c5",
+  "validation_label": "qualification",
+  "note": "stage A failed; stage-B hypothesis untested for this seed",
+  "evaluator_only": true,
+  "fixed_final_checkpoint_only": true
+}

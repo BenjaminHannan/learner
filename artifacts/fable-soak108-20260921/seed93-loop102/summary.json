@@ -1,0 +1,86 @@
+{
+ "status": "FAIL",
+ "seed": 93,
+ "turns_done": 20000,
+ "turns_planned": 20000,
+ "wall_s": 783.5,
+ "plan_kinds": {
+  "teach": 11288,
+  "correct": 2715,
+  "ask": 5997
+ },
+ "restarts": [
+  [
+   3797,
+   "kill"
+  ],
+  [
+   5281,
+   "kill"
+  ],
+  [
+   6214,
+   "graceful"
+  ],
+  [
+   8556,
+   "graceful"
+  ],
+  [
+   12968,
+   "graceful"
+  ],
+  [
+   17710,
+   "kill"
+  ],
+  [
+   18711,
+   "kill"
+  ],
+  [
+   18898,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 20000 turns",
+   "pass": true,
+   "wrong": 0
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 8 restarts",
+   "pass": true
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 1.073,
+   "verify_s": 0.139
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": false,
+   "p99_1k_ms": 66.18,
+   "p99_end_ms": 1096.26
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": true,
+   "wall_s": 783.5,
+   "turns_done": 20000
+  }
+ },
+ "fail": {
+  "mark": "K4"
+ },
+ "final_stop_s": 1.041633129119873,
+ "exactly_once": {
+  "replies_checked": 20000,
+  "doubled_sentence_replies": 0,
+  "doubled_seqs": [],
+  "receipt_ids": 20000,
+  "receipts_not_exactly_once": {}
+ }
+}

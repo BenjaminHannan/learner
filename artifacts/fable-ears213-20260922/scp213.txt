@@ -1,0 +1,33 @@
+# scp list — Exp 213 BensPC staging (run by the director from the worktree root)
+# PRECONDITION: this exp's PASSMARKS sealed
+# (artifacts/fable-ears213-20260922/SEAL.sha256.txt); verify with
+# `shasum -a 256 -c artifacts/fable-ears213-20260922/SEAL.sha256.txt`.
+# Stage 213 into C:\Users\benja\ears213\. The 119h PC tree already holds the
+# full wave closure (47/45 stack, 119/119b/119e/119g/119h scorers, read106,
+# abstain64, listening, notebook, bert_loader, data/, repo/panels/,
+# panel94.jsonl, panel94b.jsonl, 119h runs + taus119h.json + report47h.json),
+# so mirror it, then copy only the 4 new files. No training, no installs.
+
+# 1. Mirror the 119h PC tree (closure + panels + 119h checkpoints/reports).
+# ssh benspc "xcopy C:\Users\benja\ears119h C:\Users\benja\ears213\ /E /I /Y"
+
+# 2. New scripts (safety map + scorer; wave closure otherwise by import).
+# Run from: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+scp scripts/fable_ears213_relmap.py scripts/fable_ears213_score.py "benspc:C:/Users/benja/ears213/repo/scripts/"
+
+# 3. Sealed probe cases (A1 runs these on the GPU; 48 fictional sentences).
+scp artifacts/fable-ears213-20260922/probe213_cases.json "benspc:C:/Users/benja/ears213/probe213_cases.json"
+
+# 4. Wave batch file to the work dir (staged name wave213.bat).
+scp scripts/fable_ears213_wave.bat "benspc:C:/Users/benja/ears213/wave213.bat"
+
+# 5. Verify 119g inputs exist (119g checkpoints + sealed taus/report).
+# ssh benspc "dir C:\Users\benja\ears119g\runs\w-11911\ear.pt & dir C:\Users\benja\ears119g\taus119g.json & dir C:\Users\benja\ears119g\report47g.json & dir C:\Users\benja\ears213\repo\panels\cal.json & dir C:\Users\benja\ears213\panel94.jsonl & dir C:\Users\benja\ears213\panel94b.jsonl"
+
+# 6. Launch (director only, detached; stop the Qwen llama-server first if it
+# holds VRAM; install nothing; GPU wall-clock plan <= 2400 s, PASSMARKS §6).
+# ssh benspc "powershell -NoProfile -Command \"Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CommandLine = 'cmd /c C:\\Users\\benja\\ears213\\wave213.bat' } | Out-Null; echo LAUNCHED\""
+
+# 7. Fetch back (probe + both model waves + sealed LTT taus + log).
+scp "benspc:C:/Users/benja/ears213/probe213_out.json" "benspc:C:/Users/benja/ears213/taus213_119g.json" "benspc:C:/Users/benja/ears213/report213_119g.json" artifacts/fable-ears213-20260922/
+scp "benspc:C:/Users/benja/ears213/taus213_119h.json" "benspc:C:/Users/benja/ears213/report213_119h.json" "benspc:C:/Users/benja/ears213/wave213.log" artifacts/fable-ears213-20260922/

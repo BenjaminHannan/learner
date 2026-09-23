@@ -1,0 +1,10 @@
+TASK 252cf: finish merge 252c. A previous agent (Claude Opus) built and sealed 252c and ran the registered M2, M3 and M5–M8. It was then stopped by an account usage limit, not by any problem in the task.
+Brief: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/252c-merge.txt (read it fully). Panel scoring rules for M1: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/corrtail258-spec.txt.
+State: artifacts/claude-merge252c-20260922/ holds PASSMARKS.md, SEAL.sha256.txt, and run/ outputs for M2, M3 and M5–M8 (m8-check.txt at 18:23). M4 (corrpanel252) and M1 (corrtail258) have NOT been run.
+Do, in order:
+1. From the repo root, run shasum -a 256 -c on artifacts/claude-merge252c-20260922/SEAL.sha256.txt and on the SEAL files of artifacts/claude-corrpanel252-20260922/ and artifacts/claude-corrtail258-20260922/ (find the exact folder names with ls artifacts | grep -i corr). If any line fails, stop and report.
+2. Confirm from run/ that M2, M3 and M5–M8 each have registered outputs and what the sealed scorer says for each. Do not re-run them.
+3. Run M4, then M1, ONCE each, exactly as PASSMARKS.md says, with the sealed scripts only. Never write a new scorer after seeing a panel; if one is missing from the seal, stop and report.
+4. Append the ledger outcome line(s) P252c.n.
+5. Write artifacts/claude-merge252c-20260922/RESULTS.md. M1 goes side by side for 252b, 258, 259 and 252c: right per family, false claims, junk writes, wrong values, and the became-right/became-wrong ids. Cover every mark M1–M8 with integer counts. Write the design note design/v3/30-modes/252c-merge-opus.md only if it does not exist yet.
+6. Final reply: verdict, the marks table, every move by id, every miss.

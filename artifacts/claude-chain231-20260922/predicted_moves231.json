@@ -1,0 +1,771 @@
+{
+ "rule": "Exp 231 -- M3 PREDICTED MOVES, worked out before any registered run.\n\nPure function over the frozen suite INPUTS (rt136 cases, rt143 cases,\nsessions152 sessions, the four bench splits; same files as\nscripts/fable_fix221_predict.py) and the relation table. No agent is\nbuilt and no output row is read.\n\nA case is a PREDICTED MOVE CANDIDATE (vs loop221) iff one of its question\nturns Q (text ending in \"?\") has a unique chain reading:\nclaude_loop231_agent.unique_chain231(Q) is not None. The 231 stage can\nonly change such a turn, and only when 221 missed it (or produced a\none-key ask on a never-used key), so this is a superset of real moves.\nPredicted direction for every candidate: the 221 not-understood reply /\nempty-key abstain becomes either a chain answer built from taught facts or\na targeted abstain (\"I don't know X's R.\" / \"..., but I don't know ...\").",
+ "suites": {
+  "rt136": [],
+  "rt143": [
+   {
+    "id": "A1",
+    "turn": "What is the official language of the country of citizenship of Bram Kite?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Bram Kite",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "D2",
+    "turn": "What is Cora Lind's country's capital?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Cora Lind",
+     "hops": [
+      "country"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "D4",
+    "turn": "Who is the author of The Glass Orchard married to?",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "root": "The Glass Orchard",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "D7",
+    "turn": "What country is the child of Bram Kite a citizen of?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Bram Kite",
+     "hops": [
+      "child"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "D12",
+    "turn": "Who is the creator of Sunmosaic married to?",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "root": "Sunmosaic",
+     "hops": [
+      "creator"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "E4",
+    "turn": "What is the capital of the country of citizenship of the performer of Moonchant?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Moonchant",
+     "hops": [
+      "performer",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "E6",
+    "turn": "What country is the spouse of the founder of Harborline a citizen of?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Harborline",
+     "hops": [
+      "founder",
+      "spouse"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "F1",
+    "turn": "What is the capital of the country of citizenship of the spouse of the author of The Glass Orchard?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "The Glass Orchard",
+     "hops": [
+      "author",
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "F4",
+    "turn": "What is the capital of the country of citizenship of the child of the spouse of Bram Kite?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Bram Kite",
+     "hops": [
+      "spouse",
+      "child",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "F5",
+    "turn": "What is the capital of the country of citizenship of the director of the performer of Moonchant?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Moonchant",
+     "hops": [
+      "performer",
+      "director",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "F6",
+    "turn": "Who is the director of the performer of Moonchant?",
+    "reading": {
+     "rel": "director",
+     "kind": "ask",
+     "root": "Moonchant",
+     "hops": [
+      "performer"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "G1",
+    "turn": "What is the official language of the country of citizenship of Cora Lind?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Cora Lind",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "G2",
+    "turn": "Who is the spouse of the author of The Glass Orchard?",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "root": "The Glass Orchard",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "G6",
+    "turn": "Who is the head of state of Norland married to?",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "root": "Norland",
+     "hops": [
+      "head_of_state"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "K8",
+    "turn": "Who is the spouse of the author of The Glass Orchard?",
+    "reading": {
+     "rel": "spouse",
+     "kind": "ask",
+     "root": "The Glass Orchard",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "Q4",
+    "turn": "What is the capital of the country of citizenship of Sella Marne?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Sella Marne",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "U1",
+    "turn": "What country is the spouse of Bram Kite a citizen of?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Bram Kite",
+     "hops": [
+      "spouse"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "U3",
+    "turn": "What is the official language of the country of citizenship of the spouse of Bram Kite?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Bram Kite",
+     "hops": [
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   }
+  ],
+  "sessions152": [
+   {
+    "id": "S1-family10#12",
+    "turn": "Where is Ana's sister's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "Ana",
+     "hops": [
+      "sister"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S1-family10#17",
+    "turn": "Who is Ana's brother's teacher?",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "root": "Ana",
+     "hops": [
+      "brother"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S2-casual-friends#18",
+    "turn": "where is marta's father's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "marta",
+     "hops": [
+      "father"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#5",
+    "turn": "Where is Nadia's teacher's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "Nadia",
+     "hops": [
+      "teacher"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#8",
+    "turn": "Where is Nadia's teacher's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "Nadia",
+     "hops": [
+      "teacher"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#13",
+    "turn": "Who is Nadia's brother's mother?",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "root": "Nadia",
+     "hops": [
+      "brother"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#22",
+    "turn": "Where is Nadia's teacher's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "Nadia",
+     "hops": [
+      "teacher"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S3-teachers-correction#28",
+    "turn": "Who is Nadia's brother's mother?",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "root": "Nadia",
+     "hops": [
+      "brother"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#20",
+    "turn": "Who is Ana's pet's owner?",
+    "reading": {
+     "rel": "owner",
+     "kind": "ask",
+     "root": "Ana",
+     "hops": [
+      "pet"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S4-pets-identity#26",
+    "turn": "Who is Biscuit's owner's pet?",
+    "reading": {
+     "rel": "pet",
+     "kind": "ask",
+     "root": "Biscuit",
+     "hops": [
+      "owner"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#14",
+    "turn": "Who is Rosa's brother's teacher?",
+    "reading": {
+     "rel": "teacher",
+     "kind": "ask",
+     "root": "Rosa",
+     "hops": [
+      "brother"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S5-robustness#22",
+    "turn": "Where is Rosa's friend's city?",
+    "reading": {
+     "rel": "city",
+     "kind": "ask",
+     "root": "Rosa",
+     "hops": [
+      "friend"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#12",
+    "turn": "Who is Eve's father's mother?",
+    "reading": {
+     "rel": "mother",
+     "kind": "ask",
+     "root": "Eve",
+     "hops": [
+      "father"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "S6-pronouns-corrections#25",
+    "turn": "Who is Eve's father's father?",
+    "reading": {
+     "rel": "father",
+     "kind": "ask",
+     "root": "Eve",
+     "hops": [
+      "father"
+     ],
+     "Y": null
+    }
+   }
+  ],
+  "bench": [
+   {
+    "id": "bench121-4hop-043",
+    "split": "new_121_4hop",
+    "turn": "What is the official language of the country of citizenship of the spouse of the creator of WWE Tough Enough?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "WWE Tough Enough",
+     "hops": [
+      "creator",
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench121-4hop-047",
+    "split": "new_121_4hop",
+    "turn": "What is the capital of the country of citizenship of the founder of the employer of Mike Mignola?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Mike Mignola",
+     "hops": [
+      "employer",
+      "founder",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench121-4hop-094",
+    "split": "new_121_4hop",
+    "turn": "What is the capital of the country of the spouse of the creator of WWE Superstars?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "WWE Superstars",
+     "hops": [
+      "creator",
+      "spouse",
+      "country"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench121-4hop-136",
+    "split": "new_121_4hop",
+    "turn": "What is the official language of the country of citizenship of the spouse of the creator of Star Trek?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Star Trek",
+     "hops": [
+      "creator",
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench121-4hop-197",
+    "split": "new_121_4hop",
+    "turn": "What is the capital of the country of the spouse of the creator of WWF Superstars of Wrestling?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "WWF Superstars of Wrestling",
+     "hops": [
+      "creator",
+      "spouse",
+      "country"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench103-s2fresh-4hop-029",
+    "split": "old_s2fresh_4hop",
+    "turn": "What is the capital of the country of citizenship of the creator of the founder of Death Eater?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Death Eater",
+     "hops": [
+      "founder",
+      "creator",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench103-s2fresh-4hop-035",
+    "split": "old_s2fresh_4hop",
+    "turn": "What is the official language of the country of citizenship of the spouse of the creator of Jean-Luc Picard?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Jean-Luc Picard",
+     "hops": [
+      "creator",
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench103-s2fresh-4hop-134",
+    "split": "old_s2fresh_4hop",
+    "turn": "What is the capital of the country of the spouse of the creator of Bob Cratchit?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Bob Cratchit",
+     "hops": [
+      "creator",
+      "spouse",
+      "country"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench103-s2fresh-4hop-192",
+    "split": "old_s2fresh_4hop",
+    "turn": "What is the capital of the country of citizenship of the spouse of the creator of WrestleMania?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "WrestleMania",
+     "hops": [
+      "creator",
+      "spouse",
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-001",
+    "split": "edit200",
+    "turn": "What is the country of citizenship of the chief executive officer of Twitter?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Twitter",
+     "hops": [
+      "chief_executive_officer"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-002",
+    "split": "edit200",
+    "turn": "What is the official language of the country of citizenship of Roberto Merhi?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Roberto Merhi",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-007",
+    "split": "edit200",
+    "turn": "Where is the birthplace of the chairperson of Serbian Progressive Party?",
+    "reading": {
+     "rel": "place_of_birth",
+     "kind": "ask",
+     "root": "Serbian Progressive Party",
+     "hops": [
+      "chairperson"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-021",
+    "split": "edit200",
+    "turn": "What is the nationality of the founder of French East India Company?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "French East India Company",
+     "hops": [
+      "founder"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-026",
+    "split": "edit200",
+    "turn": "What is the official language of the country of citizenship of Lee Petty?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "Lee Petty",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-034",
+    "split": "edit200",
+    "turn": "What country is the creator of Lady Macbeth a citizen of?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Lady Macbeth",
+     "hops": [
+      "creator"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-038",
+    "split": "edit200",
+    "turn": "What is the country of citizenship of the creator of Miss Marple?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Miss Marple",
+     "hops": [
+      "creator"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-055",
+    "split": "edit200",
+    "turn": "What country is the author of Captain Underpants a citizen of?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Captain Underpants",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-063",
+    "split": "edit200",
+    "turn": "What is the country of citizenship of the author of Usagi Yojimbo?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "Usagi Yojimbo",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-067",
+    "split": "edit200",
+    "turn": "What is the official language of the country of citizenship of James Rowland Angell?",
+    "reading": {
+     "rel": "official_language",
+     "kind": "ask",
+     "root": "James Rowland Angell",
+     "hops": [
+      "country_of_citizenship"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-069",
+    "split": "edit200",
+    "turn": "What is the nationality of the author of The Marriage of Figaro?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "The Marriage of Figaro",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench65-mquake-081",
+    "split": "edit200",
+    "turn": "What is the nationality of the author of The Lost Symbol?",
+    "reading": {
+     "rel": "country_of_citizenship",
+     "kind": "ask",
+     "root": "The Lost Symbol",
+     "hops": [
+      "author"
+     ],
+     "Y": null
+    }
+   },
+   {
+    "id": "bench132-4hop-116",
+    "split": "bench132_4hop",
+    "turn": "What is the capital of the country of the spouse of the creator of Fagin?",
+    "reading": {
+     "rel": "capital",
+     "kind": "ask",
+     "root": "Fagin",
+     "hops": [
+      "creator",
+      "spouse",
+      "country"
+     ],
+     "Y": null
+    }
+   }
+  ]
+ },
+ "counts": {
+  "rt136": 0,
+  "rt143": 18,
+  "sessions152": 14,
+  "bench": 22
+ }
+}

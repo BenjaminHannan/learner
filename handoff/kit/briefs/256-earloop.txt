@@ -1,0 +1,85 @@
+EXP 256 BRIEF: the learned ear in the loop, stage 1. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why
+- Judge A graded the 30 test conversations on 138l: 86 of 244 turns were correct.
+- The biggest mistake classes are all reading failures: missed_known_fact 62, missing_write 41, misread_request 27. The rules do not understand everyday wording.
+- Director decision (board, 16:39): stop adding hand wording tables; wording goes to the learned ear.
+- Exp 235's fine-tuned SmolLM2-360M ear read 94.6% of facts exactly on a blind panel, against 31.5% for the rules. Exp 235b (running now) adds a write gate and is re-tested on a fresh blind panel.
+- This experiment puts the ear in front of the loop's reading, and changes nothing else.
+
+Base
+- 138l (confirmed): scripts/claude_loop138l_agent.py with artifacts/claude-merge138l-20260922/loop138l-config.json.
+- SrcGuardMixin228 stays first in the bases, and install_srcguard228() is called at import.
+- The one change is one mixin, in scripts/claude_loop256_agent.py, with its helpers in scripts/claude_ear256_*.py.
+- Config: artifacts/claude-earloop256-20260922/loop256-config.json. Artifacts: artifacts/claude-earloop256-20260922/. Ledger lines: P256.n.
+- Import 235/235b's model, tokenizer and gate code. Never copy-edit them.
+
+The ear
+- Final ear: 235b's checkpoint and gate exactly as 235b seals them.
+- Until the director messages you 235b's verdict and checkpoint hash, build and pilot with 235's v3 checkpoint:
+  - It is on BensPC at C:\Users\benja\smolear235\out_v3\smolear235.safetensors, sha256 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8 (see artifacts/claude-smolear235-20260922/train/CKPT.sha256.txt).
+  - `ssh benspc` works. Copy only; install nothing; never touch other processes. The GPU is busy with 235b's training, so don't run GPU jobs there.
+  - Check `df -g /` first; at least 5 GB must stay free after the copy. Keep checkpoints in data/models/ (create it), never under artifacts/ or notebook/. Verify the sha256 after copying.
+- The ear runs on the Mac, on CPU (or MPS, only if its frames are identical to CPU's on 235's dev split). Report the accuracy on 235's dev split (not its panel) on the Mac, next to 235's GPU number (783/800).
+
+Behaviour, safety first
+1. Fixed acts stay byte-identical: greetings, thanks, small talk, identity/self questions, capability questions, commands, the user-name flow, the denials and corrections the base already handles, and source/restart questions.
+   - Find the base's own decision for these and keep those turns on the legacy path. The ear does not see them.
+2. On every other turn, the ear reads the raw turn (after 235b's gate: question guard + margin).
+   a. TEACH frames: render each as the canonical teach sentence that the base's teach path stores exactly as (S, R, V), then hand it to that path.
+      - 209's write screen, duplicate and conflict checks, replacement replies and 220's restart index then all apply.
+      - Never write to the notebook yourself.
+      - For several frames, follow the base's own multi-fact handling.
+   b. ASK frames: render the canonical question the base answers correctly for that subject and relation (or chain), then hand it to the base's answer path.
+      - Inverses stay the base's job ("(worked out backwards)", never stored).
+   c. Round-trip table. For every relation in the relation table × {named subject, first person, "my <relative>" chain}:
+      - the canonical teach must store exactly (S, R, V), and
+      - the canonical question must return V.
+      A row that fails is not routed through the ear; it falls back to 2e. Save the table as artifacts/.../roundtrip.json.
+   d. Direction guard. The ear's frame format cannot express a backwards question ("Who works for X?"). An ASK frame is dropped, and the turn goes to 2e, when the confirmed 251 direction check (scripts/claude_fix251_direction.py, used read-only as a veto) marks the turn as backwards. Show on dev that backwards questions never get a forward value.
+   e. NONE, unsure or dropped: the base's legacy handling of the raw turn, unchanged. One exception: if the ear's question guard fired, the legacy path may not write. Questions never write.
+3. No new reply templates. Grammar is exp 241's job.
+4. Ben's rules, restated:
+   - there is only one user ("me");
+   - typos are fixed silently (the ear's reading may do this);
+   - taught facts are never overwritten by inferences;
+   - two-hop corrections ask.
+
+Test sets
+- Never open before your seal: the 239 conversation panel (artifacts/claude-convpanel239-*), the 254 loop panel (being written blind now), the 235/235b ear panels, the 252 correction panel, and every panel in OPUS-RULES.
+- Never read the convjudge239 grades or examples.
+- You may read category-level RESULTS.md files.
+
+Order of work
+1. Copy the v3 checkpoint, verify it, and measure Mac dev accuracy and latency (1 thread and 4 threads).
+2. Reproduce the base's reading failures with your own dev dialogs (probe runner in OPUS-RULES). Then write the dev cases: at least 80 scored dialogs in your own wording. They must include:
+   - at least 12 backwards questions, with the forward value listed as must-not;
+   - at least 10 statement-shaped questions;
+   - at least 12 must-not-change fixed acts;
+   - at least 6 restart cases;
+   - at least 10 typo'd or lowercase turns.
+3. Build the mixin and the round-trip table. Pilot with v3 on dev, the suites (fable_suitediff218 --only rt136,rt143,sessions152,bench against 138l's saved rows) and the sleep smoke.
+4. STOP. Send the director a short message (dev numbers, suite moves, latency) and wait for 235b's verdict.
+   - If 235b PASSES, the director sends the checkpoint hash and gate settings. Swap them in, re-pilot, write PASSMARKS.md with every predicted suite move by id, seal, add the ledger lines, and do the registered runs.
+   - If 235b FAILS, write a short RESULTS.md (pilot only, no verdict) and stop.
+
+Registered marks (after the seal)
+- M1, panel 254 (wait for the director's message that it is sealed; check its SEAL from the repo root). Use the exact schema and scoring rules in looppanel254-spec.txt (same folder), including the schema check (SCHEMA-MISMATCH, exit 3). Run once on both arms (138l and yours) and score.
+  - Everyday families combined (teach_varied, ask_varied, both_varied, casual, chain): right ≥ 80%, and ≥ base + 25 points.
+  - backwards: 0 wrong values.
+  - wrong values over all 160 items: ≤ 1 on your arm. Report the base's count next to it.
+  - Junk writes over all 160: ≤ 1. Question writes: 0.
+  - no_save: ≥ 19/20 with the store unchanged.
+  - control: 10/10 right and byte-identical to base138l.
+- M2, the 239 conversations: run all 30 once on your arm. Write transcripts and a changes file against 138l in the same format as artifacts/claude-convpanel239-138l-20260922/ (transcripts-138l.jsonl and changes-138l-vs-138k.json). Message the director; the director's judges grade the changed turns. Bars, computed by the director:
+  - bad writes ≤ 1
+  - correct ≥ 101/244 (138l: 86)
+  - changed turns graded less grammatical ≤ 3
+  - wrong values ≤ 3 (138l: 3)
+- M3, suites against 138l: 0 new WRONG / WRONG-WRITE / junk / lost OK, and the moves exactly equal your predicted list.
+- M4, sleep smoke: identical to 138l's.
+- M5, latency on the Mac, same session, load checked first: added time per turn median ≤ 700 ms, p95 ≤ 1500 ms.
+- M6, restart dialogs (artifacts/claude-verify-20260922/138k/v-dialogs.json and v-supp.json, run like scripts/claude_merge138k_probe.py): 0 ghost answers and 0 failed duplicate checks.
+- M7, dev: 0 wrong values, 0 question writes, fixed acts byte-identical, restart cases right.
+
+Finish with RESULTS.md and a final message as OPUS-RULES requires, plus a design note: design/v3/30-modes/256-earloop-opus.md.

@@ -1,0 +1,280 @@
+{
+ "pairs": [
+  {
+   "base": {
+    "reply": "Saved: Peru's capital is Lima.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "expected": "new WRONG-WRITE",
+   "id": "T01-newwrongwrite",
+   "new": {
+    "reply": "Saved: Peru's capital is Lima. Saved: Peru's continent is Atlantis.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ],
+     [
+      "Peru",
+      "continent",
+      "Atlantis"
+     ]
+    ],
+    "verdict": "WRONG-WRITE"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "Saved: Peru's capital is Lima.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "expected": "new WRONG",
+   "id": "T02-newwrong",
+   "new": {
+    "reply": "Peru's capital is Santiago.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "WRONG"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "I can take one fact at a time.\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "expected": "new junk write",
+   "id": "T03-junk-clause-a",
+   "new": {
+    "reply": "Saved: Peru's continent is Atlantis.\n",
+    "stored": [
+     [
+      "Peru",
+      "continent",
+      "Atlantis"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "verdict": "WRONG",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "reply": "Peru capital Santiago."
+   },
+   "expected": "new junk write",
+   "id": "T04-junk-clause-b",
+   "new": {
+    "verdict": "WRONG",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ],
+     [
+      "Peru",
+      "continent",
+      "Atlantis"
+     ]
+    ],
+    "reply": "Peru capital Santiago. Saved Atlantis."
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "Saved: Peru's capital is Lima.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "expected": "lost OK",
+   "id": "T05-lostok",
+   "new": {
+    "reply": "I didn't understand that.\n",
+    "stored": [],
+    "verdict": "MISSED"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "I can take one fact at a time.\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "expected": "lost OK",
+   "id": "T06-lostok-clarify",
+   "new": {
+    "reply": "I didn't understand that.\n",
+    "stored": [],
+    "verdict": "MISSED"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "verdict": "MISSED",
+    "stored": [],
+    "reply": "I did not understand that."
+   },
+   "expected": "fixed",
+   "id": "T07-fixed",
+   "new": {
+    "verdict": "OK",
+    "stored": [],
+    "reply": "I can take one fact at a time."
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "verdict": "WRONG",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "reply": "Peru capital Santiago."
+   },
+   "expected": "fixed",
+   "id": "T08-fixed-from-wrong",
+   "new": {
+    "verdict": "OK",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "reply": "Saved: Peru capital is Lima."
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "Saved: Peru's capital is Lima.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "expected": "write change",
+   "id": "T09-writechange",
+   "new": {
+    "reply": "Saved: Peru's capital is Cusco.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Cusco"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "fact_writes": 0,
+    "reply": "Hi!\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "expected": "write change",
+   "id": "T10-writechange-fw",
+   "new": {
+    "fact_writes": 1,
+    "reply": "Hi!\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "suite": "sessions152"
+  },
+  {
+   "base": {
+    "reply": "I can take one fact at a time.\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "expected": "reply-only move",
+   "id": "T11-replyonly",
+   "new": {
+    "reply": "I can take one fact at a time. (test)\n",
+    "stored": [],
+    "verdict": "OK"
+   },
+   "suite": "rt136"
+  },
+  {
+   "base": {
+    "reply": "Saved: Peru's capital is Lima.\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "expected": "reply-only move",
+   "id": "T12-replyonly-saved",
+   "new": {
+    "reply": "Saved: Peru's capital is Lima!\n",
+    "stored": [
+     [
+      "Peru",
+      "capital",
+      "Lima"
+     ]
+    ],
+    "verdict": "OK"
+   },
+   "suite": "rt136"
+  }
+ ]
+}

@@ -1,0 +1,111 @@
+plan: 6000 turns {'teach': 3901, 'correct': 878, 'ask': 1221}
+restarts: [(1063, 'kill'), (1075, 'kill'), (1232, 'kill'), (1585, 'kill'), (2067, 'kill'), (2266, 'kill'), (2891, 'kill'), (3862, 'kill'), (4677, 'kill'), (5844, 'kill')]
+ckpt 1000: 22,30288,562706,65.3,75.1
+restart 1/10 kill at turn 1066: stop=-1.00s verify=0.01s boot=0.06s audit_ok=True aim={'victim': 1065, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 2/10 kill at turn 1078: stop=-1.00s verify=0.01s boot=0.08s audit_ok=True aim={'victim': 1077, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 3/10 kill at turn 1235: stop=-1.00s verify=0.01s boot=0.08s audit_ok=True aim={'victim': 1234, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 4/10 kill at turn 1588: stop=-1.00s verify=0.01s boot=0.08s audit_ok=True aim={'victim': 1587, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+ckpt 2000: 45,35024,991967,68.8,80.5
+restart 5/10 kill at turn 2070: stop=-1.00s verify=0.01s boot=0.08s audit_ok=True aim={'victim': 2069, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 6/10 kill at turn 2269: stop=-1.00s verify=0.01s boot=0.08s audit_ok=True aim={'victim': 2268, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 7/10 kill at turn 2894: stop=-1.00s verify=0.02s boot=0.08s audit_ok=True aim={'victim': 2893, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+ckpt 3000: 70,39856,1368165,74.1,84.1
+restart 8/10 kill at turn 3865: stop=-1.00s verify=0.02s boot=0.10s audit_ok=True aim={'victim': 3864, 'aimed': True, 'outbox_before_kill': True, 'attempts': 1}
+ckpt 4000: 97,43104,1707757,79.5,90.6
+restart 9/10 kill at turn 4680: stop=-1.00s verify=0.02s boot=0.08s audit_ok=True aim={'victim': 4679, 'aimed': True, 'outbox_before_kill': True, 'attempts': 1}
+ckpt 5000: 125,45648,2025421,82.6,102.9
+restart 10/10 kill at turn 5847: stop=-1.00s verify=0.02s boot=0.13s audit_ok=True aim={'victim': 5846, 'aimed': True, 'outbox_before_kill': True, 'attempts': 1}
+ckpt 6000: 157,51952,2325572,89.8,193.2
+{
+ "status": "PASS",
+ "seed": 931,
+ "turns_done": 6000,
+ "turns_planned": 6000,
+ "wall_s": 156.9,
+ "plan_kinds": {
+  "teach": 3901,
+  "correct": 878,
+  "ask": 1221
+ },
+ "restarts": [
+  [
+   1063,
+   "kill"
+  ],
+  [
+   1075,
+   "kill"
+  ],
+  [
+   1232,
+   "kill"
+  ],
+  [
+   1585,
+   "kill"
+  ],
+  [
+   2067,
+   "kill"
+  ],
+  [
+   2266,
+   "kill"
+  ],
+  [
+   2891,
+   "kill"
+  ],
+  [
+   3862,
+   "kill"
+  ],
+  [
+   4677,
+   "kill"
+  ],
+  [
+   5844,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 6000 turns",
+   "pass": true,
+   "wrong": 0
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 10 restarts",
+   "pass": true
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 0.131,
+   "verify_s": 0.05
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": true,
+   "p99_1k_ms": 66.71,
+   "p99_end_ms": 193.21
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": true,
+   "wall_s": 156.9,
+   "turns_done": 6000
+  }
+ },
+ "fail": null,
+ "final_stop_s": 0.048670053482055664,
+ "exactly_once": {
+  "replies_checked": 6000,
+  "doubled_sentence_replies": 0,
+  "doubled_seqs": [],
+  "receipt_ids": 6000,
+  "receipts_not_exactly_once": {}
+ }
+}
+SOAK108 PASS

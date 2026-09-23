@@ -1,0 +1,272 @@
+{
+  "created_utc": "2026-09-20T16:49:07.591345+00:00",
+  "experiment": "fable-link-isolation-v2-20260920",
+  "seeds": [
+    1400,
+    1401,
+    1402
+  ],
+  "arms": [
+    "shared",
+    "frozen",
+    "frozen-present-mask",
+    "detached"
+  ],
+  "primary_arms": [
+    "shared",
+    "frozen",
+    "frozen-present-mask"
+  ],
+  "diagnostic_arms": [
+    "detached"
+  ],
+  "params": {
+    "balance": false,
+    "blind_lines": 16,
+    "grow_g1": 750,
+    "grow_g2": 1500,
+    "stage_a_extra": 2,
+    "terminal_dedupe": true,
+    "single_forward": true,
+    "probe_six": 512,
+    "probe_sixteen": 512,
+    "probe_per_visit": 4,
+    "probe_attribute": 512,
+    "qualification_two_hop": 512,
+    "qualification_attribute": 512,
+    "confirm_six": 512,
+    "confirm_sixteen": 512,
+    "confirm_attribute": 512,
+    "presented_exclusion_check": true,
+    "include_detached": true
+  },
+  "schedule": {
+    "visits_per_update": 16,
+    "stage_a": {
+      "updates": 3000,
+      "training_seconds": 420,
+      "work_seconds": 660,
+      "terminate_seconds": 690,
+      "lr": "v3r shape rescaled to the stage length (retained from the proposal)"
+    },
+    "stage_b": {
+      "updates": 3000,
+      "warmup": 100,
+      "peak": 0.001,
+      "flat_through": 2000,
+      "final": 0.0001,
+      "anchors": {
+        "updates": 3000,
+        "warmup": 100,
+        "peak": 0.001,
+        "flat_through": 2000,
+        "final": 0.0001,
+        "lr_first": 1e-05,
+        "lr_at_warmup_end": 0.001,
+        "lr_at_flat_end": 0.001,
+        "lr_last": 0.00010090000000000001
+      },
+      "measure_every": 100,
+      "training_seconds": 1200,
+      "work_seconds": 1440,
+      "terminate_seconds": 1470
+    }
+  },
+  "acceptance": {
+    "denominator": 512,
+    "link": 487,
+    "attribute": 487,
+    "path_and_answer": 461
+  },
+  "qualification": {
+    "denominator": 512,
+    "attribute": 487,
+    "terminal_true_endpoint": 487
+  },
+  "exclusion_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-link-isolation-v2-20260920/validation/exclusion_union.json",
+  "original_exclusion_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/forbidden-semantics.json",
+  "validation_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-link-isolation-v2-20260920/validation/validation.json",
+  "validation": {
+    "qualification": {
+      "entities": 6,
+      "two_hop": 512,
+      "attribute_per_relation": 512,
+      "chunks": 16,
+      "signatures": 5466,
+      "fingerprint": "e63599a9a72c5eb1bda692ce06fd91b0fe334a38719a100851646b87bbb755c5"
+    },
+    "probe-six": {
+      "entities": 6,
+      "two_hop": 512,
+      "attribute_per_relation": 512,
+      "chunks": 16,
+      "signatures": 5513,
+      "fingerprint": "4f52dcb238a3d7edff60d4f1e839d0194cf878324c1f0526380993a722465bb5"
+    },
+    "probe-sixteen": {
+      "entities": 16,
+      "two_hop": 512,
+      "attribute_per_relation": 512,
+      "chunks": 16,
+      "signatures": 5373,
+      "fingerprint": "596beaacfb3d5e7069a86fc990c1250b5cc2afb98e3c4513c061d35acd31bd67"
+    },
+    "confirm-six": {
+      "entities": 6,
+      "two_hop": 512,
+      "attribute_per_relation": 512,
+      "chunks": 16,
+      "signatures": 5522,
+      "fingerprint": "6e4e136fd979b58dba130b31c4b996e146d91343b9010d1ae0d56c08e172e84a"
+    },
+    "confirm-sixteen": {
+      "entities": 16,
+      "two_hop": 512,
+      "attribute_per_relation": 512,
+      "chunks": 16,
+      "signatures": 5443,
+      "fingerprint": "c95e452b511db1f0418addc12e1496fe818a7a8ebc46d3ea1b6f59a7c69ec84c"
+    }
+  },
+  "panels": {
+    "c1": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c1_own_one_hop.pt",
+      "sha256": "03bb0576f702c1e645ed2c57640ecd2ac5493802e752db5b8293250f7dae8be8",
+      "cutoff": 487,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202001
+    },
+    "c2": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c2_own_practised_two_hop.pt",
+      "sha256": "bc4bcc6839f3519cfcb486f2b501dbfaaf63b72cb3aa8ba0cd857e1c4a2500c6",
+      "cutoff": 487,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202002
+    },
+    "c3": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c3_own_heldout_two_hop.pt",
+      "sha256": "ef60344211cf91e371511232b7794a56a2189d9786f1d7999752abfc85f4fdc4",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202003
+    },
+    "c4": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c4_changed_link.pt",
+      "sha256": "438eb4d448c01d3a09748378a552a5f8faa4ae558faf4167f547a8169895274f",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202004
+    },
+    "c5": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c5_changed_endpoint_value.pt",
+      "sha256": "1616ae7a2021f5dcb4e77a192817c3fa3faf9a6c21e4869736949bb72e01dfb2",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202005
+    },
+    "c6": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c6_irrelevant_edit.pt",
+      "sha256": "dd36ce9e2aeb34cdd9d4b68ee2c8e36bc1314e9951c133011e4fa1354eae2840",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": true,
+      "namespace": "canonical-operator-screen-v1",
+      "seed": 202609202006
+    },
+    "p12-1": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/codex-token-memory-20260920/stress/people12-c1_own_one_hop.pt",
+      "sha256": "51141aff72cf1a6ba73f875a196321f33fd95dfe39fc6b08acd3d765499ba07e",
+      "cutoff": 487,
+      "n": 512,
+      "fresh": false
+    },
+    "p12-2": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/codex-token-memory-20260920/stress/people12-c2_own_practised_two_hop.pt",
+      "sha256": "f96016e9cd7b9d2c70f3f8525f5621a4df580ad81447e20ca96995134821069d",
+      "cutoff": 487,
+      "n": 512,
+      "fresh": false
+    },
+    "p12-3": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/codex-token-memory-20260920/stress/people12-c3_own_heldout_two_hop.pt",
+      "sha256": "166873d0420091d002e990c0fbb1ff8a83dba30f9cb3e6fe06324f52fc6c7392",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": false
+    },
+    "s3": {
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/codex-token-memory-20260920/stress/three-hop-heldout.pt",
+      "sha256": "0028b77a11ea015a560e51590bc444fa718e958cb5c98daa45c6e8d610a45e59",
+      "cutoff": 461,
+      "n": 512,
+      "fresh": false
+    }
+  },
+  "files": {
+    "archive/opus-ovn-20260918-235851/frozen/premonition/__init__.py": "4e8b3a25bab544fc87816e9e0dcccc0c737b63316fa729322cde9110f17d89b9",
+    "archive/opus-ovn-20260918-235851/frozen/premonition/batch.py": "45c2e90590045b3c209ccd8b52e7c0b501fbfe42a969c3ec22fe9f6b756b99ee",
+    "archive/opus-ovn-20260918-235851/frozen/premonition/toy_ladder.py": "dc728463f505a86aa9537a4451903f5872d17ca77f44bfce36046afebda117c2",
+    "artifacts/astra-canonical-operator-screen-20260920/DESIGN-MANIFEST.json": "87051ea970d6c4b270a4404b1de335ad19d83c18e032dc04d46b6c9d0dd3d792",
+    "artifacts/astra-canonical-operator-screen-20260920/PRE-RUN-DESIGN.md": "cb4e566d8562e96e65bec5c2b1a238da41ac838e95ca9ce852b887dec9b41a10",
+    "artifacts/astra-canonical-operator-screen-20260920/PREDICTIONS.md": "84bad45ca74d2ab0e135747ef9603712ff23f6c85ff43e91fc142060f838b9df",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_PRE-LAUNCH-AMENDMENT.md": "f31380f4561e9d9d289f7ab7a307a6d36f07734c6c222bc467bcbc0300930f5b",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panel_audit.json": "2b72dcc575c7e1387c16fbf0934cc4dfeb1df5cb9fcdd8357569eabf92ea5ef2",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c1_own_one_hop.pt": "03bb0576f702c1e645ed2c57640ecd2ac5493802e752db5b8293250f7dae8be8",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c2_own_practised_two_hop.pt": "bc4bcc6839f3519cfcb486f2b501dbfaaf63b72cb3aa8ba0cd857e1c4a2500c6",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c3_own_heldout_two_hop.pt": "ef60344211cf91e371511232b7794a56a2189d9786f1d7999752abfc85f4fdc4",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c4_changed_link.pt": "438eb4d448c01d3a09748378a552a5f8faa4ae558faf4167f547a8169895274f",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c5_changed_endpoint_value.pt": "1616ae7a2021f5dcb4e77a192817c3fa3faf9a6c21e4869736949bb72e01dfb2",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/c6_irrelevant_edit.pt": "dd36ce9e2aeb34cdd9d4b68ee2c8e36bc1314e9951c133011e4fa1354eae2840",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels/forbidden-semantics.json": "f63fae9ac8e9f5aafad86b6c6dfd37ece2f1b7cb7e94f9349e09ed6785a8c158",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_panels.json": "f90c0ac16f1205c7cca41c7c849256a7fd5eeeb483973f7cb37e84a8cdcd4739",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_preflight.log": "682df4d6782ece473a4fc93d5cb9749304ba8c4c76a8704a77aaf175e32cf791",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/completion.json": "13eec5fe9de7c5ea871b8bed1f30fc7cf3084028b960201e1c02a89d9b9bac88",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/ready-0": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/ready-1": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/ready-2": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/seed-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/seed-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/seed-2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/start": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/timing-0.json": "6131342b1327871d0a1854a1d8528a75eb6d3f8981fe09fd84a853f606cb4ef8",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/timing-1.json": "0de9a0f663b2b47a370f7440b0cd015b7090bd793f0d76941ab7eccf212aa3a9",
+    "artifacts/astra-canonical-operator-screen-20260920/astra_canonical_operator_rehearsal/timing-2.json": "eb66a446b8327725dd2d459416a638b273ab7b7dc88cd6fff4ee997e9deabbbd",
+    "artifacts/codex-token-memory-20260920/stress/people12-c1_own_one_hop.pt": "51141aff72cf1a6ba73f875a196321f33fd95dfe39fc6b08acd3d765499ba07e",
+    "artifacts/codex-token-memory-20260920/stress/people12-c2_own_practised_two_hop.pt": "f96016e9cd7b9d2c70f3f8525f5621a4df580ad81447e20ca96995134821069d",
+    "artifacts/codex-token-memory-20260920/stress/people12-c3_own_heldout_two_hop.pt": "166873d0420091d002e990c0fbb1ff8a83dba30f9cb3e6fe06324f52fc6c7392",
+    "artifacts/codex-token-memory-20260920/stress/three-hop-heldout.pt": "0028b77a11ea015a560e51590bc444fa718e958cb5c98daa45c6e8d610a45e59",
+    "runtime.local.json": "38130f1fc4892e7de423cea22299c8db98eb50e72c9aedcfc44d65472a986310",
+    "scripts/astra_canonical_operator.py": "74f1242e15a5ca68f12f572bdac656bb954e1b99ce41e7b365969481f3c48fea",
+    "scripts/astra_canonical_operator_panels.py": "3a9274284a3c22dbdad6b0bcf7cec52462bc3a0d2e16bacf5c4d632ed8f12ef7",
+    "scripts/astra_canonical_operator_report.py": "132ac2e688e5e28acb1eb32a0478d51b505a2c435dbb1977bbde72b9ab5e80c8",
+    "scripts/astra_canonical_operator_run.py": "cc77bb87c625780ab6b3ea54e13b32165bb6acfa2d610381f21e4abfda4b626a",
+    "scripts/fable_canonical_launch_freeze.py": "3fd9d6a1f2e58a982024ec27a1da830cf2045eb532ca40baf6ef0e0920a8e492",
+    "scripts/premonition_memnn.py": "05db1e6af69639cb0456cc096d803b3e09e19427526a9fa07ddd64782adc94be",
+    "scripts/premonition_memnn_compare.py": "98de3e68b03153713f72163849c099bc50f3a89e570a6687ea6fdbafa92286de",
+    "scripts/premonition_ovn_ladder.py": "2096a8ee23f658c3ac2c109e09d0030e11aaaf107ce859c2a7e61a2db0979252",
+    "scripts/premonition_token_evidence.py": "5418ce470908471e953d2ec22a5f703210636dbfc683d853de38cc514edf3dea",
+    "scripts/premonition_token_initialization_probe.py": "0435aae51c02dfbeeb2e83198e3c2c03513391560abcd7f316b2406b2b96bb56",
+    "scripts/premonition_token_memory.py": "4900c0ee89942caefd8e6de27a99e68ce09a7c5ce6518dcefbfb094bb224e6ee",
+    "tests/test_astra_canonical_operator.py": "f0123b9210539a6c90a1f906bb370c41f8d61deeb222319968a787af4836dcbd",
+    "scripts/fable_operator_variants.py": "d32d9cfcea9507684169275a5225b6585c1989529f4c96f3a6eabcdad2058776",
+    "scripts/fable_operator_startup.py": "d429495ec39ff6358c34f3517b8a235e9cbf595aead214f1826c00b3467ab55f",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_link_isolation.py": "66c5e20810e02476713735090798fe4e9a5b8c6a3cf2cad6e9a4036c8967f1fb",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_link_isolation_v2.py": "c9c25356a9cc6468e629f0bce4bb830fc676c4cf2378721d4460155ef07b14be",
+    ".claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-link-isolation-v2-20260920/PREREGISTRATION.md": "d1b0c262aa99fde06254d7dcebf511854800cbd28297b400fc0d06bed2179cfd",
+    "artifacts/fable-link-isolation-v2-20260920/validation/exclusion_union.json": "bc96480778c89f0fbf15f40fdcc21b02e06b0f05cade5504592ca007d795cb42",
+    "artifacts/fable-link-isolation-v2-20260920/validation/validation.json": "5cfb7d1176afcbdcc9ad46b45168930f0e9409e54d5900dc18906f4e330943be"
+  },
+  "dev_out": null,
+  "v1_launch_sha256": "a269c4f25759f27f08b66451fecdcf3ba8a366e8e7c7ef5cd0bd39986a5b10c7",
+  "withdrawn_predecessor": "fable-link-isolation-20260920 (v1, never run)"
+}

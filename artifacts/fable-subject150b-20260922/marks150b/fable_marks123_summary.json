@@ -1,0 +1,89 @@
+{
+ "agent": "scripts/fable_loop150b_agent.py",
+ "config": "artifacts/fable-subject150b-20260922/loop150b-config.json",
+ "suites": [
+  "p2",
+  "p3",
+  "p4",
+  "rt110",
+  "q1",
+  "bench",
+  "rt81",
+  "sleep",
+  "soak"
+ ],
+ "table": [
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "p2",
+   "status": "FAIL",
+   "seconds": 10.2
+  },
+  {
+   "suite": "p3",
+   "bar": "L1-L6 all PASS",
+   "number": "p3",
+   "status": "PASS",
+   "seconds": 45.6
+  },
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "p4",
+   "status": "PASS",
+   "seconds": 3.2
+  },
+  {
+   "suite": "rt110",
+   "bar": "62/62 executed, 0 harness-error",
+   "number": "rt110",
+   "status": "PASS",
+   "seconds": 139.7
+  },
+  {
+   "suite": "q1",
+   "bar": "F5+M5 both OK",
+   "number": "q1",
+   "status": "FAIL",
+   "seconds": 2.8
+  },
+  {
+   "suite": "bench",
+   "bar": "scorer v2; split-A 0 wrong (200+200)",
+   "number": "bench",
+   "status": "PASS",
+   "seconds": 26.6
+  },
+  {
+   "suite": "rt81",
+   "bar": "74/74 OK, 0 wrong writes",
+   "number": "rt81",
+   "status": "FAIL",
+   "seconds": 3.0
+  },
+  {
+   "suite": "sleep",
+   "bar": "Z1-Z5 if sleep path else SKIP+reason",
+   "number": "SKIP: agent fable_loop150b_agent.py has no Sleep104 maternal-grandmother install path ",
+   "status": "SKIP",
+   "seconds": 0.0
+  },
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "soak",
+   "status": "PASS",
+   "seconds": 132.5
+  },
+  {
+   "suite": "q4",
+   "bar": "0 relation-name underscore leaks",
+   "number": "leaks=['also_mira', 'birth_year', 'city_and', 'country_of', 'official_language', 'place_of', 'who_is']",
+   "status": "FAIL",
+   "seconds": 0.0
+  }
+ ],
+ "total_seconds": 363.6,
+ "pass": false
+}

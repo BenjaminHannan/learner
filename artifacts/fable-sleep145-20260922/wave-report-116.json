@@ -1,0 +1,257 @@
+{
+ "cases": {
+  "A1": {
+   "detail": "installed=0 abstain=1 reply=I don't know K07's maternal_grandmother.",
+   "verdict": "OK"
+  },
+  "A2": {
+   "detail": "installed=0 abstain=1 reply=I don't know K02's maternal_grandmother.",
+   "verdict": "OK"
+  },
+  "A3": {
+   "detail": "reply=I don't know K03's paternal_grandmother. status=None norel=1",
+   "verdict": "OK"
+  },
+  "A4": {
+   "detail": "installed=0 abstain=1 reply=I don't know K05's maternal_grandmother.",
+   "verdict": "OK"
+  },
+  "B1": {
+   "detail": "installed=1 abstain=0 reply=T01's maternal grandmother is H01.",
+   "verdict": "OK"
+  },
+  "B2": {
+   "detail": "installed=1 abstain=0 reply=T02's maternal grandmother is H02.",
+   "verdict": "OK"
+  },
+  "B3": {
+   "detail": "installed=1 abstain=0 reply=T03's maternal grandmother is H03.",
+   "verdict": "OK"
+  },
+  "B4": {
+   "detail": "installed=1 abstain=0 reply=T04's maternal grandmother is H04.",
+   "verdict": "OK"
+  },
+  "C1": {
+   "detail": "reply=I have Sam's mother as M01. Do you want me to change it to M02? active=['M01'] wrote=0",
+   "verdict": "OK"
+  },
+  "C2": {
+   "detail": "reply=Sam's mother is M01. answer=",
+   "verdict": "OK"
+  },
+  "C3": {
+   "detail": "C3a=reply=K01's maternal grandmother is G01.; C3b=reply=K02's maternal grandmother is G02.",
+   "verdict": "OK"
+  },
+  "C3a": {
+   "detail": "reply=K01's maternal grandmother is G01.",
+   "verdict": "OK"
+  },
+  "C3b": {
+   "detail": "reply=K02's maternal grandmother is G02.",
+   "verdict": "OK"
+  },
+  "C4": {
+   "detail": "q=[\"Sam's mother is M01.\", \"K01's maternal grandmother is G01.\", \"K02's maternal grandmother is G02.\"] taught=17",
+   "verdict": "OK"
+  },
+  "D1": {
+   "detail": "double-teach reply=I have K01's mother as M01. Do you want me to change it to M01b? wrote=0 final-active=['M01b'] (conflict must clarify; Actually-correction sets M01b)",
+   "verdict": "OK"
+  },
+  "D2": {
+   "detail": "correction reply=Saved: K01's mother is M01b. active=['M01b']",
+   "verdict": "OK"
+  },
+  "D3": {
+   "detail": "installed=1 reply=K01's maternal grandmother is G01b.",
+   "verdict": "OK"
+  },
+  "D4": {
+   "detail": "taught=17/17 dupes=0 ow=0 ctrl=K02's maternal grandmother is G02.",
+   "verdict": "OK"
+  },
+  "E1": {
+   "detail": "reply=Saved: T01's maternal_grandmother is Z01. wrote=1 stored={1: True, 2: True, 3: True}",
+   "verdict": "OK"
+  },
+  "E2": {
+   "detail": "stored; installed=1 abstain=0 src= reply=T01's maternal grandmother is Z01.",
+   "verdict": "OK"
+  },
+  "E3": {
+   "detail": "stored; installed=1 abstain=0 src= reply=T02's maternal grandmother is Z02.",
+   "verdict": "OK"
+  },
+  "E4": {
+   "detail": "taught intact src= reply=T03's maternal grandmother is Z03.",
+   "verdict": "OK"
+  },
+  "F1": {
+   "detail": "src= reply=K01's maternal grandmother is X01. installed=1",
+   "verdict": "BUG"
+  },
+  "F2": {
+   "detail": "trail does not head report: [] reports=['F00025']",
+   "verdict": "BUG"
+  },
+  "F3": {
+   "detail": "taught=24/24 dupes=0 ow=0",
+   "verdict": "OK"
+  },
+  "F4": {
+   "detail": "reply=K09's maternal grandmother is G09.",
+   "verdict": "OK"
+  },
+  "G1": {
+   "detail": "replies=200/200 missing=[]",
+   "verdict": "OK"
+  },
+  "G2": {
+   "detail": "clean-stop=1",
+   "verdict": "OK"
+  },
+  "G3": {
+   "detail": "sleeps=6 attempted-first=True extra-attempted=0 installed=1",
+   "verdict": "OK"
+  },
+  "G4": {
+   "detail": "z040=K01's mother is M01.; z080=K02's mother is M02.; z120=K03's mother is M03.; z160=K04's mother is M04.; z200=K05's mother is M05.",
+   "verdict": "OK"
+  },
+  "G5": {
+   "detail": "saw-marker=0 exit=0 stopped=1",
+   "verdict": "BUG"
+  },
+  "G6": {
+   "detail": "trigger reply present=1",
+   "verdict": "OK"
+  },
+  "G7": {
+   "detail": "boot_ok=True taught=16/16 dupes=0 ow=0 word=absent",
+   "verdict": "OK"
+  },
+  "G8": {
+   "detail": "word=absent replies=[\"K01's maternal grandmother is G01.\", \"K01's maternal grandmother is G01.\", \"K02's maternal grandmother is G02.\", \"K02's maternal grandmother is G02.\"]",
+   "verdict": "OK"
+  },
+  "H1": {
+   "detail": "attempted=0 installed=0 abstain=[True, True] replies=[\"I don't know K01's maternal_grandmother.\", \"I don't know K02's maternal_grandmother.\"]",
+   "verdict": "OK"
+  },
+  "H2": {
+   "detail": "attempted=1 installed=1 abstain=[False, False] replies=[\"K01's maternal grandmother is G01.\", \"K02's maternal grandmother is G02.\"]",
+   "verdict": "OK"
+  },
+  "H3": {
+   "detail": "attempted=1 installed=1 abstain=[False, False] replies=[\"K01's maternal grandmother is G01.\", \"K02's maternal grandmother is G02.\"]",
+   "verdict": "OK"
+  },
+  "H4": {
+   "detail": "report-rows=0 word=False taught=10/10",
+   "verdict": "OK"
+  }
+ },
+ "runs": {
+  "coinc": {
+   "agree": 1.0,
+   "attempted": true,
+   "dupes": 0,
+   "episodes": 12,
+   "installed": true,
+   "oof": 1.0,
+   "overwrite": 0,
+   "taught_good": 47,
+   "taught_total": 47
+  },
+  "collide": {
+   "agree": 1.0,
+   "attempted": true,
+   "dupes": 0,
+   "episodes": 10,
+   "installed": true,
+   "oof": 1.0,
+   "overwrite": 0
+  },
+  "contra": {
+   "agree": null,
+   "attempted": true,
+   "dupes": 0,
+   "episodes": 12,
+   "installed": false,
+   "oof": 0.5,
+   "overwrite": 0,
+   "taught_good": 48,
+   "taught_total": 48
+  },
+  "few10": {
+   "agree": 1.0,
+   "attempted": true,
+   "episodes": 10,
+   "installed": true,
+   "oof": 1.0
+  },
+  "few15": {
+   "agree": 1.0,
+   "attempted": true,
+   "episodes": 15,
+   "installed": true,
+   "oof": 1.0
+  },
+  "few5": {
+   "agree": null,
+   "attempted": false,
+   "episodes": 0,
+   "installed": false,
+   "oof": null
+  },
+  "flood": {
+   "attempted": true,
+   "episodes": 12,
+   "installed": true,
+   "sleeps": 6
+  },
+  "stop": {
+   "exit": 0,
+   "stopped": true,
+   "taught_good": 16,
+   "word": "absent"
+  },
+  "taughtwin": {
+   "agree": 1.0,
+   "attempted": true,
+   "episodes": 8,
+   "installed": true,
+   "oof": 1.0,
+   "overwrite": 0,
+   "stored": {
+    "1": true,
+    "2": true,
+    "3": true
+   }
+  },
+  "twomom": {
+   "agree": 1.0,
+   "attempted": true,
+   "dupes": 0,
+   "episodes": 8,
+   "installed": true,
+   "oof": 1.0,
+   "overwrite": 0,
+   "taught_good": 17
+  },
+  "wrongpre": {
+   "agree": 1.0,
+   "attempted": true,
+   "dupes": 0,
+   "episodes": 12,
+   "installed": true,
+   "oof": 1.0,
+   "overwrite": 0,
+   "taught_good": 24,
+   "wrong_vs_truth": 1
+  }
+ },
+ "wave_seconds": 1114.2
+}

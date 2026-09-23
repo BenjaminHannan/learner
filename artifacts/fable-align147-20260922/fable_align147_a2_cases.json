@@ -1,0 +1,552 @@
+{
+ "abstain_markers": [
+  "don't know",
+  "not someone",
+  "which one do you mean",
+  "didn't understand",
+  "could you say",
+  "was that a question?",
+  "split that",
+  "only follow",
+  "do you know that yourself",
+  "didn't catch",
+  "please say it like",
+  "couldn't read",
+  "only handle one-word",
+  "could not use that",
+  "didn't get the value",
+  "not allowed",
+  "do you want me to change",
+  "i didn't catch anything",
+  "i can take one fact at a time",
+  "i only save facts",
+  "i wasn't waiting for an answer"
+ ],
+ "cases": [
+  {
+   "expected": "Cira Noll",
+   "family": "answer-suffix-1hop",
+   "frame": "married to",
+   "id": "A01",
+   "question": "Who is Borin Kale married to?",
+   "teaches": [
+    "Borin Kale is married to Cira Noll",
+    "Cira Noll is a citizen of Astoria",
+    "The capital of Astoria is Bromwich"
+   ]
+  },
+  {
+   "expected": "Elga Thorne",
+   "family": "answer-suffix-1hop",
+   "frame": "the X of Y",
+   "id": "A02",
+   "question": "Who is the spouse of Dain Mercer?",
+   "teaches": [
+    "Dain Mercer is married to Elga Thorne",
+    "Elga Thorne is a citizen of Cindermark",
+    "The capital of Cindermark is Eastvale"
+   ]
+  },
+  {
+   "expected": "Farnham",
+   "family": "answer-suffix-1hop",
+   "frame": "which country is Y a citizen of",
+   "id": "A03",
+   "question": "Which country is Finn Okafor a citizen of?",
+   "teaches": [
+    "Finn Okafor is a citizen of Farnham",
+    "The capital of Farnham is Gildenford"
+   ]
+  },
+  {
+   "expected": "Quillan Frost",
+   "family": "answer-suffix-1hop",
+   "frame": "who created",
+   "id": "A04",
+   "question": "Who created the Glass Harp?",
+   "teaches": [
+    "The Glass Harp was created by Quillan Frost",
+    "Quillan Frost is married to Rosa Lindqvist"
+   ]
+  },
+  {
+   "expected": "Keswick",
+   "family": "answer-suffix-1hop",
+   "frame": "where was",
+   "id": "A05",
+   "question": "Where was Harborview Trading founded?",
+   "teaches": [
+    "Harborview Trading was founded in the city of Keswick",
+    "Keswick is located in the continent of Larkspur"
+   ]
+  },
+  {
+   "expected": "Tilda Crane",
+   "family": "answer-suffix-1hop",
+   "frame": "relative clause",
+   "id": "A06",
+   "question": "Who is the author of the Copper Atlas married to?",
+   "teaches": [
+    "The author of the Copper Atlas is Stefan Marsh",
+    "Stefan Marsh is married to Tilda Crane",
+    "Tilda Crane is a citizen of Valoria"
+   ]
+  },
+  {
+   "expected": "Mossbank",
+   "family": "answer-suffix-1hop",
+   "frame": "married to",
+   "id": "A07",
+   "question": "What country is Ulf Banner a citizen of?",
+   "teaches": [
+    "Ulf Banner is a citizen of Mossbank",
+    "The capital of Mossbank is Nottinghill"
+   ]
+  },
+  {
+   "expected": "Xander Pruitt",
+   "family": "answer-suffix-1hop",
+   "frame": "the X of Y",
+   "id": "A08",
+   "question": "Who is the creator of the Ivory Compass married to?",
+   "teaches": [
+    "The Ivory Compass was created by Petra Quinn",
+    "Petra Quinn is married to Xander Pruitt",
+    "Xander Pruitt is a citizen of Oakhaven"
+   ]
+  },
+  {
+   "expected": "Stonebridge",
+   "family": "answer-suffix-2hop",
+   "frame": "which country is Y a citizen of",
+   "id": "A09",
+   "question": "What is the capital of the country Vera Nightingale is a citizen of?",
+   "teaches": [
+    "Vera Nightingale is a citizen of Rillport",
+    "The capital of Rillport is Stonebridge",
+    "The official language of Stonebridge is Selkirk"
+   ]
+  },
+  {
+   "expected": "Ulmaris",
+   "family": "answer-suffix-2hop",
+   "frame": "relative clause",
+   "id": "A10",
+   "question": "What is the capital of the country Wren Halloran is a citizen of?",
+   "teaches": [
+    "Wren Halloran is a citizen of Tarnwick",
+    "The capital of Tarnwick is Ulmaris",
+    "The official language of Ulmaris is Selkirk"
+   ]
+  },
+  {
+   "expected": "Yara Somnus",
+   "family": "answer-suffix-1hop",
+   "frame": "who created",
+   "id": "A11",
+   "question": "Who created the Golden Sextant?",
+   "teaches": [
+    "The Golden Sextant was created by Yara Somnus",
+    "Yara Somnus is a citizen of Westmarch",
+    "The capital of Westmarch is Yellerton"
+   ]
+  },
+  {
+   "expected": "Port Sela",
+   "family": "answer-suffix-1hop",
+   "frame": "where was",
+   "id": "A12",
+   "question": "Where was Queensferry Shipping founded?",
+   "teaches": [
+    "Queensferry Shipping was founded in the city of Port Sela",
+    "Port Sela is located in the continent of Zaragoza"
+   ]
+  },
+  {
+   "expected": "Astoria",
+   "family": "answer-suffix-2hop",
+   "frame": "married to",
+   "id": "A13",
+   "question": "What country is the spouse of Orin Blake a citizen of?",
+   "teaches": [
+    "Orin Blake is married to Kellan Dru",
+    "Kellan Dru is a citizen of Astoria",
+    "The capital of Astoria is Bromwich"
+   ]
+  },
+  {
+   "expected": "Dunmere Vale",
+   "family": "answer-suffix-1hop",
+   "frame": "the X of Y",
+   "id": "A14",
+   "question": "What country is Mira Solen a citizen of?",
+   "teaches": [
+    "Mira Solen is a citizen of Dunmere Vale",
+    "The capital of Dunmere Vale is Farnham"
+   ]
+  },
+  {
+   "expected": "Borin Kale",
+   "family": "answer-suffix-2hop",
+   "frame": "relative clause",
+   "id": "A15",
+   "question": "Who is the creator of the Amber Ledger married to?",
+   "teaches": [
+    "The Amber Ledger was created by Zev Albrecht",
+    "Zev Albrecht is married to Borin Kale",
+    "Borin Kale is a citizen of Gildenford"
+   ]
+  },
+  {
+   "expected": "Bromwich",
+   "family": "answer-suffix-1hop",
+   "frame": "which country is Y a citizen of",
+   "id": "A16",
+   "question": "What is Cira Noll's country's capital?",
+   "teaches": [
+    "Cira Noll is a citizen of Astoria",
+    "The capital of Astoria is Bromwich"
+   ]
+  },
+  {
+   "expected": "Tilda Crane",
+   "family": "answer-suffix-1hop",
+   "frame": "married to",
+   "id": "A17",
+   "question": "Who is Stefan Marsh married to?",
+   "teaches": [
+    "Stefan Marsh is married to Tilda Crane",
+    "Tilda Crane is a citizen of Valoria",
+    "The capital of Valoria is Westmarch"
+   ]
+  },
+  {
+   "expected": "Eastvale",
+   "family": "answer-suffix-2hop",
+   "frame": "relative clause",
+   "id": "A18",
+   "question": "What is the capital of the country of citizenship of the person married to Dain Mercer?",
+   "teaches": [
+    "Dain Mercer is married to Elga Thorne",
+    "Elga Thorne is a citizen of Cindermark",
+    "The capital of Cindermark is Eastvale"
+   ]
+  },
+  {
+   "expected": "Kellan Dru",
+   "family": "answer-suffix-1hop",
+   "frame": "the X of Y",
+   "id": "A19",
+   "question": "Who is the spouse of Orin Blake?",
+   "teaches": [
+    "Orin Blake is married to Kellan Dru",
+    "Kellan Dru is a citizen of Keswick",
+    "The capital of Keswick is Larkspur"
+   ]
+  },
+  {
+   "expected": "Rillport",
+   "family": "answer-suffix-1hop",
+   "frame": "where was",
+   "id": "A20",
+   "question": "Where was Stonebridge Freight founded?",
+   "teaches": [
+    "Stonebridge Freight was founded in the city of Rillport",
+    "Rillport is located in the continent of Tarnwick"
+   ]
+  },
+  {
+   "expected": "Xander Pruitt",
+   "family": "answer-suffix-1hop",
+   "frame": "who created",
+   "id": "A21",
+   "question": "Who created the Bells of Dawn?",
+   "teaches": [
+    "The Bells of Dawn was created by Xander Pruitt",
+    "Xander Pruitt is married to Vera Nightingale"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "which country is Y a citizen of",
+   "id": "B25",
+   "question": "What country is the child of Wren Halloran a citizen of?",
+   "teaches": [
+    "Wren Halloran is a citizen of Tarnwick",
+    "The capital of Tarnwick is Ulmaris"
+   ]
+  },
+  {
+   "expected": "Rosa Lindqvist",
+   "family": "answer-suffix-1hop",
+   "frame": "relative clause",
+   "id": "A23",
+   "question": "Who is Quillan Frost married to?",
+   "teaches": [
+    "Quillan Frost is married to Rosa Lindqvist",
+    "Rosa Lindqvist is a citizen of Mossbank",
+    "The capital of Mossbank is Nottinghill"
+   ]
+  },
+  {
+   "expected": "Harborview",
+   "family": "answer-suffix-2hop",
+   "frame": "married to",
+   "id": "A24",
+   "question": "What is the capital of the country Zev Albrecht is a citizen of?",
+   "teaches": [
+    "Zev Albrecht is a citizen of Gildenford",
+    "The capital of Gildenford is Harborview",
+    "The official language of Harborview is Selkirk"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "which country is Y a citizen of",
+   "id": "B01",
+   "question": "What country is the spouse of Borin Kale a citizen of?",
+   "teaches": [
+    "Borin Kale is married to Cira Noll"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "relative clause",
+   "id": "B02",
+   "question": "What is the official language of the country of citizenship of Dain Mercer?",
+   "teaches": [
+    "Dain Mercer is a citizen of Cindermark"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "the X of Y",
+   "id": "B03",
+   "question": "Who is the creator of the Glass Harp married to?",
+   "teaches": [
+    "The Glass Harp was created by Quillan Frost"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "married to",
+   "id": "B04",
+   "question": "Who is the spouse of the author of the Copper Atlas?",
+   "teaches": [
+    "The author of the Copper Atlas is Stefan Marsh"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "who created",
+   "id": "B05",
+   "question": "Who created the Winter Sonata?",
+   "teaches": [
+    "The Winter Sonata was created in the country of Valoria"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "where was",
+   "id": "B06",
+   "question": "Where was Finn Okafor born?",
+   "teaches": [
+    "Finn Okafor is a citizen of Farnham",
+    "The capital of Farnham is Gildenford"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "relative clause",
+   "id": "B07",
+   "question": "What is the capital of the country of citizenship of the person married to Ulf Banner?",
+   "teaches": [
+    "Ulf Banner is married to Petra Quinn",
+    "Petra Quinn is a citizen of Oakhaven"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "the X of Y",
+   "id": "B08",
+   "question": "Who is the founder of the company that produced the Harbor Symphony?",
+   "teaches": [
+    "The company that produced the Harbor Symphony is Queensferry Shipping"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-4hop",
+   "frame": "married to",
+   "id": "B09",
+   "question": "What is the capital of the country of citizenship of the spouse of the creator of the Star Cartograph?",
+   "teaches": [
+    "The Star Cartograph was created by Orin Blake",
+    "Orin Blake is married to Kellan Dru"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "which country is Y a citizen of",
+   "id": "B10",
+   "question": "Which country is Mira Solen a citizen of?",
+   "teaches": [
+    "Mira Solen is married to Nadia Frost"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "who created",
+   "id": "B11",
+   "question": "Who employs the person married to Xander Pruitt?",
+   "teaches": [
+    "Xander Pruitt is married to Vera Nightingale"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "where was",
+   "id": "B12",
+   "question": "What continent was Vera Nightingale born in?",
+   "teaches": [
+    "Vera Nightingale is married to Wren Halloran"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "relative clause",
+   "id": "B13",
+   "question": "What is the official language of Tarnwick?",
+   "teaches": [
+    "Wren Halloran is a citizen of Tarnwick",
+    "The capital of Tarnwick is Ulmaris"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "the X of Y",
+   "id": "B14",
+   "question": "What is the capital of the country of citizenship of the child of Stefan Marsh?",
+   "teaches": [
+    "Stefan Marsh is married to Tilda Crane",
+    "Tilda Crane is a citizen of Valoria"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "married to",
+   "id": "B15",
+   "question": "Who is Tilda Crane married to?",
+   "teaches": [
+    "Stefan Marsh is married to Tilda Crane"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "which country is Y a citizen of",
+   "id": "B16",
+   "question": "What is the capital of the country of citizenship of the spouse of Rosa Lindqvist?",
+   "teaches": [
+    "Rosa Lindqvist is married to Quillan Frost"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "who created",
+   "id": "B17",
+   "question": "What country was the Bells of Dawn created in?",
+   "teaches": [
+    "The Bells of Dawn was created by Yara Somnus"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "where was",
+   "id": "B18",
+   "question": "Where was the headquarters of Stonebridge Freight located?",
+   "teaches": [
+    "Stonebridge Freight was founded in the city of Rillport"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "relative clause",
+   "id": "B19",
+   "question": "Who is the spouse of the creator of the Amber Ledger?",
+   "teaches": [
+    "The Amber Ledger was created by Zev Albrecht"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "the X of Y",
+   "id": "B20",
+   "question": "What language does the author of the Ivory Compass speak?",
+   "teaches": [
+    "The author of the Ivory Compass is Petra Quinn"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "married to",
+   "id": "B21",
+   "question": "Who is Elga Thorne married to?",
+   "teaches": [
+    "Dain Mercer is married to Elga Thorne"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-4hop",
+   "frame": "which country is Y a citizen of",
+   "id": "B22",
+   "question": "What is the official language of the country of citizenship of the spouse of the author of the Golden Sextant?",
+   "teaches": [
+    "The author of the Golden Sextant is Yara Somnus",
+    "Yara Somnus is married to Zev Albrecht",
+    "Zev Albrecht is a citizen of Gildenford"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-3hop",
+   "frame": "who created",
+   "id": "B23",
+   "question": "Who developed the Copper Atlas?",
+   "teaches": [
+    "The Copper Atlas was created in the country of Cindermark"
+   ]
+  },
+  {
+   "expected": "abstain",
+   "family": "abstain-short-2hop",
+   "frame": "where was",
+   "id": "B24",
+   "question": "What is the religion of Borin Kale?",
+   "teaches": [
+    "Borin Kale is married to Cira Noll"
+   ]
+  }
+ ]
+}

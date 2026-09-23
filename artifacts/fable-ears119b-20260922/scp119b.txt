@@ -1,0 +1,32 @@
+# scp list — Exp 119b BensPC staging (run by the director from the worktree root)
+# The PC already has C:\Users\benja\ears119\repo with data/open/webred,
+# simplewiki86, reading94. Stage 119b into C:\Users\benja\ears119b\.
+
+# 1. Scripts (wave closure: 119b shims + 119 trainer/scorer/data + 47/45 stack).
+# Run from: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+scp scripts/fable_ears119b_data.py scripts/fable_ears119b_train.py scripts/fable_ears119b_score.py scripts/fable_ears119b_wave.bat "benspc:C:/Users/benja/ears119b/repo/scripts/"
+scp scripts/fable_ears119_data.py scripts/fable_ears119_train.py scripts/fable_ears119_score.py "benspc:C:/Users/benja/ears119b/repo/scripts/"
+scp scripts/fable_ears47_data.py scripts/fable_ears47_encoder.py scripts/fable_ears47_model.py scripts/fable_ears47_train.py scripts/fable_ears47_score.py "benspc:C:/Users/benja/ears119b/repo/scripts/"
+scp scripts/fable_ears45_data.py scripts/fable_ears45_model.py scripts/fable_ears45_train.py scripts/fable_ears45_score.py scripts/fable_read106_score.py scripts/fable_listening_english.py scripts/fable_bert_loader.py "benspc:C:/Users/benja/ears119b/repo/scripts/"
+
+# 2. Sealed 47 panels (CAL + all scoring panels; bar definitions live in the scorer).
+scp artifacts/fable-ears47-20260921/panels/cal.json artifacts/fable-ears47-20260921/panels/t_seen.json artifacts/fable-ears47-20260921/panels/t_new.json artifacts/fable-ears47-20260921/panels/t_far.json artifacts/fable-ears47-20260921/panels/t_trap.json artifacts/fable-ears47-20260921/panels/t_hard.json artifacts/fable-ears47-20260921/panels/wneg.json artifacts/fable-ears47-20260921/panels/wpos.json artifacts/fable-ears47-20260921/panels/wclosed.json artifacts/fable-ears47-20260921/panels/wnewrel.json "benspc:C:/Users/benja/ears119b/repo/panels/"
+
+# 3. reading94 panel for scoring ONLY (never training/tuning; PASSMARKS D5).
+scp data/open/reading94/panel.jsonl "benspc:C:/Users/benja/ears119b/panel.jsonl"
+
+# 4. Wave batch file to the work dir (staged name wave119b.bat).
+scp scripts/fable_ears119b_wave.bat "benspc:C:/Users/benja/ears119b/wave119b.bat"
+
+# 5. Big training data: copy LOCALLY on the PC (no re-upload; same bytes).
+# ssh benspc "xcopy C:\Users\benja\ears119\repo\data C:\Users\benja\ears119b\repo\data /E /I /Y"
+
+# 6. Launch (director only, detached, after the 119 line ends; stop the Qwen
+# llama-server first if it holds VRAM; install nothing).
+# ssh benspc "powershell -NoProfile -Command \"Invoke-CimMethod Win32_Process -MethodName Create -Arguments @{ CommandLine = 'cmd /c C:\\Users\\benja\\ears119b\\wave119b.bat' } | Out-Null; echo LAUNCHED\""
+
+# 7. Fetch back (scores run on BensPC inside the .bat).
+scp "benspc:C:/Users/benja/ears119b/report47.json" "benspc:C:/Users/benja/ears119b/report119.json" "benspc:C:/Users/benja/ears119b/taus.json" "benspc:C:/Users/benja/ears119b/wave119b.log" artifacts/fable-ears119b-20260922/
+scp "benspc:C:/Users/benja/ears119b/runs/w-11911/meta.json" artifacts/fable-ears119b-20260922/meta-11911.json
+scp "benspc:C:/Users/benja/ears119b/runs/w-11912/meta.json" artifacts/fable-ears119b-20260922/meta-11912.json
+scp "benspc:C:/Users/benja/ears119b/runs/w-11913/meta.json" artifacts/fable-ears119b-20260922/meta-11913.json

@@ -1,0 +1,57 @@
+[
+ {
+  "check": "L1 world alias -> family",
+  "verdict": "LEAK",
+  "detail": "12/12 public aliases inverted to (split, family, index, coefficients, verb map) with no secret, using only the design document: [('c', 8), ('n', 2), ('o', 2)]"
+ },
+ {
+  "check": "L2 normalization constant V and the analytic sensor floor",
+  "verdict": "LEAK",
+  "detail": "all 6 published V values recomputed independently to <1e-12 (True); V is therefore not secret either"
+ },
+ {
+  "check": "L3 noise-free responses, noisy targets, latent states, panel identity",
+  "verdict": "LEAK",
+  "detail": "every evaluator-only quantity for all 12 calibration worlds regenerated exactly from the public design; the same procedure applies verbatim to the 24 FINAL worlds"
+ },
+ {
+  "check": "L4 QUERY_ORDER_BY_HASH hides panel grouping",
+  "verdict": "LEAK",
+  "detail": "the ordering key sha256(\"<wpid>/order/<panel>/<unit>/<branch>\") uses only public inputs, so record_id -> panel/unit/branch is fully invertible without any private file (reproduced for 12/12 worlds)"
+ },
+ {
+  "check": "L5a file sizes / tensor shapes",
+  "verdict": "LEAK",
+  "detail": "4 distinct public file-size signatures across 12 worlds (byte-identical layout, so size carries no family information)"
+ },
+ {
+  "check": "L5b prefix length / query index / detector b",
+  "verdict": "ok",
+  "detail": "n_records={(16,)} query_index={(15,)} detector_b={(4,)} -- constant in the pilot, so padding length and the detector cannot separate panels or families"
+ },
+ {
+  "check": "L5c dose sign / destination / mask rate",
+  "verdict": "ok",
+  "detail": "pulse rate 0.178-0.240, contact rate 0.158-0.221, present rate 0.740-0.775; all consistent with the family-free 1/5 and 3/4 draws (dose!=0 => pulse and destination!=NONE => contact remain the registered public hints)"
+ },
+ {
+  "check": "L5d observed sensor magnitude -> family",
+  "verdict": "LEAK (inherent)",
+  "detail": "max |y| over present observations: c=[0.62, 0.647, 0.713, 0.771, 0.891, 0.913, 0.918, 0.919]; n=[0.075, 0.09]; o=[0.391, 0.555] -- the noise-only family N is separable from the public tensors by a one-line statistic. This is intrinsic to the task (the learner is meant to see y); it does mean \"family is not a model feature\" is a code discipline, not a data property."
+ },
+ {
+  "check": "L6 pair membership from public tensors alone",
+  "verdict": "LEAK",
+  "detail": "panel 3: duplicate 24-float property blocks identify all 16 pairs per world exactly (True for every world); panel 4: matching the multiset of (channel0, channel1) rows recovers 16-16 of 16 pairs per world. Pair membership and panel-3 identity are therefore inferable WITHOUT the generator source. Not disclosed in SCHEMA.md section 4, which claims only that the action sequence partly discloses membership."
+ },
+ {
+  "check": "L7 target value present anywhere in its own query sequence",
+  "verdict": "ok",
+  "detail": "no float32 equal to the noisy target occurs in any of the 12*96 public query sequences; QUERY carries sensor=0/present=0 and the final OBSERVED is never built"
+ },
+ {
+  "check": "L8 outer_split in public/worlds.json",
+  "verdict": "disclosed",
+  "detail": "present, as the builder flags; the prereg forbids it as a model feature. The public loader returns it from worlds()/worlds_in_split(), so nothing but code discipline stops it reaching a batch."
+ }
+]

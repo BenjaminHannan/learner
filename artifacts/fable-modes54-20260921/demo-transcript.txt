@@ -1,0 +1,92 @@
+[LISTENING] person Mira
+    -> Saved: Mira is E0001.
+[LISTENING] person Ana
+    -> Saved: Ana is E0002.
+[LISTENING] person Tom
+    -> Saved: Tom is E0003.
+[LISTENING] teach Mira mother -> Ana
+    -> Saved: Mira's mother is Ana.
+[LISTENING] teach Ana city = Porto
+    -> Saved: Ana's city is Porto.
+[LISTENING] teach Mira city = Lisbon
+    -> Saved: Mira's city is Lisbon.
+[LISTENING] teach Mira colour = green
+    -> Saved: Mira's colour is green.
+[LISTENING] ask Mira mother
+    -> Ana.
+[LISTENING] ask Mira mother city
+    -> Porto.
+[LISTENING] correct Mira city = Paris
+    -> Saved: Mira's city is Paris.
+[LISTENING] ask Mira city
+    -> Paris.
+[LISTENING] quote Apparently Tom's city is Rome
+    -> I didn't save that, because it was not you telling me a fact.
+[LISTENING] ask Tom city
+    -> I don't know Tom's city.
+[LISTENING] ask Mira job
+    -> I don't know Mira's job.
+[LISTENING] alias Mira1 = Mira
+    -> Saved: Mira1 is another name for Mira.
+[LISTENING] person Mira
+    -> Saved: Mira is E0004.
+[LISTENING] teach Mira city = Oslo
+    -> I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+[LISTENING] pick E0004
+    -> Saved: Mira's city is Oslo.
+[LISTENING] ask Mira city
+    -> I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+[LISTENING] pick E0001
+    -> Paris.
+[LISTENING] ask Mira1 city
+    -> Paris.
+[LISTENING] ask Mira favourite
+    -> I know more than one Mira: Mira (E0001), Mira (E0004). Which one do you mean?
+[LISTENING] person Kai
+    -> (I dropped my earlier question.) Saved: Kai is E0005.
+[LISTENING] teach Kai mother -> Ana
+    -> Saved: Kai's mother is Ana.
+[LISTENING] ask Kai city
+    -> Porto.
+[THINKING] What do you know? How do you know it? What are you unsure about?
+    -> WHAT I KNOW (by notebook source tag):
+  inferred: 1 active fact(s)
+    F00008  Kai city = Porto
+  proposed: 1 active fact(s)
+    F00009  Ana likes = tea
+  sleep-derived: 1 active fact(s)
+    F00010  Mira night_note = notebook compacted
+  taught: 6 active fact(s)
+    F00001  Mira mother = Ana
+    F00002  Ana city = Porto
+    F00004  Mira colour = green
+    F00005  Mira city = Paris
+    F00006  Mira city = Oslo
+    F00007  Kai mother = Ana
+HOW I KNOW IT (source tag + where it came from):
+    F00008 [inferred] via rule R1 (inferred)
+    F00009 [proposed] via WORK job J-show (proposed, awaiting Ben)
+    F00010 [sleep-derived] via SLEEP commit (sleep-derived)
+    F00001 [taught] via teach[3], LISTENING turn t=1
+    F00002 [taught] via teach[4], LISTENING turn t=1
+    F00004 [taught] via teach[6], LISTENING turn t=1
+    F00005 [taught] via teach[7:correct], LISTENING turn t=1
+WHAT I AM UNSURE ABOUT:
+    - AMBIGUOUS: 'Mira' resolves to two entities (E0001, E0004); I asked which one instead of guessing
+    - MISSING/AMBIGUOUS on Q4: Tom's city: only hearsay exists, nothing was saved
+    - MISSING/AMBIGUOUS on Q5: Mira's job: never taught
+    - MISSING/AMBIGUOUS on Q8: Mira's favourite: 'Mira' still ambiguous, and colour was taught as relation 'colour' not 'favourite'
+    - hearsay refused: the quote about Tom's city wrote nothing (only LISTENING writes 'taught')
+    - 1 proposed row awaits your approval (WORK wrote it, it does not answer questions yet)
+    - job J-stuck is parked: Job J-stuck: tried 11 idea-rounds, no idea passed its check. What should I do?
+    - 0 web-quarantine rows: I have not believed anything from the web in this session
+MODE LOG (why I was where I was):
+    t=0 THINKING -> THINKING (start)
+    t=1 THINKING -> LISTENING (inbox-nonempty)
+    t=26 LISTENING -> CREATIVE (work-open-ended)
+    t=27 CREATIVE -> WORK (creative-found-round-2)
+    t=29 WORK -> CREATIVE (work-open-ended)
+    t=39 CREATIVE -> THINKING (creative-giveup-fixed-n-ask-ben)
+    t=40 THINKING -> SLEEP (memory-full)
+    t=42 SLEEP -> THINKING (sleep-commit)
+    modes seen: CREATIVE, LISTENING, SLEEP, THINKING, WORK

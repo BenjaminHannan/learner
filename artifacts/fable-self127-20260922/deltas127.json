@@ -1,0 +1,71 @@
+{
+ "calibration": {
+  "dev_correct_pool": "every calibration row the frozen 122 path routes AND answers correctly (verdict CORRECT): 388 rows (heldout122 + exp99 + exp100 + panels 105/114/122)",
+  "dev_wrong_pool": "every calibration row the frozen 122 path answers WRONGLY (verdict WRONG): 49 rows (46 heldout122 + 3 panel122); panels 99/100/105/114 contribute 0 wrongs",
+  "note": "heldout122 rows are the author's own train-adjacent phrasings (same styles as the bank); blind-panel rows are other-agent phrasings, distribution-matched to the fresh blind panel. The rule uses both pools exactly as stated, with no per-intent hand-tuning.",
+  "sets": [
+   "heldout122 (632 rows)",
+   "exp99 (40)",
+   "exp100 (80)",
+   "panel105 (100)",
+   "panel114 (100)",
+   "panel122 (100)"
+  ]
+ },
+ "delta": {
+  "C1": 0.527899904346466,
+  "C10": 0.7402518821716308,
+  "C11": 0.6031495166778564,
+  "C12": 0.3928115201950073,
+  "C13": 0.5253578854560852,
+  "C14": 0.5793679190635681,
+  "C15": 0.12897606031799316,
+  "C16": 0.6229909492492676,
+  "C17": 0.5531117154121399,
+  "C18": 0.5130545331001282,
+  "C19": 0.5729967189788818,
+  "C2": 0.5478250814437866,
+  "C20": 0.5086828304290771,
+  "C21": 0.49472872743606566,
+  "C22": 0.5085817409515381,
+  "C23": 0.5124743414878845,
+  "C24": 0.3715480400085449,
+  "C25": 0.6119771433830261,
+  "C26": 0.4310239387512207,
+  "C27": 0.5656659437179565,
+  "C28": 0.6199188066482544,
+  "C29": 0.52345771925354,
+  "C3": 0.5000590516090393,
+  "C30": 0.3019878102302551,
+  "C4": 0.44972644577026366,
+  "C5": 0.26532096998596194,
+  "C6": 0.5001088214874267,
+  "C7": 0.4797977639198303,
+  "C8": 0.39959965476989745,
+  "C9": 0.45388506183624266
+ },
+ "intents_without_delta": [
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+  "D5",
+  "D6",
+  "D7",
+  "D8",
+  "D9",
+  "D10",
+  "OOS"
+ ],
+ "intents_without_delta_note": "no correctly-routed calibration row exists for these labels (their answers are always the decline sentence), so the guard is vacuous for them: decline iff 1 - max-cosine > +inf, i.e. never. This changes no verdict.",
+ "rule": "ONE fixed rule, applied identically to every content intent L in C1..C30: delta_L = min( max NN cosine distance over the dev_correct_pool rows routed to L, PLUS a fixed keep-side margin 1e-4, min NN cosine distance over the dev_wrong_pool rows from BLIND panels routed to L, MINUS a fixed epsilon 1e-6 ); where no blind-panel wrong was routed to L, delta_L = the max term plus 1e-4. Guard fires (decline) iff the question NN distance strictly exceeds delta_L. The 1e-4 margin covers measured cross-run float noise (<= 1.2e-7, from batch-1 vs batch-64 embedding) ~1000x, so rows defining the max keep are never flipped by noise; the 1e-6 epsilon keeps the three blind-panel wrongs (each exactly 1e-6 above its delta by construction) on the decline side with ~8x noise margin.",
+ "audit": {
+  "keeps_total": 388,
+  "keeps_lost": 17,
+  "wrongs_total": 49,
+  "wrongs_caught": 23,
+  "full_precision": true,
+  "epsilon_wrong": 1e-06,
+  "margin_keep": 0.0001
+ }
+}

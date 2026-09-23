@@ -1,0 +1,800 @@
+{
+ "A": [
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A01",
+   "note": "director verbatim P1",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A02",
+   "note": "P2 imperative, no question mark",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tell me about Tom"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A03",
+   "note": "P3",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What have I told you about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A04",
+   "note": "P4",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Anything about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A05",
+   "note": "P1 all-caps",
+   "turns": [
+    "Tom's boss is Ann.",
+    "WHAT DO YOU KNOW ABOUT TOM?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A06",
+   "note": "P2 lowercase + period",
+   "turns": [
+    "Tom's boss is Ann.",
+    "tell me about tom."
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A07",
+   "note": "P1 no question mark",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Mira's mother is Ann.",
+   "expect_triples": [
+    [
+     "Mira",
+     "mother",
+     "Ann"
+    ]
+   ],
+   "id": "A08",
+   "note": "value side only",
+   "turns": [
+    "Mira's mother is Ann.",
+    "What do you know about Ann?"
+   ]
+  },
+  {
+   "ask_idx": 3,
+   "expect_reply": "Tom's boss is Ann. Tom's city is Paris. Tom's pet is Rex.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "pet",
+     "Rex"
+    ]
+   ],
+   "id": "A09",
+   "note": "3 subject facts, teach order",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's city is Paris.",
+    "Tom's pet is Rex.",
+    "What do you know about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Ann's city is Paris. Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A10",
+   "note": "subject side first, then value side",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Ann's city is Paris.",
+    "What do you know about Ann?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Tom's boss is Ann. Mira's mother is Ann.",
+   "expect_triples": [
+    [
+     "Mira",
+     "mother",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A11",
+   "note": "two value-side facts, fact_id order",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Mira's mother is Ann.",
+    "Tell me about Ann"
+   ]
+  },
+  {
+   "ask_idx": 3,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A12",
+   "note": "retracted fact must not appear",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's city is Paris.",
+    "Forget Tom city.",
+    "What do you know about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Tom's city is Rome.",
+   "expect_triples": [
+    [
+     "Tom",
+     "city",
+     "Rome"
+    ]
+   ],
+   "id": "A13",
+   "note": "overwritten fact must not appear",
+   "turns": [
+    "Tom's city is Paris.",
+    "Actually, Tom's city is Rome.",
+    "What do you know about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's boss is Ann.",
+   "expect_reply2": "Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A14",
+   "note": "two about-turns, subject then value side",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom?",
+    "Tell me about Ann"
+   ]
+  },
+  {
+   "ask_idx": 10,
+   "expect_reply": "Tom's boss is Ann. Tom's city is Paris. Tom's pet is Rex. Tom's mother is Mira. Tom's father is Bob. Tom's sister is Eve. Tom's brother is Sam. Tom's friend is Kim. and 2 more.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "brother",
+     "Sam"
+    ],
+    [
+     "Tom",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "father",
+     "Bob"
+    ],
+    [
+     "Tom",
+     "friend",
+     "Kim"
+    ],
+    [
+     "Tom",
+     "mother",
+     "Mira"
+    ],
+    [
+     "Tom",
+     "pet",
+     "Rex"
+    ],
+    [
+     "Tom",
+     "sister",
+     "Eve"
+    ],
+    [
+     "Tom",
+     "teacher",
+     "Lee"
+    ],
+    [
+     "Tom",
+     "wife",
+     "Sue"
+    ]
+   ],
+   "id": "A15",
+   "note": "10 facts -> 8 + and 2 more",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's city is Paris.",
+    "Tom's pet is Rex.",
+    "Tom's mother is Mira.",
+    "Tom's father is Bob.",
+    "Tom's sister is Eve.",
+    "Tom's brother is Sam.",
+    "Tom's friend is Kim.",
+    "Tom's teacher is Lee.",
+    "Tom's wife is Sue.",
+    "What do you know about Tom?"
+   ]
+  },
+  {
+   "ask_idx": 8,
+   "expect_reply": "Tom's boss is Ann. Tom's city is Paris. Tom's pet is Rex. Tom's mother is Mira. Tom's father is Bob. Tom's sister is Eve. Tom's brother is Sam. Tom's friend is Kim.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "brother",
+     "Sam"
+    ],
+    [
+     "Tom",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "father",
+     "Bob"
+    ],
+    [
+     "Tom",
+     "friend",
+     "Kim"
+    ],
+    [
+     "Tom",
+     "mother",
+     "Mira"
+    ],
+    [
+     "Tom",
+     "pet",
+     "Rex"
+    ],
+    [
+     "Tom",
+     "sister",
+     "Eve"
+    ]
+   ],
+   "id": "A16",
+   "note": "exactly 8 facts, no more-suffix",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's city is Paris.",
+    "Tom's pet is Rex.",
+    "Tom's mother is Mira.",
+    "Tom's father is Bob.",
+    "Tom's sister is Eve.",
+    "Tom's brother is Sam.",
+    "Tom's friend is Kim.",
+    "Tell me about Tom"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "Tom's city is Paris.",
+   "expect_triples": [
+    [
+     "Tom",
+     "city",
+     "Paris"
+    ]
+   ],
+   "id": "A17",
+   "note": "literal value as X",
+   "turns": [
+    "Tom's city is Paris.",
+    "What do you know about Paris?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Ann's city is Paris. Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A18",
+   "note": "P4 over mixed sides",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Ann's city is Paris.",
+    "Anything about Ann?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Tom's boss is Ann. Bob's boss is Ann.",
+   "expect_triples": [
+    [
+     "Bob",
+     "boss",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A19",
+   "note": "two value-side facts",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Bob's boss is Ann.",
+    "What do you know about Ann?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "May's city is Oslo.",
+   "expect_triples": [
+    [
+     "May",
+     "city",
+     "Oslo"
+    ]
+   ],
+   "id": "A20",
+   "note": "capitalised word-like name is a name, not a pronoun",
+   "turns": [
+    "May's city is Oslo.",
+    "What do you know about May?"
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Ann's city is Paris. Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A21",
+   "note": "P2 shout + bang",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Ann's city is Paris.",
+    "  Tell me about Ann!  "
+   ]
+  },
+  {
+   "ask_idx": 2,
+   "expect_reply": "Ann's city is Paris. Tom's boss is Ann.",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Paris"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "A22",
+   "note": "P1 inner spacing",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Ann's city is Paris.",
+    "What do you know about   Ann  ?"
+   ]
+  }
+ ],
+ "B": [
+  {
+   "ask_idx": 1,
+   "expect_reply": "I don't know anyone called Zara.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "B01",
+   "note": "unknown X, P1",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Zara?"
+   ]
+  },
+  {
+   "ask_idx": 0,
+   "expect_reply": "I don't know anyone called cooking.",
+   "expect_triples": [],
+   "id": "B02",
+   "note": "task example, empty notebook, P2",
+   "turns": [
+    "Tell me about cooking"
+   ]
+  },
+  {
+   "ask_idx": 0,
+   "expect_reply": "I don't know anyone called cooking.",
+   "expect_triples": [],
+   "id": "B03",
+   "note": "task example, empty notebook, P1",
+   "turns": [
+    "What do you know about cooking?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "I don't know anyone called Boris.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "B04",
+   "note": "unknown X, P3",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What have I told you about Boris?"
+   ]
+  },
+  {
+   "ask_idx": 0,
+   "expect_reply": "I don't know anyone called Xqz.",
+   "expect_triples": [],
+   "id": "B05",
+   "note": "unknown X, P4",
+   "turns": [
+    "Anything about Xqz?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "I don't know anyone called ZARA.",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "B06",
+   "note": "unknown X as typed",
+   "turns": [
+    "Tom's boss is Ann.",
+    "WHAT DO YOU KNOW ABOUT ZARA?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "I don't know anyone called Annie.",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Paris"
+    ]
+   ],
+   "id": "B07",
+   "note": "prefix of a known name is still unknown",
+   "turns": [
+    "Ann's city is Paris.",
+    "What do you know about Annie?"
+   ]
+  }
+ ],
+ "C": [
+  {
+   "ask_idx": 0,
+   "expect_reply": "I have 0 facts about 0 people. Ask me about one of them, like 'What do you know about Tom?'",
+   "expect_triples": [],
+   "id": "C01",
+   "note": "empty notebook",
+   "turns": [
+    "What do you know?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "I have 1 facts about 1 people. Ask me about one of them, like 'What do you know about Tom?'",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "C02",
+   "note": "one fact",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know?"
+   ]
+  },
+  {
+   "ask_idx": 3,
+   "expect_reply": "I have 3 facts about 2 people. Ask me about one of them, like 'What do you know about Tom?'",
+   "expect_triples": [
+    [
+     "Ann",
+     "city",
+     "Rome"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "city",
+     "Paris"
+    ]
+   ],
+   "id": "C03",
+   "note": "counts across two subjects",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's city is Paris.",
+    "Ann's city is Rome.",
+    "What do you know?"
+   ]
+  },
+  {
+   "ask_idx": 1,
+   "expect_reply": "I have 1 facts about 1 people. Ask me about one of them, like 'What do you know about Tom?'",
+   "expect_triples": [
+    [
+     "Tom",
+     "boss",
+     "Ann"
+    ]
+   ],
+   "id": "C04",
+   "note": "lowercase, no punct",
+   "turns": [
+    "Tom's boss is Ann.",
+    "what do you know"
+   ]
+  }
+ ],
+ "D": [
+  {
+   "id": "D01",
+   "note": "reflexive delegates to base fallback",
+   "turns": [
+    "Tell me about yourself."
+   ]
+  },
+  {
+   "id": "D02",
+   "note": "reflexive delegates",
+   "turns": [
+    "Tell me about myself."
+   ]
+  },
+  {
+   "id": "D03",
+   "note": "pronoun delegates",
+   "turns": [
+    "Tell me about him."
+   ]
+  },
+  {
+   "id": "D04",
+   "note": "compound delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom and Ann?"
+   ]
+  },
+  {
+   "id": "D05",
+   "note": "possessive chain delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom's boss?"
+   ]
+  },
+  {
+   "id": "D06",
+   "note": "yes/no frame delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Do you know about Tom?"
+   ]
+  },
+  {
+   "id": "D07",
+   "note": "story frame delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tell me a story about Tom."
+   ]
+  },
+  {
+   "id": "D08",
+   "note": "statement delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "I know about Tom."
+   ]
+  },
+  {
+   "id": "D09",
+   "note": "teach containing about, then ask",
+   "turns": [
+    "Tom's book is about cats.",
+    "Who is Tom's book?"
+   ]
+  },
+  {
+   "id": "D10",
+   "note": "teach containing about mid-dialogue, possessive ask delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "Tom's book is about teamwork.",
+    "What do you know about Tom's book?"
+   ]
+  },
+  {
+   "id": "D11",
+   "note": "trailing extra text delegates",
+   "turns": [
+    "Tom's boss is Ann.",
+    "What do you know about Tom? Just kidding."
+   ]
+  }
+ ],
+ "meta": {
+  "counts": {
+   "A": 22,
+   "B": 7,
+   "C": 4,
+   "D": 11,
+   "total": 44
+  },
+  "frozen": "2026-09-22, before any loop164 run"
+ }
+}

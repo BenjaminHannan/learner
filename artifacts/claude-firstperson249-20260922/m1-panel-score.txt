@@ -1,0 +1,35 @@
+PANEL 243 (schema OK)
+  family compose       right   0/16
+  family no_apos       right   0/16
+  family whats         right   0/12
+  family first_person  right  11/12
+  family verb_subject  right   0/12
+  family my_relation   right   2/16
+  family direction     right   4/10
+  family combo         right   0/8
+  family control       right  12/12
+  family untaught      right  10/10
+M1a first_person right 11/12 (bar >= 90%): PASS
+M1b wrong values 6 [('q243-085', ['Gedund']), ('q243-086', ['Dendund']), ('q243-087', ['Brathin']), ('q243-088', ['Fyra']), ('q243-089', ['Kraembek']), ('q243-090', ['Foxan'])]: FAIL
+M1c question writes 0 []: PASS
+M1d control byte-identical 12/12: PASS
+M1e base_right->wrong/decline 0 []; untaught no value 10/10; direction new leaks []; base228 leaks (listed, not counted) [('q243-085', ['Gedund']), ('q243-086', ['Dendund']), ('q243-087', ['Brathin']), ('q243-088', ['Fyra']), ('q243-089', ['Kraembek']), ('q243-090', ['Foxan'])]: PASS
+M1f combo per item (no bar): [('q243-095', False, []), ('q243-096', False, []), ('q243-097', False, []), ('q243-098', False, []), ('q243-099', False, []), ('q243-100', False, []), ('q243-101', False, []), ('q243-102', False, [])]
+M5 median(loop249 - base228) question ms = -0.05 (bar <= +5): PASS
+info: own base228 arm reply == base228.jsonl base_reply 124/124
+moves vs base228.jsonl: 13
+  MOVE q243-045 [first_person] 'Where do I live?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your city is Mundan.'
+  MOVE q243-046 [first_person] "What's my city?": "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your city is Yylvar.'
+  MOVE q243-047 [first_person] 'Who am I married to?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your spouse is Kytith.'
+  MOVE q243-048 [first_person] 'Where do I work?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your employer is Kelix.'
+  MOVE q243-049 [first_person] 'Who do I work for?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your employer is Fexow.'
+  MOVE q243-050 [first_person] "Who's my boss?": "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your boss is Zinar.'
+  MOVE q243-051 [first_person] "What's my pet?": 'You never told me your name, so I do not know it.' -> 'Your pet is Torkar.'
+  MOVE q243-052 [first_person] "Who's my doctor?": 'You never told me your name, so I do not know it.' -> 'Your doctor is Dikund.'
+  MOVE q243-053 [first_person] 'Where do I go to school?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your school is Jegin.'
+  MOVE q243-054 [first_person] 'where do i live?': "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?" -> 'Your city is Kronith.'
+  MOVE q243-055 [first_person] "Who's my sister?": 'You never told me your name, so I do not know it.' -> 'Your sister is Stylek.'
+  MOVE q243-073 [my_relation] "What's my sister's city?": "I don't know anyone called my sister." -> "Your sister's city is Brixek."
+  MOVE q243-081 [my_relation] "What's my friend's pet?": "I don't know anyone called my friend." -> "Your friend's pet is Kraelow."
+  MISS q243-056 'Who employs me?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+PANEL MARKS: FAIL
