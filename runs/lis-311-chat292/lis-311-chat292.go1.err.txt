@@ -1,0 +1,974 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main 2>&1 | head -5; git rev-parse --show-toplevel; git status --short | head -20
+9:56  up 3 days,  1:45, 4 users, load averages: 48.59 45.58 46.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102511720    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+[0m
+[0m$ [0mgit show origin/main:design/v3/60-listener/frame-spec.md 2>&1 | head -100; echo ====; git branch -a 2>&1 | head; echo ====; git show origin/builder-outbox:artifacts/claude-lis310-20260923/RESULTS.md 2>&1 | head -60
+# Listener frame spec v1 (lis- line, exps 300-319, 2026-09-23)
+
+This is the target format for the listener. The listener is Qwen3.5-0.8B, fine-tuned (Ben's 10:55 UTC decision). It reads one chat turn, plus the assistant's previous reply, and writes **one JSON object**. It proposes; plain code (the write compiler, `scripts/claude_lis300_compiler.py`) decides what gets saved. Key-writing rules in `design/v3/30-modes/key-writing-rules.md` apply in full.
+
+## Output
+
+```json
+{"act": "STATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pip", "mode": "ASSERT"}], "ask": null}
+```
+
+- `act` (whole turn): one of `STATE`, `CORRECT`, `ASK`, `CHECK`, `NEGATE`, `SUPPOSE`, `PLAN`, `CHAT`, `UNCLEAR`.
+  - A turn that both states and asks gets the act of its first clause. Each fact still carries its own mode.
+- `facts`: every fact the turn mentions, including facts that must not be saved (for those, the mode says why). Order them as they appear in the turn. The list is `[]` when there is none.
+  - `owner`:
+    - `"me"` for I / me / my / mine.
+    - `"we"` for we / us / our / ours. Never map "our" to "me"; the compiler asks whose.
+    - Otherwise, the owner's name **exactly as typed**, with the same case and any typo.
+    - A pronoun ("he", "she", "they") is resolved to the name it refers to, but only when that is clear from this turn or the previous reply. If it isn't clear, use mode `UNCLEAR`.
+  - `rel`: a name from `design/v3/60-listener/relation-names.txt` (153 names), or `"other"`. Pick the most specific name the words support ("dog", not "pet", when the turn says dog).
+  - `value`: exactly as typed. Keep the case and any typos; never fix spelling.
+  - `mode`, one per fact:
+    - `ASSERT`: the speaker tells it as true.
+    - `CORRECT`: it replaces an earlier value. Add `"old": "<old value as typed>"` when the turn names it.
+    - `NEGATED`: "doesn't have", "isn't", "no longer".
+    - `CHECK`: the speaker is checking it. This covers "so X is Y" without "?", "X is Y right", and "X is Y, yeah".
+    - `SUPPOSE`: pretend, suppose, imagine, "let's say", "what if".
+    - `PLAN`: wants, plans, will, hopes, might.
+    - `REPORTED`: someone else claims it ("Tal says...", "I heard...").
+    - `QUESTION`: part of a question.
+    - `UNCLEAR`: the owner or value can't be pinned down.
+- `ask`: `null` unless the turn asks a question. For a question, `{"owner": ..., "rel": ..., "inverse": false}`.
+  - `inverse: true` means the question asks for the owner. For example, "Whose dog is Pip?" is `{"owner": "Pip", "rel": "dog", "inverse": true}`.
+  - For a yes/no question ("Is Mira's dog Pip?"), add `"value": "Pip"`.
+
+- Two-hop questions ("who is my sister's husband") use `"via"` for the first hop: `{"owner": "me", "via": "sister", "rel": "husband", "inverse": false}`.
+- Negations that name no value ("Kofi has no kids") have `facts: []` and act `NEGATE`. A reported fact ("Dev says his boss is Mara") has act `STATE`, and its fact has mode `REPORTED`.
+
+## One fact per value
+
+"My sisters are Mira and Tal" gives two facts: (me, sister, Mira) and (me, sister, Tal).
+"My boss, Tal, has a cat named Fig" gives (me, boss, Tal) and (Tal, cat, Fig).
+
+## What the compiler writes (for reference; the listener never decides this)
+
+A turn's facts are written all together or not at all. A fact is written only if **all** of these hold:
+1. Its mode is `ASSERT` or `CORRECT`.
+2. Its owner is `me`, or a whole-word span of the turn or the previous reply. `we` is never written: the system asks whose.
+3. Its value is a whole-word span of the turn.
+4. Its relation is in the table.
+5. The reader's confidence clears the threshold set on dev. Below it, the system asks back.
+
+Anything else writes nothing: `NEGATED`, `CHECK`, `SUPPOSE`, `PLAN`, `REPORTED`, `QUESTION` and `UNCLEAR` never write.
+zsh:1: === not found
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis310-20260923/RESULTS.md
+# lis-310 RESULTS: PASS (registered run 2026-09-23, builder)
+
+Registered verdict: PASS. 11/11 sealed unit tests passed, exit 0; 0
+base-chain writes across the 5 blocked-write turns. Seal 4/4 OK after the
+run; no post-seal change. No TEST-ONLY panel was opened, tuned on, or quoted
+(none is used by this task). All names fictional.
+
+## Marks table (integer counts)
+
+| Mark | Bar | Got |
+|---|---|---|
+| P310.1 all sealed unit tests pass | 11/11, exit 0 | 11/11, exit 0 |
+| P310.2 base-chain writes in T7 (5 turns) | 0 | 0 |
+
+## Every move (registered run, StubReader, threshold 0.99)
+
+- T1 two-facts-save-2: PASS. Saved 2 triples (USER,sister,Mira),
+  (USER,sister,Tal); reply the base mouth's confirmation.
+- T2 whose-ask: PASS. Exact "Whose dog is Pip, yours or someone else's?";
+  0 triples.
+- T3a askback-yes: PASS. Exact "Just to check: is Mira's dog Pip?", 0
+  triples; "yes" saved exactly 1 triple with a Saved reply.
+- T3b askback-no: PASS. 0 triples, "Okay, I won't save that."
+- T3c askback-dropped: PASS. A non-yes/no turn dropped the pending fact and
+  saved normally (1 triple; the dog fact never saved).
+- T4 negation: PASS. 0 triples; base reply used (no write attempted).
+- T5 CHECK: PASS. Base answered "I already have that."; triples stayed 1,
+  0 new notebook events.
+- T6 question: PASS. Answered from the notebook
+  ("Mira's dog is Pip. (worked out backwards)"); 0 new events.
+- T7 blocked five: PASS. All 5 turns grew notebook events on the raw 291
+  base (validity check in-run) and grew 0 events / 0 triples under 310.
+  Base-chain writes: 0.
+- T8 unparsed: PASS. Exact sorry-reply; 0 triples.
+- T9 chatdemo-load: PASS. load_agent finds Loop310Daemon + build_agent310 +
+  DEFAULT_CONFIG310; the demo's server-style mailbox build ran a turn and
+  saved 2 triples. The server file itself was not edited.
+
+Misses: 0. Deviations: 0 (every prediction in PASSMARKS.md matched exactly).
+
+## Hook point + me-storage (for the record)
+
+- Hook: turn310 installed as the outermost instance wrapper, outside
+  turn291: turn310(turn291(turn260(turn224c(turn224(class turn))))). No frozen
+  file edited; 291 chain untouched.
+- "me" facts are stored as subject USER: probed raw 291 turn "My sister is
+  Mira." -> triple ('USER','sister','Mira'), reply "Saved: your sister is
+  Mira." The 310 doorway calls loop._act with name "USER" plus the base's own
+  Me166 reply render, giving byte-identical confirmations ("Saved: your ...").
+- Screens applied to every listener save: 209 screen_action209 and 252b
+  value_ok252b; any rejection blocks the whole turn (0 hits in tests, all
+  values clean). 228 source guard untouched on the daemon path.
+- Writes blocked in the base pass by wrapping loop._act: teach/correct
+  actions that would mutate the notebook are swallowed (silent note);
+  no-op re-teaches run so the base's "I already have that." survives.
+- Every turn logged to <state_dir>/lis310_log.jsonl (frame, confs, decision,
+  blocked count, ms).
+- Real-model 20-turn chat: SKIPPED. ~/premonition-models/lis300-merged/ does
+  not exist (~/premonition-models/ itself is absent), so no weights, no GPU
+  run, no ms numbers. Nothing real-model is claimed.
+
+## What it means (plain high-school English)
+
+- The chat agent can now take facts from the listener instead of its own
+  hand-written rules, and in these tests it saved exactly what it should and
+  nothing it shouldn't. Questions still get answered from the notebook, and
+  the old rule chain cannot sneak in a save anymore.
+- "My sister is Mira" is stored under the name USER and reads back as
+  "your sister", exactly like before, so old and new saves mix cleanly.
+
+## What it doesn't mean
+
+- This used a fake reader with hand-picked frames, not the real fine-tuned
+  model, so it says nothing about how well the real listener hears. Speed
+  (median/p90 ms) is unmeasured for the same reason.
+- It does not prove safety on tricky turns (typos, quotes, "we", corrections
+  of corrections); those belong to lis-300's blind panel, not this build.
+[0m
+[0m$ [0mgit branch -a
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit log --oneline origin/builder-outbox -5; git show origin/builder-outbox --stat=200 | head -40
+9966f246c watcher status
+2cc149ec0 watcher status
+72969940d watcher status
+e574e555d watcher status
+1aacefc61 watcher status
+commit 9966f246cc7231d32ddbd25a4f899faba63fa0ca
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 08:51:43 2026 -0400
+
+    watcher status
+
+ status/watcher.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_lis310_agent.py | wc -l; git show origin/builder-outbox:scripts/claude_lis310_test.py | wc -l; git show origin/main:scripts/claude_loop292_agent.py | wc -l; git show origin/main:scripts/claude_chatdemo_server.py | wc -l; ls scripts/ | head -50
+530
+     357
+fatal: path 'scripts/claude_loop292_agent.py' exists on disk, but not in 'origin/main'
+       0
+     402
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -i -E "292|chatdemo|lis3" | head -30; echo ---DISK---; ls scripts/ | grep -i -E "292|chatdemo|lis3" | head -30
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+artifacts/claude-chatdemo-20260923/selftest.md
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00292/events.fix77.seal.json
+design/v3/30-modes/292-merge-onto-291.md
+design/v3/60-listener/task-lis300-train.md
+handoff/kit/briefs/mixpanel292-spec.txt
+handoff/queue/lis-311-chat292.md
+handoff/queue/rsn-292-build.md
+handoff/queue/rsn-292-build2.md
+handoff/queue/rsn-292-panel.md
+scripts/claude_chatdemo_page.html
+scripts/claude_chatdemo_server.py
+scripts/claude_chatdemo_start.sh
+scripts/claude_lis300_agree.py
+---DISK---
+claude_292_corrarm_run.py
+claude_292_m5.sh
+claude_292_m5run.py
+claude_292_panelrun.py
+claude_292_runall.sh
+claude_292_score.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_lis310_agent.py
+claude_lis310_demo.py
+claude_lis310_test.py
+claude_loop292_agent.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_lis310_agent.py > /tmp/lis310_agent.py; wc -l /tmp/lis310_agent.py; git ls-tree -r origin/builder-outbox --name-only | grep -i -E "lis31|292|lis30|chatdemo" | head -30
+530 /tmp/lis310_agent.py
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+artifacts/claude-chatdemo-20260923/selftest.md
+artifacts/claude-lis310-20260923/PASSMARKS.md
+artifacts/claude-lis310-20260923/RESULTS.md
+artifacts/claude-lis310-20260923/SEAL.sha256.txt
+artifacts/claude-merge292-20260923/loop292-config.json
+artifacts/claude-mixpanel292-20260923/README.md
+artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt
+artifacts/claude-mixpanel292-20260923/base291.jsonl
+artifacts/claude-mixpanel292-20260923/make_panel.py
+artifacts/claude-mixpanel292-20260923/panel.jsonl
+artifacts/claude-mixpanel292-20260923/run_base.py
+artifacts/claude-mixpanel292-20260923/score_panel.py
+design/v3/30-modes/292-merge-muse.md
+runs/rsn-292-build/rsn-292-build.exit
+runs/rsn-292-build/rsn-292-build.go1.done
+runs/rsn-292-build/rsn-292-build.go1.err.txt
+runs/rsn-292-build/rsn-292-build.go1.reply.md
+runs/rsn-292-build/rsn-292-build.md
+runs/rsn-292-panel/rsn-292-panel.exit
+runs/rsn-292-panel/rsn-292-panel.go1.done
+runs/rsn-292-panel/rsn-292-panel.go1.err.txt
+runs/rsn-292-panel/rsn-292-panel.go1.reply.md
+runs/rsn-292-panel/rsn-292-panel.md
+scripts/claude_292_m5.sh
+scripts/claude_292_m5run.py
+scripts/claude_292_panelrun.py
+scripts/claude_292_runall.sh
+scripts/claude_292_score.py
+scripts/claude_chatdemo_page.html
+[0m
+[0m→ [0mRead scripts/claude_loop292_agent.py
+[0m→ [0mRead scripts/claude_lis310_agent.py
+[0m→ [0mRead scripts/claude_lis310_test.py
+[0m→ [0mRead scripts/claude_chatdemo_server.py
+[0m
+[0m$ [0mls ~/premonition-models/ 2>&1; ls ~/premonition-models/lis300-merged/ 2>&1 | head; ls ~/premonition-chat/ 2>&1 | head
+lis300-merged
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+chatdemo-venv
+flags
+flags-repo
+old
+port.txt
+runtime
+server.log
+state
+transcript.jsonl
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis300-20260923/RESULTS.md | head -80
+fatal: path 'artifacts/claude-lis300-20260923/RESULTS.md' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mls artifacts/ | grep lis; ls scripts/ | grep lis3
+claude-lis300-20260923
+claude-lis310-20260923
+fable-english-listening-20260921
+claude_lis310_agent.py
+claude_lis310_demo.py
+claude_lis310_test.py
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox --name-only | grep lis30 | head; shasum -a 256 ~/premonition-models/lis300-merged/model.safetensors
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  /Users/ben-hannan/premonition-models/lis300-merged/model.safetensors
+[0m
+[0m$ [0mls artifacts/claude-lis300-20260923/ artifacts/claude-lis310-20260923/
+artifacts/claude-lis300-20260923/:
+dev_sweep.txt
+panel_score_T0.json
+panel_score.json
+RESULTS.md
+SEAL-run.sha256.txt
+THRESHOLD.txt
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-lis310-20260923/:
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+[0m
+[0m✗ [0mGrep "sha256|0\.995|THRESHOLD|model\.safetensors" failed[90m in artifacts/claude-lis300-20260923[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mcat artifacts/claude-lis300-20260923/THRESHOLD.txt; head -60 artifacts/claude-lis300-20260923/RESULTS.md
+T=0.995
+
+Threshold rule (PASSMARKS.md): T is the smallest grid value with 0 wrong-save
+turns on the whole dev set (867 turns: 428 o0b_l2 + 139 opus_dev + 300 o0a2),
+else 0.995. No grid value reached 0 wrong-save turns (minimum 6 at t=0.995),
+so T = 0.995.
+
+Dev sweep (whole dev set, sealed scorer claude_lis300_score.py --sweep):
+t=0.000 wrong_turns=38 recall=634/688 ask=73/78 we=12/12
+t=0.300 wrong_turns=38 recall=633/688 ask=73/78 we=12/12
+t=0.500 wrong_turns=33 recall=629/688 ask=73/78 we=12/12
+t=0.600 wrong_turns=30 recall=626/688 ask=73/78 we=12/12
+t=0.700 wrong_turns=29 recall=615/688 ask=73/78 we=12/12
+t=0.800 wrong_turns=20 recall=605/688 ask=73/78 we=12/12
+t=0.850 wrong_turns=19 recall=598/688 ask=73/78 we=12/12
+t=0.900 wrong_turns=17 recall=574/688 ask=73/78 we=12/12
+t=0.930 wrong_turns=16 recall=561/688 ask=73/78 we=12/12
+t=0.950 wrong_turns=14 recall=533/688 ask=73/78 we=12/12
+t=0.970 wrong_turns=13 recall=510/688 ask=73/78 we=12/12
+t=0.980 wrong_turns=9 recall=487/688 ask=73/78 we=12/12
+t=0.990 wrong_turns=7 recall=428/688 ask=73/78 we=12/12
+t=0.995 wrong_turns=6 recall=374/688 ask=73/78 we=12/12
+
+Dev numbers at T=0.995, per src (sealed scorer, --threshold 0.995):
+- o0b_l2 (428 turns): gold_writes=352 hits=226 recall=64.2% wrong_turns=0 ask=59/59 we=n/a
+- opus_dev (139 turns): gold_writes=79 hits=32 recall=40.5% wrong_turns=1 ask=14/19 we=4/4
+- o0a2 (300 turns): gold_writes=257 hits=116 recall=45.1% wrong_turns=5 ask=n/a we=8/8
+- whole dev (867 turns): gold_writes=688 hits=374 recall=54.4% wrong_turns=6
+  (5 of the 6 on no-save turns) wrong_facts=6 ask=73/78 we=12/12
+  turn_exact=266/499 held_back_facts=309 ms_median=1505.3ms p90=2169.9ms max=3745.2ms
+# lis-300 registered result: FAIL (P300.2 recall 71/137 = 51.8%, bar 85%)
+
+Builder run 2026-09-23 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel run once. Category counts only; no panel turn is quoted.
+
+## Marks table (arm A = reader + compiler at T = 0.995)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| P300.1 wrong-save turns | ≤ 1 of 240 | 1 of 240 | PASS |
+| P300.2 exact recall of gold writes | ≥ 85% | 71 of 137 = 51.8% | FAIL |
+| P300.3 ASK turns read correctly | ≥ 90% | 38 of 40 = 95.0% | PASS |
+| P300.4 our/we turns that ask whose | ≥ 90% | 20 of 20 = 100% | PASS |
+| P300.5 unparseable outputs | ≤ 2% of turns | 0 of 240 = 0% | FAIL-free, PASS |
+| P300.6 median read time on GPU | ≤ 1,500 ms | 1492.45 ms | PASS |
+
+Overall verdict: FAIL. P300.2 also lands under 75%, which trips the PASSMARKS
+"proved wrong" clause: at the sealed threshold rule the threshold/compiler is
+too strict to be useful.
+
+## What the threshold buys (report only)
+
+- At T = 0.995: 72 pred writes, 71 hits, 1 wrong fact, 1 wrong turn, 66 held-back facts.
+- At T = 0: 140 pred writes, 133 hits, 7 wrong facts, 7 wrong turns, 1 held-back fact.
+- Wrong facts per saved fact: 1/72 at T, 7/140 at T = 0.
+- Wrong facts per turn: 1/240 at T, 7/240 at T = 0.
+- Recall: 71/137 (51.8%) at T, 133/137 (97.1%) at T = 0.
+- The reader itself reads well (97.1% with no gate); the 0.995 gate holds back
+  66 of 137 gold facts yet still lets 1 wrong save through.
+
+## Recall by family at T (hits / gold writes, category level only)
+
+- tell-single: 11/14 turns exact-ish 11/14 writes hit; tell-multi 8/21; tell-plural 11/17;
+  tell-appositive 6/20; tell-verb 7/12; tell-typo 5/8; tell-self 6/8.
+- correct (uses prev_reply): 7/17. short-answer (uses prev_reply): 4/8.
+- pronoun-clear: 6/12. pronoun-ambiguous: 0 writes gold, 1 wrong-save turn.
+- our-we: 0 gold writes, 0 wrong turns (all 20 asked whose).
+- negation/check/suppose/plan/reported/chat: 0 gold writes each, 0 wrong turns each.
+- questions: wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5 ask-ok.
+- The single wrong-save turn is in pronoun-ambiguous (a no-save turn).
+- At T = 0 the 7 wrong turns are: 5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo.
+
+## Timing, training, money
+
+- Read device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode.
+- Panel read ms (240 turns): median 1492.45, p90 2051.0, max 3115.1.
+- Dev read ms (867 turns): median 1505.3, p90 2169.9, max 3745.2.
+- Training: 4002/4002 steps, 2 epochs, 21.78 minutes, 4851.9 tok/s,
+  dev loss 0.0842, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc,
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (2,161,290,912 bytes).
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+  kept at ~/premonition-models/lis300-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis300/work/run/merged/. Never in git.
+- Dollars spent: $0. BensPC used (free). No vast.ai rental. No other instance running.
+
+## Data built (recorded counts)
+[0m
+[0m$ [0mls scripts/ | grep -E "lis300|lis31|292|chatdemo|demo"; echo ---; ls artifacts/claude-lis310-20260923/; echo ---; cat artifacts/claude-lis310-20260923/PASSMARKS.md | head -30
+claude_292_corrarm_run.py
+claude_292_m5.sh
+claude_292_m5run.py
+claude_292_panelrun.py
+claude_292_runall.sh
+claude_292_score.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_demo_dryrun.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_transcript.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_lis310_agent.py
+claude_lis310_demo.py
+claude_lis310_test.py
+claude_loop292_agent.py
+fable_demo126_run.py
+fable_demo55_advantage.py
+fable_demo55b_forgetting.py
+fable_demo88_rehearse.py
+fable_modes54_demo.py
+fable_soak108_ghostdemo.py
+fable_soak93_ghostdemo.py
+---
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+---
+# lis-310 PASSMARKS (sealed BEFORE the registered run, 2026-09-23)
+
+Build: 291 + the lis-300 listener (turn310 outside turn291). CPU build.
+Tests: scripts/claude_lis310_test.py, StubReader (no weights), threshold 0.99
+(lis-300 THRESHOLD.txt default; no THRESHOLD.txt on origin/main as of today).
+
+## Marks
+
+| Mark | Bar |
+|---|---|
+| P310.1 all sealed unit tests pass | 11/11 PASS, exit 0 |
+| P310.2 base-chain writes in the blocked-write test (T7) | 0 writes over 5 turns |
+
+## Predicted moves (from the pilot, same sealed files)
+
+- T1 "My sisters are Mira and Tal." (STATE, 2x ASSERT me, conf .999) saves 2
+  triples (USER,sister,Mira) + (USER,sister,Tal); reply is the base mouth's
+  save confirmation ("Saved: your sister is ...").
+- T2 "Our dog is Pip." (we-frame) replies exactly
+  "Whose dog is Pip, yours or someone else's?"; 0 triples.
+- T3a low-conf STATE (conf 0.5 < 0.99) replies exactly
+  "Just to check: is Mira's dog Pip?"; 0 triples; then "yes" saves exactly 1
+  triple with a Saved reply.
+- T3b same ask-back, then "no": 0 triples, "Okay, I won't save that."
+- T3c same ask-back, then another fact turn: pending dropped, new turn saves
+  normally (1 triple, the dog fact never saved).
+- T4 NEGATE turn saves 0; reply is the base's (no write).
+- T5 CHECK "So Mira's dog is Pip." after a STATE teach: base answers
+  "I already have that."; triples unchanged (1); 0 new events.
+- T6 "Whose dog is Pip?" (ASK frame) answered from the notebook
+[0m
+[0m# [0mTodos
+[•] Verify lis300 reader/compiler on origin/main + torch/MPS availability
+[ ] Write scripts/claude_lis311_agent.py (292 + install_turn310, T=0.995)
+[ ] Write scripts/claude_lis311_try.py (stub equivalents + 30-turn real try-out driver)
+[ ] Pilot: stub suite + short real-model smoke (few turns)
+[ ] Write PASSMARKS.md, seal, append ledger predictions
+[ ] Registered stub run vs 311
+[ ] Registered 30-turn real-model try-out on Mac, full per-turn report
+[ ] Write server + start.sh, launch on 8767, GET / + one turn, leave running
+[ ] Write RESULTS.md + final reply (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_read.py | head -80
+#!/usr/bin/env python3
+"""lis-300 reader: the fine-tuned MiniCPM5-1B listener, with a confidence per fact.
+
+Confidence of fact i = the lowest probability the model gave any token it emitted inside
+the turn's "act" value or inside fact i's JSON object (greedy decoding). The compiler asks
+back when this is below the threshold fixed on dev.
+
+Library:  r = Reader(model_dir); frame, confs, raw, ms = r.read(turn, prev_reply)
+CLI:      python claude_lis300_read.py --model DIR --rows ROWS.jsonl --out OUT.jsonl
+          ROWS rows need {"id","turn","prev_reply"}; OUT rows = {"id","frame","conf","raw","ms"}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_common import build_prompt, parse_frame  # noqa: E402
+
+
+def object_spans(text: str):
+    """Char spans of the act value and of each object inside the facts array."""
+    act = None
+    i = text.find('"act"')
+    if i >= 0:
+        j = text.find(",", i)
+        act = (i, j if j > 0 else len(text))
+    facts = []
+    k = text.find('"facts"')
+    if k >= 0:
+        k = text.find("[", k)
+        depth, start, instr, esc = 0, None, False, False
+        for p in range(k + 1, len(text)):
+            ch = text[p]
+            if instr:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    instr = False
+                continue
+            if ch == '"':
+                instr = True
+            elif ch == "{":
+                if depth == 0:
+                    start = p
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0 and start is not None:
+                    facts.append((start, p + 1))
+            elif ch == "]" and depth == 0:
+                break
+    return act, facts
+
+
+class Reader:
+    def __init__(self, model_dir, device=None, max_new_tokens=200):
+        self.dev = device or ("cuda" if torch.cuda.is_available() else
+                              "mps" if torch.backends.mps.is_available() else "cpu")
+        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.dev).eval()
+        self.max_new = max_new_tokens
+
+    @torch.no_grad()
+    def read(self, turn, prev_reply=""):
+        t0 = time.perf_counter()
+        p = self.tok(build_prompt(turn, prev_reply), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        out = self.model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=self.max_new,
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B -c "import torch; print('torch', torch.__version__); print('mps', torch.backends.mps.is_available()); print('cuda', torch.cuda.is_available()); import transformers; print('tf', transformers.__version__)"
+torch 2.14.0
+mps True
+cuda False
+tf 5.17.0
+[0m
+[0m$ [0muptime; df -g / | tail -2; tail -20 artifacts/fable-predictions-ledger.md
+9:58  up 3 days,  1:47, 4 users, load averages: 44.58 45.54 46.39
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102307480    0%   /
+- P270b.7 (same) overall registered PASS: predicted ~10%. Needs M1+M2+M3+M5 together.
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 291, then 0 events growth under 310).
+- P270b OUTCOME (2026-09-23, builder; registered verdict FAIL: M1 margin, M3, M5 fail; M2, M4, M6 pass; panel seal 2/2 OK, schema clean, arms A/A261b ran ONCE each on BensPC GPU, sealed 18/18 OK after, no sealed file changed): M1 A 37/40 vs A261b 31/40 margin +6 (bar >=30 and +15: absolute met, margin missed by 9; P270b.1 margin half wrong, absolute right); M2 A 14/15 (P270b.2 right); M3 A 2 (061 hunter-occupation pYES 0.511, 068 may-occupation pYES 0.266; P270b.3 range right, bar missed by 1); M4 30/30 (P270b.4 right); M5 3 (040 capitalised-phrase-span, 061 value-span diff, 068 capitalised-decoy save; P270b.5 range wrong by 1); M6 median 0.0096 max 0.1146 (P270b.6 right); ALL FAIL (P270b.7 resolves). Post-seal scorer fix disclosed with diff (v1 symmetric-strip wrongly missed 5 correct s-name frames; v2 pred-anchored re-scores recorded rows, arms never re-ran; v1 file kept). Scorer artifact: u270-003 arm A HIT undeserved (true M1 36, margin +5). See artifacts/claude-type270b-20260923/RESULTS.md.
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P310.2 OUTCOME (same) 0 base-chain writes over the 5 T7 turns (each verified in-run to grow notebook events on raw 291 first, then 0 events/0 triples under 310). Hook turn310 outside turn291; me stored as USER with Me166 render; 209/252b screens on every listener save (0 hits); every turn in lis310_log.jsonl.
+- P280n.1 (2026-09-23, builder; exp 280n re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280n-20260923; blind panel never opened) M1 blind joinpanel280n run once on all five arms with sealed 280m runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed = single piece arm whose reply differs from 260 else 260, 2+ = overlap fail) = 100%; 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): 8/8 PASS exit 0, overlap mock 8/9 FAIL exit 1, empty exit 4, schema exit 3.
+- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. 280m deviation corrected (its suites ran only as pre-seal pilot).
+- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test wrong.
+- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10 with owners 280b:5/260:5, control 7/10); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. The 3 misses (ct00#1, ct01#1, ct04#1, control, ev 0) are turns where only 281 differs from 260 and 280m == 281 byte-identical: control wording firing the 281 rewrite, unpredicted by the fixed control->260 rule. All 90 turns equal some piece arm. M2 PASS exactly as P280n.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280n.1 figure wrong (87 not 100), 0-overlap/write/scan parts right; P280n.2 right; P280n.3 right; P280n.4 bar-miss clause tripped on the 3 controls. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280n-20260923/RESULTS.md.
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-merge292-20260923; blind panels never opened, only specs/README counts read) M1 four piece panels fidelity-100%-or-VOID then same runner+scorer on 292: right_lost [] new_wrong [] new_writes [] all panels; traveling 268b employer hole disclosed. M2 vs 291 rows: sessions152 [] bench [] marks123 exactly D_q_vs_s-04 OK->UNCLEAR reply-only; rt136 move set identical to 291 (21 inherited) 0 new; rt143 exactly M3 Q2->Yes + O5 Q2->IDK. M3 restart probes 0 moves; verifier exactly N02 rows[1] Q2->"I don't know Tomas's house." stores identical (lift-then-honest-abstain, stable 5/5); 0 ghosts/dup-fails/bad-writes. M4 median added <= +5 ms (pilot +0.57/+0.68/+0.64). M5 mixpanel292 once per arm: no piece-right item lost, 0 wrong beyond 291, 0 question writes, controls byte-identical to 291, mixed no bar.
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save turns 1/240 (pronoun-ambiguous no-save turn; bar <=1: PASS).
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo); held-back 66; $0 spent; merged sha256 112880d6 kept at ~/premonition-models/lis300-merged/ and on BensPC. See artifacts/claude-lis300-20260923/RESULTS.md.
+- P292.2 OUTCOME (2026-09-23, builder) registered verdict PASS M1-M5. M1: chain 67/70 fidelity exact + 0/0/0; nhop 55/60 (bug 11+1) + 0/0/0; yesno 85/85 + 0/0/0; corr 291-table 73/17/3/1 exact + 292 identical 96/96. M2: sessions 0, bench 0, marks123 D_q_vs_s-04 only, rt136 set == 291 (21 inherited), rt143 M3/O5 only, GATE clean. M3: restarts 0, verifier N02 only (stable, stores identical), 0 ghosts/dups/bad-writes. M4: +0.53/+0.41/+0.61 ms. M5: 291 35/0, 266b 24/10, 268b 29/6, 293 44/8, 292 73/0/7miss; union-right 56 lost 0; wrong beyond 291: 0; controls 24/24 identical; writes 0; mixed 9/12. Deviations: corr VOID×2 (wrong runner) redone with new mirror driver; m5 scorer-flag VOID rescored with flags; 3 pre-seal draft fixes + design amendment disclosed. Seal 10/10 OK post-run. P292.1 held on every line.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_compiler.py | head -60; echo ===; git show origin/main:scripts/claude_lis300_compiler.py | grep -n "relation-names\|open(\|Path" | head
+#!/usr/bin/env python3
+"""lis-300 write compiler: the ONLY code that decides what the listener may save.
+
+The fine-tuned reader (MiniCPM5-1B) proposes a frame (design/v3/60-listener/frame-spec.md).
+This plain code turns it into a decision:
+  write      facts to save now (all of a turn's writable facts, or none)
+  ask_whose  facts owned by "we" (Ben's our/we ruling: ask whose, never save as me)
+  ask_back   facts that would be writable but fall below the confidence threshold
+  held       facts that can't be written, each with a reason
+  question   the reader's ask object when act == ASK
+
+A fact is written only when ALL hold: mode ASSERT/CORRECT; owner "me" or a whole-word span
+of the turn or previous reply; value a whole-word span of the turn; relation in the table;
+confidence >= threshold. If any writable-looking fact in the turn fails a check, the whole
+turn writes nothing (all-or-nothing) and the failing facts go to ask_back or held.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+WRITE_MODES = {"ASSERT", "CORRECT"}
+PRONOUNS = {"he", "she", "his", "her", "hers", "him", "they", "them", "their", "it", "its",
+            "i", "my", "our", "us", "you", "your"}
+ME_WORDS = re.compile(r"\b(i|i'm|im|i've|ive|me|my|mine|myself)\b", re.I)
+
+
+def whole_word_span(needle: str, hay: str) -> bool:
+    """True if needle occurs in hay as whole words (exact case; typos kept as typed)."""
+    if not needle or not needle.strip():
+        return False
+    # a possessive or "is" contraction typed without an apostrophe is allowed: "anas boss", "hals my cousin"
+    pat = r"(?<![A-Za-z0-9])" + re.escape(needle.strip()) + r"(?:'s|’s|s)?(?![A-Za-z0-9])"
+    return re.search(pat, hay) is not None
+
+
+def check_fact(f: dict, turn: str, prev: str) -> str | None:
+    """Return None if structurally writable, else the reason it is not."""
+    mode = f.get("mode")
+    if mode not in WRITE_MODES:
+        return f"mode:{mode}"
+    owner = str(f.get("owner", ""))
+    if owner.lower() == "we":
+        return "we"
+    if f.get("rel") not in REL_NAMES:
+        return "rel_not_in_table"
+    if owner.strip().lower() in PRONOUNS:
+        return "pronoun_owner"
+    if owner.lower() == "me":
+        if not ME_WORDS.search(turn) and not ME_WORDS.search(prev or ""):
+            return "me_without_first_person"
+    elif not (whole_word_span(owner, turn) or whole_word_span(owner, prev or "")):
+        return "owner_not_span"
+    val = str(f.get("value", ""))
+    asked = (prev or "").strip().endswith("?")  # short answers: "Who is Kai?" -> "my cousin"
+    if not (whole_word_span(val, turn) or (asked and whole_word_span(val, prev))):
+        return "value_not_span"
+    if owner.strip().lower() == str(f.get("value", "")).strip().lower():
+zsh:1: == not found
+[0m
+[0m# [0mTodos
+[✓] Verify lis300 reader/compiler on origin/main + torch/MPS availability
+[•] Write scripts/claude_lis311_agent.py (292 + install_turn310, T=0.995)
+[ ] Write scripts/claude_lis311_try.py (stub equivalents + 30-turn real try-out driver)
+[ ] Pilot: stub suite + short real-model smoke (few turns)
+[ ] Write PASSMARKS.md, seal, append ledger predictions
+[ ] Registered stub run vs 311
+[ ] Registered 30-turn real-model try-out on Mac, full per-turn report
+[ ] Write server + start.sh, launch on 8767, GET / + one turn, leave running
+[ ] Write RESULTS.md + final reply (verdict, marks, moves, deviations)
+[0m
+[0m← [0mWrite scripts/claude_lis311_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_lis311_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_agent.py
+@@ -66,13 +66,9 @@
+ 0.995)."""
+ cfg = dict(DEFAULT_CONFIG311, **(cfg or {}))
+ loop = B292.build_agent292(cfg)
+ liscfg = cfg.get("lis311", {}) or {}
+-reader, threshold = _reader_from_cfg311(
+-    {"lis311": dict(liscfg, threshold=liscfg.get("threshold", threshold))}
+-    if "reader" in liscfg or "model_dir" in liscfg
+-    else {"lis311": dict(liscfg, reader=reader,
+-                         threshold=threshold)})
++reader, threshold = _reader_from_cfg311({"lis311": liscfg})
+ try:
+     state_dir = Path(loop.dir)
+ except Exception:  # noqa: BLE001
+     state_dir = Path(".")
+
+[0m
+[0m← [0mWrite scripts/claude_lis311_try.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_lis311_try.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
+@@ -411,56 +411,36 @@
+     for conv, turns in CONVS:
+         d = tempfile.mkdtemp(prefix="lis311real_")
+         loop = A311.build_agent311({"state_dir": d, "lis311": {
+             "reader": reader, "threshold": 0.995}})
+-        queue = list(turns)
++        queue = [(t, False) for t in turns]
+         idx = 0
+         while queue:
+-            turn = queue.pop(0)
++            turn, adaptive = queue.pop(0)
+             idx += 1
+             t0 = time.perf_counter()
+             reply = loop.turn(turn)
+             ms = round((time.perf_counter() - t0) * 1000, 1)
+             ms_all.append(ms)
++            if adaptive:
++                n_yes += 1
+             row = log_rows(d)[-1] if log_rows(d) else {}
+             rec = {"conv": conv, "n": idx, "turn": turn,
+                    "reply": list(reply),
+                    "saved": row.get("wrote", []),
+                    "frame": row.get("frame"),
+                    "confs": row.get("confs"),
+                    "decision": row.get("decision"),
+-                   "ms": ms, "adaptive": False}
++                   "ms": ms, "adaptive": adaptive}
+             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+-            print("--- [%s#%d] user: %r" % (conv, idx, turn))
++            print("--- [%s#%d] user: %r%s" % (conv, idx, turn,
++                  " (adaptive yes)" if adaptive else ""))
+             print("    reply: %r saved=%r frame=%s confs=%s ms=%s" % (
+                 " ".join(reply), rec["saved"], json.dumps(rec["frame"]),
+                 rec["confs"], ms))
+             if (reply and reply[0].startswith("Just to check:")
+-                    and not queue[:1] == ["yes"]):
+-                queue.insert(0, "yes")
+-        # drain any trailing adaptive yes already handled in-loop
+-        while queue:
+-            turn = queue.pop(0)
+-            idx += 1
+-            t0 = time.perf_counter()
+-            reply = loop.turn(turn)
+-            ms = round((time.perf_counter() - t0) * 1000, 1)
+-            ms_all.append(ms)
+-            n_yes += 1
+-            row = log_rows(d)[-1] if log_rows(d) else {}
+-            rec = {"conv": conv, "n": idx, "turn": turn,
+-                   "reply": list(reply),
+-                   "saved": row.get("wrote", []),
+-                   "frame": row.get("frame"),
+-                   "confs": row.get("confs"),
+-                   "decision": row.get("decision"),
+-                   "ms": ms, "adaptive": True}
+-            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+-            print("--- [%s#%d] user: %r (adaptive yes)" % (conv, idx,
+-                                                           turn))
+-            print("    reply: %r saved=%r frame=%s confs=%s ms=%s" % (
+-                " ".join(reply), rec["saved"], json.dumps(rec["frame"]),
+-                rec["confs"], ms))
++                    and not queue[:1] == [("yes", False)]):
++                queue.insert(0, ("yes", True))
+         print(" Conv %s notebook: %s" % (conv, triples(loop)))
+ n_total = n_scripted + n_yes
+ print("device: %s" % dev)
+ print("scripted turns: %d adaptive yes turns: %d total: %d" % (
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis311_try.py --stub 2>&1 | tail -25
+lis-311 stub scenarios (StubReader, threshold 0.995)
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+PASS T3c askback-dropped-on-other :: non-yes drops pending, next turn saves normally
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+summary: 10/10 passed
+[0m
+[0m← [0mWrite /tmp/lis311_pilot.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime | cut -c1-80; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B /tmp/lis311_pilot.py 2>&1 | tail -10
+10:01  up 3 days,  1:50, 4 users, load averages: 33.05 41.02 44.42
+Traceback (most recent call last):
+  File "/tmp/lis311_pilot.py", line 9, in <module>
+    import claude_lis300_read as READ
+ModuleNotFoundError: No module named 'claude_lis300_read'
+[0m
+[0m← [0mEdit scripts/claude_lis311_try.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis311_try.py
+@@ -51,8 +51,10 @@
+ (_DEPS / "design" / "v3" / "60-listener").mkdir(parents=True,
+                                                 exist_ok=True)
+ jobs = {"scripts/claude_lis300_common.py":
+         _DEPS / "scripts" / "claude_lis300_common.py",
++        "scripts/claude_lis300_read.py":
++        _DEPS / "scripts" / "claude_lis300_read.py",
+         "scripts/claude_lis300_compiler.py":
+         _DEPS / "scripts" / "claude_lis300_compiler.py",
+         "design/v3/60-listener/relation-names.txt":
+         _DEPS / "design" / "v3" / "60-listener" / "relation-names.txt"}
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B /tmp/lis311_pilot.py 2>&1 | tail -10
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:54,  1.35s/it]Loading weights:  59%|█████▉    | 130/219 [00:01<00:00, 121.59it/s]Loading weights:  88%|████████▊ | 193/219 [00:02<00:00, 106.65it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 92.32it/s] 
+device: mps
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 510.03it/s]
+'my dog is pip.' -> ["That sounds like a description, not a name, so I didn't save it. What is your dog's name?"] ms=4047.6
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 387.30it/s]
+'our dog is pip.' -> ["Whose dog is pip, yours or someone else's?"] ms=1447.1
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2150.93it/s]
+'whose dog is pip?' -> ["I don't know anyone whose dog is pip."] ms=1871.2
+[0m
+[0m← [0mWrite scripts/claude_lis311_server.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_lis311_start.sh
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_lis311_start.sh && sh scripts/claude_lis311_start.sh 2>&1 | tail -5
+lis311 starting (pid 32313), log /Users/ben-hannan/premonition-chat/lis311-server.log
+lis311 ready on 8767
+[0m
+[0m$ [0mcurl -s -m 10 http://127.0.0.1:8767/ -o /dev/null -w "GET / -> %{http_code} %{size_download} bytes\n"; curl -s -m 60 -X POST http://127.0.0.1:8767/turn -H 'Content-Type: application/json' -d '{"text":"My sister is Mira."}'; echo; curl -s -m 10 http://127.0.0.1:8767/notebook
+GET / -> 200 8387 bytes
+{"reply": "Saved: your sister is Mira.", "added": [["USER", "sister", "Mira"]], "removed": [], "notebook": [["USER", "sister", "Mira"]], "why": {"ears_stage": "", "ears_score": 0.0, "records": []}, "seconds": 1.586, "turn_index": 0}
+{"ready": true, "notebook": [["USER", "sister", "Mira"]], "turns": 1}
+[0m
+[0m$ [0mcurl -s -m 30 -X POST http://127.0.0.1:8767/reset; echo; curl -s -m 10 http://127.0.0.1:8767/notebook
+{"ok": true, "moved_to": "/Users/ben-hannan/premonition-chat/old/lis311-state-20260923-100303"}
+{"ready": true, "notebook": [], "turns": 1}
+[0m
+[0m← [0mWrite artifacts/claude-lis311-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_lis311_agent.py scripts/claude_lis311_try.py scripts/claude_lis311_server.py scripts/claude_lis311_start.sh artifacts/claude-lis311-20260923/PASSMARKS.md > artifacts/claude-lis311-20260923/SEAL.sha256.txt && cat artifacts/claude-lis311-20260923/SEAL.sha256.txt
+bfa0dce9dc6c4ac1d7c1494f1ccf53be27833b663692a7c2ea3e2cdb40a6580a  scripts/claude_lis311_agent.py
+2e64d6a9b3963dfce30f66fc911727780c8d63e3756f546bd1652137beb1788a  scripts/claude_lis311_try.py
+a6586611144d1c62854fdd0b59ecd48c77038877ea288d72f669ff92cf471b51  scripts/claude_lis311_server.py
+c2116cdf75d8348b9258d169d8f2a51e09ec85de009688db2f44f318054807cd  scripts/claude_lis311_start.sh
+31df26062c89ee614cd0e1f7a72ed5fe0094a897d83033eb49a50d0e8efc0a1e  artifacts/claude-lis311-20260923/PASSMARKS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis311-20260923) all 10 stub scenarios pass, exit 0: T1 2-facts-save-2 with 292 mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK already-have + 0; T6 notebook answer + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0.
+- P311.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 292, then 0 events growth under 311).
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched; own state dir ~/premonition-chat/lis311-state. Step 3 real-model 30-turn try-out report-only (no bar): every turn row + median/p90/max ms + device in artifacts/claude-lis311-20260923/real-rows/rows.jsonl.
+EOF
+tail -4 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P280p.5 OUTCOME (2026-09-23, builder, sealed exp 280p re-test of unchanged 280m, CPU only) registered verdict PASS M1-
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, re
+- P311.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow noteboo
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched;
+[0m
+[0m# [0mTodos
+[✓] Verify lis300 reader/compiler on origin/main + torch/MPS availability
+[✓] Write scripts/claude_lis311_agent.py (292 + install_turn310, T=0.995)
+[✓] Write scripts/claude_lis311_try.py (stub equivalents + 30-turn real try-out driver)
+[✓] Pilot: stub suite + short real-model smoke (few turns)
+[✓] Write PASSMARKS.md, seal, append ledger predictions
+[•] Registered stub run vs 311
+[ ] Registered 30-turn real-model try-out on Mac, full per-turn report
+[ ] Write server + start.sh, launch on 8767, GET / + one turn, leave running
+[ ] Write RESULTS.md + final reply (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis311_try.py --stub 2>&1 | tail -15
+lis-311 stub scenarios (StubReader, threshold 0.995)
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+PASS T3c askback-dropped-on-other :: non-yes drops pending, next turn saves normally
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+summary: 10/10 passed
+[0m
+[0m$ [0muptime | cut -c1-100; vm_stat | head -8; df -g / | tail -1
+10:03  up 3 days,  1:53, 4 users, load averages: 40.67 39.75 43.25
+Mach Virtual Memory Statistics: (page size of 16384 bytes)
+Pages free:                                    13037.
+Pages active:                                 647270.
+Pages inactive:                               646104.
+Pages speculative:                               330.
+Pages throttled:                                   0.
+Pages wired down:                             199749.
+Pages purgeable:                                1950.
+/dev/disk3s1s1       460   12         9    57%  484014 102021040    0%   /
+[0m
