@@ -62,6 +62,10 @@ while [ ! -e "$H/STOP" ]; do
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
     ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
   done
+  # status: every round, publish which tasks are running and the log tail, so the director can see launches
+  { date '+%F %T'; echo "running:"; ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null; echo "launched (no exit yet) / finished:"; ls "$Q"/*.md 2>/dev/null | wc -l; echo; tail -150 "$LOG"; } > "$H/status.txt"
+  mkdir -p "$O/status"; if ! cmp -s "$H/status.txt" "$O/status/watcher.txt"; then cp "$H/status.txt" "$O/status/watcher.txt"
+    (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add status && git commit -qm "watcher status" && git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 || true; fi
   sleep 120
 done
 log "watcher stopped"
