@@ -1,0 +1,140 @@
+{
+ "agent": "scripts/claude_loop138nb_agent.py",
+ "rows": [
+  {
+   "dialog": 0,
+   "turns": [
+    {
+     "turn": "Oriel's boss is Sabine.",
+     "reply": "Saved: Oriel's boss is Sabine.",
+     "events": 4
+    },
+    {
+     "turn": "No, Oriel's boss is Tavish.",
+     "reply": "Updated: Oriel's boss is Tavish (it was Sabine).",
+     "events": 2
+    },
+    {
+     "turn": "Tavish's city is Drumlow.",
+     "reply": "Saved: Tavish's city is Drumlow.",
+     "events": 2
+    },
+    {
+     "turn": "Actually, Oriel's boss is Quill.",
+     "reply": "Updated: Oriel's boss is Quill (it was Tavish).",
+     "events": 2
+    },
+    {
+     "turn": "Oriel's boss is not Quill.",
+     "reply": "OK, Oriel's boss is not Quill. I don't have another boss for Oriel.",
+     "events": 1
+    },
+    {
+     "turn": "Whose boss is Tavish?",
+     "reply": "I don't know anyone whose boss is Tavish.",
+     "events": 0
+    },
+    {
+     "turn": "Tell me about Oriel.",
+     "reply": "I didn't understand that question — could you say it another way?",
+     "events": 0
+    },
+    {
+     "turn": "Tell me about Tavish.",
+     "reply": "Tavish's city is Drumlow.",
+     "events": 0
+    },
+    {
+     "turn": "What is Oriel's boss's city?",
+     "reply": "I don't know Oriel's boss.",
+     "events": 0
+    },
+    {
+     "turn": "Who is Oriel's boss?",
+     "reply": "I don't know Oriel's boss.",
+     "events": 0
+    }
+   ],
+   "audits": [
+    {
+     "where": "restart1",
+     "fast": [
+      [
+       "Oriel",
+       "boss",
+       "Tavish"
+      ],
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "truth": [
+      [
+       "Oriel",
+       "boss",
+       "Tavish"
+      ],
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "dup_fast": [],
+     "dup_ids": [],
+     "dup_ok": true
+    },
+    {
+     "where": "triples@5",
+     "fast": [
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "truth": [
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "dup_fast": [],
+     "dup_ids": [],
+     "dup_ok": true
+    },
+    {
+     "where": "end",
+     "fast": [
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "truth": [
+      [
+       "Tavish",
+       "city",
+       "Drumlow"
+      ]
+     ],
+     "dup_fast": [],
+     "dup_ids": [],
+     "dup_ok": true
+    }
+   ],
+   "stored": [
+    [
+     "Tavish",
+     "city",
+     "Drumlow"
+    ]
+   ],
+   "dup_ok_all": true
+  }
+ ]
+}
