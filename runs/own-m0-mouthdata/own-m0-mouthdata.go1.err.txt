@@ -1,0 +1,2702 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; pwd; ls
+14:06  up  3:59, 4 users, load averages: 36.11 45.12 45.67
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         8    61%  484014 86121680    1%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head; git branch -a | head -20; ls scratchpad/briefs/ 2>&1; ls /private/tmp/claude-502/ 2>&1 | head
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+ls: scratchpad/briefs/: No such file or directory
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+bash-edit-diff
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+[0m
+[0m$ [0mls scratchpad/ 2>&1; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -200
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.3 Update 2026-09-23 18:15 UTC: fluent, conversational mouth (absorbs the talking line's F4)
+
+Ben (17:55 UTC): "I only want to talk to it when it's able to speak fluent english in a conversational tone". The talking line
+(design/v3/30-modes/talk-fluency-plan.md) keeps F0 (conversation benchmark), F1 (241b rewriter on 292t), F2 (reworded fixed
+lines) and F3 (reply planner). Its F4, the generative mouth, is this line's M-stages. What changes:
+- **Which model speaks (Ben decides; the default below is what gets built).** talker101 is ours, but it is small and trained only on
+  stories. Its fine-tuned form talker120b wrote raw lines like "Am I I I I have that fact is I I have?" and was unfaithful 172/500
+  times before the brake (shown, artifacts/claude-talker120b-run-20260922/score.json). The default is to fine-tune a copy of the
+  reader's model, MiniCPM5-1B (Ben picked it at 11:01 and it is already downloaded, so no new download). talker101 becomes the
+  "fully ours" comparison arm, not the shipped mouth.
+- **Input:** the checked reply record (act, owner, relation, value, negation, direction, status) plus the user's last turn and a dialog
+  tag from F3 (acknowledge, answer, ask, follow-up). **Output:** one or two conversational sentences with names and values as slot
+  tokens (§3.1 step 1). The printer puts the exact strings back.
+- **Faithfulness (unchanged in spirit, new checker):**
+  1. Slot check: every name and value in the reply is in the record, and every record slot the act needs is present.
+  2. Read-back by the listener's reader (not the shelved own ear). The frame it reads must equal the record, act, negation and
+     direction included.
+  3. If either check fails, the 241b rewriter (F1) says it instead.
+  A yes/no checker is not used (it let 63/65 wrong frames through, board 267).
+- **Stages (each one sealed change):**
+  - M0: training pairs, CPU. Records + turns → several conversational target replies, written by builders, kept only if the slot
+[0m
+[0m$ [0mgit show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | sed -n '200,400p'
+- M0: training pairs, CPU. Records + turns → several conversational target replies, written by builders, kept only if the slot
+    check passes, with fictional names and none drawn from F0's benchmark.
+  - M1: fine-tune with slot tokens.
+  - M2: add the read-back.
+  - M3: measure on F0's benchmark with F0's pass marks: blind judge wins ≥70% of non-tie dialogs vs the arm in use, ≤10% losses,
+    0 unfaithful lines, no single reply on >10% of turns, grammar ≥99%. It is proved wrong if wins are ≤60% or any unfaithful line
+    reaches the user.
+- The M1 to M3 marks in §6 still apply to the talker101 arm.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+**Update 2026-09-23 10:45 (after O0a/O0a2, board entry):** Ben ruled that "we/our" facts are never saved as the
+speaker's; the system asks whose they are. The literal-cue rule capped coverage (v0 67.6%; v1 89.7% on a set rich in
+plurals, 83.5% on the earlier natural set), so relations are **licensed by the ear's calibrated relation head**, with
+a cue in the turn as extra evidence and a higher threshold for cue-less facts (set on dev). Spans, modes, WE→ask and
+atomic writes stay hard rules. O0a3 measures which wrong readings each rule lets through.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 seeds × 15 min)
+**Change:** the 6 set slots + count head replace a single-fact output (E1/E2 arms use 1 slot + "more" flag).
+Marks: plural and appositive dev turns: all facts found ≥ 90% (261 was 4/16); turns with count ≠ filled slots are
+asked about, never half-saved. Recall reported three ways (read right, saved right, sent back as a question).
+**Proved wrong if** plural recall < 60%.
+
+### E4 — own ear against ear v4.1 on a fresh blind panel
+**Change:** swap ear v4.1 for the own ear inside the current pipeline; gate (Qwen QA from 264) unchanged.
+Panel: written blind by a separate agent from a spec, sealed before the run, ≥ 150 turns, same marks as 261b
+(wrong saves ≤ 1, exact TEACH ≥ 85%, ASK ≥ 90%, median ≤ 800 ms). Report wrong saves per saved fact and per turn,
+plus recall. Also report the shared-blind-spot count of §4.4 on dev.
+**Proved wrong if** the own ear has more wrong saves *before the gate* than ear v4.1 on the same panel.
+
+### E5 — certification run (later)
+Freeze everything first (weights, tokenizer, relation table, compiler, thresholds, grading rules). A fresh,
+representative sample of **≥ 368 independent everyday-chat turns** for writes and ≥ 368 replies for grammar: with 0
+errors in each, both rates are below 1% *together* at 95% (2.5% error allowed per claim). 300 turns certify one rate
+alone. Report the rate per turn (a turn with any wrong save) and, separately, per saved fact (with turns as clusters),
+plus automatic recall ≥ 85% and how often it asked. Confirmed-after-asking facts are reported apart, never counted as
+automatic recall. A failed certification is not re-run until it passes under the same 95% claim; any retry is
+pre-registered with its own error budget. The certificate names the kind of chat it was tested on.
+
+### M1 — whole-name copy in talker101 (GPU ≈ 1 min, or Mac CPU)
+**Change:** slot tokens instead of word-piece copy, vs talker120b.
+Marks: truncated names 0/500; raw unfaithful before the brake ≤ 50/500 (120b: 172/500); status right ≥ 489/500.
+**Proved wrong if** raw unfaithful stays > 120/500: the names were not the main problem.
+
+### M2 — read-back check with the own ear (needs E3)
+**Change:** add the §3.1(2) meaning check before the reply is sent; 241 layer as fallback.
+Marks: 0 unfaithful after the check on 1,200 renders, *including* act, negation and direction (the old brake misses
+these, doc 240 §0.2); fallback rate ≤ 10%.
+
+### M3 — grammar and naturalness, blind
+**Change:** none (a measurement of M2), graded with the 241 style sheet v2 by a blind grader.
+Marks: grammar ≥ 99% over ≈ 1,200 renders and ≥ 97% per act; blind pairwise naturalness vs 241b ≥ 60% wins.
+**Proved wrong if** grammar < 97%: then the pre-named fix (§3.1 step 3) is the next single change.
+
+### B — the comparison (after E4 and M3)
+See §7. Marks fixed before the baselines are trained.
+
+### T1 — small talk through the thought (after B)
+Doc 24 S1/S2 (thinker + gist) on top of the own ear and mouth, with doc 24's marks.
+
+---
+
+## 7. A fair comparison with a same-size plain transformer
+
+Benchmarks (all synthetic, fictional names, generated by our generator, sealed before any baseline is trained):
+- **two-hop:** facts taught in separate turns, asked as one question;
+- **reversal:** taught "Ada is Bo's mother", asked "Who is Ada's child?" (the reversal curse, arXiv 2309.12288);
+- **abstention:** untaught facts and never-mentioned people, plus the wipe test (empty notebook → "I don't know");
+- **MQuAKE-style edits:** teach a chain, correct one link, ask the multi-hop question (MQuAKE, arXiv 2305.14795);
+- **3- and 4-hop** chains longer than any in training;
+- grammar of the answers.
+
+Arms:
+
+| Arm | Size | Memory | Why it's there |
+|---|---|---|---|
+| **Premonition-own** | **61,783,463** (§7.1) | notebook | the system |
+| **B-plain** | **61,783,680** (§7.1), decoder-only, same 8,192 tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
+| **B-RAG** | 61,783,680; B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
+| **B-notebook** | 61,783,680; B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+
+### 7.1 Parameter counts (design counts, recomputed from the shapes; the builder re-counts from the built models)
+
+Every learned number the benchmark path uses is counted, including all ear heads, the whole mouth and the reasoner.
+
+| Part | Shape | Parameters |
+|---|---|---:|
+| Ear embeddings | 8,192 × 512 | 4,194,304 |
+| Ear encoder | 8 blocks × (attention 4·512² + MLP 8·512² + 2 norms) + final norm | 25,174,528 |
+| Ear slot layer | 1 cross-attention layer for the 6 slot queries + the queries | 1,052,672 |
+| Ear pointers | owner, value and relation-cue start/end projections (6 × 512²) | 1,572,864 |
+| Ear question pointers | question-owner start/end (2 × 512²) | 524,288 |
+| Ear classifiers | relation (154 classes) per slot + 3 for questions, slot mode (9), act (9), count (7), exists, inverse | 329,859 |
+| Ear special tokens | `ME`, `WE`, `SEP` | 1,536 |
+| **Ear total** | | **32,850,051** |
+| Mouth (talker101, incl. its 0.52M copy head) | as trained; `artifacts/fable-talker101-20260921/RESULTS.md` | 28,847,105 |
+| Mouth slot tokens | 8 new tokens × 512 (M1) | 4,096 |
+| Reasoner | the existing lookup operator | 79,316 |
+| **Premonition-own total** | | **61,783,463** (the first version of this doc said "≈ 59M" and left out the ear heads) |
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/talk-fluency-plan.md 2>&1 | head -150; echo ===; git show origin/main:design/v3/30-modes/our-policy-decision-20260923.md 2>&1 | head -80
+# Fluent, conversational replies: gap and plan. Talking line, 2026-09-23 18:10 UTC
+
+Ben (17:55 UTC): "I only want to talk to it when it's able to speak fluent english in a conversational tone".
+Evidence was checked in code and in the 04:18 chat-demo transcripts (artifacts/claude-chatweak-20260923, 90 turns, dev material).
+
+## Where replies come from today (base 292)
+- 292's mouth is still the stand-in template mouth. Config `mouth`: "Loop138bMouth ... replacement: real mouth
+  fable_mouth53". Answers read like "<owner> is <value>." or "Ana's city is Quito.", and relation labels are
+  used in place of verbs.
+- 241b's better mouth (a rule-based rewriter: 99%+ grammar, and a blind judge preferred it 97 times to 9) is
+  installed only on the old base 228. The 280p talking layers are on 260; they reach 292 via 292t (queued).
+- Chat demo, 90 turns:
+  - 36 are fixed clarify lines. One "I don't know that shape yet..." line appears 17 times, and "I didn't
+    understand that question..." appears 14 times.
+  - 17 are fixed small-talk or self lines.
+  - 37 are built from notebook records. Saves read "Saved: ...".
+  - 0 replies ask a follow-up or refer back to an earlier turn.
+
+## The gap, in order of size
+1. **Understanding, not wording.** 40% of demo replies are "I didn't understand". No mouth can make those
+   conversational; the ear (the understanding step) has to understand more. That is the ear and reasoning
+   lines' work. This line will measure it and hand them the counts.
+2. **Stiff fixed lines.** One wording per situation, repeated word for word, plus the "I can: a; b; c" list and
+   "Saved:". This is fixable on CPU in days.
+3. **Sentence wording.** 241b already fixes most of this; it just is not on 292.
+4. **Conversation habits.** No acknowledgements, variety, follow-ups or references back. These need a dialog
+   state and a reply planner, not just a better sentence writer.
+5. **A real generative mouth** (the own talker101, or a small pretrained model that only paraphrases a checked
+   record). This is the long-run answer to "fluent". It needs an exact read-back check first, because a yes/no
+   checker let 63 of 65 wrong readings through. It belongs to the own-model line, and a new model download needs
+   Ben's yes.
+
+## Plan (each step is one sealed experiment; marks fixed before each build)
+- **F0: measurement first.** A sealed conversation benchmark: fresh multi-turn everyday dialogs from a blind
+  writer, fictional names. Baseline taken on 292.
+  - Mechanical marks: unfaithful lines, notebook-event changes, share of the single most common reply, and the
+    share of turns that are clarify lines.
+  - Graded marks: a dialog-level blind pairwise judge, and a rubric grader (warmth, variety, acknowledgement,
+    follow-up). Every grader must first catch at least 36 of 40 planted flaws.
+- **F1: 241b's rewriter on 292t.** This also re-registers 241b's speed mark under a quiet-machine rule.
+- **F2: conversational fixed text.** Several true wordings per situation (clarify, greeting, thanks, save
+  acknowledgement, ability), chosen deterministically, under a sealed style guide. Each wording gets a truth
+  check.
+- **F3: a small reply planner.** Acknowledge the teach and never repeat the same line twice in a row, with
+  nothing new claimed.
+- **F4: generative mouth,** coordinated with the own-model line through the coordinator.
+Pass mark for "conversational" (proposed, to be fixed in F0's note):
+- the blind judge prefers the new arm on at least 70% of non-tie dialogs vs 292, with at most 10% losses;
+- 0 unfaithful lines;
+- no single reply on more than 10% of turns;
+- grammar at least 99%.
+Wrong if: 60% or fewer wins, or any unfaithful line.
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/our-policy-decision-20260923.md 2>&1 | head -60; echo ---SAYFORMS---; git show origin/main:artifacts/claude-mouth241b-20260922/say_forms.json 2>&1 | head -100
+# Decision: "our" is not the speaker (Ben, 2026-09-23 02:49 UTC)
+
+Ben chose **Ask** on the decision card in the research thread. Question: save "our dog is Rex" as the speaker's dog, or ask whose dog?
+
+- From now on, a teach turn whose owner is we / us / our / ours / ourselves is **not** saved as the speaker's fact. The system asks whose it is, unless the group has been identified.
+- I / me / my / mine / myself still map to the speaker.
+- Today's code does the opposite: `scripts/claude_earcheck261_canon.py` line 21 maps we/us/our/ours/ourselves to "me". That file is sealed (261); the change goes into a new, separately numbered experiment. Answer keys for panels written from now on should mark such turns as "ask", not as speaker facts.
+- Why: both GPT-6 Pro answers to prompt 3 said "our" names a group, and a wrong save is worse than a question (`reviews/gpt6pro-2026-09-23/3-answers-adjudication.md`).
+---SAYFORMS---
+{
+ "version": "241b-A-2",
+ "source_table": "artifacts/claude-table237-20260922/relation_table_v1_1.json",
+ "rows": {
+  "mother": {
+   "name": "mother",
+   "noun": "mother",
+   "plural": "mothers",
+   "surfaces": [
+    "mother",
+    "mom",
+    "mum",
+    "mommy",
+    "mummy",
+    "ma"
+   ],
+   "value_kind": "person",
+   "say_kind": "name",
+   "cardinality": "single",
+   "affirm": [
+    "{NP} is {V}."
+   ],
+   "user": [
+    "your {R} is {V}."
+   ],
+   "abstain_missing": "I don't know who {NP} is.",
+   "abstain_user": "I don't know who your {R} is yet.",
+   "forgotten": "OK, I've forgotten who {NP} is.",
+   "forgotten_user": "OK, I've forgotten who your {R} is.",
+   "inverse": "{V} is the {R} of {S}.",
+   "yes": "Yes, {NP} is {V}.",
+   "no": "No, {NP} is {V}.",
+   "notknown": "Not that I know of. I have {V} as {NP}.",
+   "self": null,
+   "possessive_ok": true,
+   "of_form_ok": true,
+   "dropped": []
+  },
+  "father": {
+   "name": "father",
+   "noun": "father",
+   "plural": "fathers",
+   "surfaces": [
+    "father",
+    "dad",
+    "daddy",
+    "papa",
+    "pa",
+    "pop",
+    "poppa"
+   ],
+   "value_kind": "person",
+   "say_kind": "name",
+   "cardinality": "single",
+   "affirm": [
+    "{NP} is {V}."
+   ],
+   "user": [
+    "your {R} is {V}."
+   ],
+   "abstain_missing": "I don't know who {NP} is.",
+   "abstain_user": "I don't know who your {R} is yet.",
+   "forgotten": "OK, I've forgotten who {NP} is.",
+   "forgotten_user": "OK, I've forgotten who your {R} is.",
+   "inverse": "{V} is the {R} of {S}.",
+   "yes": "Yes, {NP} is {V}.",
+   "no": "No, {NP} is {V}.",
+   "notknown": "Not that I know of. I have {V} as {NP}.",
+   "self": null,
+   "possessive_ok": true,
+   "of_form_ok": true,
+   "dropped": []
+  },
+  "parent": {
+   "name": "parent",
+   "noun": "parent",
+   "plural": "parents",
+   "surfaces": [
+    "parent"
+   ],
+   "value_kind": "person",
+   "say_kind": "name",
+   "cardinality": "multi",
+   "affirm": [
+    "{NP} is {V}."
+   ],
+   "user": [
+    "your {R} is {V}."
+   ],
+   "abstain_missing": "I don't know who {NP} is.",
+   "abstain_user": "I don't know who your {R} is yet.",
+   "forgotten": "OK, I've forgotten who {NP} is.",
+   "forgotten_user": "OK, I've forgotten who your {R} is.",
+   "inverse": "{V} is the {R} of {S}.",
+   "yes": "Yes, {NP} is {V}.",
+   "no": "No, {NP} is {V}.",
+   "notknown": "Not that I know of. I have {V} as {NP}.",
+   "self": null,
+   "possessive_ok": true,
+   "of_form_ok": true,
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-talker120-20260922/data/train.jsonl 2>&1 | head -5; echo ---COUNT---; git show origin/main:artifacts/fable-talker120-20260922/data/train.jsonl 2>&1 | wc -l
+{"record": {"kind": "answer", "status": "FORGOT", "name": "Koda", "relations": ["grandfather"], "fields": {"subject": "Koda", "relation": "grandfather", "hop": 1, "source": "inferred"}}, "sentence": "I forgot Koda's grandfather, I fear."}
+{"record": {"kind": "answer", "status": "OK", "name": "Goran", "relations": ["sibling", "child"], "fields": {"answer": "Pella", "trail": ["F00878", "F05249"], "source": "sleep-derived"}}, "sentence": "Goran's sibling's child is Pella."}
+{"record": {"kind": "answer", "status": "OK", "name": "Wren", "relations": ["employer"], "fields": {"answer": "Ivan", "trail": ["F03325"], "source": "inferred"}}, "sentence": "Wren's employer is Ivan -- I have that fact."}
+{"record": {"kind": "answer", "status": "FORGOT", "name": "Mara", "relations": ["sibling", "child", "driver"], "fields": {"subject": "Mara", "relation": "driver", "hop": 3, "source": "web-verified"}}, "sentence": "I forgot Mara's driver, I fear."}
+{"record": {"kind": "answer", "status": "OK", "name": "Emil", "relations": ["spouse", "mother", "spouse"], "fields": {"answer": "Cleo", "trail": ["F02112", "F07791", "F02161"], "source": "sleep-derived"}}, "sentence": "Right: Emil's spouse's mother's spouse is Cleo."}
+---COUNT---
+    3000
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-talker120-20260922/data/train.jsonl 2>&1 | python3 -c "
+import sys,json
+from collections import Counter
+statuses=Counter(); kinds=Counter()
+names=set()
+for line in sys.stdin:
+    o=json.loads(line)
+    r=o['record']
+    statuses[r.get('status')]+=1
+    kinds[r.get('kind')]+=1
+    names.add(r.get('name'))
+print(statuses); print(kinds); print(len(names)); print(sorted(names)[:20])
+"
+Counter({'OK': 1250, 'UNKNOWN': 450, 'ABSTAIN': 350, 'CLARIFY': 350, 'FORGOT': 300, 'SAVED': 300})
+Counter({'answer': 3000})
+48
+['Adel', 'Ash', 'Bex', 'Bram', 'Cleo', 'Corin', 'Dara', 'Dessa', 'Elmo', 'Emil', 'Faye', 'Fina', 'Goran', 'Gus', 'Hana', 'Hela', 'Ivan', 'Ivo', 'Jessa', 'Juno']
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-talker120-20260922/data/train.jsonl 2>&1 | python3 -c "
+import sys,json
+for i,line in enumerate(sys.stdin):
+    o=json.loads(line)
+    print(json.dumps(o,indent=1)[:900])
+    if i>=4: break
+"; echo ---RELATIONS---; git show origin/main:artifacts/claude-mouth241b-20260922/say_forms.json 2>&1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(list(d['rows'].keys()))"
+{
+ "record": {
+  "kind": "answer",
+  "status": "FORGOT",
+  "name": "Koda",
+  "relations": [
+   "grandfather"
+  ],
+  "fields": {
+   "subject": "Koda",
+   "relation": "grandfather",
+   "hop": 1,
+   "source": "inferred"
+  }
+ },
+ "sentence": "I forgot Koda's grandfather, I fear."
+}
+{
+ "record": {
+  "kind": "answer",
+  "status": "OK",
+  "name": "Goran",
+  "relations": [
+   "sibling",
+   "child"
+  ],
+  "fields": {
+   "answer": "Pella",
+   "trail": [
+    "F00878",
+    "F05249"
+   ],
+   "source": "sleep-derived"
+  }
+ },
+ "sentence": "Goran's sibling's child is Pella."
+}
+{
+ "record": {
+  "kind": "answer",
+  "status": "OK",
+  "name": "Wren",
+  "relations": [
+   "employer"
+  ],
+  "fields": {
+   "answer": "Ivan",
+   "trail": [
+    "F03325"
+   ],
+   "source": "inferred"
+  }
+ },
+ "sentence": "Wren's employer is Ivan -- I have that fact."
+}
+{
+ "record": {
+  "kind": "answer",
+  "status": "FORGOT",
+  "name": "Mara",
+  "relations": [
+   "sibling",
+   "child",
+   "driver"
+  ],
+  "fields": {
+   "subject": "Mara",
+   "relation": "driver",
+   "hop": 3,
+   "source": "web-verified"
+  }
+ },
+ "sentence": "I forgot Mara's driver, I fear."
+}
+{
+ "record": {
+  "kind": "answer",
+  "status": "OK",
+  "name": "Emil",
+  "relations": [
+   "spouse",
+   "mother",
+   "spouse"
+  ],
+  "fields": {
+   "answer": "Cleo",
+   "trail": [
+    "F02112",
+    "F07791",
+    "F02161"
+   ],
+   "source": "sleep-derived"
+  }
+ },
+ "sentence": "Right: Emil's spouse's mother's spouse is Cleo."
+}
+---RELATIONS---
+['mother', 'father', 'parent', 'sister', 'brother', 'sibling', 'spouse', 'wife', 'husband', 'partner', 'child', 'son', 'daughter', 'grandchild', 'grandson', 'granddaughter', 'grandmother', 'grandfather', 'cousin', 'aunt', 'uncle', 'friend', 'best_friend', 'neighbour', 'boss', 'colleague', 'teacher', 'coach', 'doctor', 'mentor', 'apprentice', 'rival', 'envoy', 'herald', 'keeper', 'scout', 'warden', 'owner', 'pet', 'dog', 'cat', 'employer', 'occupation', 'work_location', 'school', 'educated_at', 'title', 'city', 'home', 'hometown', 'place_of_birth', 'place_of_death', 'country', 'country_of_citizenship', 'country_of_origin', 'capital', 'continent', 'headquarters_location', 'location_of_formation', 'composer', 'author', 'painter', 'director', 'founder', 'inventor', 'designer', 'discoverer', 'architect', 'creator', 'developer', 'performer', 'manufacturer', 'notable_work', 'original_broadcaster', 'genre', 'officeholder', 'head_of_state', 'head_of_government', 'chairperson', 'chief_executive_officer', 'head_coach', 'dean', 'language', 'official_language', 'language_of_work_or_name', 'religion_or_worldview', 'sport', 'position_played_on_team_speciality', 'favorite_color', 'color', 'hobby', 'nickname', 'code', 'mood', 'toy', 'training_data', 'age', 'birthday', 'anniversary', 'date_of_birth', 'date_of_death', 'native_language', 'landlord', 'dentist', 'vet', 'tutor', 'mayor', 'lawyer', 'accountant', 'therapist', 'nurse', 'babysitter', 'nanny', 'barber', 'roommate', 'classmate', 'teammate', 'girlfriend', 'boyfriend', 'fiance', 'principal', 'captain', 'pastor', 'pharmacist', 'mechanic', 'plumber', 'stepmother', 'stepfather', 'niece', 'nephew', 'godmother', 'godfather', 'favorite_food', 'favorite_book', 'favorite_song', 'favorite_animal', 'car', 'address', 'phone_number', 'email', 'street', 'bank', 'team', 'club', 'instrument', 'major', 'date_founded', 'opening_date', 'graduation_date', 'wedding_anniversary']
+[0m
+[0m$ [0mls artifacts/ | head -40; echo ---; ls scripts/ | head -40; echo ---; git show origin/builder-outbox --stat 2>&1 | head -20; git log --oneline origin/builder-outbox -5 2>&1 | head
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+---
+commit eec8fe55eabb7de9e658987edd99143f9480d1e9
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 13:59:35 2026 -0400
+
+    watcher status
+
+ status/watcher.txt | 36 ++++++++++++++++++++----------------
+ 1 file changed, 20 insertions(+), 16 deletions(-)
+eec8fe55e watcher status
+3b5dc9d61 builder results: lis-311-chat292
+98b521cc3 watcher status
+53094f655 builder results: talk-280p-run
+7212bdcd1 builder results: lis-300-publish
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-talker120-20260922/data/train.jsonl 2>&1 | python3 -c "
+import subprocess,json
+"; ls artifacts/ | grep -i -E "talker120|mouth241|own-m0"; echo ---; ls artifacts/fable-talker120-20260922/ 2>&1; ls artifacts/fable-talker120-20260922/data/ 2>&1
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+---
+data
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+smoke
+smoke-score.json
+smoke-score.log
+smoke-train.log
+heldout.jsonl
+meta.json
+train.jsonl
+[0m
+[0m$ [0mpython3 -c "
+import json
+for f in ['artifacts/fable-talker120-20260922/data/heldout.jsonl','artifacts/fable-talker120-20260922/data/train.jsonl','artifacts/fable-talker120-20260922/meta.json']:
+    print('==',f)
+" ; head -c 2000 artifacts/fable-talker120-20260922/meta.json; echo; python3 -c "
+import json
+names=set()
+for fn in ['artifacts/fable-talker120-20260922/data/train.jsonl','artifacts/fable-talker120-20260922/data/heldout.jsonl']:
+    try:
+      for line in open(fn):
+        o=json.loads(line); names.add(o['record'].get('name'))
+    except Exception as e: print(fn,e)
+print(len(names), sorted(names))
+"
+== artifacts/fable-talker120-20260922/data/heldout.jsonl
+== artifacts/fable-talker120-20260922/data/train.jsonl
+== artifacts/fable-talker120-20260922/meta.json
+head: artifacts/fable-talker120-20260922/meta.json: No such file or directory
+
+96 ['Adel', 'Alba', 'Amos', 'Ash', 'Berta', 'Bex', 'Boris', 'Bram', 'Casper', 'Celia', 'Cleo', 'Corin', 'Dara', 'Delia', 'Dessa', 'Dorian', 'Edwin', 'Elmo', 'Emil', 'Esme', 'Farah', 'Faye', 'Fina', 'Flora', 'Garth', 'Gideon', 'Goran', 'Gus', 'Hana', 'Hazel', 'Hela', 'Hilda', 'Ida', 'Iris', 'Ivan', 'Ivo', 'Jasper', 'Jessa', 'Joren', 'Juno', 'Karel', 'Kasia', 'Kito', 'Koda', 'Leon', 'Lila', 'Ludo', 'Lumo', 'Mabel', 'Mara', 'Marta', 'Miro', 'Nadia', 'Nessa', 'Niko', 'Nils', 'Odin', 'Ona', 'Opal', 'Otis', 'Pavel', 'Pella', 'Petra', 'Pippa', 'Quin', 'Ramon', 'Rhea', 'Rosa', 'Runa', 'Selma', 'Seth', 'Sima', 'Sten', 'Talia', 'Tessa', 'Tilda', 'Tobin', 'Ula', 'Ulf', 'Ulma', 'Umar', 'Vera', 'Vesper', 'Viggo', 'Vita', 'Waldo', 'Wilma', 'Wren', 'Wynn', 'Xela', 'Ximena', 'Yara', 'Ysolde', 'Yusuf', 'Zelda', 'Zeno']
+[0m
+[0m$ [0mls artifacts/fable-talker120-20260922/; ls artifacts/fable-talker120-20260922/data/; cat artifacts/fable-talker120-20260922/RESULTS.md 2>&1 | head -30; echo ===; cat artifacts/fable-talker120-20260922/SEAL.sha256.txt 2>&1 | head; echo ===; cat artifacts/fable-talker120-20260922/PASSMARKS.md 2>&1 | head -40
+data
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+smoke
+smoke-score.json
+smoke-score.log
+smoke-train.log
+heldout.jsonl
+meta.json
+train.jsonl
+# RESULTS — Experiment 120: talker mouth fine-tune PREP (Muse), 2026-09-22
+
+## Result
+
+PREP COMPLETE, both smoke gates PASS. Everything the GPU fine-tune needs
+exists, is sealed, and is proven on the Mac CPU path. No fine-tuning has
+happened — the registered O1–O6 remain predictions (ledger P120.3–P120.8).
+
+## Marks table (integers; smoke seeds reported, never averaged)
+
+| Mark | Bar | Got (seed 12001) | Verdict |
+|---|---|---|---|
+| S1 loss falls (100 CPU steps, bs2, ctx256, lr 1e-4) | last20-mean < first20-mean | 5.4466 → 3.5888 | PASS |
+| S2 20 held-out decodes | run, no crash, all reported | 20/20 non-empty, 5.3 s | PASS |
+| O1–O6 (registered GPU run, seed 12002) | PASSMARKS.md (seal 4bb165df) | not run yet | OPEN |
+
+Smoke decode detail (20 records, 100-step baby model): before-brake
+violations 17/20, after-brake 0/20, status correct 17/20, OK answers 9/9,
+fallbacks 17, p_gen mean 0.45. Fallback net verified separately: all 500
+held-out fallbacks pass the brake, classify to their own status, and carry
+their OK/SAVED answer (500/500 × 3).
+
+## 10 verbatim smoke examples (raw -> final)
+
+1. OK good-via-fallback: `ld.` -> `Ysolde's baker is Kito.` PASS (net holds).
+2. UNKNOWN babble caught: `'sa'sa'sa…` -> `I don't know Farah's spouse.` PASS.
+3. OK web suffix kept: `'s h mother's h.` -> `Amos's mother's uncle's hometown
+   is Otis. (I read that online; you didn't tell me.)` PASS.
+4. FORGOT loop caught: `'s G's G's G's G's G.` -> `I've forgotten Gideon's
+   nurse.` PASS.
+zsh:1: == not found
+[0m
+[0m$ [0mpython3 -c "
+import json
+from collections import Counter
+c=Counter(); names=set()
+for line in open('artifacts/fable-talker120-20260922/data/heldout.jsonl'):
+    o=json.loads(line); c[o['record'].get('status')]+=1; names.add(o['record'].get('name'))
+print(c); print(len(names)); print(sorted(names))
+"; echo ---; python3 -c "
+import json,glob
+names=set()
+for fn in glob.glob('artifacts/fable-talker120*/data/*.jsonl'):
+    for line in open(fn):
+        try: names.add(json.loads(line)['record'].get('name'))
+        except: pass
+print(len(names))
+print(sorted(names))
+"
+Counter({'OK': 250, 'UNKNOWN': 50, 'FORGOT': 50, 'SAVED': 50, 'ABSTAIN': 50, 'CLARIFY': 50})
+48
+['Alba', 'Amos', 'Berta', 'Boris', 'Casper', 'Celia', 'Delia', 'Dorian', 'Edwin', 'Esme', 'Farah', 'Flora', 'Garth', 'Gideon', 'Hazel', 'Hilda', 'Ida', 'Iris', 'Jasper', 'Joren', 'Kasia', 'Kito', 'Leon', 'Ludo', 'Mabel', 'Marta', 'Nadia', 'Nils', 'Opal', 'Otis', 'Pavel', 'Pippa', 'Ramon', 'Runa', 'Selma', 'Sten', 'Tilda', 'Tobin', 'Ulma', 'Umar', 'Vesper', 'Vita', 'Waldo', 'Wilma', 'Ximena', 'Ysolde', 'Yusuf', 'Zelda']
+---
+96
+['Adel', 'Alba', 'Amos', 'Ash', 'Berta', 'Bex', 'Boris', 'Bram', 'Casper', 'Celia', 'Cleo', 'Corin', 'Dara', 'Delia', 'Dessa', 'Dorian', 'Edwin', 'Elmo', 'Emil', 'Esme', 'Farah', 'Faye', 'Fina', 'Flora', 'Garth', 'Gideon', 'Goran', 'Gus', 'Hana', 'Hazel', 'Hela', 'Hilda', 'Ida', 'Iris', 'Ivan', 'Ivo', 'Jasper', 'Jessa', 'Joren', 'Juno', 'Karel', 'Kasia', 'Kito', 'Koda', 'Leon', 'Lila', 'Ludo', 'Lumo', 'Mabel', 'Mara', 'Marta', 'Miro', 'Nadia', 'Nessa', 'Niko', 'Nils', 'Odin', 'Ona', 'Opal', 'Otis', 'Pavel', 'Pella', 'Petra', 'Pippa', 'Quin', 'Ramon', 'Rhea', 'Rosa', 'Runa', 'Selma', 'Seth', 'Sima', 'Sten', 'Talia', 'Tessa', 'Tilda', 'Tobin', 'Ula', 'Ulf', 'Ulma', 'Umar', 'Vera', 'Vesper', 'Viggo', 'Vita', 'Waldo', 'Wilma', 'Wren', 'Wynn', 'Xela', 'Ximena', 'Yara', 'Ysolde', 'Yusuf', 'Zelda', 'Zeno']
+[0m
+[0m$ [0mpython3 -c "
+import json
+from collections import Counter
+import glob
+for fn in sorted(glob.glob('artifacts/fable-talker120*/data/*.jsonl')):
+    names=set(); c=Counter()
+    for line in open(fn):
+        o=json.loads(line); c[o['record'].get('status')]+=1; names.add(o['record'].get('name'))
+    print(fn, dict(c), len(names))
+"; echo ---SAMPLE-RECORDS-PER-STATUS---; python3 -c "
+import json
+from collections import defaultdict
+seen=defaultdict(int)
+for line in open('artifacts/fable-talker120-20260922/data/train.jsonl'):
+    o=json.loads(line); s=o['record'].get('status')
+    if seen[s]<1:
+        print(json.dumps(o)); seen[s]+=1
+    if all(v>=1 for v in seen.values()): break
+"
+artifacts/fable-talker120-20260922/data/heldout.jsonl {'OK': 250, 'UNKNOWN': 50, 'FORGOT': 50, 'SAVED': 50, 'ABSTAIN': 50, 'CLARIFY': 50} 48
+artifacts/fable-talker120-20260922/data/train.jsonl {'FORGOT': 300, 'OK': 1250, 'ABSTAIN': 350, 'UNKNOWN': 450, 'CLARIFY': 350, 'SAVED': 300} 48
+---SAMPLE-RECORDS-PER-STATUS---
+{"record": {"kind": "answer", "status": "FORGOT", "name": "Koda", "relations": ["grandfather"], "fields": {"subject": "Koda", "relation": "grandfather", "hop": 1, "source": "inferred"}}, "sentence": "I forgot Koda's grandfather, I fear."}
+[0m
+[0m$ [0mpython3 -c "
+import json
+seen={}
+for line in open('artifacts/fable-talker120-20260922/data/train.jsonl'):
+    o=json.loads(line); s=o['record'].get('status')
+    if s not in seen:
+        seen[s]=o
+print(list(seen.keys()))
+for s,o in seen.items():
+    print('==',s); print(json.dumps(o))
+"
+['FORGOT', 'OK', 'ABSTAIN', 'UNKNOWN', 'CLARIFY', 'SAVED']
+== FORGOT
+{"record": {"kind": "answer", "status": "FORGOT", "name": "Koda", "relations": ["grandfather"], "fields": {"subject": "Koda", "relation": "grandfather", "hop": 1, "source": "inferred"}}, "sentence": "I forgot Koda's grandfather, I fear."}
+== OK
+{"record": {"kind": "answer", "status": "OK", "name": "Goran", "relations": ["sibling", "child"], "fields": {"answer": "Pella", "trail": ["F00878", "F05249"], "source": "sleep-derived"}}, "sentence": "Goran's sibling's child is Pella."}
+== ABSTAIN
+{"record": {"kind": "answer", "status": "ABSTAIN", "name": "Miro", "relations": ["niece", "boss", "partner"], "fields": {"reason": "no name I know", "source": "inferred"}}, "sentence": "I can't answer that: no name I know Nothing was done."}
+== UNKNOWN
+{"record": {"kind": "answer", "status": "UNKNOWN", "name": "Viggo", "relations": ["dentist", "child", "hometown"], "fields": {"subject": "Viggo", "relation": "hometown", "hop": 3, "trail": [], "source": "taught"}}, "sentence": "Even now, I don't know Viggo's hometown."}
+== CLARIFY
+{"record": {"kind": "answer", "status": "CLARIFY", "name": "Fina", "relations": ["boss"], "fields": {"name": "Fina", "choices": "Adel (E0041), Pella (E0027)", "ids": ["E0041", "E0027"], "source": "sleep-derived"}}, "sentence": "Hmm, which Fina do you mean: Adel (E0041), Pella (E0027)?"}
+== SAVED
+{"record": {"kind": "answer", "status": "SAVED", "name": "Elmo", "relations": ["sibling", "hometown"], "fields": {"answer": "Petra", "trail": ["F00388", "F01300"], "source": "inferred"}}, "sentence": "Right, saved: Elmo's sibling's hometown is Petra."}
+[0m
+[0m$ [0mcat artifacts/fable-talker120-20260922/SEAL.sha256.txt; echo ---; git log --oneline -3 -- scripts/ | head; echo ---; find . -maxdepth 4 -name "OPUS-RULES*" 2>/dev/null; find /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27 -maxdepth 3 2>/dev/null | head
+4bb165dff6e350611696f8d4da2527d611b2ac817bb9260198789125f644315a  artifacts/fable-talker120-20260922/PASSMARKS.md
+---
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+---
+./handoff/kit/briefs/OPUS-RULES.txt
+[0m
+[0m→ [0mRead handoff/kit/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mls scripts/ | grep -i own_m0; ls artifacts/ | grep -i own-m0; echo ---; ls artifacts/fable-predictions-ledger.md 2>&1; tail -5 artifacts/fable-predictions-ledger.md 2>&1; echo ---; uptime
+---
+artifacts/fable-predictions-ledger.md
+- P280p.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any turn with 2+ piece arms differing from 260 proves the re-test wrong. Last attempt: a fail closes the join.
+- P280p.5 OUTCOME (2026-09-23, builder, sealed exp 280p re-test of unchanged 280m, CPU only) registered verdict PASS M1-M4. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 90/90 (ability 25/25, called 12/12, teach 8/8, smalltalk 25/25, mixed 10/10, control 10/10; owners 280b:24/281:4/282b:5/260:57); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P280p.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280p.1-4 all held. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280p-20260923/RESULTS.md.
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis311-20260923) all 10 stub scenarios pass, exit 0: T1 2-facts-save-2 with 292 mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK already-have + 0; T6 notebook answer + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0.
+- P311.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 292, then 0 events growth under 311).
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched; own state dir ~/premonition-chat/lis311-state. Step 3 real-model 30-turn try-out report-only (no bar): every turn row + median/p90/max ms + device in artifacts/claude-lis311-20260923/real-rows/rows.jsonl.
+---
+14:08  up  4:01, 4 users, load averages: 29.16 39.77 43.49
+[0m
+[0m# [0mTodos
+[•] Inspect say_forms value_kinds + pick relations
+[ ] Write scripts/claude_own_m0_check.py (filter, code only)
+[ ] Write scripts/claude_own_m0_build.py (21k pairs)
+[ ] Pilot both scripts, derive caps allowlist, freeze
+[ ] Write PASSMARKS.md, append ledger preds, SEAL
+[ ] Registered run + fresh re-check + stats
+[ ] Write RESULTS.md, final verdict reply
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+from collections import Counter
+d=json.load(open('artifacts/claude-mouth241b-20260922/say_forms.json'))
+c=Counter()
+for k,v in d['rows'].items():
+    c[(v.get('value_kind'),v.get('say_kind'))]+=1
+for k,v in sorted(c.items()): print(k,v)
+print('n relations:',len(d['rows']))
+print(json.dumps(d['rows']['city'],indent=1)[:600])
+print(json.dumps(d['rows']['boss'],indent=1)[:600])
+"
+('date', 'date') 8
+('language', 'name') 4
+('literal', 'common') 17
+('literal', 'free') 5
+('literal', 'name') 1
+('number', 'number') 1
+('organization', 'name') 6
+('person', 'name') 89
+('place', 'name') 16
+('work', 'name') 3
+n relations: 150
+{
+ "name": "city",
+ "noun": "city",
+ "plural": "cities",
+ "surfaces": [
+  "city",
+  "town",
+  "residence",
+  "place of residence",
+  "city lived in"
+ ],
+ "value_kind": "place",
+ "say_kind": "name",
+ "cardinality": "single",
+ "affirm": [
+  "{S} lives in {V}.",
+  "{NP} is {V}."
+ ],
+ "user": [
+  "you live in {V}.",
+  "your {R} is {V}."
+ ],
+ "abstain_missing": "I don't know where {S} lives.",
+ "abstain_user": "I don't know where you live yet.",
+ "forgotten": "OK, I've forgotten where {S} lives.",
+ "forgotten_user": "OK, I've forgotten where you live.",
+ "inverse": "{V} is the {R} of {S}.",
+ "yes":
+{
+ "name": "boss",
+ "noun": "boss",
+ "plural": "bosses",
+ "surfaces": [
+  "boss",
+  "manager",
+  "supervisor",
+  "line manager"
+ ],
+ "value_kind": "person",
+ "say_kind": "name",
+ "cardinality": "single",
+ "affirm": [
+  "{NP} is {V}."
+ ],
+ "user": [
+  "your {R} is {V}."
+ ],
+ "abstain_missing": "I don't know who {NP} is.",
+ "abstain_user": "I don't know who your {R} is yet.",
+ "forgotten": "OK, I've forgotten who {NP} is.",
+ "forgotten_user": "OK, I've forgotten who your {R} is.",
+ "inverse": "{V} is the {R} of {S}.",
+ "yes": "Yes, {NP} is {V}.",
+ "no": "No, {NP} is {V}.",
+ "notknown": "Not that
+[0m
+[0m← [0mWrite scripts/claude_own_m0_check.py
+Wrote file successfully.
+[0m
+[0m✗ [0mWrite  failed
+[91m[1mError: [0mThe write tool was called with invalid arguments: SchemaError(Missing key
+  at ["filePath"]).
+Please rewrite the input so it satisfies the expected schema.
+[0m
+[0m$ [0mls scripts/claude_own_m0_* 2>&1; echo ---; /usr/bin/python3 -c "import ast; ast.parse(open('scripts/claude_own_m0_check.py').read()); print('check.py parses OK')"
+scripts/claude_own_m0_check.py
+---
+check.py parses OK
+[0m
+[0m← [0mWrite scripts/claude_own_m0_build.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -208,5 +208,265 @@
+     "Great, that's noted. <S1>'s <R1> is <V1>.",
+     "Perfect, that's stored. <S1>'s <R1> is <V1>.",
+     "Done, <S1>'s <R1> is <V1>. Saved and sound.",
+ ]
+-# __MORE_TEMPLATES__
++T_UNKNOWN_P = [
++    "Hmm, I don't know who <S1>'s <R1> is yet.",
++    "Oh, I'm not sure who <S1>'s <R1> is.",
++    "Sorry, I have no idea who <S1>'s <R1> is.",
++    "I don't know that one. Who <S1>'s <R1> is hasn't come up.",
++    "Hmm, that's blank for me. I don't know who <S1>'s <R1> is.",
++    "I can't say who <S1>'s <R1> is. You haven't told me.",
++    "No clue, sorry. I don't know who <S1>'s <R1> is.",
++    "Oh, I don't know who <S1>'s <R1> is. Want to tell me?",
++    "Hmm, I'm not certain who <S1>'s <R1> is yet.",
++    "I haven't got anything on that. I don't know who <S1>'s <R1> is.",
++    "That's one I don't know. Who is <S1>'s <R1>?",
++    "Sorry, no idea on that. Who <S1>'s <R1> is, I mean.",
++    "Oh dear, I don't know who <S1>'s <R1> is.",
++    "Honestly, I have no idea who <S1>'s <R1> is.",
++    "Hmm, you haven't told me who <S1>'s <R1> is, so I don't know.",
++    "I don't know who <S1>'s <R1> is, sorry!",
++    "Not sure on that one. I don't know who <S1>'s <R1> is.",
++    "I couldn't say who <S1>'s <R1> is. Nothing on that.",
++    "Who <S1>'s <R1> is? I don't know, sorry.",
++    "Ah, I don't know who <S1>'s <R1> is yet.",
++]
++T_UNKNOWN_L = [
++    "Hmm, I don't know where <S1>'s <R1> is yet.",
++    "Oh, I'm not sure where <S1>'s <R1> is.",
++    "Sorry, I have no idea where <S1>'s <R1> is.",
++    "I don't know that one. Where <S1>'s <R1> is hasn't come up.",
++    "Hmm, that's blank for me. I don't know where <S1>'s <R1> is.",
++    "I can't say where <S1>'s <R1> is. You haven't told me.",
++    "No clue, sorry. I don't know where <S1>'s <R1> is.",
++    "Oh, I don't know where <S1>'s <R1> is. Want to tell me?",
++    "Hmm, I'm not certain where <S1>'s <R1> is yet.",
++    "I haven't got anything on that. I don't know where <S1>'s <R1> is.",
++    "That's one I don't know. Where is <S1>'s <R1>?",
++    "Sorry, no idea on that. Where <S1>'s <R1> is, I mean.",
++    "Oh dear, I don't know where <S1>'s <R1> is.",
++    "Honestly, I have no idea where <S1>'s <R1> is.",
++    "Hmm, you haven't told me where <S1>'s <R1> is, so I don't know.",
++]
++T_UNKNOWN_T = [
++    "Hmm, I don't know what <S1>'s <R1> is yet.",
++    "Oh, I'm not sure what <S1>'s <R1> is.",
++    "Sorry, I have no idea what <S1>'s <R1> is.",
++    "I don't know that one. What <S1>'s <R1> is hasn't come up.",
++    "Hmm, that's blank for me. I don't know what <S1>'s <R1> is.",
++    "I can't say what <S1>'s <R1> is. You haven't told me.",
++    "No clue, sorry. I don't know what <S1>'s <R1> is.",
++    "Oh, I don't know what <S1>'s <R1> is. Want to tell me?",
++    "Hmm, I'm not certain what <S1>'s <R1> is yet.",
++    "I haven't got anything on that. I don't know what <S1>'s <R1> is.",
++    "That's one I don't know. What is <S1>'s <R1>?",
++    "Sorry, no idea on that. What <S1>'s <R1> is, I mean.",
++    "Oh dear, I don't know what <S1>'s <R1> is.",
++    "Honestly, I have no idea what <S1>'s <R1> is.",
++    "Hmm, you haven't told me what <S1>'s <R1> is, so I don't know.",
++]
++T_ABSTAIN_P = [
++    "Hmm, I don't know who that is, so I can't say who <S1>'s <R1> is.",
++    "Sorry, I don't know who <S1>'s <R1> is. I have nothing on that.",
++    "Oh, I'm not sure. I don't know who <S1>'s <R1> is.",
++    "I have no idea who <S1>'s <R1> is, sorry.",
++    "Hmm, that's blank. I don't know who <S1>'s <R1> is.",
++    "I can't say, sorry. I don't know who <S1>'s <R1> is.",
++    "No idea at all. I don't know who <S1>'s <R1> is.",
++    "Oh, I don't know who <S1>'s <R1> is. Could you tell me more?",
++    "Hmm, not certain here. I don't know who <S1>'s <R1> is.",
++    "I haven't got that one. I don't know who <S1>'s <R1> is.",
++    "Sorry, that hasn't come up. I don't know who <S1>'s <R1> is.",
++    "Honestly no idea. I don't know who <S1>'s <R1> is.",
++    "Hmm, I don't know who <S1>'s <R1> is, and I can't say.",
++    "Not sure, sorry. I don't know who <S1>'s <R1> is.",
++    "I couldn't say. I don't know who <S1>'s <R1> is.",
++    "Ah, I don't know who <S1>'s <R1> is. Nothing on that.",
++]
++T_ABSTAIN_L = [
++    "Hmm, I don't know where that is, so I can't say where <S1>'s <R1> is.",
++    "Sorry, I don't know where <S1>'s <R1> is. I have nothing on that.",
++    "Oh, I'm not sure. I don't know where <S1>'s <R1> is.",
++    "I have no idea where <S1>'s <R1> is, sorry.",
++    "Hmm, that's blank. I don't know where <S1>'s <R1> is.",
++    "I can't say, sorry. I don't know where <S1>'s <R1> is.",
++    "No idea at all. I don't know where <S1>'s <R1> is.",
++    "Oh, I don't know where <S1>'s <R1> is. Could you tell me more?",
++    "Hmm, not certain here. I don't know where <S1>'s <R1> is.",
++    "I haven't got that one. I don't know where <S1>'s <R1> is.",
++    "Sorry, that hasn't come up. I don't know where <S1>'s <R1> is.",
++    "Honestly no idea. I don't know where <S1>'s <R1> is.",
++    "Hmm, I don't know where <S1>'s <R1> is, and I can't say.",
++    "Not sure, sorry. I don't know where <S1>'s <R1> is.",
++    "I couldn't say. I don't know where <S1>'s <R1> is.",
++    "Ah, I don't know where <S1>'s <R1> is. Nothing on that.",
++]
++T_ABSTAIN_T = [
++    "Hmm, I don't know what that is, so I can't say what <S1>'s <R1> is.",
++    "Sorry, I don't know what <S1>'s <R1> is. I have nothing on that.",
++    "Oh, I'm not sure. I don't know what <S1>'s <R1> is.",
++    "I have no idea what <S1>'s <R1> is, sorry.",
++    "Hmm, that's blank. I don't know what <S1>'s <R1> is.",
++    "I can't say, sorry. I don't know what <S1>'s <R1> is.",
++    "No idea at all. I don't know what <S1>'s <R1> is.",
++    "Oh, I don't know what <S1>'s <R1> is. Could you tell me more?",
++    "Hmm, not certain here. I don't know what <S1>'s <R1> is.",
++    "I haven't got that one. I don't know what <S1>'s <R1> is.",
++    "Sorry, that hasn't come up. I don't know what <S1>'s <R1> is.",
++    "Honestly no idea. I don't know what <S1>'s <R1> is.",
++    "Hmm, I don't know what <S1>'s <R1> is, and I can't say.",
++    "Not sure, sorry. I don't know what <S1>'s <R1> is.",
++    "I couldn't say. I don't know what <S1>'s <R1> is.",
++    "Ah, I don't know what <S1>'s <R1> is. Nothing on that.",
++]
++T_FORGOT_P = [
++    "Okay, I've forgotten who <S1>'s <R1> is.",
++    "Done, I've forgotten who <S1>'s <R1> was.",
++    "Sure, I've forgotten who <S1>'s <R1> is now.",
++    "Got it, forgotten. I no longer hold who <S1>'s <R1> is.",
++    "Right, that's forgotten. Who <S1>'s <R1> is, I mean.",
++    "Yep, forgotten. I don't hold who <S1>'s <R1> is anymore.",
++    "Yeah, I've wiped that. Who <S1>'s <R1> is, forgotten.",
++    "Okay then, forgotten. Who <S1>'s <R1> is has gone.",
++    "Sure thing, I've forgotten who <S1>'s <R1> is.",
++    "Oh sure, that's forgotten now. Who <S1>'s <R1> is, I mean.",
++    "Ah, forgotten. I no longer have who <S1>'s <R1> is.",
++    "Nice, that's cleared. I've forgotten who <S1>'s <R1> is.",
++    "Great, forgotten. Who <S1>'s <R1> is has gone from my notes.",
++    "Perfect, I've forgotten who <S1>'s <R1> was.",
++    "Thanks, and forgotten. Who <S1>'s <R1> is, I mean.",
++    "Happy to forget that. Who <S1>'s <R1> is, gone.",
++]
++T_FORGOT_L = [
++    "Okay, I've forgotten where <S1>'s <R1> is.",
++    "Done, I've forgotten where <S1>'s <R1> was.",
++    "Sure, I've forgotten where <S1>'s <R1> is now.",
++    "Got it, forgotten. I no longer hold where <S1>'s <R1> is.",
++    "Right, that's forgotten. Where <S1>'s <R1> is, I mean.",
++    "Yep, forgotten. I don't hold where <S1>'s <R1> is anymore.",
++    "Yeah, I've wiped that. Where <S1>'s <R1> is, forgotten.",
++    "Okay then, forgotten. Where <S1>'s <R1> is has gone.",
++    "Sure thing, I've forgotten where <S1>'s <R1> is.",
++    "Oh sure, that's forgotten now. Where <S1>'s <R1> is, I mean.",
++    "Ah, forgotten. I no longer have where <S1>'s <R1> is.",
++    "Nice, that's cleared. I've forgotten where <S1>'s <R1> is.",
++    "Great, forgotten. Where <S1>'s <R1> is has gone from my notes.",
++    "Perfect, I've forgotten where <S1>'s <R1> was.",
++    "Thanks, and forgotten. Where <S1>'s <R1> is, I mean.",
++    "Happy to forget that. Where <S1>'s <R1> is, gone.",
++]
++T_FORGOT_T = [
++    "Okay, I've forgotten what <S1>'s <R1> is.",
++    "Done, I've forgotten what <S1>'s <R1> was.",
++    "Sure, I've forgotten what <S1>'s <R1> is now.",
++    "Got it, forgotten. I no longer hold what <S1>'s <R1> is.",
++    "Right, that's forgotten. What <S1>'s <R1> is, I mean.",
++    "Yep, forgotten. I don't hold what <S1>'s <R1> is anymore.",
++    "Yeah, I've wiped that. What <S1>'s <R1> is, forgotten.",
++    "Okay then, forgotten. What <S1>'s <R1> is has gone.",
++    "Sure thing, I've forgotten what <S1>'s <R1> is.",
++    "Oh sure, that's forgotten now. What <S1>'s <R1> is, I mean.",
++    "Ah, forgotten. I no longer have what <S1>'s <R1> is.",
++    "Nice, that's cleared. I've forgotten what <S1>'s <R1> is.",
++    "Great, forgotten. What <S1>'s <R1> is has gone from my notes.",
++    "Perfect, I've forgotten what <S1>'s <R1> was.",
++    "Thanks, and forgotten. What <S1>'s <R1> is, I mean.",
++    "Happy to forget that. What <S1>'s <R1> is, gone.",
++]
++T_CLARIFY = [
++    "Hmm, which <S1> do you mean? I've got a couple of them.",
++    "Sorry, which <S1> are you asking about?",
++    "Oh, who do you mean by <S1>? There is more than one.",
++    "Could you say which <S1> you mean?",
++    "Hmm, I'm not sure which <S1> you mean. Can you clarify?",
++    "Which <S1> is it? What did you have in mind?",
++    "Sorry, who exactly do you mean by <S1>?",
++    "Oh, there are two <S1>s here. Which one do you mean?",
++    "Hmm, what do you mean by <S1>? Which one?",
++    "Can you tell me which <S1> you mean?",
++    "Sorry, I'm not sure who <S1> is here. Which one?",
++    "Which <S1> do you have in mind? I want to be sure.",
++    "Oh, which <S1>? I know more than one.",
++    "Hmm, who is <S1> to you? Which one do you mean?",
++    "What do you mean by <S1>, exactly? Which one?",
++    "Sorry, could you clarify which <S1> you mean?",
++    "Which <S1>, sorry? There are a couple.",
++    "Oh dear, which <S1> do you mean? I don't want to mix them up.",
++    "Hmm, I know two people called <S1>. Which one?",
++    "Who do you mean, exactly? Which <S1>?",
++    "Sorry, what <S1> are we talking about? Which one?",
++    "Okay, which <S1> shall I look at? Who do you mean?",
++    "Right, who do you mean by <S1>? Which one is it?",
++    "Gotcha, but which <S1>? I want to get the right one.",
++    "Sure, but which <S1> do you mean? Who is it?",
++    "Yeah, which <S1>? Can you say a bit more?",
++    "Yep, who do you mean by <S1>? Which one?",
++    "Ah, which <S1> is that? Who do you mean?",
++    "Oh nice, but which <S1>? Who are we talking about?",
++    "Great, which <S1> do you mean? I want to be sure.",
++    "Thanks, and which <S1> is it? Who do you mean?",
++    "Perfect, but which <S1>? Who is it, exactly?",
++    "Just to be sure, which <S1> do you mean?",
++    "Let me be sure here. Which <S1> do you mean?",
++    "Hmm, which <S1> are we talking about? Who is it?",
++    "Sorry, which <S1>? What else can you tell me so I pick right?",
++    "Oh, who is <S1>? I mean, which one are you after?",
++    "Which <S1> would that be? Who do you have in mind?",
++    "Hmm, sure, but which <S1>? Who do you mean?",
++    "Okay, who is <S1>? Which one shall I answer about?",
++    "Right, what do you mean by <S1>? Which person?",
++    "Which <S1> are you after? I know two, I mean.",
++    "Sorry, who? Which <S1> are you asking about?",
++    "Hmm, <S1>? Which one do you mean, who is it?",
++    "Oh, <S1>? Who do you mean exactly? Which one?",
++    "Which <S1> did you have in mind? Who is it?",
++]
++T_WHOSE = [
++    "Whose <R1> do you mean? Yours, or someone else's?",
++    "Oh, whose <R1> is this? Is it yours?",
++    "Hmm, whose <R1> are we talking about? Yours?",
++    "Sorry, whose <R1> do you mean here? Yours or another's?",
++    "Whose <R1> is it? I want to be sure before I save anything.",
++    "Okay, whose <R1>? Is that yours, or someone else's?",
++    "Right, whose <R1> are we talking about? Can you say?",
++    "Hmm, is that your <R1>, or whose <R1> is it?",
++    "Whose <R1> do you have in mind? Yours?",
++    "Oh, I want to get this right. Whose <R1> is it?",
++    "Sorry, whose <R1>? Yours, or a friend's?",
++    "Whose <R1> shall I note? Yours or someone else's?",
++    "Hmm, whose <R1> is this about? Is it yours?",
++    "Okay, but whose <R1>? I don't want to mix that up.",
++    "Whose <R1> are we saving here? Yours?",
++    "Gotcha, but whose <R1> do you mean? Yours?",
++    "Sure, but whose <R1> is it? Yours or someone else's?",
++    "Yeah, whose <R1>? Can you tell me who it belongs to?",
++    "Yep, whose <R1> are we talking about? Yours?",
++    "Ah, whose <R1> is that? Is it yours?",
++    "Oh nice, but whose <R1> is it? Yours?",
++    "Great question, but whose <R1>? Yours or another's?",
++    "Thanks, and whose <R1> is this? Is it yours?",
++    "Perfect, but whose <R1> do you mean? Yours?",
++    "Just to be sure, whose <R1> is it? Yours?",
++    "Let me be sure here. Whose <R1> are we talking about?",
++    "Hmm, whose <R1>? Yours, or someone in your group?",
++    "Sorry, whose <R1> is it? I want to save it for the right person.",
++    "Oh, whose <R1>? Is that yours to tell, or someone else's?",
++    "Whose <R1> would that be? Yours?",
++    "Hmm, sure, but whose <R1>? Who does it belong to?",
++    "Okay, whose <R1> shall I answer about? Yours?",
++    "Right, whose <R1> do you mean? Who is it for?",
++    "Which group's <R1> is it? I mean, whose <R1>?",
++    "Sorry, who does this <R1> belong to? I mean, whose is it?",
++    "Hmm, <R1>? Whose <R1> is it, yours?",
++    "Oh, a <R1>? Whose <R1>, sorry? Yours?",
++    "Whose <R1> did you have in mind? Is it yours?",
++    "How should I note this <R1>? I mean, whose <R1> is it?",
++    "Can you say whose <R1> this is? Yours, or another's?",
++    "Who is this <R1> for? I mean, whose <R1>?",
++    "Is this about your <R1>? I mean, whose <R1> is it?",
++    "Whose <R1> are you telling me about? Yours?",
++    "Whose <R1> should I keep? Yours or someone else's?",
++    "Hmm, who owns this <R1>? Whose is it, yours?",
++    "Sorry to ask, but whose <R1> is it? Yours?",
++]
++# __MORE_CODE__
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -323,9 +323,8 @@
+ "Okay, I've forgotten who <S1>'s <R1> is.",
+ "Done, I've forgotten who <S1>'s <R1> was.",
+ "Sure, I've forgotten who <S1>'s <R1> is now.",
+ "Got it, forgotten. I no longer hold who <S1>'s <R1> is.",
+-"Right, that's forgotten. Who <S1>'s <R1> is, I mean.",
+ "Yep, forgotten. I don't hold who <S1>'s <R1> is anymore.",
+ "Yeah, I've wiped that. Who <S1>'s <R1> is, forgotten.",
+ "Okay then, forgotten. Who <S1>'s <R1> is has gone.",
+ "Sure thing, I've forgotten who <S1>'s <R1> is.",
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -322,9 +322,10 @@
+ T_FORGOT_P = [
+     "Okay, I've forgotten who <S1>'s <R1> is.",
+     "Done, I've forgotten who <S1>'s <R1> was.",
+     "Sure, I've forgotten who <S1>'s <R1> is now.",
+-    "Got it, forgotten. I no longer hold who <S1>'s <R1> is.",
++    "Okay, forgotten. I no longer hold who <S1>'s <R1> is.",
++    "Right, that's forgotten. Who <S1>'s <R1> is, I mean.",
+     "Yep, forgotten. I don't hold who <S1>'s <R1> is anymore.",
+     "Yeah, I've wiped that. Who <S1>'s <R1> is, forgotten.",
+     "Okay then, forgotten. Who <S1>'s <R1> is has gone.",
+     "Sure thing, I've forgotten who <S1>'s <R1> is.",
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -340,9 +340,9 @@
+ T_FORGOT_L = [
+     "Okay, I've forgotten where <S1>'s <R1> is.",
+     "Done, I've forgotten where <S1>'s <R1> was.",
+     "Sure, I've forgotten where <S1>'s <R1> is now.",
+-    "Got it, forgotten. I no longer hold where <S1>'s <R1> is.",
++    "Okay, forgotten. I no longer hold where <S1>'s <R1> is.",
+     "Right, that's forgotten. Where <S1>'s <R1> is, I mean.",
+     "Yep, forgotten. I don't hold where <S1>'s <R1> is anymore.",
+     "Yeah, I've wiped that. Where <S1>'s <R1> is, forgotten.",
+     "Okay then, forgotten. Where <S1>'s <R1> is has gone.",
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -358,9 +358,9 @@
+ T_FORGOT_T = [
+     "Okay, I've forgotten what <S1>'s <R1> is.",
+     "Done, I've forgotten what <S1>'s <R1> was.",
+     "Sure, I've forgotten what <S1>'s <R1> is now.",
+-    "Got it, forgotten. I no longer hold what <S1>'s <R1> is.",
++    "Okay, forgotten. I no longer hold what <S1>'s <R1> is.",
+     "Right, that's forgotten. What <S1>'s <R1> is, I mean.",
+     "Yep, forgotten. I don't hold what <S1>'s <R1> is anymore.",
+     "Yeah, I've wiped that. What <S1>'s <R1> is, forgotten.",
+     "Okay then, forgotten. What <S1>'s <R1> is has gone.",
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -468,5 +468,519 @@
+     "Whose <R1> should I keep? Yours or someone else's?",
+     "Hmm, who owns this <R1>? Whose is it, yours?",
+     "Sorry to ask, but whose <R1> is it? Yours?",
+ ]
+-# __MORE_CODE__
++# ---------------- user_turn frames ---------------------------------------
++# {n} owner literal, {nl} owner lowercased, {r} relation surface,
++# {v} value literal, {vl} value lowercased.
++Q_FRAMES = {
++    "person": [
++        "who is {n}'s {r}?", "Who is {n}'s {r}?", "what is {n}'s {r}",
++        "tell me {n}'s {r}", "{n}'s {r}?", "do u know {n}'s {r}",
++        "whos {n}'s {r}", "who is {nl}'s {r}", "{nl}'s {r}?",
++        "hey who is {n}'s {r} btw", "remind me: {n}'s {r}",
++        "who is {n}'s {r} btw",
++    ],
++    "place": [
++        "where is {n}'s {r}?", "Where is {n}'s {r}?", "what is {n}'s {r}",
++        "tell me {n}'s {r}", "{n}'s {r}?", "do u know {n}'s {r}",
++        "where is {nl}'s {r}", "{nl}'s {r}?", "hey where is {n}'s {r}",
++        "remind me: {n}'s {r}", "what {r} is {n} from",
++        "where does {n} live btw",
++    ],
++    "thing": [
++        "what is {n}'s {r}?", "What is {n}'s {r}?", "whats {n}'s {r}",
++        "tell me {n}'s {r}", "{n}'s {r}?", "do u know {n}'s {r}",
++        "what is {nl}'s {r}", "{nl}'s {r}?", "hey what is {n}'s {r}",
++        "remind me: {n}'s {r}", "what {r} does {n} like",
++        "fav {r} of {n}?",
++    ],
++}
++TELL_FRAMES = [
++    "{n}'s {r} is {v}", "btw {n}'s {r} is {v}", "{nl}'s {r} is {v}",
++    "just so u know, {n}'s {r} is {v}", "fyi {n}'s {r} is {v}",
++    "{n}'s {r} is {v} btw", "oh btw {n}'s {r} is {v}",
++    "hey, {n}'s {r} is {v}", "so {n}'s {r} is {v}",
++    "quick note: {n}'s {r} is {v}", "{n}'s {r}? its {v}",
++    "for {n}, {r} is {v}",
++]
++SHORT_FRAMES = [
++    "{n}?", "tell me about {n}", "what about {n}", "and {n}?",
++    "{n}...?", "u know {n}?", "more on {n} pls", "who is {n}",
++    "{n} pls", "hmm {n}", "wait, {n}?", "tell me abt {n}",
++]
++FORGET_FRAMES = [
++    "forget {n}'s {r}", "pls forget {n}'s {r}", "wipe {n}'s {r}",
++    "i want u to forget {n}'s {r}", "forget what i said about {n}'s {r}",
++    "can u forget {n}'s {r}", "drop {n}'s {r} from memory",
++    "erase {n}'s {r}", "forget {nl}'s {r} pls", "unremember {n}'s {r}",
++]
++WHOSE_FRAMES = [
++    "our {r} is {v}", "we have a {r} named {v}", "our {r}'s name is {v}",
++    "we just got a {r}, {v}", "btw our {r} is {v}", "our {r} is {v} btw",
++    "we call our {r} {v}", "ours is {v}, the {r}", "our {r}: {v}",
++    "hey our {r} is {v}",
++]
++
++STATUS_TAG = {
++    "OK": "ANSWER", "SAVED": "ACK_SAVE", "UNKNOWN": "ABSTAIN",
++    "ABSTAIN": "ABSTAIN", "CLARIFY": "CLARIFY", "FORGOT": "FORGOT_ACK",
++}
++
++TRAIN_COUNTS = {"OK": 7000, "SAVED": 3000, "UNKNOWN": 3000,
++                "ABSTAIN": 2000, "CLARIFY": 1500, "WHOSE": 1000,
++                "FORGOT": 2500}
++DEV_COUNTS = {"OK": 350, "SAVED": 150, "UNKNOWN": 150, "ABSTAIN": 100,
++              "CLARIFY": 100, "WHOSE": 50, "FORGOT": 100}
++REPLIES_PER_COMBO = 5
++
++
++def pick_rel(rng, two_hop):
++    if two_hop:
++        r1 = rng.choice(PERSON_RELS)
++        r2 = rng.choice(PERSON_RELS)
++        return ([r1[0], r2[0]], r1[1] + "'s " + r2[1], "person")
++    c = rng.random()
++    if c < 0.55:
++        r = rng.choice(PERSON_RELS)
++        return ([r[0]], r[1], "person")
++    if c < 0.8:
++        r = rng.choice(PLACE_RELS)
++        return ([r[0]], r[1], "place")
++    r = rng.choice(THING_RELS)
++    return ([r[0]], r[1], "thing")
++
++
++def pick_value(rng, kind, relkey, owners, values, places):
++    if kind == "person":
++        v = rng.choice(values)
++        while v in owners:
++            v = rng.choice(values)
++        return v
++    if kind == "place":
++        return rng.choice(places)
++    return rng.choice(THING_VALUES[relkey])
++
++
++def templates_for(status, kind):
++    if status == "OK":
++        return T_OK
++    if status == "SAVED":
++        return T_SAVED
++    if status == "UNKNOWN":
++        return {"person": T_UNKNOWN_P, "place": T_UNKNOWN_L,
++                "thing": T_UNKNOWN_T}[kind]
++    if status == "ABSTAIN":
++        return {"person": T_ABSTAIN_P, "place": T_ABSTAIN_L,
++                "thing": T_ABSTAIN_T}[kind]
++    if status == "FORGOT":
++        return {"person": T_FORGOT_P, "place": T_FORGOT_L,
++                "thing": T_FORGOT_T}[kind]
++    if status == "CLARIFY":
++        return T_CLARIFY
++    if status == "WHOSE":
++        return T_WHOSE
++    raise ValueError(status)
++
++
++def build_split(counts, owners, values, places, seed):
++    rng = random.Random(seed)
++    rows = []
++    drops = {}
++    combos = set()
++    tid = [0]
++
++    def trail(n):
++        ids = []
++        for _ in range(n):
++            tid[0] += 1
++            ids.append("M0%05d" % tid[0])
++        return ids
++
++    def make_combo(status):
++        for _ in range(200):
++            two = status in ("OK", "UNKNOWN") and rng.random() < 0.2
++            rels, phrase, kind = pick_rel(rng, two)
++            owner = rng.choice(owners)
++            if status == "WHOSE":
++                key = ("WHOSE", tuple(rels), None)
++                val = rng.choice(values + places)
++            elif status in ("OK", "SAVED"):
++                val = pick_value(rng, kind, rels[0], [owner], values,
++                                 places)
++                key = (owner, tuple(rels), val)
++            else:
++                val = None
++                key = (owner, tuple(rels), status)
++            if key not in combos:
++                combos.add(key)
++                return owner, rels, phrase, kind, val
++        raise RuntimeError("combo space exhausted")
++
++    def make_record(status, owner, rels, phrase, kind, val):
++        src = rng.choice(["taught", "taught", "inferred"])
++        if status == "OK":
++            return {"kind": "answer", "status": "OK", "name": owner,
++                    "relations": rels,
++                    "fields": {"answer": val, "trail": trail(len(rels)),
++                               "source": src}}
++        if status == "SAVED":
++            return {"kind": "answer", "status": "SAVED", "name": owner,
++                    "relations": rels,
++                    "fields": {"answer": val, "trail": trail(len(rels)),
++                               "source": "taught"}}
++        if status == "UNKNOWN":
++            return {"kind": "answer", "status": "UNKNOWN", "name": owner,
++                    "relations": rels,
++                    "fields": {"subject": owner, "relation": rels[-1],
++                               "hop": len(rels), "trail": [],
++                               "source": "taught"}}
++        if status == "ABSTAIN":
++            return {"kind": "answer", "status": "ABSTAIN", "name": owner,
++                    "relations": rels,
++                    "fields": {"reason": "no record of that",
++                               "source": "taught"}}
++        if status == "FORGOT":
++            return {"kind": "answer", "status": "FORGOT", "name": owner,
++                    "relations": rels,
++                    "fields": {"subject": owner, "relation": rels[-1],
++                               "hop": len(rels), "source": "taught"}}
++        if status == "CLARIFY":
++            c1 = rng.choice(values)
++            c2 = rng.choice(values)
++            while c2 == c1:
++                c2 = rng.choice(values)
++            i1, i2 = trail(2)
++            return {"kind": "answer", "status": "CLARIFY", "name": owner,
++                    "relations": rels,
++                    "fields": {"name": owner,
++                               "choices": "%s (%s), %s (%s)" % (c1, i1,
++                                                               c2, i2),
++                               "ids": [i1, i2], "source": "taught"}}
++        if status == "WHOSE":
++            return {"kind": "answer", "status": "CLARIFY", "name": "our",
++                    "relations": rels,
++                    "fields": {"owner_phrase": "our",
++                               "relation": rels[-1], "source": "taught"}}
++        raise ValueError(status)
++
++    def make_turn(status, owner, phrase, kind, val):
++        fmt = {"n": owner, "nl": owner.lower(), "r": phrase,
++               "v": val or "", "vl": (val or "").lower()}
++        if status == "OK" or status == "UNKNOWN" or status == "ABSTAIN":
++            return rng.choice(Q_FRAMES[kind]).format(**fmt)
++        if status == "SAVED":
++            return rng.choice(TELL_FRAMES).format(**fmt)
++        if status == "CLARIFY":
++            return rng.choice(SHORT_FRAMES).format(**fmt)
++        if status == "FORGOT":
++            return rng.choice(FORGET_FRAMES).format(**fmt)
++        if status == "WHOSE":
++            return rng.choice(WHOSE_FRAMES).format(**fmt)
++        raise ValueError(status)
++
++    block = tuple(owners) + tuple(values) + tuple(places) + tuple(
++        w for vs in THING_VALUES.values() for w in vs)
++    for status, n in counts.items():
++        tag = "WHOSE" if status == "WHOSE" else STATUS_TAG[
++            status if status != "WHOSE" else "CLARIFY"]
++        ncombo = n // REPLIES_PER_COMBO
++        tcount = [0]
++        made = 0
++        ci = 0
++        while made < n:
++            owner, rels, phrase, kind, val = make_combo(status)
++            ci += 1
++            for _ in range(REPLIES_PER_COMBO):
++                if made >= n:
++                    break
++                tmpl = templates_for(status, kind)[
++                    tcount[0] % len(templates_for(status, kind))]
++                tcount[0] += 1
++                rec = make_record(status, owner, rels, phrase, kind, val)
++                turn = make_turn(status, owner, phrase, kind, val)
++                bad = check_row(dict(rec, tag=tag), tmpl, block)
++                if bad:
++                    for r in bad:
++                        drops[r] = drops.get(r, 0) + 1
++                    continue
++                rows.append({"record": rec, "user_turn": turn, "tag": tag,
++                             "reply": tmpl})
++                made += 1
++    return rows, drops, combos
++
++
++def write_jsonl(path, rows):
++    with open(path, "w") as f:
++        for o in rows:
++            f.write(json.dumps(o) + "\n")
++
++
++def load_jsonl(path):
++    out = []
++    with open(path) as f:
++        for line in f:
++            line = line.strip()
++            if line:
++                out.append(json.loads(line))
++    return out
++
++
++def stats_of(rows):
++    from collections import Counter
++    by_status = Counter()
++    by_tag = Counter()
++    by_reply_status = {}
++    for o in rows:
++        s = o["record"]["status"]
++        by_status[s] += 1
++        by_tag[o["tag"]] += 1
++        by_reply_status.setdefault(s, Counter())[o["reply"]] += 1
++    return by_status, by_tag, by_reply_status
++
++
++def verify(adir):
++    train = load_jsonl(os.path.join(adir, "train.jsonl"))
++    dev = load_jsonl(os.path.join(adir, "dev.jsonl"))
++    pools = json.load(open(os.path.join(adir, "pools.json")))
++    block = tuple(pools["block"])
++    ok = True
++    for name, rows in (("train", train), ("dev", dev)):
++        fails = 0
++        for o in rows:
++            rec = dict(o["record"])
++            rec["tag"] = o["tag"]
++            if check_row(rec, o["reply"], block):
++                fails += 1
++        print("Pm0.1 %s: rows=%d refails=%d" % (name, len(rows), fails))
++        ok &= (fails == 0)
++    for name, rows in (("train", train), ("dev", dev)):
++        _, _, brs = stats_of(rows)
++        for s, c in sorted(brs.items()):
++            n = sum(c.values())
++            top, topn = c.most_common(1)[0]
++            share = 100.0 * topn / n
++            ndist = len(c)
++            print("Pm0.2/0.3 %s %s: n=%d distinct=%d top=%.2f%%" % (
++                name, s, n, ndist, share))
++            if topn / n > 0.03:
++                ok = False
++            if ndist < 40:
++                ok = False
++    tn = {o["record"]["name"] for o in train if o["tag"] != "WHOSE"}
++    dn = {o["record"]["name"] for o in dev if o["tag"] != "WHOSE"}
++    print("Pm0.4: train_names=%d dev_names=%d inter=%d" % (
++        len(tn), len(dn), len(tn & dn)))
++    ok &= (len(tn & dn) == 0)
++    tc = {(o["record"]["name"], tuple(o["record"]["relations"]),
++           o["record"]["fields"].get("answer"),
++           o["record"]["status"]) for o in train}
++    dc = {(o["record"]["name"], tuple(o["record"]["relations"]),
++           o["record"]["fields"].get("answer"),
++           o["record"]["status"]) for o in dev}
++    print("combos: train=%d dev=%d inter=%d" % (len(tc), len(dc),
++                                                len(tc & dc)))
++    ok &= (len(tc & dc) == 0)
++    return ok
++
++
++def selftest():
++    base_ok = {"kind": "answer", "status": "OK", "name": "Aldo",
++               "relations": ["mother"],
++               "fields": {"answer": "Ander", "trail": ["M000001"],
++                          "source": "taught"}}
++    cases = [
++        (dict(base_ok, tag="ANSWER"), "Yep, <S1>'s <R1> is <V1>.", []),
++        (dict(base_ok, tag="ANSWER"), "Yep, <S1>'s <R1> is.", ["R1_missing"]),
++        (dict(base_ok, tag="ANSWER"), "Yep, Aldo's <R1> is <V1>.",
++         ["R1_missing", "R3_caps"]),
++        (dict(base_ok, tag="ANSWER"), "Yep, <S1>'s <R1> is <V1>. Got it.",
++         ["R4_status"]),
++        ({"kind": "answer", "status": "UNKNOWN", "name": "Aldo",
++          "relations": ["city"],
++          "fields": {"subject": "Aldo", "relation": "city", "hop": 1,
++                     "trail": [], "source": "taught"}, "tag": "ABSTAIN"},
++         "Hmm, I don't know where <S1>'s <R1> is yet.", []),
++        ({"kind": "answer", "status": "UNKNOWN", "name": "Aldo",
++          "relations": ["city"],
++          "fields": {"subject": "Aldo", "relation": "city", "hop": 1,
++                     "trail": [], "source": "taught"}, "tag": "ABSTAIN"},
++         "Hmm, <S1>'s <R1> is <V1>.", ["R2_extra", "R4_status"]),
++        ({"kind": "answer", "status": "FORGOT", "name": "Aldo",
++          "relations": ["boss"],
++          "fields": {"subject": "Aldo", "relation": "boss", "hop": 1,
++                     "source": "taught"}, "tag": "FORGOT_ACK"},
++         "Okay, I've forgotten who <S1>'s <R1> is.", []),
++        ({"kind": "answer", "status": "FORGOT", "name": "Aldo",
++          "relations": ["boss"],
++          "fields": {"subject": "Aldo", "relation": "boss", "hop": 1,
++                     "source": "taught"}, "tag": "FORGOT_ACK"},
++         "Okay, who <S1>'s <R1> is, I mean.", ["R4_status"]),
++        ({"kind": "answer", "status": "CLARIFY", "name": "our",
++          "relations": ["dog"],
++          "fields": {"owner_phrase": "our", "relation": "dog",
++                     "source": "taught"}, "tag": "WHOSE"},
++         "Whose <R1> do you mean? Yours, or someone else's?", []),
++        ({"kind": "answer", "status": "CLARIFY", "name": "our",
++          "relations": ["dog"],
++          "fields": {"owner_phrase": "our", "relation": "dog",
++                     "source": "taught"}, "tag": "WHOSE"},
++         "Whose <R1> does <S1> mean?", ["R2_extra"]),
++    ]
++    bad = 0
++    for rec, reply, want in cases:
++        tag = rec.pop("tag")
++        got = check_row(dict(rec, tag=tag), reply)
++        if got != want:
++            print("SELFTEST MISMATCH: %r got=%r want=%r" % (reply, got,
++                                                            want))
++            bad += 1
++    # every template must pass on a fitting sample row
++    samples = {
++        "OK": (dict(base_ok, tag="ANSWER"), "p"),
++        "SAVED": ({"kind": "answer", "status": "SAVED", "name": "Aldo",
++                   "relations": ["mother"],
++                   "fields": {"answer": "Ander", "trail": ["M000001"],
++                              "source": "taught"}}, "p"),
++        "CLARIFY": ({"kind": "answer", "status": "CLARIFY", "name": "Aldo",
++                     "relations": ["boss"],
++                     "fields": {"name": "Aldo", "choices": "x (M000002)",
++                                "ids": ["M000002"],
++                                "source": "taught"}}, "p"),
++    }
++    p_row = {"kind": "answer", "status": "OK", "name": "Aldo",
++             "relations": ["mother"],
++             "fields": {"answer": "Ander", "trail": ["M000001"],
++                        "source": "taught"}}
++    l_row = {"kind": "answer", "status": "OK", "name": "Aldo",
++             "relations": ["city"],
++             "fields": {"answer": "Rook", "trail": ["M000001"],
++                        "source": "taught"}}
++    t_row = {"kind": "answer", "status": "OK", "name": "Aldo",
++             "relations": ["hobby"],
++             "fields": {"answer": "chess", "trail": ["M000001"],
++                        "source": "taught"}}
++    block = tuple(TRAIN_OWNERS + TRAIN_VALUES + TRAIN_PLACES +
++                  [w for vs in THING_VALUES.values() for w in vs])
++    checks = []
++    for t in T_OK:
++        checks.append((dict(p_row, tag="ANSWER"), t))
++    for t in T_SAVED:
++        checks.append((dict(p_row, status="SAVED", tag="ACK_SAVE",
++                            fields={"answer": "Ander",
++                                    "trail": ["M000001"],
++                                    "source": "taught"}), t))
++    unk_p = {"kind": "answer", "status": "UNKNOWN", "name": "Aldo",
++             "relations": ["mother"],
++             "fields": {"subject": "Aldo", "relation": "mother", "hop": 1,
++                        "trail": [], "source": "taught"}}
++    unk_l = dict(unk_p, relations=["city"],
++                 fields={"subject": "Aldo", "relation": "city", "hop": 1,
++                         "trail": [], "source": "taught"})
++    unk_t = dict(unk_p, relations=["hobby"],
++                 fields={"subject": "Aldo", "relation": "hobby", "hop": 1,
++                         "trail": [], "source": "taught"})
++    for t in T_UNKNOWN_P:
++        checks.append((dict(unk_p, tag="ABSTAIN"), t))
++    for t in T_UNKNOWN_L:
++        checks.append((dict(unk_l, tag="ABSTAIN"), t))
++    for t in T_UNKNOWN_T:
++        checks.append((dict(unk_t, tag="ABSTAIN"), t))
++    abs_p = dict(unk_p, status="ABSTAIN",
++                 fields={"reason": "no record of that",
++                         "source": "taught"})
++    abs_l = dict(unk_l, status="ABSTAIN",
++                 fields={"reason": "no record of that",
++                         "source": "taught"})
++    abs_t = dict(unk_t, status="ABSTAIN",
++                 fields={"reason": "no record of that",
++                         "source": "taught"})
++    for t in T_ABSTAIN_P:
++        checks.append((dict(abs_p, tag="ABSTAIN"), t))
++    for t in T_ABSTAIN_L:
++        checks.append((dict(abs_l, tag="ABSTAIN"), t))
++    for t in T_ABSTAIN_T:
++        checks.append((dict(abs_t, tag="ABSTAIN"), t))
++    frg_p = {"kind": "answer", "status": "FORGOT", "name": "Aldo",
++             "relations": ["boss"],
++             "fields": {"subject": "Aldo", "relation": "boss", "hop": 1,
++                        "source": "taught"}}
++    frg_l = dict(frg_p, relations=["city"],
++                 fields={"subject": "Aldo", "relation": "city", "hop": 1,
++                         "source": "taught"})
++    frg_t = dict(frg_p, relations=["hobby"],
++                 fields={"subject": "Aldo", "relation": "hobby", "hop": 1,
++                         "source": "taught"})
++    for t in T_FORGOT_P:
++        checks.append((dict(frg_p, tag="FORGOT_ACK"), t))
++    for t in T_FORGOT_L:
++        checks.append((dict(frg_l, tag="FORGOT_ACK"), t))
++    for t in T_FORGOT_T:
++        checks.append((dict(frg_t, tag="FORGOT_ACK"), t))
++    clr = {"kind": "answer", "status": "CLARIFY", "name": "Aldo",
++           "relations": ["boss"],
++           "fields": {"name": "Aldo", "choices": "Ander (M000002)",
++                      "ids": ["M000002"], "source": "taught"}}
++    for t in T_CLARIFY:
++        checks.append((dict(clr, tag="CLARIFY"), t))
++    whs = {"kind": "answer", "status": "CLARIFY", "name": "our",
++           "relations": ["dog"],
++           "fields": {"owner_phrase": "our", "relation": "dog",
++                      "source": "taught"}}
++    for t in T_WHOSE:
++        checks.append((dict(whs, tag="WHOSE"), t))
++    for rec, t in checks:
++        got = check_row(rec, t, block)
++        if got:
++            print("TEMPLATE FAIL: %r -> %r" % (t, got))
++            bad += 1
++    print("selftest templates=%d mismatches=%d" % (len(checks), bad))
++    return bad == 0
++
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument("--out", default="artifacts/claude-own-m0-20260923")
++    ap.add_argument("--verify", action="store_true")
++    ap.add_argument("--selftest", action="store_true")
++    args = ap.parse_args()
++    if args.selftest:
++        sys.exit(0 if selftest() else 1)
++    if args.verify:
++        sys.exit(0 if verify(args.out) else 1)
++    import claude_own_m0_check as C
++    tb = set(TALKER120_BLOCK) if hasattr(C, "TALKER120_BLOCK") else set()
++    mine = (TRAIN_OWNERS + DEV_OWNERS + TRAIN_VALUES + DEV_VALUES +
++            TRAIN_PLACES + DEV_PLACES)
++    assert len(set(mine)) == len(mine), "own pools overlap each other"
++    assert not (set(mine) & tb), "own pool hits talker120 names: %s" % (
++        sorted(set(mine) & tb))
++    assert not (set(TRAIN_OWNERS) & set(DEV_OWNERS)), "owner pools overlap"
++    os.makedirs(args.out, exist_ok=True)
++    train, dtrain, _ = build_split(TRAIN_COUNTS, TRAIN_OWNERS,
++                                   TRAIN_VALUES, TRAIN_PLACES, SEED_TRAIN)
++    dev, ddev, _ = build_split(DEV_COUNTS, DEV_OWNERS, DEV_VALUES,
++                               DEV_PLACES, SEED_DEV)
++    want_train = sum(TRAIN_COUNTS.values())
++    want_dev = sum(DEV_COUNTS.values())
++    assert len(train) == want_train, (len(train), want_train)
++    assert len(dev) == want_dev, (len(dev), want_dev)
++    write_jsonl(os.path.join(args.out, "train.jsonl"), train)
++    write_jsonl(os.path.join(args.out, "dev.jsonl"), dev)
++    block = sorted(set(mine + [w for vs in THING_VALUES.values()
++                               for w in vs]))
++    json.dump({"block": block},
++              open(os.path.join(args.out, "pools.json"), "w"))
++    bs, bt, _ = stats_of(train)
++    ds, dt, _ = stats_of(dev)
++    stats = {"train": len(train), "dev": len(dev),
++             "train_by_status": dict(bs), "train_by_tag": dict(bt),
++             "dev_by_status": dict(ds), "dev_by_tag": dict(dt),
++             "drops_train": dtrain, "drops_dev": ddev}
++    json.dump(stats, open(os.path.join(args.out, "stats.json"), "w"),
++              indent=1, sort_keys=True)
++    print(json.dumps(stats, indent=1, sort_keys=True))
++
++
++if __name__ == "__main__":
++    main()
++# __END__
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -834,20 +834,8 @@
+         print("SELFTEST MISMATCH: %r got=%r want=%r" % (reply, got,
+                                                         want))
+         bad += 1
+ # every template must pass on a fitting sample row
+-samples = {
+-    "OK": (dict(base_ok, tag="ANSWER"), "p"),
+-    "SAVED": ({"kind": "answer", "status": "SAVED", "name": "Aldo",
+-               "relations": ["mother"],
+-               "fields": {"answer": "Ander", "trail": ["M000001"],
+-                          "source": "taught"}}, "p"),
+-    "CLARIFY": ({"kind": "answer", "status": "CLARIFY", "name": "Aldo",
+-                 "relations": ["boss"],
+-                 "fields": {"name": "Aldo", "choices": "x (M000002)",
+-                            "ids": ["M000002"],
+-                            "source": "taught"}}, "p"),
+-}
+ p_row = {"kind": "answer", "status": "OK", "name": "Aldo",
+          "relations": ["mother"],
+          "fields": {"answer": "Ander", "trail": ["M000001"],
+                     "source": "taught"}}
+
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | tail -30
+TEMPLATE FAIL: 'Which <S1>, sorry? There are a couple.' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, what <S1> are we talking about? Which one?' -> ['R3_caps']
+TEMPLATE FAIL: 'Gotcha, but which <S1>? I want to get the right one.' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, which <S1>? What else can you tell me so I pick right?' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, who? Which <S1> are you asking about?' -> ['R3_caps']
+TEMPLATE FAIL: "Whose <R1> do you mean? Yours, or someone else's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Hmm, whose <R1> are we talking about? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Sorry, whose <R1> do you mean here? Yours or another's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Whose <R1> do you have in mind? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Sorry, whose <R1>? Yours, or a friend's?" -> ['R3_caps']
+TEMPLATE FAIL: "Whose <R1> shall I note? Yours or someone else's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Whose <R1> are we saving here? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Gotcha, but whose <R1> do you mean? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Sure, but whose <R1> is it? Yours or someone else's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Yep, whose <R1> are we talking about? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Oh nice, but whose <R1> is it? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Great question, but whose <R1>? Yours or another's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Perfect, but whose <R1> do you mean? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Just to be sure, whose <R1> is it? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Hmm, whose <R1>? Yours, or someone in your group?' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, whose <R1> is it? I want to save it for the right person.' -> ['R3_caps']
+TEMPLATE FAIL: 'Whose <R1> would that be? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Okay, whose <R1> shall I answer about? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, who does this <R1> belong to? I mean, whose is it?' -> ['R3_caps']
+TEMPLATE FAIL: 'Oh, a <R1>? Whose <R1>, sorry? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Can you say whose <R1> this is? Yours, or another's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Whose <R1> are you telling me about? Yours?' -> ['R3_caps']
+TEMPLATE FAIL: "Whose <R1> should I keep? Yours or someone else's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry to ask, but whose <R1> is it? Yours?' -> ['R3_caps']
+selftest templates=339 mismatches=80
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | grep TEMPLATE | /usr/bin/python3 -c "
+import sys,re,json
+sys.path.insert(0,'scripts')
+from claude_own_m0_check import ALLOW_CAPS
+import re
+miss=set()
+for line in sys.stdin:
+    t=line.split(\"'\")[1] if line.startswith('TEMPLATE FAIL: \\'') else None
+    if t is None:
+        m=re.search(r'TEMPLATE FAIL: \"(.*)\" ->',line)
+        t=m.group(1) if m else ''
+    for s in ('<S1>','<V1>','<R1>'):
+        t=t.replace(s,' ')
+    for w in re.findall(r\"[A-Za-z]+(?:'[A-Za-z]+)?\",t):
+        if w[0].isupper() and w not in ALLOW_CAPS:
+            miss.add(w)
+print(sorted(miss))
+"
+['All', 'From', 'Gotcha', 'Here', 'Honestly', 'Not', 'Nothing', 'So', 'Sorry', 'The', 'There', 'Where', 'Yours']
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | grep TEMPLATE | grep -v R3_caps; echo "non-R3 done"; /usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | grep -c "R3_caps"
+TEMPLATE FAIL: "Glad to note that. <S1>'s <R1> is <V1>." -> ['R4_status']
+TEMPLATE FAIL: "I've written that down. <S1>'s <R1> is <V1>." -> ['R4_status']
+non-R3 done
+78
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -180,9 +180,9 @@
+ "Awesome, noted. <S1>'s <R1> is <V1>.",
+ "Wonderful, saved. <S1>'s <R1> is <V1>.",
+ "Fantastic, noted. <S1>'s <R1> is <V1>.",
+ "Lovely, saved. <S1>'s <R1> is <V1>.",
+-"Glad to note that. <S1>'s <R1> is <V1>.",
++"Glad to save that. <S1>'s <R1> is <V1>, noted.",
+ "Thanks for telling me. <S1>'s <R1> is <V1>, saved.",
+ "Got it, and saved. <S1>'s <R1> is <V1>.",
+ "Noted and saved. <S1>'s <R1> is <V1>.",
+ "I've written that down. <S1>'s <R1> is <V1>.",
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_check.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+@@ -39,11 +39,10 @@
+ # Derived from the template corpus in the pilot, then frozen here.
+ ALLOW_CAPS = frozenset([
+     "Ah", "And", "Anything", "Anytime", "Awesome", "Can", "Could",
+     "Did", "Do", "Done", "Don't", "Fantastic", "Glad", "Got", "Great",
+-    "Happy", "Have", "Here's", "Hmm", "How", "I", "I'd", "I'll", "I'm",
++    "Happy", "Have", "Here's", "Hmm", "How", "I",     "I'd", "I'll", "I'm",
+     "I've", "Is", "Isn't", "It", "It's", "Just", "Let", "Lovely",
+-    "Nice", "No", "Noted", "Oh", "Okay", "Perfect", "Right", "Saved",
+     "Shall", "Sounds", "Stored", "Sure", "Sweet", "Thanks", "That",
+     "That's", "There's", "Want", "What", "Which", "Who", "Whose",
+     "Wonderful", "Yeah", "Yep", "You", "You've",
+ ])
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -184,9 +184,9 @@
+ "Glad to save that. <S1>'s <R1> is <V1>, noted.",
+ "Thanks for telling me. <S1>'s <R1> is <V1>, saved.",
+ "Got it, and saved. <S1>'s <R1> is <V1>.",
+ "Noted and saved. <S1>'s <R1> is <V1>.",
+-"I've written that down. <S1>'s <R1> is <V1>.",
++"I've written that down and saved it. <S1>'s <R1> is <V1>.",
+ "That's written down. <S1>'s <R1> is <V1>, saved.",
+ "Stored! <S1>'s <R1> is <V1>.",
+ "Saved it. <S1>'s <R1> is <V1>.",
+ "Okay, I've stored that. <S1>'s <R1> is <V1>.",
+
+[0m
+[0m→ [0mRead scripts/claude_own_m0_check.py[90m [limit=30, offset=38][0m
+[0m
+[0m← [0mEdit scripts/claude_own_m0_check.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+@@ -37,15 +37,20 @@
+ 
+ # Every capitalised token the sealed M0 templates may use outside slots.
+ # Derived from the template corpus in the pilot, then frozen here.
+ ALLOW_CAPS = frozenset([
+-    "Ah", "And", "Anything", "Anytime", "Awesome", "Can", "Could",
+-    "Did", "Do", "Done", "Don't", "Fantastic", "Glad", "Got", "Great",
+-    "Happy", "Have", "Here's", "Hmm", "How", "I",     "I'd", "I'll", "I'm",
++    "Ah", "All", "And", "Anything", "Anytime", "Awesome", "Can", "Could",
++    "Did", "Do", "Done", "Don't", "Fantastic", "From", "Glad", "Got",
++    "Gotcha", "Great",
++    "Happy", "Have", "Here", "Here's", "Hmm", "Honestly", "How", "I",
++    "I'd", "I'll", "I'm",
+     "I've", "Is", "Isn't", "It", "It's", "Just", "Let", "Lovely",
+-    "Shall", "Sounds", "Stored", "Sure", "Sweet", "Thanks", "That",
+-    "That's", "There's", "Want", "What", "Which", "Who", "Whose",
+-    "Wonderful", "Yeah", "Yep", "You", "You've",
++    "Nice", "No", "Not", "Noted", "Nothing", "Oh", "Okay", "Perfect",
++    "Right", "Saved",
++    "Shall", "So", "Sounds", "Stored", "Sure", "Sweet", "Thanks", "That",
++    "That's", "The", "There", "There's", "Want", "What", "Where",
++    "Which", "Who", "Whose",
++    "Wonderful", "Yeah", "Yep", "You", "You've", "Yours",
+ ])
+ 
+ HEDGE_PHRASES = [
+     "don't know", "do not know", "not sure", "no idea", "can't say",
+
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | tail -5
+TEMPLATE FAIL: "Sorry, whose <R1>? Yours, or a friend's?" -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, whose <R1> is it? I want to save it for the right person.' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry, who does this <R1> belong to? I mean, whose is it?' -> ['R3_caps']
+TEMPLATE FAIL: 'Sorry to ask, but whose <R1> is it? Yours?' -> ['R3_caps']
+selftest templates=339 mismatches=24
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | grep TEMPLATE | /usr/bin/python3 -c "
+import sys,re
+sys.path.insert(0,'scripts')
+from claude_own_m0_check import ALLOW_CAPS
+miss=set()
+for line in sys.stdin:
+    m=re.search(r'TEMPLATE FAIL: .(.*). ->',line)
+    t=m.group(1) if m else ''
+    for s in ('<S1>','<V1>','<R1>'):
+        t=t.replace(s,' ')
+    for w in re.findall(r\"[A-Za-z]+(?:'[A-Za-z]+)?\",t):
+        if w[0].isupper() and w not in ALLOW_CAPS:
+            miss.add(w)
+print(sorted(miss))
+"
+['Sorry']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import re
+t=\"Sorry, whose <R1>? Yours, or a friend's?\"
+for s in ('<S1>','<V1>','<R1>'): t=t.replace(s,' ')
+print(re.findall(r\"[A-Za-z]+(?:'[A-Za-z]+)?\",t))
+"
+['Sorry', 'whose', 'Yours', 'or', 'a', "friend's"]
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import sys; sys.path.insert(0,'scripts')
+from claude_own_m0_check import check_row, ALLOW_CAPS
+rec={'kind':'answer','status':'CLARIFY','name':'our','relations':['dog'],'fields':{}}
+t=\"Sorry, whose <R1>? Yours, or a friend's?\"
+print(check_row(dict(rec,tag='WHOSE'),t))
+print('Sorry' in ALLOW_CAPS, 'Yours' in ALLOW_CAPS)
+"
+['R3_caps']
+False True
+[0m
+[0m← [0mEdit scripts/claude_own_m0_check.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_check.py
+@@ -44,10 +44,9 @@
+     "Happy", "Have", "Here", "Here's", "Hmm", "Honestly", "How", "I",
+     "I'd", "I'll", "I'm",
+     "I've", "Is", "Isn't", "It", "It's", "Just", "Let", "Lovely",
+     "Nice", "No", "Not", "Noted", "Nothing", "Oh", "Okay", "Perfect",
+-    "Right", "Saved",
+-    "Shall", "So", "Sounds", "Stored", "Sure", "Sweet", "Thanks", "That",
++    "Right", "Saved", "Shall", "So", "Sorry", "Sounds", "Stored", "Sure", "Sweet", "Thanks", "That",
+     "That's", "The", "There", "There's", "Want", "What", "Where",
+     "Which", "Who", "Whose",
+     "Wonderful", "Yeah", "Yep", "You", "You've", "Yours",
+ ])
+
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | tail -3
+selftest templates=339 mismatches=0
+[0m
+[0m$ [0muptime; /usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot 2>&1 | tail -25 && /usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot --verify 2>&1 | tail -30
+14:14  up  4:07, 4 users, load averages: 46.58 36.89 40.04
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 973, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 939, in main
+    tb = set(TALKER120_BLOCK) if hasattr(C, "TALKER120_BLOCK") else set()
+NameError: name 'TALKER120_BLOCK' is not defined
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 973, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 937, in main
+    sys.exit(0 if verify(args.out) else 1)
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 742, in verify
+    train = load_jsonl(os.path.join(adir, "train.jsonl"))
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 720, in load_jsonl
+    with open(path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/m0pilot/train.jsonl'
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -18,9 +18,9 @@
+ import random
+ import sys
+ 
+ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+-from claude_own_m0_check import check_row  # noqa: E402
++from claude_own_m0_check import check_row, TALKER120_BLOCK  # noqa: E402
+ 
+ SEED_TRAIN = 20260923
+ SEED_DEV = 20260924
+ 
+
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot 2>&1 | tail -30
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 973, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 947, in main
+    train, dtrain, _ = build_split(TRAIN_COUNTS, TRAIN_OWNERS,
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 691, in build_split
+    owner, rels, phrase, kind, val = make_combo(status)
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py", line 617, in make_combo
+    raise RuntimeError("combo space exhausted")
+RuntimeError: combo space exhausted
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -601,10 +601,10 @@
+ two = status in ("OK", "UNKNOWN") and rng.random() < 0.2
+ rels, phrase, kind = pick_rel(rng, two)
+ owner = rng.choice(owners)
+ if status == "WHOSE":
+-    key = ("WHOSE", tuple(rels), None)
+     val = rng.choice(values + places)
++    key = ("WHOSE", tuple(rels), val)
+ elif status in ("OK", "SAVED"):
+     val = pick_value(rng, kind, rels[0], [owner], values,
+                      places)
+     key = (owner, tuple(rels), val)
+
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot 2>&1 | tail -30
+"UNKNOWN": 150
+ },
+ "dev_by_tag": {
+  "ABSTAIN": 250,
+  "ACK_SAVE": 150,
+  "ANSWER": 350,
+  "CLARIFY": 100,
+  "FORGOT_ACK": 100,
+  "WHOSE": 50
+ },
+ "drops_dev": {},
+ "drops_train": {},
+ "train": 20000,
+ "train_by_status": {
+  "ABSTAIN": 2000,
+  "CLARIFY": 2500,
+  "FORGOT": 2500,
+  "OK": 7000,
+  "SAVED": 3000,
+  "UNKNOWN": 3000
+ },
+ "train_by_tag": {
+  "ABSTAIN": 5000,
+  "ACK_SAVE": 3000,
+  "ANSWER": 7000,
+  "CLARIFY": 1500,
+  "FORGOT_ACK": 2500,
+  "WHOSE": 1000
+ }
+}
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot --verify 2>&1 | tail -30
+Pm0.1 train: rows=20000 refails=0
+Pm0.1 dev: rows=1000 refails=0
+Pm0.2/0.3 train ABSTAIN: n=2000 distinct=48 top=3.60%
+Pm0.2/0.3 train CLARIFY: n=2500 distinct=92 top=1.32%
+Pm0.2/0.3 train FORGOT: n=2500 distinct=48 top=3.56%
+Pm0.2/0.3 train OK: n=7000 distinct=51 top=1.97%
+Pm0.2/0.3 train SAVED: n=3000 distinct=50 top=2.00%
+Pm0.2/0.3 train UNKNOWN: n=3000 distinct=50 top=3.50%
+Pm0.2/0.3 dev ABSTAIN: n=100 distinct=43 top=5.00%
+Pm0.2/0.3 dev CLARIFY: n=150 distinct=92 top=2.00%
+Pm0.2/0.3 dev FORGOT: n=100 distinct=43 top=6.00%
+Pm0.2/0.3 dev OK: n=350 distinct=51 top=2.00%
+Pm0.2/0.3 dev SAVED: n=150 distinct=50 top=2.00%
+Pm0.2/0.3 dev UNKNOWN: n=150 distinct=50 top=3.33%
+Pm0.4: train_names=64 dev_names=40 inter=0
+combos: train=3823 dev=199 inter=9
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -533,18 +533,25 @@
+               "CLARIFY": 100, "WHOSE": 50, "FORGOT": 100}
+ REPLIES_PER_COMBO = 5
+ 
+ 
+-def pick_rel(rng, two_hop):
+-    if two_hop:
+-        r1 = rng.choice(PERSON_RELS)
+-        r2 = rng.choice(PERSON_RELS)
+-        return ([r1[0], r2[0]], r1[1] + "'s " + r2[1], "person")
+-    c = rng.random()
+-    if c < 0.55:
++def pick_rel(rng, two_hop, force_kind=None):
++    if force_kind is None:
++        c = rng.random()
++        if c < 0.55:
++            force_kind = "person"
++        elif c < 0.8:
++            force_kind = "place"
++        else:
++            force_kind = "thing"
++    if force_kind == "person":
++        if two_hop:
++            r1 = rng.choice(PERSON_RELS)
++            r2 = rng.choice(PERSON_RELS)
++            return ([r1[0], r2[0]], r1[1] + "'s " + r2[1], "person")
+         r = rng.choice(PERSON_RELS)
+         return ([r[0]], r[1], "person")
+-    if c < 0.8:
++    if force_kind == "place":
+         r = rng.choice(PLACE_RELS)
+         return ([r[0]], r[1], "place")
+     r = rng.choice(THING_RELS)
+     return ([r[0]], r[1], "thing")
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -602,12 +602,18 @@
+         tid[0] += 1
+         ids.append("M0%05d" % tid[0])
+     return ids
+ 
+-def make_combo(status):
++def make_combo(status, kcycle):
+     for _ in range(200):
+         two = status in ("OK", "UNKNOWN") and rng.random() < 0.2
+-        rels, phrase, kind = pick_rel(rng, two)
++        # UNKNOWN/ABSTAIN/FORGOT draw kinds in strict rotation so no
++        # kind's template list dominates the status share (Pm0.2).
++        force = ["person", "place", "thing"][kcycle[0] % 3] \
++            if status in ("UNKNOWN", "ABSTAIN", "FORGOT") else None
++        if force is not None:
++            kcycle[0] += 1
++        rels, phrase, kind = pick_rel(rng, two, force)
+         owner = rng.choice(owners)
+         if status == "WHOSE":
+             val = rng.choice(values + places)
+             key = ("WHOSE", tuple(rels), val)
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -672,9 +672,10 @@
+     if status == "WHOSE":
+         return {"kind": "answer", "status": "CLARIFY", "name": "our",
+                 "relations": rels,
+                 "fields": {"owner_phrase": "our",
+-                           "relation": rels[-1], "source": "taught"}}
++                           "relation": rels[-1],
++                           "stated_value": val, "source": "taught"}}
+     raise ValueError(status)
+ 
+ def make_turn(status, owner, phrase, kind, val):
+     fmt = {"n": owner, "nl": owner.lower(), "r": phrase,
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -697,20 +697,24 @@
+ for status, n in counts.items():
+     tag = "WHOSE" if status == "WHOSE" else STATUS_TAG[
+         status if status != "WHOSE" else "CLARIFY"]
+     ncombo = n // REPLIES_PER_COMBO
+-    tcount = [0]
++    counters = {}
+     made = 0
+     ci = 0
++    kcycle = [0]
+     while made < n:
+-        owner, rels, phrase, kind, val = make_combo(status)
++        owner, rels, phrase, kind, val = make_combo(status, kcycle)
+         ci += 1
+         for _ in range(REPLIES_PER_COMBO):
+             if made >= n:
+                 break
+-            tmpl = templates_for(status, kind)[
+-                tcount[0] % len(templates_for(status, kind))]
+-            tcount[0] += 1
++            lst = templates_for(status, kind)
++            # round-robin per template list: uniform shares (Pm0.2).
++            key = (status, id(lst))
++            idx = counters.get(key, 0)
++            counters[key] = idx + 1
++            tmpl = lst[idx % len(lst)]
+             rec = make_record(status, owner, rels, phrase, kind, val)
+             turn = make_turn(status, owner, phrase, kind, val)
+             bad = check_row(dict(rec, tag=tag), tmpl, block)
+             if bad:
+
+[0m
+[0m← [0mEdit scripts/claude_own_m0_build.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_m0_build.py
+@@ -788,13 +788,15 @@
+ dn = {o["record"]["name"] for o in dev if o["tag"] != "WHOSE"}
+ print("Pm0.4: train_names=%d dev_names=%d inter=%d" % (
+     len(tn), len(dn), len(tn & dn)))
+ ok &= (len(tn & dn) == 0)
+-tc = {(o["record"]["name"], tuple(o["record"]["relations"]),
++tc = {(o["tag"], o["record"]["name"], tuple(o["record"]["relations"]),
+        o["record"]["fields"].get("answer"),
++       o["record"]["fields"].get("stated_value"),
+        o["record"]["status"]) for o in train}
+-dc = {(o["record"]["name"], tuple(o["record"]["relations"]),
++dc = {(o["tag"], o["record"]["name"], tuple(o["record"]["relations"]),
+        o["record"]["fields"].get("answer"),
++       o["record"]["fields"].get("stated_value"),
+        o["record"]["status"]) for o in dev}
+ print("combos: train=%d dev=%d inter=%d" % (len(tc), len(dc),
+                                             len(tc & dc)))
+ ok &= (len(tc & dc) == 0)
+
+[0m
+[0m✗ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | tail -2 && rm -rf /tmp/m0pilot && /usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot 2>&1 | tail -3 && /usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot --verify 2>&1 | tail -20 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --selftest 2>&1 | tail -2
+selftest templates=339 mismatches=0
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot2 2>&1 | tail -3; /usr/bin/python3 -B scripts/claude_own_m0_build.py --out /tmp/m0pilot2 --verify 2>&1 | tail -20
+"WHOSE": 1000
+ }
+}
+Pm0.1 train: rows=20000 refails=0
+Pm0.1 dev: rows=1000 refails=0
+Pm0.2/0.3 train ABSTAIN: n=2000 distinct=48 top=2.30%
+Pm0.2/0.3 train CLARIFY: n=2500 distinct=92 top=1.32%
+Pm0.2/0.3 train FORGOT: n=2500 distinct=48 top=2.48%
+Pm0.2/0.3 train OK: n=7000 distinct=51 top=1.97%
+Pm0.2/0.3 train SAVED: n=3000 distinct=50 top=2.00%
+Pm0.2/0.3 train UNKNOWN: n=3000 distinct=50 top=2.10%
+Pm0.2/0.3 dev ABSTAIN: n=100 distinct=48 top=3.00%
+Pm0.2/0.3 dev CLARIFY: n=150 distinct=92 top=2.00%
+Pm0.2/0.3 dev FORGOT: n=100 distinct=48 top=3.00%
+Pm0.2/0.3 dev OK: n=350 distinct=51 top=2.00%
+Pm0.2/0.3 dev SAVED: n=150 distinct=50 top=2.00%
+Pm0.2/0.3 dev UNKNOWN: n=150 distinct=50 top=2.67%
+Pm0.4: train_names=64 dev_names=39 inter=0
+combos: train=4000 dev=200 inter=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "print('uv-ok')" 2>&1 | tail -3
+uv-ok
+[0m
+[0m$ [0m/usr/bin/python3 -B scripts/claude_own_m0_check.py --in /tmp/m0pilot2/train.jsonl --block /tmp/m0pilot2/pools.json; /usr/bin/python3 -B scripts/claude_own_m0_check.py --in /tmp/m0pilot2/dev.jsonl --block /tmp/m0pilot2/pools.json; /usr/bin/python3 -c "import json; s=json.load(open('/tmp/m0pilot2/stats.json')); print(s['drops_train'], s['drops_dev'])"
+rows=20000 fails=0 {}
+rows=1000 fails=0 {}
+{} {}
+[0m
+[0m# [0mTodos
+[✓] Inspect say_forms value_kinds + pick relations
+[✓] Write scripts/claude_own_m0_check.py (filter, code only)
+[✓] Write scripts/claude_own_m0_build.py (21k pairs)
+[✓] Pilot both scripts, derive caps allowlist, freeze
+[•] Write PASSMARKS.md, append ledger preds, SEAL
+[ ] Registered run + fresh re-check + stats
+[ ] Write RESULTS.md, final verdict reply
+[0m
+[0m← [0mWrite artifacts/claude-own-m0-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train + 0 dev; max single-reply share <= 3% every status train+dev; distinct templates >= 40 every status train+dev; dev∩train names 0 and combos 0; exit 0.
+EOF
+tail -2 artifacts/fable-predictions-ledger.md | cut -c1-80; uptime; df -g / | tail -2
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train
+14:15  up  4:09, 4 users, load averages: 33.25 36.25 39.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 178315400    0%   /
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_m0_build.py scripts/claude_own_m0_check.py artifacts/claude-own-m0-20260923/PASSMARKS.md > artifacts/claude-own-m0-20260923/SEAL.sha256.txt && cat artifacts/claude-own-m0-20260923/SEAL.sha256.txt
+584a86bd047a27b1a4fb7e0532fbf35a678ee66041e1a54f108d64c1fbdbf895  scripts/claude_own_m0_build.py
+afcdcdef00e16e5eac926aea816feefb65f5bfe49b6ebf380c5861a7ba26b560  scripts/claude_own_m0_check.py
+7c0aa4ceb9a35190fac9abf68db5809e80a62c17d55462444aa7fdffa9d30be3  artifacts/claude-own-m0-20260923/PASSMARKS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_m0_build.py --out artifacts/claude-own-m0-20260923 2>&1 | tail -40
+{
+ "dev": 1000,
+ "dev_by_status": {
+  "ABSTAIN": 100,
+  "CLARIFY": 150,
+  "FORGOT": 100,
+  "OK": 350,
+  "SAVED": 150,
+  "UNKNOWN": 150
+ },
+ "dev_by_tag": {
+  "ABSTAIN": 250,
+  "ACK_SAVE": 150,
+  "ANSWER": 350,
+  "CLARIFY": 100,
+  "FORGOT_ACK": 100,
+  "WHOSE": 50
+ },
+ "drops_dev": {},
+ "drops_train": {},
+ "train": 20000,
+ "train_by_status": {
+  "ABSTAIN": 2000,
+  "CLARIFY": 2500,
+  "FORGOT": 2500,
+  "OK": 7000,
+  "SAVED": 3000,
+  "UNKNOWN": 3000
+ },
+ "train_by_tag": {
+  "ABSTAIN": 5000,
+  "ACK_SAVE": 3000,
+  "ANSWER": 7000,
+  "CLARIFY": 1500,
+  "FORGOT_ACK": 2500,
+  "WHOSE": 1000
+ }
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_m0_build.py --out artifacts/claude-own-m0-20260923 --verify; echo "verify-exit=$?"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_m0_check.py --in artifacts/claude-own-m0-20260923/train.jsonl --block artifacts/claude-own-m0-20260923/pools.json; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_m0_check.py --in artifacts/claude-own-m0-20260923/dev.jsonl --block artifacts/claude-own-m0-20260923/pools.json
+Pm0.1 train: rows=20000 refails=0
+Pm0.1 dev: rows=1000 refails=0
+Pm0.2/0.3 train ABSTAIN: n=2000 distinct=48 top=2.30%
+Pm0.2/0.3 train CLARIFY: n=2500 distinct=92 top=1.32%
+Pm0.2/0.3 train FORGOT: n=2500 distinct=48 top=2.48%
+Pm0.2/0.3 train OK: n=7000 distinct=51 top=1.97%
+Pm0.2/0.3 train SAVED: n=3000 distinct=50 top=2.00%
+Pm0.2/0.3 train UNKNOWN: n=3000 distinct=50 top=2.10%
+Pm0.2/0.3 dev ABSTAIN: n=100 distinct=48 top=3.00%
+Pm0.2/0.3 dev CLARIFY: n=150 distinct=92 top=2.00%
+Pm0.2/0.3 dev FORGOT: n=100 distinct=48 top=3.00%
+Pm0.2/0.3 dev OK: n=350 distinct=51 top=2.00%
+Pm0.2/0.3 dev SAVED: n=150 distinct=50 top=2.00%
+Pm0.2/0.3 dev UNKNOWN: n=150 distinct=50 top=2.67%
+Pm0.4: train_names=64 dev_names=39 inter=0
+combos: train=4000 dev=200 inter=0
+verify-exit=0
+rows=20000 fails=0 {}
+rows=1000 fails=0 {}
+[0m
+[0m$ [0mshasum -c artifacts/claude-own-m0-20260923/SEAL.sha256.txt && /usr/bin/python3 -c "
+import json,random
+rows=[json.loads(l) for l in open('artifacts/claude-own-m0-20260923/train.jsonl')]
+rng=random.Random(7)
+for o in rng.sample(rows,10):
+    r=o['record']
+    print(r['status'],o['tag'],'|',o['user_turn'],'=>',o['reply'])
+"
+scripts/claude_own_m0_build.py: OK
+scripts/claude_own_m0_check.py: OK
+artifacts/claude-own-m0-20260923/PASSMARKS.md: OK
+UNKNOWN ABSTAIN | what is Lissa's hometown => Oh, I'm not sure where <S1>'s <R1> is.
+OK ANSWER | prillo's mentor? => Yeah, <S1>'s <R1> is <V1>. Want me to remember anything else about <S1>?
+UNKNOWN ABSTAIN | tell me Willo's boss's spouse => Oh, I don't know who <S1>'s <R1> is. Want to tell me?
+OK ANSWER | do u know Morna's neighbour's teacher => Yeah, <S1>'s <R1> is <V1>.
+OK ANSWER | what is Harko's city => Right then, <S1>'s <R1> is <V1>.
+FORGOT FORGOT_ACK | forget what i said about Sella's favorite color => Okay, forgotten. I no longer hold what <S1>'s <R1> is.
+OK ANSWER | who is Sella's uncle? => Gotcha. <S1>'s <R1> is <V1>.
+UNKNOWN ABSTAIN | where does Ossa live btw => Oh, I don't know where <S1>'s <R1> is. Want to tell me?
+FORGOT FORGOT_ACK | erase Zellin's country => Okay, I've forgotten where <S1>'s <R1> is.
+OK ANSWER | tell me Zellin's aunt => Oh, I know this. <S1>'s <R1> is <V1>.
+[0m
+[0m← [0mWrite artifacts/claude-own-m0-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Inspect say_forms value_kinds + pick relations
+[✓] Write scripts/claude_own_m0_check.py (filter, code only)
+[✓] Write scripts/claude_own_m0_build.py (21k pairs)
+[✓] Pilot both scripts, derive caps allowlist, freeze
+[✓] Write PASSMARKS.md, append ledger preds, SEAL
+[✓] Registered run + fresh re-check + stats
+[✓] Write RESULTS.md, final verdict reply
+[0m
