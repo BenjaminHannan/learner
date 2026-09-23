@@ -1,0 +1,1694 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; ls -la; ls -la runs/ 2>&1 | head -n 100; ls -la artifacts/ 2>&1 | head -n 100; ls ~/premonition-watch/queue/ 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+total 336
+drwxr-xr-x    29 ben-hannan  staff    928 Sep 23 14:03 .
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 13:13 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  450 ben-hannan  staff  14400 Sep 23 14:15 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 03:22 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 04:38 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 22 21:20 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 07:26 scratchpad
+drwxr-xr-x  1450 ben-hannan  staff  46400 Sep 23 14:15 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+ls: runs/: No such file or directory
+total 8504
+drwxr-xr-x@ 450 ben-hannan  staff    14400 Sep 23 14:15 .
+drwxr-xr-x   29 ben-hannan  staff      928 Sep 23 14:03 ..
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 15:54 claude-aliaspanel237-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 16:18 claude-aliaspanel237b-20260922
+drwxr-xr-x@  17 ben-hannan  staff      544 Sep 22 16:29 claude-apos247-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 16:22 claude-askpanel243-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 23 03:03 claude-bench125-fairness-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 18:01 claude-boundary259-20260922
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 04:19 claude-called281-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 05:00 claude-called281b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 04:13 claude-calledpanel281-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 04:37 claude-calledpanel281b-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 03:16 claude-capab280-20260923
+drwxr-xr-x   14 ben-hannan  staff      448 Sep 23 04:32 claude-capab280b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 03:09 claude-capabilpanel280-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 03:47 claude-capabilpanel280b-20260923
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 22 15:41 claude-chain231-20260922
+drwxr-xr-x@  27 ben-hannan  staff      864 Sep 22 16:35 claude-chain231b-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 01:07 claude-chain266-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 02:45 claude-chain266b-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 15:23 claude-chainpanel231-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 00:37 claude-chainpanel266-20260923
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 02:17 claude-chainpanel266b-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 22 23:57 claude-chatdemo-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 22 23:46 claude-chatweak-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 22 23:35 claude-comma263-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 22 22:27 claude-commapanel263-20260923
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 17:57 claude-comment258-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 14:13 claude-convbench-f0-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 14:15 claude-convf0-20260923
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 22 17:26 claude-convjudge239-A-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 17:26 claude-convjudge239-B-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 16:45 claude-convpanel239-138l-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 17:23 claude-convpanel239-138m-20260922
+drwxr-xr-x@   5 ben-hannan  staff      160 Sep 22 20:02 claude-convpanel239-138n-20260922
+drwxr-xr-x@  10 ben-hannan  staff      320 Sep 22 16:25 claude-convpanel239-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 17:07 claude-correct252-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 17:24 claude-correct252b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 16:42 claude-corrpanel252-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 05:39 claude-corrpanel291-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 17:41 claude-corrtail258-20260922
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 15:47 claude-decline224c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 14:22 claude-demo-dryrun-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 15:32 claude-determinism228-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:09 claude-devset267-20260923
+drwxr-xr-x@  13 ben-hannan  staff      416 Sep 22 16:07 claude-diag243-20260922
+drwxr-xr-x   12 ben-hannan  staff      384 Sep 23 01:48 claude-diag267-20260923
+drwxr-xr-x    8 ben-hannan  staff      256 Sep 23 06:34 claude-diag271-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 02:11 claude-diag290-20260923
+drwxr-xr-x    4 ben-hannan  staff      128 Sep 23 04:55 claude-diag293-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 16:32 claude-direction251-20260922
+drwxr-xr-x   19 ben-hannan  staff      608 Sep 23 01:24 claude-ear265-20260923
+drwxr-xr-x   24 ben-hannan  staff      768 Sep 23 06:21 claude-ear269-20260923
+drwxr-xr-x@  18 ben-hannan  staff      576 Sep 22 21:16 claude-earcheck261-20260922
+drwxr-xr-x   17 ben-hannan  staff      544 Sep 22 22:30 claude-earcheck261b-20260923
+drwxr-xr-x   27 ben-hannan  staff      864 Sep 23 00:55 claude-earcheck264-20260923
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 17:22 claude-earloop256-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 15:37 claude-earpanel235-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 16:49 claude-earpanel235b-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 17:23 claude-earpanel257-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 20:12 claude-earpanel261-20260922
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 22 21:45 claude-earpanel261b-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 22 23:43 claude-earpanel264-20260923
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 04:44 claude-ears119-run-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 22 15:56 claude-firstname236-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 15:51 claude-firstnamepanel236-20260922
+drwxr-xr-x@  16 ben-hannan  staff      512 Sep 22 16:28 claude-firstperson249-20260922
+drwxr-xr-x@  14 ben-hannan  staff      448 Sep 22 20:02 claude-fixedtext255-20260922
+drwxr-xr-x   13 ben-hannan  staff      416 Sep 23 00:12 claude-fixedtext255b-20260923
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 22 15:53 claude-fullname232-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 15:59 claude-fullname232b-20260922
+drwxr-xr-x@   7 ben-hannan  staff      224 Sep 22 16:19 claude-fullname232c-20260922
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 22 17:25 claude-grade241-20260922
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:23 claude-grade241b-A-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 01:27 claude-grade241b-B-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 02:04 claude-grade241b-C-set2-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 02:40 claude-grade241b-D-set2-20260923
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 01:30 claude-grade255b-B-20260923
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 22 20:03 claude-grades255-20260922
+drwxr-xr-x@  12 ben-hannan  staff      384 Sep 22 16:16 claude-grammar238-20260922
+drwxr-xr-x@  21 ben-hannan  staff      672 Sep 22 15:39 claude-identity227c-20260922
+drwxr-xr-x@   4 ben-hannan  staff      128 Sep 22 13:34 claude-improvement-review-20260922
+drwxr-xr-x    9 ben-hannan  staff      288 Sep 23 01:05 claude-invpanel138nb-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 06:46 claude-join280m-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 08:12 claude-join280n-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 10:00 claude-join280p-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 05:49 claude-join291-20260923
+drwxr-xr-x   10 ben-hannan  staff      320 Sep 23 14:15 claude-join292t-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 06:23 claude-joinpanel280m-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 07:59 claude-joinpanel280n-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 09:58 claude-joinpanel280p-20260923
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 14:02 claude-joinpanel292t-20260923
+drwxr-xr-x@   3 ben-hannan  staff       96 Sep 22 17:23 claude-judge241-20260922
+drwxr-xr-x    3 ben-hannan  staff       96 Sep 23 01:30 claude-judge241b-20260923
+drwxr-xr-x@  11 ben-hannan  staff      352 Sep 23 09:57 claude-lis300-20260923
+drwxr-xr-x    5 ben-hannan  staff      160 Sep 23 07:31 claude-lis310-20260923
+drwxr-xr-x@   6 ben-hannan  staff      192 Sep 23 14:08 claude-lis311-20260923
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 17:07 claude-looppanel254-20260922
+drwxr-xr-x@   8 ben-hannan  staff      256 Sep 22 16:32 claude-mentionwalk246-20260922
+000-ckpt-copy.exit
+000-ckpt-copy.go1.done
+000-ckpt-copy.go1.err.txt
+000-ckpt-copy.go1.reply.md
+000-ckpt-copy.md
+000-ckpt-copy.pushed
+000-smoke.exit
+000-smoke.go1.done
+000-smoke.go1.err.txt
+000-smoke.go1.reply.md
+000-smoke.md
+000-smoke.pushed
+000-vast-rescue.go1.err.txt
+000-vast-rescue.go1.reply.md
+000-vast-rescue.md
+000-vast-rescue.running
+000-watcher-dedupe.exit
+000-watcher-dedupe.go1.done
+000-watcher-dedupe.go1.err.txt
+000-watcher-dedupe.go1.reply.md
+000-watcher-dedupe.md
+000-watcher-dedupe.pushed
+000-watcher-upgrade.exit
+000-watcher-upgrade.go1.done
+000-watcher-upgrade.go1.err.txt
+000-watcher-upgrade.go1.reply.md
+000-watcher-upgrade.md
+000-watcher-upgrade.pushed
+261b-build.exit
+261b-build.go1.done
+261b-build.go1.err.txt
+261b-build.go1.reply.md
+261b-build.md
+261b-build.pushed
+261b-panel.exit
+261b-panel.go1.done
+261b-panel.go1.err.txt
+261b-panel.go1.reply.md
+261b-panel.md
+261b-panel.pushed
+263-build.exit
+263-build.go1.done
+263-build.go1.err.txt
+263-build.go1.reply.md
+263-build.md
+263-build.pushed
+263-panel.exit
+263-panel.go1.done
+263-panel.go1.err.txt
+263-panel.go1.reply.md
+263-panel.md
+263-panel.pushed
+263-probe.exit
+263-probe.go1.done
+263-probe.go1.err.txt
+263-probe.go1.reply.md
+263-probe.md
+263-probe.pushed
+264-build.exit
+264-build.go1.done
+264-build.go1.err.txt
+264-build.go1.reply.md
+264-build.md
+264-build.pushed
+264-panel.exit
+264-panel.go1.done
+264-panel.go1.err.txt
+264-panel.go1.reply.md
+264-panel.md
+264-panel.pushed
+265-build.exit
+265-build.go1.done
+265-build.go1.err.txt
+265-build.go1.reply.md
+265-build.md
+265-build.pushed
+265-panel.exit
+265-panel.go1.done
+265-panel.go1.err.txt
+265-panel.go1.reply.md
+265-panel.md
+265-panel.pushed
+267-devset.exit
+267-devset.go1.done
+267-devset.go1.err.txt
+267-devset.go1.reply.md
+267-devset.md
+267-devset.pushed
+267-diag.exit
+267-diag.go1.done
+267-diag.go1.err.txt
+267-diag.go1.reply.md
+267-diag.md
+267-diag.pushed
+269-build.exit
+269-build.go1.done
+269-build.go1.err.txt
+269-build.go1.reply.md
+269-build.md
+269-build.pushed
+[0m
+[0m$ [0mls -la ~/premonition-watch/queue/ 2>&1 | head -n 200
+echo "---LEDGER---"
+ls -la artifacts/fable-predictions-ledger.md 2>&1; echo "---VAST_KEY_EXISTS---"; ls -l ~/.config/vastai/vast_api_key 2>&1
+echo "---PGREP---"; pgrep -fl own-m1 2>&1 | head -n 100
+echo "---VASTAI_WHICH---"; which vastai 2>&1; vastai --help 2>&1 | head -n 50
+total 24512
+drwxr-xr-x  682 ben-hannan  staff   21824 Sep 23 14:39 .
+drwxr-xr-x    8 ben-hannan  staff     256 Sep 23 14:19 ..
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 06:46 000-ckpt-copy.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 06:46 000-ckpt-copy.go1.done
+-rw-r--r--    1 ben-hannan  staff   67304 Sep 23 06:46 000-ckpt-copy.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4302 Sep 23 06:46 000-ckpt-copy.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    2872 Sep 23 06:38 000-ckpt-copy.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 06:48 000-ckpt-copy.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 21:39 000-smoke.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 21:39 000-smoke.go1.done
+-rw-r--r--    1 ben-hannan  staff     415 Sep 22 21:39 000-smoke.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff     519 Sep 22 21:39 000-smoke.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff     331 Sep 22 21:39 000-smoke.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 21:56 000-smoke.pushed
+-rw-r--r--    1 ben-hannan  staff   12519 Sep 23 14:40 000-vast-rescue.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff      65 Sep 23 14:40 000-vast-rescue.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    1400 Sep 23 14:39 000-vast-rescue.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 14:39 000-vast-rescue.running
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 23:16 000-watcher-dedupe.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:16 000-watcher-dedupe.go1.done
+-rw-r--r--    1 ben-hannan  staff   69232 Sep 22 23:16 000-watcher-dedupe.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    2109 Sep 22 23:16 000-watcher-dedupe.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff     850 Sep 22 23:15 000-watcher-dedupe.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:17 000-watcher-dedupe.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 22:49 000-watcher-upgrade.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 22:49 000-watcher-upgrade.go1.done
+-rw-r--r--    1 ben-hannan  staff   19165 Sep 22 22:49 000-watcher-upgrade.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3232 Sep 22 22:49 000-watcher-upgrade.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    1067 Sep 22 22:46 000-watcher-upgrade.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 22:50 000-watcher-upgrade.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 22:30 261b-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 22:30 261b-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  198015 Sep 22 22:30 261b-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    6539 Sep 22 22:30 261b-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    5240 Sep 22 21:39 261b-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 22:31 261b-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 21:46 261b-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 21:46 261b-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   14646 Sep 22 21:45 261b-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3708 Sep 22 21:46 261b-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3036 Sep 22 21:39 261b-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 21:56 261b-panel.pushed
+-rw-r--r--    1 ben-hannan  staff      10 Sep 22 23:36 263-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:35 263-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  151719 Sep 22 23:35 263-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5721 Sep 22 23:35 263-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    4123 Sep 22 22:21 263-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:36 263-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 22:27 263-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 22:27 263-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   65432 Sep 22 22:27 263-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3609 Sep 22 22:27 263-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    2320 Sep 22 22:21 263-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 22:29 263-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 00:03 263-probe.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 00:03 263-probe.go1.done
+-rw-r--r--    1 ben-hannan  staff   12385 Sep 23 00:02 263-probe.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4693 Sep 23 00:03 263-probe.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3763 Sep 23 00:01 263-probe.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 00:03 263-probe.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 00:55 264-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 00:55 264-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  275658 Sep 23 00:55 264-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    6176 Sep 23 00:55 264-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    4447 Sep 22 23:17 264-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 00:56 264-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 23:43 264-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:43 264-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   36924 Sep 22 23:43 264-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3634 Sep 22 23:43 264-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    2424 Sep 22 23:34 264-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:45 264-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 01:25 265-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 01:25 265-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  187326 Sep 23 01:25 265-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4959 Sep 23 01:25 265-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3193 Sep 23 00:56 265-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 01:27 265-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 23:41 265-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:41 265-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   17604 Sep 22 23:41 265-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    2414 Sep 22 23:41 265-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    2143 Sep 22 23:34 265-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:42 265-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 01:10 267-devset.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 01:10 267-devset.go1.done
+-rw-r--r--    1 ben-hannan  staff   44408 Sep 23 01:09 267-devset.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3388 Sep 23 01:10 267-devset.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3250 Sep 23 01:07 267-devset.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 01:13 267-devset.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 01:49 267-diag.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 01:49 267-diag.go1.done
+-rw-r--r--    1 ben-hannan  staff  127270 Sep 23 01:49 267-diag.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4442 Sep 23 01:49 267-diag.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    4012 Sep 23 01:27 267-diag.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 01:50 267-diag.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 04:32 269-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 04:32 269-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  118429 Sep 23 04:31 269-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5614 Sep 23 04:32 269-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    4105 Sep 23 01:58 269-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 04:32 269-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 01:48 269-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 01:48 269-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   43231 Sep 23 01:48 269-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5037 Sep 23 01:48 269-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3377 Sep 23 01:42 269-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 01:48 269-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 06:22 269-resume.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 06:22 269-resume.go1.done
+-rw-r--r--    1 ben-hannan  staff  142208 Sep 23 06:22 269-resume.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5787 Sep 23 06:22 269-resume.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3583 Sep 23 05:18 269-resume.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 06:23 269-resume.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 05:37 269-resume2.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 05:37 269-resume2.go1.done
+-rw-r--r--    1 ben-hannan  staff  106242 Sep 23 05:37 269-resume2.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3537 Sep 23 05:37 269-resume2.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    4178 Sep 23 05:29 269-resume2.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 05:40 269-resume2.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 05:17 270-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 05:17 270-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  173150 Sep 23 05:17 270-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5852 Sep 23 05:17 270-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3856 Sep 23 04:32 270-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 05:18 270-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 02:46 270-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 02:46 270-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   43496 Sep 23 02:45 270-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5977 Sep 23 02:46 270-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3334 Sep 23 02:41 270-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 02:49 270-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 07:31 270b-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 07:31 270b-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  172023 Sep 23 07:31 270b-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    6632 Sep 23 07:31 270b-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3904 Sep 23 06:48 270b-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 07:32 270b-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 06:46 270b-panel.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 06:46 270b-panel.go1.done
+-rw-r--r--    1 ben-hannan  staff   69212 Sep 23 06:46 270b-panel.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3395 Sep 23 06:46 270b-panel.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3122 Sep 23 06:41 270b-panel.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 06:48 270b-panel.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 06:34 271-threshold.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 06:34 271-threshold.go1.done
+-rw-r--r--    1 ben-hannan  staff   89818 Sep 23 06:34 271-threshold.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3834 Sep 23 06:34 271-threshold.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3668 Sep 23 06:26 271-threshold.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 06:36 271-threshold.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 23:58 chat-demo-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:58 chat-demo-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  152876 Sep 22 23:58 chat-demo-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4214 Sep 22 23:58 chat-demo-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    6802 Sep 22 23:38 chat-demo-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:59 chat-demo-build.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 22 23:47 chat-weakspots.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 22 23:47 chat-weakspots.go1.done
+-rw-r--r--    1 ben-hannan  staff   35146 Sep 22 23:47 chat-weakspots.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3496 Sep 22 23:47 chat-weakspots.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3884 Sep 22 23:42 chat-weakspots.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 22 23:49 chat-weakspots.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 09:59 lis-300-publish.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 09:59 lis-300-publish.go1.done
+-rw-r--r--    1 ben-hannan  staff   54990 Sep 23 09:58 lis-300-publish.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    4368 Sep 23 09:59 lis-300-publish.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    3541 Sep 23 09:56 lis-300-publish.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 10:01 lis-300-publish.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 08:53 lis-300-train.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 08:53 lis-300-train.go1.done
+-rw-r--r--    1 ben-hannan  staff  142598 Sep 23 08:53 lis-300-train.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    5916 Sep 23 08:53 lis-300-train.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    6764 Sep 23 07:32 lis-300-train.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 08:53 lis-300-train.pushed
+-rw-r--r--    1 ben-hannan  staff  153517 Sep 23 14:28 lis-301-train.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff     515 Sep 23 14:28 lis-301-train.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    6283 Sep 23 13:59 lis-301-train.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 13:59 lis-301-train.running
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 07:31 lis-310-chat-build.exit
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 07:31 lis-310-chat-build.go1.done
+-rw-r--r--    1 ben-hannan  staff  142079 Sep 23 07:31 lis-310-chat-build.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff    3729 Sep 23 07:31 lis-310-chat-build.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    6762 Sep 23 07:17 lis-310-chat-build.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 07:32 lis-310-chat-build.pushed
+-rw-r--r--    1 ben-hannan  staff      10 Sep 23 13:59 lis-311-chat292.exit
+-rw-r--r--    1 ben-hannan  staff   57475 Sep 23 10:03 lis-311-chat292.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff     919 Sep 23 10:03 lis-311-chat292.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff    5359 Sep 23 09:56 lis-311-chat292.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 13:59 lis-311-chat292.pushed
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 14:08 lis-311b-chat292.exit
+-rw-r--r--    1 ben-hannan  staff      57 Sep 23 13:59 lis-311b-chat292.go1.err.txt
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 13:59 lis-311b-chat292.go1.reply.md
+-rw-r--r--    1 ben-hannan  staff      39 Sep 23 14:08 lis-311b-chat292.go2.done
+-rw-r--r--    1 ben-hannan  staff   55162 Sep 23 14:08 lis-311b-chat292.go2.err.txt
+-rw-r--r--    1 ben-hannan  staff    3829 Sep 23 14:08 lis-311b-chat292.go2.reply.md
+-rw-r--r--    1 ben-hannan  staff    3746 Sep 23 13:59 lis-311b-chat292.md
+-rw-r--r--    1 ben-hannan  staff       0 Sep 23 14:10 lis-311b-chat292.pushed
+-rw-r--r--    1 ben-hannan  staff   15776 Sep 23 14:39 log.txt
+-rw-r--r--    1 ben-hannan  staff       5 Sep 23 14:16 own-m0-mouthdata.exit
+---LEDGER---
+-rw-r--r--  1 ben-hannan  staff  606254 Sep 23 14:15 artifacts/fable-predictions-ledger.md
+---VAST_KEY_EXISTS---
+-rw-------  1 ben-hannan  staff  64 Sep 19 13:34 /Users/ben-hannan/.config/vastai/vast_api_key
+---PGREP---
+23817 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+23847 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1-train.go1.23817 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:
+   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;
+   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);
+   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+---VASTAI_WHICH---
+vastai not found
+zsh:5: command not found: vastai
+[0m
+[0m$ [0mls -la ~/premonition-watch/queue/own-m1* 2>&1
+echo "---WATCHER_EQUIV---"
+ls -la ~/premonition-watch/ 2>&1 | head -n 50
+echo "---PGREP_FULL---"
+ps aux | grep -i own-m1 | grep -v grep 2>&1 | head -n 50
+echo "---PGREP_PIDS---"
+pgrep -fl own-m1 2>&1
+echo "---CHILDREN---"
+ps -o pid,ppid,command -p 23817 2>&1; ps -o pid,ppid,command | grep 23817 2>&1 | head -n 20
+-rw-r--r--  1 ben-hannan  staff  122556 Sep 23 14:39 /Users/ben-hannan/premonition-watch/queue/own-m1-train.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    1368 Sep 23 14:37 /Users/ben-hannan/premonition-watch/queue/own-m1-train.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff    5874 Sep 23 14:23 /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 14:23 /Users/ben-hannan/premonition-watch/queue/own-m1-train.running
+---WATCHER_EQUIV---
+total 96
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 23 14:19 .
+drwxr-xr-x+  77 ben-hannan  staff   2464 Sep 23 14:36 ..
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 23 01:20 outbox
+drwxr-xr-x  682 ben-hannan  staff  21824 Sep 23 14:39 queue
+-rw-r--r--    1 ben-hannan  staff   8017 Sep 23 14:39 status.txt
+-rw-r--r--    1 ben-hannan  staff  21001 Sep 23 14:39 watch.log
+-rw-r--r--    1 ben-hannan  staff   5747 Sep 23 14:39 watcher.new
+-rw-r--r--    1 ben-hannan  staff   5747 Sep 23 14:19 watcher.sh
+---PGREP_FULL---
+ben-hannan       23847   0.3  2.8 562876512 931216   ??  SN    2:23PM   0:40.55 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1-train.go1.23817 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.\012GPU: rent\012\012YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.\012READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).\012INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.\012\0120. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:\012   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;\012   - check the ledger first: stop if the rental total would pass $30;\012   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;\012   - destroy the instance at the end and confirm your instance is gone;\012   - append a ledger line.\012   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.\0121. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:\012   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;\012   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);\012   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).\0122. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.\0123. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge\012   If it runs out of memory, use --batch 8 once and report it.\0124. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.\0125. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl\012   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.\012   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.\0126. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).\0127. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.\012PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+ben-hannan       23817   0.0  0.0 488782208   2592   ??  SN    2:23PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+---PGREP_PIDS---
+23817 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+23847 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1-train.go1.23817 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:
+   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;
+   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);
+   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+---CHILDREN---
+  PID  PPID COMMAND
+23817 23815 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+[0m
+[0m$ [0mps -o pid,ppid,command | grep -E "23815|23817|23847" 2>&1
+echo "---FIND VAST---"
+ls /opt/homebrew/bin/vast* 2>&1; ls /usr/local/bin/vast* 2>&1; pip show vastai 2>&1 | head -n 20; pip3 show vastai 2>&1 | head -n 20; uv tool list 2>&1 | head -n 40; find /Users/ben-hannan -maxdepth 4 -name "vastai*" -type f 2>&1 | head -n 20
+python3 -c "import vastai; print(vastai.__file__)" 2>&1 | head
+ls ~/.config/vastai/ 2>&1
+---FIND VAST---
+zsh:3: no matches found: /opt/homebrew/bin/vast*
+zsh:3: no matches found: /usr/local/bin/vast*
+zsh:3: command not found: pip
+WARNING: Package(s) not found: vastai
+cai-framework v0.5.10
+- cai
+- cai-asciinema
+- cai-gif
+- cai-replay
+cmake v4.4.2
+- ccmake
+- cmake
+- cpack
+- ctest
+find: /Users/ben-hannan/Pictures/Photo Booth Library: Operation not permitted
+find: /Users/ben-hannan/Pictures/Photos Library.photoslibrary: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/discord: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/CallHistoryTransactions: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/CloudDocs: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/com.apple.sharedfilelist: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/Knowledge: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/FileProvider: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/AddressBook: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/FaceTime: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/Microsoft Edge: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/DifferentialPrivacy: Operation not permitted
+find: /Users/ben-hannan/Library/Application Support/CallHistoryDB: Operation not permitted
+find: /Users/ben-hannan/Library/Assistant/SiriVocabulary: Operation not permitted
+find: /Users/ben-hannan/Library/Daemon Containers: Operation not permitted
+find: /Users/ben-hannan/Library/Autosave Information: Operation not permitted
+find: /Users/ben-hannan/Library/IdentityServices: Operation not permitted
+find: /Users/ben-hannan/Library/Messages: Operation not permitted
+find: /Users/ben-hannan/Library/HomeKit: Operation not permitted
+find: /Users/ben-hannan/Library/Sharing: Operation not permitted
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'vastai'
+vast_api_key
+[0m
+[0m$ [0mwhich uv; uv --version 2>&1 | head
+cat ~/premonition-watch/queue/own-m1-train.md 2>&1 | head -n 200
+echo "===REPLY==="; cat ~/premonition-watch/queue/own-m1-train.go1.reply.md 2>&1 | head -n 200
+echo "===ERR_TAIL==="; tail -n 100 ~/premonition-watch/queue/own-m1-train.go1.err.txt 2>&1
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:
+   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;
+   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);
+   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+===REPLY===
+Your M1 mouth build is queued — importing the sealed code and renting GPU.
+Sealed spec confirmed. Now checking rental rules, ledger, and training code.
+Ledger is clear (no rental spend recorded; $30 cap stands). Checking vast.ai account state read-only.
+Account: credit $6.39, 0 instances running. Searching for RTX 5090 on-demand offers.
+8 single-RTX 5090 offers available. Getting the cheapest.
+Verifying the code seal against origin/main blobs (worktree checkout predates the seal commit, so checking the sealed blobs directly).
+Seal verified 5/5 OK. Preparing the remote bundle.
+Bundle staged. Attempting the rental (offer 19602471, $0.2129/h, ceiling $4.00/3h).
+Offer already taken. Retrying with next-cheapest offers in order.
+Rented: contract 52276394 (RTX 5090, $0.6096/h). Start ~18:28Z, 3h deadline 21:28Z. Waiting for boot.
+Instance is broken host-side (CDI device error, never booted). Destroying and re-renting a different offer.
+Second instance rented (contract 52276603, $0.4676/h). Waiting for boot.
+Same host-side CDI failure. Destroying and trying another host.
+Search cache is stale amid high churn. Fetching fresh and renting immediately in one pass.
+Rented contract 52276877 ($0.4704/h). Waiting for boot.
+Still initializing (image pull can take a while). Polling.
+Host state is "running" (container still pulling/starting). Continuing to poll.
+===ERR_TAIL===
+[0m
+[0m$ [0msleep 75; python3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/?owner=me', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+for i in d.get('instances',[]):
+    print({k:i.get(k) for k in ('id','actual_status','status_msg','ssh_host','ssh_port','dph_total','gpu_name','num_gpus')})
+"
+{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 36876, 'dph_total': 0.48518518518518516, 'gpu_name': 'RTX 5090', 'num_gpus': 1}
+[0m
+[0m$ [0mpython3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+pub=open('/Users/ben-hannan/.ssh/id_ed25519.pub').read().strip()
+body=json.dumps({'ssh_key':pub}).encode()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/ssh/', data=body, method='POST', headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'})
+try:
+    r=urllib.request.urlopen(req, timeout=30)
+    print('SSHKEY',r.status,r.read().decode()[:200])
+except Exception as e:
+    print('SSHKEY_FAIL',repr(e)[:80])
+"; sleep 60; python3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/?owner=me', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+for i in d.get('instances',[]):
+    print({k:i.get(k) for k in ('id','actual_status','status_msg','ssh_port','dph_total')})
+"
+SSHKEY 200 {"success": true, "msg": "SSH key added to instance.", "key": "{\"id\": 1419949, \"user_id\": null, \"default\": null, \"public_key\": \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29u
+{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'ssh_port': 36876, 'dph_total': 0.48518518518518516}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 36876 root@ssh8.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader; python3 --version" 2>&1 | head -n 10
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+[0m
+[0m$ [0msleep 120; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 36876 root@ssh8.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader" 2>&1 | head -n 5; python3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/?owner=me', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+for i in d.get('instances',[]):
+    print({k:i.get(k) for k in ('id','actual_status','status_msg')})
+"
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -p 36876 root@ssh8.vast.ai "echo SSH_OK" 2>&1 | head -n 3
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+[0m
+[0m$ [0mpython3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/?owner=me', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+for i in d.get('instances',[]):
+    print({k:i.get(k) for k in ('id','actual_status','status_msg','dph_total')})
+"
+{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'dph_total': 0.48518518518518516}
+[0m
+[0m$ [0msleep 100; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -p 36876 root@ssh8.vast.ai "echo SSH_OK" 2>&1 | head -n 2
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+[0m
+[0m$ [0msleep 100; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -p 36876 root@ssh8.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader" 2>&1 | head -n 4
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+[0m
+[0m$ [0mpython3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+i=d.get('instance',d)
+for k in ('id','actual_status','status_msg','cur_state','hostname','machine_id','gpu_name','num_gpus'):
+    print(k,'=',str(i.get(k))[:200])
+"
+id = None
+actual_status = None
+status_msg = None
+cur_state = None
+hostname = None
+machine_id = None
+gpu_name = None
+num_gpus = None
+[0m
+[0m$ [0mpython3 -c "
+import json,urllib.request
+key=open('/Users/ben-hannan/.config/vastai/vast_api_key').read().strip()
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/', headers={'Authorization':'Bearer '+key})
+raw=urllib.request.urlopen(req, timeout=30).read().decode()
+print(raw[:1500])
+"
+{"instances": {"actual_status": "offline", "bundle_id": null, "bw_nvlink": 0.0, "client_run_time": 1.1, "compute_cap": 1200, "cpu_arch": "amd64", "cpu_cores": 16, "cpu_cores_effective": 16.0, "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor", "cpu_ram": 31193, "cpu_util": 0.0, "credit_balance": null, "credit_discount": null, "credit_discount_max": 0.0, "cuda_max_good": 13.0, "cur_state": "running", "direct_port_count": 100, "direct_port_end": -1, "direct_port_start": -1, "disk_bw": 4474.0, "disk_name": "GIGABYTE AG4731TB N", "disk_space": 40.0, "disk_usage": -1, "disk_util": -1, "dlperf": 199.01399354299608, "dlperf_per_dphtotal": 410.18151340922856, "dph_base": 0.4666666666666666, "dph_total": 0.48518518518518516, "driver_version": "580.173.02", "duration": 2146936.605634451, "end_date": 1792335600.0, "external": false, "extra_env": [], "flops_per_dphtotal": 222.8091114503817, "geolocation": "South Korea, KR", "gpu_arch": "nvidia", "gpu_display_active": false, "gpu_frac": 1.0, "gpu_lanes": 16, "gpu_mem_bw": 1455.1, "gpu_name": "RTX 5090", "gpu_ram": 32607, "gpu_temp": null, "gpu_totalram": 32607, "gpu_util": null, "has_avx": 1, "host_id": 406325, "host_run_time": 2592000.0, "hosting_type": 1, "id": 52276877, "image_args": [], "image_runtype": "ssh_direc ssh_proxy", "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime", "inet_down": 570.9, "inet_down_billed": null, "inet_down_cost": 0.005208333333333333, "inet_up": 545.1, "inet_up_billed": null, "inet_up_cost": 0.005
+[0m
+[0m$ [0msleep 105; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -p 36876 root@ssh8.vast.ai "echo SSH_OK" 2>&1 | head -n 2
+ssh: connect to host ssh8.vast.ai port 36876: Connection refused
+[0m
+[0m
+[0m$ [0mls -la runs 2>&1; cat artifacts/fable-predictions-ledger.md 2>&1 | tail -n 100
+ls: runs: No such file or directory
+- P281b.2 (same) M2 frozen suites vs 281 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 281's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 281 rows: vp 98 + supp 12, 0 changes. Dev 56 own-wording fictional-name dialogs: stored_formal 10/10 + stored_casual 20/20 + opener_casual 4/4 answer with the stored value on 281b, all other 91 turns byte-identical 281b vs 281, notstored 8/8 abstain both arms, 0 question writes.
+- P281b.3 (same) falsifiers: any 281b answer with a value not in the store, any question-turn write, any ambiguous/control/notstored move vs 281, any suite/probe move vs 281's rows, or any teach store diff 281b vs 281 proves the change wrong. Known limits: multi-word no-apostrophe subjects unrestored; formal text 281 mishandles stays byte-identical; ?-less non-question-word-start or cue-less turns never normalise; rewrite failures keep 281's reply (incl. malformed abstains, report-only).
+- P270.1 (2026-09-23, builder; exp 270 normaliser in front of 263, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-type270-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A263+20 on arm A (263 arm beside): predicted A 33-38/40 vs A263 8-14/40. Dev proxy 51/51 vs 13/51 (+38), 42 moves panel-wide, 0 both-wrong.
+- P270.2 (same) M2 casual_q ASK >= 12/15 on arm A: predicted 13-15/15. Dev 16/16 vs 12/16 (whos/whats/wheres fixes move 4).
+- P270.3 (same) M3 lower_trap wrong saves <= 1 on arm A: predicted 0-1. Dev 24/25 (only a bare-so-head trap saves; check-tails suppressed 5/5).
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30 by construction (clean passthrough), dev 24/24.
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 newwrong on the bare-so trap; panel traps validated S1 hold 0).
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev median 0.033 ms, n=116).
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL on the M1 stored bar only, with one figure off prediction. M1 (60 turns once per arm, seals 17/17 + panel OK, schema clean, no post-seal change): stored 9/25 on 281b (bar >= 23/25; denom 25/25, 0 excluded) with 0 wrong and 16 abstains (281: 9/25, same 9 ids); notstored 10/10 abstain both; ambiguous 10/10 same-as-281; control 5/5 same (5/5 right both); teach 10/10 both (panel VALID); 0 store diffs; 0 question writes; broken abstains 0 both. M2/probes PASS exactly as P281b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical; rt143 0; vp/vs 0/0). Miss diagnosis by shape category: 5 misses formalise (known-entity restore, 281 shape match) yet resolve to no stored triple (wording beyond casual typing); 11 match no called shape at all (2 cue-less, rest embedded/non-trailing-cue wordings). No falsifier tripped (0 wrong values, 0 question writes, 0 unpredicted moves). P281b.1 wrong on the stored figure (9 vs >= 23), right on 0-wrong/notstored/ambiguous/control/teach; P281b.2 right; P281b.3 no falsifier tripped.
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FAIL, sealed loop arms A/A263 run ONCE each on blind typepanel270, seal Checks OK, schema OK, seal 12/12 re-verified) M1 A 23/40 vs A263 6/40 margin +17 FAIL (bar 30 and +20); M2 0/15 FAIL (loop emits no ASK frames; no-write 15/15 both); M3 0 wrong saves PASS (7 trap misses both arms); M4 30/30 identical PASS; M5 3 new wrong saves FAIL (keep-s stems t270-002/028/033); M6 median 0.0312 ms PASS. P270.1/.2/.5 wrong, P270.3/.4/.6 right, P270.7 resolves FAIL.
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0d2.1 (2026-09-23, own-O0d2 diagnosis follow-up, scripts/claude_own_o0d2_{model,train,test}.py + PASSMARKS.md artifacts/claude-own-o0d2-20260923; CPU only): all 8 unit tests pass; bar = 8/8 pass.
+- Pown0d2.2 same: audited ear count still exactly 32,850,051; bar = diff <= 0.005 with exact number reported per part.
+- Pown0d2.3 same: kill test identical (kill at step 30, resume to step 60, sha256 equal); bar = identical.
+- Pown0d2.4 same: fuzz 10,000 random-logit draws, 0 non-whole-word spans decoded (span + owner checks); bar = 0.
+- Pown0d2.5 same: o0d smoke (toy frames, <= 10 min) loss still falls; bar = mean(last 10%) < mean(first 10%).
+- Pown0d2 OUTCOME (2026-09-23, builder; registered verdict PASS, 5/5 marks PASS, test run once): Pown0d2.1 units 8/8; Pown0d2.2 audit exactly 32,850,051; Pown0d2.3 kill A=054dbec63839 B=054dbec63839 (match o0d hashes); Pown0d2.4 fuzz 0/10,000; Pown0d2.5 smoke 120 steps 1.3347 -> 0.3635 (falls). Deviations: D1 fuzz reference + round-trip call updated to the fixed rule/signature; D2 predictions pre-registered pre-run. See artifacts/claude-own-o0d2-20260923/RESULTS.md.
+- P282b.1 (2026-09-23, builder; exp 282b vocab small talk on 282, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-small282b-20260923; blind panel never opened, smallpanel282 burned per director note) M1 blind smallpanel282b run once per arm with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories greeting/closing/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): writer greeting+closing fitting on 282b >= 90% (bar 32/35 at spec counts, 282 shown); 0 writes on them; mixed + control 0 moves vs 282; 0 store diffs; 0 question writes. Panel moves: exactly the writer-smalltalk turns where 282 errs and the vocab test fires (dev proxy 18/40 smalltalk dev turns move, rest keep 282's already-fitting reply; blind ids not predictable).
+- P282b.2 (same) M2 frozen suites vs 282 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 282's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 282 rows: vp 98 + supp 12, 0 changes. Dev 65 own-wording fictional-name dialogs 79 turns: greet 20/20 + thanks_close 20/20 with the head's canonical reply, mixed 15/15 + control 10/10 byte-identical 282b vs 282, exactly the 18 listed moves d282b-002/007/009/010/011/013/014/015/016/017/018/021/026/036/037/038/039/040 turn 0, 0 question writes.
+- P282b.3 (same) M3 smalltalkpanel234 once per arm: wellbeing 282b >= 282, other items all identical, 0 writes, 0 setup/store diffs; predicted only all-vocabulary wellbeing turns 282 errs on move to fitting. Falsifiers: any 282b reply change on mixed/control, any question-turn write, any suite/probe move vs 282 rows, any store diff. Known limits: class-less pure tails and how-are-you shapes keep 282's route; bare emoji and foreign greetings uncovered; stored-name homographs keep 282's route; first-word class on multi-class turns.
+- Pown0e2.1 (pred, sealed pre-run 2026-09-23) own-O0e2 follow-up, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0e2-20260923 (o0e2 model = o0e model code unchanged incl. rotary fix, o0e serialize/train imported unchanged): audit prints exactly 61,783,680 (fix is forward-math only, adds no params): PASS.
+- Pown0e2.2 (pred, same) kill test at tiny width (147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS.
+- Pown0e2.3 (pred, same) 200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts: poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0: PASS.
+- Pown0e2.4 (pred, same) rotary unit test: same-offset rotation leaves q.k unchanged, per-position and cross-position (0,d) vs (m,m+d) max abs errors both <= 1e-5 (rotation is orthogonal, float32 rounding ~1e-6): PASS.
+- P282b.4 OUTCOME (2026-09-23, builder, sealed exp 282b) registered verdict FAIL on the M1 bar only. M1 (60 turns once per arm, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): writer greeting+closing 30/35 on 282b (bar 32/35; greeting 15/20, closing 15/15) vs 19/35 on 282 (greeting 10/20, closing 9/15); 0 writes; mixed+control 25/25 same-as-282; 0 store diffs; 0 question writes. 11 moves (d_greet_07/12/15/17/18, d_close_03/08/09/12/13/14 turn 0, ev 0, all toward canonical); 5 misses all greeting and byte-identical to 282 (d_greet_08/16/20 identical non-fitting fixed reply both arms, d_greet_13/14 abstain both); 0 new wrongs/abstains. M2/probes PASS exactly as P282b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical to 282's; rt143 0; vp/vs 0/0). M3 PASS (wellbeing 17/20 both, other 36/36 same, 0 writes/diffs, 0 moves). P282b.1 wrong on the M1 figure only; P282b.2 right; P282b.3 bars right (0 st234 moves observed).
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+- P291.6 OUTCOME (2026-09-23, builder) registered verdict FAIL. M1-M6 all PASS first try (M1 503/503 + devs; M2 suites/rt136/rt143 as predicted; M3 4 fields; M4 4/4 identical x3; M5 +0.671 ms; M6 2 + 5 moves). M7 4/5 PASS (openpanel 80/80, corrtail 53/54 with 6 q2-wording, invpanel clean, tablepanel clean) and corrpanel252 FAIL on c252-009 (sealed scorer new_wrong_value; evidence: removal miss shared by all arms, 291 == base 138nb reply+store verbatim, 138p abstains; same shape as disclosed v259-056). M8 corrpanel291 73/96 (138nb 34, 138p 65): union preservation perfect (0 r2w both ways), cause families all >= 138p, controls 12/12, 0 question/followup writes, 0 new wrong/junk/claim beyond both parents (17/3/1 all inherited; c291-006 == 138nb verbatim) -- FAIL on absolute-zero bars only. P291.1 right; P291.2 right; P291.3 right; P291.4 wrong (1 row); P291.5 wrong (overall). Diagnosis for the director: stale-answer-on-shared-removal-miss, verbatim-base both times; ruling options: accept as table behaviour per the M7 classification clause, or route a removal-path follow-up.
+- P293.1 (pred, sealed pre-run 2026-09-23, builder exp 293 yes/no reader on 138nb, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-yesno293-20260923) M1 blind yesnopanel293 once per arm with sealed score_panel.py: yes/no families together >= 90% right on 293 (138nb dev 11/51); 0 wrong (never Yes when not stored, never No when stored); taken_back 0 Yes; 0 question writes; is_single/wh/statement controls byte-identical to 138nb. Dev proxy 111 dialogs: exactly the 72 listed moves Q2->Yes/No/IDK, 7 Q2 left (5 chain + 1 inverted-wh + 1 lowercase), 0 writes; blind ids not predictable.
+- P293.2 (same) M2 invpanel138nb + chainpanel266b regression once per arm: 0 moves on both (pilot 0/70 + 0/70).
+- P293.3 (same) M3 frozen suites vs 138nb rows: sessions152 0 moves; bench 0; marks123 exactly 1 reply-only (rt81 D_q_vs_s-04 OK->UNCLEAR, honest IDK); rt136 0 field diffs vs 138nb rows; rt143nogate exactly 2 (M3 Q2->Yes of-form, O5 Q2->IDK); 0 new WRONG/WRONG-WRITE/junk/lost-OK.
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude-own-o0a3-20260923; 5886 one-change WRONG readings from 553 ACD + 190 no-save gold facts of the o0a/o0a2 dev sets, judged v0/v1/learned-licensed with WE never saved) P1 m1 clean-through >=95% all rules; P2 m2 same; P3 m3 same; P4 m4 clean-through >=90% all rules; P5 m5 clean-blocked 100% v0+v1, clean-through 100% licensed; P6a me2we clean-blocked 100% all; P6b name2me clean-through >=95% all; P6c we2me clean base empty, raw through >=70% each; P7 m7 clean-through >=90% all; P8 m8 empty(55)/OTHER-valued(1)/WE-valued(9) blocked 100% all, rest(125) licensed 100%, v1 75-95%, v0 40-65%, ordered lic>=v1>=v0.
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permission audit, one registered CPU run, 5886 wrong readings, seals 2/2 OK post-run, summary byte-identical to pilot, no post-seal change) Pown0a3.1 10/10 HIT: m1/m2/m3 clean-through 100% all rules; m4 100% (n 109-132); m5 clean-blocked 100% v0+v1, clean-through 100% licensed; m6 me2we blocked 100% all, name2me 100% through all, we2me raw 75/95/100% (clean base empty by construction); m7 100% all 9 sub-cells; m8 structural 65/65 blocked everywhere, rest lic 100% / v1 87.2% / v0 52.0%. Pown0a3.2 PASS 0 crashes. Pown0a3.3 PASS table complete 11x3. Clean through-share (wrong on savable truths): v0 68.1%, v1 68.1%, licensed 96.7%. Only cue absence (m5, v0/v1), WE owner, and mode/empty/OTHER stop a wrong reading; all else needs the reader or an independent checker. See artifacts/claude-own-o0a3-20260923/RESULTS.md.
+- P270b.1 (2026-09-23, builder; exp 270b = 270's normaliser with keep-s fixed in front of the EAR on 261b's arm A, CPU+Mac local + BensPC GPU, sealed 18 files SEAL.sha256.txt artifacts/claude-type270b-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A261b+15: predicted A 30-37/40, A261b 5-15/40, margin +18-28; PASS ~60%. Dev 63/64 (+25); blind risk ear-vocab shapes + so-head holds.
+- P270b.2 (same) M2 casual_q ASK >= 12/15: predicted A 12-15/15; PASS ~75%. Dev 16/16 (A261b 3/16); blind risk odd question shapes.
+- P270b.3 (same) M3 lower_trap wrong saves <= 1: predicted A 0-3; PASS ~45%. Dev 3 (will-future-possessive d270b-087, check-tail passthrough d270b-093, is-a d270b-102).
+- P270b.4 (same) M4 clean 30/30 identical to A261b: predicted 30/30 by construction, dev 24/24; PASS ~95%.
+- P270b.5 (same) M5 0 new wrong saves vs A261b: predicted 0-2; PASS ~55%. Dev 1 (087 span-difference class).
+- P270b.6 (same) M6 median added normaliser time <= 20 ms: predicted ~0.01-0.5 ms (dev median 0.0094); PASS ~99%.
+- P270b.7 (same) overall registered PASS: predicted ~10%. Needs M1+M2+M3+M5 together.
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 291, then 0 events growth under 310).
+- P270b OUTCOME (2026-09-23, builder; registered verdict FAIL: M1 margin, M3, M5 fail; M2, M4, M6 pass; panel seal 2/2 OK, schema clean, arms A/A261b ran ONCE each on BensPC GPU, sealed 18/18 OK after, no sealed file changed): M1 A 37/40 vs A261b 31/40 margin +6 (bar >=30 and +15: absolute met, margin missed by 9; P270b.1 margin half wrong, absolute right); M2 A 14/15 (P270b.2 right); M3 A 2 (061 hunter-occupation pYES 0.511, 068 may-occupation pYES 0.266; P270b.3 range right, bar missed by 1); M4 30/30 (P270b.4 right); M5 3 (040 capitalised-phrase-span, 061 value-span diff, 068 capitalised-decoy save; P270b.5 range wrong by 1); M6 median 0.0096 max 0.1146 (P270b.6 right); ALL FAIL (P270b.7 resolves). Post-seal scorer fix disclosed with diff (v1 symmetric-strip wrongly missed 5 correct s-name frames; v2 pred-anchored re-scores recorded rows, arms never re-ran; v1 file kept). Scorer artifact: u270-003 arm A HIT undeserved (true M1 36, margin +5). See artifacts/claude-type270b-20260923/RESULTS.md.
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P310.2 OUTCOME (same) 0 base-chain writes over the 5 T7 turns (each verified in-run to grow notebook events on raw 291 first, then 0 events/0 triples under 310). Hook turn310 outside turn291; me stored as USER with Me166 render; 209/252b screens on every listener save (0 hits); every turn in lis310_log.jsonl.
+- P280n.1 (2026-09-23, builder; exp 280n re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280n-20260923; blind panel never opened) M1 blind joinpanel280n run once on all five arms with sealed 280m runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed = single piece arm whose reply differs from 260 else 260, 2+ = overlap fail) = 100%; 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): 8/8 PASS exit 0, overlap mock 8/9 FAIL exit 1, empty exit 4, schema exit 3.
+- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. 280m deviation corrected (its suites ran only as pre-seal pilot).
+- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test wrong.
+- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10 with owners 280b:5/260:5, control 7/10); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. The 3 misses (ct00#1, ct01#1, ct04#1, control, ev 0) are turns where only 281 differs from 260 and 280m == 281 byte-identical: control wording firing the 281 rewrite, unpredicted by the fixed control->260 rule. All 90 turns equal some piece arm. M2 PASS exactly as P280n.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280n.1 figure wrong (87 not 100), 0-overlap/write/scan parts right; P280n.2 right; P280n.3 right; P280n.4 bar-miss clause tripped on the 3 controls. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280n-20260923/RESULTS.md.
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-merge292-20260923; blind panels never opened, only specs/README counts read) M1 four piece panels fidelity-100%-or-VOID then same runner+scorer on 292: right_lost [] new_wrong [] new_writes [] all panels; traveling 268b employer hole disclosed. M2 vs 291 rows: sessions152 [] bench [] marks123 exactly D_q_vs_s-04 OK->UNCLEAR reply-only; rt136 move set identical to 291 (21 inherited) 0 new; rt143 exactly M3 Q2->Yes + O5 Q2->IDK. M3 restart probes 0 moves; verifier exactly N02 rows[1] Q2->"I don't know Tomas's house." stores identical (lift-then-honest-abstain, stable 5/5); 0 ghosts/dup-fails/bad-writes. M4 median added <= +5 ms (pilot +0.57/+0.68/+0.64). M5 mixpanel292 once per arm: no piece-right item lost, 0 wrong beyond 291, 0 question writes, controls byte-identical to 291, mixed no bar.
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save turns 1/240 (pronoun-ambiguous no-save turn; bar <=1: PASS).
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo); held-back 66; $0 spent; merged sha256 112880d6 kept at ~/premonition-models/lis300-merged/ and on BensPC. See artifacts/claude-lis300-20260923/RESULTS.md.
+- P292.2 OUTCOME (2026-09-23, builder) registered verdict PASS M1-M5. M1: chain 67/70 fidelity exact + 0/0/0; nhop 55/60 (bug 11+1) + 0/0/0; yesno 85/85 + 0/0/0; corr 291-table 73/17/3/1 exact + 292 identical 96/96. M2: sessions 0, bench 0, marks123 D_q_vs_s-04 only, rt136 set == 291 (21 inherited), rt143 M3/O5 only, GATE clean. M3: restarts 0, verifier N02 only (stable, stores identical), 0 ghosts/dups/bad-writes. M4: +0.53/+0.41/+0.61 ms. M5: 291 35/0, 266b 24/10, 268b 29/6, 293 44/8, 292 73/0/7miss; union-right 56 lost 0; wrong beyond 291: 0; controls 24/24 identical; writes 0; mixed 9/12. Deviations: corr VOID×2 (wrong runner) redone with new mirror driver; m5 scorer-flag VOID rescored with flags; 3 pre-seal draft fixes + design amendment disclosed. Seal 10/10 OK post-run. P292.1 held on every line.
+- P280p.1 (2026-09-23, builder; exp 280p registered re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280p-20260923; blind panel never opened item by item) M1 blind joinpanel280p run once on all five arms with 280m's sealed runner + new mechanical scorer for EVERY turn (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the mechanical owner (single piece arm whose reply/writes/store differ from 260's, else 260; 2+ = overlap fail) = 100% (90/90); 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called/control answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): clean 6/6 PASS exit 0, overlap mock 6/7 FAIL exit 1 overlap listed, writes-only-diff owner PASS, empty exit 4, schema exit 3.
+- P280p.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with 280m's sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0.
+- P280p.3 (same) M3 smalltalkpanel234 once on 260 and 280m with sealed runner + new scorer: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280n observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel except where a piece arm differs.
+- P280p.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any turn with 2+ piece arms differing from 260 proves the re-test wrong. Last attempt: a fail closes the join.
+- P280p.5 OUTCOME (2026-09-23, builder, sealed exp 280p re-test of unchanged 280m, CPU only) registered verdict PASS M1-M4. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 90/90 (ability 25/25, called 12/12, teach 8/8, smalltalk 25/25, mixed 10/10, control 10/10; owners 280b:24/281:4/282b:5/260:57); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P280p.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280p.1-4 all held. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280p-20260923/RESULTS.md.
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis311-20260923) all 10 stub scenarios pass, exit 0: T1 2-facts-save-2 with 292 mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK already-have + 0; T6 notebook answer + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0.
+- P311.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 292, then 0 events growth under 311).
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched; own state dir ~/premonition-chat/lis311-state. Step 3 real-model 30-turn try-out report-only (no bar): every turn row + median/p90/max ms + device in artifacts/claude-lis311-20260923/real-rows/rows.jsonl.
+- P311.4 OUTCOME (2026-09-23, builder, re-run lis-311b after Mac sleep; sealed 5 files SEAL.sha256.txt 5/5 OK before and after, no post-seal change, predictions not duplicated) registered verdict PASS P311.1-P311.3. P311.1: 10/10 stub scenarios pass exit 0, every reply/triple count exactly as predicted. P311.2: 0 base-chain writes over the 5 blocked turns (each verified teachable on raw 292 first). P311.3: GET / 200 + POST /turn 200 "Saved: your sister is Mira." 1 triple; server left running; 8765 untouched (ready true), 8766 no answer pre-existing untouched; own state dir.
+- P311.5 OUTCOME (same) step 3 real-model try-out report-only no bar: weights sha 112880d6 match, device mps, 30 scripted + 4 adaptive yes = 34 rows in artifacts/claude-lis311-20260923/real-rows/rows.jsonl, ms median 2826.6 p90 15567.1 max 59429.6; 4 ask-backs all resolved; observed as-is: A#7 mouth said not-saved yet triple written, A#8 ASK missed just-saved lowercase fact, C#4 correction left zoe with 2 cats, small talk saved 0.
+- P292t.1 (pred, sealed pre-run 2026-09-23, builder; exp 292t = 292 + 280m talking layers in 280m order, CPU only, sealed 13 files SEAL.sha256.txt artifacts/claude-join292t-20260923; blind panel never opened item by item) M1 blind joinpanel292t run once on all five arms with sealed runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 292t reply, write count and store byte-identical to the mechanical owner (single single-layer arm whose reply/writes/store differ from 292's, else 292; 2+ = overlap fail) = 100% (90/90); 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called/control answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 292 beside. Mock pre-seal (in /tmp, not sealed): clean 8/8 PASS exit 0 (owners 280b:1/281:1/282b:1/292:5), overlap mock 7/8 FAIL exit 1 overlap listed, writes-only-diff owner 281 PASS exit 0, empty exit 4, schema exit 3. Dev basis: 66 own dialogs / 111 turns (ability, teach-then-called, smalltalk, mixed, controls, twostep, yesno, corrections; fictional names) pilot 111/111 owner agreement, 0 overlaps (280b fired 12, 281 fired 4, 282b fired 0), 0 question writes, 0 old-sheet hits.
+- P292t.2 (same) M2 frozen suites vs 292 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 3 reply-only moves owned by the 280b arm (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes; 281: 0, 282b: 0 on pilot); bench 4x200 0; rt136 145 units 0 field diffs 292t vs 292 with vs-138j labels identical to 292's and gate identical to 292's (NOT-clean string inherited); rt143_nogate 124 rows 0; GATE identical to 292's. Verifier probes vs 292 rows: vp exactly N06 (281: name-of + stored -> "Tomas's boss is Mirela.", ev 0, store identical) + E04 (282b: whats-up + empty store -> head greeting reply, ev 0, store identical); 281 arm moves exactly N06, 282b arm exactly E04, 280b arm 0; supp 0 changes.
+- P292t.3 (same) M3 smalltalkpanel234 once on 292 and once on 292t: wellbeing 292t >= 292, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). Notebook-zero: 0 store diffs 292t vs 292 on suites and panel except where a single-layer arm differs.
+- P292t.4 (same) falsifiers: any 292t reply differing from its mechanical owner arm, any suite/probe move outside the predicted list, any write on a question or small-talk turn, or any turn with 2+ single-layer arms differing from 292 proves the join wrong.
+- P292t.5 OUTCOME (2026-09-23, builder, sealed exp 292t, CPU only) registered verdict PASS M1-M3. M1 (90 turns / 78 dialogs once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 13/13 + panel 2/2 OK after): agree 90/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10, control 10/10; owners 292:65/280b:20/282b:5/281:0); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P292t.2 (sessions152 exactly the 3 reply-only owned by 280b, bench/rt136/rt143 0, labels+gate identical to 292's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs). P292t.1-4 all held. Misses 0, deviations 0. See artifacts/claude-join292t-20260923/RESULTS.md.
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train + 0 dev; max single-reply share <= 3% every status train+dev; distinct templates >= 40 every status train+dev; dev∩train names 0 and combos 0; exit 0.
+[0m
+[0m$ [0mgrep -i "vast\|rental\|52276\|RTX 5090\|dph\|contract" artifacts/fable-predictions-ledger.md 2>&1 | tail -n 50
+echo "---COUNT---"
+wc -l artifacts/fable-predictions-ledger.md 2>&1
+echo "---WATCH_LOG_TAIL---"
+tail -n 100 ~/premonition-watch/watch.log 2>&1
+| P27 | baseline-v2 prereg | I0-H1 (default init + hint), run on rental box per DEVIATION-1 | clears fit gate ≥ 2/3 | 0.40 | ≤ 1 | FALSE 0/3: chance (21–37/512) on every cell; all 6,000 updates completed (~990 s) | 0.16 |
+| P28 | baseline-v2 prereg | I1-H0 (rescaled init, no hint), rental box | clears ≥ 2/3 | 0.25 | ≥ 2 | FALSE→forecast "unlikely" correct: 1/3 (seed 1202 512/512 ×4; seeds 1200/1201 at chance) | 0.0625 |
+| P29 | baseline-v2 prereg | I0-H0 (default init, no hint), rental box | clears fit gate in ≥ 1/3 | 0.10 | any clears | FALSE 0/3 (chance) — forecast "unlikely" correct | 0.01 |
+## 2026-09-21 — Experiment 50 (reasoner on the real notebook contract), written before the wave
+- P219: S1 parity 2700/2700 reasoner==contract (status AND fields) across the 9 cells, with all five statuses present in every cell. 90%.
+- P222: reasoner <= 1 ms/question at every cell while the contract's own ask reaches >= 300 ms/question at (6000, 500); reasoner cache < 200 MB at the biggest cell. 85%.
+  and contract 478 ms at 6000x500; cache 204.1 MB missed the < 200 MB clause).
+- P62.1: T1 — 32/32 contract lifecycle cases pass through the wrapper. 90%.
+## 2026-09-22 — Redteam 67 (adversarial probe of plain-software core: notebook contract, listening M1, reasoner50+qual56, thought49/62 rows, agent loop), written before the probe run
+- P200.1: >= 60 adversarial action-sequence cases execute; >= 80% verdict OK (core matches its own contract). 70%.
+- P200.2: >= 1 critical bug found (silent wrong answer or wrong write through the contract hop loop). 40%.
+- Outcomes 200: P200.1 TRUE (64/69 OK = 92.8%). P200.2 TRUE (1 critical: RT66 qualifier leak). P200.3 TRUE (reasoner50 == contract on all parity frames). P200.4 TRUE (10k chain intact, query 1.7 ms). P200.5 FALSE (2 TNotebook-vs-qual56 divergences: RT65, RT66). 4/5 TRUE; 3 bugs filed in design doc 72.
+- P79.4: quarantined rows answer 0 questions through every reader (contract ask, listening hear, thought49 ask, qual56, reasoner50). 85%.
+- P81.1: >= 60 adversarial ENGLISH turns execute in sequences; >= 80% verdict OK (doorway+contract match docstring/design docs 36/54). 70%.
+- P81.2: >= 1 doorway/contract BUG found (silent wrong write, wrong answer, wrong status, crash, or personal inference). 35%.
+- Outcomes 81: P81.1 TRUE (73 English turns in 17 sequences; 74/74 cases OK incl. 1 harness setup). P81.2 FALSE (0 doorway/contract BUGs, 0 UNCLEAR). P81.3 FALSE on the letter (D_q_vs_s-01 "Mira's city is Lisbon?" taught 1 FACT with value "Lisbon?"; all genuine interrogatives wrote 0). P81.4 TRUE (0 crashes, every turn replied). Brier: 0.09, 0.1225, 0.81, 0.0225. SCORE PASS (R1-R4). RESULTS: artifacts/fable-redteam81-20260921/RESULTS.md
+- P100.2: B2 — CORRECT >= 40/60 on rephrasings (typos/contractions still hit templates; long-winded ones decline honestly rather than misfire). 30%. Falsified by <= 39/60.
+- P120c.1: R1 — wire51 replay x3 with the new mouth matches replay-report.json exactly on all 3 runs: wrong_writes [0,0,0], 0 empty said on answer turns, correct [12,12,12], abstentions [3,3,3], missed [0,0,0], two_hop_correct [6,6,6]. 0.55. Falsified by any differing count (known risk: the 120b raw decode may pass the brake with wrong text on the two contract-status turns instead of falling back).
+- P120d.2: R2 — sealed 500-record re-score with the new mouth: after-brake unfaithful 0, status >= 486/500, OK answer 250/250 (held-out uses only the six statuses, so contract_routed == 0 and numbers match the director's 489/250). 0.80. Falsified by any miss.
+- Outcomes 120d: REGISTERED RUNS BLOCKED — mandated checkpoint artifacts/claude-talker120b-run-20260922/fable_talker120b_ckpt_last.pt absent from the repo and every worktree (only logs/JSON remain; it existed at the 05:50 director replay), so P120d.1-P120d.4 are UNSCORABLE as registered (no re-run into a pass will be attempted; a substitute ckpt would void the marks). OPEN DIAGNOSTICS with the surviving mask-fixed 100-step smoke ckpt (artifacts/fable-talker120b-20260922/smoke/): replay x3 == wire51 replay-report.json exactly (wrong [0,0,0], correct [12,12,12], abstentions [3,3,3], missed [0,0,0], two-hop [6,6,6], empty 5/run, english 40/40 x3; both missed turns speak wire51's sentences verbatim; contract_routed 6) | n/a. Score 500: after-brake 0, OK 250/250, status 287/500 (weak smoke model; contract_routed 0), 202 s | n/a. RESULTS: artifacts/fable-talker120d-20260922/RESULTS.md
+- Outcomes 120d (registered runs executed by Claude/director 07:37–07:44 after the checkpoint was restored; seal OK; no post-seal code edits): P120d.1 TRUE (R1 vectors identical x3, empty said 5/5/5 all small talk), P120d.2 TRUE (after-brake 0, status 489/500, OK 250/250, contract_routed 0), P120d.3 TRUE (ears english 40/40 x3), P120d.4 TRUE (328 s, 426 s). Verdict PASS. See artifacts/fable-talker120d-20260922/REGISTERED-RUN-claude.md.
+- P221c.2: M1 contractions_fillers family 221c right >= 221 right + 6. 0.7.
+- Outcomes 221c qnorm: P221c.1 TRUE (0 wrong, 0 question writes) | P221c.2 FALSE (contractions_fillers 5 vs 221 2, +3 < +6) | P221c.3 FALSE (54 vs 49, +5 < +8) | P221c.4 TRUE (0) | P221c.5 TRUE (44/44, statements 10/10) | P221c.6 TRUE (0/0/0/0, GATE clean) | P221c.7 TRUE (installed=1, 5/5, 50/50, ow 0, 95.5 s) | P221c.8 TRUE (+0.04 ms). 221c FAIL (M1).
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+---COUNT---
+    2875 artifacts/fable-predictions-ledger.md
+---WATCH_LOG_TAIL---
+2026-09-23 06:32:23 load 72, holding new launches (       3 running)
+2026-09-23 06:34:28 load 64, holding new launches (       3 running)
+2026-09-23 06:36:39 pushed 271-threshold
+2026-09-23 06:36:39 load 82, holding new launches (       2 running)
+2026-09-23 06:38:49 pushed rsn-291-publish
+2026-09-23 06:38:49 launch 000-ckpt-copy
+2026-09-23 06:38:49 load 72, holding new launches (       2 running)
+2026-09-23 06:41:02 launch 270b-panel
+2026-09-23 06:41:02 launch own-o0a3-permission
+2026-09-23 06:48:18 pushed 000-ckpt-copy
+2026-09-23 06:48:22 pushed 270b-panel
+2026-09-23 06:48:26 pushed talk-280m-build
+2026-09-23 06:48:27 launch 270b-build
+2026-09-23 06:54:45 pushed own-o0a3-permission
+2026-09-23 07:11:22 launch rsn-292-build
+2026-09-23 07:11:22 launch rsn-292-panel
+2026-09-23 07:13:27 load 66, holding new launches (       3 running)
+2026-09-23 07:17:37 launch lis-310-chat-build
+2026-09-23 07:19:42 load 150, holding new launches (       4 running)
+2026-09-23 07:21:47 load 162, holding new launches (       4 running)
+2026-09-23 07:23:51 load 135, holding new launches (       4 running)
+2026-09-23 07:25:59 pushed rsn-292-build
+2026-09-23 07:25:59 load 85, holding new launches (       3 running)
+2026-09-23 07:28:03 load 73, holding new launches (       3 running)
+2026-09-23 07:30:07 load 86, holding new launches (       3 running)
+2026-09-23 07:32:16 pushed 270b-build
+2026-09-23 07:32:20 pushed lis-310-chat-build
+2026-09-23 07:32:20 launch lis-300-train
+2026-09-23 07:32:20 load 98, holding new launches (       2 running)
+2026-09-23 07:34:25 load 65, holding new launches (       2 running)
+2026-09-23 07:36:30 load 81, holding new launches (       2 running)
+2026-09-23 07:38:34 load 107, holding new launches (       2 running)
+2026-09-23 07:40:38 load 118, holding new launches (       2 running)
+2026-09-23 07:42:44 load 125, holding new launches (       2 running)
+2026-09-23 07:44:50 load 108, holding new launches (       2 running)
+2026-09-23 07:46:54 load 77, holding new launches (       2 running)
+2026-09-23 07:55:12 load 65, holding new launches (       2 running)
+2026-09-23 07:57:17 launch talk-280n-panel
+2026-09-23 07:57:17 launch talk-280n-run
+2026-09-23 08:01:30 pushed talk-280n-panel
+2026-09-23 08:03:39 pushed rsn-292-panel
+2026-09-23 08:03:39 load 84, holding new launches (       2 running)
+2026-09-23 08:05:44 load 70, holding new launches (       2 running)
+2026-09-23 08:07:48 load 67, holding new launches (       2 running)
+2026-09-23 08:14:06 pushed talk-280n-run
+2026-09-23 08:14:06 launch rsn-292-build2
+2026-09-23 08:14:06 load 89, holding new launches (       2 running)
+2026-09-23 08:16:11 load 92, holding new launches (       2 running)
+2026-09-23 08:18:15 load 83, holding new launches (       2 running)
+2026-09-23 08:20:20 load 94, holding new launches (       2 running)
+2026-09-23 08:22:24 load 72, holding new launches (       2 running)
+2026-09-23 08:24:28 load 98, holding new launches (       2 running)
+2026-09-23 08:26:33 load 90, holding new launches (       2 running)
+2026-09-23 08:28:37 load 87, holding new launches (       2 running)
+2026-09-23 08:30:42 load 87, holding new launches (       2 running)
+2026-09-23 08:32:46 load 94, holding new launches (       2 running)
+2026-09-23 08:34:51 load 103, holding new launches (       2 running)
+2026-09-23 08:36:55 load 96, holding new launches (       2 running)
+2026-09-23 08:39:00 load 68, holding new launches (       2 running)
+2026-09-23 08:47:18 load 73, holding new launches (       2 running)
+2026-09-23 08:49:25 load 69, holding new launches (       2 running)
+2026-09-23 08:53:54 pushed lis-300-train
+2026-09-23 08:57:34 pushed rsn-292-build2
+2026-09-23 09:20:26 launch talk-241b-wall
+2026-09-23 09:56:29 pushed talk-241b-wall
+2026-09-23 09:56:30 launch lis-300-publish
+2026-09-23 09:56:30 launch lis-311-chat292
+2026-09-23 09:56:30 launch talk-280p-panel
+2026-09-23 09:56:30 launch talk-280p-run
+2026-09-23 09:58:45 pushed talk-280p-panel
+2026-09-23 10:01:27 pushed lis-300-publish
+2026-09-23 10:01:39 pushed talk-280p-run
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+2026-09-23 13:59:25 watcher started (pid 16015)
+2026-09-23 13:59:26 orphan finished lis-311-chat292
+2026-09-23 13:59:32 pushed lis-311-chat292
+2026-09-23 13:59:32 launch lis-301-train
+2026-09-23 13:59:32 launch lis-311b-chat292
+2026-09-23 13:59:32 launch talk-280p-probe
+2026-09-23 13:59:33 launch talk-292t-build
+2026-09-23 13:59:33 launch talk-292t-panel
+2026-09-23 14:03:52 pushed talk-292t-panel
+2026-09-23 14:03:53 launch talk-f0-base
+2026-09-23 14:06:08 pushed talk-280p-probe
+2026-09-23 14:06:09 launch own-m0-mouthdata
+2026-09-23 14:10:27 pushed lis-311b-chat292
+2026-09-23 14:10:28 launch talk-f0-bench
+2026-09-23 14:14:45 pushed talk-f0-bench
+2026-09-23 14:16:55 pushed own-m0-mouthdata
+2026-09-23 14:17:02 pushed talk-292t-build
+2026-09-23 14:17:07 pushed talk-f0-base
+2026-09-23 14:19:11 self-update, restarting
+2026-09-23 14:19:11 watcher started (pid 16015)
+2026-09-23 14:23:21 launch own-m1-train
+2026-09-23 14:39:58 launch 000-vast-rescue
+2026-09-23 14:39:58 launch talk-f1-build
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key)
+python3 -c "
+import json,urllib.request,os
+key=os.environ['VAST_API_KEY']
+req=urllib.request.Request('https://console.vast.ai/api/v0/instances/?owner=me', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+print('KEYS:', list(d.keys()))
+insts=d.get('instances',[])
+print('COUNT:', len(insts))
+for i in insts:
+  print('---INSTANCE---')
+  for k in sorted(i.keys()):
+    v=i[k]
+    if isinstance(v,str) and len(v)>200:
+      v=v[:200]+'...'
+    print(f'{k}={v}')
+" 2>&1 | head -n 300
+KEYS: ['instances_found', 'instances']
+COUNT: 1
+---INSTANCE---
+actual_status=offline
+bundle_id=None
+bw_nvlink=0.0
+client_run_time=1.1
+compute_cap=1200
+country_code=KR
+cpu_arch=amd64
+cpu_cores=16
+cpu_cores_effective=16.0
+cpu_name=AMD Ryzen 7 7800X3D 8-Core Processor
+cpu_ram=31193
+cpu_util=0.0
+credit_balance=None
+credit_discount=None
+credit_discount_max=0.0
+cuda_max_good=13.0
+cur_state=running
+direct_port_count=100
+direct_port_end=-1
+direct_port_start=-1
+disk_bw=4474.0
+disk_name=GIGABYTE AG4731TB N
+disk_space=40.0
+disk_usage=-1
+disk_util=-1
+dlperf=199.01399354299608
+dlperf_per_dphtotal=410.18151340922856
+dph_base=0.4666666666666666
+dph_total=0.48518518518518516
+driver_version=580.173.02
+duration=2146761.0854165554
+end_date=1792335600.0
+external=False
+extra_env=[]
+flops_per_dphtotal=222.8091114503817
+geolocation=South Korea, KR
+gpu_arch=nvidia
+gpu_display_active=False
+gpu_frac=1.0
+gpu_lanes=16
+gpu_mem_bw=1455.1
+gpu_name=RTX 5090
+gpu_ram=32607
+gpu_temp=None
+gpu_totalram=32607
+gpu_util=None
+has_avx=1
+host_id=406325
+host_run_time=2592000.0
+hosting_type=1
+id=52276877
+image_args=[]
+image_runtype=ssh_direc ssh_proxy
+image_uuid=pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
+inet_down=570.9
+inet_down_billed=None
+inet_down_cost=0.005208333333333333
+inet_up=545.1
+inet_up_billed=None
+inet_up_cost=0.005208333333333333
+instance={'gpuCostPerHour': 0, 'diskHour': 0.018518518518518517, 'slaPremiumPerHour': 0, 'totalHour': 0.018518518518518517, 'discountTotalHour': 0, 'discountedTotalPerHour': 0.018518518518518517}
+intended_status=running
+internet_down_cost_per_tb=5.333333333333333
+internet_up_cost_per_tb=5.333333333333333
+is_bid=False
+jupyter_token=22bca8e9942e85c4eeda829c011e367ffbb5759a762b19dcd69c3bbda4580ca3
+label=None
+local_ipaddrs=172.30.22.235 172.17.0.1 
+
+logo=/static/logos/vastai_small2.png
+machine_dir_ssh_port=34499
+machine_id=146501
+mem_limit=None
+mem_usage=None
+min_bid=0.907
+mobo_name=B850 EAGLE ICE
+next_state=running
+num_gpus=1
+onstart=None
+os_version=24.04
+pci_gen=5.0
+pcie_bw=48.9
+public_ipaddr=180.189.55.38
+reliability2=0.8612003
+rentable=False
+score=182.34565855010513
+search={'gpuCostPerHour': 0.4666666666666666, 'diskHour': 0.018518518518518517, 'slaPremiumPerHour': 0.0, 'totalHour': 0.48518518518518516, 'discountTotalHour': 0, 'discountedTotalPerHour': 0.48518518518518516}
+sla_r_claim=None
+sla_sigma_x=None
+ssh_host=ssh8.vast.ai
+ssh_idx=8
+ssh_port=36876
+start_date=1790188182.1848757
+static_ip=False
+status_msg=None
+storage_cost=0.3333333333333333
+storage_total_cost=0.018518518518518517
+target_reliability=0.0
+template_hash_id=None
+template_id=None
+template_name=None
+time_remaining=
+time_remaining_isbid=
+total_flops=108.10368
+uptime_mins=None
+verification=verified
+vmem_usage=None
+volume_info=[]
+vram_costperhour=1.4879786094555929e-05
+webpage=None
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key)
+python3 -c "
+import json,urllib.request,os,time
+key=os.environ['VAST_API_KEY']
+# try invoices / billing endpoints
+for path in ['/api/v0/users/current/', '/api/v0/invoices/?limit=20', '/api/v0/instances/billing/']:
+  try:
+    req=urllib.request.Request('https://console.vast.ai'+path, headers={'Authorization':'Bearer '+key})
+    raw=urllib.request.urlopen(req, timeout=30).read().decode()
+    print('=== '+path+' len', len(raw))
+    print(raw[:2000])
+  except Exception as e:
+    print('=== '+path+' FAIL', repr(e)[:500])
+" 2>&1 | head -n 100
+echo "---DATE_CONVERT---"
+python3 -c "import datetime; print(datetime.datetime.utcfromtimestamp(1790188182.1848757))"; date -u 2>&1
+echo "---RENT_START_GREPS---"
+grep -n "52276877\|Rented\|contract\|18:2\|18:3" ~/premonition-watch/queue/own-m1-train.go1.reply.md 2>&1 | head -n 30
+grep -n "52276877\|Rented contract" ~/premonition-watch/queue/own-m1-train.go1.err.txt 2>&1 | head -n 30
+=== /api/v0/users/current/ len 2128
+{"can_pay": true, "id": 553012, "created_at": 1779583287787, "api_key": "", "key_id": 28637247, "username": "benjamin.a.hannan@gmail.com", "ssh_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training", "phone_number": null, "paypal_email": null, "wise_email": null, "fullname": null, "balance_threshold": -0.01, "balance_threshold_enabled": true, "autobill_threshold": 5.0, "total_spend": -23.608697509659994, "autobill_amount": 5.0, "billaddress_line1": null, "billaddress_line2": null, "billaddress_city": null, "billaddress_zip": null, "billaddress_country": null, "billing_creditonly": 1, "billaddress_taxinfo": null, "password_resettable": null, "email": "benjamin.a.hannan@gmail.com", "tfa_status": "disabled", "has_billing": true, "has_payout": false, "has_stripe_payout": false, "payout_enabled": true, "host_only": false, "host_agreement_accepted": false, "email_verified": true, "last4": null, "balance": 0, "credit": 6.391302490340006, "got_signup_credit": 0, "paid_verified": 0.0, "paid_expected": 0.0, "billed_verified": 0.0, "billed_expected": 0.0, "has_rented": true, "balance_referrals": 0.0, "is_subject_to_unpaid_deletion": false, "discord_id": null, "huggingface_cloud_sync_enabled": true, "oauth_provider": "google", "rights": {"api": {"*": {"api.team": {"POST": {}}, "api.ssh.keys": {}, "api.template": {"GET": {}}, "api.instances": {"GET": {}}, "api.users.root": {"GET": {}}, "api.template_v1": {"GET": {}}, "api.auth.apikeys": {"GET": {}}, "api.instances_v1": {"GET": {}}, "api.auth.sessions": {"GET": {}}, "api.users.current": {"GET": {}}, "api.instances.count": {"GET": {}}, "api.template.params": {"GET": {}}, "api.user.save_context": {"PUT": {}}, "api.user.verify-email": {"POST": {}}, "api.hubspot.newsletters": {"GET": {}}, "api.users.crisp-identity": {"GET": {}}, "api.user.created_templates": {"GET": {}}}, "misc": {}, "user_read": {}, "user_write": {}, "billing_read": {}, "billing_write": {}, "instance_read": {}, "instan
+=== /api/v0/invoices/?limit=20 len 1920
+[{"id": 2869630, "user_id": 553012, "when": 1779583512.4235363, "paid_on": 1779583656.2032676, "payment_expected": null, "amount_cents": -2000, "is_credit": true, "is_delayed": false, "balance_before": 0.0, "balance_after": 20.0, "original_amount": null, "event_id": null, "cut_amount": null, "cut_percent": null, "extra": {"last4": "0164", "network": "mastercard"}, "service": "stripe_payments", "stripe_charge": null, "stripe_refund": null, "stripe_payout": null, "error": null, "paypal_email": null, "transfer_group": "pi_3TaQAFHRxJkb56aO1Qcf4jn7", "failed": null, "refunded": null, "latest_refund_id": null, "is_check": null}, {"id": 3506144, "user_id": 553012, "when": 1789777883.6747003, "paid_on": 1789777883.6747003, "payment_expected": null, "amount_cents": -500, "is_credit": false, "is_delayed": false, "balance_before": null, "balance_after": null, "original_amount": null, "event_id": null, "cut_amount": null, "cut_percent": null, "extra": {"last4": "0164", "network": "mastercard", "auto": true}, "service": "stripe_payments", "stripe_charge": null, "stripe_refund": null, "stripe_payout": null, "error": null, "paypal_email": null, "transfer_group": "pi_3UHCBmHRxJkb56aO1PH23IRX", "failed": null, "refunded": null, "latest_refund_id": null, "is_check": null}, {"id": 3511098, "user_id": 553012, "when": 1789853487.1681778, "paid_on": 1789853487.1681778, "payment_expected": null, "amount_cents": -500, "is_credit": false, "is_delayed": false, "balance_before": null, "balance_after": null, "original_amount": null, "event_id": null, "cut_amount": null, "cut_percent": null, "extra": {"last4": "0164", "network": "mastercard", "auto": true}, "service": "stripe_payments", "stripe_charge": null, "stripe_refund": null, "stripe_payout": null, "error": null, "paypal_email": null, "transfer_group": "pi_3UHVrFHRxJkb56aO0OJ0ZSua", "failed": null, "refunded": null, "latest_refund_id": null, "is_check": null}]
+=== /api/v0/instances/billing/ FAIL <HTTPError 400: 'Bad Request'>
+---DATE_CONVERT---
+2026-09-23 18:29:42.184876
+Wed Sep 23 18:40:47 UTC 2026
+---RENT_START_GREPS---
+10:Rented: contract 52276394 (RTX 5090, $0.6096/h). Start ~18:28Z, 3h deadline 21:28Z. Waiting for boot.
+12:Second instance rented (contract 52276603, $0.4676/h). Waiting for boot.
+15:Rented contract 52276877 ($0.4704/h). Waiting for boot.
+1672:{"success": true, "new_contract": 52276877, "instance_api_key": "7ea429ce1008b69c39d142831ea8da1c214e377939989100be26a5a28494f111"}
+1682:{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 36876, 'dph_total': 0.48518518518518516, 'gpu_name': 'RTX 5090', 'num_gpus': 1}
+1689:req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/ssh/', data=body, method='POST', headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'})
+1704:{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'ssh_port': 36876, 'dph_total': 0.48518518518518516}
+1735:{'id': 52276877, 'actual_status': 'offline', 'status_msg': None, 'dph_total': 0.48518518518518516}
+1746:req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/', headers={'Authorization':'Bearer '+key})
+1764:req=urllib.request.Request('https://console.vast.ai/api/v0/instances/52276877/', headers={'Authorization':'Bearer '+key})
+1768:{"instances": {"actual_status": "offline", "bundle_id": null, "bw_nvlink": 0.0, "client_run_time": 1.1, "compute_cap": 1200, "cpu_arch": "amd64", "cpu_cores": 16, "cpu_cores_effective": 16.0, "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor", "cpu_ram": 31193, "cpu_util": 0.0, "credit_balance": null, "credit_discount": null, "credit_discount_max": 0.0, "cuda_max_good": 13.0, "cur_state": "running", "direct_port_count": 100, "direct_port_end": -1, "direct_port_start": -1, "disk_bw": 4474.0, "disk_name": "GIGABYTE AG4731TB N", "disk_space": 40.0, "disk_usage": -1, "disk_util": -1, "dlperf": 199.01399354299608, "dlperf_per_dphtotal": 410.18151340922856, "dph_base": 0.4666666666666666, "dph_total": 0.48518518518518516, "driver_version": "580.173.02", "duration": 2146936.605634451, "end_date": 1792335600.0, "external": false, "extra_env": [], "flops_per_dphtotal": 222.8091114503817, "geolocation": "South Korea, KR", "gpu_arch": "nvidia", "gpu_display_active": false, "gpu_frac": 1.0, "gpu_lanes": 16, "gpu_mem_bw": 1455.1, "gpu_name": "RTX 5090", "gpu_ram": 32607, "gpu_temp": null, "gpu_totalram": 32607, "gpu_util": null, "has_avx": 1, "host_id": 406325, "host_run_time": 2592000.0, "hosting_type": 1, "id": 52276877, "image_args": [], "image_runtype": "ssh_direc ssh_proxy", "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime", "inet_down": 570.9, "inet_down_billed": null, "inet_down_cost": 0.005208333333333333, "inet_up": 545.1, "inet_up_billed": null, "inet_up_cost": 0.005
+[0m
+[0m$ [0muv tool install vastai 2>&1 | tail -n 20
+echo "---TRY_VASTAI---"
+ls ~/.local/bin/vastai 2>&1; ~/.local/bin/vastai --help 2>&1 | head -n 30
++ propcache==0.5.4
+ + psutil==7.2.2
+ + pycares==4.11.0
+ + pycparser==3.0
+ + pycryptodome==3.23.0
+ + pygments==2.21.0
+ + pyparsing==3.3.3
+ + python-barcode==0.16.1
+ + python-dateutil==2.9.0.post0
+ + qrcode==8.2
+ + requests==2.34.2
+ + rich==15.0.0
+ + setuptools==84.0.0
+ + six==1.17.0
+ + typing-extensions==4.16.0
+ + urllib3==2.8.0
+ + vastai==1.8.1
+ + xdg==6.0.0
+ + yarl==1.25.1
+Installed 2 executables: serve-vast-deployment, vastai
+---TRY_VASTAI---
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+ --full                        Print full results instead of paging with `less` for commands that support it
+ --curl                        Show a curl equivalency to the call
+ --api-key API_KEY             API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                     Show CLI version
+ --no-color                    Disable colored output for commands that support it
+
+Search:
+ search offers                 Search for instance types using custom query
+ search benchmarks             Search for benchmark results using custom query
+ search templates              Search for template results using custom query
+ search invoices               Search for invoices using custom query
+ create template               Create a new template
+ update template               Update an existing template
+ delete template               Delete a Template
+
+Instances:
+ show instance                 Display user's current instances
+ create instance               Create a new instance
+ create instances              Create instances from a list of offers
+ destroy instance              Destroy an instance (irreversible, deletes data)
+[0m
+[0m$ [0mmkdir -p runs/000-vast-rescue
+~/.local/bin/vastai show instances --raw 2>&1 | head -n 200
+echo "EXIT:$?"
+[
+ {
+  "actual_status": "offline",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31193,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": -1,
+  "disk_bw": 4474.0,
+  "disk_name": "GIGABYTE AG4731TB N",
+  "disk_space": 40.0,
+  "disk_usage": -1,
+  "disk_util": -1,
+  "dlperf": 199.01399354299608,
+  "dlperf_per_dphtotal": 410.18151340922856,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.48518518518518516,
+  "driver_version": "580.173.02",
+  "duration": 677.0628662109375,
+  "end_date": 1792335600.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 222.8091114503817,
+  "geolocation": "South Korea, KR",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 1.0,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1455.1,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": null,
+  "gpu_totalram": 32607,
+  "gpu_util": null,
+  "has_avx": 1,
+  "host_id": 406325,
+  "host_run_time": 2592000.0,
+  "hosting_type": 1,
+  "id": 52276877,
+  "image_args": [],
+  "image_runtype": "ssh_direc ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 570.9,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.005208333333333333,
+  "inet_up": 545.1,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.005208333333333333,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.018518518518518517,
+   "diskHour": 0.018518518518518517,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.018518518518518517
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 5.333333333333333,
+  "internet_up_cost_per_tb": 5.333333333333333,
+  "is_bid": false,
+  "jupyter_token": "22bca8e9942e85c4eeda829c011e367ffbb5759a762b19dcd69c3bbda4580ca3",
+  "label": null,
+  "local_ipaddrs": "172.30.22.235 172.17.0.1",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 34499,
+  "machine_id": 146501,
+  "mem_limit": null,
+  "mem_usage": null,
+  "min_bid": 0.907,
+  "mobo_name": "B850 EAGLE ICE",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 5.0,
+  "pcie_bw": 48.9,
+  "public_ipaddr": "180.189.55.38",
+  "reliability2": 0.8612003,
+  "rentable": false,
+  "score": 182.34565855010513,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.48518518518518516,
+   "diskHour": 0.018518518518518517,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.48518518518518516
+  },
+  "sla_r_claim": null,
+  "sla_sigma_x": null,
+  "ssh_host": "ssh8.vast.ai",
+  "ssh_idx": "8",
+  "ssh_port": 36876,
+  "start_date": 1790188182.1848757,
+  "static_ip": false,
+  "status_msg": null,
+  "storage_cost": 0.3333333333333333,
+  "storage_total_cost": 0.018518518518518517,
+  "target_reliability": 0.0,
+  "template_hash_id": null,
+  "template_id": null,
+  "template_name": null,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+  "total_flops": 108.10368,
+  "uptime_mins": null,
+  "verification": "verified",
+  "vmem_usage": null,
+  "volume_info": [],
+  "vram_costperhour": 1.4879786094555929e-05,
+  "webpage": null
+ }
+]
+EXIT:0
+[0m
+[0m$ [0m~/.local/bin/vastai show instances --raw > /tmp/vast_raw.json 2>/tmp/vast_err.txt; echo "raw_exit:$?"; wc -c /tmp/vast_raw.json
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+d=json.load(open('/tmp/vast_raw.json'))
+insts=d if isinstance(d,list) else d.get('instances',[])
+lines=[]
+header='id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label'
+lines.append('# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)')
+lines.append(header)
+lines.append('-'*len(header))
+for i in insts:
+  iid=i.get('id')
+  gpu=f\"{i.get('num_gpus',1)}x {i.get('gpu_name')}\"
+  actual=i.get('actual_status')
+  cur=i.get('cur_state')
+  ip=i.get('public_ipaddr')
+  rel=i.get('reliability2', i.get('reliability'))
+  dph=i.get('dph_total')
+  label=i.get('label')
+  lines.append(f'{iid} | {gpu} | {actual} | {cur} | {ip} | {rel} | {dph} | {label}')
+lines.append('')
+lines.append(f\"count={len(insts)}\")
+open('runs/000-vast-rescue/instances.txt','w').write('\n'.join(lines)+'\n')
+print('\n'.join(lines))
+" 2>&1
+echo "---FILE---"
+cat runs/000-vast-rescue/instances.txt 2>&1
+raw_exit:0
+    3482 /tmp/vast_raw.json
+# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)
+id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label
+--------------------------------------------------------------------------------
+52276877 | 1x RTX 5090 | offline | running | 180.189.55.38 | 0.8612003 | 0.48518518518518516 | None
+
+count=1
+---FILE---
+# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)
+id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label
+--------------------------------------------------------------------------------
+52276877 | 1x RTX 5090 | offline | running | 180.189.55.38 | 0.8612003 | 0.48518518518518516 | None
+
+count=1
+[0m
+[0m$ [0m~/.local/bin/vastai destroy instance --help 2>&1 | head -n 40
+usage: vastai destroy instance id [-h] [-y] [--api-key API_KEY] [--raw]
+
+positional arguments:
+ id                 id of instance to delete
+
+options:
+ -h, --help         show this help message and exit
+ -y, --yes          Skip confirmation prompt
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+ --curl             Show a curl equivalency to the call
+ --api-key API_KEY  API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version          Show CLI version
+ --no-color         Disable colored output for commands that support it
+
+________________________________________________________________________________
+
+Perfoms the same action as pressing the "DESTROY" button on the website at https://console.vast.ai/instances/
+Example: vastai destroy instance 4242
+Use -y or --yes to skip the confirmation prompt.
+________________________________________________________________________________
+[0m
+[0m$ [0m~/.local/bin/vastai destroy instance 52276877 -y --raw 2>&1 | head -n 50; echo "DESTROY_EXIT:$?"
+DESTROY_EXIT:0
+[0m
+[0m$ [0msleep 5; ~/.local/bin/vastai show instances --raw 2>&1 | head -n 20; echo "CONFIRM_EXIT:$?"
+[]
+CONFIRM_EXIT:0
+[0m
+[0m$ [0mps -o pid,ppid,pgid,command -p 23817 -p 23847 2>&1
+echo "---CHILDREN_OF_23817---"
+pgrep -P 23817 2>&1; echo "---CHILDREN_OF_23847---"
+pgrep -P 23847 2>&1; echo "---FULL_TREE---"
+ps -o pid,ppid,command | grep -E "23817|23847|16015" 2>&1 | head -n 20
+echo "---MARKER---"
+ls -l ~/premonition-watch/queue/own-m1-train.running ~/premonition-watch/queue/own-m1-train.md 2>&1
+PID  PPID  PGID COMMAND
+23817 23815 16011 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+23847 23817 16011 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1-train.go1.23817 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.\012GPU: rent\012\012YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.\012READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).\012INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.\012\0120. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:\012   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;\012   - check the ledger first: stop if the rental total would pass $30;\012   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;\012   - destroy the instance at the end and confirm your instance is gone;\012   - append a ledger line.\012   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.\0121. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:\012   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;\012   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);\012   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).\0122. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.\0123. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge\012   If it runs out of memory, use --batch 8 once and report it.\0124. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.\0125. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl\012   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.\012   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.\0126. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).\0127. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.\012PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+---CHILDREN_OF_23817---
+23847
+---CHILDREN_OF_23847---
+27733
+---FULL_TREE---
+---MARKER---
+-rw-r--r--  1 ben-hannan  staff  5874 Sep 23 14:23 /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+-rw-r--r--  1 ben-hannan  staff     0 Sep 23 14:23 /Users/ben-hannan/premonition-watch/queue/own-m1-train.running
+[0m
+[0m$ [0mps -o pid,ppid,command -p 27733 2>&1
+ps -o pid,ppid,command | grep 27733 2>&1 | head -n 20
+pgrep -P 27733 2>&1; echo "done"
+PID  PPID COMMAND
+27733 23847 /bin/zsh -c sleep 105; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -p 36876 root@ssh8.vast.ai "echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv,noheader" 2>&1 | head -n 4; date -u +%FT%TZ
+27734
+done
+[0m
+[0m$ [0mps -o pid,ppid,command -p 27734 2>&1; pgrep -P 27734 2>&1; echo "done"
+PID  PPID COMMAND
+27734 27733 sleep 105
+done
+[0m
+[0m$ [0mkill 27734 27733 23847 23817 2>&1; echo "kill_exit:$?"
+sleep 2
+ps -o pid,ppid,command -p 23817 -p 23847 -p 27733 -p 27734 2>&1
+pgrep -fl own-m1 2>&1; echo "pgrep_exit:$?"
+kill_exit:0
+  PID  PPID COMMAND
+pgrep_exit:1
+[0m
+[0m$ [0mrm ~/premonition-watch/queue/own-m1-train.running 2>&1; echo "rm_exit:$?"; ls -l ~/premonition-watch/queue/own-m1* 2>&1
+rm: /Users/ben-hannan/premonition-watch/queue/own-m1-train.running: No such file or directory
+rm_exit:1
+-rw-r--r--  1 ben-hannan  staff       7 Sep 23 14:41 /Users/ben-hannan/premonition-watch/queue/own-m1-train.exit
+-rw-r--r--  1 ben-hannan  staff  122757 Sep 23 14:41 /Users/ben-hannan/premonition-watch/queue/own-m1-train.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    1368 Sep 23 14:37 /Users/ben-hannan/premonition-watch/queue/own-m1-train.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff    5874 Sep 23 14:23 /Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+[0m
+[0m$ [0mcat ~/premonition-watch/queue/own-m1-train.exit 2>&1; echo "---"; ls -l ~/premonition-watch/queue/*.running 2>&1 | head -n 20
+rc=143
+---
+-rw-r--r--  1 ben-hannan  staff  0 Sep 23 14:39 /Users/ben-hannan/premonition-watch/queue/000-vast-rescue.running
+-rw-r--r--  1 ben-hannan  staff  0 Sep 23 13:59 /Users/ben-hannan/premonition-watch/queue/lis-301-train.running
+-rw-r--r--  1 ben-hannan  staff  0 Sep 23 14:39 /Users/ben-hannan/premonition-watch/queue/talk-f1-build.running
+[0m
+[0m$ [0mgrep -n "spent \$\|dph\|contract 5227\|52276\|vast.*\$" artifacts/fable-predictions-ledger.md 2>&1 | tail -n 20
+date -u +%FT%TZ 2>&1
+python3 -c "start=1790188182.1848757; import time; now=time.time(); print(f'start={start} now={now} alive_s={now-start:.1f} alive_min={(now-start)/60:.2f}')"
+cat /tmp/vast_raw.json 2>&1 | python3 -c "import json; d=json.load(open('/tmp/vast_raw.json')); i=d[0]; print(f\"duration={i['duration']} dph={i['dph_total']} cost_est={i['duration']/3600*i['dph_total']:.4f}\")"
+2793:- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+2026-09-23T18:41:47Z
+start=1790188182.1848757 now=1790188907.357773 alive_s=725.2 alive_min=12.09
+duration=684.8017702102661 dph=0.48518518518518516 cost_est=0.0923
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key)
+python3 -c "
+import json,urllib.request,os
+key=os.environ['VAST_API_KEY']
+req=urllib.request.Request('https://console.vast.ai/api/v0/users/current/', headers={'Authorization':'Bearer '+key})
+d=json.loads(urllib.request.urlopen(req, timeout=30).read())
+print(f\"credit={d.get('credit')} balance={d.get('balance')}\")
+" 2>&1
+cat runs/000-vast-rescue/instances.txt 2>&1
+credit=6.391302490340006 balance=0
+# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)
+id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label
+--------------------------------------------------------------------------------
+52276877 | 1x RTX 5090 | offline | running | 180.189.55.38 | 0.8612003 | 0.48518518518518516 | None
+
+count=1
+[0m
+[0m$ [0mpython3 -c "dph=0.48518518518518516; secs=677.0628662109375; print(f'{secs/60:.2f} min, cost=\${secs/3600*dph:.4f}')"
+cat >> runs/000-vast-rescue/instances.txt <<'EOF'
+
+# destroy log @ 2026-09-23 18:41 UTC
+# match rule: public_ipaddr == 180.189.55.38 OR actual_status in (offline, exited, not running); never destroy running healthy
+destroyed 52276877 (1x RTX 5090, 180.189.55.38, actual_status=offline, cur_state=running, dph=0.48518518518518516) via: vastai destroy instance 52276877 -y
+# confirm: vastai show instances --raw => [] (0 instances)
+EOF
+cat runs/000-vast-rescue/instances.txt 2>&1
+echo "---SECRET_SCAN---"
+grep -i "jupyter_token\|api_key\|Bearer\|sk-\|vast_api" runs/000-vast-rescue/instances.txt 2>&1; echo "scan_exit:$? (1 means no secrets found)"
+11.28 min, cost=$0.0913
+# vastai show instances --raw @ 2026-09-23 18:40 UTC (1 instance found)
+id | gpu | actual_status | cur_state | public_ipaddr | reliability | dph | label
+--------------------------------------------------------------------------------
+52276877 | 1x RTX 5090 | offline | running | 180.189.55.38 | 0.8612003 | 0.48518518518518516 | None
+
+count=1
+
+# destroy log @ 2026-09-23 18:41 UTC
+# match rule: public_ipaddr == 180.189.55.38 OR actual_status in (offline, exited, not running); never destroy running healthy
+destroyed 52276877 (1x RTX 5090, 180.189.55.38, actual_status=offline, cur_state=running, dph=0.48518518518518516) via: vastai destroy instance 52276877 -y
+# confirm: vastai show instances --raw => [] (0 instances)
+---SECRET_SCAN---
+scan_exit:1 (1 means no secrets found)
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P-vast-rescue (2026-09-23 18:41 UTC, director rescue of own-m1-train dead rental) contract 52276877 RTX 5090 1x public_ip 180.189.55.38 actual_status=offline cur_state=running: start 2026-09-23T18:29:42Z, destroyed 18:41Z, alive ~677 s (11.28 min) x $0.485185/hr = ~$0.09 (per-instance billing not readable via API: /invoices shows only stripe top-ups, /users/current credit 6.3913 balance 0 unchanged; estimate used per task rule); post-destroy show instances 0; own-m1-train runner PIDs 23817/23847/27733/27734 killed, queue marker own-m1-train.running removed (exit rc=143). See runs/000-vast-rescue/instances.txt.
+EOF
+echo "ledger_append_exit:$?"
+tail -n 5 artifacts/fable-predictions-ledger.md 2>&1
+ledger_append_exit:0
+- P292t.4 (same) falsifiers: any 292t reply differing from its mechanical owner arm, any suite/probe move outside the predicted list, any write on a question or small-talk turn, or any turn with 2+ single-layer arms differing from 292 proves the join wrong.
+- P292t.5 OUTCOME (2026-09-23, builder, sealed exp 292t, CPU only) registered verdict PASS M1-M3. M1 (90 turns / 78 dialogs once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 13/13 + panel 2/2 OK after): agree 90/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10, control 10/10; owners 292:65/280b:20/282b:5/281:0); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P292t.2 (sessions152 exactly the 3 reply-only owned by 280b, bench/rt136/rt143 0, labels+gate identical to 292's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs). P292t.1-4 all held. Misses 0, deviations 0. See artifacts/claude-join292t-20260923/RESULTS.md.
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train + 0 dev; max single-reply share <= 3% every status train+dev; distinct templates >= 40 every status train+dev; dev∩train names 0 and combos 0; exit 0.
+- P-vast-rescue (2026-09-23 18:41 UTC, director rescue of own-m1-train dead rental) contract 52276877 RTX 5090 1x public_ip 180.189.55.38 actual_status=offline cur_state=running: start 2026-09-23T18:29:42Z, destroyed 18:41Z, alive ~677 s (11.28 min) x $0.485185/hr = ~$0.09 (per-instance billing not readable via API: /invoices shows only stripe top-ups, /users/current credit 6.3913 balance 0 unchanged; estimate used per task rule); post-destroy show instances 0; own-m1-train runner PIDs 23817/23847/27733/27734 killed, queue marker own-m1-train.running removed (exit rc=143). See runs/000-vast-rescue/instances.txt.
+[0m
+[0m$ [0mecho "===FINAL_SHOW==="; ~/.local/bin/vastai show instances --raw 2>&1 | head -n 5
+echo "===PGREP==="; pgrep -fl own-m1 2>&1; echo "pgrep_exit:$?"
+echo "===MARKER_CHECK==="; ls -l ~/premonition-watch/queue/own-m1-train.running 2>&1; ls -l ~/premonition-watch/queue/own-m1-train.exit 2>&1
+echo "===FILES_FOR_PUSH==="; ls -l runs/000-vast-rescue/instances.txt artifacts/fable-predictions-ledger.md 2>&1
+echo "===GIT_STATUS==="; git status --short 2>&1 | head -n 20
+===FINAL_SHOW===
+[]
+===PGREP===
+28140 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1b-train.md
+28173 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1b-train.go1.28140 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+RERUN RULES (own-m1b, director 18:40 UTC; the first try's host went offline):
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph); 4090 with the same filter if no 5090 is available.
+- Before renting: check that no other instance labelled own-m1 is live (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
+- Label the instance own-m1b. Remaining credit is about $6; the ceiling is $4 / 3 h.
+- Liveness watchdog: every 60 s, check the instance's actual_status and that the training log's line count grows. If the instance is offline or shows no log progress for 10 min, destroy it by exact id and rent again once (same filter). If that one fails too, destroy it and stop with HOST-FAIL. Never have 2 instances at once.
+
+
+YOUR TASK: builder for own-M1. Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1-20260923/PASSMARKS.md and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main, and the M0 data from origin/builder-outbox:artifacts/claude-own-m0-20260923. From the repo root:
+   - run `shasum -a 256 -c artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt` (sha256sum -c on Linux); every line must be OK, otherwise stop;
+   - train.jsonl was too big to push, so rebuild M0 deterministically. From the repo root, with origin/builder-outbox's scripts/claude_own_m0_build.py, run python scripts/claude_own_m0_build.py --out <m0 dir>. Then cmp <m0 dir>/dev.jsonl against origin/builder-outbox:artifacts/claude-own-m0-20260923/dev.jsonl; it must be identical (the own-model thread checked this: dev and stats come out byte-identical);
+   - run python scripts/claude_own_m1_data.py --m0 <m0 dir> --out <work>/data and record the printed counts (expected: 20000 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: every Pm1.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1.1 to Pm1.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1-20260923/RESULTS.md artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1-20260923/dev_summary.json artifacts/claude-own-m1-20260923/dev_out_sample.jsonl artifacts/claude-own-m1-20260923/train_summary.json artifacts/claude-own-m1-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+28179 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/own-m1n-train.md
+28208 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:own-m1n-train.go1.28179 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+RENTAL RULES (from the director's rerun spec, 18:40 UTC; the first own-m1 host went offline):
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph); 4090 with the same filter if no 5090 is available.
+- Before renting: check that no other instance labelled exactly own-m1n is live (the v1 rerun, labelled own-m1b, may be running at the same time on purpose; that is NOT a duplicate) (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
+- Label the instance own-m1n. Remaining credit is about $6; the ceiling is $4 / 3 h.
+- Liveness watchdog: every 60 s, check the instance's actual_status and that the training log's line count grows. If the instance is offline or shows no log progress for 10 min, destroy it by exact id and rent again once (same filter). If that one fails too, destroy it and stop with HOST-FAIL. Never have 2 instances at once.
+
+
+
+YOUR TASK: builder for own-M1n (mouth v2, natural replies). Fine-tune the conversational mouth, then measure it on dev ONCE. Artifacts go in artifacts/claude-own-m1n-20260923/. The own-model thread (Opus) wrote all the code, smoke-tested it on CPU and sealed it (SEAL-code.sha256.txt). Import and run it; never edit it. If something breaks, stop and report; do not patch it.
+READ FIRST: artifacts/claude-own-m1n-20260923/PASSMARKS.md (and artifacts/claude-own-m0b-20260923/README.md) and scripts/claude_own_m1_{common,data,speak}.py (on origin/main).
+INDEPENDENCE: never open any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or ANY convbench-f0 file.
+
+0. GPU: rent. Rent ONE vast.ai RTX 5090 (4090 if no 5090 is available) on demand, following the rental rules in handoff/queue:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - check the ledger first: stop if the rental total would pass $30;
+   - this task's ceiling is $4.00 and 3 h, enforced by a watchdog;
+   - destroy the instance at the end and confirm your instance is gone;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git. On the GPU machine, put torch, transformers >= 5.6, peft, safetensors and huggingface_hub in a NEW venv.
+1. CODE + DATA. Get the repo at origin/main. From the repo root, run `shasum -a 256 -c` (sha256sum -c on Linux) on BOTH artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt and artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt. Every line must be OK, otherwise stop. Then run python scripts/claude_own_m1_data.py --m0 artifacts/claude-own-m0b-20260923 --out <work>/data and record the printed counts (expected: 5602 train kept and 1000 dev kept, 0 dropped).
+2. MODEL. huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B") (Ben chose it 2026-09-23 11:01 UTC). Record the commit hash.
+3. TRAIN. python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 120 --merge
+   If it runs out of memory, use --batch 8 once and report it.
+4. SEAL. Put sha256 of the merged safetensors and <work>/data/counts.json in artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt BEFORE step 5.
+5. MEASURE ONCE. python scripts/claude_own_m1_speak.py --model <work>/run/merged --data <work>/data/dev.jsonl --out <work>/dev_out.jsonl
+   Then recount Pm1n.3 yourself: re-run slot_check on every non-null reply's winning raw text (the last non-empty raw); the count of failures must be 0.
+   Also quote 20 random dev_out rows (dev material, fictional names): the record status, user_turn and filled reply.
+6. RESULTS.md, verdict first: show real training steps from train_log.jsonl (step count, first and last loss); every Pm1n.n with integer counts and PASS/FAIL, fallbacks per status, speak ms, training minutes, tok/s, dollars. Append ledger lines Pm1n.1 to Pm1n.5 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/own-m1n-mouth/ and record its sha256 in RESULTS.md. Never push weights.
+PUSH: artifacts/claude-own-m1n-20260923/RESULTS.md artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt artifacts/claude-own-m1n-20260923/dev_summary.json artifacts/claude-own-m1n-20260923/dev_out_sample.jsonl artifacts/claude-own-m1n-20260923/train_summary.json artifacts/claude-own-m1n-20260923/train_log.jsonl artifacts/fable-predictions-ledger.md
+pgrep_exit:0
+===MARKER_CHECK===
+ls: /Users/ben-hannan/premonition-watch/queue/own-m1-train.running: No such file or directory
+-rw-r--r--  1 ben-hannan  staff  7 Sep 23 14:41 /Users/ben-hannan/premonition-watch/queue/own-m1-train.exit
+===FILES_FOR_PUSH===
+-rw-r--r--  1 ben-hannan  staff  606874 Sep 23 14:42 artifacts/fable-predictions-ledger.md
+-rw-r--r--  1 ben-hannan  staff     723 Sep 23 14:42 runs/000-vast-rescue/instances.txt
+===GIT_STATUS===
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
