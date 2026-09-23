@@ -89,11 +89,27 @@ plain transformer with the same number of learned numbers, the same inputs, the 
 the same RL steps and the same seeds. B only counts as a win if it beats this baseline on the
 held-out question types.
 
-**Recommendation:** A first, as 294. It is the likelier route to a reasoner that works, it
-needs no download, and the first run costs about $3. B follows as 295, against its equal-size
-baseline, and is cheap enough to run in parallel on BensPC. The two stay separate experiments
-so each one changes one thing. If B beats its baseline and gets near A, B becomes the long-term
-reasoner.
+**Recommendation (revised 19:30 after Ben 19:07, "The purpose of this model was to emulate a
+brain but make it better in all the ways we can"): B leads, as 294.** B is a learned, brain-style
+reasoner. It thinks in thoughts, not words. It recalls notebook rows by attention, the way a
+brain recalls memories. It takes more thinking steps on harder questions. It practises during
+sleep. A stays as 295, the comparison that shows whether starting from a big pretrained model
+beats the brain-style design.
+
+- **Size, and "the bulk of the model":** B starts at about 30M and grows by the project rule
+  (PASS → scale until it breaks): 30M, then about 100M, then about 300M, while each size step
+  still adds right answers on the held-out types. Its practice questions are generated without
+  limit, so data never runs out. From scratch, about 300M is roughly the most $50 buys (about
+  14 GPU-h per 2B-token pass; untested estimate), which would make it about a quarter of the
+  whole system. Past that, the 1B reasoning add-on (A) is the way to make it the bulk.
+- **Better than a brain, kept on purpose:** a person forgets and sometimes misremembers. This
+  one keeps facts perfectly in the notebook. It says an answer out loud only after a code check
+  confirms that every fact it cited is really in the notebook, so it cannot invent a fact. It
+  says "I don't know" instead of guessing. The code is not the reasoner. It is a fact-checker on
+  the way out, and a brain doesn't have one.
+- **The ear being a Llama-style transformer is normal.** It is the standard choice for reading
+  English. In brain terms it plays the language-reading area. The brain-style design is about
+  what happens after reading: thoughts, memory, reasoning, sleep.
 
 ## 4. The test that would show the value: reasonpanel294 (blind, sealed)
 
@@ -113,23 +129,30 @@ reasoner.
   - fact missing (must say "I don't know");
   - two held-out types that are never practised (for example "all the people who live in X"
     and "do A and B share a boss").
-- Arms: 292's code reasoner, untrained MiniCPM5-1B with the same prompt, and 294.
+- Arms: 292's code reasoner, the 294 loop reasoner, its equal-size plain baseline, and (for 295)
+  the untrained and trained MiniCPM5-1B.
 
 ## 5. Experiment 294 (to register after the panel is sealed)
 
-- **One change:** copy-then-RL training of a reasoning add-on on MiniCPM5-1B. Everything else
-  stays fixed: prompt, panel, scorer.
+- **One change:** the brain-style loop reasoner (B, about 30M, from scratch, copy then RL) versus
+  the equal-size plain transformer, trained identically (same data, steps, seeds, reward). Both
+  arms are also scored against 292's code reasoner. The 1B add-on (A) is registered separately
+  as 295 with the same panel and marks.
+- **Earlier draft (A as 294), kept for the record:** copy-then-RL training of a reasoning add-on
+  on MiniCPM5-1B, with everything else fixed.
 - **Pass marks, fixed now:**
   - (1) invented or unsupported answers ≤ 2/300;
   - (2) at least 200/300 right overall, and at least 30 more than the better of the code
     reasoner and the untrained 1B;
   - (3) at least 25/30 honest "I don't know" on the missing-fact category;
-  - (4) held-out types: at least 10 of 60 more right than the untrained 1B;
+  - (4) held-out types: at least 10 of 60 more right than the untrained 1B (for 294: than the
+    equal-size plain baseline);
   - (5) no category more than 3 below the code reasoner on one-step, backwards, yes/no and
     correction.
 - **What would prove it wrong:** RL adds fewer than 10 right over the copy-only checkpoint, or
-  mark (1) fails. Either would mean practice isn't teaching reasoning at this size.
-- **Runs:** GPU rental lane, ≤ $4 per job, watchdog, destroy on finish, ledger entry. It
+  mark (1) fails. For 294 specifically: the loop reasoner fails to beat its plain equal-size
+  baseline by at least 10 on the held-out types. Either would mean practice isn't teaching reasoning at this size.
+- **Runs:** 294 is small enough for BensPC ($0) or the GPU rental lane, ≤ $4 per job, watchdog, destroy on finish, ledger entry. It
   stays inside the $30 total cap unless Ben says yes to $50.
 - **Build:** Muse builders write the episode generator, the reward checker and the training
   script. Opus writes and audits the panel blind. I verify seal, recount and a held-out probe.
