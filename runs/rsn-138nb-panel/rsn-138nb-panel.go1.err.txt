@@ -1,0 +1,1602 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main && echo FETCH_OK; uptime; df -g /; git rev-parse --abbrev-ref HEAD; git log --oneline -3; ls handoff/kit/briefs/ 2>&1 | head -n 50
+FETCH_OK
+ 0:22  up 2 days, 16:12, 4 users, load averages: 56.34 54.43 59.11
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 194296480    0%   /
+claude/card-experiment-handoff-7c5b27
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt; echo "=====SPEC====="; git show origin/main:handoff/kit/briefs/invpanel138nb-spec.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+=====SPEC=====
+BLIND PANEL SPEC: invpanel138nb (backwards questions: "who/what has this value?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/138nb-*, design/v3/30-modes/138n-merge-opus.md, scripts/claude_fix138nb_*, scripts/claude_loop138nb_agent.py, artifacts/claude-merge138nb-*, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py, scripts/claude_loop237_agent.py, any relation-table data file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-invpanel138nb-20260923/ with panel.jsonl (70 items), base138n.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item format (one fresh session per item): {"id": "i138nb-001", "family": ..., "setup": [1-3 teaching sentences, each sent as its own turn], "question": "...", "gold": [list of strings; EVERY string must appear in a right reply; [] for abstain/control families], "backwards": true/false, "stored_after_setup": [[subject, relation, value], ...], "note": "..."}.
+Use a JSON list for gold. Never join several answers into one string.
+
+Families and exact counts (70). V = the value asked about, A/B = the subjects. Every setup sentence is a plain "A's R is V." teach or "My R is V." (subject "you" in gold). Before using a setup, check on the base that it stores exactly the triple you expect; drop and replace any that doesn't.
+- whose_R 14: "Whose R is V?". 8 with one subject, 6 with two subjects sharing V. Relations: spread over at least 7 of boss, mother, father, dentist, doctor, coach, teacher, city, employer, birthplace, wife, husband, friend, neighbour. At most 3 items per relation.
+- lives_born 10: "Who lives in V?" (after "A's city is V.") and "Who was born in V?" (after "A's birthplace is V."), 5 each; 4 of the 10 have two subjects.
+- has_as 6: "Who has V as their R?" / "Who has V as his R?" / "Who has V as her R?"; 2 with two subjects.
+- verb_backwards 10: verb questions from value to subject: "Who does V manage?", "Who does V teach?", "Who does V coach?", "Who works at V?", "What did V compose?", "What did V write?", "What did V paint?" (setups "X's composer is V." etc.; works/songs/books may be multi-word titles). 3 with two subjects.
+- my_backwards 4: one setup is "My R is V." and one is "A's R is V."; question "Whose R is V?". gold ["you", A] is not required word-for-word for the user: gold lists A only, and the note says the reply must also refer to the user.
+- no_match 8: V is taught in a DIFFERENT relation than the one asked ("A's mother is V." then "Whose boss is V?"). gold []; the right reply abstains and names no subject.
+- unknown_value 4: V never taught ("Whose boss is Q?" after unrelated teaches). gold []; abstain, names no taught person.
+- forward_control 10: forward questions about the same kinds of setups ("Who is A's R?", "Where does A live?"). gold [V]. Not backwards.
+- teach_control 4: a setup sentence then a plain second teach as the "question" turn (no "?"); gold []; checks that nothing changes on statements.
+Two-subject items: at least 15 over the panel. Fictional names only, including multi-word names (at least 20 items use a two-word person name somewhere) and at least 4 items where a work title starts with "The".
+
+run_base.py: run every item once on the base, 138n = scripts/claude_loop138n_agent.py with artifacts/claude-merge138n-20260922/loop138n-config.json (build with build_agent138n, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Base row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote (true/false).
+
+score_panel.py (sealed with the panel; the builder uses it unchanged): input = the panel and a rows file in the base-row format; output JSON per item and per family:
+- right: backwards families: every gold string appears in the reply (case-insensitive) AND the reply contains "(worked out backwards)"; my_backwards also needs "your" or "you" in the reply; forward_control: gold appears; no_match/unknown_value: the reply is an abstain (contains "I don't know" or "I couldn't") and names no taught subject; teach_control: the question turn stores exactly its own triple.
+- right_names: backwards families only: every gold string appears, label or not (reported, not the main score).
+- wrong: the reply names a taught subject or taught value that is not in gold, and does not contain every gold string, and is not an abstain. (A reply that gives every gold name is never wrong.)
+- question_wrote: from the rows file.
+Report the base's counts per family (right, right_names, wrong, question writes) in README.md, category level only.
+
+Rules: fictional names only; the base runs once per item; never quote an item in README.md or in your final reply. Report: counts per family, the base's right / right_names / wrong per family, SEAL lines and the `shasum -a 256 -c` output from the repo root.
+[0m
+[0m$ [0mls scripts/ | head -n 100; echo "---"; ls artifacts/ | head -n 100; echo "---"; ls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ 2>&1 | head -n 20; df -g /; uptime
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_comma263_devcases.py
+claude_comma263_regscore.py
+claude_comma263_run.py
+claude_comma263_score.py
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_confirm241b.py
+claude_convpanel239_run.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_demo_dryrun.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_transcript.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_diag119h_freshprobe.py
+claude_diag243_composers.py
+claude_diag243_grid.py
+claude_diag243_tally.py
+claude_diag243_trace.py
+claude_direction251_run.py
+claude_direction251_score.py
+claude_ear256_devcases.py
+claude_ear256_deveval.py
+claude_ear256_devrun.py
+claude_ear256_ear.py
+claude_ear256_roundtrip.py
+claude_ear256_route.py
+claude_ear256_score.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-judge241-20260922
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-ourpanel265-20260923
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0e-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+---
+about.json
+adj3.json
+adv.json
+art_add.txt
+bigfiles.txt
+briefs
+c160.json
+cap.json
+cases140.json
+chain120.sh
+changes239.py
+chk119g.ps1
+chk189.py
+cmpmarks.py
+corr.json
+corr167e.json
+ctoy_diag.py
+ctoy_probe.py
+ctoy_reasons.py
+ctoy_sum.py
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 194307080    0%   /
+ 0:23  up 2 days, 16:12, 4 users, load averages: 48.08 52.69 58.38
+[0m
+[0m$ [0mls scripts/ | grep -i 138n; echo "---"; ls artifacts/claude-merge138n-20260922/; echo "---"; ls artifacts/claude-invpanel138nb-20260923/ 2>&1; echo "---"; ls scripts/claude_loop138n* 2>&1; ls scripts/fable_loop138* 2>&1
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_loop138n_agent.py
+---
+loop138n-config.json
+m7
+PASSMARKS.md
+predicted_moves138n.json
+RESULTS.md
+run
+SEAL.sha256.txt
+v138m-probes-dialogs.json
+v138m-probes-ids.json
+v138m-probes-supp-dialogs.json
+v138m-probes-supp-ids.json
+---
+ls: artifacts/claude-invpanel138nb-20260923/: No such file or directory
+---
+scripts/claude_loop138n_agent.py
+scripts/fable_loop138_agent.py
+scripts/fable_loop138b_agent.py
+scripts/fable_loop138b_junk.py
+scripts/fable_loop138b_redteam143.py
+scripts/fable_loop138b_sessions.py
+scripts/fable_loop138b_sleepdrive.py
+scripts/fable_loop138b_speed.py
+scripts/fable_loop138b_speed2.py
+scripts/fable_loop138c_agent.py
+scripts/fable_loop138c_bench121.py
+scripts/fable_loop138c_probe.py
+scripts/fable_loop138c_selfcheck.py
+scripts/fable_loop138d_agent.py
+scripts/fable_loop138d_bench121.py
+scripts/fable_loop138d_junk.py
+scripts/fable_loop138d_m1.py
+scripts/fable_loop138d_redteam143.py
+scripts/fable_loop138d_sessions.py
+scripts/fable_loop138d_sleepdrive.py
+scripts/fable_loop138d_sleepz5.py
+scripts/fable_loop138d_soak.py
+scripts/fable_loop138d_speed2.py
+scripts/fable_loop138e_agent.py
+scripts/fable_loop138f_agent.py
+scripts/fable_loop138g_agent.py
+scripts/fable_loop138h_agent.py
+scripts/fable_loop138i_agent.py
+scripts/fable_loop138j_agent.py
+[0m
+[0m→ [0mRead scripts/claude_loop138n_agent.py
+[0m→ [0mRead artifacts/claude-merge138n-20260922/loop138n-config.json
+[0m
+[0m$ [0mgrep -n "def turn\|def build_agent\|stored\|question_wrote\|state_dir\|sleep_threshold" scripts/fable_loop138i_agent.py | head -n 60; echo "==="; grep -n "def turn\|stored\|notebook" scripts/claude_loop138m_agent.py | head -n 40
+373:def build_agent138i(cfg: dict | None = None) -> Loop138iAgentLoop:
+377:    state_dir = Path(cfg.get("state_dir", "."))
+381:    sleeper = HardGate46Sleeper(state_dir, reasoner=None, seed=4121)
+385:        state_dir, ears=inner_ears, mouth=mouth,
+386:        reasoner=reasoner, sleeper=sleeper, sleep_threshold=int(cfg.get(
+387:            "sleep_threshold", A.SLEEP_THRESHOLD)))
+415:    store = D146B.D146.DoubtStore146(state_dir)
+427:    S145.retrofit_sleep145(loop, state_dir, seed=seed)
+443:                 sleep_threshold: int | None = None,
+446:        if sleep_threshold is not None:
+447:            self.cfg["sleep_threshold"] = sleep_threshold
+464:        agent_cfg["state_dir"] = str(self.root)
+510:        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
+===
+13:        + NameLine230cMixin (this file) 219 D8 notebook check
+24:        + 224c install_q1honest224c    Q1 only when the notebook confirms
+46:      notebook-miss branch; 187's own patterns still run when 227c misses.
+54:(process-local, restored in finally).
+142:    """227c's identity gate at the top of 138j's notebook-miss branch."""
+144:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+152:    """fix168's grounded self answer + 219's D8 notebook check."""
+171:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+174:        def turn219(_self, t):
+249:    "added": ["219 D8 user-name notebook check",
+269:        raise RuntimeError("138m: notebook is not FixedIndexedLoopNotebook")
+[0m
+[0m$ [0mgrep -n "class Loop138iAgentLoop\|def turn" scripts/fable_loop138j_agent.py | head -n 20; echo "==="; grep -n "def turn" scripts/fable_loop138i_agent.py | head -n 20
+554:    def turn(self, text: str) -> list[str]:
+===
+[0m
+[0m→ [0mRead scripts/fable_loop138j_agent.py[90m [limit=120, offset=530][0m
+[0m
+[0m$ [0mgrep -n "self.nb.facts\|nb.facts\|facts.append\|class FixedIndexedLoopNotebook\|class GatedThoughtNotebook" scripts/fable_fix220_restartindex.py scripts/fable_loop138g_agent.py scripts/fable_loop138i_agent.py 2>&1 | head -n 40; echo "==="; grep -rn "stored_after" scripts/ 2>&1 | head -n 20
+scripts/fable_fix220_restartindex.py:52:class FixedIndexedLoopNotebook(P128.IndexedLoopNotebook):
+scripts/fable_loop138g_agent.py:305:        before = set(self.nb.facts)
+scripts/fable_loop138g_agent.py:310:        after = set(self.nb.facts)
+===
+scripts/claude_openers260_run.py:107:                    "stored_after_setup": s_setup, "turn_reply": turn_reply,
+scripts/claude_openers260_run.py:108:                    "stored_after_turn": s_turn, "followup_reply": f_reply,
+scripts/claude_openers260_run.py:109:                    "stored_after_followup": s_f, "plain_reply": "",
+scripts/claude_merge252c_score.py:114:    for s, r, v in row.get("stored_after_turn") or []:
+scripts/claude_merge252c_score.py:136:    for s, r, v in row.get("stored_after_turn") or []:
+scripts/claude_merge252c_score.py:144:    allowed = T(row["stored_after_setup"]) | T(it.get("expect_store") or [])
+scripts/claude_merge252c_score.py:145:    return not (T(row["stored_after_turn"]) <= allowed
+scripts/claude_merge252c_score.py:146:                and T(row["stored_after_followup"]) <= allowed)
+scripts/claude_merge252c_score.py:248:        a = T(r["stored_after_setup"])
+scripts/claude_merge252c_score.py:251:        for key in ("stored_after_turn", "stored_after_followup"):
+scripts/claude_merge252c_score.py:258:                T(r["stored_after_turn"]) != a
+scripts/claude_merge252c_score.py:259:                or T(r["stored_after_followup"]) != a):
+scripts/claude_merge252c_score.py:323:    sa, sm = T(a["stored_after_turn"]), T(m["stored_after_turn"])
+scripts/claude_merge252c_score.py:330:            and T(m["stored_after_followup"]) == sm)
+scripts/claude_merge252c_score.py:363:                        ok = (T(m["stored_after_turn"])
+scripts/claude_merge252c_score.py:364:                              == T(a["stored_after_turn"])
+scripts/claude_merge252c_score.py:365:                              and T(m["stored_after_followup"])
+scripts/claude_merge252c_score.py:366:                              == T(a["stored_after_turn"]))
+scripts/claude_merge252c_score.py:374:                gone = T(a["stored_after_turn"]) - T(m["stored_after_turn"])
+scripts/claude_merge252c_score.py:383:                    T(a["stored_after_turn"]) - T(m["stored_after_turn"]))
+[0m
+[0m$ [0mgrep -n "facts" scripts/fable_loop138g_agent.py | head -n 30; echo "==="; grep -n "facts\|triple\|subject.*relation.*value" scripts/fable_fix77_core.py | head -n 40
+105:    --config artifacts/fable-agent138g-20260922/loop138g-config.json
+305:        before = set(self.nb.facts)
+310:        after = set(self.nb.facts)
+361:                "answer_self on live loop138g state; facts only from "
+===
+157:    for fid, fact in nb.facts.items():
+175:        facts = [f for f, _ in rows]
+176:        facts.sort(key=lambda f: (ANS_IDX[f["source"]], -f["n"]))
+177:        best = facts[0]["source"]
+178:        facts = [f for f in facts if f["source"] == best]
+180:        if functional or len(facts) == 1:
+181:            row = facts[0]
+190:            for row in facts:
+244:            for fid, fact in nb.facts.items():
+[0m
+[0m→ [0mRead scripts/fable_fix77_core.py[90m [limit=120, offset=140][0m
+[0m→ [0mRead scripts/claude_openers260_run.py
+[0m
+[0m$ [0mgrep -n "def load_agent\|def load_base_cfg\|def make_daemon\|def notebook_triples" scripts/fable_marks123_all.py scripts/fable_loop90_agent.py | head -n 20
+scripts/fable_marks123_all.py:68:def load_agent(agent_script: str):
+scripts/fable_marks123_all.py:95:def load_base_cfg(config_path: str) -> dict:
+scripts/fable_marks123_all.py:99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+scripts/fable_loop90_agent.py:101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+[0m
+[0m→ [0mRead scripts/fable_loop90_agent.py[90m [limit=40, offset=95][0m
+[0m→ [0mRead scripts/fable_marks123_all.py[90m [limit=60, offset=60][0m
+[0m
+[0m# [0mTodos
+[•] Probe base 138n storage for candidate relations (pilot)
+[ ] Write make_panel.py + generate 70-item panel (pilot, verify stores)
+[ ] Write run_base.py + run once per item (base138n.jsonl)
+[ ] Write score_panel.py + score + README.md (category only)
+[ ] Seal (SEAL.sha256.txt) + verify shasum -c, final report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import sys; sys.path.insert(0,'scripts'); import fable_loop90_agent as L90; print('L90 ok'); import claude_loop138n_agent as N; print('138n import ok')"
+L90 ok
+138n import ok
+[0m
+[0m$ [0mls /tmp/inv138nb_probe 2>&1; mkdir -p /tmp/inv138nb_probe && echo ok
+ls: /tmp/inv138nb_probe: No such file or directory
+ok
+[0m
+[0m← [0mWrite /tmp/inv138nb_probe/probe1.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/probe1.py 2>&1 | head -n 60
+{"sent": "Lena's boss is Mira.", "reply": ["Saved: Lena's boss is Mira."], "triples": [["Lena", "boss", "Mira"]]}
+{"sent": "Lena's mother is Mira.", "reply": ["Saved: Lena's mother is Mira."], "triples": [["Lena", "mother", "Mira"]]}
+{"sent": "Lena's city is Paris.", "reply": ["Saved: Lena's city is Paris."], "triples": [["Lena", "city", "Paris"]]}
+{"sent": "Lena's birthplace is Paris.", "reply": ["Saved: Lena's birthplace is Paris."], "triples": [["Lena", "birthplace", "Paris"]]}
+{"sent": "My boss is Mira.", "reply": ["Saved: your boss is Mira."], "triples": [["USER", "boss", "Mira"]]}
+{"sent": "Tomas's composer is Mira.", "reply": ["Saved: Tomas's composer is Mira."], "triples": [["Tomas", "composer", "Mira"]]}
+{"sent": "Tomas's author is Mira.", "reply": ["Saved: Tomas's author is Mira."], "triples": [["Tomas", "author", "Mira"]]}
+{"sent": "Tomas's painter is Mira.", "reply": ["Saved: Tomas's painter is Mira."], "triples": [["Tomas", "painter", "Mira"]]}
+{"sent": "Lena's manager is Mira.", "reply": ["Saved: Lena's manager is Mira."], "triples": [["Lena", "manager", "Mira"]]}
+{"sent": "Lena's employer is Northwind Traders.", "reply": ["Saved: Lena's employer is Northwind Traders."], "triples": [["Lena", "employer", "Northwind Traders"]]}
+{"sent": "Lena's dentist is Mira.", "reply": ["Saved: Lena's dentist is Mira."], "triples": [["Lena", "dentist", "Mira"]]}
+{"sent": "Lena's doctor is Mira.", "reply": ["Saved: Lena's doctor is Mira."], "triples": [["Lena", "doctor", "Mira"]]}
+{"sent": "Lena's coach is Mira.", "reply": ["Saved: Lena's coach is Mira."], "triples": [["Lena", "coach", "Mira"]]}
+{"sent": "Lena's teacher is Mira.", "reply": ["Saved: Lena's teacher is Mira."], "triples": [["Lena", "teacher", "Mira"]]}
+{"sent": "Lena's wife is Mira.", "reply": ["Saved: Lena's wife is Mira."], "triples": [["Lena", "wife", "Mira"]]}
+{"sent": "Lena's husband is Tomas.", "reply": ["Saved: Lena's husband is Tomas."], "triples": [["Lena", "husband", "Tomas"]]}
+{"sent": "Lena's friend is Mira.", "reply": ["Saved: Lena's friend is Mira."], "triples": [["Lena", "friend", "Mira"]]}
+{"sent": "Lena's neighbour is Mira.", "reply": ["Saved: Lena's neighbour is Mira."], "triples": [["Lena", "neighbour", "Mira"]]}
+[0m
+[0m← [0mWrite /tmp/inv138nb_probe/probe2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/probe2.py 2>&1 | head -n 80
+{"setup": ["Lena's boss is Mira."], "q": "Whose boss is Mira?", "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's boss is Mira.", "Tomas's boss is Mira."], "q": "Whose boss is Mira?", "stored": [["Lena", "boss", "Mira"], ["Tomas", "boss", "Mira"]], "qrep": ["Lena's boss is Mira. Tomas's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"], ["Tomas", "boss", "Mira"]]}
+{"setup": ["Lena's city is Paris."], "q": "Who lives in Paris?", "stored": [["Lena", "city", "Paris"]], "qrep": ["Lena's city is Paris."], "stored_q": [["Lena", "city", "Paris"]]}
+{"setup": ["Lena's birthplace is Paris."], "q": "Who was born in Paris?", "stored": [["Lena", "birthplace", "Paris"]], "qrep": ["Lena's birthplace is Paris."], "stored_q": [["Lena", "birthplace", "Paris"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Who has Mira as their boss?", "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["My boss is Mira.", "Lena's boss is Mira."], "q": "Whose boss is Mira?", "stored": [["USER", "boss", "Mira"], ["Lena", "boss", "Mira"]], "qrep": ["Your boss is Mira. Lena's boss is Mira."], "stored_q": [["USER", "boss", "Mira"], ["Lena", "boss", "Mira"]]}
+  RAW:[{"kind": "FACT", "event_id": "turn00000-fact-05ba6399", "fact_id": "F00001", "actor": "listening", "source": "taught", "subject": "E0001", "relation": "boss", "value": "{'entity': 'E0002'}", "supersedes": "None", "raw": "teach USER boss -> Mira", "rule_id": "None", "deps": "[]", "provenance": "None", "n": "4", "prev": "ac7d7a0dad7b7ef539c7c4a0af2f3411fe5711c0ee2259647ae5b3690a176b80", "v": "1"}, {"kind": "FACT", "event_id": "turn00001-fact-018f9e68", "fact_id": "F00002", "actor": "listening", "source": "taught", "subject": "E0003", "relation": "boss", "value": "{'entity': 'E0002'}", "supersedes": "None", "raw": "teach Lena boss -> Mira", "rule_id": "None", "deps": "[]", "provenance": "None", "n": "6", "prev": "4775e8183a33a864c2439a50099272564c4c5f8fb5a88706505598ae2aa8cd99", "v": "1"}]
+  ENTS:{"E0001": "USER", "E0002": "Mira", "E0003": "Lena"}
+{"setup": ["Lena's mother is Mira."], "q": "Whose boss is Mira?", "stored": [["Lena", "mother", "Mira"]], "qrep": ["I don't know anyone whose boss is Mira."], "stored_q": [["Lena", "mother", "Mira"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Whose boss is Zed?", "stored": [["Lena", "boss", "Mira"]], "qrep": ["I don't know anyone whose boss is Zed."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Who is Lena's boss?", "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's manager is Mira."], "q": "Who does Mira manage?", "stored": [["Lena", "manager", "Mira"]], "qrep": ["Lena's manager is Mira. (worked out backwards)"], "stored_q": [["Lena", "manager", "Mira"]]}
+{"setup": ["Lena's teacher is Mira."], "q": "Who does Mira teach?", "stored": [["Lena", "teacher", "Mira"]], "qrep": ["Lena's teacher is Mira. (worked out backwards)"], "stored_q": [["Lena", "teacher", "Mira"]]}
+{"setup": ["Lena's coach is Mira."], "q": "Who does Mira coach?", "stored": [["Lena", "coach", "Mira"]], "qrep": ["I didn't understand that question \u2014 could you say it another way?"], "stored_q": [["Lena", "coach", "Mira"]]}
+{"setup": ["Lena's employer is Northwind Traders."], "q": "Who works at Northwind Traders?", "stored": [["Lena", "employer", "Northwind Traders"]], "qrep": ["Lena's employer is Northwind Traders. (worked out backwards)"], "stored_q": [["Lena", "employer", "Northwind Traders"]]}
+{"setup": ["Tomas's composer is Mira."], "q": "What did Mira compose?", "stored": [["Tomas", "composer", "Mira"]], "qrep": ["Tomas's composer is Mira. (worked out backwards)"], "stored_q": [["Tomas", "composer", "Mira"]]}
+{"setup": ["Tomas's author is Mira."], "q": "What did Mira write?", "stored": [["Tomas", "author", "Mira"]], "qrep": ["Tomas's author is Mira. (worked out backwards)"], "stored_q": [["Tomas", "author", "Mira"]]}
+{"setup": ["Tomas's painter is Mira."], "q": "What did Mira paint?", "stored": [["Tomas", "painter", "Mira"]], "qrep": ["Tomas's painter is Mira. (worked out backwards)"], "stored_q": [["Tomas", "painter", "Mira"]]}
+{"setup": ["Anna Bell's boss is Mira."], "q": "Whose boss is Mira?", "stored": [["Anna Bell", "boss", "Mira"]], "qrep": ["Anna Bell's boss is Mira."], "stored_q": [["Anna Bell", "boss", "Mira"]]}
+{"setup": ["Tomas's author is The Glass Garden."], "q": "What did The Glass Garden write?", "stored": [["Tomas", "author", "The Glass Garden"]], "qrep": ["Tomas's author is The Glass Garden. (worked out backwards)"], "stored_q": [["Tomas", "author", "The Glass Garden"]]}
+[0m
+[0m← [0mWrite /tmp/inv138nb_probe/probe3.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/probe3.py 2>&1 | head -n 40
+{"setup": ["Lena's boss is Mira."], "q": "Who has Mira as their boss?", "setup_rep": [["Saved: Lena's boss is Mira."]], "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Who has Mira as her boss?", "setup_rep": [["Saved: Lena's boss is Mira."]], "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Who has Mira as his boss?", "setup_rep": [["Saved: Lena's boss is Mira."]], "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's city is Paris."], "q": "Where does Lena live?", "setup_rep": [["Saved: Lena's city is Paris."]], "stored": [["Lena", "city", "Paris"]], "qrep": ["Lena's city is Paris."], "stored_q": [["Lena", "city", "Paris"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Tomas's boss is Zed.", "setup_rep": [["Saved: Lena's boss is Mira."]], "stored": [["Lena", "boss", "Mira"]], "qrep": ["Saved: Tomas's boss is Zed."], "stored_q": [["Lena", "boss", "Mira"], ["Tomas", "boss", "Zed"]]}
+{"setup": ["Lena's boss is Mira."], "q": "Who is Lena's boss?", "setup_rep": [["Saved: Lena's boss is Mira."]], "stored": [["Lena", "boss", "Mira"]], "qrep": ["Lena's boss is Mira."], "stored_q": [["Lena", "boss", "Mira"]]}
+{"setup": ["Lena's birthplace is Paris."], "q": "Where was Lena born?", "setup_rep": [["Saved: Lena's birthplace is Paris."]], "stored": [["Lena", "birthplace", "Paris"]], "qrep": ["Lena's birthplace is Paris."], "stored_q": [["Lena", "birthplace", "Paris"]]}
+{"setup": ["Anna Bell's city is Paris."], "q": "Who lives in Paris?", "setup_rep": [["Saved: Anna Bell's city is Paris."]], "stored": [["Anna Bell", "city", "Paris"]], "qrep": ["Anna Bell's city is Paris."], "stored_q": [["Anna Bell", "city", "Paris"]]}
+{"setup": ["Lena's employer is Northwind Traders."], "q": "Who is Lena's employer?", "setup_rep": [["Saved: Lena's employer is Northwind Traders."]], "stored": [["Lena", "employer", "Northwind Traders"]], "qrep": ["Lena's employer is Northwind Traders."], "stored_q": [["Lena", "employer", "Northwind Traders"]]}
+{"setup": ["Tomas's author is The Glass Garden."], "q": "Who is Tomas's author?", "setup_rep": [["Saved: Tomas's author is The Glass Garden."]], "stored": [["Tomas", "author", "The Glass Garden"]], "qrep": ["Tomas's author is The Glass Garden."], "stored_q": [["Tomas", "author", "The Glass Garden"]]}
+{"setup": ["Lena's coach is Mira."], "q": "Who is Lena's coach?", "setup_rep": [["Saved: Lena's coach is Mira."]], "stored": [["Lena", "coach", "Mira"]], "qrep": ["Lena's coach is Mira."], "stored_q": [["Lena", "coach", "Mira"]]}
+[0m
+[0m← [0mWrite /tmp/inv138nb_probe/probe4.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/probe4.py 2>&1 | head -n 40
+{"setup": ["The Glass Garden's author is Mira."], "q": "What did Mira write?", "setup_rep": [["Saved: The Glass Garden's author is Mira."]], "stored": [["The Glass Garden", "author", "Mira"]], "qrep": ["The Glass Garden's author is Mira. (worked out backwards)"], "stored_q": [["The Glass Garden", "author", "Mira"]]}
+{"setup": ["The Glass Garden's composer is Mira."], "q": "What did Mira compose?", "setup_rep": [["Saved: The Glass Garden's composer is Mira."]], "stored": [["The Glass Garden", "composer", "Mira"]], "qrep": ["The Glass Garden's composer is Mira. (worked out backwards)"], "stored_q": [["The Glass Garden", "composer", "Mira"]]}
+{"setup": ["The Glass Garden's painter is Mira."], "q": "What did Mira paint?", "setup_rep": [["Saved: The Glass Garden's painter is Mira."]], "stored": [["The Glass Garden", "painter", "Mira"]], "qrep": ["The Glass Garden's painter is Mira. (worked out backwards)"], "stored_q": [["The Glass Garden", "painter", "Mira"]]}
+{"setup": ["The Silent Bell's author is Mira.", "The Glass Garden's author is Mira."], "q": "What did Mira write?", "setup_rep": [["Saved: The Silent Bell's author is Mira."], ["Saved: The Glass Garden's author is Mira."]], "stored": [["The Silent Bell", "author", "Mira"], ["The Glass Garden", "author", "Mira"]], "qrep": ["The Silent Bell's author is Mira. The Glass Garden's author is Mira. (worked out backwards)"], "stored_q": [["The Silent Bell", "author", "Mira"], ["The Glass Garden", "author", "Mira"]]}
+{"setup": ["Anna Bell's manager is Mira."], "q": "Who does Mira manage?", "setup_rep": [["Saved: Anna Bell's manager is Mira."]], "stored": [["Anna Bell", "manager", "Mira"]], "qrep": ["Anna Bell's manager is Mira. (worked out backwards)"], "stored_q": [["Anna Bell", "manager", "Mira"]]}
+{"setup": ["Anna Bell's coach is Mira."], "q": "Who does Mira coach?", "setup_rep": [["Saved: Anna Bell's coach is Mira."]], "stored": [["Anna Bell", "coach", "Mira"]], "qrep": ["I didn't understand that question \u2014 could you say it another way?"], "stored_q": [["Anna Bell", "coach", "Mira"]]}
+[0m
+[0m# [0mTodos
+[✓] Probe base 138n storage for candidate relations (pilot)
+[•] Write make_panel.py + generate 70-item panel (pilot, verify stores)
+[ ] Write run_base.py + run once per item (base138n.jsonl)
+[ ] Write score_panel.py + score + README.md (category only)
+[ ] Seal (SEAL.sha256.txt) + verify shasum -c, final report
+[0m
+[0m$ [0mmkdir -p artifacts/claude-invpanel138nb-20260923 && ls artifacts/claude-invpanel138nb-20260923
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-invpanel138nb-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-invpanel138nb-20260923/run_base.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-invpanel138nb-20260923/score_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/make_panel.py && df -g / && uptime
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/panel.jsonl 70 items
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 193175040    0%   /
+ 0:28  up 2 days, 16:17, 4 users, load averages: 56.79 45.85 52.71
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/run_base.py
+did i138nb-001
+did i138nb-002
+did i138nb-003
+did i138nb-004
+did i138nb-005
+did i138nb-006
+did i138nb-007
+did i138nb-008
+did i138nb-009
+did i138nb-010
+did i138nb-011
+did i138nb-012
+did i138nb-013
+did i138nb-014
+did i138nb-015
+did i138nb-016
+did i138nb-017
+did i138nb-018
+did i138nb-019
+did i138nb-020
+did i138nb-021
+did i138nb-022
+did i138nb-023
+did i138nb-024
+did i138nb-025
+did i138nb-026
+did i138nb-027
+did i138nb-028
+did i138nb-029
+did i138nb-030
+did i138nb-031
+did i138nb-032
+did i138nb-033
+did i138nb-034
+did i138nb-035
+did i138nb-036
+did i138nb-037
+did i138nb-038
+did i138nb-039
+did i138nb-040
+did i138nb-041
+did i138nb-042
+did i138nb-043
+did i138nb-044
+did i138nb-045
+did i138nb-046
+did i138nb-047
+did i138nb-048
+did i138nb-049
+did i138nb-050
+did i138nb-051
+did i138nb-052
+did i138nb-053
+did i138nb-054
+did i138nb-055
+did i138nb-056
+did i138nb-057
+did i138nb-058
+did i138nb-059
+did i138nb-060
+did i138nb-061
+did i138nb-062
+did i138nb-063
+did i138nb-064
+did i138nb-065
+did i138nb-066
+did i138nb-067
+did i138nb-068
+did i138nb-069
+did i138nb-070
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/base138n.jsonl 70 rows
+[0m
+[0m← [0mWrite /tmp/inv138nb_probe/check_store.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/check_store.py
+MISMATCH i138nb-063 [['Tam', 'employer', 'Brindle and Co.']] [] ['I can take one fact at a time — could you split that?']
+mismatches 1 /70
+[0m
+[0m← [0mEdit artifacts/claude-invpanel138nb-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/make_panel.py
+@@ -75,9 +75,9 @@
+ {"id": "i138nb-059", "family": "forward_control", "setup": ["Kellen's city is Fernhill."], "question": "Where does Kellen live?", "gold": ["Fernhill"], "backwards": False, "stored_after_setup": [["Kellen", "city", "Fernhill"]], "note": "forward control question"},
+ {"id": "i138nb-060", "family": "forward_control", "setup": ["Ilsa Fay's birthplace is Norbury."], "question": "Where was Ilsa Fay born?", "gold": ["Norbury"], "backwards": False, "stored_after_setup": [["Ilsa Fay", "birthplace", "Norbury"]], "note": "forward control question"},
+ {"id": "i138nb-061", "family": "forward_control", "setup": ["Rook's doctor is Eamon."], "question": "Who is Rook's doctor?", "gold": ["Eamon"], "backwards": False, "stored_after_setup": [["Rook", "doctor", "Eamon"]], "note": "forward control question"},
+ {"id": "i138nb-062", "family": "forward_control", "setup": ["Sable Wren's teacher is Fitch."], "question": "Who is Sable Wren's teacher?", "gold": ["Fitch"], "backwards": False, "stored_after_setup": [["Sable Wren", "teacher", "Fitch"]], "note": "forward control question"},
+-{"id": "i138nb-063", "family": "forward_control", "setup": ["Tam's employer is Brindle and Co."], "question": "Who is Tam's employer?", "gold": ["Brindle and Co."], "backwards": False, "stored_after_setup": [["Tam", "employer", "Brindle and Co."]], "note": "forward control question"},
++{"id": "i138nb-063", "family": "forward_control", "setup": ["Tam's employer is Brindle Press."], "question": "Who is Tam's employer?", "gold": ["Brindle Press"], "backwards": False, "stored_after_setup": [["Tam", "employer", "Brindle Press"]], "note": "forward control question"},
+ {"id": "i138nb-064", "family": "forward_control", "setup": ["The Briar Lantern's author is Vesper."], "question": "Who is The Briar Lantern's author?", "gold": ["Vesper"], "backwards": False, "stored_after_setup": [["The Briar Lantern", "author", "Vesper"]], "note": "forward control question"},
+ {"id": "i138nb-065", "family": "forward_control", "setup": ["Odile's friend is Marco."], "question": "Who is Odile's friend?", "gold": ["Marco"], "backwards": False, "stored_after_setup": [["Odile", "friend", "Marco"]], "note": "forward control question"},
+ {"id": "i138nb-066", "family": "forward_control", "setup": ["Jasper Vale's coach is Linnea."], "question": "Who is Jasper Vale's coach?", "gold": ["Linnea"], "backwards": False, "stored_after_setup": [["Jasper Vale", "coach", "Linnea"]], "note": "forward control question"},
+ # teach_control 4.
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/make_panel.py && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/run_base.py 2>&1 | tail -n 8; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/inv138nb_probe/check_store.py
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/panel.jsonl 70 items
+did i138nb-064
+did i138nb-065
+did i138nb-066
+did i138nb-067
+did i138nb-068
+did i138nb-069
+did i138nb-070
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/base138n.jsonl 70 rows
+mismatches 0 /70
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/score_panel.py artifacts/claude-invpanel138nb-20260923/panel.jsonl artifacts/claude-invpanel138nb-20260923/base138n.jsonl /tmp/inv138nb_probe/score.json; echo EXIT:$?
+{
+ "per_item": [
+  {
+   "id": "i138nb-001",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Petra's boss is Harlan."
+  },
+  {
+   "id": "i138nb-002",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Darin Cole's mother is Selma."
+  },
+  {
+   "id": "i138nb-003",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Kessa's father is Bram."
+  },
+  {
+   "id": "i138nb-004",
+   "family": "whose_R",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Ilsa is the doctor of Theo Marsh. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-005",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Wren's coach is Pavel."
+  },
+  {
+   "id": "i138nb-006",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Nadia Frost's teacher is Orson."
+  },
+  {
+   "id": "i138nb-007",
+   "family": "whose_R",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Halcyon Books is the employer of Colm. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-008",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Vera Lynn's wife is Odette."
+  },
+  {
+   "id": "i138nb-009",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Juno's boss is Harlan. Felix Grant's boss is Harlan."
+  },
+  {
+   "id": "i138nb-010",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Mira Sol's boss is Kern. Dov's boss is Kern."
+  },
+  {
+   "id": "i138nb-011",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Alba's mother is Selma. Ruth Ann's mother is Selma."
+  },
+  {
+   "id": "i138nb-012",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Sten's father is Bram. Hugo Vale's father is Bram."
+  },
+  {
+   "id": "i138nb-013",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Ida's friend is Nils. Clara Moon's friend is Nils."
+  },
+  {
+   "id": "i138nb-014",
+   "family": "whose_R",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Otto Reed's friend is Sana. Lida's friend is Sana."
+  },
+  {
+   "id": "i138nb-015",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Bram's city is Alderport."
+  },
+  {
+   "id": "i138nb-016",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "June Park's city is Brynwick."
+  },
+  {
+   "id": "i138nb-017",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Sella's city is Alderport. Corvin Dale's city is Alderport."
+  },
+  {
+   "id": "i138nb-018",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Tilda's city is Marlowe."
+  },
+  {
+   "id": "i138nb-019",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Edvin's city is Kestrel Bay. Maren Holt's city is Kestrel Bay."
+  },
+  {
+   "id": "i138nb-020",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Oskar's birthplace is Vennor."
+  },
+  {
+   "id": "i138nb-021",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Lena Marsh's birthplace is Gullhaven."
+  },
+  {
+   "id": "i138nb-022",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Pavel's birthplace is Vennor. Sonia Rill's birthplace is Vennor."
+  },
+  {
+   "id": "i138nb-023",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Dara's birthplace is Plumstead."
+  },
+  {
+   "id": "i138nb-024",
+   "family": "lives_born",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Ivo Lind's birthplace is Cairnhill. Bessa's birthplace is Cairnhill."
+  },
+  {
+   "id": "i138nb-025",
+   "family": "has_as",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Farah's dentist is Quin. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-026",
+   "family": "has_as",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Emmett Stone's doctor is Wrenley. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-027",
+   "family": "has_as",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Priya Nair's teacher is Hollis."
+  },
+  {
+   "id": "i138nb-028",
+   "family": "has_as",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Garran's coach is Vesper."
+  },
+  {
+   "id": "i138nb-029",
+   "family": "has_as",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Tilda Frost's neighbour is Bramwell. Ondine's neighbour is Bramwell."
+  },
+  {
+   "id": "i138nb-030",
+   "family": "has_as",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Sarella's husband is Corvin. Mira Patel's husband is Corvin."
+  },
+  {
+   "id": "i138nb-031",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Devon Rill's manager is Sorrel. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-032",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Kira's manager is Sorrel. Bram Noble's manager is Sorrel. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-033",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Elif Demir's teacher is Voss. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-034",
+   "family": "verb_backwards",
+   "right": false,
+   "right_names": false,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I didn't understand that question — could you say it another way?"
+  },
+  {
+   "id": "i138nb-035",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Hollis Ray's employer is Copperline Press. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-036",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Sanne's employer is Copperline Press. Viggo Lund's employer is Copperline Press. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-037",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "The Amber Lighthouse's composer is Delphine. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-038",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "The Copper Fox's author is Isolde. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-039",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "The Silent Orchard's author is Isolde. Willowfall's author is Isolde. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-040",
+   "family": "verb_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "The Pale Meridian's painter is Cressida. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-041",
+   "family": "my_backwards",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Your boss is Ansel. Rhea's boss is Ansel."
+  },
+  {
+   "id": "i138nb-042",
+   "family": "my_backwards",
+   "right": true,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Fenwick is the doctor of you and Jonas Pike. (worked out backwards)"
+  },
+  {
+   "id": "i138nb-043",
+   "family": "my_backwards",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Your city is Harborton. Sable's city is Harborton."
+  },
+  {
+   "id": "i138nb-044",
+   "family": "my_backwards",
+   "right": false,
+   "right_names": true,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Your friend is Talia. Moss Hart's friend is Talia."
+  },
+  {
+   "id": "i138nb-045",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose boss is Greta."
+  },
+  {
+   "id": "i138nb-046",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose birthplace is Dunmere."
+  },
+  {
+   "id": "i138nb-047",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose dentist is Farid."
+  },
+  {
+   "id": "i138nb-048",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose city is Saltline Yarns."
+  },
+  {
+   "id": "i138nb-049",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose boss is Ludo."
+  },
+  {
+   "id": "i138nb-050",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose city is Ostrell."
+  },
+  {
+   "id": "i138nb-051",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose friend is Kent."
+  },
+  {
+   "id": "i138nb-052",
+   "family": "no_match",
+   "right": false,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose teacher is Odile."
+  },
+  {
+   "id": "i138nb-053",
+   "family": "unknown_value",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose boss is Zell."
+  },
+  {
+   "id": "i138nb-054",
+   "family": "unknown_value",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose city is Quillhaven."
+  },
+  {
+   "id": "i138nb-055",
+   "family": "unknown_value",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone called Merritt."
+  },
+  {
+   "id": "i138nb-056",
+   "family": "unknown_value",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "I don't know anyone whose friend is Xanthe."
+  },
+  {
+   "id": "i138nb-057",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Aldis's boss is Petra."
+  },
+  {
+   "id": "i138nb-058",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Nora Bliss's mother is Tilda."
+  },
+  {
+   "id": "i138nb-059",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Kellen's city is Fernhill."
+  },
+  {
+   "id": "i138nb-060",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Ilsa Fay's birthplace is Norbury."
+  },
+  {
+   "id": "i138nb-061",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Rook's doctor is Eamon."
+  },
+  {
+   "id": "i138nb-062",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Sable Wren's teacher is Fitch."
+  },
+  {
+   "id": "i138nb-063",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Tam's employer is Brindle Press."
+  },
+  {
+   "id": "i138nb-064",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "The Briar Lantern's author is Vesper."
+  },
+  {
+   "id": "i138nb-065",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Odile's friend is Marco."
+  },
+  {
+   "id": "i138nb-066",
+   "family": "forward_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": false,
+   "question_reply": "Jasper Vale's coach is Linnea."
+  },
+  {
+   "id": "i138nb-067",
+   "family": "teach_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": true,
+   "question_reply": "Saved: Quill's dentist is Runa."
+  },
+  {
+   "id": "i138nb-068",
+   "family": "teach_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": true,
+   "question_reply": "Saved: Bram Kite's city is Westvale."
+  },
+  {
+   "id": "i138nb-069",
+   "family": "teach_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": true,
+   "question_reply": "Saved: Tove's friend is Homer."
+  },
+  {
+   "id": "i138nb-070",
+   "family": "teach_control",
+   "right": true,
+   "right_names": null,
+   "wrong": false,
+   "question_wrote": true,
+   "question_reply": "Saved: Duskhaven's painter is Petra Quinn."
+  }
+ ],
+ "per_family": {
+  "whose_R": {
+   "n": 14,
+   "right": 2,
+   "right_names": 14,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "lives_born": {
+   "n": 10,
+   "right": 0,
+   "right_names": 10,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "has_as": {
+   "n": 6,
+   "right": 2,
+   "right_names": 6,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "verb_backwards": {
+   "n": 10,
+   "right": 9,
+   "right_names": 9,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "my_backwards": {
+   "n": 4,
+   "right": 1,
+   "right_names": 4,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "no_match": {
+   "n": 8,
+   "right": 0,
+   "right_names": 0,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "unknown_value": {
+   "n": 4,
+   "right": 4,
+   "right_names": 0,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "forward_control": {
+   "n": 10,
+   "right": 10,
+   "right_names": 0,
+   "wrong": 0,
+   "question_wrote": 0
+  },
+  "teach_control": {
+   "n": 4,
+   "right": 4,
+   "right_names": 0,
+   "wrong": 0,
+   "question_wrote": 4
+  }
+ },
+ "total": {
+  "n": 70,
+  "right": 32,
+  "wrong": 0,
+  "question_wrote": 4
+ }
+}
+EXIT:0
+[0m
+[0m← [0mEdit artifacts/claude-invpanel138nb-20260923/score_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/score_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/score_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-invpanel138nb-20260923/score_panel.py
+@@ -119,10 +119,11 @@
+             right = True
+ elif fam == "forward_control":
+     right = all(g.lower() in rl for g in gold)
+ elif fam in ("no_match", "unknown_value"):
++    taught_subjects = {str(s) for s, _r, _v in it["stored_after_setup"]}
+     right = is_abstain(reply) and not any(
+-        n.lower() in rl for n in taught if str(n).lower() not in ("you", "user"))
++        s.lower() in rl for s in taught_subjects if str(s).lower() not in ("you", "user"))
+ elif fam == "teach_control":
+     qt = parse_question_triple(it["question"])
+     actual = [list(x) for x in row["stored_after_question_actual"]]
+     setup = [list(x) for x in it["stored_after_setup"]]
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/score_panel.py artifacts/claude-invpanel138nb-20260923/panel.jsonl artifacts/claude-invpanel138nb-20260923/base138n.jsonl /tmp/inv138nb_probe/score2.json >/tmp/inv138nb_probe/score2_stdout.json; echo EXIT:$?; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('/tmp/inv138nb_probe/score2.json')); print(json.dumps(d['per_family'],indent=1)); print(d['total'])"
+EXIT:0
+{
+ "whose_R": {
+  "n": 14,
+  "right": 2,
+  "right_names": 14,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "lives_born": {
+  "n": 10,
+  "right": 0,
+  "right_names": 10,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "has_as": {
+  "n": 6,
+  "right": 2,
+  "right_names": 6,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "verb_backwards": {
+  "n": 10,
+  "right": 9,
+  "right_names": 9,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "my_backwards": {
+  "n": 4,
+  "right": 1,
+  "right_names": 4,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "no_match": {
+  "n": 8,
+  "right": 8,
+  "right_names": 0,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "unknown_value": {
+  "n": 4,
+  "right": 4,
+  "right_names": 0,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "forward_control": {
+  "n": 10,
+  "right": 10,
+  "right_names": 0,
+  "wrong": 0,
+  "question_wrote": 0
+ },
+ "teach_control": {
+  "n": 4,
+  "right": 4,
+  "right_names": 0,
+  "wrong": 0,
+  "question_wrote": 4
+ }
+}
+{'n': 70, 'right': 40, 'wrong': 0, 'question_wrote': 4}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+items=[json.loads(x) for x in open('artifacts/claude-invpanel138nb-20260923/panel.jsonl')]
+# two-word person name somewhere: any subject or value or gold with a space that is not a known place/company/work? just count names with space
+mw=sum(1 for it in items if any(' ' in str(x) for trip in it['stored_after_setup'] for x in [trip[0],trip[2]]))
+print('items with space in subject/value:',mw)
+the=sum(1 for it in items if any(str(trip[0]).startswith('The ') for trip in it['stored_after_setup']))
+print('items with The-title subject:',the)
+two=sum(1 for it in items if len(it['stored_after_setup'])>=2)
+print('items with >=2 stored triples:',two)
+from collections import Counter
+print(Counter(x['family'] for x in items))
+print('whose rels:',Counter(t[1] for it in items if it['family']=='whose_R' for t in it['stored_after_setup']))
+"
+items with space in subject/value: 43
+items with The-title subject: 6
+items with >=2 stored triples: 19
+Counter({'whose_R': 14, 'lives_born': 10, 'verb_backwards': 10, 'forward_control': 10, 'no_match': 8, 'has_as': 6, 'my_backwards': 4, 'unknown_value': 4, 'teach_control': 4})
+whose rels: Counter({'boss': 5, 'friend': 4, 'mother': 3, 'father': 3, 'doctor': 1, 'coach': 1, 'teacher': 1, 'employer': 1, 'wife': 1})
+[0m
+[0m# [0mTodos
+[✓] Probe base 138n storage for candidate relations (pilot)
+[✓] Write make_panel.py + generate 70-item panel (pilot, verify stores)
+[✓] Write run_base.py + run once per item (base138n.jsonl)
+[•] Write score_panel.py + score + README.md (category only)
+[ ] Seal (SEAL.sha256.txt) + verify shasum -c, final report
+[0m
+[0m← [0mWrite artifacts/claude-invpanel138nb-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-invpanel138nb-20260923/panel.jsonl artifacts/claude-invpanel138nb-20260923/base138n.jsonl artifacts/claude-invpanel138nb-20260923/make_panel.py artifacts/claude-invpanel138nb-20260923/run_base.py artifacts/claude-invpanel138nb-20260923/score_panel.py > artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt && cat artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt && ls -la artifacts/claude-invpanel138nb-20260923/ && df -g /
+fc8921f6b7c6bcadd47a0a913225ab57a4340c9ee3af78d23a59371b4d8fb2ba  artifacts/claude-invpanel138nb-20260923/panel.jsonl
+06c6ed4b9594b43160e94d18246743b37888189ca0a6166823712a7a63780a71  artifacts/claude-invpanel138nb-20260923/base138n.jsonl
+7a35728de5ff4fd80a2667a955c84055f0c9245b385bff77a2771d208ca35460  artifacts/claude-invpanel138nb-20260923/make_panel.py
+ed898944d5d5e0fcdaf91af48b60f122ead6b60dc8d1dc9d2a9385f3642de88f  artifacts/claude-invpanel138nb-20260923/run_base.py
+b00e33a9387639e50e314e197eb8725180aa582f6542a7ae26fec9b59f5fb6df  artifacts/claude-invpanel138nb-20260923/score_panel.py
+artifacts/claude-invpanel138nb-20260923/panel.jsonl: OK
+artifacts/claude-invpanel138nb-20260923/base138n.jsonl: OK
+artifacts/claude-invpanel138nb-20260923/make_panel.py: OK
+artifacts/claude-invpanel138nb-20260923/run_base.py: OK
+artifacts/claude-invpanel138nb-20260923/score_panel.py: OK
+total 176
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 23 00:29 .
+drwxr-xr-x@ 384 ben-hannan  staff  12288 Sep 23 00:28 ..
+-rw-r--r--    1 ben-hannan  staff  23501 Sep 23 00:28 base138n.jsonl
+-rw-r--r--    1 ben-hannan  staff  21866 Sep 23 00:28 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  20340 Sep 23 00:28 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   1750 Sep 23 00:29 README.md
+-rw-r--r--    1 ben-hannan  staff   2223 Sep 23 00:27 run_base.py
+-rw-r--r--    1 ben-hannan  staff   7324 Sep 23 00:28 score_panel.py
+-rw-r--r--    1 ben-hannan  staff    598 Sep 23 00:29 SEAL.sha256.txt
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    42%  484014 191637280    0%   /
+[0m
+[0m$ [0mgit status --short | head -n 20; echo "---"; git diff --stat | head -n 10
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+---
+ artifacts/fable-predictions-ledger.md | 56 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-invpanel138nb-20260923/; echo "---untracked check---"; git check-ignore artifacts/claude-invpanel138nb-20260923/panel.jsonl 2>&1; echo "---"; ls artifacts/claude-invpanel138nb-20260923/
+---untracked check---
+artifacts/claude-invpanel138nb-20260923/panel.jsonl
+---
+base138n.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+score_panel.py
+SEAL.sha256.txt
+[0m
+[0m# [0mTodos
+[✓] Probe base 138n storage for candidate relations (pilot)
+[✓] Write make_panel.py + generate 70-item panel (pilot, verify stores)
+[✓] Write run_base.py + run once per item (base138n.jsonl)
+[✓] Write score_panel.py + score + README.md (category only)
+[✓] Seal (SEAL.sha256.txt) + verify shasum -c, final report
+[0m
