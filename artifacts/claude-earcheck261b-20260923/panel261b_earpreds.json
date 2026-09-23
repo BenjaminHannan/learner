@@ -1,0 +1,4403 @@
+{
+ "summary": {
+  "n": 150,
+  "median_ms": 159.27459998056293,
+  "p90_ms": 326.14500005729496,
+  "max_ms": 503.8242000155151,
+  "n_beamed": 84,
+  "device": "cuda",
+  "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+  "torch": "2.11.0+cu128",
+  "threads": 6,
+  "tau": 9.3,
+  "k": 4,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti"
+ },
+ "preds": {
+  "e261b-001": {
+   "raw": "TEACH | Lara | city | Vexford\nTEACH | Lara | old_cannery | location",
+   "greedy_lp": -1.5680220955414796,
+   "beams": [
+    [
+     "TEACH | Lara | city | Vexford\nTEACH | Lara | old_cannery | location",
+     -1.7564762830734253
+    ],
+    [
+     "TEACH | Lara | city | Vexford\nTEACH | Lara | location | the old cannery",
+     -1.7572575807571411
+    ],
+    [
+     "TEACH | Lara | city | Vexford\nTEACH | Lara | old_cannery | location_of_formation",
+     -2.4109904766082764
+    ],
+    [
+     "TEACH | Lara | city | Vexford\nTEACH | Lara | location_of_formation | old cannery",
+     -2.4199864864349365
+    ]
+   ],
+   "ms_greedy": 131.43,
+   "ms": 326.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-002": {
+   "raw": "TEACH | Bram | employer | Copperline Press\nTEACH | Bram | occupation | driver",
+   "greedy_lp": -0.0006715656060549691,
+   "beams": [
+    [
+     "TEACH | Bram | employer | Copperline Press\nTEACH | Bram | occupation | driver",
+     -0.0007113780011422932
+    ],
+    [
+     "TEACH | Bram | employer | Copperline Press\nTEACH | Bram | occupation | driver",
+     -8.599780082702637
+    ],
+    [
+     "TEACH | Bram | employer | Copperline Press\nTEACH | Bram | occupation | Driver",
+     -9.375714302062988
+    ],
+    [
+     "TEACH | Bram | employer | Copperline Press\nTEACH | Bram | occupation | driver",
+     -9.474525451660156
+    ]
+   ],
+   "ms_greedy": 95.2,
+   "ms": 221.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "employer",
+      "value": "Copperline Press"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "occupation",
+      "value": "driver"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-003": {
+   "raw": "TEACH | Caspian | occupation | night-shift baker\nTEACH | Caspian | favorite_food | rye bread",
+   "greedy_lp": -0.6526898240311354,
+   "beams": [
+    [
+     "TEACH | Caspian | occupation | night-shift baker\nTEACH | Caspian | favorite_food | rye bread",
+     -0.6161248683929443
+    ],
+    [
+     "TEACH | Caspian | occupation | night-shift baker\nTEACH | Caspian | hobby | rye bread",
+     -1.0549511909484863
+    ],
+    [
+     "TEACH | Caspian | occupation | baker\nTEACH | Caspian | favorite_food | rye bread",
+     -3.860368251800537
+    ],
+    [
+     "TEACH | Caspian | occupation | night-shift baker\nTEACH | Caspian | favorite_bread | rye bread",
+     -3.99126935005188
+    ]
+   ],
+   "ms_greedy": 111.19,
+   "ms": 257.93,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Caspian",
+      "relation": "occupation",
+      "value": "night-shift baker"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-004": {
+   "raw": "TEACH | Dara | language | Korean",
+   "greedy_lp": -0.0041376543090052564,
+   "beams": [
+    [
+     "TEACH | Dara | language | Korean",
+     -0.0042107244953513145
+    ],
+    [
+     "TEACH | Dara | language_of_work_or_name | Korean",
+     -6.772924423217773
+    ],
+    [
+     "TEACH | Dara | language | Korean\nTEACH | Dara | mother | Korean",
+     -8.368355751037598
+    ],
+    [
+     "NONE",
+     -8.50021743774414
+    ]
+   ],
+   "ms_greedy": 56.13,
+   "ms": 173.26,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Dara",
+      "relation": "language",
+      "value": "Korean",
+      "why": "UNSURE",
+      "margin": 6.768713698722422
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-005": {
+   "raw": "TEACH | Juno | place_of_birth | Tarnwick\nTEACH | Juno | date_of_birth | 2010",
+   "greedy_lp": -4.815375264404295,
+   "beams": [
+    [
+     "TEACH | Juno | place_of_birth | Tarnwick\nTEACH | Juno | festival | harbor festival",
+     -2.548109769821167
+    ],
+    [
+     "TEACH | Juno | place_of_birth | Tarnwick\nTEACH | Juno | event | harbor festival",
+     -2.6446516513824463
+    ],
+    [
+     "TEACH | Juno | place_of_birth | Tarnwick\nTEACH | Juno | date_of_birth | 2010",
+     -4.792258262634277
+    ],
+    [
+     "TEACH | Juno | place_of_birth | Tarnwick\nTEACH | Juno | date_of_birth | 2015",
+     -4.793778419494629
+    ]
+   ],
+   "ms_greedy": 171.44,
+   "ms": 349.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Juno",
+      "relation": "place_of_birth",
+      "value": "Tarnwick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-006": {
+   "raw": "TEACH | Essie | dog | Biscuit",
+   "greedy_lp": -0.006882826475298032,
+   "beams": [
+    [
+     "TEACH | Essie | dog | Biscuit",
+     -0.007763870060443878
+    ],
+    [
+     "TEACH | Essie | dog | Biscuit last spring",
+     -5.946951389312744
+    ],
+    [
+     "TEACH | Essie | rescue_dog | Biscuit",
+     -6.288163661956787
+    ],
+    [
+     "TEACH | Essie | rescue_animal | Biscuit",
+     -7.287968635559082
+    ]
+   ],
+   "ms_greedy": 63.91,
+   "ms": 150.89,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Essie",
+      "relation": "dog",
+      "value": "Biscuit",
+      "why": "UNSURE",
+      "margin": 5.9391875192523
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-007": {
+   "raw": "TEACH | Imogen | employer | Wexley Community School",
+   "greedy_lp": -0.0001279079519207471,
+   "beams": [
+    [
+     "TEACH | Imogen | employer | Wexley Community School",
+     -0.0001410200638929382
+    ],
+    [
+     "TEACH |Imogen | employer | Wexley Community School",
+     -10.000463485717773
+    ],
+    [
+     "TEACH | Immogen | employer | Wexley Community School",
+     -10.168852806091309
+    ],
+    [
+     "TEACH | Imogen | employer | WexleyCommunitySchool",
+     -11.28913688659668
+    ]
+   ],
+   "ms_greedy": 71.52,
+   "ms": 158.22,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Imogen",
+      "relation": "employer",
+      "value": "Wexley Community School"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-008": {
+   "raw": "TEACH | Niko | employer | the Marrowgate Rowing Club",
+   "greedy_lp": -0.7820650912751077,
+   "beams": [
+    [
+     "TEACH | Niko | employer | the Marrowgate Rowing Club",
+     -0.827741265296936
+    ],
+    [
+     "TEACH | Niko | employer | the Marrowgate Rowing Club",
+     -0.9218374490737915
+    ],
+    [
+     "TEACH |niko | employer | the Marrowgate Rowing Club",
+     -3.8102669715881348
+    ],
+    [
+     "TEACH | Nikingo | employer | the Marrowgate Rowing Club",
+     -3.999330520629883
+    ]
+   ],
+   "ms_greedy": 79.6,
+   "ms": 182.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Niko",
+      "relation": "employer",
+      "value": "the Marrowgate Rowing Club"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-009": {
+   "raw": "TEACH | My | stepsister | Lara\nTEACH | Lara | city | Vexford",
+   "greedy_lp": -5.5789663662153544e-05,
+   "beams": [
+    [
+     "TEACH | My | stepsister | Lara\nTEACH | Lara | city | Vexford",
+     -5.59088985028211e-05
+    ],
+    [
+     "TEACH | My | stepsisters | Lara\nTEACH | Lara | city | Vexford",
+     -12.250076293945312
+    ],
+    [
+     "TEACH |My | stepsister | Lara\nTEACH | Lara | city | Vexford",
+     -12.30492115020752
+    ],
+    [
+     "TEACH | my | stepsister | Lara\nTEACH | Lara | city | Vexford",
+     -12.875052452087402
+    ]
+   ],
+   "ms_greedy": 107.19,
+   "ms": 239.45,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-010": {
+   "raw": "TEACH | My | roommate | Juno\nTEACH | Juno | employer | Copperline Press",
+   "greedy_lp": -0.0002102737991336312,
+   "beams": [
+    [
+     "TEACH | My | roommate | Juno\nTEACH | Juno | employer | Copperline Press",
+     -0.00022803276078775525
+    ],
+    [
+     "TEACH | My | housemate | Juno\nTEACH | Juno | employer | Copperline Press",
+     -9.819923400878906
+    ],
+    [
+     "TEACH | My | house_mate | Juno\nTEACH | Juno | employer | Copperline Press",
+     -9.883931159973145
+    ],
+    [
+     "TEACH | My | partner | Juno\nTEACH | Juno | employer | Copperline Press",
+     -10.25023365020752
+    ]
+   ],
+   "ms_greedy": 103.39,
+   "ms": 230.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Juno",
+      "relation": "employer",
+      "value": "Copperline Press"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-011": {
+   "raw": "TEACH | Niko | instrument | cello\nTEACH | Niko | quartet | weekend",
+   "greedy_lp": -1.7081660316159386,
+   "beams": [],
+   "ms_greedy": 103.57,
+   "ms": 103.62,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-012": {
+   "raw": "TEACH | My | neighbour | Kella\nTEACH | Kella | ladder | my",
+   "greedy_lp": -0.07848301648794376,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | ladder | my",
+     -0.07588256150484085
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | ladder | me",
+     -3.5754144191741943
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | ladder | My",
+     -3.7005958557128906
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kellar | ladder | my",
+     -5.633123397827148
+    ]
+   ],
+   "ms_greedy": 95.51,
+   "ms": 213.89,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Kella"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-013": {
+   "raw": "TEACH | Our | dog | Biscuit\nTEACH | Biscuit | sleep | the porch every afternoon",
+   "greedy_lp": -1.1448854237155999,
+   "beams": [
+    [
+     "TEACH | Our | dog | Biscuit\nTEACH | Biscuit | sleep | the porch every afternoon",
+     -1.1439687013626099
+    ],
+    [
+     "TEACH | Our | dog | Biscuit\nTEACH | Biscuit | sleep | on the porch every afternoon",
+     -2.0802958011627197
+    ],
+    [
+     "TEACH | Our | dog | Biscuit\nTEACH | Biscuit | sleeping_place | the porch",
+     -2.372762680053711
+    ],
+    [
+     "TEACH | Our | dog | Biscuit\nTEACH | Biscuit | sleeps | on the porch every afternoon",
+     -2.8812122344970703
+    ]
+   ],
+   "ms_greedy": 123.69,
+   "ms": 276.11,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "dog",
+      "value": "Biscuit"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-014": {
+   "raw": "TEACH | We | landlord | Pellwick\nTEACH | We | building | bright room\nTEACH | We | above_the_bakery | landlord | Pellwick",
+   "greedy_lp": -7.16250542096676,
+   "beams": [],
+   "ms_greedy": 173.64,
+   "ms": 173.79,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-015": {
+   "raw": "TEACH | My | two_sister | Lara\nTEACH | Lara | city | Vexford",
+   "greedy_lp": -0.8970973142760243,
+   "beams": [
+    [
+     "TEACH | My | two_sister | Lara\nTEACH | Lara | city | Vexford",
+     -0.832830548286438
+    ],
+    [
+     "TEACH | My | two | Lara\nTEACH | Lara | city | Vexford",
+     -1.6961054801940918
+    ],
+    [
+     "TEACH | My | two_sisters | Lara\nTEACH | Lara | city | Vexford",
+     -2.0404515266418457
+    ],
+    [
+     "TEACH | My | sisters | Lara\nTEACH | Lara | city | Vexford",
+     -2.330258846282959
+    ]
+   ],
+   "ms_greedy": 115.35,
+   "ms": 257.7,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-016": {
+   "raw": "TEACH | My | cousin | Dara\nTEACH | Dara | city | Zellmoor",
+   "greedy_lp": -3.516661644198393e-05,
+   "beams": [
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | city | Zellmoor",
+     -3.528582601575181e-05
+    ],
+    [
+     "TEACH |My | cousin | Dara\nTEACH | Dara | city | Zellmoor",
+     -11.514220237731934
+    ],
+    [
+     "TEACH | My | neighbour | Dara\nTEACH | Dara | city | Zellmoor",
+     -12.750035285949707
+    ],
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | city | Zellmoor<|im_start|>",
+     -13.600794792175293
+    ]
+   ],
+   "ms_greedy": 107.24,
+   "ms": 249.71,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Dara"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Dara",
+      "relation": "city",
+      "value": "Zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-017": {
+   "raw": "TEACH | Petra | friend | Jona\nTEACH | Jona | employer | Kessar Transit",
+   "greedy_lp": -0.0021501264512480134,
+   "beams": [
+    [
+     "TEACH | Petra | friend | Jona\nTEACH | Jona | employer | Kessar Transit",
+     -0.002178467344492674
+    ],
+    [
+     "TEACH |Petra | friend | Jona\nTEACH | Jona | employer | Kessar Transit",
+     -7.689929008483887
+    ],
+    [
+     "TEACH | Petra | friend | Jona\nTEACH | Jona | work_location | Kessar Transit",
+     -8.274595260620117
+    ],
+    [
+     "TEACH | Petra | friend | Jona\nTEACH | Jona | work_or_ employer | Kessar Transit",
+     -8.81095027923584
+    ]
+   ],
+   "ms_greedy": 111.1,
+   "ms": 268.57,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "friend",
+      "value": "Jona"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Jona",
+      "relation": "employer",
+      "value": "Kessar Transit",
+      "why": "UNSURE",
+      "margin": 8.272416793275625
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-018": {
+   "raw": "TEACH | My | friend | Jona livs\nTEACH | Jona livs | city | Dunmere\nTEACH | Jona livs | neighbour | the mill",
+   "greedy_lp": -0.6574270585908693,
+   "beams": [
+    [
+     "TEACH | My | friend | Jona livs\nTEACH | Jona livs | city | Dunmere\nTEACH | Jona livs | neighbour | the mill",
+     -0.6694081425666809
+    ],
+    [
+     "TEACH | My | friend | Jona livs\nTEACH | Jona livs | city | Dunmere\nTEACH | Jona livs | location_of_formation | mill",
+     -2.4164626598358154
+    ],
+    [
+     "TEACH | My | friend | Jona livs\nTEACH | Jona livs | city | Dunmere\nTEACH | Jona livs | neighbour | The mill",
+     -2.450925350189209
+    ],
+    [
+     "TEACH | My | friend | Jona livs\nTEACH | Jona livs | city | Dunmere\nTEACH | Jona livs | location_of_formation | the mill",
+     -3.1666598320007324
+    ]
+   ],
+   "ms_greedy": 165.99,
+   "ms": 394.68,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Jona livs"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Jona livs",
+      "relation": "city",
+      "value": "Dunmere"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Jona livs",
+      "relation": "neighbour",
+      "value": "the mill",
+      "why": "UNSURE",
+      "margin": 1.7470545172691345
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-019": {
+   "raw": "TEACH | Essie werks | occupation | receptionist",
+   "greedy_lp": -0.028697487505780828,
+   "beams": [
+    [
+     "TEACH | Essie werks | occupation | receptionist",
+     -0.02568666823208332
+    ],
+    [
+     "TEACH | Essie werks | occupation | receptionist\nTEACH | Essie werks | employer | Fernway Clinic",
+     -3.7775344848632812
+    ],
+    [
+     "TEACH | Essie werks | occupation | receptionist | Fernway Clinic",
+     -6.985215187072754
+    ],
+    [
+     "TEACH | Essie | occupation | receptionist",
+     -8.196240425109863
+    ]
+   ],
+   "ms_greedy": 71.72,
+   "ms": 234.25,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Essie werks",
+      "relation": "occupation",
+      "value": "receptionist",
+      "why": "UNSURE",
+      "margin": 8.17055375687778
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-020": {
+   "raw": "TEACH | marlo | city | dunmere\nTEACH | marlo | brother | brother",
+   "greedy_lp": -0.34023713555421864,
+   "beams": [
+    [
+     "TEACH | marlo | city | dunmere\nTEACH | marlo | brother | brother",
+     -0.34662115573883057
+    ],
+    [
+     "TEACH | marlo | city | dunmere\nTEACH | marlo | brother | brother",
+     -3.5115396976470947
+    ],
+    [
+     "TEACH | marlo | city | dunmere\nTEACH | marlo | brother | his",
+     -3.9855799674987793
+    ],
+    [
+     "TEACH | marlo | city | dunmere\nTEACH | marlo | brother | robert",
+     -4.3147406578063965
+    ]
+   ],
+   "ms_greedy": 103.12,
+   "ms": 245.58,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "marlo",
+      "relation": "city",
+      "value": "dunmere"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "marlo",
+      "relation": "brother",
+      "value": "brother",
+      "why": "UNSURE",
+      "margin": 3.6389588117599487
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-021": {
+   "raw": "TEACH | essie | cat | mochi",
+   "greedy_lp": -0.07439456311179526,
+   "beams": [
+    [
+     "TEACH | essie | cat | mochi",
+     -0.06650682538747787
+    ],
+    [
+     "TEACH | esie | cat | mochi",
+     -3.3203625679016113
+    ],
+    [
+     "TEACH | essie | adopted_animal | mochi",
+     -6.164842128753662
+    ],
+    [
+     "TEACH | essie | pet | mochi",
+     -6.566508769989014
+    ]
+   ],
+   "ms_greedy": 63.83,
+   "ms": 151.02,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "essie",
+      "relation": "cat",
+      "value": "mochi",
+      "why": "UNSURE",
+      "margin": 6.500001944601536
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-022": {
+   "raw": "TEACH | I | hometown | Sember\nTEACH | I | house | full_of_cousins",
+   "greedy_lp": -1.3555102603387397,
+   "beams": [
+    [
+     "TEACH | I | hometown | Sember\nTEACH | I | house | full_of_cousins",
+     -1.4789141416549683
+    ],
+    [
+     "TEACH | I | hometown | Sember\nTEACH | I | house | cousins",
+     -2.290868043899536
+    ],
+    [
+     "TEACH | I | hometown | Sember\nTEACH | Sember | house | cousins",
+     -3.3509747982025146
+    ],
+    [
+     "TEACH | I | hometown | Sember\nTEACH | Sember | number_of_cousins | 1",
+     -3.5189380645751953
+    ]
+   ],
+   "ms_greedy": 115.02,
+   "ms": 267.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "hometown",
+      "value": "Sember"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-023": {
+   "raw": "TEACH | Willa | school | Brackle College",
+   "greedy_lp": -0.002061867155532582,
+   "beams": [
+    [
+     "TEACH | Willa | school | Brackle College",
+     -0.0018781311810016632
+    ],
+    [
+     "TEACH | Willa | educated_at | Brackle College",
+     -6.501862525939941
+    ],
+    [
+     "TEACH | Willa | school | Brackel College",
+     -8.377725601196289
+    ],
+    [
+     "TEACH | Willa | school | Brackle College",
+     -9.626154899597168
+    ]
+   ],
+   "ms_greedy": 67.99,
+   "ms": 159.83,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Willa",
+      "relation": "school",
+      "value": "Brackle College",
+      "why": "UNSURE",
+      "margin": 6.49998439475894
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-024": {
+   "raw": "TEACH | Petra | spouse | Soren\nTEACH | Soren | place_of_birth | Tarnwick",
+   "greedy_lp": -0.48346263650260823,
+   "beams": [
+    [
+     "TEACH | Petra | spouse | Soren\nTEACH | Soren | place_of_birth | Tarnwick",
+     -0.45827460289001465
+    ],
+    [
+     "TEACH | Petra | spouse | Soren\nTEACH | Soren | place_of_death | Tarnwick",
+     -1.8957750797271729
+    ],
+    [
+     "TEACH | Petra | wedding | Tarnwick",
+     -2.9526078701019287
+    ],
+    [
+     "TEACH | Petra | wedding | Soren\nTEACH | Soren | place_of_birth | Tarnwick",
+     -2.9601900577545166
+    ]
+   ],
+   "ms_greedy": 122.71,
+   "ms": 275.43,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "spouse",
+      "value": "Soren"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Soren",
+      "relation": "place_of_birth",
+      "value": "Tarnwick",
+      "why": "UNSURE",
+      "margin": 1.4375004768371582
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-025": {
+   "raw": "TEACH | Petra | brother | Niko\nTEACH | Petra | employer | Halden Mills",
+   "greedy_lp": -0.012940908594671896,
+   "beams": [
+    [
+     "TEACH | Petra | brother | Niko\nTEACH | Petra | employer | Halden Mills",
+     -0.013029038906097412
+    ],
+    [
+     "TEACH | Petra | brother |niko\nTEACH | Petra | employer | Halden Mills",
+     -5.006450653076172
+    ],
+    [
+     "TEACH | Petra | brother |niko\nTEACH | Petra | employer | halden mills",
+     -5.5166401863098145
+    ],
+    [
+     "TEACH |Petra | brother | Niko\nTEACH |Petra | employer | Halden Mills",
+     -7.270421028137207
+    ]
+   ],
+   "ms_greedy": 110.75,
+   "ms": 248.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "brother",
+      "value": "Niko"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "employer",
+      "value": "Halden Mills"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-026": {
+   "raw": "TEACH | My | sister | Lara\nTEACH | Lara | city | Vexford",
+   "greedy_lp": -0.0001448319075691984,
+   "beams": [
+    [
+     "TEACH | My | sister | Lara\nTEACH | Lara | city | Vexford",
+     -0.00015496351988986135
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | My | city | Vexford",
+     -9.437667846679688
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | She | city | Vexford",
+     -11.562704086303711
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | NONE | city | Vexford",
+     -12.255488395690918
+    ]
+   ],
+   "ms_greedy": 102.88,
+   "ms": 230.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Lara"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-027": {
+   "raw": "TEACH | My | brother | Bram\nTEACH | Bram | employer | Kessar Transit",
+   "greedy_lp": -0.11925034256864109,
+   "beams": [
+    [
+     "TEACH | My | brother | Bram\nTEACH | Bram | employer | Kessar Transit",
+     -0.11838748306035995
+    ],
+    [
+     "TEACH | My | brother | Bram\nTEACH | Bram | car | Kessar Transit",
+     -2.3686776161193848
+    ],
+    [
+     "TEACH | My | brother | Bram\nTEACH | Bram | manufacturer | Kessar Transit",
+     -4.743412494659424
+    ],
+    [
+     "TEACH | My | brother | Bram\nTEACH | Bram | work | Kessar Transit",
+     -6.376369953155518
+    ]
+   ],
+   "ms_greedy": 99.96,
+   "ms": 222.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Bram"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "employer",
+      "value": "Kessar Transit",
+      "why": "UNSURE",
+      "margin": 4.625025011599064
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-028": {
+   "raw": "TEACH | My | cousin | Dara\nTEACH | Dara | language | Korean",
+   "greedy_lp": -0.0005179290842463047,
+   "beams": [
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | language | Korean",
+     -0.0005369968130253255
+    ],
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | language_of_work_or_name | Korean",
+     -8.40591812133789
+    ],
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | language | Korean_at_home",
+     -10.379199981689453
+    ],
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | language | Korean at home",
+     -10.500566482543945
+    ]
+   ],
+   "ms_greedy": 94.91,
+   "ms": 252.24,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Dara"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Dara",
+      "relation": "language",
+      "value": "Korean",
+      "why": "UNSURE",
+      "margin": 8.405381124524865
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-029": {
+   "raw": "TEACH | My | neighbour | Kella\nTEACH | Kella | city | Zellmoor",
+   "greedy_lp": -0.006454573026374533,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | city | Zellmoor",
+     -0.006012996193021536
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | My | city | Zellmoor",
+     -6.190963268280029
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kellar | city | Zellmoor",
+     -6.508296489715576
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kelle | city | Zellmoor",
+     -7.756012439727783
+    ]
+   ],
+   "ms_greedy": 107.14,
+   "ms": 239.08,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Kella"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Kella",
+      "relation": "city",
+      "value": "Zellmoor",
+      "why": "UNSURE",
+      "margin": 6.184950272087008
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-030": {
+   "raw": "TEACH | My | boss | Petra\nTEACH | Petra | city | Bramwell",
+   "greedy_lp": -0.006735276757360964,
+   "beams": [
+    [
+     "TEACH | My | boss | Petra\nTEACH | Petra | city | Bramwell",
+     -0.005776027217507362
+    ],
+    [
+     "TEACH | My | boss | Petra\nTEACH | My | city | Bramwell",
+     -6.318280220031738
+    ],
+    [
+     "TEACH | My | boss | Petra\nTEACH |Petra | city | Bramwell",
+     -6.755984783172607
+    ],
+    [
+     "TEACH | My | boss | Petra\nTEACH | petra | city | Bramwell",
+     -7.255848407745361
+    ]
+   ],
+   "ms_greedy": 99.26,
+   "ms": 221.49,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Petra"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "city",
+      "value": "Bramwell",
+      "why": "UNSURE",
+      "margin": 6.312504192814231
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-031": {
+   "raw": "TEACH | My | mother | Odette\nTEACH | Odette | employer | Loomfield Studio",
+   "greedy_lp": -0.0034891046811722504,
+   "beams": [
+    [
+     "TEACH | My | mother | Odette\nTEACH | Odette | employer | Loomfield Studio",
+     -0.003570728236809373
+    ],
+    [
+     "TEACH | My | mother | ODette\nTEACH | ODette | employer | Loomfield Studio",
+     -7.2567524909973145
+    ],
+    [
+     "TEACH | My | mother | Odette\nTEACH | Odette | employer | Loomfield Studios",
+     -7.481993198394775
+    ],
+    [
+     "TEACH | My | mother | Odette\nTEACH | ODette | employer | Loomfield Studio",
+     -7.631074905395508
+    ]
+   ],
+   "ms_greedy": 115.73,
+   "ms": 263.76,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "mother",
+      "value": "Odette"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Odette",
+      "relation": "employer",
+      "value": "Loomfield Studio"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-032": {
+   "raw": "TEACH | Our | home | Alder Street",
+   "greedy_lp": -1.1289523886848585,
+   "beams": [
+    [
+     "TEACH | Our | home | Alder Street",
+     -1.0593291521072388
+    ],
+    [
+     "TEACH | our | home | Alder Street",
+     -1.4858672618865967
+    ],
+    [
+     "TEACH | Our | city | Zellmoor\nTEACH | Our | home | Alder Street",
+     -2.839327573776245
+    ],
+    [
+     "TEACH | Zellmoor | reason_of_formation | a long story\nTEACH | Zellmoor | home | Alder Street",
+     -5.232816219329834
+    ]
+   ],
+   "ms_greedy": 59.88,
+   "ms": 236.85,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "home",
+      "value": "Alder Street"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-033": {
+   "raw": "TEACH | Pellwick | landlord | Mill Lane",
+   "greedy_lp": -3.1530231779654443,
+   "beams": [],
+   "ms_greedy": 63.84,
+   "ms": 63.97,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-034": {
+   "raw": "TEACH | I | place_of_birth | Tarnwick\nTEACH | I | favorite_place | Tarnwick",
+   "greedy_lp": -0.4905402566257848,
+   "beams": [
+    [
+     "TEACH | I | place_of_birth | Tarnwick\nTEACH | I | favorite_place | Tarnwick",
+     -0.5239750742912292
+    ],
+    [
+     "TEACH | I | place_of_birth | Tarnwick\nTEACH | I | favorite_location | Tarnwick",
+     -1.6530418395996094
+    ],
+    [
+     "TEACH | I | place_of_birth | Tarnwick\nTEACH | I | hometown | Tarnwick",
+     -2.807720422744751
+    ],
+    [
+     "TEACH | I | place_of_birth | Tarnwick\nTEACH | I | love | Tarnwick",
+     -3.377323865890503
+    ]
+   ],
+   "ms_greedy": 126.44,
+   "ms": 283.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "place_of_birth",
+      "value": "Tarnwick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-035": {
+   "raw": "TEACH | I | school | Brackle College\nTEACH | I | favorite_color | night bus home",
+   "greedy_lp": -2.568557762467087,
+   "beams": [
+    [
+     "TEACH | I | school | Brackle College\nTEACH | I | favorite_animal | night bus home",
+     -2.2747251987457275
+    ],
+    [
+     "TEACH | I | school | Brackle College\nTEACH | I | favorite_color | night bus home",
+     -2.5691416263580322
+    ],
+    [
+     "TEACH | I | school | Brackle College\nTEACH | I | favorite_hobby | the night bus home",
+     -2.7673702239990234
+    ],
+    [
+     "TEACH | I | school | Brackle College\nTEACH | I | favorite_color | night bus",
+     -3.569126844406128
+    ]
+   ],
+   "ms_greedy": 114.98,
+   "ms": 277.52,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "school",
+      "value": "Brackle College"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "favorite_color",
+      "value": "night bus home",
+      "why": "UNSURE",
+      "margin": 0.9999852180480957
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-036": {
+   "raw": "TEACH | I | employer | Wexley Community School\nTEACH | I | daily | bike",
+   "greedy_lp": -1.1965429606107634,
+   "beams": [
+    [
+     "TEACH | I | employer | Wexley Community School\nTEACH | I | daily | bike",
+     -1.2081128358840942
+    ],
+    [
+     "TEACH | I | employer | Wexley Community School\nTEACH | I | mode_of_transport | bike",
+     -1.6411335468292236
+    ],
+    [
+     "TEACH | I | employer | Wexley Community School\nTEACH | I | work_location | daily",
+     -2.836235284805298
+    ],
+    [
+     "TEACH | I | employer | Wexley Community School\nTEACH | I | mode_of_transport | bicycle",
+     -3.1408798694610596
+    ]
+   ],
+   "ms_greedy": 103.48,
+   "ms": 286.4,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "employer",
+      "value": "Wexley Community School"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-037": {
+   "raw": "TEACH | My | half_brother | Soren\nTEACH | Soren | city | Kessar\nTEACH | Soren | location_of_formation | depot",
+   "greedy_lp": -0.7705373655258256,
+   "beams": [
+    [
+     "TEACH | My | half_brother | Soren\nTEACH | Soren | city | Kessar\nTEACH | Soren | location_of_formation | depot",
+     -0.7146508693695068
+    ],
+    [
+     "TEACH | My | half_brother | Soren\nTEACH | Soren | city | Kessar\nTEACH | Soren | depot | location",
+     -2.2528414726257324
+    ],
+    [
+     "TEACH | My | half_brother | Soren\nTEACH | Soren | city | Kessar\nTEACH | Soren | location | depot",
+     -2.7974374294281006
+    ],
+    [
+     "TEACH | My | half_brother | Soren\nTEACH | Soren | city | Kessar\nTEACH | Soren | location | the depot",
+     -2.797471523284912
+    ]
+   ],
+   "ms_greedy": 165.63,
+   "ms": 378.22,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Soren",
+      "relation": "city",
+      "value": "Kessar"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Soren",
+      "relation": "location_of_formation",
+      "value": "depot"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-038": {
+   "raw": "TEACH | My | mother_in_law | Celine\nTEACH | Celine | city | Drellin",
+   "greedy_lp": -0.00016295654528164505,
+   "beams": [
+    [
+     "TEACH | My | mother_in_law | Celine\nTEACH | Celine | city | Drellin",
+     -0.00016200260142795742
+    ],
+    [
+     "TEACH | My | mother_in_law | Celine\nTEACH | Celine | city | Drelin",
+     -10.000162124633789
+    ],
+    [
+     "TEACH | My |mother_in_law | Celine\nTEACH | Celine | city | Drellin",
+     -11.626112937927246
+    ],
+    [
+     "TEACH | My | mother_in_law | Celine\nTEACH | Celine | city | Dellin",
+     -11.889213562011719
+    ]
+   ],
+   "ms_greedy": 130.59,
+   "ms": 278.07,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Celine",
+      "relation": "city",
+      "value": "Drellin"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-039": {
+   "raw": "TEACH | My | guitar_teacher | Niko\nTEACH | My | city | Sember",
+   "greedy_lp": -1.792518742412284,
+   "beams": [
+    [
+     "TEACH | My | teacher | Niko\nTEACH | Niko | city | Sember",
+     -1.6698774099349976
+    ],
+    [
+     "TEACH | My | guitar teacher | Niko\nTEACH | My | city | Sember",
+     -1.6828750371932983
+    ],
+    [
+     "TEACH | My | guitar_teacher | Niko\nTEACH | My | city | Sember",
+     -1.789875864982605
+    ],
+    [
+     "TEACH | My | teacher | Niko\nTEACH | My | city | Sember",
+     -1.9198691844940186
+    ]
+   ],
+   "ms_greedy": 103.12,
+   "ms": 230.08,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "city",
+      "value": "Sember",
+      "why": "UNSURE",
+      "margin": -0.11999845504760742
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-040": {
+   "raw": "TEACH | My | doctor | Farrah\nTEACH | Farrah | employer | Fernway Clinic",
+   "greedy_lp": -0.5905128171863012,
+   "beams": [
+    [
+     "TEACH | My | doctor | Farrah\nTEACH | Farrah | employer | Fernway Clinic",
+     -0.5381325483322144
+    ],
+    [
+     "TEACH | My | doctor | Farrah\nTEACH | My | employer | Fernway Clinic",
+     -0.9129888415336609
+    ],
+    [
+     "TEACH | My | doctor | Farrah\nTEACH | She | employer | Fernway Clinic",
+     -5.850544452667236
+    ],
+    [
+     "TEACH | My | doctor | Farrah\nTEACH | my | employer | Fernway Clinic",
+     -6.225460529327393
+    ]
+   ],
+   "ms_greedy": 102.8,
+   "ms": 229.9,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "doctor",
+      "value": "Farrah"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Farrah",
+      "relation": "employer",
+      "value": "Fernway Clinic",
+      "why": "UNSURE",
+      "margin": 0.37485629320144653
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-041": {
+   "raw": "TEACH | The warm dryer | cat | Miso",
+   "greedy_lp": -0.7359867930863402,
+   "beams": [
+    [
+     "TEACH | the warm dryer | cat | Miso",
+     -0.7655021548271179
+    ],
+    [
+     "TEACH | The warm dryer | cat | Miso",
+     -0.7893816828727722
+    ],
+    [
+     "TEACH | The warm dryer | rule | Our cat Miso",
+     -5.042595386505127
+    ],
+    [
+     "TEACH | The warm dryer | rule | Our | cat | Miso",
+     -5.182454586029053
+    ]
+   ],
+   "ms_greedy": 64.16,
+   "ms": 160.9,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "The warm dryer",
+      "relation": "cat",
+      "value": "Miso"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-042": {
+   "raw": "TEACH | We | city | Loomfield\nTEACH | Loomfield | best_bakery | Our | street",
+   "greedy_lp": -2.420638065200869,
+   "beams": [
+    [
+     "TEACH | We | city | Loomfield\nTEACH | Loomfield | best_bakery | Our | street",
+     -2.4152448177337646
+    ],
+    [
+     "TEACH | We | city | Loomfield\nTEACH | Loomfield | best_bakery | Our street",
+     -2.860830307006836
+    ],
+    [
+     "TEACH | We | city | Loomfield\nTEACH | Loomfield | best_bakery | Our_street",
+     -3.563990831375122
+    ],
+    [
+     "TEACH | We | city | Loomfield\nTEACH | Loomfield | best_bakery | my_friend",
+     -3.920088291168213
+    ]
+   ],
+   "ms_greedy": 126.44,
+   "ms": 284.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "city",
+      "value": "Loomfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-043": {
+   "raw": "TEACH | Our | neighbour | Joss\nTEACH | Joss | mail | when_we_travel",
+   "greedy_lp": -2.8343845472723146,
+   "beams": [
+    [
+     "TEACH | Our | neighbour | Joss\nTEACH | Joss | collection | mail",
+     -1.746730923652649
+    ],
+    [
+     "TEACH | Our | neighbour | Joss\nTEACH | Joss | mail | when_we_travel",
+     -2.798408269882202
+    ],
+    [
+     "TEACH | Our | neighbour | Joss\nTEACH | Joss | collection | our mail",
+     -3.153064727783203
+    ],
+    [
+     "TEACH | Our | neighbour | Joss\nTEACH | Joss | mail | when | travel",
+     -3.2106964588165283
+    ]
+   ],
+   "ms_greedy": 110.71,
+   "ms": 248.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "neighbour",
+      "value": "Joss"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-044": {
+   "raw": "TEACH | I | occupation | pilot\nTEACH | I | employer | Kessar Transit",
+   "greedy_lp": -0.24360898597531389,
+   "beams": [
+    [
+     "TEACH | I | occupation | pilot\nTEACH | I | employer | Kessar Transit",
+     -0.26383620500564575
+    ],
+    [
+     "TEACH | I | occupation | pilot\nTEACH | I | work_location | Kessar Transit",
+     -1.7983914613723755
+    ],
+    [
+     "TEACH | I | occupation | pilot\nTEACH | I | place_of_work | Kessar Transit",
+     -4.383663177490234
+    ],
+    [
+     "TEACH | I | training | pilot\nTEACH | I | occupation | load bags\nTEACH | I | employer | Kessar Transit",
+     -4.879220962524414
+    ]
+   ],
+   "ms_greedy": 98.98,
+   "ms": 271.67,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "occupation",
+      "value": "pilot"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "employer",
+      "value": "Kessar Transit",
+      "why": "UNSURE",
+      "margin": 1.5345552563667297
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-045": {
+   "raw": "TEACH | Caspian | occupation | chef\nTEACH | Caspian | employer | Kessar Transit",
+   "greedy_lp": -0.6774203326890316,
+   "beams": [
+    [
+     "TEACH | Caspian | occupation | chef\nTEACH | Caspian | employer | Kessar Transit",
+     -0.6902033090591431
+    ],
+    [
+     "NONE",
+     -2.017815351486206
+    ],
+    [
+     "TEACH | Caspian | occupation | chef\nTEACH | Caspian | work_location | Kessar Transit",
+     -2.3059470653533936
+    ],
+    [
+     "TEACH | Caspian | occupation | chef\nTEACH | Caspian | occupation | truck driver",
+     -3.1347310543060303
+    ]
+   ],
+   "ms_greedy": 99.27,
+   "ms": 231.52,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Caspian",
+      "relation": "occupation",
+      "value": "chef",
+      "why": "UNSURE",
+      "margin": 1.327612042427063
+     },
+     {
+      "act": "TEACH",
+      "subject": "Caspian",
+      "relation": "employer",
+      "value": "Kessar Transit",
+      "why": "UNSURE",
+      "margin": 1.327612042427063
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-046": {
+   "raw": "TEACH | I | city | Zellmoor\nTEACH | I | landlord | Pellwick",
+   "greedy_lp": -0.2148064919092505,
+   "beams": [
+    [
+     "TEACH | I | city | Zellmoor\nTEACH | I | landlord | Pellwick",
+     -0.233368381857872
+    ],
+    [
+     "TEACH | I | city | Zellmoor\nTEACH | I | city | Pellwick",
+     -3.757863998413086
+    ],
+    [
+     "TEACH | I | city | Zellmoor\nTEACH | I | city_of_residence | Pellwick",
+     -4.616511344909668
+    ],
+    [
+     "TEACH | I | city | Zellmoor\nTEACH | Pellwick | landlord | I\nTEACH | I | city | Pellwick",
+     -5.232270240783691
+    ]
+   ],
+   "ms_greedy": 107.08,
+   "ms": 294.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-047": {
+   "raw": "TEACH | My | brothers | Soren\nTEACH | Soren | car | Kessar Transit",
+   "greedy_lp": -0.3333465980920991,
+   "beams": [],
+   "ms_greedy": 106.51,
+   "ms": 106.57,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-048": {
+   "raw": "TEACH | My | cousins | Dara\nTEACH | Dara | school | Brackle College",
+   "greedy_lp": -0.010338396606258016,
+   "beams": [
+    [
+     "TEACH | My | cousins | Dara\nTEACH | Dara | school | Brackle College",
+     -0.010608093813061714
+    ],
+    [
+     "TEACH | My | cousin | Dara\nTEACH | Dara | school | Brackle College",
+     -5.261894702911377
+    ],
+    [
+     "TEACH | My | cousins | Dara and Willa\nTEACH | Dara | school | Brackle College",
+     -6.215949535369873
+    ],
+    [
+     "TEACH | My | cousins | Dara and Willa\nTEACH | Dara | school | Brackle College\nTEACH | Willa | school | Brackle College",
+     -8.09517765045166
+    ]
+   ],
+   "ms_greedy": 106.94,
+   "ms": 319.11,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Dara",
+      "relation": "school",
+      "value": "Brackle College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-049": {
+   "raw": "TEACH | My | uncle | Raynor\nTEACH | Raynor | employer | Voss Harbor",
+   "greedy_lp": -0.0018960990059255778,
+   "beams": [
+    [
+     "TEACH | My | uncle | Raynor\nTEACH | Raynor | employer | Voss Harbor",
+     -0.001870128558948636
+    ],
+    [
+     "TEACH | My | uncle | Raynor\nTEACH | RayNor | employer | Voss Harbor",
+     -8.00213623046875
+    ],
+    [
+     "TEACH | My | uncle | RayNor\nTEACH | RayNor | employer | Voss Harbor",
+     -8.505460739135742
+    ],
+    [
+     "TEACH | My | uncle | Raynor\nTEACH |raynor | employer | Voss Harbor",
+     -8.691718101501465
+    ]
+   ],
+   "ms_greedy": 102.75,
+   "ms": 229.77,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "uncle",
+      "value": "Raynor"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Raynor",
+      "relation": "employer",
+      "value": "Voss Harbor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-050": {
+   "raw": "TEACH | My | sister | Lara\nTEACH | Lara | employer | Vexford Cannery",
+   "greedy_lp": -0.0010865113550835304,
+   "beams": [
+    [
+     "TEACH | My | sister | Lara\nTEACH | Lara | employer | Vexford Cannery",
+     -0.001116534462198615
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | Lara | employer | Vexford Canterbury",
+     -8.246990203857422
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | Lara | employer | Vexford Cannerry",
+     -8.911592483520508
+    ],
+    [
+     "TEACH | My | sister | Lara\nTEACH | Lara | employer | Vexford Canning",
+     -9.001212120056152
+    ]
+   ],
+   "ms_greedy": 110.78,
+   "ms": 253.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Lara"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "employer",
+      "value": "Vexford Cannery"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-051": {
+   "raw": "TEACH | My | neighbour | Kella\nTEACH | Kella | market | Tarnwick",
+   "greedy_lp": -1.7178976839355116,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | market | Tarnwick",
+     -1.6814277172088623
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | florist | Tarnwick market",
+     -2.1497530937194824
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | employer | Tarnwick market",
+     -2.7335455417633057
+    ],
+    [
+     "TEACH | My | neighbour | Kella\nTEACH | Kella | supplier | Tarnwick market",
+     -3.0476768016815186
+    ]
+   ],
+   "ms_greedy": 102.9,
+   "ms": 240.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Kella"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-052": {
+   "raw": "TEACH | Rima | brother | Joss\nTEACH | Rima | employer | Halden Mills",
+   "greedy_lp": -0.007843791504896558,
+   "beams": [
+    [
+     "TEACH | Rima | brother | Joss\nTEACH | Rima | employer | Halden Mills",
+     -0.008814548142254353
+    ],
+    [
+     "TEACH | Rima | brother | Joss\nTEACH | Joss | employer | Halden Mills",
+     -5.07108211517334
+    ],
+    [
+     "TEACH | Rima | brother | Joss\nTEACH | Rima | employer | Halden Mills",
+     -8.277274131774902
+    ],
+    [
+     "TEACH | Rima | brother | Joss\nTEACH | Riam | employer | Halden Mills",
+     -8.780888557434082
+    ]
+   ],
+   "ms_greedy": 110.89,
+   "ms": 248.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Rima",
+      "relation": "brother",
+      "value": "Joss"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Rima",
+      "relation": "employer",
+      "value": "Halden Mills",
+      "why": "UNSURE",
+      "margin": 5.0622675670310855
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-053": {
+   "raw": "TEACH | Essie | sister | Lara\nTEACH | Essie | city | Vexford",
+   "greedy_lp": -0.0005578177973717402,
+   "beams": [
+    [
+     "TEACH | Essie | sister | Lara\nTEACH | Essie | city | Vexford",
+     -0.0005498317768797278
+    ],
+    [
+     "TEACH |essie | sister | Lara\nTEACH |essie | city | vexford",
+     -8.978886604309082
+    ],
+    [
+     "TEACH | Esie | sister | Lara\nTEACH | Essie | city | Vexford",
+     -9.622306823730469
+    ],
+    [
+     "TEACH | Esie | sister | Lara\nTEACH | Esie | city | Vexford",
+     -9.872315406799316
+    ]
+   ],
+   "ms_greedy": 106.67,
+   "ms": 239.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Essie",
+      "relation": "sister",
+      "value": "Lara"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Essie",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-054": {
+   "raw": "TEACH | My | friend | Essie bron in Tarnwick during the festival",
+   "greedy_lp": -0.8433258466254401,
+   "beams": [
+    [
+     "TEACH | My | friend | Essie bron in Tarnwick during the festival",
+     -0.8000527620315552
+    ],
+    [
+     "TEACH | My | friend | Essie bron\nTEACH | Essie bron | place_of_birth | Tarnwick",
+     -1.819645881652832
+    ],
+    [
+     "TEACH | My | friend | Essie bron in Tarnwick\nTEACH | Essie bron in Tarnwick | festival | the festival",
+     -4.449365615844727
+    ],
+    [
+     "TEACH | My | friend | Essie bron in Tarnwick",
+     -4.549877166748047
+    ]
+   ],
+   "ms_greedy": 87.37,
+   "ms": 289.88,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Essie bron in Tarnwick during the festival",
+      "why": "UNSURE",
+      "margin": 1.0195931196212769
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-055": {
+   "raw": "TEACH | my | sister | lara\nTEACH | lara | city | vexford\nTEACH | lara | dog | myrkisn",
+   "greedy_lp": -10.80301627629958,
+   "beams": [
+    [
+     "TEACH | my | sister | lara\nTEACH | lara | city | vexford\nTEACH | lara | dog | dog",
+     -1.4403082132339478
+    ],
+    [
+     "TEACH | my | sister | lara\nTEACH | lara | city | vexford\nTEACH | lara | dog | my_dog",
+     -3.772585391998291
+    ],
+    [
+     "TEACH | my | sister | lara\nTEACH | lara | city | vexford\nTEACH | lara | dog | my | lara",
+     -3.84084415435791
+    ],
+    [
+     "TEACH | my | sister | lara\nTEACH | lara | city | vexford\nTEACH | lara | dog | lara",
+     -4.280244827270508
+    ]
+   ],
+   "ms_greedy": 157.57,
+   "ms": 346.85,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "sister",
+      "value": "lara"
+     },
+     {
+      "act": "TEACH",
+      "subject": "lara",
+      "relation": "city",
+      "value": "vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-056": {
+   "raw": "TEACH | marlo drayden hale | city | dunmere\nTEACH | marlo drayden hale | neighbour | the mill",
+   "greedy_lp": -0.2573329835733418,
+   "beams": [
+    [
+     "TEACH | marlo drayden hale | city | dunmere\nTEACH | marlo drayden hale | neighbour | the mill",
+     -0.24582061171531677
+    ],
+    [
+     "TEACH | marlo drayden hale | city | dunmere\nTEACH | marlo drayden hale | neighbour | the mill",
+     -2.3656809329986572
+    ],
+    [
+     "TEACH | milo drayden hale | city | dunmere\nTEACH | milo drayden hale | neighbour | the mill",
+     -3.7434749603271484
+    ],
+    [
+     "TEACH | marklo drayden hale | city | dunmere\nTEACH | marklo drayden hale | neighbour | the mill",
+     -3.870412826538086
+    ]
+   ],
+   "ms_greedy": 155.61,
+   "ms": 351.72,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "marlo drayden hale",
+      "relation": "city",
+      "value": "dunmere"
+     },
+     {
+      "act": "TEACH",
+      "subject": "marlo drayden hale",
+      "relation": "neighbour",
+      "value": "the mill"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-057": {
+   "raw": "TEACH | Petra Loomis Vane | employer | Wexley Community School",
+   "greedy_lp": -0.0012077011012578964,
+   "beams": [
+    [
+     "TEACH | Petra Loomis Vane | employer | Wexley Community School",
+     -0.0011469564633443952
+    ],
+    [
+     "TEACH |Petra Loomis Vane | employer | Wexley Community School",
+     -7.690098285675049
+    ],
+    [
+     "TEACH | petra loomis vane | employer | wexley community school",
+     -9.585853576660156
+    ],
+    [
+     "TEACH | Petra Loomis Vane Teahces | employer | Wexley Community School",
+     -9.712493896484375
+    ]
+   ],
+   "ms_greedy": 91.12,
+   "ms": 218.25,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra Loomis Vane",
+      "relation": "employer",
+      "value": "Wexley Community School"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-058": {
+   "raw": "TEACH | My | teacher | Imogen Hartley Vale\nTEACH | Imogen Hartley Vale | city | Sember",
+   "greedy_lp": -0.0018130440540389259,
+   "beams": [
+    [
+     "TEACH | My | teacher | Imogen Hartley Vale\nTEACH | Imogen Hartley Vale | city | Sember",
+     -0.0022630863822996616
+    ],
+    [
+     "TEACH | My | teacher | Imogen Hartley Vale\nTEACH | My | city | Sember",
+     -7.31453800201416
+    ],
+    [
+     "TEACH | My | teacher | Imogen Hartley Vale\nTEACH | Emilia Hartley Vale | city | Sember",
+     -9.03136920928955
+    ],
+    [
+     "TEACH | My | teacher | Imogen Hartley Vale\nTEACH | Idris | city | Sember",
+     -10.142065048217773
+    ]
+   ],
+   "ms_greedy": 159.97,
+   "ms": 353.71,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "teacher",
+      "value": "Imogen Hartley Vale"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Imogen Hartley Vale",
+      "relation": "city",
+      "value": "Sember",
+      "why": "UNSURE",
+      "margin": 7.3122749156318605
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-059": {
+   "raw": "TEACH | My | doctor | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | employer | Fernway Clinic",
+   "greedy_lp": -0.009380302688434483,
+   "beams": [
+    [
+     "TEACH | My | doctor | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | employer | Fernway Clinic",
+     -0.01027220394462347
+    ],
+    [
+     "TEACH | My | doctor | Caspian Reed Nolan\nTEACH | Dr. Caspian Reed Nolan | employer | Fernway Clinic",
+     -5.605170249938965
+    ],
+    [
+     "TEACH | My | doctor | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | employer | Fernview Clinic",
+     -8.019055366516113
+    ],
+    [
+     "TEACH | My | doctor | Caspian Reed Nolan\nTEACH | He | employer | Fernway Clinic",
+     -8.166374206542969
+    ]
+   ],
+   "ms_greedy": 118.86,
+   "ms": 276.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "doctor",
+      "value": "Caspian Reed Nolan"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Caspian Reed Nolan",
+      "relation": "employer",
+      "value": "Fernway Clinic",
+      "why": "UNSURE",
+      "margin": 8.156102002598345
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-060": {
+   "raw": "TEACH | My | neighbour | Odette Larkspur Bell\nTEACH | Odette Larkspur Bell | city | Zellmoor",
+   "greedy_lp": -0.0025655969085889296,
+   "beams": [
+    [
+     "TEACH | My | neighbour | Odette Larkspur Bell\nTEACH | Odette Larkspur Bell | city | Zellmoor",
+     -0.002703571692109108
+    ],
+    [
+     "TEACH | My | neighbour | Odette Larkspur Bell\nTEACH | ODette Larkspur Bell | city | Zellmoor",
+     -7.0086541175842285
+    ],
+    [
+     "TEACH | My | neighbour | ODette Larkspur Bell\nTEACH | ODette Larkspur Bell | city | Zellmoor",
+     -7.882864475250244
+    ],
+    [
+     "TEACH | My | neighbour | Odette Larkspur Bell\nTEACH | Odette LarkspurBell | city | Zellmoor",
+     -8.690210342407227
+    ]
+   ],
+   "ms_greedy": 146.25,
+   "ms": 328.92,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "neighbour",
+      "value": "Odette Larkspur Bell"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Odette Larkspur Bell",
+      "relation": "city",
+      "value": "Zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-061": {
+   "raw": "TEACH | My | boss | Lennox Granger Pike\nTEACH | Lennox Granger Pike | city | Bramwell",
+   "greedy_lp": -0.00044482786334043567,
+   "beams": [
+    [
+     "TEACH | My | boss | Lennox Granger Pike\nTEACH | Lennox Granger Pike | city | Bramwell",
+     -0.00044637720566242933
+    ],
+    [
+     "TEACH | My | boss | Lennox Granger Pike\nTEACH | He | city | Bramwell",
+     -10.500420570373535
+    ],
+    [
+     "TEACH | My | boss | Lennox Granger Pike\nTEACH | NONE | city | Bramwell",
+     -10.564447402954102
+    ],
+    [
+     "TEACH | My | boss | Lennox Granger Pike\nTEACH | Lennox Grangers Pike | city | Bramwell",
+     -11.75236988067627
+    ]
+   ],
+   "ms_greedy": 130.6,
+   "ms": 293.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Lennox Granger Pike"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Lennox Granger Pike",
+      "relation": "city",
+      "value": "Bramwell"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-062": {
+   "raw": "TEACH | My | great_aunt | Mabel Cornflower Hart\nTEACH | Mabel Cornflower Hart | city | Drellin",
+   "greedy_lp": -0.006061953558202049,
+   "beams": [
+    [
+     "TEACH | My | great_aunt | Mabel Cornflower Hart\nTEACH | Mabel Cornflower Hart | city | Drellin",
+     -0.006043554283678532
+    ],
+    [
+     "TEACH | My | great_aunt | Mabel Cornflower Hart\nTEACH | MabelCornflower Hart | city | Drellin",
+     -6.011214733123779
+    ],
+    [
+     "TEACH | My | great_aunt | MabelCornflower Hart\nTEACH | MabelCornflower Hart | city | Drellin",
+     -6.443475723266602
+    ],
+    [
+     "TEACH | My | great_aunt | Mabel Cornflower Hart\nTEACH | MabelCornflowerHart | city | Drellin",
+     -7.261463642120361
+    ]
+   ],
+   "ms_greedy": 134.57,
+   "ms": 341.79,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Mabel Cornflower Hart",
+      "relation": "city",
+      "value": "Drellin"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-063": {
+   "raw": "TEACH | My | roommate | Juno Baxter Reed\nTEACH | Juno Baxter Reed | city | Pellwick\nTEACH | Juno Baxter Reed | employer | The bakery",
+   "greedy_lp": -0.8434673134805308,
+   "beams": [
+    [
+     "TEACH | My | roommate | Juno Baxter Reed\nTEACH | Juno Baxter Reed | city | Pellwick\nTEACH | Juno Baxter Reed | employer | The bakery",
+     -0.8427315950393677
+    ],
+    [
+     "TEACH | My | roommate | Juno Baxter Reed\nTEACH | Juno Baxter Reed | city | Pellwick\nTEACH | Juno Baxter Reed | bakery | above",
+     -1.6999058723449707
+    ],
+    [
+     "TEACH | My | roommate | Juno Baxter Reed\nTEACH | Juno Baxter Reed | city | Pellwick\nTEACH | Juno Baxter Reed | occupation | baker",
+     -2.6331918239593506
+    ],
+    [
+     "TEACH | My | roommate | Juno Baxter Reed\nTEACH | Juno Baxter Reed | city | Pellwick\nTEACH | Juno Baxter Reed | bakery | Above the bakery",
+     -3.181473731994629
+    ]
+   ],
+   "ms_greedy": 219.99,
+   "ms": 503.82,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Juno Baxter Reed",
+      "relation": "city",
+      "value": "Pellwick"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Juno Baxter Reed",
+      "relation": "employer",
+      "value": "The bakery"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-064": {
+   "raw": "TEACH | Our | doctor | Farrah Noor Aziz\nTEACH | Farrah Noor Aziz | practice_location | Fernway Clinic",
+   "greedy_lp": -0.6026001862668622,
+   "beams": [
+    [
+     "TEACH | Our | doctor | Farrah Noor Aziz\nTEACH | Farrah Noor Aziz | practice_location | Fernway Clinic",
+     -0.6218307614326477
+    ],
+    [
+     "TEACH | Our | doctor | Farrah Noor Aziz\nTEACH | Farrah Noor Aziz | hospital | Fernway Clinic",
+     -1.5547127723693848
+    ],
+    [
+     "TEACH | Our | doctor | Farrah Noor Aziz\nTEACH | Farrah Noor Aziz | clinic | Fernway Clinic",
+     -2.1624372005462646
+    ],
+    [
+     "TEACH | Our | doctor | Farrah Noor Aziz\nTEACH | Farrah Noor Aziz | practice_or_hospital | Fernway Clinic",
+     -4.4026618003845215
+    ]
+   ],
+   "ms_greedy": 151.99,
+   "ms": 368.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "doctor",
+      "value": "Farrah Noor Aziz"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-065": {
+   "raw": "TEACH | My | two_sister | Yvette Calloway Hart\nTEACH | Yvette Calloway Hart | city | Zellmoor",
+   "greedy_lp": -0.7366489091332369,
+   "beams": [
+    [
+     "TEACH | My | two_sister | Yvette Calloway Hart\nTEACH | Yvette Calloway Hart | city | Zellmoor",
+     -0.7702640295028687
+    ],
+    [
+     "TEACH | My | two_sisters | Yvette Calloway Hart\nTEACH | Yvette Calloway Hart | city | Zellmoor",
+     -1.6433616876602173
+    ],
+    [
+     "TEACH | My | two | Yvette Calloway Hart\nTEACH | Yvette Calloway Hart | city | Zellmoor",
+     -1.9489238262176514
+    ],
+    [
+     "TEACH | My | sisters | Yvette Calloway Hart\nTEACH | Yvette Calloway Hart | city | Zellmoor",
+     -2.7135958671569824
+    ]
+   ],
+   "ms_greedy": 157.45,
+   "ms": 365.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Yvette Calloway Hart",
+      "relation": "city",
+      "value": "Zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-066": {
+   "raw": "TEACH | My | cousins | Raynor Cade Holt\nTEACH | Raynor Cade Holt | school | Brackle College",
+   "greedy_lp": -0.49182660166130177,
+   "beams": [
+    [
+     "TEACH | My | cousins | Raynor Cade Holt\nTEACH | Raynor Cade Holt | school | Brackle College",
+     -0.4939526915550232
+    ],
+    [
+     "TEACH | My | cousins | Raynor Cade Holt\nTEACH | Soren Vale Holt | school | Brackle College",
+     -0.9951637387275696
+    ],
+    [
+     "TEACH | My | cousins | Raynor Cade Holt and Soren Vale Holt\nTEACH | Raynor Cade Holt | school | Brackle College",
+     -4.830627918243408
+    ],
+    [
+     "TEACH | My | cousin | Raynor Cade Holt\nTEACH | Soren Vale Holt | school | Brackle College",
+     -5.712967395782471
+    ]
+   ],
+   "ms_greedy": 160.69,
+   "ms": 392.61,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Raynor Cade Holt",
+      "relation": "school",
+      "value": "Brackle College",
+      "why": "UNSURE",
+      "margin": 5.2190147042274475
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-067": {
+   "raw": "TEACH | My | cousin | Dara Linden Vale\nTEACH | Dara Linden Vale | employer | Vexford Cannery",
+   "greedy_lp": -0.14726978944762692,
+   "beams": [
+    [
+     "TEACH | My | cousin | Dara Linden Vale\nTEACH | Dara Linden Vale | employer | Vexford Cannery",
+     -0.14488017559051514
+    ],
+    [
+     "TEACH | My | cousin | Dara Linden Vale\nTEACH | Dara Linden Vale | occupation | packers\nTEACH | Dara Linden Vale | employer | Vexford Cannery",
+     -2.5566091537475586
+    ],
+    [
+     "TEACH | My | cousin | Dara Linden Vale\nTEACH | Dara Linden Vale | occupation | packer\nTEACH | Dara Linden Vale | employer | Vexford Cannery",
+     -4.555374622344971
+    ],
+    [
+     "TEACH | My | cousin | Dara Linden Vale\nTEACH | Dara Linden Vale | work_location | Vexford Cannery",
+     -4.651309490203857
+    ]
+   ],
+   "ms_greedy": 172.3,
+   "ms": 462.36,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "cousin",
+      "value": "Dara Linden Vale"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Dara Linden Vale",
+      "relation": "employer",
+      "value": "Vexford Cannery",
+      "why": "UNSURE",
+      "margin": 4.506429314613342
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-068": {
+   "raw": "TEACH | My | uncle | Raynor Cade Holt\nTEACH | Raynor Cade Holt | employer | Voss Harbor",
+   "greedy_lp": -0.008263176990830345,
+   "beams": [
+    [
+     "TEACH | My | uncle | Raynor Cade Holt\nTEACH | Raynor Cade Holt | employer | Voss Harbor",
+     -0.008376166224479675
+    ],
+    [
+     "TEACH | My | uncle | Raynor Cade Holt\nTEACH | Raynor Cade Holt | occupation | engines\nTEACH | Raynor Cade Holt | employer | Voss Harbor",
+     -5.56963586807251
+    ],
+    [
+     "TEACH | My | uncle | Raynor Cade Holt\nTEACH | Raynor Cade Holt | occupation | repairs engines\nTEACH | Raynor Cade Holt | employer | Voss Harbor",
+     -7.384485721588135
+    ],
+    [
+     "TEACH | My | uncle | Raynor Cade Holt\nTEACH | Raynor Cade Holt | occupation | engine repair\nTEACH | Raynor Cade Holt | employer | Voss Harbor",
+     -7.688050746917725
+    ]
+   ],
+   "ms_greedy": 157.53,
+   "ms": 394.09,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "uncle",
+      "value": "Raynor Cade Holt"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Raynor Cade Holt",
+      "relation": "employer",
+      "value": "Voss Harbor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-069": {
+   "raw": "TEACH | Petra | son | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | school | Brackle College",
+   "greedy_lp": -0.407670792593926,
+   "beams": [
+    [
+     "TEACH | Petra | son | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | school | Brackle College",
+     -0.4280351996421814
+    ],
+    [
+     "TEACH | Petra | son | Caspian Reed Nolan\nTEACH | Petra | school | Brackle College",
+     -1.2842801809310913
+    ],
+    [
+     "TEACH | Petra | son | Caspian Reed Nolan\nTEACH | Petra | educated_at | Brackle College",
+     -2.909369945526123
+    ],
+    [
+     "TEACH | Petra | son | Caspian Reed Nolan\nTEACH | Caspian Reed Nolan | educated_at | Brackle College",
+     -4.803088188171387
+    ]
+   ],
+   "ms_greedy": 127.01,
+   "ms": 295.14,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "son",
+      "value": "Caspian Reed Nolan"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Caspian Reed Nolan",
+      "relation": "school",
+      "value": "Brackle College",
+      "why": "UNSURE",
+      "margin": 0.8562449812889099
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-070": {
+   "raw": "TEACH | petra | son | caspian reed nolan\nTEACH | caspian reed nolan | school | brackle college",
+   "greedy_lp": -0.6764058305399985,
+   "beams": [
+    [
+     "TEACH | petra | son | caspian reed nolan\nTEACH | caspian reed nolan | school | brackle college",
+     -0.6230177879333496
+    ],
+    [
+     "TEACH | petra | son | caspian reed nolan\nTEACH | petra | school | brackle college",
+     -1.071310043334961
+    ],
+    [
+     "TEACH | petra | son | caspian reed nolan\nTEACH | petra | educated_at | brackle college",
+     -2.821535587310791
+    ],
+    [
+     "TEACH | petra | son | caspian reed nolan\nTEACH | caspian reed nolan | educated_at | brackle college",
+     -2.9987123012542725
+    ]
+   ],
+   "ms_greedy": 138.12,
+   "ms": 320.47,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "petra",
+      "relation": "son",
+      "value": "caspian reed nolan"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "caspian reed nolan",
+      "relation": "school",
+      "value": "brackle college",
+      "why": "UNSURE",
+      "margin": 0.44829225540161133
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-071": {
+   "raw": "ASK | Lara | city",
+   "greedy_lp": -6.914023332171837e-05,
+   "beams": [],
+   "ms_greedy": 44.38,
+   "ms": 44.42,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Lara",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-072": {
+   "raw": "ASK | Bram | employer",
+   "greedy_lp": -0.00012385459154273804,
+   "beams": [],
+   "ms_greedy": 40.13,
+   "ms": 40.17,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Bram",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-073": {
+   "raw": "ASK | Caspian | occupation",
+   "greedy_lp": -3.564317754012336e-05,
+   "beams": [],
+   "ms_greedy": 40.47,
+   "ms": 40.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Caspian",
+      "relation": [
+       "occupation"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-074": {
+   "raw": "ASK | Dara | language",
+   "greedy_lp": -0.005552642490087578,
+   "beams": [],
+   "ms_greedy": 44.24,
+   "ms": 44.28,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Dara",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-075": {
+   "raw": "ASK | Bram | employer",
+   "greedy_lp": -4.541830274717995e-05,
+   "beams": [],
+   "ms_greedy": 40.16,
+   "ms": 40.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Bram",
+      "relation": [
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-076": {
+   "raw": "ASK | Petra | spouse",
+   "greedy_lp": -0.0003432855671618995,
+   "beams": [],
+   "ms_greedy": 44.13,
+   "ms": 44.16,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Petra",
+      "relation": [
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-077": {
+   "raw": "ASK | Essie | dog",
+   "greedy_lp": -0.0016347760895314423,
+   "beams": [],
+   "ms_greedy": 44.38,
+   "ms": 44.42,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Essie",
+      "relation": [
+       "dog"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-078": {
+   "raw": "ASK | Willa | school",
+   "greedy_lp": -0.00011014433925993217,
+   "beams": [],
+   "ms_greedy": 43.65,
+   "ms": 43.68,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Willa",
+      "relation": [
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-079": {
+   "raw": "ASK | Tovan | boss",
+   "greedy_lp": -8.117967070120358e-05,
+   "beams": [],
+   "ms_greedy": 44.29,
+   "ms": 44.42,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovan",
+      "relation": [
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-080": {
+   "raw": "ASK | Rima | sister",
+   "greedy_lp": -0.00016879379833767416,
+   "beams": [],
+   "ms_greedy": 44.25,
+   "ms": 44.29,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Rima",
+      "relation": [
+       "sister"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-081": {
+   "raw": "ASK | Celine | mother_in_law",
+   "greedy_lp": -9.64387606856576e-05,
+   "beams": [],
+   "ms_greedy": 60.11,
+   "ms": 60.14,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-082": {
+   "raw": "ASK | Juno | roommate",
+   "greedy_lp": -0.0004338404625272574,
+   "beams": [],
+   "ms_greedy": 47.8,
+   "ms": 47.83,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-083": {
+   "raw": "ASK | Marlo | doctor",
+   "greedy_lp": -5.4716398373955144e-05,
+   "beams": [],
+   "ms_greedy": 44.24,
+   "ms": 44.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Marlo",
+      "relation": [
+       "doctor"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-084": {
+   "raw": "ASK | kella | city",
+   "greedy_lp": -0.0016842961839458326,
+   "beams": [],
+   "ms_greedy": 43.91,
+   "ms": 43.94,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "kella",
+      "relation": [
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-085": {
+   "raw": "ASK | dara | language",
+   "greedy_lp": -0.005887959451541747,
+   "beams": [],
+   "ms_greedy": 43.99,
+   "ms": 44.02,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "dara",
+      "relation": [
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-086": {
+   "raw": "ASK | juno | roommate",
+   "greedy_lp": -0.001794047934822629,
+   "beams": [],
+   "ms_greedy": 60.64,
+   "ms": 60.67,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-087": {
+   "raw": "ASK | essie | dog",
+   "greedy_lp": -0.10322200030316253,
+   "beams": [],
+   "ms_greedy": 52.96,
+   "ms": 53.0,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "essie",
+      "relation": [
+       "dog"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-088": {
+   "raw": "ASK | Juno | place_of_birth",
+   "greedy_lp": -4.136534172261008e-05,
+   "beams": [],
+   "ms_greedy": 64.77,
+   "ms": 64.8,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Juno",
+      "relation": [
+       "place_of_birth"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-089": {
+   "raw": "ASK | Raynor | hometown",
+   "greedy_lp": -0.0007043014084047172,
+   "beams": [],
+   "ms_greedy": 61.47,
+   "ms": 61.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Raynor",
+      "relation": [
+       "hometown"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-090": {
+   "raw": "ASK | Niko | guitar teacher",
+   "greedy_lp": -0.4627208904166764,
+   "beams": [],
+   "ms_greedy": 48.13,
+   "ms": 48.16,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-091": {
+   "raw": "ASK | Kella | neighbour",
+   "greedy_lp": -0.002393195521335656,
+   "beams": [],
+   "ms_greedy": 44.01,
+   "ms": 44.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Kella",
+      "relation": [
+       "neighbour"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-092": {
+   "raw": "ASK | Odette | hobby",
+   "greedy_lp": -0.043506398186245576,
+   "beams": [],
+   "ms_greedy": 51.3,
+   "ms": 51.35,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Odette",
+      "relation": [
+       "hobby"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-093": {
+   "raw": "ASK | Bram | favorite_dish",
+   "greedy_lp": -0.40323919012151777,
+   "beams": [],
+   "ms_greedy": 57.28,
+   "ms": 57.33,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-094": {
+   "raw": "ASK | Niko | instrument",
+   "greedy_lp": -0.003896650217903641,
+   "beams": [],
+   "ms_greedy": 44.46,
+   "ms": 44.49,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-095": {
+   "raw": "ASK | Soren | grandfather",
+   "greedy_lp": -1.7166038162486075e-05,
+   "beams": [],
+   "ms_greedy": 43.79,
+   "ms": 43.83,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Soren",
+      "relation": [
+       "grandfather"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-096": {
+   "raw": "ASK | Lara | sister > city",
+   "greedy_lp": -2.7417959529429936e-05,
+   "beams": [],
+   "ms_greedy": 51.96,
+   "ms": 51.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Lara",
+      "relation": [
+       "sister",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-097": {
+   "raw": "ASK | Bram | brother > employer",
+   "greedy_lp": -2.002706214199179e-05,
+   "beams": [],
+   "ms_greedy": 48.06,
+   "ms": 48.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Bram",
+      "relation": [
+       "brother",
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-098": {
+   "raw": "ASK | Dara | cousin > language",
+   "greedy_lp": -0.0007238201143806577,
+   "beams": [],
+   "ms_greedy": 52.08,
+   "ms": 52.12,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Dara",
+      "relation": [
+       "cousin",
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-099": {
+   "raw": "ASK | Rima | mother > doctor",
+   "greedy_lp": -3.3497549168259866e-05,
+   "beams": [],
+   "ms_greedy": 51.74,
+   "ms": 51.79,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Rima",
+      "relation": [
+       "mother",
+       "doctor"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-100": {
+   "raw": "ASK | Caspian | husband > employer",
+   "greedy_lp": -2.1219144514361687e-05,
+   "beams": [],
+   "ms_greedy": 48.24,
+   "ms": 48.29,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Caspian",
+      "relation": [
+       "husband",
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-101": {
+   "raw": "ASK | Willa | sister > school",
+   "greedy_lp": -1.8954151983052725e-05,
+   "beams": [],
+   "ms_greedy": 51.93,
+   "ms": 51.97,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Willa",
+      "relation": [
+       "sister",
+       "school"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-102": {
+   "raw": "ASK | Tovan | brother > boss",
+   "greedy_lp": -7.736557127913102e-05,
+   "beams": [],
+   "ms_greedy": 51.54,
+   "ms": 51.58,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovan",
+      "relation": [
+       "brother",
+       "boss"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-103": {
+   "raw": "ASK | Tovan | boss > city",
+   "greedy_lp": -9.262398192788623e-05,
+   "beams": [],
+   "ms_greedy": 52.44,
+   "ms": 52.48,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Tovan",
+      "relation": [
+       "boss",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-104": {
+   "raw": "ASK | Niko | teacher > language",
+   "greedy_lp": -0.004367958981099207,
+   "beams": [],
+   "ms_greedy": 51.98,
+   "ms": 52.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Niko",
+      "relation": [
+       "teacher",
+       "language"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-105": {
+   "raw": "ASK | Kella | neighbour > employer",
+   "greedy_lp": -0.002982260124781533,
+   "beams": [],
+   "ms_greedy": 52.24,
+   "ms": 52.28,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Kella",
+      "relation": [
+       "neighbour",
+       "employer"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-106": {
+   "raw": "ASK | Petra | boss > spouse",
+   "greedy_lp": -0.00024733656379538616,
+   "beams": [],
+   "ms_greedy": 51.84,
+   "ms": 51.87,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Petra",
+      "relation": [
+       "boss",
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-107": {
+   "raw": "ASK | Juno | roommate > occupation",
+   "greedy_lp": -0.0028933869343745755,
+   "beams": [],
+   "ms_greedy": 56.08,
+   "ms": 56.11,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-108": {
+   "raw": "ASK | lara | sister > city",
+   "greedy_lp": -4.2557393037157e-05,
+   "beams": [],
+   "ms_greedy": 52.16,
+   "ms": 52.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "lara",
+      "relation": [
+       "sister",
+       "city"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-109": {
+   "raw": "ASK | tovan | boss > spouse",
+   "greedy_lp": -0.00120626757047404,
+   "beams": [],
+   "ms_greedy": 51.87,
+   "ms": 51.91,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "tovan",
+      "relation": [
+       "boss",
+       "spouse"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-110": {
+   "raw": "ASK | Essie | brother > place_of_birth",
+   "greedy_lp": -8.082263059350225e-05,
+   "beams": [],
+   "ms_greedy": 67.71,
+   "ms": 67.75,
+   "gate": {
+    "saved": [
+     {
+      "act": "ASK",
+      "subject": "Essie",
+      "relation": [
+       "brother",
+       "place_of_birth"
+      ]
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-111": {
+   "raw": "NONE",
+   "greedy_lp": -9.417505225428613e-06,
+   "beams": [],
+   "ms_greedy": 28.76,
+   "ms": 28.78,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-112": {
+   "raw": "NONE",
+   "greedy_lp": -7.74858653329602e-06,
+   "beams": [],
+   "ms_greedy": 28.51,
+   "ms": 28.52,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-113": {
+   "raw": "NONE",
+   "greedy_lp": -0.11286441978518269,
+   "beams": [],
+   "ms_greedy": 28.26,
+   "ms": 28.28,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-114": {
+   "raw": "NONE",
+   "greedy_lp": -1.0371175903856056e-05,
+   "beams": [],
+   "ms_greedy": 28.32,
+   "ms": 28.34,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-115": {
+   "raw": "TEACH | lara | city | vexford",
+   "greedy_lp": -0.005477839535856788,
+   "beams": [
+    [
+     "TEACH | lara | city | vexford",
+     -0.0049335225485265255
+    ],
+    [
+     "TEACH | so lara | city | vexford",
+     -6.43401575088501
+    ],
+    [
+     "TEACH | so | city | vexford",
+     -7.0592360496521
+    ],
+    [
+     "TEACH | lara | city | vexford",
+     -7.511510372161865
+    ]
+   ],
+   "ms_greedy": 59.71,
+   "ms": 136.07,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "lara",
+      "relation": "city",
+      "value": "vexford",
+      "why": "UNSURE",
+      "margin": 6.429082228336483
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-116": {
+   "raw": "TEACH | bram | employer | copperline press",
+   "greedy_lp": -1.382272062933957,
+   "beams": [
+    [
+     "TEACH | bram | employer | copperline press",
+     -1.276998519897461
+    ],
+    [
+     "TEACH | bram | employer | copperline press",
+     -1.2843660116195679
+    ],
+    [
+     "TEACH | Bram | employer | copperline press",
+     -1.7846851348876953
+    ],
+    [
+     "TEACH | brahm | employer | copperline press",
+     -2.160853862762451
+    ]
+   ],
+   "ms_greedy": 64.03,
+   "ms": 140.62,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "bram",
+      "relation": "employer",
+      "value": "copperline press"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-117": {
+   "raw": "NONE",
+   "greedy_lp": -1.0251974003949726e-05,
+   "beams": [],
+   "ms_greedy": 28.51,
+   "ms": 28.53,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-118": {
+   "raw": "TEACH | dara | language | korean",
+   "greedy_lp": -0.0012314766171357405,
+   "beams": [
+    [
+     "TEACH | dara | language | korean",
+     -0.0012276622001081705
+    ],
+    [
+     "TEACH | dara | language_of_work_or_name | korean",
+     -7.003012180328369
+    ],
+    [
+     "TEACH | dara | language | Korean",
+     -9.501222610473633
+    ],
+    [
+     "TEACH | so | language | korean",
+     -9.9764986038208
+    ]
+   ],
+   "ms_greedy": 59.45,
+   "ms": 170.38,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "dara",
+      "relation": "language",
+      "value": "korean",
+      "why": "UNSURE",
+      "margin": 7.001784518128261
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-119": {
+   "raw": "NONE",
+   "greedy_lp": -2.1457557494386492e-05,
+   "beams": [],
+   "ms_greedy": 28.59,
+   "ms": 28.61,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-120": {
+   "raw": "TEACH | I | training | pilot\nTEACH | I | school | flight school",
+   "greedy_lp": -1.4558942044617282,
+   "beams": [
+    [
+     "TEACH | I | training | pilot\nTEACH | I | school | flight school",
+     -1.442544937133789
+    ],
+    [
+     "TEACH | I | occupation | pilot\nTEACH | I | school | flight school",
+     -1.5168044567108154
+    ],
+    [
+     "TEACH | I | aspiration | pilot\nTEACH | I | school | flight school",
+     -2.4993224143981934
+    ],
+    [
+     "TEACH | I | training_to | pilot\nTEACH | I | school | flight school",
+     -2.9521970748901367
+    ]
+   ],
+   "ms_greedy": 91.08,
+   "ms": 212.95,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "school",
+      "value": "flight school"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-121": {
+   "raw": "NONE",
+   "greedy_lp": -1.6927650278830697e-05,
+   "beams": [],
+   "ms_greedy": 28.42,
+   "ms": 28.43,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-122": {
+   "raw": "NONE",
+   "greedy_lp": -5.1259007697979087e-05,
+   "beams": [],
+   "ms_greedy": 28.45,
+   "ms": 28.47,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-123": {
+   "raw": "NONE",
+   "greedy_lp": -8.785374484432396e-05,
+   "beams": [],
+   "ms_greedy": 37.72,
+   "ms": 37.74,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-124": {
+   "raw": "NONE",
+   "greedy_lp": -0.00048173761388170533,
+   "beams": [],
+   "ms_greedy": 37.31,
+   "ms": 37.33,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-125": {
+   "raw": "NONE",
+   "greedy_lp": -9.012003283714876e-05,
+   "beams": [],
+   "ms_greedy": 28.71,
+   "ms": 28.73,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-126": {
+   "raw": "NONE",
+   "greedy_lp": -3.111337082373211e-05,
+   "beams": [],
+   "ms_greedy": 28.4,
+   "ms": 28.42,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-127": {
+   "raw": "NONE",
+   "greedy_lp": -1.7881317830870103e-05,
+   "beams": [],
+   "ms_greedy": 28.53,
+   "ms": 28.55,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-128": {
+   "raw": "NONE",
+   "greedy_lp": -1.0132759115322187e-05,
+   "beams": [],
+   "ms_greedy": 28.56,
+   "ms": 28.57,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-129": {
+   "raw": "NONE",
+   "greedy_lp": -4.267633084964473e-05,
+   "beams": [],
+   "ms_greedy": 28.46,
+   "ms": 28.48,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-130": {
+   "raw": "TEACH | Joss | best_boss | best_friend",
+   "greedy_lp": -3.3490326752057626,
+   "beams": [],
+   "ms_greedy": 75.53,
+   "ms": 75.58,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-131": {
+   "raw": "NONE",
+   "greedy_lp": -6.556494554388337e-06,
+   "beams": [],
+   "ms_greedy": 28.4,
+   "ms": 28.41,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-132": {
+   "raw": "NONE",
+   "greedy_lp": -8.463838639727328e-06,
+   "beams": [],
+   "ms_greedy": 28.5,
+   "ms": 28.52,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-133": {
+   "raw": "NONE",
+   "greedy_lp": -1.0728806500992505e-05,
+   "beams": [],
+   "ms_greedy": 28.31,
+   "ms": 28.32,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-134": {
+   "raw": "NONE",
+   "greedy_lp": -6.318074575517585e-06,
+   "beams": [],
+   "ms_greedy": 28.21,
+   "ms": 28.23,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-135": {
+   "raw": "NONE",
+   "greedy_lp": -1.1801694654423045e-05,
+   "beams": [],
+   "ms_greedy": 28.33,
+   "ms": 28.34,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-136": {
+   "raw": "TEACH | Lara | city | Zellmoor",
+   "greedy_lp": -1.0371197205927274e-05,
+   "beams": [
+    [
+     "TEACH | Lara | city | Zellmoor",
+     -1.0609617675072514e-05
+    ],
+    [
+     "TEACH | Lara | city | Zellmoor<|im_start|>",
+     -13.24342155456543
+    ],
+    [
+     "TEACH | Lara | street | Zellmoor",
+     -14.32502555847168
+    ],
+    [
+     "TEACH | Lara |City | Zellmoor",
+     -14.625031471252441
+    ]
+   ],
+   "ms_greedy": 67.6,
+   "ms": 158.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-137": {
+   "raw": "TEACH | Bram | employer | Copperline Press",
+   "greedy_lp": -4.5418495858484675e-05,
+   "beams": [
+    [
+     "TEACH | Bram | employer | Copperline Press",
+     -4.768341386807151e-05
+    ],
+    [
+     "TEACH | Bram | employer | Copperline Press<|im_start|>",
+     -12.161794662475586
+    ],
+    [
+     "TEACH | Bram | employer | Coppereline Press",
+     -12.375046730041504
+    ],
+    [
+     "TEACH | Bram | employer | CopperlinePress",
+     -12.75004768371582
+    ]
+   ],
+   "ms_greedy": 59.9,
+   "ms": 141.01,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Bram",
+      "relation": "employer",
+      "value": "Copperline Press"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-138": {
+   "raw": "TEACH | Dara | language | Korean",
+   "greedy_lp": -0.0036345013699801143,
+   "beams": [
+    [
+     "TEACH | Dara | language | Korean",
+     -0.0036365294363349676
+    ],
+    [
+     "TEACH | Dara | language_of_work_or_name | Korean",
+     -5.634852409362793
+    ],
+    [
+     "TEACH | Dara | language | Korean<|im_start|>",
+     -12.0287446975708
+    ],
+    [
+     "TEACH | Dara | language_of_speech | Korean",
+     -12.134530067443848
+    ]
+   ],
+   "ms_greedy": 55.98,
+   "ms": 162.5,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Dara",
+      "relation": "language",
+      "value": "Korean",
+      "why": "UNSURE",
+      "margin": 5.631215879926458
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-139": {
+   "raw": "TEACH | my | stepsister | Lara\nTEACH | Lara | city | Vexford",
+   "greedy_lp": -0.007069791125907443,
+   "beams": [
+    [
+     "TEACH | my | stepsister | Lara\nTEACH | Lara | city | Vexford",
+     -0.007006623316556215
+    ],
+    [
+     "TEACH | My | stepsister | Lara\nTEACH | Lara | city | Vexford",
+     -5.006986141204834
+    ],
+    [
+     "TEACH | my | sister | Lara\nTEACH | Lara | city | Vexford",
+     -8.506994247436523
+    ],
+    [
+     "TEACH | Lara | city | Vexford",
+     -10.381800651550293
+    ]
+   ],
+   "ms_greedy": 106.63,
+   "ms": 238.73,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Lara",
+      "relation": "city",
+      "value": "Vexford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-140": {
+   "raw": "TEACH | my | half_brother | Tovan\nTEACH | Tovan | city | Kessar",
+   "greedy_lp": -0.0007925127413912492,
+   "beams": [
+    [
+     "TEACH | my | half_brother | Tovan\nTEACH | Tovan | city | Kessar",
+     -0.0007920393836684525
+    ],
+    [
+     "TEACH | my | half_brother | Tovan\nTEACH | Tophan | city | Kessar",
+     -9.938297271728516
+    ],
+    [
+     "TEACH | my | half_brother | Tovan\nTEACH | Tavan | city | Kessar",
+     -9.938358306884766
+    ],
+    [
+     "TEACH | my | half_brother | Tovan\nTEACH | Tivan | city | Kessar",
+     -10.063297271728516
+    ]
+   ],
+   "ms_greedy": 120.79,
+   "ms": 269.39,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Tovan",
+      "relation": "city",
+      "value": "Kessar"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-141": {
+   "raw": "TEACH | Niko | instrument | cello",
+   "greedy_lp": -0.008170253500601632,
+   "beams": [],
+   "ms_greedy": 63.03,
+   "ms": 63.08,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-142": {
+   "raw": "TEACH | my | doctor | Farrah",
+   "greedy_lp": -0.0007067072398072582,
+   "beams": [
+    [
+     "TEACH | my | doctor | Farrah",
+     -0.0007078993367031217
+    ],
+    [
+     "TEACH | My | doctor | Farrah",
+     -7.375702857971191
+    ],
+    [
+     "TEACH | my | doctor |Farrah",
+     -10.625712394714355
+    ],
+    [
+     "TEACH | my | doctor | Farrh",
+     -11.181283950805664
+    ]
+   ],
+   "ms_greedy": 55.94,
+   "ms": 122.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "doctor",
+      "value": "Farrah"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-143": {
+   "raw": "TEACH | I | occupation | teacher\nTEACH | I | employer | Wexley Community School",
+   "greedy_lp": -0.13112825120733618,
+   "beams": [
+    [
+     "TEACH | I | occupation | teacher\nTEACH | I | employer | Wexley Community School",
+     -0.10435998439788818
+    ],
+    [
+     "TEACH | I | employer | Wexley Community School",
+     -2.3523874282836914
+    ],
+    [
+     "TEACH | Not a student | employer | Wexley Community School",
+     -6.612072944641113
+    ],
+    [
+     "TEACH | I | occupation | teacher | Wexley Community School",
+     -6.703369140625
+    ]
+   ],
+   "ms_greedy": 103.09,
+   "ms": 229.76,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "employer",
+      "value": "Wexley Community School",
+      "why": "UNSURE",
+      "margin": 6.507712960243225
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-144": {
+   "raw": "TEACH | his | dog | Miso\nTEACH | Miso | sleeps_on_porch | the porch",
+   "greedy_lp": -3.214752214096471,
+   "beams": [
+    [
+     "TEACH | his | dog | Miso\nTEACH | Miso | sleeping_place | the porch",
+     -1.994592308998108
+    ],
+    [
+     "TEACH | his | dog | Miso\nTEACH | Miso | sleeps | the porch",
+     -2.6020326614379883
+    ],
+    [
+     "TEACH | his | dog | Miso\nTEACH | Miso | sleeping_location | the porch",
+     -2.6849586963653564
+    ],
+    [
+     "TEACH | his | dog | Miso\nTEACH | Miso | sleeps_on_porch | the porch",
+     -3.093763828277588
+    ]
+   ],
+   "ms_greedy": 122.6,
+   "ms": 274.78,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "his",
+      "relation": "dog",
+      "value": "Miso"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-145": {
+   "raw": "TEACH | Jona livs | city | Zellmoor",
+   "greedy_lp": -0.48238249691557655,
+   "beams": [
+    [
+     "TEACH | Jona livs | city | Zellmoor",
+     -0.48192694783210754
+    ],
+    [
+     "TEACH | Jona | city | Zellmoor",
+     -0.9783282279968262
+    ],
+    [
+     "TEACH | Jona liv | city | Zellmoor",
+     -6.106917381286621
+    ],
+    [
+     "TEACH | Jona lives | city | Zellmoor",
+     -6.917459964752197
+    ]
+   ],
+   "ms_greedy": 80.42,
+   "ms": 182.39,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Jona livs",
+      "relation": "city",
+      "value": "Zellmoor",
+      "why": "UNSURE",
+      "margin": 0.49640128016471863
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-146": {
+   "raw": "TEACH | Essie werks | employer | Fernway Clinic",
+   "greedy_lp": -0.004019044012387951,
+   "beams": [
+    [
+     "TEACH | Essie werks | employer | Fernway Clinic",
+     -0.004995687864720821
+    ],
+    [
+     "TEACH | Essie | employer | Fernway Clinic",
+     -5.879708290100098
+    ],
+    [
+     "TEACH | Essie werks | employer | Fernview Clinic",
+     -7.012382507324219
+    ],
+    [
+     "TEACH | Essie werks | employer | Fernways Clinic",
+     -8.406289100646973
+    ]
+   ],
+   "ms_greedy": 84.41,
+   "ms": 190.76,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Essie werks",
+      "relation": "employer",
+      "value": "Fernway Clinic",
+      "why": "UNSURE",
+      "margin": 5.874712602235377
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-147": {
+   "raw": "TEACH | lara | city | zellmoor",
+   "greedy_lp": -4.5776133148933695e-05,
+   "beams": [
+    [
+     "TEACH | lara | city | zellmoor",
+     -4.529928992269561e-05
+    ],
+    [
+     "TEACH | lara | city | zuelmoor",
+     -12.517186164855957
+    ],
+    [
+     "TEACH | lara | city | zeolmoor",
+     -13.13398551940918
+    ],
+    [
+     "TEACH | lara | city |zellmoor",
+     -13.25005054473877
+    ]
+   ],
+   "ms_greedy": 87.04,
+   "ms": 173.63,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "lara",
+      "relation": "city",
+      "value": "zellmoor"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-148": {
+   "raw": "TEACH | bram | employer | halden mills",
+   "greedy_lp": -0.001362234443767818,
+   "beams": [
+    [
+     "TEACH | bram | employer | halden mills",
+     -0.00130195333622396
+    ],
+    [
+     "TEACH | brahm | employer | halden mills",
+     -8.108549118041992
+    ],
+    [
+     "TEACH | bram | employer | haldenmills",
+     -8.126304626464844
+    ],
+    [
+     "TEACH | bram | employer | halden Mills",
+     -8.501302719116211
+    ]
+   ],
+   "ms_greedy": 67.69,
+   "ms": 159.55,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "bram",
+      "relation": "employer",
+      "value": "halden mills"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "e261b-149": {
+   "raw": "TEACH | Tovan | employer | Prindle Foods",
+   "greedy_lp": -0.2490624347662589,
+   "beams": [
+    [
+     "TEACH | Tovan | employer | Prindle Foods",
+     -0.24810048937797546
+    ],
+    [
+     "TEACH | Tovan | car | Prindle Foods",
+     -1.8737002611160278
+    ],
+    [
+     "TEACH | Tovan | manufacturer | Prindle Foods",
+     -3.1232082843780518
+    ],
+    [
+     "TEACH | Tovan | occupation | Prindle Foods",
+     -5.014673709869385
+    ]
+   ],
+   "ms_greedy": 73.29,
+   "ms": 155.57,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Tovan",
+      "relation": "employer",
+      "value": "Prindle Foods",
+      "why": "UNSURE",
+      "margin": 2.8751077950000763
+     }
+    ],
+    "guard": []
+   }
+  },
+  "e261b-150": {
+   "raw": "TEACH | Petra | spouse | Soren",
+   "greedy_lp": -0.018432788041614856,
+   "beams": [
+    [
+     "TEACH | Petra | spouse | Soren",
+     -0.020529676228761673
+    ],
+    [
+     "TEACH | Petra | spouse | Soren last spring",
+     -4.1467084884643555
+    ],
+    [
+     "TEACH | Petra | spouse | Soren Last Spring",
+     -7.489616394042969
+    ],
+    [
+     "TEACH | Petra | wedding | Soren last spring",
+     -7.857402801513672
+    ]
+   ],
+   "ms_greedy": 60.03,
+   "ms": 141.43,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Petra",
+      "relation": "spouse",
+      "value": "Soren",
+      "why": "UNSURE",
+      "margin": 4.126178812235594
+     }
+    ],
+    "guard": []
+   }
+  }
+ }
+}

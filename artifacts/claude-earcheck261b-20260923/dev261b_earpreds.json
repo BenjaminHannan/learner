@@ -1,0 +1,1795 @@
+{
+ "summary": {
+  "n": 48,
+  "median_ms": 186.68305000755936,
+  "p90_ms": 294.85289996955544,
+  "max_ms": 307.13380000088364,
+  "n_beamed": 46,
+  "device": "cuda",
+  "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+  "torch": "2.11.0+cu128",
+  "threads": 6,
+  "tau": 9.3,
+  "k": 4,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti"
+ },
+ "preds": {
+  "b261b-0000": {
+   "raw": "TEACH | My | friend | Briony Candlewick\nTEACH | Briony Candlewick | city | Dunnsmouth",
+   "greedy_lp": -0.11826677207596248,
+   "beams": [
+    [
+     "TEACH | My | friend | Briony Candlewick\nTEACH | Briony Candlewick | city | Dunnsmouth",
+     -0.10560615360736847
+    ],
+    [
+     "TEACH | My | neighbour | Briony Candlewick\nTEACH | Briony Candlewick | city | Dunnsmouth",
+     -2.7304270267486572
+    ],
+    [
+     "TEACH | My | friend | Briony Candlewick\nTEACH | Briony Candelwick | city | Dunnsmouth",
+     -4.610050678253174
+    ],
+    [
+     "TEACH | My | friend | Briony Candelwick\nTEACH | Briony Candelwick | city | Dunnsmouth",
+     -5.001841068267822
+    ]
+   ],
+   "ms_greedy": 134.97,
+   "ms": 307.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Candlewick",
+      "relation": "city",
+      "value": "Dunnsmouth"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Briony Candlewick",
+      "why": "UNSURE",
+      "margin": 2.6248208731412888
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0001": {
+   "raw": "TEACH | My | friend | Ivo Lantern\nTEACH | Ivo Lantern | city | Oatfield",
+   "greedy_lp": -0.05102260340441234,
+   "beams": [
+    [
+     "TEACH | My | friend | Ivo Lantern\nTEACH | Ivo Lantern | city | Oatfield",
+     -0.052400924265384674
+    ],
+    [
+     "TEACH | My | neighbour | Ivo Lantern\nTEACH | Ivo Lantern | city | Oatfield",
+     -3.3024070262908936
+    ],
+    [
+     "TEACH | My | brother | Ivo Lantern\nTEACH | Ivo Lantern | city | Oatfield",
+     -5.302402019500732
+    ],
+    [
+     "TEACH | My | frend | Ivo Lantern\nTEACH | Ivo Lantern | city | Oatfield",
+     -5.427842617034912
+    ]
+   ],
+   "ms_greedy": 122.83,
+   "ms": 287.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Lantern",
+      "relation": "city",
+      "value": "Oatfield"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Ivo Lantern",
+      "why": "UNSURE",
+      "margin": 3.250006102025509
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0002": {
+   "raw": "TEACH | Briony Stonefield | city | Yewfield",
+   "greedy_lp": -8.368407912229259e-05,
+   "beams": [
+    [
+     "TEACH | Briony Stonefield | city | Yewfield",
+     -8.439927478320897e-05
+    ],
+    [
+     "TEACH |Briony Stonefield | city | Yewfield",
+     -11.50052261352539
+    ],
+    [
+     "TEACH | Braiony Stonefield | city | Yewfield",
+     -11.907682418823242
+    ],
+    [
+     "TEACH | Briony Stonefield | live_in | Yewfield",
+     -12.019980430603027
+    ]
+   ],
+   "ms_greedy": 85.44,
+   "ms": 187.24,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Stonefield",
+      "relation": "city",
+      "value": "Yewfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0003": {
+   "raw": "TEACH | Ivo Blackmoor | city | Cinderford",
+   "greedy_lp": -0.0012618262609578323,
+   "beams": [
+    [
+     "TEACH | Ivo Blackmoor | city | Cinderford",
+     -0.001257181167602539
+    ],
+    [
+     "TEACH | IvoBlackmoor | city | Cinderford",
+     -6.788575649261475
+    ],
+    [
+     "TEACH | IvoBlackmoore | city | Cinderford",
+     -11.275003433227539
+    ],
+    [
+     "TEACH | IvoBlackmor | city | Cinderford",
+     -11.415568351745605
+    ]
+   ],
+   "ms_greedy": 75.67,
+   "ms": 170.59,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Blackmoor",
+      "relation": "city",
+      "value": "Cinderford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0004": {
+   "raw": "TEACH | Briony Hartfield | occupation | cutler",
+   "greedy_lp": -0.0014949261194985297,
+   "beams": [
+    [
+     "TEACH | Briony Hartfield | occupation | cutler",
+     -0.0014951644698157907
+    ],
+    [
+     "TEACH | Briony Hartfield werks | occupation | cutler",
+     -7.004366397857666
+    ],
+    [
+     "TEACH | Briony Hartfield | occupation | cutter",
+     -8.00233268737793
+    ],
+    [
+     "TEACH | Briony Hartfield | occupation |cutler",
+     -9.00151252746582
+    ]
+   ],
+   "ms_greedy": 101.84,
+   "ms": 237.99,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Hartfield",
+      "relation": "occupation",
+      "value": "cutler",
+      "why": "UNSURE",
+      "margin": 7.00287123338785
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0005": {
+   "raw": "TEACH | Ivo Rushmere | occupation | sawyer",
+   "greedy_lp": -0.018493563802678636,
+   "beams": [
+    [
+     "TEACH | Ivo Rushmere | occupation | sawyer",
+     -0.01848679408431053
+    ],
+    [
+     "TEACH | Ivo Rushmere werks | occupation | sawyer",
+     -4.0190558433532715
+    ],
+    [
+     "TEACH | Ivo Rushmere | occupation | seeyer",
+     -8.650345802307129
+    ],
+    [
+     "TEACH | Ivo Rushmere | occupation | seenyer",
+     -10.309185028076172
+    ]
+   ],
+   "ms_greedy": 97.13,
+   "ms": 227.75,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Rushmere",
+      "relation": "occupation",
+      "value": "sawyer",
+      "why": "UNSURE",
+      "margin": 4.000569049268961
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0006": {
+   "raw": "TEACH | Briony Zimmer | nickname | bron in Grimestone",
+   "greedy_lp": -1.4071728659631546,
+   "beams": [
+    [
+     "TEACH | Briony Zimmer | nickname | bron in Grimestone",
+     -1.3247013092041016
+    ],
+    [
+     "TEACH | Briony Zimmer | sport | bron in Grimestone",
+     -2.078150749206543
+    ],
+    [
+     "TEACH | Briony Zimmer | nickname | bron\nTEACH | Briony Zimmer | hometown | Grimestone",
+     -2.9276530742645264
+    ],
+    [
+     "TEACH | Briony Zimmer | nickname | bron in Grimstone",
+     -2.949702262878418
+    ]
+   ],
+   "ms_greedy": 105.87,
+   "ms": 285.27,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Zimmer",
+      "relation": "nickname",
+      "value": "bron in Grimestone",
+      "why": "UNSURE",
+      "margin": 0.7534494400024414
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0007": {
+   "raw": "TEACH | Ivo Foxford | sport | bron in Gorsefield",
+   "greedy_lp": -0.7325891854390747,
+   "beams": [
+    [
+     "TEACH | Ivo Foxford | sport | bron in Gorsefield",
+     -0.672518253326416
+    ],
+    [
+     "TEACH | Ivo Foxford | sport | bron\nTEACH | Ivo Foxford | hometown | Gorsefield",
+     -1.9716289043426514
+    ],
+    [
+     "TEACH | Ivo Foxford | nickname | bron\nTEACH | Ivo Foxford | hometown | Gorsefield",
+     -2.817934989929199
+    ],
+    [
+     "TEACH | Ivo Foxford | nickname | bron in Gorsefield",
+     -3.005953311920166
+    ]
+   ],
+   "ms_greedy": 109.57,
+   "ms": 271.24,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Foxford",
+      "relation": "sport",
+      "value": "bron in Gorsefield",
+      "why": "UNSURE",
+      "margin": 1.2991106510162354
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0008": {
+   "raw": "TEACH | My | sister | Briony Marrow\nTEACH | Briony Marrow | speaks | Tormic",
+   "greedy_lp": -1.3573314801666143,
+   "beams": [
+    [
+     "TEACH | My | sister | Briony Marrow\nTEACH | Briony Marrow | speech | Tormic",
+     -1.4082448482513428
+    ],
+    [
+     "TEACH | My | sister | Briony Marrow\nTEACH | Briony Marrow | speaks | Tormic",
+     -1.4088853597640991
+    ],
+    [
+     "TEACH | My | sister | Briony Marrow\nTEACH | Briony Marrow | language | Tormic",
+     -1.5352556705474854
+    ],
+    [
+     "TEACH | My | siter | Briony Marrow\nTEACH | Briony Marrow | language | Tormic",
+     -3.146728038787842
+    ]
+   ],
+   "ms_greedy": 127.44,
+   "ms": 290.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Briony Marrow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0009": {
+   "raw": "TEACH | My | sister | Ivo Yewfield\nTEACH | Ivo Yewfield | language | Velloric",
+   "greedy_lp": -0.2804471184132211,
+   "beams": [
+    [
+     "TEACH | My | sister | Ivo Yewfield\nTEACH | Ivo Yewfield | language | Velloric",
+     -0.30682411789894104
+    ],
+    [
+     "TEACH | My | siter | Ivo Yewfield\nTEACH | Ivo Yewfield | language | Velloric",
+     -1.6840699911117554
+    ],
+    [
+     "TEACH | My | daughter | Ivo Yewfield\nTEACH | Ivo Yewfield | language | Velloric",
+     -4.559831142425537
+    ],
+    [
+     "TEACH | My | sister | Ivo Yewfield\nTEACH | Ivo Yewfield | nickname | Velloric",
+     -4.680854320526123
+    ]
+   ],
+   "ms_greedy": 126.95,
+   "ms": 289.46,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Ivo Yewfield",
+      "why": "UNSURE",
+      "margin": 4.253007024526596
+     },
+     {
+      "act": "TEACH",
+      "subject": "Ivo Yewfield",
+      "relation": "language",
+      "value": "Velloric",
+      "why": "UNSURE",
+      "margin": 4.374030202627182
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0010": {
+   "raw": "TEACH | My | brother | Briony Candlewick\nTEACH | Briony Candlewick | dog | Dusk",
+   "greedy_lp": -0.03960520888337271,
+   "beams": [
+    [
+     "TEACH | My | brother | Briony Candlewick\nTEACH | Briony Candlewick | dog | Dusk",
+     -0.03814155235886574
+    ],
+    [
+     "TEACH | My | broter | Briony Candlewick\nTEACH | Briony Candlewick | dog | Dusk",
+     -3.9110639095306396
+    ],
+    [
+     "TEACH | My | brother | Briony Candelwick\nTEACH | Briony Candelwick | dog | Dusk",
+     -5.366626262664795
+    ],
+    [
+     "TEACH | My | brother | Briony Candlewick\nTEACH | Briony Candelwick | dog | Dusk",
+     -5.54257345199585
+    ]
+   ],
+   "ms_greedy": 130.91,
+   "ms": 298.78,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Briony Candlewick"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Briony Candlewick",
+      "relation": "dog",
+      "value": "Dusk"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0011": {
+   "raw": "TEACH | My | brother | Ivo Lantern\nTEACH | Ivo Lantern | dog | Reed",
+   "greedy_lp": -0.03995681755323943,
+   "beams": [
+    [
+     "TEACH | My | brother | Ivo Lantern\nTEACH | Ivo Lantern | dog | Reed",
+     -0.03995223343372345
+    ],
+    [
+     "TEACH | My | broter | Ivo Lantern\nTEACH | Ivo Lantern | dog | Reed",
+     -3.6568009853363037
+    ],
+    [
+     "TEACH | My | brother_or_sister | Ivo Lantern\nTEACH | Ivo Lantern | dog | Reed",
+     -5.2689595222473145
+    ],
+    [
+     "TEACH | My | brotherter | Ivo Lantern\nTEACH | Ivo Lantern | dog | Reed",
+     -5.291428565979004
+    ]
+   ],
+   "ms_greedy": 111.24,
+   "ms": 274.08,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Ivo Lantern"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Ivo Lantern",
+      "relation": "dog",
+      "value": "Reed"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0012": {
+   "raw": "TEACH | my | cousin | Briony Stonefield\nTEACH | Briony Stonefield | city | Yewfield",
+   "greedy_lp": -0.29594143397989114,
+   "beams": [
+    [
+     "TEACH | my | cousin | Briony Stonefield\nTEACH | Briony Stonefield | city | Yewfield",
+     -0.3132239282131195
+    ],
+    [
+     "TEACH | my | cousn | Briony Stonefield\nTEACH | Briony Stonefield | city | Yewfield",
+     -2.191760301589966
+    ],
+    [
+     "TEACH | my |cousin | Briony Stonefield\nTEACH | Briony Stonefield | city | Yewfield",
+     -2.4514541625976562
+    ],
+    [
+     "TEACH | my | cousin | Briony Stonefield\nTEACH | Briony Stonefield | city | Yewfield",
+     -3.0749006271362305
+    ]
+   ],
+   "ms_greedy": 127.07,
+   "ms": 294.85,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Briony Stonefield"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Briony Stonefield",
+      "relation": "city",
+      "value": "Yewfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0013": {
+   "raw": "TEACH | my | cousin | Ivo Blackmoor\nTEACH | Ivo Blackmoor | city | Cinderford",
+   "greedy_lp": -0.31731537642507845,
+   "beams": [
+    [
+     "TEACH | my | cousin | Ivo Blackmoor\nTEACH | Ivo Blackmoor | city | Cinderford",
+     -0.3417072594165802
+    ],
+    [
+     "TEACH | my | cousn | Ivo Blackmoor\nTEACH | Ivo Blackmoor | city | Cinderford",
+     -1.9690532684326172
+    ],
+    [
+     "TEACH | my |cousin | Ivo Blackmoor\nTEACH | Ivo Blackmoor | city | Cinderford",
+     -2.755929708480835
+    ],
+    [
+     "TEACH | my | cousin | Ivo Blackmoor\nTEACH | Ivo Blackmoor | city | Cinderford",
+     -2.876967191696167
+    ]
+   ],
+   "ms_greedy": 126.77,
+   "ms": 295.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Ivo Blackmoor"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Ivo Blackmoor",
+      "relation": "city",
+      "value": "Cinderford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0014": {
+   "raw": "TEACH | My | uncle | Briony Hartfield\nTEACH | Briony Hartfield | occupation | cutler",
+   "greedy_lp": -0.09260322811495314,
+   "beams": [
+    [
+     "TEACH | My | uncle | Briony Hartfield\nTEACH | Briony Hartfield | occupation | cutler",
+     -0.09249813109636307
+    ],
+    [
+     "TEACH | My | unkle | Briony Hartfield\nTEACH | Briony Hartfield | occupation | cutler",
+     -2.4746060371398926
+    ],
+    [
+     "TEACH | My | nephew | Briony Hartfield\nTEACH | Briony Hartfield | occupation | cutler",
+     -7.721111297607422
+    ],
+    [
+     "TEACH | My | ungle | Briony Hartfield\nTEACH | Briony Hartfield | occupation | cutler",
+     -8.070233345031738
+    ]
+   ],
+   "ms_greedy": 122.89,
+   "ms": 286.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "uncle",
+      "value": "Briony Hartfield"
+     },
+     {
+      "act": "TEACH",
+      "subject": "Briony Hartfield",
+      "relation": "occupation",
+      "value": "cutler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0015": {
+   "raw": "TEACH | My | uncle | Ivo Rushmere\nTEACH | Ivo Rushmere | occupation | sawyer",
+   "greedy_lp": -0.12558848379784848,
+   "beams": [
+    [
+     "TEACH | My | uncle | Ivo Rushmere\nTEACH | Ivo Rushmere | occupation | sawyer",
+     -0.1164732351899147
+    ],
+    [
+     "TEACH | My | unkle | Ivo Rushmere\nTEACH | Ivo Rushmere | occupation | sawyer",
+     -2.830643892288208
+    ],
+    [
+     "TEACH | My | uncle | Ivo Rushmere werks\nTEACH | Ivo Rushmere werks | occupation | sawyer",
+     -3.241976261138916
+    ],
+    [
+     "TEACH | My | unkle | Ivo Rushmere werks\nTEACH | Ivo Rushmere werks | occupation | sawyer",
+     -4.830317974090576
+    ]
+   ],
+   "ms_greedy": 115.17,
+   "ms": 297.84,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "uncle",
+      "value": "Ivo Rushmere",
+      "why": "UNSURE",
+      "margin": 3.1255030259490013
+     },
+     {
+      "act": "TEACH",
+      "subject": "Ivo Rushmere",
+      "relation": "occupation",
+      "value": "sawyer",
+      "why": "UNSURE",
+      "margin": 3.1255030259490013
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0016": {
+   "raw": "TEACH | Scholmate Briony Zimmer | educated_at | Grimestone Academy",
+   "greedy_lp": -0.7878963363216798,
+   "beams": [
+    [
+     "TEACH | Scholmate Briony Zimmer | educated_at | Grimestone Academy",
+     -0.8091172575950623
+    ],
+    [
+     "TEACH | scholmate Briony Zimmer | educated_at | Grimestone Academy",
+     -1.9259529113769531
+    ],
+    [
+     "TEACH | Briony Zimmer | educated_at | Grimestone Academy",
+     -2.0428144931793213
+    ],
+    [
+     "TEACH | scholar | school | Grimestone Academy",
+     -2.8771982192993164
+    ]
+   ],
+   "ms_greedy": 87.23,
+   "ms": 194.13,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Scholmate Briony Zimmer",
+      "relation": "educated_at",
+      "value": "Grimestone Academy",
+      "why": "UNSURE",
+      "margin": 1.233697235584259
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0017": {
+   "raw": "TEACH | Ivo Foxford | educated_at | Gorsefield Academy",
+   "greedy_lp": -0.4278662252432852,
+   "beams": [
+    [
+     "TEACH | Ivo Foxford | educated_at | Gorsefield Academy",
+     -0.4624057114124298
+    ],
+    [
+     "TEACH | scholmate Ivo Foxford | educated_at | Gorsefield Academy",
+     -1.4749016761779785
+    ],
+    [
+     "TEACH | Scholmate Ivo Foxford | educated_at | Gorsefield Academy",
+     -3.1027233600616455
+    ],
+    [
+     "TEACH | scholar | educated_at | Gorsefield Academy",
+     -4.21389102935791
+    ]
+   ],
+   "ms_greedy": 83.65,
+   "ms": 195.63,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Foxford",
+      "relation": "educated_at",
+      "value": "Gorsefield Academy",
+      "why": "UNSURE",
+      "margin": 1.0124959647655487
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0018": {
+   "raw": "TEACH | Briony Marrow | city | Pebblewick",
+   "greedy_lp": -0.038398525916861104,
+   "beams": [
+    [
+     "TEACH | Briony Marrow | city | Pebblewick",
+     -0.038386642932891846
+    ],
+    [
+     "TEACH | Our | friend | Briony Marrow\nTEACH | Briony Marrow | city | Pebblewick",
+     -3.375978708267212
+    ],
+    [
+     "TEACH | Our | neighbour | Briony Marrow\nTEACH | Briony Marrow | city | Pebblewick",
+     -6.1402106285095215
+    ],
+    [
+     "TEACH | Our | landlord | Briony Marrow\nTEACH | Briony Marrow | city | Pebblewick",
+     -7.628600597381592
+    ]
+   ],
+   "ms_greedy": 79.89,
+   "ms": 243.37,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Marrow",
+      "relation": "city",
+      "value": "Pebblewick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0019": {
+   "raw": "TEACH | Ivo Yewfield | city | Fern Hollow",
+   "greedy_lp": -0.0012538252945475392,
+   "beams": [
+    [
+     "TEACH | Ivo Yewfield | city | Fern Hollow",
+     -0.001117607462219894
+    ],
+    [
+     "TEACH | Our | friend | Ivo Yewfield\nTEACH | Ivo Yewfield | city | Fern Hollow",
+     -6.967622756958008
+    ],
+    [
+     "TEACH | Our | neighbour | Ivo Yewfield\nTEACH | Ivo Yewfield | city | Fern Hollow",
+     -9.842827796936035
+    ],
+    [
+     "TEACH | Our | landlord | Ivo Yewfield\nTEACH | Ivo Yewfield | city | Fern Hollow",
+     -10.842679977416992
+    ]
+   ],
+   "ms_greedy": 71.82,
+   "ms": 224.6,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Yewfield",
+      "relation": "city",
+      "value": "Fern Hollow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0020": {
+   "raw": "TEACH | Briony Candlewick | city | Dunnsmouth",
+   "greedy_lp": -0.002904925931204616,
+   "beams": [
+    [
+     "TEACH | Briony Candlewick | city | Dunnsmouth",
+     -0.0029173351358622313
+    ],
+    [
+     "TEACH | Briony Candelwick | city | Dunnsmouth",
+     -6.168384075164795
+    ],
+    [
+     "TEACH | Briony Candlewick livs | city | Dunnsmouth",
+     -9.84251880645752
+    ],
+    [
+     "TEACH | Briony Candlewick lives | city | Dunnsmouth",
+     -9.851546287536621
+    ]
+   ],
+   "ms_greedy": 79.41,
+   "ms": 186.27,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Candlewick",
+      "relation": "city",
+      "value": "Dunnsmouth"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0021": {
+   "raw": "NONE",
+   "greedy_lp": -3.2305416254985175e-05,
+   "beams": [],
+   "ms_greedy": 28.88,
+   "ms": 28.89,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0022": {
+   "raw": "TEACH | my | cousin | Pell Willowmere\nTEACH | Pell Willowmere | language | Velloric",
+   "greedy_lp": -0.18671880994592982,
+   "beams": [
+    [
+     "TEACH | my | cousin | Pell Willowmere\nTEACH | Pell Willowmere | language | Velloric",
+     -0.17429544031620026
+    ],
+    [
+     "TEACH | Pell Willowmere | language | Velloric",
+     -2.747182607650757
+    ],
+    [
+     "TEACH | my | cousn | Pell Willowmere\nTEACH | Pell Willowmere | language | Velloric",
+     -3.3838114738464355
+    ],
+    [
+     "TEACH | My | cousin | Pell Willowmere\nTEACH | Pell Willowmere | language | Velloric",
+     -3.525287628173828
+    ]
+   ],
+   "ms_greedy": 118.14,
+   "ms": 271.1,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Pell Willowmere",
+      "relation": "language",
+      "value": "Velloric"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "Pell Willowmere",
+      "why": "UNSURE",
+      "margin": 2.5728871673345566
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0023": {
+   "raw": "NONE",
+   "greedy_lp": -9.894349886963028e-06,
+   "beams": [],
+   "ms_greedy": 29.17,
+   "ms": 29.19,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0024": {
+   "raw": "TEACH | my | cousin | pell pebblewick",
+   "greedy_lp": -2.8490921373247602e-05,
+   "beams": [
+    [
+     "TEACH | my | cousin | pell pebblewick",
+     -2.8133294108556584e-05
+    ],
+    [
+     "TEACH | my | cousin | pell pebbleswick",
+     -11.596024513244629
+    ],
+    [
+     "TEACH | my | cousin | pEll pebblewick",
+     -12.654622077941895
+    ],
+    [
+     "TEACH | my | cousin | pell pebblewick<|im_start|>",
+     -13.07078742980957
+    ]
+   ],
+   "ms_greedy": 68.09,
+   "ms": 160.24,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "cousin",
+      "value": "pell pebblewick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0025": {
+   "raw": "TEACH | my | partner | zella aldercroft",
+   "greedy_lp": -0.00030599276507103923,
+   "beams": [
+    [
+     "TEACH | my | partner | zella aldercroft",
+     -0.0002971721114590764
+    ],
+    [
+     "TEACH | my | partner | zilla aldercroft",
+     -9.750714302062988
+    ],
+    [
+     "TEACH | my | partner | zella alercroft",
+     -10.125323295593262
+    ],
+    [
+     "TEACH | my | partner | z Ella aldercroft",
+     -10.256420135498047
+    ]
+   ],
+   "ms_greedy": 72.03,
+   "ms": 158.76,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "partner",
+      "value": "zella aldercroft"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0026": {
+   "raw": "TEACH | my | uncle | farah hartfield",
+   "greedy_lp": -0.00026581888664622966,
+   "beams": [
+    [
+     "TEACH | my | uncle | farah hartfield",
+     -0.00022732018260285258
+    ],
+    [
+     "TEACH | my | uncle | farh hartfield",
+     -9.125299453735352
+    ],
+    [
+     "TEACH | my | uncle | farah hartfield",
+     -10.568205833435059
+    ],
+    [
+     "TEACH | my | uncle | farhah hartfield",
+     -11.62544059753418
+    ]
+   ],
+   "ms_greedy": 68.25,
+   "ms": 163.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "uncle",
+      "value": "farah hartfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0027": {
+   "raw": "TEACH | my | daughter | marlow rushmere",
+   "greedy_lp": -0.00523135676843367,
+   "beams": [
+    [
+     "TEACH | my | daughter | marlow rushmere",
+     -0.005359489470720291
+    ],
+    [
+     "TEACH | my | daughter | marLOW rushmere",
+     -7.526395320892334
+    ],
+    [
+     "TEACH | my | daughter | marLow rushmere",
+     -7.650419235229492
+    ],
+    [
+     "TEACH | my | daughter | mar Lowell rushmere",
+     -7.745168685913086
+    ]
+   ],
+   "ms_greedy": 91.89,
+   "ms": 178.55,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "daughter",
+      "value": "marlow rushmere"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0028": {
+   "raw": "TEACH | willa blackmoor | city | cinderford",
+   "greedy_lp": -0.035714357359630355,
+   "beams": [
+    [
+     "TEACH | willa blackmoor | city | cinderford",
+     -0.0357767753303051
+    ],
+    [
+     "TEACH | willa blackmoor | city | cinderford",
+     -3.4108798503875732
+    ],
+    [
+     "TEACH | willa blackmoor | city | cinderford",
+     -7.010123252868652
+    ],
+    [
+     "TEACH | willa blackmoor | city | Cinderford",
+     -12.160787582397461
+    ]
+   ],
+   "ms_greedy": 84.91,
+   "ms": 187.09,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "willa blackmoor",
+      "relation": "city",
+      "value": "cinderford"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0029": {
+   "raw": "TEACH | delia keldwick | city | marrowgate",
+   "greedy_lp": -0.013178687037843417,
+   "beams": [
+    [
+     "TEACH | delia keldwick | city | marrowgate",
+     -0.013179340399801731
+    ],
+    [
+     "TEACH | delia keldwick | city | marrowgate",
+     -4.767209529876709
+    ],
+    [
+     "TEACH |delia keldwick | city | marrowgate",
+     -6.888190746307373
+    ],
+    [
+     "TEACH | delia keldwick | city | marrowgate",
+     -7.171716690063477
+    ]
+   ],
+   "ms_greedy": 80.96,
+   "ms": 175.35,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "delia keldwick",
+      "relation": "city",
+      "value": "marrowgate"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0030": {
+   "raw": "TEACH | kester thornwick | city | duskhaven",
+   "greedy_lp": -0.1198974372350321,
+   "beams": [
+    [
+     "TEACH | kester thornwick | city | duskhaven",
+     -0.12015177309513092
+    ],
+    [
+     "TEACH | ketter thornwick | city | duskhaven",
+     -2.388883352279663
+    ],
+    [
+     "TEACH | kester thornwick | city | duskhaven",
+     -5.1537604331970215
+    ],
+    [
+     "TEACH | kster thornwick | city | duskhaven",
+     -5.37001371383667
+    ]
+   ],
+   "ms_greedy": 67.92,
+   "ms": 150.29,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "kester thornwick",
+      "relation": "city",
+      "value": "duskhaven"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0031": {
+   "raw": "TEACH | rafe candlewick | city | dunnsmouth",
+   "greedy_lp": -0.01999604607836858,
+   "beams": [
+    [
+     "TEACH | rafe candlewick | city | dunnsmouth",
+     -0.020496148616075516
+    ],
+    [
+     "TEACH | rofe candlewick | city | dunnsmouth",
+     -4.460417747497559
+    ],
+    [
+     "TEACH | rafe candlewick | city | dunnsmouth",
+     -6.645806789398193
+    ],
+    [
+     "TEACH | fea candlewick | city | dunnsmouth",
+     -7.338878154754639
+    ]
+   ],
+   "ms_greedy": 75.8,
+   "ms": 168.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "rafe candlewick",
+      "relation": "city",
+      "value": "dunnsmouth"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0032": {
+   "raw": "TEACH | corvin oatfield | occupation | knitter",
+   "greedy_lp": -0.02125761305914864,
+   "beams": [
+    [
+     "TEACH | corvin oatfield | occupation | knitter",
+     -0.021320918574929237
+    ],
+    [
+     "TEACH | corvin oatfield | occupation | knitting",
+     -4.395861625671387
+    ],
+    [
+     "TEACH | corvin oatfield | occupation | knitter",
+     -5.408799648284912
+    ],
+    [
+     "TEACH | corvin oatfield | occupation | baker",
+     -7.4044318199157715
+    ]
+   ],
+   "ms_greedy": 68.09,
+   "ms": 150.2,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "corvin oatfield",
+      "relation": "occupation",
+      "value": "knitter"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0033": {
+   "raw": "TEACH | jessamine zimmer | occupation | wheelera",
+   "greedy_lp": -0.0015484724493362023,
+   "beams": [
+    [
+     "TEACH | jessamine zimmer | occupation | wheelera",
+     -0.0016003912314772606
+    ],
+    [
+     "TEACH | Jessamine Zimmer | occupation | wheelera",
+     -7.026988506317139
+    ],
+    [
+     "TEACH | Jessamine zimmer | occupation | wheelera",
+     -9.276888847351074
+    ],
+    [
+     "TEACH | Jessamine Zimmer | occupation | wheelera",
+     -9.901884078979492
+    ]
+   ],
+   "ms_greedy": 71.4,
+   "ms": 158.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "jessamine zimmer",
+      "relation": "occupation",
+      "value": "wheelera"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0034": {
+   "raw": "TEACH | quenna foxford | occupation | chandler",
+   "greedy_lp": -0.01174189873298559,
+   "beams": [
+    [
+     "TEACH | quenna foxford | occupation | chandler",
+     -0.01169244572520256
+    ],
+    [
+     "TEACH | quena foxford | occupation | chandler",
+     -6.636203289031982
+    ],
+    [
+     "TEACH | quenna foxford | occupation | chondler",
+     -7.019270896911621
+    ],
+    [
+     "TEACH | quenna foxford | occupation | chapman",
+     -8.6016206741333
+    ]
+   ],
+   "ms_greedy": 71.48,
+   "ms": 158.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "quenna foxford",
+      "relation": "occupation",
+      "value": "chandler"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0035": {
+   "raw": "TEACH | bramwell pebblewick | occupation | milliner",
+   "greedy_lp": -0.542463536855017,
+   "beams": [
+    [
+     "TEACH | bramwell pebblewick | occupation | milliner",
+     -0.5796764492988586
+    ],
+    [
+     "TEACH | Bramwell pebblewick | occupation | milliner",
+     -2.0318102836608887
+    ],
+    [
+     "TEACH | bramwell pebblewick | occupation | milliner",
+     -2.216127872467041
+    ],
+    [
+     "TEACH | bramwell pebblewick | occupation | milliner",
+     -2.8433420658111572
+    ]
+   ],
+   "ms_greedy": 75.41,
+   "ms": 167.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "bramwell pebblewick",
+      "relation": "occupation",
+      "value": "milliner"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0036": {
+   "raw": "TEACH | my | dog | acorn",
+   "greedy_lp": -0.0003105167070174275,
+   "beams": [
+    [
+     "TEACH | my | dog | acorn",
+     -0.00035056498018093407
+    ],
+    [
+     "TEACH | my | dog |acorn",
+     -9.500280380249023
+    ],
+    [
+     "TEACH | my | dog | acornt",
+     -9.658966064453125
+    ],
+    [
+     "TEACH | my | dog | acorns",
+     -9.875188827514648
+    ]
+   ],
+   "ms_greedy": 56.17,
+   "ms": 137.58,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "acorn"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0037": {
+   "raw": "TEACH | my | dog | nib",
+   "greedy_lp": -1.1801696153668217e-05,
+   "beams": [
+    [
+     "TEACH | my | dog | nib",
+     -1.3828242117597256e-05
+    ],
+    [
+     "TEACH | my | dog | nim",
+     -12.494190216064453
+    ],
+    [
+     "TEACH | my | dog | nib<|im_start|>",
+     -13.078803062438965
+    ],
+    [
+     "TEACH |my | dog | nib",
+     -13.500021934509277
+    ]
+   ],
+   "ms_greedy": 60.07,
+   "ms": 131.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "nib"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0038": {
+   "raw": "TEACH | my | dog | cinder",
+   "greedy_lp": -2.062311283168583e-05,
+   "beams": [
+    [
+     "TEACH | my | dog | cinder",
+     -2.1099949663039297e-05
+    ],
+    [
+     "TEACH | my | dog | cinder",
+     -11.514906883239746
+    ],
+    [
+     "TEACH | my | dog | cinder<|im_start|>",
+     -12.957283020019531
+    ],
+    [
+     "TEACH | my | dog | cender",
+     -13.625091552734375
+    ]
+   ],
+   "ms_greedy": 55.59,
+   "ms": 131.64,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "cinder"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0039": {
+   "raw": "TEACH | my | dog | bristle",
+   "greedy_lp": -0.0013196359589002782,
+   "beams": [
+    [
+     "TEACH | my | dog | bristle",
+     -0.0013508584816008806
+    ],
+    [
+     "TEACH | my | dog | bringle",
+     -7.228446006774902
+    ],
+    [
+     "TEACH | my | dog |bristle",
+     -8.879253387451172
+    ],
+    [
+     "TEACH | my | dog | brilett",
+     -11.723526000976562
+    ]
+   ],
+   "ms_greedy": 56.0,
+   "ms": 152.4,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "dog",
+      "value": "bristle"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0040": {
+   "raw": "TEACH | we | city | oatfield",
+   "greedy_lp": -0.0024685800342183484,
+   "beams": [
+    [
+     "TEACH | we | city | oatfield",
+     -0.002662957413122058
+    ],
+    [
+     "TEACH | oatfield | city | we live in oatfield",
+     -6.825071811676025
+    ],
+    [
+     "TEACH | we | city | oatsfield",
+     -8.508942604064941
+    ],
+    [
+     "NONE",
+     -8.875152587890625
+    ]
+   ],
+   "ms_greedy": 67.07,
+   "ms": 207.08,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "we",
+      "relation": "city",
+      "value": "oatfield",
+      "why": "UNSURE",
+      "margin": 6.822408854262903
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0041": {
+   "raw": "TEACH | we | city | elmwold",
+   "greedy_lp": -0.0006191141193028216,
+   "beams": [
+    [
+     "TEACH | we | city | elmwold",
+     -0.0006232828018255532
+    ],
+    [
+     "TEACH | we | city | elmwold",
+     -9.63249397277832
+    ],
+    [
+     "NONE",
+     -10.000054359436035
+    ],
+    [
+     "TEACH | our | city | elmwold",
+     -10.001283645629883
+    ]
+   ],
+   "ms_greedy": 60.11,
+   "ms": 136.69,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "we",
+      "relation": "city",
+      "value": "elmwold"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0042": {
+   "raw": "TEACH | we | city | eldervale",
+   "greedy_lp": -0.00335009705187872,
+   "beams": [
+    [
+     "TEACH | we | city | eldervale",
+     -0.0033555985428392887
+    ],
+    [
+     "TEACH | we | city | Eldervale",
+     -6.2539777755737305
+    ],
+    [
+     "TEACH | we | city | eldervale",
+     -8.290483474731445
+    ],
+    [
+     "TEACH | we | city | edlervale",
+     -8.541747093200684
+    ]
+   ],
+   "ms_greedy": 60.05,
+   "ms": 136.75,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "we",
+      "relation": "city",
+      "value": "eldervale"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0043": {
+   "raw": "TEACH | we | city | pebblewick",
+   "greedy_lp": -0.0025346546799198677,
+   "beams": [
+    [
+     "TEACH | we | city | pebblewick",
+     -0.002078382298350334
+    ],
+    [
+     "TEACH | pebblewick | city | we live in pebblewick",
+     -6.581445693969727
+    ],
+    [
+     "TEACH |we | city | pebblewick",
+     -9.00229263305664
+    ],
+    [
+     "NONE",
+     -10.125048637390137
+    ]
+   ],
+   "ms_greedy": 60.16,
+   "ms": 157.12,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "we",
+      "relation": "city",
+      "value": "pebblewick",
+      "why": "UNSURE",
+      "margin": 6.579367311671376
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0044": {
+   "raw": "TEACH | thea aldercroft | language | andic",
+   "greedy_lp": -1.280336677870082,
+   "beams": [
+    [
+     "TEACH | thea aldercroft | language | andic",
+     -1.182146668434143
+    ],
+    [
+     "TEACH | thea aldercroft | language | inic",
+     -1.8438838720321655
+    ],
+    [
+     "TEACH | thea aldercroft | language | icand",
+     -2.11867618560791
+    ],
+    [
+     "TEACH | thea aldercroft | language | oric",
+     -2.186960458755493
+    ]
+   ],
+   "ms_greedy": 75.96,
+   "ms": 167.99,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "thea aldercroft",
+      "relation": "language",
+      "value": "andic"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "b261b-0045": {
+   "raw": "TEACH | briony hartfield | language | tormic",
+   "greedy_lp": -0.0040389128405422525,
+   "beams": [
+    [
+     "TEACH | briony hartfield | language | tormic",
+     -0.003933304455131292
+    ],
+    [
+     "TEACH | briony hartfield | language_of_work_or_name | tormic",
+     -6.631683826446533
+    ],
+    [
+     "TEACH | briony hartfield | language | tormic",
+     -8.004205703735352
+    ],
+    [
+     "TEACH |briony hartfield | language | tormic",
+     -8.253989219665527
+    ]
+   ],
+   "ms_greedy": 79.5,
+   "ms": 216.38,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "briony hartfield",
+      "relation": "language",
+      "value": "tormic",
+      "why": "UNSURE",
+      "margin": 6.627750521991402
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0046": {
+   "raw": "TEACH | ivo rushmere | language | velloric",
+   "greedy_lp": -0.010314503251152018,
+   "beams": [
+    [
+     "TEACH | ivo rushmere | language | velloric",
+     -0.009315514005720615
+    ],
+    [
+     "TEACH |ivo rushmere | language | velloric",
+     -5.009649276733398
+    ],
+    [
+     "TEACH | ivo rushmere | language_of_work_or_name | velloric",
+     -6.88555383682251
+    ],
+    [
+     "TEACH | vivo rushmere | language | velloric",
+     -7.591544151306152
+    ]
+   ],
+   "ms_greedy": 72.13,
+   "ms": 199.07,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "ivo rushmere",
+      "relation": "language",
+      "value": "velloric",
+      "why": "UNSURE",
+      "margin": 6.876238322816789
+     }
+    ],
+    "guard": []
+   }
+  },
+  "b261b-0047": {
+   "raw": "TEACH | pell ashford | language | andic",
+   "greedy_lp": -0.507264572622141,
+   "beams": [
+    [
+     "TEACH | pell ashford | language | andic",
+     -0.4943927228450775
+    ],
+    [
+     "TEACH | pell ashford | language | oric",
+     -2.001570463180542
+    ],
+    [
+     "TEACH | pell ashford | language | inic",
+     -2.395749568939209
+    ],
+    [
+     "TEACH | pell ashford | language | icand",
+     -3.771435022354126
+    ]
+   ],
+   "ms_greedy": 67.69,
+   "ms": 148.93,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "pell ashford",
+      "relation": "language",
+      "value": "andic"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  }
+ }
+}
