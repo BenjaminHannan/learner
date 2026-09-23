@@ -1,0 +1,2930 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main; git fetch -q origin builder-outbox 2>&1 | head -20; git status --short | head -20; pwd
+1:21  up 2 days, 17:10, 4 users, load averages: 43.56 48.71 54.59
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 163531920    0%   /
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/268-nhop-direction-guard.md
+# 268: the n-hop reader answers backwards questions the wrong way ("Whose spouse is Dana?")
+
+Director (Opus, reasoning line), 2026-09-23 ~05:20 UTC. New file; nothing edited. Diagnosis by the Muse builder rsn-nhopdiag (artifacts/claude-nhopdiag-20260923/DIAG.md on builder-outbox), checked against the code by me.
+
+## Result first
+A backwards question about a value V ("Whose spouse is V?", "Who is married to V?", "What has V written?", "What did V found?") gets a wrong answer when V itself has an outgoing fact of a relation the n-hop reader knows (a "chain"): the reply is V's own forward fact ("V's spouse is W."). Stored facts are never damaged (0 of 66 teaches wrong); only the reply is wrong. Builder's count: 12 of 12 such dev dialogs wrong, 0 wrong on controls.
+
+## Cause (checked in code)
+- scripts/fable_bench92_english_arm.py `compose_n_hop` (lines ~214-242): takes the single entity named in the question as `start` and walks only forward (`if s == cur`). The coverage gate checks that each walked relation is mentioned in the question, never its direction. So in "Whose spouse is V?", `start` = V and the walk follows V's own spouse edge.
+- scripts/fable_loop138_agent.py `_hear_question` (lines ~122-131): the nhop frame is tried before everything below it, so the correct reverse path (190 reverse / 221 table inverse) never sees the turn.
+- Relations without an n-hop cue word (boss, mother, friend) are not affected (8/8 right): the reader returns None and 190 answers.
+
+## The one change
+268 = base + one question-side direction guard around the nhop frame: when the question is backwards-shaped about `start` (the value slot: "Whose R is V?", "Who is/was R'd to V?", "Who is married to V?", "What has/did V <verb>?" where the verb is the relation's own verb, "Who has V as their R?"), the nhop frame is not used and the turn falls through unchanged to the layers below (190 reverse, 221/237 table inverse). Forward n-hop questions are untouched. No writes.
+
+## Also found, NOT in 268 (logged)
+With a same-relation chain ("X's author is P. P's author is M."), the forward one-hop question "Who wrote X?" over-walks to "X's author's author is M." (the walk goes to the sink). It needs a nonsense-looking chain to trigger. A separate follow-up if it shows up in real chats.
+
+## Base, marks, falsifier
+Base 138m (accepted; the guard is a wrapper that carries over to 138n/138p at the next merge). Built in parallel.
+- M1 blind panel nhoppanel268 (spec-only writer): reverse_chain >= 22/24 right (all gold subjects named), 0 wrong over all items, uncued_reverse / forward_* / abstain byte-identical to 138m, 0 question writes.
+- M2 frozen suites vs 138m's saved rows: moves exactly predicted; 0 new WRONG/WRONG-WRITE/lost OK (rt136 and bench have n-hop items; any forward n-hop move is a failure).
+- M3 138m's restart + verifier dialogs: 0 ghost answers, 0 write changes, every reply change predicted. M4 latency <= +5 ms.
+What would prove it wrong: any reverse_chain item still answered with V's own forward fact, any forward n-hop reply change, or any new wrong value.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-nhopdiag-20260923/DIAG.md 2>&1 | head -200
+# DIAG: loop138-nhop answers a backwards question with a forward fact (138n)
+
+Date: 2026-09-23. Base studied: 138n = `scripts/claude_loop138n_agent.py`
++ `artifacts/claude-merge138n-20260922/loop138n-config.json`. CPU only.
+Diagnosis only: no fix built, no sealed experiment, no panel read/quoted/tuned on.
+
+## Verdict
+
+REPRODUCED and CAUSE FOUND. After teaching a 2-link chain `A R B`
++ `B R V` (e.g. "Kim Varro's spouse is Dana Holt." +
+"Dana Holt's spouse is Ravi Stone."), a backwards question about the
+middle value ("Whose spouse is Dana Holt?", "Who is married to Dana
+Holt?", "What has Dana Holt written?") is answered from stage
+`loop138-nhop` with the FORWARD fact about the value
+("Dana Holt's spouse is Ravi Stone."). Gold is the backward fact
+("Kim Varro's spouse is Dana Holt."). The stored notebook facts are
+intact in every case: only the reply is wrong, nothing is mis-stored.
+
+## Cause (file:line)
+
+Two cooperating defects, both "forward-only, no direction check":
+
+1. `scripts/fable_bench92_english_arm.py:214-234` (`compose_n_hop`):
+   the composer requires exactly one mentioned entity (line 215), then
+   walks FORWARD only — `outs = [(r, o) for (s, r, o) in triples
+   if s == cur]` (line 222). There is no `o == cur` (backward) branch
+   anywhere in the function. For "Whose spouse is Dana Holt?" the only
+   mentioned entity is the VALUE (Dana Holt), so the walk starts at the
+   value and follows its outgoing edge to Ravi Stone. The coverage gate
+   (lines 237-239) only checks that the walked relation is MENTIONED,
+   not its direction, so it passes.
+2. `scripts/fable_loop138_agent.py:122-131` (`Loop138Ears._hear_question`):
+   the first composer frame is asked unconditionally (after the consume
+   gate + compound guard, neither of which checks direction —
+   `frame_consumes_question` at
+   `scripts/fable_loop113c_agent.py:112-164` only checks leftover cues
+   and year qualifiers). The emitted ask is
+   `{"act": "ask", "name": start, "relations": rels}` with
+   `start = the value`, so the notebook resolves it forward
+   (`current(value, rel)` = Ravi Stone) and the reply names the wrong person.
+   Because this branch fires FIRST, the correct reverse path below it
+   (`Reverse190Mixin`, `scripts/fable_fix190_reverse.py:207-234`, stage
+   `loop190-reverse`, which scans triples for `(subj, rel, value)` and
+   answers "Kim Varro's spouse is Dana Holt.") never gets a chance.
+
+Chain of custody: 138n reuses this branch unchanged through its ears
+MRO (`Loop138nEars` -> ... -> `Loop138mEars` -> ... -> `Loop138Ears`).
+
+## Marks table (integer counts; 36 dialogs, 102 turns, all fresh agents)
+
+| mark | n |
+|---|---|
+| dev dialogs run (34 own + 2 director anchors) | 36 |
+| total turns (66 teaches + 36 questions) | 102 |
+| teach turns stored correctly ("Saved: ...") | 66 / 66 |
+| backwards chain questions answered WRONG from `loop138-nhop` (forward fact about the value) | 12 |
+| forward/no-chain/2-subject controls answered CORRECT (gold match) | 13 |
+| RECORD-only behaviours (abstains, other stages; unchanged by any claim) | 9 |
+| MISMATCH vs my pre-registered gold (extra finding, same family: 2-hop over-walk on 1-hop forward questions, d13/d17) | 2 |
+| stored triples wrong in any dialog | 0 |
+
+Every move (final turn per dialog; teach turns all "Saved:", stages
+`loop138b-fix137`/`loop121-teach`):
+
+- WRONG from `loop138-nhop` (12): d01, d02 (director anchors, spouse),
+  d03, d04, d05 (husband), d06 (wife), d11 (director anchor, author),
+  d12 (author), d16 (founder), d29 (3-link chain, asked about middle),
+  d33 (author "whose"), d34 (founder "whose"). Reply always = forward
+  fact about the value (e.g. "Dana Holt's spouse is Ravi Stone.").
+- CORRECT (13): d07, d31 (spouse no-chain / chain-sink via
+  `loop190-reverse`); d10, d30 (spouse 1-hop forward via `loop138-nhop`);
+  d20, d21 (boss via `loop190-reverse`); d22 (boss forward via `fake`);
+  d23, d24 (mother via `loop190-reverse`); d25 (mother forward via
+  `fake`); d26, d27 (friend via `loop190-reverse`); d28 (friend forward
+  via `fake`).
+- RECORD (9): d08, d09, d15, d19, d35 (2-subject yes/no -> stage `none`,
+  honest abstain); d14 (author no-chain backwards -> `none` abstain);
+  d32 (2-subject choice -> `bench73` "Was that a question?"); d36
+  (friend no-chain forward -> `fake` "I don't know Moss Kline's
+  friend."); d18 (founder no-chain backwards -> CORRECT
+  `loop221-table-inverse` with "(worked out backwards)" label).
+- MISMATCH (2, extra finding): d13 "Who wrote Salt Harbor?" ->
+  "Salt Harbor's author's author is Milo Hart."; d17 "Who founded Ember
+  Bay?" -> "Ember Bay's founder's founder is Daro Venn." Both stage
+  `loop138-nhop`: the walk-to-sink loop (lines 221-234) over-walks a
+  1-hop forward question into a 2-hop answer whenever the start entity
+  has a longer single-outgoing chain. Same family (no endpoint check),
+  reported separately; the proposed change below does NOT claim to fix it.
+
+Deviations from my pre-registered expectations: d13/d17 (predicted
+1-hop correct, got 2-hop over-walk); d18 (predicted RECORD, got a
+correct labelled inverse from the table reader — because the relation
+table has an inverse template for "What did X found?" but not for the
+author/spouse shapes).
+
+## Which relations are affected
+
+NOT symmetric-vs-one-way: the trigger is whether the relation has
+mention cues in the composer maps (`REL_MENTION_CUES` /
+`REL_CUES92`: 38 keyed relations, incl. spouse, author, founder,
+founded_by, employer, child, creator, ...). Any backwards question
+about a MID-CHAIN value on a cued relation misfires, symmetric
+(spouse) or one-way (author, founder) alike. Cue-less relations
+(boss, mother, friend, teacher, coach, sister, ...) never produce a
+frame (`compose_n_hop` returns None at line 238) and fall through to
+the correct `loop190-reverse` path — 8/8 correct here. Preconditions
+for the bug, all required: (a) cued relation, (b) a real chain
+(value has an outgoing edge; chain-sink and no-chain questions fall
+through correctly), (c) exactly one entity named in the question
+(2-subject questions abstain at line 215).
+
+## Stored fact vs reply
+
+Only the reply is wrong. In all 12 WRONG dialogs the triples recorded
+after the question turn contain BOTH links intact (e.g.
+`[('Kim Varro','spouse','Dana Holt'),('Dana Holt','spouse','Ravi
+Stone')]` — see `raw_replies.json`, `triples_after`). No teach was
+corrupted and no inverse fact was stored (inferred answers are never
+stored by construction). A re-ask through the reverse path would still
+find the right answer.
+
+## Proposed ONE change (not built)
+
+Add a direction guard at the nhop branch
+(`scripts/fable_loop138_agent.py:122-131`, or as an additive wrapper
+mixin above it in the 138n lineage): after `compose_n_hop` returns
+`(start, rels)`, detect a REVERSE-shaped question about `start` —
+"whose R is START", "who is married to START" (R=spouse),
+"what has START written" (R=author), "what did START found"
+(R=founder), i.e. the question names the value but no chain
+start/endpoint — and return None so the turn falls through to the
+existing `loop102` chain (`loop190-reverse` / table-inverse), which
+this report proves already answers these shapes correctly.
+Question-side only; no write path touched.
+
+Pass marks for the proposal: re-run these exact 36 dialogs —
+12/12 WRONG flip to the gold reverse reply (accept `loop190-reverse`
+plain or `loop221-table-inverse` "(worked out backwards)" labelled,
+both name the right person); 13/13 CORRECT byte-identical (same stage
++ same reply); 9/9 RECORD unchanged; 66/66 teaches unchanged.
+
+Falsifier (what would prove this proposal wrong): after the change,
+any of the 12 still replies with the forward fact about the value, OR
+any of the 13 correct controls changes reply or stage, OR any teach
+turn stops saving. Any one of those kills the proposal.
+
+## What it means / doesn't mean (plain high-school English)
+
+- Means: when you teach two linked facts with certain verbs (married,
+  wrote, founded, ...) and then ask "who is on the OTHER end?", the
+  agent looks the wrong way: it starts from the name you asked about
+  and reads forward instead of searching backward. The notebook itself
+  is fine — your facts are saved correctly.
+- Doesn't mean: your data is corrupted (it isn't — 0/36 dialogs show
+  wrong stored triples); every relation is broken (boss/mother/friend
+  answer correctly 8/8); the agent can't answer forward questions
+  (1-hop forward answers are correct); or that longer chains are safe
+  (the 3-link case d29 fails too).
+
+## Files
+
+- `artifacts/claude-nhopdiag-20260923/DIAG.md` (this file)
+- `artifacts/claude-nhopdiag-20260923/dev_dialogs.json` (36 dev dialogs,
+  34 own-wording + 2 director anchors, fictional names)
+- `artifacts/claude-nhopdiag-20260923/raw_replies.json` (102 rows: every
+  turn's stage + reply + stored triples + gold/expect/verdict)
+- `scripts/claude_nhopdiag_20260923_repro.py` (repro driver, new file)
+- `scripts/claude_nhopdiag_20260923_pilot.py` (pilot, new file)
+
+No existing file edited, deleted, or re-sealed; no commit/push made
+(per OPUS-RULES, which forbids pushes — the `PUSH:` line in the brief
+is satisfied by leaving the directory in the worktree for the director
+to collect). No blind panel opened, quoted, or tuned on. Max 1 process
+used (limit 4). Disk was 17 GB free at start.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-nhopdiag-20260923/dev_dialogs.json > /tmp/nhop_dev.json; /usr/bin/python3 -c "import json; d=json.load(open('/tmp/nhop_dev.json')); print(len(d)); print(json.dumps(d[0],indent=1)[:1500])"; echo ---; git branch -a | head; git log --oneline -3
+36
+{
+ "dialog": "d01-anchor-spouse-whose",
+ "turns": [
+  "Kim Varro's spouse is Dana Holt.",
+  "Dana Holt's spouse is Ravi Stone.",
+  "Whose spouse is Dana Holt?"
+ ],
+ "gold_final": "Kim Varro's spouse is Dana Holt.",
+ "expect": "WRONG-nhop"
+}
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+[0m
+[0m→ [0mRead scripts/claude_loop138m_agent.py
+[0m→ [0mRead artifacts/claude-merge138m-20260922/PASSMARKS.md
+[0m
+[0m$ [0mls artifacts/claude-merge138m-20260922/; ls artifacts/claude-merge138m-20260922/run/ 2>&1 | head; ls scripts/ | grep -E "fable_loop138|fable_bench92|fable_fix190|claude_loop138m|fable_suitediff|228" | head -20
+loop138m-config.json
+PASSMARKS.md
+predicted_moves138m.json
+RESULTS.md
+run
+SEAL.sha256.txt
+bench1
+bench1.log
+bench2
+bench2.log
+bench3
+bench3.log
+l1
+l1-judge.json
+l1-judge.txt
+l1-log-head.txt
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_fix228_srcguard.py
+claude_loop138m_agent.py
+claude_loop228_agent.py
+fable_bench92_build.py
+fable_bench92_english_arm.py
+fable_bench92_notebook_arm.py
+fable_fix190_bench.py
+fable_fix190_marks.py
+fable_fix190_reverse.py
+fable_fix190_suites.py
+fable_fix190_v1.py
+fable_fix190b_marks.py
+fable_fix190b_suites.py
+fable_fix190b_v1.py
+fable_loop138_agent.py
+fable_loop138b_agent.py
+fable_loop138b_junk.py
+fable_loop138b_redteam143.py
+[0m
+[0m→ [0mRead scripts/fable_loop138_agent.py[90m [limit=180][0m
+[0m→ [0mRead scripts/fable_bench92_english_arm.py[90m [limit=280, offset=150][0m
+[0m→ [0mRead scripts/fable_fix190_reverse.py[90m [limit=120, offset=180][0m
+[0m→ [0mRead scripts/claude_fix228_srcguard.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --help 2>&1 | head -40; echo ===; ls artifacts/claude-merge138m-20260922/run/; echo ===; ls artifacts/claude-verify-20260922/138m/ 2>&1; ls artifacts/claude-verify-20260922/138j/ 2>&1 | head
+usage: fable_suitediff218.py [-h] [--agent AGENT] [--config CONFIG]
+                             [--base {138h,138i}] [--base-dir BASE_DIR]
+                             [--out OUT] [--only ONLY]
+                             [--bench-only BENCH_ONLY]
+                             [--check-table CHECK_TABLE]
+
+Exp 218 suite-diff v2
+
+options:
+  -h, --help            show this help message and exit
+  --agent AGENT
+  --config CONFIG
+  --base {138h,138i}
+  --base-dir BASE_DIR   any sealed agent artifact folder
+  --out OUT
+  --only ONLY           comma list of rt136,rt143,sessions152,bench,marks123
+                        (or all)
+  --bench-only BENCH_ONLY
+  --check-table CHECK_TABLE
+                        classify hand-made (base,new) pairs and exit
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-merge138m-20260922/run/ 2>&1; echo ===VERIFY===; ls artifacts/claude-verify-20260922/ 2>&1; ls artifacts/claude-verify-20260922/138m 2>&1; ls artifacts/claude-verify-20260922/138j 2>&1 | head -20
+bench1
+bench1.log
+bench2
+bench2.log
+bench3
+bench3.log
+l1
+l1-judge.json
+l1-judge.txt
+l1-log-head.txt
+l1-log-l.txt
+l1-log-m.txt
+l1-log-own.txt
+l1-sealed.json
+l1-sealed.txt
+lat-l-1.json
+lat-l-1.log
+lat-l-2.json
+lat-l-2.log
+lat-l-3.json
+lat-l-3.log
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+probe
+rt143nogate-m.json
+rt143nogate.log
+score.txt
+score138m.json
+sd
+sd.log
+sd136
+sd136.log
+smoke-l.json
+smoke-l.log
+smoke-m.json
+smoke-m.log
+uptime.log
+work
+zsh:1: ==VERIFY=== not found
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "verify|138m" | head -20; echo ===; ls artifacts/claude-merge138m-20260922/run/sd/ 2>&1 | head; ls artifacts/claude-merge138m-20260922/run/probe/ 2>&1 | head
+claude-convpanel239-138m-20260922
+claude-merge138m-20260922
+claude-verify-20260922
+claude-verify-20260923
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-verify-20260922/; ls artifacts/claude-verify-20260922/138m/; ls artifacts/claude-merge138m-20260922/run/sd/; ls artifacts/claude-merge138m-20260922/run/probe/ 2>&1 | head -30
+138j
+138k
+138l
+138m
+220
+222
+223
+224
+226
+227
+227bc230
+228
+232c
+236
+243fixes
+restart_probe.py
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+supp-run-own233.log
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+marks123
+marks123-diff.json
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+l-p3-dialogs.json
+l-p3-dialogs.txt
+l-p3c-restart2.json
+l-p3c-restart2.txt
+l-p3d-ghost.json
+l-p3d-ghost.txt
+l-v-dialogs.json
+l-v-dialogs.txt
+l-v-supp.json
+l-v-supp.txt
+m-p3-dialogs.json
+m-p3-dialogs.txt
+m-p3c-restart2.json
+m-p3c-restart2.txt
+m-p3d-ghost.json
+m-p3d-ghost.txt
+m-v-dialogs.json
+m-v-dialogs.txt
+m-v-supp.json
+m-v-supp.txt
+[0m
+[0m$ [0mls artifacts/claude-verify-20260922/138m/ 2>&1 | head -30; echo ---; ls scripts/ | grep -E "138m|suitediff|probe|latency|268" | head -30; echo ---; ls artifacts/claude-merge138m-20260922/run/sd136/ 2>&1 | head
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+---
+address_probe.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_diag119h_freshprobe.py
+claude_loop138m_agent.py
+claude_merge138k_latency.py
+claude_merge138k_probe.py
+depth_probe.py
+fable_dispatcher_probes26.py
+fable_doubt146_probe.py
+fable_doubt146b_probe.py
+fable_fix129_probe.py
+fable_fix137_probe.py
+fable_fix137b_probe.py
+fable_fix137c_probe.py
+fable_fix137d_probe.py
+fable_fix137e_probe.py
+fable_fix139_probe.py
+fable_fix139b_probe.py
+fable_fix139c_probe.py
+fable_fix139d_probe.py
+fable_fix139e_probe.py
+fable_fix150_probe.py
+fable_fix150b_probe.py
+---
+rt136-diff.json
+rt136-rows.json
+SUITEDIFF218-SUMMARY.json
+[0m
+[0m$ [0mcat scripts/claude_138m_runall.sh 2>&1 | head -100
+#!/bin/bash
+# Merge 138m -- every registered command, in order, one heavy suite at a
+# time, `uptime` checked before each step (waits while 1-min load > 60).
+# usage: scripts/claude_138m_runall.sh <run_dir>
+set -u
+R=$1
+cd "$(dirname "$0")/.."
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+PY() { uv run --offline --no-project --python 3.12 --with torch --with numpy python -B "$@"; }
+AL=scripts/claude_loop138l_agent.py
+CL=artifacts/claude-merge138l-20260922/loop138l-config.json
+AM=scripts/claude_loop138m_agent.py
+CM=artifacts/claude-merge138m-20260922/loop138m-config.json
+PRED=artifacts/claude-merge138m-20260922/predicted_moves138m.json
+V=artifacts/claude-verify-20260922/138j
+VK=artifacts/claude-verify-20260922/138k
+LB=artifacts/claude-merge138l-20260922/run/sd
+W=$R/work
+mkdir -p "$R" "$W" "$R/l1" "$R/probe"
+waitload() {
+  while :; do
+    L=$(uptime | sed -E 's/.*load averages?: *([0-9.]+).*/\1/')
+    echo "$(date +%T) uptime load1=$L before: $1" | tee -a "$R/uptime.log"
+    awk -v l="$L" 'BEGIN{exit !(l<=60)}' && break
+    sleep 30
+  done
+}
+T0=$(date +%s)
+# M1 -- each piece's own sealed dev cases on own / line head / 138l / 138m
+for a in own head l m; do
+  waitload M1-$a
+  PY scripts/claude_138m_l1.py run --arm $a --out-dir $R/l1 --work $W/l1-$a \
+    > $R/l1-log-$a.txt 2>&1 || echo "ERR M1 $a" | tee -a $R/errors.txt
+done
+PY scripts/claude_138m_l1.py sealed --dir $R/l1 --out $R/l1-sealed.json > $R/l1-sealed.txt 2>&1
+PY scripts/claude_138m_l1.py judge --dir $R/l1 --pred $PRED --out $R/l1-judge.json > $R/l1-judge.txt 2>&1
+# M2 -- frozen suites vs 138l's saved rows
+waitload M2-suites
+PY scripts/fable_suitediff218.py --agent $AM --config $CM --base-dir $LB \
+  --out $R/sd --only sessions152,bench,marks123 > $R/sd.log 2>&1
+# rt136 labels vs 138j's sealed rows (same method as 138l); the scorer also
+# compares every row directly with 138l's saved run/sd136/rt136-rows.json.
+waitload M2-rt136
+PY scripts/fable_suitediff218.py --agent $AM --config $CM \
+  --base-dir artifacts/fable-agent138j-20260922 --out $R/sd136 --only rt136 > $R/sd136.log 2>&1
+waitload M2-rt143
+PY scripts/claude_138l_rt143nogate.py $AM $CM $R/rt143nogate-m.json > $R/rt143nogate.log 2>&1
+# M3 -- sleep smoke on 138l and 138m
+for a in l m; do
+  waitload M3-$a
+  if [ $a = l ]; then AG=$AL; CF=$CL; else AG=$AM; CF=$CM; fi
+  PY scripts/fable_sleepsmoke206.py --agent $AG --config $CF --root $W/smoke-$a \
+    --report $R/smoke-$a.json --label $a --idle-seconds 5.0 > $R/smoke-$a.log 2>&1
+done
+# M4 -- 3 back-to-back bench reruns on 138m
+for i in 1 2 3; do
+  waitload M4-$i
+  PY scripts/fable_suitediff218.py --agent $AM --config $CM --base-dir $LB \
+    --out $R/bench$i --only bench > $R/bench$i.log 2>&1
+done
+# M5 -- latency, alternating processes l,m,l,m,l,m, 2 reps each
+for i in 1 2 3; do for a in l m; do
+  waitload M5-$a-$i
+  if [ $a = l ]; then AG=$AL; CF=$CL; else AG=$AM; CF=$CM; fi
+  PY scripts/claude_merge138k_latency.py $AG $CF $W/lat-$a-$i 2 $R/lat-$a-$i.json \
+    $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json > $R/lat-$a-$i.log 2>&1
+done; done
+# M6 -- restart and verifier dialogs (138j p3 set + 138k v-dialogs/v-supp)
+for a in l m; do
+  waitload M6-$a
+  if [ $a = l ]; then AG=$AL; CF=$CL; else AG=$AM; CF=$CM; fi
+  for p in $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json \
+           $VK/v-dialogs.json $VK/v-supp.json; do
+    b=$(basename $p .json)
+    PY scripts/claude_merge138k_probe.py $AG $CF $W/probe-$a-$b $p \
+      $R/probe/$a-$b.json > $R/probe/$a-$b.txt 2>&1
+  done
+done
+PY scripts/claude_138m_score.py $R $PRED $R/score138m.json > $R/score.txt 2>&1
+echo "TOTAL $(( $(date +%s) - T0 )) s" | tee -a $R/uptime.log
+cat $R/l1-sealed.txt $R/l1-judge.txt $R/score.txt
+[0m
+[0m$ [0mls artifacts/claude-verify-20260922/138m/ | head -40; echo ===TOP===; ls artifacts/claude-verify-20260922/*.json 2>&1 | head
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+supp-run-own233.log
+zsh:1: ==TOP=== not found
+[0m
+[0m→ [0mRead scripts/fable_bench92_english_arm.py[90m [limit=150][0m
+[0m→ [0mRead scripts/fable_fix190_reverse.py[90m [limit=180][0m
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop_dev.json'))
+for x in d:
+    print(x['dialog'],'|',x['turns'][-1],'| gold:',x['gold_final'],'| expect:',x['expect'])
+"
+d01-anchor-spouse-whose | Whose spouse is Dana Holt? | gold: Kim Varro's spouse is Dana Holt. | expect: WRONG-nhop
+d02-anchor-spouse-married | Who is married to Dana Holt? | gold: Kim Varro's spouse is Dana Holt. | expect: WRONG-nhop
+d03-spouse-whose | Whose spouse is Bex Marlowe? | gold: Talia Wren's spouse is Bex Marlowe. | expect: WRONG-nhop
+d04-spouse-married | Who is married to Bex Marlowe? | gold: Talia Wren's spouse is Bex Marlowe. | expect: WRONG-nhop
+d05-spouse-husband | Whose husband is Bex Marlowe? | gold: Talia Wren's spouse is Bex Marlowe. | expect: WRONG-nhop
+d06-spouse-wife | Whose wife is Bex Marlowe? | gold: Talia Wren's spouse is Bex Marlowe. | expect: WRONG-nhop
+d07-spouse-nochain | Whose spouse is Bex Marlowe? | gold: Talia Wren's spouse is Bex Marlowe. | expect: CORRECT
+d08-spouse-2subj-yn1 | Is Bex Marlowe Talia Wren's spouse? | gold:  | expect: RECORD
+d09-spouse-2subj-yn2 | Is Cato Fenn Bex Marlowe's spouse? | gold:  | expect: RECORD
+d10-spouse-forward | Who is Bex Marlowe's spouse? | gold: Bex Marlowe's spouse is Cato Fenn. | expect: CORRECT
+d11-anchor-author-whatwritten | What has Dana Holt written? | gold: Harbor Lights's author is Dana Holt. | expect: WRONG-nhop
+d12-author-whatwritten | What has Petra Quinn written? | gold: Salt Harbor's author is Petra Quinn. | expect: WRONG-nhop
+d13-author-forward | Who wrote Salt Harbor? | gold: Salt Harbor's author is Petra Quinn. | expect: CORRECT
+d14-author-nochain | What has Petra Quinn written? | gold:  | expect: RECORD
+d15-author-2subj | Did Petra Quinn write Salt Harbor? | gold:  | expect: RECORD
+d16-founder-whatfound | What did Sela Voss found? | gold: Ember Bay's founder is Sela Voss. | expect: WRONG-nhop
+d17-founder-forward | Who founded Ember Bay? | gold: Ember Bay's founder is Sela Voss. | expect: CORRECT
+d18-founder-nochain | What did Sela Voss found? | gold:  | expect: RECORD
+d19-founder-2subj | Did Sela Voss found Ember Bay? | gold:  | expect: RECORD
+d20-boss-chain | Whose boss is Wren Talbot? | gold: Juno Pike's boss is Wren Talbot. | expect: CORRECT
+d21-boss-nochain | Whose boss is Wren Talbot? | gold: Juno Pike's boss is Wren Talbot. | expect: CORRECT
+d22-boss-forward | Who is Wren Talbot's boss? | gold: Wren Talbot's boss is Ash Moreno. | expect: CORRECT
+d23-mother-chain | Whose mother is Tess Ibarra? | gold: Lark Ohm's mother is Tess Ibarra. | expect: CORRECT
+d24-mother-nochain | Whose mother is Tess Ibarra? | gold: Lark Ohm's mother is Tess Ibarra. | expect: CORRECT
+d25-mother-forward | Who is Tess Ibarra's mother? | gold: Tess Ibarra's mother is Nia Sol. | expect: CORRECT
+d26-friend-chain | Whose friend is Moss Kline? | gold: Pell Dray's friend is Moss Kline. | expect: CORRECT
+d27-friend-nochain | Whose friend is Moss Kline? | gold: Pell Dray's friend is Moss Kline. | expect: CORRECT
+d28-friend-forward | Who is Moss Kline's friend? | gold: Moss Kline's friend is Vera Jost. | expect: CORRECT
+d29-spouse-3link | Whose spouse is Cleo Drane? | gold: Bram Colt's spouse is Cleo Drane. | expect: WRONG-nhop
+d30-spouse-fwd-wording | Who is Bex Marlowe married to? | gold: Bex Marlowe's spouse is Cato Fenn. | expect: CORRECT
+d31-spouse-sink | Whose spouse is Cato Fenn? | gold: Bex Marlowe's spouse is Cato Fenn. | expect: CORRECT
+d32-spouse-2subj-choice | Who is married to Bex Marlowe, Talia Wren or Cato Fenn? | gold:  | expect: RECORD
+d33-author-whose | Whose author is Petra Quinn? | gold: Salt Harbor's author is Petra Quinn. | expect: WRONG-nhop
+d34-founder-whose | Whose founder is Sela Voss? | gold: Ember Bay's founder is Sela Voss. | expect: WRONG-nhop
+d35-boss-2subj | Is Wren Talbot Juno Pike's boss? | gold:  | expect: RECORD
+d36-friend-nochain-fwd | Who is Moss Kline's friend? | gold:  | expect: RECORD
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop_dev.json'))
+for x in d:
+    if x['dialog'] in ('d05-spouse-husband','d06-spouse-wife','d29-spouse-3link','d33-author-whose','d34-founder-whose','d11-anchor-author-whatwritten','d16-founder-whatfound','d31-spouse-sink','d30-spouse-fwd-wording','d10-spouse-forward','d13-author-forward','d17-founder-forward'):
+        print(x['dialog'])
+        for t in x['turns']: print('   T:',t)
+        print('   gold:',x['gold_final'])
+"
+d05-spouse-husband
+   T: Talia Wren's spouse is Bex Marlowe.
+   T: Bex Marlowe's spouse is Cato Fenn.
+   T: Whose husband is Bex Marlowe?
+   gold: Talia Wren's spouse is Bex Marlowe.
+d06-spouse-wife
+   T: Talia Wren's spouse is Bex Marlowe.
+   T: Bex Marlowe's spouse is Cato Fenn.
+   T: Whose wife is Bex Marlowe?
+   gold: Talia Wren's spouse is Bex Marlowe.
+d10-spouse-forward
+   T: Talia Wren's spouse is Bex Marlowe.
+   T: Bex Marlowe's spouse is Cato Fenn.
+   T: Who is Bex Marlowe's spouse?
+   gold: Bex Marlowe's spouse is Cato Fenn.
+d11-anchor-author-whatwritten
+   T: Harbor Lights's author is Dana Holt.
+   T: Dana Holt's author is Ravi Stone.
+   T: What has Dana Holt written?
+   gold: Harbor Lights's author is Dana Holt.
+d13-author-forward
+   T: The author of Salt Harbor is Petra Quinn.
+   T: The author of Petra Quinn is Milo Hart.
+   T: Who wrote Salt Harbor?
+   gold: Salt Harbor's author is Petra Quinn.
+d16-founder-whatfound
+   T: Ember Bay's founder is Sela Voss.
+   T: Sela Voss's founder is Daro Venn.
+   T: What did Sela Voss found?
+   gold: Ember Bay's founder is Sela Voss.
+d17-founder-forward
+   T: Ember Bay's founder is Sela Voss.
+   T: Sela Voss's founder is Daro Venn.
+   T: Who founded Ember Bay?
+   gold: Ember Bay's founder is Sela Voss.
+d29-spouse-3link
+   T: Aldo Rehn's spouse is Bram Colt.
+   T: Bram Colt's spouse is Cleo Drane.
+   T: Cleo Drane's spouse is Dov Elkin.
+   T: Whose spouse is Cleo Drane?
+   gold: Bram Colt's spouse is Cleo Drane.
+d30-spouse-fwd-wording
+   T: Talia Wren's spouse is Bex Marlowe.
+   T: Bex Marlowe's spouse is Cato Fenn.
+   T: Who is Bex Marlowe married to?
+   gold: Bex Marlowe's spouse is Cato Fenn.
+d31-spouse-sink
+   T: Talia Wren's spouse is Bex Marlowe.
+   T: Bex Marlowe's spouse is Cato Fenn.
+   T: Whose spouse is Cato Fenn?
+   gold: Bex Marlowe's spouse is Cato Fenn.
+d33-author-whose
+   T: The author of Salt Harbor is Petra Quinn.
+   T: The author of Petra Quinn is Milo Hart.
+   T: Whose author is Petra Quinn?
+   gold: Salt Harbor's author is Petra Quinn.
+d34-founder-whose
+   T: Ember Bay's founder is Sela Voss.
+   T: Sela Voss's founder is Daro Venn.
+   T: Whose founder is Sela Voss?
+   gold: Ember Bay's founder is Sela Voss.
+[0m
+[0m$ [0mgrep -n "_relation\b" scripts/fable_agent_loop.py | head; grep -n "def _relation" -A 30 scripts/fable_agent_loop.py | head -50
+129:                     "relations": [self._relation(p) for p in parts[1:]]}]
+140:            name, relation = parts[0], self._relation(parts[1])
+151:    def _relation(surface: str) -> str:
+151:    def _relation(surface: str) -> str:
+152-        return "_".join(surface.strip().lower().split())
+153-
+154-
+155-class FakeMouth:
+156-    """Template sentences. Every content word is copied out of the result record."""
+157-
+158-    def say(self, record: dict) -> str:
+159-        kind = record.get("kind")
+160-        if kind in ("write", "clarify", "note"):
+161-            return record.get("text", "")
+162-        if kind != "answer":
+163-            return ""
+164-        status, fields = record.get("status"), dict(record.get("fields") or {})
+165-        if status == C.OK:
+166-            owner = "'s ".join([record["name"]] + [part.replace("_", " ")
+167-                                                   for part in record["relations"]])
+168-            sentence = f"{owner} is {fields.get('answer')}."
+169-            if fields.get("source") == "web-verified":
+170-                sentence += " (I read that online; you didn't tell me.)"
+171-            return sentence
+172-        return C.Result(status, fields).say()
+173-
+174-
+175-class LookupReasoner:
+176-    """1-3 hop lookup through the notebook contract's own hard-coded hop loop."""
+177-
+178-    def answer(self, question: dict, notebook) -> dict:
+179-        name = question["name"]
+180-        relations = list(question["relations"])
+181-        if not 1 <= len(relations) <= MAX_HOPS:
+[0m
+[0m$ [0mls scripts/ | grep -E "221|237|fix22|table" | head; echo ---; grep -rn "worked out backwards" scripts/*.py | head -5
+claude_221b_run.py
+claude_221b_unit.py
+claude_fix228_srcguard.py
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_loop237_agent.py
+claude_loop237b_agent.py
+claude_qnorm221c_run.py
+claude_relationtable_check.py
+---
+scripts/claude_138n_score.py:305:    m = re.match(r"^(.+?)'s? (.+?) is (.+?)\.( \(worked out backwards\))?$",
+scripts/claude_138nb_devrepro.py:66:                if "(worked out backwards)" in rep: n_label += 1
+scripts/claude_direction251_score.py:32:LABEL = "(worked out backwards)"
+scripts/claude_fix138nb_label.py:8:forward-style sentences ("S's R is V.") but no "(worked out backwards)"
+scripts/claude_fix138nb_label.py:35:LABEL138NB = T221.LABEL221  # "(worked out backwards)"
+[0m
+[0m$ [0mgrep -rn "LABEL221\|INVERSE\|inverse" scripts/fable_fix221*.py scripts/claude_loop221*.py 2>&1 | head -20; ls scripts/ | grep -i "fix22" | head
+scripts/fable_fix221_panel.py:16:                        (case/space-insensitive); for an inverse family
+scripts/fable_fix221_panel.py:17:                        (family name contains "inverse"/"reverse"/
+scripts/fable_fix221_panel.py:190:    inverse_fam = any(w in fl for w in ("inverse", "reverse", "backward"))
+scripts/fable_fix221_panel.py:198:        ok = has_gold and (not inverse_fam or T221.LABEL221 in reply)
+scripts/fable_fix221_panel.py:205:            "label221": T221.LABEL221 in reply,
+scripts/fable_fix221_panel.py:250:                   if r["stage221"] == T221.STAGE221 + "-inverse"
+scripts/fable_fix221_panel.py:257:        "inverse_answers": len(inv_answers),
+scripts/fable_fix221_panel.py:258:        "inverse_answers_labelled": sum(T221.LABEL221 in r["reply221"]
+scripts/fable_fix221_panelmap.py:70:        inv = "inverse" in fl
+scripts/fable_fix221_panelmap.py:71:        ok = has_all and (not inv or P.T221.LABEL221 in r221["reply"])
+scripts/fable_fix221_tableask.py:16:    matched against the table's ask and inverse
+scripts/fable_fix221_tableask.py:23:      inverse reading -> one clarify action whose text is forward-style
+scripts/fable_fix221_tableask.py:43:    inverse answer ONLY if the table's key group (aliases, storage keys,
+scripts/fable_fix221_tableask.py:69:LABEL221 = "(worked out backwards)"
+scripts/fable_fix221_tableask.py:179:            for k in r.get("inverse_storage_keys", []):
+scripts/fable_fix221_tableask.py:187:                    if kind in ("ask", "inverse"):
+scripts/fable_fix221_tableask.py:189:            for kind in ("ask", "inverse"):
+scripts/fable_fix221_tableask.py:226:    def inverse_keys(self, name: str) -> list[str]:
+scripts/fable_fix221_tableask.py:228:                self.rels[name].get("inverse_storage_keys", [])]
+scripts/fable_fix221_tableask.py:273:    "inverse". X == USER_KEY221 for "my" templates. Self questions (any
+claude_fix228_srcguard.py
+fable_fix220_marks.py
+fable_fix220_restartindex.py
+fable_fix221_g3.py
+fable_fix221_p3check.py
+fable_fix221_panel.py
+fable_fix221_panelmap.py
+fable_fix221_predict.py
+fable_fix221_tableask.py
+fable_fix222_ofteachb.py
+[0m
+[0m$ [0mgrep -n "spouse\|author\|founder\|husband\|married\|written\|wrote" scripts/fable_fix221_tableask.py | head -40
+81:# a slot never ENDS in one of these (catches "The Glass Orchard married
+82:# to" in "Who is the author of The Glass Orchard married to?")
+85:    "into", "as", "married", "born", "called", "named", "is", "was", "are",
+545:        ("Who is the author of The Glass Orchard married to?", None),
+546:        ("who is bram kite married to?", ("spouse", "ask", "bram kite", None)),
+[0m
+[0m$ [0mgrep -rn "spouse\|author\|founder" scripts/claude_relationtable_check.py 2>&1 | head; echo ---; grep -rln "RELATION_TABLE\|relation_table\|TABLE221" scripts/*.py | head
+---
+scripts/claude_ear256_roundtrip.py
+scripts/claude_ear256_score.py
+scripts/claude_loop229_agent.py
+scripts/claude_loop231_agent.py
+scripts/claude_loop237_agent.py
+scripts/claude_loop237b_agent.py
+scripts/claude_mouth241_reader.py
+scripts/claude_mouth241_say.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_say.py
+[0m
+[0m# [0mTodos
+[•] Reproduce on 138m: dev 36 dialogs + 30+ own dialogs (new driver)
+[ ] Build guard scripts/claude_fix268_nhopdir.py + agent scripts/claude_loop268_agent.py
+[ ] Pilot guard on dev+own dialogs; verify flips/identical
+[ ] Pilot M2/M3/M4 vs 138m saved rows
+[ ] Write PASSMARKS.md + predictions + seal + ledger append
+[ ] Registered runs M2-M4 once
+[ ] Wait/copy/check blind panel, run once on both arms
+[ ] Write RESULTS.md + final reply; leave files for director
+[0m
+[0m$ [0mgrep -rn "compose_n_hop" scripts/*.py | grep -v "def compose_n_hop" | head -20
+scripts/claude_determinism228_forced.py:8:(compose_n_hop, compound_subject_hit) read the wrong index -> the rewrite
+scripts/claude_diag243_composers.py:5:B92.compose_n_hop first, then B73.compose_question, each gated by
+scripts/claude_diag243_composers.py:40:    f = B92.compose_n_hop(t, tr)
+scripts/claude_diag243_composers.py:98:    print(f"{t!r} | nhop={B92.compose_n_hop(t, tr)} | guided={g} consumes={c}")
+scripts/claude_fix228_srcguard.py:10:more). The fast compose_n_hop / compound_subject_hit leaves read the wrong
+scripts/claude_fix246_mentionwalk.py:3:B92.compose_n_hop (scripts/fable_bench92_english_arm.py:198) walks the
+scripts/claude_fix246_mentionwalk.py:10:where compose_n_hop returns None AND the unchanged base branch ends in a
+scripts/claude_fix246_mentionwalk.py:190:        # chains stay with compose_n_hop.
+scripts/claude_fix246_mentionwalk.py:194:        # 2-cycle back to the start (rt143 S5): abstain like compose_n_hop
+scripts/claude_fix246_mentionwalk.py:271:        if B92.compose_n_hop(text, triples) is not None:
+scripts/claude_fix251_direction.py:6:scripts/fable_bench92_english_arm.py:221 compose_n_hop (called from
+scripts/claude_fix251_direction.py:31:compose_n_hop cue substrings; see the design note):
+scripts/claude_loop246_agent.py:6:B92.compose_n_hop returns None and the unchanged base misses the question.
+scripts/fable_align147_compose.py:7:compose_n_hop (scripts/fable_bench92_english_arm.py:198-240) walks to the
+scripts/fable_align147_compose.py:57:_BASE_COMPOSE_N_HOP92 = B92.compose_n_hop
+scripts/fable_align147_compose.py:593:# Aligned N-hop composer (drop-in for B92.compose_n_hop).
+scripts/fable_align147_compose.py:721:    B92.compose_n_hop / B73.compose_question for the aligned versions,
+scripts/fable_align147_compose.py:732:        s92, s73 = _B92.compose_n_hop, _B73.compose_question
+scripts/fable_align147_compose.py:733:        _B92.compose_n_hop, _B73.compose_question = (
+scripts/fable_align147_compose.py:734:            compose_n_hop147, compose_question147)
+[0m
+[0m$ [0mgrep -n "^import\|^from\|install_" scripts/claude_loop138l_agent.py | head -40
+50:from __future__ import annotations
+52:import argparse
+53:import copy
+54:import json
+55:import sys
+56:from pathlib import Path
+62:import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+64:G228.install_srcguard228()  # 228 first, at import
+66:import claude_loop138k_agent as L138K  # noqa: E402 (base, read-only)
+67:import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+68:import fable_loop209_agent as L209  # noqa: E402 (piece, read-only)
+69:import fable_loop212_agent as L212  # noqa: E402 (piece, read-only)
+70:import fable_loop216_agent as L216  # noqa: E402 (piece, read-only)
+71:import fable_loop222_agent as L222  # noqa: E402 (piece, read-only)
+72:import fable_loop223_agent as L223  # noqa: E402 (piece, read-only)
+73:import fable_loop226_agent as L226  # noqa: E402 (piece, read-only)
+154:    G228.install_srcguard228()
+166:        G228.install_srcguard228()
+[0m
+[0m→ [0mRead scripts/claude_fix251_direction.py
+[0m→ [0mRead scripts/claude_nhopdiag_20260923_repro.py
+[0m
+[0m$ [0msed -n 1,60p scripts/claude_merge138k_latency.py; echo =====; sed -n 1,60p scripts/claude_merge138k_probe.py
+#!/usr/bin/env python3
+"""Merge 138k K7 driver: per-turn wall latency through daemon.process_file.
+
+Runs every dialog in the given probe files (restart markers honoured,
+restarts not timed) <reps> times on fresh work dirs and records the wall
+time of each process_file call. One agent per process (run 138j and 138k
+in alternating processes); the scorer compares medians.
+
+usage: claude_merge138k_latency.py <agent.py> <config> <workdir> <reps> <out.json> <probe.json>...
+"""
+from __future__ import annotations
+
+import gc
+import json
+import shutil
+import statistics
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main() -> int:
+    agent, config, work, reps, out = sys.argv[1:6]
+    probes = sys.argv[6:]
+    _, dcls, _, _ = M.load_agent(agent)
+    base = M.load_base_cfg(config)
+    dialogs = []
+    for p in probes:
+        dialogs += json.loads(Path(p).read_text(encoding="utf-8"))
+    times = []
+    for r in range(int(reps)):
+        for i, msgs in enumerate(dialogs):
+            root = Path(work) / f"r{r}" / f"d{i:02d}"
+            shutil.rmtree(root, ignore_errors=True)
+            root.mkdir(parents=True)
+            d = M.make_daemon(dcls, base, root)
+            k = 0
+            for t in msgs:
+                if t == "__RESTART__":
+                    del d
+                    gc.collect()
+                    d = M.make_daemon(dcls, base, root)
+                    continue
+                if t == "__TRIPLES__":
+                    continue
+                f = root / "inbox" / f"m{k:02d}.txt"
+                f.write_text(t)
+                t0 = time.perf_counter()
+                d.process_file(f)
+                times.append((time.perf_counter() - t0) * 1000.0)
+                k += 1
+            del d
+            gc.collect()
+    rep = {"agent": agent, "n_turns": len(times),
+zsh:1: ==== not found
+[0m
+[0m$ [0msed -n 1,60p scripts/claude_merge138k_probe.py
+#!/usr/bin/env python3
+"""Merge 138k driver: restart-aware dialog probe with duplicate checks.
+
+Same turn path as artifacts/claude-verify-20260922/restart_probe.py
+(fable_marks123_all.make_daemon + process_file, "__RESTART__" rebuilds the
+daemon on the same root, "__TRIPLES__" snapshots). Adds, after EVERY
+restart and at the end of every dialog, a duplicate audit:
+  fast  = L90.notebook_triples(nb)       (170-cached, index-backed)
+  truth = fix170 _ORIG_TRIPLES(nb)       (full nb.facts scan, no index)
+  inner = inner._triples fact ids        (the 220-rebuilt index)
+dup_ok iff fast has no repeated triple, inner has no repeated fact id, and
+sorted(fast) == sorted(truth).
+
+usage: claude_merge138k_probe.py <agent.py> <config> <workdir> <probe.json> <out.json>
+"""
+from __future__ import annotations
+
+import gc
+import json
+import shutil
+import sys
+from collections import Counter
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main() -> int:
+    agent, config, work, probe, out = sys.argv[1:6]
+    mod, dcls, _, _ = M.load_agent(agent)
+    import fable_fix170_compose as F170  # after the agent import
+    import fable_loop90_agent as L90
+    base = M.load_base_cfg(config)
+    S = Path(work)
+    dialogs = json.loads(Path(probe).read_text(encoding="utf-8"))
+
+    def nev(d):
+        nb = d.loop.nb
+        for o in (nb, getattr(nb, "nb", None)):
+            if o is not None and hasattr(o, "events"):
+                return len(o.events)
+        return -1
+
+    def audit(d, where):
+        nb = d.loop.nb
+        fast = [tuple(x) for x in L90.notebook_triples(nb)]
+        truth = [tuple(x) for x in F170._ORIG_TRIPLES(nb)]
+        inner = getattr(nb, "nb", nb)
+        ids = [t[0] for t in getattr(inner, "_triples", [])]
+        dup_fast = sorted(k for k, v in Counter(fast).items() if v > 1)
+        dup_ids = sorted(k for k, v in Counter(ids).items() if v > 1)
+        ok = (not dup_fast and not dup_ids
+              and sorted(fast) == sorted(truth))
+        return {"where": where, "fast": [list(t) for t in fast],
+                "truth": [list(t) for t in truth],
+                "dup_fast": [list(t) for t in dup_fast],
+[0m
+[0m← [0mWrite scripts/claude_268_devrepro.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime | head -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_devrepro.py scripts/claude_loop138m_agent.py artifacts/claude-merge138m-20260922/loop138m-config.json /tmp/nhop268_138m.json 138m-base 2>&1 | tail -80
+1:27  up 2 days, 17:17, 4 users, load averages: 31.09 45.82 52.18
+[138m-base] dialogs=70 turns=205 gold=25 wrong_as_predicted=23 n_exp={'WRONG-nhop': 23, 'CORRECT': 29, 'RECORD': 18}
+[138m-base] d01-anchor-spouse-whose: stage=loop138-nhop reply="Dana Holt's spouse is Ravi Stone." verdict=WRONG-AS-PREDICTED
+[138m-base] d02-anchor-spouse-married: stage=loop138-nhop reply="Dana Holt's spouse is Ravi Stone." verdict=WRONG-AS-PREDICTED
+[138m-base] d03-spouse-whose: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=WRONG-AS-PREDICTED
+[138m-base] d04-spouse-married: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=WRONG-AS-PREDICTED
+[138m-base] d05-spouse-husband: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=WRONG-AS-PREDICTED
+[138m-base] d06-spouse-wife: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=WRONG-AS-PREDICTED
+[138m-base] d07-spouse-nochain: stage=loop190-reverse reply="Talia Wren's spouse is Bex Marlowe." verdict=GOLD
+[138m-base] d10-spouse-forward: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[138m-base] d11-anchor-author-whatwritten: stage=loop138-nhop reply="Dana Holt's author is Ravi Stone." verdict=WRONG-AS-PREDICTED
+[138m-base] d12-author-whatwritten: stage=loop138-nhop reply="Petra Quinn's author is Milo Hart." verdict=WRONG-AS-PREDICTED
+[138m-base] d13-author-forward: stage=loop138-nhop reply="Salt Harbor's author's author is Milo Hart." verdict=MISMATCH
+[138m-base] d16-founder-whatfound: stage=loop138-nhop reply="Sela Voss's founder is Daro Venn." verdict=WRONG-AS-PREDICTED
+[138m-base] d17-founder-forward: stage=loop138-nhop reply="Ember Bay's founder's founder is Daro Venn." verdict=MISMATCH
+[138m-base] d20-boss-chain: stage=loop190-reverse reply="Juno Pike's boss is Wren Talbot." verdict=GOLD
+[138m-base] d21-boss-nochain: stage=loop190-reverse reply="Juno Pike's boss is Wren Talbot." verdict=GOLD
+[138m-base] d22-boss-forward: stage=fake reply="Wren Talbot's boss is Ash Moreno." verdict=GOLD
+[138m-base] d23-mother-chain: stage=loop190-reverse reply="Lark Ohm's mother is Tess Ibarra." verdict=GOLD
+[138m-base] d24-mother-nochain: stage=loop190-reverse reply="Lark Ohm's mother is Tess Ibarra." verdict=GOLD
+[138m-base] d25-mother-forward: stage=fake reply="Tess Ibarra's mother is Nia Sol." verdict=GOLD
+[138m-base] d26-friend-chain: stage=loop190-reverse reply="Pell Dray's friend is Moss Kline." verdict=GOLD
+[138m-base] d27-friend-nochain: stage=loop190-reverse reply="Pell Dray's friend is Moss Kline." verdict=GOLD
+[138m-base] d28-friend-forward: stage=fake reply="Moss Kline's friend is Vera Jost." verdict=GOLD
+[138m-base] d29-spouse-3link: stage=loop138-nhop reply="Cleo Drane's spouse is Dov Elkin." verdict=WRONG-AS-PREDICTED
+[138m-base] d30-spouse-fwd-wording: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[138m-base] d31-spouse-sink: stage=loop190-reverse reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[138m-base] d33-author-whose: stage=loop138-nhop reply="Petra Quinn's author is Milo Hart." verdict=WRONG-AS-PREDICTED
+[138m-base] d34-founder-whose: stage=loop138-nhop reply="Sela Voss's founder is Daro Venn." verdict=WRONG-AS-PREDICTED
+[138m-base] o01-spouse-was-married: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=WRONG-AS-PREDICTED
+[138m-base] o02-spouse-who-has-as: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=WRONG-AS-PREDICTED
+[138m-base] o03-spouse-fwd-married-to: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[138m-base] o04-spouse-partner: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=WRONG-AS-PREDICTED
+[138m-base] o06-spouse-sink-whose: stage=loop190-reverse reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[138m-base] o09-author-whose: stage=loop138-nhop reply="Ines Halvors's author is Jorah Bell." verdict=WRONG-AS-PREDICTED
+[138m-base] o10-author-fwd-possessive: stage=loop138-nhop reply="Ines Halvors's author is Jorah Bell." verdict=GOLD
+[138m-base] o11-founder-who-founded-value: stage=none reply="I didn't understand that question — could you say it another way?" verdict=MISMATCH
+[138m-base] o12-founder-whose: stage=loop153-reverse reply="I don't know anyone whose founder is Liora Sen." verdict=WRONG-AS-PREDICTED
+[138m-base] o13-founder-what-has-founded: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[138m-base] o15-employer-whose: stage=loop138-nhop reply="Priya Nair's employer is Oren Hale." verdict=WRONG-AS-PREDICTED
+[138m-base] o16-employer-fwd: stage=loop138-nhop reply="Priya Nair's employer is Oren Hale." verdict=GOLD
+[138m-base] o18-child-whose: stage=loop138-nhop reply="Tomas Rey's child is Uma Frost." verdict=WRONG-AS-PREDICTED
+[138m-base] o19-child-fwd: stage=loop138-nhop reply="Tomas Rey's child is Uma Frost." verdict=GOLD
+[138m-base] o20-author-3link-whatwritten: stage=loop138-nhop reply="Felix Marsh's author is Greta Lund." verdict=WRONG-AS-PREDICTED
+[138m-base] o21-spouse-sink-who-has-as: stage=loop190-reverse reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[138m-base] o22-spouse-fwd-husband: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[138m-base] o25-founder-fwd-possessive: stage=fake reply="I don't know anyone called Liora Sen." verdict=MISMATCH
+[138m-base] o26-mother-chain: stage=loop190-reverse reply="Ivy Sloane's mother is Nadia Fer." verdict=GOLD
+[138m-base] o27-spouse-fwd-short: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[138m-base] o28-spouse-whose-was: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=WRONG-AS-PREDICTED
+[138m-base] o29-author-past-perfect: stage=loop138-nhop reply="Ines Halvors's author is Jorah Bell." verdict=WRONG-AS-PREDICTED
+[138m-base] o30-boss-fwd: stage=fake reply="Rory Tan's boss is Skye Lind." verdict=GOLD
+[138m-base] o31-friend-chain: stage=loop190-reverse reply="Pax Ford's friend is Quin Harper." verdict=GOLD
+[138m-base] o32-spouse-sink-3link: stage=loop190-reverse reply="Cleo Drane's spouse is Dov Elkin." verdict=GOLD
+WROTE /tmp/nhop268_138m.json
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+rows=json.load(open('/tmp/nhop268_138m.json'))
+cur=None
+for r in rows:
+    if r['dialog'] in ('o11-founder-who-founded-value','o13-founder-what-has-founded','o25-founder-fwd-possessive','o12-founder-whose','o14-founder-what-was-founded-by'):
+        print(r['dialog'],'t'+str(r['turn']),'|',r['input'][:60],'| stage=',r['stage'],'| reply=',r['reply'][:80])
+        if r['turn']<2: print('   triples:',r['triples_after'])
+"
+o11-founder-who-founded-value t0 | The founder of Copperfield is Liora Sen. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o11-founder-who-founded-value t1 | The founder of Liora Sen is Marek Doyle. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o11-founder-who-founded-value t2 | Who founded Liora Sen? | stage= none | reply= I didn't understand that question — could you say it another way?
+o12-founder-whose t0 | The founder of Copperfield is Liora Sen. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o12-founder-whose t1 | The founder of Liora Sen is Marek Doyle. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o12-founder-whose t2 | Whose founder is Liora Sen? | stage= loop153-reverse | reply= I don't know anyone whose founder is Liora Sen.
+o13-founder-what-has-founded t0 | The founder of Copperfield is Liora Sen. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o13-founder-what-has-founded t1 | The founder of Liora Sen is Marek Doyle. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o13-founder-what-has-founded t2 | What has Liora Sen founded? | stage= none | reply= I didn't understand that question — could you say it another way?
+o14-founder-what-was-founded-by t0 | The founder of Copperfield is Liora Sen. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o14-founder-what-was-founded-by t1 | The founder of Liora Sen is Marek Doyle. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o14-founder-what-was-founded-by t2 | What was founded by Liora Sen? | stage= bench73 | reply= Was that a question?
+o25-founder-fwd-possessive t0 | The founder of Copperfield is Liora Sen. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o25-founder-fwd-possessive t1 | The founder of Liora Sen is Marek Doyle. | stage= none | reply= I couldn't save that as a fact. I don't know that shape yet. Could you say it an
+   triples: []
+o25-founder-fwd-possessive t2 | Who is Liora Sen's founder? | stage= fake | reply= I don't know anyone called Liora Sen.
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+rows=json.load(open('/tmp/nhop268_138m.json'))
+for r in rows:
+    if r['expect']=='RECORD' and r['turn']==len([x for x in rows if x['dialog']==r['dialog']])-1:
+        print(r['dialog'],'| Q:',r['input'][:55],'| stage=',r['stage'],'| reply=',r['reply'][:90])
+"
+d08-spouse-2subj-yn1 | Q: Is Bex Marlowe Talia Wren's spouse? | stage= none | reply= I didn't understand that question — could you say it another way?
+d09-spouse-2subj-yn2 | Q: Is Cato Fenn Bex Marlowe's spouse? | stage= none | reply= I didn't understand that question — could you say it another way?
+d14-author-nochain | Q: What has Petra Quinn written? | stage= none | reply= I didn't understand that question — could you say it another way?
+d15-author-2subj | Q: Did Petra Quinn write Salt Harbor? | stage= none | reply= I didn't understand that question — could you say it another way?
+d18-founder-nochain | Q: What did Sela Voss found? | stage= none | reply= I didn't understand that question — could you say it another way?
+d19-founder-2subj | Q: Did Sela Voss found Ember Bay? | stage= none | reply= I didn't understand that question — could you say it another way?
+d32-spouse-2subj-choice | Q: Who is married to Bex Marlowe, Talia Wren or Cato Fenn? | stage= bench73 | reply= Was that a question?
+d35-boss-2subj | Q: Is Wren Talbot Juno Pike's boss? | stage= none | reply= I didn't understand that question — could you say it another way?
+d36-friend-nochain-fwd | Q: Who is Moss Kline's friend? | stage= fake | reply= I don't know Moss Kline's friend.
+o05-spouse-2subj-choice | Q: Is Bram Kolb married to Alba Reyes or Cleo Drane? | stage= none | reply= I didn't understand that question — could you say it another way?
+o07-author-what-did-write | Q: What did Ines Halvors write? | stage= none | reply= I didn't understand that question — could you say it another way?
+o08-author-who-wrote-value | Q: Who wrote Ines Halvors? | stage= loop138-nhop | reply= Ines Halvors's author is Jorah Bell.
+o14-founder-what-was-founded-by | Q: What was founded by Liora Sen? | stage= bench73 | reply= Was that a question?
+o17-employer-who-employs | Q: Who employs Priya Nair? | stage= loop138-nhop | reply= Priya Nair's employer is Oren Hale.
+o23-author-nochain-whatwritten | Q: What has Ines Halvors written? | stage= none | reply= I didn't understand that question — could you say it another way?
+o24-spouse-sink-whose-wife | Q: Whose wife is Cleo Drane? | stage= loop190-reverse | reply= I don't know anyone whose wife is Cleo Drane.
+o33-author-who-wrote-sink | Q: Who wrote Jorah Bell? | stage= none | reply= I didn't understand that question — could you say it another way?
+o34-founder-2subj | Q: Did Liora Sen found Copperfield? | stage= none | reply= I didn't understand that question — could you say it another way?
+[0m
+[0m$ [0msed -n 1,120p scripts/fable_fix153_reverse.py 2>&1 | head -130
+#!/usr/bin/env python3
+"""Experiment 153 -- THE ONE CHANGE: a reverse-question stage for loop150.
+
+Director probe on loop150 (and loop149-qrewrite): after "Tom's boss is Bob."
+every reverse question gets "I didn't understand that": "Whose boss is Bob?",
+"Who is Bob the boss of?", "Bob is the boss of whom?", "Who is Rita the
+mother of?", "Kelm is the capital of what?". Reversal is a benchmark target
+(plain transformers fail 'A is B -> B is A'; the notebook stores triples, so
+reverse lookup is exact).
+
+THE RULE (question side only; teach/correct/forget/ask paths untouched): a
+reverse-question stage runs ONLY when the forward question path did not
+understand the message (the base ears returned exactly the loop's own
+miss clarify, scripts/fable_loop90_agent.py:291-292). It parses four closed
+reverse frames, maps R with the loop's own relation table
+(FakeEars._relation, scripts/fable_agent_loop.py:150-152), scans the loop's
+own live taught triples (Loop90Notebook triples: source == taught AND active,
+scripts/fable_loop90_agent.py:101-114 -- so corrected-away, forgotten,
+refused/hearsay content never answers), and replies:
+
+  one subject    "Bob is the boss of Tom."
+  several        "Bob is the boss of Tom and Sue." (teach order)
+  none           "I don't know anyone whose boss is Bob." (never invents)
+
+The stage emits clarify actions only, so the loop's _act passes them through
+without writing (scripts/fable_agent_loop.py:337-339): a reverse question
+never writes (mark V2). Multi-hop reverse ("Whose mother's boss is Bob?")
+matches no frame (R spans exclude "'s"/"of"/relative cues) and keeps the
+base clarify -- out of scope, never answered wrong.
+
+No existing file edited; everything new lives in this file (+
+scripts/fable_loop153_agent.py, which stacks this mixin onto loop150).
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_agent_loop as A  # noqa: E402 (relation table, read-only)
+import fable_loop90_agent as L90  # noqa: E402 (triples, read-only)
+
+# The loop's own miss replies: forward path "did not understand" iff the
+# base ears return exactly one clarify carrying one of these bits.
+MISS_BITS = ("didn't understand that", "didn't catch anything")
+
+# Relation spans are single noun phrases: letters/spaces only (no "'s", no
+# "of", no relative-clause cues) so multi-hop shapes can never parse.
+
+# Cues that disqualify a parse (multi-hop / relative / compound shapes).
+_NON_SIMPLE = ("'s", "\u2019s", " of ", " that ", " who ", " which ",
+               " where ", " and ", ",", ";")
+
+
+def _norm(text: str) -> str:
+    return " ".join(str(text).split())
+
+
+def parse_reverse(text: str) -> tuple[str, str] | None:
+    """Reverse question -> (relation_surface, value_surface), or None.
+
+    Returns None for every non-reverse turn (including multi-hop reverse,
+    which is out of scope and must keep the base clarify).
+    """
+    t = _norm(text)
+    if not t.rstrip().endswith("?"):
+        return None
+    low = t.lower().rstrip("?")
+    if "whose " in low or low.startswith("whose"):
+        m = re.fullmatch(r"whose\s+([A-Za-z][A-Za-z ]*?)\s+is\s+(.+?)\?",
+                         t, re.IGNORECASE)
+        if m:
+            return (m.group(1).strip(), m.group(2).strip().rstrip("?"))
+        return None
+    m = re.fullmatch(r"(?:who|what)\s+is\s+(.+?)\s+the\s+"
+                     r"([A-Za-z][A-Za-z ]*?)\s+of\?", t, re.IGNORECASE)
+    if m:
+        return (m.group(2).strip(), m.group(1).strip())
+    m = re.fullmatch(r"(.+?)\s+is\s+the\s+([A-Za-z][A-Za-z ]*?)\s+of\s+"
+                     r"(?:whom|what|who)\?", t, re.IGNORECASE)
+    if m:
+        return (m.group(2).strip(), m.group(1).strip())
+    m = re.fullmatch(r"(?:which|what)\s+[A-Za-z]+\s+has\s+(.+?)\s+as\s+"
+                     r"its\s+([A-Za-z][A-Za-z ]*?)\?", t, re.IGNORECASE)
+    if m:
+        return (m.group(2).strip(), m.group(1).strip())
+    return None
+
+
+def _simple(span: str) -> bool:
+    s = _norm(span)
+    if not s or not s[0].isalpha():
+        return False
+    low = f" {s.lower()} "
+    return not any(cue in low or cue in s for cue in _NON_SIMPLE)
+
+
+def reverse_subjects(nb, rel_key: str, value: str) -> list[str]:
+    """Every subject S with a live taught (S, rel_key, value), teach order."""
+    want = _norm(value).rstrip(".")
+    out: list[str] = []
+    triples = L90.notebook_triples(nb) if nb is not None else []
+    for subj, rel, val in triples:
+        if rel != rel_key:
+            continue
+        if _norm(val).rstrip(".") != want:
+            continue
+        if subj not in out:
+            out.append(subj)
+    return out
+
+
+def answer_reverse(rel_surface: str, value: str,
+                   subjects: list[str]) -> str:
+    """Exact reply strings (reused shapes, nothing invented beyond R/V)."""
+[0m
+[0m$ [0mgrep -n "def compose_question" -A 40 scripts/fable_bench73_english_arm.py | head -60; grep -n "def is_explicit_question" -A 15 scripts/fable_loop113_agent.py | head -20
+246:def compose_question(question: str,
+247-                     triples: list[tuple[str, str, str]]
+248-                     ) -> tuple[str, list[str]] | None:
+249-    """English question + parsed taught triples -> (name, relations), or None.
+250-
+251-    Shared arm code (both ears choices): the pluggable ears map single
+252-    sentences to triples; query composition over those triples lives here so
+253-    ears47 drops in without new code.
+254-    """
+255-    q = " ".join(str(question).split())
+256-    if not q:
+257-        return None
+258-    ents: list[str] = []
+259-    for s, _, o in triples:
+260-        ents.extend([s, o])
+261-
+262-    m = re.fullmatch(r"What is the never-taught relation (\d+) of (.+?)\??", q)
+263-    if m:
+264-        return (m.group(2).strip(), [f"never_taught_rel_{m.group(1)}"])
+265-
+266-    m = re.fullmatch(
+267-        r"What is the never-taught relation of the ([\w /-]+?) of (.+?)\??", q)
+268-    if m:
+269-        key = REV_OF_NOUNS.get(m.group(1).strip().lower().replace(" ", "_"))
+270-        if key is None:
+271-            return None
+272-        # Second hop was never taught: use an undeclared key so the notebook
+273-        # structurally abstains (same mechanism as the structured arm).
+274-        return (m.group(2).strip(), [key, "never_taught_rel"])
+275-
+276-    m = re.fullmatch(r"Who is the ([\w /-]+?) of (.+?)\??", q)
+277-    if m:
+278-        label = m.group(1).strip().lower().replace(" ", "_")
+279-        name = m.group(2).strip()
+280-        if label in REV_OF_NOUNS and _bare_name_ok(name):
+281-            return _one_hop(name, REV_OF_NOUNS[label], triples)
+282-
+283-    m = re.fullmatch(r"Who (\w+) by (.+?)\??", q)
+284-    if m:
+285-        verb = m.group(1).strip().lower()
+286-        name = m.group(2).strip()
+84:def is_explicit_question(question: str) -> bool:
+85-    """True for single-hop / structural probes (can never be a truncation).
+86-
+87-    Mirrors compose_question's explicit branches: Who-is-<noun>-of-bare-Name
+88-    (noun in the reversal map, bare-name gate), Who-<verb>-by-bare-Name
+89-    (verb in the reversal map, bare-name gate), and the two never-taught
+90-    relation probes (structural abstention probes).
+91-    """
+92-    q = " ".join(str(question).split())
+93-    if _NEVER_N_RE.fullmatch(q) or _NEVER_OF_RE.fullmatch(q):
+94-        return True
+95-    m = _WHO_OF_RE.fullmatch(q)
+96-    if m:
+97-        label = m.group(1).strip().lower().replace(" ", "_")
+98-        if (label in B73.REV_OF_NOUNS
+99-                and B73._bare_name_ok(m.group(2).strip())):
+[0m
+[0m$ [0mgrep -n "def load_agent" -A 30 scripts/fable_marks123_all.py | head -45; grep -n "def load_base_cfg" -A 10 scripts/fable_marks123_all.py | head -14
+68:def load_agent(agent_script: str):
+69-    spec = importlib.util.spec_from_file_location(
+70-        "fable_marks123_agent_under_test", agent_script)
+71-    mod = importlib.util.module_from_spec(spec)
+72-    sys.modules[spec.name] = mod
+73-    spec.loader.exec_module(mod)
+74-    daemon_cls = None
+75-    for name in dir(mod):
+76-        obj = getattr(mod, name)
+77-        if isinstance(obj, type) and name.endswith("Daemon"):
+78-            if daemon_cls is None or name.startswith("Loop"):
+79-                daemon_cls = obj
+80-    if daemon_cls is None:
+81-        raise RuntimeError(f"no *Daemon class found in {agent_script}")
+82-    build_fn = None
+83-    for name in dir(mod):
+84-        if name.startswith("build_agent") and callable(getattr(mod, name)):
+85-            build_fn = getattr(mod, name)
+86-            break
+87-    default_cfg = None
+88-    for name in dir(mod):
+89-        if name.startswith("DEFAULT_CONFIG"):
+90-            default_cfg = getattr(mod, name)
+91-            break
+92-    return mod, daemon_cls, build_fn, default_cfg
+93-
+94-
+95-def load_base_cfg(config_path: str) -> dict:
+96-    return json.loads(Path(config_path).read_text(encoding="utf-8"))
+97-
+98-
+95:def load_base_cfg(config_path: str) -> dict:
+96-    return json.loads(Path(config_path).read_text(encoding="utf-8"))
+97-
+98-
+99-def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+100-    cfg = copy.deepcopy(base_cfg)
+101-    cfg["state_dir"] = str(root)
+102-    cfg["sleep_threshold"] = 100000
+103-    return daemon_cls(root, cfg=cfg, idle_seconds=3600.0)
+104-
+105-
+[0m
+[0m← [0mWrite scripts/claude_fix268_nhopdir.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fix268_nhopdir.py 2>&1 | tail -30
+ok   r1 'R1-whose'
+ok   r1-was 'R1-whose'
+ok   r1-husband 'R1-whose'
+ok   r1-author 'R1-whose'
+ok   r2 'R2-married-to'
+ok   r2-was 'R2-married-to'
+ok   r3 'R3-who-has-as'
+ok   r3-her 'R3-who-has-as'
+ok   r4-author 'R4-what-verb'
+ok   r4-had 'R4-what-verb'
+ok   r4-founder 'R4-what-verb'
+ok   r4-founded 'R4-what-verb'
+ok   fwd-possessive None
+ok   fwd-married-to None
+ok   fwd-married-to-2 None
+ok   fwd-husband None
+ok   fwd-wrote None
+ok   fwd-founded None
+ok   fwd-founded-value None
+ok   fwd-author-poss None
+ok   fwd-employer None
+ok   fwd-mquake None
+ok   fwd-relative-possessive None
+ok   yn-2subj None
+ok   no-question-mark None
+selftest268 0 fails
+[0m
+[0m← [0mWrite scripts/claude_loop268_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_loop268_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+@@ -35,8 +35,9 @@
+ 
+ G228.install_srcguard228()  # 228 first, at import
+ 
+ import claude_fix268_nhopdir as G268  # noqa: E402 (the one change)
++import claude_loop138k_agent as L138K  # noqa: E402 (daemon base, read-only)
+ import claude_loop138m_agent as L138M  # noqa: E402 (base, read-only)
+ import fable_loop90_agent as L90  # noqa: E402 (read-only)
+ 
+ G268.install_nhopdir268()  # 268 guard, at import
+
+[0m
+[0m← [0mEdit scripts/claude_loop268_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+@@ -160,9 +160,9 @@
+              L138J.build_agent138j) = [s[0] for s in saved]
+         _check(self.loop)
+ 
+ 
+-class Loop268Daemon(Classes268Mixin, L138M.L138K.Loop138kDaemon):
++class Loop268Daemon(Classes268Mixin, L138K.Loop138kDaemon):
+     """Loop138kDaemon + 138m stack + 268 guard."""
+ 
+ 
+ def run_daemon268(root, cfg: dict | None = None,
+
+[0m
+[0m← [0mEdit scripts/claude_loop268_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop268_agent.py
+@@ -143,9 +143,8 @@
+ 
+ def __init__(self, *args, **kwargs):
+     G228.install_srcguard228()
+     G268.install_nhopdir268()
+-    import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+     import fable_loop138j_agent as L138J  # noqa: E402 (read-only)
+     saved = [(L138J.Loop138jEars, "Loop138jEars"),
+              (L138J.Loop138jAgentLoop, "Loop138jAgentLoop"),
+              (L138J.build_agent138j, "build_agent138j")]
+
+[0m
+[0m$ [0mmkdir -p artifacts/claude-nhop268-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop268_agent.py --write-config artifacts/claude-nhop268-20260923/loop268-config.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop268_agent.py --once "Who is Bex Marlowe's spouse?" --state-dir /tmp/nhop268-smoke1 2>&1 | tail -3
+Wrote artifacts/claude-nhop268-20260923/loop268-config.json
+I don't know anyone called Bex Marlowe.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_devrepro.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_268pilot.json 268-pilot 2>&1 | tail -75
+[268-pilot] dialogs=70 turns=205 gold=29 wrong_as_predicted=19 n_exp={'WRONG-nhop': 23, 'CORRECT': 29, 'RECORD': 18}
+[268-pilot] d01-anchor-spouse-whose: stage=loop190-reverse reply="Kim Varro's spouse is Dana Holt." verdict=GOLD
+[268-pilot] d02-anchor-spouse-married: stage=bench73 reply='Was that a question?' verdict=WRONG-AS-PREDICTED
+[268-pilot] d03-spouse-whose: stage=loop190-reverse reply="Talia Wren's spouse is Bex Marlowe." verdict=GOLD
+[268-pilot] d04-spouse-married: stage=bench73 reply='Was that a question?' verdict=WRONG-AS-PREDICTED
+[268-pilot] d05-spouse-husband: stage=loop190-reverse reply="I don't know anyone whose husband is Bex Marlowe." verdict=WRONG-AS-PREDICTED
+[268-pilot] d06-spouse-wife: stage=loop190-reverse reply="I don't know anyone whose wife is Bex Marlowe." verdict=WRONG-AS-PREDICTED
+[268-pilot] d07-spouse-nochain: stage=loop190-reverse reply="Talia Wren's spouse is Bex Marlowe." verdict=GOLD
+[268-pilot] d10-spouse-forward: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[268-pilot] d11-anchor-author-whatwritten: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] d12-author-whatwritten: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] d13-author-forward: stage=loop138-nhop reply="Salt Harbor's author's author is Milo Hart." verdict=MISMATCH
+[268-pilot] d16-founder-whatfound: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] d17-founder-forward: stage=loop138-nhop reply="Ember Bay's founder's founder is Daro Venn." verdict=MISMATCH
+[268-pilot] d20-boss-chain: stage=loop190-reverse reply="Juno Pike's boss is Wren Talbot." verdict=GOLD
+[268-pilot] d21-boss-nochain: stage=loop190-reverse reply="Juno Pike's boss is Wren Talbot." verdict=GOLD
+[268-pilot] d22-boss-forward: stage=fake reply="Wren Talbot's boss is Ash Moreno." verdict=GOLD
+[268-pilot] d23-mother-chain: stage=loop190-reverse reply="Lark Ohm's mother is Tess Ibarra." verdict=GOLD
+[268-pilot] d24-mother-nochain: stage=loop190-reverse reply="Lark Ohm's mother is Tess Ibarra." verdict=GOLD
+[268-pilot] d25-mother-forward: stage=fake reply="Tess Ibarra's mother is Nia Sol." verdict=GOLD
+[268-pilot] d26-friend-chain: stage=loop190-reverse reply="Pell Dray's friend is Moss Kline." verdict=GOLD
+[268-pilot] d27-friend-nochain: stage=loop190-reverse reply="Pell Dray's friend is Moss Kline." verdict=GOLD
+[268-pilot] d28-friend-forward: stage=fake reply="Moss Kline's friend is Vera Jost." verdict=GOLD
+[268-pilot] d29-spouse-3link: stage=loop190-reverse reply="Bram Colt's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] d30-spouse-fwd-wording: stage=loop138-nhop reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[268-pilot] d31-spouse-sink: stage=loop190-reverse reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+[268-pilot] d33-author-whose: stage=loop153-reverse reply='Petra Quinn is the author of Salt Harbor.' verdict=WRONG-AS-PREDICTED
+[268-pilot] d34-founder-whose: stage=loop153-reverse reply='Sela Voss is the founder of Ember Bay.' verdict=WRONG-AS-PREDICTED
+[268-pilot] o01-spouse-was-married: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] o02-spouse-who-has-as: stage=loop190-reverse reply="Alba Reyes's spouse is Bram Kolb." verdict=GOLD
+[268-pilot] o03-spouse-fwd-married-to: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] o04-spouse-partner: stage=loop190-reverse reply="I don't know anyone whose partner is Bram Kolb." verdict=WRONG-AS-PREDICTED
+[268-pilot] o06-spouse-sink-whose: stage=loop190-reverse reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] o09-author-whose: stage=loop153-reverse reply='Ines Halvors is the author of Grayport.' verdict=WRONG-AS-PREDICTED
+[268-pilot] o10-author-fwd-possessive: stage=loop138-nhop reply="Ines Halvors's author is Jorah Bell." verdict=GOLD
+[268-pilot] o11-founder-who-founded-value: stage=none reply="I didn't understand that question — could you say it another way?" verdict=MISMATCH
+[268-pilot] o12-founder-whose: stage=loop153-reverse reply="I don't know anyone whose founder is Liora Sen." verdict=WRONG-AS-PREDICTED
+[268-pilot] o13-founder-what-has-founded: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] o15-employer-whose: stage=loop153-reverse reply='Priya Nair is the employer of Theo Marsh.' verdict=WRONG-AS-PREDICTED
+[268-pilot] o16-employer-fwd: stage=loop138-nhop reply="Priya Nair's employer is Oren Hale." verdict=GOLD
+[268-pilot] o18-child-whose: stage=loop153-reverse reply='Tomas Rey is the child of Rosa Lind.' verdict=WRONG-AS-PREDICTED
+[268-pilot] o19-child-fwd: stage=loop138-nhop reply="Tomas Rey's child is Uma Frost." verdict=GOLD
+[268-pilot] o20-author-3link-whatwritten: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] o21-spouse-sink-who-has-as: stage=loop190-reverse reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] o22-spouse-fwd-husband: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] o25-founder-fwd-possessive: stage=fake reply="I don't know anyone called Liora Sen." verdict=MISMATCH
+[268-pilot] o26-mother-chain: stage=loop190-reverse reply="Ivy Sloane's mother is Nadia Fer." verdict=GOLD
+[268-pilot] o27-spouse-fwd-short: stage=loop138-nhop reply="Bram Kolb's spouse is Cleo Drane." verdict=GOLD
+[268-pilot] o28-spouse-whose-was: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] o29-author-past-perfect: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[268-pilot] o30-boss-fwd: stage=fake reply="Rory Tan's boss is Skye Lind." verdict=GOLD
+[268-pilot] o31-friend-chain: stage=loop190-reverse reply="Pax Ford's friend is Quin Harper." verdict=GOLD
+[268-pilot] o32-spouse-sink-3link: stage=loop190-reverse reply="Cleo Drane's spouse is Dov Elkin." verdict=GOLD
+WROTE /tmp/nhop268_268pilot.json
+[0m
+[0m$ [0mgrep -n "bench73" scripts/fable_loop102_agent.py scripts/fable_loop138_agent.py scripts/fable_bench73_english_arm.py 2>&1 | head; echo ===; grep -n "married" scripts/fable_bench73_english_arm.py | head
+scripts/fable_loop102_agent.py:61:import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+scripts/fable_loop102_agent.py:325:    "over Loop96Ears = GuardedEars91 over ChainEars(bench73 template + "
+scripts/fable_loop138_agent.py:63:import fable_bench73_english_arm as B73  # noqa: E402 (composer, read-only)
+scripts/fable_loop138_agent.py:286:    "GuardedEars91 over ChainEars(bench73 template + FakeEars templates)")
+scripts/fable_bench73_english_arm.py:34:    python -B scripts/fable_bench73_english_arm.py --selftest
+scripts/fable_bench73_english_arm.py:36:    python -B scripts/fable_bench73_english_arm.py --run --ears template
+scripts/fable_bench73_english_arm.py:38:    python -B scripts/fable_bench73_english_arm.py --run-garbled --ears template
+scripts/fable_bench73_english_arm.py:40:    python -B scripts/fable_bench73_english_arm.py --smoke-ears47 [--snapshot DIR]
+scripts/fable_bench73_english_arm.py:62:ART = ROOT / "artifacts" / "fable-bench73-20260921"
+scripts/fable_bench73_english_arm.py:64:GARBLED_DEFAULT = ART / "fable_bench73_garbled.jsonl"
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -rn "last_stage.*bench73\|\"bench73\"\|'bench73'" scripts/*.py | head; echo ===; sed -n 283,345p scripts/fable_bench73_english_arm.py
+scripts/fable_bench73_english_arm.py:503:    stem = "bench73" if args.data == str(DATA_DEFAULT) else "bench73-garbled"
+scripts/fable_fix129_f1.py:54:    ("P01", "bench73", ["Nora Brightmore is a citizen of Italy."],
+scripts/fable_fix129_f1.py:56:    ("P02", "bench73", ["Nora Brightmore is a citizen of Italy!"],
+scripts/fable_fix129_f1.py:58:    ("P03", "bench73", ["Nora Brightmore is a citizen of Italy?"],
+scripts/fable_fix129_f1.py:60:    ("P04", "bench73", ["Nora Brightmore is a citizen of Italy.  "],
+scripts/fable_fix129_f1.py:62:    ("P05", "bench73", ["Nora Brightmore is a citizen of Peru"],
+scripts/fable_fix129_f1.py:65:    ("P06", "bench73", ["The capital of Norland is Oslo."],
+scripts/fable_fix129_f1.py:67:    ("P07", "bench73", ["The capital of Norland is Oslo!"],
+scripts/fable_fix129_f1.py:69:    ("P08", "bench73", ["The capital of Norland is Oslo?"],
+scripts/fable_fix129_f1.py:72:    ("P09", "bench73", ["The official language of Norland is Norse."],
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -rn "bench73" scripts/fable_bench73_english_arm.py | grep -in "stage\|Was that" | head; grep -n "Was that a question" scripts/*.py | head
+scripts/claude_138n_predict.py:84:        "Was that a question", "not sure")
+scripts/claude_loop256_agent.py:27:       with the base's own "Was that a question?" clarify.
+scripts/fable_decline224.py:68:    ("Was that a question?", "fable_earsguard91 / loop96 '?' clarify"),
+scripts/fable_earsguard91.py:9:  (i)  value contains "?"  -> "Was that a question?"
+scripts/fable_earsguard91.py:33:QUESTION_MSG = "Was that a question?"
+scripts/fable_fix129_f1.py:17:"Was that a question?", 0 writes), so clarify-nowrite is the honest
+scripts/fable_redteam110_cases.py:452:     "expect": {"checks": [{"turn": 1, "contains": ["Was that a question?"]},
+[0m
+[0m$ [0mgrep -rn '"bench73"' scripts/fable_loop102_agent.py scripts/fable_loop96_agent.py scripts/fable_loop91_agent.py 2>&1 | head; grep -rn "last_stage\s*=" scripts/fable_loop102_agent.py | head -20
+grep: scripts/fable_loop91_agent.py: No such file or directory
+scripts/fable_loop102_agent.py:162:        self.last_stage = ""
+scripts/fable_loop102_agent.py:246:        self.last_stage = str(getattr(self.inner, "last_stage", ""))
+[0m
+[0m$ [0mgrep -rn "bench73" scripts/fable_loop102_agent.py | head; echo ===; sed -n 150,260p scripts/fable_loop102_agent.py
+scripts/fable_loop102_agent.py:61:import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+scripts/fable_loop102_agent.py:325:    "over Loop96Ears = GuardedEars91 over ChainEars(bench73 template + "
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -rln "last_stage.*=.*bench73\|= \"bench73\"\|= 'bench73'" scripts/ | head; grep -rn "stage" scripts/fable_earsguard91.py | head
+scripts/fable_loop90_agent.py
+scripts/fable_perf128_index.py
+scripts/fable_bench73_english_arm.py
+scripts/fable_perf142_index.py
+[0m
+[0m$ [0mgrep -n "bench73" scripts/fable_loop90_agent.py | head; grep -n "bench73" scripts/fable_bench73_english_arm.py | head -20
+10:  ears     = ChainEars: [bench73 template stage now; ears47:<ckpt> adapter
+45:import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+104:    This is the triple context bench73's compose_question needs; here it is
+118:    """bench73 template ears as a ChainEars stage (deterministic 1.0 / 0.0)."""
+120:    name = "bench73"
+170:                "is_person": True, "structured": True, "stage": "bench73"}
+244:        for name in ears_cfg.get("chain", ["bench73", "fake"]):
+245:            if name == "bench73":
+259:            ckpts = B73.fable_bench73_find_checkpoints()
+354:        # Structured frame actions (bench73 stage) bypass the single-word line
+34:    python -B scripts/fable_bench73_english_arm.py --selftest
+36:    python -B scripts/fable_bench73_english_arm.py --run --ears template
+38:    python -B scripts/fable_bench73_english_arm.py --run-garbled --ears template
+40:    python -B scripts/fable_bench73_english_arm.py --smoke-ears47 [--snapshot DIR]
+62:ART = ROOT / "artifacts" / "fable-bench73-20260921"
+64:GARBLED_DEFAULT = ART / "fable_bench73_garbled.jsonl"
+347:def fable_bench73_find_checkpoints() -> list[Path]:
+503:    stem = "bench73" if args.data == str(DATA_DEFAULT) else "bench73-garbled"
+528:    ckpts = fable_bench73_find_checkpoints()
+698:    ckpts = fable_bench73_find_checkpoints()
+[0m
+[0m$ [0msed -n 100,200p scripts/fable_loop90_agent.py
+def notebook_triples(nb) -> list[tuple[str, str, str]]:
+    """Active taught facts as (subject-name, relation, value-display).
+
+    This is the triple context bench73's compose_question needs; here it is
+    sourced from the loop's own notebook (post-edit values only, because
+    superseded rows are inactive).
+    """
+    out = []
+    for fact in nb.facts.values():
+        if fact.get("source") != "taught" or not nb.active(fact["fact_id"]):
+            continue
+        out.append((nb.entities.get(fact["subject"], "?"),
+                    fact["relation"], _display(nb, fact["value"])))
+    return out
+
+
+class Bench73Stage:
+    """bench73 template ears as a ChainEars stage (deterministic 1.0 / 0.0)."""
+
+    name = "bench73"
+
+    def __init__(self, family: str = "tape") -> None:
+        self.family = family
+        self.nb = None
+
+    def bind(self, nb) -> None:
+        self.nb = nb
+
+    def hear(self, turn: str, tau: dict) -> tuple[list[dict], float] | None:
+        text = " ".join(str(turn).split())
+        if not text:
+            return None
+        triples = notebook_triples(self.nb) if self.nb is not None else []
+        # Questions first when the turn asks, teaches first otherwise.
+        if text.rstrip().endswith("?"):
+            frame = B73.compose_question(text, triples)
+            if frame is not None:
+                return ([{"act": "ask", "name": frame[0],
+                           "relations": list(frame[1])}], 1.0)
+            triple = B73.hear_teach_template(text)
+            if triple is not None:
+                return ([self._teach_action(triple)], 1.0)
+            return None
+        triple = B73.hear_teach_template(text)
+        if triple is not None:
+            return ([self._teach_action(triple)], 1.0)
+        frame = B73.compose_question(text, triples)
+        if frame is not None:
+            return ([{"act": "ask", "name": frame[0],
+                       "relations": list(frame[1])}], 1.0)
+        return None
+
+    def _teach_action(self, triple: tuple[str, str, str]) -> dict:
+        subj, rel, obj = triple
+        act = "teach"
+        if self.nb is not None:
+            found = self.nb.resolve(subj)
+            if found.status == C.OK:
+                eid = found.detail["entity_id"]
+                for fact in self.nb.facts.values():
+                    if (fact.get("subject") == eid and fact.get("relation") == rel
+                            and fact.get("source") == "taught"
+                            and self.nb.active(fact["fact_id"])):
+                        if _display(self.nb, fact["value"]) != obj:
+                            act = "correct"  # same (s,r), new object: supersede
+                        break
+        # Every bench value is entity-like (bench65 teaches ALL values as
+        # entities); the "->" arrow keeps mid-chain hops entity-valued.
+        return {"act": act, "name": subj, "relation": rel, "value": obj,
+                "is_person": True, "structured": True, "stage": "bench73"}
+
+
+class FakeStage:
+    """M1-style template ears as a ChainEars stage (FakeEars, deterministic)."""
+
+    name = "fake"
+
+    def __init__(self) -> None:
+        self._fake = A.FakeEars()
+
+    def bind(self, nb) -> None:
+        pass
+
+    def hear(self, turn: str, tau: dict) -> tuple[list[dict], float] | None:
+        actions = self._fake.hear(turn)
+        if len(actions) == 1 and actions[0].get("act") == "clarify":
+            return None
+        for action in actions:
+            action["stage"] = "fake"
+        return (actions, 1.0)
+
+
+class Ears47Stage:
+    """ears47:<ckpt> neural adapter stage (abstains until decode is validated).
+
+    hear_teach is UNVALIDATED upstream (raises NotImplementedError), so this
+    stage only ever answers questions via the shared compose_question over
+    neurally-independent triples; until a checkpoint loads AND decodes, it
+    abstains and the chain falls through.
+    """
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import fable_bench73_english_arm as B73
+tr=[('Kim Varro','spouse','Dana Holt'),('Dana Holt','spouse','Ravi Stone')]
+for q in ['Who is married to Dana Holt?','Who was married to Bram Kolb?','Whose spouse is Dana Holt?','What has Dana Holt written?','Who has Bram Kolb as their spouse?','Whose spouse was Bram Kolb?','What did Sela Voss found?','Whose founder is Sela Voss?','Whose employer is Priya Nair?','Whose child is Tomas Rey?']:
+    print(repr(q),'->',B73.compose_question(q, tr))
+" 2>&1 | tail -12
+'Who is married to Dana Holt?' -> None
+'Who was married to Bram Kolb?' -> None
+'Whose spouse is Dana Holt?' -> None
+'What has Dana Holt written?' -> None
+'Who has Bram Kolb as their spouse?' -> None
+'Whose spouse was Bram Kolb?' -> None
+'What did Sela Voss found?' -> None
+'Whose founder is Sela Voss?' -> None
+'Whose employer is Priya Nair?' -> None
+'Whose child is Tomas Rey?' -> None
+[0m
+[0m$ [0muptime; df -g / | head -3
+1:34  up 2 days, 17:23, 4 users, load averages: 106.43 86.96 69.90
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 167133760    0%   /
+[0m
+[0m← [0mWrite scripts/claude_268_supp.py
+Wrote file successfully.
+[0m
+[0m$ [0msleep 90; uptime | head -1
+1:36  up 2 days, 17:25, 4 users, load averages: 109.08 93.04 74.49
+[0m
+[0m$ [0mtail -30 artifacts/fable-predictions-ledger.md; echo ===; sleep 120; uptime | head -1
+- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+- P264.8 Overall registered PASS ~5 %.
+- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+- P266.1 (2026-09-23, builder; exp 266 chain-subject lift on 138m, CPU only, sealed 21 files SEAL.sha256.txt artifacts/claude-chain266-20260923; blind panel never opened) dev 44 dialogs own wording fictional names: 14 lifts MISS->RIGHT d01-d14 (live, work-for, was-born-where, work-where, speak-language; 2-link, 3-link, my-chains), 6 MISS->honest-ABSTAIN d17,d18,d20,d21,d22,d44 (broken chains), 24 byte-identical incl d15 when-born boundary miss on both arms; 0 question writes.
+- P266.2 (same) M1 blind chainpanel266 run once per arm with sealed score_panel.py: chain_verb >= 27/30, chain_verb_three >= 5/6, chain_possessive no regression vs 138m, broken_chain 12/12 honest abstain, 0 wrong over 80, 0 question writes, plain_control 14/14 + statement_control 8/8 byte-identical (138m number beside every figure).
+- P266.3 (same) M2 frozen suites vs 138m saved rows: sessions152/bench/marks123 0 moves; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only; rt136 direct vs 138m rows []; rt143 no-gate 0 moves 0 verdict flips; 63 inherited 222 exceptions identical (seconds field excluded).
+- P266.4 (same) M3 restart+verifier (5 M6 files vs 138m m-rows; 98+12 138m verifier dialogs): 0 reply changes, 0 ghost answers, 0 failed duplicate checks, 0 write changes.
+- P266.5 (same) M4 latency alternating processes: median(266)-median(138m) <= +5 ms/turn (pilot +0.13 ms).
+- P266.6 (same) falsifiers: any wrong value on a chain question, any answer with a missing link, or any reply change on a chain-free turn proves the change wrong.
+- P138nb.1 (merge 138nb = 138n + one outermost reply-text rule labelling 190 reverse answers, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-merge138nb-20260923 11 files) M2 on 138n's 720 dev/case files: 1 move vs 138n (221/D11 label gain, exact record predicted); 0 unpredicted / 0 wrong / 0 not moved. Registered verdict:
+- P138nb.2 M3 vs 138n saved rows: suites sessions152/bench/marks123 0 moves; rt136 16 (C019-C031 inherited allowed WRONG-WRITE + C076/C079/C115 reply-only, direct vs 138n moved == [] over 145 rows); rt143 no-gate 0 moves 0 flips; probes 18 reply changes by id (all pure label appends, 226 source lines unchanged), 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138n reproduces saved rows. Registered verdict:
+- P138nb.3 M4 smoke identical except agent/config/label/seconds (pilot exactly those 4); M4 bench identical x3 (pilot 4/4); M5 median delta <= +2 ms (pilot -0.166 ms). Registered verdict:
+- P138nb.4 M1 invpanel138nb (blind 70, once per arm after seal): 0 wrong on 138nb, 0 question writes, whose_R >= 13/14, lives_born >= 9/10, has_as >= 5/6, verb_backwards kept, no_match 8/8, unknown_value 4/4, forward_control 10/10 + teach_control 4/4 byte-identical. M6 tablepanel221 (once, registered scorer): 0 wrong on 138nb, kept, every loop190-reverse subject row becomes right. Registered verdict:
+- P138p.1 (merge 138p = 138m + 260 + 252c, Muse, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-merge138p-20260923 9 files) M1: own arms reproduce all sealed rows (138m L1 990/990; 260 dev 109/109 pilot rows; 252c devs 201/201 registered rows); 138p moves vs line head exactly the 209 predicted ids with exact records (204 identical to 138m's records: 260-greeting D059/D062/D068 + new D063 and 252-denial 233/D52 differ, all justified by id); 260 dev 138p == 260 all 109; 252c devs 138p == 252c except 14 predicted abstain-wording ids with exact records, 0 false replies, junk only d258-037/v259-008. 0 unpredicted / 0 wrong / 0 missing.
+- P138p.2 M2 vs 138m saved rows: sessions152 1 reply-only (S3-teachers-correction#6, 252 inferred-ask); bench 0; marks123 2 reply-only (B_corrections-04 252 pronoun correction her=Mira byte-identical on 252c with rt81 UNCLEAR->BUG harness verdict, -05 follow-on); rt136 20 = 13 inherited C019-C031 identical + C122 260 exemption + reply-only C071/C072/C073/C075 (252 unknown-ask) + C076/C079; direct moved [C071,C072,C073,C075,C122]; rt143 0 moved 0 flips; GATE affairs: no new WRONG/WRONG-WRITE/junk/lost-OK outside justified ids.
+- P138p.3 M3 smoke differs only .agent/.config/.label/.seconds; M4 bench 4/4 byte-identical x3; M5 median delta <= +5 ms (pilot +0.04 ms); M6 restart 2 predicted reply changes (p3-dialogs d08t01/d08t04 252 which-fact asks), 0 ghosts, 0 dup fails, 0 bad writes; verifier probes byte-identical to 260's vp-n/vs-n.json (7 changes, 1 new write B15:t0), supp 0; m arm reproduces rows-138m.json.
+- P138p.4 M7 blind panels (once per arm after seal, fidelity first with SAME runner+scorer, VOID if not 100%): openpanel260 138p 80/80 same totals as 260; corrtail258 138p totals == 252c (54 right, 0 false, 0 junk, 26 wrong values incl. inherited t258-026, keep/control identical) with the 24 registered moves; corrpanel252 only c252-022 moves (class both). Bars per panel: no right->wrong vs registered arm, 0 new wrong/junk/false/question-writes, controls identical. 138m numbers reported alongside.
+- P138p.5 Registered verdict: PASS on all seven marks (M1-M7) on the first try, no re-runs, no post-seal changes; likely failure points if wrong: an opener-led tail/panel row moving vs 252c (mechanism predicts none), or a 222-gated canonical correction differing from 252c's 138k-base parse.
+- P138nb.5 OUTCOME (2026-09-23, build/verification agent, sealed merge 138nb) registered verdict PASS, all marks PASS with one driver-only deviation (D1, diff in RESULTS.md; sealed files unchanged). M1 invpanel138nb 70 items: 138nb wrong 0, qw 0 from questions, whose_R 14/14 (138n 2), lives_born 10/10 (138n 0), has_as 6/6 (138n 2), verb 9/9 kept lost 0, my 4/4 (138n 1), no_match 8/8, unknown 4/4, forward 10/10 + teach 4/4 byte-identical; gained 29 ids listed in RESULTS.md. M2 PASS (720 cases, 1 move 221/D11, 0/0/0). M3 PASS (suites 0/0/0; rt136 16 = 13 allowed + 3 reply-only, direct vs 138n 0/145; rt143 0/0 n=124; probes 18 reply changes as predicted, 0 writes, 0 ghosts, 0 dup fails). M4 PASS (smoke .agent/.config/.label/.seconds; bench 4/4 x3). M5 PASS (delta -0.121 ms). M6 PASS (91 items: wrong 0/0; right 80->84; gained p221-060#1 p221-063#1 p221-064#1 p221-069#1; lost 0; qw 0). Seals verified OK (138nb seal 11/11 after run; invpanel seal 5/5 from repo root; panelmap SHA-OK). 138n's FAIL stays on record.
+- P138p.6 OUTCOME (2026-09-23, Muse build/verification) registered verdict FAIL on M7 only. M1 PASS (990/990 sealed rows; 209/209 moves exact, 0/0/0; 260 dev 109/109 identical; 252c devs 201/201 fidelity with exactly the 14 predicted abstain-wording diffs). M2 PASS (sessions152 1, bench 0, marks123 2 with B-04 UNCLEAR->BUG harness verdict on 252's byte-identical pronoun correction, rt136 20 labels + direct 5, rt143 0/0). M3 PASS (4 allowed fields). M4 PASS (4/4 x3). M5 PASS (+0.111 ms). M6 PASS (2 predicted asks, 0/0/0; probes identical to 260). M7: openpanel260 PASS (80/80, fidelity 100%); corrtail258 FAIL (53 vs 54, r2w t258-049 keep long-decline->save-failure, stores identical); corrpanel252 FAIL (c252-022 correct but 9 extra neither-class long-decline->Q2 reply-only moves, 0 new wrong/junk/false). P138p.1-.3 right; P138p.4 wrong on two panels (same abstain-rewording mechanism as predicted M1C rows, unpredicted on blind items); P138p.5 wrong overall. Sealed files unchanged 9/9 OK; driver workarounds (panel.sh $R2B typo; scorer m7() two crashes) logged in run/m7-check.txt, no panel arm re-run. No post-seal edits.
+- P265.1 (2026-09-23, builder; exp 265 = 261b sealed arm A with 265 canon/divert only: first-person still -> "me", group-word TEACH never saved + fixed ask-whose reply, checker prompt B theta 0.25 + guard unchanged, scorer = 261b + Ruling 1 + M1-M5, sealed 16 files SEAL.sha256.txt artifacts/claude-ear265-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-28/30; pass (0 saves and >= 27 ask) ~45 %. Dev: 0 saves, ask 12/14 (misses: brake-dropped odd-relation frame, ours-possessive span).
+- P265.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 11-14/15; pass (>= 12) ~55 %. Dev 7/10 (ear misattributes group clause to first person twice, relation-direction flip once).
+- P265.3 M3 first_person 0 hits lost vs A261b; pass ~95 %. Dev 10/10 hits, 0 lost; holds by construction (divert needs a group subject).
+- P265.4 M4 named 15/15 turns byte-identical to A261b; pass ~99 %. Construction, dev 10/10.
+- P265.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 5, A261b wrong 25 = 20 diverted + 5). Per-fact/per-turn rates for A, A261b, B reported, no bars.
+- P265.6 Overall registered PASS ~25 % (needs M1+M2 together; M3/M4/M5 near-certain).
+- P265.7 Latency (no bar): ear+checker+guard median ~350-450 ms/turn (dev 356.6 ms); arm B mostly abstains (dev 6/30 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 30076 left running between waves, final stop by WMI terminate (taskkill denied, session-0); D4 diverted frames still spend a checker query (A261b exactness); D5 M5 = per-turn multiset difference. See artifacts/claude-ear265-20260923/PASSMARKS.md.
+zsh:1: == not found
+[0m
+[0m$ [0msleep 180; uptime | head -1; df -g / | awk 'NR==2{print "free_GB="$4}'
+1:39  up 2 days, 17:29, 4 users, load averages: 77.16 93.39 78.92
+free_GB=15
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_supp.py scripts/claude_loop138m_agent.py artifacts/claude-merge138m-20260922/loop138m-config.json /tmp/nhop268_supp138m.json supp-138m 2>&1 | tail -10
+[supp-138m] p01-founder-whatfound: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=WRONG-AS-PREDICTED
+[supp-138m] p02-founder-whose: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=WRONG-AS-PREDICTED
+[supp-138m] p03-founder-who-founded-value: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=GOLD
+[supp-138m] p04-founder-what-has-founded: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=WRONG-AS-PREDICTED
+[supp-138m] p05-founder-nochain-whatfound: stage=none reply="I didn't understand that question — could you say it another way?" verdict=
+[supp-138m] p06-founder-fwd-possessive: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=GOLD
+[supp-138m] p07-spouse-who-is-the-spouse-of: stage=loop215-ofteach-q reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+WROTE /tmp/nhop268_supp138m.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_supp.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_supp268.json supp-268 2>&1 | tail -10; uptime | head -1
+[supp-268] p01-founder-whatfound: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[supp-268] p02-founder-whose: stage=loop153-reverse reply='Liora Sen is the founder of Copperfield.' verdict=WRONG-AS-PREDICTED
+[supp-268] p03-founder-who-founded-value: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=GOLD
+[supp-268] p04-founder-what-has-founded: stage=none reply="I didn't understand that question — could you say it another way?" verdict=WRONG-AS-PREDICTED
+[supp-268] p05-founder-nochain-whatfound: stage=none reply="I didn't understand that question — could you say it another way?" verdict=
+[supp-268] p06-founder-fwd-possessive: stage=loop138-nhop reply="Liora Sen's founder is Marek Doyle." verdict=GOLD
+[supp-268] p07-spouse-who-is-the-spouse-of: stage=loop215-ofteach-q reply="Bex Marlowe's spouse is Cato Fenn." verdict=GOLD
+WROTE /tmp/nhop268_supp268.json
+ 1:39  up 2 days, 17:29, 4 users, load averages: 70.04 91.34 78.36
+[0m
+[0m$ [0msleep 240; uptime | head -1
+1:44  up 2 days, 17:33, 4 users, load averages: 26.06 53.08 64.41
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop268_agent.py --config artifacts/claude-nhop268-20260923/loop268-config.json --base-dir artifacts/claude-merge138m-20260922/run/sd --out /tmp/nhop268_sd --only sessions152,bench,marks123 2>&1 | tail -30; uptime | head -1
+P4 P4-27: PASS
+P4 P4-28: PASS
+P4 P4-29: PASS
+P4 P4-30: PASS
+{"suite": "p4", "pass": false, "seconds": 1.2}
+Q1: F5=OK M5=OK
+{"suite": "q1", "pass": true, "seconds": 0.9}
+BENCH fable_edit_200: items=200 {'mquake-twohop': {'n': 100, 'correct': 0, 'abstain': 1, 'wrong': 99, 'contains_gold': 6, 'teach_reject_items': 99, 'teach_rejects': 99}, 'reversal': {'n': 50, 'correct': 25, 'abstain': 0, 'wrong': 25, 'contains_gold': 50, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-absent': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}, 'abstain-broken': {'n': 25, 'correct': 0, 'abstain': 25, 'wrong': 0, 'contains_gold': 0, 'teach_reject_items': 0, 'teach_rejects': 0}}
+BENCH s2fresh_4hop: items=200 {'mquake-s2fresh-4hop': {'n': 200, 'correct': 0, 'abstain': 6, 'wrong': 194, 'contains_gold': 6, 'teach_reject_items': 197, 'teach_rejects': 213}}
+{"suite": "bench", "pass": false, "seconds": 7.7}
+RT81: {'n': 74, 'ok': 55, 'bug': 1, 'unclear': 18}
+{"suite": "rt81", "pass": false, "seconds": 3.2}
+
+suite  | registered bar                             | number                                                     | status | secs
+p4     | <= 2 false refusals, 0 non-pass (30)       | 30 sents, refusals 1, nonpass 2                            | FAIL   | 1.2
+q1     | F5+M5 both OK                              | F5=OK M5=OK                                                | PASS   | 0.9
+bench  | scorer v2; split-A 0 wrong (200+200)       | fable_edit_200 {'correct': 25, 'abstain': 51, 'wrong': 124 | FAIL   | 7.7
+rt81   | 74/74 OK, 0 wrong writes                   | {'n': 74, 'ok': 55, 'bug': 1, 'unclear': 18}               | FAIL   | 3.2
+q4     | 0 relation-name underscore leaks           | leaks=[]                                                   | PASS   | 0.0
+TOTAL 13.8 s -> FAIL
+
+marks123: n_moves=0 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=0) seconds=13.9
+marks123: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=13.9
+done marks123 in 13.9s
+GATE: clean
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.9
+bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=19.4
+marks123: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=13.9
+GATE: clean
+TOTAL seconds=38.6
+ 1:44  up 2 days, 17:34, 4 users, load averages: 44.03 53.60 63.99
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop268_agent.py --config artifacts/claude-nhop268-20260923/loop268-config.json --base-dir artifacts/fable-agent138j-20260922 --out /tmp/nhop268_sd136 --only rt136 2>&1 | tail -8; uptime | head -1
+rt136: n_moves=15 (new WRONG=0, new WRONG-WRITE=13, new junk=0, reply-only=2) seconds=1.4
+rt136: n_moves=15 (new WRONG-WRITE=13, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=2) seconds=1.4
+done rt136 in 1.4s
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 0, lost OK 0)
+rt136: n_moves=15 (new WRONG-WRITE=13, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=2) seconds=1.4
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 0, lost OK 0)
+TOTAL seconds=1.6
+ 1:44  up 2 days, 17:34, 4 users, load averages: 42.83 53.19 63.78
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_sd136/rt136-diff.json'))
+print(type(d), list(d.keys())[:10] if isinstance(d,dict) else len(d))
+" 2>&1; ls /tmp/nhop268_sd136/
+<class 'dict'> ['suite', 'summary_line', 'n_moves', 'class_counts', 'moves', 'new_wrong', 'new_wrong_write', 'new_junk', 'counter', 'seconds']
+rt136-diff.json
+rt136-rows.json
+SUITEDIFF218-SUMMARY.json
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_sd136/rt136-diff.json'))
+print('moves:', sorted(d['moves']) if isinstance(d['moves'],list) else d['moves'])
+print('new_wrong_write:', d.get('new_wrong_write'))
+print('class_counts:', d.get('class_counts'))
+# direct compare vs 138m saved rows
+import glob
+new=json.load(open('/tmp/nhop268_sd136/rt136-rows.json'))
+print('new rows type:', type(new), len(new) if hasattr(new,'__len__') else '')
+"
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+TypeError: '<' not supported between instances of 'dict' and 'dict'
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_sd136/rt136-diff.json'))
+mv=d['moves']
+print('n moves:', len(mv))
+print('move ids:', sorted(m.get('id', m.get('case')) if isinstance(m,dict) else m for m in mv))
+print('new_wrong_write:', d.get('new_wrong_write'))
+print('class_counts:', json.dumps(d.get('class_counts'))[:500])
+"
+n moves: 15
+move ids: ['C019', 'C020', 'C021', 'C022', 'C023', 'C024', 'C025', 'C026', 'C027', 'C028', 'C029', 'C030', 'C031', 'C076', 'C079']
+new_wrong_write: 13
+class_counts: {"new WRONG-WRITE": 13, "reply-only move": 2}
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    rows=[json.loads(l) for l in open(p) if l.strip()]
+    return {r.get('id',r.get('case','?')): r for r in rows}
+a=load('/tmp/nhop268_sd136/rt136-rows.json'); b=load('artifacts/claude-merge138m-20260922/run/sd136/rt136-rows.json')
+print('n new/old:', len(a), len(b), 'id sets equal:', set(a)==set(b))
+moved=[]
+for k in a:
+    ra={kk:vv for kk,vv in a[k].items() if kk!='seconds'}; rb={kk:vv for kk,vv in b[k].items() if kk!='seconds'}
+    if ra!=rb: moved.append(k)
+print('moved (excl seconds):', sorted(moved))
+"
+n new/old: 145 145 id sets equal: True
+moved (excl seconds): []
+[0m
+[0m$ [0mgrep -n "sd136\|C076\|direct" scripts/claude_138m_score.py | head; grep -n "def \|rt136" scripts/claude_138m_score.py | head -20
+8:  sd136/              fable_suitediff218 --only rt136 vs 138j's sealed rows
+10:                      compares every row directly with 138l's saved
+11:                      run/sd136/rt136-rows.json
+74:    return {"rt136": run / "sd136", "sessions152": run / "sd",
+103:def _rt136_direct(run: Path) -> list[str]:
+105:    lr = jsonl(L_RUN / "sd136" / "rt136-rows.json")
+106:    mr = jsonl(run / "sd136" / "rt136-rows.json")
+155:    # rt136 direct row check against 138l's saved rows
+156:    moved = _rt136_direct(run)
+157:    n_l = len(jsonl(L_RUN / "sd136" / "rt136-rows.json"))
+8:  sd136/              fable_suitediff218 --only rt136 vs 138j's sealed rows
+11:                      run/sd136/rt136-rows.json
+39:SUITES = ("rt136", "sessions152", "bench", "marks123")
+44:def jl(p: Path):
+48:def jsonl_raw(p: Path) -> dict:
+56:def jsonl(p: Path) -> dict:
+60:def fixed_texts() -> set[str]:
+73:def _sd_dirs(run: Path) -> dict:
+74:    return {"rt136": run / "sd136", "sessions152": run / "sd",
+78:def _rt143_moves(run: Path) -> list[dict]:
+91:def _rt143_verdict(row: dict, markers) -> str:
+103:def _rt136_direct(run: Path) -> list[str]:
+105:    lr = jsonl(L_RUN / "sd136" / "rt136-rows.json")
+106:    mr = jsonl(run / "sd136" / "rt136-rows.json")
+110:def m1(run: Path) -> dict:
+128:def m2(run: Path, pred: dict) -> dict:
+155:    # rt136 direct row check against 138l's saved rows
+156:    moved = _rt136_direct(run)
+157:    n_l = len(jsonl(L_RUN / "sd136" / "rt136-rows.json"))
+158:    n_m = len(jsonl(run / "sd136" / "rt136-rows.json"))
+[0m
+[0m$ [0msed -n 44,110p scripts/claude_138m_score.py
+def jl(p: Path):
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def jsonl_raw(p: Path) -> dict:
+    out = {}
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            out[json.loads(line)["id"]] = line
+    return out
+
+
+def jsonl(p: Path) -> dict:
+    return {k: json.loads(v) for k, v in jsonl_raw(p).items()}
+
+
+def fixed_texts() -> set[str]:
+    """Replies that state no notebook fact (224 sentences, 234 fixed reply,
+    227c identity sheet / name-check / rename)."""
+    import claude_identity227c as C
+    import claude_loop234_agent as A234
+    import fable_decline224 as DEC
+    s = set(DEC.NEW_SENTENCES224.values())
+    s |= {A234.FIXED_234, A234.GREET_PREFIX_234 + A234.FIXED_234}
+    s |= set(C.SHEET_227C.values())
+    s |= {C.NAMECHECK_YES, C.NAMECHECK_NO, C.RENAME_REPLY}
+    return s
+
+
+def _sd_dirs(run: Path) -> dict:
+    return {"rt136": run / "sd136", "sessions152": run / "sd",
+            "bench": run / "sd", "marks123": run / "sd"}
+
+
+def _rt143_moves(run: Path) -> list[dict]:
+    base = {r["id"]: r for r in jl(L_RUN / "rt143nogate-l.json")}
+    new = {r["id"]: r for r in jl(run / "rt143nogate-m.json")}
+    moves = []
+    for cid, r in base.items():
+        f = [k for k in ("teach_replies", "triples", "reply")
+             if r[k] != new[cid][k]]
+        if f:
+            moves.append({"id": cid, "fields": f, "base_reply": r["reply"],
+                          "new_reply": new[cid]["reply"]})
+    return moves
+
+
+def _rt143_verdict(row: dict, markers) -> str:
+    import fable_redteam143_run as R
+    low = row["reply"].lower()
+    abst = any(m.lower() in low for m in markers)
+    exp = row["expected"]
+    if exp == "abstain":
+        return "OK" if abst else "WRONG-ANSWER"
+    if R.norm(R.extract_answer(row["reply"])) == R.norm(exp) and R.norm(exp):
+        return "OK"
+    return "MISSED" if abst else "WRONG-ANSWER"
+
+
+def _rt136_direct(run: Path) -> list[str]:
+    keys = ("reply", "stored", "verdict")
+    lr = jsonl(L_RUN / "sd136" / "rt136-rows.json")
+    mr = jsonl(run / "sd136" / "rt136-rows.json")
+    return sorted(i for i in lr if any(lr[i][k] != mr[i][k] for k in keys))
+
+
+def m1(run: Path) -> dict:
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    return {json.loads(l)['id']: json.loads(l) for l in open(p) if l.strip()}
+a=load('/tmp/nhop268_sd136/rt136-rows.json'); b=load('artifacts/claude-merge138m-20260922/run/sd136/rt136-rows.json')
+keys=('reply','stored','verdict')
+print('moved:', sorted(i for i in b if any(a[i][k]!=b[i][k] for k in keys)))
+for i in ('C076','C079'):
+    print(i, 'new:', json.dumps(a[i])[:220]); print(i, 'old:', json.dumps(b[i])[:220])
+"
+moved: []
+C076 new: {"expect": "nowrite", "group": "q", "id": "C076", "reply": "I didn't understand that question \u2014 could you say it another way?\n", "seconds": 0.216, "stored": [], "text": "Is Tom French?", "verdict": "OK"}
+C076 old: {"expect": "nowrite", "group": "q", "id": "C076", "reply": "I didn't understand that question \u2014 could you say it another way?\n", "seconds": 0.239, "stored": [], "text": "Is Tom French?", "verdict": "OK"}
+C079 new: {"expect": "nowrite", "group": "q", "id": "C079", "reply": "I didn't understand that question \u2014 could you say it another way?\n", "seconds": 0.007, "stored": [], "text": "What is the capital of Peru.", "verdict": "O
+C079 old: {"expect": "nowrite", "group": "q", "id": "C079", "reply": "I didn't understand that question \u2014 could you say it another way?\n", "seconds": 0.011, "stored": [], "text": "What is the capital of Peru.", "verdict": "O
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138l_rt143nogate.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_rt143.json 2>&1 | tail -5; uptime | head -1
+rt143-nogate: 124 rows -> /tmp/nhop268_rt143.json
+ 1:45  up 2 days, 17:35, 4 users, load averages: 42.84 51.38 62.44
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+base={r['id']:r for r in json.load(open('artifacts/claude-merge138m-20260922/run/rt143nogate-m.json'))}
+new={r['id']:r for r in json.load(open('/tmp/nhop268_rt143.json'))}
+print('n base/new:', len(base), len(new), 'ids equal:', set(base)==set(new))
+moves=[]
+for cid,r in base.items():
+    f=[k for k in ('teach_replies','triples','reply') if r[k]!=new[cid][k]]
+    if f: moves.append((cid,f))
+print('moves:', moves)
+"
+n base/new: 124 124 ids equal: True
+moves: []
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+for p in ['artifacts/claude-verify-20260922/138j/p3-dialogs.json','artifacts/claude-verify-20260922/138k/v-dialogs.json','artifacts/claude-verify-20260922/138m/probes.json','artifacts/claude-verify-20260922/138m/probes-supp.json']:
+    d=json.load(open(p)); print(p, type(d).__name__, len(d), str(d[0])[:80] if d else '')
+"
+artifacts/claude-verify-20260922/138j/p3-dialogs.json list 15 ["brannick's boss is Ottoline.", 'who is brannicks boss?', "Who is Brannick's bo
+artifacts/claude-verify-20260922/138k/v-dialogs.json list 15 ["Brisa's boss is Tolland.", "Brisa's city is Wethermoor.", '__RESTART__', "Who 
+artifacts/claude-verify-20260922/138m/probes.json list 98 {'id': 'A01', 'feature': 'identity', 'turns': ["Q|what's ur name"], 'expect_stor
+artifacts/claude-verify-20260922/138m/probes-supp.json list 12 {'id': 'S01', 'feature': 'polite233', 'turns': ["T|Tomas's boss is Mirela.", "Q|
+[0m
+[0m$ [0msed -n 1,50p artifacts/claude-verify-20260922/138m/run_probes.py; grep -n "usage" artifacts/claude-verify-20260922/138m/run_probes.py
+"""Usage (from repo root): run_probes.py <agent.py> <config> <fresh workdir> <probes.json> <out.json>
+Each dialog in its own fresh dir; "__RESTART__" rebuilds the daemon on the same dir. Records reply, event delta, triples after every turn."""
+import sys, json, shutil, gc
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+import fable_marks123_all as M
+import fable_loop90_agent as L90
+mod, dcls, _, _ = M.load_agent(sys.argv[1]); base = M.load_base_cfg(sys.argv[2]); S = Path(sys.argv[3]); P = json.load(open(sys.argv[4]))
+def nev(d):
+    nb = d.loop.nb
+    for o in (nb, getattr(nb, 'nb', None)):
+        if o is not None and hasattr(o, 'events'): return len(o.events)
+    return -1
+trip = lambda d: [list(x) for x in L90.notebook_triples(d.loop.nb)]
+out = []
+for p in P:
+    root = S / p["id"]; shutil.rmtree(root, ignore_errors=True); root.mkdir(parents=True)
+    d = M.make_daemon(dcls, base, root); k = 0; rows = []
+    for t in p["turns"]:
+        if t == "__RESTART__":
+            del d; gc.collect(); d = M.make_daemon(dcls, base, root)
+            rows.append({"restart": True, "triples": trip(d)}); continue
+        kind, text = t.split("|", 1)
+        f = root / "inbox" / f"m{k:02d}.txt"; f.write_text(text); b = nev(d)
+        try:
+            d.process_file(f); rep = (root / "outbox" / f"m{k:02d}.txt").read_text().strip()
+        except Exception as e:
+            rep = f"CRASH {type(e).__name__}: {e}"
+        rows.append({"kind": kind, "turn": text, "reply": rep, "ev": nev(d) - b, "triples": trip(d)}); k += 1
+    out.append({"id": p["id"], "feature": p["feature"], "rows": rows, "stored": trip(d)})
+    del d; gc.collect(); shutil.rmtree(root, ignore_errors=True)
+json.dump(out, open(sys.argv[5], "w"), indent=1)
+print("done", len(out))
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; AM=scripts/claude_loop268_agent.py; CM=artifacts/claude-nhop268-20260923/loop268-config.json; for p in p3-dialogs p3c-restart2 p3d-ghost; do uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_probe.py $AM $CM /tmp/nhop268_pb268_$p artifacts/claude-verify-20260922/138j/$p.json /tmp/nhop268_m3_268-$p.json 2>&1 | tail -1; done; for p in v-dialogs v-supp; do uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_probe.py $AM $CM /tmp/nhop268_pb268_$p artifacts/claude-verify-20260922/138k/$p.json /tmp/nhop268_m3_268-$p.json 2>&1 | tail -1; done; uptime | head -1
+14   STORED []  dup_ok=True
+01   STORED [['Marl', 'city', 'Osterby']]  dup_ok=True
+00   STORED [['Tavish', 'city', 'Drumlow']]  dup_ok=True
+14   STORED [['Venna', 'city', 'Westerly'], ['Wick', 'city', 'Yarndale']]  dup_ok=True
+02   STORED [['USER', 'name', 'Zoltan']]  dup_ok=True
+ 1:46  up 2 days, 17:35, 4 users, load averages: 51.50 52.36 62.28
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+pairs=[('p3-dialogs','l-p3-dialogs'),('p3c-restart2','l-p3c-restart2'),('p3d-ghost','l-p3d-ghost')]
+# 138m M6 saved rows are m-*.json; compare 268 outputs vs m-rows
+import glob
+for short,_ in pairs+ [('v-dialogs','m-v-dialogs'),('v-supp','m-v-supp')]:
+    pass
+for short in ['p3-dialogs','p3c-restart2','p3d-ghost','v-dialogs','v-supp']:
+    new=json.load(open(f'/tmp/nhop268_m3_268-{short}.json'))
+    old=json.load(open(f'artifacts/claude-merge138m-20260922/run/probe/m-{short}.json'))
+    print(short, 'type:', type(new).__name__, 'len:', len(new) if hasattr(new,'__len__') else '?', 'old len:', len(old))
+"
+p3-dialogs type: dict len: 2 old len: 2
+p3c-restart2 type: dict len: 2 old len: 2
+p3d-ghost type: dict len: 2 old len: 2
+v-dialogs type: dict len: 2 old len: 2
+v-supp type: dict len: 2 old len: 2
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+for short in ['p3-dialogs','p3c-restart2','p3d-ghost','v-dialogs','v-supp']:
+    new=json.load(open(f'/tmp/nhop268_m3_268-{short}.json'))
+    old=json.load(open(f'artifacts/claude-merge138m-20260922/run/probe/m-{short}.json'))
+    print('===',short); print('  new keys:', sorted(new.keys())); print('  old keys:', sorted(old.keys()))
+    for k in new:
+        if k in old:
+            print('  ',k,'equal:', new[k]==old[k])
+        else:
+            print('  ',k,'ONLY IN NEW, len', len(json.dumps(new[k])))
+"
+=== p3-dialogs
+  new keys: ['agent', 'rows']
+  old keys: ['agent', 'rows']
+   agent equal: False
+   rows equal: True
+=== p3c-restart2
+  new keys: ['agent', 'rows']
+  old keys: ['agent', 'rows']
+   agent equal: False
+   rows equal: True
+=== p3d-ghost
+  new keys: ['agent', 'rows']
+  old keys: ['agent', 'rows']
+   agent equal: False
+   rows equal: True
+=== v-dialogs
+  new keys: ['agent', 'rows']
+  old keys: ['agent', 'rows']
+   agent equal: False
+   rows equal: True
+=== v-supp
+  new keys: ['agent', 'rows']
+  old keys: ['agent', 'rows']
+   agent equal: False
+   rows equal: True
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-verify-20260922/138m/run_probes.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_vp268 artifacts/claude-verify-20260922/138m/probes.json /tmp/nhop268_m3_probes268.json 2>&1 | tail -2; uptime | head -1
+done 98
+ 1:46  up 2 days, 17:36, 4 users, load averages: 55.05 53.16 62.40
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-verify-20260922/138m/run_probes.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_vs268 artifacts/claude-verify-20260922/138m/probes-supp.json /tmp/nhop268_m3_supp268.json 2>&1 | tail -2; /usr/bin/python3 -c "
+import json
+new=json.load(open('/tmp/nhop268_m3_probes268.json')); old=json.load(open('artifacts/claude-verify-20260922/138m/rows-138m.json'))
+print('probes n:', len(new), len(old))
+nd={r['id']:r for r in new}; od={r['id']:r for r in old}
+print('ids equal:', set(nd)==set(od))
+diff=[i for i in nd if nd[i]!=od[i]]
+print('diff ids:', diff)
+for i in diff[:5]:
+    a,b=nd[i],od[i]
+    print('---',i)
+    for k in a:
+        if a[k]!=b.get(k): print('  key',k,'new=',json.dumps(a[k])[:200],'old=',json.dumps(b.get(k))[:200])
+"
+done 12
+probes n: 98 98
+ids equal: True
+diff ids: []
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+new=json.load(open('/tmp/nhop268_m3_supp268.json')); old=json.load(open('artifacts/claude-verify-20260922/138m/supp-rows-138m.json'))
+nd={r['id']:r for r in new}; od={r['id']:r for r in old}
+print('supp n:', len(new), len(old), 'ids equal:', set(nd)==set(od))
+print('diff ids:', [i for i in nd if nd[i]!=od[i]])
+"
+supp n: 12 12 ids equal: True
+diff ids: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; V=artifacts/claude-verify-20260922/138j; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_latency.py scripts/claude_loop138m_agent.py artifacts/claude-merge138m-20260922/loop138m-config.json /tmp/nhop268_latm 1 /tmp/nhop268_lat_m.json $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json 2>&1 | tail -2; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_latency.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json /tmp/nhop268_latn 1 /tmp/nhop268_lat_n.json $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json 2>&1 | tail -2; /usr/bin/python3 -c "
+import json, statistics
+m=json.load(open('/tmp/nhop268_lat_m.json')); n=json.load(open('/tmp/nhop268_lat_n.json'))
+print('138m:', m.get('n_turns'), 'median', statistics.median(m['times']) if 'times' in m else m)
+print('268:', n.get('n_turns'), 'median', statistics.median(n['times']) if 'times' in n else n)
+"
+scripts/claude_loop138m_agent.py: n=104 median=1.73 ms mean=3.86 ms
+scripts/claude_loop268_agent.py: n=104 median=1.72 ms mean=3.81 ms
+138m: 104 median {'agent': 'scripts/claude_loop138m_agent.py', 'n_turns': 104, 'median_ms': 1.730708492686972, 'mean_ms': 3.860522892724615, 'times_ms': [3.2517499930690974, 2.1533330145757645, 1.8153339915443212, 2.14491700171493, 218.50870898924768, 2.5020409957505763, 5.842125014169142, 1.7315419972874224, 1.7485420103184879, 2.842917019734159, 1.9749589846469462, 1.807624998036772, 1.1919999960809946, 1.1281250044703484, 1.136166014475748, 0.688458007061854, 2.084624982671812, 1.601208990905434, 0.5176659906283021, 0.4945840046275407, 0.6072499963920563, 2.320624975254759, 1.7830830183811486, 1.8835419905371964, 1.4540829870384187, 1.8662090005818754, 1.5618749894201756, 2.0461250096559525, 1.707666990114376, 1.2135419819969684, 5.5282080138567835, 1.2826660240534693, 1.20825000340119, 2.345834014704451, 2.132250025169924, 1.5069579822011292, 1.795249991118908, 1.7763339856173843, 1.3020409969612956, 2.2436669969465584, 1.738084014505148, 1.1598749842960387, 1.6250839980784804, 1.4472499897237867, 1.51554198237136, 2.139958000043407, 1.4669169904664159, 1.519874989753589, 1.7863330140244216, 1.36599998222664, 1.32620899239555, 1.7485419812146574, 1.3414580025710166, 1.3035419979132712, 1.8589170067571104, 1.4911250036675483, 2.384208986768499, 1.9254999933764338, 1.6765000182203948, 2.019957988522947, 1.6756669792812318, 2.2111660218797624, 1.7719169845804572, 2.076083008432761, 1.6336249827872962, 2.225874981377274, 1.760167011525482, 1.1832079908344895, 1.5240829961840063, 1.5195409941952676, 2.2242919949349016, 1.6619999951217324, 1.9793329993262887, 1.2872499937657267, 2.298459003213793, 0.5912499909754843, 1.5242920198943466, 1.757958991220221, 2.0402090158313513, 2.8677909867838025, 2.3101670085452497, 2.219791989773512, 1.3231670018285513, 1.8290829902980477, 1.5849169867578894, 1.5641250065527856, 1.4389999851118773, 1.3096250186208636, 2.1564589987974614, 1.7298749880865216, 1.7418749921489507, 1.6449169779662043, 1.757707999786362, 1.174125005491078, 2.2559160133823752, 1.817458018194884, 1.6797500138636678, 2.332749980269, 1.5150000108405948, 1.549125008750707, 1.458332990296185, 1.1004580010194331, 1.332708023255691, 1.2809170002583414]}
+268: 104 median {'agent': 'scripts/claude_loop268_agent.py', 'n_turns': 104, 'median_ms': 1.7231249948963523, 'mean_ms': 3.808763210634844, 'times_ms': [3.3643329807091504, 1.794958021491766, 1.498541998444125, 1.8041250004898757, 213.944499992067, 2.2092089930083603, 5.726290983147919, 1.6622080001980066, 1.4899579982738942, 2.642666979227215, 2.1747499995399266, 2.0310419786255807, 1.3296249962877482, 1.1237500002607703, 1.2594579893629998, 0.6338749954011291, 2.0594160014297813, 1.5679170028306544, 0.464374985313043, 0.4469169944059104, 0.4322500026319176, 2.199291018769145, 1.789875008398667, 1.957125001354143, 1.5305410197470337, 1.8469170026946813, 1.9222499977331609, 1.9460000039543957, 1.62341701798141, 1.1609999928623438, 5.681415990693495, 1.3384170015342534, 1.233917020726949, 2.206459001172334, 2.3638329876121134, 1.7828329873736948, 1.9333329983055592, 1.954250008566305, 1.7559159896336496, 2.502540999557823, 2.0824169914703816, 1.2637499894481152, 1.533291972009465, 1.1323749786242843, 1.348958001472056, 2.0600410061888397, 1.4455830096267164, 1.4817499904893339, 1.7393749731127173, 1.3879999751225114, 1.3017079909332097, 1.8458340200595558, 1.4045840071048588, 1.364583004033193, 2.020959014771506, 1.6042089846450835, 2.410582994343713, 2.140708005754277, 1.8284170073457062, 1.969084027223289, 1.486583991209045, 2.5651250034570694, 1.9783329917117953, 2.019959007157013, 1.7514170031063259, 2.2086249955464154, 1.7588750051800162, 1.1877499928232282, 1.4834579778835177, 1.4925829891581088, 2.1551669924519956, 1.77329100552015, 1.7068750166799873, 1.1158339912071824, 1.6104170063044876, 0.516125001013279, 1.3395000132732093, 1.4317079912871122, 1.6578329959884286, 2.3364170046988875, 2.0314580178819597, 2.180915995268151, 1.3071249995846301, 1.3923750084359199, 1.8198750040028244, 1.6001249896362424, 1.491625007474795, 1.3341660087462515, 2.1215830056462437, 1.7702500044833869, 1.825083018047735, 1.5465419855900109, 1.454292010748759, 1.050416991347447, 2.580707980087027, 2.2685840085614473, 2.0278330193832517, 2.446375001454726, 1.406875002430752, 1.653416984481737, 1.5174160071182996, 1.199124992126599, 1.3778340071439743, 1.3757919950876385]}
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+a=json.load(open('/tmp/nhop268_138m.json')); b=json.load(open('/tmp/nhop268_268pilot.json'))
+print('turns:', len(a), len(b))
+assert len(a)==len(b)
+chg=0
+for ra,rb in zip(a,b):
+    assert ra['dialog']==rb['dialog'] and ra['turn']==rb['turn'] and ra['input']==rb['input']
+    if ra['reply']!=rb['reply'] or ra['stage']!=rb['stage'] or ra['triples_after']!=rb['triples_after']:
+        chg+=1
+        t='TEACH-CHANGE' if not ra['input'].rstrip().endswith('?') else 'Q-CHANGE'
+        print(f\"{t} {ra['dialog']} t{ra['turn']}: [{ra['stage']}]->[{rb['stage']}]\")
+        print(f\"   138m: {ra['reply'][:90]}\")
+        print(f\"   268:  {rb['reply'][:90]}\")
+        if ra['triples_after']!=rb['triples_after']: print('   TRIPLES DIFFER!')
+print('total changed turns:', chg)
+"
+turns: 205 205
+Q-CHANGE d01-anchor-spouse-whose t2: [loop138-nhop]->[loop190-reverse]
+   138m: Dana Holt's spouse is Ravi Stone.
+   268:  Kim Varro's spouse is Dana Holt.
+Q-CHANGE d02-anchor-spouse-married t2: [loop138-nhop]->[bench73]
+   138m: Dana Holt's spouse is Ravi Stone.
+   268:  Was that a question?
+Q-CHANGE d03-spouse-whose t2: [loop138-nhop]->[loop190-reverse]
+   138m: Bex Marlowe's spouse is Cato Fenn.
+   268:  Talia Wren's spouse is Bex Marlowe.
+Q-CHANGE d04-spouse-married t2: [loop138-nhop]->[bench73]
+   138m: Bex Marlowe's spouse is Cato Fenn.
+   268:  Was that a question?
+Q-CHANGE d05-spouse-husband t2: [loop138-nhop]->[loop190-reverse]
+   138m: Bex Marlowe's spouse is Cato Fenn.
+   268:  I don't know anyone whose husband is Bex Marlowe.
+Q-CHANGE d06-spouse-wife t2: [loop138-nhop]->[loop190-reverse]
+   138m: Bex Marlowe's spouse is Cato Fenn.
+   268:  I don't know anyone whose wife is Bex Marlowe.
+Q-CHANGE d11-anchor-author-whatwritten t2: [loop138-nhop]->[none]
+   138m: Dana Holt's author is Ravi Stone.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE d12-author-whatwritten t2: [loop138-nhop]->[none]
+   138m: Petra Quinn's author is Milo Hart.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE d16-founder-whatfound t2: [loop138-nhop]->[none]
+   138m: Sela Voss's founder is Daro Venn.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE d29-spouse-3link t3: [loop138-nhop]->[loop190-reverse]
+   138m: Cleo Drane's spouse is Dov Elkin.
+   268:  Bram Colt's spouse is Cleo Drane.
+Q-CHANGE d33-author-whose t2: [loop138-nhop]->[loop153-reverse]
+   138m: Petra Quinn's author is Milo Hart.
+   268:  Petra Quinn is the author of Salt Harbor.
+Q-CHANGE d34-founder-whose t2: [loop138-nhop]->[loop153-reverse]
+   138m: Sela Voss's founder is Daro Venn.
+   268:  Sela Voss is the founder of Ember Bay.
+Q-CHANGE o01-spouse-was-married t2: [loop138-nhop]->[none]
+   138m: Bram Kolb's spouse is Cleo Drane.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE o02-spouse-who-has-as t2: [loop138-nhop]->[loop190-reverse]
+   138m: Bram Kolb's spouse is Cleo Drane.
+   268:  Alba Reyes's spouse is Bram Kolb.
+Q-CHANGE o04-spouse-partner t2: [loop138-nhop]->[loop190-reverse]
+   138m: Bram Kolb's spouse is Cleo Drane.
+   268:  I don't know anyone whose partner is Bram Kolb.
+Q-CHANGE o09-author-whose t2: [loop138-nhop]->[loop153-reverse]
+   138m: Ines Halvors's author is Jorah Bell.
+   268:  Ines Halvors is the author of Grayport.
+Q-CHANGE o15-employer-whose t2: [loop138-nhop]->[loop153-reverse]
+   138m: Priya Nair's employer is Oren Hale.
+   268:  Priya Nair is the employer of Theo Marsh.
+Q-CHANGE o18-child-whose t2: [loop138-nhop]->[loop153-reverse]
+   138m: Tomas Rey's child is Uma Frost.
+   268:  Tomas Rey is the child of Rosa Lind.
+Q-CHANGE o20-author-3link-whatwritten t3: [loop138-nhop]->[none]
+   138m: Felix Marsh's author is Greta Lund.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE o28-spouse-whose-was t2: [loop138-nhop]->[none]
+   138m: Bram Kolb's spouse is Cleo Drane.
+   268:  I didn't understand that question — could you say it another way?
+Q-CHANGE o29-author-past-perfect t2: [loop138-nhop]->[none]
+   138m: Ines Halvors's author is Jorah Bell.
+   268:  I didn't understand that question — could you say it another way?
+total changed turns: 21
+[0m
+[0m$ [0mhead -30 artifacts/claude-merge138m-20260922/SEAL.sha256.txt; echo ...; wc -l artifacts/claude-merge138m-20260922/SEAL.sha256.txt
+b74ef44499664809a27fdf764857bcd5e8e3ee1bbb39315ea1862def2c92f505  scripts/claude_loop138m_agent.py
+a3afd9f798e4262e57d183b196afb716370652f38270ee01281129219b2fece9  artifacts/claude-merge138m-20260922/loop138m-config.json
+5e49665c2137d5f1f0443bff1a986f7d206e9ed9e563abead06be8f372a022e7  scripts/claude_138m_l1.py
+04e10ea9892b6e0e31c8714b77fcc0e0fa5ae2a70cf116b35e66973547c2077d  scripts/claude_138m_predict.py
+42d40c08e44de0b64b4bbe55e47e7cdd57dd24df4783ec75da82e1d1c3ec702c  scripts/claude_138m_score.py
+9f1a5af75cfe28a4572413fd254feab29303362832a68bf10c5f061c0d575743  scripts/claude_138m_runall.sh
+861e739170718fe75485a93c6868d48d7ba2913e8f8cf2ac3985b93e98929f2b  artifacts/claude-merge138m-20260922/predicted_moves138m.json
+a4ca01105d311e329c4a1701b456289db70f6be3b7850e09712184f65bd5c028  artifacts/claude-merge138m-20260922/PASSMARKS.md
+6d05a081ee85864b2cee6c14fdd0c9f01aa21077a498941111724f46ca502b3f  design/v3/30-modes/138m-merge-opus.md
+1c5233c805a05e5410fea9433315ecf58abf3cd5c773137d9753db8a9be2a243  scripts/fable_suitediff218.py
+69c4df1a22b1808173320b740d1cbbdd85d8b1e862cfd843acdde4c8a0610c67  scripts/claude_138l_rt143nogate.py
+87bf05194a2c69dabc8f8d00344179dbd1422cc9b97271c6fc23d3a8e2f59e7f  scripts/claude_merge138k_probe.py
+bcbde8d6a67ff00c9dcf592c5e1d19f0391e0c336fd7bbec6c61ab45d2d08679  scripts/claude_merge138k_latency.py
+e111a2a5afe03803973646371ee126a71b9366b772407f69c65916d341e905d1  scripts/fable_sleepsmoke206.py
+f9f4f7900ee86dc8520a78c5dc56cae99f08818c36ba87d2850b2a62edec642c  artifacts/claude-verify-20260922/138k/v-dialogs.json
+ae8d1fcf075561ce02df015eb7b2c8bc91a3484aeaec79ed5afc9993608ab3eb  artifacts/claude-verify-20260922/138k/v-supp.json
+5968ee9a87a78b7079a01523a90fc44f892d5dc8483d5a02a1285b3a83da40b3  artifacts/claude-verify-20260922/138j/p3-dialogs.json
+e30e40b4e654184c83709c57f899b0e52f0772ac53680a52fb41c08631727dc6  artifacts/claude-verify-20260922/138j/p3c-restart2.json
+3d4ba57e2e862cabd3f489ba5821963c03b99e638f786f9309ca18cfcb7af804  artifacts/claude-verify-20260922/138j/p3d-ghost.json
+...
+      19 artifacts/claude-merge138m-20260922/SEAL.sha256.txt
+[0m
+[0m← [0mWrite scripts/claude_268_runall.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_268_score.py
+Wrote file successfully.
+[0m
+[0m$ [0mls /tmp/nhop268_sd/; /usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_sd/sessions152-diff.json')); print('s152 keys:', sorted(d.keys())); print('n_moves' in d, {k:d[k] for k in d if 'move' in k.lower() or 'wrong' in k.lower() or 'junk' in k.lower()})
+"; ls artifacts/claude-merge138m-20260922/run/sd/ | head -20
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+marks123
+marks123-diff.json
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+s152 keys: ['base_rows', 'class_counts', 'counter', 'moves', 'n_moves', 'new_junk', 'new_wrong', 'new_wrong_write', 'seconds', 'suite', 'summary_line']
+True {'n_moves': 0, 'moves': [], 'new_wrong': 0, 'new_wrong_write': 0, 'new_junk': 0}
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+marks123
+marks123-diff.json
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+[0m
+[0m$ [0mls artifacts/claude-merge138m-20260922/run/sd/marks123/; /usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_sd/bench-diff.json')); print('bench n_moves:', d['n_moves'], 'moves:', d['moves'][:3])
+d=json.load(open('/tmp/nhop268_sd/marks123-diff.json')); print('m123 n_moves:', d['n_moves'])
+"
+bench-report.json
+bench-rows-fable_edit_200.jsonl
+bench-rows-s2fresh_4hop.jsonl
+bench-tmp
+fable_marks123_summary.json
+p4-report.json
+p4-tmp
+q1-report.json
+q1-tmp
+q4-report.json
+rt81-report.json
+rt81-tmp
+bench n_moves: 0 moves: []
+m123 n_moves: 0
+[0m
+[0m$ [0mfor f in bench-edit200-rows.jsonl bench-bench132_4hop-rows.jsonl bench-new_121_4hop-rows.jsonl bench-old_s2fresh_4hop-rows.jsonl; do cmp -s /tmp/nhop268_sd/$f artifacts/claude-merge138m-20260922/run/sd/$f && echo "IDENTICAL $f" || echo "DIFFER $f"; done; for f in bench-rows-fable_edit_200.jsonl bench-rows-s2fresh_4hop.jsonl; do cmp -s /tmp/nhop268_sd/marks123/$f artifacts/claude-merge138m-20260922/run/sd/marks123/$f && echo "IDENTICAL marks123/$f" || echo "DIFFER marks123/$f"; done
+IDENTICAL bench-edit200-rows.jsonl
+IDENTICAL bench-bench132_4hop-rows.jsonl
+IDENTICAL bench-new_121_4hop-rows.jsonl
+IDENTICAL bench-old_s2fresh_4hop-rows.jsonl
+IDENTICAL marks123/bench-rows-fable_edit_200.jsonl
+IDENTICAL marks123/bench-rows-s2fresh_4hop.jsonl
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('/tmp/nhop268_m3_268-p3-dialogs.json'))
+print(type(d), list(d.keys()))
+r=d['rows']; print(type(r), len(r))
+print(json.dumps(r[0], indent=1)[:600])
+"
+<class 'dict'> ['agent', 'rows']
+<class 'list'> 15
+{
+ "dialog": 0,
+ "turns": [
+  {
+   "turn": "brannick's boss is Ottoline.",
+   "reply": "Saved: brannick's boss is Ottoline.",
+   "events": 4
+  },
+  {
+   "turn": "who is brannicks boss?",
+   "reply": "brannick's boss is Ottoline.",
+   "events": 0
+  },
+  {
+   "turn": "Who is Brannick's boss?",
+   "reply": "Brannick's boss is Ottoline.",
+   "events": 0
+  },
+  {
+   "turn": "BRANNICK's city is Selwick.",
+   "reply": "Saved: Brannick's city is Selwick.",
+   "events": 2
+  },
+  {
+   "turn": "where does brannick live?",
+   "reply": "I didn't understand that question \u2014 could you say it another way?
+[0m
+[0m← [0mEdit scripts/claude_268_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+@@ -135,24 +135,25 @@
+ det["rt143_moves"] = moves143
+ if moves143 != pred["m2"]["rt143_moves"]:
+     m2ok = False
+ # 63 inherited 222 exceptions identical to 138m's saved rows
++# (rt136 C019-C031 covered by the direct compare above; bench -fwd
++# and marks123 bench-fable_edit_200 rows byte-compared here).
+ exc_ok = True
+ sd138m = ROOT / "artifacts" / "claude-merge138m-20260922" / "run" / "sd"
+-for rel, name in (("sd", "bench-bench132_4hop-rows.jsonl"),
+-                  ("sd", "bench-edit200-rows.jsonl")):
+-    a = (sd138m / name).read_text(encoding="utf-8")
+-    b = (run / "sd" / name).read_text(encoding="utf-8")
+-    if a != b:
++for name in ("bench-bench132_4hop-rows.jsonl",
++             "bench-edit200-rows.jsonl",
++             "bench-new_121_4hop-rows.jsonl",
++             "bench-old_s2fresh_4hop-rows.jsonl"):
++    if ((sd138m / name).read_bytes() != (run / "sd" / name).read_bytes()):
+         exc_ok = False
+         det.setdefault("exc_mismatch", []).append(name)
+-m138 = {r["id"]: r for r in jl(
+-    ROOT / "artifacts" / "claude-merge138m-20260922" / "run"
+-    / "sd" / "marks123-rows.json")}
+-m268 = {r["id"]: r for r in jl(run / "sd" / "marks123-rows.json")}
+-if m138 != m268:
+-    exc_ok = False
+-    det.setdefault("exc_mismatch", []).append("marks123-rows.json")
++for name in ("bench-rows-fable_edit_200.jsonl",
++             "bench-rows-s2fresh_4hop.jsonl"):
++    if ((sd138m / "marks123" / name).read_bytes()
++            != (run / "sd" / "marks123" / name).read_bytes()):
++        exc_ok = False
++        det.setdefault("exc_mismatch", []).append(f"marks123/{name}")
+ det["inherited_222_identical"] = exc_ok
+ if not exc_ok:
+     m2ok = False
+ res["marks"]["M2"] = {"pass": m2ok, "detail": det}
+
+[0m
+[0m← [0mEdit scripts/claude_268_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+@@ -187,25 +187,45 @@
+ sdiff = sorted(i for i in sd_ if sd_[i] != so.get(i))
+ m3det["supp_diff"] = sdiff
+ if sdiff != pred["m3"]["supp_diff"]:
+     m3ok = False
+-# ghost answers: a reply naming a value never taught in its dialog
++# ghost answers: any changed reply vs 138m that states a notebook
++# value (non-decline wording) where 138m abstained/declined.
++vdiff_rows = [(vd[i], vo.get(i)) for i in vdiff]
++sdiff_rows = [(sd_[i], so.get(i)) for i in sdiff]
+ ghosts = []
+-for rows in (vnew, snew):
+-    for dlg in rows:
+-        taught_vals = set()
+-        for t in dlg.get("rows", []):
+-            for _s, _r, o in t.get("triples", []):
+-                taught_vals.add(str(o).lower())
+-        for t in dlg.get("rows", []):
+-            if t.get("kind", "Q") == "Q" or "turn" in t:
+-                rep = str(t.get("reply", ""))
+-                for v in taught_vals:
+-                    pass
+-                if "GHOST" in rep:
+-                    ghosts.append(dlg["id"])
++for new_d, old_d in vdiff_rows + sdiff_rows:
++    if old_d is None:
++        ghosts.append((new_d["id"], "missing-base"))
++        continue
++    ot = {(t.get("turn"), t.get("reply")) for t in old_d.get("rows", [])}
++    for t in new_d.get("rows", []):
++        if (t.get("turn"), t.get("reply")) not in ot:
++            vals = {str(o).lower()
++                    for row in new_d.get("rows", [])
++                    for _s, _r, o in row.get("triples", [])}
++            if any(v and v in str(t.get("reply", "")).lower()
++                   for v in vals):
++                ghosts.append((new_d["id"], t.get("turn")))
++# duplicate-index audits in the restart probes must all hold
++dup_bad = []
++for short in ("p3-dialogs", "p3c-restart2", "p3d-ghost",
++              "v-dialogs", "v-supp"):
++    new = jl(run / "probe" / f"268-{short}.json")
++
++    def scan(o, path=""):
++        if isinstance(o, dict):
++            for k, v in o.items():
++                if k == "dup_ok" and v is not True:
++                    dup_bad.append(f"{short}:{path}/{k}")
++                scan(v, f"{path}/{k}")
++        elif isinstance(o, list):
++            for i, v in enumerate(o):
++                scan(v, f"{path}[{i}]")
++    scan(new)
+ m3det["ghost_answers"] = ghosts
+-if ghosts:
++m3det["dup_bad"] = dup_bad
++if ghosts or dup_bad:
+     m3ok = False
+ res["marks"]["M3"] = {"pass": m3ok, "detail": m3det}
+ 
+ # M4
+
+[0m
+[0m← [0mEdit scripts/claude_268_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_268_score.py
+@@ -229,13 +229,15 @@
+ res["marks"]["M3"] = {"pass": m3ok, "detail": m3det}
+ 
+ # M4
+ med_m, med_n = [], []
+-for i in (1, 2, 3):
+-    for a, acc in (("m", med_m), ("n", med_n)):
+-        d = jl(run / f"lat-{a}-{i}.json")
+-        key = "times_ms" if "times_ms" in d else "times"
+-        acc.extend(d[key])
++for p in sorted(run.glob("lat-m-*.json")):
++    d = jl(p)
++    med_m.extend(d["times_ms"] if "times_ms" in d else d["times"])
++for p in sorted(run.glob("lat-n-*.json")):
++    d = jl(p)
++    med_n.extend(d["times_ms"] if "times_ms" in d else d["times"])
++assert med_m and med_n, "latency files missing"
+ delta = statistics.median(med_n) - statistics.median(med_m)
+ m4ok = delta <= 5.0
+ res["marks"]["M4"] = {"pass": m4ok, "median_m_ms": statistics.median(med_m),
+                       "median_n_ms": statistics.median(med_n),
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, json; sys.path.insert(0, 'scripts')
+import claude_268_devrepro as D; import claude_268_supp as S
+from pathlib import Path
+out = Path('artifacts/claude-nhop268-20260923/dev'); out.mkdir(parents=True, exist_ok=True)
+all_d = [{'dialog':d,'turns':t,'gold_final':g,'expect':e} for d,t,g,e in D.DEV36] + [{'dialog':d,'turns':t,'gold_final':g,'expect':e} for d,t,g,e in D.OWN34]
+(out/'dialogs268.json').write_text(json.dumps({'dev36_own34': all_d, 'supp7': [{'dialog':d,'turns':t,'gold_final':g,'expect':e} for d,t,g,e in S.SUPP]}, indent=1))
+print('dialogs:', len(all_d), '+ 7 supp')
+# predicted moves from 268 pilots (pre-seal evidence)
+b268 = {(r['dialog'],r['turn']): r for r in json.load(open('/tmp/nhop268_268pilot.json'))}
+b138 = {(r['dialog'],r['turn']): r for r in json.load(open('/tmp/nhop268_138m.json'))}
+moves = sorted(f\"{d}#t{t}\" for (d,t) in b268 if (b268[(d,t)]['reply'],b268[(d,t)]['stage']) != (b138[(d,t)]['reply'],b138[(d,t)]['stage']))
+s268 = {(r['dialog'],r['turn']): r for r in json.load(open('/tmp/nhop268_supp268.json'))}
+s138 = {(r['dialog'],r['turn']): r for r in json.load(open('/tmp/nhop268_supp138m.json'))}
+smoves = sorted(f\"{d}#t{t}\" for (d,t) in s268 if (s268[(d,t)]['reply'],s268[(d,t)]['stage']) != (s138[(d,t)]['reply'],s138[(d,t)]['stage']))
+rec = {m: {'stage': b268[(m.split('#')[0], int(m.split('#t')[1]))]['stage'], 'reply': b268[(m.split('#')[0], int(m.split('#t')[1]))]['reply']} for m in moves}
+rec.update({m: {'stage': s268[(m.split('#')[0], int(m.split('#t')[1]))]['stage'], 'reply': s268[(m.split('#')[0], int(m.split('#t')[1]))]['reply']} for m in smoves})
+pred = {'dev_moves': moves, 'supp_moves': smoves, 'dev_records': rec,
+ 'm2': {'rt136_labels': ['C019','C020','C021','C022','C023','C024','C025','C026','C027','C028','C029','C030','C031','C076','C079'], 'rt136_direct': [], 'rt143_moves': []},
+ 'm3': {'probes_diff': [], 'supp_diff': []}}
+Path('artifacts/claude-nhop268-20260923/predicted_moves268.json').write_text(json.dumps(pred, indent=1))
+print('dev moves:', len(moves), 'supp moves:', len(smoves)); print(smoves)
+"
+dialogs: 70 + 7 supp
+dev moves: 21 supp moves: 3
+['p01-founder-whatfound#t2', 'p02-founder-whose#t2', 'p04-founder-what-has-founded#t2']
+[0m
+[0m← [0mWrite artifacts/claude-nhop268-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mmkdir -p /tmp/mockrun/dev /tmp/mockrun/probe && cp /tmp/nhop268_138m.json /tmp/mockrun/dev/dev-138m.json && cp /tmp/nhop268_268pilot.json /tmp/mockrun/dev/dev-268.json && cp /tmp/nhop268_supp138m.json /tmp/mockrun/dev/supp-138m.json && cp /tmp/nhop268_supp268.json /tmp/mockrun/dev/supp-268.json && cp -r /tmp/nhop268_sd /tmp/mockrun/sd && cp -r /tmp/nhop268_sd136 /tmp/mockrun/sd136 && cp /tmp/nhop268_rt143.json /tmp/mockrun/rt143nogate-268.json && for p in p3-dialogs p3c-restart2 p3d-ghost v-dialogs v-supp; do cp /tmp/nhop268_m3_268-$p.json /tmp/mockrun/probe/268-$p.json; done && cp /tmp/nhop268_m3_probes268.json /tmp/mockrun/probe/268-probes.json && cp /tmp/nhop268_m3_supp268.json /tmp/mockrun/probe/268-supp.json && cp /tmp/nhop268_lat_m.json /tmp/mockrun/lat-m-1.json && cp /tmp/nhop268_lat_n.json /tmp/mockrun/lat-n-1.json && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_score.py /tmp/mockrun artifacts/claude-nhop268-20260923/predicted_moves268.json /tmp/mockrun_score.json 2>&1 | tail -8
+DEV: PASS {"pass": true, "moves": ["d01-anchor-spouse-whose#t2", "d02-anchor-spouse-married#t2", "d03-spouse-whose#t2", "d04-spouse-married#t2", "d05-spouse-husband#t2", "d06-spouse-wife#t2", "d11-anchor-author-whatwritten#t2", "d12-author-whatwritten#t2", "d16-founder-whatfound#t2", "d29-spouse-3link#t3", "d33-author-whose#t2", "d34-founder-whose#t2", "o01-spouse-was-married#t2", "o02-spouse-who-has-as#t2"
+M2: PASS {"pass": true, "detail": {"sessions152": {"n_moves": 0, "new_wrong": 0}, "bench": {"n_moves": 0, "new_wrong": 0}, "marks123": {"n_moves": 0, "new_wrong": 0}, "rt136_labels": ["C019", "C020", "C021", "C022", "C023", "C024", "C025", "C026", "C027", "C028", "C029", "C030", "C031", "C076", "C079"], "rt136_direct_vs_138m": [], "rt143_moves": [], "inherited_222_identical": true}}
+M3: PASS {"pass": true, "detail": {"p3-dialogs": {"rows_equal": true, "n_dialogs": 15}, "p3c-restart2": {"rows_equal": true, "n_dialogs": 2}, "p3d-ghost": {"rows_equal": true, "n_dialogs": 1}, "v-dialogs": {"rows_equal": true, "n_dialogs": 15}, "v-supp": {"rows_equal": true, "n_dialogs": 3}, "probes_diff": [], "supp_diff": [], "ghost_answers": [], "dup_bad": []}}
+M4: PASS {"pass": true, "median_m_ms": 1.730708492686972, "median_n_ms": 1.7231249948963523, "delta_ms": -0.007583497790619731}
+PASS
+[0m
+[0m# [0mTodos
+[✓] Reproduce on 138m: dev 36 dialogs + 30+ own dialogs (new driver)
+[✓] Build guard scripts/claude_fix268_nhopdir.py + agent scripts/claude_loop268_agent.py
+[✓] Pilot guard on dev+own dialogs; verify flips/identical
+[✓] Pilot M2/M3/M4 vs 138m saved rows
+[•] Write PASSMARKS.md + predictions + seal + ledger append
+[ ] Registered runs M2-M4 once
+[ ] Wait/copy/check blind panel, run once on both arms
+[ ] Write RESULTS.md + final reply; leave files for director
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix268_nhopdir.py scripts/claude_loop268_agent.py scripts/claude_268_devrepro.py scripts/claude_268_supp.py scripts/claude_268_runall.sh scripts/claude_268_score.py artifacts/claude-nhop268-20260923/loop268-config.json artifacts/claude-nhop268-20260923/PASSMARKS.md artifacts/claude-nhop268-20260923/predicted_moves268.json artifacts/claude-nhop268-20260923/dev/dialogs268.json artifacts/claude-merge138m-20260922/loop138m-config.json artifacts/claude-verify-20260922/138j/p3-dialogs.json artifacts/claude-verify-20260922/138j/p3c-restart2.json artifacts/claude-verify-20260922/138j/p3d-ghost.json artifacts/claude-verify-20260922/138k/v-dialogs.json artifacts/claude-verify-20260922/138k/v-supp.json artifacts/claude-verify-20260922/138m/probes.json artifacts/claude-verify-20260922/138m/probes-supp.json > artifacts/claude-nhop268-20260923/SEAL.sha256.txt && cat artifacts/claude-nhop268-20260923/SEAL.sha256.txt | head -20 && shasum -c artifacts/claude-nhop268-20260923/SEAL.sha256.txt 2>&1 | tail -2
+8cdc9f377ee4ffcbf89b3d04d64807a28d79446c02705abe65f172f17b91af85  scripts/claude_fix268_nhopdir.py
+e2ecbaabca8446dd16c078ee43861a24ca427d4a125a169c034518f16a3f0abd  scripts/claude_loop268_agent.py
+b2c8d1bbb2b6cddb6f995c56ba02469e923f30a3904361813a4eb3725bbc07cb  scripts/claude_268_devrepro.py
+d15cfe87ec4bbfa356f36f4dec8a4562ba70e0bdbe8b0407f9670753a55cdd37  scripts/claude_268_supp.py
+ecdb926ca9eade30d0432182613707643533c67878a92c4c60e4d2b756e5c207  scripts/claude_268_runall.sh
+8e9d60c80dc606cd4803570f4a71b6af7ba563bfb42975902475370bab5b03a4  scripts/claude_268_score.py
+3292991109335df7c94b3e5f7b1b38cbae6cd8dfa65713de2257cd5db20f3e0d  artifacts/claude-nhop268-20260923/loop268-config.json
+bc2fc9737da62dd1ea4dd511739a7fec9083c0975ef242538d005e19f659f857  artifacts/claude-nhop268-20260923/PASSMARKS.md
+d3ab1cd1e2b4132fc37d80b908aa0722a1cdc71fe5bfc268ae623e1ab5da2ce0  artifacts/claude-nhop268-20260923/predicted_moves268.json
+6a38cf263928586466b0b275fd649201ca7d977cfdc7fa042198a31653ae141c  artifacts/claude-nhop268-20260923/dev/dialogs268.json
+a3afd9f798e4262e57d183b196afb716370652f38270ee01281129219b2fece9  artifacts/claude-merge138m-20260922/loop138m-config.json
+5968ee9a87a78b7079a01523a90fc44f892d5dc8483d5a02a1285b3a83da40b3  artifacts/claude-verify-20260922/138j/p3-dialogs.json
+e30e40b4e654184c83709c57f899b0e52f0772ac53680a52fb41c08631727dc6  artifacts/claude-verify-20260922/138j/p3c-restart2.json
+3d4ba57e2e862cabd3f489ba5821963c03b99e638f786f9309ca18cfcb7af804  artifacts/claude-verify-20260922/138j/p3d-ghost.json
+f9f4f7900ee86dc8520a78c5dc56cae99f08818c36ba87d2850b2a62edec642c  artifacts/claude-verify-20260922/138k/v-dialogs.json
+ae8d1fcf075561ce02df015eb7b2c8bc91a3484aeaec79ed5afc9993608ab3eb  artifacts/claude-verify-20260922/138k/v-supp.json
+369b132bd585bdc7d8b533b271e34673c63bda32412fcc9038f3a87262b5da0b  artifacts/claude-verify-20260922/138m/probes.json
+e78ea9cd3f2ebd3b5424d27d2ca91667f55f54866b508ba30e1d82ed93e5598c  artifacts/claude-verify-20260922/138m/probes-supp.json
+artifacts/claude-verify-20260922/138m/probes.json: OK
+artifacts/claude-verify-20260922/138m/probes-supp.json: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P268.1 (2026-09-23, builder; exp 268 n-hop direction guard on 138m, CPU only, sealed 18 files SEAL.sha256.txt artifacts/claude-nhop268-20260923; blind panel never opened) dev 70 dialogs own wording fictional names: 21 question-turn moves 138m->268 exactly as listed (4 to 190 gold d01 d03 d29 o02; 2 married-to to Was-that-a-question d02 d04; 3 to 190 honest decline d05 d06 o04; 7 to honest abstain d11 d12 d16 o01 o20 o28 o29; 5 to true 153-wording fact d33 d34 o09 o15 o18); 184/205 other turns byte-identical incl all teaches, all forward/uncued/2-subject controls and the d13/d17 over-walks; 0 teach/triple changes; 0 new wrong values. Supp 7: 3 moves (p01 abstain, p02 153-wording, p04 abstain), p03/p06/p07 identical forward gold, p05 identical abstain.
+- P268.2 (same) M1 blind nhoppanel268 run once per arm with sealed score_panel.py: reverse_chain guard blocks all 5 design shapes (no V-forward-fact answer); by shape: spouse-whose/has-as to 190 gold, married-to to Was-that-a-question, husband/wife/partner-whose to 190 decline, what-written/found to abstain, whose-author/founder/employer/child to true 153-wording naming the gold subject; reverse_nochain keeps every 138m-right item right (byte-identical); 0 wrong over all 70; 0 question writes; uncued_reverse 8/8, forward_chain 12/12, forward_1hop 10/10, abstain 6/6 byte-identical (138m number beside every figure). Composition risk stated in PASSMARKS: 22/24 needs 190-answerable shapes and/or gold-subject-naming counted right.
+- P268.3 (same) M2 frozen suites vs 138m saved rows: sessions152/bench/marks123 0 moves GATE clean with all bench+marks123 row files byte-identical; rt136 labels exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only, direct rows vs 138m [] (reply/stored/verdict); rt143 no-gate 0 moves 0 flips (124/124); 63 inherited 222 exceptions identical (seconds excluded); any forward n-hop move fails.
+- P268.4 (same) M3 restart+verifier (5 M6 files rows equal to 138m m-rows; 98 probes + 12 supp diff []): 0 reply changes, 0 ghost answers, 0 failed duplicate checks, 0 write changes.
+- P268.5 (same) M4 latency alternating processes m,n,m,n,m,n 2 reps each: median(268)-median(138m) <= +5 ms/turn (pilot -0.008 ms, n=104).
+- P268.6 (same) falsifiers: any reverse_chain item answered with V's own forward fact, any forward n-hop reply change, or any new wrong value proves the change wrong.
+EOF
+tail -7 artifacts/fable-predictions-ledger.md | cut -c1-80
+- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, 
+- P268.1 (2026-09-23, builder; exp 268 n-hop direction guard on 138m, CPU only, 
+- P268.2 (same) M1 blind nhoppanel268 run once per arm with sealed score_panel.p
+- P268.3 (same) M2 frozen suites vs 138m saved rows: sessions152/bench/marks123 
+- P268.4 (same) M3 restart+verifier (5 M6 files rows equal to 138m m-rows; 98 pr
+- P268.5 (same) M4 latency alternating processes m,n,m,n,m,n 2 reps each: median
+- P268.6 (same) falsifiers: any reverse_chain item answered with V's own forward
+[0m
+[0m$ [0muptime | head -1; df -g / | awk 'NR==2{print "free_GB="$4}'
+1:51  up 2 days, 17:40, 4 users, load averages: 58.78 58.11 62.30
+free_GB=15
+[0m
+[0m$ [0mbash scripts/claude_268_runall.sh artifacts/claude-nhop268-20260923/run 2>&1 | tail -15
+01:57:50 uptime load1=56.29 before: M3-supp
+01:57:52 uptime load1=59.63 before: M4-m-1
+01:57:55 uptime load1=60.38 before: M4-n-2
+01:58:25 uptime load1=61.72 before: M4-n-2
+01:58:55 uptime load1=53.26 before: M4-n-2
+01:59:00 uptime load1=53.26 before: M4-m-3
+01:59:03 uptime load1=51.64 before: M4-n-4
+01:59:07 uptime load1=52.15 before: M4-m-5
+01:59:11 uptime load1=50.13 before: M4-n-6
+TOTAL 485 s
+DEV: PASS {"pass": true, "moves": ["d01-anchor-spouse-whose#t2", "d02-anchor-spouse-married#t2", "d03-spouse-whose#t2", "d04-spouse-married#t2", "d05-spouse-husband#t2", "d06-spouse-wife#t2", "d11-anchor-author-whatwritten#t2", "d12-author-whatwritten#t2", "d16-founder-whatfound#t2", "d29-spouse-3link#t3", "d33-author-whose#t2", "d34-founder-whose#t2", "o01-spouse-was-married#t2", "o02-spouse-who-has-as#t2"
+M2: PASS {"pass": true, "detail": {"sessions152": {"n_moves": 0, "new_wrong": 0}, "bench": {"n_moves": 0, "new_wrong": 0}, "marks123": {"n_moves": 0, "new_wrong": 0}, "rt136_labels": ["C019", "C020", "C021", "C022", "C023", "C024", "C025", "C026", "C027", "C028", "C029", "C030", "C031", "C076", "C079"], "rt136_direct_vs_138m": [], "rt143_moves": [], "inherited_222_identical": true}}
+M3: PASS {"pass": true, "detail": {"p3-dialogs": {"rows_equal": true, "n_dialogs": 15}, "p3c-restart2": {"rows_equal": true, "n_dialogs": 2}, "p3d-ghost": {"rows_equal": true, "n_dialogs": 1}, "v-dialogs": {"rows_equal": true, "n_dialogs": 15}, "v-supp": {"rows_equal": true, "n_dialogs": 3}, "probes_diff": [], "supp_diff": [], "ghost_answers": [], "dup_bad": []}}
+M4: PASS {"pass": true, "median_m_ms": 2.0787499961443245, "median_n_ms": 2.075749507639557, "delta_ms": -0.003000488504767418}
+PASS
+[0m
+[0m$ [0mshasum -c artifacts/claude-nhop268-20260923/SEAL.sha256.txt 2>&1 | grep -v ": OK" | head -5; echo "seal-bad-lines-above(empty=ok)"; cat artifacts/claude-nhop268-20260923/run/errors.txt 2>&1 | head -3; ls artifacts/claude-nhop268-20260923/run/ artifacts/claude-nhop268-20260923/run/probe/ | head -40
+seal-bad-lines-above(empty=ok)
+cat: artifacts/claude-nhop268-20260923/run/errors.txt: No such file or directory
+artifacts/claude-nhop268-20260923/run/:
+dev
+lat-m-1.json
+lat-m-1.log
+lat-m-3.json
+lat-m-3.log
+lat-m-5.json
+lat-m-5.log
+lat-n-2.json
+lat-n-2.log
+lat-n-4.json
+lat-n-4.log
+lat-n-6.json
+lat-n-6.log
+probe
+rt143nogate-268.json
+rt143nogate.log
+score.txt
+score268.json
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+work
+
+artifacts/claude-nhop268-20260923/run/probe/:
+268-p3-dialogs.json
+268-p3-dialogs.txt
+268-p3c-restart2.json
+268-p3c-restart2.txt
+268-p3d-ghost.json
+268-p3d-ghost.txt
+268-probes.json
+268-probes.txt
+268-supp.json
+268-supp.txt
+268-v-dialogs.json
+268-v-dialogs.txt
+268-v-supp.json
+[0m
+[0m# [0mTodos
+[✓] Reproduce on 138m: dev 36 dialogs + 30+ own dialogs (new driver)
+[✓] Build guard scripts/claude_fix268_nhopdir.py + agent scripts/claude_loop268_agent.py
+[✓] Pilot guard on dev+own dialogs; verify flips/identical
+[✓] Pilot M2/M3/M4 vs 138m saved rows
+[✓] Write PASSMARKS.md + predictions + seal + ledger append
+[✓] Registered runs M2-M4 once
+[•] Wait/copy/check blind panel, run once on both arms
+[ ] Write RESULTS.md + final reply; leave files for director
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox 2>&1 | head -3; git show origin/builder-outbox:artifacts/claude-nhoppanel268-20260923/SEAL.sha256.txt 2>&1 | head -10
+197bdb094030bd180689d5a9a3740de32c28281f562c2169841a87ee50e32072  artifacts/claude-nhoppanel268-20260923/panel.jsonl
+f2affd6446083c106539abceeab6775a5bfc5c8683e47616159852c2c5864843  artifacts/claude-nhoppanel268-20260923/base138m.jsonl
+ca924ea8a08d3c6d7d8be1954b34409bbdc6efbb5afee64c14905f86b9d6da19  artifacts/claude-nhoppanel268-20260923/make_panel.py
+dd550bae1a77d2a480c4bd3e088aebaeeed0eb3f5b07afd33ba6cd09eb0f8386  artifacts/claude-nhoppanel268-20260923/run_base.py
+d2a565dbf2dfde70e93e6db00660b134d2a4e1d1d0ccb87b78775d69e2e7a4d9  artifacts/claude-nhoppanel268-20260923/score_panel.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-nhoppanel268-20260923/; mkdir -p /tmp/panelx && git archive origin/builder-outbox artifacts/claude-nhoppanel268-20260923 | tar -x -C /tmp/panelx && ls -la /tmp/panelx/artifacts/claude-nhoppanel268-20260923/
+artifacts/claude-nhoppanel268-20260923/README.md
+artifacts/claude-nhoppanel268-20260923/SEAL.sha256.txt
+artifacts/claude-nhoppanel268-20260923/base138m.jsonl
+artifacts/claude-nhoppanel268-20260923/make_panel.py
+artifacts/claude-nhoppanel268-20260923/panel.jsonl
+artifacts/claude-nhoppanel268-20260923/run_base.py
+artifacts/claude-nhoppanel268-20260923/score138m.json
+artifacts/claude-nhoppanel268-20260923/score_panel.py
+total 184
+drwxr-xr-x  10 ben-hannan  wheel    320 Sep 23 01:58 .
+drwxr-xr-x   3 ben-hannan  wheel     96 Sep 23 01:58 ..
+-rw-r--r--   1 ben-hannan  wheel  19910 Sep 23 01:58 base138m.jsonl
+-rw-r--r--   1 ben-hannan  wheel  19495 Sep 23 01:58 make_panel.py
+-rw-r--r--   1 ben-hannan  wheel  14962 Sep 23 01:58 panel.jsonl
+-rw-r--r--   1 ben-hannan  wheel   2653 Sep 23 01:58 README.md
+-rw-r--r--   1 ben-hannan  wheel   3244 Sep 23 01:58 run_base.py
+-rw-r--r--   1 ben-hannan  wheel   8380 Sep 23 01:58 score_panel.py
+-rw-r--r--   1 ben-hannan  wheel  11723 Sep 23 01:58 score138m.json
+-rw-r--r--   1 ben-hannan  wheel    593 Sep 23 01:58 SEAL.sha256.txt
+[0m
+[0m$ [0mcp -r /tmp/panelx/artifacts/claude-nhoppanel268-20260923 artifacts/ && ls artifacts/claude-nhoppanel268-20260923/ && shasum -c artifacts/claude-nhoppanel268-20260923/SEAL.sha256.txt && echo SEAL-OK
+base138m.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+score_panel.py
+score138m.json
+SEAL.sha256.txt
+artifacts/claude-nhoppanel268-20260923/panel.jsonl: OK
+artifacts/claude-nhoppanel268-20260923/base138m.jsonl: OK
+artifacts/claude-nhoppanel268-20260923/make_panel.py: OK
+artifacts/claude-nhoppanel268-20260923/run_base.py: OK
+artifacts/claude-nhoppanel268-20260923/score_panel.py: OK
+SEAL-OK
+[0m
+[0m→ [0mRead artifacts/claude-nhoppanel268-20260923/run_base.py
+[0m→ [0mRead artifacts/claude-nhoppanel268-20260923/README.md
+[0m→ [0mRead artifacts/claude-nhoppanel268-20260923/score_panel.py
+[0m
+[0m← [0mWrite scripts/claude_268_panelrun.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime | head -1; df -g / | awk 'NR==2{print "free_GB="$4}'
+2:02  up 2 days, 17:51, 4 users, load averages: 37.95 48.10 56.78
+free_GB=14
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_panelrun.py scripts/claude_loop138m_agent.py artifacts/claude-merge138m-20260922/loop138m-config.json artifacts/claude-nhoppanel268-20260923/panel.jsonl artifacts/claude-nhop268-20260923/run/panel-rows138m.jsonl panel-138m 2>&1 | tail -6
+[panel-138m] n268-066 setup_n=1 stage='bench73' wrote=False
+[panel-138m] n268-067 setup_n=1 stage='none' wrote=False
+[panel-138m] n268-068 setup_n=1 stage='none' wrote=False
+[panel-138m] n268-069 setup_n=1 stage='fake' wrote=False
+[panel-138m] n268-070 setup_n=2 stage='loop153-reverse' wrote=False
+[panel-138m] Wrote artifacts/claude-nhop268-20260923/run/panel-rows138m.jsonl (70 rows)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-nhoppanel268-20260923/score_panel.py artifacts/claude-nhoppanel268-20260923/panel.jsonl artifacts/claude-nhop268-20260923/run/panel-rows138m.jsonl artifacts/claude-nhop268-20260923/run/panel-score138m.json 2>&1 | tail -10
+nhoppanel268 score (category level only):
+reverse_chain: n=24 right=10 wrong=0 question_wrote=0
+reverse_nochain: n=10 right=4 wrong=0 question_wrote=0
+uncued_reverse: n=8 right=8 wrong=0 question_wrote=0
+forward_chain: n=12 right=12 wrong=0 question_wrote=0
+forward_1hop: n=10 right=9 wrong=0 question_wrote=0
+abstain: n=6 right=3 wrong=0 question_wrote=0
+TOTAL: n=70 right=46 wrong=0 question_wrote=0
+Wrote artifacts/claude-nhop268-20260923/run/panel-score138m.json
+[0m
+[0m$ [0muptime | head -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_268_panelrun.py scripts/claude_loop268_agent.py artifacts/claude-nhop268-20260923/loop268-config.json artifacts/claude-nhoppanel268-20260923/panel.jsonl artifacts/claude-nhop268-20260923/run/panel-rows268.jsonl panel-268 2>&1 | tail -4
+2:02  up 2 days, 17:51, 4 users, load averages: 42.66 48.76 56.91
+[panel-268] n268-068 setup_n=1 stage='none' wrote=False
+[panel-268] n268-069 setup_n=1 stage='fake' wrote=False
+[panel-268] n268-070 setup_n=2 stage='loop153-reverse' wrote=False
+[panel-268] Wrote artifacts/claude-nhop268-20260923/run/panel-rows268.jsonl (70 rows)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-nhoppanel268-20260923/score_panel.py artifacts/claude-nhoppanel268-20260923/panel.jsonl artifacts/claude-nhop268-20260923/run/panel-rows268.jsonl artifacts/claude-nhop268-20260923/run/panel-score268.json 2>&1 | tail -10
+nhoppanel268 score (category level only):
+reverse_chain: n=24 right=10 wrong=0 question_wrote=0
+reverse_nochain: n=10 right=4 wrong=0 question_wrote=0
+uncued_reverse: n=8 right=8 wrong=0 question_wrote=0
+forward_chain: n=12 right=12 wrong=0 question_wrote=0
+forward_1hop: n=10 right=9 wrong=0 question_wrote=0
+abstain: n=6 right=3 wrong=0 question_wrote=0
+TOTAL: n=70 right=46 wrong=0 question_wrote=0
+Wrote artifacts/claude-nhop268-20260923/run/panel-score268.json
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+a=[json.loads(l) for l in open('artifacts/claude-nhop268-20260923/run/panel-rows138m.jsonl')]
+b=[json.loads(l) for l in open('artifacts/claude-nhop268-20260923/run/panel-rows268.jsonl')]
+print('rows:', len(a), len(b))
+diffs=[]
+for ra,rb in zip(a,b):
+    assert ra['id']==rb['id']
+    if ra!=rb:
+        diffs.append((ra['id'], {k:(ra[k],rb[k]) for k in ra if ra[k]!=rb[k]}))
+print('differing rows:', len(diffs))
+for i,d in diffs: print(i, json.dumps(d)[:300])
+"; shasum -c artifacts/claude-nhop268-20260923/SEAL.sha256.txt 2>&1 | grep -cv ": OK"
+rows: 70 70
+differing rows: 0
+0
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+from collections import Counter
+s138=json.load(open('artifacts/claude-nhop268-20260923/run/panel-score138m.json'))
+c=Counter()
+for e in s138['per_item']: c[(e['family'], e['question_stage'], 'R' if e['right'] else ('W' if e['wrong'] else 'M'))]+=1
+for k in sorted(c): print(k, c[k])
+"
+('abstain', 'bench73', 'M') 1
+('abstain', 'fake', 'R') 1
+('abstain', 'loop153-reverse', 'R') 1
+('abstain', 'loop190b-reverse-nomatch', 'R') 1
+('abstain', 'none', 'M') 2
+('forward_1hop', 'fake', 'R') 5
+('forward_1hop', 'loop138-nhop', 'R') 4
+('forward_1hop', 'none', 'M') 1
+('forward_chain', 'fake', 'R') 9
+('forward_chain', 'loop138-nhop', 'R') 3
+('reverse_chain', 'bench73', 'M') 2
+('reverse_chain', 'loop153-reverse', 'R') 8
+('reverse_chain', 'loop190-reverse', 'R') 2
+('reverse_chain', 'none', 'M') 12
+('reverse_nochain', 'bench73', 'M') 3
+('reverse_nochain', 'loop153-reverse', 'R') 3
+('reverse_nochain', 'loop190-reverse', 'R') 1
+('reverse_nochain', 'none', 'M') 3
+('uncued_reverse', 'loop190-reverse', 'R') 8
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+a=json.load(open('artifacts/claude-nhop268-20260923/run/panel-score138m.json'))
+b=json.load(open('artifacts/claude-nhop268-20260923/run/panel-score268.json'))
+pa=a['per_item']; pb=b['per_item']
+print('per-item identical:', pa==pb)
+for fam in ['reverse_chain','reverse_nochain','uncued_reverse','forward_chain','forward_1hop','abstain']:
+    ra=[e for e in pa if e['family']==fam and e['right']]
+    rb=[e for e in pb if e['family']==fam and e['right']]
+    print(fam, '138m-right:', sorted(e['id'] for e in ra))
+    print(fam, '268-right: ', sorted(e['id'] for e in rb))
+"
+per-item identical: True
+reverse_chain 138m-right: ['n268-001', 'n268-003', 'n268-013', 'n268-015', 'n268-017', 'n268-018', 'n268-019', 'n268-022', 'n268-023', 'n268-024']
+reverse_chain 268-right:  ['n268-001', 'n268-003', 'n268-013', 'n268-015', 'n268-017', 'n268-018', 'n268-019', 'n268-022', 'n268-023', 'n268-024']
+reverse_nochain 138m-right: ['n268-025', 'n268-029', 'n268-030', 'n268-031']
+reverse_nochain 268-right:  ['n268-025', 'n268-029', 'n268-030', 'n268-031']
+uncued_reverse 138m-right: ['n268-035', 'n268-036', 'n268-037', 'n268-038', 'n268-039', 'n268-040', 'n268-041', 'n268-042']
+uncued_reverse 268-right:  ['n268-035', 'n268-036', 'n268-037', 'n268-038', 'n268-039', 'n268-040', 'n268-041', 'n268-042']
+forward_chain 138m-right: ['n268-043', 'n268-044', 'n268-045', 'n268-046', 'n268-047', 'n268-048', 'n268-049', 'n268-050', 'n268-051', 'n268-052', 'n268-053', 'n268-054']
+forward_chain 268-right:  ['n268-043', 'n268-044', 'n268-045', 'n268-046', 'n268-047', 'n268-048', 'n268-049', 'n268-050', 'n268-051', 'n268-052', 'n268-053', 'n268-054']
+forward_1hop 138m-right: ['n268-055', 'n268-056', 'n268-057', 'n268-058', 'n268-059', 'n268-061', 'n268-062', 'n268-063', 'n268-064']
+forward_1hop 268-right:  ['n268-055', 'n268-056', 'n268-057', 'n268-058', 'n268-059', 'n268-061', 'n268-062', 'n268-063', 'n268-064']
+abstain 138m-right: ['n268-065', 'n268-069', 'n268-070']
+abstain 268-right:  ['n268-065', 'n268-069', 'n268-070']
+[0m
+[0m← [0mWrite artifacts/claude-nhop268-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P268.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bar 1 only. M1 panel 70 items once per arm with sealed score_panel.py: 268 rows byte-identical to 138m on all 70 (per-item right sets equal); reverse_chain 10/24 (bar 22/24), reverse_nochain keeps 4/4, uncued 8/8, forward_chain 12/12, forward_1hop 9+1miss identical, abstain 3+3miss identical, wrong 0/70, question_wrote 0/70. Stage census: 0 reverse_chain items at loop138-nhop on either arm (153-reverse 8R, 190-reverse 2R, none 12M, bench73 2M) — the panel presents no forward-walkable frame, so the frame-suppressing guard is a no-op there. DEV/M2/M3/M4 all PASS exactly as predicted (21+3 dev moves by id, 0 elsewhere, latency -0.003 ms). No falsifier triggered. Post-seal driver addition only: scripts/claude_268_panelrun.py (panel runner; sealed files unchanged, seal re-verified OK). P268.1-P268.6 predictions held except P268.2's 22/24 reach goal (composition risk stated pre-seal).
+EOF
+shasum -c artifacts/claude-nhop268-20260923/SEAL.sha256.txt 2>&1 | grep -c ": OK"; shasum -c artifacts/claude-nhoppanel268-20260923/SEAL.sha256.txt 2>&1 | grep -c ": OK"; git status --short | head -30
+18
+5
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+[0m
+[0m# [0mTodos
+[✓] Reproduce on 138m: dev 36 dialogs + 30+ own dialogs (new driver)
+[✓] Build guard scripts/claude_fix268_nhopdir.py + agent scripts/claude_loop268_agent.py
+[✓] Pilot guard on dev+own dialogs; verify flips/identical
+[✓] Pilot M2/M3/M4 vs 138m saved rows
+[✓] Write PASSMARKS.md + predictions + seal + ledger append
+[✓] Registered runs M2-M4 once
+[✓] Wait/copy/check blind panel, run once on both arms
+[✓] Write RESULTS.md + final reply; leave files for director
+[0m
