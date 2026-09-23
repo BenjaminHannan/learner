@@ -13,7 +13,7 @@ set -u
 export OPENCODE_CONFIG_CONTENT='{"snapshot": false}'
 W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
 H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
-IN=claude/project-thread-p68q5v; OUT=builder-outbox; MAX=${MAX:-3}
+IN=main; OUT=builder-outbox; MAX=${MAX:-3}
 RUN="$W/handoff/kit/mimo/rungo4.sh"
 mkdir -p "$Q"; LOG=$H/watch.log
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
@@ -37,6 +37,10 @@ publish() {  # $1 = task name; marks $Q/$n.pushed on success
 log "watcher started (pid $$)"
 while [ ! -e "$H/STOP" ]; do
   git -C "$W" fetch -q origin "$IN" 2>>"$LOG"
+  # self-update: when the watcher on $IN changes, restart into the new version (running tasks keep going)
+  if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
+    bash -n "$H/watcher.new" && { mv "$H/watcher.new" "$0"; log "self-update, restarting"; exec bash "$0"; }
+  fi
   for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
   for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
     n=$(basename "$f" .md)
