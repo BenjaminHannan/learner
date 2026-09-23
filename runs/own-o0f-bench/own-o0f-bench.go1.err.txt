@@ -1,0 +1,810 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | head -c 20000; echo "---"; uptime; df -g /
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 s---
+ 0:13  up 2 days, 16:03, 4 users, load averages: 51.36 58.21 65.49
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 197904840    0%   /
+[0m
+[0m$ [0mgit show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | sed -n '/## 7/,/## 9/p' | head -c 25000
+## 7. A fair comparison with a same-size plain transformer
+
+Benchmarks (all synthetic, fictional names, generated by our generator, sealed before any baseline is trained):
+- **two-hop:** facts taught in separate turns, asked as one question;
+- **reversal:** taught "Ada is Bo's mother", asked "Who is Ada's child?" (the reversal curse, arXiv 2309.12288);
+- **abstention:** untaught facts and never-mentioned people, plus the wipe test (empty notebook → "I don't know");
+- **MQuAKE-style edits:** teach a chain, correct one link, ask the multi-hop question (MQuAKE, arXiv 2305.14795);
+- **3- and 4-hop** chains longer than any in training;
+- grammar of the answers.
+
+Arms:
+
+| Arm | Size | Memory | Why it's there |
+|---|---|---|---|
+| **Premonition-own** | **61,783,463** (§7.1) | notebook | the system |
+| **B-plain** | **61,783,680** (§7.1), decoder-only, same 8,192 tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
+| **B-RAG** | 61,783,680; B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
+| **B-notebook** | 61,783,680; B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+
+### 7.1 Parameter counts (design counts, recomputed from the shapes; the builder re-counts from the built models)
+
+Every learned number the benchmark path uses is counted, including all ear heads, the whole mouth and the reasoner.
+
+| Part | Shape | Parameters |
+|---|---|---:|
+| Ear embeddings | 8,192 × 512 | 4,194,304 |
+| Ear encoder | 8 blocks × (attention 4·512² + MLP 8·512² + 2 norms) + final norm | 25,174,528 |
+| Ear slot layer | 1 cross-attention layer for the 6 slot queries + the queries | 1,052,672 |
+| Ear pointers | owner, value and relation-cue start/end projections (6 × 512²) | 1,572,864 |
+| Ear question pointers | question-owner start/end (2 × 512²) | 524,288 |
+| Ear classifiers | relation (154 classes) per slot + 3 for questions, slot mode (9), act (9), count (7), exists, inverse | 329,859 |
+| Ear special tokens | `ME`, `WE`, `SEP` | 1,536 |
+| **Ear total** | | **32,850,051** |
+| Mouth (talker101, incl. its 0.52M copy head) | as trained; `artifacts/fable-talker101-20260921/RESULTS.md` | 28,847,105 |
+| Mouth slot tokens | 8 new tokens × 512 (M1) | 4,096 |
+| Reasoner | the existing lookup operator | 79,316 |
+| **Premonition-own total** | | **61,783,463** (the first version of this doc said "≈ 59M" and left out the ear heads) |
+| **Each baseline** | decoder-only, 12 blocks, width 640, SwiGLU MLP width 1,600, 8,192 tied embeddings, RMSNorm | **61,783,680** (+217, +0.0004%) |
+
+B-RAG and B-notebook reuse B-plain's pretrained weights (retrieval and rows are test-time inputs), and the
+3 seeds are for the dialogue-training stage; the long pretraining runs once per side, as in §8.
+Retrieval in B-RAG uses plain word-overlap search (no learned parameters), and B-notebook gets the rows as text, so
+all three baselines have the same count. If the built system's audited count differs, the baselines are re-sized to
+within 0.2% before any baseline is trained, and both counts go in the PASSMARKS.
+
+Three tests keep the sources of a win apart: (1) **language boundary**: English → each reader → the same compiler and
+notebook, score the fact sets; (2) **reasoning**: gold facts and gold questions in, no ear; (3) **end to end**.
+If Premonition-own beats only B-plain, the honest claim is "an external-memory assistant works better", not "a
+better reasoner".
+
+Fairness rules (fixed in advance):
+- same pretraining text and the same number of training FLOPs as ear + mouth pretraining together (so each baseline ≈
+  62M × 617M tokens), the same generated teach/ask/correct dialogues as training text, 3 seeds each (training time and FLOPs reported too:
+  equal parameters do not mean equal compute for an encoder + decoder versus one decoder);
+- the same test items, greedy decoding, the same answer extractor for every arm;
+- report the ear's reading accuracy separately, so a win is not credited to the notebook when the reading failed,
+  and a loss is not blamed on the notebook when the reading failed;
+- parameter counts audited from the built models (shared tensors counted once); the baselines are sized to within 1%
+  of Premonition-own's audited count, not "about the same";
+- say plainly what the notebook gives for free (exact storage, edits by overwrite) and where the learned parts
+  (ear, reasoner, mouth) had to earn it.
+
+Expected (untested): B-plain loses on 3–4 hops and on long conversations. It may **not** lose on reversal: the
+reversal-curse paper (arXiv 2309.12288) found models *can* reverse a fact that is in their context window; the curse is
+about facts learned in the weights. So reversal is only a fair win if B-plain actually fails it when measured.
+Success = a paired gain of ≥ 5 points in each benchmark family, over ≥ 500 independent fictional worlds per family,
+with the confidence interval above zero after correcting for the four families, across 3 seeds (no best-seed picking).
+If B-RAG or B-notebook ties Premonition-own, that is the headline.
+
+---
+
+## 8. Compute and money
+
+Anchor (shown): talker101, 28.85M parameters, 617M tokens, about 49,000 tokens/s on BensPC's RTX 5070 Ti, about
+3.5 h. Planning rule (untested): time scales with parameters × tokens.
+
+| Job | BensPC (free) | One rented RTX 5090 (≈ 3× faster on a small model, shown on the 4M model; $0.27–0.60/h listed) |
+|---|---|---|
+| O0 tiny ear | Mac CPU ≤ 25 min | — |
+| E1 ear pretraining, 29M × 600M tokens | ≈ 3.5 h | ≈ 1.2 h ≈ $0.50–0.75 |
+| E1–E3 frame training, 8 short runs | ≈ 2 h | ≈ 0.7 h |
+| M1 mouth fine-tune | ≈ 1 min | — |
+| Each baseline, 61.8M × 617M tokens | ≈ 7.5 h (two resumable runs of ≤ 6 h, D8) | ≈ 2.5 h ≈ $1–1.50 |
+| B-RAG and all evaluations | ≈ 1 h | — |
+| **Total** | **≈ 11–12 GPU-hours, $0** | **≈ 3.5–4 h, ≈ $2–2.50; hard cap $5** |
+
+BensPC is shared: Qwen (the 264 checker, 261b) takes about 15 GB of the 16 GB card, so it can check or train, never
+both. The $30 cap is shared across all lines; the ledger must be read before any rental.
+
+---
+
+## 9. The decision for Ben
+[0m
+[0m$ [0mls artifacts/claude-smolear257-20260922/ 2>&1; echo "==="; ls artifacts/ | head -50; echo "==="; ls scripts/claude_own_* 2>&1; echo "==="; cat artifacts/fable-predictions-ledger.md 2>&1 | tail -30
+data
+data41
+dev
+on235b
+PASSMARKS.md
+relation_table_v2.json
+RESULTS.md
+run
+SEAL.sha256.txt
+train
+train41
+===
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grades255-20260922
+===
+scripts/claude_own_o0a_compiler.py
+scripts/claude_own_o0b_check.py
+scripts/claude_own_o0b_gen.py
+scripts/claude_own_o0c_prep.py
+scripts/claude_own_o0c_tok.py
+scripts/claude_own_o0d_model.py
+scripts/claude_own_o0d_test.py
+scripts/claude_own_o0d_train.py
+scripts/claude_own_o0e_model.py
+scripts/claude_own_o0e_serialize.py
+scripts/claude_own_o0e_tests.py
+scripts/claude_own_o0e_train.py
+===
+- P241b.1 (2026-09-23, finishing builder; exp 241b mouth stage A v2, sealed 19 files SEAL.sha256.txt artifacts/claude-mouth241b-20260922, say table v2 150 rows / 32 verb / 0 dropped, unit tests 29/29) M2(a)/(b)/(c) each 0 failures. Dev: 0/1205 sweep, 0/7646 suite lines (A 7268, passthrough 378, legacy 0), 1016/1016 logs normalised identical.
+- P241b.2 M3 GATE clean; every suite move reply-only on a route-A line of a PASSMARKS section-3 act (expect about rt136 45, rt143 24, sessions152 60, bench 623); 0 verdict changes; 0 flips toward abstain. 241b rows scored with NEW-1 172b version, base rows frozen.
+- P241b.3 M5 latency passes with margin (dev median 0.180 ms, p99 1.423 ms over 1205; in-suite mean 0.239 ms/line). Suite wall within +5% of 228 under D6 (p about 0.8; dev single runs 241b 29.0 s vs 228 31.5 s at load about 100).
+- P241b.4 Every mechanical sub-mark (6 S + 22 C) is 0 on the fresh sweep (p about 0.8; dev re-render of the 241 sweep 0/1205 but the fresh seed is untested).
+- P241b.5 M1 grader bar passes, 99.0% overall and 97% per act (p about 0.6): all 42 old misses changed with 0 sub-mark hits, graders have not seen the new wording. Riskiest: CONFLICT article/capital rendering, BROKEN_CHAIN about-phrasing, AMBIGUOUS names without codes.
+- P241b.6 M4 passes (p about 0.65): win at least 70% non-tie, losses at most 10%. 241 scored 111/9; kept Saved-colon capital and of-forms are the known risk (8 of 241's 9 losses).
+- P241b.7 Sleep smoke identical to 228 on all summary fields except agent/label/seconds.
+- P241b.8 0 sev-1 fallbacks on the suites; unframed-line count 378; ambiguous_identical 0 on the suites.
+- P241b.9 S1 reproduces the frozen verdicts on 100% of saved v3 rows replaced (dev 800/800 on 241's rows, 721 needle replies, 0 differences); v2 rows counted and skipped.
+- P263 OUTCOME (2026-09-23, builder; registered verdict PASS, M1-M4 all PASS, sealed scripts run once per arm) M1 commapanel263: 263 comma-subject stores 0/60 (260: 16), unlisted 20/20 (260 1/20; 19 moves c263-001..019 all toward right, 0 against), comma_value 8/8 lost 0, question 0 writes, control 14/14 byte-identical; 263 right 46/60, 260 right 27/60; 260 arm vs base260.jsonl 60/60 identical; schema OK. M2 openpanel260 on 263: 80/80, every 260 figure equal, 0 worse, 0 new junk, control 16/16 identical. M3 suites: 0 moved units on all 7 files, labels equal 260's (rt136 keeps C019-C031+C076+C079+C122), 0 rt143 flips. M4 latency delta +0.243 ms (bar +3). PROBES: exactly predicted 7 rows, stored B15+D10, 1 allowed new write, supp 0. No abstain flips. Deviations: retry trigger widened to head-shape-failures (pre-seal, documented); name-internal comma exemption added after pilot showed 13 bench flips (0 moves after); first runall died in load-wait pre-step and was re-invoked once; regscore263.json holds a cosmetic M2-absent error (M2 verdict in openpanel-score263.json); no git push per hard rules.
+- P255b.1-A (exp 255b Part A T02 wording, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-fixedtext255b-20260923) T02 text exactly "I didn't understand that. Could you say it another way?"; anchors identical to 138m (yes,yes,yes,yes,no); true on every T02 turn incl. the 8 probes 255 failed (A06,B04,B05,B20,D02,D03,D04,D08).
+- P255b.2-B (exp 255b Part B zero counts) exact texts T43/T52/T53/T46/T40/T41/T47 per decision note; n=0..12 sweep of every count template has no "zero", no "1 <plural>", no "one <plural>"; every other line byte-identical to rewrite255 (unit tests 60 templates + 519 sweep renders, 0 failures).
+- P255b.3-A M2 vs 138m: exactly the 162 predicted ids (rt136 48, rt143 42, sessions152 25, bench 47 = 4+37+5+1); 52 T02-lines carry the new text, 110 carryover byte-identical to 255; GATE clean; 0 verdict/status/store/write changes; rt143 no-gate exactly the 45 predicted ids (37 T02-lines).
+- P255b.4-B zero-lines: 0 in suites, no-gate, probes and dialogs (pilot); M1 zero-case renders and any M3 zero-turn carry exactly the Part B texts with 0 verdict changes.
+- P255b.5-A M4: exactly the 38 predicted changed replies, all same meaning, incl. 20 T02-lines with the 8 previously flagged probes; 0 worse (unexplained); 0 store/event changes; m4_flagged empty by director ruling.
+- P255b.6-A M6: exactly the 17 predicted changes with predicted texts (6 T02-lines new text: p3-dialogs d00t04,d01t01,d05t03; p3c-restart2 d00t06; p3d-ghost d00t06; v-dialogs d03t05); 0 ghosts, dup_ok_all, 0 bad writes, vs saved and same-session.
+- P255b.7-B M1 fixedtext.jsonl seed 2550923: 228 rows (171 changed incl. T02 once + T46 zero-text once; 57 unchanged); bar 100% changed GRAMMATICAL both graders (director grades).
+- P255b.8-A M3 239 panel (TEST-ONLY, once): every changed turn an exact 255b-template rewrite (~153 as 255); 0 unexplained; 0 store changes (director judges correctness/grammar).
+- P255b.9-B M3 zero-turns (if any) carry exact Part B texts; M5 smoke differs only agent/config/label/seconds; M7 median delta <= +2.0 ms (pilot +0.078 ms).
+- Pown0a.1 (2026-09-23, own-O0a oracle coverage, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0a-20260923; 300 hand dev turns, 272 ASSERT/CORRECT/DENY oracle facts, CPU-only compiler run once) auto-writable WE not allowed 184/272 = 67.6%; bar >= 85%: FAIL. Non-writable: 58 no-relation-cue (26 plural lists, 18 verb paraphrases, 8 bare possessives, 3 copula ages, 1 relation typo, 2 bare-correction), 12 OTHER, 10 WE, 5 typo, 2 DENY-old-value-not-repeated, 1 owner missing-apostrophe. Predicted 65-75% in PASSMARKS.
+- Pown0a.2 same with WE allowed 193/272 = 71.0% (report only, no bar). Folding plural cues too would give 210/272 = 77.2% (both: 219/272 = 80.5%) by arithmetic, still below 85%.
+- Pown0a.3 no-save-mode facts writable 0/76; bar = 0: PASS (0 by construction via mode gate).
+- Pown0a OUTCOME: strict v0 write rules ceiling ~68% even with a perfect reader, so no ear training can reach 85% recall under them; rules must change before any GPU run. Seal 4/4 OK after run; no deviations from task order.
+- Pown0c.1 (2026-09-23, own-O0c pipeline sample, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0c-20260923; 4000 SimpleStories + 15000 webred sample, seed 7, CPU only) shards round-trip exactly on 1000 sampled docs: 1000/1000, 0 misses.
+- Pown0c.2 same (seed 7, step 0) data order twice byte-identical (same sha256); step 1 differs.
+- Pown0c.3 total planned download 2.23 GB + 316 MB = 2.546 GB <= 7 GB (plan S5 numbers quoted; remote bytes not re-verifiable offline, nothing downloaded).
+- Pown0d.1 (2026-09-23, own-O0d ear code+trainer, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0d-20260923; CPU only): all unit tests pass; bar = every unit test passes.
+- Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
+- Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
+- Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.
+[0m
+[0m$ [0mcat artifacts/claude-smolear257-20260922/relation_table_v2.json | head -c 4000; echo; echo "==="; ls artifacts/claude-own-bench-20260923/ 2>&1; echo "==="; ls artifacts/claude-own-* 2>&1
+{
+ "version": "v2",
+ "date": "2026-09-22",
+ "purpose": "One relation table for (a) the hand-written reader (rule table) and (b) training labels for a learned reader. Facts are (X, R, Y) read as \"X's R is Y\". v2 (exp 257): v1 rows unchanged except added informal aliases; new rows appended.",
+ "template_syntax": {
+  "value_kinds": {
+   "person": "a named individual (people and named pets; 171 NAME_KEYS)",
+   "place": "a place name",
+   "organization": "a company or group",
+   "work": "a title of a work",
+   "date": "month / day / year",
+   "number": "a number",
+   "language": "a language name",
+   "literal": "any short phrase"
+  },
+  "slots": {
+   "X": "subject",
+   "Y": "value",
+   "R": "relation word (canonical or alias)",
+   "WH": "question word from 'wh'"
+  },
+  "alternation": "(a|b)",
+  "optional": "[word]",
+  "where_values": {
+   "live": "handled by some piece in the 138i stack today",
+   "layer_c": "handled by a layer-C piece being merged now (not yet in 138i)",
+   "not_live": "exists in repo code but not in the 138i stack",
+   "NEW": "no code handles it today"
+  },
+  "status_values": {
+   "known": "relation name appears in code or frozen suite/bench data",
+   "NEW": "relation name appears nowhere in code or data"
+  }
+ },
+ "rules": {
+  "taught_facts_win": "Taught facts are never overwritten by inferences; inverse and narrower answers are read-only.",
+  "inverse_never_stored": "Inverse phrasings are answered at question time by scanning live taught facts (like fable_fix190_reverse.py:149 reverse_subjects190), labelled 'worked out backwards', and never written.",
+  "aliases_true_synonyms_only": "An alias must mean exactly the same relation (boss = manager; boss != employer).",
+  "narrower_is_one_way": "A narrower fact (wife) may answer a broader question (spouse), labelled; never the reverse.",
+  "storage_keys_read_all": "Existing code has stored the same relation under several keys. At question time the reader looks under every storage key; if two keys give different current values it reports both and asks, never picks one.",
+  "inverse_storage_keys": "Legacy bench keys whose subject and value are swapped ((Ada, composer_of, Blue Rain) == (Blue Rain, composer, Ada)). Read-only; the table never writes them.",
+  "verb_facts_are_relations": "Ben's standing decision: anything readable as a relation is (e.g. 'X works at Y' -> employer).",
+  "open_vocabulary_fallback": "Relations not in this table still work through the existing possessive path (FakeEars._relation snake-cases any surface). The table adds shapes; it removes nothing.",
+  "self_questions": "Questions about the agent itself ('What is your name?', 'Who made you?', 'How old are you?') stay with the self router (fable_loop138_agent.py:181 route127). The table reader must not claim any turn whose subject slot is 'you'/'your'."
+ },
+ "generic_patterns": {
+  "possessive": {
+   "teach": [
+    {
+     "t": "{X}'s {R} is {Y}.",
+     "where": "live",
+     "src": "scripts/fable_agent_loop.py:96 (_STATEMENT, open-vocabulary 'X's R is Y'; key rule FakeEars._relation :151)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "{WH} is {X}'s {R}?",
+     "where": "live",
+     "src": "scripts/fable_agent_loop.py:94 (_QUESTION who/what/where is X's R [ 's R2 ...])"
+    },
+    {
+     "t": "What's {X}'s {R}?",
+     "where": "NEW",
+     "src": "NEW (contraction; 158 qform only folds some)"
+    }
+   ],
+   "yesno": [
+    {
+     "t": "Is {X}'s {R} {Y}?",
+     "where": "live",
+     "src": "scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154"
+    },
+    {
+     "t": "Is {Y} {X}'s {R}?",
+     "where": "live",
+     "src": "scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154"
+    }
+   ]
+  },
+  "my": {
+   "teach": [
+    {
+     "t": "My {R} is {Y}.",
+     "where": "live",
+     "src": "scripts/fable_fix166_me.py (Me166Mixin; X = the user)"
+    }
+   ],
+   "ask": [
+    {
+     "t": "{WH} is my {R}?",
+     "where": "live",
+     "src": "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS"
+    }
+   ],
+   "yesn
+===
+ls: artifacts/claude-own-bench-20260923/: No such file or directory
+===
+artifacts/claude-own-o0a-20260923:
+gold.jsonl
+oracle_coverage.json
+PASSMARKS.md
+RESULTS.md
+SEAL-data.sha256.txt
+SEAL.sha256.txt
+turns.jsonl
+
+artifacts/claude-own-o0c-20260923:
+index-sample.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+tokenizer-sample.json
+
+artifacts/claude-own-o0d-20260923:
+kill_A
+kill_B
+PASSMARKS.md
+SEAL.sha256.txt
+smoke_frame
+smoke_mlm
+test_results.json
+tok.pkl
+
+artifacts/claude-own-o0e-20260923:
+killA
+PASSMARKS.md
+SEAL.sha256.txt
+TESTLOG.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json')); rows=d.get('relations',d.get('rows',[])); print(type(d), list(d.keys())); print('n_rel_keys:', len(rows) if isinstance(rows,list) else 'dict'); import itertools; print(json.dumps(d, indent=1)[:0]); " 2>&1 | head -20
+echo "==="
+/usr/bin/python3 -c "import json; d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json')); print(list(d.keys()))"
+<class 'dict'> ['version', 'date', 'purpose', 'template_syntax', 'rules', 'generic_patterns', 'inventory_exclusions', 'relations']
+n_rel_keys: 153
+
+===
+['version', 'date', 'purpose', 'template_syntax', 'rules', 'generic_patterns', 'inventory_exclusions', 'relations']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json; d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=d['relations']
+print('n=',len(rels))
+print(json.dumps(rels[0],indent=1)[:1500])
+print('---')
+print(json.dumps(rels[1],indent=1)[:800])
+"
+n= 153
+{
+ "name": "mother",
+ "status": "known",
+ "value_kind": "person",
+ "cardinality": "single",
+ "yesno_can_say_no": true,
+ "aliases": [
+  "mom",
+  "mum",
+  "mommy",
+  "mummy",
+  "ma",
+  "mam",
+  "mama"
+ ],
+ "storage_keys": [
+  "mother"
+ ],
+ "inverse_storage_keys": [],
+ "narrower": [],
+ "generic": [
+  "possessive",
+  "my",
+  "of_form",
+  "inverted",
+  "reverse"
+ ],
+ "wh": [
+  "Who",
+  "What"
+ ],
+ "teach": [],
+ "ask": [],
+ "yesno": [],
+ "inverse": [
+  {
+   "t": "Who are {Y}'s children?",
+   "where": "NEW",
+   "src": "NEW (collects mother and father facts)",
+   "never_store": true,
+   "label": "worked out backwards"
+  }
+ ],
+ "src": [
+  "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+  "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+  "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+  "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+  "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS",
+  "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS",
+  "scripts/fable_reasoner50.py:76 CORE8"
+ ]
+}
+---
+{
+ "name": "father",
+ "status": "known",
+ "value_kind": "person",
+ "cardinality": "single",
+ "yesno_can_say_no": true,
+ "aliases": [
+  "dad",
+  "daddy",
+  "papa",
+  "pa",
+  "pop",
+  "poppa"
+ ],
+ "storage_keys": [
+  "father"
+ ],
+ "inverse_storage_keys": [],
+ "narrower": [],
+ "generic": [
+  "possessive",
+  "my",
+  "of_form",
+  "inverted",
+  "reverse"
+ ],
+ "wh": [
+  "Who",
+  "What"
+ ],
+ "teach": [],
+ "ask": [],
+ "yesno": [],
+ "inverse": [],
+ "src": [
+  "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+  "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+  "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+  "scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE",
+  "scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS",
+  "scripts/fable_fix139e_tail.py:57 LISTED_RELATIONS"
+ ]
+}
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json; d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=d['relations']
+from collections import Counter
+print(Counter(r['value_kind'] for r in rels))
+pers=[r['name'] for r in rels if r['value_kind']=='person']
+print(len(pers)); print(pers[:60])
+"
+Counter({'person': 96, 'literal': 15, 'place': 15, 'thing': 11, 'date': 4, 'pet': 4, 'organization': 3, 'language': 3, 'work': 1, 'number': 1})
+96
+['mother', 'father', 'parent', 'sister', 'brother', 'sibling', 'spouse', 'wife', 'husband', 'partner', 'child', 'son', 'daughter', 'grandchild', 'grandson', 'granddaughter', 'grandmother', 'grandfather', 'cousin', 'aunt', 'uncle', 'friend', 'best_friend', 'neighbour', 'boss', 'colleague', 'teacher', 'coach', 'doctor', 'mentor', 'apprentice', 'rival', 'envoy', 'herald', 'keeper', 'scout', 'warden', 'owner', 'dog', 'cat', 'composer', 'author', 'painter', 'director', 'founder', 'inventor', 'designer', 'discoverer', 'architect', 'creator', 'developer', 'performer', 'officeholder', 'head_of_state', 'head_of_government', 'chairperson', 'chief_executive_officer', 'head_coach', 'dean', 'stepfather']
+[0m
+[0m← [0mWrite scripts/claude_own_o0f_bench.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0f_bench.py generate
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-bench-20260923/two_hop.jsonl (500 worlds)
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-bench-20260923/reversal.jsonl (500 worlds)
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-bench-20260923/abstention.jsonl (500 worlds)
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-bench-20260923/mquake_edit.jsonl (500 worlds)
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-bench-20260923/long_chain.jsonl (500 worlds)
+template counts per family:
+  two_hop teach=49 ask=32
+  reversal teach=49 ask=32
+  abstention teach=49 ask=32
+  mquake_edit teach=49 ask=32
+  long_chain teach=49 ask=32
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0f_bench.py verify
+two_hop: n=500 mismatches=0 ungrounded=0 over_budget=0 max_chars=286 max_tokens~71
+reversal: n=500 mismatches=0 ungrounded=0 over_budget=0 max_chars=210 max_tokens~52
+abstention: n=500 mismatches=0 ungrounded=0 over_budget=0 max_chars=292 max_tokens~73
+mquake_edit: n=500 mismatches=0 ungrounded=0 over_budget=0 max_chars=605 max_tokens~151
+long_chain: n=500 mismatches=0 ungrounded=0 over_budget=0 max_chars=478 max_tokens~119
+cross-family shared name sets: 0
+TOTAL worlds=2500 mismatches=0
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+from collections import Counter
+for fam in ['abstention','long_chain','mquake_edit']:
+    c=Counter()
+    for l in open('artifacts/claude-own-bench-20260923/%s.jsonl'%fam):
+        w=json.loads(l)
+        if fam=='abstention': c[w['questions'][0]['meta']['sub']]+=1
+        elif fam=='long_chain': c[w['questions'][0]['kind']]+=1
+        else: c['q='+str(len(w['questions']))]+=1
+    print(fam, dict(c))
+"
+abstention {'untaught': 167, 'never_mentioned': 167, 'broken': 166}
+long_chain {'long_3': 250, 'long_4': 250}
+mquake_edit {'q=2': 500}
+[0m
+[0m← [0mWrite artifacts/claude-own-bench-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_o0f_bench.py artifacts/claude-own-bench-20260923/two_hop.jsonl artifacts/claude-own-bench-20260923/reversal.jsonl artifacts/claude-own-bench-20260923/abstention.jsonl artifacts/claude-own-bench-20260923/mquake_edit.jsonl artifacts/claude-own-bench-20260923/long_chain.jsonl artifacts/claude-own-bench-20260923/RESULTS.md > artifacts/claude-own-bench-20260923/SEAL.sha256.txt && cat artifacts/claude-own-bench-20260923/SEAL.sha256.txt
+c7a574fb367f039350af9954ba762609d03dc44ad90de238612b34f84da5eb3d  scripts/claude_own_o0f_bench.py
+f1dd7d33e6cfda4f85998d8d21c39277b8fc24b86dbb5a0393a90ae5fa7487e0  artifacts/claude-own-bench-20260923/two_hop.jsonl
+e849fad62f55588c92d5e01d18fc3c1f3bcafa7e80134ce13f852ae15d8a71d0  artifacts/claude-own-bench-20260923/reversal.jsonl
+50439efb515767e8f46ed776dcc74d5c46fa3aa2a8ad0d7396906b7306a51199  artifacts/claude-own-bench-20260923/abstention.jsonl
+af5793066e5d3ab147f238719e90d2a8d63507a0ab51e5105d74d1ff29c827e6  artifacts/claude-own-bench-20260923/mquake_edit.jsonl
+8b21468e4cd93c089f5c7e29b6c627ec25d67c7ab85dfc12aaac32e80bd9a3cb  artifacts/claude-own-bench-20260923/long_chain.jsonl
+bd9706c5c86d206682c63933dadd074394e83ec20702248160488c54ae72157a  artifacts/claude-own-bench-20260923/RESULTS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0f.1 (2026-09-23, own-O0f sealed comparison benchmark, sealed 7 files SEAL.sha256.txt artifacts/claude-own-bench-20260923; blind generator, CPU only, fictional names) 500 worlds per family x 5 families = 2500 worlds, 3000 questions (mquake 2/world); abstention 167/167/166, long 250x3-hop + 250x4-hop; max conversation 605 chars ~ 151 tokens (bar 900).
+- Pown0f.2 same: rule-based checker re-derives every gold from conversation facts, 0 mismatches over 3000 questions, 0 ungrounded facts, 0 over-budget conversations.
+- Pown0f.3 same: 0 worlds share a name set with another family's world (globally unique names by construction).
+EOF
+tail -4 artifacts/fable-predictions-ledger.md
+- Pown0b.4 (own-O0b) each of the 10 families in [9%, 11%] of the 200,000 train rows (bar: >= 3% each).
+- Pown0f.1 (2026-09-23, own-O0f sealed comparison benchmark, sealed 7 files SEAL.sha256.txt artifacts/claude-own-bench-20260923; blind generator, CPU only, fictional names) 500 worlds per family x 5 families = 2500 worlds, 3000 questions (mquake 2/world); abstention 167/167/166, long 250x3-hop + 250x4-hop; max conversation 605 chars ~ 151 tokens (bar 900).
+- Pown0f.2 same: rule-based checker re-derives every gold from conversation facts, 0 mismatches over 3000 questions, 0 ungrounded facts, 0 over-budget conversations.
+- Pown0f.3 same: 0 worlds share a name set with another family's world (globally unique names by construction).
+[0m
