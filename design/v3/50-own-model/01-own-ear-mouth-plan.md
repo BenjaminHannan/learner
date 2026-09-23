@@ -177,6 +177,35 @@ Changes, one per stage (§6):
 3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
    TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
 
+### 3.3 Update 2026-09-23 18:15 UTC: fluent, conversational mouth (absorbs the talking line's F4)
+
+Ben (17:55 UTC): "I only want to talk to it when it's able to speak fluent english in a conversational tone". The talking line
+(design/v3/30-modes/talk-fluency-plan.md) keeps F0 (conversation benchmark), F1 (241b rewriter on 292t), F2 (reworded fixed
+lines) and F3 (reply planner). Its F4, the generative mouth, is this line's M-stages. What changes:
+- **Which model speaks (Ben decides; the default below is what gets built).** talker101 is ours, but it is small and trained only on
+  stories. Its fine-tuned form talker120b wrote raw lines like "Am I I I I have that fact is I I have?" and was unfaithful 172/500
+  times before the brake (shown, artifacts/claude-talker120b-run-20260922/score.json). The default is to fine-tune a copy of the
+  reader's model, MiniCPM5-1B (Ben picked it at 11:01 and it is already downloaded, so no new download). talker101 becomes the
+  "fully ours" comparison arm, not the shipped mouth.
+- **Input:** the checked reply record (act, owner, relation, value, negation, direction, status) plus the user's last turn and a dialog
+  tag from F3 (acknowledge, answer, ask, follow-up). **Output:** one or two conversational sentences with names and values as slot
+  tokens (§3.1 step 1). The printer puts the exact strings back.
+- **Faithfulness (unchanged in spirit, new checker):**
+  1. Slot check: every name and value in the reply is in the record, and every record slot the act needs is present.
+  2. Read-back by the listener's reader (not the shelved own ear). The frame it reads must equal the record, act, negation and
+     direction included.
+  3. If either check fails, the 241b rewriter (F1) says it instead.
+  A yes/no checker is not used (it let 63/65 wrong frames through, board 267).
+- **Stages (each one sealed change):**
+  - M0: training pairs, CPU. Records + turns → several conversational target replies, written by builders, kept only if the slot
+    check passes, with fictional names and none drawn from F0's benchmark.
+  - M1: fine-tune with slot tokens.
+  - M2: add the read-back.
+  - M3: measure on F0's benchmark with F0's pass marks: blind judge wins ≥70% of non-tie dialogs vs the arm in use, ≤10% losses,
+    0 unfaithful lines, no single reply on >10% of turns, grammar ≥99%. It is proved wrong if wins are ≤60% or any unfaithful line
+    reaches the user.
+- The M1 to M3 marks in §6 still apply to the talker101 arm.
+
 ### 3.2 Small talk (later, stage T1)
 
 Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
