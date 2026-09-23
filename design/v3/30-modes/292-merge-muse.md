@@ -199,3 +199,19 @@ resolves by pass-through order, never by a new rewrite. No
 `scripts/claude_fix292_glue.py` is created; if pilots find otherwise, a
 dated amendment here will say so before the seal (a new file, never an
 edit).
+
+## Pilot amendment 2026-09-23 (pre-seal): "Who <verb> X's R?" chains lift
+
+One pilot-found interaction, verified stable 5/5 on both arms (not the
+1-in-800 flake): "Who built Tomas's house?" (verifier probe N02 class).
+The lift claims it — `plan266` extracts chain "Tomas's house", probe
+"Who built Zqbex?" passes the one-frame gate on the 291 ears — and the
+canonical ("What is Tomas's house's builder?") honest-abstains on the
+291 stack ("I don't know Tomas's house."), where 138m/138nb stacks (and
+hence the 266b/268b/293 arms and 291) give the generic clarify. 293's
+parser takes no Who-shape (`parse_yesno293` returns None; confirmed by
+reading, not by panel), so this is lift-then-honest-abstain, not a
+yes/no answer from an unresolved chain. Reply-only, stores identical,
+0 writes. Predicted in PASSMARKS as the single verifier-probe move. No
+new glue: the standing rules already cover it (lift is read-only; an
+honest abstain is never a ghost answer).

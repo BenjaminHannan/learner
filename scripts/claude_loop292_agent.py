@@ -59,8 +59,6 @@ G228.install_srcguard228()  # 228 first, at import
 
 import claude_fix268_nhopdir as G268  # noqa: E402 (268 guard, read-only)
 
-G268.install_nhopdir268()  # 268 guard, at import (as on 268b)
-
 import claude_fix138nb_label as LB138NB  # noqa: E402 (read-only)
 import claude_fix252b_screen as F252B  # noqa: E402 (read-only; installs 252b)
 import claude_fix252_correct as F252  # noqa: E402 (read-only)
@@ -77,6 +75,11 @@ import claude_loop232c_agent as L232C  # noqa: E402 (read-only, 232c rule)
 import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
 import fable_loop224_agent as L224  # noqa: E402 (read-only)
 import claude_loop224c_agent as L224C  # noqa: E402 (read-only)
+
+G268.install_nhopdir268()  # 268 guard, at import AFTER L138J (as on 268b:
+# fable_loop138j_agent installs fix170's fast_compose_n_hop at import, so
+# the guard must win last; installing earlier gets overwritten and the
+# later no-op reinstall leaves fast installed)
 
 F252B.install_screen252b()
 
@@ -222,10 +225,9 @@ def _check(loop):
         raise RuntimeError("292: Correct252LoopMixin not on loop")
     if "Label138nbMixin" not in _mro_names(type(loop)):
         raise RuntimeError("292: Label138nbMixin not on loop")
-    outer = getattr(loop, "ears", None)
-    if "ChainLift266bMixin" not in _mro_names(type(outer)):
-        raise RuntimeError("292: ChainLift266bMixin not on outer ears")
     inner = getattr(loop, "_inner138j_ears", None)
+    if "ChainLift266bMixin" not in _mro_names(type(inner)):
+        raise RuntimeError("292: ChainLift266bMixin not on inner ears")
     if not isinstance(inner, NB138.Loop138nbEars):
         raise RuntimeError("292: inner ears are not Loop138nbEars")
     if not isinstance(inner, Loop292Ears):

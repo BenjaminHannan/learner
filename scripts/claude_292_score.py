@@ -143,9 +143,13 @@ def cmd_m2m6(a) -> int:
         p = d / name
         if p.exists():
             try:
-                rows = [json.loads(l) for l in
-                        p.read_text(encoding="utf-8").splitlines()
-                        if l.strip()]
+                txt = p.read_text(encoding="utf-8")
+                try:
+                    doc = json.loads(txt)
+                    rows = doc if isinstance(doc, list) else [doc]
+                except Exception:
+                    rows = [json.loads(l) for l in txt.splitlines()
+                            if l.strip()]
                 out[name] = {"n": len(rows)}
             except Exception as e:  # noqa: BLE001
                 out[name] = {"read_error": str(e)}

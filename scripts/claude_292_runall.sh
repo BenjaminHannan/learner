@@ -122,6 +122,6 @@ for i in 1 2 3; do for arm in 291 292; do
   PY scripts/claude_merge138k_latency.py $AG $CF $W/lat-$arm-$i 2 $R/lat-$arm-$i.json \
     $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json > $R/lat-$arm-$i.log 2>&1
 done; done
-SPY scripts/claude_292_score.py m2m6 --dir $R --pred $PRED $R/score292.json > $R/score.txt 2>&1
+SPY scripts/claude_292_score.py m2m6 --dir $R --pred $PRED --out $R/score292.json > $R/score.txt 2>&1
 echo "TOTAL $(( $(date +%s) - T0 )) s" | tee -a "$R/uptime.log"
 cat $R/score.txt
