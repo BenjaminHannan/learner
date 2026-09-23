@@ -8,7 +8,7 @@ THE PIPELINE
 
 THE RESULT (fresh blind test set, 150 turns: 122 gold facts in statement turns, 25 turns that must save nothing, 40 questions)
 - Wrong saves: 9 (target <= 1). Exact fact recall: 95/122 = 77.9% (target >= 85%). Questions: 39/40 correct. Checker held back 10 facts, all correctly.
-- The 9 wrong saves, by kind: 4 gave a pet to the wrong owner (2 from "our"/plural-owner turns, 1 from an appositive like "my sister's dog, X, ...", 1 plain speaker-pet); 2 corrections kept the old value; 2 had a chat typo inside the saved value; 1 was saved from a turn that should save nothing (P = 0.37).
+- The 9 wrong saves, by kind: 4 gave a pet to the wrong owner (2 from "our"/plural-owner turns, 1 from an appositive (a name set off by commas after a relative), 1 plain speaker-pet); 2 corrections kept the old value; 2 had a chat typo inside the saved value; 1 was saved from a turn that should save nothing (P = 0.37).
 - 8 of the 9 wrong saves had P(YES) >= 0.68; most >= 0.94.
 - Sweeping theta: recall is flat at 77.9% from theta 0 to 0.8 while wrong saves fall only 19 -> 7; at theta 0.95 recall is 60.7% with 4 wrong; no theta meets both targets.
 - On an older, easier development panel the same checker kept 100/112 facts with 6 wrong saves. With the literal prompt wording, <= 1% wrong needed theta 0.9 and recall fell to ~51%; a reworded prompt gave 91.9% recall at 0.95% wrong on development data (and then failed on the fresh set).
