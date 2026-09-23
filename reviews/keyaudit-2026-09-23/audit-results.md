@@ -17,7 +17,7 @@ Replaces Ben hand-labelling 100 turns (Ben, 10:32 UTC). Research thread.
 | Labeller slip, key right (38, 84) | 2 |
 | **Clear key errors** | **0** |
 
-"we/our" turns (2, 6, 11, 59, 61, 64, 78, 86): all three keys say ask whose, 8/8. Corrections (10 turns): the key's new fact and removal matched at least one labeller on all 10. No-save turns: all 12 match on the no-save decision (key and both labellers), except the 4 disputed items above.
+"we/our" turns (2, 6, 11, 59, 61, 64, 78, 86): all three keys say ask whose, 8/8. Corrections (10 turns): the key's new fact and removal matched at least one labeller on all 10. No-save turns: 9 of 12 match on the no-save decision (key and both labellers); the other 3 are disputed items 7, 57 and 97.
 
 ## What this does and does not show (shown / suggested / untested)
 - **Shown:** on this 100-message set, a blind Opus labeller reproduces the Opus-written key on every clear case.
