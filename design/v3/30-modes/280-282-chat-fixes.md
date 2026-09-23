@@ -78,3 +78,40 @@ Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in 
 type (slang, typos, long and short, "tell me"/"list" forms, questions about what it is for); 10 "Can you <specific>?"
 turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
 "What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
+
+## 280b re-run ruling (director, 2026-09-23 08:40 UTC, before any 280b panel row has run)
+
+280b's registered panel step exited VOID: the blind panel names its turn-text column `user`, the sealed runner
+requires `user_text`. Neither arm ran a single row, so no panel result exists and nothing was tuned. The brief
+(mine) named no text column, so this is a director error, not the builder's.
+Ruling: one re-run, with one new adapter file `scripts/claude_capab280b_paneladapt.py` that writes
+`artifacts/claude-capab280b-20260923/rerun/panel-adapted.jsonl`: every row identical to the sealed panel except the
+key `user` renamed to `user_text` (same order, same values, no other key touched). The adapter checks this
+mechanically (row count, every other field equal, text equal) and records both sha256 values. Then the sealed
+`claude_280b_panel.sh` steps run ONCE per arm on the adapted file, unchanged. The sealed marks and bars stand as
+registered. The sealed .sh files were not in 280b's PUSH list (my glob missed them); the re-run pushes them so the
+director can check the 15/15 seal.
+
+## 281 result and the 281b follow-up (director, 2026-09-23 08:40 UTC)
+
+281 is a registered FAIL (M1 stored 16/25, bar 23/25; every other bar passed: 0 wrong answers, 10/10 not-stored
+abstains, 0 moves on ambiguous and control items, 0 notebook changes, 0 suite moves). Director recount from the raw
+rows: 16 replies changed, all 16 on stored items, all toward the right answer; 0 triple diffs; 0 writes on questions.
+Diagnosis available without the panel: of 281's 9 misses, the builder reports 5 sit in dialogs whose teach turn is
+not stored by 260 either (so no question wording could be answered: a panel-design flaw), and 4 are called-wordings
+outside the four sealed shapes. The builder described those 4 by shape category; the director read that summary.
+So calledpanel281 is burned for 281b.
+281b's one change (on top of 281) comes from dev material that predates the panel: the 04:18 chat-demo probe found
+casual typing (lowercase, no apostrophe, no question mark) fails generally. Change: 281's called/named reader also
+accepts the same question typed casually: any letter case, a possessive written without its apostrophe ("anas cat"
+only when "ana" is a known entity), "whats"/"what's"/"what is", and a missing question mark when the turn starts
+with a question word. Teach turns and writes untouched. Nothing else moves.
+Marks: M1 calledpanel281b (fresh): stored items answered exactly >= 90%, counted only over items whose teach turn
+the 260 arm stores (panel writers must use plain teach forms; teach-fail count reported separately, bar: at most 2
+of the teach turns fail on 260, else the panel is VOID); 0 wrong answers; not-stored items abstain 100%; 0 writes on
+question items; ambiguous and control items identical to 281. M2 frozen suites vs 281's rows: only predicted moves,
+GATE clean.
+Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+(at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
+was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
+turn_index, user_text, category, gold. Fictional names only.
