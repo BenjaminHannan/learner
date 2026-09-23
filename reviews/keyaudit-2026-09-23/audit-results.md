@@ -31,3 +31,8 @@ Replaces Ben hand-labelling 100 turns (Ben, 10:32 UTC). Research thread.
 3. If we want the full EVAL-GOLD-01, add planted bad keys so the catch rate is measured, not assumed.
 
 Files: messages.md, ai_key.jsonl, label_A.jsonl, label_B.jsonl (same folder).
+
+## Addendum 10:37 UTC: director rulings (design/v3/30-modes/key-writing-rules.md)
+- Negatives save nothing (no "dog: none"); the turn is tagged negation. Removing an old row belongs to the forget/deny path, not the ear. So the key was right on 57 and 94, and my "remove the old row" suggestion above is superseded.
+- "so X is Y" without "?", "…right" and "…, yeah" are checks: gold is an ASK/confirm frame. So 7 and 97 go to the key's side.
+- Any Muse-written key must pass this blind Opus audit before it grades a registered run.
