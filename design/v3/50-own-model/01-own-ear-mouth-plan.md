@@ -410,6 +410,11 @@ both. The $30 cap is shared across all lines; the ledger must be read before any
 
 ## 9. The decision for Ben
 
+**Decided by Ben (2026-09-23 03:00 UTC): "Anything that starts and finishes overnight, use rtx 5070-ti as a blanket
+rule."** So E1 ear pretraining (≈ 3.5 h) and each baseline pretraining run (≈ 7.5 h, split into two resumable runs)
+go on BensPC overnight, free. A rental would only come up again for a job that can't fit in a night, and that would
+be a new question to Ben. The options below are kept as they were asked.
+
 **Where should the first long GPU job run (own-ear pretraining, E1, ≈ 3.5 h on BensPC)?**
 - **Rent one RTX 5090 for about 1.2 hours (≈ $1, hard cap $3)** — runs in parallel with the other lines, which keep
   BensPC for the Qwen checker work. *Recommended*, because the GPU is the thing every line is waiting on.
