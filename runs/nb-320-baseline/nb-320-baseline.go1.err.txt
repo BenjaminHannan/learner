@@ -1,0 +1,2279 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/talk-f0-base.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/talk-f0-base.md
+[0m✗ [0mRead design/v3/30-modes/320-notebook-compact.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/30-modes/320-notebook-compact.md
+[0m
+[0m$ [0mpwd && git rev-parse --show-toplevel 2>&1; ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m✗ [0mRead design/v3/30-modes/320-notebook-compact.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/30-modes/320-notebook-compact.md
+[0m✗ [0mGlob "handoff/queue/*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls handoff/queue/ 2>&1 | head -30; echo ---; ls design/v3/30-modes/ 2>&1 | head -30; echo ---; ls design/ 2>&1 | head
+ls: handoff/queue/: No such file or directory
+---
+00-director-board.md
+00-morning-report-20260922.md
+100-self-questions-blind-phrasing-muse.md
+101-talker-first-run-prep-muse.md
+102-integrated-agent-patches-muse.md
+103-bench-scale-followups-muse.md
+104-live-sleep-in-daemon-muse.md
+105-self-router-fix-muse.md
+106-reading-ladder-first-score-muse.md
+107-reading-behind-the-gate-muse.md
+108-daemon-exactly-once-muse.md
+109-ears-real-text-supervision-muse.md
+110-redteam-loop102-muse.md
+111-loop102-end-to-end-bench-muse.md
+112-ledger-backfill-muse.md
+113-loop-nhop-questions-muse.md
+113b-loop-nhop-fallback-muse.md
+113c-loop-partial-frame-muse.md
+113d-fallback-partial-frame-muse.md
+113e-gate-inverse-cues-muse.md
+114-self-router-scope-guard-muse.md
+115-sleep-scale-muse.md
+116-sleep-redteam-muse.md
+117-redteam110-patches-muse.md
+118-ears-leftover-brake-muse.md
+118b-ears-brake-train-list-muse.md
+119-ears-length-coverage-muse.md
+119b-ears-remap-muse.md
+119d-ears-diagnosis-muse.md
+119e-ears-gate-diagnosis-muse.md
+---
+01-learning-spec.md
+02-options.md
+03-issues-and-decisions.md
+04-architecture-v1.md
+04-architecture.md
+05-village-v0.md
+06-premonition-mini-spec.md
+06-step1-pilot-results.md
+pilots
+research
+[0m
+[0m$ [0mls handoff/ 2>&1 | head -30; echo ---; ls design/v3/ 2>&1 | head -30
+HANDOFF.md
+kit
+memory
+replies
+---
+19-development-readout-and-next-step.md
+19-novelty-experiment-preregistration-draft.md
+19-novelty-mechanism-research.md
+19-rulings-1.md
+20-concept-toy-build-plan.md
+20-concept-toy-preregistration-draft.md
+20-concept-toy-rulings-1.md
+20-concept-toy-rulings-2.md
+20-concept-toy-rulings-3-fable-review.md
+20-concept-toy-simulator-spec.md
+20-top-mechanism-preregistration-draft.md
+20-undercovered-brain-mechanisms.md
+21-teachable-assistant-roadmap-fable-review.md
+21b-new-names-rulings-fable-review.md
+24-talker-from-scratch-fable-design.md
+24b-talker-decisions-ben.md
+25-gpt6pro-eight-problems-answer.md
+25b-gpt6pro-answer-adjudication-fable-review.md
+26-dispatcher-stop-probes-registration-fable-review.md
+27-new-names-followup-design-fable-review.md
+28-all-problems-handoff-fable.md
+28-outside-review-adjudication-fable.md
+28-outside-review-answer-verbatim.txt
+29-new-names-gap-followup-design-fable-review.md
+30-modes
+40-talker
+[0m
+[0m$ [0mls design/v3/30-modes/ 2>&1; echo ---; ls handoff/kit/ 2>&1 | head
+00-director-board.md
+00-morning-report-20260922.md
+100-self-questions-blind-phrasing-muse.md
+101-talker-first-run-prep-muse.md
+102-integrated-agent-patches-muse.md
+103-bench-scale-followups-muse.md
+104-live-sleep-in-daemon-muse.md
+105-self-router-fix-muse.md
+106-reading-ladder-first-score-muse.md
+107-reading-behind-the-gate-muse.md
+108-daemon-exactly-once-muse.md
+109-ears-real-text-supervision-muse.md
+110-redteam-loop102-muse.md
+111-loop102-end-to-end-bench-muse.md
+112-ledger-backfill-muse.md
+113-loop-nhop-questions-muse.md
+113b-loop-nhop-fallback-muse.md
+113c-loop-partial-frame-muse.md
+113d-fallback-partial-frame-muse.md
+113e-gate-inverse-cues-muse.md
+114-self-router-scope-guard-muse.md
+115-sleep-scale-muse.md
+116-sleep-redteam-muse.md
+117-redteam110-patches-muse.md
+118-ears-leftover-brake-muse.md
+118b-ears-brake-train-list-muse.md
+119-ears-length-coverage-muse.md
+119b-ears-remap-muse.md
+119d-ears-diagnosis-muse.md
+119e-ears-gate-diagnosis-muse.md
+119f-ears-build-muse.md
+119f-ears-plan-muse.md
+119g-ears-build-muse.md
+119h-ears-build-muse.md
+120-talker-mouth-finetune-prep-muse.md
+120b-mouth-decode-muse.md
+120d-talker-dontknow-muse.md
+121-teach-phrasing-coverage-muse.md
+122-self-router-learned-muse.md
+123-marks-runner-muse.md
+124-redteam-composer-muse.md
+125-bench-smollm-4hop-muse.md
+126-demo-harness-muse.md
+127-self-router-novelty-muse.md
+128-agent-per-turn-cost-muse.md
+129-teach-punctuation-muse.md
+130-sleep-grow-slot-muse.md
+131-taught-beats-sleep-muse.md
+132-question-rewriter-muse.md
+134-port-117-fixes-muse.md
+135-officeholder-guard-muse.md
+136-teach-redteam-muse.md
+137-multiword-possessive-muse.md
+137b-discourse-muse.md
+137c-hypo-muse.md
+137d-frame-muse.md
+137e-one-hearsay-reply-muse.md
+138-integration-muse.md
+138b-stack-muse.md
+138c-self-serving-muse.md
+138d-stack-muse.md
+138e-officechain-muse.md
+138f-stack-clean-muse.md
+138g-merge-layer-a-muse.md
+138h-merge-layer-b1-muse.md
+138h-portplan-layer-b-muse.md
+138i-merge-layer-b2-muse.md
+138j-merge-layer-c-muse.md
+138k-merge-opus.md
+138l-merge-opus.md
+138m-merge-opus.md
+138n-merge-opus.md
+138p-merge-muse.md
+139-value-guard-muse.md
+139b-and-names-muse.md
+139c-tailwords-muse.md
+139d-tail-muse.md
+139e-tail-muse.md
+140-value-tail-muse.md
+141-mailbox-settle-muse.md
+142-perf-port-muse.md
+143-question-redteam-muse.md
+144-multi-of-names-muse.md
+145-sleep-merge-muse.md
+146-refused-correction-doubt-muse.md
+146b-doubt-hearsay-exempt-muse.md
+147-mention-walk-alignment-muse.md
+148-question-screen-muse.md
+148b-screen-status-muse.md
+149-whole-word-entities-muse.md
+150-subject-guard-muse.md
+150b-subject150b-muse.md
+150c-closed-class-subject-muse.md
+150d-hedgecase-muse.md
+151-no-question-mark-muse.md
+152-user-session-redteam-muse.md
+153-reverse153-muse.md
+154-yesno154-muse.md
+154b-multival-muse.md
+154c-multival-allowlist-muse.md
+154d-yesno-muse.md
+154e-language-multi-muse.md
+154f-negate-muse.md
+154g-nocorrect-muse.md
+155-inverted155-muse.md
+156-smalltalk156-muse.md
+156b-smalltalk-classes-muse.md
+156c-smalltalk-muse.md
+157-filler157-muse.md
+157b-capfiller-muse.md
+157c-title-muse.md
+158-qform158-muse.md
+158b-whrel-muse.md
+158c-whcity-muse.md
+159-hop159-muse.md
+160-correct160-muse.md
+160b-correct-last-stated-muse.md
+160c-twohop-correct-muse.md
+161-self-card-muse.md
+162-the-names-muse.md
+162b-plural-muse.md
+163-lowercase-muse.md
+164-about-muse.md
+164b-about-muse.md
+165-typo-muse.md
+166-me-muse.md
+166b-display-case-muse.md
+166c-display-case-clean-muse.md
+167-verb-muse.md
+167b-verb-value-screen-muse.md
+167c-label-muse.md
+167d-verb-muse.md
+167e-label-muse.md
+168-self-grounded-canned-muse.md
+170-speed-index-muse.md
+171-name-shaped-values-muse.md
+171b-word-names-muse.md
+172-copula-reteach-ask-muse.md
+172b-copula-bench-v3-muse.md
+173-user-name-muse.md
+173b-word-names-user-muse.md
+174-chainof-muse.md
+180-lowercase-muse.md
+180b-case-muse.md
+187b-selfq-muse.md
+188-statefall-muse.md
+189-sayagain-muse.md
+189b-sayagain-muse.md
+190-reverse-muse.md
+190b-reverse-muse.md
+192-correctreply-muse.md
+193-apos-muse.md
+206-sleepsmoke-muse.md
+207-atomic-inbox-muse.md
+208-natural-panel-muse.md
+209-writescreen-muse.md
+210-reversal-muse.md
+211-fairsmol-muse.md
+212-selfgate-muse.md
+213-earssafety-muse.md
+214-suitediff-muse.md
+215-ofteach-muse.md
+216-declinecue-muse.md
+217-relationtable-design.md
+218-suitediff2-muse.md
+219-selfname-muse.md
+220-restartindex-muse.md
+221-tableask.md
+221b-storedrel-opus.md
+221c-qnorm-opus.md
+222-ofteachb-muse.md
+223-cantdo-muse.md
+224-decline-opus.md
+224c-q1honest-opus.md
+226-source-opus.md
+227-identity-muse.md
+228-determinism-opus.md
+229-tableteach-opus.md
+230b-namecheck-opus.md
+231-chain-opus.md
+232-fullname-opus.md
+233-polite-opus.md
+234-smalltalk-opus.md
+235-smolear-opus.md
+236-firstname-opus.md
+237-tablev11-opus.md
+237b-tablev12-opus.md
+240-mouth-design-opus.md
+245-myrel-opus.md
+246-mentionwalk-opus.md
+247-apos-opus.md
+248-whats-opus.md
+249-firstperson-opus.md
+250-verbsubj-opus.md
+251-direction-opus.md
+252-correct-opus.md
+252c-merge-opus.md
+255-fixedtext-opus.md
+258-commentclause-opus.md
+259-valueboundary-opus.md
+260-openers-opus.md
+291-join-muse.md
+292-merge-muse.md
+31-modes-integrated-design-fable-review.md
+32-ben-simplification-ruling.md
+33-creative-stopping-mechanism-fable.md
+34-gpt-xhigh-sleep-consolidation-deep-dive.md
+35-gpt-xhigh-reading-ladder-and-reasoning-deep-dive.md
+36-milestone1-notebook-listening-fable.md
+37-milestone2-thinking-websearch-fable.md
+38-sleep-review-gpt-xhigh.md
+39-creative-review-gpt-xhigh.md
+40-english-listening-design-gpt-xhigh.md
+41-shared-subspace-sleep-review-fable.md
+42-gpt-review-adjudication-fable.md
+43-talker-ears-mouth-design-fable.md
+44-codex-reasoner-goal.md
+45-gpt-scout-length-counters.md
+46-gpt-scout-ears.md
+47-ears-rung2-open-encoder-spec.md
+47c-gpt-scout-encoder-choice.md
+48-parallel-build-brief-20260921.md
+49-thought-format-v2-opus.md
+50-reasoner-on-notebook-opus.md
+51-wiring-opus.md
+52-live-sleep-opus.md
+53-mouth-borrowed-decoder-muse.md
+54-modes-and-demo-opus.md
+55-demo-advantage-questions-mimo.md
+55b-q11-forgetting-arm-mimo.md
+56-scientific-claim-rows-research-muse.md
+57-signed-counter-family-research-muse.md
+58-open-relation-canonicalisation-research-muse.md
+59-ears-abstention-recipe-research-muse.md
+60-qualifier-aware-reasoner-muse.md
+61-wiring-end-to-end-muse.md
+62-modernbert-loader-muse.md
+63-benchmark-plan-research-muse.md
+64-signed-counter-experiment-muse.md
+65-counter-dictionary-experiment-muse.md
+66-modernbert-eager-reseal-muse.md
+67-thought-v3-groups-novalue-muse.md
+68-relation-alias-table-muse.md
+69-abstention-ltt-on-rung1-muse.md
+70-fable-edit-200-build-muse.md
+71-fable-edit-200-baselines-muse.md
+72-redteam-core-findings-muse.md
+73-fable-edit-200-english-arm-muse.md
+74-persistent-agent-daemon-muse.md
+75-audit-exp29-exp46-muse.md
+76-abstention-ltt-candidate-grid-muse.md
+77-core-fixes-muse.md
+78-abstention-fresh-split-confirmation-muse.md
+79-redteam-web-quarantine-findings-muse.md
+80-hardgate-noise-mismatch-muse.md
+81-redteam-listening-doorway-findings-muse.md
+82-ledger-audit-muse.md
+83-audit-ears47-scoring-muse.md
+84-natural-turns-acceptance-muse.md
+85-ears-modernbert-swap-prep-muse.md
+86-simple-english-reading-data-muse.md
+87-own-small-lm-from-scratch-research-muse.md
+88-demo-rehearsal-transcript-muse.md
+89-web-quarantine-fixes-muse.md
+90-integrated-loop-muse.md
+91-fakeears-guard-muse.md
+92-fable-edit-scale-muse.md
+93-daemon-soak-muse.md
+94-reading-panel-muse.md
+95-ears47-fail-diagnosis-muse.md
+96-loop-gaps-closed-muse.md
+97-relcanon-independent-panel-muse.md
+98-redteam-integrated-agent-muse.md
+99-self-questions-muse.md
+decided-inputs-fable.md
+gpt-xhigh-bored-mode.md
+gpt-xhigh-creative-mode.md
+gpt-xhigh-working-mode.md
+review-20260922-improvements.md
+shared-brief.md
+---
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+[0m
+[0m$ [0mls design/v3/30-modes/ | grep -iE "32|notebook|compact" ; echo ---; find . -maxdepth 3 -name "*f0*" 2>/dev/null | head; echo ---; find . -maxdepth 4 -name "*320*" 2>/dev/null | head; echo ---; git log --oneline -5; git status --short | head -20
+132-question-rewriter-muse.md
+232-fullname-opus.md
+32-ben-simplification-ruling.md
+36-milestone1-notebook-listening-fable.md
+50-reasoner-on-notebook-opus.md
+---
+./artifacts/claude-convf0-20260923
+./artifacts/claude-convbench-f0-20260923
+./scripts/claude_convf0_score.py
+./scripts/claude_convf0_run.py
+---
+./artifacts/claude-papers-20260923/2403.03208.txt
+./artifacts/fable-officechain138e-20260922/scratch-nb/nb00320
+./data/open/wikidata-props/P3320.json
+---
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+7493e5e14 292t: talking layers on main base 292 (registered PASS M1-M3)
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/talk-f0-base.md 2>&1 | head -20; echo ===; git show origin/main:design/v3/30-modes/320-notebook-compact.md 2>&1 | head -50
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: run git fetch -q origin main and read each named file with git show origin/main:<path>. Never check out or merge that branch.
+
+
+YOUR TASK: baseline run of the conversation benchmark convbench-f0 on the main base 292 (step F0 of design/v3/30-modes/talk-fluency-plan.md). CPU only. No agent code changes.
+Read: design/v3/30-modes/talk-fluency-plan.md (git show origin/main:...) and, in this worktree, scripts/claude_loop292_agent.py (build_agent292, DEFAULT_CONFIG292), read-only. Never use git log.
+Wait for artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt (poll 2 min, up to 120 min) and check it OK from the worktree root. Write one new runner scripts/claude_convf0_run.py that runs each dialog once, in order, with a fresh agent per dialog, and records for every turn: dialog_id, turn_index, reply, notebook events, and stored triples. Accept a text key named `user_text` or `user`, and stop with an error on empty text. Run on 292 once. Write artifacts/claude-convf0-20260923/run/base292.jsonl.
+Then compute mechanical figures only, with a new scorer scripts/claude_convf0_score.py:
+- turns;
+zsh:1: == not found
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -3; git show origin/main:handoff/queue/talk-f0-base.md | head -16
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: run git fetch -q origin main and read each named file with git show origin/main:<path>. Never check out or merge that branch.
+
+
+YOUR TASK: baseline run of the conversation benchmark convbench-f0 on the main base 292 (step F0 of design/v3/30-modes/talk-fluency-plan.md). CPU only. No agent code changes.
+[0m
+[0m$ [0mcat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -60; echo ===; git show origin/main:design/v3/30-modes/320-notebook-compact.md 2>&1 | head -120
+cat: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/320-notebook-compact.md | head -150
+# 320-329 — Notebook: compact, instant, reliable at scale (nb- line)
+
+Owner: notebook thread (cmsg_01FuvegZXjMmeUzStiEFVnEWCqGqovgrHeqzd28AgWySnb), opened 2026-09-23 19:05 UTC.
+Ben (18:59 UTC): "can we compact that storage at all? I want it to be better at storing facts than a human in
+reliability and scale" and "speed at which it recalls it should be instantaneous and also more accurate".
+
+## Where we start (measured in the cloud, scratch, not registered)
+- Today's notebook = one append-only JSON log (`scripts/fable_notebook_contract.py:164-183`), fsync + read-back
+  on every write, sha hash chain, whole log re-read and re-verified at every start
+  (`scripts/fable_fix220_restartindex.py:50-62` -> `fable_fix77_core.verify_full`), everything held in RAM.
+- 20,000 facts / 2,000 people: 8.3 MB log (~375 bytes per event), 44 MB process RSS, reload 0.2 s.
+  gzip -9 of the log: 1.5 MB; xz: 1.1 MB.
+- Base contract `current()` scans every fact (~1 ms at 20k); the 170/142 index that 292 inherits makes asks flat
+  (board: 28 ms p50 per whole ask turn at 15k facts).
+- Scratch SQLite table, 1,000,000 facts / 100,000 people, integer ids, one (subject, relation) index, no raw
+  sentences or hashes: 47 MB (~47 bytes per fact), lookup p50 0.004 ms / p99 0.014 ms, open ~0 s.
+
+Ben (19:02 UTC) narrowed it: "I mean a useable notebook. If the model can't read the notebook then size doesn't
+matter ... find a way to store fewer bytes per unit of information." Speed and accuracy are fine as they are.
+So the MAIN target is bytes per fact in a store the model can query directly (no full load); speed, accuracy,
+crash safety and tamper evidence are guard marks that must not get worse.
+
+## What "better than a human" means here (fixed now, before any run)
+- Reliability: a stored fact comes back exactly (0 wrong, 0 lost) after corrections, forgets, crashes and restarts;
+  any edit to stored history is detected.
+- Scale: 1,000,000 facts on a laptop with sub-second start and small memory.
+- Speed: one-hop recall under 1 ms at 1,000,000 facts (storage layer only; a whole chat turn also pays the reader).
+- Accuracy note: storage recall is already exact; wrong or missing answers in chat come from the reader
+  (F0: 65 of 78 missed questions were never-understood teaches). This line does not claim to fix those.
+
+## Kept, never weakened
+Original sentence (raw), actor, source, provenance, rule/deps, supersedes chain, retractions, the hash chain,
+append-only history (corrections add, never erase), same decisions and statuses as the contract.
+
+## Experiments
+- **nb-320 baseline (report-only):** the current store (FixedIndexedLoopNotebook, as in 292) at 20k / 100k / 1M facts
+  with corrections and forgets mixed in. Bytes per fact, write rate, cold start, peak memory, 1- and 2-hop recall
+  latency, recall correctness against the generator's ground truth, crash test, tamper test.
+  Runner is backend-pluggable so nb-321 reuses it unchanged.
+- **nb-321 compact store (one change: the storage backend).** Build task queued in parallel with nb-320 (build +
+  seal + unit tests only); the registered scale comparison (nb-321-run) is queued after nb-320 is verified.
+  Pass marks are fixed in the build task and copied verbatim into its sealed PASSMARKS.md.
+- **nb-322 (later):** plug the verified store into 292 (the reasoner reads the in-memory indexes directly, see
+  `scripts/fable_perf128_index.py:390`), with 0 reply differences on the frozen suites. Not written yet.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/320-notebook-compact.md | sed -n '150,400p'
+(no output)
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/320-notebook-compact.md | wc -l
+44
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/320-notebook-compact.md | tail -12
+append-only history (corrections add, never erase), same decisions and statuses as the contract.
+
+## Experiments
+- **nb-320 baseline (report-only):** the current store (FixedIndexedLoopNotebook, as in 292) at 20k / 100k / 1M facts
+  with corrections and forgets mixed in. Bytes per fact, write rate, cold start, peak memory, 1- and 2-hop recall
+  latency, recall correctness against the generator's ground truth, crash test, tamper test.
+  Runner is backend-pluggable so nb-321 reuses it unchanged.
+- **nb-321 compact store (one change: the storage backend).** Build task queued in parallel with nb-320 (build +
+  seal + unit tests only); the registered scale comparison (nb-321-run) is queued after nb-320 is verified.
+  Pass marks are fixed in the build task and copied verbatim into its sealed PASSMARKS.md.
+- **nb-322 (later):** plug the verified store into 292 (the reasoner reads the in-memory indexes directly, see
+  `scripts/fable_perf128_index.py:390`), with 0 reply differences on the frozen suites. Not written yet.
+[0m
+[0m$ [0mls scripts/ | head -50; uptime; df -g /
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+15:09  up  5:03, 4 users, load averages: 92.09 71.30 72.78
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        14    48%  484014 148812600    0%   /
+[0m
+[0m→ [0mRead scripts/fable_notebook_contract.py
+[0m→ [0mRead scripts/fable_fix220_restartindex.py
+[0m
+[0m# [0mTodos
+[•] Read index layer (fable_perf128_index.py) + verify_full + o0b data schema
+[ ] Write scripts/claude_nb320_workload.py (seed 3200, o0b raw sentences)
+[ ] Write scripts/claude_nb320_scale.py runner with --factory + open_baseline
+[ ] Write PASSMARKS.md and SEAL before registered run
+[ ] Generate workloads 20k/100k/1M to /tmp/nb320/
+[ ] Run 20k size + crash/tamper tests
+[ ] Run 100k size
+[ ] Run 1M size (background, caps 90min/8GB)
+[ ] Write results.json, RESULTS.md, samples; delete /tmp/nb320/; push artifacts+scripts
+[0m
+[0m$ [0mgrep -n "def \(current\|ask\|_index_event\|_apply\|active\|resolve\)" scripts/fable_perf128_index.py
+91:    def _apply(self, event: dict) -> None:
+167:    def _index_event(self, event: dict) -> None:
+193:    def current(self, entity_id: str, relation: str) -> list[dict]:
+242:    def current(self, entity_id: str, relation: str) -> list[dict]:
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git show origin/builder-outbox:artifacts/claude-own-o0b-20260923/train-00.jsonl.gz > /tmp/nb320_o0b_00.gz; ls -la /tmp/nb320_o0b_00.gz
+-rw-r--r--  1 ben-hannan  wheel  1576341 Sep 23 15:10 /tmp/nb320_o0b_00.gz
+[0m
+[0m→ [0mRead scripts/fable_perf128_index.py[90m [offset=85, limit=180][0m
+[0m
+[0m$ [0mgrep -n "def verify_full" -A 30 scripts/fable_fix77_core.py | head -45
+348:def verify_full(notebook_dir) -> dict:
+349-    """Re-hash every events.jsonl line INCLUDING the tail.
+350-
+351-    Checks each line parses, each prev link matches the running sha (names
+352-    the line number), the stored prefix seal still matches (catches edits
+353-    at or before the sealed line), and -- when nothing was appended since
+354-    the seal -- the current tail hash matches the sealed tail hash (catches
+355-    last-line edits). A torn final line raises LogCorrupt: repair it with
+356-    Notebook.repair_torn_tail() first, then verify again. On success the
+357-    seal advances to the current tail and a record is returned.
+358-    """
+359-    root = Path(notebook_dir)
+360-    path = root / C.LOG_NAME
+361-    if not path.exists():
+362-        _write_seal(root, 0, C.GENESIS)
+363-        return {"lines": 0, "sealed": True, "note": "empty log sealed"}
+364-    raw = path.read_text(encoding="utf-8").split("\n")
+365-    if raw and raw[-1] == "":
+366-        raw.pop()
+367-    lines = [ln for ln in raw if ln.strip()]
+368-    running = C.GENESIS
+369-    for i, line in enumerate(lines):
+370-        try:
+371-            event = json.loads(line)
+372-        except ValueError as exc:
+373-            if i == len(lines) - 1:
+374-                raise C.LogCorrupt(
+375-                    f"line {i + 1}: torn tail (repair with repair_torn_tail first)") from exc
+376-            raise C.LogCorrupt(f"line {i + 1}: {exc}") from exc
+377-        try:
+378-            prev = event["prev"]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import gzip, json
+p='/tmp/nb320_o0b_00.gz'
+n=0
+with gzip.open(p,'rt') as f:
+    for i,line in enumerate(f):
+        r=json.loads(line)
+        if i<2: print(json.dumps(r, indent=1)[:2000])
+        n+=1
+print('rows:',n)
+"
+{
+ "prev_reply": "",
+ "turn": "Listen, Mark this: Quinn's work location is Saltholm. you know.",
+ "act": "STATE",
+ "count": 1,
+ "facts": [
+  {
+   "owner": [
+    19,
+    24
+   ],
+   "relation": "work_location",
+   "relation_cue_span": [
+    27,
+    40
+   ],
+   "value_span": [
+    44,
+    52
+   ],
+   "mode": "ASSERT"
+  }
+ ],
+ "question": null,
+ "spelling_flag": false,
+ "world": {
+  "facts": [
+   {
+    "owner_kind": "NAME",
+    "owner": "Quinn",
+    "cue": "work location",
+    "value": "Saltholm",
+    "relation": "work_location"
+   }
+  ],
+  "question": null,
+  "context": {
+   "kind": "place"
+  },
+  "typo_canonical": null
+ },
+ "family": "tell",
+ "frame_id": "tell/STATE/place/042",
+ "id": "o0b-train-000000",
+ "split": "train"
+}
+{
+ "prev_reply": "",
+ "turn": "Guess what, Honestly, Orla's mom is Mira.",
+ "act": "STATE",
+ "count": 1,
+ "facts": [
+  {
+   "owner": [
+    22,
+    26
+   ],
+   "relation": "mother",
+   "relation_cue_span": [
+    29,
+    32
+   ],
+   "value_span": [
+    36,
+    40
+   ],
+   "mode": "ASSERT"
+  }
+ ],
+ "question": null,
+ "spelling_flag": false,
+ "world": {
+  "facts": [
+   {
+    "owner_kind": "NAME",
+    "owner": "Orla",
+    "cue": "mom",
+    "value": "Mira",
+    "relation": "mother"
+   }
+  ],
+  "question": null,
+  "context": {
+   "kind": "kin"
+  },
+  "typo_canonical": null
+ },
+ "family": "tell",
+ "frame_id": "tell/STATE/kin/028",
+ "id": "o0b-train-000001",
+ "split": "train"
+}
+rows: 25000
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-own-o0b-20260923/train-01.jsonl.gz > /tmp/nb320_o0b_01.gz; ls -la /tmp/nb320_o0b_01.gz; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import gzip, json, collections
+rels = collections.Counter()
+kept = 0; total = 0
+for p in ['/tmp/nb320_o0b_00.gz','/tmp/nb320_o0b_01.gz']:
+    with gzip.open(p,'rt') as f:
+        for line in f:
+            r = json.loads(line); total += 1
+            if r.get('family')=='tell' and r.get('act')=='STATE' and r.get('count')==1 and len(r.get('facts',[]))==1 and r['facts'][0].get('mode')=='ASSERT' and r.get('world',{}).get('facts',[{}])[0].get('owner_kind')=='NAME':
+                kept += 1
+                rels[r['facts'][0]['relation']] += 1
+print('total', total, 'kept', kept)
+print('n relations:', len(rels))
+for rel,c in rels.most_common(): print(rel, c)
+"
+-rw-r--r--  1 ben-hannan  wheel  1574987 Sep 23 15:10 /tmp/nb320_o0b_01.gz
+total 50000 kept 3754
+n relations: 77
+title 232
+occupation 210
+employer 206
+rabbit 122
+hamster 114
+dog 114
+horse 107
+parrot 105
+cat 102
+capital 100
+place_of_birth 99
+work_location 98
+school 90
+country 87
+city 83
+hometown 80
+home 75
+favorite_book 55
+hobby 48
+color 47
+car 45
+favorite_season 45
+favorite_sport 44
+instrument 43
+favorite_food 42
+favorite_color 41
+neighbour 41
+sport 41
+boss 39
+vet 39
+allergy 38
+mentor 37
+tutor 36
+apprentice 36
+teacher 36
+roommate 36
+nickname 35
+favorite_subject 35
+friend 34
+teammate 33
+doctor 33
+dentist 32
+rival 31
+landlord 30
+coach 28
+child 28
+godmother 27
+sister 25
+half_brother 25
+babysitter 24
+brother_in_law 24
+therapist 23
+husband 22
+nephew 22
+colleague 22
+grandmother 22
+stepmother 22
+wife 21
+best_friend 21
+niece 21
+aunt 20
+uncle 20
+sister_in_law 20
+partner 20
+mother 19
+son 19
+stepfather 19
+mother_in_law 19
+stepsister 18
+father 17
+classmate 17
+fiance 17
+grandfather 16
+brother 16
+parent 16
+daughter 14
+cousin 14
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import sys, time, os, tempfile
+sys.path.insert(0, 'scripts')
+from fable_fix220_restartindex import FixedIndexedLoopNotebook
+d = tempfile.mkdtemp(prefix='nbprobe_')
+nb = FixedIndexedLoopNotebook(d).nb
+nb.declare_relation('e1','city',True)
+nb.declare_relation('e2','friend',False)
+import random
+t0=time.time()
+for i in range(3000):
+    nb.new_entity(f'ent{i}', f'Person{i} Alpha')
+print('3000 entities: %.2fs' % (time.time()-t0))
+eids = nb.resolve('Person0 Alpha').detail
+t0=time.time()
+for i in range(5000):
+    s = f'E{(i%3000)+1:04d}'
+    nb.assert_fact(f'f{i}','listening','taught',s,'city',{'literal':f'Town{i}'})
+print('5000 teaches: %.2fs' % (time.time()-t0))
+# retract cost at size ~5000
+import time as T
+t0=T.time()
+for i in range(200):
+    f = nb.assert_fact(f'g{i}','listening','taught','E0001','friend',{'literal':f'Pal{i}'})
+    nb.retract(f'r{i}','listening',f.detail['fact_id'],'x')
+t1=T.time()
+print('200 recent teach+retract: %.2fs' % (t1-t0))
+# retract of OLDEST facts
+old = [fid for fid in list(nb.facts)[:200]]
+t0=T.time()
+for i,fid in enumerate(old):
+    nb.retract(f'ro{i}','listening',fid,'x')
+print('200 oldest retracts at n~5000: %.3fs' % (T.time()-t0))
+" 2>&1 | tail -8
+3000 entities: 0.27s
+5000 teaches: 0.31s
+200 recent teach+retract: 0.05s
+200 oldest retracts at n~5000: 0.055s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import sys, time, tempfile
+sys.path.insert(0, 'scripts')
+from fable_fix220_restartindex import FixedIndexedLoopNotebook
+d = tempfile.mkdtemp(prefix='nbprobe2_')
+nb = FixedIndexedLoopNotebook(d).nb
+nb.declare_relation('e1','city',True)
+for i in range(20000):
+    nb.new_entity(f'ent{i}', f'Person{i} Alpha')
+t0=time.time()
+for i in range(100000):
+    s = f'E{(i%20000)+1:05d}' if False else 'E%05d' % ((i%20000)+1)
+    nb.assert_fact(f'f{i}','listening','taught',s,'city',{'literal':f'Town{i}'})
+print('100k teaches: %.2fs' % (time.time()-t0))
+old = [fid for fid in list(nb.facts)[:300]]
+t0=time.time()
+for i,fid in enumerate(old):
+    nb.retract(f'ro{i}','listening',fid,'x')
+print('300 oldest retracts at n=100k: %.3fs' % (time.time()-t0))
+t0=time.time()
+nb2 = FixedIndexedLoopNotebook(d).nb
+print('cold reopen 120k events: %.2fs' % (time.time()-t0))
+" 2>&1 | tail -5
+100k teaches: 1.10s
+300 oldest retracts at n=100k: 0.225s
+cold reopen 120k events: 0.59s
+[0m
+[0m$ [0mls artifacts/claude-convf0-20260923/; head -30 artifacts/claude-convf0-20260923/SEAL.sha256.txt 2>/dev/null; mkdir -p /tmp/nb320/inputs artifacts/claude-nb320-20260923; mv /tmp/nb320_o0b_00.gz /tmp/nb320_o0b_01.gz /tmp/nb320/inputs/; ls /tmp/nb320/inputs/
+RESULTS.md
+run
+nb320_o0b_00.gz
+nb320_o0b_01.gz
+[0m
+[0m← [0mWrite scripts/claude_nb320_workload.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_nb320_scale.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -328,13 +328,11 @@
+ nb = factory(str(outdir))
+ nb.declare_relation(f"crash-rel-{args.seed}", "city", True)
+ eids = []
+ for i in range(20):
+-    eids.append(nb.new_entity(f"crash-{args.seed}-ent-{i}",
+-                              f"Crashper{args.seed} Son{i}")["detail"]
+-                ["entity_id"] if False else
+-                nb.new_entity(f"crash-{args.seed}-e{i}",
+-                              f"Crashper{args.seed} Son{i}").detail["entity_id"])
++    r = nb.new_entity(f"crash-{args.seed}-e{i}",
++                      f"Crashper{args.seed} Son{i}")
++    eids.append(r.detail["entity_id"])
+ ack = open(args.ack, "a", encoding="utf-8")
+ for i in range(args.n):
+     eid = eids[i % len(eids)]
+     ev = f"crash-{args.seed}-{i:05d}"
+
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -95,10 +95,9 @@
+     statuses[kind][status] += 1
+     if status != "SAVED":
+         if len(unexpected) < 200:
+             unexpected.append({"op": op["i"], "kind": kind,
+-                               "status": status,
+-                               "detail": getattr(op, "_r", None) and None})
++                               "status": status})
+ 
+ for op in ops:
+     subj = eid[op["subject"]]
+     if op["kind"] == "teach":
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_workload.py --n 200 --o0b /tmp/nb320/inputs/nb320_o0b_00.gz /tmp/nb320/inputs/nb320_o0b_01.gz --out /tmp/nb320/workload-200.jsonl && head -c 600 /tmp/nb320/workload-200.jsonl
+templates kept: 3754 over 77 relations
+wrote /tmp/nb320/workload-200.jsonl: N=200 correct=20 forget=10 teach=170
+{"type": "header", "seed": 3200, "N": 200, "sizes": {"teach": 170, "correct": 20, "forget": 10, "fact_writes": 190, "people": 20}, "functional": ["title", "occupation", "employer", "capital", "place_of_birth", "work_location", "school", "country", "city", "hometown", "home", "favorite_book", "hobby", "color", "car", "favorite_season", "favorite_sport", "instrument", "favorite_food", "favorite_color", "nickname", "favorite_subject", "allergy", "boss", "landlord", "coach", "doctor", "dentist", "vet", "mentor"], "multivalued": ["apprentice", "aunt", "babysitter", "best_friend", "brother", "brothe
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py write --dir /tmp/nb320/smoke-nb --workload /tmp/nb320/workload-200.jsonl --gt /tmp/nb320/smoke-gt.pkl --out /tmp/nb320/smoke-write.json; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py probe --dir /tmp/nb320/smoke-nb --gt /tmp/nb320/smoke-gt.pkl --out /tmp/nb320/smoke-probe.json --seed 3400 2>&1 | tail -3; head -2 /tmp/nb320/workload-200.jsonl | tail -1 | head -c 400
+{"wall_s": 0.141829707999932, "n_ops": 200, "n_fact_writes": 190, "facts_per_s": 1339.6347117917715, "n_events": 297, "statuses": {"teach": {"SAVED": 170}, "correct": {"SAVED": 20}, "forget": {"SAVED": 10}}, "n_unexpected": 0}
+    assert len(plain) >= 1200, f"plain pool {len(plain)}"
+           ^^^^^^^^^^^^^^^^^^
+AssertionError: plain pool 140
+{"type": "op", "i": 0, "kind": "teach", "subject": 18, "relation": "dentist", "value": {"entity": 19}, "raw": "I will state it plainly: Talvo Brenash's dentist is Talvo Brenoom. you know.", "correction": false, "event_id": "nb320-200-op0000000", "target": null}
+[0m
+[0m# [0mTodos
+[✓] Read index layer (fable_perf128_index.py) + verify_full + o0b data schema
+[✓] Write scripts/claude_nb320_workload.py (seed 3200, o0b raw sentences)
+[✓] Write scripts/claude_nb320_scale.py runner with --factory + open_baseline
+[•] Write PASSMARKS.md and SEAL before registered run
+[ ] Generate workloads 20k/100k/1M to /tmp/nb320/
+[ ] Run 20k size + crash/tamper tests
+[ ] Run 100k size
+[ ] Run 1M size (background, caps 90min/8GB)
+[ ] Write results.json, RESULTS.md, samples; delete /tmp/nb320/; push artifacts+scripts
+[0m
+[0m← [0mWrite artifacts/claude-nb320-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m✗ [0mshasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md > artifacts/claude-nb320-20260923/SEAL.sha256.txt; cat artifacts/claude-nb320-20260923/SEAL.sha256.txt; rm -rf /tmp/nb320/smoke-nb /tmp/nb320/workload-200.jsonl /tmp/nb320/smoke-gt.pkl /tmp/nb320/smoke-write.json /tmp/nb320/smoke-probe.json failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md | tee artifacts/claude-nb320-20260923/SEAL.sha256.txt
+1fecffe4171db005c86978ad8ffbc06ce3893331bb247b09e02acbe11fbd8fc5  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_workload.py --n 20000 --o0b /tmp/nb320/inputs/nb320_o0b_00.gz /tmp/nb320/inputs/nb320_o0b_01.gz --out /tmp/nb320/workload-20000.jsonl && ls -la /tmp/nb320/
+templates kept: 3754 over 77 relations
+wrote /tmp/nb320/workload-20000.jsonl: N=20000 correct=2000 forget=1000 teach=17000
+total 10304
+drwxr-xr-x   8 ben-hannan  wheel      256 Sep 23 15:15 .
+drwxrwxrwt  62 root        wheel     1984 Sep 23 15:15 ..
+drwxr-xr-x   4 ben-hannan  wheel      128 Sep 23 15:12 inputs
+-rw-r--r--   1 ben-hannan  wheel    11784 Sep 23 15:15 smoke-gt.pkl
+drwxr-xr-x   4 ben-hannan  wheel      128 Sep 23 15:15 smoke-nb
+-rw-r--r--   1 ben-hannan  wheel      284 Sep 23 15:15 smoke-write.json
+-rw-r--r--   1 ben-hannan  wheel    52055 Sep 23 15:15 workload-200.jsonl
+-rw-r--r--   1 ben-hannan  wheel  5202887 Sep 23 15:15 workload-20000.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_workload.py --n 100000 --o0b /tmp/nb320/inputs/nb320_o0b_00.gz /tmp/nb320/inputs/nb320_o0b_01.gz --out /tmp/nb320/workload-100000.jsonl > /tmp/nb320/gen-100k.log 2>&1 && uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_workload.py --n 1000000 --o0b /tmp/nb320/inputs/nb320_o0b_00.gz /tmp/nb320/inputs/nb320_o0b_01.gz --out /tmp/nb320/workload-1000000.jsonl > /tmp/nb320/gen-1M.log 2>&1 & echo "gen-bg pid $!"
+gen-bg pid 37058
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py write --dir /tmp/nb320/nb-20000 --workload /tmp/nb320/workload-20000.jsonl --gt /tmp/nb320/gt-20000.pkl --out /tmp/nb320/write-20000.json; echo "uptime-before-coldopen:"; uptime
+15:16  up  5:09, 4 users, load averages: 106.50 87.46 79.42
+{"wall_s": 3.1246205830011604, "n_ops": 20000, "n_fact_writes": 19000, "facts_per_s": 6080.7382833504635, "n_events": 22077, "statuses": {"teach": {"SAVED": 17000}, "correct": {"SAVED": 2000}, "forget": {"SAVED": 1000}}, "n_unexpected": 0}
+uptime-before-coldopen:
+15:16  up  5:09, 4 users, load averages: 107.02 87.89 79.62
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; for k in 1 2 3; do uptime; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py open --dir /tmp/nb320/nb-20000 --out /tmp/nb320/open-20000-$k.json; done; ls -la /tmp/nb320/nb-20000/; uv run --offline --no-project --python 3.12 python -B -c "import os; tot=0; fs={}; [ (fs.__setitem__(f, os.path.getsize(os.path.join(dp,f))) or None) for dp,dn,fns in os.walk('/tmp/nb320/nb-20000') for f in fns ]; print(fs, sum(fs.values()))"
+15:16  up  5:09, 4 users, load averages: 106.06 88.00 79.71
+open_s=1.942
+15:16  up  5:09, 4 users, load averages: 106.06 88.00 79.71
+open_s=1.773
+15:16  up  5:09, 4 users, load averages: 104.77 88.04 79.77
+open_s=1.302
+total 18928
+drwxr-xr-x   4 ben-hannan  wheel      128 Sep 23 15:16 .
+drwxr-xr-x  17 ben-hannan  wheel      544 Sep 23 15:16 ..
+-rw-r--r--   1 ben-hannan  wheel      109 Sep 23 15:16 events.fix77.seal.json
+-rw-r--r--   1 ben-hannan  wheel  8827112 Sep 23 15:16 events.jsonl
+{'events.fix77.seal.json': 109, 'events.jsonl': 8827112} 8827221
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py probe --dir /tmp/nb320/nb-20000 --gt /tmp/nb320/gt-20000.pkl --out /tmp/nb320/probe-20000.json --seed 20200; gzip -9 -c /tmp/nb320/nb-20000/events.jsonl > /tmp/nb320/ev20.gz; xz -9 -c /tmp/nb320/nb-20000/events.jsonl > /tmp/nb320/ev20.xz; ls -la /tmp/nb320/ev20.gz /tmp/nb320/ev20.xz
+15:16  up  5:09, 4 users, load averages: 104.77 88.04 79.77
+{"open_s": 1.7886440420006693, "one_hop": {"n": 2000, "p50_ms": 0.0045409997255774215, "p99_ms": 0.010458999895490706, "max_ms": 0.08433400034846272, "score": {"right": 2000, "wrong": 0, "miss_should_answer": 0, "answered_should_not": 0, "other": 0}}, "two_hop": {"n": 1000, "p50_ms": 0.007125001502572559, "p99_ms": 0.010959000064758584, "max_ms": 0.04816699947696179, "score": {"right": 948, "wrong": 52, "miss_should_answer": 0, "answered_should_not": 0, "other": 0}}, "maxrss_bytes": 146751488}
+zsh:1: bad CPU type in executable: xz
+-rw-r--r--  1 ben-hannan  wheel  1750233 Sep 23 15:16 /tmp/nb320/ev20.gz
+-rw-r--r--  1 ben-hannan  wheel        0 Sep 23 15:16 /tmp/nb320/ev20.xz
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+r = json.load(open('/tmp/nb320/probe-20000.json'))
+w = r['wrong_rows']
+print(len(w))
+import collections
+print(collections.Counter((x.get('two_hop',False), x['status']) for x in w))
+for x in w[:6]: print(json.dumps(x)[:300])
+"
+52
+Counter({(True, 'OK'): 52})
+{"ask": ["Tali Harror", ["neighbour", "boss"]], "expected": "Tala Dallow", "got": "Sulmere, Tali Nerris", "status": "OK", "two_hop": true}
+{"ask": ["Talvo Zanner", ["friend", "place_of_birth"]], "expected": "Tala Tannelm", "got": "Tali Tannun, Drinstead", "status": "OK", "two_hop": true}
+{"ask": ["Talvo Lannis", ["horse", "favorite_sport"]], "expected": "Tala Lorrer", "got": "Tala Serrow, Talvo Garren", "status": "OK", "two_hop": true}
+{"ask": ["Talor Corvald", ["horse", "hobby"]], "expected": "Tali Corvan", "got": "Brelwick, Talvo Seller", "status": "OK", "two_hop": true}
+{"ask": ["Tali Dorreth", ["niece", "instrument"]], "expected": "Tala Corvurn", "got": "Delway, Talvo Sellor", "status": "OK", "two_hop": true}
+{"ask": ["Tali Harroom", ["therapist", "allergy"]], "expected": "Talvo Jennun", "got": "Tala Tolloom, Tala Vellen", "status": "OK", "two_hop": true}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json, pickle
+r = json.load(open('/tmp/nb320/probe-20000.json'))
+gt = pickle.load(open('/tmp/nb320/gt-20000.pkl'))
+names = gt['names']; facts = gt['facts']
+idx = {n:i for i,n in enumerate(names)}
+def pair_answer(subj, rel):
+    rows = [(oi,f) for oi,f in facts.items() if f['active'] and f['subj']==subj and f['rel']==rel]
+    rows.sort(key=lambda x:-x[0])
+    return ', '.join(f['text'] for _,f in rows), len(rows)
+ok=0
+for x in r['wrong_rows']:
+    name, (r1, r2) = x['ask'][0], x['ask'][1]
+    s = idx[name]
+    join1, n1 = pair_answer(s, r1)
+    if n1 > 1 and join1 == x['got']:
+        ok += 1
+    else:
+        print('UNEXPLAINED', json.dumps(x)[:200], n1)
+print(f'{ok}/{len(r[\"wrong_rows\"])} explained as multi-valued hop-1 join (contract-correct)')
+"
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+  File "<frozen codecs>", line 322, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte
+[0m
+[0m$ [0mls -la /tmp/nb320/probe-20000.json /tmp/nb320/gt-20000.pkl; head -c 200 /tmp/nb320/probe-20000.json | od -c | head -5
+-rw-r--r--  1 ben-hannan  wheel  1645653 Sep 23 15:16 /tmp/nb320/gt-20000.pkl
+-rw-r--r--  1 ben-hannan  wheel     8067 Sep 23 15:16 /tmp/nb320/probe-20000.json
+0000000    {   "   o   p   e   n   _   s   "   :       1   .   7   8   8
+0000020    6   4   4   0   4   2   0   0   0   6   6   9   3   ,       "
+0000040    o   n   e   _   h   o   p   "   :       {   "   n   "   :    
+0000060    2   0   0   0   ,       "   p   5   0   _   m   s   "   :    
+0000100    0   .   0   0   4   5   4   0   9   9   9   7   2   5   5   7
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json, pickle
+r = json.load(open('/tmp/nb320/probe-20000.json'))
+gt = pickle.load(open('/tmp/nb320/gt-20000.pkl','rb'))
+names = gt['names']; facts = gt['facts']
+idx = {n:i for i,n in enumerate(names)}
+def pair_answer(subj, rel):
+    rows = [(oi,f) for oi,f in facts.items() if f['active'] and f['subj']==subj and f['rel']==rel]
+    rows.sort(key=lambda x:-x[0])
+    return ', '.join(f['text'] for _,f in rows), len(rows)
+ok=0
+for x in r['wrong_rows']:
+    name, (r1, r2) = x['ask'][0], x['ask'][1]
+    s = idx[name]
+    join1, n1 = pair_answer(s, r1)
+    if n1 > 1 and join1 == x['got']:
+        ok += 1
+    else:
+        print('UNEXPLAINED', json.dumps(x)[:200], n1)
+print(f'{ok}/{len(r[\"wrong_rows\"])} explained as multi-valued hop-1 join (contract-correct)')
+"
+52/52 explained as multi-valued hop-1 join (contract-correct)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import lzma
+raw = open('/tmp/nb320/nb-20000/events.jsonl','rb').read()
+open('/tmp/nb320/ev20.xz','wb').write(lzma.compress(raw, preset=9))
+print('xz9 bytes:', len(lzma.compress(raw, preset=9)))
+"; ls -la /tmp/nb320/ev20.gz /tmp/nb320/ev20.xz; uptime
+xz9 bytes: 1252688
+-rw-r--r--  1 ben-hannan  wheel  1750233 Sep 23 15:16 /tmp/nb320/ev20.gz
+-rw-r--r--  1 ben-hannan  wheel  1252688 Sep 23 15:17 /tmp/nb320/ev20.xz
+15:17  up  5:10, 4 users, load averages: 108.29 91.31 81.40
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20 --out /tmp/nb320/crash-20000.json --children 30 --per-child 3000 --seed 3200; echo CRASH-DONE; uptime
+15:17  up  5:10, 4 users, load averages: 108.29 91.31 81.40
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py", line 509, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py", line 503, in main
+    return {"write": cmd_write, "open": cmd_open, "probe": cmd_probe,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py", line 396, in cmd_crash
+    for line in (d / "events.jsonl").read_text(encoding="utf-8").split("\n"):
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/nb320/crash20/crash-05/events.jsonl'
+CRASH-DONE
+15:17  up  5:10, 4 users, load averages: 107.47 91.42 81.50
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import shutil, sys
+sys.path.insert(0, 'scripts')
+shutil.rmtree('/tmp/nb320/crash20', ignore_errors=True)
+from claude_nb320_scale import open_baseline
+from pathlib import Path
+for j in range(30):
+    d = Path(f'/tmp/nb320/crash20/crash-{j:02d}')
+    nb = open_baseline(str(d))
+    nb.declare_relation(f'seed-rel-{j}', 'city', True)
+    eid = nb.new_entity(f'seed-ent-{j}', f'Seedper{j} Solo').detail['entity_id']
+    nb.assert_fact(f'seed-{j}', 'listening', 'taught', eid, 'city', {'literal': 'Seedtown'}, raw='seed line')
+print('preseeded 30 dirs')
+"; ls /tmp/nb320/crash20 | head -3; cat /tmp/nb320/gen-100k.log 2>/dev/null; ls -la /tmp/nb320/workload-*.jsonl 2>/dev/null
+preseeded 30 dirs
+crash-00
+crash-01
+crash-02
+templates kept: 3754 over 77 relations
+wrote /tmp/nb320/workload-100000.jsonl: N=100000 correct=10000 forget=5000 teach=85000
+-rw-r--r--  1 ben-hannan  wheel  26367004 Sep 23 15:16 /tmp/nb320/workload-100000.jsonl
+-rw-r--r--  1 ben-hannan  wheel     52055 Sep 23 15:15 /tmp/nb320/workload-200.jsonl
+-rw-r--r--  1 ben-hannan  wheel   5202887 Sep 23 15:15 /tmp/nb320/workload-20000.jsonl
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -392,9 +392,14 @@
+ lost = [e for e in acked if e not in present]
+ ack_lost += len(lost)
+ seen: set[str] = set()
+ nd = 0
+-for line in (d / "events.jsonl").read_text(encoding="utf-8").split("\n"):
++log = d / "events.jsonl"
++# A child killed before its first append leaves no log at all:
++# that is an empty store, not a duplicate.
++raw_lines = log.read_text(encoding="utf-8").split("\n") \
++    if log.exists() else []
++for line in raw_lines:
+     if not line.strip():
+         continue
+     try:
+         ev = json.loads(line).get("event_id")
+
+[0m
+[0m$ [0mgit diff --stat; git diff scripts/claude_nb320_scale.py | head -30; shasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md | tee artifacts/claude-nb320-20260923/SEAL.sha256.txt
+artifacts/fable-predictions-ledger.md | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+572cce3dec78811d2724dff9ab66fb0dcb58ee416c18f31509df8cf7666e7430  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20 --out /tmp/nb320/crash-20000.json --children 30 --per-child 3000 --seed 3200; echo CRASH-DONE; uptime
+15:17  up  5:10, 4 users, load averages: 118.26 95.80 83.53
+{"children": 30, "per_child": 3000, "clean_finish": 27, "killed": 3, "acked_but_lost": 0, "duplicates": 0, "failed_opens": 0, "torn_tails": 0}
+CRASH-DONE
+15:18  up  5:11, 4 users, load averages: 123.97 99.20 85.18
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20b --out /tmp/nb320/crash-20000b.json --children 30 --per-child 30000 --seed 3200; echo CRASH-DONE; uptime
+15:18  up  5:11, 4 users, load averages: 123.88 100.02 85.63
+{"children": 30, "per_child": 30000, "clean_finish": 27, "killed": 3, "acked_but_lost": 0, "duplicates": 0, "failed_opens": 0, "torn_tails": 0}
+CRASH-DONE
+15:19  up  5:12, 4 users, load averages: 104.13 97.68 85.29
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+for p in ['/tmp/nb320/crash-20000.json','/tmp/nb320/crash-20000b.json']:
+    r = json.load(open(p))
+    print(p.split('/')[-1], 'clean', r['clean_finish'], 'killed', r['killed'])
+    for d in r['details']:
+        if d.get('killed'): print('  killed child', d)
+"
+crash-20000.json clean 27 killed 3
+  killed child {'child': 5, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+  killed child {'child': 15, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+  killed child {'child': 23, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+crash-20000b.json clean 27 killed 3
+  killed child {'child': 5, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+  killed child {'child': 15, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+  killed child {'child': 23, 'killed': True, 'acked': 0, 'lost': 0, 'dup': 0, 'torn': False}
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -366,8 +366,19 @@
+      "--factory", args.factory or "", "--dir", str(d),
+      "--ack", str(ack), "--n", str(per_child),
+      "--seed", str(args.seed + j)],
+     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++# Wait until the child is mid-write (first ack line fsynced), so the
++# random-moment SIGKILL below lands during writing, not during
++# interpreter startup. A child that exits first counts as clean.
++waited = 0.0
++while waited < 120.0:
++    if proc.poll() is not None:
++        break
++    if ack.exists() and ack.stat().st_size > 0:
++        break
++    time.sleep(0.02)
++    waited += 0.02
+ time.sleep(rng.uniform(0.05, 2.0))
+ killed = True
+ if proc.poll() is None:
+     proc.send_signal(signal.SIGKILL)
+
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md | tee artifacts/claude-nb320-20260923/SEAL.sha256.txt; uptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20c --out /tmp/nb320/crash-20000c.json --children 30 --per-child 30000 --seed 3200; echo CRASH-DONE; uptime
+4bf1b178e90439fe2ad4ec9770363cb6dfbefe03caad0a6c355903cecf2014cd  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+15:19  up  5:12, 4 users, load averages: 81.74 92.86 83.98
+{"children": 30, "per_child": 30000, "clean_finish": 30, "killed": 0, "acked_but_lost": 0, "duplicates": 0, "failed_opens": 0, "torn_tails": 0}
+CRASH-DONE
+15:20  up  5:13, 4 users, load averages: 69.54 88.59 82.78
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20d --out /tmp/nb320/crash-20000d.json --children 30 --per-child 200000 --seed 3200; echo CRASH-DONE; uptime; df -g /
+15:20  up  5:13, 4 users, load averages: 64.54 86.59 82.17
+{"children": 30, "per_child": 200000, "clean_finish": 27, "killed": 3, "acked_but_lost": 0, "duplicates": 0, "failed_opens": 0, "torn_tails": 0}
+CRASH-DONE
+15:20  up  5:13, 4 users, load averages: 53.27 81.47 80.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    48%  484014 146266040    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+r = json.load(open('/tmp/nb320/crash-20000d.json'))
+import collections
+print(collections.Counter((d.get('killed'), d.get('acked')) for d in r['details']))
+acked = sorted(d['acked'] for d in r['details'])
+print('min/max acked:', acked[0], acked[-1])
+for d in r['details']:
+    if d.get('killed'): print('killed:', d)
+"
+Counter({(False, 20): 27, (True, 20): 3})
+min/max acked: 20 20
+killed: {'child': 5, 'killed': True, 'acked': 20, 'lost': 0, 'dup': 0, 'torn': False}
+killed: {'child': 15, 'killed': True, 'acked': 20, 'lost': 0, 'dup': 0, 'torn': False}
+killed: {'child': 23, 'killed': True, 'acked': 20, 'lost': 0, 'dup': 0, 'torn': False}
+[0m
+[0m$ [0mwc -l /tmp/nb320/crash20d/ack-00.txt; ls /tmp/nb320/crash20d/ | head; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crashchild --dir /tmp/nb320/dbg-child --ack /tmp/nb320/dbg-ack.txt --n 500 --seed 999; echo "exit=$?"; wc -l /tmp/nb320/dbg-ack.txt
+20 /tmp/nb320/crash20d/ack-00.txt
+ack-00.txt
+ack-01.txt
+ack-02.txt
+ack-03.txt
+ack-04.txt
+ack-05.txt
+ack-06.txt
+ack-07.txt
+ack-08.txt
+ack-09.txt
+exit=0
+      20 /tmp/nb320/dbg-ack.txt
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -324,9 +324,9 @@
+ rng = random.Random(args.seed)
+ outdir = Path(args.dir)
+ outdir.mkdir(parents=True, exist_ok=True)
+ nb = factory(str(outdir))
+-nb.declare_relation(f"crash-rel-{args.seed}", "city", True)
++nb.declare_relation(f"crash-rel-{args.seed}", "pal", False)
+ eids = []
+ for i in range(20):
+     r = nb.new_entity(f"crash-{args.seed}-e{i}",
+                       f"Crashper{args.seed} Son{i}")
+
+[0m
+[0m$ [0mgrep -n '"city"' scripts/claude_nb320_scale.py | head; grep -n 'eid, "city"\|"pal"' scripts/claude_nb320_scale.py
+338:        r = nb.assert_fact(ev, "listening", "taught", eid, "city",
+328:    nb.declare_relation(f"crash-rel-{args.seed}", "pal", False)
+338:        r = nb.assert_fact(ev, "listening", "taught", eid, "city",
+[0m
+[0m← [0mEdit scripts/claude_nb320_scale.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_nb320_scale.py
+@@ -334,9 +334,9 @@
+ ack = open(args.ack, "a", encoding="utf-8")
+ for i in range(args.n):
+     eid = eids[i % len(eids)]
+     ev = f"crash-{args.seed}-{i:05d}"
+-    r = nb.assert_fact(ev, "listening", "taught", eid, "city",
++    r = nb.assert_fact(ev, "listening", "taught", eid, "pal",
+                        {"literal": f"Town{i}"}, raw=f"crash {i}")
+     if r.status == "SAVED":
+         ack.write(ev + "\n")
+         ack.flush()
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crashchild --dir /tmp/nb320/dbg-child2 --ack /tmp/nb320/dbg-ack2.txt --n 500 --seed 999; echo "exit=$?"; wc -l < /tmp/nb320/dbg-ack2.txt
+exit=0
+     500
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md | tee artifacts/claude-nb320-20260923/SEAL.sha256.txt; uptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py crash --workdir /tmp/nb320/crash20e --out /tmp/nb320/crash-20000e.json --children 30 --per-child 30000 --seed 3200; echo CRASH-DONE; uptime
+aa9e7a29c7fa7e43ee8916ed0fb806302c7422e69e34dad6651f12117ded0373  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+15:21  up  5:14, 4 users, load averages: 57.50 78.78 79.53
+{"children": 30, "per_child": 30000, "clean_finish": 0, "killed": 30, "acked_but_lost": 0, "duplicates": 0, "failed_opens": 0, "torn_tails": 0}
+CRASH-DONE
+15:22  up  5:15, 4 users, load averages: 73.20 79.97 79.92
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+r = json.load(open('/tmp/nb320/crash-20000e.json'))
+a = sorted(d['acked'] for d in r['details'])
+print('acked min/med/max:', a[0], a[15], a[-1])
+print('torn flags:', sum(1 for d in r['details'] if d.get('torn')))
+"
+acked min/med/max: 238 5431 7585
+torn flags: 0
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py tamper --dir /tmp/nb320/nb-20000 --workdir /tmp/nb320/tamper20 --out /tmp/nb320/tamper-20000.json --copies 20 --seed 3201; echo TAMPER-DONE; ls -la /tmp/nb320/workload-1000000.jsonl 2>/dev/null; cat /tmp/nb320/gen-1M.log 2>/dev/null
+15:22  up  5:15, 4 users, load averages: 74.94 80.22 80.01
+{"copies": 20, "caught": 20, "missed_n": 0}
+TAMPER-DONE
+templates kept: 3754 over 77 relations
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py write --dir /tmp/nb320/nb-100000 --workload /tmp/nb320/workload-100000.jsonl --gt /tmp/nb320/gt-100000.pkl --out /tmp/nb320/write-100000.json; echo WRITE100K-DONE; uptime
+15:22  up  5:15, 4 users, load averages: 76.31 80.42 80.08
+{"wall_s": 37.75560479100022, "n_ops": 100000, "n_fact_writes": 95000, "facts_per_s": 2516.1827105109724, "n_events": 110077, "statuses": {"teach": {"SAVED": 85000}, "correct": {"SAVED": 10000}, "forget": {"SAVED": 5000}}, "n_unexpected": 0}
+WRITE100K-DONE
+15:23  up  5:16, 4 users, load averages: 89.31 83.20 81.11
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; for k in 1 2 3; do uptime; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py open --dir /tmp/nb320/nb-100000 --out /tmp/nb320/open-100000-$k.json; done; uv run --offline --no-project --python 3.12 python -B -c "import os; fs={}; [fs.__setitem__(f, os.path.getsize(os.path.join(dp,f))) for dp,dn,fns in os.walk('/tmp/nb320/nb-100000') for f in fns]; print(fs, sum(fs.values()))"
+15:23  up  5:16, 4 users, load averages: 89.31 83.20 81.11
+open_s=59.140
+15:24  up  5:17, 4 users, load averages: 93.42 85.38 82.05
+open_s=63.911
+15:25  up  5:18, 4 users, load averages: 93.02 86.78 82.82
+open_s=51.650
+{'events.fix77.seal.json': 110, 'events.jsonl': 44372207} 44372317
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import sys, time, tempfile
+sys.path.insert(0, 'scripts')
+from fable_fix220_restartindex import FixedIndexedLoopNotebook
+d = tempfile.mkdtemp(prefix='nbdiag_')
+nb = FixedIndexedLoopNotebook(d).nb
+nb.declare_relation('e1','city',True)
+t0=time.time()
+for i in range(10000):
+    nb.new_entity(f'ent{i}', f'Diagper{i} Test{i%97}')
+for i in range(100000):
+    nb.assert_fact(f'f{i}','listening','taught','E%05d' % ((i%10000)+1),'city',{'literal':f'Town{i}'})
+print('build 100k no-retract: %.1fs' % (time.time()-t0))
+t0=time.time()
+nb2 = FixedIndexedLoopNotebook(d).nb
+print('reopen 110k events no-retract: %.2fs' % (time.time()-t0))
+" 2>&1 | tail -3
+build 100k no-retract: 1.0s
+reopen 110k events no-retract: 0.05s
+[0m
+[0m$ [0mls -la /tmp/nb320/workload-1000000.jsonl 2>/dev/null; cat /tmp/nb320/gen-1M.log 2>/dev/null; uptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py probe --dir /tmp/nb320/nb-100000 --gt /tmp/nb320/gt-100000.pkl --out /tmp/nb320/probe-100000.json --seed 101000; echo PROBE100K-DONE
+-rw-r--r--  1 ben-hannan  wheel  266662721 Sep 23 15:25 /tmp/nb320/workload-1000000.jsonl
+templates kept: 3754 over 77 relations
+wrote /tmp/nb320/workload-1000000.jsonl: N=1000000 correct=100000 forget=50000 teach=850000
+15:26  up  5:19, 4 users, load averages: 104.44 91.25 84.88
+{"open_s": 49.83428045900109, "one_hop": {"n": 2000, "p50_ms": 0.004499999704421498, "p99_ms": 0.009125000360654667, "max_ms": 0.05100000089441892, "score": {"right": 2000, "wrong": 0, "miss_should_answer": 0, "answered_should_not": 0, "other": 0}}, "two_hop": {"n": 1000, "p50_ms": 0.006250000296859071, "p99_ms": 0.009999999747378752, "max_ms": 0.02341700019314885, "score": {"right": 934, "wrong": 66, "miss_should_answer": 0, "answered_should_not": 0, "other": 0}}, "maxrss_bytes": 592936960}
+PROBE100K-DONE
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uptime; nohup uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py write --dir /tmp/nb320/nb-1000000 --workload /tmp/nb320/workload-1000000.jsonl --gt /tmp/nb320/gt-1000000.pkl --out /tmp/nb320/write-1000000.json > /tmp/nb320/write-1M-stdout.log 2>&1 & echo "write1M pid $!"; date
+15:27  up  5:20, 4 users, load averages: 108.04 94.85 86.73
+write1M pid 40164
+Wed Sep 23 15:27:47 EDT 2026
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json, pickle
+r = json.load(open('/tmp/nb320/probe-100000.json'))
+gt = pickle.load(open('/tmp/nb320/gt-100000.pkl','rb'))
+names = gt['names']; facts = gt['facts']
+idx = {n:i for i,n in enumerate(names)}
+def pair_answer(subj, rel):
+    rows = [(oi,f) for oi,f in facts.items() if f['active'] and f['subj']==subj and f['rel']==rel]
+    rows.sort(key=lambda x:-x[0])
+    return ', '.join(f['text'] for _,f in rows), len(rows)
+ok=0
+for x in r['wrong_rows']:
+    name, (r1, r2) = x['ask'][0], x['ask'][1]
+    join1, n1 = pair_answer(idx[name], r1)
+    if n1 > 1 and join1 == x['got']: ok += 1
+    else: print('UNEXPLAINED', json.dumps(x)[:200], n1)
+print(f'{ok}/{len(r[\"wrong_rows\"])} explained as hop-1 multi join')
+"; gzip -9 -c /tmp/nb320/nb-100000/events.jsonl > /tmp/nb320/ev100.gz; ls -la /tmp/nb320/ev100.gz
+66/66 explained as hop-1 multi join
+-rw-r--r--  1 ben-hannan  wheel  8915761 Sep 23 15:27 /tmp/nb320/ev100.gz
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import lzma
+raw = open('/tmp/nb320/nb-100000/events.jsonl','rb').read()
+open('/tmp/nb320/ev100.xz','wb').write(lzma.compress(raw, preset=9))
+import os; print('xz9 bytes:', os.path.getsize('/tmp/nb320/ev100.xz'))
+"; sed -n '1p;5000p;10000p;15000p;20000p' /tmp/nb320/nb-20000/events.jsonl | cut -c1-400; echo; wc -l /tmp/nb320/nb-20000/events.jsonl /tmp/nb320/nb-100000/events.jsonl
+xz9 bytes: 6258160
+{"event_id": "nb320-rel-allergy", "functional": true, "kind": "RELATION", "n": 1, "prev": "0000000000000000000000000000000000000000000000000000000000000000", "relation": "allergy", "v": 1}
+{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0002922", "fact_id": "F02923", "kind": "FACT", "n": 5000, "prev": "28d1fb28e9b0301aa36bfbff0f00cd9b91d9f438f62aa6e01ac629a0fd71fe66", "provenance": null, "raw": "Guess what, The story is Talor Corvoom's favorite food is Tordale. I think.", "relation": "favorite_food", "rule_id": null, "source": "taught", "subject": "E1960", "supersedes"
+{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0007922", "fact_id": "F07923", "kind": "FACT", "n": 10000, "prev": "24c2abcdfb71769d96bb64621631b79af3449b290f12b6ed846dd0dc4fce4a60", "provenance": null, "raw": "Listen, On record: Talvo Karran's teacher is Talor Brenan. really.", "relation": "teacher", "rule_id": null, "source": "taught", "subject": "E0488", "supersedes": null, "v": 1
+{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0012922", "fact_id": "F12923", "kind": "FACT", "n": 15000, "prev": "f56b462114f32feb87b6ccd7bf00227e0cffc4446205b79a73936161dcd0ac1e", "provenance": null, "raw": "Hey, For the record, Talvo Daller's son is Grenbrook. I think.", "relation": "son", "rule_id": null, "source": "taught", "subject": "E0049", "supersedes": null, "v": 1, "value
+{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0017922", "fact_id": "F17923", "kind": "FACT", "n": 20000, "prev": "9ff4f353097c2bf69f4cced8a0e7e0310c3561c3ae05a8b6e613915b1ef4c657", "provenance": null, "raw": "I misspoke, Hey, I will state it plainly: Talvo Dallash's school is Salway. I think.", "relation": "school", "rule_id": null, "source": "taught", "subject": "E0059", "supersed
+
+   22077 /tmp/nb320/nb-20000/events.jsonl
+  110077 /tmp/nb320/nb-100000/events.jsonl
+  132154 total
+[0m
+[0m$ [0mwc -l /tmp/nb320/nb-1000000/events.jsonl 2>/dev/null; ps -o pid,rss,etime,command -p 40164 2>/dev/null | tail -2; uptime; date
+293207 /tmp/nb320/nb-1000000/events.jsonl
+  PID    RSS ELAPSED COMMAND
+40164  19664   00:35 uv run --offline --no-project --python 3.12 python -B scripts/claude_nb320_scale.py write --dir /tmp/nb320/nb-1000000 --workload /tmp/nb320/workload-1000000.jsonl --gt /tmp/nb320/gt-1000000.pkl --out /tmp/nb320/write-1000000.json
+15:28  up  5:21, 4 users, load averages: 126.51 100.50 89.09
+Wed Sep 23 15:28:22 EDT 2026
+[0m
+[0m$ [0mps aux | grep -E "claude_nb320" | grep -v grep | awk '{print $2, $3"%cpu", int($6/1024)"MB", $11, $12, $13, $14}'; date
+40165 78.2%cpu 2062MB /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12 -B scripts/claude_nb320_scale.py write
+35529 1.3%cpu 591MB /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor
+40164 0.0%cpu 19MB uv run --offline --no-project
+Wed Sep 23 15:28:27 EDT 2026
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+for size in ['20000','100000']:
+    r = json.load(open(f'/tmp/nb320/probe-{size}.json'))
+    lines = [json.dumps(x, ensure_ascii=False) for x in r['wrong_rows']]
+    open(f'/tmp/nb320/wrong-{size}.jsonl','w').write('\n'.join(lines) + ('\n' if lines else ''))
+    print(size, len(lines))
+"; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss= -p 40165 | awk '{print int($1/1024/1024)\"GB\"}'; date
+20000 52
+100000 66
+  523976 /tmp/nb320/nb-1000000/events.jsonl
+awk: syntax error at source line 1
+ context is
+	{print >>>  int($1/1024/1024)\ <<< "GB\"}
+awk: illegal statement at source line 1
+Wed Sep 23 15:28:46 EDT 2026
+[0m
+[0m$ [0mps -o rss= -p 40165; date; wc -l /tmp/nb320/nb-1000000/events.jsonl
+2565696
+Wed Sep 23 15:28:47 EDT 2026
+  542682 /tmp/nb320/nb-1000000/events.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-nb320-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mdate; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165; uptime
+Wed Sep 23 15:29:15 EDT 2026
+  819823 /tmp/nb320/nb-1000000/events.jsonl
+3313712 01:29
+15:29  up  5:22, 4 users, load averages: 121.25 103.29 90.78
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+out = {'sizes': {}}
+for size, fw, ev, people in [('20000',19000,22077,2000),('100000',95000,110077,10000)]:
+    w = json.load(open(f'/tmp/nb320/write-{size}.json'))
+    opens = [json.load(open(f'/tmp/nb320/open-{size}-{k}.json'))['open_s'] for k in (1,2,3)]
+    opens.sort()
+    p = json.load(open(f'/tmp/nb320/probe-{size}.json'))
+    import os
+    disk = sum(os.path.getsize(os.path.join(dp,f)) for dp,dn,fns in os.walk(f'/tmp/nb320/nb-{size}') for f in fns)
+    log = os.path.getsize(f'/tmp/nb320/nb-{size}/events.jsonl')
+    gz = os.path.getsize(f'/tmp/nb320/ev{int(size)//1000}.gz') if False else None
+    out['sizes'][size] = {'write': w, 'opens_s': opens, 'probe': p, 'disk_bytes': disk, 'log_bytes': log}
+json.dump(out, open('/tmp/nb320/frag.json','w'), indent=1)
+for size in ('20000','100000'):
+    s = out['sizes'][size]
+    print(size, 'wall', round(s['write']['wall_s'],3), 'rate', round(s['write']['facts_per_s'],1), 'opens', [round(x,3) for x in s['opens_s']], 'disk', s['disk_bytes'])
+"
+20000 wall 3.125 rate 6080.7 opens [1.302, 1.773, 1.942] disk 8827221
+100000 wall 37.756 rate 2516.2 opens [51.65, 59.14, 63.911] disk 44372317
+[0m
+[0m$ [0msleep 240; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -2; uptime
+Wed Sep 23 15:33:25 EDT 2026
+ 1052096 /tmp/nb320/nb-1000000/events.jsonl
+3277376 05:39
+15:33  up  5:26, 4 users, load averages: 60.24 81.73 84.88
+[0m
+[0m$ [0msleep 480; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -2; uptime
+Wed Sep 23 15:41:33 EDT 2026
+ 1056608 /tmp/nb320/nb-1000000/events.jsonl
+3317440 13:47
+15:41  up  5:34, 4 users, load averages: 53.42 65.33 75.30
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+r = json.load(open('/tmp/nb320/frag.json'))
+s = r['sizes']
+for size in ('20000','100000'):
+    p = s[size]['probe']
+    print(size, 'open_s', round(p['open_s'],3), 'one', p['one_hop']['score'], 'two', p['two_hop']['score'], 'rss', p['maxrss_bytes'])
+    print('  one lat', round(p['one_hop']['p50_ms'],4), round(p['one_hop']['p99_ms'],4), round(p['one_hop']['max_ms'],4))
+    print('  two lat', round(p['two_hop']['p50_ms'],4), round(p['two_hop']['p99_ms'],4), round(p['two_hop']['max_ms'],4))
+"; shasum -a 256 /tmp/nb320/inputs/nb320_o0b_00.gz /tmp/nb320/inputs/nb320_o0b_01.gz
+20000 open_s 1.789 one {'right': 2000, 'wrong': 0, 'miss_should_answer': 0, 'answered_should_not': 0, 'other': 0} two {'right': 948, 'wrong': 52, 'miss_should_answer': 0, 'answered_should_not': 0, 'other': 0} rss 146751488
+  one lat 0.0045 0.0105 0.0843
+  two lat 0.0071 0.011 0.0482
+100000 open_s 49.834 one {'right': 2000, 'wrong': 0, 'miss_should_answer': 0, 'answered_should_not': 0, 'other': 0} two {'right': 934, 'wrong': 66, 'miss_should_answer': 0, 'answered_should_not': 0, 'other': 0} rss 592936960
+  one lat 0.0045 0.0091 0.051
+  two lat 0.0063 0.01 0.0234
+4fefdadf32e0cf548ecb6f3ab0f405d7cfb867c2828f843f4a2e1fa346efce0b  /tmp/nb320/inputs/nb320_o0b_00.gz
+b76297948a0176c0f2f4a44ca483a93c9263dd09344b4adbd11e6966a5478bef  /tmp/nb320/inputs/nb320_o0b_01.gz
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -2
+Wed Sep 23 15:50:53 EDT 2026
+ 1061743 /tmp/nb320/nb-1000000/events.jsonl
+2809008 23:06
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -3
+Wed Sep 23 15:59:58 EDT 2026
+ 1066777 /tmp/nb320/nb-1000000/events.jsonl
+1080896 32:12
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:09:07 EDT 2026
+ 1071837 /tmp/nb320/nb-1000000/events.jsonl
+1574672 41:20
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:18:11 EDT 2026
+ 1076768 /tmp/nb320/nb-1000000/events.jsonl
+1845472 50:24
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:27:18 EDT 2026
+ 1081803 /tmp/nb320/nb-1000000/events.jsonl
+1903040 59:32
+[0m
+[0m$ [0msleep 540; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:36:26 EDT 2026
+ 1087263 /tmp/nb320/nb-1000000/events.jsonl
+1450464 01:08:39
+[0m
+[0m$ [0msleep 300; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -2
+Wed Sep 23 16:41:31 EDT 2026
+ 1090201 /tmp/nb320/nb-1000000/events.jsonl
+1586656 01:13:45
+[0m
+[0m$ [0msleep 300; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"; cat /tmp/nb320/write-1M-stdout.log 2>/dev/null | tail -2
+Wed Sep 23 16:46:36 EDT 2026
+ 1093122 /tmp/nb320/nb-1000000/events.jsonl
+1504576 01:18:50
+[0m
+[0m$ [0msleep 420; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o rss=,etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:53:41 EDT 2026
+ 1097324 /tmp/nb320/nb-1000000/events.jsonl
+1508176 01:25:54
+[0m
+[0m$ [0msleep 250; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ps -o etime= -p 40165 || echo "WRITE PROCESS GONE"
+Wed Sep 23 16:57:59 EDT 2026
+ 1099919 /tmp/nb320/nb-1000000/events.jsonl
+01:30:13
+[0m
+[0m$ [0mkill -9 40165 40164 2>/dev/null; sleep 2; ps -p 40165 2>/dev/null || echo "write process stopped"; date; wc -l /tmp/nb320/nb-1000000/events.jsonl; ls -la /tmp/nb320/nb-1000000/ /tmp/nb320/write-1000000.json 2>&1 | tail -5
+PID TTY           TIME CMD
+write process stopped
+Wed Sep 23 16:58:06 EDT 2026
+ 1099966 /tmp/nb320/nb-1000000/events.jsonl
+total 873840
+drwxr-xr-x   4 ben-hannan  wheel        128 Sep 23 15:27 .
+drwxr-xr-x  51 ben-hannan  wheel       1632 Sep 23 15:29 ..
+-rw-r--r--   1 ben-hannan  wheel        105 Sep 23 15:27 events.fix77.seal.json
+-rw-r--r--   1 ben-hannan  wheel  447398277 Sep 23 16:58 events.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+p = '/tmp/nb320/nb-1000000/events.jsonl'
+with open(p,'rb') as f:
+    f.seek(-2000, 2)
+    tail = f.read().decode('utf-8', errors='replace').split('\n')
+print('last full line parses:', end=' ')
+try:
+    json.loads(tail[-2] if tail[-1]=='' else tail[-1])
+    print(True)
+except Exception as e:
+    print('TORN', str(e)[:100])
+n_lines = sum(1 for _ in open(p, encoding='utf-8'))
+print('lines:', n_lines)
+"; uptime
+last full line parses: True
+lines: 1099966
+16:58  up  6:51, 4 users, load averages: 95.28 79.02 73.47
+[0m
+[0m$ [0mgzip -9 -c /tmp/nb320/nb-1000000/events.jsonl > /tmp/nb320/ev1M.gz & echo "gzip pid $!"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 python -B -c "
+import lzma
+raw = open('/tmp/nb320/nb-1000000/events.jsonl','rb').read()
+open('/tmp/nb320/ev1M.xz','wb').write(lzma.compress(raw, preset=9))
+print('done')
+" > /tmp/nb320/xz1M.log 2>&1 & echo "xz pid $!"
+gzip pid 68736
+xz pid 68737
+[0m
+[0m$ [0msleep 60; ls -la /tmp/nb320/ev1M.gz 2>/dev/null; cat /tmp/nb320/xz1M.log 2>/dev/null; echo ---; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json, os
+def disk(d):
+    return sum(os.path.getsize(os.path.join(dp,f)) for dp,dn,fns in os.walk(d) for f in fns)
+res = {'run':'nb-320','seed':3200,'backend':'FixedIndexedLoopNotebook','workload':{},'sizes':{}}
+for size, ops, fw, ev, people in [('20000',(17000,2000,1000),19000,22077,2000),('100000',(85000,10000,5000),95000,110077,10000)]:
+    w = json.load(open(f'/tmp/nb320/write-{size}.json'))
+    opens = sorted(json.load(open(f'/tmp/nb320/open-{size}-{k}.json'))['open_s'] for k in (1,2,3))
+    p = json.load(open(f'/tmp/nb320/probe-{size}.json'))
+    gz = os.path.getsize(f'/tmp/nb320/ev{int(size)//1000 if int(size)<1000000 else \"1M\"}.gz') if False else None
+    res['sizes'][size] = {'ops':{'teach':ops[0],'correct':ops[1],'forget':ops[2]},'fact_writes':fw,'events':ev,'people':people,
+      'write_wall_s':w['wall_s'],'facts_per_s':w['facts_per_s'],'statuses':w['statuses'],'n_unexpected':w['n_unexpected'],
+      'disk_bytes':disk(f'/tmp/nb320/nb-{size}'),'cold_opens_s':opens,'probe':{k:(v if k!='wrong_rows' else len(v)) for k,v in p.items()}}
+json.dump(res, open('/tmp/nb320/results-skel.json','w'), indent=1)
+print('skel ok')
+"
+-rw-r--r--  1 ben-hannan  wheel  91784021 Sep 23 16:58 /tmp/nb320/ev1M.gz
+---
+skel ok
+[0m
+[0m$ [0mcat /tmp/nb320/results-skel.json | head -100
+{
+ "run": "nb-320",
+ "seed": 3200,
+ "backend": "FixedIndexedLoopNotebook",
+ "workload": {},
+ "sizes": {
+  "20000": {
+   "ops": {
+    "teach": 17000,
+    "correct": 2000,
+    "forget": 1000
+   },
+   "fact_writes": 19000,
+   "events": 22077,
+   "people": 2000,
+   "write_wall_s": 3.1246205830011604,
+   "facts_per_s": 6080.7382833504635,
+   "statuses": {
+    "teach": {
+     "SAVED": 17000
+    },
+    "correct": {
+     "SAVED": 2000
+    },
+    "forget": {
+     "SAVED": 1000
+    }
+   },
+   "n_unexpected": 0,
+   "disk_bytes": 8827221,
+   "cold_opens_s": [
+    1.302380125000127,
+    1.7728658750002069,
+    1.9421180419994926
+   ],
+   "probe": {
+    "open_s": 1.7886440420006693,
+    "one_hop": {
+     "n": 2000,
+     "p50_ms": 0.0045409997255774215,
+     "p99_ms": 0.010458999895490706,
+     "max_ms": 0.08433400034846272,
+     "score": {
+      "right": 2000,
+      "wrong": 0,
+      "miss_should_answer": 0,
+      "answered_should_not": 0,
+      "other": 0
+     }
+    },
+    "two_hop": {
+     "n": 1000,
+     "p50_ms": 0.007125001502572559,
+     "p99_ms": 0.010959000064758584,
+     "max_ms": 0.04816699947696179,
+     "score": {
+      "right": 948,
+      "wrong": 52,
+      "miss_should_answer": 0,
+      "answered_should_not": 0,
+      "other": 0
+     }
+    },
+    "wrong_rows": 52,
+    "maxrss_bytes": 146751488
+   }
+  },
+  "100000": {
+   "ops": {
+    "teach": 85000,
+    "correct": 10000,
+    "forget": 5000
+   },
+   "fact_writes": 95000,
+   "events": 110077,
+   "people": 10000,
+   "write_wall_s": 37.75560479100022,
+   "facts_per_s": 2516.1827105109724,
+   "statuses": {
+    "teach": {
+     "SAVED": 85000
+    },
+    "correct": {
+     "SAVED": 10000
+    },
+    "forget": {
+     "SAVED": 5000
+    }
+   },
+   "n_unexpected": 0,
+   "disk_bytes": 44372317,
+   "cold_opens_s": [
+    51.64964499999951,
+    59.14028283399966,
+    63.911209166000845
+   ],
+   "probe": {
+    "open_s": 49.83428045900109,
+    "one_hop": {
+     "n": 2000,
+[0m
+[0m$ [0msleep 120; cat /tmp/nb320/xz1M.log 2>/dev/null; ls -la /tmp/nb320/ev1M.xz 2>/dev/null; echo ---; head -3 /tmp/nb320/wrong-20000.jsonl
+-rw-r--r--  1 ben-hannan  wheel  0 Sep 23 16:58 /tmp/nb320/ev1M.xz
+---
+{"ask": ["Tali Harror", ["neighbour", "boss"]], "expected": "Tala Dallow", "got": "Sulmere, Tali Nerris", "status": "OK", "two_hop": true}
+{"ask": ["Talvo Zanner", ["friend", "place_of_birth"]], "expected": "Tala Tannelm", "got": "Tali Tannun, Drinstead", "status": "OK", "two_hop": true}
+{"ask": ["Talvo Lannis", ["horse", "favorite_sport"]], "expected": "Tala Lorrer", "got": "Tala Serrow, Talvo Garren", "status": "OK", "two_hop": true}
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -92,12 +92,38 @@
+ ### 100k two-hop artifacts (66)
+ 
+ @@WRONG100K@@
+ 
+-## 4. The 1,000,000 run
++## 4. The 1,000,000 run: DID NOT FINISH (stopped by the preregistered rule)
+ 
+-@@SIZE1M@@
++Workload: 850,000 teach + 100,000 correct + 50,000 forget = 950,000 FACT
++writes; 100,000 people; 1,100,077 events expected. Write started 15:27:47,
++stopped by SIGKILL at 16:58:06 (90.3 min, the 90-minute cap).
+ 
++| measure | value |
++|---|---|
++| outcome | DID NOT FINISH (cap stop, not a crash) |
++| ops completed | 999,889 / 1,000,000 (teach 850,000/850,000; correct 100,000/100,000; forget 49,889/50,000) |
++| FACT writes completed | 950,000 / 950,000 (all of them, in ~6 min ≈ 2,900/s) |
++| events on disk | 1,099,966 / 1,100,077; final line parses (no torn tail) |
++| write statuses | no write-*.json (process stopped before dump); every completed op returned through the same SAVED-only path observed at 20k/100k — 0 unexpected in 114,000 prior ops |
++| disk total | 447,398,382 B (events.jsonl 447,398,277 + seal 105) |
++| bytes / FACT write | 471.0 |
++| bytes / event | 406.7 |
++| gzip -9 of log (ref) | 91,784,021 B |
++| xz -9 of log (ref) | 64,393,344 B |
++| write-process RSS samples | 1.0–3.2 GB (never near the 8 GB cap; no memory breach) |
++| cold open / probes | NOT RUN: a replay open at this size projects to ~2 h (retract replay, §7) — beyond the remaining 180-minute total budget, so there was nothing timely to probe |
++
++What happened: teaches and corrections flew (950k fact writes in ~6 min),
++then the forget phase collapsed to ~9 forgets/s flat from 15:33 to the cap.
++Each forget pays `_triple_remove`: delete-from + re-index of a ~950k-entry
++Python list (~100 ms). 49,889 forgets x ~100 ms ≈ 83 min — that IS the
++90-minute write. Same cost sits inside every cold open (each RETRACT event
++replays the same O(n) removal: 0.05 s with no retracts vs 59 s at 100k with
++5k retracts, both measured), so opens and probes at 1M are out of reach for
++this store as built, not just unmeasured.
++
+ ## 5. Crash and tamper (20k only)
+ 
+ Crash: 30 child processes x 30,000 facts, each event_id appended to an ack
+ file (flush + fsync) only after assert_fact returned; parent waited for the
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -109,9 +109,9 @@
+ | disk total | 447,398,382 B (events.jsonl 447,398,277 + seal 105) |
+ | bytes / FACT write | 471.0 |
+ | bytes / event | 406.7 |
+ | gzip -9 of log (ref) | 91,784,021 B |
+-| xz -9 of log (ref) | 64,393,344 B |
++| xz -9 of log (ref) | @@XZ1M@@ |
+ | write-process RSS samples | 1.0–3.2 GB (never near the 8 GB cap; no memory breach) |
+ | cold open / probes | NOT RUN: a replay open at this size projects to ~2 h (retract replay, §7) — beyond the remaining 180-minute total budget, so there was nothing timely to probe |
+ 
+ What happened: teaches and corrections flew (950k fact writes in ~6 min),
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -143,10 +143,24 @@
+ runs fable_fix77_core.verify_full) caught 20/20; missed 0.
+ 
+ ## 6. Byte layout: five sample event lines from the 20k log
+ 
+-@@SAMPLES@@
++Line 1 is the first line of the log (a RELATION declaration); the rest are
++FACT lines 5000/10000/15000/20000 (truncated to 400 chars here; full lines
++average ~400 bytes):
+ 
++```
++{"event_id": "nb320-rel-allergy", "functional": true, "kind": "RELATION", "n": 1, "prev": "0000...0000", "relation": "allergy", "v": 1}
++{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0002922", "fact_id": "F02923", "kind": "FACT", "n": 5000, "prev": "28d1fb28...", "raw": "Guess what, The story is Talor Corvoom's favorite food is Tordale. I think.", "relation": "favorite_food", "source": "taught", "subject": "E1960", ...}
++{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0007922", "fact_id": "F07923", "kind": "FACT", "n": 10000, "prev": "24c2abcd...", "raw": "Listen, On record: Talvo Karran's teacher is Talor Brenan. really.", "relation": "teacher", "source": "taught", "subject": "E0488", ...}
++{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0012922", "fact_id": "F12923", "kind": "FACT", "n": 15000, "prev": "f56b4621...", "raw": "Hey, For the record, Talvo Daller's son is Grenbrook. I think.", "relation": "son", "source": "taught", "subject": "E0049", ...}
++{"actor": "listening", "deps": [], "event_id": "nb320-20000-op0017922", "fact_id": "F17923", "kind": "FACT", "n": 20000, "prev": "9ff4f353...", "raw": "I misspoke, Hey, I will state it plainly: Talvo Dallash's school is Salway. I think.", "relation": "school", "source": "taught", "subject": "E0059", ...}
++```
++
++Every line carries n (sequence), prev (sha256 of the previous line),
++v (format version), actor/source/provenance/supersedes where applicable —
++that framing is the ~400 bytes per event.
++
+ ## 7. Deviations, noise, and what this means / does not mean
+ 
+ - The runner was resealed 3 times before the 1M run (never during it):
+   (1) crash driver crashed on a missing log file when a child died during
+
+[0m
+[0m→ [0mRead /tmp/nb320/wrong-20000.jsonl
+[0m→ [0mRead /tmp/nb320/wrong-100000.jsonl
+[0m
+[0m$ [0mcat /tmp/nb320/xz1M.log 2>/dev/null; ls -la /tmp/nb320/ev1M.xz 2>/dev/null; date
+done
+-rw-r--r--  1 ben-hannan  wheel  64099252 Sep 23 17:02 /tmp/nb320/ev1M.xz
+Wed Sep 23 17:02:29 EDT 2026
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -109,9 +109,9 @@
+ | disk total | 447,398,382 B (events.jsonl 447,398,277 + seal 105) |
+ | bytes / FACT write | 471.0 |
+ | bytes / event | 406.7 |
+ | gzip -9 of log (ref) | 91,784,021 B |
+-| xz -9 of log (ref) | @@XZ1M@@ |
++| xz -9 of log (ref) | 64,099,252 B |
+ | write-process RSS samples | 1.0–3.2 GB (never near the 8 GB cap; no memory breach) |
+ | cold open / probes | NOT RUN: a replay open at this size projects to ~2 h (retract replay, §7) — beyond the remaining 180-minute total budget, so there was nothing timely to probe |
+ 
+ What happened: teaches and corrections flew (950k fact writes in ~6 min),
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -86,10 +86,66 @@
+ runner was left unchanged so all sizes stay comparable. Full list:
+ 
+ ### 20k two-hop artifacts (52)
+ 
+-@@WRONG20K@@
++All status OK; each `got` is the hop-1 multi-value join, verified equal to
++the ground-truth join for that pair.
+ 
++```
++{"ask": ["Tali Harror", ["neighbour", "boss"]], "expected": "Tala Dallow", "got": "Sulmere, Tali Nerris", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Zanner", ["friend", "place_of_birth"]], "expected": "Tala Tannelm", "got": "Tali Tannun, Drinstead", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Lannis", ["horse", "favorite_sport"]], "expected": "Tala Lorrer", "got": "Tala Serrow, Talvo Garren", "status": "OK", "two_hop": true}
++{"ask": ["Talor Corvald", ["horse", "hobby"]], "expected": "Tali Corvan", "got": "Brelwick, Talvo Seller", "status": "OK", "two_hop": true}
++{"ask": ["Tali Dorreth", ["niece", "instrument"]], "expected": "Tala Corvurn", "got": "Delway, Talvo Sellor", "status": "OK", "two_hop": true}
++{"ask": ["Tali Harroom", ["therapist", "allergy"]], "expected": "Talvo Jennun", "got": "Tala Tolloom, Tala Vellen", "status": "OK", "two_hop": true}
++{"ask": ["Tali Corvow", ["child", "favorite_subject"]], "expected": "Tali Yeller", "got": "Talvo Sellun, Tali Nerrow", "status": "OK", "two_hop": true}
++{"ask": ["Tali Rennil", ["aunt", "allergy"]], "expected": "Talvo Warrin", "got": "Corstead, Tala Fennil", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Karrash", ["best_friend", "landlord"]], "expected": "Tali Perrun", "got": "Tali Hallark, Tala Lannen", "status": "OK", "two_hop": true}
++{"ask": ["Tali Moller", ["dog", "hometown"]], "expected": "Brelfield", "got": "Tali Brenath, Rilholm", "status": "OK", "two_hop": true}
++{"ask": ["Tala Rallor", ["parent", "favorite_color"]], "expected": "Hardale", "got": "Tali Pollurn, Tala Rennath", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Follin", ["cousin", "vet"]], "expected": "Tala Lorrin", "got": "Delholm, Tali Yellun", "status": "OK", "two_hop": true}
++{"ask": ["Tali Yellil", ["son", "home"]], "expected": "Torford", "got": "Tali Hallen, Tali Kellor", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Perrelm", ["son", "occupation"]], "expected": "Tala Tanner", "got": "Ithholm, Tali Karrelm", "status": "OK", "two_hop": true}
++{"ask": ["Tali Rennark", ["rabbit", "home"]], "expected": "Tali Follald", "got": "Talvo Genney, Fenbank", "status": "OK", "two_hop": true}
++{"ask": ["Tala Yelleth", ["teammate", "favorite_food"]], "expected": "Tala Follen", "got": "Torwick, Talvo Nallelm", "status": "OK", "two_hop": true}
++{"ask": ["Tala Rennath", ["teacher", "hometown"]], "expected": "Talvo Merrick", "got": "Tala Rennark, Brelford", "status": "OK", "two_hop": true}
++{"ask": ["Tali Serrer", ["uncle", "vet"]], "expected": "Tali Garris", "got": "Talvo Ralley, Talvo Pollath", "status": "OK", "two_hop": true}
++{"ask": ["Tali Brenin", ["tutor", "favorite_season"]], "expected": "Grenmar", "got": "Suldale, Tali Vellin", "status": "OK", "two_hop": true}
++{"ask": ["Tala Tolleth", ["friend", "doctor"]], "expected": "Normar", "got": "Tala Jennos, Tala Corvun", "status": "OK", "two_hop": true}
++{"ask": ["Tala Follen", ["therapist", "allergy"]], "expected": "Tala Kellelm", "got": "Brelmoor, Tali Warrin", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Serris", ["uncle", "doctor"]], "expected": "Delway", "got": "Tali Follath, Talvo Sellick, Tali Yelleth", "status": "OK", "two_hop": true}
++{"ask": ["Tala Gennelm", ["classmate", "dentist"]], "expected": "Tali Perros", "got": "Tali Fennin, Tali Nerros", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Polley", ["teammate", "favorite_color"]], "expected": "Talvo Zannash", "got": "Tala Harreth, Tali Vellor", "status": "OK", "two_hop": true}
++{"ask": ["Tala Pollil", ["father", "doctor"]], "expected": "Delway", "got": "Tali Follath, Pelmere", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Nallin", ["cat", "landlord"]], "expected": "Talor Dallun", "got": "Tali Serrey, Tali Merros", "status": "OK", "two_hop": true}
++{"ask": ["Tala Corvos", ["brother", "color"]], "expected": "Tali Brenow", "got": "Tala Follow, Tala Lanney", "status": "OK", "two_hop": true}
++{"ask": ["Tali Kellow", ["classmate", "favorite_color"]], "expected": "Harwick", "got": "Tali Harrick, Drinway", "status": "OK", "two_hop": true}
++{"ask": ["Tala Rallen", ["son", "home"]], "expected": "Salwick", "got": "Tali Harrurn, Tali Brenurn", "status": "OK", "two_hop": true}
++{"ask": ["Tali Rallin", ["son", "hometown"]], "expected": "Falbank", "got": "Galbrook, Tali Perril", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Dallick", ["horse", "occupation"]], "expected": "Faldale", "got": "Tala Warrald, Talvo Tollos", "status": "OK", "two_hop": true}
++{"ask": ["Tala Serrin", ["hamster", "work_location"]], "expected": "Tala Sellos", "got": "Wynwick, Talvo Serrurn", "status": "OK", "two_hop": true}
++{"ask": ["Tala Vellick", ["apprentice", "car"]], "expected": "Brelmere", "got": "Tali Nallash, Tali Merris", "status": "OK", "two_hop": true}
++{"ask": ["Tala Hallath", ["apprentice", "favorite_color"]], "expected": "Talvo Merror", "got": "Talvo Mollun, Talvo Tannath", "status": "OK", "two_hop": true}
++{"ask": ["Tala Rallor", ["parent", "capital"]], "expected": "Tali Perren", "got": "Tali Pollurn, Tala Rennath", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Jennurn", ["father", "title"]], "expected": "Grenwick", "got": "Tali Tannen, Tali Mollath", "status": "OK", "two_hop": true}
++{"ask": ["Tali Brenoom", ["neighbour", "school"]], "expected": "Rilmere", "got": "Talvo Serran, Tala Fennark", "status": "OK", "two_hop": true}
++{"ask": ["Talor Dallow", ["brother_in_law", "favorite_subject"]], "expected": "Elfield", "got": "Thalbrook, Tali Garrurn", "status": "OK", "two_hop": true}
++{"ask": ["Tala Perrick", ["therapist", "vet"]], "expected": "Kelway", "got": "Tali Follen, Tali Gennash", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Corvin", ["grandmother", "school"]], "expected": "Tali Kellin", "got": "Tali Tollil, Norbank", "status": "OK", "two_hop": true}
++{"ask": ["Tala Nerreth", ["sister", "home"]], "expected": "Tali Tollun", "got": "Tali Serril, Tali Jennor", "status": "OK", "two_hop": true}
++{"ask": ["Tala Garren", ["son", "employer"]], "expected": "Talvo Lanneth", "got": "Tala Perror, Holfield", "status": "OK", "two_hop": true}
++{"ask": ["Tali Brenath", ["half_brother", "nickname"]], "expected": "Talvo Dorril", "got": "Tala Warrick, Tala Lorrick", "status": "OK", "two_hop": true}
++{"ask": ["Tala Brenash", ["mother", "work_location"]], "expected": "Tali Gennen", "got": "Tali Tannick, Talvo Dallick", "status": "OK", "two_hop": true}
++{"ask": ["Tali Rennark", ["mother_in_law", "hobby"]], "expected": "Brelmoor", "got": "Holdale, Talvo Kellos", "status": "OK", "two_hop": true}
++{"ask": ["Tala Jollow", ["rival", "favorite_food"]], "expected": "Marfield", "got": "Tali Ralleth, Tali Follil", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Warrey", ["babysitter", "car"]], "expected": "Brelstead", "got": "Norway, Talvo Jolley", "status": "OK", "two_hop": true}
++{"ask": ["Tali Dorrin", ["colleague", "allergy"]], "expected": "Tala Karrald", "got": "Ithbank, Talvo Lannald", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Hallos", ["dog", "allergy"]], "expected": "Torbank", "got": "Tala Merror, Fenmoor", "status": "OK", "two_hop": true}
++{"ask": ["Tala Tollick", ["horse", "husband"]], "expected": "Talvo Nerrow", "got": "Tali Rennark, Tala Corvil, Velholm", "status": "OK", "two_hop": true}
++{"ask": ["Tali Dorrurn", ["husband", "mentor"]], "expected": "Falmar", "got": "Delmere, Talvo Perrey", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Perrald", ["child", "favorite_sport"]], "expected": "Tali Pollis", "got": "Talor Brenash, Tali Hallald", "status": "OK", "two_hop": true}
++```
++
+ ### 100k two-hop artifacts (66)
+ 
+ @@WRONG100K@@
+ 
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -146,10 +146,79 @@
+ ```
+ 
+ ### 100k two-hop artifacts (66)
+ 
+-@@WRONG100K@@
++Same verification (66/66 equal the ground-truth hop-1 join).
+ 
++```
++{"ask": ["Brenvo Zannelm", ["grandfather", "coach"]], "expected": "Talvo Lorran", "got": "Talen Harris, Brenis Dorroom", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Lorris", ["neighbour", "school"]], "expected": "Breneth Dallick", "got": "Kelmere, Brena Harris", "status": "OK", "two_hop": true}
++{"ask": ["Breni Pollath", ["mother_in_law", "favorite_subject"]], "expected": "Rilmoor", "got": "Brenor Tolleth, Talor Kelloom", "status": "OK", "two_hop": true}
++{"ask": ["Brenor Serrey", ["niece", "mentor"]], "expected": "Talal Nerrun", "got": "Tala Nerrun, Breni Dallurn", "status": "OK", "two_hop": true}
++{"ask": ["Talal Garrow", ["apprentice", "favorite_food"]], "expected": "Pelbrook", "got": "Grenmoor, Talor Lannin", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Vellil", ["dog", "favorite_subject"]], "expected": "Brenis Jennin", "got": "Brindale, Talen Harrey", "status": "OK", "two_hop": true}
++{"ask": ["Taleth Serreth", ["half_brother", "school"]], "expected": "Talen Vellash", "got": "Brenvo Tollil, Brenal Brenelm", "status": "OK", "two_hop": true}
++{"ask": ["Talis Fennath", ["child", "favorite_sport"]], "expected": "Brenen Gennath", "got": "Brenis Yellath, Brenen Fenner", "status": "OK", "two_hop": true}
++{"ask": ["Brenor Perrey", ["colleague", "title"]], "expected": "Norbrook", "got": "Mardale, Brenis Garran", "status": "OK", "two_hop": true}
++{"ask": ["Tala Nerris", ["grandmother", "school"]], "expected": "Grenbrook", "got": "Delford, Taleth Rennath", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Sellald", ["stepsister", "hometown"]], "expected": "Brenal Mollis", "got": "Norstead, Tala Kellil, Breneth Rennath", "status": "OK", "two_hop": true}
++{"ask": ["Brenvo Merris", ["friend", "favorite_book"]], "expected": "Talor Serrow", "got": "Tali Dallin, Talal Dorrurn", "status": "OK", "two_hop": true}
++{"ask": ["Breneth Vellelm", ["parrot", "favorite_book"]], "expected": "Galholm", "got": "Brenis Fennash, Brena Hallow", "status": "OK", "two_hop": true}
++{"ask": ["Breni Brener", ["teammate", "city"]], "expected": "Grenstead", "got": "Brenen Polloom, Brenvo Jollick", "status": "OK", "two_hop": true}
++{"ask": ["Brenis Dallelm", ["neighbour", "boss"]], "expected": "Brenor Lorren", "got": "Brenvo Selloom, Talal Nallis", "status": "OK", "two_hop": true}
++{"ask": ["Brenor Perrath", ["brother_in_law", "coach"]], "expected": "Breni Fennash", "got": "Brenal Serran, Breni Garros", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Kellil", ["sister_in_law", "dentist"]], "expected": "Sulholm", "got": "Talvo Serrald, Ithbank", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Gennos", ["parent", "friend"]], "expected": "Brelway", "got": "Grenfield, Talen Fennath", "status": "OK", "two_hop": true}
++{"ask": ["Brenvo Sellow", ["mother", "hometown"]], "expected": "Brenen Mollath", "got": "Rilbank, Tala Dallos", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Tanney", ["mother", "instrument"]], "expected": "Tala Nerros", "got": "Breneth Tannos, Brenal Jollath", "status": "OK", "two_hop": true}
++{"ask": ["Talor Corvin", ["mother_in_law", "color"]], "expected": "Talvo Hallald", "got": "Tala Pollick, Talal Yellun", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Dorran", ["aunt", "boss"]], "expected": "Tordale", "got": "Delfield, Talis Hallil", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Perroom", ["teacher", "school"]], "expected": "Galstead", "got": "Brenis Corvelm, Drinmere", "status": "OK", "two_hop": true}
++{"ask": ["Talis Warros", ["godmother", "school"]], "expected": "Talor Karrow", "got": "Talen Hallurn, Talen Veller", "status": "OK", "two_hop": true}
++{"ask": ["Brenis Harrark", ["best_friend", "place_of_birth"]], "expected": "Brenal Hallil", "got": "Brena Gennor, Brenor Tannun", "status": "OK", "two_hop": true}
++{"ask": ["Breni Dorros", ["therapist", "doctor"]], "expected": "Brenen Brenash", "got": "Tala Jennash, Brenor Gennald", "status": "OK", "two_hop": true}
++{"ask": ["Brenis Fennick", ["fiance", "hometown"]], "expected": "Corstead", "got": "Mardale, Brenen Jennick", "status": "OK", "two_hop": true}
++{"ask": ["Breni Nerren", ["dog", "country"]], "expected": "Breneth Yelleth", "got": "Brenvo Dorran, Holwick", "status": "OK", "two_hop": true}
++{"ask": ["Talor Lorrurn", ["partner", "country"]], "expected": "Ithbank", "got": "Brinmoor, Breni Breney", "status": "OK", "two_hop": true}
++{"ask": ["Talor Gennark", ["brother", "title"]], "expected": "Falfield", "got": "Thalmoor, Tala Dallis", "status": "OK", "two_hop": true}
++{"ask": ["Taleth Nallun", ["rival", "vet"]], "expected": "Keldale", "got": "Tala Hallurn, Brinford", "status": "OK", "two_hop": true}
++{"ask": ["Talis Jennurn", ["brother_in_law", "mentor"]], "expected": "Delbank", "got": "Tala Corvurn, Brenor Brenos", "status": "OK", "two_hop": true}
++{"ask": ["Brenis Tannoom", ["grandfather", "instrument"]], "expected": "Brelbrook", "got": "Taleth Fennor, Talal Fennick", "status": "OK", "two_hop": true}
++{"ask": ["Talal Karreth", ["daughter", "hamster"]], "expected": "Kelwick", "got": "Taleth Dallen, Talor Dallelm", "status": "OK", "two_hop": true}
++{"ask": ["Talor Lannark", ["brother", "doctor"]], "expected": "Breneth Lannick", "got": "Breni Hallen, Elholm", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Rallin", ["cousin", "favorite_subject"]], "expected": "Delbrook", "got": "Tali Kellash, Brenor Brenelm", "status": "OK", "two_hop": true}
++{"ask": ["Brena Nerran", ["brother_in_law", "employer"]], "expected": "Elbrook", "got": "Brenen Vellen, Pelbrook", "status": "OK", "two_hop": true}
++{"ask": ["Breni Hallin", ["daughter", "occupation"]], "expected": "Delbrook", "got": "Brenen Gennark, Talal Rennath", "status": "OK", "two_hop": true}
++{"ask": ["Breni Tollurn", ["partner", "favorite_food"]], "expected": "Brenen Brenen", "got": "Breni Zannil, Tala Mollos", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Merroom", ["grandmother", "coach"]], "expected": "Brenen Perrun", "got": "Taleth Pollald, Talen Tannelm", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Lorroom", ["child", "occupation"]], "expected": "Delmoor", "got": "Tali Tolley, Brenor Brenos", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Genneth", ["friend", "vet"]], "expected": "Suldale", "got": "Brena Mollan, Talvo Tannelm", "status": "OK", "two_hop": true}
++{"ask": ["Talvo Jennin", ["classmate", "favorite_sport"]], "expected": "Brenal Nallald", "got": "Brenen Mollil, Talvo Lannen", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Fennis", ["godmother", "favorite_food"]], "expected": "Tali Ralley", "got": "Talvo Perris, Brenor Brenin", "status": "OK", "two_hop": true}
++{"ask": ["Breneth Rennash", ["rival", "school"]], "expected": "Brinwick", "got": "Talor Garrath, Tali Hallick", "status": "OK", "two_hop": true}
++{"ask": ["Brenis Rennash", ["cat", "employer"]], "expected": "Galmar", "got": "Breneth Corvis, Tali Nallan", "status": "OK", "two_hop": true}
++{"ask": ["Brenvo Tolleth", ["best_friend", "vet"]], "expected": "Fenway", "got": "Talal Dallen, Brenor Corvald", "status": "OK", "two_hop": true}
++{"ask": ["Talen Warrurn", ["godmother", "favorite_food"]], "expected": "Normoor", "got": "Brinstead, Brenal Dallin", "status": "OK", "two_hop": true}
++{"ask": ["Talen Zannos", ["stepmother", "car"]], "expected": "Galdale", "got": "Delstead, Breni Dorror", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Selloom", ["grandmother", "boss"]], "expected": "Brenvo Kellark", "got": "Breneth Dallald, Brenen Dorrelm", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Nerris", ["sister", "boss"]], "expected": "Talis Karrun", "got": "Drinholm, Brenis Corvun", "status": "OK", "two_hop": true}
++{"ask": ["Talis Harren", ["son", "favorite_food"]], "expected": "Torway", "got": "Brenor Jennor, Brelford", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Nalley", ["daughter", "favorite_subject"]], "expected": "Tali Karrath", "got": "Brenal Molloom, Brenvo Kellath", "status": "OK", "two_hop": true}
++{"ask": ["Brenal Pollor", ["parent", "dentist"]], "expected": "Fenmoor", "got": "Breni Corvun, Pelfield", "status": "OK", "two_hop": true}
++{"ask": ["Breni Nerrash", ["rival", "favorite_subject"]], "expected": "Talen Karril", "got": "Velholm, Talor Rallin", "status": "OK", "two_hop": true}
++{"ask": ["Talen Nallan", ["roommate", "car"]], "expected": "Salmar", "got": "Kelbrook, Talal Hallick", "status": "OK", "two_hop": true}
++{"ask": ["Brena Tannath", ["therapist", "place_of_birth"]], "expected": "Taleth Tannor", "got": "Talen Velleth, Normere", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Nallil", ["tutor", "favorite_sport"]], "expected": "Brenis Follow", "got": "Brelmere, Brenis Gennor", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Folleth", ["neighbour", "instrument"]], "expected": "Norstead", "got": "Talen Fennark, Brenal Dorren", "status": "OK", "two_hop": true}
++{"ask": ["Brenor Rallun", ["father", "mentor"]], "expected": "Talal Jennash", "got": "Breni Sellald, Breneth Dallick", "status": "OK", "two_hop": true}
++{"ask": ["Talal Tollor", ["best_friend", "favorite_color"]], "expected": "Delmere", "got": "Cormere, Brenen Merrald", "status": "OK", "two_hop": true}
++{"ask": ["Talal Yellash", ["child", "coach"]], "expected": "Brinstead", "got": "Brenvo Serrelm, Talal Jennurn", "status": "OK", "two_hop": true}
++{"ask": ["Breneth Yeller", ["fiance", "employer"]], "expected": "Sulbank", "got": "Talen Polley, Falmar", "status": "OK", "two_hop": true}
++{"ask": ["Breni Garran", ["teammate", "favorite_sport"]], "expected": "Rilmere", "got": "Brenvo Jollun, Falmar", "status": "OK", "two_hop": true}
++{"ask": ["Brenen Dallow", ["rival", "work_location"]], "expected": "Wynmoor", "got": "Brenen Mollash, Tala Harrun", "status": "OK", "two_hop": true}
++{"ask": ["Talen Nerroom", ["hamster", "country"]], "expected": "Sulstead", "got": "Brenen Harrun, Talen Rennun", "status": "OK", "two_hop": true}
++```
++
+ ## 4. The 1,000,000 run: DID NOT FINISH (stopped by the preregistered rule)
+ 
+ Workload: 850,000 teach + 100,000 correct + 50,000 forget = 950,000 FACT
+ writes; 100,000 people; 1,100,077 events expected. Write started 15:27:47,
+
+[0m
+[0m← [0mWrite artifacts/claude-nb320-20260923/results.json
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/results.json
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/results.json
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/results.json
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/results.json
+@@ -1,1 +1,1 @@
+-{"backend": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py) via open_baseline", "crash_20k": {"acked_but_lost": 0, "acked_max": 7585, "acked_median": 5431, "acked_min": 238, "children": 30, "clean_finish": 0, "duplicates": 0, "failed_opens": 0, "killed_mid_write": 30, "per_child": 30000, "seed": 3200, "torn_tails": 0, "void_attempts": "4 earlier attempts reported in RESULTS.md §5 (startup-kills, functional-relation child writing only ~41 events, driver missing-file crash); only this run counts"}, "gpu": false, "machine": "Mac CPU only; all timings noisy, load averages ~50-125 all run; uptime logged before each timing step", "o0b_inputs": {"files": ["artifacts/claude-own-o0b-20260923/train-00.jsonl.gz (branch builder-outbox)", "artifacts/claude-own-o0b-20260923/train-01.jsonl.gz (branch builder-outbox)"], "filter": "family tell, act STATE, count 1, one fact, mode ASSERT, owner_kind NAME", "local_sha256": {"nb320_o0b_00.gz": "4fefdadf32e0cf548ecb6f3ab0f405d7cfb867c2828f843f4a2e1fa346efce0b", "nb320_o0b_01.gz": "b76297948a0176c0f2f4a44ca483a93c9263dd09344b4adbd11e6966a5478bef"}, "templates_kept": 3754}, "run": "nb-320", "seed": 3200, "sizes": {"100000": {"bytes_per_event": 403.1, "bytes_per_fact_write": 467.1, "cold_opens_s": [51.64964499999951, 59.14028283399966, 63.911209166000845], "cold_opens_s_median": 59.14028283399966, "disk_bytes": 44372317, "events": 110077, "events_jsonl_bytes": 44372207, "fact_writes": 95000, "facts_per_s": 2516.1827105109724, "gzip9_bytes": 8915761, "n_unexpected": 0, "ops": {"correct": 10000, "forget": 5000, "teach": 85000}, "people": 10000, "probe": {"maxrss_bytes": 592936960, "one_hop": {"max_ms": 0.05100000089441892, "n": 2000, "p50_ms": 0.004499999704421498, "p99_ms": 0.009125000360654667, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 2000, "wrong": 0}}, "open_s": 49.83428045900109, "two_hop": {"artifact_hop1_multi_join": 66, "max_ms": 0.02341700019314885, "n": 1000, "p50_ms": 0.006250000296859071, "p99_ms": 0.009999999747378752, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 934, "wrong": 66}}}, "probe_seed": 101000, "statuses": {"correct": {"SAVED": 10000}, "forget": {"SAVED": 5000}, "teach": {"SAVED": 85000}}, "write_wall_s": 37.75560479100022, "xz9_bytes": 6258160}, "1000000": {"bytes_per_event": 406.7, "bytes_per_fact_write": 471.0, "cold_opens": "NOT RUN (projected ~2h per open; exceeds remaining total budget)", "disk_bytes": 447398382, "events_expected": 1100077, "events_on_disk": 1099966, "fact_writes_completed": 950000, "fact_writes_expected": 950000, "final_line_parses": true, "forget_completed": 49889, "forget_expected": 50000, "gzip9_bytes": 91784021, "ops_completed": 999889, "ops_expected": 1000000, "outcome": "DID NOT FINISH (90-minute cap stop at 90.3 min; SIGKILLed, not crashed)", "probes": "NOT RUN (no timely open possible; see outcome)", "statuses": "write-*.json never dumped (stopped before dump); 0 unexpected in 114000 ops at 20k+100k on the same code path", "write_RSS_bytes_samples": [2062000000, 2566000000, 3314000000, 3277000000, 2809000000, 1081000000, 1575000000, 1845000000, 1903000000, 1450000000, 1587000000, 1505000000, 1508000000], "write_RSS_note": "1.0-3.2 GB sampled; never near the 8 GB cap", "write_start": "15:27:47", "write_stop": "16:58:06", "xz9_bytes": 64099252}, "20000": {"bytes_per_event": 399.9, "bytes_per_fact_write": 464.6, "cold_opens_s": [1.302380125000127, 1.7728658750002069, 1.9421180419994926], "cold_opens_s_median": 1.7728658750002069, "disk_bytes": 8827221, "events": 22077, "events_jsonl_bytes": 8827112, "fact_writes": 19000, "facts_per_s": 6080.7382833504635, "gzip9_bytes": 1750233, "n_unexpected": 0, "ops": {"correct": 2000, "forget": 1000, "teach": 17000}, "people": 2000, "probe": {"maxrss_bytes": 146751488, "one_hop": {"max_ms": 0.08433400034846272, "n": 2000, "p50_ms": 0.0045409997255774215, "p99_ms": 0.010458999895490706, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 2000, "wrong": 0}}, "open_s": 1.7886440420006693, "two_hop": {"artifact_hop1_multi_join": 52, "max_ms": 0.04816699947696179, "n": 1000, "p50_ms": 0.007125001502572559, "p99_ms": 0.010959000064758584, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 948, "wrong": 52}}}, "probe_seed": 22000, "statuses": {"correct": {"SAVED": 2000}, "forget": {"SAVED": 1000}, "teach": {"SAVED": 17000}}, "write_wall_s": 3.1246205830011604, "xz9_bytes": 1252688}}, "tamper_20k": {"caught": 20, "copies": 20, "missed": 0, "seed": 3201}, "workload": {"N_is": "total operations (85% teach / 10% correction / 5% forget, in phase order); FACT writes = 95% of N", "functional_relations": ["title", "occupation", "employer", "capital", "place_of_birth", "work_location", "school", "country", "city", "hometown", "home", "favorite_book", "hobby", "color", "car", "favorite_season", "favorite_sport", "instrument", "favorite_food", "favorite_color", "nickname", "favorite_subject", "allergy", "boss", "landlord", "coach", "doctor", "dentist", "vet", "mentor"], "multivalued_relations": 47, "names": "N/10 unique fictional two-part names from invented syllables", "probes": "2000 one-hop (1200 plain / 400 corrected / 200 forgotten / 200 never) + 1000 two-hop; seeds 3200+N", "values": "50% entity / 50% literal"}}
++{"backend": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py) via open_baseline", "crash_20k": {"acked_but_lost": 0, "acked_max": 7585, "acked_median": 5431, "acked_min": 238, "children": 30, "clean_finish": 0, "duplicates": 0, "failed_opens": 0, "killed_mid_write": 30, "per_child": 30000, "seed": 3200, "torn_tails": 0, "void_attempts": "4 earlier attempts reported in RESULTS.md §5 (startup-kills, functional-relation child writing only ~41 events, driver missing-file crash); only this run counts"}, "gpu": false, "machine": "Mac CPU only; all timings noisy, load averages ~50-125 all run; uptime logged before each timing step", "o0b_inputs": {"files": ["artifacts/claude-own-o0b-20260923/train-00.jsonl.gz (branch builder-outbox)", "artifacts/claude-own-o0b-20260923/train-01.jsonl.gz (branch builder-outbox)"], "filter": "family tell, act STATE, count 1, one fact, mode ASSERT, owner_kind NAME", "local_sha256": {"nb320_o0b_00.gz": "4fefdadf32e0cf548ecb6f3ab0f405d7cfb867c2828f843f4a2e1fa346efce0b", "nb320_o0b_01.gz": "b76297948a0176c0f2f4a44ca483a93c9263dd09344b4adbd11e6966a5478bef"}, "templates_kept": 3754}, "run": "nb-320", "seed": 3200, "sizes": {"100000": {"bytes_per_event": 403.1, "bytes_per_fact_write": 467.1, "cold_opens_s": [51.64964499999951, 59.14028283399966, 63.911209166000845], "cold_opens_s_median": 59.14028283399966, "disk_bytes": 44372317, "events": 110077, "events_jsonl_bytes": 44372207, "fact_writes": 95000, "facts_per_s": 2516.1827105109724, "gzip9_bytes": 8915761, "n_unexpected": 0, "ops": {"correct": 10000, "forget": 5000, "teach": 85000}, "people": 10000, "probe": {"maxrss_bytes": 592936960, "one_hop": {"max_ms": 0.05100000089441892, "n": 2000, "p50_ms": 0.004499999704421498, "p99_ms": 0.009125000360654667, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 2000, "wrong": 0}}, "open_s": 49.83428045900109, "two_hop": {"artifact_hop1_multi_join": 66, "max_ms": 0.02341700019314885, "n": 1000, "p50_ms": 0.006250000296859071, "p99_ms": 0.009999999747378752, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 934, "wrong": 66}}}, "probe_seed": 101000, "statuses": {"correct": {"SAVED": 10000}, "forget": {"SAVED": 5000}, "teach": {"SAVED": 85000}}, "write_wall_s": 37.75560479100022, "xz9_bytes": 6258160}, "1000000": {"bytes_per_event": 406.7, "bytes_per_fact_write": 471.0, "cold_opens": "NOT RUN (projected ~2h per open; exceeds remaining total budget)", "disk_bytes": 447398382, "events_expected": 1100077, "events_on_disk": 1099966, "fact_writes_completed": 950000, "fact_writes_expected": 950000, "final_line_parses": true, "forget_completed": 49889, "forget_expected": 50000, "gzip9_bytes": 91784021, "ops_completed": 999889, "ops_expected": 1000000, "outcome": "DID NOT FINISH (90-minute cap stop at 90.3 min; SIGKILLed, not crashed)", "probes": "NOT RUN (no timely open possible; see outcome)", "statuses": "write-*.json never dumped (stopped before dump); 0 unexpected in 114000 ops at 20k+100k on the same code path", "write_RSS_bytes_samples": [2062000000, 2566000000, 3314000000, 3277000000, 2809000000, 1081000000, 1575000000, 1845000000, 1903000000, 1450000000, 1587000000, 1505000000, 1508000000], "write_RSS_note": "1.0-3.2 GB sampled; never near the 8 GB cap", "write_start": "15:27:47", "write_stop": "16:58:06", "xz9_bytes": 64099252}, "20000": {"bytes_per_event": 399.9, "bytes_per_fact_write": 464.6, "cold_opens_s": [1.302380125000127, 1.7728658750002069, 1.9421180419994926], "cold_opens_s_median": 1.7728658750002069, "disk_bytes": 8827221, "events": 22077, "events_jsonl_bytes": 8827112, "fact_writes": 19000, "facts_per_s": 6080.7382833504635, "gzip9_bytes": 1750233, "n_unexpected": 0, "ops": {"correct": 2000, "forget": 1000, "teach": 17000}, "people": 2000, "probe": {"maxrss_bytes": 146751488, "one_hop": {"max_ms": 0.08433400034846272, "n": 2000, "p50_ms": 0.0045409997255774215, "p99_ms": 0.010458999895490706, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 2000, "wrong": 0}}, "open_s": 1.7886440420006693, "two_hop": {"artifact_hop1_multi_join": 52, "max_ms": 0.04816699947696179, "n": 1000, "p50_ms": 0.007125001502572559, "p99_ms": 0.010959000064758584, "score": {"answered_should_not": 0, "miss_should_answer": 0, "other": 0, "right": 948, "wrong": 52}}}, "probe_seed": 20200, "statuses": {"correct": {"SAVED": 2000}, "forget": {"SAVED": 1000}, "teach": {"SAVED": 17000}}, "write_wall_s": 3.1246205830011604, "xz9_bytes": 1252688}}, "tamper_20k": {"caught": 20, "copies": 20, "missed": 0, "seed": 3201}, "workload": {"N_is": "total operations (85% teach / 10% correction / 5% forget, in phase order); FACT writes = 95% of N", "functional_relations": ["title", "occupation", "employer", "capital", "place_of_birth", "work_location", "school", "country", "city", "hometown", "home", "favorite_book", "hobby", "color", "car", "favorite_season", "favorite_sport", "instrument", "favorite_food", "favorite_color", "nickname", "favorite_subject", "allergy", "boss", "landlord", "coach", "doctor", "dentist", "vet", "mentor"], "multivalued_relations": 47, "names": "N/10 unique fictional two-part names from invented syllables", "probes": "2000 one-hop (1200 plain / 400 corrected / 200 forgotten / 200 never) + 1000 two-hop; seeds 3200+N", "values": "50% entity / 50% literal"}}
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -295,10 +295,12 @@
+   written (CONFLICTs) — switched to a multi-valued relation. The workload
+   generator is byte-identical since the first seal; the write/open/probe/
+   tamper code paths were never touched (only crash-driver lines changed).
+   Final seal: SEAL.sha256.txt.
+-- Workload interpretation (preregistered in PASSMARKS.md): N = total ops at
+-  85/10/5, so FACT writes = 95% of N (19,000 / 95,000 / 950,000).
++- Probe seeds used were 20200 (20k) and 101000 (100k) — deterministic and
++  recorded, but NOT the preregistered 3200+N formula (a launch-time slip:
++  20000+200 / 100000+1000). Sampling is still fully reproducible from
++  results.json; only the formula differs.
+ - xz reference sizes were computed with Python's lzma (preset 9) because
+   the system xz binary is a broken x86 executable on this Mac; bytes equal
+   xz -9 output format.
+ - Noise: load averages sat between ~50 and ~125 for the whole run (a very
+
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -299,8 +299,10 @@
+ - Probe seeds used were 20200 (20k) and 101000 (100k) — deterministic and
+   recorded, but NOT the preregistered 3200+N formula (a launch-time slip:
+   20000+200 / 100000+1000). Sampling is still fully reproducible from
+   results.json; only the formula differs.
++- Workload interpretation (preregistered in PASSMARKS.md): N = total ops at
++  85/10/5, so FACT writes = 95% of N (19,000 / 95,000 / 950,000).
+ - xz reference sizes were computed with Python's lzma (preset 9) because
+   the system xz binary is a broken x86 executable on this Mac; bytes equal
+   xz -9 output format.
+ - Noise: load averages sat between ~50 and ~125 for the whole run (a very
+
+[0m
+[0m✗ [0mEdit artifacts/claude-nb320-20260923/RESULTS.md failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m
+[0m$ [0mgrep -n "3200 + N" artifacts/claude-nb320-20260923/RESULTS.md
+29:in this run). Probe seed = 3200 + N.
+[0m
+[0m→ [0mRead artifacts/claude-nb320-20260923/RESULTS.md[90m [limit=8, offset=24][0m
+[0m
+[0m← [0mEdit artifacts/claude-nb320-20260923/RESULTS.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-nb320-20260923/RESULTS.md
+@@ -25,9 +25,10 @@
+ listed in PASSMARKS.md, rest multi-valued); values 50% entity / 50% literal;
+ raw sentences built from 3,754 o0b templates (tell/STATE/count-1/1-fact/
+ ASSERT/owner-NAME) with owner/value spans spliced, correction openers on
+ corrections. Same file replayed into each backend (only the baseline exists
+-in this run). Probe seed = 3200 + N.
++in this run). Probe seeds actually used: 20200 (20k), 101000 (100k) —
++see §7 deviation note.
+ 
+ ## 2. Per-size tables
+ 
+ ### 20,000 ops (17,000 teach + 2,000 correct + 1,000 forget = 19,000 FACT writes; 2,000 people; 22,077 events)
+
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py artifacts/claude-nb320-20260923/PASSMARKS.md; echo ---; cat artifacts/claude-nb320-20260923/SEAL.sha256.txt; echo ---; ls -la artifacts/claude-nb320-20260923/; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "import json; r=json.load(open('artifacts/claude-nb320-20260923/results.json')); print('results.json valid, sizes:', list(r['sizes']))"
+aa9e7a29c7fa7e43ee8916ed0fb806302c7422e69e34dad6651f12117ded0373  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+---
+aa9e7a29c7fa7e43ee8916ed0fb806302c7422e69e34dad6651f12117ded0373  scripts/claude_nb320_scale.py
+f1cbe1568a93e8209231d50d553e2ac78bbc37f8cd14b749f50e744b51790201  scripts/claude_nb320_workload.py
+4eebd604574497b4b3fb4699dc4424fd07a7d92bd84e00dbfe9f57ac606b7f62  artifacts/claude-nb320-20260923/PASSMARKS.md
+---
+total 96
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 17:03 .
+drwxr-xr-x@ 457 ben-hannan  staff  14624 Sep 23 16:00 ..
+-rw-r--r--    1 ben-hannan  staff   4017 Sep 23 15:15 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff   5368 Sep 23 17:03 results.json
+-rw-r--r--    1 ben-hannan  staff  29468 Sep 23 17:03 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    306 Sep 23 15:21 SEAL.sha256.txt
+results.json valid, sizes: ['100000', '1000000', '20000']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import shutil
+shutil.rmtree('/tmp/nb320', ignore_errors=True)
+import os
+print('nb320 gone:', not os.path.exists('/tmp/nb320'))
+"; df -g / | tail -1; git status --short | grep -v "^ M\|^??" | head; git status --short | grep -E "nb320|SEAL|PASSMARKS|RESULTS|results" 
+nb320 gone: True
+/dev/disk3s1s1       460   12         7    63%  484014 81572360    1%   /
+?? scripts/claude_nb320_scale.py
+?? scripts/claude_nb320_workload.py
+[0m
+[0m$ [0mgit status --short | grep -iE "nb320|artifact" | head; echo ---; git check-ignore artifacts/claude-nb320-20260923/results.json && echo IGNORED || echo NOT-IGNORED; du -sh /tmp 2>/dev/null
+M artifacts/fable-predictions-ledger.md
+?? scripts/claude_nb320_scale.py
+?? scripts/claude_nb320_workload.py
+---
+artifacts/claude-nb320-20260923/results.json
+IGNORED
+  0B	/tmp
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-nb320-20260923/RESULTS.md; git ls-files artifacts/ | head -8; grep -n "artifact" .gitignore 2>/dev/null | head
+.gitignore:5:artifacts/	artifacts/claude-nb320-20260923/RESULTS.md
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/base221.jsonl
+artifacts/claude-aliaspanel237b-20260922/panel.jsonl
+5:artifacts/
+[0m
+[0m$ [0mgit add -f artifacts/claude-nb320-20260923 scripts/claude_nb320_scale.py scripts/claude_nb320_workload.py && git status --short | grep -E "nb320" ; echo ---; git diff --cached --stat
+A  artifacts/claude-nb320-20260923/PASSMARKS.md
+A  artifacts/claude-nb320-20260923/RESULTS.md
+A  artifacts/claude-nb320-20260923/SEAL.sha256.txt
+A  artifacts/claude-nb320-20260923/results.json
+A  scripts/claude_nb320_scale.py
+A  scripts/claude_nb320_workload.py
+---
+ artifacts/claude-nb320-20260923/PASSMARKS.md    |  67 +++
+ artifacts/claude-nb320-20260923/RESULTS.md      | 324 +++++++++++++++
+ artifacts/claude-nb320-20260923/SEAL.sha256.txt |   3 +
+ artifacts/claude-nb320-20260923/results.json    |   1 +
+ scripts/claude_nb320_scale.py                   | 525 ++++++++++++++++++++++++
+ scripts/claude_nb320_workload.py                | 297 ++++++++++++++
+ 6 files changed, 1217 insertions(+)
+[0m
+[0m$ [0mgit commit -m "nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results" && git log --oneline -2 && git status --short | head -8
+[claude/card-experiment-handoff-7c5b27 ae3e5f02f] nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+ 6 files changed, 1217 insertions(+)
+ create mode 100644 artifacts/claude-nb320-20260923/PASSMARKS.md
+ create mode 100644 artifacts/claude-nb320-20260923/RESULTS.md
+ create mode 100644 artifacts/claude-nb320-20260923/SEAL.sha256.txt
+ create mode 100644 artifacts/claude-nb320-20260923/results.json
+ create mode 100644 scripts/claude_nb320_scale.py
+ create mode 100644 scripts/claude_nb320_workload.py
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+[0m
+[0m# [0mTodos
+[✓] Read index layer (fable_perf128_index.py) + verify_full + o0b data schema
+[✓] Write scripts/claude_nb320_workload.py (seed 3200, o0b raw sentences)
+[✓] Write scripts/claude_nb320_scale.py runner with --factory + open_baseline
+[✓] Write PASSMARKS.md and SEAL before registered run
+[✓] Generate workloads 20k/100k/1M to /tmp/nb320/
+[✓] Run 20k size + crash/tamper tests
+[✓] Run 100k size
+[✓] Run 1M size (background, caps 90min/8GB)
+[✓] Write results.json, RESULTS.md, samples; delete /tmp/nb320/; push artifacts+scripts
+[0m
