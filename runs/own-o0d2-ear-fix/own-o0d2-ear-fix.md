@@ -1,0 +1,19 @@
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read the plan with git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md. Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: other own-model builders run in parallel. Never open artifacts/claude-own-* folders other than the ones your task names, and never open any TEST-ONLY panel, artifacts/claude-*panel* folder or artifacts/claude-own-bench-20260923 (TEST-ONLY). New files only; never edit an earlier builder's sealed file. Time limit 30 minutes. Fictional names only.
+
+YOUR TASK: builder for own-O0d2, the ONE diagnosis-driven follow-up to the registered FAIL of own-O0d (ear code). CPU only; plain torch. Artifacts: artifacts/claude-own-o0d2-20260923/. Read artifacts/claude-own-o0d-20260923/RESULTS.md and the three sealed scripts scripts/claude_own_o0d_{model,train,test}.py (read-only; never edit them).
+Diagnosis (director, verified at scripts/claude_own_o0d_model.py:147-157): ByteBPE.word_start_end sets end[i-1] = False when token i starts a NEW word, which is backwards: end[i-1] must be False only when token i continues the SAME word. So valid_span_mask admits half-word spans. The same RESULTS also reports that decode drops the spaces between words (bpe-roundtrip FAIL).
+The ONE change: new file scripts/claude_own_o0d2_model.py = a copy of the o0d model with only (a) word_start_end fixed and (b) decode restoring spaces; everything else byte-identical (show the diff in RESULTS.md). New scripts/claude_own_o0d2_test.py = the o0d tests pointed at the o0d2 model, unchanged otherwise. Train script: import the o0d trainer unchanged with the o0d2 model.
+Marks (sealed before running): Pown0d2.1 all 8 unit tests pass; Pown0d2.2 audit still exactly 32,850,051; Pown0d2.3 kill test identical; Pown0d2.4 fuzz 10,000 random-logit draws: 0 non-whole-word spans decoded; Pown0d2.5 the o0d smoke (toy frames, <= 10 min) loss still falls.
+PUSH: artifacts/claude-own-o0d2-20260923 scripts/claude_own_o0d2_model.py scripts/claude_own_o0d2_test.py artifacts/fable-predictions-ledger.md

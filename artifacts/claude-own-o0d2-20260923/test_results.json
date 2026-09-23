@@ -1,0 +1,134 @@
+{
+ "units": [
+  {
+   "name": "bpe-trains",
+   "pass": true,
+   "detail": "vocab=474"
+  },
+  {
+   "name": "bpe-roundtrip",
+   "pass": true,
+   "detail": "5 sentences"
+  },
+  {
+   "name": "word-ids",
+   "pass": true,
+   "detail": "ids=[387, 83, 116, 105, 108] wids=[0, 1, 1, 1, 1]"
+  },
+  {
+   "name": "mask-blocks-cuts",
+   "pass": true,
+   "detail": "T=7 wids=[0, 0, 0, 0, 0, 0, 0]"
+  },
+  {
+   "name": "decode-whole-word-only",
+   "pass": true,
+   "detail": "bad=0/2000"
+  },
+  {
+   "name": "hungarian-optimal",
+   "pass": true,
+   "detail": "maxgap=0.00e+00"
+  },
+  {
+   "name": "forward-shapes",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "relation-table-153",
+   "pass": true,
+   "detail": "n=153"
+  },
+  {
+   "name": "audit-within-0.5pct",
+   "pass": true,
+   "detail": "total=32850051 diff=0.000000"
+  },
+  {
+   "name": "kill-A-runs",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "kill-landed",
+   "pass": true,
+   "detail": "ckpt@30 present=True"
+  },
+  {
+   "name": "kill-resume-runs",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "kill-identical",
+   "pass": true,
+   "detail": "A=054dbec63839 B=054dbec63839"
+  },
+  {
+   "name": "fuzz-10000-zero",
+   "pass": true,
+   "detail": "bad=0/10000(+owners)"
+  },
+  {
+   "name": "smoke-runs",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "smoke-loss-falls",
+   "pass": true,
+   "detail": "early=1.3347 late=0.3635 steps=120 t=2s"
+  },
+  {
+   "name": "mlm-pilot-runs",
+   "pass": true,
+   "detail": ""
+  }
+ ],
+ "ok": true,
+ "audit": {
+  "parts": {
+   "embeddings": 4194304,
+   "encoder": 25174528,
+   "slot_layer": 1052672,
+   "pointers": 1572864,
+   "question_pointers": 524288,
+   "classifiers": 329859,
+   "special_tokens": 1536,
+   "total": 32850051
+  },
+  "plan": {
+   "embeddings": 4194304,
+   "encoder": 25174528,
+   "slot_layer": 1052672,
+   "pointers": 1572864,
+   "question_pointers": 524288,
+   "classifiers": 329859,
+   "special_tokens": 1536,
+   "total": 32850051
+  },
+  "table": [
+   "part | audited | plan | match",
+   "embeddings | 4194304 | 4194304 | True",
+   "encoder | 25174528 | 25174528 | True",
+   "slot_layer | 1052672 | 1052672 | True",
+   "pointers | 1572864 | 1572864 | True",
+   "question_pointers | 524288 | 524288 | True",
+   "classifiers | 329859 | 329859 | True",
+   "special_tokens | 1536 | 1536 | True",
+   "total | 32850051 | 32850051 | True"
+  ]
+ },
+ "kill_hashes": {
+  "A": "054dbec63839ad5d4dbe9dcd4da88d55a4e2dc4a1f3d4df815ab439269d88cfe",
+  "B": "054dbec63839ad5d4dbe9dcd4da88d55a4e2dc4a1f3d4df815ab439269d88cfe"
+ },
+ "smoke": {
+  "early": 1.3347298552592595,
+  "late": 0.3635036920507749,
+  "steps": 120,
+  "seconds": 2.0342912673950195
+ },
+ "seconds": 10.280476093292236
+}
