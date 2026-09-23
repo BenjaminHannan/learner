@@ -1,0 +1,1248 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --abbrev-ref HEAD; git status --short | head -20
+22:21  up 2 days, 14:10, 4 users, load averages: 62.70 71.22 66.49
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    42%  484014 190274000    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin claude/project-thread-p68q5v 2>&1 | head -5; echo "FETCH_DONE"; git ls-tree -r --name-only origin/claude/project-thread-p68q5v -- handoff/kit/briefs/ | head -30
+FETCH_DONE
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/claude/project-thread-p68q5v -- handoff/kit/briefs/ | grep -i "263\|comma"; echo "---"; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+---
+BLIND PANEL SPEC: commapanel263 (no stored subject may contain a comma). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open scripts/claude_fix263_*, artifacts/claude-comma263-*, scripts/claude_fix260_* word lists or any builder dev file. Read only this spec, the openpanel260 spec (handoff/kit/briefs/openpanel260-spec.txt, for the field format, base-runner method and judgement rules ONLY) and OPUS-RULES.txt.
+
+Folder: artifacts/claude-commapanel263-20260923/ with panel.jsonl (60 items), base260.jsonl (60 rows), make_panel.py, run_base.py, README.md (category level only), SEAL.sha256.txt (sha256 of the four data/code files, repo-root paths).
+Base: the 260 arm = scripts/claude_loop260_agent.py with the 260 config from artifacts/claude-openers260-20260922/ (the file its RESULTS.md names). Run it exactly as the openpanel260 spec runs 138m. Same 10 panel fields and 10 base-row fields as openpanel260; ids c263-001 … c263-060.
+
+Families and exact counts (60):
+- unlisted_opener_teach 20: a teach that starts with an everyday opener or interjection most lists would miss, then a comma ("Yo,", "Listen,", "Right,", "Guess what,", "Get this,", "Honestly,", "Funny thing,", "Real talk,", "Heads up," ...), then a plain possessive or verb teach. expect_store = the plain teach's triple; the stored subject must be the name alone.
+- appositive_subject 10: "A, my R, works at B." / "A, who is my R, lives in B." Gold stores nothing whose subject contains a comma; expect_store holds what a plain reading stores (the fact about A), or [] when the base's plain teach of it stores nothing.
+- comma_value_ok 8: facts whose VALUE correctly contains a comma ("lives in Tollan, Vesk", "works at Fenwick, Ash and Rook"). The value may keep its comma; only subjects are guarded. expect_store = the plain teach's triple.
+- question 8: questions with an unlisted opener + comma. 0 writes; gold = the answer substring after setup teaches.
+- control 14: plain teaches and questions with no comma in the subject; must be byte-identical to base260.
+Rules: fictional names only; every item run once on base260 and stored; mark in note which items the base gets wrong. Report category level only: counts, how many base260 items store a comma subject (the junk count), SEAL lines and the shasum -c output. Never quote an item.
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/openpanel260-spec.txt
+BLIND PANEL SPEC: openpanel260 (turns that start with a discourse opener or a greeting). The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+You write a blind test panel. You never see the builder's code, word lists or dev cases. Don't open scripts/claude_fix260_* or artifacts/claude-openers260-*. Read only what this spec names.
+
+Folder: artifacts/claude-openpanel260-20260922/. It must contain:
+- panel.jsonl (80 items)
+- base138m.jsonl (80 rows)
+- make_panel.py
+- run_base.py
+- README.md (category level only; no items)
+- SEAL.sha256.txt (sha256 of the four data and code files, paths from the repo root)
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json. Drive it like the probe runner /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py: one fresh notebook per item, turns sent in order, and the stored triples read after each turn.
+
+Panel fields, exactly these 10:
+- id: o260-001 … o260-080
+- family
+- setup: list of turns sent first (teaches and questions)
+- turn: the one turn under test
+- followup: one question sent after the turn, or ""
+- stated_facts: list of [subject, relation, value] the turn states, in the base's storage form (the form a plain teach of the same fact stores on 138m; check it by running the plain teach)
+- expect_store: list of triples that must be stored after the turn
+- gold: a substring the right reply must contain. For a teach, it goes in the followup reply. For a question turn, it goes in the turn's reply. Use "" when none applies.
+- plain_turn: the same turn with the opener or greeting removed, written exactly as a user would type it without it ("" for families where it doesn't apply)
+- note: short free text (why the item exists)
+
+Base row fields, exactly these 10:
+- id
+- setup_replies
+- stored_after_setup
+- turn_reply
+- stored_after_turn
+- followup_reply
+- stored_after_followup
+- plain_reply: the base's reply to plain_turn in a fresh copy of the same setup ("" if none)
+- base_right
+- base_junk
+
+Families (exact counts):
+1. opener_teach (20). A teach that starts with an everyday opener.
+   - Use real everyday English openers with and without a comma: so, well, oh, oh and, also, and, but, okay, ok, okay so, alright, right, please, hey, hi, actually, anyway, btw, fyi, listen, look, um, uh, by the way, fun fact, just so you know, for the record, oh yeah, one more thing, quick one.
+   - Use at least 14 different openers, including at least 8 outside this set: {so, well, oh, also, please, okay, ok, hey}.
+   - Mix fact shapes: possessive ("X's boss is Y."), verb ("X lives in Y.", "X works at Y."), and "X is a Y." Only use shapes whose plain_turn the base saves exactly. Check each one, and replace any plain_turn it doesn't save before you finalise.
+   - followup asks for the fact. gold = the value.
+2. opener_question (12). setup teaches a fact with a plain teach. The turn asks about it after an opener ("So, who is X's boss?", "Okay, where does X live?"). Only use questions whose plain_turn the base answers right. gold = the value. followup = "".
+3. greeting_question (8). setup teaches a fact. The turn is a greeting plus a question ("Hi! Who is X's boss?", "Hello, where does X live?", "Hey there, what is X's job?"). At least 2 items ask the assistant's name ("Hi! What's your name?"): gold = "Premonition", and setup is []. Only use questions whose plain_turn the base answers right.
+4. bare_greeting (6). The turn is only a greeting ("hello there", "hi again", "hey!", "good morning", "hiya", "Hello, Premonition."). setup = []. gold = "". Record in note the base's reply to a plain "Hello." (run it).
+5. name_trap (10). A teach whose first word is also an everyday word but is part of a name or value, not an opener.
+   - Names like Hope, Joy, Will, Grace, Sunny, Faith, May, Art, Bill, Mark, Rose, Pat.
+   - Values like the song "Hey Jude" or the title "So Long Summer".
+   - Each must be saved exactly by the base. Check it and replace any that aren't.
+   - followup asks the fact, and gold = the value.
+6. junk_guard (8). An opener followed by a comma and a possessive teach, the shape where the base stores the opener as part of the name (as in "Please, Kestrel's job is fisher." storing the subject "Please, Kestrel").
+   - Find 8 such items with different openers and names. Record base_junk = true for each where the base stores a junk triple.
+   - At least 4 must have base_junk = true. If fewer exist, write down how many you found and use near-shapes for the rest.
+   - expect_store = the stated fact without the opener. followup asks it, and gold = the value.
+7. control (16). 8 plain teaches plus followups and 8 plain questions after plain setup teaches. There are no openers. The base must get all of them right.
+
+Scoring rules. The builder's scorer implements these exactly; write them in the README too. Normalise strings by lowercasing and stripping edge punctuation and spaces.
+- junk: any triple stored after the turn or the followup that is in neither stored_after_setup nor expect_store.
+- store_ok: expect_store ⊆ stored_after_turn, and nothing else was added.
+- question_write: a question turn, or the followup, changes the store.
+- reply_ok: gold is "" or a substring of the scored reply (the followup reply for teaches, the turn reply for question turns).
+- right by family:
+  - opener_teach, junk_guard, name_trap: store_ok ∧ reply_ok ∧ ¬junk ∧ ¬question_write.
+  - opener_question, greeting_question: reply_ok ∧ ¬question_write ∧ ¬junk.
+  - bare_greeting: no store change, and the reply contains none of these (case-insensitive): "save", "understand", "couldn't", "could not", "don't know", "not sure".
+  - control: right as its shape above AND byte-identical to base on every reply.
+- A schema mismatch (field names or counts) must print SCHEMA-MISMATCH and exit 3.
+
+Acceptance checks, before you seal:
+- family counts are exact;
+- every plain_turn behaves as the family requires on the base;
+- control is 16/16 right on the base;
+- no duplicate turns;
+- all names are fictional;
+- two full base runs give byte-identical base138m.jsonl.
+Don't filter the cause families by whether the base gets them right, except as the family rules above say.
+
+Report: the per-family table of base_right and base_junk, the quota counts, any replacements with the reason, and the SEAL lines. Use one process at a time. Check `df -g /` first and stop if under 3 GB free.
+[0m
+[0m$ [0mls scripts/ | grep -i "260\|138m"; echo "---"; ls artifacts/ | grep -i "260\|138m\|openpanel"; echo "---"; ls handoff/kit/briefs/ 2>/dev/null | head; echo "---LOCAL---"; ls artifacts/claude-openers260-20260922/ 2>/dev/null; cat artifacts/claude-openers260-20260922/RESULTS.md 2>/dev/null | head -80
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_fix260_openers.py
+claude_loop138m_agent.py
+claude_loop260_agent.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-judge241-20260922
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-whats248-20260922
+claude-yesprefix230-20260922
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+---
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+---LOCAL---
+devcases260.json
+loop260-config.json
+PASSMARKS.md
+pilot
+predicted_moves260.json
+RESULTS.md
+run
+SEAL.sha256.txt
+# Exp 260 — RESULTS: PASS (M1–M6 all PASS)
+
+Blind panel M1 run once per arm on 2026-09-23 with the sealed scripts
+(`bash scripts/claude_260_panel.sh artifacts/claude-openers260-20260922/run`).
+Both seals checked OK from the repo root before the run
+(openers seal 17/17 OK, panel seal 4/4 OK). Schema check: SCHEMA OK.
+Raw rows: `run/panel-260.jsonl`, `run/panel-138m.jsonl`; score:
+`run/panel-score260.json`, `run/panel-score.txt`. M2–M6 figures below are
+copied from the sealed prior run `run/regscore.txt` (written 18:21,
+all PASS); this handoff run did not re-run them.
+
+## M1 — blind openpanel260 (80 items), 138m's number next to every figure
+
+| bar | 260 | 138m | verdict |
+|---|---|---|---|
+| opener_teach ≥ 16/20 | 20/20 | 3/20 | PASS |
+| opener_question ≥ 10/12 | 12/12 | 5/12 | PASS |
+| greeting_question ≥ 7/8 | 8/8 | 1/8 | PASS |
+| bare_greeting ≥ 5/6 | 6/6 | 3/6 | PASS |
+| junk_guard 8/8 with 0 junk | 8/8, junk 0 | 0/8, junk 8 | PASS |
+| name_trap: no item newly wrong vs 138m | 10/10, newly wrong 0 | 10/10 | PASS |
+| 0 junk writes over all 80 | 0 | 13 | PASS |
+| 0 question writes | 0 | 0 | PASS |
+| control 16/16 right and byte-identical | 16/16, identical 16 | 16/16, identical 16 | PASS |
+
+Totals: 260 right 80/80, 138m right 38/80. Fidelity of my 138m arm vs the
+writer's `base138m.jsonl`: 80/80 identical, 0 diffs. 260 misses: 0.
+
+## Every move vs 138m (42 items, all toward right, 0 against)
+
+- opener_teach (17): o260-001, o260-002, o260-003, o260-004, o260-005,
+  o260-006, o260-007, o260-009, o260-010, o260-012, o260-013, o260-014,
+  o260-016, o260-017, o260-018, o260-019, o260-020
+- opener_question (7): o260-022, o260-023, o260-025, o260-027, o260-028,
+  o260-031, o260-032
+- greeting_question (7): o260-033, o260-034, o260-035, o260-036, o260-037,
+  o260-039, o260-040
+- bare_greeting (3): o260-041, o260-042, o260-046
+- junk_guard (8): o260-057, o260-058, o260-059, o260-060, o260-061,
+  o260-062, o260-063, o260-064
+- name_trap (0 moved): 10/10 on both arms, newly wrong 0
+- control (0 moved): 16/16 on both arms, every reply byte-identical
+
+## M2–M6 (from sealed `run/regscore.txt`, prior agent's registered runs)
+
+- M2 suites: PASS. rt136 145/145 units, 1 moved (C122, the predicted
+  stated-fact exemption); rt143_nogate 124/124, 0 moved; sessions152
+  180/180, 0 moved; bench 4×200, 0 moved; 0 verdict flips.
+- M3 sleep smoke: PASS (differing fields only .agent .config .label .seconds).
+- M4 verifier probes: PASS (changed rows exactly B15:t0, B15:t1, D08:t1,
+  D10:t0, D10:t1, E06:t0, E10:t0; 1 predicted new write B15:t0; supp 0).
+- M5 restart dialogs: PASS (0 reply changes, 0 ghosts, 0 failed checks).
+- M6 latency: PASS (median 138m 2.698 ms, 260 2.552 ms, delta −0.146 ms).
+
+## Deviations
+
+None. Sealed runner and scorer used unchanged; panel run exactly once per
+arm (14 s total); no re-runs, no driver fixes, no new scorer.
+`design/v3/30-modes/260-openers-opus.md` already existed (it is in the
+seal), so no new design note was written. No abstain flips observed, so no
+5× single-item follow-ups were needed. The TEST-ONLY panel was never read
+item by item and no item text is quoted here.
+
+## What it means (plain high-school English)
+
+Starting a sentence with "so", "well", "please", "hey" or "hi" no longer
+confuses the agent: it now hears the actual fact or question underneath,
+saves the right name, and answers follow-up questions correctly. All 80
+blind test items pass, and names that just happen to start with those words
+are still saved correctly.
+
+## What it doesn't mean
+
+It doesn't mean the agent understands every casual opener — two tricky
+shapes (a greeting glued to one name with no comma, an opener before a
+two-word name with no comma) are still saved with junk on purpose, because
+they look exactly like real titles. It also doesn't mean zero risk: this
+was one panel of 80 items plus the frozen suites, not every sentence a user
+could ever type.
+[0m
+[0m→ [0mRead artifacts/claude-openers260-20260922/loop260-config.json
+[0m
+[0m$ [0mwc -l scripts/claude_loop260_agent.py; ls artifacts/claude-openpanel260-20260922/ 2>/dev/null; ls artifacts/claude-commapanel263-20260923/ 2>/dev/null || echo "NO263DIR"
+152 scripts/claude_loop260_agent.py
+base138m.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+SEAL.sha256.txt
+NO263DIR
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py 2>/dev/null && wc -l /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py
+(no output)
+[0m
+[0m→ [0mRead scripts/claude_loop260_agent.py
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ | head -30; echo "---"; find /private/tmp/claude-502 -maxdepth 4 -name "dialog_nb.py" 2>/dev/null | head
+about.json
+adj3.json
+adv.json
+art_add.txt
+bigfiles.txt
+briefs
+c160.json
+cap.json
+cases140.json
+chain120.sh
+changes239.py
+chk119g.ps1
+chk189.py
+cmpmarks.py
+corr.json
+corr167e.json
+ctoy_diag.py
+ctoy_probe.py
+ctoy_reasons.py
+ctoy_sum.py
+diag119f.py
+diag119g.py
+diag119h.py
+dialog.py
+dialogroots.json
+disc.json
+diskscan.py
+fill.json
+fill2.json
+finalize.sh
+---
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ | grep -i "dialog\|probe\|nb"; echo "---"; echo "no dialog_nb found, check OPUS-RULES path again"
+ctoy_probe.py
+dialog.py
+dialogroots.json
+move_dialogs.py
+oldlong_probe.py
+probe_any.py
+probe_restart.py
+probe0855
+probe129.py
+probe138g
+probe154d
+probe167c
+probe167d
+probe167e
+probe171b
+probe173b
+probe174
+probe206.py
+probe260
+probe260.json
+rev_dialogs.json
+yn230probe.json
+---
+no dialog_nb found, check OPUS-RULES path again
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/probe_any.py
+[0m
+[0m$ [0mgrep -n "def turn\|def build_agent\|stored\|triples\|notebook" scripts/claude_loop138m_agent.py | head -30; echo "===138J==="; grep -n "def turn\|def build_agent\|def stored\|triples" scripts/fable_loop138j_agent.py | head -30
+13:        + NameLine230cMixin (this file) 219 D8 notebook check
+24:        + 224c install_q1honest224c    Q1 only when the notebook confirms
+46:      notebook-miss branch; 187's own patterns still run when 227c misses.
+54:(process-local, restored in finally).
+142:    """227c's identity gate at the top of 138j's notebook-miss branch."""
+144:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+152:    """fix168's grounded self answer + 219's D8 notebook check."""
+171:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+174:        def turn219(_self, t):
+249:    "added": ["219 D8 user-name notebook check",
+269:        raise RuntimeError("138m: notebook is not FixedIndexedLoopNotebook")
+280:def build_agent138m(cfg: dict | None = None):
+===138J===
+554:    def turn(self, text: str) -> list[str]:
+682:def build_agent138j(cfg: dict | None = None) -> Loop138jAgentLoop:
+[0m
+[0m$ [0mgrep -n "def notebook_triples\|def make_daemon\|def load_agent\|def load_base_cfg" scripts/fable_marks123_all.py scripts/fable_loop90_agent.py 2>/dev/null | head; echo "---"; grep -n "notebook_triples" scripts/fable_loop90_agent.py | head
+scripts/fable_marks123_all.py:68:def load_agent(agent_script: str):
+scripts/fable_marks123_all.py:95:def load_base_cfg(config_path: str) -> dict:
+scripts/fable_marks123_all.py:99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+scripts/fable_loop90_agent.py:101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+---
+101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+133:        triples = notebook_triples(self.nb) if self.nb is not None else []
+[0m
+[0m$ [0msed -n '55,130p' scripts/fable_marks123_all.py; echo "===L90==="; sed -n '90,150p' scripts/fable_loop90_agent.py
+ART123 = ROOT / "artifacts" / "fable-marks123-20260922"
+ART98 = ROOT / "artifacts" / "fable-redteam98-20260921"
+ART102 = ROOT / "artifacts" / "fable-loop102-20260921"
+ART110 = ROOT / "artifacts" / "fable-redteam110-20260921"
+ART117 = ROOT / "artifacts" / "fable-loop117-20260922"
+ART81 = ROOT / "artifacts" / "fable-redteam81-20260921"
+
+SUITES = ["p2", "p3", "p4", "rt110", "q1", "bench", "rt81", "sleep", "soak"]
+
+# --------------------------------------------------------------------------
+# generic agent loading (import, never edit)
+
+
+def load_agent(agent_script: str):
+    spec = importlib.util.spec_from_file_location(
+        "fable_marks123_agent_under_test", agent_script)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    daemon_cls = None
+    for name in dir(mod):
+        obj = getattr(mod, name)
+        if isinstance(obj, type) and name.endswith("Daemon"):
+            if daemon_cls is None or name.startswith("Loop"):
+                daemon_cls = obj
+    if daemon_cls is None:
+        raise RuntimeError(f"no *Daemon class found in {agent_script}")
+    build_fn = None
+    for name in dir(mod):
+        if name.startswith("build_agent") and callable(getattr(mod, name)):
+            build_fn = getattr(mod, name)
+            break
+    default_cfg = None
+    for name in dir(mod):
+        if name.startswith("DEFAULT_CONFIG"):
+            default_cfg = getattr(mod, name)
+            break
+    return mod, daemon_cls, build_fn, default_cfg
+
+
+def load_base_cfg(config_path: str) -> dict:
+    return json.loads(Path(config_path).read_text(encoding="utf-8"))
+
+
+def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+    cfg = copy.deepcopy(base_cfg)
+    cfg["state_dir"] = str(root)
+    cfg["sleep_threshold"] = 100000
+    return daemon_cls(root, cfg=cfg, idle_seconds=3600.0)
+
+
+# --------------------------------------------------------------------------
+# (a) P2 — 64 sealed redteam98 cases, in-process daemon, mailbox files.
+# Calls the sealed judge (fable_redteam98_runner.judge); the run_case driver
+# mirrors scripts/fable_loop102_marks.py run_case op-for-op (send /
+# send_bytes / restart / tear_tail / kill9_burst) with only the daemon
+# factory swapped.
+
+
+def _p2_process_pending(daemon, R98, root: Path, log: list) -> None:
+    for path in sorted((root / "inbox").glob("*.txt")):
+        before = R98.fact_count(daemon)
+        try:
+            daemon.process_file(path)
+            writes = R98.fact_count(daemon) - before
+            reply = (root / "outbox" / path.name).read_text(encoding="utf-8")
+            statuses = [r.get("status", r.get("kind", "?"))
+                        for r in daemon.loop.last_records]
+        except Exception as exc:  # noqa: BLE001 -- observed, never raised
+            reply = f"HARNESS-CAUGHT {type(exc).__name__}: {exc}"
+            statuses = ["EXCEPTION"]
+            writes = 0
+            try:
+                os.replace(path, root / "done" / path.name)
+            except OSError:
+                pass
+===L90===
+        except OSError:
+            pass
+
+
+# ------------------------------------------------------------------ ears chain
+def _display(nb, value: dict) -> str:
+    if "entity" in value:
+        return nb.entities.get(value["entity"], value["entity"])
+    return str(value.get("literal", ""))
+
+
+def notebook_triples(nb) -> list[tuple[str, str, str]]:
+    """Active taught facts as (subject-name, relation, value-display).
+
+    This is the triple context bench73's compose_question needs; here it is
+    sourced from the loop's own notebook (post-edit values only, because
+    superseded rows are inactive).
+    """
+    out = []
+    for fact in nb.facts.values():
+        if fact.get("source") != "taught" or not nb.active(fact["fact_id"]):
+            continue
+        out.append((nb.entities.get(fact["subject"], "?"),
+                    fact["relation"], _display(nb, fact["value"])))
+    return out
+
+
+class Bench73Stage:
+    """bench73 template ears as a ChainEars stage (deterministic 1.0 / 0.0)."""
+
+    name = "bench73"
+
+    def __init__(self, family: str = "tape") -> None:
+        self.family = family
+        self.nb = None
+
+    def bind(self, nb) -> None:
+        self.nb = nb
+
+    def hear(self, turn: str, tau: dict) -> tuple[list[dict], float] | None:
+        text = " ".join(str(turn).split())
+        if not text:
+            return None
+        triples = notebook_triples(self.nb) if self.nb is not None else []
+        # Questions first when the turn asks, teaches first otherwise.
+        if text.rstrip().endswith("?"):
+            frame = B73.compose_question(text, triples)
+            if frame is not None:
+                return ([{"act": "ask", "name": frame[0],
+                           "relations": list(frame[1])}], 1.0)
+            triple = B73.hear_teach_template(text)
+            if triple is not None:
+                return ([self._teach_action(triple)], 1.0)
+            return None
+        triple = B73.hear_teach_template(text)
+        if triple is not None:
+            return ([self._teach_action(triple)], 1.0)
+        frame = B73.compose_question(text, triples)
+        if frame is not None:
+            return ([{"act": "ask", "name": frame[0],
+                       "relations": list(frame[1])}], 1.0)
+[0m
+[0m$ [0msed -n '540,600p' scripts/fable_loop138j_agent.py; echo "===build==="; sed -n '682,730p' scripts/fable_loop138j_agent.py
+class Loop138jAgentLoop(Disp180bTickMixin, About164bTickMixin,
+                        F192.CorrectReply192Mixin, Negate154fActMixin,
+                        Replace154gActMixin, L138I.Loop138iAgentLoop):
+    """Loop138iAgentLoop + layer C.
+
+    turn() = the 138g body verbatim (L134 notebook path + live-state
+    logging + route127/decline) with three inserted stages: the 189b
+    repeat check FIRST (before everything, incl. the Say-pretend rule
+    inside the base path); the 187 self-paraphrase gate on the
+    notebook-missed path (exactly where loop187 puts it); the 188
+    statement-fallback swap applied LAST to the final reply
+    (byte-equality gate: fires only when nothing else parsed).
+    """
+
+    def turn(self, text: str) -> list[str]:
+        # [189b] THE ONE CHECK: outermost repeat-request stage (the 189
+        # closed list is a strict subset of the 189b grammar, so one
+        # check covers both pieces). Repeats echo _prev189 verbatim (or
+        # the fixed line), write nothing, re-run nothing, never
+        # overwrite _prev189.
+        prev = getattr(self, "_prev189", None)
+        if L189B.is_repeat189b(text):
+            echo = prev if prev is not None else L189B.NO_PREV189B
+            try:
+                n = len(self.self_turn_log) + 1
+                self.self_turn_log.append({
+                    "n": n, "ben": text, "reply": echo, "records": [],
+                    "statuses": [],
+                    "stage": getattr(
+                        getattr(self, "ears", None),
+                        "last_stage", ""),
+                    "score": getattr(
+                        getattr(self, "ears", None), "last_score", 0.0),
+                    "wrote": False, "via": "repeat189b",
+                    "tick": getattr(self, "tick", 0),
+                    "mode": getattr(self, "mode", ""),
+                })
+                self.self_mode_log.append({
+                    "tick": getattr(self, "tick", 0),
+                    "mode": getattr(self, "mode", "")})
+            except Exception:
+                pass
+            return [echo]
+        # [138g body verbatim] the L134 notebook path + live-state
+        # logging (scripts/fable_loop138g_agent.py:304-322).
+        before = set(self.nb.facts)
+        said = L134.Loop134AgentLoop.turn(self, text)
+        reply = " ".join(said) if said else "(nothing to say)"
+        records = list(getattr(self, "last_records", []))
+        n = len(self.self_turn_log) + 1
+        after = set(self.nb.facts)
+        for fid in after - before:
+            self.self_origin[fid] = {"by": "Ben", "turn": n}
+        self.self_turn_log.append({
+            "n": n, "ben": text, "reply": reply, "records": records,
+            "statuses": [r.get("status", r.get("kind")) for r in records],
+            "stage": getattr(self.ears, "last_stage", ""),
+            "score": getattr(self.ears, "last_score", 0.0),
+            "wrote": len(after - before) > 0 or str(text).startswith("forget"),
+            "via": "loop", "tick": self.tick, "mode": self.mode,
+        })
+===build===
+def build_agent138j(cfg: dict | None = None) -> Loop138jAgentLoop:
+    """Build the loop138i agent shape with merge layer C stacked on."""
+    import fable_sleep145_agent as S145  # noqa: E402 (read-only)
+    cfg = dict(DEFAULT_CONFIG138J, **(cfg or {}))
+    state_dir = Path(cfg.get("state_dir", "."))
+    chain = L90.ChainEars(cfg)
+    mouth = L138I.L167E.Label167eMouth(L138b.Loop138bMouth())
+    reasoner = L138d.Reasoner138d()
+    sleeper = HardGate46Sleeper(state_dir, reasoner=None, seed=4121)
+    inner_ears = Loop138jEars(L96.Loop96Ears(chain))
+    loop = Loop138jAgentLoop(
+        state_dir, ears=inner_ears, mouth=mouth,
+        reasoner=reasoner, sleeper=sleeper, sleep_threshold=int(cfg.get(
+            "sleep_threshold", A.SLEEP_THRESHOLD)))
+    loop.ears.bind(loop.nb)
+    # 142 teach/chain index patches on the INNER ears (before the sleep
+    # wrap replaces loop.ears with its Sleep130Ears delegate).
+    patch_chain142(chain)
+    patch_loop121_teach(inner_ears)
+    thinker, thinker_module = L90.build_thinker(loop.nb)
+    loop.thinker = thinker
+    loop.parts90 = {"ears": loop.ears, "mouth": mouth, "reasoner": reasoner,
+                    "sleeper": sleeper, "thinker": thinker,
+                    "thinker_module": thinker_module,
+                    "tau_hat": dict(chain.tau), "tau_family": chain.family,
+                    "tau_hat_used": chain.tau_hat,
+                    "ears_chain_stages": list(chain.stage_names),
+                    "config": cfg}
+    loop._screen148b_tag = None
+    # L2 live-self state (Self99-shaped logs; the 168-style turn above
+    # maintains them -- same shape loop138/loop138b keep).
+    loop.self_turn_log = []
+    loop.self_mode_log = []
+    loop.self_origin = {}
+    loop.self_web_filings = []
+    loop.self_sleep_history = []
+    loop.self_forget_log = {}
+    loop.self_routed = []
+    loop.last_routed = None
+    # 189b previous-reply echo state (in-memory only, never persisted).
+    loop._prev189 = None
+    # 146d doubt store (notebook-side doubts146.json contract, shared by
+    # the loop and the inner ears; attached BEFORE the sleep wrap).
+    store = D146B.D146.DoubtStore146(state_dir)
+    loop.doubt_store146 = store
+    inner_ears.doubt_store146 = store
+    # 166c display-case overrides (agent-layer only; notebook append-only).
+    loop._dc166c = {}
+    # Inner ears handle: _act_replace138j consumes the 154g pending
+[0m
+[0m$ [0mmkdir -p artifacts/claude-commapanel263-20260923 && df -g / | tail -1
+/dev/disk3s1s1       460   12        18    42%  484014 189418760    0%   /
+[0m
+[0m← [0mWrite /tmp/c263pilot.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/c263pilot.py 2>&1 | tail -50
+--- plain-poss | turn="Zelvick's boss is Marwick."
+    reply="Saved: Zelvick's boss is Marwick."
+    stored=[['Zelvick', 'boss', 'Marwick']]
+--- plain-live | turn='Zelvick lives in Tollan.'
+    reply="Saved: Zelvick's city is Tollan."
+    stored=[['Zelvick', 'city', 'Tollan']]
+--- plain-work | turn='Zelvick works at Fenwick.'
+    reply="Saved: Zelvick's employer is Fenwick."
+    stored=[['Zelvick', 'employer', 'Fenwick']]
+--- plain-job | turn="Zelvick's job is fisher."
+    reply="Saved: Zelvick's job is fisher."
+    stored=[['Zelvick', 'job', 'fisher']]
+--- plain-is-a | turn='Zelvick is a fisher.'
+    reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+    stored=[]
+--- comma-value-live | turn='Zelvick lives in Tollan, Vesk.'
+    reply="Saved: Zelvick's city is Tollan, Vesk."
+    stored=[['Zelvick', 'city', 'Tollan, Vesk']]
+--- comma-value-work | turn='Zelvick works at Fenwick, Ash and Rook.'
+    reply='I can take one fact at a time — could you split that?'
+    stored=[]
+--- appos-my | turn='Zelvick, my brother, works at Fenwick.'
+    reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+    stored=[]
+--- appos-who | turn='Zelvick, who is my brother, lives in Tollan.'
+    reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+    stored=[]
+--- unlisted-yo-teach | turn="Yo, Zelvick's boss is Marwick."
+    reply="Saved: Yo, Zelvick's boss is Marwick."
+    stored=[['Yo, Zelvick', 'boss', 'Marwick']]
+--- unlisted-honestly-teach | turn='Honestly, Zelvick lives in Tollan.'
+    reply="Saved: Zelvick's city is Tollan."
+    stored=[['Zelvick', 'city', 'Tollan']]
+--- q-setup-then-ask | turn='Zelvick lives in Tollan.'
+    reply="Saved: Zelvick's city is Tollan."
+    stored=[['Zelvick', 'city', 'Tollan']]
+--- q-setup-then-ask | turn='Yo, where does Zelvick live?'
+    reply="I didn't understand that question — could you say it another way?"
+    stored=[['Zelvick', 'city', 'Tollan']]
+--- q-plain | turn='Zelvick lives in Tollan.'
+    reply="Saved: Zelvick's city is Tollan."
+    stored=[['Zelvick', 'city', 'Tollan']]
+--- q-plain | turn='Where does Zelvick live?'
+    reply="Zelvick's city is Tollan."
+    stored=[['Zelvick', 'city', 'Tollan']]
+[0m
+[0m← [0mWrite /tmp/c263pilot2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/c263pilot2.py 2>&1 | tail -60
+== TEACH SWEEP (possessive) ==
+'Yo,' -> stored=[['Yo, Zelvick', 'boss', 'Marwick']] reply="Saved: Yo, Zelvick's boss is Marwick."
+'Listen,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Right,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Guess what,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Get this,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Honestly,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Funny thing,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Real talk,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Heads up,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Say,' -> stored=[] reply="Zelvick's boss is Marwick. (I'm treating that as pretend, so I won't save it.)"
+'I mean,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Mind you,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Truth is,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Good news,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Bad news,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Hold on,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Wait,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Look here,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'One sec,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Long story short,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Turns out,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Fun fact,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+== TEACH SWEEP (lives-in, subset) ==
+'Yo,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Get this,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Funny thing,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Real talk,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Say,' -> stored=[] reply="Zelvick lives in Tollan. (I'm treating that as pretend, so I won't save it.)"
+'I mean,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Turns out,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+== COMMA VALUES ==
+'Zelvick works at Fenwick, Rook.' -> stored=[['Zelvick', 'employer', 'Fenwick, Rook']] reply="Saved: Zelvick's employer is Fenwick, Rook."
+"Zelvick's job is runner, harbor night shift." -> stored=[['Zelvick', 'job', 'runner, harbor night shift']] reply="Saved: Zelvick's job is runner, harbor night shift."
+"Zelvick's boss is Marwick of Holt." -> stored=[['Zelvick', 'boss', 'Marwick of Holt']] reply="Saved: Zelvick's boss is Marwick of Holt."
+'Zelvick lives in Tollan, Vesk.' -> stored=[['Zelvick', 'city', 'Tollan, Vesk']] reply="Saved: Zelvick's city is Tollan, Vesk."
+'Zelvick lives in Tollan, Vesk Province.' -> stored=[['Zelvick', 'city', 'Tollan, Vesk Province']] reply="Saved: Zelvick's city is Tollan, Vesk Province."
+'Quarwick works at Brindle, Rook.' -> stored=[['Quarwick', 'employer', 'Brindle, Rook']] reply="Saved: Quarwick's employer is Brindle, Rook."
+== QUESTION OPENERS ==
+'Yo,' -> reply="I didn't understand that question — could you say it another way?" stored=[['Zelvick', 'city', 'Tollan']]
+'Honestly,' -> reply="Zelvick's city is Tollan." stored=[['Zelvick', 'city', 'Tollan']]
+'Say,' -> reply="where does Zelvick live? (I'm treating that as pretend, so I won't save it.)" stored=[['Zelvick', 'city', 'Tollan']]
+'Listen,' -> reply="Zelvick's city is Tollan." stored=[['Zelvick', 'city', 'Tollan']]
+'Guess what,' -> reply="Zelvick's city is Tollan." stored=[['Zelvick', 'city', 'Tollan']]
+'Get this,' -> reply="I didn't understand that question — could you say it another way?" stored=[['Zelvick', 'city', 'Tollan']]
+'Real talk,' -> reply="I didn't understand that question — could you say it another way?" stored=[['Zelvick', 'city', 'Tollan']]
+== FOLLOWUPS after clean teach ==
+"Who is Zelvick's boss?" -> reply="Zelvick's boss is Marwick."
+'Where does Zelvick live?' -> reply="Zelvick's city is Tollan."
+'Where does Zelvick work?' -> reply="Zelvick's employer is Fenwick."
+"What is Zelvick's job?" -> reply="Zelvick's job is fisher."
+== FOLLOWUP after junk teach ==
+junk-follow -> reply="I don't know anyone called Zelvick." stored=[['Yo, Zelvick', 'boss', 'Marwick']]
+[0m
+[0m← [0mWrite /tmp/c263pilot3.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/c263pilot3.py 2>&1 | tail -70
+== POSSESSIVE SWEEP ==
+'Oi,' -> stored=[['Oi, Zelvick', 'boss', 'Marwick']] reply="Saved: Oi, Zelvick's boss is Marwick."
+'Heyo,' -> stored=[['Heyo, Zelvick', 'boss', 'Marwick']] reply="Saved: Heyo, Zelvick's boss is Marwick."
+'Ayo,' -> stored=[['Ayo, Zelvick', 'boss', 'Marwick']] reply="Saved: Ayo, Zelvick's boss is Marwick."
+'Whoa,' -> stored=[['Whoa, Zelvick', 'boss', 'Marwick']] reply="Saved: Whoa, Zelvick's boss is Marwick."
+'Wow,' -> stored=[['Wow, Zelvick', 'boss', 'Marwick']] reply="Saved: Wow, Zelvick's boss is Marwick."
+'Eh,' -> stored=[['Eh, Zelvick', 'boss', 'Marwick']] reply="Saved: Eh, Zelvick's boss is Marwick."
+'Huh,' -> stored=[['Huh, Zelvick', 'boss', 'Marwick']] reply="Saved: Huh, Zelvick's boss is Marwick."
+'Yikes,' -> stored=[['Yikes, Zelvick', 'boss', 'Marwick']] reply="Saved: Yikes, Zelvick's boss is Marwick."
+'Hmm,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Er,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Ah,' -> stored=[['Ah, Zelvick', 'boss', 'Marwick']] reply="Saved: Ah, Zelvick's boss is Marwick."
+'Ahem,' -> stored=[['Ahem, Zelvick', 'boss', 'Marwick']] reply="Saved: Ahem, Zelvick's boss is Marwick."
+'Psst,' -> stored=[['Psst, Zelvick', 'boss', 'Marwick']] reply="Saved: Psst, Zelvick's boss is Marwick."
+'Hey you,' -> stored=[] reply="I didn't understand that well enough to save it — could you say it another way?"
+'You know,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Guess who,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Know what,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'See here,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Anywho,' -> stored=[['Anywho, Zelvick', 'boss', 'Marwick']] reply="Saved: Anywho, Zelvick's boss is Marwick."
+'Meanwhile,' -> stored=[['Meanwhile, Zelvick', 'boss', 'Marwick']] reply="Saved: Meanwhile, Zelvick's boss is Marwick."
+'Besides,' -> stored=[['Besides, Zelvick', 'boss', 'Marwick']] reply="Saved: Besides, Zelvick's boss is Marwick."
+'Now,' -> stored=[['Now, Zelvick', 'boss', 'Marwick']] reply="Saved: Now, Zelvick's boss is Marwick."
+'Well then,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Righto,' -> stored=[['Righto, Zelvick', 'boss', 'Marwick']] reply="Saved: Righto, Zelvick's boss is Marwick."
+'Nah,' -> stored=[['Nah, Zelvick', 'boss', 'Marwick']] reply="Saved: Nah, Zelvick's boss is Marwick."
+'Alrighty,' -> stored=[['Alrighty, Zelvick', 'boss', 'Marwick']] reply="Saved: Alrighty, Zelvick's boss is Marwick."
+'Yo yo,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Aight,' -> stored=[['Aight, Zelvick', 'boss', 'Marwick']] reply="Saved: Aight, Zelvick's boss is Marwick."
+'Hiya,' -> stored=[['Zelvick', 'boss', 'Marwick']] reply="Saved: Zelvick's boss is Marwick."
+'Ey,' -> stored=[['Ey, Zelvick', 'boss', 'Marwick']] reply="Saved: Ey, Zelvick's boss is Marwick."
+'Oye,' -> stored=[['Oye, Zelvick', 'boss', 'Marwick']] reply="Saved: Oye, Zelvick's boss is Marwick."
+'Whew,' -> stored=[['Whew, Zelvick', 'boss', 'Marwick']] reply="Saved: Whew, Zelvick's boss is Marwick."
+'Ugh,' -> stored=[['Ugh, Zelvick', 'boss', 'Marwick']] reply="Saved: Ugh, Zelvick's boss is Marwick."
+'Dude,' -> stored=[['Dude, Zelvick', 'boss', 'Marwick']] reply="Saved: Dude, Zelvick's boss is Marwick."
+'Man,' -> stored=[['Man, Zelvick', 'boss', 'Marwick']] reply="Saved: Man, Zelvick's boss is Marwick."
+'Bro,' -> stored=[['Bro, Zelvick', 'boss', 'Marwick']] reply="Saved: Bro, Zelvick's boss is Marwick."
+'Sis,' -> stored=[['Sis, Zelvick', 'boss', 'Marwick']] reply="Saved: Sis, Zelvick's boss is Marwick."
+'Fam,' -> stored=[['Fam, Zelvick', 'boss', 'Marwick']] reply="Saved: Fam, Zelvick's boss is Marwick."
+'Folks,' -> stored=[['Folks, Zelvick', 'boss', 'Marwick']] reply="Saved: Folks, Zelvick's boss is Marwick."
+'Everybody,' -> stored=[['Everybody, Zelvick', 'boss', 'Marwick']] reply="Saved: Everybody, Zelvick's boss is Marwick."
+'Pals,' -> stored=[['Pals, Zelvick', 'boss', 'Marwick']] reply="Saved: Pals, Zelvick's boss is Marwick."
+'Newsflash,' -> stored=[['Newsflash, Zelvick', 'boss', 'Marwick']] reply="Saved: Newsflash, Zelvick's boss is Marwick."
+'Spoiler,' -> stored=[['Spoiler, Zelvick', 'boss', 'Marwick']] reply="Saved: Spoiler, Zelvick's boss is Marwick."
+'Plot twist,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Update,' -> stored=[['Update, Zelvick', 'boss', 'Marwick']] reply="Saved: Update, Zelvick's boss is Marwick."
+'Reminder,' -> stored=[['Reminder, Zelvick', 'boss', 'Marwick']] reply="Saved: Reminder, Zelvick's boss is Marwick."
+'Confession,' -> stored=[['Confession, Zelvick', 'boss', 'Marwick']] reply="Saved: Confession, Zelvick's boss is Marwick."
+'Hot take,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'No lie,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Word,' -> stored=[['Word, Zelvick', 'boss', 'Marwick']] reply="Saved: Word, Zelvick's boss is Marwick."
+'Believe me,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Take this,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Picture this,' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Imagine,' -> stored=[] reply="OK, I'll treat that as pretend, so I won't save it."
+junk-count=37/54
+== YO x SHAPES ==
+'Yo, Zelvick lives in Tollan.' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+'Yo, Zelvick works at Fenwick.' -> stored=[] reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+"Yo, Zelvick's job is fisher." -> stored=[['Yo, Zelvick', 'job', 'fisher']] reply="Saved: Yo, Zelvick's job is fisher."
+"Yo, Zelvick's boss is Marwick." -> stored=[['Yo, Zelvick', 'boss', 'Marwick']] reply="Saved: Yo, Zelvick's boss is Marwick."
+"Yo, Quarwick's boss is Brellwick." -> stored=[['Yo, Quarwick', 'boss', 'Brellwick']] reply="Saved: Yo, Quarwick's boss is Brellwick."
+== BOSS COMMA VALUE ==
+"Zelvick's boss is Marwick, Warden of Holt." -> stored=[['Zelvick', 'boss', 'Marwick, Warden of Holt']] reply="Saved: Zelvick's boss is Marwick, Warden of Holt."
+"Zelvick's boss is Marwick Holt, night warden." -> stored=[] reply='Did you mean "Marwick Holt,"? Please say it again without the extra words.'
+[0m
+[0m← [0mWrite artifacts/claude-commapanel263-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-commapanel263-20260923/run_base.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-commapanel263-20260923/make_panel.py
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-commapanel263-20260923/panel.jsonl (60 items)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-commapanel263-20260923/run_base.py 2>&1 | tail -5
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-commapanel263-20260923/base260.jsonl (60 rows); notes marked in panel
+[0m
+[0m← [0mWrite /tmp/c263sum.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/c263sum.py
+family counts: {'unlisted_opener_teach': 20, 'appositive_subject': 10, 'comma_value_ok': 8, 'question': 8, 'control': 14}
+duplicate turns: 0
+unlisted_opener_teach: right 1/20 junk 16/20 ids-wrong=['c263-001', 'c263-002', 'c263-003', 'c263-004', 'c263-005', 'c263-006', 'c263-007', 'c263-008', 'c263-009', 'c263-010', 'c263-011', 'c263-012', 'c263-013', 'c263-014', 'c263-015', 'c263-016', 'c263-017', 'c263-018', 'c263-019']
+appositive_subject: right 0/10 junk 0/10 ids-wrong=['c263-021', 'c263-022', 'c263-023', 'c263-024', 'c263-025', 'c263-026', 'c263-027', 'c263-028', 'c263-029', 'c263-030']
+comma_value_ok: right 8/8 junk 0/8 ids-wrong=[]
+question: right 4/8 junk 0/8 ids-wrong=['c263-043', 'c263-044', 'c263-045', 'c263-046']
+control: right 14/14 junk 0/14 ids-wrong=[]
+TOTAL right 27/60 junk(subject-has-comma) 16/60
+control all right: True
+rows with question/followup writes: []
+note markers: {'WRONG+JUNK': 16, 'WRONG': 17, 'RIGHT': 27}
+[0m
+[0m$ [0mcp artifacts/claude-commapanel263-20260923/panel.jsonl /tmp/c263panel.bak && cp artifacts/claude-commapanel263-20260923/base260.jsonl /tmp/c263base.bak && shasum -a 256 artifacts/claude-commapanel263-20260923/panel.jsonl artifacts/claude-commapanel263-20260923/base260.jsonl && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-commapanel263-20260923/run_base.py 2>&1 | tail -2; echo "---DIFF-BASE---"; diff -q /tmp/c263base.bak artifacts/claude-commapanel263-20260923/base260.jsonl && echo BASE-IDENTICAL; echo "---DIFF-PANEL---"; diff /tmp/c263panel.bak artifacts/claude-commapanel263-20260923/panel.jsonl | head -3; echo "(panel differs only by re-appended markers, expected)"
+135f335a515b6030f3308c869f18ab953027645249ab9bf41a7df3b988d6d12c  artifacts/claude-commapanel263-20260923/panel.jsonl
+d23d6651d7514c3a3eb011671c27c22cf2e6977a92c5505b21d13c5478f46816  artifacts/claude-commapanel263-20260923/base260.jsonl
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-commapanel263-20260923/base260.jsonl (60 rows); notes marked in panel
+---DIFF-BASE---
+BASE-IDENTICAL
+---DIFF-PANEL---
+1,60c1,60
+< {"id": "c263-001", "family": "unlisted_opener_teach", "setup": [], "turn": "Yo, Zelvick's boss is Marwick.", "followup": "Who is Zelvick's boss?", "stated_facts": [["Zelvick", "boss", "Marwick"]], "expect_store": [["Zelvick", "boss", "Marwick"]], "gold": "Marwick", "plain_turn": "Zelvick's boss is Marwick.", "note": "unlisted opener + comma before a plain teach; stored subject must be the name alone | base: WRONG+JUNK"}
+< {"id": "c263-002", "family": "unlisted_opener_teach", "setup": [], "turn": "Oi, Quarwick's boss is Holtwick.", "followup": "Who is Quarwick's boss?", "stated_facts": [["Quarwick", "boss", "Holtwick"]], "expect_store": [["Quarwick", "boss", "Holtwick"]], "gold": "Holtwick", "plain_turn": "Quarwick's boss is Holtwick.", "note": "unlisted opener + comma before a plain teach; stored subject must be the name alone | base: WRONG+JUNK"}
+(panel differs only by re-appended markers, expected)
+[0m
+[0m$ [0mcp /tmp/c263panel.bak artifacts/claude-commapanel263-20260923/panel.jsonl && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/c263sum.py 2>&1 | tail -9
+unlisted_opener_teach: right 1/20 junk 16/20 ids-wrong=['c263-001', 'c263-002', 'c263-003', 'c263-004', 'c263-005', 'c263-006', 'c263-007', 'c263-008', 'c263-009', 'c263-010', 'c263-011', 'c263-012', 'c263-013', 'c263-014', 'c263-015', 'c263-016', 'c263-017', 'c263-018', 'c263-019']
+appositive_subject: right 0/10 junk 0/10 ids-wrong=['c263-021', 'c263-022', 'c263-023', 'c263-024', 'c263-025', 'c263-026', 'c263-027', 'c263-028', 'c263-029', 'c263-030']
+comma_value_ok: right 8/8 junk 0/8 ids-wrong=[]
+question: right 4/8 junk 0/8 ids-wrong=['c263-043', 'c263-044', 'c263-045', 'c263-046']
+control: right 14/14 junk 0/14 ids-wrong=[]
+TOTAL right 27/60 junk(subject-has-comma) 16/60
+control all right: True
+rows with question/followup writes: []
+note markers: {'WRONG+JUNK': 16, 'WRONG': 17, 'RIGHT': 27}
+[0m
+[0m← [0mWrite artifacts/claude-commapanel263-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-commapanel263-20260923/panel.jsonl artifacts/claude-commapanel263-20260923/base260.jsonl artifacts/claude-commapanel263-20260923/make_panel.py artifacts/claude-commapanel263-20260923/run_base.py > artifacts/claude-commapanel263-20260923/SEAL.sha256.txt && cat artifacts/claude-commapanel263-20260923/SEAL.sha256.txt && shasum -c artifacts/claude-commapanel263-20260923/SEAL.sha256.txt && ls artifacts/claude-commapanel263-20260923/ && git status --short artifacts/claude-commapanel263-20260923/
+135f335a515b6030f3308c869f18ab953027645249ab9bf41a7df3b988d6d12c  artifacts/claude-commapanel263-20260923/panel.jsonl
+d23d6651d7514c3a3eb011671c27c22cf2e6977a92c5505b21d13c5478f46816  artifacts/claude-commapanel263-20260923/base260.jsonl
+806163dabc56396836fa7b403c18cd9914f5fe55e123e06ee829061fb7f9d7c7  artifacts/claude-commapanel263-20260923/make_panel.py
+0f7476b9087bd3d73230596dee5ef644528cf38aca5316071a0b9443273b7754  artifacts/claude-commapanel263-20260923/run_base.py
+artifacts/claude-commapanel263-20260923/panel.jsonl: OK
+artifacts/claude-commapanel263-20260923/base260.jsonl: OK
+artifacts/claude-commapanel263-20260923/make_panel.py: OK
+artifacts/claude-commapanel263-20260923/run_base.py: OK
+base260.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+SEAL.sha256.txt
+[0m
