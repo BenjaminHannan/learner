@@ -309,3 +309,17 @@ Three cautions:
 - On a fresh dev set from a separate writer, experiment 267 had the yes/no checker let 63 of 65 wrong frames through (23 of 25 after the relative-gold artefact).
 
 **Reading (suggested, not shown).** The drop from about 87% held on the tuning set to about 3–8% held on fresh wording supports the "0.25 is fitted to the practice set" hypothesis. The two sets have different error mixes, so this is not a controlled comparison.
+
+## Corrections after reading the full papers (2026-09-23, research thread)
+
+The paper texts arrived through Ben's Mac. Every claim was checked against them in `reviews/paper-claims-check-2026-09-23.md`: 30 of 36 confirmed, 5 overstated, 1 wrong. I spot-checked items 2 and 6 and the CoVe finding myself. Corrections:
+
+1. **2606.20158.** The authors are Ron, Baudry and Monperrus (first author Ron), not "Monperrus et al.". The paper has no "66%" and no "bugs" figure. It reports the mean number of failing test inputs (out of 1,000,000) falling from 387.44 for single versions to 130.99 for three-version units.
+2. **2207.05221 (Kadavath et al.).** The same paper finds that "replacing an option with 'none of the above' reduces accuracy and calibration significantly". §5's rival-readings checker always includes "none", so this paper is partly *against* that design choice. A §5 build should test with and without the "none" option.
+3. **PriDe (2309.03882).** The per-item prior is a softmax of the *log* probabilities averaged over cyclic permutations (Eq. 7). The prior is then averaged over items and divided out (Eq. 8). It is defined for a fixed number of options, while §5 uses 2 to 6, so the prior has to be estimated separately for each option count.
+4. **Contrast sets (2004.02709).** They are written by hand by experts, for evaluation. The paper warns that rule-built perturbations rarely cross the decision boundary. §5's rule-built rivals are *inspired by* contrast sets; they are not contrast sets.
+5. **Stolcke et al. (cs/0006023).** Statement-shaped questions are confused with statements, but the next turn (for example a yes/no answer) also resolves them. Words alone separate questions from statements 85.9% of the time on balanced data. "Often marked only by intonation" overstates this.
+
+**Findings that back the plan (confirmed in full text):**
+- CoVe (2309.11495, Table 4): open verification questions beat yes/no questions, and the model tends to agree with yes/no facts whether they are right or wrong. This supports testing a question-answering checker.
+- 2306.00024: its separate "find what was missed" step raised recall (medications 0.928 → 0.946), but lowered precision (0.929 → 0.881).
