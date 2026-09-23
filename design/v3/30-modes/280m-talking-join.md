@@ -45,3 +45,10 @@ or any write on a question or small-talk turn.
 Columns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /
 control), gold. Mixed items are owned by 260 for M1 agreement unless the builder's PASSMARKS predicts a piece
 route for each one before the seal. Fictional names only.
+
+## Ordering with the reasoning line (added 2026-09-23 11:15 UTC, before any 280m result)
+291 is now the reasoning line's main base (73/96 on its blind panel, no losses against either parent), and 292 is
+queued on top of it. 280m stays on 260, as registered, because its bar is agreement with the 260-built piece arms.
+Order: 292 goes first on 291. Once 280m has a verdict and the main base is settled (291, or 292 if verified), the
+talking line registers a separate join that puts 280m's layers on the main base, with joinpanel280m re-run as a
+regression check. The reasoning thread was told this at 11:15 UTC. It does not wait on the talking line.
