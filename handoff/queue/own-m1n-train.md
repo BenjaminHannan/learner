@@ -14,7 +14,7 @@ GPU: rent
 
 RENTAL RULES (from the director's rerun spec, 18:40 UTC; the first own-m1 host went offline):
 - Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph); 4090 with the same filter if no 5090 is available.
-- Before renting: check that no other instance labelled own-m1 is live (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
+- Before renting: check that no other instance labelled exactly own-m1n is live (the v1 rerun, labelled own-m1b, may be running at the same time on purpose; that is NOT a duplicate) (`vastai show instances`). If one is running and healthy, exit and report DUPLICATE.
 - Label the instance own-m1n. Remaining credit is about $6; the ceiling is $4 / 3 h.
 - Liveness watchdog: every 60 s, check the instance's actual_status and that the training log's line count grows. If the instance is offline or shows no log progress for 10 min, destroy it by exact id and rent again once (same filter). If that one fails too, destroy it and stop with HOST-FAIL. Never have 2 instances at once.
 
