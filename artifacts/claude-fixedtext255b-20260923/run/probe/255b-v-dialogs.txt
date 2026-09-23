@@ -1,0 +1,159 @@
+00 "Brisa's boss is Tolland." -> "Saved: Brisa's boss is Tolland."  [+4 ev]
+00 "Brisa's city is Wethermoor." -> "Saved: Brisa's city is Wethermoor."  [+2 ev]
+00 -- RESTART 1 --
+00 "Who is Brisa's boss?" -> "Brisa's boss is Tolland."  [+0 ev]
+00 'Where does Brisa live?' -> "Brisa's city is Wethermoor."  [+0 ev]
+00 'Tell me about Brisa.' -> "Brisa's boss is Tolland. Brisa's city is Wethermoor."  [+0 ev]
+00 'Whose boss is Tolland?' -> "Brisa's boss is Tolland."  [+0 ev]
+00   STORED [['Brisa', 'boss', 'Tolland'], ['Brisa', 'city', 'Wethermoor']]  dup_ok=True
+01 "Caddock's boss is Yelena." -> "Saved: Caddock's boss is Yelena."  [+4 ev]
+01 -- RESTART 1 --
+01 "No, Caddock's boss is Ferris." -> "Updated: Caddock's boss is Ferris (it was Yelena)."  [+2 ev]
+01 "Who is Caddock's boss?" -> "Caddock's boss is Ferris."  [+0 ev]
+01 'Whose boss is Yelena?' -> "I don't know anyone whose boss is Yelena."  [+0 ev]
+01 'Whose boss is Ferris?' -> "Caddock's boss is Ferris."  [+0 ev]
+01 -- RESTART 2 --
+01 "Who is Caddock's boss?" -> "Caddock's boss is Ferris."  [+0 ev]
+01 'Whose boss is Yelena?' -> "I don't know anyone whose boss is Yelena."  [+0 ev]
+01   STORED [['Caddock', 'boss', 'Ferris']]  dup_ok=True
+02 "Dunmore's boss is Arlett." -> "Saved: Dunmore's boss is Arlett."  [+4 ev]
+02 "Dunmore's boss is Pellam." -> "I have Dunmore's boss as Arlett. Do you want me to change it to Pellam?"  [+1 ev]
+02 -- RESTART 1 --
+02 "Dunmore's boss is not Arlett." -> "OK, Dunmore's boss is not Arlett. I don't have another boss for Dunmore."  [+1 ev]
+02 "Who is Dunmore's boss?" -> "I don't know Dunmore's boss."  [+0 ev]
+02 'Whose boss is Arlett?' -> "I don't know anyone whose boss is Arlett."  [+0 ev]
+02 -- RESTART 2 --
+02 "Who is Dunmore's boss?" -> "I don't know Dunmore's boss."  [+0 ev]
+02 'Whose boss is Arlett?' -> "I don't know anyone whose boss is Arlett."  [+0 ev]
+02   TRIPLES []
+02   STORED []  dup_ok=True
+03 "Elspin's boss is Morrigan." -> "Saved: Elspin's boss is Morrigan."  [+4 ev]
+03 -- RESTART 1 --
+03 "Elspin's boss is not Morrigan." -> "OK, Elspin's boss is not Morrigan. I don't have another boss for Elspin."  [+1 ev]
+03 "Who is Elspin's boss?" -> "I don't know Elspin's boss."  [+0 ev]
+03 'Whose boss is Morrigan?' -> "I don't know anyone whose boss is Morrigan."  [+0 ev]
+03 -- RESTART 2 --
+03 'Whose boss is Morrigan?' -> "I don't know anyone whose boss is Morrigan."  [+0 ev]
+03 'Tell me about Elspin.' -> "I didn't understand that. Could you say it another way?"  [+0 ev]
+03   STORED []  dup_ok=True
+04 "Fallon's pet is Biscuit." -> "Saved: Fallon's pet is Biscuit."  [+3 ev]
+04 "Fallon's city is Grayhaven." -> "Saved: Fallon's city is Grayhaven."  [+2 ev]
+04 -- RESTART 1 --
+04 "Forget Fallon's pet Biscuit." -> "Forgotten: Fallon's pet Biscuit."  [+1 ev]
+04 "What is Fallon's pet?" -> "I don't know Fallon's pet."  [+0 ev]
+04 'Tell me about Fallon.' -> "Fallon's city is Grayhaven."  [+0 ev]
+04 -- RESTART 2 --
+04 "What is Fallon's pet?" -> "I don't know Fallon's pet."  [+0 ev]
+04 'Where does Fallon live?' -> "Fallon's city is Grayhaven."  [+0 ev]
+04   STORED [['Fallon', 'city', 'Grayhaven']]  dup_ok=True
+05 "Gorsey's boss is Hanne." -> "Saved: Gorsey's boss is Hanne."  [+4 ev]
+05 "Tibbet's boss is Hanne." -> "Saved: Tibbet's boss is Hanne."  [+2 ev]
+05 -- RESTART 1 --
+05 'Whose boss is Hanne?' -> "Gorsey's boss is Hanne. Tibbet's boss is Hanne."  [+0 ev]
+05 "Actually, Tibbet's boss is Wystan." -> "Updated: Tibbet's boss is Wystan (it was Hanne)."  [+2 ev]
+05 'Whose boss is Hanne?' -> "Gorsey's boss is Hanne."  [+0 ev]
+05 'Whose boss is Wystan?' -> "Tibbet's boss is Wystan."  [+0 ev]
+05 -- RESTART 2 --
+05 'Whose boss is Hanne?' -> "Gorsey's boss is Hanne."  [+0 ev]
+05 'Whose boss is Wystan?' -> "Tibbet's boss is Wystan."  [+0 ev]
+05   STORED [['Gorsey', 'boss', 'Hanne'], ['Tibbet', 'boss', 'Wystan']]  dup_ok=True
+06 "Harrow's city is Lindenfell." -> "Saved: Harrow's city is Lindenfell."  [+3 ev]
+06 -- RESTART 1 --
+06 "Actually, Harrow's city is Mossbury." -> "Updated: Harrow's city is Mossbury (it was Lindenfell)."  [+1 ev]
+06 -- RESTART 2 --
+06 "Harrow's boss is Quenby." -> "Saved: Harrow's boss is Quenby."  [+3 ev]
+06 "No, Harrow's boss is Rastrick." -> "Updated: Harrow's boss is Rastrick (it was Quenby)."  [+2 ev]
+06 -- RESTART 3 --
+06 "Harrow's boss is not Rastrick." -> "OK, Harrow's boss is not Rastrick. I don't have another boss for Harrow."  [+1 ev]
+06 'Where does Harrow live?' -> "Harrow's city is Mossbury."  [+0 ev]
+06 "Who is Harrow's boss?" -> "I don't know Harrow's boss."  [+0 ev]
+06 'Who lives in Lindenfell?' -> "I don't know anyone whose city is Lindenfell."  [+0 ev]
+06 'Who lives in Mossbury?' -> "Harrow's city is Mossbury."  [+0 ev]
+06   TRIPLES [['Harrow', 'city', 'Mossbury']]
+06   STORED [['Harrow', 'city', 'Mossbury']]  dup_ok=True
+07 'My name is Ilvane.' -> 'Saved: your name is Ilvane.'  [+3 ev]
+07 'My city is Portwick.' -> 'Saved: your city is Portwick.'  [+3 ev]
+07 -- RESTART 1 --
+07 'What is my name?' -> 'Your name is Ilvane.'  [+0 ev]
+07 'Tell me about me.' -> 'Your name is Ilvane. Your city is Portwick.'  [+0 ev]
+07 'Actually, my name is Jorvell.' -> 'I have your name as Ilvane. Do you want me to change it to Jorvell?'  [+0 ev]
+07 -- RESTART 2 --
+07 'What is my name?' -> 'Your name is Ilvane.'  [+0 ev]
+07 'Who am I?' -> 'Your name is Ilvane.'  [+0 ev]
+07   STORED [['USER', 'name', 'Ilvane'], ['USER', 'city', 'Portwick']]  dup_ok=True
+08 "Kestrel's boss is Maudry." -> "Saved: Kestrel's boss is Maudry."  [+4 ev]
+08 "Lorcan's boss is Maudry." -> "Saved: Lorcan's boss is Maudry."  [+2 ev]
+08 "Nimue's city is Oakhurst." -> "Saved: Nimue's city is Oakhurst."  [+3 ev]
+08 'How many people do you know?' -> 'I know four people: Kestrel, Lorcan, Maudry and Nimue.'  [+0 ev]
+08 -- RESTART 1 --
+08 "Actually, Lorcan's boss is Pentony." -> "Updated: Lorcan's boss is Pentony (it was Maudry)."  [+2 ev]
+08 'How many people do you know?' -> 'I know five people: Kestrel, Lorcan, Maudry, Nimue and Pentony.'  [+0 ev]
+08 'How many facts do you know?' -> "I know three facts you taught me. I don't hold any web rows."  [+0 ev]
+08 -- RESTART 2 --
+08 'How many people do you know?' -> 'I know five people: Kestrel, Lorcan, Maudry, Nimue and Pentony.'  [+0 ev]
+08 'How many facts do you know?' -> "I know three facts you taught me. I don't hold any web rows."  [+0 ev]
+08   STORED [['Kestrel', 'boss', 'Maudry'], ['Lorcan', 'boss', 'Pentony'], ['Nimue', 'city', 'Oakhurst']]  dup_ok=True
+09 "Merrow's boss is Sallow." -> "Saved: Merrow's boss is Sallow."  [+4 ev]
+09 "No, Merrow's boss is Thistle." -> "Updated: Merrow's boss is Thistle (it was Sallow)."  [+2 ev]
+09 -- RESTART 1 --
+09 "No, Merrow's boss is Umber." -> "Updated: Merrow's boss is Umber (it was Thistle)."  [+2 ev]
+09 "Who is Merrow's boss?" -> "Merrow's boss is Umber."  [+0 ev]
+09 'Whose boss is Thistle?' -> "I don't know anyone whose boss is Thistle."  [+0 ev]
+09 'Whose boss is Sallow?' -> "I don't know anyone whose boss is Sallow."  [+0 ev]
+09 -- RESTART 2 --
+09 "Who is Merrow's boss?" -> "Merrow's boss is Umber."  [+0 ev]
+09   TRIPLES [['Merrow', 'boss', 'Umber']]
+09   STORED [['Merrow', 'boss', 'Umber']]  dup_ok=True
+10 "Ondine's city is Rookfield." -> "Saved: Ondine's city is Rookfield."  [+3 ev]
+10 "Ondine's boss is Vashti." -> "Saved: Ondine's boss is Vashti."  [+3 ev]
+10 "Vashti's city is Wrenmarsh." -> "Saved: Vashti's city is Wrenmarsh."  [+1 ev]
+10 -- RESTART 1 --
+10 "What is Ondine's boss's city?" -> "Ondine's boss's city is Wrenmarsh."  [+0 ev]
+10 "Actually, Ondine's boss is Yarrow." -> "Updated: Ondine's boss is Yarrow (it was Vashti)."  [+2 ev]
+10 -- RESTART 2 --
+10 "What is Ondine's boss's city?" -> "I don't know Yarrow's city."  [+0 ev]
+10 'Whose boss is Vashti?' -> "I don't know anyone whose boss is Vashti."  [+0 ev]
+10 'Who lives in Wrenmarsh?' -> "Vashti's city is Wrenmarsh."  [+0 ev]
+10   STORED [['Ondine', 'city', 'Rookfield'], ['Ondine', 'boss', 'Yarrow'], ['Vashti', 'city', 'Wrenmarsh']]  dup_ok=True
+11 'Pascoe speaks Frisian.' -> "Saved: Pascoe's language is Frisian."  [+3 ev]
+11 -- RESTART 1 --
+11 'Pascoe speaks Manx.' -> "Saved: Pascoe's language is Manx. (I also have Frisian.)"  [+1 ev]
+11 -- RESTART 2 --
+11 "Pascoe's language is not Frisian." -> "OK, Pascoe's language is not Frisian. I still have Manx."  [+1 ev]
+11 "What is Pascoe's language?" -> "Pascoe's language is Manx."  [+0 ev]
+11 -- RESTART 3 --
+11 "What is Pascoe's language?" -> "Pascoe's language is Manx."  [+0 ev]
+11 'Tell me about Pascoe.' -> "Pascoe's language is Manx."  [+0 ev]
+11   STORED [['Pascoe', 'language', 'Manx']]  dup_ok=True
+12 "Quinta's boss is Ravel." -> "Saved: Quinta's boss is Ravel."  [+4 ev]
+12 -- RESTART 1 --
+12 "Quinta's boss is Ravel." -> 'I already have that.'  [+0 ev]
+12 -- RESTART 2 --
+12 "Quinta's boss is Ravel." -> 'I already have that.'  [+0 ev]
+12 "Who is Quinta's boss?" -> "Quinta's boss is Ravel."  [+0 ev]
+12 'Whose boss is Ravel?' -> "Quinta's boss is Ravel."  [+0 ev]
+12   TRIPLES [['Quinta', 'boss', 'Ravel']]
+12   STORED [['Quinta', 'boss', 'Ravel']]  dup_ok=True
+13 "Rosmer's friend is Sorrel." -> "Saved: Rosmer's friend is Sorrel."  [+4 ev]
+13 "Rosmer's friend is Tamar." -> "Saved: Rosmer's friend is Tamar. (I also have Sorrel.)"  [+2 ev]
+13 -- RESTART 1 --
+13 "Forget Rosmer's friend Sorrel." -> "Forgotten: Rosmer's friend Sorrel."  [+1 ev]
+13 "Who is Rosmer's friend?" -> "Rosmer's friend is Tamar."  [+0 ev]
+13 'Whose friend is Sorrel?' -> "I don't know anyone whose friend is Sorrel."  [+0 ev]
+13 -- RESTART 2 --
+13 'Whose friend is Sorrel?' -> "I don't know anyone whose friend is Sorrel."  [+0 ev]
+13 'Whose friend is Tamar?' -> "Rosmer's friend is Tamar."  [+0 ev]
+13   STORED [['Rosmer', 'friend', 'Tamar']]  dup_ok=True
+14 "Ulric's boss is Venna." -> "Saved: Ulric's boss is Venna."  [+4 ev]
+14 "Venna's city is Westerly." -> "Saved: Venna's city is Westerly."  [+2 ev]
+14 -- RESTART 1 --
+14 "No, Ulric's boss is Wick." -> "Updated: Ulric's boss is Wick (it was Venna)."  [+2 ev]
+14 "Wick's city is Yarndale." -> "Saved: Wick's city is Yarndale."  [+1 ev]
+14 -- RESTART 2 --
+14 "Ulric's boss is not Wick." -> "OK, Ulric's boss is not Wick. I don't have another boss for Ulric."  [+1 ev]
+14 -- RESTART 3 --
+14 "Who is Ulric's boss?" -> "I don't know Ulric's boss."  [+0 ev]
+14 'Whose boss is Wick?' -> "I don't know anyone whose boss is Wick."  [+0 ev]
+14 'Whose boss is Venna?' -> "I don't know anyone whose boss is Venna."  [+0 ev]
+14 "What is Ulric's boss's city?" -> "I don't know Ulric's boss."  [+0 ev]
+14   STORED [['Venna', 'city', 'Westerly'], ['Wick', 'city', 'Yarndale']]  dup_ok=True

@@ -2661,3 +2661,7 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - Pown0c.1 (2026-09-23, own-O0c pipeline sample, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0c-20260923; 4000 SimpleStories + 15000 webred sample, seed 7, CPU only) shards round-trip exactly on 1000 sampled docs: 1000/1000, 0 misses.
 - Pown0c.2 same (seed 7, step 0) data order twice byte-identical (same sha256); step 1 differs.
 - Pown0c.3 total planned download 2.23 GB + 316 MB = 2.546 GB <= 7 GB (plan S5 numbers quoted; remote bytes not re-verifiable offline, nothing downloaded).
+- Pown0d.1 (2026-09-23, own-O0d ear code+trainer, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0d-20260923; CPU only): all unit tests pass; bar = every unit test passes.
+- Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
+- Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
+- Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.

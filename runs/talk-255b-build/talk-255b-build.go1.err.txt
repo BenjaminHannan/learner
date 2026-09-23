@@ -1,0 +1,1571 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin claude/project-thread-p68q5v 2>&1 | head -20; echo FETCH_DONE; git log --oneline -3; uptime; df -g / | head -5
+FETCH_DONE
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+22:50  up 2 days, 14:39, 4 users, load averages: 136.46 142.36 114.02
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    42%  484014 184750120    0%   /
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:design/v3/30-modes/255b-fixedtext-decision.md; echo =====BRIEF255=====; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/255-fixedtext.txt
+# 255b: the one follow-up to 255 (fixed-reply text). Director's note, 2026-09-23 02:45 UTC
+
+255 is a registered FAIL and stays FAIL. This note is the diagnosis and the one change for 255b.
+
+## Diagnosis (checked against the code, not from memory)
+
+1. **M4, 8 untrue replies.** 255's T02 rewrite turns 138m's misread-question reply into
+   "I don't know that. I may have misread your question, so could you say it another way?".
+   T02 fires when the loop fails to *read* the question, not when the notebook lacks the fact. So on
+   A06, B04, B05, B20, D02, D03, D04 and D08 the first sentence is false: the fact is stored, or it is the
+   assistant's own name, or the turn was a teach.
+2. **M1, "zero turns".** `claude_fix255_text.num()` returns the word "zero" for 0. T43 has no zero branch,
+   so "We have had 0 turns." became "We have had zero turns." (row r141; both graders flagged it).
+   The same hole exists in T52, T53 and T46, and in T40, T41 and T47 if a 0 ever reaches them.
+3. **The wording planned on the board would break the frozen scorers.** I ran 255's anchor check
+   (`claude_fix255_test.fam`) on "I couldn't find an answer to that. I may have misread your question, so
+   could you ask it another way?". 138m's old text is (224a decline yes, bench121 abstain yes, redteam143
+   abstain yes, session152 clarify yes, "i have no record" no). The planned text gives bench121 **no** and
+   redteam143 **no**, so the frozen suites would score those declines as answers. The planned text is dropped.
+
+## The one change (text only; same place as 255: one outermost reply wrapper on 138m)
+
+255b = 255's rewriter with two corrections, as one new module `scripts/claude_fix255b_text.py` that imports
+`claude_fix255_text` unchanged:
+
+a. **T02 (misread question)** becomes exactly: `I didn't understand that. Could you say it another way?`
+   It is true on every turn T02 fires on (the loop did not understand the turn), whether the turn was a
+   question or a teach. Anchor check: (yes, yes, yes, yes, no), identical to 138m's text.
+b. **No count is ever said as "zero".** A count of 0 uses these exact texts:
+   - T43: `We haven't had any turns yet.`
+   - T52: `I have no record of yesterday. My log starts with our first turn here, and it is still empty.`
+   - T53: `Nobody besides you has spoken to me.`
+   - T46: `No. I never asked for clarification.`
+   - T40: `No. I don't hold any web rows.`
+   - T41: `No. I haven't slept yet.`
+   - T47: `No. I never asked for clarification instead of saving.`
+   Every other template and every other count renders exactly as 255 does.
+
+Why this counts as one change: both parts fix the two registered failures of the same single piece (the
+fixed-text wrapper), and nothing else in 255's 60 templates moves. Director's decision, logged.
+
+T04 (GLUE) keeps 255's text. Its claim ("I have no record of it") is 138m's own verdict, not new in 255.
+M4 reports every T04 line so this can be checked.
+
+## Pass marks (fixed now, before the build)
+
+255's M1–M7 with 255's bars, re-run on 255b vs 138m, plus these changes:
+- **M1** fresh render file (new seed 2550923), same generator rules. Graders: the director and one Muse
+  grader, blind to each other. Bar: 100% of changed-template renders grammatical for both. Plus a mechanical
+  sweep in the unit tests: every count template rendered for n = 0..12 contains no "zero", no "1 <plural>"
+  and no "one <plural>".
+- **M4** mechanical labels as in 255. The director's ruling is fixed now: the new T02 text is a same-meaning
+  rewrite of 138m's T02 and is true on all 8 previously flagged probes. Bar: 0 "worse (unexplained)".
+- **M3** (239 panel, TEST-ONLY) run once; changes file vs 138m's registered transcripts; bars as in 255.
+- **Extra report (no bar):** 255b vs 255 on the M4 probes and M6 dialogs. The only differences must be T02
+  lines and zero-count lines.
+
+What would prove this wrong: any frozen-suite verdict change (M2 gate), any changed reply that is not an
+exact 255b template, a grader flagging a changed render, or the new T02 text judged untrue on any probe.
+
+## Registration: one piece, two parts, scored separately (added 02:47 UTC, before any build)
+
+Part A = the T02 wording. Part B = the zero-count texts. They are kept in one experiment because they are the
+two registered failures of the same wrapper, they touch disjoint templates (T02 vs T40/T41/T43/T46/T47/T52/T53),
+and splitting them would force a third merge experiment before either could ship. To keep "one change" honest:
+- every prediction in PASSMARKS is numbered and labelled Part A or Part B (P255b.n-A / P255b.n-B);
+- every predicted move and every result is reported per part (M1 renders, M2/M4/M6 moves, M3 changed turns);
+- a move that belongs to neither part is a failure of the piece;
+- PASSMARKS says this choice and the reason above in one paragraph.
+Provenance: the 8 untrue replies come from the 138m verifier probes (artifacts/claude-verify-20260922/138m/probes.json),
+which are dev/verification data, not a TEST-ONLY panel. "zero turns" comes from 255's generated M1 render file.
+The 239 panel was run for 255 but never judged or tuned on; 255b's change was derived without it.
+zsh:1: ====BRIEF255===== not found
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/255-fixedtext.txt > /tmp/brief255.txt; wc -l /tmp/brief255.txt
+74 /tmp/brief255.txt
+[0m
+[0m→ [0mRead /tmp/brief255.txt
+[0m→ [0mRead scripts/claude_fix255_text.py
+[0m→ [0mRead artifacts/claude-fixedtext255-20260922/RESULTS.md
+[0m→ [0mRead artifacts/claude-fixedtext255-20260922/PASSMARKS.md
+[0m→ [0mRead scripts/claude_fix255_test.py
+[0m→ [0mRead scripts/claude_loop255_agent.py
+[0m→ [0mRead scripts/claude_255_runall.sh
+[0m
+[0m$ [0mls scripts/claude_255_*.py scripts/claude_fix255*.py scripts/claude_loop138m_agent.py artifacts/claude-merge138m-20260922/loop138m-config.json artifacts/claude-fixedtext255-20260922/ artifacts/claude-verify-20260922/138m/ artifacts/claude-convpanel239-138m-20260922/ 2>&1; echo ---; ls artifacts/claude-fixedtext255-20260922/run 2>&1 | head; echo ---; cat artifacts/fable-predictions-ledger.md 2>&1 | tail -30
+artifacts/claude-merge138m-20260922/loop138m-config.json
+scripts/claude_255_m1gen.py
+scripts/claude_255_m2check.py
+scripts/claude_255_m3changes.py
+scripts/claude_255_m3format.py
+scripts/claude_255_score.py
+scripts/claude_fix255_test.py
+scripts/claude_fix255_text.py
+scripts/claude_loop138m_agent.py
+
+artifacts/claude-convpanel239-138m-20260922/:
+changes-138m-vs-138l.json
+transcripts-138m.jsonl
+transcripts-138m.md
+
+artifacts/claude-fixedtext255-20260922/:
+base138m-rows
+fixedtext.jsonl
+loop255-config.json
+m3
+m3-reg
+PASSMARKS.md
+predicted_moves255.json
+predicted-moves255.md
+RESULTS.md
+run
+SEAL.sha256.txt
+SEAL2.sha256.txt
+
+artifacts/claude-verify-20260922/138m/:
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+supp-run-own233.log
+---
+lat-255-1.json
+lat-255-1.log
+lat-255-2.json
+lat-255-2.log
+lat-255-3.json
+lat-255-3.log
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+---
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- P261 OUTCOME (2026-09-22, resume builder) registered FAIL on M2/M3: A (checker theta 0.25) M1 1 (pass), M2 9 wrong saves (bar 1), M3 95/122 = 77.9 % (B 13/122 = 10.7 %), M3b 6/122 = 4.9 % (pass), M4 39/40 = 97.5 % (pass), M5 median 344.7 ms (pass), M6 0 mismatches (pass). Others: A_raw M1 5/M2 25, A_brake 5/19, A_gate 1/8 with M3 79/122 = 64.8 %, A_nocanon 1/12 with M3 92/122. Panel theta curve flat 77.9 % recall theta 0-0.8, wrong 19->7. Miss drivers: R10 plural relatives 4/16, R7 1/4; 8/9 wrongs passed checker with pYES >= 0.68. P261.1/.5/.6/.7/.8 right; .4 pass with 4.9 just under 5-12 range; .2/.3 ranges wrong. Report only (after run, once): 261 pipeline on earpanel257: A M1 3/M2 6/M3 100/112=89.3 %/M3b 1.8 %/M4 39/40; A_gate+canon M1 1/M2 2/M3 80/112; 257 sealed A was M1 1/M2 4/M3 78/112/M3b 21.4 %. Seals: 261 18/18 OK after runs; panel 261 2/2 OK; panel 257 2/2 OK (own loaders).
+- P261b.1 (2026-09-23, builder; exp 261b = 261 sealed arm A + mixed-case span guard after checker, theta 0.25 prompt B, scorer = 261 sealed + Ruling 1 narrower-relations-hit, sealed 15 files SEAL.sha256.txt artifacts/claude-earcheck261b-20260923) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261b.2 M2 wrong saves (statement fams + no_save) 0-2; pass (<= 1) ~60 %. 261's 9 wrongs: ~6 pet-narrower become hits (Ruling 1), ~2 typo-mix held by guard if case-mixed; residual risks so-check style, capitalised-glued typos, R10/R11 splits.
+- P261b.3 M3 exact TEACH recall 80-90 % and >= B + 30 (B 10-20 %); pass ~55 %. 261 77.9 % + Ruling-1 hits - ~1 % guard false holds; R10 plural splits still cap.
+- P261b.4 M3b UNSURE 4-10 % of gold TEACH; pass (<= 12 %) ~80 %. 261 checker 4.9 % + guard ~1-3 %.
+- P261b.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %. ASK untouched by guard.
+- P261b.6 M5 median ear+checker+guard ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261b.7 M6 every A frame byte-identical in A261; pass ~99 % (guard only removes).
+- P261b.8 Overall registered PASS ~30 %.
+- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+lowercase dev 53 saved 0 held; pipeline reproduces 261 dev sweep byte-equal; synthetic 150-line pilot scores with Ruling-1 hits + 2 value_mix holds, SCHEMA-MISMATCH exit 3 ok.
+- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opener_teach >= 16/20 exact; comma_value_ok 0 lost vs 260; question 0 writes; control 14/14 byte-identical to base260.
+- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.) pass through like 260.
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored B15+D10, 1 allowed new write B15:t0, supp 0. Dev 55/55 (260 34/55; unlisted 20/20 vs 0/20). Known limits: two-comma turns lose the fact; unlisted-opener questions keep 260's reply; pretend markers never stripped.
+[0m
+[0m→ [0mRead scripts/claude_255_m1gen.py
+[0m→ [0mRead scripts/claude_255_score.py
+[0m→ [0mRead artifacts/claude-fixedtext255-20260922/loop255-config.json
+[0m→ [0mRead scripts/claude_255_m2check.py
+[0m→ [0mRead scripts/claude_255_m3changes.py
+[0m
+[0m$ [0mls scripts/ | grep -i -E "convpanel239|conv239|239"; echo ---; ls scripts/claude_255_m3format.py && head -50 scripts/claude_255_m3format.py; echo ---; head -c 2000 artifacts/claude-fixedtext255-20260922/predicted_moves255.json; echo; echo ---; ls /tmp/ 2>/dev/null | head
+claude_138n_conv239_changes.py
+claude_convpanel239_run.py
+---
+scripts/claude_255_m3format.py
+#!/usr/bin/env python3
+"""Exp 255 M3: changes file in the 239 panel format (as in
+artifacts/claude-convpanel239-138m-20260922/changes-138m-vs-138l.json).
+Written after the seal (driver-only addition; reported). Ungraded.
+
+usage: claude_255_m3format.py <base.jsonl> <new.jsonl> <out.json> <base_label> <new_label>
+"""
+import json
+import sys
+from collections import OrderedDict
+
+
+def load(p):
+    return [json.loads(x) for x in open(p, encoding="utf-8") if x.strip()]
+
+
+def main(a):
+    base, new = load(a[0]), load(a[1])
+    assert [(r["id"], r["turn"]) for r in base] == \
+        [(r["id"], r["turn"]) for r in new]
+    turns, by = [], {}
+    prev_b = prev_n = None
+    for i, (b, n) in enumerate(zip(base, new)):
+        if n["turn"] == 0:
+            prev_b = prev_n = []
+        rc = b["reply"] != n["reply"] or b["error"] != n["error"]
+        sa = b["triples"] != n["triples"]
+        sb = prev_b != prev_n
+        ch = rc or sa or sb
+        turns.append({"turn_number": i, "conv_id": n["id"],
+                      "turn_index": n["turn"], "intent": n["intent"],
+                      "reply_changed": rc, "stored_after_changed": sa,
+                      "stored_before_changed": sb, "changed": ch})
+        e = by.setdefault(n["intent"], {"changed": 0, "turns": 0})
+        e["turns"] += 1
+        e["changed"] += int(ch)
+        prev_b, prev_n = b["triples"], n["triples"]
+    out = OrderedDict(
+        base=a[3], new=a[4],
+        numbering="0..%d in panel file order (conversation order, then "
+                  "turn order)" % (len(turns) - 1),
+        stored_before_definition="stored triples after the previous turn of "
+                                 "the same conversation (empty for the first "
+                                 "turn)",
+        totals={"changed": sum(t["changed"] for t in turns),
+                "turns": len(turns),
+                "reply_changed": sum(t["reply_changed"] for t in turns),
+                "stored_after_changed": sum(t["stored_after_changed"]
+                                            for t in turns),
+                "stored_before_changed": sum(t["stored_before_changed"]
+---
+{
+ "moves": [
+  "bench-bench132_4hop/bench132-4hop-019",
+  "bench-bench132_4hop/bench132-4hop-112",
+  "bench-bench132_4hop/bench132-4hop-152",
+  "bench-bench132_4hop/bench132-4hop-162",
+  "bench-edit200/bench65-abs-absent-01",
+  "bench-edit200/bench65-abs-absent-03",
+  "bench-edit200/bench65-abs-absent-05",
+  "bench-edit200/bench65-abs-absent-07",
+  "bench-edit200/bench65-abs-absent-09",
+  "bench-edit200/bench65-abs-absent-11",
+  "bench-edit200/bench65-abs-absent-13",
+  "bench-edit200/bench65-abs-absent-15",
+  "bench-edit200/bench65-abs-absent-17",
+  "bench-edit200/bench65-abs-absent-19",
+  "bench-edit200/bench65-abs-absent-21",
+  "bench-edit200/bench65-abs-absent-23",
+  "bench-edit200/bench65-abs-broken-00",
+  "bench-edit200/bench65-abs-broken-01",
+  "bench-edit200/bench65-abs-broken-02",
+  "bench-edit200/bench65-abs-broken-03",
+  "bench-edit200/bench65-abs-broken-04",
+  "bench-edit200/bench65-abs-broken-05",
+  "bench-edit200/bench65-abs-broken-06",
+  "bench-edit200/bench65-abs-broken-07",
+  "bench-edit200/bench65-abs-broken-08",
+  "bench-edit200/bench65-abs-broken-09",
+  "bench-edit200/bench65-abs-broken-10",
+  "bench-edit200/bench65-abs-broken-11",
+  "bench-edit200/bench65-abs-broken-12",
+  "bench-edit200/bench65-abs-broken-13",
+  "bench-edit200/bench65-abs-broken-14",
+  "bench-edit200/bench65-abs-broken-15",
+  "bench-edit200/bench65-abs-broken-16",
+  "bench-edit200/bench65-abs-broken-17",
+  "bench-edit200/bench65-abs-broken-18",
+  "bench-edit200/bench65-abs-broken-19",
+  "bench-edit200/bench65-abs-broken-20",
+  "bench-edit200/bench65-abs-broken-21",
+  "bench-edit200/bench65-abs-broken-22",
+  "bench-edit200/bench65-abs-broken-23",
+  "bench-edit200/bench65-abs-broken-24",
+  "bench-new_121_4hop/bench121-4hop-025",
+  "bench-new_121_4hop/bench121-4hop-026",
+  "bench-new_121_4hop/bench121-4hop-066",
+  "bench-new_121_4hop/bench121-4hop-073",
+  "bench-new_121_4hop/bench121-4hop-149",
+  "bench-old_s2fresh_4hop/bench103-s2fresh-4hop-187",
+  "rt136/C063",
+  "rt136/C064",
+ 
+---
+__KMP_REGISTERED_LIB_10043
+__KMP_REGISTERED_LIB_10167
+__KMP_REGISTERED_LIB_10277
+__KMP_REGISTERED_LIB_10588
+__KMP_REGISTERED_LIB_10636
+__KMP_REGISTERED_LIB_1066
+__KMP_REGISTERED_LIB_10679
+__KMP_REGISTERED_LIB_10716
+__KMP_REGISTERED_LIB_10827
+__KMP_REGISTERED_LIB_10919
+[0m
+[0m# [0mTodos
+[•] Write scripts/claude_fix255b_text.py (T02 + zero-count texts, else 255)
+[ ] Write scripts/claude_fix255b_test.py (60 templates + n=0..12 sweep + T02 anchors), 0 failures
+[ ] Write claude_loop255b_agent.py + config + claude_255b_*.py + runall.sh copies
+[ ] Pilot M2/M4/M5/M6/M7 vs 138m on scratch + extra report 255b vs 255
+[ ] Write PASSMARKS.md + predicted moves, seal SEAL.sha256.txt, ledger P255b.n
+[ ] Generate M1 fixedtext.jsonl seed 2550923, seal SEAL2
+[ ] Registered M2/M4/M5/M6/M7 runs
+[ ] Run 239 panel ONCE on 255b + mechanical changes file vs 138m
+[ ] RESULTS.md + final report (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import sys; sys.path.insert(0,'scripts'); import claude_fix255_test as T; print(sorted(T.SAMPLES.keys())); print('N=',len(T.SAMPLES))"
+['T01_Q1', 'T02_Q2', 'T03_S1', 'T04_GLUE', 'T05_F188', 'T06_NEG148', 'T07_TIME148', 'T08_SPLIT', 'T09_UNREAD', 'T10_SAYLIKE', 'T11_PICK', 'T12_WEBACTOR', 'T13_SELFFALLBACK', 'T14_GREETING', 'T15_187MAKER', 'T16_187WHAT', 'T17_187NAME', 'T18_FEELINGS', 'T19_CAN', 'T20_CANNOT', 'T21_AGETHEIR', 'T22_SRCTHAT', 'T23_SRCNOTRACK', 'T24_SAYBARE', 'T25_IDLETHINKING', 'T26_WEB0', 'T27_SLEPT0', 'T28_CORRECTED0', 'T29_PEOPLE0', 'T30_MODE', 'T31_SAYECHO', 'T32_FIRST', 'T33_LAST', 'T34_FORGOT', 'T35_CORRECTED', 'T36_SRCTOLD', 'T37_SRCPUT', 'T38_FACTS', 'T39_PEOPLE', 'T40_WEBN', 'T41_SLEPTN', 'T42_SLEEPDERIVED', 'T43_TURNS', 'T44_ANSWERED', 'T45_SAVEDN', 'T46_REFUSED0', 'T47_REFUSEDN', 'T48_GUESSES', 'T49_RULES', 'T50_BARECOUNT', 'T51_DREAM', 'T52_YESTERDAY', 'T53_NOBODYELSE', 'T54_C5NOTURN', 'T55_UNSURE', 'T56_DONTKNOWEX', 'T57_JUSTBEFORE', 'T58_UPDATEDUSER', 'T59_NOTSAVED', 'T60_NEWUNSTORED']
+N= 60
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_fix255_test as TT, claude_fix255_text as T
+for tid in ['T40_WEBN','T41_SLEPTN','T42_SLEEPDERIVED','T43_TURNS','T44_ANSWERED','T45_SAVEDN','T46_REFUSED0','T47_REFUSEDN','T48_GUESSES','T49_RULES','T50_BARECOUNT','T51_DREAM','T52_YESTERDAY','T53_NOBODYELSE','T38_FACTS','T39_PEOPLE']:
+    old = TT.SAMPLES[tid]
+    new, got = T.rewrite255(old)
+    print(tid,'| OLD:',old)
+    print('   | NEW:',new)
+"
+T40_WEBN | OLD: Yes. I hold 1 quarantined web row. I filed it but I do not believe it.
+   | NEW: Yes. I hold one quarantined web row. I filed it, but I do not believe it.
+T41_SLEPTN | OLD: Yes. I have slept 3 times.
+   | NEW: Yes. I have slept three times.
+T42_SLEEPDERIVED | OLD: None. 0 of my facts are sleep-derived.
+   | NEW: None of my facts came from sleep.
+T43_TURNS | OLD: We have had 1 turns.
+   | NEW: We have had one turn.
+T44_ANSWERED | OLD: I have answered 1 questions.
+   | NEW: I have answered one question.
+T45_SAVEDN | OLD: I saved 0 times through our turns.
+   | NEW: I haven't saved anything yet.
+T46_REFUSED0 | OLD: No. I understood all 7 turns; I asked for clarification 0 times.
+   | NEW: No. I understood all seven turns, and I never asked for clarification.
+T47_REFUSEDN | OLD: Yes, 20 times I asked for clarification instead of saving.
+   | NEW: Yes. I asked for clarification 20 times instead of saving.
+T48_GUESSES | OLD: 0 guesses are waiting for your approval.
+   | NEW: No guesses are waiting for your approval.
+T49_RULES | OLD: 0 of my facts came from rules.
+   | NEW: None of my facts came from rules.
+T50_BARECOUNT | OLD: 0.
+   | NEW: None.
+T51_DREAM | OLD: I do not dream. I have slept 0 times and hold 0 sleep-derived facts.
+   | NEW: I do not dream. I haven't slept yet, and I hold no sleep-derived facts.
+T52_YESTERDAY | OLD: I have no record of yesterday. My log starts with our first turn here and holds 4 turns.
+   | NEW: I have no record of yesterday. My log starts with our first turn here and holds four turns.
+T53_NOBODYELSE | OLD: Nobody besides you has spoken to me. All 9 turns are yours.
+   | NEW: Nobody besides you has spoken to me. All nine turns are yours.
+T38_FACTS | OLD: I know 3 facts you taught me. I also hold 0 web row, which I do not believe.
+   | NEW: I know three facts you taught me. I don't hold any web rows.
+T39_PEOPLE | OLD: I know 5 people: Kestrel, Lorcan, Maudry, Nimue, Pentony.
+   | NEW: I know five people: Kestrel, Lorcan, Maudry, Nimue and Pentony.
+[0m
+[0m← [0mWrite scripts/claude_fix255b_text.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_fix255b_test.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fix255b_test.py
+FAIL ('T46_REFUSED0', 'not 255-identical', 'No. I never asked for clarification.', 'No. I understood all seven turns, and I never asked for clarification.')
+FAIL ('T40_WEBN/0', 'prefix')
+FAIL ('T41_SLEPTN/0', 'prefix')
+FAIL ('T43_TURNS/0', 'prefix')
+FAIL ('T46_REFUSED0/0', 'prefix')
+FAIL ('T47_REFUSEDN/0', 'prefix')
+FAIL ('T52_YESTERDAY/0', 'prefix')
+FAIL ('T53_NOBODYELSE/0', 'prefix')
+FAIL ('T41_SLEPTN', 'sweep id', None, 'Yes. I have slept 10 times.')
+FAIL ('T41_SLEPTN', 'sweep id', None, 'Yes. I have slept 11 times.')
+FAIL ('T41_SLEPTN', 'sweep id', None, 'Yes. I have slept 12 times.')
+FAIL ('T43_TURNS', 'sweep id', None, 'We have had 10 turns.')
+FAIL ('T43_TURNS', 'sweep id', None, 'We have had 11 turns.')
+FAIL ('T43_TURNS', 'sweep id', None, 'We have had 12 turns.')
+FAIL ('T44_ANSWERED', 'sweep id', None, 'I have answered 10 questions.')
+FAIL ('T44_ANSWERED', 'sweep id', None, 'I have answered 11 questions.')
+FAIL ('T44_ANSWERED', 'sweep id', None, 'I have answered 12 questions.')
+FAIL ('T52_YESTERDAY', 'sweep id', None, 'I have no record of yesterday. My log starts with our first turn here and holds 10 turns.')
+FAIL ('T52_YESTERDAY', 'sweep id', None, 'I have no record of yesterday. My log starts with our first turn here and holds 11 turns.')
+FAIL ('T52_YESTERDAY', 'sweep id', None, 'I have no record of yesterday. My log starts with our first turn here and holds 12 turns.')
+FAIL ('T53_NOBODYELSE', 'sweep id', None, 'Nobody besides you has spoken to me. All 10 turns are yours.')
+FAIL ('T53_NOBODYELSE', 'sweep id', None, 'Nobody besides you has spoken to me. All 11 turns are yours.')
+FAIL ('T53_NOBODYELSE', 'sweep id', None, 'Nobody besides you has spoken to me. All 12 turns are yours.')
+60 templates, 504 sweep renders, 23 failures
+T02 anchor old: (True, True, True, True, False)
+T02 anchor new: (True, True, True, True, False)
+[0m
+[0m← [0mEdit scripts/claude_fix255b_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+@@ -92,23 +92,23 @@
+ 
+ SWEEP_BAD = [r"(?i)\bzero\b", r"\b1 [a-z]+s\b", r"\bone [a-z]+s\b"]
+ 
+ 
+-def check_text(fails: list, tid: str, old: str, new: str):
++def check_text(fails: list, label: str, tid: str, old: str, new: str):
+     for b in T255T.BAD:
+         if re.search(b, new):
+-            fails.append((tid, "bad", b, new))
++            fails.append((label, "bad", b, new))
+     if not re.search(r'[.?!]"?$', new):
+-        fails.append((tid, "end", new))
++        fails.append((label, "end", new))
+     if new[:1] != new[:1].upper():
+-        fails.append((tid, "cap", new))
++        fails.append((label, "cap", new))
+     if T.rewrite255b(new)[1] is not None:
+-        fails.append((tid, "not idempotent", new))
++        fails.append((label, "not idempotent", new))
+     if T255T.fam(old) != T255T.fam(new):
+-        fails.append((tid, "anchor", T255T.fam(old), T255T.fam(new), new))
++        fails.append((label, "anchor", T255T.fam(old), T255T.fam(new), new))
+     pre, gp = T.rewrite255b(T.PREFIX_DROPPED + old)
+     if gp != tid or pre != T.PREFIX_DROPPED + new:
+-        fails.append((tid, "prefix"))
++        fails.append((label, "prefix"))
+ 
+ 
+ def main() -> int:
+     fails: list = []
+
+[0m
+[0m← [0mEdit scripts/claude_fix255b_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+@@ -124,13 +124,18 @@
+         continue
+     if tid == "T02_Q2":
+         if new != T.T02_NEW_255B:
+             fails.append((tid, "t02 text", new))
++    elif tid == "T46_REFUSED0":
++        # the clarification count is structurally 0, so every T46
++        # line takes the director's zero text (decision note, Part B)
++        if new != T.ZERO_TEXTS_255B[tid]:
++            fails.append((tid, "t46 zero text", new))
+     else:
+         exp255, expid = T255.rewrite255(old)
+         if expid != tid or new != exp255:
+             fails.append((tid, "not 255-identical", new, exp255))
+-    check_text(fails, tid, old, new)
++    check_text(fails, tid, tid, old, new)
+ # 2. the zero-count olds give exactly the director's zero texts
+ for tid, old in ZERO_OLD.items():
+     new, got = T.rewrite255b(old)
+     if got != tid:
+
+[0m
+[0m← [0mEdit scripts/claude_fix255b_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+@@ -142,9 +142,9 @@
+         fails.append((tid, "zero id", got))
+         continue
+     if new != T.ZERO_TEXTS_255B[tid]:
+         fails.append((tid, "zero text", new, T.ZERO_TEXTS_255B[tid]))
+-    check_text(fails, tid + "/0", old, new)
++    check_text(fails, tid + "/0", tid, old, new)
+ # 3. n = 0..12 sweep of every count template
+ olds = count_olds()
+ n_render = 0
+ for tid, lines in olds.items():
+
+[0m
+[0m← [0mEdit scripts/claude_fix255b_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix255b_test.py
+@@ -150,10 +150,14 @@
+ for tid, lines in olds.items():
+     for old in lines:
+         new, got = T.rewrite255b(old)
+         if got != tid:
+-            fails.append((tid, "sweep id", got, old))
+-            continue
++            # allowed only when 255 also leaves the line untouched
++            # (n >= 10 digit forms identical to the old text)
++            exp255, expid = T255.rewrite255(old)
++            if expid is not None or new != old:
++                fails.append((tid, "sweep id", got, old))
++                continue
+         n_render += 1
+         for b in SWEEP_BAD:
+             if re.search(b, new):
+                 fails.append((tid, "sweep bad", b, old, new))
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fix255b_test.py
+60 templates, 519 sweep renders, 0 failures
+T02 anchor old: (True, True, True, True, False)
+T02 anchor new: (True, True, True, True, False)
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_fix255b_text.py (T02 + zero-count texts, else 255)
+[✓] Write scripts/claude_fix255b_test.py (60 templates + n=0..12 sweep + T02 anchors), 0 failures
+[•] Write claude_loop255b_agent.py + config + claude_255b_*.py + runall.sh copies
+[ ] Pilot M2/M4/M5/M6/M7 vs 138m on scratch + extra report 255b vs 255
+[ ] Write PASSMARKS.md + predicted moves, seal SEAL.sha256.txt, ledger P255b.n
+[ ] Generate M1 fixedtext.jsonl seed 2550923, seal SEAL2
+[ ] Registered M2/M4/M5/M6/M7 runs
+[ ] Run 239 panel ONCE on 255b + mechanical changes file vs 138m
+[ ] RESULTS.md + final report (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mdu -sh artifacts/claude-fixedtext255-20260922/base138m-rows; ls artifacts/claude-fixedtext255-20260922/base138m-rows; sed -n '50,120p' scripts/claude_255_m3format.py
+864K	artifacts/claude-fixedtext255-20260922/base138m-rows
+bench-bench132_4hop-rows.jsonl
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+redteam136-rows.json
+redteam143-rows.json
+sessions152-rows.json
+                "stored_before_changed": sum(t["stored_before_changed"]
+                                             for t in turns),
+                "by_intent": dict(sorted(by.items()))},
+        turns=turns)
+    json.dump(out, open(a[2], "w"), indent=1)
+    print(json.dumps(out["totals"]))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
+[0m
+[0m$ [0mmkdir -p artifacts/claude-fixedtext255b-20260923 && cp -r artifacts/claude-fixedtext255-20260922/base138m-rows artifacts/claude-fixedtext255b-20260923/base138m-rows && cp scripts/claude_loop255_agent.py scripts/claude_loop255b_agent.py && sed -i '' 's/255/255b/g; s/T255b/T255B/g' scripts/claude_loop255b_agent.py && grep -n "255b\|255B\|T255" scripts/claude_loop255b_agent.py | head -40
+2:"""Exp 255b agent: 138m + ONE outermost text-only layer (fixed-reply text).
+4:loop255b = loop138m (scripts/claude_loop138m_agent.py, read-only) with
+5:scripts/claude_fix255b_text.py installed as the OUTERMOST turn wrapper.
+10:decline sentences. The 255b wrapper is installed on the built loop after
+13:template (claude_fix255b_text.rewrite255b); it never reads or writes the
+20:Text255bDaemonMixin, exactly as in 138m, and Text255bDaemonMixin calls
+42:import claude_fix255b_text as T255B  # noqa: E402 (THE ONE CHANGE)
+45:NOTE255b = ("loop255b: 138m + claude_fix255b_text outermost fixed-reply text "
+49:def install_text255b(loop):
+50:    """Wrap the loop's current (outermost) turn with the 255b text pass."""
+51:    if getattr(loop, "text255b_installed", False):
+54:    loop.text255b_log = []
+55:    loop.text255b_ms = []
+57:    def turn255b(text):
+61:            loop.text255b_ms.append((time.perf_counter() - t0) * 1000.0)
+66:            new, tid = T255B.rewrite255b(line)
+71:                loop.text255b_log.append(entry)
+72:                logp = os.environ.get("TEXT255B_LOG")
+77:        loop.text255b_ms.append((time.perf_counter() - t0) * 1000.0)
+80:    loop.turn = turn255b
+81:    loop.text255b_installed = True
+82:    loop.notes.append(NOTE255b)
+86:def _check255b(loop):
+88:    if t is None or getattr(t, "__name__", "") != "turn255b":
+89:        raise RuntimeError("255b: text wrapper not outermost")
+91:        raise RuntimeError("255b: 228 guard not installed")
+94:DEFAULT_CONFIG255b: dict = copy.deepcopy(L138M.DEFAULT_CONFIG138M)
+95:DEFAULT_CONFIG255b["daemon"]["module"] = (
+96:    "Loop255bDaemon (scripts/claude_loop255b_agent.py) over Loop138mDaemon")
+97:DEFAULT_CONFIG255b["self"]["rule255b"] = (
+98:    "255b fixed-reply text pass (scripts/claude_fix255b_text.py): whole "
+102:def build_agent255b(cfg: dict | None = None):
+105:    install_text255b(loop)
+106:    _check255b(loop)
+110:class Text255bDaemonMixin:
+111:    """228 guard first, then the whole 138m daemon build, then the 255b
+117:        install_text255b(self.loop)
+118:        _check255b(self.loop)
+121:class Loop255bDaemon(Text255bDaemonMixin, L138M.Loop138mDaemon):
+122:    """Loop138mDaemon + the 255b text pass as the outermost turn."""
+[0m
+[0m$ [0mgrep -n "255[^bB]" scripts/claude_loop255b_agent.py; echo "GREP_DONE(empty=clean)"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -m py_compile scripts/claude_loop255b_agent.py scripts/claude_fix255b_text.py scripts/claude_fix255b_test.py && echo COMPILE_OK
+GREP_DONE(empty=clean)
+COMPILE_OK
+[0m
+[0m$ [0mcp artifacts/claude-fixedtext255-20260922/loop255-config.json artifacts/claude-fixedtext255b-20260923/loop255b-config.json && sed -i '' 's/Loop255Daemon (scripts\/claude_loop255_agent.py)/Loop255bDaemon (scripts\/claude_loop255b_agent.py)/; s/"rule255"/"rule255b"/; s/255 fixed-reply text pass (scripts\/claude_fix255_text.py)/255b fixed-reply text pass (scripts\/claude_fix255b_text.py)/' artifacts/claude-fixedtext255b-20260923/loop255b-config.json && diff artifacts/claude-fixedtext255-20260922/loop255-config.json artifacts/claude-fixedtext255b-20260923/loop255b-config.json; cp scripts/claude_255_m2check.py scripts/claude_255b_m2check.py && cp scripts/claude_255_m3changes.py scripts/claude_255b_m3changes.py && cp scripts/claude_255_m3format.py scripts/claude_255b_m3format.py && cp scripts/claude_255_score.py scripts/claude_255b_score.py && sed -i '' 's/claude-fixedtext255-20260922/claude-fixedtext255b-20260923/' scripts/claude_255b_score.py && sed -i '' 's/255/255b/g' scripts/claude_255b_m2check.py scripts/claude_255b_m3changes.py scripts/claude_255b_m3format.py scripts/claude_255b_score.py && grep -n "255[^b]" scripts/claude_255b_m2check.py scripts/claude_255b_m3changes.py scripts/claude_255b_m3format.py scripts/claude_255b_score.py; echo SED_DONE
+42c42
+<   "module": "Loop255Daemon (scripts/claude_loop255_agent.py) over Loop138mDaemon"
+---
+>   "module": "Loop255bDaemon (scripts/claude_loop255b_agent.py) over Loop138mDaemon"
+58c58
+<   "rule255": "255 fixed-reply text pass (scripts/claude_fix255_text.py): whole fixed templates rewritten to grammatical English; reply text only"
+---
+>   "rule255b": "255b fixed-reply text pass (scripts/claude_fix255b_text.py): whole fixed templates rewritten to grammatical English; reply text only"
+SED_DONE
+[0m
+[0m$ [0mcp scripts/claude_255_m1gen.py scripts/claude_255b_m1gen.py && sed -i '' 's/claude_fix255_text/claude_fix255b_text/; s/T\.rewrite255/T.rewrite255b/; s/2550922/2550923/; s/Exp 255/Exp 255b/; s/claude_255_m1gen/claude_255b_m1gen/' scripts/claude_255b_m1gen.py && grep -n "255" scripts/claude_255b_m1gen.py; cp scripts/claude_255_runall.sh scripts/claude_255b_runall.sh && sed -i '' 's/claude-fixedtext255-20260922/claude-fixedtext255b-20260923/; s/255/255b/g' scripts/claude_255b_runall.sh && grep -n "255[^b]" scripts/claude_255b_runall.sh; echo DONE
+2:"""Exp 255b M1 generator: fixedtext.jsonl for the two blind grammar graders.
+7:  claude_fix255b_text.rewrite255 (the id it returns must be the template's).
+14:usage: claude_255b_m1gen.py <out.jsonl>
+22:import claude_fix255b_text as T  # noqa: E402
+24:SEED = 2550923  # sealed with PASSMARKS; never changed after the seal
+279:        got, gt = T.rewrite255b(old)
+289:            new, gt = T.rewrite255b(forms[tid]())
+298:        assert T.rewrite255b(t)[1] is None, (uid, t)
+DONE
+[0m
+[0m← [0mEdit scripts/claude_255b_m1gen.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+@@ -3,9 +3,9 @@
+ 
+ - Every CHANGED template with slots (T30-T60 pattern rules) is rendered 5
+   times: an old 138m-shaped line is built with fresh fictional fillers
+   drawn from the sealed seed and passed through the real
+-  claude_fix255b_text.rewrite255 (the id it returns must be the template's).
++  claude_fix255b_text.rewrite255b (the id it returns must be the template's).
+   A slot template whose new text cannot vary (T54, T59) and every
+   fixed-string template (T01-T29) has exactly one possible text, so it is
+   rendered ONCE (five copies would be identical; deviation reported).
+ - Every UNCHANGED swept template (U01-...) is rendered once with fillers.
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -m py_compile scripts/claude_255b_m1gen.py scripts/claude_255b_m2check.py scripts/claude_255b_m3changes.py scripts/claude_255b_m3format.py scripts/claude_255b_score.py && echo COMPILE_OK; diff scripts/claude_255_score.py scripts/claude_255b_score.py | head -60; echo ===; cat scripts/claude_255b_runall.sh | head -30
+COMPILE_OK
+2c2
+< """Exp 255 scorer for M2, M4, M5, M6, M7 (M1 and M3 are graded by others).
+---
+> """Exp 255b scorer for M2, M4, M5, M6, M7 (M1 and M3 are graded by others).
+4,10c4,10
+< Run dir layout (scripts/claude_255_runall.sh):
+<   sd255/                 suitediff218 rows, 255 vs base138m-rows
+<   rt143nogate-255.json   verifier-method rt143 rows on 255
+<   vp/{m,255}-{probes,probes-supp}.json   verifier probes, same session
+<   smoke-255.json         sleep smoke on 255
+<   probe/{m,255}-<p>.json restart / verifier dialogs, same session
+<   lat-{m,255}-{1,2,3}.json  latency, alternating processes
+---
+> Run dir layout (scripts/claude_255b_runall.sh):
+>   sd255b/                 suitediff218 rows, 255b vs base138m-rows
+>   rt143nogate-255b.json   verifier-method rt143 rows on 255b
+>   vp/{m,255b}-{probes,probes-supp}.json   verifier probes, same session
+>   smoke-255b.json         sleep smoke on 255b
+>   probe/{m,255b}-<p>.json restart / verifier dialogs, same session
+>   lat-{m,255b}-{1,2,3}.json  latency, alternating processes
+13c13
+< passed through claude_fix255_text.rewrite255 ("explained"); anything else
+---
+> passed through claude_fix255b_text.rewrite255b ("explained"); anything else
+19,20c19,20
+< usage: claude_255_score.py <run_dir> <predicted_moves255.json> <out.json>
+<        claude_255_score.py --predict <run_dir> <out_pred.json>
+---
+> usage: claude_255b_score.py <run_dir> <predicted_moves255b.json> <out.json>
+>        claude_255b_score.py --predict <run_dir> <out_pred.json>
+30c30
+< import claude_fix255_text as T  # noqa: E402
+---
+> import claude_fix255b_text as T  # noqa: E402
+33c33
+< BASE_ROWS = ROOT / "artifacts" / "claude-fixedtext255-20260922" / \
+---
+> BASE_ROWS = ROOT / "artifacts" / "claude-fixedtext255bb-20260923" / \
+48c48
+<         n, t = T.rewrite255(line)
+---
+>         n, t = T.rewrite255b(line)
+61,62c61,62
+<                          str(ROOT / "scripts" / "claude_255_m2check.py"),
+<                          str(BASE_ROWS), str(run / "sd255"), str(out),
+---
+>                          str(ROOT / "scripts" / "claude_255b_m2check.py"),
+>                          str(BASE_ROWS), str(run / "sd255b"), str(out),
+67c67
+<                          str(ROOT / "scripts" / "claude_255_m2check.py"),
+---
+>                          str(ROOT / "scripts" / "claude_255b_m2check.py"),
+69c69
+<                          str(run / "rt143nogate-255.json"), str(out2)],
+---
+>                          str(run / "rt143nogate-255b.json"), str(out2)],
+74c74
+<     summ = jl(run / "sd255" / "SUITEDIFF218-SUMMARY.json")
+---
+>     summ = jl(run / "sd255b" / "SUITEDIFF218-SUMMARY.json")
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -rn "255bb" scripts/claude_255b_* scripts/claude_loop255b_agent.py artifacts/claude-fixedtext255b-20260923/loop255b-config.json; echo ---; sed -i '' 's/255bb/255b/g' scripts/claude_255b_score.py scripts/claude_255b_runall.sh && grep -rn "255bb" scripts/ artifacts/claude-fixedtext255b-20260923/loop255b-config.json; echo CLEAN_CHECK_DONE; grep -n "base138m-rows\|fixedtext255b" scripts/claude_255b_score.py scripts/claude_255b_runall.sh | head
+scripts/claude_255b_runall.sh:14:CN=artifacts/claude-fixedtext255bb-20260923/loop255b-config.json
+scripts/claude_255b_runall.sh:15:D=artifacts/claude-fixedtext255bb-20260923
+scripts/claude_255b_score.py:33:BASE_ROWS = ROOT / "artifacts" / "claude-fixedtext255bb-20260923" / \
+---
+Binary file scripts/__pycache__/claude_255b_score.cpython-312.pyc matches
+CLEAN_CHECK_DONE
+scripts/claude_255b_score.py:5:  sd255b/                 suitediff218 rows, 255b vs base138m-rows
+scripts/claude_255b_score.py:33:BASE_ROWS = ROOT / "artifacts" / "claude-fixedtext255b-20260923" / \
+scripts/claude_255b_score.py:34:    "base138m-rows"
+scripts/claude_255b_runall.sh:14:CN=artifacts/claude-fixedtext255b-20260923/loop255b-config.json
+scripts/claude_255b_runall.sh:15:D=artifacts/claude-fixedtext255b-20260923
+scripts/claude_255b_runall.sh:30:# M2 -- frozen suites vs 138m's rows (base138m-rows), then rt143 no-gate
+scripts/claude_255b_runall.sh:32:PY scripts/fable_suitediff218.py --agent $AN --config $CN --base-dir $D/base138m-rows \
+scripts/claude_255b_runall.sh:68:  PY scripts/claude_255b_m2check.py $D/base138m-rows $R/sd255b $R/m2-check.json > $R/m2-check.txt 2>&1
+[0m
+[0m$ [0mrm -rf scripts/__pycache__ && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+p=json.load(open('artifacts/claude-fixedtext255-20260922/predicted_moves255.json'))
+print(list(p.keys())); print('moves',len(p['moves']),'m4',len(p['m4']),'m6',len(p['m6']),'nogate',len(p['m2_nogate']),'flagged',len(p.get('m4_flagged',[])))
+print('m4 sample:',p['m4'][:5]); print('m6 sample:',list(p['m6'])[:5])
+"; rm -rf scripts/__pycache__; uptime
+['moves', 'm4', 'm6', 'm2_nogate', 'm4_flagged']
+moves 162 m4 38 m6 17 nogate 45 flagged 8
+m4 sample: ['probes-supp:S07:t01', 'probes-supp:S11:t01', 'probes:A02:t00', 'probes:A06:t00', 'probes:A15:t00']
+m6 sample: ['p3-dialogs:d00:t04', 'p3-dialogs:d01:t01', 'p3-dialogs:d05:t03', 'p3-dialogs:d08:t01', 'p3-dialogs:d08:t04']
+22:54  up 2 days, 14:44, 4 users, load averages: 122.63 127.66 114.59
+[0m
+[0m← [0mWrite scripts/claude_255b_v255check.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -m py_compile scripts/claude_255b_v255check.py && echo OK; ls artifacts/claude-fixedtext255-20260922/run/vp/ artifacts/claude-fixedtext255-20260922/run/probe/ 2>&1 | head -20
+OK
+artifacts/claude-fixedtext255-20260922/run/probe/:
+255-p3-dialogs.json
+255-p3-dialogs.txt
+255-p3c-restart2.json
+255-p3c-restart2.txt
+255-p3d-ghost.json
+255-p3d-ghost.txt
+255-v-dialogs.json
+255-v-dialogs.txt
+255-v-supp.json
+255-v-supp.txt
+m-p3-dialogs.json
+m-p3-dialogs.txt
+m-p3c-restart2.json
+m-p3c-restart2.txt
+m-p3d-ghost.json
+m-p3d-ghost.txt
+m-v-dialogs.json
+m-v-dialogs.txt
+m-v-supp.json
+[0m
+[0m✗ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; rm -rf /tmp/smoke255b && mkdir -p /tmp/smoke255b && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255b_agent.py --config artifacts/claude-fixedtext255b-20260923/loop255b-config.json --once "Who is Tomas's boss?" --state-dir /tmp/smoke255b && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255_agent.py --config artifacts/claude-fixedtext255-20260922/loop255-config.json --once "Who is Tomas's boss?" --state-dir /tmp/smoke255b-255 2>&1 | tail -3; rm -rf /tmp/smoke255b /tmp/smoke255b-255 scripts/__pycache__ failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mmkdir -p /tmp/smoke255b /tmp/smoke255ba; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255b_agent.py --config artifacts/claude-fixedtext255b-20260923/loop255b-config.json --once "Who is Tomas's boss?" --state-dir /tmp/smoke255b
+I don't know anyone called Tomas.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+p=json.load(open('artifacts/claude-verify-20260922/138m/probes.json'))
+for d in p:
+    if d.get('id')=='A06':
+        print(type(d), list(d.keys())[:10])
+        rows=d.get('rows',d if isinstance(d,list) else [])
+        print(json.dumps(d)[:600])
+        break
+"
+<class 'dict'> ['id', 'feature', 'turns', 'expect_stored', 'note']
+{"id": "A06", "feature": "identity", "turns": ["Q|whats yuor name?"], "expect_stored": [], "note": ""}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; mkdir -p /tmp/sm255b /tmp/sm255; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255b_agent.py --config artifacts/claude-fixedtext255b-20260923/loop255b-config.json --once "whats yuor name?" --state-dir /tmp/sm255b; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255_agent.py --config artifacts/claude-fixedtext255-20260922/loop255-config.json --once "whats yuor name?" --state-dir /tmp/sm255
+I didn't understand that. Could you say it another way?
+I don't know that. I may have misread your question, so could you say it another way?
+[0m
+[0m$ [0mgit status --porcelain | head -20; echo ---; df -g / | head -3; uptime; echo ---; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_convpanel239_run.py --help 2>&1 | head -20
+M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 183291360    0%   /
+22:55  up 2 days, 14:45, 4 users, load averages: 133.71 130.24 116.38
+---
+usage: claude_convpanel239_run.py [-h] --agent AGENT --config CONFIG --out OUT
+                                  [--panel PANEL] [--work WORK]
+
+options:
+  -h, --help       show this help message and exit
+  --agent AGENT
+  --config CONFIG
+  --out OUT        output path without extension
+  --panel PANEL
+  --work WORK      scratch dir for per-conversation workdirs
+[0m
+[0m$ [0mgit diff --stat artifacts/fable-predictions-ledger.md; tail -5 artifacts/fable-predictions-ledger.md | cut -c1-200
+artifacts/fable-predictions-ledger.md | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+
+- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opene
+- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-inte
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored
+[0m
+[0m$ [0mchmod +x scripts/claude_255b_runall.sh && mkdir -p scratchpad/w255b && PREDICT=1 nohup scripts/claude_255b_runall.sh scratchpad/w255b/pilot scratchpad/w255b/work > scratchpad/w255b/pilot-launch.log 2>&1 & echo "PID=$!"; sleep 5; cat scratchpad/w255b/pilot-launch.log 2>/dev/null; head -5 scratchpad/w255b/pilot/uptime.log 2>/dev/null
+PID=9685
+22:56:11 uptime load1=135.83 before: M2-suites
+22:56:11 uptime load1=135.83 before: M2-suites
+[0m
+[0m→ [0mRead scripts/claude_255b_m1gen.py[90m [limit=30, offset=14][0m
+[0m
+[0m← [0mEdit scripts/claude_255b_m1gen.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+@@ -18,9 +18,10 @@
+ import sys
+ from pathlib import Path
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parent))
+-import claude_fix255b_text as T  # noqa: E402
++import claude_fix255_text as T255  # noqa: E402 (old-form structure, read-only)
++import claude_fix255b_text as T  # noqa: E402 (the rewriter under test)
+ 
+ SEED = 2550923  # sealed with PASSMARKS; never changed after the seal
+ 
+ # fictional fillers only
+
+[0m
+[0m$ [0mgrep -n "T\.RULES\|T\.MODE_NEW\|T\.EXACT\|T\.user_np" scripts/claude_255b_m1gen.py
+81:    modes = sorted(T.MODE_NEW)
+202:        "U24_SAVED": lambda: f"Saved: {T.user_np(g.fs())}.",
+273:    rule_ids = [t for t, _p, _f in T.RULES]
+277:    for old, (tid, new) in T.EXACT.items():
+[0m
+[0m$ [0msed -i '' 's/modes = sorted(T\.MODE_NEW)/modes = sorted(T255.MODE_NEW)/; s/f"Saved: {T\.user_np(g\.fs())}\."/f"Saved: {T255.user_np(g.fs())}."/; s/rule_ids = \[t for t, _p, _f in T\.RULES\]/rule_ids = [t for t, _p, _f in T255.RULES]/; s/for old, (tid, new) in T\.EXACT\.items():/for old, (tid, new) in T255.EXACT.items():/' scripts/claude_255b_m1gen.py && grep -n "T255\.\|T\.rewrite255b" scripts/claude_255b_m1gen.py
+81:    modes = sorted(T255.MODE_NEW)
+202:        "U24_SAVED": lambda: f"Saved: {T255.user_np(g.fs())}.",
+273:    rule_ids = [t for t, _p, _f in T255.RULES]
+277:    for old, (tid, new) in T255.EXACT.items():
+280:        got, gt = T.rewrite255b(old)
+290:            new, gt = T.rewrite255b(forms[tid]())
+299:        assert T.rewrite255b(t)[1] is None, (uid, t)
+[0m
+[0m→ [0mRead scripts/claude_255b_m1gen.py[90m [limit=25, offset=267][0m
+[0m
+[0m← [0mEdit scripts/claude_255b_m1gen.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_m1gen.py
+@@ -273,13 +273,16 @@
+ rule_ids = [t for t, _p, _f in T255.RULES]
+ assert set(rule_ids) == set(forms), set(rule_ids) ^ set(forms)
+ # fixed-string changed templates: once each
+ done = set()
+-for old, (tid, new) in T255.EXACT.items():
++for old, (tid, new255) in T255.EXACT.items():
+     if tid in done:
+         continue
++    # 255b: T02 renders the new Part A text; every other fixed
++    # string renders exactly as 255
++    new = T.T02_NEW_255B if tid == "T02_Q2" else new255
+     got, gt = T.rewrite255b(old)
+-    assert gt == tid and got == new
++    assert gt == tid and got == new, (tid, got, new)
+     rows.append({"template_id": tid, "text": new, "kind": "changed"})
+     done.add(tid)
+ # slot templates: 5 distinct renders (once when the text cannot vary)
+ for tid in rule_ids:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_255b_m1gen.py scratchpad/w255b/m1-trial.jsonl && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+rows=[json.loads(x) for x in open('scratchpad/w255b/m1-trial.jsonl')]
+ch=[r for r in rows if r['template_id'].startswith('T')]
+un=[r for r in rows if r['template_id'].startswith('U')]
+print('total',len(rows),'changed',len(ch),'unchanged',len(un))
+from collections import Counter
+print(Counter(r['template_id'] for r in rows).most_common(5))
+print('T02:',[r['text'] for r in rows if r['template_id']=='T02_Q2'])
+print('T46:',[r['text'] for r in rows if r['template_id']=='T46_REFUSED0'])
+"
+wrote 228 rows (171 changed-template renders, 57 unchanged) -> scratchpad/w255b/m1-trial.jsonl
+total 228 changed 171 unchanged 57
+[('T55_UNSURE', 5), ('T40_WEBN', 5), ('T48_GUESSES', 5), ('T52_YESTERDAY', 5), ('T37_SRCPUT', 5)]
+T02: ["I didn't understand that. Could you say it another way?"]
+T46: ['No. I never asked for clarification.']
+[0m
+[0m$ [0mrm scratchpad/w255b/m1-trial.jsonl; cat scratchpad/w255b/pilot/uptime.log 2>/dev/null | tail -5; uptime; ps aux | grep -E "suitediff|run_probes|255b" | grep -v grep | head -5
+22:56:11 uptime load1=135.83 before: M2-suites
+22:56:41 uptime load1=141.55 before: M2-suites
+22:56  up 2 days, 14:46, 4 users, load averages: 140.31 132.95 118.42
+ben-hannan        8961  11.4  2.3 562788608 773472   ??  RN   10:50PM   0:41.40 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:talk-255b-build.go1.8946 COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012\012GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.\012\012\012YOUR TASK: builder for exp 255b, the one follow-up to 255 (fixed-reply text). CPU only.\012Read first: design/v3/30-modes/255b-fixedtext-decision.md (from the branch above; it is the whole change, with exact texts), handoff/kit/briefs/255-fixedtext.txt (how 255 was built). In this worktree read artifacts/claude-fixedtext255-20260922/PASSMARKS.md and RESULTS.md, and scripts/claude_fix255_text.py, claude_fix255_test.py, claude_loop255_agent.py, claude_255_*.py, claude_255_runall.sh (read-only; import them, never edit).\012Base: 138m (scripts/claude_loop138m_agent.py + artifacts/claude-merge138m-20260922/loop138m-config.json). 255b replaces 255's wrapper; it does not stack on 255.\012New files only:\012- scripts/claude_fix255b_text.py: rewrite255b(line) imports claude_fix255_text; T02 and zero counts per the decision note; every other line exactly as rewrite255.\012- scripts/claude_fix255b_test.py: 255's checks on all 60 templates with 255b texts, plus the n = 0..12 sweep of every count template (no "zero", no "1 <plural>", no "one <plural>"), plus the anchor family check on the new T02 text.\012- scripts/claude_loop255b_agent.py and its config; scripts/claude_255b_*.py and claude_255b_runall.sh copied from 255's with 255b paths.\012- artifacts/claude-fixedtext255b-20260923/ (PASSMARKS.md, predicted moves, SEAL.sha256.txt, fixedtext.jsonl + SEAL2.sha256.txt, RESULTS.md). Ledger lines P255b.n appended to artifacts/fable-predictions-ledger.md.\012Order: (1) unit tests at 0 failures; (2) full pilot of M2, M4, M5, M6, M7 vs 138m on scratch, and the extra report 255b vs 255 (differences only on T02 and zero-count lines); (3) PASSMARKS.md with the marks from the decision note, numbered predictions and every predicted move by id; seal (shasum -a 256 > SEAL.sha256.txt); (4) generate the M1 render file with seed 2550923, seal it into SEAL2; (5) run the registered M2, M4, M5, M6, M7; (6) run the 239 panel ONCE on 255b and write the changes file vs artifacts/claude-convpanel239-138m-20260922/transcripts-138m.jsonl (mechanical only: count changed turns, unexplained changes and store changes; never quote or read items). Do not grade M1 or M3 yourself; the director does.\012Report: verdict for your marks, marks table with integer counts, the paths and sha256 of fixedtext.jsonl and the M3 changes file, every move, miss and deviation.\012PUSH: artifacts/claude-fixedtext255b-20260923 scripts/claude_fix255b_text.py scripts/claude_fix255b_test.py scripts/claude_loop255b_agent.py scripts/claude_255b_* artifacts/fable-predictions-ledger.md
+ben-hannan        1343   5.5  1.1 562837392 376224 s001  SN   10:21PM   1:34.93 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:263-build.go1.1307 COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012\012GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.\012\012YOUR TASK: builder for exp 263, the comma write guard. Read design/v3/30-modes/263-comma-guard.md (the one change) and handoff/kit/briefs/260-openers.txt (how 260 was built, run and scored; copy its structure). In this worktree, read artifacts/claude-openers260-20260922/PASSMARKS.md and RESULTS.md, and scripts/claude_*260*.py (read-only; import, never edit).\012Base: the 260 arm (scripts/claude_loop260_agent.py + its config). One change: one outermost write-guard mixin scripts/claude_fix263_comma.py in scripts/claude_loop263_agent.py (SrcGuardMixin228 stays first). Artifacts: artifacts/claude-comma263-20260923/. Ledger lines P263.n. New files only. CPU only.\012Order: (1) reproduce the gap on 260 with your own dev dialogs; (2) write 40+ dev dialogs in your own wording (unlisted openers + comma, appositive subjects, comma values that must stay, questions, controls); (3) build and pilot on dev, the 260 suites (fable_suitediff218 --only rt136,rt143,sessions152,bench against 260's rows) and the 138m verifier probes; (4) PASSMARKS.md with numbered predictions and every predicted move by id, seal (shasum -a 256 > SEAL.sha256.txt), append the ledger lines; (5) only then wait for artifacts/claude-commapanel263-20260923/SEAL.sha256.txt (poll every 2 min, up to 90 min), check it OK from the repo root, and run the panel ONCE on both arms (260 and 263); (6) re-run openpanel260 once on 263 as a regression check.\012Marks: M1 commapanel263, 0 stored subjects containing a comma over all 60 (260 arm's count shown next to it); unlisted_opener_teach >= 16/20 exact; comma_value_ok: 0 lost vs 260; question 0 writes; control 14/14 byte-identical to 260. M2 openpanel260 on 263: every 260 figure equal or better, 0 new junk. M3 suites: moves exactly your predicted list, 0 new WRONG/WRONG-WRITE/lost OK. M4 median added time per turn <= +3 ms vs 260.\012Finish with RESULTS.md (result first, integer counts, categories only, never quote panel items) and your final reply.\012PUSH: artifacts/claude-comma263-20260923 scripts/claude_fix263_comma.py scripts/claude_loop263_agent.py scripts/claude_comma263_*.py artifacts/fable-predictions-ledger.md
+ben-hannan        9685   0.0  0.0 488781552   2352   ??  SN   10:56PM   0:00.01 /bin/bash scripts/claude_255b_runall.sh scratchpad/w255b/pilot scratchpad/w255b/work
+ben-hannan        8946   0.0  0.0 488782336   2064   ??  SN   10:50PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/talk-255b-build.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_255b_v255check as V
+d=V.build_delta_map()
+print('delta lines:',len(d))
+from collections import Counter
+print(Counter(v[1] for v in d.values()))
+import json
+print(json.dumps({'k':list(d)[:2]},indent=0)[:300])
+"; sleep 45; tail -3 scratchpad/w255b/pilot/uptime.log; uptime | head -1
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_v255check.py", line 44, in build_delta_map
+    assert t255 == t255b and t255 is not None, o
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: We have had 10 turns.
+22:56:41 uptime load1=141.55 before: M2-suites
+22:57:11 uptime load1=142.12 before: M2-suites
+22:57:41 uptime load1=141.44 before: M2-suites
+22:57  up 2 days, 14:47, 4 users, load averages: 141.17 134.57 119.94
+[0m
+[0m← [0mEdit scripts/claude_255b_v255check.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_v255check.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_v255check.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_255b_v255check.py
+@@ -40,8 +40,11 @@
+                 f"clarification 0 times.")
+ for o in olds:
+     r255, t255 = T255.rewrite255(o)
+     r255b, t255b = T255B.rewrite255b(o)
++    if t255 is None and t255b is None:
++        assert r255 == o and r255b == o, o
++        continue  # n >= 10 digit form: neither arm rewrites
+     assert t255 == t255b and t255 is not None, o
+     if r255 != r255b:
+         d[r255] = (r255b, "B")
+ return d
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_255b_v255check as V
+from collections import Counter
+d=V.build_delta_map()
+print('delta lines:',len(d), Counter(v[1] for v in d.values()))
+"
+delta lines: 48 Counter({'B': 47, 'A': 1})
+[0m
+[0m$ [0msleep 240; tail -3 scratchpad/w255b/pilot/uptime.log; ls scratchpad/w255b/pilot/ 2>/dev/null; uptime | head -1
+23:00:41 uptime load1=125.79 before: M2-suites
+23:01:11 uptime load1=143.06 before: M2-suites
+23:01:41 uptime load1=152.02 before: M2-suites
+probe
+uptime.log
+vp
+23:01  up 2 days, 14:51, 4 users, load averages: 154.08 136.32 123.64
+[0m
+[0m$ [0msleep 280; tail -2 scratchpad/w255b/pilot/uptime.log; ls scratchpad/w255b/pilot/sd255b 2>/dev/null | head -3; uptime | head -1
+23:05:42 uptime load1=205.63 before: M2-suites
+23:06:12 uptime load1=211.61 before: M2-suites
+23:06  up 2 days, 14:55, 4 users, load averages: 221.08 183.63 148.74
+[0m
+[0m$ [0msleep 290; tail -2 scratchpad/w255b/pilot/uptime.log; uptime | head -1
+23:10:42 uptime load1=156.06 before: M2-suites
+23:11:13 uptime load1=165.08 before: M2-suites
+23:11  up 2 days, 15 hrs, 4 users, load averages: 180.00 173.34 153.63
+[0m
+[0m$ [0msleep 290; tail -2 scratchpad/w255b/pilot/uptime.log; uptime | head -1
+23:15:43 uptime load1=156.50 before: M2-suites
+23:16:13 uptime load1=143.44 before: M2-suites
+23:16  up 2 days, 15:05, 4 users, load averages: 139.94 158.44 152.77
+[0m
+[0m$ [0msleep 290; tail -2 scratchpad/w255b/pilot/uptime.log; uptime | head -1
+23:20:43 uptime load1=114.24 before: M2-suites
+23:21:13 uptime load1=104.69 before: M2-suites
+23:21  up 2 days, 15:10, 4 users, load averages: 103.11 128.14 140.52
+[0m
+[0m$ [0msleep 290; tail -2 scratchpad/w255b/pilot/uptime.log; uptime | head -1
+23:25:13 uptime load1=87.35 before: M2-suites
+23:25:44 uptime load1=78.87 before: M2-suites
+23:26  up 2 days, 15:15, 4 users, load averages: 70.35 94.23 121.12
+[0m
+[0m$ [0msleep 290; tail -3 scratchpad/w255b/pilot/uptime.log; ls scratchpad/w255b/pilot/ 2>/dev/null; uptime | head -1
+23:29:33 uptime load1=85.33 before: M4-255b-probes-supp
+23:30:03 uptime load1=90.16 before: M4-255b-probes-supp
+23:30:33 uptime load1=91.16 before: M4-255b-probes-supp
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+uptime.log
+vp
+23:31  up 2 days, 15:20, 4 users, load averages: 94.12 88.08 109.47
+[0m
+[0m$ [0mtail -8 scratchpad/w255b/pilot/sd255b.log; echo ===; tail -3 scratchpad/w255b/pilot/rt143nogate.log; echo ===; tail -2 scratchpad/w255b/pilot/uptime.log
+done bench in 19.5s
+GATE: clean
+rt136: n_moves=48 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=48) seconds=1.5
+rt143: n_moves=42 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=42) seconds=3.3
+sessions152: n_moves=25 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=25) seconds=0.4
+bench: n_moves=43 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=43) seconds=19.5
+GATE: clean
+TOTAL seconds=26.5
+zsh:1: == not found
+[0m
+[0m$ [0msleep 290; tail -2 scratchpad/w255b/pilot/uptime.log; ls scratchpad/w255b/pilot/; uptime | head -1
+23:35:27 uptime load1=90.94 before: M7-m-1
+23:35:57 uptime load1=85.15 before: M7-m-1
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+23:36  up 2 days, 15:25, 4 users, load averages: 78.63 76.06 96.95
+[0m
+[0m$ [0msleep 280; tail -3 scratchpad/w255b/pilot/uptime.log; ls scratchpad/w255b/pilot/; cat scratchpad/w255b/pilot/score.txt 2>/dev/null | head -20; uptime | head -1
+23:39:26 uptime load1=76.76 before: M7-m-2
+23:39:56 uptime load1=80.29 before: M7-m-2
+23:40:26 uptime load1=62.67 before: M7-m-2
+lat-255b-1.json
+lat-255b-1.log
+lat-m-1.json
+lat-m-1.log
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+23:40  up 2 days, 15:30, 4 users, load averages: 50.52 67.73 87.74
+[0m
+[0m$ [0msleep 280; tail -4 scratchpad/w255b/pilot/uptime.log; cat scratchpad/w255b/pilot/score.txt 2>/dev/null; uptime | head -1
+23:41:39 uptime load1=67.63 before: M7-255b-3
+23:42:09 uptime load1=66.57 before: M7-255b-3
+23:42:39 uptime load1=52.91 before: M7-255b-3
+TOTAL 2799 s
+M2 PASS {"suitediff_summary": ["rt136: n_moves=48 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=48) seconds=1.5", "rt143: n_moves=42 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=42) seconds=3.3", "sessions152: n_moves=25 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=25) seconds=0.4", "bench: n_moves=43 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=43) seconds=19.5"], "gate": "GATE: clean", "skipped": {}, "reply_only_moves": 162, "unexplained": 0, "matches_prediction": true, "missing_predicted": [], "unpredicted": [], "nogate_moves": 45, "nogate_unexplained": 0, "nogate_matches_prediction": true, "stdout": ["moves=162 unexplained=0 matches_prediction=True missing=0 unpred
+M4 PASS {"changed_replies": 38, "labels": {"same meaning": 38}, "flagged": [], "worse": [], "store_changes": [], "unpredicted": [], "predicted_not_seen": [], "pass": true}
+M5 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "pass": true}
+M6 PASS {"pass": true}
+   vs_138m_saved {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+   vs_138m_same_session {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+M7 PASS {"median_138m_ms": 2.208, "median_255b_ms": 2.286, "delta_ms": 0.078, "n_138m": 624, "n_255b": 624, "pass": true}
+23:45  up 2 days, 15:34, 4 users, load averages: 43.51 58.53 78.43
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+a=json.load(open('artifacts/claude-fixedtext255-20260922/predicted_moves255.json'))
+b=json.load(open('scratchpad/w255b/pilot/predicted_moves255.json'))
+for k in ('moves','m4','m2_nogate'):
+    sa,sb=set(a[k]),set(b[k])
+    print(k,'255:',len(sa),'255b:',len(sb),'only255:',sorted(sa-sb)[:10],'only255b:',sorted(sb-sa)[:10])
+ma={k:v for k,v in a['m6'].items()}; mb={k:v for k,v in b['m6'].items()}
+print('m6 255:',len(ma),'255b:',len(mb))
+print('m6 only255:',sorted(set(ma)-set(mb)))
+print('m6 only255b:',sorted(set(mb)-set(ma)))
+print('m6 text-diffs:',[(k,ma[k],mb[k]) for k in ma if k in mb and ma[k]!=mb[k]][:10])
+print('m6 text-diffs n:',sum(1 for k in ma if k in mb and ma[k]!=mb[k]))
+"
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'scratchpad/w255b/pilot/predicted_moves255.json'
+[0m
+[0m$ [0mls scratchpad/w255b/pilot/; grep -n "predict" scratchpad/w255b/pilot-launch.log 2>/dev/null | head; tail -20 scratchpad/w255b/pilot/sd255b.log 2>/dev/null | head -5; cat scratchpad/w255b/pilot/m2-check.txt 2>/dev/null | head
+lat-255b-1.json
+lat-255b-1.log
+lat-255b-2.json
+lat-255b-2.log
+lat-255b-3.json
+lat-255b-3.log
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+m2-check.json
+m2-check.txt
+m2-nogate-check.json
+predicted_moves255b.json
+probe
+rt143nogate-255b.json
+rt143nogate.log
+score.txt
+score255b.json
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+100:m2=162 m4=38 m6=17 m2_nogate=45 -> scratchpad/w255b/pilot/predicted_moves255b.json
+102:M2 PASS {"suitediff_summary": ["rt136: n_moves=48 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=48) seconds=1.5", "rt143: n_moves=42 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=42) seconds=3.3", "sessions152: n_moves=25 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=25) seconds=0.4", "bench: n_moves=43 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=43) seconds=19.5"], "gate": "GATE: clean", "skipped": {}, "reply_only_moves": 162, "unexplained": 0, "matches_prediction": true, "missing_predicted": [], "unpredicted": [], "nogate_moves": 45, "nogate_unexplained": 0, "nogate_matches_prediction": true, "stdout": ["moves=162 unexplained=0 matches_prediction=True missing=0 unpred
+103:M4 PASS {"changed_replies": 38, "labels": {"same meaning": 38}, "flagged": [], "worse": [], "store_changes": [], "unpredicted": [], "predicted_not_seen": [], "pass": true}
+106:   vs_138m_saved {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+107:   vs_138m_same_session {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+rt143: n_moves=42 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=42) seconds=3.3
+rt143: n_moves=42 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=42) seconds=3.3
+done rt143 in 3.3s
+sessions152: n_moves=25 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=25) seconds=0.4
+sessions152: n_moves=25 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=25) seconds=0.4
+rt136: rows=145 reply-only moves=48
+rt143: rows=124 reply-only moves=42
+sessions152: rows=180 reply-only moves=25
+bench-bench132_4hop: rows=200 reply-only moves=4
+bench-edit200: rows=200 reply-only moves=37
+bench-new_121_4hop: rows=200 reply-only moves=5
+bench-old_s2fresh_4hop: rows=200 reply-only moves=1
+moves=162 unexplained=0
+M2 PASS
+rt143nogate: rows=124 reply-only moves=45 unexplained=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+a=json.load(open('artifacts/claude-fixedtext255-20260922/predicted_moves255.json'))
+b=json.load(open('scratchpad/w255b/pilot/predicted_moves255b.json'))
+for k in ('moves','m4','m2_nogate'):
+    sa,sb=set(a[k]),set(b[k])
+    print(k,'255:',len(sa),'255b:',len(sb))
+    print('  only255:',sorted(sa-sb))
+    print('  only255b:',sorted(sb-sa))
+ma,mb=a['m6'],b['m6']
+print('m6 255:',len(ma),'255b:',len(mb))
+print('m6 only255:',sorted(set(ma)-set(mb)))
+print('m6 only255b:',sorted(set(mb)-set(ma)))
+td=[k for k in ma if k in mb and ma[k]!=mb[k]]
+print('m6 text-diffs n:',len(td))
+for k in td: print('  ',k,'|255:',ma[k][:80],'|255b:',mb[k][:80])
+"
+moves 255: 162 255b: 162
+  only255: []
+  only255b: []
+m4 255: 38 255b: 38
+  only255: []
+  only255b: []
+m2_nogate 255: 45 255b: 45
+  only255: []
+  only255b: []
+m6 255: 17 255b: 17
+m6 only255: []
+m6 only255b: []
+m6 text-diffs n: 6
+   p3-dialogs:d00:t04 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+   p3-dialogs:d01:t01 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+   p3-dialogs:d05:t03 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+   p3c-restart2:d00:t06 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+   p3d-ghost:d00:t06 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+   v-dialogs:d03:t05 |255: I don't know that. I may have misread your question, so could you say it another |255b: I didn't understand that. Could you say it another way?
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_255b_v255check.py artifacts/claude-fixedtext255-20260922/run scratchpad/w255b/pilot scratchpad/w255b/v255check.json
+255b-vs-255: diffs=26 by_part={'A': 26} unexpected=0
+EXTRA PASS
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+r=json.load(open('scratchpad/w255b/v255check.json'))
+c=Counter((x.get('file'),) for x in r['changes'])
+print(dict(c))
+print('M4 ids:',sorted((x['file']+':'+x['id']+':t%02d'%x['turn']) for x in r['changes'] if 'dialog' not in x))
+print('M6 ids:',sorted((x['file']+':d%02d:t%02d'%(x['dialog'],x['turn'])) for x in r['changes'] if 'dialog' in x))
+print('parts:',Counter(x['part'] for x in r['changes']))
+"
+{('probes',): 20, ('p3-dialogs',): 3, ('p3c-restart2',): 1, ('p3d-ghost',): 1, ('v-dialogs',): 1}
+M4 ids: ['probes:A02:t00', 'probes:A06:t00', 'probes:A15:t00', 'probes:B04:t01', 'probes:B05:t01', 'probes:B20:t01', 'probes:C14:t00', 'probes:D02:t01', 'probes:D03:t01', 'probes:D04:t00', 'probes:D06:t00', 'probes:D08:t01', 'probes:D10:t01', 'probes:N02:t01', 'probes:N03:t00', 'probes:N05:t00', 'probes:N07:t00', 'probes:N08:t00', 'probes:N09:t00', 'probes:R07:t01']
+M6 ids: ['p3-dialogs:d00:t04', 'p3-dialogs:d01:t01', 'p3-dialogs:d05:t03', 'p3c-restart2:d00:t06', 'p3d-ghost:d00:t06', 'v-dialogs:d03:t05']
+parts: Counter({'A': 26})
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+c=json.load(open('scratchpad/w255b/pilot/m2-check.json'))
+t2=[m for m in c['moves'] if 'T02_Q2' in m['templates']]
+zb=[m for m in c['moves'] if set(m['templates']) & {'T40_WEBN','T41_SLEPTN','T43_TURNS','T46_REFUSED0','T47_REFUSEDN','T52_YESTERDAY','T53_NOBODYELSE'}]
+print('moves:',len(c['moves']),'T02 moves:',len(t2),'zeroB moves:',len(zb))
+print('T02 ids:',sorted(f\"{m['suite']}/{m['id']}\" for m in t2))
+ng=json.load(open('scratchpad/w255b/pilot/m2-nogate-check.json'))
+n2=[m for m in ng['moves'] if 'T02_Q2' in m['templates']]
+nb=[m for m in ng['moves'] if set(m['templates']) & {'T40_WEBN','T41_SLEPTN','T43_TURNS','T46_REFUSED0','T47_REFUSEDN','T52_YESTERDAY','T53_NOBODYELSE'}]
+print('nogate:',len(ng['moves']),'T02:',len(n2),'zeroB:',len(nb))
+print('nogate T02 ids:',sorted(m['id'] for m in n2))
+"
+moves: 162 T02 moves: 52 zeroB moves: 0
+T02 ids: ['bench-bench132_4hop/bench132-4hop-019', 'bench-bench132_4hop/bench132-4hop-112', 'bench-new_121_4hop/bench121-4hop-026', 'bench-new_121_4hop/bench121-4hop-066', 'bench-old_s2fresh_4hop/bench103-s2fresh-4hop-187', 'rt136/C076', 'rt136/C079', 'rt143/A1', 'rt143/F6', 'rt143/H3', 'rt143/J9', 'rt143/K1', 'rt143/K2', 'rt143/K3', 'rt143/K4', 'rt143/K5', 'rt143/K7', 'rt143/K8', 'rt143/L2', 'rt143/L3', 'rt143/L5', 'rt143/L6', 'rt143/M3', 'rt143/M4', 'rt143/M5', 'rt143/M6', 'rt143/O1', 'rt143/O2', 'rt143/O4', 'rt143/O5', 'rt143/P1', 'rt143/P2', 'rt143/P5', 'rt143/S1', 'rt143/S4', 'rt143/S5', 'rt143/T2', 'rt143/T3', 'rt143/U1', 'rt143/U2', 'rt143/U4', 'sessions152/S1-family10#19', 'sessions152/S1-family10#5', 'sessions152/S1-family10#8', 'sessions152/S3-teachers-correction#10', 'sessions152/S3-teachers-correction#17', 'sessions152/S3-teachers-correction#19', 'sessions152/S3-teachers-correction#4', 'sessions152/S6-pronouns-corrections#20', 'sessions152/S6-pronouns-corrections#3', 'sessions152/S6-pronouns-corrections#6', 'sessions152/S6-pronouns-corrections#9']
+nogate: 45 T02: 37 zeroB: 0
+nogate T02 ids: ['A1', 'F6', 'H3', 'J9', 'K1', 'K2', 'K3', 'K4', 'K5', 'K7', 'K8', 'L2', 'L3', 'L5', 'L6', 'M3', 'M4', 'M5', 'M6', 'O1', 'O2', 'O4', 'O5', 'P1', 'P2', 'P5', 'Q1', 'Q2', 'Q7', 'S1', 'S4', 'S5', 'T2', 'T3', 'U1', 'U2', 'U4']
+[0m
+[0m$ [0mcat artifacts/claude-fixedtext255-20260922/SEAL.sha256.txt; echo ===; cat artifacts/claude-fixedtext255-20260922/SEAL2.sha256.txt; echo ===; head -30 artifacts/claude-fixedtext255-20260922/predicted-moves255.md
+735279561a315b5aca618c50ec013a97d258bd55ce4c0da612ff9252efbe117a  scripts/claude_fix255_text.py
+40f305f56f4c0e444113d80cfd3a7fa69c811248157506ed8a87155f5f2feec4  scripts/claude_loop255_agent.py
+7070797e9b899f315bccbe2db5343c6926416c0a371dac19b6b4e1514d976256  scripts/claude_fix255_test.py
+6cf0d7989e7555b14f8619b49f2a84ddda84611f3f9091ead238d01bc4e1d4be  scripts/claude_255_m1gen.py
+28fb337e2d28007045fab1c17f7b2ee0e4edfd07dd07b10dba85bfd6814a8fb4  scripts/claude_255_m2check.py
+915aea7ebe512d0459d9d9c2caec5eadabcdb9da97f23cdec674dab30d301a02  scripts/claude_255_m3changes.py
+6a73e59ec9a55738a870c1c881a5dda9cfa7954cda308ce9093306085ba08422  scripts/claude_255_score.py
+578e8ecf32de02783e0d71a02a5032fc538af2a78fda315b89bad065bf7d17f6  scripts/claude_255_runall.sh
+5a796e0e58877fae2045d8a6f56c1428eb33aa4965c2daf7cf48ddc007e567a1  artifacts/claude-fixedtext255-20260922/loop255-config.json
+86631b158999599ed0b59e19b95e494c566fc771d3ad39ad11e4ae06831e3d8b  artifacts/claude-fixedtext255-20260922/PASSMARKS.md
+79dab992ff360aa300c4852d5abb5f0c9c0a57e70728fb68a97bdec5b77a6bb5  artifacts/claude-fixedtext255-20260922/predicted_moves255.json
+b26f4bc43bc1b4021240fa3c7782d6e0047d02033ad29a50ec38790f048f0207  artifacts/claude-fixedtext255-20260922/predicted-moves255.md
+84143173e2fc6f86ca5b980c1e4c50447def660a6a1f82ae51552d57b322a252  artifacts/claude-fixedtext255-20260922/base138m-rows/bench-bench132_4hop-rows.jsonl
+4dd9eba3d02c6ae2268c2aa73cfc4eb04c917c22a2d6b054558aeb493198ec5c  artifacts/claude-fixedtext255-20260922/base138m-rows/bench-edit200-rows.jsonl
+2eafb3d1a709d613bd336662a178a5dcaea210aeb39280b589cd83d1ac420a6b  artifacts/claude-fixedtext255-20260922/base138m-rows/bench-new_121_4hop-rows.jsonl
+8fd0bec7e508f76ea7f8d1e26cf5813b25f2c95240570bb92b94670c11da5404  artifacts/claude-fixedtext255-20260922/base138m-rows/bench-old_s2fresh_4hop-rows.jsonl
+5555d7b81d4f482f0a77c86b9ff5fcd596efad5ac32e1aa9a83e6a9073bd3714  artifacts/claude-fixedtext255-20260922/base138m-rows/redteam136-rows.json
+e9474f5e32bf95afcb810e08459f96de59d5193f31302f5fdda3ba681b1d5438  artifacts/claude-fixedtext255-20260922/base138m-rows/redteam143-rows.json
+3293c9b2408f60e9863d831f6ac83cf1cebd50f0b303dc1e81c3c7cc8e3fc114  artifacts/claude-fixedtext255-20260922/base138m-rows/sessions152-rows.json
+zsh:1: == not found
+[0m
+[0m$ [0mls -la artifacts/claude-fixedtext255-20260922/SEAL2.sha256.txt && wc -l artifacts/claude-fixedtext255-20260922/SEAL2.sha256.txt artifacts/claude-fixedtext255-20260922/predicted-moves255.md
+-rw-r--r--  1 ben-hannan  staff  121 Sep 22 18:20 artifacts/claude-fixedtext255-20260922/SEAL2.sha256.txt
+       1 artifacts/claude-fixedtext255-20260922/SEAL2.sha256.txt
+     279 artifacts/claude-fixedtext255-20260922/predicted-moves255.md
+     280 total
+[0m
+[0m→ [0mRead artifacts/claude-fixedtext255-20260922/predicted-moves255.md[90m [limit=60][0m
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_fix255b_text.py (T02 + zero-count texts, else 255)
+[✓] Write scripts/claude_fix255b_test.py (60 templates + n=0..12 sweep + T02 anchors), 0 failures
+[✓] Write claude_loop255b_agent.py + config + claude_255b_*.py + runall.sh copies
+[✓] Pilot M2/M4/M5/M6/M7 vs 138m on scratch + extra report 255b vs 255
+[•] Write PASSMARKS.md + predicted moves, seal SEAL.sha256.txt, ledger P255b.n
+[ ] Generate M1 fixedtext.jsonl seed 2550923, seal SEAL2
+[ ] Registered M2/M4/M5/M6/M7 runs
+[ ] Run 239 panel ONCE on 255b + mechanical changes file vs 138m
+[ ] RESULTS.md + final report (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+b=json.load(open('scratchpad/w255b/pilot/predicted_moves255b.json'))
+b['m4_flagged']=[]
+json.dump(b,open('artifacts/claude-fixedtext255b-20260923/predicted_moves255b.json','w'),indent=1)
+print('wrote predicted_moves255b.json', sorted(b.keys()))
+"
+wrote predicted_moves255b.json ['m2_nogate', 'm4', 'm4_flagged', 'm6', 'moves']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+ZERO={'T40_WEBN','T41_SLEPTN','T43_TURNS','T46_REFUSED0','T47_REFUSEDN','T52_YESTERDAY','T53_NOBODYELSE'}
+def part(tids):
+    if 'T02_Q2' in tids: return 'A'
+    if set(tids)&ZERO: return 'B'
+    return 'carry'
+m2=json.load(open('scratchpad/w255b/pilot/m2-check.json'))
+ng=json.load(open('scratchpad/w255b/pilot/m2-nogate-check.json'))
+sc=json.load(open('scratchpad/w255b/pilot/score255b.json'))
+L=['# Exp 255b predicted moves (by id), built from the pilot before the seal','',
+'MACHINE-READABLE COPY: predicted_moves255b.json (keys moves = M2, m2_nogate, m4, m6). Every move is a reply-only rewrite of a 138m fixed template by claude_fix255b_text.rewrite255b. Part tags: [A] = T02 line (new Part A text), [B] = zero-count line (Part B zero text), [carry] = 255-carryover line byte-identical to 255s registered text.','',
+'## M2 suites: %d reply-only moves'%len(m2['moves']),'',
+'Template counts: '+str(dict(Counter(t for m in m2['moves'] for t in m['templates']))),'',
+'Part counts: '+str(dict(Counter(part(m['templates']) for m in m2['moves']))),''
+]
+for m in m2['moves']:
+    L.append('- %s/%s: %s (fields: %s) [%s]'%(m['suite'],m['id'],', '.join(m['templates']),', '.join(m['fields']),part(m['templates'])))
+L+=['','## M2 rt143 no-gate: %d reply-only moves'%len(ng['moves']),'',
+'Part counts: '+str(dict(Counter(part(m['templates']) for m in ng['moves']))),''
+]
+for m in ng['moves']:
+    L.append('- %s: %s [%s]'%(m['id'],', '.join(m['templates']),part(m['templates'])))
+L+=['','## M4 verifier probes: 38 changed replies (all same meaning; m4_flagged is empty by director ruling)','']
+for k in sorted(sc['M4']['changes']):
+    v=sc['M4']['changes'][k]
+    L.append('- %s: %s [%s]'%(k,', '.join(v['templates']),part(v['templates'])))
+    L.append('  138m: %s'%v['m'])
+    L.append('  255b: %s'%v['255b'])
+L+=['','## M6 restart/dialogs: 17 reply changes','']
+for k in sorted(sc['M6']['vs_138m_saved']['changes']):
+    v=sc['M6']['vs_138m_saved']['changes'][k]
+    L.append('- %s: %s [%s]'%(k,', '.join(v['templates']),part(v['templates'])))
+    L.append('  138m: %s'%v['m'])
+    L.append('  255b: %s'%v['255b'])
+open('artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md','w').write(chr(10).join(L)+chr(10))
+print('lines:',len(L))
+"
+lines: 393
+[0m
+[0m$ [0mhead -8 artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md; grep -c "^\- " artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md; grep -n "\[A\]" artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md | head -3; grep -c "\[B\]" artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md
+# Exp 255b predicted moves (by id), built from the pilot before the seal
+
+MACHINE-READABLE COPY: predicted_moves255b.json (keys moves = M2, m2_nogate, m4, m6). Every move is a reply-only rewrite of a 138m fixed template by claude_fix255b_text.rewrite255b. Part tags: [A] = T02 line (new Part A text), [B] = zero-count line (Part B zero text), [carry] = 255-carryover line byte-identical to 255s registered text.
+
+## M2 suites: 162 reply-only moves
+
+Template counts: {'T05_F188': 36, 'T08_SPLIT': 19, 'T02_Q2': 52, 'T07_TIME148': 4, 'T06_NEG148': 42, 'T14_GREETING': 5, 'T19_CAN': 3, 'T16_187WHAT': 2, 'T60_NEWUNSTORED': 1}
+
+262
+3:MACHINE-READABLE COPY: predicted_moves255b.json (keys moves = M2, m2_nogate, m4, m6). Every move is a reply-only rewrite of a 138m fixed template by claude_fix255b_text.rewrite255b. Part tags: [A] = T02 line (new Part A text), [B] = zero-count line (Part B zero text), [carry] = 255-carryover line byte-identical to 255s registered text.
+24:- rt136/C076: T02_Q2 (fields: reply) [A]
+25:- rt136/C079: T02_Q2 (fields: reply) [A]
+1
+[0m
+[0m$ [0msed -i '' "s/255s registered/255's registered/" artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md && grep -c "255's registered" artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md
+1
+[0m
+[0m← [0mWrite artifacts/claude-fixedtext255b-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix255b_text.py scripts/claude_loop255b_agent.py scripts/claude_fix255b_test.py scripts/claude_255b_m1gen.py scripts/claude_255b_m2check.py scripts/claude_255b_m3changes.py scripts/claude_255b_m3format.py scripts/claude_255b_score.py scripts/claude_255b_v255check.py scripts/claude_255b_runall.sh artifacts/claude-fixedtext255b-20260923/loop255b-config.json artifacts/claude-fixedtext255b-20260923/PASSMARKS.md artifacts/claude-fixedtext255b-20260923/predicted_moves255b.json artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-bench132_4hop-rows.jsonl artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-edit200-rows.jsonl artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-new_121_4hop-rows.jsonl artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-old_s2fresh_4hop-rows.jsonl artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam136-rows.json artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam143-rows.json artifacts/claude-fixedtext255b-20260923/base138m-rows/sessions152-rows.json > artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt && wc -l artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt
+scripts/claude_fix255b_text.py: OK
+scripts/claude_loop255b_agent.py: OK
+scripts/claude_fix255b_test.py: OK
+scripts/claude_255b_m1gen.py: OK
+scripts/claude_255b_m2check.py: OK
+scripts/claude_255b_m3changes.py: OK
+scripts/claude_255b_m3format.py: OK
+scripts/claude_255b_score.py: OK
+scripts/claude_255b_v255check.py: OK
+scripts/claude_255b_runall.sh: OK
+artifacts/claude-fixedtext255b-20260923/loop255b-config.json: OK
+artifacts/claude-fixedtext255b-20260923/PASSMARKS.md: OK
+artifacts/claude-fixedtext255b-20260923/predicted_moves255b.json: OK
+artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-bench132_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-edit200-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-new_121_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-old_s2fresh_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam136-rows.json: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam143-rows.json: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/sessions152-rows.json: OK
+      21 artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P255b.1-A (exp 255b Part A T02 wording, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-fixedtext255b-20260923) T02 text exactly "I didn't understand that. Could you say it another way?"; anchors identical to 138m (yes,yes,yes,yes,no); true on every T02 turn incl. the 8 probes 255 failed (A06,B04,B05,B20,D02,D03,D04,D08).
+- P255b.2-B (exp 255b Part B zero counts) exact texts T43/T52/T53/T46/T40/T41/T47 per decision note; n=0..12 sweep of every count template has no "zero", no "1 <plural>", no "one <plural>"; every other line byte-identical to rewrite255 (unit tests 60 templates + 519 sweep renders, 0 failures).
+- P255b.3-A M2 vs 138m: exactly the 162 predicted ids (rt136 48, rt143 42, sessions152 25, bench 47 = 4+37+5+1); 52 T02-lines carry the new text, 110 carryover byte-identical to 255; GATE clean; 0 verdict/status/store/write changes; rt143 no-gate exactly the 45 predicted ids (37 T02-lines).
+- P255b.4-B zero-lines: 0 in suites, no-gate, probes and dialogs (pilot); M1 zero-case renders and any M3 zero-turn carry exactly the Part B texts with 0 verdict changes.
+- P255b.5-A M4: exactly the 38 predicted changed replies, all same meaning, incl. 20 T02-lines with the 8 previously flagged probes; 0 worse (unexplained); 0 store/event changes; m4_flagged empty by director ruling.
+- P255b.6-A M6: exactly the 17 predicted changes with predicted texts (6 T02-lines new text: p3-dialogs d00t04,d01t01,d05t03; p3c-restart2 d00t06; p3d-ghost d00t06; v-dialogs d03t05); 0 ghosts, dup_ok_all, 0 bad writes, vs saved and same-session.
+- P255b.7-B M1 fixedtext.jsonl seed 2550923: 228 rows (171 changed incl. T02 once + T46 zero-text once; 57 unchanged); bar 100% changed GRAMMATICAL both graders (director grades).
+- P255b.8-A M3 239 panel (TEST-ONLY, once): every changed turn an exact 255b-template rewrite (~153 as 255); 0 unexplained; 0 store changes (director judges correctness/grammar).
+- P255b.9-B M3 zero-turns (if any) carry exact Part B texts; M5 smoke differs only agent/config/label/seconds; M7 median delta <= +2.0 ms (pilot +0.078 ms).
+EOF
+tail -9 artifacts/fable-predictions-ledger.md | cut -c1-60
+- P255b.1-A (exp 255b Part A T02 wording, sealed 2026-09-23,
+- P255b.2-B (exp 255b Part B zero counts) exact texts T43/T5
+- P255b.3-A M2 vs 138m: exactly the 162 predicted ids (rt136
+- P255b.4-B zero-lines: 0 in suites, no-gate, probes and dia
+- P255b.5-A M4: exactly the 38 predicted changed replies, al
+- P255b.6-A M6: exactly the 17 predicted changes with predic
+- P255b.7-B M1 fixedtext.jsonl seed 2550923: 228 rows (171 c
+- P255b.8-A M3 239 panel (TEST-ONLY, once): every changed tu
+- P255b.9-B M3 zero-turns (if any) carry exact Part B texts;
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_255b_m1gen.py artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl && shasum -a 256 artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl > artifacts/claude-fixedtext255b-20260923/SEAL2.sha256.txt && shasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL2.sha256.txt && cat artifacts/claude-fixedtext255b-20260923/SEAL2.sha256.txt
+wrote 228 rows (171 changed-template renders, 57 unchanged) -> artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl
+artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl: OK
+1740e0b96f6062acd2b655f46f4359224277509774d874abcb2c83537ff019a4  artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_fix255b_text.py (T02 + zero-count texts, else 255)
+[✓] Write scripts/claude_fix255b_test.py (60 templates + n=0..12 sweep + T02 anchors), 0 failures
+[✓] Write claude_loop255b_agent.py + config + claude_255b_*.py + runall.sh copies
+[✓] Pilot M2/M4/M5/M6/M7 vs 138m on scratch + extra report 255b vs 255
+[✓] Write PASSMARKS.md + predicted moves, seal SEAL.sha256.txt, ledger P255b.n
+[✓] Generate M1 fixedtext.jsonl seed 2550923, seal SEAL2
+[•] Registered M2/M4/M5/M6/M7 runs
+[ ] Run 239 panel ONCE on 255b + mechanical changes file vs 138m
+[ ] RESULTS.md + final report (verdict, marks, moves, deviations)
+[0m
+[0m$ [0mnohup scripts/claude_255b_runall.sh artifacts/claude-fixedtext255b-20260923/run scratchpad/w255b/regwork > scratchpad/w255b/reg-launch.log 2>&1 & echo "PID=$!"; sleep 10; tail -3 artifacts/claude-fixedtext255b-20260923/run/uptime.log 2>/dev/null; uptime | head -1
+PID=50151
+23:48:03 uptime load1=33.07 before: M2-suites
+23:48  up 2 days, 15:37, 4 users, load averages: 32.03 47.65 70.49
+[0m
+[0m$ [0msleep 280; tail -2 artifacts/claude-fixedtext255b-20260923/run/uptime.log; ls artifacts/claude-fixedtext255b-20260923/run/ 2>/dev/null; uptime | head -1
+23:52:00 uptime load1=80.11 before: M6-255b
+23:52:30 uptime load1=89.83 before: M6-255b
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+23:52  up 2 days, 15:42, 4 users, load averages: 100.77 67.58 72.01
+[0m
+[0m$ [0msleep 280; tail -2 artifacts/claude-fixedtext255b-20260923/run/uptime.log; ls artifacts/claude-fixedtext255b-20260923/run/; uptime | head -1
+23:57:00 uptime load1=107.09 before: M6-255b
+23:57:30 uptime load1=85.47 before: M6-255b
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+23:57  up 2 days, 15:46, 4 users, load averages: 77.23 82.84 78.35
+[0m
+[0m$ [0msleep 280; tail -2 artifacts/claude-fixedtext255b-20260923/run/uptime.log; ls artifacts/claude-fixedtext255b-20260923/run/; uptime | head -1
+00:01:46 uptime load1=72.94 before: M7-m-2
+00:02:16 uptime load1=83.98 before: M7-m-2
+lat-255b-1.json
+lat-255b-1.log
+lat-m-1.json
+lat-m-1.log
+probe
+rt143nogate-255b.json
+rt143nogate.log
+sd255b
+sd255b.log
+smoke-255b.json
+smoke-255b.log
+uptime.log
+vp
+ 0:02  up 2 days, 15:51, 4 users, load averages: 79.26 74.76 75.38
+[0m
+[0m$ [0msleep 280; tail -3 artifacts/claude-fixedtext255b-20260923/run/uptime.log; cat artifacts/claude-fixedtext255b-20260923/run/score.txt 2>/dev/null; uptime | head -1
+00:05:51 uptime load1=69.82 before: M7-255b-3
+00:06:21 uptime load1=78.31 before: M7-255b-3
+00:06:51 uptime load1=65.34 before: M7-255b-3
+ 0:07  up 2 days, 15:56, 4 users, load averages: 66.56 68.56 72.07
+[0m
+[0m$ [0msleep 200; tail -2 artifacts/claude-fixedtext255b-20260923/run/uptime.log; cat artifacts/claude-fixedtext255b-20260923/run/score.txt 2>/dev/null; uptime | head -1
+00:07:51 uptime load1=58.70 before: M7-255b-3
+TOTAL 1200 s
+M2 PASS {"suitediff_summary": ["rt136: n_moves=48 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=48) seconds=1.7", "rt143: n_moves=42 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=42) seconds=3.4", "sessions152: n_moves=25 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=25) seconds=0.5", "bench: n_moves=43 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=43) seconds=21.8"], "gate": "GATE: clean", "skipped": {}, "reply_only_moves": 162, "unexplained": 0, "matches_prediction": true, "missing_predicted": [], "unpredicted": [], "nogate_moves": 45, "nogate_unexplained": 0, "nogate_matches_prediction": true, "stdout": ["moves=162 unexplained=0 matches_prediction=True missing=0 unpred
+M4 PASS {"changed_replies": 38, "labels": {"same meaning": 38}, "flagged": [], "worse": [], "store_changes": [], "unpredicted": [], "predicted_not_seen": [], "pass": true}
+M5 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "pass": true}
+M6 PASS {"pass": true}
+   vs_138m_saved {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+   vs_138m_same_session {"reply_changes": 17, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_writes": [], "failed_duplicate_checks": [], "pass": true}
+M7 PASS {"median_138m_ms": 2.285, "median_255b_ms": 2.293, "delta_ms": 0.008, "n_138m": 624, "n_255b": 624, "pass": true}
+ 0:10  up 2 days, 15:59, 4 users, load averages: 42.39 58.40 67.23
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt > /dev/null && echo SEAL_OK; shasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL2.sha256.txt > /dev/null && echo SEAL2_OK; df -g / | head -2; uptime | head -1
+SEAL_OK
+SEAL2_OK
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        19    41%  484014 199436320    0%   /
+ 0:10  up 2 days, 16 hrs, 4 users, load averages: 41.26 57.63 66.85
+[0m
+[0m$ [0mmkdir -p artifacts/claude-fixedtext255b-20260923/m3-reg scratchpad/w255b/panelwork && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_convpanel239_run.py --agent scripts/claude_loop255b_agent.py --config artifacts/claude-fixedtext255b-20260923/loop255b-config.json --out artifacts/claude-fixedtext255b-20260923/m3-reg/transcripts-255b --work scratchpad/w255b/panelwork > scratchpad/w255b/panel.log 2>&1 & echo "PID=$!"; sleep 60; tail -5 scratchpad/w255b/panel.log; ls artifacts/claude-fixedtext255b-20260923/m3-reg/
+PID=53822
+c239-27 8 turns 0.0s
+c239-28 9 turns 0.0s
+c239-29 8 turns 0.3s
+c239-30 9 turns 0.0s
+DONE rows=244 empty=0 errors=0 elapsed=5s work=scratchpad/w255b/panelwork
+transcripts-255b.jsonl
+transcripts-255b.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_255b_m3changes.py artifacts/claude-convpanel239-138m-20260922/transcripts-138m.jsonl artifacts/claude-fixedtext255b-20260923/m3-reg/transcripts-255b.jsonl artifacts/claude-fixedtext255b-20260923/m3-reg/changes-255b-vs-138m && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_255b_m3format.py artifacts/claude-convpanel239-138m-20260922/transcripts-138m.jsonl artifacts/claude-fixedtext255b-20260923/m3-reg/transcripts-255b.jsonl artifacts/claude-fixedtext255b-20260923/m3-reg/changes-255b-vs-138m.json 138m 255b && ls artifacts/claude-fixedtext255b-20260923/m3-reg/
+{"turns_compared": 244, "changed_turns": 153, "unexplained": 0, "store_changes": 0, "missing": []}
+{"changed": 153, "turns": 244, "reply_changed": 153, "stored_after_changed": 0, "stored_before_changed": 0, "by_intent": {"ask": {"changed": 51, "turns": 83}, "cannot": {"changed": 11, "turns": 11}, "correct": {"changed": 6, "turns": 6}, "greet": {"changed": 27, "turns": 27}, "other": {"changed": 0, "turns": 1}, "self": {"changed": 8, "turns": 18}, "smalltalk": {"changed": 2, "turns": 5}, "teach": {"changed": 41, "turns": 63}, "thanks": {"changed": 7, "turns": 30}}}
+changes-255b-vs-138m-summary.json
+changes-255b-vs-138m.json
+changes-255b-vs-138m.jsonl
+changes-255b-vs-138m.md
+transcripts-255b.jsonl
+transcripts-255b.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+ZERO={'T40_WEBN','T41_SLEPTN','T43_TURNS','T46_REFUSED0','T47_REFUSEDN','T52_YESTERDAY','T53_NOBODYELSE'}
+rows=[json.loads(x) for x in open('artifacts/claude-fixedtext255b-20260923/m3-reg/changes-255b-vs-138m.jsonl')]
+def part(t):
+    if 'T02_Q2' in t: return 'A'
+    if set(t)&ZERO: return 'B'
+    return 'carry'
+c=Counter(part(r['templates']) for r in rows)
+print('changed:',len(rows),'parts:',dict(c),'explained:',sum(r['explained'] for r in rows))
+print('template counts:',dict(Counter(t for r in rows for t in r['templates'])))
+print('triples_same all:',all(r['triples_same'] for r in rows))
+"; shasum -a 256 artifacts/claude-fixedtext255b-20260923/m3-reg/changes-255b-vs-138m.jsonl artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl
+changed: 153 parts: {'carry': 91, 'A': 62} explained: 153
+template counts: {'T14_GREETING': 21, 'T05_F188': 57, 'T03_S1': 7, 'T02_Q2': 62, 'T30_MODE': 1, 'T08_SPLIT': 1, 'T21_AGETHEIR': 1, 'T16_187WHAT': 1, 'T19_CAN': 1, 'T06_NEG148': 1}
+triples_same all: True
+81c6f393350dce7d3b7d80d79fb0747ae0d08e1e17ebf1fd9a87b9ff320a63c5  artifacts/claude-fixedtext255b-20260923/m3-reg/changes-255b-vs-138m.jsonl
+1740e0b96f6062acd2b655f46f4359224277509774d874abcb2c83537ff019a4  artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-fixedtext255b-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt 2>&1 | grep -cv ": OK"; shasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL2.sha256.txt; git diff artifacts/fable-predictions-ledger.md | grep "^-[^-]" | head; echo LEDGER_ADDITIVE_CHECK_DONE; git status --porcelain | grep -v "^??" ; echo TRACKED_CHECK_DONE
+0
+artifacts/claude-fixedtext255b-20260923/fixedtext.jsonl: OK
+LEDGER_ADDITIVE_CHECK_DONE
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+TRACKED_CHECK_DONE
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_fix255b_test.py; ls artifacts/claude-fixedtext255b-20260923/; ls scripts/claude_255b_* scripts/claude_fix255b_* scripts/claude_loop255b_agent.py
+60 templates, 519 sweep renders, 0 failures
+T02 anchor old: (True, True, True, True, False)
+T02 anchor new: (True, True, True, True, False)
+base138m-rows
+fixedtext.jsonl
+loop255b-config.json
+m3-reg
+PASSMARKS.md
+predicted_moves255b.json
+predicted-moves255b.md
+RESULTS.md
+run
+SEAL.sha256.txt
+SEAL2.sha256.txt
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+scripts/claude_fix255b_test.py
+scripts/claude_fix255b_text.py
+scripts/claude_loop255b_agent.py
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_fix255b_text.py (T02 + zero-count texts, else 255)
+[✓] Write scripts/claude_fix255b_test.py (60 templates + n=0..12 sweep + T02 anchors), 0 failures
+[✓] Write claude_loop255b_agent.py + config + claude_255b_*.py + runall.sh copies
+[✓] Pilot M2/M4/M5/M6/M7 vs 138m on scratch + extra report 255b vs 255
+[✓] Write PASSMARKS.md + predicted moves, seal SEAL.sha256.txt, ledger P255b.n
+[✓] Generate M1 fixedtext.jsonl seed 2550923, seal SEAL2
+[✓] Registered M2/M4/M5/M6/M7 runs
+[✓] Run 239 panel ONCE on 255b + mechanical changes file vs 138m
+[✓] RESULTS.md + final report (verdict, marks, moves, deviations)
+[0m

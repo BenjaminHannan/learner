@@ -1,0 +1,1950 @@
+{
+ "seconds": 0,
+ "rows": [
+  {
+   "id": "A1",
+   "family": "confirm-broken-prefix",
+   "confirm": true,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's country of citizenship is Norland.",
+    "Saved: Tomas Reed's sport is curling."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "B1",
+   "family": "confirm-qualifier",
+   "confirm": true,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's official language is Meridian."
+   ],
+   "reply": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "stage": "loop148b-screen-time",
+   "reasons": []
+  },
+  {
+   "id": "C1",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "C2",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "C3",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "Norland",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Cora Lind's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "C4",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "Bram Kite",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "The Glass Orchard's author is Bram Kite.",
+   "extracted": "Bram Kite",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "C5",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "The Glass Orchard",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's notable work is The Glass Orchard.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's notable work is The Glass Orchard.",
+   "extracted": "The Glass Orchard",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "C6",
+   "family": "one-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's place of birth is Dunmere.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's place of birth is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D1",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Cora Lind's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D2",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I don't know Cora Lind's country.",
+   "extracted": "I don't know Cora Lind's country",
+   "stage": "fake",
+   "reasons": [
+    "abstained though answer sealed ('Aldport'): \"I don't know Cora Lind's country.\""
+   ]
+  },
+  {
+   "id": "D3",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Cora Lind's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D4",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Bram Kite's spouse is Cora Lind."
+   ],
+   "reply": "The Glass Orchard's author's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D5",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Tomas Reed's employer is Harborline.",
+    "Saved: Harborline's headquarters location is Dunmere."
+   ],
+   "reply": "Tomas Reed's employer's headquarters location is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D6",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Nadia Frost's employer is Harborline.",
+    "Saved: Harborline's location of formation is Dunmere."
+   ],
+   "reply": "Nadia Frost's employer's location of formation is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D7",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Norland",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's child is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland."
+   ],
+   "reply": "Bram Kite's child's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D8",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Veldoria",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Harborlight Choir's genre is choral music.",
+    "Saved: choral music's country of origin is Veldoria."
+   ],
+   "reply": "Harborlight Choir's genre's country of origin is Veldoria.",
+   "extracted": "Veldoria",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D9",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Veldoria",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Tomas Reed's sport is curling.",
+    "Saved: curling's country of origin is Veldoria."
+   ],
+   "reply": "Tomas Reed's sport's country of origin is Veldoria.",
+   "extracted": "Veldoria",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D10",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Australis",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's place of death is Dunmere.",
+    "Saved: Dunmere's continent is Australis."
+   ],
+   "reply": "Bram Kite's place of death's continent is Australis.",
+   "extracted": "Australis",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D11",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Australis",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's place of birth is Dunmere.",
+    "Saved: Dunmere's continent is Australis."
+   ],
+   "reply": "Bram Kite's place of birth's continent is Australis.",
+   "extracted": "Australis",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "D12",
+   "family": "two-hop",
+   "confirm": false,
+   "expected": "Zev Carlton",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Sunmosaic's creator is Yara Haddad.",
+    "Saved: Yara Haddad's spouse is Zev Carlton."
+   ],
+   "reply": "Sunmosaic's creator's spouse is Zev Carlton.",
+   "extracted": "Zev Carlton",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E1",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E2",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E3",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E4",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Moonchant's performer is Petra Voss.",
+    "Saved: Petra Voss's country of citizenship is Veldoria.",
+    "Saved: Veldoria's capital is Dunmere."
+   ],
+   "reply": "Moonchant's performer's country of citizenship's capital is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E5",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: HarborOS's developer is Ivo Brandt.",
+    "Saved: Ivo Brandt's employer is Harborline.",
+    "Saved: Harborline's headquarters location is Dunmere."
+   ],
+   "reply": "HarborOS's developer's employer's headquarters location is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E6",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Ostmark",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Harborline's founded by is Ada Wren.",
+    "Saved: Ada Wren's spouse is Nils Berger.",
+    "Saved: Nils Berger's country of citizenship is Ostmark."
+   ],
+   "reply": "Harborline's founded by's spouse's country of citizenship is Ostmark.",
+   "extracted": "Ostmark",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E7",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Australis",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Seaglider's manufacturer is Harborline.",
+    "Saved: Harborline's location of formation is Dunmere.",
+    "Saved: Dunmere's continent is Australis."
+   ],
+   "reply": "Seaglider's manufacturer's location of formation's continent is Australis.",
+   "extracted": "Australis",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "E8",
+   "family": "three-hop",
+   "confirm": false,
+   "expected": "Australis",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Ivo Brandt's educated at is Harbor Academy.",
+    "Saved: Harbor Academy's location of formation is Dunmere.",
+    "Saved: Dunmere's continent is Australis."
+   ],
+   "reply": "Ivo Brandt's educated at's location of formation's continent is Australis.",
+   "extracted": "Australis",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "F1",
+   "family": "four-hop",
+   "confirm": false,
+   "expected": "Norhaven",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Yara Haddad.",
+    "Saved: Yara Haddad's spouse is Nils Berger.",
+    "Saved: Nils Berger's country of citizenship is Ostmark.",
+    "Saved: Ostmark's capital is Norhaven."
+   ],
+   "reply": "The Glass Orchard's author's spouse's country of citizenship's capital is Norhaven.",
+   "extracted": "Norhaven",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "F2",
+   "family": "four-hop",
+   "confirm": false,
+   "expected": "Norhaven",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Yara Haddad.",
+    "Saved: Yara Haddad's spouse is Nils Berger.",
+    "Saved: Nils Berger's country of citizenship is Ostmark.",
+    "Saved: Ostmark's capital is Norhaven."
+   ],
+   "reply": "The Glass Orchard's author's spouse's country of citizenship's capital is Norhaven.",
+   "extracted": "Norhaven",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "F3",
+   "family": "four-hop",
+   "confirm": false,
+   "expected": "Norhaven",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Yara Haddad.",
+    "Saved: Yara Haddad's spouse is Nils Berger.",
+    "Saved: Nils Berger's country of citizenship is Ostmark.",
+    "Saved: Ostmark's capital is Norhaven."
+   ],
+   "reply": "The Glass Orchard's author's spouse's country of citizenship's capital is Norhaven.",
+   "extracted": "Norhaven",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "F4",
+   "family": "four-hop",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's child is Emil Sorrel.",
+    "Saved: Emil Sorrel's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Bram Kite's spouse's child's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "F5",
+   "family": "four-hop",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Moonchant's performer is Harborlight Choir.",
+    "Saved: director of Harborlight Choir's officeholder is Petra Voss.",
+    "Saved: Petra Voss's country of citizenship is Veldoria.",
+    "Saved: Veldoria's capital is Dunmere."
+   ],
+   "reply": "director of Harborlight Choir's officeholder's country of citizenship's capital is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138b-rewrite",
+   "reasons": []
+  },
+  {
+   "id": "F6",
+   "family": "four-hop-island-prefix",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Moonchant's performer is Harborlight Choir.",
+    "Saved: director of Harborlight Choir's officeholder is Petra Voss."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "G1",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Meridian",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's official language is Meridian."
+   ],
+   "reply": "Cora Lind's country of citizenship's official language is Meridian.",
+   "extracted": "Meridian",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "G2",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Bram Kite's spouse is Cora Lind."
+   ],
+   "reply": "The Glass Orchard's author's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "G3",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Australis",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's place of death is Dunmere.",
+    "Saved: Dunmere's continent is Australis."
+   ],
+   "reply": "Bram Kite's place of death's continent is Australis.",
+   "extracted": "Australis",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "G4",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Ada Wren",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Seaglider's manufacturer is Harborline.",
+    "Saved: Harborline's founded by is Ada Wren."
+   ],
+   "reply": "Seaglider's manufacturer's founded by is Ada Wren.",
+   "extracted": "Ada Wren",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "G5",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Meridian",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Bram Kite's languages spoken written or signed is Meridian."
+   ],
+   "reply": "The Glass Orchard's author's languages spoken written or signed is Meridian.",
+   "extracted": "Meridian",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "G6",
+   "family": "of-phrasing",
+   "confirm": false,
+   "expected": "Lena Marsh",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's head of state is Ivo Brandt.",
+    "Saved: Ivo Brandt's spouse is Lena Marsh."
+   ],
+   "reply": "Norland's head of state's spouse is Lena Marsh.",
+   "extracted": "Lena Marsh",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "H1",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "H2",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Yara Haddad",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's notable work is The Glass Orchard.",
+    "Saved: The Glass Orchard's author is Yara Haddad."
+   ],
+   "reply": "Bram Kite's notable work's author is Yara Haddad.",
+   "extracted": "Yara Haddad",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "H3",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Ostmark",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Harborline's founded by is Ada Wren.",
+    "Saved: Ada Wren's country of citizenship is Ostmark."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": [
+    "abstained though answer sealed ('Ostmark'): \"I didn't understand that question — could you say it another way?\""
+   ]
+  },
+  {
+   "id": "H4",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Norhaven",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Seaglider's manufacturer is Harborline.",
+    "Saved: Harborline's founded by is Ada Wren.",
+    "Saved: Ada Wren's country of citizenship is Ostmark.",
+    "Saved: Ostmark's capital is Norhaven."
+   ],
+   "reply": "Seaglider's manufacturer's founded by's country of citizenship's capital is Norhaven.",
+   "extracted": "Norhaven",
+   "stage": "loop138b-rewrite",
+   "reasons": []
+  },
+  {
+   "id": "H5",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's official language is Meridian.",
+    "Saved: Bram Kite's spouse is Cora Lind."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship's official language is Meridian.",
+   "extracted": "Meridian",
+   "stage": "loop138b-rewrite",
+   "reasons": [
+    "confident reply where abstain sealed: \"Bram Kite's spouse's country of citizenship's official language is Meridian.\""
+   ]
+  },
+  {
+   "id": "H6",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "Cora Lind's country of citizenship's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "bench73",
+   "reasons": []
+  },
+  {
+   "id": "H7",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Harbor Academy",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: HarborOS's developer is Ivo Brandt.",
+    "Saved: Ivo Brandt's educated at is Harbor Academy."
+   ],
+   "reply": "HarborOS's developer's educated at is Harbor Academy.",
+   "extracted": "Harbor Academy",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "H8",
+   "family": "relative-clause",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Bram Kite's place of birth is Dunmere."
+   ],
+   "reply": "The Glass Orchard's author's place of birth is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "I1",
+   "family": "passive",
+   "confirm": false,
+   "expected": "Bram Kite",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "The Glass Orchard's author is Bram Kite.",
+   "extracted": "Bram Kite",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "I2",
+   "family": "passive",
+   "confirm": false,
+   "expected": "Petra Voss",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Moonchant's performer is Petra Voss.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Moonchant's performer is Petra Voss.",
+   "extracted": "Petra Voss",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "I3",
+   "family": "passive",
+   "confirm": false,
+   "expected": "Ada Wren",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Harborline's founded by is Ada Wren.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Harborline's founded by is Ada Wren.",
+   "extracted": "Ada Wren",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "I4",
+   "family": "passive",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's place of birth is Dunmere.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's place of birth is Dunmere.",
+   "extracted": "Dunmere",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "I5",
+   "family": "passive",
+   "confirm": false,
+   "expected": "Veldoria",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Sunmosaic's country of origin is Veldoria.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Sunmosaic's country of origin is Veldoria.",
+   "extracted": "Veldoria",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J1",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J2",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J3",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J4",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J5",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop151-qmark+loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J6",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop215-ofteach-q",
+   "reasons": []
+  },
+  {
+   "id": "J7",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J8",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I don't know anyone called Norlanb.",
+   "extracted": "I don't know anyone called Norlanb",
+   "stage": "loop215-ofteach-q",
+   "reasons": [
+    "abstained though answer sealed ('Aldport'): \"I don't know anyone called Norlanb.\""
+   ]
+  },
+  {
+   "id": "J9",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": [
+    "abstained though answer sealed ('Aldport'): \"I didn't understand that question — could you say it another way?\""
+   ]
+  },
+  {
+   "id": "J10",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J11",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Norland",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Cora Lind's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "J12",
+   "family": "robust",
+   "confirm": false,
+   "expected": "Aldport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Norland's capital is Aldport.",
+   "extracted": "Aldport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "K1",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K2",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K3",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K4",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K5",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K6",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: HarborOS's country of origin is Veldoria.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "HarborOS's country of origin is Veldoria.",
+   "extracted": "Veldoria",
+   "stage": "loop138-nhop",
+   "reasons": [
+    "confident reply where abstain sealed: \"HarborOS's country of origin is Veldoria.\""
+   ]
+  },
+  {
+   "id": "K7",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Ada Wren's spouse is Nils Berger.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K8",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "K9",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I don't know anyone called Ostmark.",
+   "extracted": "I don't know anyone called Ostmark",
+   "stage": "loop215-ofteach-q",
+   "reasons": []
+  },
+  {
+   "id": "K10",
+   "family": "never-taught",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Sunmosaic's creator is Yara Haddad.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Sunmosaic's creator is Yara Haddad.",
+   "extracted": "Yara Haddad",
+   "stage": "loop138-nhop",
+   "reasons": [
+    "confident reply where abstain sealed: \"Sunmosaic's creator is Yara Haddad.\""
+   ]
+  },
+  {
+   "id": "L1",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I don't know Bram Kite's occupation.",
+   "extracted": "I don't know Bram Kite's occupation",
+   "stage": "fake",
+   "reasons": []
+  },
+  {
+   "id": "L2",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "L3",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Tomas Reed's sport is curling.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "L4",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": [
+    "confident reply where abstain sealed: \"Bram Kite's spouse is Cora Lind.\""
+   ]
+  },
+  {
+   "id": "L5",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "L6",
+   "family": "unknown-relation",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "M1",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "M2",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "Norland",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "M3",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "M4",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "M5",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "M6",
+   "family": "yes-no",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "N1",
+   "family": "negated",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "stage": "loop148b-screen-neg",
+   "reasons": []
+  },
+  {
+   "id": "N2",
+   "family": "negated",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "stage": "loop148b-screen-neg",
+   "reasons": []
+  },
+  {
+   "id": "N3",
+   "family": "negated",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "stage": "loop148b-screen-neg",
+   "reasons": []
+  },
+  {
+   "id": "N4",
+   "family": "negated",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "stage": "loop148b-screen-neg",
+   "reasons": []
+  },
+  {
+   "id": "N5",
+   "family": "negated",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: The Glass Orchard's author is Bram Kite.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?",
+   "stage": "loop148b-screen-neg",
+   "reasons": []
+  },
+  {
+   "id": "O1",
+   "family": "unknown-entity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "O2",
+   "family": "unknown-entity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "O3",
+   "family": "unknown-entity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Norland's capital is Aldport.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I don't know anyone called Norlandia.",
+   "extracted": "I don't know anyone called Norlandia",
+   "stage": "loop215-ofteach-q",
+   "reasons": []
+  },
+  {
+   "id": "O4",
+   "family": "unknown-entity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "O5",
+   "family": "unknown-entity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "P1",
+   "family": "look-alike",
+   "confirm": false,
+   "expected": "Litora",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Dara Fenn's country of citizenship is Litora.",
+    "Saved: Litora's capital is Fellport.",
+    "Saved: Dara Fenner's country of citizenship is Cardova.",
+    "Saved: Cardova's capital is Port Riva."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": [
+    "abstained though answer sealed ('Litora'): \"I didn't understand that question — could you say it another way?\""
+   ]
+  },
+  {
+   "id": "P2",
+   "family": "look-alike",
+   "confirm": false,
+   "expected": "Cardova",
+   "verdict": "MISSED",
+   "teach_replies": [
+    "Saved: Dara Fenn's country of citizenship is Litora.",
+    "Saved: Litora's capital is Fellport.",
+    "Saved: Dara Fenner's country of citizenship is Cardova.",
+    "Saved: Cardova's capital is Port Riva."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": [
+    "abstained though answer sealed ('Cardova'): \"I didn't understand that question — could you say it another way?\""
+   ]
+  },
+  {
+   "id": "P3",
+   "family": "look-alike",
+   "confirm": false,
+   "expected": "Fellport",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Dara Fenn's country of citizenship is Litora.",
+    "Saved: Litora's capital is Fellport.",
+    "Saved: Dara Fenner's country of citizenship is Cardova.",
+    "Saved: Cardova's capital is Port Riva."
+   ],
+   "reply": "Dara Fenn's country of citizenship's capital is Fellport.",
+   "extracted": "Fellport",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "P4",
+   "family": "look-alike",
+   "confirm": false,
+   "expected": "Port Riva",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Dara Fenn's country of citizenship is Litora.",
+    "Saved: Litora's capital is Fellport.",
+    "Saved: Dara Fenner's country of citizenship is Cardova.",
+    "Saved: Cardova's capital is Port Riva."
+   ],
+   "reply": "Dara Fenner's country of citizenship's capital is Port Riva.",
+   "extracted": "Port Riva",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "P5",
+   "family": "look-alike",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Dara Fenn's country of citizenship is Litora.",
+    "Saved: Litora's capital is Fellport.",
+    "Saved: Dara Fenner's country of citizenship is Cardova.",
+    "Saved: Cardova's capital is Port Riva."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "Q1",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Petra Voss",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Joren Hale's spouse is Sella Marne.",
+    "Saved: Sella Marne's country of citizenship is Tormeil.",
+    "Saved: Tormeil's capital is Northgate.",
+    "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne)."
+   ],
+   "reply": "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 3 rejected: \"Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).\""
+   ]
+  },
+  {
+   "id": "Q2",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Tormeil",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Joren Hale's spouse is Sella Marne.",
+    "Saved: Sella Marne's country of citizenship is Tormeil.",
+    "Saved: Tormeil's capital is Northgate.",
+    "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne)."
+   ],
+   "reply": "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 3 rejected: \"Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).\""
+   ]
+  },
+  {
+   "id": "Q3",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Dunmere",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Joren Hale's spouse is Sella Marne.",
+    "Saved: Sella Marne's country of citizenship is Tormeil.",
+    "Saved: Tormeil's capital is Northgate.",
+    "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne)."
+   ],
+   "reply": "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 3 rejected: \"Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).\""
+   ]
+  },
+  {
+   "id": "Q4",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Northgate",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Joren Hale's spouse is Sella Marne.",
+    "Saved: Sella Marne's country of citizenship is Tormeil.",
+    "Saved: Tormeil's capital is Northgate.",
+    "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne)."
+   ],
+   "reply": "Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 3 rejected: \"Updated: Joren Hale's spouse is Petra Voss (it was Sella Marne).\""
+   ]
+  },
+  {
+   "id": "Q5",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Greta Moss",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Tomas Reed's spouse is Hana Okafor.",
+    "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor)."
+   ],
+   "reply": "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 1 rejected: \"Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).\""
+   ]
+  },
+  {
+   "id": "Q6",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "Greta Moss",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Tomas Reed's spouse is Hana Okafor.",
+    "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor)."
+   ],
+   "reply": "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 1 rejected: \"Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).\""
+   ]
+  },
+  {
+   "id": "Q7",
+   "family": "post-correction",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "HARNESS-ERROR",
+   "teach_replies": [
+    "Saved: Tomas Reed's spouse is Hana Okafor.",
+    "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor)."
+   ],
+   "reply": "Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).",
+   "extracted": "",
+   "stage": "",
+   "reasons": [
+    "teach 1 rejected: \"Updated: Tomas Reed's spouse is Greta Moss (it was Hana Okafor).\""
+   ]
+  },
+  {
+   "id": "S1",
+   "family": "ambiguity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Bram Kite's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "S2",
+   "family": "ambiguity",
+   "confirm": false,
+   "expected": "Cora Lind",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Mira Sol's spouse is Cora Lind.",
+    "Saved: Mira Solis's spouse is Petra Voss."
+   ],
+   "reply": "Mira Sol's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "S3",
+   "family": "ambiguity",
+   "confirm": false,
+   "expected": "Petra Voss",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Mira Sol's spouse is Cora Lind.",
+    "Saved: Mira Solis's spouse is Petra Voss."
+   ],
+   "reply": "Mira Solis's spouse is Petra Voss.",
+   "extracted": "Petra Voss",
+   "stage": "loop138-nhop",
+   "reasons": []
+  },
+  {
+   "id": "S4",
+   "family": "ambiguity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Mira Sol's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Mira Solis's spouse is Petra Voss.",
+    "Saved: Petra Voss's country of citizenship is Veldoria."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "S5",
+   "family": "ambiguity",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's spouse is Bram Kite."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "T1",
+   "family": "qualifier",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "stage": "loop148b-screen-time-unparsed",
+   "reasons": []
+  },
+  {
+   "id": "T2",
+   "family": "qualifier",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "T3",
+   "family": "qualifier",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "T4",
+   "family": "qualifier",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "Bram Kite's spouse is Cora Lind.",
+   "extracted": "Cora Lind",
+   "stage": "loop138-nhop",
+   "reasons": [
+    "confident reply where abstain sealed: \"Bram Kite's spouse is Cora Lind.\""
+   ]
+  },
+  {
+   "id": "T5",
+   "family": "qualifier",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "extracted": "I didn't understand that. I only know current facts, not years or 'as of' -- could you say it without that part?",
+   "stage": "loop148b-screen-time",
+   "reasons": []
+  },
+  {
+   "id": "U1",
+   "family": "chain-end",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "U2",
+   "family": "chain-end",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's country of citizenship is Norland.",
+    "Saved: Wren Padder's work location is Millhaven."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "U3",
+   "family": "chain-end",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "bench73",
+   "reasons": [
+    "confident reply where abstain sealed: \"Bram Kite's spouse's country of citizenship is Norland.\""
+   ]
+  },
+  {
+   "id": "U4",
+   "family": "chain-end",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "OK",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Norland's capital is Aldport."
+   ],
+   "reply": "I didn't understand that question — could you say it another way?",
+   "extracted": "I didn't understand that question — could you say it another way?",
+   "stage": "none",
+   "reasons": []
+  },
+  {
+   "id": "U5",
+   "family": "chain-end",
+   "confirm": false,
+   "expected": "abstain",
+   "verdict": "WRONG-ANSWER",
+   "teach_replies": [
+    "Saved: Bram Kite's spouse is Cora Lind.",
+    "Saved: Cora Lind's country of citizenship is Norland."
+   ],
+   "reply": "Bram Kite's spouse's country of citizenship is Norland.",
+   "extracted": "Norland",
+   "stage": "bench73",
+   "reasons": [
+    "confident reply where abstain sealed: \"Bram Kite's spouse's country of citizenship is Norland.\""
+   ]
+  }
+ ]
+}
