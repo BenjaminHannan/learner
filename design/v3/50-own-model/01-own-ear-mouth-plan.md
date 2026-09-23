@@ -36,7 +36,7 @@ fact path works (stage T1 below).
   (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
 
 **The plan in one line each:**
-1. **Ear:** a 29M bidirectional encoder of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
    the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
 2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
    by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
@@ -94,7 +94,7 @@ Two lessons decide the design:
 | Value | pointer to a whole-word span of the turn | |
 | Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
 | Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
-| Total | | ≈ **30M** |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
 
 ### 2.2 What each part stops, and what it doesn't
 
@@ -259,7 +259,7 @@ that are not a span of the turn** (checked on every output). **Proved wrong if**
 STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
 
 ### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
-**Change:** fill-in-the-blank pretraining on/off, everything else identical (29M ear, same frame data, seed).
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
 **Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
 the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
 proposals or recall, the pointer design is not shown to be better.
@@ -331,10 +331,36 @@ Arms:
 
 | Arm | Size | Memory | Why it's there |
 |---|---|---|---|
-| **Premonition-own** | ear 30M + mouth 29M + reasoner 0.08M ≈ 59M | notebook | the system |
-| **B-plain** | decoder-only ≈ 58M (e.g. 14 layers × 576), same tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
-| **B-RAG** | B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
-| **B-notebook** | B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+| **Premonition-own** | **61,783,463** (§7.1) | notebook | the system |
+| **B-plain** | **61,783,680** (§7.1), decoder-only, same 8,192 tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
+| **B-RAG** | 61,783,680; B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
+| **B-notebook** | 61,783,680; B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+
+### 7.1 Parameter counts (design counts, recomputed from the shapes; the builder re-counts from the built models)
+
+Every learned number the benchmark path uses is counted, including all ear heads, the whole mouth and the reasoner.
+
+| Part | Shape | Parameters |
+|---|---|---:|
+| Ear embeddings | 8,192 × 512 | 4,194,304 |
+| Ear encoder | 8 blocks × (attention 4·512² + MLP 8·512² + 2 norms) + final norm | 25,174,528 |
+| Ear slot layer | 1 cross-attention layer for the 6 slot queries + the queries | 1,052,672 |
+| Ear pointers | owner, value and relation-cue start/end projections (6 × 512²) | 1,572,864 |
+| Ear question pointers | question-owner start/end (2 × 512²) | 524,288 |
+| Ear classifiers | relation (154 classes) per slot + 3 for questions, slot mode (9), act (9), count (7), exists, inverse | 329,859 |
+| Ear special tokens | `ME`, `WE`, `SEP` | 1,536 |
+| **Ear total** | | **32,850,051** |
+| Mouth (talker101, incl. its 0.52M copy head) | as trained; `artifacts/fable-talker101-20260921/RESULTS.md` | 28,847,105 |
+| Mouth slot tokens | 8 new tokens × 512 (M1) | 4,096 |
+| Reasoner | the existing lookup operator | 79,316 |
+| **Premonition-own total** | | **61,783,463** (the first version of this doc said "≈ 59M" and left out the ear heads) |
+| **Each baseline** | decoder-only, 12 blocks, width 640, SwiGLU MLP width 1,600, 8,192 tied embeddings, RMSNorm | **61,783,680** (+217, +0.0004%) |
+
+B-RAG and B-notebook reuse B-plain's pretrained weights (retrieval and rows are test-time inputs), and the
+3 seeds are for the dialogue-training stage; the long pretraining runs once per side, as in §8.
+Retrieval in B-RAG uses plain word-overlap search (no learned parameters), and B-notebook gets the rows as text, so
+all three baselines have the same count. If the built system's audited count differs, the baselines are re-sized to
+within 0.2% before any baseline is trained, and both counts go in the PASSMARKS.
 
 Three tests keep the sources of a win apart: (1) **language boundary**: English → each reader → the same compiler and
 notebook, score the fact sets; (2) **reasoning**: gold facts and gold questions in, no ear; (3) **end to end**.
@@ -342,8 +368,9 @@ If Premonition-own beats only B-plain, the honest claim is "an external-memory a
 better reasoner".
 
 Fairness rules (fixed in advance):
-- same pretraining text and the same number of training FLOPs as ear + mouth pretraining together (so B-plain ≈
-  58M × 617M tokens), the same generated teach/ask/correct dialogues as training text, 3 seeds each;
+- same pretraining text and the same number of training FLOPs as ear + mouth pretraining together (so each baseline ≈
+  62M × 617M tokens), the same generated teach/ask/correct dialogues as training text, 3 seeds each (training time and FLOPs reported too:
+  equal parameters do not mean equal compute for an encoder + decoder versus one decoder);
 - the same test items, greedy decoding, the same answer extractor for every arm;
 - report the ear's reading accuracy separately, so a win is not credited to the notebook when the reading failed,
   and a loss is not blamed on the notebook when the reading failed;
@@ -372,7 +399,7 @@ Anchor (shown): talker101, 28.85M parameters, 617M tokens, about 49,000 tokens/s
 | E1 ear pretraining, 29M × 600M tokens | ≈ 3.5 h | ≈ 1.2 h ≈ $0.50–0.75 |
 | E1–E3 frame training, 8 short runs | ≈ 2 h | ≈ 0.7 h |
 | M1 mouth fine-tune | ≈ 1 min | — |
-| B-plain, 58M × 617M tokens | ≈ 7 h (two resumable runs of ≤ 6 h, D8) | ≈ 2.3 h ≈ $1–1.40 |
+| Each baseline, 61.8M × 617M tokens | ≈ 7.5 h (two resumable runs of ≤ 6 h, D8) | ≈ 2.5 h ≈ $1–1.50 |
 | B-RAG and all evaluations | ≈ 1 h | — |
 | **Total** | **≈ 11–12 GPU-hours, $0** | **≈ 3.5–4 h, ≈ $2–2.50; hard cap $5** |
 
