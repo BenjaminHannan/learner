@@ -17,23 +17,26 @@ IN=claude/project-thread-p68q5v; OUT=builder-outbox; MAX=${MAX:-3}
 RUN="$W/handoff/kit/mimo/rungo4.sh"
 mkdir -p "$Q"; LOG=$H/watch.log
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
-if [ ! -d "$O/.git" ]; then
-  git clone -q "$(git -C "$W" remote get-url origin)" "$O" || { log "clone failed"; exit 1; }
-  git -C "$O" checkout -q "$OUT" 2>/dev/null || git -C "$O" checkout -q --orphan "$OUT"
+if [ ! -d "$O/.git" ]; then   # small separate repo that holds only builder results (no copy of the project)
+  mkdir -p "$O" && git -C "$O" init -q && git -C "$O" remote add origin "$(git -C "$W" remote get-url origin)"
+  git -C "$O" checkout -q -b "$OUT"
+  if git -C "$O" fetch -q origin "$OUT" 2>/dev/null; then git -C "$O" reset -q --hard FETCH_HEAD; fi
 fi
-publish() {  # $1 = task name
+publish() {  # $1 = task name; marks $Q/$n.pushed on success
   local n="$1" d="$O/runs/$n"; mkdir -p "$d"
-  cp "$Q/$n".* "$d/" 2>/dev/null
+  cp "$Q/$n".md "$Q/$n".go* "$Q/$n".exit "$d/" 2>/dev/null
   grep -h '^PUSH:' "$Q/$n.md" | sed 's/^PUSH://' | tr ' ' '\n' | grep -v '^$' | while read -r p; do
     case "$p" in notebook*|/*|*..*) log "refused push path $p"; continue;; esac
     (cd "$W" && find $p -type f -size -5M ! -name '*.pt' ! -name '*.safetensors' ! -name '*.gguf' ! -name '*.bin' 2>/dev/null) | while read -r f; do
       mkdir -p "$O/$(dirname "$f")"; cp "$W/$f" "$O/$f"; done
   done
-  (cd "$O" && git add -A && git commit -qm "builder results: $n" && git push -q origin "HEAD:$OUT") && log "pushed $n" || log "push failed $n"
+  (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add -A && git commit -qm "builder results: $n"; git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 \
+    && touch "$Q/$n.pushed" && log "pushed $n" || log "push failed $n (retry next round)"
 }
 log "watcher started (pid $$)"
 while [ ! -e "$H/STOP" ]; do
   git -C "$W" fetch -q origin "$IN" 2>>"$LOG"
+  for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
   for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
     n=$(basename "$f" .md)
     [ -e "$Q/$n.md" ] && continue
@@ -44,7 +47,7 @@ while [ ! -e "$H/STOP" ]; do
       rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
     fi
     mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
-    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running"; publish "$n" ) &
+    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
   done
   sleep 120
 done
