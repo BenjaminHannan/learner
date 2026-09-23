@@ -1,0 +1,20 @@
+liveness probe progress (sanitized: step and loss lines only, no ip addresses, no keys) 2026-09-23 19:05-19:10 UTC
+Method: read-only. No instance created, stopped, destroyed; no files touched on any box; no processes killed.
+SSH used the already-working local key only; no new keys, no new setup.
+
+--- own-m1n (id 52279213, v2) ---
+status: running (actual_status=running, cur_state=running)
+vastai logs --tail 40: 0 training lines; output was only sshd session/auth lines from the builder's own polling.
+ssh train_log: /root/work/run/train_log.jsonl, 36 lines
+first step seen: step 1/702 loss 2.9962
+last step seen: step 700/702 loss 0.262 (previous line step 680/702 loss 0.3418)
+steps rising: yes (1 -> 700 of 702); loss falling (2.9962 -> 0.262)
+nvidia-smi: utilization.gpu 98 %, memory.used 1030 MiB
+
+--- own-m1b (id 52279343, v1) ---
+status: running (actual_status=running, cur_state=running)
+vastai logs --tail 40: 0 training lines; output was only sshd session/auth lines from the builder's own polling.
+ssh train_log: no train_log.jsonl newer than /etc/hostname found (empty result)
+box contents (read-only ls): /root/work/ holds only data/ ; no run/ directory
+nvidia-smi: utilization.gpu 0 %, memory.used 2 MiB
+steps rising: no evidence of training yet -- box is still in setup stage (matches builder reply file: venv install in progress, training not launched)
