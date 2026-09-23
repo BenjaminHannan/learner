@@ -1,0 +1,1382 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/30-modes/280-282-chat-fixes.md | head -n 400; echo ===; ls artifacts/claude-capab280-20260923/; echo ===; uptime; df -g / | head
+# 280, 281, 282: three chat fixes from the chat-demo probe. Director's note, 2026-09-23 04:30 UTC
+
+Source: artifacts/claude-chatweak-20260923/WEAKSPOTS.md (90 fresh dev turns on base 260; dev material, not a panel).
+Base for all three: 260 (scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json).
+Each experiment is one change, sealed before its registered run, graded on its own fresh blind panel written
+by a separate agent from the spec below. The probe's dialogs are dev material: builders may read them.
+The three are independent and run in parallel. None of them may change what gets saved in the notebook.
+
+## 280: "What can you do?" says only what is true (honesty; first priority)
+
+Problem: t08-t1 lists "answer ... following one or two steps" and "correct a fact or forget one", but the probe
+shows two-step questions fail (t02-t3) and forget commands fail (t05-t2, t05-t5).
+The one change: the self-description replies ("What can you do?" and its variants, and "Can you <ability>?"
+yes/no questions if the base already routes them to the self sheet) are rendered from a sealed ability table.
+- Each row: ability, the exact example phrasing that works, evidence (a registered PASS or a frozen-suite family
+  that measures it), and a dev score from the builder's OWN new dev chats (fictional names; at least 8 turns per
+  ability, varied phrasing).
+- An ability is listed plainly only if its dev score is at least 80%. If only one phrasing works (at least 90% on
+  that phrasing), it is listed with that phrasing as an example ("I can follow two steps if you ask like
+  'Who is Kim's boss's boss?'"). Otherwise it is dropped from the list.
+- "What can't you do?" stays as it is, except that any ability dropped above is not claimed anywhere else.
+Marks: M1 capabilpanel280: 0 replies that claim an ability the table does not support (the director checks each
+claim; the 260 arm's count is shown beside it); every general "what can you do" item lists at least 3 abilities.
+M2 frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench vs 260 rows): only predicted reply-only
+moves, GATE clean. M3 0 notebook changes on the panel and suites. M4 grammar of every changed reply: director.
+
+Panel spec (capabilpanel280, 40 turns, fresh dialogs): 12 general ability questions in varied wording and register
+("What can you do?", "what are you good at", "Tell me what you're able to do."), 20 "Can you ...?" questions over
+abilities that plausibly exist or not (forget, correct, two-step, remember after restart, math, web, feelings,
+translate, names, sources), 8 controls (plain teach and ask). Each dialog may first teach 1 or 2 facts.
+
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+
+## 282: casual greetings and closings get small talk, not an error
+
+Problem: "hey whats up" (t07-t0) gets "I didn't understand that question"; "Thanks, that's all!" (t01-t7) gets
+"I didn't understand that well enough to save it". Bare "Thanks!" and "cool thanks!" already work.
+The one change: the small-talk recogniser also accepts greetings and closings that are lowercase, lack
+apostrophes or end marks, or carry a short closing tail ("that's all", "that's it", "bye for now", "see ya").
+Only whole turns that are pure small talk; a turn with any fact or question content keeps its old route.
+Marks: M1 smallpanel282: at least 90% of small-talk items get a fitting small-talk reply (260 arm shown);
+0 writes on small-talk items; mixed items (small talk + a fact or question) keep 260's route and result exactly.
+M2 frozen suites as in 280. M3 smalltalkpanel234 re-run once: every figure equal or better than 260.
+
+Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
+closings with tails, 15 mixed turns (a greeting or thanks plus a real teach or question, e.g. "hey, whats Ana's
+city"), 10 controls. Fictional names only.
+
+## 280b: the one follow-up to 280 (added 07:45 UTC after 280's registered FAIL on M1b 9/12)
+
+Diagnosis: 280's honest text only fires for 16 closed wordings; 3 of 12 general panel items (category level only:
+wordings outside that closed set) keep 260's clarify line. (Director's correction 07:50: an earlier version of this
+paragraph quoted panel items; that was a breach of the blind-panel rule. capabilpanel280 is therefore burned for
+280b: it is not used for any 280b mark, and 280b is graded only on the fresh capabilpanel280b.)
+The one change (on top of 280): a turn is a general ability question when it is question-shaped (or starts with
+"tell me"/"list"), addresses the assistant (you/u/your/yourself), contains an ability cue (can, able, good at,
+capable, help with, abilities, skills, "what do you do"), and names no stored or new entity and no relation word.
+Such turns get 280's sealed CAN280 text. "Can you <specific thing>?" questions are NOT in scope and keep 280's reply.
+Marks: M1 capabilpanel280b: every general item gets CAN280 (bar 100%; 280 arm shown); 0 unsupported claims
+anywhere (director checks); 0 "can you X" items changed vs 280; 0 writes. M2 frozen suites vs 280's rows: only
+predicted moves, GATE clean.
+Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in wordings as varied as real people
+type (slang, typos, long and short, "tell me"/"list" forms, questions about what it is for); 10 "Can you <specific>?"
+turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
+"What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
+zsh:1: == not found
+[0m
+[0m→ [0mRead artifacts/claude-capab280-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-capab280-20260923/RESULTS.md
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280-282-chat-fixes.md | tail -n 60; echo ---SEAL-CHECK---; git status --short | head -n 30
+- "What can't you do?" stays as it is, except that any ability dropped above is not claimed anywhere else.
+Marks: M1 capabilpanel280: 0 replies that claim an ability the table does not support (the director checks each
+claim; the 260 arm's count is shown beside it); every general "what can you do" item lists at least 3 abilities.
+M2 frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench vs 260 rows): only predicted reply-only
+moves, GATE clean. M3 0 notebook changes on the panel and suites. M4 grammar of every changed reply: director.
+
+Panel spec (capabilpanel280, 40 turns, fresh dialogs): 12 general ability questions in varied wording and register
+("What can you do?", "what are you good at", "Tell me what you're able to do."), 20 "Can you ...?" questions over
+abilities that plausibly exist or not (forget, correct, two-step, remember after restart, math, web, feelings,
+translate, names, sources), 8 controls (plain teach and ask). Each dialog may first teach 1 or 2 facts.
+
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+
+## 282: casual greetings and closings get small talk, not an error
+
+Problem: "hey whats up" (t07-t0) gets "I didn't understand that question"; "Thanks, that's all!" (t01-t7) gets
+"I didn't understand that well enough to save it". Bare "Thanks!" and "cool thanks!" already work.
+The one change: the small-talk recogniser also accepts greetings and closings that are lowercase, lack
+apostrophes or end marks, or carry a short closing tail ("that's all", "that's it", "bye for now", "see ya").
+Only whole turns that are pure small talk; a turn with any fact or question content keeps its old route.
+Marks: M1 smallpanel282: at least 90% of small-talk items get a fitting small-talk reply (260 arm shown);
+0 writes on small-talk items; mixed items (small talk + a fact or question) keep 260's route and result exactly.
+M2 frozen suites as in 280. M3 smalltalkpanel234 re-run once: every figure equal or better than 260.
+
+Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
+closings with tails, 15 mixed turns (a greeting or thanks plus a real teach or question, e.g. "hey, whats Ana's
+city"), 10 controls. Fictional names only.
+
+## 280b: the one follow-up to 280 (added 07:45 UTC after 280's registered FAIL on M1b 9/12)
+
+Diagnosis: 280's honest text only fires for 16 closed wordings; 3 of 12 general panel items (category level only:
+wordings outside that closed set) keep 260's clarify line. (Director's correction 07:50: an earlier version of this
+paragraph quoted panel items; that was a breach of the blind-panel rule. capabilpanel280 is therefore burned for
+280b: it is not used for any 280b mark, and 280b is graded only on the fresh capabilpanel280b.)
+The one change (on top of 280): a turn is a general ability question when it is question-shaped (or starts with
+"tell me"/"list"), addresses the assistant (you/u/your/yourself), contains an ability cue (can, able, good at,
+capable, help with, abilities, skills, "what do you do"), and names no stored or new entity and no relation word.
+Such turns get 280's sealed CAN280 text. "Can you <specific thing>?" questions are NOT in scope and keep 280's reply.
+Marks: M1 capabilpanel280b: every general item gets CAN280 (bar 100%; 280 arm shown); 0 unsupported claims
+anywhere (director checks); 0 "can you X" items changed vs 280; 0 writes. M2 frozen suites vs 280's rows: only
+predicted moves, GATE clean.
+Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in wordings as varied as real people
+type (slang, typos, long and short, "tell me"/"list" forms, questions about what it is for); 10 "Can you <specific>?"
+turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
+"What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
+---SEAL-CHECK---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+[0m
+[0m$ [0mls scripts/ | grep -i "280\|260\|218\|143nogate"; echo ---; ls artifacts/claude-capab280-20260923/; echo ---; ls artifacts/claude-openers260-20260922/ 2>&1 | head -n 20
+claude_138l_rt143nogate.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_280_panel.sh
+claude_280_runall.sh
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_fix260_openers.py
+claude_fix280_capab.py
+claude_loop260_agent.py
+claude_loop280_agent.py
+claude_merge138k_rt143nogate.py
+claude_nhopdiag_20260923_pilot.py
+claude_nhopdiag_20260923_repro.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+fable_suitediff218.py
+---
+devcases280.json
+loop280-config.json
+PASSMARKS.md
+pilot
+predicted_moves280.json
+RESULTS.md
+run
+SEAL.sha256.txt
+---
+devcases260.json
+loop260-config.json
+PASSMARKS.md
+pilot
+predicted_moves260.json
+RESULTS.md
+run
+SEAL.sha256.txt
+[0m
+[0m→ [0mRead scripts/claude_fix280_capab.py
+[0m→ [0mRead scripts/claude_loop280_agent.py
+[0m→ [0mRead scripts/claude_capab280_devcases.py
+[0m→ [0mRead scripts/claude_capab280_score.py
+[0m→ [0mRead artifacts/claude-capab280-20260923/loop280-config.json
+[0m→ [0mRead scripts/claude_capab280_run.py
+[0m→ [0mRead scripts/claude_280_runall.sh
+[0m→ [0mRead scripts/claude_280_panel.sh
+[0m→ [0mRead scripts/claude_openers260_run.py
+[0m→ [0mRead scripts/claude_capab280_regscore.py
+[0m
+[0m$ [0mls artifacts/claude-capab280-20260923/run/ artifacts/claude-openers260-20260922/run/ 2>&1; echo ---; ls artifacts/ | grep -i "280b\|panel280"; echo ---; tail -n 20 artifacts/fable-predictions-ledger.md 2>&1; echo ---; uptime; df -g / | head -n 5
+artifacts/claude-capab280-20260923/run/:
+panel-260.json
+panel-260.log
+panel-280.json
+panel-280.log
+panel-files.txt
+panel-score.txt
+panel-score280.json
+panel-seal-check.txt
+regscore-registered.txt
+regscore.txt
+regscore280.json
+rt143nogate-280.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-280.json
+vp-280.log
+vs-280.json
+vs-280.log
+work
+
+artifacts/claude-openers260-20260922/run/:
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+lat-n-3.json
+lat-n-3.log
+panel-138m.jsonl
+panel-138m.log
+panel-260.jsonl
+panel-260.log
+panel-schema.txt
+panel-score.txt
+panel-score260.json
+panel-seal-check.txt
+probe
+regscore.txt
+regscore260.json
+rt143nogate-n.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+smoke-n.json
+smoke-n.log
+uptime.log
+vp-n.json
+vp-n.log
+vs-n.json
+vs-n.log
+work
+---
+claude-capabilpanel280-20260923
+---
+- P269.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 8-12/15; pass (>= 12) ~35 %. Dev 14/22 (ex265 subset 7/10 reproduces 265; new 7/12); misses are extra checker-passed frames read off the group clause (6) + neighbour direction flips (2).
+- P269.3 M3 first_person 0 hits lost vs A265; pass ~99 %. Dev 10/10 hits, 0 lost; holds by construction (saves identical, asserted per turn).
+- P269.4 M4 named 15/15 turns byte-identical to A265; pass ~99 %. Construction, dev 10/10.
+- P269.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 13, A261b wrong 39 = 26 diverted + 13). Per-fact/per-turn rates for A, A265, A261b, B reported, no bars.
+- P269.6 M6 false asks on non_owner_we + first_person + named <= 1 total: 0-1, pass ~85 % (dev 0/53: 0 fires + 0 divert asks on 33 nonowner + 10 first + 10 named; 46/46 adversarial probes as intended). M7 gold hits lost on non_owner_we vs A265 <= 1: 0, pass ~99 % (dev 0; construction). M8 0 new wrong vs A265 across all families: 0, pass ~99 % (dev 0; construction).
+- P269.7 Overall registered PASS ~20 % (needs M1+M2 together; M3-M8 near-certain).
+- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health; /completion verified 162/162, 0 fallbacks); D4 diverted frames still spend a checker query (A265/A261b exactness); D5 M5/M8 = per-turn multiset difference; D6 check changes only the ASK trigger (per-frame divert does all suppression); D7 residuals: walk/feed/carry verbs don't fire, death contexts still fire, ourselves needs ownable nearby. See artifacts/claude-ear269-20260923/PASSMARKS.md.
+- P268b.1 (2026-09-23, builder; exp 268b = 138nb + unchanged 268 guard scripts/claude_fix268_nhopdir.py, CPU only, sealed 23 files SEAL.sha256.txt artifacts/claude-nhop268b-20260923; blind panels never opened, nhoppanel268 never dev material) DEV 123 dialogs own wording fictional names (70 rerun 268 dev + 7 supp + 46 new table-reader shapes): moves exactly the 46 predicted ids with exact 268b stage+reply (8 to 190 gold+label, 3 to bench73 ask, 4 to honest decline, 13 to none-abstain, 8 to table-inverse gold+label, 10 to table-label153 true fact); 315/361 other turns byte-identical; 0 teach/triple changes; 0 new wrong values.
+- P268b.2 (same) M1 blind nhoppanel268b run once per arm with sealed score_panel.py: bug family 0 wrong on 268b, >= 14/16 right with the "(worked out backwards)" label (rest honest abstains); every other family byte-identical to 138nb; 0 question writes. By-shape dev evidence: spouse whose/has-as 8/8 to 190 gold+label, married-to 3/3 to ask, husband/wife/partner/son 4/4 to decline, what-written/had-written/whose-was 13/13 to abstain, founder/author what-found+who-has-as 8/8 to table-inverse gold+label, whose-author/founder/employer/child 10/10 to table-label153 true fact.
+- P268b.3 (same) M2 invpanel138nb regression once per arm with sealed score_panel.py: moves 268b vs 138nb rows [], 0 new wrong, every 138nb-right item stays right, 0 question writes. Push only score JSON with ids/families/stages/counts, never item text or replies.
+- P268b.4 (same) M3 frozen suites vs 138nb saved rows: sessions152/bench/marks123 0 moves GATE clean; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079/C115 reply-only, 0 new WRONG/WRONG-WRITE/junk, direct rows vs 138nb [] (145); rt143 no-gate 0 moves 0 flips (124); 7 restart/verifier probes rows equal (15+2+1+15+3+98+12 dialogs); 0 ghosts, 0 dup fails, 0 write changes.
+- P268b.5 (same) M4 latency alternating processes b,n,b,n,b,n 2 reps each on 138j p3/p3c/p3d: median(268b)-median(138nb) <= +5 ms/turn (pilot +0.068 ms, n=104 each).
+- P268b.6 (same) falsifiers: a forward-walk answer surviving on a bug item, any forward two-step answer change, or any backwards answer naming someone not in gold proves the change wrong.
+- P280.4 OUTCOME (2026-09-23, build agent, sealed exp 280) registered verdict FAIL on M1b only, as P280.3's likeliest failure. M1 panel (36 dialogs; seal OK; panel once per arm): M1a 0 forbidden on 280 (260 arm 7) PASS; M1b 9/12 general items list >= 3 abilities FAIL (misses G06, G11, G12: wording outside the closed 16-form set, clarify on both arms, 0 claims, 0 writes); M3 0 write diffs + 0 question/self writes PASS; canyou 20 0 forbidden 0 moves; control 4 0 moves. M2 PASS (sessions152 exactly the 3 predicted reply-only moves UNHELPFUL->UNHELPFUL GATE clean; rt136 0 field diffs with vs-138j labels identical to 260's; rt143 0; bench 4x200 0; 0 flips). Probes 0 changes. Dev identical 280 vs 260 with the registered ability scores. Deviations: 2 driver-only fixes after seal (regscore rt136-gate check; run+score flat-row panel_group after one void panel pass, outputs in pilot/void-attempt/); agent/config/cases/PASSMARKS 14/15 seal-OK... (14 of 15 sealed files byte-identical; only the 2 fixed drivers differ). P280.1 right (suites+probes exactly), P280.2 half-right (M1a/M3 right, M1b 9/12 not all), P280.3 wrong lean (FAIL, not PASS) with the predicted failure mode right.
+- P280.5 CORRECTION to P280.4's seal count: 12/15 sealed files byte-identical (the 3 post-seal driver fixes are run.py, score.py, regscore.py); agent, config, dev cases, PASSMARKS, predicted moves, pilot dev rows untouched. Verdict unchanged: FAIL on M1b only.
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-20260923; blind panel never opened) M1 blind calledpanel281 run once per arm with sealed score_panel: stored called/named/name-of/do-you-call items >= 90% answered exactly on 281 (260 arm shown beside); 0 wrong answers on 281; not-stored items all abstain (0 new guesses); ambiguous "called <Name>" + control items 0 moves vs 260; 0 panel store diffs 281 vs 260; 0 question writes on 281. Changed replies come only from scripts/claude_fix281_called.py (rewrite + head's own plain-question answer). Truth of claims and grammar director-graded, ungraded here.
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 124 rows 0 moved, GATE clean on sessions152/bench; 0 abstain-ward flips. Verifier probes vs 260 rows: exactly 1 changed row N06 Q "What is the name of Tomas's boss?" -> "Tomas's boss is Mirela.", ev 0, stored identical; supp 0 changes.
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stored value); ambiguous 5/5 + control 6/6 byte-identical; notstored 5/5 abstain both arms; 0 question writes either arm. 260-arm failure modes: trailing-called "I don't know X's R called.", trailing-named "I don't know X's R named.", do-you-call clarify, name-of "anyone called the name of X".
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any suite/probe move outside N06 proves the change wrong. Known limits: embedded/non-"?" called-wordings, rewritten-clarifies (original stands), not-stored/ambiguous keep 260's malformed abstains (report-only).
+- P268b.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bug clauses only. M1 blind nhoppanel268b 60 items once per arm with sealed score_panel.py: bug 11/16 right with label (bar 14), 1 wrong n268b-010 (bar 0), 4 honest bench73 non-answers; other 44 items byte-identical to 138nb (stages, replies, stored), question writes 0/60 both arms; base bug 0/16 right 16/16 wrong all loop138-nhop. Diagnosis: guard R1-R4 list has no "Who <verb>" employer/work shape, so 010's (employer-valued start,[employer]) frame survived as a forward-walk reply (falsifier P268b.6 clause 1 tripped); 4 married-to shapes fall to bench73 ask (predicted class, never wrong). DEV/M2/M3/M4 all PASS per design marks (DEV 46/46 exact, 0 writes; M2 moves [] 0 new wrong keep 69/69 rights; M3 suites 0 GATE clean rt136 16 inherited direct [] rt143 0 probes 7/7 equal latency -0.005 ms). Missed extra prediction: M2 writes [] vs 4 teach_control writes identical on both arms (legitimate, right). Post-seal driver files only: scripts/claude_268b_score_fix1.py (2 sealed-scorer bug fixes, diff disclosed), scripts/claude_268b_m1run.py (question_stage row format the sealed scorer requires). Sealed files unchanged, seal re-verified 23/23 OK. P268b.1-P268b.5 held except P268b.2's 14/16 + 0-wrong bars.
+---
+ 3:36  up 2 days, 19:25, 4 users, load averages: 50.19 49.35 54.25
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132096280    0%   /
+[0m
+[0m✗ [0mGrep "RELATIONS\s*=|KNOWN_REL|relation_words|REL_WORDS" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls artifacts/claude-verify-20260922/138m/; ls artifacts/claude-capab280-20260923/run/sd/ artifacts/claude-capab280-20260923/run/sd136/; ls artifacts/claude-capabilpanel280-20260923/ 2>&1
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+supp-run-own233.log
+artifacts/claude-capab280-20260923/run/sd/:
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+
+artifacts/claude-capab280-20260923/run/sd136/:
+rt136-diff.json
+rt136-rows.json
+SUITEDIFF218-SUMMARY.json
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+[0m
+[0m$ [0mgrep -rl "place_of_birth" scripts/ | head; echo ---; grep -n "employer" scripts/fable_ears47_model.py 2>/dev/null | head -n 5; ls scripts/ | head -n 100
+scripts/claude_fix266_chainlift.py
+scripts/claude_fullname232c_score.py
+scripts/claude_fullname232b_score.py
+scripts/fable_fix193_apos.py
+scripts/fable_loop167_agent.py
+scripts/claude_earcheck261b_devset5.py
+scripts/fable_redteam98_cases.py
+scripts/claude_own_o0b_gen.py
+scripts/fable_fix167e_probe.py
+scripts/fable_redteam136_cases.py
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+claude_266_panelrun.py
+claude_266_runall.sh
+claude_266_score.py
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268_devrepro.py
+claude_268_panelrun.py
+claude_268_runall.sh
+claude_268_score.py
+claude_268_supp.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score_fix1.py
+claude_268b_score.py
+claude_280_panel.sh
+claude_280_runall.sh
+claude_281_panel.sh
+claude_281_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_called281_devcases.py
+claude_called281_regscore.py
+claude_called281_run.py
+claude_called281_score.py
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_comma263_devcases.py
+claude_comma263_regscore.py
+[0m
+[0m$ [0mgrep -n "REL\|relations =" scripts/claude_fix266_chainlift.py | head -n 10; echo ---; grep -n "SCHEMA\|dialog_id\|turn_index" scripts/claude_called281_score.py | head -n 20; echo ---; grep -n "SCHEMA\|dialog_id" scripts/claude_capab280_score.py | head
+43:# PERSON_RELATIONS mirrors scripts/fable_agent_loop.py; employer uses "Who"
+55:_REL266 = r"[A-Za-z][A-Za-z\-]*"
+56:_LINK266 = r"(?:" + _APOS266 + r"s " + _REL266 + r")"
+62:    r"(?:" + _MY266 + r" " + _REL266 + _LINK266 + r"{0,2}"
+---
+---
+268:    """Group flat turn rows ({dialog_id, turn_index, user_text, category})
+273:    if items and isinstance(items[0], dict) and "dialog_id" in items[0]:
+276:            by.setdefault(r["dialog_id"], []).append(r)
+[0m
+[0m$ [0msed -n '35,55p' scripts/claude_fix266_chainlift.py; echo ===; grep -rn "RELATIONS =" scripts/fable_agent_loop.py | head -n 3
+import json
+import os
+import re
+
+PLACEHOLDER266 = "Zqbex"  # single capital-lead token; passes _subject_ok
+
+# Person-valued relations take "Who is <chain>'s R?", the rest "What is ...".
+# PERSON_RELATIONS mirrors scripts/fable_agent_loop.py; employer uses "Who"
+# (the established verb167 twin "Who is X's employer?").
+PERSON266 = frozenset({
+    "mother", "father", "sister", "brother", "friend", "boss", "teacher",
+    "wife", "husband", "neighbour", "neighbor", "partner", "employer",
+})
+
+_WRITE_FREE266 = frozenset({"ask", "clarify", "answer"})
+
+_APOS266 = r"['\u2019]"
+_MY266 = r"[Mm][Yy]"
+_NAME266 = r"[A-Z][A-Za-z'\u2019\-]*"
+_REL266 = r"[A-Za-z][A-Za-z\-]*"
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -n "PERSON_RELATIONS" scripts/fable_agent_loop.py | head -n 3
+91:PERSON_RELATIONS = {"mother", "father", "sister", "brother", "friend", "boss",
+147:                     "is_person": relation in PERSON_RELATIONS}]
+[0m
+[0m$ [0msed -n '85,110p' scripts/fable_agent_loop.py
+class Thinker(Protocol):
+    def think(self, notebook) -> dict | None:
+        """Optional idle work. None means 'nothing to do'."""
+
+
+# ------------------------------------------------------- deterministic offline fakes
+PERSON_RELATIONS = {"mother", "father", "sister", "brother", "friend", "boss",
+                    "teacher", "wife", "husband", "neighbour", "neighbor", "partner"}
+_APOS = r"['’]s\b\s*"
+_QUESTION = re.compile(r"^\s*(?:who|what|where)\s+(?:is|are)\s+(.+?)\s*[?.]?\s*$", re.I)
+_CORRECTION = re.compile(r"^\s*(?:actually|no,)\s*,?\s*(.*)$", re.I)
+_STATEMENT = re.compile(r"^\s*(.+?)\s+is\s+(.+?)\s*\.?\s*$", re.I)
+_PICK = re.compile(r"^\s*pick\s+(E\d+)\s*\.?\s*$", re.I)
+_YESNO = re.compile(r"^\s*(yes|no)\s*\.?\s*$", re.I)
+
+
+def _chain(text: str) -> list[str]:
+    return [part.strip() for part in re.split(_APOS, text.strip()) if part.strip()]
+
+
+def _clarify(text: str) -> dict:
+    return {"act": "clarify", "text": text}
+
+
+class FakeEars:
+    """A tiny template parser. Test scaffolding for the loop -- NOT the real ears."""
+[0m
+[0m# [0mTodos
+[•] Write 60+ dev turns (general/canyou/nearmiss/control) in own wording
+[ ] Build fix280b + loop280b agent + config, pilot on dev vs 280
+[ ] Pilot frozen suites + verifier probes vs 280 rows
+[ ] Write runner+scorer, mock-panel end-to-end schema test
+[ ] Write PASSMARKS + predicted moves, seal, ledger append
+[ ] Poll panel280b seal, run once per arm
+[ ] RESULTS.md, ledger outcome, final report
+[0m
+[0m← [0mWrite scripts/claude_capab280b_devcases.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_capab280b_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_capab280b_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_capab280b_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_capab280b_devcases.py
+@@ -63,9 +63,9 @@
+ add("general", ["Vessa's boss is Kipp.", "Wren's city is Dalby.",
+                 "so what can u do nowadays"],
+     [["Vessa", "boss", "Kipp"], ["Wren", "city", "Dalby"]], [],
+     note="setup teach then general")
+-add("general", [" каждый irrelevant check skipped ".replace(" каждый irrelevant check skipped ", "Bexley's dog is Pip."),
++add("general", ["Bexley's dog is Pip.",
+                 "Tell me, what are all your abilities?"],
+     [["Bexley", "dog", "Pip"]], [], note="setup teach then general")
+ 
+ # ---- canyou: must keep 280's reply byte-identical ----
+
+[0m
+[0m← [0mWrite scripts/claude_fix280b_general.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -247,9 +247,9 @@
+         return False
+     if (words[0] in ("can", "cannot", "could") and len(words) > 1
+             and words[1] in ("you", "u")):
+         rest = words[2:]
+-        return _rule_general(rest, " ".join(rest), loop)
++        return _rule_general(rest, text, loop)
+     return _rule_general(words, text, loop)
+ 
+ 
+ def install_general280b(loop):
+
+[0m
+[0m← [0mWrite scripts/claude_loop280b_agent.py
+Wrote file successfully.
+[0m
+[0m$ [0mmkdir -p artifacts/claude-capab280b-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop280b_agent.py --write-config artifacts/claude-capab280b-20260923/loop280b-config.json && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_devcases.py
+Wrote artifacts/claude-capab280b-20260923/loop280b-config.json
+Wrote artifacts/claude-capab280b-20260923/devcases280b.json (68 dialogs)
+Counter({'general': 28, 'canyou': 12, 'nearmiss': 12, 'control': 10, 'ability': 6})
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, sys
+sys.path.insert(0, 'scripts')
+import claude_fix280b_general as F
+cases = json.load(open('artifacts/claude-capab280b-20260923/devcases280b.json'))
+for c in cases:
+    for t in c['turns']:
+        got = F.is_general280b(t, None)
+        want = (c['family'] == 'general' and t == c['turns'][-1] and len(c['turns']) == 1) or (c['family']=='general' and t == c['turns'][-1])
+        # general family: only last turn should fire (setup teaches must not)
+        if c['family'] == 'general':
+            want = (t == c['turns'][-1])
+        else:
+            want = False
+        if got != want:
+            print(('MISS' if want else 'FALSE-FIRE'), c['id'], c['family'], repr(t))
+print('done')
+"
+MISS d280b-024 general 'i want to know what you do'
+done
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -50,9 +50,15 @@
+     "would", "shall", "have", "has", "tell", "list", "describe", "say",
+     "explain",
+ })
+ 
+-# Second-person tokens (after normalisation).
++# Multi-word statement openers that still ask about abilities
++# ("wordings as varied as real people type").
++WANT280B = (
++    ("i", "want", "to", "know"),
++    ("i", "wonder"),
++    ("i", "d", "like", "to", "know"),
++)
+ YOU280B = frozenset({
+     "you", "u", "your", "yours", "yourself", "youre", "youve",
+     "youll", "youd",
+ })
+
+[0m
+[0m✗ [0mEdit scripts/claude_fix280b_general.py failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=60, offset=100][0m
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=50, offset=60][0m
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=25, offset=36][0m
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -57,8 +57,9 @@
+     ("i", "want", "to", "know"),
+     ("i", "wonder"),
+     ("i", "d", "like", "to", "know"),
+ )
++# Second-person tokens (after normalisation).
+ YOU280B = frozenset({
+     "you", "u", "your", "yours", "yourself", "youre", "youve",
+     "youll", "youd",
+ })
+
+[0m
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=45, offset=236][0m
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=15, offset=224][0m
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -230,9 +230,10 @@
+ if not words:
+     return False
+ if any(w in NEG280B or w.endswith("n't") for w in words):
+     return False
+-shaped = (str(orig_text).strip().endswith("?") or words[0] in SHAPED280B)
++shaped = (str(orig_text).strip().endswith("?") or words[0] in SHAPED280B
++          or any(tuple(words[:len(p)]) == p for p in WANT280B))
+ if not shaped:
+     return False
+ if not any(w in YOU280B for w in words):
+     return False
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, sys
+sys.path.insert(0, 'scripts')
+import claude_fix280b_general as F
+cases = json.load(open('artifacts/claude-capab280b-20260923/devcases280b.json'))
+miss = ff = 0
+for c in cases:
+    for t in c['turns']:
+        got = F.is_general280b(t, None)
+        want = (c['family'] == 'general' and t == c['turns'][-1])
+        if got != want:
+            print(('MISS' if want else 'FALSE-FIRE'), c['id'], c['family'], repr(t))
+            miss += want; ff += (not want)
+print('misses:', miss, 'false-fires:', ff)
+"
+MISS d280b-024 general 'i want to know what you do'
+misses: 1 false-fires: 0
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -176,8 +176,12 @@
+     for i in range(len(words) - 3):
+         if (words[i] == "what" and words[i + 1] == "do"
+                 and words[i + 2] in YOU280B and words[i + 3] == "do"):
+             return True
++    for i in range(len(words) - 2):
++        if (words[i] == "what" and words[i + 1] in YOU280B
++                and words[i + 2] == "do"):
++            return True
+     return False
+ 
+ 
+ def _stored_names(loop) -> set[str]:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, sys
+sys.path.insert(0, 'scripts')
+import claude_fix280b_general as F
+cases = json.load(open('artifacts/claude-capab280b-20260923/devcases280b.json'))
+miss = ff = 0
+for c in cases:
+    for t in c['turns']:
+        got = F.is_general280b(t, None)
+        want = (c['family'] == 'general' and t == c['turns'][-1])
+        if got != want:
+            print(('MISS' if want else 'FALSE-FIRE'), c['id'], c['family'], repr(t))
+            miss += want; ff += (not want)
+print('misses:', miss, 'false-fires:', ff)
+"
+misses: 0 false-fires: 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+rows = [json.loads(x) for x in open('artifacts/claude-capabilpanel280-20260923/panel.jsonl') if x.strip()]
+print('n rows:', len(rows))
+print('keys:', sorted(rows[0].keys()))
+import collections
+print(collections.Counter(r.get('category') for r in rows))
+print('dialogs:', len(set(r['dialog_id'] for r in rows)))
+"; grep -n "user_text\|'turn'\|\"turn\"" scripts/claude_called281_score.py | head -n 10
+n rows: 40
+keys: ['category', 'dialog_id', 'gold', 'turn_index', 'user_text']
+Counter({'can_you': 20, 'general': 12, 'control_teach': 4, 'control_ask': 4})
+dialogs: 36
+132:                if is_question(row.get("turn", "")) and row.get("ev", 0):
+153:                if is_question(row.get("turn", "")):
+198:    turn = it.get("turn", it.get("question", it.get("text", "")))
+[0m
+[0m← [0mWrite scripts/claude_capab280b_run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_capab280b_score.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime; df -g / | head -n 3; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py dev scripts/claude_loop280_agent.py artifacts/claude-capab280-20260923/loop280-config.json artifacts/claude-capab280b-20260923/pilot/work280 artifacts/claude-capab280b-20260923/devcases280b.json artifacts/claude-capab280b-20260923/pilot/dev-280.json
+3:41  up 2 days, 19:30, 4 users, load averages: 54.92 57.53 57.08
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 130135600    0%   /
+done 68
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py dev scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/work280b artifacts/claude-capab280b-20260923/devcases280b.json artifacts/claude-capab280b-20260923/pilot/dev-280b.json
+3:41  up 2 days, 19:31, 4 users, load averages: 56.52 57.82 57.19
+done 68
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_score.py dev artifacts/claude-capab280b-20260923/devcases280b.json artifacts/claude-capab280b-20260923/pilot/dev-280.json artifacts/claude-capab280b-20260923/pilot/dev-280b.json artifacts/claude-capab280b-20260923/pilot/dev-score.json
+general   n=28 same=18 moved=13 W280=3 W280b=3
+canyou    n=12 same=12 moved=0 W280=0 W280b=0
+nearmiss  n=12 same=21 moved=0 W280=8 W280b=8
+control   n=10 same=18 moved=0 W280=10 W280b=10
+ability   n=6 same=14 moved=0 W280=10 W280b=10
+general non-canon: []
+non-general diffs: []
+question-write violations: []
+[0m
+[0m# [0mTodos
+[✓] Write 60+ dev turns (general/canyou/nearmiss/control) in own wording
+[✓] Build fix280b + loop280b agent + config, pilot on dev vs 280
+[•] Pilot frozen suites + verifier probes vs 280 rows
+[ ] Write runner+scorer, mock-panel end-to-end schema test
+[ ] Write PASSMARKS + predicted moves, seal, ledger append
+[ ] Poll panel280b seal, run once per arm
+[ ] RESULTS.md, ledger outcome, final report
+[0m
+[0m← [0mWrite scripts/claude_capab280b_regscore.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_280b_panel.sh
+Wrote file successfully.
+[0m
+[0m$ [0mcp scripts/claude_280b_panel.sh scripts/claude_280b_runall.sh && sed -i '' 's/claude_280b_panel.sh <run_dir>/claude_280b_runall.sh <run_dir>/' scripts/claude_280b_runall.sh && head -n 7 scripts/claude_280b_runall.sh
+#!/bin/bash
+# Exp 280b -- registered marks M2 (+M3 notebook-zero, verifier probes), in
+# order, one heavy step at a time, `uptime` checked before each step (waits
+# while 1-min load > 60).
+# usage: scripts/claude_280b_runall.sh <run_dir>
+# M1 (the blind panel) runs separately: scripts/claude_280b_runall.sh <run_dir>
+set -u
+[0m
+[0m← [0mWrite scripts/claude_280b_panel.sh
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_280b_runall.sh
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_280b_runall.sh
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_280b_runall.sh
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_280b_runall.sh
+@@ -2,9 +2,9 @@
+ # Exp 280b -- registered marks M2 (+M3 notebook-zero, verifier probes), in
+ # order, one heavy step at a time, `uptime` checked before each step (waits
+ # while 1-min load > 60).
+ # usage: scripts/claude_280b_runall.sh <run_dir>
+-# M1 (the blind panel) runs separately: scripts/claude_280b_runall.sh <run_dir>
++# M1 (the blind panel) runs separately: scripts/claude_280b_panel.sh <run_dir>
+ set -u
+ R=$1
+ cd "$(dirname "$0")/.."
+ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+
+[0m
+[0m← [0mWrite artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl
+Wrote file successfully.
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py panel scripts/claude_loop280_agent.py artifacts/claude-capab280-20260923/loop280-config.json artifacts/claude-capab280b-20260923/pilot/workmock0 artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py panel scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/workmock1 artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280b.json && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_score.py panel artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280.json artifacts/claude-capab280b-20260923/pilot/mock-280b.json artifacts/claude-capab280b-20260923/pilot/mock-score.json
+3:42  up 2 days, 19:31, 4 users, load averages: 68.74 60.53 58.20
+done 8
+done 8
+panel n=8 general=3 canyou=1 nearmiss=2 control=2
+M1gen non-canon: 0 []
+M1a forbidden-on-280b: 0 [] (280 arm: 0)
+M1 canyou moves: 0 []
+M1 nearmiss moves: 0 []
+M1 control moves: 0 []
+M3 write diffs: 0 []
+M3 question/self writes on 280b: 0 []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && printf '%s\n' '{"dialog_id": "b1", "turn_index": 0, "category": "general"}' > /tmp/broken280b.jsonl && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_score.py panel /tmp/broken280b.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280.json artifacts/claude-capab280b-20260923/pilot/mock-280b.json /tmp/broken-out.json; echo "exit=$?"; rm /tmp/broken280b.jsonl /tmp/broken-out.json
+SCHEMA-MISMATCH: row 0 missing field user_text
+exit=3
+rm: /tmp/broken-out.json: No such file or directory
+[0m
+[0m$ [0muptime; df -g / | head -n 3
+3:42  up 2 days, 19:32, 4 users, load averages: 74.40 62.20 58.84
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 129939840    0%   /
+[0m
+[0m$ [0msleep 240; uptime
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0muptime
+3:44  up 2 days, 19:34, 4 users, load averages: 64.26 62.12 59.29
+[0m
+[0m$ [0msleep 110; uptime
+3:46  up 2 days, 19:36, 4 users, load averages: 81.41 68.63 62.16
+[0m
+[0m→ [0mRead artifacts/claude-capab280b-20260923/loop280b-config.json[90m [limit=15, offset=40][0m
+[0m
+[0m$ [0msleep 100; uptime
+3:48  up 2 days, 19:37, 4 users, load averages: 70.08 68.61 62.93
+[0m
+[0m$ [0msleep 110; uptime
+3:50  up 2 days, 19:39, 4 users, load averages: 79.59 72.43 65.09
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -172,8 +172,10 @@
+     if "at" in s:
+         return True
+ if "what" in s and "for" in s:
+     return True
++if "what" in s and "do" in s and any(w in YOU280B for w in words):
++    return True
+ for i in range(len(words) - 3):
+     if (words[i] == "what" and words[i + 1] == "do"
+             and words[i + 2] in YOU280B and words[i + 3] == "do"):
+         return True
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, sys
+sys.path.insert(0, 'scripts')
+import claude_fix280b_general as F
+cases = json.load(open('artifacts/claude-capab280b-20260923/devcases280b.json'))
+miss = ff = 0
+for c in cases:
+    for t in c['turns']:
+        got = F.is_general280b(t, None)
+        want = (c['family'] == 'general' and t == c['turns'][-1])
+        if got != want:
+            print(('MISS' if want else 'FALSE-FIRE'), c['id'], c['family'], repr(t))
+            miss += want; ff += (not want)
+print('misses:', miss, 'false-fires:', ff)
+extra = ['What can you do for me today?', 'Can you tell me what you can do?', 'Could you list your skills?', 'So what is it you do?', 'How do you do?', 'What do you know?', 'Can you tell me about yourself?', 'What does Mira do for work?', 'Who are you?', 'Are you a bot?', 'Do you know Mira?', 'What did you save for Mira?', 'Tell Mira what you do', 'You know what you can do']
+for t in extra:
+    print(F.is_general280b(t, None), repr(t))
+"
+misses: 0 false-fires: 0
+True 'What can you do for me today?'
+True 'Can you tell me what you can do?'
+True 'Could you list your skills?'
+True 'So what is it you do?'
+False 'How do you do?'
+True 'What do you know?'
+False 'Can you tell me about yourself?'
+False 'What does Mira do for work?'
+False 'Who are you?'
+False 'Are you a bot?'
+False 'Do you know Mira?'
+False 'What did you save for Mira?'
+False 'Tell Mira what you do'
+False 'You know what you can do'
+[0m
+[0m$ [0msleep 110; uptime
+3:52  up 2 days, 19:42, 4 users, load averages: 66.97 72.46 66.39
+[0m
+[0m$ [0msleep 110; uptime
+3:54  up 2 days, 19:44, 4 users, load averages: 82.54 74.18 67.67
+[0m
+[0m$ [0msleep 115; uptime
+3:56  up 2 days, 19:46, 4 users, load averages: 94.30 79.80 70.70
+[0m
+[0m$ [0msleep 115; uptime
+3:58  up 2 days, 19:48, 4 users, load averages: 63.43 75.84 70.55
+[0m
+[0m$ [0msleep 115; uptime
+4:00  up 2 days, 19:50, 4 users, load averages: 80.29 76.13 71.19
+[0m
+[0m$ [0msleep 600; uptime
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0muptime
+4:03  up 2 days, 19:52, 4 users, load averages: 66.73 72.95 70.68
+[0m
+[0m$ [0msleep 110; uptime
+4:04  up 2 days, 19:54, 4 users, load averages: 98.15 82.53 74.71
+[0m
+[0m$ [0msleep 110; uptime
+4:06  up 2 days, 19:56, 4 users, load averages: 92.48 86.18 77.20
+[0m
+[0m$ [0msleep 110; uptime
+4:08  up 2 days, 19:58, 4 users, load averages: 64.43 81.94 76.93
+[0m
+[0m$ [0msleep 110; uptime
+4:10  up 2 days, 19:59, 4 users, load averages: 27.82 63.04 70.10
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop280b_agent.py --config artifacts/claude-capab280b-20260923/loop280b-config.json --base-dir artifacts/claude-capab280-20260923/run/sd --out artifacts/claude-capab280b-20260923/pilot/sd --only sessions152,bench 2>&1 | tail -n 25
+sessions152: n_moves=0 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=0) seconds=1.4
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=1.4
+done sessions152 in 1.4s
+bench new_121_4hop: {'n': 200, 'correct': 187, 'abstain': 9, 'wrong': 4} moves=0
+bench old_s2fresh_4hop: {'n': 200, 'correct': 195, 'abstain': 5, 'wrong': 0} moves=0
+bench edit200: {'n': 200, 'correct': 124, 'abstain': 51, 'wrong': 25} moves=0
+bench bench132_4hop: {'n': 200, 'correct': 191, 'abstain': 9, 'wrong': 0} moves=0
+bench: n_moves=0 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=0) seconds=20.1
+bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=20.1
+done bench in 20.1s
+GATE: clean
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=1.4
+bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=20.1
+GATE: clean
+TOTAL seconds=23.0
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop280b_agent.py --config artifacts/claude-capab280b-20260923/loop280b-config.json --base-dir artifacts/fable-agent138j-20260922 --out artifacts/claude-capab280b-20260923/pilot/sd136 --only rt136 2>&1 | tail -n 8
+4:11  up 2 days, 20 hrs, 4 users, load averages: 23.49 58.63 68.25
+rt136: n_moves=16 (new WRONG=0, new WRONG-WRITE=13, new junk=1, reply-only=2) seconds=1.7
+rt136: n_moves=16 (new WRONG-WRITE=13, new WRONG=0, new junk write=1, lost OK=0, fixed=0, write change=0, reply-only move=2) seconds=1.8
+done rt136 in 1.8s
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt136: n_moves=16 (new WRONG-WRITE=13, new WRONG=0, new junk write=1, lost OK=0, fixed=0, write change=0, reply-only move=2) seconds=1.8
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+TOTAL seconds=1.9
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, re
+def rows(p):
+    return [json.loads(l) for l in open(p) if l.strip()]
+new = rows('artifacts/claude-capab280b-20260923/pilot/sd136/rt136-rows.json')
+old = rows('artifacts/claude-capab280-20260923/run/sd136/rt136-rows.json')
+print('n:', len(new), len(old))
+diffs = []
+for a, b in zip(new, old):
+    if a.get('id') != b.get('id'): diffs.append((a.get('id'), 'id-order')); continue
+    for k in sorted(set(a) | set(b)):
+        if k in ('seconds', 'sec'): continue
+        if a.get(k) != b.get(k): diffs.append((a.get('id'), k))
+print('direct diffs vs 280:', diffs)
+norm = lambda s: re.sub(r'seconds=[\d.]+', 'seconds=X', str(s))
+s1 = json.load(open('artifacts/claude-capab280b-20260923/pilot/sd136/SUITEDIFF218-SUMMARY.json'))
+s0 = json.load(open('artifacts/claude-capab280-20260923/run/sd136/SUITEDIFF218-SUMMARY.json'))
+print('vs-138j labels identical:', norm(s1.get('summary_lines')) == norm(s0.get('summary_lines')))
+"
+n: 145 145
+direct diffs vs 280: []
+vs-138j labels identical: True
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138l_rt143nogate.py scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/rt143nogate-280b.json 2>&1 | tail -n 3 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+new = json.load(open('artifacts/claude-capab280b-20260923/pilot/rt143nogate-280b.json'))
+old = json.load(open('artifacts/claude-capab280-20260923/run/rt143nogate-280.json'))
+print('n:', len(new), len(old))
+d = [(a.get('id'), k) for a, b in zip(new, old) for k in ('teach_replies', 'triples', 'reply', 'expected') if a.get(k) != b.get(k)]
+print('rt143 diffs vs 280:', d)
+"
+4:11  up 2 days, 20 hrs, 4 users, load averages: 20.81 56.31 67.26
+rt143-nogate: 124 rows -> artifacts/claude-capab280b-20260923/pilot/rt143nogate-280b.json
+n: 124 124
+rt143 diffs vs 280: []
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-verify-20260922/138m/run_probes.py scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/workvp artifacts/claude-verify-20260922/138m/probes.json artifacts/claude-capab280b-20260923/pilot/vp-280b.json 2>&1 | tail -n 2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-verify-20260922/138m/run_probes.py scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/workvs artifacts/claude-verify-20260922/138m/probes-supp.json artifacts/claude-capab280b-20260923/pilot/vs-280b.json 2>&1 | tail -n 2 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+for tag in ('vp', 'vs'):
+    new = json.load(open(f'artifacts/claude-capab280b-20260923/pilot/{tag}-280b.json'))
+    old = json.load(open(f'artifacts/claude-capab280-20260923/run/{tag}-280.json'))
+    nr = new if isinstance(new, list) else new.get('rows', new)
+    orr = old if isinstance(old, list) else old.get('rows', old)
+    d = [a.get('id', '?') for a, b in zip(nr, orr) if json.dumps(a, sort_keys=True) != json.dumps(b, sort_keys=True)]
+    print(tag, 'diffs vs 280:', d)
+"
+4:11  up 2 days, 20 hrs, 4 users, load averages: 20.18 55.59 66.94
+done 98
+done 12
+vp diffs vs 280: ['B17']
+vs diffs vs 280: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+new = json.load(open('artifacts/claude-capab280b-20260923/pilot/vp-280b.json'))
+old = json.load(open('artifacts/claude-capab280-20260923/run/vp-280.json'))
+nr = new if isinstance(new, list) else new.get('rows', new)
+orr = old if isinstance(old, list) else old.get('rows', old)
+for a, b in zip(nr, orr):
+    if json.dumps(a, sort_keys=True) != json.dumps(b, sort_keys=True):
+        print('KEYS new:', sorted(a.keys()))
+        print('KEYS old:', sorted(b.keys()))
+        for k in sorted(set(a) | set(b)):
+            if a.get(k) != b.get(k):
+                print('FIELD', k)
+                print('  280 :', repr(a.get(k) if False else b.get(k))[:400])
+                print('  280b:', repr(a.get(k))[:400])
+"
+KEYS new: ['feature', 'id', 'rows', 'stored']
+KEYS old: ['feature', 'id', 'rows', 'stored']
+FIELD rows
+  280 : [{'kind': 'T', 'turn': 'My name is Marek.', 'reply': 'Saved: your name is Marek.', 'ev': 3, 'triples': [['USER', 'name', 'Marek']]}, {'kind': 'Q', 'turn': 'What do you know about me?', 'reply': 'Your name is Marek.', 'ev': 0, 'triples': [['USER', 'name', 'Marek']]}]
+  280b: [{'kind': 'T', 'turn': 'My name is Marek.', 'reply': 'Saved: your name is Marek.', 'ev': 3, 'triples': [['USER', 'name', 'Marek']]}, {'kind': 'Q', 'turn': 'What do you know about me?', 'reply': "I can: save what you teach me in my notebook; answer one-step questions from my notes, like 'Where does Tavish live?'; correct a fact if you say it like 'No, Mira's city is York'; forget a fact if you say
+[0m
+[0m✗ [0mEdit scripts/claude_fix280b_general.py failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m→ [0mRead scripts/claude_fix280b_general.py[90m [limit=50, offset=160][0m
+[0m
+[0m← [0mEdit scripts/claude_fix280b_general.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix280b_general.py
+@@ -172,18 +172,16 @@
+         if "at" in s:
+             return True
+     if "what" in s and "for" in s:
+         return True
+-    if "what" in s and "do" in s and any(w in YOU280B for w in words):
+-        return True
+-    for i in range(len(words) - 3):
+-        if (words[i] == "what" and words[i + 1] == "do"
+-                and words[i + 2] in YOU280B and words[i + 3] == "do"):
+-            return True
+-    for i in range(len(words) - 2):
+-        if (words[i] == "what" and words[i + 1] in YOU280B
+-                and words[i + 2] == "do"):
+-            return True
++    for i, w in enumerate(words):
++        if w != "what":
++            continue
++        for j in range(i + 1, len(words)):
++            if words[j] not in YOU280B:
++                continue
++            if "do" in words[j + 1:]:
++                return True
+     return False
+ 
+ 
+ def _stored_names(loop) -> set[str]:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, sys
+sys.path.insert(0, 'scripts')
+import claude_fix280b_general as F
+cases = json.load(open('artifacts/claude-capab280b-20260923/devcases280b.json'))
+miss = ff = 0
+for c in cases:
+    for t in c['turns']:
+        got = F.is_general280b(t, None)
+        want = (c['family'] == 'general' and t == c['turns'][-1])
+        if got != want:
+            print(('MISS' if want else 'FALSE-FIRE'), c['id'], c['family'], repr(t))
+            miss += want; ff += (not want)
+print('misses:', miss, 'false-fires:', ff)
+print(F.is_general280b('What do you know about me?', None), '(want False)')
+print(F.is_general280b('So tell me about yourself, what can you do?', None), '(want True)')
+print(F.is_general280b('i want to know what you do', None), '(want True)')
+print(F.is_general280b('So what is it you do?', None), '(want True)')
+print(F.is_general280b('What do you do?', None), '(want True)')
+"
+misses: 0 false-fires: 0
+False (want False)
+True (want True)
+True (want True)
+True (want True)
+True (want True)
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py dev scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/work280b artifacts/claude-capab280b-20260923/devcases280b.json artifacts/claude-capab280b-20260923/pilot/dev-280b.json && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_score.py dev artifacts/claude-capab280b-20260923/devcases280b.json artifacts/claude-capab280b-20260923/pilot/dev-280.json artifacts/claude-capab280b-20260923/pilot/dev-280b.json artifacts/claude-capab280b-20260923/pilot/dev-score.json
+4:12  up 2 days, 20:01, 4 users, load averages: 25.09 50.73 64.40
+done 68
+general   n=28 same=18 moved=13 W280=3 W280b=3
+canyou    n=12 same=12 moved=0 W280=0 W280b=0
+nearmiss  n=12 same=21 moved=0 W280=8 W280b=8
+control   n=10 same=18 moved=0 W280=10 W280b=10
+ability   n=6 same=14 moved=0 W280=10 W280b=10
+general non-canon: []
+non-general diffs: []
+question-write violations: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-verify-20260922/138m/run_probes.py scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/workvp2 artifacts/claude-verify-20260922/138m/probes.json artifacts/claude-capab280b-20260923/pilot/vp-280b.json 2>&1 | tail -n 1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+new = json.load(open('artifacts/claude-capab280b-20260923/pilot/vp-280b.json'))
+old = json.load(open('artifacts/claude-capab280-20260923/run/vp-280.json'))
+nr = new if isinstance(new, list) else new.get('rows', new)
+orr = old if isinstance(old, list) else old.get('rows', old)
+d = [a.get('id', '?') for a, b in zip(nr, orr) if json.dumps(a, sort_keys=True) != json.dumps(b, sort_keys=True)]
+print('vp diffs vs 280:', d)
+"
+done 98
+vp diffs vs 280: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_capab280b_run.py panel scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/pilot/workmock1 artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280b.json && uv run --offline --no-project --python 3.12 python -B scripts/claude_capab280b_score.py panel artifacts/claude-capab280b-20260923/pilot/mock-panel.jsonl artifacts/claude-capab280b-20260923/pilot/mock-280.json artifacts/claude-capab280b-20260923/pilot/mock-280b.json artifacts/claude-capab280b-20260923/pilot/mock-score.json
+done 8
+panel n=8 general=3 canyou=1 nearmiss=2 control=2
+M1gen non-canon: 0 []
+M1a forbidden-on-280b: 0 [] (280 arm: 0)
+M1 canyou moves: 0 []
+M1 nearmiss moves: 0 []
+M1 control moves: 0 []
+M3 write diffs: 0 []
+M3 question/self writes on 280b: 0 []
+[0m
+[0m← [0mWrite artifacts/claude-capab280b-20260923/predicted_moves280b.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-capab280b-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix280b_general.py scripts/claude_loop280b_agent.py artifacts/claude-capab280b-20260923/loop280b-config.json artifacts/claude-capab280b-20260923/devcases280b.json scripts/claude_capab280b_devcases.py scripts/claude_capab280b_run.py scripts/claude_capab280b_score.py scripts/claude_capab280b_regscore.py scripts/claude_280b_runall.sh scripts/claude_280b_panel.sh artifacts/claude-capab280b-20260923/PASSMARKS.md artifacts/claude-capab280b-20260923/predicted_moves280b.json artifacts/claude-capab280b-20260923/pilot/dev-280.json artifacts/claude-capab280b-20260923/pilot/dev-280b.json artifacts/claude-capab280b-20260923/pilot/dev-score.json > artifacts/claude-capab280b-20260923/SEAL.sha256.txt && cat artifacts/claude-capab280b-20260923/SEAL.sha256.txt | wc -l && shasum -a 256 -c artifacts/claude-capab280b-20260923/SEAL.sha256.txt | tail -n 2
+15
+artifacts/claude-capab280b-20260923/pilot/dev-280b.json: OK
+artifacts/claude-capab280b-20260923/pilot/dev-score.json: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-capab280b-20260923; blind panel never opened, capabilpanel280 burned per director correction) M1 blind capabilpanel280b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text, SCHEMA-MISMATCH exit 3 = VOID): all 25 general items byte-equal to sealed CAN280 on 280b (280 arm shown); 0 unsupported-claim replies on 280b anywhere; canyou 10/10 + nearmiss 10/10 + control 5/5 byte-identical 280b vs 280; 0 panel write diffs; 0 question/self writes on 280b. Truth of claims and grammar director-graded, ungraded here.
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 280's (16 inherited), rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 280 rows: vp 98 + supp 12, 0 changes. Dev 68 own-wording fictional-name dialogs: general 28/28 exact CAN280 on 280b, all other families 0 diffs vs 280, 0 question writes.
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not byte-equal CAN280, or any question-turn write proves the change wrong. Known limits: cue-less generals ("Can you tell me about yourself?"), negations ("What can't you do?"), and "What can you not do?" keep 280's replies by construction. Pre-seal pilot fix disclosed: B17 "What do you know about me?" over-fired the unordered what+do+you cue; cue ordered (what...you...do) before seal, B17 0-diff since.
+EOF
+tail -n 3 artifacts/fable-predictions-ledger.md | cut -c1-80
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, C
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE cl
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, p
+[0m
+[0m# [0mTodos
+[✓] Write 60+ dev turns (general/canyou/nearmiss/control) in own wording
+[✓] Build fix280b + loop280b agent + config, pilot on dev vs 280
+[✓] Pilot frozen suites + verifier probes vs 280 rows
+[✓] Write runner+scorer, mock-panel end-to-end schema test
+[✓] Write PASSMARKS + predicted moves, seal, ledger append
+[•] Registered M2 run (runall once)
+[ ] Poll panel280b seal, run once per arm
+[ ] RESULTS.md, ledger outcome, final report
+[0m
+[0m$ [0muptime; df -g / | head -n 3; rm -rf artifacts/claude-capab280b-20260923/run && nohup bash scripts/claude_280b_runall.sh artifacts/claude-capab280b-20260923/run > artifacts/claude-capab280b-20260923/run-nohup.log 2>&1 & echo "launched pid $!"
+4:13  up 2 days, 20:02, 4 users, load averages: 36.59 48.57 62.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    52%  484014 127581760    0%   /
+launched pid 35365
+[0m
+[0m$ [0msleep 110; cat artifacts/claude-capab280b-20260923/run-nohup.log 2>/dev/null; echo ---; ls artifacts/claude-capab280b-20260923/run/ 2>/dev/null
+04:13:30 uptime load1=36.59 before: M2-suites
+04:13:55 uptime load1=42.33 before: M2-rt136
+04:13:57 uptime load1=41.67 before: M2-rt143
+04:14:02 uptime load1=40.73 before: VP
+TOTAL 42 s
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=1.8', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=20.3'} gate=GATE: clean
+rt136: {'n': 145, 'diffs': []} gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=[] vs diffs=[]
+VERDICT: PASS
+---
+regscore.txt
+regscore280b.json
+rt143nogate-280b.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-280b.json
+vp-280b.log
+vs-280b.json
+vs-280b.log
+work
+[0m
+[0m# [0mTodos
+[✓] Write 60+ dev turns (general/canyou/nearmiss/control) in own wording
+[✓] Build fix280b + loop280b agent + config, pilot on dev vs 280
+[✓] Pilot frozen suites + verifier probes vs 280 rows
+[✓] Write runner+scorer, mock-panel end-to-end schema test
+[✓] Write PASSMARKS + predicted moves, seal, ledger append
+[✓] Registered M2 run (runall once)
+[•] Poll panel280b seal, run once per arm
+[ ] RESULTS.md, ledger outcome, final report
+[0m
+[0m$ [0mls artifacts/claude-capabilpanel280b-20260923/ 2>&1; date -u
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+Wed Sep 23 08:15:29 UTC 2026
+[0m
+[0m$ [0mnohup bash scripts/claude_280b_panel.sh artifacts/claude-capab280b-20260923/run > artifacts/claude-capab280b-20260923/run-panel-nohup.log 2>&1 & echo "launched pid $!"
+launched pid 35835
+[0m
+[0m$ [0msleep 100; cat artifacts/claude-capab280b-20260923/run-panel-nohup.log 2>/dev/null
+artifacts/claude-capabilpanel280b-20260923/panel.jsonl: OK
+artifacts/claude-capabilpanel280b-20260923/SPEC-COPY.md: OK
+panel file: artifacts/claude-capabilpanel280b-20260923/panel.jsonl
+SCHEMA-MISMATCH: row 0 missing field user_text
+exit 3
+TOTAL 1 s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json
+rows = [json.loads(x) for x in open('artifacts/claude-capabilpanel280b-20260923/panel.jsonl') if x.strip()]
+print('n rows:', len(rows))
+print('keys row0:', sorted(rows[0].keys()))
+ok = all(isinstance(r, dict) and 'dialog_id' in r and 'turn_index' in r for r in rows)
+print('has dialog_id+turn_index on all rows:', ok)
+import collections
+print('dialogs:', len(set(r['dialog_id'] for r in rows)))
+print('keysets:', collections.Counter(tuple(sorted(r.keys())) for r in rows))
+"
+n rows: 50
+keys row0: ['category', 'dialog_id', 'gold', 'turn_index', 'user']
+has dialog_id+turn_index on all rows: True
+dialogs: 45
+keysets: Counter({('category', 'dialog_id', 'gold', 'turn_index', 'user'): 50})
+[0m
+[0m$ [0mls artifacts/claude-capab280b-20260923/run/ | head -n 30; echo ---; shasum -a 256 -c artifacts/claude-capab280b-20260923/SEAL.sha256.txt 2>&1 | sort | uniq -c; echo ---; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 python -B -c "
+import json, collections
+rows = [json.loads(x) for x in open('artifacts/claude-capabilpanel280b-20260923/panel.jsonl') if x.strip()]
+print('categories:', collections.Counter(r.get('category') for r in rows))
+by = collections.defaultdict(list)
+for r in rows: by[r['dialog_id']].append(r['turn_index'])
+print('rows-per-dialog:', collections.Counter(len(v) for v in by.values()))
+print('all turn_index lists start at 0:', all(sorted(v)[0] == 0 for v in by.values()))
+print('gold present on all rows:', all('gold' in r for r in rows))
+"
+panel-280.log
+panel-280b.log
+panel-files.txt
+panel-score.txt
+panel-seal-check.txt
+regscore.txt
+regscore280b.json
+rt143nogate-280b.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-280b.json
+vp-280b.log
+vs-280b.json
+vs-280b.log
+work
+---
+   1 artifacts/claude-capab280b-20260923/devcases280b.json: OK
+   1 artifacts/claude-capab280b-20260923/loop280b-config.json: OK
+   1 artifacts/claude-capab280b-20260923/PASSMARKS.md: OK
+   1 artifacts/claude-capab280b-20260923/pilot/dev-280.json: OK
+   1 artifacts/claude-capab280b-20260923/pilot/dev-280b.json: OK
+   1 artifacts/claude-capab280b-20260923/pilot/dev-score.json: OK
+   1 artifacts/claude-capab280b-20260923/predicted_moves280b.json: OK
+   1 scripts/claude_280b_panel.sh: OK
+   1 scripts/claude_280b_runall.sh: OK
+   1 scripts/claude_capab280b_devcases.py: OK
+   1 scripts/claude_capab280b_regscore.py: OK
+   1 scripts/claude_capab280b_run.py: OK
+   1 scripts/claude_capab280b_score.py: OK
+   1 scripts/claude_fix280b_general.py: OK
+   1 scripts/claude_loop280b_agent.py: OK
+---
+categories: Counter({'general': 25, 'specific': 10, 'nearmiss': 10, 'control': 5})
+rows-per-dialog: Counter({1: 40, 2: 5})
+all turn_index lists start at 0: True
+gold present on all rows: True
+[0m
+[0m$ [0mcat artifacts/claude-capab280b-20260923/run/panel-280.log artifacts/claude-capab280b-20260923/run/panel-280b.log artifacts/claude-capab280b-20260923/run/panel-score.txt; ls artifacts/claude-capab280b-20260923/run/panel-280.json artifacts/claude-capab280b-20260923/run/panel-280b.json 2>&1
+SCHEMA-MISMATCH: row 0 missing field user_text
+arm280 exit 3
+SCHEMA-MISMATCH: row 0 missing field user_text
+arm280b exit 3
+SCHEMA-MISMATCH: row 0 missing field user_text
+exit 3
+TOTAL 1 s
+ls: artifacts/claude-capab280b-20260923/run/panel-280.json: No such file or directory
+ls: artifacts/claude-capab280b-20260923/run/panel-280b.json: No such file or directory
+[0m
+[0m← [0mWrite artifacts/claude-capab280b-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+EOF
+echo done
+done
+[0m
+[0m# [0mTodos
+[✓] Write 60+ dev turns (general/canyou/nearmiss/control) in own wording
+[✓] Build fix280b + loop280b agent + config, pilot on dev vs 280
+[✓] Pilot frozen suites + verifier probes vs 280 rows
+[✓] Write runner+scorer, mock-panel end-to-end schema test
+[✓] Write PASSMARKS + predicted moves, seal, ledger append
+[✓] Registered M2 run (runall once)
+[✓] Poll panel280b seal, run once per arm
+[✓] RESULTS.md, ledger outcome, final report
+[0m
