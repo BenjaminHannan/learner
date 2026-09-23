@@ -41,6 +41,9 @@ while [ ! -e "$H/STOP" ]; do
   if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
     bash -n "$H/watcher.new" && { mv "$H/watcher.new" "$0"; log "self-update, restarting"; exec bash "$0"; }
   fi
+  # orphan repair: a task whose watcher subshell died (e.g. an old loop was stopped) still gets published
+  for r in "$Q"/*.running; do [ -e "$r" ] || continue; n=$(basename "$r" .running)
+    pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
   for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
   for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
     n=$(basename "$f" .md)
