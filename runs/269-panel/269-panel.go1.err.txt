@@ -1,0 +1,818 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo ---; df -g / | head -5; echo ---; git fetch -q origin main 2>&1 | head -5; echo FETCHDONE; git log --oneline -3; echo ---; ls artifacts/ | head -40; echo ---; ls scripts/claude_earcheck261* 2>&1; echo ---; ls design/v3/30-modes/264* handoff/kit/briefs/261* handoff/kit/briefs/ourpanel265* 2>&1
+1:42  up 2 days, 17:31, 4 users, load averages: 26.10 65.65 69.90
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 163944600    0%   /
+---
+FETCHDONE
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+---
+scripts/claude_earcheck261_armb.py
+scripts/claude_earcheck261_arms.py
+scripts/claude_earcheck261_canon.py
+scripts/claude_earcheck261_checker.py
+scripts/claude_earcheck261_checks.py
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_earcheck261_devturns.py
+scripts/claude_earcheck261_panel.py
+scripts/claude_earcheck261_pchecks.py
+scripts/claude_earcheck261_promptB.py
+scripts/claude_earcheck261_qbuild.py
+scripts/claude_earcheck261_qwen.py
+scripts/claude_earcheck261_score.py
+scripts/claude_earcheck261_score257.py
+scripts/claude_earcheck261_scoremain.py
+scripts/claude_earcheck261_theta.py
+scripts/claude_earcheck261_turns.py
+scripts/claude_earcheck261b_armb.py
+scripts/claude_earcheck261b_arms.py
+scripts/claude_earcheck261b_devset5.py
+scripts/claude_earcheck261b_guard.py
+scripts/claude_earcheck261b_guarddev.py
+scripts/claude_earcheck261b_panel.py
+scripts/claude_earcheck261b_scoremain.py
+scripts/claude_earcheck261b_turns.py
+---
+zsh:1: no matches found: design/v3/30-modes/264*
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/264-qa-checker.md 2>&1 | head -200; echo ===BRIEF261===; git show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1 | head -300; echo ===SPEC265===; git show origin/main:handoff/kit/briefs/ourpanel265-spec.txt 2>&1 | head -300
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+- Q-value (V hidden): "Message from the speaker: «turn». According to this message, stated as a real, current fact (not asked, pretended, planned, wished, denied, or replaced), what is <S>'s <relation words>? Answer with the exact words from the message. If several, list them separated by ' | '. If the message does not state it, answer NOT STATED. If it is unclear, answer AMBIGUOUS."
+- Q-owner (S hidden): the same frame of words, "whose <relation words> is <V>?". The speaker is answered as "the speaker".
+- Q-relation (R hidden): "How is <V> related to <S> in this message? Answer with one to three words, or NOT STATED or AMBIGUOUS."
+Save iff V (case- and space-normalised) is one of Q-value's answers, AND S is one of Q-owner's answers ("the speaker" matches "me"), AND Q-relation's answer maps to R through relation table v2 names, aliases or narrower. Otherwise hold back as UNSURE. No threshold, so nothing is tuned; dev is used only to debug prompt wording, and every wording change is logged. The span guard stays after it.
+Report wrong saves per saved fact AND per turn, plus recall, with every arm on the same scorer (Ruling 1 included).
+"our/we" owners are excluded from panel 264 (Ben ruled they must ask whose; that is a separate experiment, 265).
+Certification is separate: panels like 264 are discovery panels, and certifying uses the 600-turn fixed set (to be written).
+zsh:1: ==BRIEF261=== not found
+[0m
+[0m$ [0mgit show "origin/main:design/v3/30-modes/264-qa-checker.md" > /tmp/f264.md; wc -l /tmp/f264.md; git show "origin/main:handoff/kit/briefs/261-earcheck.txt" > /tmp/f261.txt; wc -l /tmp/f261.txt; git show "origin/main:handoff/kit/briefs/ourpanel265-spec.txt" > /tmp/f265spec.txt; wc -l /tmp/f265spec.txt
+12 /tmp/f264.md
+      92 /tmp/f261.txt
+       4 /tmp/f265spec.txt
+[0m
+[0m→ [0mRead /tmp/f264.md
+[0m→ [0mRead /tmp/f261.txt
+[0m→ [0mRead /tmp/f265spec.txt
+[0m
+[0m$ [0mgit show "origin/main:handoff/kit/briefs/earpanel264-spec.txt" > /tmp/f264spec.txt 2>&1; wc -l /tmp/f264spec.txt; echo ---; ls artifacts/claude-earcheck264-20260923/ 2>&1; echo ---; ls artifacts/claude-ourpanel269-20260923/ 2>&1; echo ---; ls artifacts/claude-earcheck261b-20260923/ 2>&1; echo ---; ls scripts/claude_earcheck264* 2>&1; echo ---; ls artifacts/claude-ourpanel265-20260923/ 2>&1 | head
+77 /tmp/f264spec.txt
+---
+dev_264.jsonl
+dev257_qa.json
+dev257_qmanifest.json
+dev261b_qa.json
+dev261b_qmanifest.json
+dev264_earpreds.json
+dev264_qa.json
+dev264_qmanifest.json
+devcheck_qa.json
+devcheck_qmanifest.json
+devreport_261.json
+devreport_264.json
+panel264_bpreds.json
+panel264_earpreds.json
+panel264_pmanifest.json
+panel264_pyes.json
+panel264_qa.json
+panel264_qmanifest.json
+panel264_score.json
+panel264_turns.json
+panel264comma_tags.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+---
+ls: artifacts/claude-ourpanel269-20260923/: No such file or directory
+---
+dev_261b.jsonl
+dev261b_earpreds.json
+dev261b_manifest.json
+dev261b_pyes.json
+guarddev_261bdev.json
+guarddev_261dev.json
+panel261b_bpreds.json
+panel261b_earpreds.json
+panel261b_pyes.json
+panel261b_score.json
+panel261b_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+---
+scripts/claude_earcheck264_armb.py
+scripts/claude_earcheck264_arms.py
+scripts/claude_earcheck264_client.py
+scripts/claude_earcheck264_commatags.py
+scripts/claude_earcheck264_devreport.py
+scripts/claude_earcheck264_devset.py
+scripts/claude_earcheck264_panel.py
+scripts/claude_earcheck264_qa.py
+scripts/claude_earcheck264_qbuild.py
+scripts/claude_earcheck264_scoremain.py
+scripts/claude_earcheck264_turns.py
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+[0m
+[0m→ [0mRead /tmp/f264spec.txt
+[0m
+[0m$ [0mgit status --short | head -30; echo ---; git log --oneline -8; echo ---; git diff HEAD --stat | tail -5
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+---
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+---
+ scripts/claude_chatdemo_server.py                  |  402 ++++
+ scripts/claude_chatdemo_start.sh                   |   38 +
+ scripts/claude_nhopdiag_20260923_pilot.py          |   90 +
+ scripts/claude_nhopdiag_20260923_repro.py          |  292 +++
+ 11 files changed, 3827 insertions(+)
+[0m
+[0m$ [0mgit status --short | wc -l; git status --short | grep -E "264|269|265" ; echo ---; git check-ignore artifacts/claude-earcheck264-20260923/PASSMARKS.md scripts/claude_earcheck264_qa.py 2>&1; echo ---; git ls-files | grep -E "264|269" | head -30; echo ---; grep -c "^P264" artifacts/fable-predictions-ledger.md 2>&1; grep "^P264" artifacts/fable-predictions-ledger.md 2>&1 | head -20
+110
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+---
+artifacts/claude-earcheck264-20260923/PASSMARKS.md
+---
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00264/events.fix77.seal.json
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00269/events.fix77.seal.json
+---
+0
+[0m
+[0m→ [0mRead artifacts/claude-earcheck264-20260923/PASSMARKS.md
+[0m
+[0m$ [0mls -la --time-style=full-iso artifacts/claude-earcheck264-20260923/ scripts/claude_earcheck264_* 2>&1 | head -40; echo ---; tail -15 artifacts/fable-predictions-ledger.md; echo ---; cat artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | head -20
+ls: unrecognized option `--time-style=full-iso'
+usage: ls [-@ABCFGHILOPRSTUWXabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]
+---
+- P138nb.4 M1 invpanel138nb (blind 70, once per arm after seal): 0 wrong on 138nb, 0 question writes, whose_R >= 13/14, lives_born >= 9/10, has_as >= 5/6, verb_backwards kept, no_match 8/8, unknown_value 4/4, forward_control 10/10 + teach_control 4/4 byte-identical. M6 tablepanel221 (once, registered scorer): 0 wrong on 138nb, kept, every loop190-reverse subject row becomes right. Registered verdict:
+- P138p.1 (merge 138p = 138m + 260 + 252c, Muse, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-merge138p-20260923 9 files) M1: own arms reproduce all sealed rows (138m L1 990/990; 260 dev 109/109 pilot rows; 252c devs 201/201 registered rows); 138p moves vs line head exactly the 209 predicted ids with exact records (204 identical to 138m's records: 260-greeting D059/D062/D068 + new D063 and 252-denial 233/D52 differ, all justified by id); 260 dev 138p == 260 all 109; 252c devs 138p == 252c except 14 predicted abstain-wording ids with exact records, 0 false replies, junk only d258-037/v259-008. 0 unpredicted / 0 wrong / 0 missing.
+- P138p.2 M2 vs 138m saved rows: sessions152 1 reply-only (S3-teachers-correction#6, 252 inferred-ask); bench 0; marks123 2 reply-only (B_corrections-04 252 pronoun correction her=Mira byte-identical on 252c with rt81 UNCLEAR->BUG harness verdict, -05 follow-on); rt136 20 = 13 inherited C019-C031 identical + C122 260 exemption + reply-only C071/C072/C073/C075 (252 unknown-ask) + C076/C079; direct moved [C071,C072,C073,C075,C122]; rt143 0 moved 0 flips; GATE affairs: no new WRONG/WRONG-WRITE/junk/lost-OK outside justified ids.
+- P138p.3 M3 smoke differs only .agent/.config/.label/.seconds; M4 bench 4/4 byte-identical x3; M5 median delta <= +5 ms (pilot +0.04 ms); M6 restart 2 predicted reply changes (p3-dialogs d08t01/d08t04 252 which-fact asks), 0 ghosts, 0 dup fails, 0 bad writes; verifier probes byte-identical to 260's vp-n/vs-n.json (7 changes, 1 new write B15:t0), supp 0; m arm reproduces rows-138m.json.
+- P138p.4 M7 blind panels (once per arm after seal, fidelity first with SAME runner+scorer, VOID if not 100%): openpanel260 138p 80/80 same totals as 260; corrtail258 138p totals == 252c (54 right, 0 false, 0 junk, 26 wrong values incl. inherited t258-026, keep/control identical) with the 24 registered moves; corrpanel252 only c252-022 moves (class both). Bars per panel: no right->wrong vs registered arm, 0 new wrong/junk/false/question-writes, controls identical. 138m numbers reported alongside.
+- P138p.5 Registered verdict: PASS on all seven marks (M1-M7) on the first try, no re-runs, no post-seal changes; likely failure points if wrong: an opener-led tail/panel row moving vs 252c (mechanism predicts none), or a 222-gated canonical correction differing from 252c's 138k-base parse.
+- P138nb.5 OUTCOME (2026-09-23, build/verification agent, sealed merge 138nb) registered verdict PASS, all marks PASS with one driver-only deviation (D1, diff in RESULTS.md; sealed files unchanged). M1 invpanel138nb 70 items: 138nb wrong 0, qw 0 from questions, whose_R 14/14 (138n 2), lives_born 10/10 (138n 0), has_as 6/6 (138n 2), verb 9/9 kept lost 0, my 4/4 (138n 1), no_match 8/8, unknown 4/4, forward 10/10 + teach 4/4 byte-identical; gained 29 ids listed in RESULTS.md. M2 PASS (720 cases, 1 move 221/D11, 0/0/0). M3 PASS (suites 0/0/0; rt136 16 = 13 allowed + 3 reply-only, direct vs 138n 0/145; rt143 0/0 n=124; probes 18 reply changes as predicted, 0 writes, 0 ghosts, 0 dup fails). M4 PASS (smoke .agent/.config/.label/.seconds; bench 4/4 x3). M5 PASS (delta -0.121 ms). M6 PASS (91 items: wrong 0/0; right 80->84; gained p221-060#1 p221-063#1 p221-064#1 p221-069#1; lost 0; qw 0). Seals verified OK (138nb seal 11/11 after run; invpanel seal 5/5 from repo root; panelmap SHA-OK). 138n's FAIL stays on record.
+- P138p.6 OUTCOME (2026-09-23, Muse build/verification) registered verdict FAIL on M7 only. M1 PASS (990/990 sealed rows; 209/209 moves exact, 0/0/0; 260 dev 109/109 identical; 252c devs 201/201 fidelity with exactly the 14 predicted abstain-wording diffs). M2 PASS (sessions152 1, bench 0, marks123 2 with B-04 UNCLEAR->BUG harness verdict on 252's byte-identical pronoun correction, rt136 20 labels + direct 5, rt143 0/0). M3 PASS (4 allowed fields). M4 PASS (4/4 x3). M5 PASS (+0.111 ms). M6 PASS (2 predicted asks, 0/0/0; probes identical to 260). M7: openpanel260 PASS (80/80, fidelity 100%); corrtail258 FAIL (53 vs 54, r2w t258-049 keep long-decline->save-failure, stores identical); corrpanel252 FAIL (c252-022 correct but 9 extra neither-class long-decline->Q2 reply-only moves, 0 new wrong/junk/false). P138p.1-.3 right; P138p.4 wrong on two panels (same abstain-rewording mechanism as predicted M1C rows, unpredicted on blind items); P138p.5 wrong overall. Sealed files unchanged 9/9 OK; driver workarounds (panel.sh $R2B typo; scorer m7() two crashes) logged in run/m7-check.txt, no panel arm re-run. No post-seal edits.
+- P265.1 (2026-09-23, builder; exp 265 = 261b sealed arm A with 265 canon/divert only: first-person still -> "me", group-word TEACH never saved + fixed ask-whose reply, checker prompt B theta 0.25 + guard unchanged, scorer = 261b + Ruling 1 + M1-M5, sealed 16 files SEAL.sha256.txt artifacts/claude-ear265-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-28/30; pass (0 saves and >= 27 ask) ~45 %. Dev: 0 saves, ask 12/14 (misses: brake-dropped odd-relation frame, ours-possessive span).
+- P265.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 11-14/15; pass (>= 12) ~55 %. Dev 7/10 (ear misattributes group clause to first person twice, relation-direction flip once).
+- P265.3 M3 first_person 0 hits lost vs A261b; pass ~95 %. Dev 10/10 hits, 0 lost; holds by construction (divert needs a group subject).
+- P265.4 M4 named 15/15 turns byte-identical to A261b; pass ~99 %. Construction, dev 10/10.
+- P265.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 5, A261b wrong 25 = 20 diverted + 5). Per-fact/per-turn rates for A, A261b, B reported, no bars.
+- P265.6 Overall registered PASS ~25 % (needs M1+M2 together; M3/M4/M5 near-certain).
+- P265.7 Latency (no bar): ear+checker+guard median ~350-450 ms/turn (dev 356.6 ms); arm B mostly abstains (dev 6/30 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 30076 left running between waves, final stop by WMI terminate (taskkill denied, session-0); D4 diverted frames still spend a checker query (A261b exactness); D5 M5 = per-turn multiset difference. See artifacts/claude-ear265-20260923/PASSMARKS.md.
+---
+117f574ecce76139bdfd793282d207ececfc6ac0ffeeebd5132944e32cedabed  scripts/claude_earcheck264_qa.py
+7d5641ab8a74087487e4f084065b449a383e2121b31cc8f2fb19fb3887001927  scripts/claude_earcheck264_client.py
+2cf299eda22b132d99541d8f678db44cd477dea76e7ee98384e0a31b465c19ea  scripts/claude_earcheck264_qbuild.py
+a5d099ddbf48522e31d66370216ddcb8df2937540392fcebc70c41d83312ea73  scripts/claude_earcheck264_arms.py
+b3d1c4402d2ba69c0256b4e50fec533199d7cb2205312ac1838a04ee364c7627  scripts/claude_earcheck264_scoremain.py
+a3c97c37f359ec0c7411a54ae2ef7b617423ed14588375766e2b0368c6386050  scripts/claude_earcheck264_panel.py
+44ae9bc8698f5edd1ee7c992d27a49e429b645d37a44995451d83475efd55228  scripts/claude_earcheck264_turns.py
+631676f19e9f3edbc837805ea0997619922a9b8ae00b1604e46e38a2ac2e026c  scripts/claude_earcheck264_armb.py
+42366d5f6c54d8230f26ef45a6a676ac51efb9fe3d3be7b2e85a0bdb23f5c3cf  scripts/claude_earcheck264_devset.py
+76ae06bf2ddff698a832febaa2770dfa1ab3947eea989d5294aacf249eab00fd  scripts/claude_earcheck264_devreport.py
+585835efc06c2902f2a6b1dc4944a2922339b6186c7d51ec4a5f38855efec4b2  artifacts/claude-earcheck264-20260923/PASSMARKS.md
+f7774e9eafa0650a4e3de4cf130cc142d2fe7610246571d819168cf555e76775  artifacts/claude-earcheck264-20260923/dev_264.jsonl
+bef524ad69ccf8409dd3d2c06751bb38e1147739e3dc164f6eb4c9f38555a8f4  artifacts/claude-earcheck264-20260923/dev264_earpreds.json
+0ca3285860acd99b48ba40b069c1b9ac4be9a08cd59529a1b225fb3b7b415e32  artifacts/claude-earcheck264-20260923/dev257_qa.json
+9fc7577d7c688d3e690d8790132a666650389d73ac8c2c24f5ef2804fb51ac07  artifacts/claude-earcheck264-20260923/devcheck_qa.json
+17cd60701b15dbfb6a9bc486543947f3bafb8417d5a48700fc4e614bbe35d3c4  artifacts/claude-earcheck264-20260923/dev261b_qa.json
+9c1969694db7c5fc0a2ebba29620eb6e933b2cd5997901c97d4adce081310e85  artifacts/claude-earcheck264-20260923/dev264_qa.json
+312195a3c5cdd6f3be136a49a6d67c498d9e26c9efc6a09553ab5a0094638181  artifacts/claude-earcheck264-20260923/dev257_qmanifest.json
+3e5fb89396deeb54f3d6ee935affdefcb6965f1450387297def80a15d0da2703  artifacts/claude-earcheck264-20260923/devcheck_qmanifest.json
+f07a86528af4cb54f3b36ef1f87fa9752c7f226caa5aad2e86578099645dbf4b  artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json
+[0m
+[0m# [0mTodos
+[•] Verify exp264 sealed work read-only (RESULTS, SEAL check, no edits)
+[ ] Read 261b PASSMARKS/RESULTS + 235 README schema sections (read-only context)
+[ ] Write 269 blind panel: make_panel.py + panel.jsonl + README, all-new names/wording
+[ ] Seal 269 panel (SEAL.sha256.txt) and self-checks
+[ ] Append P264.n ledger lines (append-only)
+[ ] Final reply: verdict, marks table, moves/misses/deviations, means/doesn't-mean
+[0m
+[0m→ [0mRead artifacts/claude-earcheck264-20260923/RESULTS.md
+[0m
+[0m$ [0mshasum -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | tail -8; echo ---; ls artifacts/claude-earpanel264-20260923/ 2>&1; echo ---; ls artifacts/claude-earpanel235-20260922/ 2>&1
+artifacts/claude-earcheck264-20260923/dev261b_qa.json: OK
+artifacts/claude-earcheck264-20260923/dev264_qa.json: OK
+artifacts/claude-earcheck264-20260923/dev257_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/devcheck_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/dev264_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/devreport_261.json: OK
+artifacts/claude-earcheck264-20260923/devreport_264.json: OK
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+[0m
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md[90m [limit=60][0m
+[0m
+[0m$ [0mshasum -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; shasum -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | grep -v OK | head -5; echo SEALDONE
+23
+SEALDONE
+[0m
+[0m$ [0mhead -8 artifacts/fable-predictions-ledger.md; echo ...; grep -n "Result\|verdict\|M1 \|M2 " artifacts/claude-earcheck261b-20260923/RESULTS.md | head -12; echo ---; wc -l artifacts/claude-earpanel235-20260922/README.md
+# Fable's prediction ledger (started 2026-09-20)
+
+Rule: before each registered experiment, one row per forecast with a probability, the exact evaluation setting, and the outcome that
+would falsify it. Scored afterwards (Brier score = (p − outcome)²; lower is better; always guessing 50 % scores 0.25).
+Observations, causal explanations and forecasts are kept in separate columns. Rows are append-only.
+
+## Earlier forecasts (made without probabilities; scored as hit/miss only)
+
+...
+3:## Result: registered FAIL
+6:on the blind panel (150 items, every arm run once after both seals): M1 pass,
+7:M2 FAIL (9 wrong saves, bar 1), M3 FAIL (98/135 = 72.6%, bar 85%), M3b FAIL
+8:(23/135 = 17.0%, bar 12%), M4 pass, M5 pass, M6 pass. Overall verdict FAIL.
+16:| M1 | no_save saves <= 1 | 1 | yes |
+17:| M2 | wrong saves (statement fams + no_save) <= 1 | 9 | NO |
+26:| Arm | M1 no_save saved | M2 wrong | M3 hit/gold (%) | M4 hit/gold (%) |
+36:A261 also: M3b 15/135 = 11.1% (pass). A vs A261: M1 1 = 1; M2 9 vs 16
+104:gives byte-identical A261 marks (M2 16, M3 99/135): Ruling 1 converted zero
+111:Arm B saved 2 frames total across 110 statement items (both wrong, hence M2 2
+166:cutoff passes M2 and M3 together.
+---
+      43 artifacts/claude-earpanel235-20260922/README.md
+[0m
+[0m→ [0mRead artifacts/claude-earpanel235-20260922/README.md
+[0m
+[0m# [0mTodos
+[✓] Verify exp264 sealed work read-only (RESULTS, SEAL check, no edits)
+[✓] Read 261b PASSMARKS/RESULTS + 235 README schema sections (read-only context)
+[•] Write 269 blind panel: make_panel.py + panel.jsonl + README, all-new names/wording
+[ ] Seal 269 panel (SEAL.sha256.txt) and self-checks
+[ ] Append P264.n ledger lines (append-only)
+[ ] Final reply: verdict, marks table, moves/misses/deviations, means/doesn't-mean
+[0m
+[0m← [0mWrite artifacts/claude-ourpanel269-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B artifacts/claude-ourpanel269-20260923/make_panel.py && wc -l artifacts/claude-ourpanel269-20260923/panel.jsonl
+self-check OK: 100 items, owner-mid=14, clear=false=2
+wrote artifacts/claude-ourpanel269-20260923/panel.jsonl
+     100 artifacts/claude-ourpanel269-20260923/panel.jsonl
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json
+for line in open('artifacts/claude-ourpanel269-20260923/panel.jsonl'):
+    o = json.loads(line)
+    g = '; '.join('%s|%s|%s'%(f['subject'],f['relation'],f['value']) for f in o['gold']) or '[]'
+    print(o['id'], o['family'], 'ask' if o['ask_whose'] else 'noask', 'CLEAR' if o['clear'] else 'fuzzy')
+    print('  T:', o['turn'])
+    print('  G:', g)
+"
+o269-001 group_owner ask CLEAR
+  T: Our dog Biscuit is three years old.
+  G: []
+o269-002 group_owner ask CLEAR
+  T: We live in Kallmouth now.
+  G: []
+o269-003 group_owner ask CLEAR
+  T: The cabin we rented for winter is in Eskervale.
+  G: []
+o269-004 group_owner ask CLEAR
+  T: Our mother is visiting next week.
+  G: []
+o269-005 group_owner ask CLEAR
+  T: The dog staying at ours is a beagle.
+  G: []
+o269-006 group_owner ask CLEAR
+  T: Us three share a van, and it is a Kelso.
+  G: []
+o269-007 group_owner ask CLEAR
+  T: The van us three share is a Merritt.
+  G: []
+o269-008 group_owner ask CLEAR
+  T: Our car is an Ostland.
+  G: []
+o269-009 group_owner ask CLEAR
+  T: The flat we rent is on Mill Lane.
+  G: []
+o269-010 group_owner ask CLEAR
+  T: our cat Miso sleeps on the porch all day.
+  G: []
+o269-011 group_owner ask CLEAR
+  T: we speak Kellish at home.
+  G: []
+o269-012 group_owner ask CLEAR
+  T: That boat is ours.
+  G: []
+o269-013 group_owner ask CLEAR
+  T: The school we picked for the kids is Alder School.
+  G: []
+o269-014 group_owner ask CLEAR
+  T: Our workplace is Halden Mills.
+  G: []
+o269-015 group_owner ask CLEAR
+  T: The garage we work at is Copperline Garage.
+  G: []
+o269-016 group_owner ask CLEAR
+  T: Our hometown is Dunshelf.
+  G: []
+o269-017 group_owner ask CLEAR
+  T: The town we grew up in is Fenmere.
+  G: []
+o269-018 group_owner ask CLEAR
+  T: We keep rabbits; Pebble is the oldest.
+  G: []
+o269-019 group_owner ask CLEAR
+  T: The parrot living at ours is a macaw.
+  G: []
+o269-020 group_owner ask CLEAR
+  T: our house is Thistle Cottage.
+  G: []
+o269-021 group_owner ask CLEAR
+  T: We bought a Kelso last spring.
+  G: []
+o269-022 group_owner ask CLEAR
+  T: The cottage we bought is Bramble House.
+  G: []
+o269-023 group_owner ask CLEAR
+  T: Our sister lives in Gullhaven.
+  G: []
+o269-024 group_owner ask CLEAR
+  T: The cousins we visit every summer live in Solmar.
+  G: []
+o269-025 group_owner ask CLEAR
+  T: Our boss is on holiday.
+  G: []
+o269-026 group_owner ask CLEAR
+  T: The bakery we run is Frostwick Bakery.
+  G: []
+o269-027 group_owner ask CLEAR
+  T: Our language at home is Tormic.
+  G: []
+o269-028 group_owner ask CLEAR
+  T: The car at ours needs new brakes.
+  G: []
+o269-029 group_owner ask CLEAR
+  T: Our cat had kittens yesterday.
+  G: []
+o269-030 group_owner ask CLEAR
+  T: The pony we own is stabled in Tindale.
+  G: []
+o269-031 mixed ask CLEAR
+  T: Our dog is Biscuit, and I work as a nurse.
+  G: me|job|nurse
+o269-032 mixed ask CLEAR
+  T: I live in Kallmouth, but our cat rules the house.
+  G: me|city|Kallmouth
+o269-033 mixed ask CLEAR
+  T: We speak Vessic at home, and my sister is Petra.
+  G: me|sister|Petra
+o269-034 mixed ask CLEAR
+  T: My brother is Osric, and our van is a Kelso.
+  G: me|brother|Osric
+o269-035 mixed ask CLEAR
+  T: Our house is Bramble House, while Joren lives in Tindale.
+  G: Joren|city|Tindale
+o269-036 mixed ask CLEAR
+  T: Donal works at Juniper Press, though we share one laptop.
+  G: Donal|workplace|Juniper Press
+o269-037 mixed ask CLEAR
+  T: We keep chickens, and my hometown is Eskervale.
+  G: me|hometown|Eskervale
+o269-038 mixed ask fuzzy
+  T: My boss is Ansel, but our office moved to Marshgate.
+  G: me|boss|Ansel
+o269-039 mixed ask CLEAR
+  T: our parrot is Clover, and I speak Drannic.
+  G: me|language|Drannic
+o269-040 mixed ask CLEAR
+  T: Iona's cat is Tansy, and our dog ate the cake.
+  G: Iona|pet|Tansy
+o269-041 mixed ask CLEAR
+  T: We rent on Mill Lane, while my cousin is Bellamy.
+  G: me|cousin|Bellamy
+o269-042 mixed ask CLEAR
+  T: My workplace is Vexley Shipping, and we carpool daily.
+  G: me|workplace|Vexley Shipping
+o269-043 mixed ask CLEAR
+  T: Our mother bakes bread, and I teach at Alder School.
+  G: me|workplace|Alder School
+o269-044 mixed ask CLEAR
+  T: Torvald speaks Kellish, though our radio is broken.
+  G: Torvald|language|Kellish
+o269-045 mixed ask CLEAR
+  T: We own a Merritt, and my son is Pello.
+  G: me|son|Pello
+o269-046 first_person noask CLEAR
+  T: I live in Gullhaven.
+  G: me|city|Gullhaven
+o269-047 first_person noask CLEAR
+  T: I work as a pilot.
+  G: me|job|pilot
+o269-048 first_person noask CLEAR
+  T: My dog is Bramble.
+  G: me|pet|Bramble
+o269-049 first_person noask CLEAR
+  T: I speak Tormic.
+  G: me|language|Tormic
+o269-050 first_person noask CLEAR
+  T: My sister is Liora.
+  G: me|sister|Liora
+o269-051 first_person noask CLEAR
+  T: I studied at Marshgate College.
+  G: me|school|Marshgate College
+o269-052 first_person noask CLEAR
+  T: My hometown is Vessport.
+  G: me|hometown|Vessport
+o269-053 first_person noask CLEAR
+  T: I work at Frostwick Bakery.
+  G: me|workplace|Frostwick Bakery
+o269-054 first_person noask CLEAR
+  T: My boss is Coralie.
+  G: me|boss|Coralie
+o269-055 first_person noask CLEAR
+  T: My cat is Tansy.
+  G: me|pet|Tansy
+o269-056 first_person noask CLEAR
+  T: I was born in Perrin Bay.
+  G: me|place_of_birth|Perrin Bay
+o269-057 first_person noask CLEAR
+  T: My brother is Caspian.
+  G: me|brother|Caspian
+o269-058 first_person noask CLEAR
+  T: My employer is Juniper Press.
+  G: me|employer|Juniper Press
+o269-059 first_person noask CLEAR
+  T: i drive a Kelso.
+  G: me|car|Kelso
+o269-060 first_person noask CLEAR
+  T: My cousin is Delphine.
+  G: me|cousin|Delphine
+o269-061 first_person noask CLEAR
+  T: I teach at Kestrel Academy.
+  G: me|workplace|Kestrel Academy
+o269-062 first_person noask CLEAR
+  T: My mother is Sorrel.
+  G: me|mother|Sorrel
+o269-063 first_person noask CLEAR
+  T: My spouse is Wendelin.
+  G: me|spouse|Wendelin
+o269-064 first_person noask CLEAR
+  T: My city is Larkholm.
+  G: me|city|Larkholm
+o269-065 first_person noask CLEAR
+  T: My rabbit is Pebble.
+  G: me|pet|Pebble
+o269-066 named noask CLEAR
+  T: Gregor lives in Dunshelf.
+  G: Gregor|city|Dunshelf
+o269-067 named noask CLEAR
+  T: Haldor works as a blacksmith.
+  G: Haldor|job|blacksmith
+o269-068 named noask CLEAR
+  T: Fenna's hamster is Nutmeg.
+  G: Fenna|pet|Nutmeg
+o269-069 named noask CLEAR
+  T: Maddox speaks Vessic.
+  G: Maddox|language|Vessic
+o269-070 named noask CLEAR
+  T: Nerys teaches at Alder School.
+  G: Nerys|workplace|Alder School
+o269-071 named noask CLEAR
+  T: Quillon's sister is Ysolde.
+  G: Quillon|sister|Ysolde
+o269-072 named noask CLEAR
+  T: Rowan's boss is Tadeo.
+  G: Rowan|boss|Tadeo
+o269-073 named noask CLEAR
+  T: Sella was born in Solmar.
+  G: Sella|place_of_birth|Solmar
+o269-074 named noask CLEAR
+  T: Ulfred's hometown is Kestrel Bay.
+  G: Ulfred|hometown|Kestrel Bay
+o269-075 named noask CLEAR
+  T: Vesper works at Copperline Garage.
+  G: Vesper|workplace|Copperline Garage
+o269-076 named noask CLEAR
+  T: Zevan's mother is Ondine.
+  G: Zevan|mother|Ondine
+o269-077 named noask CLEAR
+  T: Marisol's employer is Vexley Shipping.
+  G: Marisol|employer|Vexley Shipping
+o269-078 named noask CLEAR
+  T: Emeric's parrot is Clover.
+  G: Emeric|pet|Clover
+o269-079 named noask CLEAR
+  T: Doria's cousin is Kessa.
+  G: Doria|cousin|Kessa
+o269-080 named noask CLEAR
+  T: Tilda's spouse is Bram.
+  G: Tilda|spouse|Bram
+o269-081 non_owner_we noask CLEAR
+  T: We met at the harbour cafe, and Liora lives in Kestrel Bay.
+  G: Liora|city|Kestrel Bay
+o269-082 non_owner_we noask CLEAR
+  T: Our meeting is at three, and I am a pilot.
+  G: me|job|pilot
+o269-083 non_owner_we noask CLEAR
+  T: Donal told us his sister is Petra.
+  G: Donal|sister|Petra
+o269-084 non_owner_we noask CLEAR
+  T: The notice said our doors open at nine, and my workplace is Juniper Press.
+  G: me|workplace|Juniper Press
+o269-085 non_owner_we noask CLEAR
+  T: The three of us went hiking, and my hometown is Marshgate.
+  G: me|hometown|Marshgate
+o269-086 non_owner_we noask CLEAR
+  T: Between us, Mara speaks Kellish.
+  G: Mara|language|Kellish
+o269-087 non_owner_we noask fuzzy
+  T: We all know that Eskil is a blacksmith.
+  G: Eskil|job|blacksmith
+o269-088 non_owner_we noask CLEAR
+  T: The chalkboard says our special is soup, and Fenna's brother is Hadrian.
+  G: Fenna|brother|Hadrian
+o269-089 non_owner_we noask CLEAR
+  T: The news reached us late, but Petra's workplace is Halden Mills.
+  G: Petra|workplace|Halden Mills
+o269-090 non_owner_we noask CLEAR
+  T: Our best shot is Friday, says the coach, and I live in Solmar.
+  G: me|city|Solmar
+o269-091 non_owner_we noask CLEAR
+  T: We cheered when Kessa won, and Kessa teaches at Kestrel Academy.
+  G: Kessa|workplace|Kestrel Academy
+o269-092 non_owner_we noask CLEAR
+  T: Our garden grows the best plums, boasted the neighbour, and my cousin is Liv.
+  G: me|cousin|Liv
+o269-093 non_owner_we noask CLEAR
+  T: With us today is guest speaker Tadeo, who lives in Vessport.
+  G: Tadeo|city|Vessport
+o269-094 non_owner_we noask CLEAR
+  T: The two of us split the bill, and Iona's hometown is Gullhaven.
+  G: Iona|hometown|Gullhaven
+o269-095 non_owner_we noask CLEAR
+  T: Our paths crossed in Eskervale, where Bennic lives now.
+  G: Bennic|city|Eskervale
+o269-096 non_owner_we noask CLEAR
+  T: Nobody told us the store closes early, and Sella was born in Marshgate.
+  G: Sella|place_of_birth|Marshgate
+o269-097 non_owner_we noask CLEAR
+  T: We laughed all evening, and Ulfred speaks Drannic.
+  G: Ulfred|language|Drannic
+o269-098 non_owner_we noask CLEAR
+  T: Our old joke about Mondays came up again, and Vesper's boss is Liv.
+  G: Vesper|boss|Liv
+o269-099 non_owner_we noask CLEAR
+  T: The driver dropped us at midnight, and Zevan's spouse is Iona.
+  G: Zevan|spouse|Iona
+o269-100 non_owner_we noask CLEAR
+  T: We waited an hour, and my ferret is Fennel.
+  G: me|pet|Fennel
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json, re
+banned = ['tamsin','brellin','suki','ana','tarrow','corin','elspeth','anya','fernhill','wren','gil','quarrow','marta','pella','norrish','ostrish','galvish','rin','orla','tomas','tobin','ilse','hollis','ria','doorn','sela','fig']
+bad = []
+for line in open('artifacts/claude-ourpanel269-20260923/panel.jsonl'):
+    o = json.loads(line)
+    words = set(re.findall(r\"[A-Za-z]+\", o['turn'].lower()))
+    hit = words & set(banned)
+    if hit: bad.append((o['id'], sorted(hit)))
+print('banned-name hits:', bad if bad else 'NONE')
+"
+banned-name hits: NONE
+[0m
+[0m← [0mWrite artifacts/claude-ourpanel269-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-ourpanel269-20260923/panel.jsonl artifacts/claude-ourpanel269-20260923/make_panel.py > artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt && cat artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt && shasum -c artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt
+7222138f0f4ae5696f151ec06f3847601a05149cb8a1e6936ab661f247cd94e4  artifacts/claude-ourpanel269-20260923/panel.jsonl
+025e6f60f5717d4193960f10167063a8bd2f2b08e6ff14d52a6390f7e95bee2b  artifacts/claude-ourpanel269-20260923/make_panel.py
+artifacts/claude-ourpanel269-20260923/panel.jsonl: OK
+artifacts/claude-ourpanel269-20260923/make_panel.py: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+- P264.4 M3b held back <= 12% of gold TEACH: predicted 20-30% PASS ~10%. Got 38/125 = 30.4% (37 QA + 1 guard). FAIL (range missed by 0.4).
+- P264.5 M4 exact ASK recall >= 90%: predicted 90-100% PASS ~85%. Got 37/40 = 92.5%. PASS.
+- P264.6 M5 median per turn <= 800 ms: predicted 850-1100 ms PASS ~5%. Got median 880.1, p90 1826.8, max 2664.2. FAIL.
+- P264.7 M6 every A frame byte-identical in A_brake: predicted exact PASS ~99%. Got 0 mismatches. PASS.
+- P264.8 Overall registered PASS: predicted ~5%. Got FAIL (M1, M2, M3, M3b, M5 fail; M4, M6 pass).
+- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, all arms reported. Got A 5/86 = 0.0581 per fact, 5/110 = 0.0455 per turn; A261b 6/100 = 0.0600, 5/110 = 0.0455; A_brake 30/125 = 0.2400, 21/110 = 0.1909; B 9/11 = 0.8182, 9/110 = 0.0818. A vs A261b: M2 5 vs 6, M3 81 vs 94 (QA trades 13 hits for 1 fewer wrong).
+EOF
+grep -c "^-\? P264" artifacts/fable-predictions-ledger.md; grep "P264" artifacts/fable-predictions-ledger.md | head -12
+18
+- P264.1 (2026-09-23, builder; exp 264 = 261b sealed arm A with YES/NO checker replaced by QA checker v5 (3 questions, decide-first + single-word relation + de-anchored owner), span guard kept, scorer = 261b sealed + Ruling 1 with per-fact/per-turn rates, sealed 23 files SEAL.sha256.txt artifacts/claude-earcheck264-20260923) M1 no_save saves 0-3; pass (<= 1) ~55 %. Dev: pretend 5/5, checkq 13/13, plan 26/28 held.
+- P264.2 M2 wrong saves (statement fams + no_save) 2-6; pass (<= 1) ~25 %. Dev ~1%/turn (15/1207 on 261 dev) plus new R16/R17 traps (5/32 own dev).
+- P264.3 M3 exact TEACH recall 65-78 % and >= B + 30; pass ~15 %. Dev d257 73.4 %, dc 74.9 %, b5 75.0 %; three gates multiply holds.
+- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+- P264.8 Overall registered PASS ~5 %.
+- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+[0m
+[0m$ [0mgit status --short | grep -vE "^\?\? (scratchpad|notebook|data/|.claude|design/)" | grep -vE "chatdemo|nhopdiag|138n|138p|255b" ; echo ---; ls -la artifacts/claude-ourpanel269-20260923/
+M artifacts/fable-predictions-ledger.md
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---
+total 112
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 01:47 .
+drwxr-xr-x@ 400 ben-hannan  staff  12800 Sep 23 01:47 ..
+-rw-r--r--    1 ben-hannan  staff  18889 Sep 23 01:47 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  25616 Sep 23 01:47 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   3429 Sep 23 01:47 README.md
+-rw-r--r--    1 ben-hannan  staff    234 Sep 23 01:47 SEAL.sha256.txt
+[0m
+[0m# [0mTodos
+[✓] Verify exp264 sealed work read-only (RESULTS, SEAL check, no edits)
+[✓] Read 261b PASSMARKS/RESULTS + 235 README schema sections (read-only context)
+[✓] Write 269 blind panel: make_panel.py + panel.jsonl + README, all-new names/wording
+[✓] Seal 269 panel (SEAL.sha256.txt) and self-checks
+[✓] Append P264.n ledger lines (append-only)
+[•] Final reply: verdict, marks table, moves/misses/deviations, means/doesn't-mean
+[0m
