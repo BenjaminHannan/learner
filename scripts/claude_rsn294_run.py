@@ -95,15 +95,18 @@ def rl_loss(model, arm, batch, dev, rng, G=8):
     m = sl > -1e8
     sprob = torch.sigmoid(sl).clamp(1e-4, 1 - 1e-4)
     sbits = torch.bernoulli(sprob.detach().expand(G, *sprob.shape)) * m    # [G, B, R]
-    R = torch.zeros(G, len(golds), device=dev)
+    # score the tries on the CPU in one go (rsn-294-train 20:50: per-element GPU reads made
+    # every practice step take about 2.3 s on a 5090)
+    acts_c = acts.cpu().tolist()
+    match = ((sbits == sup.unsqueeze(0)) | ~m.unsqueeze(0)).all(-1).cpu().tolist()   # [G][B]
+    R = torch.zeros(G, len(golds))
     for g in range(G):
         for b in range(len(golds)):
-            a = int(acts[g, b])
-            ans = C.decode(a, infos[b])
-            r = C.reward(ans, golds[b])
-            if r == 1.0 and torch.equal(sbits[g, b][m[b]], sup[b][m[b]]):
+            r = C.reward(C.decode(acts_c[g][b], infos[b]), golds[b])
+            if r == 1.0 and match[g][b]:
                 r += 0.2
             R[g, b] = r
+    R = R.to(dev)
     adv = (R - R.mean(0, keepdim=True)) / (R.std(0, keepdim=True) + 1e-4)
     lp = dist.log_prob(acts)                                   # [G, B]
     slp = (sbits * torch.log(sprob) + (1 - sbits) * torch.log(1 - sprob)) * m
