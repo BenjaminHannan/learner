@@ -1,0 +1,31 @@
+BLIND PANEL SPEC: invpanel138nb (backwards questions: "who/what has this value?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/138nb-*, design/v3/30-modes/138n-merge-opus.md, scripts/claude_fix138nb_*, scripts/claude_loop138nb_agent.py, artifacts/claude-merge138nb-*, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py, scripts/claude_loop237_agent.py, any relation-table data file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-invpanel138nb-20260923/ with panel.jsonl (70 items), base138n.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item format (one fresh session per item): {"id": "i138nb-001", "family": ..., "setup": [1-3 teaching sentences, each sent as its own turn], "question": "...", "gold": [list of strings; EVERY string must appear in a right reply; [] for abstain/control families], "backwards": true/false, "stored_after_setup": [[subject, relation, value], ...], "note": "..."}.
+Use a JSON list for gold. Never join several answers into one string.
+
+Families and exact counts (70). V = the value asked about, A/B = the subjects. Every setup sentence is a plain "A's R is V." teach or "My R is V." (subject "you" in gold). Before using a setup, check on the base that it stores exactly the triple you expect; drop and replace any that doesn't.
+- whose_R 14: "Whose R is V?". 8 with one subject, 6 with two subjects sharing V. Relations: spread over at least 7 of boss, mother, father, dentist, doctor, coach, teacher, city, employer, birthplace, wife, husband, friend, neighbour. At most 3 items per relation.
+- lives_born 10: "Who lives in V?" (after "A's city is V.") and "Who was born in V?" (after "A's birthplace is V."), 5 each; 4 of the 10 have two subjects.
+- has_as 6: "Who has V as their R?" / "Who has V as his R?" / "Who has V as her R?"; 2 with two subjects.
+- verb_backwards 10: verb questions from value to subject: "Who does V manage?", "Who does V teach?", "Who does V coach?", "Who works at V?", "What did V compose?", "What did V write?", "What did V paint?" (setups "X's composer is V." etc.; works/songs/books may be multi-word titles). 3 with two subjects.
+- my_backwards 4: one setup is "My R is V." and one is "A's R is V."; question "Whose R is V?". gold ["you", A] is not required word-for-word for the user: gold lists A only, and the note says the reply must also refer to the user.
+- no_match 8: V is taught in a DIFFERENT relation than the one asked ("A's mother is V." then "Whose boss is V?"). gold []; the right reply abstains and names no subject.
+- unknown_value 4: V never taught ("Whose boss is Q?" after unrelated teaches). gold []; abstain, names no taught person.
+- forward_control 10: forward questions about the same kinds of setups ("Who is A's R?", "Where does A live?"). gold [V]. Not backwards.
+- teach_control 4: a setup sentence then a plain second teach as the "question" turn (no "?"); gold []; checks that nothing changes on statements.
+Two-subject items: at least 15 over the panel. Fictional names only, including multi-word names (at least 20 items use a two-word person name somewhere) and at least 4 items where a work title starts with "The".
+
+run_base.py: run every item once on the base, 138n = scripts/claude_loop138n_agent.py with artifacts/claude-merge138n-20260922/loop138n-config.json (build with build_agent138n, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Base row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote (true/false).
+
+score_panel.py (sealed with the panel; the builder uses it unchanged): input = the panel and a rows file in the base-row format; output JSON per item and per family:
+- right: backwards families: every gold string appears in the reply (case-insensitive) AND the reply contains "(worked out backwards)"; my_backwards also needs "your" or "you" in the reply; forward_control: gold appears; no_match/unknown_value: the reply is an abstain (contains "I don't know" or "I couldn't") and names no taught subject; teach_control: the question turn stores exactly its own triple.
+- right_names: backwards families only: every gold string appears, label or not (reported, not the main score).
+- wrong: the reply names a taught subject or taught value that is not in gold, and does not contain every gold string, and is not an abstain. (A reply that gives every gold name is never wrong.)
+- question_wrote: from the rows file.
+Report the base's counts per family (right, right_names, wrong, question writes) in README.md, category level only.
+
+Rules: fictional names only; the base runs once per item; never quote an item in README.md or in your final reply. Report: counts per family, the base's right / right_names / wrong per family, SEAL lines and the `shasum -a 256 -c` output from the repo root.

@@ -1,0 +1,29 @@
+MERGE 138p BRIEF: 138m + 260 (openers) + 252c (corrections: 252b + 258 + 259). The director (reasoning line) wrote this on 2026-09-23. OPUS-RULES.txt (same folder) applies in full.
+
+Why a separate merge: 138n (the reading line) failed its M7 on a scoring mix-up and is being followed up as 138nb. 260 and 252c do not depend on it, so they merge onto the accepted base 138m now, in parallel. 138p and 138nb are joined later in one registered merge (and 138o's pieces after that).
+
+Goal: one agent that has everything 138m has, plus 260 and 252c, each doing on 138p what it did on its own agent, with every interaction predicted before the seal.
+
+Base: 138m = scripts/claude_loop138m_agent.py + artifacts/claude-merge138m-20260922/loop138m-config.json; saved rows in artifacts/claude-merge138m-20260922/run/.
+Pieces (read each one's PASSMARKS.md and RESULTS.md, and the director board):
+- 260 openers, PASS: scripts/claude_loop260_agent.py, scripts/claude_fix260_openers.py, artifacts/claude-openers260-20260922/ (base 138m).
+- 252c corrections, registered FAIL ruled a merge candidate (no added false claims or junk; better than either piece): scripts/claude_loop252c_agent.py, scripts/claude_fix252c_merge.py, claude_fix258_comment.py, claude_fix259_boundary.py, artifacts/claude-merge252c-20260922/ (base 138k; built on 252b/252).
+Copy the patterns of 138m's and 138n's PASSMARKS.md, predicted_moves and design notes (design/v3/30-modes/138n-merge-opus.md).
+
+Names: agent scripts/claude_loop138p_agent.py; config artifacts/claude-merge138p-20260923/loop138p-config.json; driver and scorers scripts/claude_138p_*; artifacts artifacts/claude-merge138p-20260923/; ledger lines P138p.n; design note design/v3/30-modes/138p-merge-muse.md. Never edit an existing file. Import every piece read-only. SrcGuardMixin228 stays first, install_srcguard228() at import.
+
+Phase 1, interaction analysis (in the design note, with the layer list), before the build is final:
+- 252c was built on 138k, not 138m. List every 138l/138m layer 252c's layers never ran with, and which turns both could claim (224c declines, 227c identity, 230c name line, 233/234 fixed replies, 212/216 gates, 209 write screen, 226 sources, 222 teaches).
+- 260 vs 252c: an opener in front of a correction or denial ("Oh, actually Kim's boss is Fig, not Moss."). Say which order runs and why.
+- Rules: a layer that answers from the notebook never overrides a gate that stops a write or a ghost answer; questions never write; 224c's decline stays the fallback; inferred facts are never stored; a correction never removes a value the user did not deny.
+
+Registered marks (PASS only if all pass):
+- M1 each piece's own sealed dev/case files: arms own, 138m and 138p. Own arm reproduces every sealed row. Every case where 138p differs from own is predicted by id with its exact record: 0 unpredicted, 0 predicted-but-wrong, 0 predicted-but-not-moved.
+- M2 frozen suites vs 138m's saved rows (fable_suitediff218; rt136 as 138m did; rt143 no-gate; sessions152; bench; marks123): the (id, class) move set equals your predicted list; no new WRONG, WRONG-WRITE, junk write or lost OK except rows you justify by id as a piece's own registered behaviour; 0 unpredicted flips to abstain.
+- M3 sleep smoke identical to 138m's except .agent .config .label .seconds .root .report. M4 bench byte-identical x3. M5 latency median(138p) - median(138m) <= +5 ms (alternating as 138m's M5).
+- M6 restart and verifier dialogs (138m's M6 files plus artifacts/claude-verify-20260922/138m/probes.json and probes-supp.json): 0 ghost answers, 0 failed duplicate checks, 0 bad writes, every reply and write change predicted.
+- M7 blind panels (TEST-ONLY; don't open items; run once after your seal): openpanel260 (registered arm 260), corrtail258 and corrpanel252 (registered arm 252c).
+  LESSON FROM 138n (its M7 FAIL was a scorer mix-up): for each panel, FIRST re-run the registered piece's own arm with exactly the runner and scorer that produced its registered rows, and show it reproduces those rows (fidelity count). Then score 138p with that SAME runner and scorer. If fidelity is not 100%, the panel is VOID and you report why; never compare rows scored by different scorers.
+  Bars per panel, vs the registered arm: no item right on it is wrong on 138p; 0 new wrong values; 0 new false claims; 0 new junk writes; 0 question writes; controls byte-identical. Report each panel's score next to the registered arm's and 138m's.
+Order: phase 1, build, pilots on M1-M6, PASSMARKS with every predicted move by id, seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths), ledger, registered M1-M6, M7, RESULTS.md.
+Limits: CPU only. uptime and df -g / before each heavy step; wait while load > 60; stop under 3 GB free. At most 4 parallel processes; each registered step under 25 minutes.
