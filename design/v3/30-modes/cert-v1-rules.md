@@ -1,0 +1,11 @@
+# Certification set v1 rules (director, 2026-09-23). Rules only; nothing is built yet.
+Source: GPT-6 Pro's answer, checked by the research thread (reviews/gpt6pro-2026-09-23/2-*). Blind discovery panels (earpanel2xx) stay discovery-only and never certify a rate.
+
+1. Claim certified: per-TURN wrong-save risk < 1% (a turn fails if it saves at least one unsupported fact) AND fact-weighted recall >= 85%. Per-entry wrong rate and recall are always reported beside it. Nobody may write "99% of notebook entries are correct" from this.
+2. Population "Reference Population v1": English single turns with 0-4 atomic facts, under a frozen notebook schema. Family weights: plain 20%, varied or verb-decided 20%, corrections 15%, pronouns/relatives/appositives 15%, no-fact turns 10%, plans/pretend/mixed 10%, open-form 10%. "our/we" turns follow Ben's ask-whose rule.
+3. Sampling: 600 turns. For each turn, independently draw a family by weight and one of 4 frozen writer configs; each case is written in a fresh context. Writers never see candidate outputs, and there is no "make it harder" feedback. An out-of-scope case is rejected by a rule fixed before generation, never after seeing a result. Everything is hashed and sealed before any candidate runs.
+4. Labels: two independent agent labellers per turn, with disagreements adjudicated by a third. The claim says "agent-labelled" (Ben is the only human; this is weaker than human labels).
+5. Selection vs certification: the candidate (the full write pipeline, hashed) is chosen before the set is sampled. Only that one candidate is run, once.
+6. Pass rule, attempt j: alpha_j = 0.05 / 2^j. Safety passes if the exact one-sided binomial upper bound on per-turn risk at level alpha_j is < 1%; for n = 600 at alpha_1 = 0.025, that allows at most 1 wrong-save turn. Recall passes if the exact lower bound at alpha_j is >= 85%. Both must pass. A failed attempt still spends its alpha. A new attempt needs a fresh 600-turn sample.
+7. The certificate covers Reference Population v1 only, not real chat.
+Next step (ear line, when a candidate is worth certifying): a spec for the writer configs and labeller prompts, then queue the 600-turn writers as parallel Muse tasks.
