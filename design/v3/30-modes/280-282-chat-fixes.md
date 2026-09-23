@@ -79,7 +79,7 @@ type (slang, typos, long and short, "tell me"/"list" forms, questions about what
 turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
 "What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
 
-## 280b re-run ruling (director, 2026-09-23 08:40 UTC, before any 280b panel row has run)
+## 280b re-run ruling (director, 2026-09-23 08:28 UTC, before any 280b panel row has run)
 
 280b's registered panel step exited VOID: the blind panel names its turn-text column `user`, the sealed runner
 requires `user_text`. Neither arm ran a single row, so no panel result exists and nothing was tuned. The brief
@@ -92,7 +92,7 @@ mechanically (row count, every other field equal, text equal) and records both s
 registered. The sealed .sh files were not in 280b's PUSH list (my glob missed them); the re-run pushes them so the
 director can check the 15/15 seal.
 
-## 281 result and the 281b follow-up (director, 2026-09-23 08:40 UTC)
+## 281 result and the 281b follow-up (director, 2026-09-23 08:28 UTC)
 
 281 is a registered FAIL (M1 stored 16/25, bar 23/25; every other bar passed: 0 wrong answers, 10/10 not-stored
 abstains, 0 moves on ambiguous and control items, 0 notebook changes, 0 suite moves). Director recount from the raw
