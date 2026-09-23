@@ -7,6 +7,15 @@ experiments or the village model.
 Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
 in a different setting; **untested** = my reasoning or arithmetic.
 
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
 ---
 
 ## 0. One-page summary
