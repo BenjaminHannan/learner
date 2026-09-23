@@ -3,6 +3,7 @@ COMMON RULES (the director line, Claude, wrote this task on 2026-09-23). You are
 - Never read, write or open the repo-root notebook/. No secrets: never print or copy config files that may hold keys (opencode config, auth.json, ~/.config/vastai/, ~/.ssh).
 - Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
 - Never open or run any TEST-ONLY panel (any artifacts/*panel* folder). CPU only: do not use BensPC or any GPU.
+- Do not use the web at all (no WebFetch, no web search).
 - Check `df -g /` first; stop and report if free disk is under 3 GB. Never hard-delete: move old things to ~/premonition-chat/old/.
 - Report every problem honestly. Your final reply is read by the director.
 
