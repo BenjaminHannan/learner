@@ -1,0 +1,239 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; pwd; git status --short | head -20; git fetch -q origin main 2>&1 | head -5; echo FETCH_DONE
+18:50  up  8:43, 4 users, load averages: 64.32 55.41 45.02
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         5    69%  484014 62335000    1%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+FETCH_DONE
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mGlob "scratchpad/briefs/*.txt" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls /private/tmp/claude-502/ 2>&1 | head; ls scratchpad/briefs/ 2>&1 | head -30
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+ls: scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -20
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/" 2>&1 | head; echo ---; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1 | head
+scratchpad
+---
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mfind "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad" -maxdepth 4 2>&1 | head -30
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt > /tmp/style_241b.txt 2>&1; echo EXIT:$?; wc -c /tmp/style_241b.txt; shasum -a 256 /tmp/style_241b.txt
+EXIT:0
+    4146 /tmp/style_241b.txt
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/style_241b.txt
+[0m
+[0m→ [0mRead /tmp/style_241b.txt
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gradef1-20260923/sweep.jsonl > /tmp/sweep_full.jsonl 2>&1; echo EXIT:$?; wc -l /tmp/sweep_full.jsonl
+EXIT:0
+    2690 /tmp/sweep_full.jsonl
+[0m
+[0m$ [0msed -n '450,898p' /tmp/sweep_full.jsonl > /tmp/sweep_part2.jsonl; wc -l /tmp/sweep_part2.jsonl; python3 -c "
+import json
+ids=[]
+with open('/tmp/sweep_part2.jsonl') as f:
+    for i,line in enumerate(f, start=450):
+        o=json.loads(line)
+        ids.append(o['id'])
+print('first id:',ids[0],'last id:',ids[-1],'count:',len(ids),'unique:',len(set(ids)))
+"
+449 /tmp/sweep_part2.jsonl
+first id: h0450 last id: h0898 count: 449 unique: 449
+[0m
+[0m$ [0mwc -c /tmp/sweep_part2.jsonl; python3 -c "
+import json
+tot=0; mx=0; ex=None
+with open('/tmp/sweep_part2.jsonl') as f:
+    for line in f:
+        o=json.loads(line)
+        n=len(o['reply'])
+        tot+=n
+        if n>mx: mx=n; ex=o['id']
+print('avg reply chars:',tot/449,'max:',mx,'at',ex)
+"
+46034 /tmp/sweep_part2.jsonl
+avg reply chars: 73.48329621380846 max: 173 at h0634
+[0m
+[0m→ [0mRead /tmp/sweep_part2.jsonl[90m [limit=150][0m
+[0m→ [0mRead /tmp/sweep_part2.jsonl[90m [limit=150, offset=151][0m
+[0m→ [0mRead /tmp/sweep_part2.jsonl[90m [limit=149, offset=301][0m
+[0m
+[0m$ [0mpython3 -c "
+import json
+rows=[]
+with open('/tmp/sweep_part2.jsonl') as f:
+    for line in f:
+        rows.append(json.loads(line))
+print('n=',len(rows))
+import re
+for pat,name in [(r'[Oo]rigianl','origianl'),(r'\"reply\": \"[a-z]','lowercase-start'),(r' are [A-Z]','ARE-mid'),(r'an [b-df-hj-np-tv-z]','an+cons'),(r'\b(\w+) \1\b','doubled-word'),(r'  ','doublespace'),(r' ,|\. |,,|\.\.','punct-space')]:
+    hits=[o['id'] for o in rows if re.search(pat, json.dumps(o,ensure_ascii=False))]
+    print(name, len(hits), hits)
+"
+n= 449
+origianl 17 ['h0453', 'h0461', 'h0515', 'h0529', 'h0531', 'h0535', 'h0538', 'h0634', 'h0644', 'h0655', 'h0698', 'h0799', 'h0827', 'h0835', 'h0847', 'h0854', 'h0875']
+lowercase-start 3 ['h0703', 'h0714', 'h0719']
+ARE-mid 3 ['h0522', 'h0562', 'h0792']
+an+cons 6 ['h0479', 'h0575', 'h0577', 'h0734', 'h0754', 'h0857']
+doubled-word 1 ['h0861']
+doublespace 0 []
+punct-space 118 ['h0454', 'h0455', 'h0460', 'h0464', 'h0466', 'h0468', 'h0476', 'h0482', 'h0486', 'h0491', 'h0498', 'h0501', 'h0503', 'h0504', 'h0513', 'h0514', 'h0515', 'h0517', 'h0523', 'h0526', 'h0528', 'h0530', 'h0531', 'h0535', 'h0536', 'h0539', 'h0549', 'h0555', 'h0556', 'h0560', 'h0562', 'h0563', 'h0566', 'h0572', 'h0577', 'h0584', 'h0585', 'h0587', 'h0600', 'h0604', 'h0610', 'h0611', 'h0621', 'h0622', 'h0624', 'h0628', 'h0629', 'h0631', 'h0634', 'h0635', 'h0641', 'h0642', 'h0645', 'h0646', 'h0647', 'h0648', 'h0655', 'h0657', 'h0663', 'h0671', 'h0681', 'h0688', 'h0689', 'h0691', 'h0692', 'h0704', 'h0705', 'h0711', 'h0713', 'h0715', 'h0716', 'h0720', 'h0723', 'h0726', 'h0733', 'h0735', 'h0736', 'h0737', 'h0739', 'h0745', 'h0749', 'h0756', 'h0762', 'h0772', 'h0778', 'h0780', 'h0785', 'h0793', 'h0799', 'h0800', 'h0804', 'h0808', 'h0809', 'h0811', 'h0812', 'h0814', 'h0818', 'h0819', 'h0824', 'h0825', 'h0829', 'h0830', 'h0833', 'h0834', 'h0836', 'h0840', 'h0842', 'h0844', 'h0846', 'h0852', 'h0854', 'h0858', 'h0869', 'h0870', 'h0871', 'h0872', 'h0882', 'h0895']
+[0m
+[0m$ [0mpython3 -c "
+import json,re
+rows=[]
+with open('/tmp/sweep_part2.jsonl') as f:
+    for line in f: rows.append(json.loads(line))
+print('ARE-word:', [o['id'] for o in rows if re.search(r'\bare\b', o['reply'])])
+print('AN-word:', [o['id'] for o in rows if re.search(r'\ban\b', o['reply'], re.I)])
+print('dbl-punct:', [o['id'] for o in rows if re.search(r',,|\.\.|\?!|\?\.| \.| ,', o['reply'])])
+print('who/which/someone:', [(o['id']) for o in rows if re.search(r'\bwho\b|\bwhich\b|\bsomeone\b|\bsomething\b', o['reply'], re.I)])
+print('zero:', [o['id'] for o in rows if re.search(r'\bzero\b|\b0\b', o['reply'])])
+print('E-code:', [o['id'] for o in rows if re.search(r'\(E\d+\)|_|None|null|\{\}|\[', o['reply'])])
+print('backwards:', [o['id'] for o in rows if 'backward' in o['reply']])
+print('Oxford:', [o['id'] for o in rows if re.search(r', and ', o['reply'])])
+"
+ARE-word: ['h0522', 'h0562', 'h0792', 'h0818']
+AN-word: ['h0457', 'h0577', 'h0774', 'h0776', 'h0873']
+dbl-punct: []
+who/which/someone: []
+zero: []
+E-code: []
+backwards: []
+Oxford: []
+[0m
+[0m$ [0mls artifacts/claude-gradef1-A-20260923/ 2>&1; git log --oneline -3 2>&1; git branch --show-current 2>&1
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mls artifacts/ 2>&1 | head; ls artifacts/claude-gradef1-20260923/ 2>&1 | head
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+ls: artifacts/claude-gradef1-20260923/: No such file or directory
+[0m
+[0m$ [0mmkdir -p artifacts/claude-gradef1-A-20260923 && ls -d artifacts/claude-gradef1-A-20260923
+artifacts/claude-gradef1-A-20260923
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "print('py-ok')" 2>&1 | tail -2
+py-ok
+[0m
+[0m← [0mWrite /tmp/grade_part2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/grade_part2.py
+wrote 449 lines: 422 true, 27 false
+verify OK: 449 lines, ids match source order, unique, schema OK
+[0m
+[0m$ [0mhead -c 600 artifacts/claude-gradef1-A-20260923/part2.jsonl; echo; grep -c '"grammatical": false' artifacts/claude-gradef1-A-20260923/part2.jsonl; grep '"grammatical": false' artifacts/claude-gradef1-A-20260923/part2.jsonl | cut -c1-140
+{"id": "h0450", "grammatical": true, "reason": "ok"}
+{"id": "h0451", "grammatical": true, "reason": "ok"}
+{"id": "h0452", "grammatical": true, "reason": "ok"}
+{"id": "h0453", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0454", "grammatical": true, "reason": "ok"}
+{"id": "h0455", "grammatical": true, "reason": "ok"}
+{"id": "h0456", "grammatical": true, "reason": "ok"}
+{"id": "h0457", "grammatical": true, "reason": "ok"}
+{"id": "h0458", "grammatical": true, "reason": "ok"}
+{"id": "h0459", "grammatical": true, "reason": "ok"}
+{"id": "h0460", "grammatica
+27
+{"id": "h0453", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0461", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0515", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0522", "grammatical": false, "reason": "4: \"officeholder are\" - singular subject takes \"is\""}
+{"id": "h0529", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0531", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0535", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0538", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0562", "grammatical": false, "reason": "4: \"capital are\" - singular subject takes \"is\""}
+{"id": "h0577", "grammatical": false, "reason": "5: \"an citizen\" - consonant sound takes \"a citizen\""}
+{"id": "h0616", "grammatical": false, "reason": "11: \"peru's\" - proper name must start with a capital; 6: comma splice and mid-sentence ca
+{"id": "h0634", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0644", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0655", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0698", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0703", "grammatical": false, "reason": "6: sentence starts with lowercase \"chase\"; 11: proper name \"chase Headley\" not capitali
+{"id": "h0714", "grammatical": false, "reason": "6: sentence starts with lowercase \"president of Syria's...\""}
+{"id": "h0719", "grammatical": false, "reason": "6: sentence starts with lowercase \"capital of the country...\""}
+{"id": "h0792", "grammatical": false, "reason": "4: \"officer are\" - singular subject takes \"is\""}
+{"id": "h0799", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0818", "grammatical": false, "reason": "4: \"sport are\" - singular subject takes \"is\""}
+{"id": "h0827", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0835", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0847", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+{"id": "h0854", "grammatical": false, "reason": "general: \"origianl\" misspells \"original\""}
+{"id": "h0861", "grammatical": false, "reason": "6: doubled word \"married married\""}
+{"id": "h0875", "grammatical": false, "reason": "general: \"Origianl\" misspells \"Original\""}
+[0m
+[0m$ [0mgit status --short -- artifacts/ | head; git diff --stat -- artifacts/ | head
+(no output)
+[0m
+[0m$ [0mgit status --short | grep -i grade | head; echo ---; git check-ignore -v artifacts/claude-gradef1-A-20260923/part2.jsonl; echo ---; git status --short | head -8
+---
+.gitignore:5:artifacts/	artifacts/claude-gradef1-A-20260923/part2.jsonl
+---
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+[0m
+[0m$ [0mwc -l artifacts/claude-gradef1-A-20260923/part2.jsonl; df -g / | tail -1; uptime | cut -c1-60
+449 artifacts/claude-gradef1-A-20260923/part2.jsonl
+/dev/disk3s1s1       460   12         5    69%  484014 62250480    1%   /
+18:52  up  8:45, 4 users, load averages: 60.41 57.31 47.01
+[0m
