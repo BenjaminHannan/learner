@@ -1,0 +1,2746 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git fetch -q origin builder-outbox; git log --oneline -5; echo ---; ls artifacts/ | head -50; echo ---; ls scripts/claude_* | head -80
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+---
+scripts/claude_138l_l1.py
+scripts/claude_138l_rt143nogate.py
+scripts/claude_138l_runall.sh
+scripts/claude_138l_score.py
+scripts/claude_138m_l1.py
+scripts/claude_138m_predict.py
+scripts/claude_138m_runall.sh
+scripts/claude_138m_score.py
+scripts/claude_138n_conv239_changes.py
+scripts/claude_138n_l1.py
+scripts/claude_138n_m7.py
+scripts/claude_138n_m7.sh
+scripts/claude_138n_predict.py
+scripts/claude_138n_runall.sh
+scripts/claude_138n_score.py
+scripts/claude_138nb_devrepro.py
+scripts/claude_138nb_m1.py
+scripts/claude_138nb_m2.py
+scripts/claude_138nb_m6.py
+scripts/claude_138nb_runall.sh
+scripts/claude_138nb_score.py
+scripts/claude_138p_l1.py
+scripts/claude_138p_panel.sh
+scripts/claude_138p_runall.sh
+scripts/claude_138p_score.py
+scripts/claude_221b_run.py
+scripts/claude_221b_unit.py
+scripts/claude_224c_cases.py
+scripts/claude_224c_score.py
+scripts/claude_255_m1gen.py
+scripts/claude_255_m2check.py
+scripts/claude_255_m3changes.py
+scripts/claude_255_m3format.py
+scripts/claude_255_runall.sh
+scripts/claude_255_score.py
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+scripts/claude_260_panel.sh
+scripts/claude_260_runall.sh
+scripts/claude_263_openpanel.sh
+scripts/claude_263_panel.sh
+scripts/claude_263_runall.sh
+scripts/claude_266_devscore.py
+scripts/claude_266_panelrun.py
+scripts/claude_266_runall.sh
+scripts/claude_266_score.py
+scripts/claude_266b_devscore.py
+scripts/claude_266b_panelrun.py
+scripts/claude_266b_runall.sh
+scripts/claude_266b_score.py
+scripts/claude_268_devrepro.py
+scripts/claude_268_panelrun.py
+scripts/claude_268_runall.sh
+scripts/claude_268_score.py
+scripts/claude_268_supp.py
+scripts/claude_268b_devrepro.py
+scripts/claude_268b_m1run.py
+scripts/claude_268b_newdev.py
+scripts/claude_268b_panelrun.py
+scripts/claude_268b_runall.sh
+scripts/claude_268b_score_fix1.py
+scripts/claude_268b_score.py
+scripts/claude_280_panel.sh
+scripts/claude_280_runall.sh
+scripts/claude_280b_panel.sh
+scripts/claude_280b_runall.sh
+scripts/claude_280m_panel.sh
+scripts/claude_280m_runall.sh
+scripts/claude_281_panel.sh
+scripts/claude_281_panelrun.sh
+scripts/claude_281_runall.sh
+scripts/claude_281b_panel.sh
+scripts/claude_281b_runall.sh
+scripts/claude_282_panel.sh
+scripts/claude_282_panelrun.sh
+[0m
+[0m$ [0mgit show origin/main:design/v3/60-listener/frame-spec.md 2>&1 | head -150; echo ===BUILDER-OUTBOX===; git branch -r | head; git log origin/builder-outbox --oneline -20
+# Listener frame spec v1 (lis- line, exps 300-319, 2026-09-23)
+
+This is the target format for the listener. The listener is Qwen3.5-0.8B, fine-tuned (Ben's 10:55 UTC decision). It reads one chat turn, plus the assistant's previous reply, and writes **one JSON object**. It proposes; plain code (the write compiler, `scripts/claude_lis300_compiler.py`) decides what gets saved. Key-writing rules in `design/v3/30-modes/key-writing-rules.md` apply in full.
+
+## Output
+
+```json
+{"act": "STATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pip", "mode": "ASSERT"}], "ask": null}
+```
+
+- `act` (whole turn): one of `STATE`, `CORRECT`, `ASK`, `CHECK`, `NEGATE`, `SUPPOSE`, `PLAN`, `CHAT`, `UNCLEAR`.
+  - A turn that both states and asks gets the act of its first clause. Each fact still carries its own mode.
+- `facts`: every fact the turn mentions, including facts that must not be saved (for those, the mode says why). Order them as they appear in the turn. The list is `[]` when there is none.
+  - `owner`:
+    - `"me"` for I / me / my / mine.
+    - `"we"` for we / us / our / ours. Never map "our" to "me"; the compiler asks whose.
+    - Otherwise, the owner's name **exactly as typed**, with the same case and any typo.
+    - A pronoun ("he", "she", "they") is resolved to the name it refers to, but only when that is clear from this turn or the previous reply. If it isn't clear, use mode `UNCLEAR`.
+  - `rel`: a name from `design/v3/60-listener/relation-names.txt` (153 names), or `"other"`. Pick the most specific name the words support ("dog", not "pet", when the turn says dog).
+  - `value`: exactly as typed. Keep the case and any typos; never fix spelling.
+  - `mode`, one per fact:
+    - `ASSERT`: the speaker tells it as true.
+    - `CORRECT`: it replaces an earlier value. Add `"old": "<old value as typed>"` when the turn names it.
+    - `NEGATED`: "doesn't have", "isn't", "no longer".
+    - `CHECK`: the speaker is checking it. This covers "so X is Y" without "?", "X is Y right", and "X is Y, yeah".
+    - `SUPPOSE`: pretend, suppose, imagine, "let's say", "what if".
+    - `PLAN`: wants, plans, will, hopes, might.
+    - `REPORTED`: someone else claims it ("Tal says...", "I heard...").
+    - `QUESTION`: part of a question.
+    - `UNCLEAR`: the owner or value can't be pinned down.
+- `ask`: `null` unless the turn asks a question. For a question, `{"owner": ..., "rel": ..., "inverse": false}`.
+  - `inverse: true` means the question asks for the owner. For example, "Whose dog is Pip?" is `{"owner": "Pip", "rel": "dog", "inverse": true}`.
+  - For a yes/no question ("Is Mira's dog Pip?"), add `"value": "Pip"`.
+
+- Two-hop questions ("who is my sister's husband") use `"via"` for the first hop: `{"owner": "me", "via": "sister", "rel": "husband", "inverse": false}`.
+- Negations that name no value ("Kofi has no kids") have `facts: []` and act `NEGATE`. A reported fact ("Dev says his boss is Mara") has act `STATE`, and its fact has mode `REPORTED`.
+
+## One fact per value
+
+"My sisters are Mira and Tal" gives two facts: (me, sister, Mira) and (me, sister, Tal).
+"My boss, Tal, has a cat named Fig" gives (me, boss, Tal) and (Tal, cat, Fig).
+
+## What the compiler writes (for reference; the listener never decides this)
+
+A turn's facts are written all together or not at all. A fact is written only if **all** of these hold:
+1. Its mode is `ASSERT` or `CORRECT`.
+2. Its owner is `me`, or a whole-word span of the turn or the previous reply. `we` is never written: the system asks whose.
+3. Its value is a whole-word span of the turn.
+4. Its relation is in the table.
+5. The reader's confidence clears the threshold set on dev. Below it, the system asks back.
+
+Anything else writes nothing: `NEGATED`, `CHECK`, `SUPPOSE`, `PLAN`, `REPORTED`, `QUESTION` and `UNCLEAR` never write.
+zsh:1: ==BUILDER-OUTBOX=== not found
+[0m
+[0m$ [0mgit branch -r; echo ---LOG---; git log origin/builder-outbox --oneline -30
+origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+---LOG---
+bf17a00dd watcher status
+a7950c1ad watcher status
+5d02070b3 watcher status
+db7055551 watcher status
+2c29358b5 watcher status
+de9ad5f21 watcher status
+020b17438 watcher status
+5485ab496 watcher status
+b7f663d98 watcher status
+b7b56b00d watcher status
+7305082d3 watcher status
+09cb40399 watcher status
+9abbceb6b builder results: own-o0a3-permission
+5564c6e90 watcher status
+a1694b8b7 watcher status
+8884bbdf2 watcher status
+85be34b97 builder results: talk-280m-build
+4085740c1 builder results: 270b-panel
+293007848 builder results: 000-ckpt-copy
+8f829291a watcher status
+2b613a489 watcher status
+5b3599e0b watcher status
+e5fd26043 watcher status
+ed531cf22 builder results: rsn-291-publish
+79800d871 watcher status
+5dd3e3d19 builder results: 271-threshold
+0ea14ca9f watcher status
+1cedd76a1 watcher status
+7cb9c8b8c watcher status
+d7cb06a56 watcher status
+[0m
+[0m$ [0mgit show origin/builder-outbox --stat --oneline -5; echo ---; git ls-tree -r --name-only origin/builder-outbox | grep -i -E "lis300|291|lis310|chatdemo" | head -40
+bf17a00dd watcher status
+ status/watcher.txt | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+a7950c1ad watcher status
+ status/watcher.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+5d02070b3 watcher status
+ status/watcher.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+db7055551 watcher status
+ status/watcher.txt | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+2c29358b5 watcher status
+ status/watcher.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+---
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+artifacts/claude-chatdemo-20260923/selftest.md
+artifacts/claude-corrpanel291-20260923/README.md
+artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt
+artifacts/claude-corrpanel291-20260923/base138nb.jsonl
+artifacts/claude-corrpanel291-20260923/make_panel.py
+artifacts/claude-corrpanel291-20260923/panel.jsonl
+artifacts/claude-corrpanel291-20260923/run_base.py
+artifacts/claude-corrpanel291-20260923/score_panel.py
+artifacts/claude-join291-20260923/PASSMARKS.md
+artifacts/claude-join291-20260923/RESULTS.md
+artifacts/claude-join291-20260923/SEAL.sha256.txt
+artifacts/claude-join291-20260923/loop291-config.json
+artifacts/claude-join291-20260923/m7-check.json
+artifacts/claude-join291-20260923/m8-check.json
+artifacts/claude-join291-20260923/predicted_moves291.json
+artifacts/claude-join291-20260923/run/bench1.log
+artifacts/claude-join291-20260923/run/bench1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-join291-20260923/run/bench1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-diff.json
+artifacts/claude-join291-20260923/run/bench1/bench-edit200-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2.log
+artifacts/claude-join291-20260923/run/bench2/SUITEDIFF218-SUMMARY.json
+artifacts/claude-join291-20260923/run/bench2/bench-bench132_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-diff.json
+artifacts/claude-join291-20260923/run/bench2/bench-edit200-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-new_121_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench3.log
+artifacts/claude-join291-20260923/run/bench3/SUITEDIFF218-SUMMARY.json
+artifacts/claude-join291-20260923/run/bench3/bench-bench132_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench3/bench-diff.json
+artifacts/claude-join291-20260923/run/bench3/bench-edit200-rows.jsonl
+artifacts/claude-join291-20260923/run/bench3/bench-new_121_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench3/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/lat-291-1.json
+artifacts/claude-join291-20260923/run/lat-291-1.log
+artifacts/claude-join291-20260923/run/lat-291-2.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "scripts/claude_(lis|loop291|fix291|chatdemo)" | head -40
+scripts/claude_chatdemo_page.html
+scripts/claude_chatdemo_server.py
+scripts/claude_chatdemo_start.sh
+scripts/claude_fix291_glue.py
+scripts/claude_loop291_agent.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "lis300|lis310|loop291|fix291|chatdemo|fable_loop90" | head -40; echo ---; git ls-tree -r --name-only origin/builder-outbox | grep -E "lis" | head -40
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+artifacts/claude-chatdemo-20260923/selftest.md
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+design/v3/60-listener/task-lis300-train.md
+scripts/claude_chatdemo_page.html
+scripts/claude_chatdemo_server.py
+scripts/claude_chatdemo_start.sh
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+scripts/fable_loop90_agent.py
+scripts/fable_loop90_marks.py
+---
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+runs/rsn-291-publish/rsn-291-publish.exit
+runs/rsn-291-publish/rsn-291-publish.go1.err.txt
+runs/rsn-291-publish/rsn-291-publish.go1.reply.md
+runs/rsn-291-publish/rsn-291-publish.go2.done
+runs/rsn-291-publish/rsn-291-publish.go2.err.txt
+runs/rsn-291-publish/rsn-291-publish.go2.reply.md
+runs/rsn-291-publish/rsn-291-publish.md
+scripts/claude_type270_normalise.py
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_read.py > /tmp/lis300_read.py; wc -l /tmp/lis300_read.py; git show origin/main:scripts/claude_lis300_compiler.py > /tmp/lis300_comp.py; wc -l /tmp/lis300_comp.py; git show origin/builder-outbox:scripts/claude_loop291_agent.py > /tmp/loop291.py; wc -l /tmp/loop291.py; git show origin/builder-outbox:scripts/claude_fix291_glue.py > /tmp/fix291.py; wc -l /tmp/fix291.py; git show origin/builder-outbox:scripts/claude_chatdemo_server.py > /tmp/chatdemo.py; wc -l /tmp/chatdemo.py
+123 /tmp/lis300_read.py
+     129 /tmp/lis300_comp.py
+     269 /tmp/loop291.py
+     211 /tmp/fix291.py
+     402 /tmp/chatdemo.py
+[0m
+[0m→ [0mRead /tmp/lis300_read.py
+[0m→ [0mRead /tmp/lis300_comp.py
+[0m→ [0mRead /tmp/chatdemo.py
+[0m→ [0mRead /tmp/fix291.py
+[0m→ [0mRead /tmp/loop291.py
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_common.py | head -120; echo ===; git ls-tree -r --name-only origin/main | grep -i threshold | head; echo ===; git show origin/main:artifacts/claude-lis300-20260923/PASSMARKS.md 2>&1 | head -60
+#!/usr/bin/env python3
+"""lis-300 shared bits: the reader's prompt and the canonical frame text.
+
+The prompt is plain text (no chat template, no thinking tags) so that training and
+inference see exactly the same bytes. The target is compact JSON with keys in a fixed order.
+"""
+from __future__ import annotations
+
+import json
+
+SYSTEM = ("Read the user's chat turn into a frame. Copy names and values exactly as typed. "
+          "Output one JSON object.")
+END = "\n<END>"
+
+
+def build_prompt(turn: str, prev_reply: str = "") -> str:
+    return (f"{SYSTEM}\nAssistant said: {prev_reply.strip() or '(nothing)'}\n"
+            f"User said: {turn.strip()}\nFrame: ")
+
+
+FACT_KEYS = ["owner", "rel", "value", "mode", "old"]
+ASK_KEYS = ["owner", "rel", "via", "value", "inverse"]
+
+
+def canon_frame(fr: dict) -> dict:
+    facts = []
+    for f in fr.get("facts") or []:
+        facts.append({k: f[k] for k in FACT_KEYS if k in f and f[k] is not None})
+    ask = fr.get("ask")
+    if isinstance(ask, dict):
+        ask = {k: ask[k] for k in ASK_KEYS if k in ask and ask[k] is not None}
+    else:
+        ask = None
+    return {"act": fr.get("act"), "facts": facts, "ask": ask}
+
+
+def frame_text(fr: dict) -> str:
+    return json.dumps(canon_frame(fr), ensure_ascii=False, separators=(", ", ": ")) + END
+
+
+def parse_frame(text: str):
+    """Parse the model's output; None if it is not a valid frame."""
+    t = text.split("<END>")[0].strip()
+    try:
+        fr = json.loads(t)
+    except Exception:
+        return None
+    if not isinstance(fr, dict) or "act" not in fr or not isinstance(fr.get("facts", []), list):
+        return None
+    return fr
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i threshold | head -20; git show origin/main:artifacts/claude-lis300-20260923/PASSMARKS.md | head -60
+handoff/queue/271-threshold.md
+# lis-300: our own reader (MiniCPM5-1B fine-tuned) + write compiler, first registered test
+
+Written by the listener thread (Opus), 2026-09-23, **before** any fine-tuning run. Ben's decisions: an own ~1B reader (10:55 UTC); base model openbmb/MiniCPM5-1B, Apache 2.0 (11:01 UTC).
+
+## The one change
+
+The borrowed ear (v4.1 + 27B yes/no gate, 261b/264) is replaced by **one fine-tuned 1B reader + the plain-code write compiler**. Everything after the notebook write is unchanged. Chat-page wiring is a separate later experiment.
+
+## System under test
+
+- **Reader:** `scripts/claude_lis300_train.py` is LoRA (rank 32, alpha 64, every linear layer) on MiniCPM5-1B. It runs 2 epochs at lr 2e-4, batch 16, max length 256, with seed 300, and the LoRA is merged before reading. The prompt and frame text are in `scripts/claude_lis300_common.py`, and the frame format is `design/v3/60-listener/frame-spec.md`.
+- **Data:** `scripts/claude_lis300_data.py` builds it. It uses 3,000 own-O0b rows per family, dropping the whole `binding` family, because its pronoun owners are either the pronoun itself or a guess from assumed gender (found here, confirmed by the own-model thread). It adds the Opus-written rows (`data/opus_w{1,2,3}.jsonl`) that a blind second Opus labeller reproduced (`scripts/claude_lis300_agree.py`), each repeated 4 times, with 10% held out as dev.
+- **Confidence:** `scripts/claude_lis300_read.py` scores each fact by the lowest token probability over the act and that fact's JSON.
+- **Compiler:** `scripts/claude_lis300_compiler.py` is the only writer. A fact is written only if:
+  - its mode is ASSERT or CORRECT;
+  - its owner is `me` or a whole-word span of the turn or previous reply (never a pronoun);
+  - its value is a whole-word span of the turn, or of the assistant's question for a short answer;
+  - its relation is in the table;
+  - its confidence is at or above the threshold T.
+
+  Writes are all-or-nothing per turn. `we` triggers ask-whose.
+- **Threshold rule (fixed now, computed on dev only):** T is the smallest value on the grid in `claude_lis300_score.py --sweep` that gives **0 wrong-save turns** on the whole dev set (o0b L2 sample + Opus dev + the 300 fresh own-O0a2 turns). If no grid value reaches 0, T = 0.995.
+- **Scorer:** `scripts/claude_lis300_score.py` grades gold and predicted frames through the same compiler. Ruling 1 applies: a narrower relation counts as a hit.
+
+## Registered test
+
+`artifacts/claude-lispanel300-20260923/`: 240 turns written blind by a separate Opus agent from the spec, with names from N to Z only (training names run A to M). The key is audited by a second blind Opus labeller and adjudicated, and the key version used is sealed before the run. It is run **once**, after the seal.
+
+## Marks (arm A = reader + compiler at T)
+
+| Mark | Bar |
+|---|---|
+| P300.1 wrong-save turns (any written fact not in the gold writes) | ≤ 1 of 240 |
+| P300.2 exact recall of gold writes (hits / gold writable facts) | ≥ 85% |
+| P300.3 ASK turns read correctly (owner, relation, inverse, via) | ≥ 90% |
+| P300.4 our/we turns that ask whose | ≥ 90% |
+| P300.5 unparseable outputs | ≤ 2% of turns |
+| P300.6 median read time on the GPU used (device reported) | ≤ 1,500 ms |
+
+Report only, with no bar:
+- wrong facts per saved fact and per turn;
+- wrong-save turns and recall at T = 0, to show what the threshold buys;
+- misses by family, at category level only;
+- training loss and tokens per second;
+- held-back (asked-back) facts.
+
+**Proved wrong if:** P300.1 fails (≥ 2 wrong-save turns), since the reader is then not safe enough to write even with the threshold; or P300.2 comes out < 75%, since the threshold or compiler is then too strict to be useful.
+
+A FAIL gets exactly one diagnosis-driven follow-up (lis-301+).
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_loop90_agent.py | grep -n "_act\|def teach\|def correct\|teach/correct\|notebook\|def turn" | head -40
+6:  notebook = Loop90Notebook: GatedThoughtNotebook (fix77 rule-2 gate) with the
+49:import fable_notebook_contract as C  # noqa: E402 (contract, read-only)
+71:# ------------------------------------------------------------------ notebook
+101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+105:    sourced from the loop's own notebook (post-edit values only, because
+133:        triples = notebook_triples(self.nb) if self.nb is not None else []
+142:                return ([self._teach_action(triple)], 1.0)
+146:            return ([self._teach_action(triple)], 1.0)
+153:    def _teach_action(self, triple: tuple[str, str, str]) -> dict:
+297:    """AgentLoop with the Loop90 notebook, structured teaches, seal on save."""
+318:            self.notes.append("repaired a torn notebook tail")
+343:        records = [self._act(action) for action in self.ears.hear(text)]
+353:    def _act(self, action: dict) -> dict:
+366:                text = ("I could NOT save that: the notebook reported a "
+373:        return super()._act(action)
+387:    "notebook": {
+391:        "stand_in": "none -- this notebook IS the verified piece",
+486:        self.torn_found = any("torn notebook tail" in note
+498:        said = self.loop.turn(text)  # notebook append happens INSIDE first
+513:                  "notebook_events": len(nb.events)}
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_loop90_agent.py | sed -n '95,200p'
+def _display(nb, value: dict) -> str:
+    if "entity" in value:
+        return nb.entities.get(value["entity"], value["entity"])
+    return str(value.get("literal", ""))
+
+
+def notebook_triples(nb) -> list[tuple[str, str, str]]:
+    """Active taught facts as (subject-name, relation, value-display).
+
+    This is the triple context bench73's compose_question needs; here it is
+    sourced from the loop's own notebook (post-edit values only, because
+    superseded rows are inactive).
+    """
+    out = []
+    for fact in nb.facts.values():
+        if fact.get("source") != "taught" or not nb.active(fact["fact_id"]):
+            continue
+        out.append((nb.entities.get(fact["subject"], "?"),
+                    fact["relation"], _display(nb, fact["value"])))
+    return out
+
+
+class Bench73Stage:
+    """bench73 template ears as a ChainEars stage (deterministic 1.0 / 0.0)."""
+
+    name = "bench73"
+
+    def __init__(self, family: str = "tape") -> None:
+        self.family = family
+        self.nb = None
+
+    def bind(self, nb) -> None:
+        self.nb = nb
+
+    def hear(self, turn: str, tau: dict) -> tuple[list[dict], float] | None:
+        text = " ".join(str(turn).split())
+        if not text:
+            return None
+        triples = notebook_triples(self.nb) if self.nb is not None else []
+        # Questions first when the turn asks, teaches first otherwise.
+        if text.rstrip().endswith("?"):
+            frame = B73.compose_question(text, triples)
+            if frame is not None:
+                return ([{"act": "ask", "name": frame[0],
+                           "relations": list(frame[1])}], 1.0)
+            triple = B73.hear_teach_template(text)
+            if triple is not None:
+                return ([self._teach_action(triple)], 1.0)
+            return None
+        triple = B73.hear_teach_template(text)
+        if triple is not None:
+            return ([self._teach_action(triple)], 1.0)
+        frame = B73.compose_question(text, triples)
+        if frame is not None:
+            return ([{"act": "ask", "name": frame[0],
+                       "relations": list(frame[1])}], 1.0)
+        return None
+
+    def _teach_action(self, triple: tuple[str, str, str]) -> dict:
+        subj, rel, obj = triple
+        act = "teach"
+        if self.nb is not None:
+            found = self.nb.resolve(subj)
+            if found.status == C.OK:
+                eid = found.detail["entity_id"]
+                for fact in self.nb.facts.values():
+                    if (fact.get("subject") == eid and fact.get("relation") == rel
+                            and fact.get("source") == "taught"
+                            and self.nb.active(fact["fact_id"])):
+                        if _display(self.nb, fact["value"]) != obj:
+                            act = "correct"  # same (s,r), new object: supersede
+                        break
+        # Every bench value is entity-like (bench65 teaches ALL values as
+        # entities); the "->" arrow keeps mid-chain hops entity-valued.
+        return {"act": act, "name": subj, "relation": rel, "value": obj,
+                "is_person": True, "structured": True, "stage": "bench73"}
+
+
+class FakeStage:
+    """M1-style template ears as a ChainEars stage (FakeEars, deterministic)."""
+
+    name = "fake"
+
+    def __init__(self) -> None:
+        self._fake = A.FakeEars()
+
+    def bind(self, nb) -> None:
+        pass
+
+    def hear(self, turn: str, tau: dict) -> tuple[list[dict], float] | None:
+        actions = self._fake.hear(turn)
+        if len(actions) == 1 and actions[0].get("act") == "clarify":
+            return None
+        for action in actions:
+            action["stage"] = "fake"
+        return (actions, 1.0)
+
+
+class Ears47Stage:
+    """ears47:<ckpt> neural adapter stage (abstains until decode is validated).
+
+    hear_teach is UNVALIDATED upstream (raises NotImplementedError), so this
+    stage only ever answers questions via the shared compose_question over
+    neurally-independent triples; until a checkpoint loads AND decodes, it
+    abstains and the chain falls through.
+    """
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_loop90_agent.py | sed -n '290,400p'
+self.last_stage, self.last_score = "none", 0.0
+        return [{"act": "clarify",
+                 "text": "I didn't understand that. Could you say it another way?"}]
+
+
+# ------------------------------------------------------------------ the loop
+class Loop90AgentLoop(A.AgentLoop):
+    """AgentLoop with the Loop90 notebook, structured teaches, seal on save."""
+
+    def __init__(self, state_dir, *, ears=None, mouth=None, reasoner=None,
+                 sleeper=None, thinker=None,
+                 sleep_threshold: int = A.SLEEP_THRESHOLD) -> None:
+        self.dir = Path(state_dir)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.state_path = self.dir / A.STATE_NAME
+        self.ears = ears or A.FakeEars()
+        self.mouth = mouth or A.FakeMouth()
+        self.reasoner = reasoner or A.LookupReasoner()
+        self.sleeper = sleeper or A.StubSleeper()
+        self.thinker = thinker
+        self.sleep_threshold = int(sleep_threshold)
+        self.notes: list[str] = []
+        self.last_records: list[dict] = []
+        self.parts90: dict = {}
+
+        self.nb = Loop90Notebook(self.dir / A.NOTEBOOK_DIR)
+        if self.nb.torn_tail:  # crash mid-write: repair, then re-seal
+            self.nb.repair_torn_tail()
+            self.notes.append("repaired a torn notebook tail")
+            F77.verify_full(self.nb.root)
+        self.listening = L.Listening(self.nb)
+
+        self.tick = 0
+        self.mode = A.THINKING
+        self.inbox: list[str] = []
+        self.work_queue: list[str] = []
+        self.experience: list[dict] = []
+        self.question_pending: dict | None = None
+        self.sleep_mark = 0
+        self.counters = {"turns": 0, "writes": 0, "answers": 0,
+                         "clarifications": 0, "sleeps": 0, "work": 0,
+                         "thinks": 0}
+        self._load()
+
+    def _save(self) -> None:
+        super()._save()
+        nb = getattr(self, "nb", None)
+        if nb is not None and hasattr(nb, "advance_seal"):
+            nb.advance_seal()
+
+    def _listening_tick(self) -> dict:
+        text = self.inbox.pop(0)
+        self.counters["turns"] += 1
+        records = [self._act(action) for action in self.ears.hear(text)]
+        self.last_records = records
+        said = [line for line in (self.mouth.say(record) for record in records)
+                if line]
+        self.experience.append({"tick": self.tick, "kind": "turn", "text": text,
+                                "statuses": [r.get("status", r["kind"])
+                                             for r in records]})
+        return self._event(A.LISTENING, {"turn": text, "records": records},
+                           said)
+
+    def _act(self, action: dict) -> dict:
+        # Structured frame actions (bench73 stage) bypass the single-word line
+        # renderer and call the doorway directly: same rights, same statuses,
+        # multi-word names intact. Everything else uses the parent path.
+        if action.get("structured") and action.get("act") in ("teach",
+                                                              "correct"):
+            arrow = "->" if action.get("is_person") else "="
+            before = len(self.nb.events)
+            try:
+                text = self.listening._teach(
+                    action["name"], action["relation"], arrow,
+                    action["value"], action["act"] == "correct")
+            except C.LogCorrupt as exc:
+                text = ("I could NOT save that: the notebook reported a "
+                        f"problem ({exc}).")
+            wrote = len(self.nb.events) > before
+            self.counters["writes"] += int(wrote)
+            return {"kind": "write", "structured": action,
+                    "text": text, "wrote": wrote,
+                    "pending": self.listening.pending is not None}
+        return super()._act(action)
+
+
+# ------------------------------------------------------------------ factory
+DEFAULT_CONFIG: dict = {
+    "ears": {
+        "chain": ["bench73", "fake"],
+        "ears47_ckpt": None,
+        "tau_hat_path": str(TAU_PATH_DEFAULT),
+        "tau_family": "tape",
+        "stand_in": "ChainEars(bench73 template + FakeEars templates)",
+        "replacement": ("real ears: ears47 FrameEars checkpoint "
+                        "(scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"),
+    },
+    "notebook": {
+        "class": "Loop90Notebook",
+        "semantics": ("GatedThoughtNotebook (fix77 rule-2 gate) + "
+                      "VerifiedNotebook tail-seal discipline"),
+        "stand_in": "none -- this notebook IS the verified piece",
+        "replacement": "none",
+    },
+    "reasoner": {
+        "class": "QualifierAwareReasoner77",
+        "module": "scripts/fable_fix77_core.py",
+        "stand_in": "none -- this reasoner IS the verified piece",
+        "replacement": "none",
+    },
+    "mouth": {
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_loop90_agent.py | grep -n "Listening\|_teach\|my \|\"my\"\|'my'\|USER\|user_subject\|stand-in\|stand_in" | head -30; echo ---; git ls-tree -r --name-only origin/main | grep -E "listening|fix77|notebook_contract" | head
+140:            triple = B73.hear_teach_template(text)
+142:                return ([self._teach_action(triple)], 1.0)
+144:        triple = B73.hear_teach_template(text)
+146:            return ([self._teach_action(triple)], 1.0)
+153:    def _teach_action(self, triple: tuple[str, str, str]) -> dict:
+196:    hear_teach is UNVALIDATED upstream (raises NotImplementedError), so this
+222:            self.adapter.hear_teach(turn)
+320:        self.listening = L.Listening(self.nb)
+362:                text = self.listening._teach(
+383:        "stand_in": "ChainEars(bench73 template + FakeEars templates)",
+391:        "stand_in": "none -- this notebook IS the verified piece",
+397:        "stand_in": "none -- this reasoner IS the verified piece",
+401:        "stand_in": "FakeMouth (template sentences, content words from record)",
+406:        "stand_in": ("exp-89 QuarantinedThinking89 when "
+417:        "stand_in": "recipe armed; episode feed idle until learned-word asks",
+528:                        help="JSON config (plug points + stand-ins)")
+---
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h01/r0/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h01/r1/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h01/r2/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h02/r0/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h02/r1/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h02/r2/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h03/r0/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h03/r1/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h03/r2/notebook/events.fix77.seal.json
+artifacts/claude-merge138k-20260922/run/m220/work/fixed-q/h04/r0/notebook/events.fix77.seal.json
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_loop90_agent.py | sed -n '1,95p'
+#!/usr/bin/env python3
+"""Experiment 90 -- INTEGRATION build: one loop composing every verified piece.
+
+Factory ``build_agent(cfg)`` returns an AgentLoop-compatible object where:
+
+  notebook = Loop90Notebook: GatedThoughtNotebook (fix77 rule-2 gate) with the
+             VerifiedNotebook tail-seal discipline (verify on open via
+             fix77.verify_full, advance the sidecar seal on every save).
+  reasoner = Reasoner77 (QualifierAwareReasoner77: qual56 hop loop + bool fix).
+  ears     = ChainEars: [bench73 template stage now; ears47:<ckpt> adapter
+             when a checkpoint exists; FakeEars template stage for M1-style
+             turns], every stage score gated by the certified abstention
+             thresholds tau-hat read at run time from the exp-76 JSON
+             (score < tau-hat -> abstain/CLARIFY, never write).
+  mouth    = FakeMouth now; the Mouth Protocol slot is documented for mouth53.
+  thinker  = exp-89 fixed Thinking wrapper if scripts/fable_webfix89_thinking.py
+             exists at run time, else the m2 Thinking wrapper (import guarded).
+  sleeper  = HardGate46Sleeper: the exp-46 recipe (robust loss + harden-before-
+             gate + unchanged gate) called, not re-implemented.
+  all behind the daemon74 mailbox (Loop90Daemon).
+
+Additive only: every other module is imported read-only and wrapped or
+subclassed here. Nothing outside this file is edited.
+
+Run examples (Mac CPU, offline; only AFTER PASSMARKS are sealed):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_loop90_agent.py --write-config /tmp/loop90.json
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_loop90_agent.py --daemon --dir DIR --config CFG
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_agent_loop as A  # noqa: E402 (Protocols + AgentLoop base, read-only)
+import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+import fable_daemon74_run as D74  # noqa: E402 (mailbox daemon base, read-only)
+import fable_fix77_core as F77  # noqa: E402 (gate + reasoner + seal, read-only)
+import fable_listening_m1 as L  # noqa: E402 (doorway, read-only)
+import fable_notebook_contract as C  # noqa: E402 (contract, read-only)
+from fable_wire51_adapters import HardGate46Sleeper, NotebookThinker  # noqa: E402
+
+ROOT = SCRIPTS.parent
+TAU_PATH_DEFAULT = (ROOT / "artifacts" / "fable-abstain76-20260921"
+                    / "ltt_summary.json")
+MOUTH53_MODULE = "fable_mouth53_mouth"
+
+try:
+    import fable_webfix89_thinking as W89  # noqa: E402 (exp-89 fix, if landed)
+    THINKER_MODULE = "fable_webfix89_thinking"
+except ImportError:
+    W89 = None
+    THINKER_MODULE = "fable_thinking_m2"
+
+
+def load_tau_hat(path=None) -> dict:
+    """Certified write thresholds, read from the exp-76 JSON (never hard-coded)."""
+    with open(path or TAU_PATH_DEFAULT, encoding="utf-8") as handle:
+        return dict(json.load(handle)["tau_hat"])
+
+
+# ------------------------------------------------------------------ notebook
+class Loop90Notebook(F77.GatedThoughtNotebook):
+    """GatedThoughtNotebook semantics + VerifiedNotebook seal discipline.
+
+    verify_full() on every clean open (raises LogCorrupt on a tail edit);
+    the sidecar seal advances on every loop save (see Loop90AgentLoop._save).
+    A torn tail loads with the flag set (legacy crash-recovery behaviour);
+    the loop repairs first, then seals.
+    """
+
+    def __init__(self, root) -> None:
+        super().__init__(root)
+        if self.torn_tail:
+            return
+        F77.verify_full(self.root)
+
+    def advance_seal(self) -> None:
+        try:
+            F77._write_seal(Path(self.root), len(self.events), self.last_sha)
+        except OSError:
+            pass
+
+
+# ------------------------------------------------------------------ ears chain
+def _display(nb, value: dict) -> str:
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_listening_m1.py | head -150
+"""Milestone 1 -- LISTENING mode over the notebook contract, with template replies.
+
+No model and no English parser yet (decided: the learned talker and the parser wait until
+this works end to end).  Input is a STRUCTURED line; the reply is a deterministic template.
+
+  person Mira                 a new person (always new, even if the name exists)
+  alias Tommy = Tom           another name for a known person
+  teach Mira city = Lisbon    a fact whose value is plain text
+  teach Mira mother -> Ana    a fact whose value is a person
+  correct Mira city = Paris   an explicit correction
+  ask Mira mother city        a question (hop loop is hard-coded)
+  forget Mira city            retract the current taught value
+  quote <anything>            reported speech / hypothetical: writes nothing
+  yes | no | pick E0002       answers to LISTENING's own clarifying question
+
+LISTENING rules enforced here (design/v3/30-modes/decided-inputs-fable.md):
+  * the only writer of ``taught`` rows; says "Saved" only after the notebook returns SAVED
+  * ambiguous name -> ask which one, never guess, never merge
+  * a different value without ``correct`` -> ask before changing
+  * quotes and hypotheticals write nothing
+  * a pending clarifying question is remembered; an unrelated line cancels it and says so
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+import tempfile
+import uuid
+
+import fable_notebook_contract as C
+
+FUNCTIONAL_BY_DEFAULT = True
+
+
+class Listening:
+    def __init__(self, notebook: C.Notebook) -> None:
+        self.nb = notebook
+        self.pending: dict | None = None
+        self.turn = 0
+
+    def _eid(self, tag: str) -> str:
+        return f"turn{self.turn:05d}-{tag}-{uuid.uuid4().hex[:8]}"
+
+    # ------------------------------------------------------------ name handling
+    def _person(self, name: str, create: bool, picked: str | None = None):
+        """Returns (entity_id, None) or (None, reply). ``picked`` answers an earlier AMBIGUOUS."""
+        if picked:
+            return picked, None
+        found = self.nb.resolve(name)
+        if found.status == C.OK:
+            return found.detail["entity_id"], None
+        if found.status == C.AMBIGUOUS:
+            return None, found
+        if create:
+            made = self.nb.new_entity(self._eid("person"), name)
+            return made.detail["entity_id"], None
+        return None, found
+
+    def _relation(self, relation: str) -> None:
+        known = {e["relation"] for e in self.nb.events if e["kind"] == "RELATION"}
+        if relation not in known:
+            self.nb.declare_relation(self._eid("rel"), relation, FUNCTIONAL_BY_DEFAULT)
+
+    # ------------------------------------------------------------------- turns
+    def hear(self, line: str) -> str:
+        self.turn += 1
+        words = line.strip().split()
+        if not words:
+            return "I didn't catch anything."
+        act, rest = words[0].lower(), words[1:]
+
+        if act in ("yes", "no", "pick"):
+            return self._answer_pending(act, rest)
+        note = ""
+        if self.pending is not None:
+            self.pending = None
+            note = "(I dropped my earlier question.) "
+
+        try:
+            if act == "quote":
+                return note + "I didn't save that, because it was not you telling me a fact."
+            if act == "person" and rest:
+                made = self.nb.new_entity(self._eid("person"), " ".join(rest))
+                return note + made.say()
+            if act == "alias" and "=" in rest:
+                cut = rest.index("=")
+                return note + self._alias(" ".join(rest[:cut]), " ".join(rest[cut + 1:]))
+            if act in ("teach", "correct") and len(rest) >= 4 and rest[2] in ("=", "->"):
+                return note + self._teach(rest[0], rest[1], rest[2], " ".join(rest[3:]),
+                                          correction=(act == "correct"))
+            if act == "ask" and len(rest) >= 2:
+                return note + self._ask(rest[0], rest[1:])
+            if act == "forget" and len(rest) == 2:
+                return note + self._forget(rest[0], rest[1])
+        except C.LogCorrupt as exc:
+            return f"I could NOT save that: the notebook reported a problem ({exc})."
+        return note + C.Result(C.BAD_REQUEST, {"reason": "I did not understand the line"}).say()
+
+    def _alias(self, alias: str, name: str, picked: str | None = None) -> str:
+        entity_id, problem = self._person(name, create=False, picked=picked)
+        if problem is not None:
+            return self._clarify(problem, {"kind": "alias", "alias": alias, "name": name})
+        return self.nb.add_alias(self._eid("alias"), entity_id, alias).say()
+
+    def _teach(self, name, relation, arrow, value_text, correction, picked=None, picked_obj=None):
+        resume = {"kind": "teach", "name": name, "relation": relation, "arrow": arrow,
+                  "value_text": value_text, "correction": correction,
+                  "picked": picked, "picked_obj": picked_obj}
+        subject, problem = self._person(name, create=True, picked=picked)
+        if problem is not None:
+            return self._clarify(problem, dict(resume, slot="picked"))
+        resume["picked"] = subject
+        if arrow == "->":
+            obj, problem = self._person(value_text, create=True, picked=picked_obj)
+            if problem is not None:
+                return self._clarify(problem, dict(resume, slot="picked_obj"))
+            value = {"entity": obj}
+        else:
+            value = {"literal": value_text}
+        self._relation(relation)
+        raw = f"{'correct' if correction else 'teach'} {name} {relation} {arrow} {value_text}"
+        result = self.nb.assert_fact(self._eid("fact"), "listening", "taught", subject,
+                                     relation, value, correction=correction, raw=raw)
+        if result.status == C.CONFLICT:
+            self.pending = dict(resume, kind="confirm", picked_obj=value.get("entity"))
+        return result.say()
+
+    def _ask(self, name: str, relations: list[str], picked: str | None = None) -> str:
+        if picked is None:
+            result = self.nb.ask(name, relations)
+            if result.status == C.AMBIGUOUS:
+                return self._clarify(result, {"kind": "ask", "name": name, "relations": relations})
+            return result.say()
+        return self.nb.ask(name, relations, entity_id=picked).say()
+
+    def _forget(self, name: str, relation: str, picked: str | None = None) -> str:
+        entity_id, problem = self._person(name, create=False, picked=picked)
+        if problem is not None:
+            return self._clarify(problem, {"kind": "forget", "name": name, "relation": relation})
+        rows = [row for row in self.nb.current(entity_id, relation) if row["source"] == "taught"]
+        if not rows:
+            return C.Result(C.MISSING_FACT, {"subject": self.nb.entities[entity_id],
+                                             "relation": relation}).say()
+        for row in rows:
+            self.nb.retract(self._eid("forget"), "listening", row["fact_id"], "Ben asked")
+        return f"Forgotten: {self.nb.entities[entity_id]}'s {relation}."
+
+    def _clarify(self, problem: C.Result, resume: dict) -> str:
+        if problem.status == C.AMBIGUOUS:
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_agent_loop.py | grep -n "my\b\|user\|USER\|I\b" | head -30; echo ===; git show origin/main:scripts/fable_agent_loop.py | wc -l
+18:    LISTENING  a user turn is waiting
+94:_QUESTION = re.compile(r"^\s*(?:who|what|where)\s+(?:is|are)\s+(.+?)\s*[?.]?\s*$", re.I)
+95:_CORRECTION = re.compile(r"^\s*(?:actually|no,)\s*,?\s*(.*)$", re.I)
+96:_STATEMENT = re.compile(r"^\s*(.+?)\s+is\s+(.+?)\s*\.?\s*$", re.I)
+97:_PICK = re.compile(r"^\s*pick\s+(E\d+)\s*\.?\s*$", re.I)
+98:_YESNO = re.compile(r"^\s*(yes|no)\s*\.?\s*$", re.I)
+115:            return [_clarify("I didn't catch anything.")]
+126:                return [_clarify(f"I can only follow 1 to {MAX_HOPS} steps, like "
+142:                return [_clarify("I can only handle one-word names so far.")]
+144:                return [_clarify("I didn't get the value.")]
+148:        return [_clarify("I didn't understand that. Could you say it another way?")]
+170:                sentence += " (I read that online; you didn't tell me.)"
+350:        return {"kind": "clarify", "text": "I didn't understand that."}
+367:            return {"kind": "clarify", "text": "Please answer with: pick <one of the IDs I listed>."}
+376:            text = f"I could NOT save that: the notebook reported a problem ({exc})."
+407:# --------------------------------------------------------------------- CLI
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_agent_loop.py | sed -n '80,240p'
+def sleep(self, experience: list[dict], notebook) -> dict:
+        """Called only when the log is full. Returns {'accepted': bool, ...}."""
+
+
+@runtime_checkable
+class Thinker(Protocol):
+    def think(self, notebook) -> dict | None:
+        """Optional idle work. None means 'nothing to do'."""
+
+
+# ------------------------------------------------------- deterministic offline fakes
+PERSON_RELATIONS = {"mother", "father", "sister", "brother", "friend", "boss",
+                    "teacher", "wife", "husband", "neighbour", "neighbor", "partner"}
+_APOS = r"['’]s\b\s*"
+_QUESTION = re.compile(r"^\s*(?:who|what|where)\s+(?:is|are)\s+(.+?)\s*[?.]?\s*$", re.I)
+_CORRECTION = re.compile(r"^\s*(?:actually|no,)\s*,?\s*(.*)$", re.I)
+_STATEMENT = re.compile(r"^\s*(.+?)\s+is\s+(.+?)\s*\.?\s*$", re.I)
+_PICK = re.compile(r"^\s*pick\s+(E\d+)\s*\.?\s*$", re.I)
+_YESNO = re.compile(r"^\s*(yes|no)\s*\.?\s*$", re.I)
+
+
+def _chain(text: str) -> list[str]:
+    return [part.strip() for part in re.split(_APOS, text.strip()) if part.strip()]
+
+
+def _clarify(text: str) -> dict:
+    return {"act": "clarify", "text": text}
+
+
+class FakeEars:
+    """A tiny template parser. Test scaffolding for the loop -- NOT the real ears."""
+
+    def hear(self, turn: str) -> list[dict]:
+        turn = " ".join(str(turn).split())
+        if not turn:
+            return [_clarify("I didn't catch anything.")]
+        found = _PICK.match(turn)
+        if found:
+            return [{"act": "answer", "value": "pick", "id": found.group(1)}]
+        found = _YESNO.match(turn)
+        if found:
+            return [{"act": "answer", "value": found.group(1).lower()}]
+        found = _QUESTION.match(turn)
+        if found:
+            parts = _chain(found.group(1))
+            if len(parts) < 2 or len(parts) > MAX_HOPS + 1:
+                return [_clarify(f"I can only follow 1 to {MAX_HOPS} steps, like "
+                                 f"\"Who is Mira's mother's city?\".")]
+            return [{"act": "ask", "name": parts[0],
+                     "relations": [self._relation(p) for p in parts[1:]]}]
+        correction = False
+        found = _CORRECTION.match(turn)
+        if found and found.group(1):
+            correction, turn = True, found.group(1)
+        found = _STATEMENT.match(turn)
+        if found:
+            left, value = found.group(1), found.group(2).rstrip(".")
+            parts = _chain(left)
+            if len(parts) != 2:
+                return [_clarify("Please say it like \"Mira's city is Lisbon.\".")]
+            name, relation = parts[0], self._relation(parts[1])
+            if " " in name:
+                return [_clarify("I can only handle one-word names so far.")]
+            if not value:
+                return [_clarify("I didn't get the value.")]
+            return [{"act": "correct" if correction else "teach", "name": name,
+                     "relation": relation, "value": value,
+                     "is_person": relation in PERSON_RELATIONS}]
+        return [_clarify("I didn't understand that. Could you say it another way?")]
+
+    @staticmethod
+    def _relation(surface: str) -> str:
+        return "_".join(surface.strip().lower().split())
+
+
+class FakeMouth:
+    """Template sentences. Every content word is copied out of the result record."""
+
+    def say(self, record: dict) -> str:
+        kind = record.get("kind")
+        if kind in ("write", "clarify", "note"):
+            return record.get("text", "")
+        if kind != "answer":
+            return ""
+        status, fields = record.get("status"), dict(record.get("fields") or {})
+        if status == C.OK:
+            owner = "'s ".join([record["name"]] + [part.replace("_", " ")
+                                                   for part in record["relations"]])
+            sentence = f"{owner} is {fields.get('answer')}."
+            if fields.get("source") == "web-verified":
+                sentence += " (I read that online; you didn't tell me.)"
+            return sentence
+        return C.Result(status, fields).say()
+
+
+class LookupReasoner:
+    """1-3 hop lookup through the notebook contract's own hard-coded hop loop."""
+
+    def answer(self, question: dict, notebook) -> dict:
+        name = question["name"]
+        relations = list(question["relations"])
+        if not 1 <= len(relations) <= MAX_HOPS:
+            return {"kind": "answer", "status": C.BAD_REQUEST, "name": name,
+                    "relations": relations, "fields": {"reason": f"need 1-{MAX_HOPS} hops"}}
+        result = notebook.ask(name, relations, entity_id=question.get("entity_id"))
+        return {"kind": "answer", "status": result.status, "name": name,
+                "relations": relations, "fields": dict(result.detail)}
+
+
+class StubSleeper:
+    """Records that sleep was ASKED FOR and changes nothing. A real sleeper replaces it."""
+
+    def __init__(self) -> None:
+        self.requests: list[int] = []
+
+    def sleep(self, experience: list[dict], notebook) -> dict:
+        self.requests.append(len(experience))
+        return {"accepted": False, "reason": "no sleeper is plugged in yet",
+                "log_size": len(experience)}
+
+
+# ------------------------------------------------------------------- the loop
+class AgentLoop:
+    def __init__(self, state_dir, *, ears: Ears | None = None, mouth: Mouth | None = None,
+                 reasoner: Reasoner | None = None, sleeper: Sleeper | None = None,
+                 thinker: Thinker | None = None,
+                 sleep_threshold: int = SLEEP_THRESHOLD) -> None:
+        self.dir = Path(state_dir)
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.state_path = self.dir / STATE_NAME
+        self.ears = ears or FakeEars()
+        self.mouth = mouth or FakeMouth()
+        self.reasoner = reasoner or LookupReasoner()
+        self.sleeper = sleeper or StubSleeper()
+        self.thinker = thinker
+        self.sleep_threshold = int(sleep_threshold)
+        self.notes: list[str] = []
+
+        self.nb = C.Notebook(self.dir / NOTEBOOK_DIR)
+        if self.nb.torn_tail:                      # crash mid-write: keep the good prefix
+            self.nb.repair_torn_tail()
+            self.notes.append("repaired a torn notebook tail")
+        self.listening = L.Listening(self.nb)
+
+        self.tick = 0
+        self.mode = THINKING
+        self.inbox: list[str] = []
+        self.work_queue: list[str] = []
+        self.experience: list[dict] = []
+        self.question_pending: dict | None = None
+        self.sleep_mark = 0
+        self.counters = {"turns": 0, "writes": 0, "answers": 0, "clarifications": 0,
+                         "sleeps": 0, "work": 0, "thinks": 0}
+        self._load()
+
+    # ------------------------------------------------------------- persistence
+    def _load(self) -> None:
+        for stale in self.dir.glob(STATE_NAME + ".tmp*"):   # leftover half-written temps
+            try:
+                stale.unlink()
+            except OSError:
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_bench73_english_arm.py | grep -n "my\|hear_teach" | head -30; echo ===; ls /Users/ben-hannan/premonition-models/ 2>&1; ls ~/premonition-models/ 2>&1
+10:    hear_teach(sentence_en) -> (subject, relation, object) | None
+194:def hear_teach_template(sentence: str) -> tuple[str, str, str] | None:
+335:    def hear_teach(self, sentence: str) -> tuple[str, str, str] | None:
+336:        return hear_teach_template(sentence)
+414:    def hear_teach(self, sentence: str) -> tuple[str, str, str] | None:
+430:    teach = teach_fn or ears.hear_teach
+634:        check(hear_teach_template(sent) == want, f"teach {sent[:45]!r}")
+639:        check(hear_teach_template(bad) is None, f"garbled-teach {bad[:30]!r}")
+zsh:1: == not found
+[0m
+[0m$ [0mls ~/premonition-models/ ; echo ---; uptime; df -g / | head -5
+ls: /Users/ben-hannan/premonition-models/: No such file or directory
+---
+ 7:18  up 2 days, 23:08, 4 users, load averages: 120.51 74.57 64.78
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135934120    0%   /
+[0m
+[0m$ [0mgit status --short | head; git log --oneline -3; ls scripts/ | grep -E "loop291|fix291|lis300" | head
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+claude_fix291_glue.py
+claude_loop291_agent.py
+[0m
+[0m$ [0mls scripts/ | grep -E "lis" ; echo ---; ls scripts/ | head -30; echo ---; git diff --stat HEAD | head
+claude_type270_normalise.py
+claude_type270b_normalise.py
+fable_bench103_english_arm.py
+fable_bench73_english_arm.py
+fable_bench92_english_arm.py
+fable_brake118b_trainlist.py
+fable_fix154c_allowlist.py
+fable_fix154e_allowlist.py
+fable_listening_english.py
+fable_listening_m1.py
+gen_english.py
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+---
+ .../com.premonition.chat.plist                     |   50 +
+ artifacts/claude-chatdemo-20260923/selftest.md     |  110 ++
+ artifacts/claude-nhopdiag-20260923/DIAG.md         |  174 ++
+ .../claude-nhopdiag-20260923/dev_dialogs.json      |  356 ++++
+ .../claude-nhopdiag-20260923/raw_replies.json      | 2041 ++++++++++++++++++++
+ artifacts/fable-predictions-ledger.md              |   25 +
+ scripts/claude_chatdemo_page.html                  |  185 ++
+ scripts/claude_chatdemo_server.py                  |  402 ++++
+ scripts/claude_chatdemo_start.sh                   |   38 +
+ scripts/claude_nhopdiag_20260923_pilot.py          |   90 +
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_agent_loop.py | sed -n '330,406p'
+said = [line for line in (self.mouth.say(record) for record in records) if line]
+        self.experience.append({"tick": self.tick, "kind": "turn", "text": text,
+                                "statuses": [r.get("status", r["kind"]) for r in records]})
+        return self._event(LISTENING, {"turn": text, "records": records}, said)
+
+    def _act(self, action: dict) -> dict:
+        act = action.get("act")
+        if act == "clarify":
+            self.counters["clarifications"] += 1
+            return {"kind": "clarify", "text": action.get("text", "")}
+        if act == "ask":
+            return self._ask(action["name"], list(action["relations"]))
+        if act == "answer":
+            return self._answer(action)
+        if act in ("teach", "correct"):
+            arrow = "->" if action.get("is_person") else "="
+            return self._write(f"{act} {action['name']} {action['relation']} "
+                               f"{arrow} {action['value']}")
+        if act in ("person", "alias", "forget", "quote"):
+            return self._write(action["line"])
+        return {"kind": "clarify", "text": "I didn't understand that."}
+
+    def _ask(self, name: str, relations: list[str], entity_id: str | None = None) -> dict:
+        record = self.reasoner.answer({"name": name, "relations": relations,
+                                       "entity_id": entity_id}, self.nb)
+        self.counters["answers"] += 1
+        if record.get("status") == C.AMBIGUOUS:
+            self.question_pending = {"name": name, "relations": relations,
+                                     "ids": list(record["fields"].get("ids", []))}
+        return record
+
+    def _answer(self, action: dict) -> dict:
+        if self.question_pending is not None:
+            if action.get("value") == "pick" and action.get("id") in self.question_pending["ids"]:
+                question, self.question_pending = self.question_pending, None
+                return self._ask(question["name"], question["relations"], action["id"])
+            self.counters["clarifications"] += 1
+            return {"kind": "clarify", "text": "Please answer with: pick <one of the IDs I listed>."}
+        line = f"pick {action['id']}" if action.get("value") == "pick" else action.get("value", "")
+        return self._write(line)
+
+    def _write(self, line: str) -> dict:
+        before = len(self.nb.events)
+        try:
+            text = self.listening.hear(line)
+        except C.LogCorrupt as exc:
+            text = f"I could NOT save that: the notebook reported a problem ({exc})."
+        wrote = len(self.nb.events) > before
+        self.counters["writes"] += int(wrote)
+        return {"kind": "write", "line": line, "text": text, "wrote": wrote,
+                "pending": self.listening.pending is not None}
+
+    # ---------------------------------------------------------- SLEEP / WORK / THINKING
+    def _sleep_tick(self) -> dict:
+        outcome = self.sleeper.sleep(list(self.experience), self.nb)
+        accepted = bool(outcome.get("accepted"))
+        if accepted:
+            self.experience = []
+            self.sleep_mark = 0
+        else:
+            self.sleep_mark = len(self.experience)   # don't ask again until it grows again
+        self.counters["sleeps"] += 1
+        return self._event(SLEEP, {"accepted": accepted, "outcome": outcome}, [])
+
+    def _work_tick(self) -> dict:
+        task = self.work_queue.pop(0)
+        self.counters["work"] += 1
+        self.experience.append({"tick": self.tick, "kind": "work", "text": task})
+        return self._event(WORK, {"task": task, "done": False,
+                                  "reason": "WORK is a stub; nothing is plugged in"}, [])
+
+    def _thinking_tick(self) -> dict:
+        thought = self.thinker.think(self.nb) if self.thinker is not None else None
+        self.counters["thinks"] += 1
+        return self._event(THINKING, {"thought": thought}, [])
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_fix252b_screen.py | head -80; echo =====209=====; git ls-tree -r --name-only origin/main | grep -E "209" | grep -v artifacts | grep -v runs | head
+fatal: path 'scripts/claude_fix252b_screen.py' exists on disk, but not in 'origin/builder-outbox'
+zsh:1: ====209===== not found
+[0m
+[0m$ [0mgit log --all --oneline -- scripts/claude_fix252b_screen.py | head -5; ls scripts/ | grep 252b; git show HEAD:scripts/claude_fix252b_screen.py | head -60
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_fix252b_screen.py
+claude_loop252b_agent.py
+#!/usr/bin/env python3
+"""Exp 252b: ONE change on top of 252, inside the value screen only: the
+stopword check tokenises on non-letter characters, so "that's" is caught
+like "that", and it also rejects the apostrophe-less spellings of the
+contractions it covers ("thats", "isnt", ...; list below).
+
+Bug (252 panel c252-022): value_ok252 split values on spaces only, so the
+token "that's" never matched the stopword "that" and "Quenby's manager is
+not Tobin anymore, that's outdated." stored the value "that's outdated".
+
+value_ok252 is the only screen in claude_fix252_correct.py that checks words
+against the stopword list (every caller -- _fix252, the bare-value path, the
+explicit named path and _two252 -- goes through it). The 252 methods look the
+function up as a module global at call time, so install_screen252b() rebinds
+that global in the loaded module object (no file is edited). All other checks
+(1-4 space tokens, token shape, the 139b base screen) are unchanged.
+
+Process note: after install, every 252 agent in the SAME Python process uses
+the new screen; the drivers load one agent per process.
+"""
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix252_correct as F252  # noqa: E402 (read-only)
+
+_ORIG_VALUE_OK252 = F252.value_ok252
+
+# Apostrophe-less spellings of the contractions the screen covers (those
+# whose first piece is a 252 stopword, e.g. that's -> "that", or that are
+# listed whole, e.g. don't). Coordinator ruling 252b option B: safety
+# screening, not wording coverage. Spellings that are also ordinary English
+# words or plausible names/places are EXCLUDED (never added):
+#   its hell shell well ill wed id shed were lets whys hows ive im cant wont
+APOSLESS252B = frozenset("""
+thats hes shes theres heres whats whos wheres whens
+isnt wasnt arent werent doesnt didnt dont
+theyre youre
+theyll youll itll thatll therell wholl
+hed theyd youd itd thatd whod
+theyve youve weve whove
+""".split())
+EXCLUDED252B = ("its hell shell well ill wed id shed were lets whys hows ive "
+                "im cant wont").split()
+
+
+def value_ok252b(z: str) -> bool:
+    """252's screen + stopword check on letter-only pieces of each token."""
+    if not _ORIG_VALUE_OK252(z):
+        return False
+    for piece in re.split(r"[^A-Za-z]+", F252._norm(z)):
+        if piece and (piece.lower() in F252._STOP
+                      or piece.lower() in APOSLESS252B):
+            return False
+[0m
+[0m$ [0mls scripts/ | grep -E "209|228" | head; echo ---; grep -n "def " scripts/claude_fix209*.py 2>/dev/null | head -20
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_fix228_srcguard.py
+claude_loop228_agent.py
+fable_loop209_agent.py
+fable_writescreen209_probe.py
+fable_writescreen209_suites.py
+---
+zsh:1: no matches found: scripts/claude_fix209*.py
+[0m
+[0m$ [0mgrep -n "def \|screen" scripts/fable_loop209_agent.py | head -30; echo ===; grep -n "def \|class " scripts/claude_fix228_srcguard.py | head -20
+13:So the screen sits at the two narrowest additive points (subclass only;
+24:THE ONE CHANGE (three screens, nothing else):
+28:      hear screen and the _act backstop are idempotent. Only a LEADING
+51:      relation key is screened.
+57:    --config artifacts/fable-writescreen209-20260922/loop209-config.json
+82:def strip_named209(value: str) -> str:
+105:def is_date_relation209(relation: str) -> bool:
+119:def date_literal209(value: str) -> str | None:
+142:def relation_has_clause209(relation: str) -> bool:
+151:# ------------------------------------------------------------------ screen
+155:def screen_action209(action: dict) -> dict | None:
+156:    """One teach/correct action -> screened action, "clarify" dict, or None.
+160:    Relation-clause refusal is handled at the turn level (screen_turn209),
+177:def screen_turn209(actions: list[dict]) -> list[dict]:
+178:    """Apply the 209 write screen to one hear() result (0+ writes safe)."""
+188:        screened = screen_action209(action)
+189:        out.append(action if screened is None else screened)
+194:    """Outermost ears screen: post-process the full 138i chain's actions."""
+196:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+197:        return screen_turn209(super().hear(turn))  # type: ignore[misc]
+201:    """Loop138iEars + the 209 write screen outside everything."""
+203:    name = "loop209-write-screen"
+209:    def _act(self, action: dict) -> dict:  # type: ignore[no-redef]
+226:    "Loop209Ears (loop138i stack + outermost write screen: strip leading "
+232:def build_agent209(cfg: dict | None = None) -> Loop209AgentLoop:
+233:    """Build the loop138i agent shape with the 209 screen stacked on."""
+261:    loop._screen148b_tag = None
+280:    loop.notes.append("loop209: loop138i + write screen (named/called "
+288:    def __init__(self, root, cfg: dict | None = None,
+319:def run_daemon209(root, cfg: dict | None = None,
+zsh:1: == not found
+[0m
+[0m$ [0msed -n '82,200p' scripts/fable_loop209_agent.py
+def strip_named209(value: str) -> str:
+    """Strip leading "named"/"called" occurrences (idempotent)."""
+    text = str(value)
+    while True:
+        cleaned = _NAMED_LEAD_RE.sub("", text).strip()
+        if cleaned == text:
+            return cleaned
+        text = cleaned
+
+
+NO_VALUE_MSG = "I didn't get the value."  # FakeEars text, fable_agent_loop.py
+
+# ------------------------------------------------------------------ (b)
+_MONTHS209 = frozenset(
+    "january february march april may june july august september october "
+    "november december jan feb mar apr jun jul aug sep sept oct nov dec".split())
+_WEEKDAYS209 = frozenset(
+    "monday tuesday wednesday thursday friday saturday sunday "
+    "mon tue tues wed thu thur thurs fri sat sun".split())
+_DATE_PREP_RE = re.compile(r"^(in|on)\s+(\S.*)$",
+                           re.IGNORECASE | re.DOTALL)
+
+
+def is_date_relation209(relation: str) -> bool:
+    """Closed date-type rule over the relation KEY."""
+    norm = str(relation).lower().replace("_", " ").replace("-", " ").strip()
+    norm = " ".join(norm.split())
+    if not norm:
+        return False
+    if "birthday" in norm or "anniversar" in norm:
+        return True
+    toks = set(norm.split())
+    if "birth" in toks and ("date" in toks or "day" in toks):
+        return True
+    return norm in ("birthdate", "dob", "birth date", "day of birth")
+
+
+def date_literal209(value: str) -> str | None:
+    """'in|on <month|weekday|date>' -> stripped literal, else None."""
+    m = _DATE_PREP_RE.match(" ".join(str(value).split()))
+    if m is None:
+        return None
+    rest = m.group(2).strip().rstrip(".").strip()
+    if not rest:
+        return None
+    low = rest.lower().rstrip(".").strip()
+    if low in _MONTHS209 or low in _WEEKDAYS209:
+        return rest
+    if re.search(r"\d", rest):
+        return rest
+    return None
+
+
+# ------------------------------------------------------------------ (c)
+_CLAUSE_WORDS209 = frozenset(
+    {"but", "now", "that", "which", "who", "because", "then"})
+_REL_TOK_RE = re.compile(r"[_\s/\-]+")
+_ONE_FACT_MSG = G91.SPLIT_MSG  # base's one-fact-at-a-time reply
+
+
+def relation_has_clause209(relation: str) -> bool:
+    """True when the relation KEY contains a clause word token."""
+    toks = [t for t in _REL_TOK_RE.split(str(relation).lower()) if t]
+    if any(t in _CLAUSE_WORDS209 for t in toks):
+        return True
+    return any(a == "used" and b == "to"
+               for a, b in zip(toks, toks[1:]))
+
+
+# ------------------------------------------------------------------ screen
+_TEACH_ACTS = ("teach", "correct")
+
+
+def screen_action209(action: dict) -> dict | None:
+    """One teach/correct action -> screened action, "clarify" dict, or None.
+
+    Returns None when the action is not a teach/correct (caller keeps it
+    untouched). Returns a clarify dict for the empty-value edge.
+    Relation-clause refusal is handled at the turn level (screen_turn209),
+    not here, so one bad relation refuses the whole turn with 0 writes.
+    """
+    if not isinstance(action, dict) or action.get("act") not in _TEACH_ACTS:
+        return None
+    out = dict(action)
+    out["value"] = strip_named209(out.get("value", ""))
+    if not str(out["value"]).strip():
+        return {"act": "clarify", "text": NO_VALUE_MSG}
+    if out.get("is_person") and is_date_relation209(out.get("relation", "")):
+        lit = date_literal209(out["value"])
+        if lit is not None:
+            out["value"] = lit
+            out["is_person"] = False
+    return out
+
+
+def screen_turn209(actions: list[dict]) -> list[dict]:
+    """Apply the 209 write screen to one hear() result (0+ writes safe)."""
+    if not isinstance(actions, list) or not actions:
+        return actions
+    for action in actions:
+        if (isinstance(action, dict)
+                and action.get("act") in _TEACH_ACTS
+                and relation_has_clause209(action.get("relation", ""))):
+            return [{"act": "clarify", "text": _ONE_FACT_MSG}]
+    out = []
+    for action in actions:
+        screened = screen_action209(action)
+        out.append(action if screened is None else screened)
+    return out
+
+
+class WriteScreen209EarsMixin:
+    """Outermost ears screen: post-process the full 138i chain's actions."""
+
+    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+        return screen_turn209(super().hear(turn))  # type: ignore[misc]
+
+
+class Loop209Ears(WriteScreen209EarsMixin, L138I.Loop138iEars):
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "import sys; print('ok')"
+ok
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B scripts/claude_loop291_agent.py --once "My sister is Mira." --state-dir /tmp/probe291a 2>&1 | tail -5
+Saved: your sister is Mira.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import sys, tempfile, json
+sys.path.insert(0, 'scripts')
+import claude_loop291_agent as B291
+import fable_loop90_agent as L90
+d = tempfile.mkdtemp(prefix='p291_')
+loop = B291.build_agent291({'state_dir': d})
+for t in ['My sister is Mira.', 'Who is my sister?', 'Mira has a dog named Pip.', 'Who is Mira?']:
+    r = loop.turn(t)
+    print(repr(t), '->', r)
+print('TRIPLES:', L90.notebook_triples(loop.nb))
+" 2>&1 | tail -10
+File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop138_agent.py", line 183, in _route127
+    import fable_self127 as S127  # noqa: E402 (frozen router, read-only)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self127.py", line 46, in <module>
+    import torch  # noqa: E402
+    ^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'torch'
+'My sister is Mira.' -> ['Saved: your sister is Mira.']
+'Who is my sister?' -> ['Your sister is Mira.']
+'Mira has a dog named Pip.' -> ["Saved: Mira's dog is Pip."]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile
+sys.path.insert(0, 'scripts')
+import claude_loop291_agent as B291
+import fable_loop90_agent as L90
+d = tempfile.mkdtemp(prefix='p291_')
+loop = B291.build_agent291({'state_dir': d})
+for t in ['My sister is Mira.', 'Who is my sister?', 'Mira has a dog named Pip.', 'Whose dog is Pip?']:
+    r = loop.turn(t)
+    print(repr(t), '->', r)
+print('TRIPLES:', L90.notebook_triples(loop.nb))
+print('ENTITIES:', dict(loop.nb.entities))
+" 2>&1 | tail -10
+'My sister is Mira.' -> ['Saved: your sister is Mira.']
+'Who is my sister?' -> ['Your sister is Mira.']
+'Mira has a dog named Pip.' -> ["Saved: Mira's dog is Pip."]
+'Whose dog is Pip?' -> ["Mira's dog is Pip. (worked out backwards)"]
+TRIPLES: [('USER', 'sister', 'Mira'), ('Mira', 'dog', 'Pip')]
+ENTITIES: {'E0001': 'USER', 'E0002': 'Mira'}
+[0m
+[0m$ [0mgrep -n "def load_agent\|def load_base_cfg\|def make_daemon" -A 30 scripts/fable_marks123_all.py | head -90
+68:def load_agent(agent_script: str):
+69-    spec = importlib.util.spec_from_file_location(
+70-        "fable_marks123_agent_under_test", agent_script)
+71-    mod = importlib.util.module_from_spec(spec)
+72-    sys.modules[spec.name] = mod
+73-    spec.loader.exec_module(mod)
+74-    daemon_cls = None
+75-    for name in dir(mod):
+76-        obj = getattr(mod, name)
+77-        if isinstance(obj, type) and name.endswith("Daemon"):
+78-            if daemon_cls is None or name.startswith("Loop"):
+79-                daemon_cls = obj
+80-    if daemon_cls is None:
+81-        raise RuntimeError(f"no *Daemon class found in {agent_script}")
+82-    build_fn = None
+83-    for name in dir(mod):
+84-        if name.startswith("build_agent") and callable(getattr(mod, name)):
+85-            build_fn = getattr(mod, name)
+86-            break
+87-    default_cfg = None
+88-    for name in dir(mod):
+89-        if name.startswith("DEFAULT_CONFIG"):
+90-            default_cfg = getattr(mod, name)
+91-            break
+92-    return mod, daemon_cls, build_fn, default_cfg
+93-
+94-
+95:def load_base_cfg(config_path: str) -> dict:
+96-    return json.loads(Path(config_path).read_text(encoding="utf-8"))
+97-
+98-
+99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+100-    cfg = copy.deepcopy(base_cfg)
+101-    cfg["state_dir"] = str(root)
+102-    cfg["sleep_threshold"] = 100000
+103-    return daemon_cls(root, cfg=cfg, idle_seconds=3600.0)
+104-
+105-
+106-# --------------------------------------------------------------------------
+107-# (a) P2 — 64 sealed redteam98 cases, in-process daemon, mailbox files.
+108-# Calls the sealed judge (fable_redteam98_runner.judge); the run_case driver
+109-# mirrors scripts/fable_loop102_marks.py run_case op-for-op (send /
+110-# send_bytes / restart / tear_tail / kill9_burst) with only the daemon
+111-# factory swapped.
+112-
+113-
+114-def _p2_process_pending(daemon, R98, root: Path, log: list) -> None:
+115-    for path in sorted((root / "inbox").glob("*.txt")):
+116-        before = R98.fact_count(daemon)
+117-        try:
+118-            daemon.process_file(path)
+119-            writes = R98.fact_count(daemon) - before
+120-            reply = (root / "outbox" / path.name).read_text(encoding="utf-8")
+121-            statuses = [r.get("status", r.get("kind", "?"))
+122-                        for r in daemon.loop.last_records]
+123-        except Exception as exc:  # noqa: BLE001 -- observed, never raised
+124-            reply = f"HARNESS-CAUGHT {type(exc).__name__}: {exc}"
+125-            statuses = ["EXCEPTION"]
+126-            writes = 0
+127-            try:
+128-                os.replace(path, root / "done" / path.name)
+129-            except OSError:
+[0m
+[0m$ [0mgit show origin/main:design/v3/60-listener/relation-names.txt | tr ' ' '\n' | grep -E "^(sister|dog|city|boss|mother|brother|cat|husband)$"; echo ---; git show origin/main:design/v3/60-listener/relation-names.txt | head -c 400; echo; echo ---; git show origin/main:scripts/claude_lis300_common.py | grep -n "THRESHOLD\|threshold" | head
+mother
+sister
+brother
+husband
+boss
+dog
+cat
+city
+---
+mother father parent sister brother sibling spouse wife husband partner child son daughter grandchild grandson granddaughter grandmother grandfather cousin aunt uncle friend best_friend neighbour boss colleague teacher coach doctor mentor apprentice rival envoy herald keeper scout warden owner pet dog cat employer occupation work_location school educated_at title city home hometown place_of_birth 
+---
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -iE "threshold\.txt|THRESHOLD" | head; git ls-tree -r --name-only origin/builder-outbox | grep -iE "threshold" | head
+handoff/queue/271-threshold.md
+runs/271-threshold/271-threshold.exit
+runs/271-threshold/271-threshold.go1.done
+runs/271-threshold/271-threshold.go1.err.txt
+runs/271-threshold/271-threshold.go1.reply.md
+runs/271-threshold/271-threshold.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile
+sys.path.insert(0, 'scripts')
+import claude_loop291_agent as B291
+import fable_loop90_agent as L90
+d = tempfile.mkdtemp(prefix='p291_')
+loop = B291.build_agent291({'state_dir': d})
+seq = [\"Mira's dog is Pip.\", \"So Mira's dog is Pip.\", \"Whose dog is Pip?\", \"Mira's dog is not Pip.\", \"Suppose Mira's dog is Pip.\", 'Hello there.', 'My sister is Mira.']
+for t in seq:
+    before = len(loop.nb.events)
+    r = loop.turn(t)
+    print(repr(t), '->', r, 'events+:', len(loop.nb.events)-before)
+print('TRIPLES:', L90.notebook_triples(loop.nb))
+" 2>&1 | tail -12
+"Mira's dog is Pip." -> ["Saved: Mira's dog is Pip."] events+: 3
+"So Mira's dog is Pip." -> ['I already have that.'] events+: 0
+'Whose dog is Pip?' -> ["Mira's dog is Pip. (worked out backwards)"] events+: 0
+"Mira's dog is not Pip." -> ["OK, Mira's dog is not Pip. I don't have another dog for Mira."] events+: 1
+"Suppose Mira's dog is Pip." -> ["OK, I'll treat that as pretend, so I won't save it."] events+: 0
+'Hello there.' -> ['Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"'] events+: 0
+'My sister is Mira.' -> ['Saved: your sister is Mira.'] events+: 3
+TRIPLES: [('USER', 'sister', 'Mira')]
+[0m
+[0m# [0mTodos
+[•] Write scripts/claude_lis310_agent.py (build_agent310 + Loop310Daemon + logging)
+[ ] Write scripts/claude_lis310_test.py (StubReader tests incl. chatdemo-load)
+[ ] Write scripts/claude_lis310_demo.py (server-build copy + model dir arg)
+[ ] Pilot runs + fix issues
+[ ] Write PASSMARKS.md, seal, append ledger P310.1/P310.2
+[ ] Registered test run + RESULTS.md + final report
+[0m
+[0m$ [0mtail -20 artifacts/fable-predictions-ledger.md; echo ===; grep -n "P29" artifacts/fable-predictions-ledger.md | tail -8
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude-own-o0a3-20260923; 5886 one-change WRONG readings from 553 ACD + 190 no-save gold facts of the o0a/o0a2 dev sets, judged v0/v1/learned-licensed with WE never saved) P1 m1 clean-through >=95% all rules; P2 m2 same; P3 m3 same; P4 m4 clean-through >=90% all rules; P5 m5 clean-blocked 100% v0+v1, clean-through 100% licensed; P6a me2we clean-blocked 100% all; P6b name2me clean-through >=95% all; P6c we2me clean base empty, raw through >=70% each; P7 m7 clean-through >=90% all; P8 m8 empty(55)/OTHER-valued(1)/WE-valued(9) blocked 100% all, rest(125) licensed 100%, v1 75-95%, v0 40-65%, ordered lic>=v1>=v0.
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permission audit, one registered CPU run, 5886 wrong readings, seals 2/2 OK post-run, summary byte-identical to pilot, no post-seal change) Pown0a3.1 10/10 HIT: m1/m2/m3 clean-through 100% all rules; m4 100% (n 109-132); m5 clean-blocked 100% v0+v1, clean-through 100% licensed; m6 me2we blocked 100% all, name2me 100% through all, we2me raw 75/95/100% (clean base empty by construction); m7 100% all 9 sub-cells; m8 structural 65/65 blocked everywhere, rest lic 100% / v1 87.2% / v0 52.0%. Pown0a3.2 PASS 0 crashes. Pown0a3.3 PASS table complete 11x3. Clean through-share (wrong on savable truths): v0 68.1%, v1 68.1%, licensed 96.7%. Only cue absence (m5, v0/v1), WE owner, and mode/empty/OTHER stop a wrong reading; all else needs the reader or an independent checker. See artifacts/claude-own-o0a3-20260923/RESULTS.md.
+- P270b.1 (2026-09-23, builder; exp 270b = 270's normaliser with keep-s fixed in front of the EAR on 261b's arm A, CPU+Mac local + BensPC GPU, sealed 18 files SEAL.sha256.txt artifacts/claude-type270b-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A261b+15: predicted A 30-37/40, A261b 5-15/40, margin +18-28; PASS ~60%. Dev 63/64 (+25); blind risk ear-vocab shapes + so-head holds.
+- P270b.2 (same) M2 casual_q ASK >= 12/15: predicted A 12-15/15; PASS ~75%. Dev 16/16 (A261b 3/16); blind risk odd question shapes.
+- P270b.3 (same) M3 lower_trap wrong saves <= 1: predicted A 0-3; PASS ~45%. Dev 3 (will-future-possessive d270b-087, check-tail passthrough d270b-093, is-a d270b-102).
+- P270b.4 (same) M4 clean 30/30 identical to A261b: predicted 30/30 by construction, dev 24/24; PASS ~95%.
+- P270b.5 (same) M5 0 new wrong saves vs A261b: predicted 0-2; PASS ~55%. Dev 1 (087 span-difference class).
+- P270b.6 (same) M6 median added normaliser time <= 20 ms: predicted ~0.01-0.5 ms (dev median 0.0094); PASS ~99%.
+- P270b.7 (same) overall registered PASS: predicted ~10%. Needs M1+M2+M3+M5 together.
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+zsh:1: == not found
+[0m
+[0m← [0mWrite scripts/claude_lis310_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -287,17 +287,16 @@
+         return finish(say or NOT_PLAIN310,
+                       {"turn": t, "prev": prev, "frame": None,
+                        "confs": None, "decision": "pending-yes",
+                        "wrote": wrote, "blocked": 0})
+-    if yn in NO310 or True:
++    if yn in NO310:
+         loop.lis310_pending = None
+-        if yn not in NO310:
+-            pass  # non-yes, non-no: drop pending, process normally
+-        else:
+-            return finish(DROPPED310,
+-                          {"turn": t, "prev": prev, "frame": None,
+-                           "confs": None, "decision": "pending-no",
+-                           "wrote": [], "blocked": 0})
++        return finish(DROPPED310,
++                      {"turn": t, "prev": prev, "frame": None,
++                       "confs": None, "decision": "pending-no",
++                       "wrote": [], "blocked": 0})
++    loop.lis310_pending = None  # any other answer drops it, then
++    # fall through and process this turn normally.
+ # -- reader + compiler
+ frame, confs, _raw, ms = reader.read(t, prev)
+ try:
+     conf_list = list(confs) if confs is not None else []
+
+[0m
+[0m$ [0mgrep -n "def process_file" -A 25 scripts/fable_daemon74_run.py | head -35
+146:    def process_file(self, path: Path) -> dict:
+147-        try:
+148-            text = path.read_text(encoding="utf-8")
+149-        except OSError:
+150-            return {"event": "turn-skipped", "file": path.name}
+151-        said = self.loop.turn(text)  # notebook append (fsync) happens INSIDE, before we reply
+152-        reply = " ".join(said) if said else "(nothing to say)"
+153-        _atomic_write(self.outbox / path.name, reply + "\n")  # reply durable BEFORE ...
+154-        os.replace(path, self.done / path.name)  # ... the input is moved away
+155-        record = {"t": _now_iso(), "event": "turn", "file": path.name,
+156-                  "turn_text": text.strip()[:200], "reply": reply[:500],
+157-                  "turn_count": int(self.loop.counters.get("turns", 0)),
+158-                  "notebook_events": len(self.loop.nb.events)}
+159-        _append_log(self.log_path, record)
+160-        return record
+161-
+162-    # ------------------------------------------------ main loop
+163-    def run(self) -> int:
+164-        for stale in self.outbox.glob("*.tmp*"):  # half-written replies from a killed run
+165-            try:
+166-                stale.unlink()
+167-            except OSError:
+168-                pass
+169-        status = self.boot_status()
+170-        _atomic_write(self.status_path, json.dumps(status, indent=1, sort_keys=True))
+171-        _append_log(self.log_path, {"t": _now_iso(), "event": "boot", **status})
+[0m
+[0m← [0mWrite scripts/claude_lis310_test.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_lis310_demo.py
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_lis310_agent.py (build_agent310 + Loop310Daemon + logging)
+[✓] Write scripts/claude_lis310_test.py (StubReader tests incl. chatdemo-load)
+[✓] Write scripts/claude_lis310_demo.py (server-build copy + model dir arg)
+[•] Pilot runs + fix issues
+[ ] Write PASSMARKS.md, seal, append ledger P310.1/P310.2
+[ ] Registered test run + RESULTS.md + final report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_test.py 2>&1 | tail -30
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py", line 70, in <module>
+    import claude_lis310_agent as A310  # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py", line 373
+    def _reader_from_cfg310(c
+                           ^
+SyntaxError: '(' was never closed
+[0m
+[0m→ [0mRead scripts/claude_lis310_agent.py[90m [offset=330][0m
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -369,6 +369,121 @@
+                      "teach/correct doorway; me stored as USER)")
+     return loop
+ 
+ 
+-def _reader_from_cfg310(c
+-...[truncated 3885 chars]
+\ No newline at end of file
++def _reader_from_cfg310(cfg: dict):
++    liscfg = (cfg or {}).get("lis310", {}) or {}
++    if liscfg.get("reader") is not None:
++        return liscfg["reader"], float(liscfg.get("threshold",
++                                                  DEFAULT_THRESHOLD310))
++    model_dir = liscfg.get("model_dir")
++    if model_dir:
++        import claude_lis300_read as READ  # noqa: E402 (needs weights)
++
++        return READ.Reader(model_dir), float(liscfg.get(
++            "threshold", DEFAULT_THRESHOLD310))
++    raise RuntimeError("lis-310 needs a reader: set cfg['lis310']['reader'] "
++                       "or cfg['lis310']['model_dir']")
++
++
++def build_agent310(cfg: dict | None = None):
++    """291 base + the listener turn wrapper. cfg['lis310'] keys: reader (a
++    StubReader in tests, a lis-300 Reader in production), model_dir,
++    threshold (default 0.99)."""
++    cfg = dict(DEFAULT_CONFIG310, **(cfg or {}))
++    loop = B291.build_agent291(cfg)
++    reader, threshold = _reader_from_cfg310(cfg)
++    liscfg = cfg.get("lis310", {}) or {}
++    install_turn310(loop, reader,
++                    threshold=liscfg.get("threshold", threshold))
++    t = vars(loop).get("turn")
++    if getattr(t, "__name__", "") != "turn310":
++        raise RuntimeError("310: turn310 not installed")
++    if getattr(loop.turn310_inner, "__name__", "") != "turn291":
++        raise RuntimeError("310: turn291 not under turn310")
++    return loop
++
++
++class Classes310Mixin:
++    """Daemon mixin: 291 daemon init, then the 310 listener wrapper."""
++
++    def __init__(self, *args, **kwargs):
++        super().__init__(*args, **kwargs)
++        cfg = kwargs.get("cfg", None)
++        if cfg is None and len(args) >= 2:
++            cfg = args[1]
++        reader, threshold = _reader_from_cfg310(dict(cfg or {}))
++        liscfg = (dict(cfg or {}).get("lis310", {}) or {})
++        install_turn310(self.loop, reader,
++                        threshold=liscfg.get("threshold", threshold))
++
++
++class Loop310Daemon(Classes310Mixin, B291.Loop291Daemon):
++    """Loop291Daemon with the lis-300 listener turn wrapper installed."""
++
++
++assert Classes310Mixin.__mro__[0].__name__ == "Classes310Mixin"
++
++DEFAULT_CONFIG310: dict = copy.deepcopy(B291.DEFAULT_CONFIG291)
++DEFAULT_CONFIG310["daemon"]["module"] = (
++    "Loop310Daemon (scripts/claude_lis310_agent.py) over Loop291Daemon "
++    "with the lis-300 listener turn wrapper (reader + write compiler)")
++DEFAULT_CONFIG310["lis310"] = {
++    "base": "loop291 (scripts/claude_loop291_agent.py, builder-outbox)",
++    "reader": None,
++    "model_dir": None,
++    "threshold": DEFAULT_THRESHOLD310,
++    "threshold_note": ("lis-300 THRESHOLD.txt default until published; "
++                       "no THRESHOLD.txt on origin/main as of 2026-09-23"),
++    "me_subject": ("owner 'me' is stored as subject USER, exactly how the "
++                   "base stores 'my' facts (probed: ('USER','sister','Mira'))"),
++    "hook": "turn310 outside turn291 (outermost instance wrapper)",
++    "log": LOG_NAME310,
++}
++DEFAULT_CONFIG310["merge310"] = {
++    "base": "loop291 (scripts/claude_loop291_agent.py)",
++    "added": ["lis-300 reader (MiniCPM5-1B, lis300_read.py) + write "
++              "compiler (lis300_compiler.py), outermost turn310 wrapper"],
++    "instance": ["turn310(turn291(turn260(turn224c(turn224(class turn))))"],
++}
++
++
++def main(argv=None) -> int:
++    ap = argparse.ArgumentParser(description="lis-310 agent (291+listener)")
++    ap.add_argument("--config", default=None)
++    ap.add_argument("--write-config", default=None)
++    ap.add_argument("--daemon", action="store_true")
++    ap.add_argument("--dir", default=None)
++    ap.add_argument("--idle-seconds", type=float, default=30.0)
++    ap.add_argument("--once", default=None)
++    ap.add_argument("--state-dir", default=None)
++    ap.add_argument("--model", default=None)
++    ap.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD310)
++    args = ap.parse_args(argv)
++    if args.write_config:
++        out = copy.deepcopy(DEFAULT_CONFIG310)
++        out.pop("lis310", None)
++        Path(args.write_config).write_text(json.dumps(out, indent=1),
++                                            encoding="utf-8")
++        print("Wrote %s" % args.write_config)
++        return 0
++    cfg = copy.deepcopy(DEFAULT_CONFIG310)
++    if args.config:
++        cfg.update(json.loads(Path(args.config).read_text(encoding="utf-8")))
++    if args.model:
++        cfg["lis310"] = dict(cfg.get("lis310", {}), model_dir=args.model,
++                             threshold=args.threshold)
++    if args.daemon or (args.dir and not args.once):
++        if not args.dir:
++            ap.error("--daemon needs --dir")
++        return Loop310Daemon(args.dir, cfg=cfg,
++                             idle_seconds=args.idle_seconds).run()
++    if args.once:
++        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
++        print(" ".join(build_agent310(cfg).turn(args.once)), flush=True)
++        return 0
++    ap.print_help()
++    return 0
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_test.py 2>&1 | tail -30
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ["Just to check: is Mira's's dog Pip?"]
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py", line 327, in main
+    detail = fn()
+             ^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py", line 207, in t3b_askback_no
+    assert r1 == ["Just to check: is Mira's dog Pip?"], r1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ["Just to check: is Mira's's dog Pip?"]
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py", line 327, in main
+    detail = fn()
+             ^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py", line 230, in t5_check
+    assert any("Pip" in l or "already" in l for l in r2), r2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ["Okay, I won't save that since it isn't a plain fact."]
+lis-310 unit tests (StubReader, threshold 0.99)
+PASS T1 two-facts-save-2 :: saved=2 reply="Saved: USER's sister is Mira. Saved: USER's sister is Tal. (I also have Mira.)"
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+FAIL T3a askback-yes-saves-1 :: AssertionError(["Just to check: is Mira's's dog Pip?"])
+FAIL T3b askback-no-saves-0 :: AssertionError(["Just to check: is Mira's's dog Pip?"])
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+FAIL T5 check-answered-saves-0 :: AssertionError(["Okay, I won't save that since it isn't a plain fact."])
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+PASS T9 chatdemo-load :: daemon=Loop310Daemon reply="Saved: USER's sister is Mira. Saved: USER's sister is Tal. (I also have Mira.)"
+summary: 7/10 passed
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile
+sys.path.insert(0, 'scripts')
+import claude_loop291_agent as B291
+d = tempfile.mkdtemp(prefix='p291_')
+loop = B291.build_agent291({'state_dir': d})
+orig = loop._act
+def spy(action, _a=orig):
+    print('ACT:', json.dumps(action, default=str)[:300])
+    import json as j
+    return _a(action)
+import json
+loop._act = spy
+print(loop.turn('My sister is Mira.'))
+print('ENT:', dict(loop.nb.entities))
+" 2>&1 | tail -6
+ACT: {"act": "teach", "name": "USER", "relation": "sister", "value": "Mira", "is_person": true, "structured": true, "stage": "loop166", "me166": true}
+['Saved: your sister is Mira.']
+ENT: {'E0001': 'USER', 'E0002': 'Mira'}
+[0m
+[0m$ [0mgrep -rn "me166" scripts/*.py | head -20
+scripts/claude_fix249_firstperson.py:25:     Me166 ask (me166 True, act "ask", name USER). Anything else -> the
+scripts/claude_fix249_firstperson.py:174:            and bool(a.get("me166")) and a.get("name") == USER249
+scripts/claude_fix249_firstperson.py:219:            event["said"] = [L166.rewrite_me166_reply(line, last[1])
+scripts/claude_loop221b_agent.py:313:            act["me166"] = True
+scripts/claude_loop237_agent.py:201:                act["me166"] = True
+scripts/fable_fix138h_m1pieces.py:180:    frozen = load_json(ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138h_m1pieces.py:186:        "166c", ROOT / "artifacts" / "fable-me166-20260922"
+scripts/fable_fix138h_m1pieces.py:191:    frozen = load_json(ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138h_m1pieces.py:195:        "166c-B", ROOT / "artifacts" / "fable-me166b-20260922"
+scripts/fable_fix138h_m1pieces.py:200:    frozen = load_json(ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138h_m1pieces.py:204:        "166c-C", ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138h_m1pieces.py:212:        "173-t1", ROOT / "artifacts" / "fable-me166-20260922"
+scripts/fable_fix138i_m1pieces.py:222:    cases_t1 = load_json(ROOT / "artifacts" / "fable-me166-20260922"
+scripts/fable_fix138i_m2.py:83:    frozen = json.loads((ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138i_m2.py:90:        "166c", ROOT / "artifacts" / "fable-me166-20260922"
+scripts/fable_fix138i_m2.py:94:    frozen = json.loads((ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138i_m2.py:98:        "166c-B", ROOT / "artifacts" / "fable-me166b-20260922"
+scripts/fable_fix138i_m2.py:102:    frozen = json.loads((ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138i_m2.py:106:        "166c-C", ROOT / "artifacts" / "fable-me166c-20260922"
+scripts/fable_fix138i_m2.py:114:        "173-t1", ROOT / "artifacts" / "fable-me166-20260922"
+[0m
+[0m$ [0msed -n '150,230p' scripts/claude_fix249_firstperson.py
+return None
+        if not _chain_resolves249(_user_index249(nb), rels):  # type: ignore[arg-type]
+            return None
+        wh = m.group(1).capitalize()
+        return {"text": f"{wh} is my {m.group(2).strip()}?",
+                "relations": rels, "rule": "whats-my"}
+    for rx, cands, wh in _MAP_RE249:
+        if rx.match(t) is None:
+            continue
+        mine = _user_index249(nb).get(USER249.lower(), {})
+        stored = [r for r in cands if mine.get(r)]
+        if len(stored) != 1:
+            return None  # none stored, or ambiguous: keep the original
+        rel = stored[0]
+        return {"text": f"{wh} is my {rel.replace('_', ' ')}?",
+                "relations": [rel], "rule": rx.pattern}
+    return None
+
+
+def _is_me_ask249(actions, relations) -> bool:
+    if not isinstance(actions, list) or len(actions) != 1:
+        return False
+    a = actions[0]
+    return (isinstance(a, dict) and a.get("act") == "ask"
+            and bool(a.get("me166")) and a.get("name") == USER249
+            and list(a.get("relations") or []) == list(relations))
+
+
+class FirstPerson249Mixin:
+    """Outermost ears stage: first-person questions -> Me166 "my" forms."""
+
+    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+        text = str(turn)
+        if not text.rstrip().endswith("?"):
+            return super().hear(turn)  # type: ignore[misc]
+        rw = rewrite249(text, getattr(self, "nb", None))
+        if rw is None:
+            return super().hear(turn)  # type: ignore[misc]
+        actions = super().hear(rw["text"])  # type: ignore[misc]
+        if _is_me_ask249(actions, rw["relations"]):
+            self.last249 = (text, rw["text"])
+            try:
+                self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+                    STAGE249, 1.0)
+            except AttributeError:
+                pass
+            return actions
+        return super().hear(turn)  # type: ignore[misc]
+
+
+class Render249Mixin:
+    """Loop-level render for 249-claimed turns only: the said lines get the
+    same Me166 rendering ("USER's city is X." -> "Your city is X.") that the
+    loop already applies to "my" questions, keyed on the rewritten text.
+    Every other turn passes through untouched."""
+
+    def _listening_tick(self):  # type: ignore[no-untyped-def]
+        ears = getattr(self, "_ears249", None)
+        if ears is not None:
+            ears.last249 = None
+        event = super()._listening_tick()  # type: ignore[misc]
+        last = getattr(ears, "last249", None) if ears is not None else None
+        if not last:
+            return event
+        ears.last249 = None
+        try:
+            turn = event.get("detail", {}).get("turn", "")
+            if turn != last[0]:
+                return event
+            event["said"] = [L166.rewrite_me166_reply(line, last[1])
+                             for line in event.get("said", [])]
+        except Exception:  # noqa: BLE001 -- never break the loop on render
+            pass
+        return event
+[0m
+[0m$ [0mgrep -rn "rewrite_me166_reply\|def turn" scripts/fable_fix138h_m1pieces.py scripts/fable_agent_loop.py scripts/fable_loop138j_agent.py 2>/dev/null | head; echo ===; grep -rn "rewrite_me166_reply" scripts/*.py | grep -v 138h | grep -v 138i | head
+scripts/fable_agent_loop.py:313:    def turn(self, text: str) -> list[str]:
+scripts/fable_loop138j_agent.py:554:    def turn(self, text: str) -> list[str]:
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -rln "rewrite_me166_reply" scripts/; sed -n '300,330p' scripts/fable_agent_loop.py; echo ====; sed -n '545,600p' scripts/fable_loop138j_agent.py
+scripts/fable_loop164b_agent.py
+scripts/fable_loop166_agent.py
+scripts/fable_loop138h_agent.py
+scripts/fable_loop173_agent.py
+scripts/claude_fix249_firstperson.py
+scripts/fable_fix173_username.py
+            event = self._work_tick()
+        else:
+            event = self._thinking_tick()
+        self.mode = event["mode"]
+        self._save()
+        return event
+
+    def run_until_idle(self, limit: int = MAX_TICKS_PER_RUN) -> list[dict]:
+        events = []
+        while self.busy() and len(events) < limit:
+            events.append(self.step())
+        return events
+
+    def turn(self, text: str) -> list[str]:
+        """Convenience: one English turn in, the sentences the loop says back out."""
+        self.submit(text)
+        said: list[str] = []
+        for event in self.run_until_idle():
+            said.extend(event["said"])
+        return said
+
+    def _event(self, mode: str, detail: dict, said: list[str]) -> dict:
+        return {"tick": self.tick, "mode": mode, "detail": detail, "said": said,
+                "log_size": len(self.experience), "notebook_events": len(self.nb.events)}
+
+    # ----------------------------------------------------------------- LISTENING
+    def _listening_tick(self) -> dict:
+        text = self.inbox.pop(0)
+        self.counters["turns"] += 1
+        records = [self._act(action) for action in self.ears.hear(text)]
+        said = [line for line in (self.mouth.say(record) for record in records) if line]
+zsh:1: === not found
+[0m
+[0m$ [0mgrep -n "rewrite_me166_reply\|me166\|USER" scripts/fable_loop166_agent.py | head -20; echo ===; grep -n "rewrite_me166_reply\|me166" scripts/fable_loop138h_agent.py | head -20
+7:the reserved notebook entity USER_KEY="USER" through the canonical save/hop
+19:the me parser (USER -> your/Your, unknown -> "I don't know your <rel> yet").
+26:    --config artifacts/fable-me166-20260922/loop166-config.json
+57:def rewrite_me166_reply(line: str, turn: str) -> str:
+58:    """Render a said line for a me-claimed turn without the raw USER key.
+63:    if M166.USER_KEY not in line:
+67:    if line == "I don't know anyone called %s." % M166.USER_KEY:
+69:    out = line.replace("%s's" % M166.USER_KEY, "your")
+70:    if (line.startswith("%s's " % M166.USER_KEY)
+71:            or line.startswith("Saved: %s's " % M166.USER_KEY)):
+76:    out = out.replace(M166.USER_KEY, "you")  # last resort: never leak raw
+94:            event["said"] = [rewrite_me166_reply(line, turn)
+105:    "reserved notebook entity USER through the canonical save/hop path; "
+zsh:1: == not found
+[0m
+[0m$ [0msed -n '50,104p' scripts/fable_loop166_agent.py
+T162.TheName162Mixin, F135.OfficeholderGuardMixin,
+                  L150.Loop150Ears):
+    """Loop162bEars + outermost exp-166 first-person teach/ask stage."""
+
+    name = "loop166-me"
+
+
+def rewrite_me166_reply(line: str, turn: str) -> str:
+    """Render a said line for a me-claimed turn without the raw USER key.
+
+    Only called for turns claimed by this experiment's parser; lines without
+    the raw key pass through unchanged.
+    """
+    if M166.USER_KEY not in line:
+        return line
+    q = M166.parse_me_ask(turn)
+    chain = M166.chain_display(q["relations"]) if q else ""
+    if line == "I don't know anyone called %s." % M166.USER_KEY:
+        return "I don't know your %s yet." % chain
+    out = line.replace("%s's" % M166.USER_KEY, "your")
+    if (line.startswith("%s's " % M166.USER_KEY)
+            or line.startswith("Saved: %s's " % M166.USER_KEY)):
+        out = out[0].upper() + out[1:]
+    if (out.startswith("I don't know your ") and out.endswith(".")
+            and not out.endswith(" yet.")):
+        out = out[:-1] + " yet."
+    out = out.replace(M166.USER_KEY, "you")  # last resort: never leak raw
+    return out
+
+
+class Loop166AgentLoop(L162B.Loop162bAgentLoop):
+    """Loop162bAgentLoop + first-person reply rendering (this file only)."""
+
+    def _listening_tick(self):  # type: ignore[no-untyped-def]
+        event = super()._listening_tick()
+        try:
+            turn = event.get("detail", {}).get("turn", "")
+        except Exception:  # noqa: BLE001 -- never break the loop on render
+            return event
+        claimed = (M166.parse_me_teach(turn) is not None
+                   or M166.parse_me_ask(turn) is not None)
+        if not claimed:
+            return event
+        try:
+            event["said"] = [rewrite_me166_reply(line, turn)
+                             for line in event.get("said", [])]
+        except Exception:  # noqa: BLE001
+            pass
+        return event
+
+
+DEFAULT_CONFIG166: dict = copy.deepcopy(L162B.DEFAULT_CONFIG162B)
+DEFAULT_CONFIG166["ears"]["stand_in"] = (
+    "Loop166Ears (loop162b + exp-166 first-person stage: 'My <R> is <V>. '"
+    "teaches and 'Who/What/Where is|are my <chain>?' asks map to the "
+[0m
+[0m$ [0mgrep -n "^OK\|^AMBIGUOUS\|^CONFLICT\|^NOT_FOUND\|OK =\|AMBIGUOUS =" scripts/fable_notebook_contract.py | head; grep -n "USER_KEY" scripts/fable_me166*.py 2>/dev/null | head -3; ls scripts/ | grep me166
+65:OK = "OK"
+67:DUPLICATE_OK = "DUPLICATE_OK"
+68:CONFLICT = "CONFLICT"
+69:AMBIGUOUS = "AMBIGUOUS"
+zsh:1: no matches found: scripts/fable_me166*.py
+[0m
+[0m$ [0mgrep -rn "USER_KEY" scripts/fable_loop166_agent.py | head -3; grep -n "def resolve" -A 12 scripts/fable_notebook_contract.py | head -20; grep -n "NOT_FOUND\|MISSING" scripts/fable_notebook_contract.py | head -5
+scripts/fable_loop166_agent.py:7:the reserved notebook entity USER_KEY="USER" through the canonical save/hop
+scripts/fable_loop166_agent.py:63:    if M166.USER_KEY not in line:
+scripts/fable_loop166_agent.py:67:    if line == "I don't know anyone called %s." % M166.USER_KEY:
+235:    def resolve(self, name: str) -> Result:
+236-        ids = self.aliases.get(_norm(name), [])
+237-        if not ids:
+238-            return Result(UNKNOWN_ENTITY, {"name": name})
+239-        if len(ids) > 1:
+240-            choices = ", ".join(f"{self.entities[i]} ({i})" for i in ids)
+241-            return Result(AMBIGUOUS, {"name": name, "choices": choices, "ids": list(ids)})
+242-        return Result(OK, {"entity_id": ids[0], "answer": self.entities[ids[0]]})
+243-
+244-    def current(self, entity_id: str, relation: str) -> list[dict]:
+245-        """Active answering facts for (entity, relation), best source first."""
+246-        rows = [
+247-            fact for fact_id, fact in self.facts.items()
+--
+463:    def resolve(self, name):
+464-        key = _norm(name)
+465-        return Result(OK, {"entity_id": key}) if key in self.names else Result(UNKNOWN_ENTITY)
+466-
+467-    def ask(self, name, relations):
+468-        key = _norm(name)
+24:    deterministic templates: OK, MISSING_FACT, BROKEN_CHAIN, AMBIGUOUS, UNKNOWN_ENTITY.
+71:MISSING_FACT = "MISSING_FACT"
+82:    MISSING_FACT: "I don't know {subject}'s {relation}.",
+411:                return Result(MISSING_FACT, {"subject": self.entities[entity_id],
+473:                return Result(MISSING_FACT)
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -75,8 +75,10 @@
+ 
+ import claude_loop291_agent as B291  # noqa: E402 (base, read-only)
+ import fable_agent_loop as A  # noqa: E402 (PERSON_RELATIONS, read-only)
+ import fable_loop209_agent as W209  # noqa: E402 (209 screen, read-only)
++import fable_loop166_agent as L166  # noqa: E402 (me render, read-only)
++import fable_notebook_contract as C  # noqa: E402 (statuses, read-only)
+ import claude_fix252_correct as F252  # noqa: E402 (252b screen fn, read-only)
+ 
+ # ---------------------------------------------------------------- constants
+ 
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -86,9 +86,9 @@
+ USER_SUBJECT310 = "USER"  # how the base stores "my" facts (see docstring)
+ LOG_NAME310 = "lis310_log.jsonl"
+ 
+ WHOSE_FMT310 = "Whose {rel} is {value}, yours or someone else's?"
+-ASKBACK_FMT310 = "Just to check: is {owner}'s {rel} {value}?"
++ASKBACK_FMT310 = "Just to check: is {owner} {rel} {value}?"
+ UNPARSED310 = "Sorry, I didn't catch that. Could you say it another way?"
+ NOT_PLAIN310 = "Okay, I won't save that since it isn't a plain fact."
+ DROPPED310 = "Okay, I won't save that."
+ BLOCKED_ACTS310 = ("teach", "correct")
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -119,9 +119,9 @@
+ holds a different taught value, else teach."""
+ nb = loop.nb
+ try:
+     found = nb.resolve(name)
+-    eid = found.detail.get("entity_id") if found.status == "ok" else None
++    eid = found.detail.get("entity_id") if found.status == C.OK else None
+ except Exception:  # noqa: BLE001 -- doorway decides; default to teach
+     return "teach"
+ if eid is None:
+     return "teach"
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -137,12 +137,13 @@
+         return "teach"
+     return "teach"
+ 
+ 
+-def save_fact310(loop, owner: str, rel: str, val: str):
++def save_fact310(loop, owner: str, rel: str, val: str, turn: str = ""):
+     """One listener fact through the notebook doorway.
+ 
+-    Returns (status, text): status "saved" (text = base mouth confirmation),
++    Returns (status, text): status "saved" (text = base mouth confirmation,
++    with the base's own Me166 me-render so USER reads as your),
+     "screen209" or "screen252b" (text None) when a base screen rejects it.
+     Screens: 209 screen_action209, then 252b value_ok252 (installed screen).
+     """
+     name = USER_SUBJECT310 if str(owner) == "me" else str(owner)
+@@ -165,8 +166,12 @@
+     try:
+         text = loop.mouth.say(rec)
+     except Exception:  # noqa: BLE001
+         text = ""
++    try:
++        text = L166.rewrite_me166_reply(text or "", turn)
++    except Exception:  # noqa: BLE001
++        pass
+     return "saved", (text or "")
+ 
+ 
+ def _save_all310(loop, facts: list[dict]):
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -173,9 +173,9 @@
+         pass
+     return "saved", (text or "")
+ 
+ 
+-def _save_all310(loop, facts: list[dict]):
++def _save_all310(loop, facts: list[dict], turn: str = ""):
+     """All-or-nothing doorway save of compiled write facts.
+ 
+     Returns (wrote_list, reply_text, screen_hit): wrote_list of (s,r,v);
+     on any screen rejection nothing is saved and screen_hit names it.
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -199,9 +199,10 @@
+         return [], "", "screen252b"
+ wrote, texts = [], []
+ for f in facts:
+     st, text = save_fact310(loop, str(f.get("owner", "")),
+-                            str(f.get("rel")), str(f.get("value")))
++                            str(f.get("rel")), str(f.get("value")),
++                            turn)
+     if st != "saved":
+         continue  # probe above passed; keep going
+     wrote.append([str(f.get("owner", "")), str(f.get("rel")),
+                   str(f.get("value"))])
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -218,13 +218,45 @@
+     except OSError:
+         pass
+ 
+ 
++def _would_write310(loop, action: dict) -> bool:
++    """True if a teach/correct action would mutate the notebook.
++
++    A teach/correct of the exact triple already actively taught is a no-op
++    (the base answers "I already have that." with 0 events); it may run.
++    Anything that would add, change or create (new subject, new relation,
++    different value) is swallowed. Conservative: on any doubt, swallow.
++    """
++    try:
++        name = str(action.get("name", ""))
++        rel = str(action.get("relation", ""))
++        val = str(action.get("value", ""))
++        if not name or not rel:
++            return True
++        found = loop.nb.resolve(name)
++        if found.status == C.AMBIGUOUS:
++            return False  # doorway clarifies; no write
++        if found.status != C.OK:
++            return True  # unknown subject: doorway creates -> writes
++        eid = found.detail.get("entity_id")
++        for fact in loop.nb.facts.values():
++            if (fact.get("subject") == eid and fact.get("relation") == rel
++                    and fact.get("source") == "taught"
++                    and loop.nb.active(fact["fact_id"])):
++                return _display310(loop.nb, fact["value"]) != val
++        return True  # new (subject, relation): doorway writes
++    except Exception:  # noqa: BLE001
++        return True
++
++
+ def _base_pass_blocked310(loop, text: str):
+     """Run the base turn chain with TEACH/CORRECT writes blocked.
+ 
+-    Returns (reply_list, blocked_actions, events_delta). Blocked actions are
+-    swallowed as silent note records so the mouth says nothing for them.
++    Returns (reply_list, blocked_actions, events_delta). A teach/correct
++    that would mutate the notebook is swallowed as a silent note record so
++    the mouth says nothing for it; a no-op teach/correct (fact already
++    stored) runs so the base's own "already have" reply survives.
+     """
+     blocked: list = []
+     events0 = len(loop.nb.events)
+     orig_act = loop._act
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -262,10 +262,11 @@
+ orig_act = loop._act
+ 
+ def blocking_act(action, _a=orig_act):
+     if isinstance(action, dict) and action.get("act") in BLOCKED_ACTS310:
+-        blocked.append(action)
+-        return {"kind": "note", "text": ""}
++        if _would_write310(loop, action):
++            blocked.append(action)
++            return {"kind": "note", "text": ""}
+     return _a(action)
+ 
+ loop._act = blocking_act
+ try:
+
+[0m
+[0m$ [0mgrep -n "_save_all310(loop" scripts/claude_lis310_agent.py
+177:def _save_all310(loop, facts: list[dict], turn: str = ""):
+326:                wrote, say, _screen = _save_all310(loop, [fact])
+354:            wrote, say, screen = _save_all310(loop, list(dec["write"]))
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -322,9 +322,9 @@
+ yn = _norm_yesno(t)
+ if yn in YES310:
+     loop.lis310_pending = None
+     fact = pend["fact"]
+-    wrote, say, _screen = _save_all310(loop, [fact])
++    wrote, say, _screen = _save_all310(loop, [fact], t)
+     loop.lis310_stats["writes"] += len(wrote)
+     return finish(say or NOT_PLAIN310,
+                   {"turn": t, "prev": prev, "frame": None,
+                    "confs": None, "decision": "pending-yes",
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_agent.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_agent.py
+@@ -350,9 +350,9 @@
+ if not isinstance(frame, dict):
+     return finish(UNPARSED310, dict(base_row, decision="unparsed",
+                                     wrote=[], blocked=0))
+ if dec.get("write"):
+-    wrote, say, screen = _save_all310(loop, list(dec["write"]))
++    wrote, say, screen = _save_all310(loop, list(dec["write"]), t)
+     loop.lis310_stats["writes"] += len(wrote)
+     if screen is not None:
+         return finish(NOT_PLAIN310,
+                       dict(base_row, decision="screen-" + screen,
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_test.py 2>&1 | tail -15
+lis-310 unit tests (StubReader, threshold 0.99)
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+PASS T9 chatdemo-load :: daemon=Loop310Daemon reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+summary: 10/10 passed
+[0m
+[0m← [0mEdit scripts/claude_lis310_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+@@ -210,8 +210,19 @@
+     assert r2 == ["Okay, I won't save that."], r2
+     return "ask + no -> 0 triples"
+ 
+ 
++def t3c_askback_dropped():
++    loop, d = fresh(dict(T3, **T6))
++    r1 = loop.turn("Mira's dog is Pip.")
++    assert r1 == ["Just to check: is Mira's dog Pip?"], r1
++    r2 = loop.turn("Mira's dog is Pip.")  # not yes/no: drops pending...
++    assert triples(loop) == [["Mira", "dog", "Pip"]], (r2, triples(loop))
++    r3 = loop.turn("Whose dog is Pip?")  # ...and the chat goes on
++    assert "Pip" in " ".join(r3), (r2, r3)
++    return "non-yes drops pending, later turns normal"
++
++
+ def t4_negation():
+     loop, d = fresh(T4)
+     r = loop.turn("Mira doesn't have a dog.")
+     assert triples(loop) == [], (r, triples(loop))
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+@@ -211,16 +211,22 @@
+     return "ask + no -> 0 triples"
+ 
+ 
+ def t3c_askback_dropped():
+-    loop, d = fresh(dict(T3, **T6))
++    table = dict(T3)
++    table["My sister is Mira."] = (
++        {"act": "STATE", "facts": [
++            {"owner": "me", "rel": "sister", "value": "Mira",
++             "mode": "ASSERT"}],
++         "ask": None}, [HI], "stub", 0.4)
++    loop, d = fresh(table)
+     r1 = loop.turn("Mira's dog is Pip.")
+     assert r1 == ["Just to check: is Mira's dog Pip?"], r1
+-    r2 = loop.turn("Mira's dog is Pip.")  # not yes/no: drops pending...
+-    assert triples(loop) == [["Mira", "dog", "Pip"]], (r2, triples(loop))
+-    r3 = loop.turn("Whose dog is Pip?")  # ...and the chat goes on
+-    assert "Pip" in " ".join(r3), (r2, r3)
+-    return "non-yes drops pending, later turns normal"
++    # not yes/no: drops the pending dog fact, processes this turn normally
++    r2 = loop.turn("My sister is Mira.")
++    assert triples(loop) == [["USER", "sister", "Mira"]], (r2, triples(loop))
++    assert any("Saved" in l for l in r2), r2
++    return "non-yes drops pending, next turn saves normally"
+ 
+ 
+ def t4_negation():
+     loop, d = fresh(T4)
+
+[0m
+[0m← [0mEdit scripts/claude_lis310_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis310_test.py
+@@ -326,8 +326,9 @@
+ TESTS = [("T1 two-facts-save-2", t1_two_facts),
+          ("T2 whose-ask", t2_whose),
+          ("T3a askback-yes-saves-1", t3a_askback_yes),
+          ("T3b askback-no-saves-0", t3b_askback_no),
++         ("T3c askback-dropped-on-other", t3c_askback_dropped),
+          ("T4 negation-saves-0", t4_negation),
+          ("T5 check-answered-saves-0", t5_check),
+          ("T6 question-answered", t6_question),
+          ("T7 blocked-five-zero-writes", t7_blocked_five),
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_test.py 2>&1 | tail -15
+lis-310 unit tests (StubReader, threshold 0.99)
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+PASS T3c askback-dropped-on-other :: non-yes drops pending, next turn saves normally
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+PASS T9 chatdemo-load :: daemon=Loop310Daemon reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+summary: 11/11 passed
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_demo.py --reader-stub --state /tmp/lis310demo1 --once "Hello there." 2>&1 | tail -3
+Hi! Teach me like "Tom's boss is Ann." Ask me like "Who is Tom's boss?"
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis310-20260923 && uptime && df -g / | head -3
+7:30  up 2 days, 23:19, 4 users, load averages: 86.04 94.63 89.27
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 136150520    0%   /
+[0m
+[0m← [0mWrite artifacts/claude-lis310-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_lis310_agent.py scripts/claude_lis310_test.py scripts/claude_lis310_demo.py artifacts/claude-lis310-20260923/PASSMARKS.md > artifacts/claude-lis310-20260923/SEAL.sha256.txt && cat artifacts/claude-lis310-20260923/SEAL.sha256.txt
+1a816bbcbc18da5eb95583022b8319d157f38b5d0a72ec0cf69c8059f59c6e4a  scripts/claude_lis310_agent.py
+e885343abf78ff1c95d0f62b66e417fa63dd3cc6a725f4b14fb705a7bcb7570e  scripts/claude_lis310_test.py
+ff411f99ca9a04186d8a853b056f83fefb14bae401476e7ce953343ad21316cb  scripts/claude_lis310_demo.py
+e34445cd41065557411a564e4eaaaa8617c0e7ab928eb9c5b934c5f6e3f269e6  artifacts/claude-lis310-20260923/PASSMARKS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 291, then 0 events growth under 310).
+EOF
+tail -3 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader thresho
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow noteboo
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_lis310_agent.py (build_agent310 + Loop310Daemon + logging)
+[✓] Write scripts/claude_lis310_test.py (StubReader tests incl. chatdemo-load)
+[✓] Write scripts/claude_lis310_demo.py (server-build copy + model dir arg)
+[✓] Pilot runs + fix issues
+[✓] Write PASSMARKS.md, seal, append ledger P310.1/P310.2
+[•] Registered test run + RESULTS.md + final report
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis310_test.py 2>&1 | tail -15
+7:30  up 2 days, 23:19, 4 users, load averages: 89.29 94.77 89.45
+lis-310 unit tests (StubReader, threshold 0.99)
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+PASS T3c askback-dropped-on-other :: non-yes drops pending, next turn saves normally
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+PASS T8 unparsed-saves-0 :: reply exact
+PASS T9 chatdemo-load :: daemon=Loop310Daemon reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+summary: 11/11 passed
+[0m
+[0m$ [0mshasum -c artifacts/claude-lis310-20260923/SEAL.sha256.txt; ls ~/premonition-models/lis300-merged/ 2>&1; ls /tmp/lis310demo1/outbox/ 2>&1
+scripts/claude_lis310_agent.py: OK
+scripts/claude_lis310_test.py: OK
+scripts/claude_lis310_demo.py: OK
+artifacts/claude-lis310-20260923/PASSMARKS.md: OK
+ls: /Users/ben-hannan/premonition-models/lis300-merged/: No such file or directory
+m0000.txt
+[0m
+[0m← [0mWrite artifacts/claude-lis310-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P310.2 OUTCOME (same) 0 base-chain writes over the 5 T7 turns (each verified in-run to grow notebook events on raw 291 first, then 0 events/0 triples under 310). Hook turn310 outside turn291; me stored as USER with Me166 render; 209/252b screens on every listener save (0 hits); every turn in lis310_log.jsonl.
+EOF
+git status --short | head -20
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+[0m
+[0m$ [0mgit status --short | grep -E "lis310|ledger"
+M artifacts/fable-predictions-ledger.md
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+[0m
+[0m$ [0mgit status --short | grep -E "artifacts/claude-lis310"; git check-ignore artifacts/claude-lis310-20260923/RESULTS.md; ls artifacts/claude-lis310-20260923/
+artifacts/claude-lis310-20260923/RESULTS.md
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_lis310_agent.py (build_agent310 + Loop310Daemon + logging)
+[✓] Write scripts/claude_lis310_test.py (StubReader tests incl. chatdemo-load)
+[✓] Write scripts/claude_lis310_demo.py (server-build copy + model dir arg)
+[✓] Pilot runs + fix issues
+[✓] Write PASSMARKS.md, seal, append ledger P310.1/P310.2
+[✓] Registered test run + RESULTS.md + final report
+[0m
