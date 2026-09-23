@@ -1,0 +1,4 @@
+# 263: no stored subject may contain a comma (director, 2026-09-23)
+Gap found in the director's held-out probe of 260 (2026-09-22): an unlisted opener ("Yo," + a possessive teach) still stores the junk subject "Yo, X" on both 138m and 260. Listing openers can't close this, because people keep inventing new ones.
+One change, on the 260 arm: a write guard. When a TEACH would store a subject that contains a comma, retry on the text after the last comma of the leading segment, using the same head. Save only if the retry's subject has no comma and the head gives a save. Otherwise use the head's save-failure reply with 0 writes. Values are not guarded (a value can correctly hold a comma, like "Tollan, Vesk"). Questions never write.
+Registered on a fresh blind panel, commapanel263. openpanel260 is re-run as a no-regression check.
