@@ -19,7 +19,8 @@ Rule: Claude directs, Muse Spark agents build/research (MiMo fallback). Every re
 
 ## Verified today (2026-09-21)
 ### 02:55 (2026-09-23): 261b span guard: registered FAIL, verified
-- Seals: 261b build 15/15 OK; earpanel261b 2/2 OK (from builder-outbox). Order per the builder log: own seal, then panel seal check, then each arm once. I could not see file-access times, so "never opened early" rests on the log.
+- Seals: 261b build 15/15 OK; earpanel261b 2/2 OK (from builder-outbox). Order per the builder log: own seal, then panel seal check, then each arm once. Checked in the builder's command log (runs/261b-build err.txt): its own seal is at log line 3981, and its first access to the panel folder is at line 4028 (ls + seal check), after the seal. Before that, it only listed folder names in artifacts/ (line 236). Run clean.
+- The 261 line is closed (261b was its one follow-up). The ear's meaning errors get new experiment numbers (264 onward).
 - My recount from panel261b_score.json rows (150): arm A M1 1, M2 9 wrong saves (bar 1, FAIL), M3 98/135 = 72.6% (FAIL), held back 23/135 = 17.0% (M3b FAIL), M4 38/40, 0 question writes. Matches RESULTS.md.
 - The guard did its job narrowly (7 of 8 holds correct; 1 false hold) but did not move M2 (9 vs A261's 16 on this panel, still far above 1). The wrong saves are meaning errors (job titles, relation-word values, appositive location), and R10 plural relatives recall is 4/20. Ruling 1 converted 0 frames on this panel.
 - Panel gap: earpanel261b has 0 particle names (the writer used the pre-R15 spec).
