@@ -196,6 +196,12 @@ and writes only what every grammar reading supports. That grammar would be the r
 answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
 rests on a number.
 
+**Update 2026-09-23 10:45 (after O0a/O0a2, board entry):** Ben ruled that "we/our" facts are never saved as the
+speaker's; the system asks whose they are. The literal-cue rule capped coverage (v0 67.6%; v1 89.7% on a set rich in
+plurals, 83.5% on the earlier natural set), so relations are **licensed by the ear's calibrated relation head**, with
+a cue in the turn as extra evidence and a higher threshold for cue-less facts (set on dev). Spans, modes, WE→ask and
+atomic writes stay hard rules. O0a3 measures which wrong readings each rule lets through.
+
 ### 4.2 Rule
 
 A fact is written only when **all** of these hold:
