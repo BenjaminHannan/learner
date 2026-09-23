@@ -1,0 +1,1059 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel 2>&1 | head -5; ls artifacts/claude-lis300-20260923/ 2>&1; echo "---"; ls -la artifacts/claude-lis300-20260923/ 2>&1; echo "---sizes---"; du -b artifacts/claude-lis300-20260923/* 2>&1; wc -c artifacts/claude-lis300-20260923/* 2>&1; echo "---uptime---"; uptime; echo "---df---"; df -g / 2>&1 | head -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+dev_sweep.txt
+panel_score_T0.json
+panel_score.json
+RESULTS.md
+SEAL-run.sha256.txt
+THRESHOLD.txt
+train_log.jsonl
+train_summary.json
+---
+total 112
+drwxr-xr-x@  10 ben-hannan  staff    320 Sep 23 08:52 .
+drwxr-xr-x@ 441 ben-hannan  staff  14112 Sep 23 08:51 ..
+-rw-------    1 ben-hannan  staff    809 Sep 23 08:40 dev_sweep.txt
+-rw-------    1 ben-hannan  staff    557 Sep 23 08:47 panel_score_T0.json
+-rw-------    1 ben-hannan  staff    520 Sep 23 08:47 panel_score.json
+-rw-r--r--    1 ben-hannan  staff   5445 Sep 23 08:52 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    407 Sep 23 08:40 SEAL-run.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   1691 Sep 23 08:40 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff  22149 Sep 23 08:40 train_log.jsonl
+-rw-------    1 ben-hannan  staff    589 Sep 23 08:40 train_summary.json
+---sizes---
+du: invalid option -- b
+usage: du [--libxo] [-Aclnx] [-H | -L | -P] [-g | -h | -k | -m]
+          [-a | -s | -d depth] [-B blocksize] [-I mask] [-t threshold]
+          [file ...]
+     809 artifacts/claude-lis300-20260923/dev_sweep.txt
+     557 artifacts/claude-lis300-20260923/panel_score_T0.json
+     520 artifacts/claude-lis300-20260923/panel_score.json
+    5445 artifacts/claude-lis300-20260923/RESULTS.md
+     407 artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+    1691 artifacts/claude-lis300-20260923/THRESHOLD.txt
+   22149 artifacts/claude-lis300-20260923/train_log.jsonl
+     589 artifacts/claude-lis300-20260923/train_summary.json
+   32167 total
+---uptime---
+ 9:56  up 3 days,  1:46, 4 users, load averages: 53.11 46.56 46.82
+---df---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102482760    0%   /
+[0m
+[0m$ [0mls artifacts/claude-lis300-20260923/dev/ 2>&1; echo "---SEAL---"; cat artifacts/claude-lis300-20260923/SEAL-run.sha256.txt; echo "---fetch---"; git fetch -q origin main 2>&1 | head -3; echo done
+ls: artifacts/claude-lis300-20260923/dev/: No such file or directory
+---SEAL---
+95368ef10a4cf4e239beb832e39d6f0882079726379e53a30fdc81e4d3a43740  artifacts/claude-lis300-20260923/THRESHOLD.txt
+479d27fdb73b0c9670e7268a15dd0833a4eea575dbddb13f2527313e06972a53  artifacts/claude-lis300-20260923/dev_sweep.txt
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  C:/Users/benja/lis300/work/run/merged/model.safetensors (BensPC, RTX 5070 Ti run 2026-09-23; weights never in git)
+---fetch---
+done
+[0m
+[0m→ [0mRead artifacts/claude-lis300-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-lis300-20260923/THRESHOLD.txt
+[0m→ [0mRead artifacts/claude-lis300-20260923/train_summary.json
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/ 2>&1; echo "---"; cat artifacts/claude-lis300-20260923/dev_sweep.txt; echo "---panel---"; cat artifacts/claude-lis300-20260923/panel_score.json; echo "---T0---"; cat artifacts/claude-lis300-20260923/panel_score_T0.json
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+---
+t=0.000 wrong_turns=38 recall=634/688 ask=73/78 we=12/12
+t=0.300 wrong_turns=38 recall=633/688 ask=73/78 we=12/12
+t=0.500 wrong_turns=33 recall=629/688 ask=73/78 we=12/12
+t=0.600 wrong_turns=30 recall=626/688 ask=73/78 we=12/12
+t=0.700 wrong_turns=29 recall=615/688 ask=73/78 we=12/12
+t=0.800 wrong_turns=20 recall=605/688 ask=73/78 we=12/12
+t=0.850 wrong_turns=19 recall=598/688 ask=73/78 we=12/12
+t=0.900 wrong_turns=17 recall=574/688 ask=73/78 we=12/12
+t=0.930 wrong_turns=16 recall=561/688 ask=73/78 we=12/12
+t=0.950 wrong_turns=14 recall=533/688 ask=73/78 we=12/12
+t=0.970 wrong_turns=13 recall=510/688 ask=73/78 we=12/12
+t=0.980 wrong_turns=9 recall=487/688 ask=73/78 we=12/12
+t=0.990 wrong_turns=7 recall=428/688 ask=73/78 we=12/12
+t=0.995 wrong_turns=6 recall=374/688 ask=73/78 we=12/12
+---panel---
+{
+ "turns": 240,
+ "gold_writes": 137,
+ "pred_writes": 72,
+ "wrong_facts": 1,
+ "we_turns": 20,
+ "we_asked": 20,
+ "hits": 71,
+ "gold_write_turns": 102,
+ "turn_exact": 56,
+ "held_back_facts": 66,
+ "ask_turns": 40,
+ "ask_ok": 38,
+ "wrong_turns": 1,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.5182481751824818,
+ "ask_acc": 0.95,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "pronoun-ambiguous": 1
+ },
+ "ms_median": 1492.45,
+ "ms_p90": 2051.0,
+ "ms_max": 3115.1
+}---T0---
+{
+ "turns": 240,
+ "gold_writes": 137,
+ "pred_writes": 140,
+ "wrong_facts": 7,
+ "we_turns": 20,
+ "we_asked": 20,
+ "hits": 133,
+ "gold_write_turns": 102,
+ "turn_exact": 98,
+ "held_back_facts": 1,
+ "ask_turns": 40,
+ "ask_ok": 38,
+ "wrong_turns": 7,
+ "wrong_turns_on_nosave_turns": 5,
+ "threshold": 0.0,
+ "recall_exact": 0.9708029197080292,
+ "ask_acc": 0.95,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "pronoun-ambiguous": 5,
+  "tell-verb": 1,
+  "tell-typo": 1
+ },
+ "ms_median": 1492.45,
+ "ms_p90": 2051.0,
+ "ms_max": 3115.1
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc 'ls -la C:/Users/benja/lis300/work/data/ 2>&1; echo "---run---"; ls -la C:/Users/benja/lis300/work/run/ 2>&1' 2>&1 | head -40
+'ls' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc 'dir C:\Users\benja\lis300\work\data 2>&1 & echo "---run---" & dir C:\Users\benja\lis300\work\run 2>&1' 2>&1 | head -60
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\work\data
+
+09/23/2026  07:42 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  07:42 AM           567,831 dev.jsonl
+09/23/2026  07:42 AM        14,252,852 train.jsonl
+               2 File(s)     14,820,683 bytes
+               2 Dir(s)  58,632,208,384 bytes free
+"---run---" 
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\work\run
+
+09/23/2026  08:12 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  08:12 AM    <DIR>          adapter
+09/23/2026  08:12 AM    <DIR>          merged
+09/23/2026  08:12 AM               589 summary.json
+09/23/2026  08:12 AM            22,149 train_log.jsonl
+               2 File(s)         22,738 bytes
+               4 Dir(s)  58,632,208,384 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc 'dir /s C:\Users\benja\lis300\work 2>&1 | head -80; echo "===lis300 root==="; dir C:\Users\benja\lis300 2>&1' 2>&1 | head -100
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc 'dir /s C:\Users\benja\lis300 2>&1' 2>&1
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0ce8eb325001H92gkjvAT2hWX7
+
+9/23/2026  07:36 AM             7,324 keypoint_matching.cpython-310.pyc
+09/23/2026  07:36 AM            11,633 mask_generation.cpython-310.pyc
+09/23/2026  07:36 AM             8,230 object_detection.cpython-310.pyc
+09/23/2026  07:36 AM             9,372 pt_utils.cpython-310.pyc
+09/23/2026  07:36 AM            14,330 table_question_answering.cpython-310.pyc
+09/23/2026  07:36 AM             8,616 text_classification.cpython-310.pyc
+09/23/2026  07:36 AM            15,902 text_generation.cpython-310.pyc
+09/23/2026  07:36 AM            10,294 text_to_audio.cpython-310.pyc
+09/23/2026  07:36 AM            20,643 token_classification.cpython-310.pyc
+09/23/2026  07:36 AM             8,093 video_classification.cpython-310.pyc
+09/23/2026  07:36 AM             6,448 zero_shot_audio_classification.cpython-310.pyc
+09/23/2026  07:36 AM            11,107 zero_shot_classification.cpython-310.pyc
+09/23/2026  07:36 AM             7,559 zero_shot_image_classification.cpython-310.pyc
+09/23/2026  07:36 AM             9,870 zero_shot_object_detection.cpython-310.pyc
+09/23/2026  07:36 AM            42,697 __init__.cpython-310.pyc
+              28 File(s)        370,128 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\quantizers
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM            16,195 auto.py
+09/23/2026  07:35 AM            13,608 base.py
+09/23/2026  07:35 AM             2,469 quantizers_utils.py
+09/23/2026  07:35 AM             2,646 quantizer_aqlm.py
+09/23/2026  07:35 AM             2,686 quantizer_auto_round.py
+09/23/2026  07:35 AM             3,771 quantizer_awq.py
+09/23/2026  07:35 AM             4,533 quantizer_bitnet.py
+09/23/2026  07:35 AM             7,270 quantizer_bnb_4bit.py
+09/23/2026  07:35 AM             6,923 quantizer_bnb_8bit.py
+09/23/2026  07:35 AM            10,907 quantizer_compressed_tensors.py
+09/23/2026  07:35 AM             3,934 quantizer_eetq.py
+09/23/2026  07:35 AM             9,790 quantizer_fbgemm_fp8.py
+09/23/2026  07:35 AM            14,899 quantizer_finegrained_fp8.py
+09/23/2026  07:35 AM             4,144 quantizer_fouroversix.py
+09/23/2026  07:35 AM             6,872 quantizer_fp_quant.py
+09/23/2026  07:35 AM             2,719 quantizer_gemma.py
+09/23/2026  07:35 AM             7,795 quantizer_gguf.py
+09/23/2026  07:35 AM             4,503 quantizer_gptq.py
+09/23/2026  07:35 AM             7,485 quantizer_higgs.py
+09/23/2026  07:35 AM            11,172 quantizer_hqq.py
+09/23/2026  07:35 AM             4,994 quantizer_metal.py
+09/23/2026  07:35 AM            13,512 quantizer_mxfp4.py
+09/23/2026  07:35 AM             5,034 quantizer_nvfp4.py
+09/23/2026  07:35 AM             4,801 quantizer_quanto.py
+09/23/2026  07:35 AM             3,844 quantizer_quark.py
+09/23/2026  07:35 AM             9,518 quantizer_sinq.py
+09/23/2026  07:35 AM             2,781 quantizer_spqr.py
+09/23/2026  07:35 AM             9,378 quantizer_torchao.py
+09/23/2026  07:35 AM             2,509 quantizer_vptq.py
+09/23/2026  07:35 AM               800 __init__.py
+09/23/2026  07:36 AM    <DIR>          __pycache__
+              30 File(s)        201,492 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\quantizers\__pycache__
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:36 AM    <DIR>          ..
+09/23/2026  07:36 AM            10,117 auto.cpython-310.pyc
+09/23/2026  07:36 AM            13,608 base.cpython-310.pyc
+09/23/2026  07:36 AM             1,585 quantizers_utils.cpython-310.pyc
+09/23/2026  07:36 AM             2,568 quantizer_aqlm.cpython-310.pyc
+09/23/2026  07:36 AM             2,635 quantizer_auto_round.cpython-310.pyc
+09/23/2026  07:36 AM             3,524 quantizer_awq.cpython-310.pyc
+09/23/2026  07:36 AM             4,197 quantizer_bitnet.cpython-310.pyc
+09/23/2026  07:36 AM             6,645 quantizer_bnb_4bit.cpython-310.pyc
+09/23/2026  07:36 AM             6,501 quantizer_bnb_8bit.cpython-310.pyc
+09/23/2026  07:36 AM             9,266 quantizer_compressed_tensors.cpython-310.pyc
+09/23/2026  07:36 AM             3,804 quantizer_eetq.cpython-310.pyc
+09/23/2026  07:36 AM             7,221 quantizer_fbgemm_fp8.cpython-310.pyc
+09/23/2026  07:36 AM            11,350 quantizer_finegrained_fp8.cpython-310.pyc
+09/23/2026  07:36 AM             4,356 quantizer_fouroversix.cpython-310.pyc
+09/23/2026  07:36 AM             5,719 quantizer_fp_quant.cpython-310.pyc
+09/23/2026  07:36 AM             2,325 quantizer_gemma.cpython-310.pyc
+09/23/2026  07:36 AM             6,421 quantizer_gguf.cpython-310.pyc
+09/23/2026  07:36 AM             4,030 quantizer_gptq.cpython-310.pyc
+09/23/2026  07:36 AM             5,102 quantizer_higgs.cpython-310.pyc
+09/23/2026  07:36 AM             4,191 quantizer_hqq.cpython-310.pyc
+09/23/2026  07:36 AM             4,483 quantizer_metal.cpython-310.pyc
+09/23/2026  07:36 AM             9,209 quantizer_mxfp4.cpython-310.pyc
+09/23/2026  07:36 AM             4,875 quantizer_nvfp4.cpython-310.pyc
+09/23/2026  07:36 AM             4,441 quantizer_quanto.cpython-310.pyc
+09/23/2026  07:36 AM             3,161 quantizer_quark.cpython-310.pyc
+09/23/2026  07:36 AM             8,217 quantizer_sinq.cpython-310.pyc
+09/23/2026  07:36 AM             2,719 quantizer_spqr.cpython-310.pyc
+09/23/2026  07:36 AM             8,210 quantizer_torchao.cpython-310.pyc
+09/23/2026  07:36 AM             2,401 quantizer_vptq.cpython-310.pyc
+09/23/2026  07:36 AM               419 __init__.cpython-310.pyc
+              30 File(s)        163,300 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\utils
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM            10,165 attention_visualizer.py
+09/23/2026  07:35 AM           171,376 auto_docstring.py
+09/23/2026  07:35 AM               699 backbone_utils.py
+09/23/2026  07:36 AM    <DIR>          chat_parsing
+09/23/2026  07:35 AM            26,143 chat_template_utils.py
+09/23/2026  07:35 AM               282 constants.py
+09/23/2026  07:35 AM             8,031 deprecation.py
+09/23/2026  07:35 AM            36,848 doc.py
+09/23/2026  07:35 AM               340 dummy_detectron2_objects.py
+09/23/2026  07:35 AM               902 dummy_essentia_and_librosa_and_pretty_midi_and_scipy_and_torch_objects.py
+09/23/2026  07:35 AM               309 dummy_mistral_common_objects.py
+09/23/2026  07:35 AM               458 dummy_music_objects.py
+09/23/2026  07:35 AM            11,926 dummy_pt_objects.py
+09/23/2026  07:35 AM               286 dummy_sentencepiece_and_tokenizers_objects.py
+09/23/2026  07:35 AM               465 dummy_speech_objects.py
+09/23/2026  07:35 AM               324 dummy_timm_and_torchvision_objects.py
+09/23/2026  07:35 AM               304 dummy_tokenizers_objects.py
+09/23/2026  07:35 AM               847 dummy_torchaudio_objects.py
+09/23/2026  07:35 AM               475 dummy_torchvision_objects.py
+09/23/2026  07:35 AM               630 dummy_vision_objects.py
+09/23/2026  07:35 AM            42,839 generic.py
+09/23/2026  07:35 AM             4,979 hp_naming.py
+09/23/2026  07:35 AM            40,443 hub.py
+09/23/2026  07:35 AM           126,290 import_utils.py
+09/23/2026  07:35 AM            13,482 kernel_config.py
+09/23/2026  07:35 AM            11,784 loading_report.py
+09/23/2026  07:35 AM            13,567 logging.py
+09/23/2026  07:35 AM            18,667 network_logging.py
+09/23/2026  07:35 AM            16,526 notebook.py
+09/23/2026  07:35 AM            14,455 output_capturing.py
+09/23/2026  07:35 AM             4,845 peft_utils.py
+09/23/2026  07:35 AM             3,571 pytest_helpers.py
+09/23/2026  07:35 AM            94,708 quantization_config.py
+09/23/2026  07:35 AM            50,663 sentencepiece_model_pb2.py
+09/23/2026  07:35 AM             6,598 sentencepiece_model_pb2_new.py
+09/23/2026  07:35 AM            11,073 type_validators.py
+09/23/2026  07:35 AM             4,306 versions.py
+09/23/2026  07:35 AM             9,886 __init__.py
+09/23/2026  07:36 AM    <DIR>          __pycache__
+              37 File(s)        759,492 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\utils\chat_parsing
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:36 AM    <DIR>          ..
+09/23/2026  07:35 AM             9,553 content_parsers.py
+09/23/2026  07:35 AM            19,901 response_parser.py
+09/23/2026  07:35 AM            10,768 response_templates.py
+09/23/2026  07:35 AM               873 __init__.py
+09/23/2026  07:36 AM    <DIR>          __pycache__
+               4 File(s)         41,095 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\utils\chat_parsing\__pycache__
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:36 AM    <DIR>          ..
+09/23/2026  07:36 AM             7,997 content_parsers.cpython-310.pyc
+09/23/2026  07:36 AM            15,766 response_parser.cpython-310.pyc
+09/23/2026  07:36 AM             8,814 response_templates.cpython-310.pyc
+09/23/2026  07:36 AM               456 __init__.cpython-310.pyc
+               4 File(s)         33,033 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\utils\__pycache__
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:36 AM    <DIR>          ..
+09/23/2026  07:36 AM             7,668 attention_visualizer.cpython-310.pyc
+09/23/2026  07:36 AM           112,320 auto_docstring.cpython-310.pyc
+09/23/2026  07:36 AM               966 backbone_utils.cpython-310.pyc
+09/23/2026  07:36 AM            20,066 chat_template_utils.cpython-310.pyc
+09/23/2026  07:36 AM               488 constants.cpython-310.pyc
+09/23/2026  07:36 AM             5,616 deprecation.cpython-310.pyc
+09/23/2026  07:36 AM            30,046 doc.cpython-310.pyc
+09/23/2026  07:36 AM               725 dummy_detectron2_objects.cpython-310.pyc
+09/23/2026  07:36 AM             1,189 dummy_essentia_and_librosa_and_pretty_midi_and_scipy_and_torch_objects.cpython-310.pyc
+09/23/2026  07:36 AM               641 dummy_mistral_common_objects.cpython-310.pyc
+09/23/2026  07:36 AM               863 dummy_music_objects.cpython-310.pyc
+09/23/2026  07:36 AM            16,755 dummy_pt_objects.cpython-310.pyc
+09/23/2026  07:36 AM               478 dummy_sentencepiece_and_tokenizers_objects.cpython-310.pyc
+09/23/2026  07:36 AM               871 dummy_speech_objects.cpython-310.pyc
+09/23/2026  07:36 AM               669 dummy_timm_and_torchvision_objects.cpython-310.pyc
+09/23/2026  07:36 AM               639 dummy_tokenizers_objects.cpython-310.pyc
+09/23/2026  07:36 AM             1,383 dummy_torchaudio_objects.cpython-310.pyc
+09/23/2026  07:36 AM               861 dummy_torchvision_objects.cpython-310.pyc
+09/23/2026  07:36 AM             1,103 dummy_vision_objects.cpython-310.pyc
+09/23/2026  07:36 AM            39,815 generic.cpython-310.pyc
+09/23/2026  07:36 AM             3,786 hp_naming.cpython-310.pyc
+09/23/2026  07:36 AM            30,207 hub.cpython-310.pyc
+09/23/2026  07:36 AM            90,140 import_utils.cpython-310.pyc
+09/23/2026  07:36 AM             9,513 kernel_config.cpython-310.pyc
+09/23/2026  07:36 AM            10,639 loading_report.cpython-310.pyc
+09/23/2026  07:36 AM            12,984 logging.cpython-310.pyc
+09/23/2026  07:36 AM            16,568 network_logging.cpython-310.pyc
+09/23/2026  07:36 AM            13,655 notebook.cpython-310.pyc
+09/23/2026  07:36 AM             9,477 output_capturing.cpython-310.pyc
+09/23/2026  07:36 AM             4,022 peft_utils.cpython-310.pyc
+09/23/2026  07:36 AM             3,840 pytest_helpers.cpython-310.pyc
+09/23/2026  07:36 AM            82,491 quantization_config.cpython-310.pyc
+09/23/2026  07:36 AM            21,806 sentencepiece_model_pb2.cpython-310.pyc
+09/23/2026  07:36 AM             3,704 sentencepiece_model_pb2_new.cpython-310.pyc
+09/23/2026  07:36 AM             9,449 type_validators.cpython-310.pyc
+09/23/2026  07:36 AM             3,091 versions.cpython-310.pyc
+09/23/2026  07:36 AM            10,473 __init__.cpython-310.pyc
+              37 File(s)        579,007 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers\__pycache__
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM            14,330 activations.cpython-310.pyc
+09/23/2026  07:35 AM            53,855 audio_utils.cpython-310.pyc
+09/23/2026  07:35 AM            14,653 backbone_utils.cpython-310.pyc
+09/23/2026  07:35 AM            77,933 cache_utils.cpython-310.pyc
+09/23/2026  07:35 AM            50,294 configuration_utils.cpython-310.pyc
+09/23/2026  07:35 AM            53,145 conversion_mapping.cpython-310.pyc
+09/23/2026  07:35 AM            54,830 convert_slow_tokenizer.cpython-310.pyc
+09/23/2026  07:35 AM             3,257 convert_slow_tokenizers_checkpoints_to_fast.cpython-310.pyc
+09/23/2026  07:35 AM            58,691 core_model_loading.cpython-310.pyc
+09/23/2026  07:35 AM            11,252 debug_utils.cpython-310.pyc
+09/23/2026  07:35 AM               916 dependency_versions_check.cpython-310.pyc
+09/23/2026  07:35 AM             3,031 dependency_versions_table.cpython-310.pyc
+09/23/2026  07:35 AM            25,568 dynamic_module_utils.cpython-310.pyc
+09/23/2026  07:35 AM            13,900 feature_extraction_sequence_utils.cpython-310.pyc
+09/23/2026  07:35 AM            23,289 feature_extraction_utils.cpython-310.pyc
+09/23/2026  07:35 AM             2,823 file_utils.cpython-310.pyc
+09/23/2026  07:35 AM             9,041 fusion_mapping.cpython-310.pyc
+09/23/2026  07:35 AM            14,799 hf_argparser.cpython-310.pyc
+09/23/2026  07:35 AM             4,502 hyperparameter_search.cpython-310.pyc
+09/23/2026  07:35 AM            16,329 image_processing_backends.cpython-310.pyc
+09/23/2026  07:35 AM            17,965 image_processing_base.cpython-310.pyc
+09/23/2026  07:35 AM             1,248 image_processing_outputs.cpython-310.pyc
+09/23/2026  07:35 AM            25,476 image_processing_utils.cpython-310.pyc
+09/23/2026  07:35 AM            34,883 image_transforms.cpython-310.pyc
+09/23/2026  07:35 AM            34,929 image_utils.cpython-310.pyc
+09/23/2026  07:35 AM             9,224 initialization.cpython-310.pyc
+09/23/2026  07:35 AM            50,893 masking_utils.cpython-310.pyc
+09/23/2026  07:35 AM            15,815 modelcard.cpython-310.pyc
+09/23/2026  07:35 AM            13,791 modeling_attn_mask_utils.cpython-310.pyc
+09/23/2026  07:35 AM            25,516 modeling_flash_attention_utils.cpython-310.pyc
+09/23/2026  07:35 AM            23,274 modeling_gguf_pytorch_utils.cpython-310.pyc
+09/23/2026  07:35 AM            19,526 modeling_layers.cpython-310.pyc
+09/23/2026  07:35 AM           102,902 modeling_outputs.cpython-310.pyc
+09/23/2026  07:35 AM            40,305 modeling_rope_utils.cpython-310.pyc
+09/23/2026  07:35 AM           162,726 modeling_utils.cpython-310.pyc
+09/23/2026  07:35 AM            14,713 model_debugging_utils.cpython-310.pyc
+09/23/2026  07:36 AM            11,808 monkey_patching.cpython-310.pyc
+09/23/2026  07:36 AM            42,861 optimization.cpython-310.pyc
+09/23/2026  07:36 AM            81,604 processing_utils.cpython-310.pyc
+09/23/2026  07:36 AM             8,782 pytorch_utils.cpython-310.pyc
+09/23/2026  07:36 AM             3,695 safetensors_conversion.cpython-310.pyc
+09/23/2026  07:36 AM           144,408 testing_utils.cpython-310.pyc
+09/23/2026  07:36 AM             8,875 time_series_utils.cpython-310.pyc
+09/23/2026  07:36 AM            63,403 tokenization_mistral_common.cpython-310.pyc
+09/23/2026  07:36 AM            38,434 tokenization_python.cpython-310.pyc
+09/23/2026  07:36 AM           133,975 tokenization_utils_base.cpython-310.pyc
+09/23/2026  07:36 AM            11,234 tokenization_utils_sentencepiece.cpython-310.pyc
+09/23/2026  07:36 AM            42,671 tokenization_utils_tokenizers.cpython-310.pyc
+09/23/2026  07:36 AM           128,823 trainer.cpython-310.pyc
+09/23/2026  07:36 AM            30,637 trainer_callback.cpython-310.pyc
+09/23/2026  07:36 AM             5,059 trainer_jit_checkpoint.cpython-310.pyc
+09/23/2026  07:36 AM            16,971 trainer_optimizer.cpython-310.pyc
+09/23/2026  07:36 AM            65,930 trainer_pt_utils.cpython-310.pyc
+09/23/2026  07:36 AM            12,065 trainer_seq2seq.cpython-310.pyc
+09/23/2026  07:36 AM            37,805 trainer_utils.cpython-310.pyc
+09/23/2026  07:36 AM           119,454 training_args.cpython-310.pyc
+09/23/2026  07:36 AM             3,704 training_args_seq2seq.cpython-310.pyc
+09/23/2026  07:36 AM            25,254 video_processing_utils.cpython-310.pyc
+09/23/2026  07:36 AM            29,666 video_utils.cpython-310.pyc
+09/23/2026  07:36 AM            14,797 vision_utils.cpython-310.pyc
+09/23/2026  07:35 AM            10,232 _typing.cpython-310.pyc
+09/23/2026  07:35 AM            22,575 __init__.cpython-310.pyc
+              62 File(s)      2,214,346 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers-5.17.0.dist-info
+
+09/23/2026  07:36 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM                68 entry_points.txt
+09/23/2026  07:36 AM                 4 INSTALLER
+09/23/2026  07:35 AM    <DIR>          licenses
+09/23/2026  07:35 AM            32,230 METADATA
+09/23/2026  07:36 AM           502,636 RECORD
+09/23/2026  07:36 AM                 0 REQUESTED
+09/23/2026  07:35 AM                13 top_level.txt
+09/23/2026  07:35 AM                91 WHEEL
+               7 File(s)        535,042 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\transformers-5.17.0.dist-info\licenses
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:36 AM    <DIR>          ..
+09/23/2026  07:35 AM            11,418 LICENSE
+               1 File(s)         11,418 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM    <DIR>          .agents
+09/23/2026  07:35 AM            10,259 cli.py
+09/23/2026  07:35 AM               430 colors.py
+09/23/2026  07:35 AM             4,825 completion.py
+09/23/2026  07:35 AM            42,540 core.py
+09/23/2026  07:35 AM               673 exceptions.py
+09/23/2026  07:35 AM            69,089 main.py
+09/23/2026  07:35 AM            22,793 models.py
+09/23/2026  07:35 AM            59,648 params.py
+09/23/2026  07:35 AM                 0 py.typed
+09/23/2026  07:35 AM            26,258 rich_utils.py
+09/23/2026  07:35 AM            11,084 testing.py
+09/23/2026  07:35 AM             7,599 utils.py
+09/23/2026  07:35 AM    <DIR>          _click
+09/23/2026  07:35 AM             7,836 _completion_classes.py
+09/23/2026  07:35 AM             9,145 _completion_shared.py
+09/23/2026  07:35 AM             4,223 _types.py
+09/23/2026  07:35 AM             1,727 _typing.py
+09/23/2026  07:35 AM             1,399 __init__.py
+09/23/2026  07:35 AM                30 __main__.py
+09/23/2026  07:35 AM    <DIR>          __pycache__
+              18 File(s)        279,558 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\.agents
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM    <DIR>          skills
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\.agents\skills
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM    <DIR>          typer
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\.agents\skills\typer
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM             6,709 SKILL.md
+               1 File(s)          6,709 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\_click
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM            39,103 core.py
+09/23/2026  07:35 AM             1,593 decorators.py
+09/23/2026  07:35 AM             7,574 exceptions.py
+09/23/2026  07:35 AM             8,472 formatting.py
+09/23/2026  07:35 AM             1,761 globals.py
+09/23/2026  07:35 AM             1,475 LICENSE.txt
+09/23/2026  07:35 AM            16,645 parser.py
+09/23/2026  07:35 AM                 0 py.typed
+09/23/2026  07:35 AM            10,018 shell_completion.py
+09/23/2026  07:35 AM            13,727 termui.py
+09/23/2026  07:35 AM            21,556 types.py
+09/23/2026  07:35 AM            14,571 utils.py
+09/23/2026  07:35 AM            16,935 _compat.py
+09/23/2026  07:35 AM            16,669 _termui_impl.py
+09/23/2026  07:35 AM             1,233 _textwrap.py
+09/23/2026  07:35 AM             8,305 _winconsole.py
+09/23/2026  07:35 AM               392 __init__.py
+09/23/2026  07:35 AM    <DIR>          __pycache__
+              17 File(s)        180,029 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\_click\__pycache__
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM            33,385 core.cpython-310.pyc
+09/23/2026  07:35 AM             1,955 decorators.cpython-310.pyc
+09/23/2026  07:35 AM             8,389 exceptions.cpython-310.pyc
+09/23/2026  07:35 AM             8,148 formatting.cpython-310.pyc
+09/23/2026  07:35 AM             2,181 globals.cpython-310.pyc
+09/23/2026  07:35 AM            12,280 parser.cpython-310.pyc
+09/23/2026  07:35 AM             8,918 shell_completion.cpython-310.pyc
+09/23/2026  07:35 AM            11,416 termui.cpython-310.pyc
+09/23/2026  07:35 AM            21,192 types.cpython-310.pyc
+09/23/2026  07:35 AM            12,669 utils.cpython-310.pyc
+09/23/2026  07:35 AM            14,356 _compat.cpython-310.pyc
+09/23/2026  07:35 AM            10,813 _termui_impl.cpython-310.pyc
+09/23/2026  07:35 AM             1,488 _textwrap.cpython-310.pyc
+09/23/2026  07:35 AM             7,890 _winconsole.cpython-310.pyc
+09/23/2026  07:35 AM               533 __init__.cpython-310.pyc
+              15 File(s)        155,613 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer\__pycache__
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM             8,365 cli.cpython-310.pyc
+09/23/2026  07:35 AM               596 colors.cpython-310.pyc
+09/23/2026  07:35 AM             3,612 completion.cpython-310.pyc
+09/23/2026  07:35 AM            28,929 core.cpython-310.pyc
+09/23/2026  07:35 AM             1,536 exceptions.cpython-310.pyc
+09/23/2026  07:35 AM            42,763 main.cpython-310.pyc
+09/23/2026  07:35 AM            17,778 models.cpython-310.pyc
+09/23/2026  07:35 AM            49,667 params.cpython-310.pyc
+09/23/2026  07:35 AM            16,997 rich_utils.cpython-310.pyc
+09/23/2026  07:35 AM            10,326 testing.cpython-310.pyc
+09/23/2026  07:35 AM             5,172 utils.cpython-310.pyc
+09/23/2026  07:35 AM             7,196 _completion_classes.cpython-310.pyc
+09/23/2026  07:35 AM             6,648 _completion_shared.cpython-310.pyc
+09/23/2026  07:35 AM             5,004 _types.cpython-310.pyc
+09/23/2026  07:35 AM             1,913 _typing.cpython-310.pyc
+09/23/2026  07:35 AM             1,265 __init__.cpython-310.pyc
+09/23/2026  07:35 AM               195 __main__.cpython-310.pyc
+              17 File(s)        207,962 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer-0.27.2.dist-info
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM                57 entry_points.txt
+09/23/2026  07:35 AM                 4 INSTALLER
+09/23/2026  07:35 AM    <DIR>          licenses
+09/23/2026  07:35 AM            16,414 METADATA
+09/23/2026  07:35 AM             4,995 RECORD
+09/23/2026  07:35 AM                90 WHEEL
+               5 File(s)         21,560 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typer-0.27.2.dist-info\licenses
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM             1,086 LICENSE
+               1 File(s)          1,086 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typing_extensions-4.16.0.dist-info
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:34 AM                 4 INSTALLER
+09/23/2026  07:34 AM    <DIR>          licenses
+09/23/2026  07:34 AM             3,310 METADATA
+09/23/2026  07:34 AM               580 RECORD
+09/23/2026  07:34 AM                82 WHEEL
+               4 File(s)          3,976 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\typing_extensions-4.16.0.dist-info\licenses
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:34 AM    <DIR>          ..
+09/23/2026  07:34 AM            13,936 LICENSE
+               1 File(s)         13,936 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\yaml
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM             4,883 composer.py
+09/23/2026  07:35 AM            28,639 constructor.py
+09/23/2026  07:35 AM             3,851 cyaml.py
+09/23/2026  07:35 AM             2,837 dumper.py
+09/23/2026  07:35 AM            43,006 emitter.py
+09/23/2026  07:35 AM             2,533 error.py
+09/23/2026  07:35 AM             2,445 events.py
+09/23/2026  07:35 AM             2,061 loader.py
+09/23/2026  07:35 AM             1,440 nodes.py
+09/23/2026  07:35 AM            25,495 parser.py
+09/23/2026  07:35 AM             6,794 reader.py
+09/23/2026  07:35 AM            14,190 representer.py
+09/23/2026  07:35 AM             9,004 resolver.py
+09/23/2026  07:35 AM            51,279 scanner.py
+09/23/2026  07:35 AM             4,165 serializer.py
+09/23/2026  07:35 AM             2,573 tokens.py
+09/23/2026  07:35 AM           258,048 _yaml.cp310-win_amd64.pyd
+09/23/2026  07:35 AM            12,311 __init__.py
+09/23/2026  07:35 AM    <DIR>          __pycache__
+              18 File(s)        475,554 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\yaml\__pycache__
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM             3,597 composer.cpython-310.pyc
+09/23/2026  07:35 AM            20,204 constructor.cpython-310.pyc
+09/23/2026  07:35 AM             2,859 cyaml.cpython-310.pyc
+09/23/2026  07:35 AM             1,500 dumper.cpython-310.pyc
+09/23/2026  07:35 AM            25,109 emitter.cpython-310.pyc
+09/23/2026  07:35 AM             2,383 error.cpython-310.pyc
+09/23/2026  07:35 AM             3,791 events.cpython-310.pyc
+09/23/2026  07:35 AM             1,807 loader.cpython-310.pyc
+09/23/2026  07:35 AM             1,687 nodes.cpython-310.pyc
+09/23/2026  07:35 AM            11,674 parser.cpython-310.pyc
+09/23/2026  07:35 AM             4,580 reader.cpython-310.pyc
+09/23/2026  07:35 AM            10,035 representer.cpython-310.pyc
+09/23/2026  07:35 AM             5,508 resolver.cpython-310.pyc
+09/23/2026  07:35 AM            25,554 scanner.cpython-310.pyc
+09/23/2026  07:35 AM             3,352 serializer.cpython-310.pyc
+09/23/2026  07:35 AM             4,577 tokens.cpython-310.pyc
+09/23/2026  07:35 AM            10,691 __init__.cpython-310.pyc
+              17 File(s)        138,908 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\_distutils_hack
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM                44 override.py
+09/23/2026  07:35 AM             6,800 __init__.py
+09/23/2026  07:35 AM    <DIR>          __pycache__
+               2 File(s)          6,844 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\_distutils_hack\__pycache__
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM               216 override.cpython-310.pyc
+09/23/2026  07:35 AM             8,222 __init__.cpython-310.pyc
+               2 File(s)          8,438 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\_yaml
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:35 AM             1,402 __init__.py
+09/23/2026  07:35 AM    <DIR>          __pycache__
+               1 File(s)          1,402 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\_yaml\__pycache__
+
+09/23/2026  07:35 AM    <DIR>          .
+09/23/2026  07:35 AM    <DIR>          ..
+09/23/2026  07:35 AM               717 __init__.cpython-310.pyc
+               1 File(s)            717 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Lib\site-packages\__pycache__
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:39 AM    <DIR>          ..
+09/23/2026  07:34 AM             9,409 isympy.cpython-310.pyc
+09/23/2026  07:34 AM           117,341 typing_extensions.cpython-310.pyc
+               2 File(s)        126,750 bytes
+
+ Directory of C:\Users\benja\lis300\venv\Scripts
+
+09/23/2026  07:39 AM    <DIR>          .
+09/23/2026  07:34 AM    <DIR>          ..
+09/23/2026  07:35 AM           108,354 accelerate-config.exe
+09/23/2026  07:35 AM           108,356 accelerate-estimate-memory.exe
+09/23/2026  07:35 AM           108,354 accelerate-launch.exe
+09/23/2026  07:35 AM           108,353 accelerate-merge-weights.exe
+09/23/2026  07:35 AM           108,362 accelerate.exe
+09/23/2026  07:34 AM             2,066 activate
+09/23/2026  07:34 AM               995 activate.bat
+09/23/2026  07:34 AM            24,167 Activate.ps1
+09/23/2026  07:34 AM               393 deactivate.bat
+09/23/2026  07:35 AM           108,345 f2py.exe
+09/23/2026  07:35 AM           108,350 hf.exe
+09/23/2026  07:35 AM           108,333 httpx.exe
+09/23/2026  07:35 AM           108,362 huggingface-cli.exe
+09/23/2026  07:35 AM           108,336 idna.exe
+09/23/2026  07:35 AM           108,334 isympy.exe
+09/23/2026  07:35 AM           108,349 markdown-it.exe
+09/23/2026  07:35 AM           108,345 numpy-config.exe
+09/23/2026  07:34 AM           108,404 pip.exe
+09/23/2026  07:34 AM           108,404 pip3.10.exe
+09/23/2026  07:34 AM           108,404 pip3.exe
+09/23/2026  07:35 AM           108,344 pygmentize.exe
+09/23/2026  07:33 AM           266,624 python.exe
+09/23/2026  07:33 AM           254,848 pythonw.exe
+09/23/2026  07:35 AM           108,360 tiny-agents.exe
+09/23/2026  07:39 AM           108,370 torchfrtrace.exe
+09/23/2026  07:39 AM           108,349 torchrun.exe
+09/23/2026  07:35 AM           108,336 tqdm.exe
+09/23/2026  07:36 AM           108,357 transformers.exe
+09/23/2026  07:35 AM           108,337 typer.exe
+              29 File(s)      3,041,291 bytes
+
+ Directory of C:\Users\benja\lis300\venv\share
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:34 AM    <DIR>          ..
+09/23/2026  07:34 AM    <DIR>          man
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\benja\lis300\venv\share\man
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:34 AM    <DIR>          ..
+09/23/2026  07:34 AM    <DIR>          man1
+               0 File(s)              0 bytes
+
+ Directory of C:\Users\benja\lis300\venv\share\man\man1
+
+09/23/2026  07:34 AM    <DIR>          .
+09/23/2026  07:34 AM    <DIR>          ..
+09/23/2026  07:34 AM             6,659 isympy.1
+               1 File(s)          6,659 bytes
+
+ Directory of C:\Users\benja\lis300\work
+
+09/23/2026  08:47 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  07:42 AM    <DIR>          data
+09/23/2026  08:39 AM               484 dev_o0a2.json
+09/23/2026  08:39 AM               402 dev_o0b_l2.json
+09/23/2026  08:39 AM               485 dev_opus_dev.json
+09/23/2026  08:39 AM           328,004 dev_pred.jsonl
+09/23/2026  08:15 AM            85,845 dev_rows.jsonl
+09/23/2026  08:39 AM               543 dev_score_T.json
+09/23/2026  08:39 AM               809 dev_sweep.txt
+09/23/2026  08:47 AM            87,025 panel_pred.jsonl
+09/23/2026  08:40 AM            20,085 panel_rows.jsonl
+09/23/2026  08:47 AM               520 panel_score.json
+09/23/2026  08:47 AM               557 panel_score_T0.json
+09/23/2026  08:47 AM    <DIR>          perfam
+09/23/2026  08:39 AM    <DIR>          persrc
+09/23/2026  08:12 AM    <DIR>          run
+              11 File(s)        524,759 bytes
+
+ Directory of C:\Users\benja\lis300\work\data
+
+09/23/2026  07:42 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  07:42 AM           567,831 dev.jsonl
+09/23/2026  07:42 AM        14,252,852 train.jsonl
+               2 File(s)     14,820,683 bytes
+
+ Directory of C:\Users\benja\lis300\work\perfam
+
+09/23/2026  08:47 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  08:47 AM               720 gold_chat.jsonl
+09/23/2026  08:47 AM             2,720 gold_check.jsonl
+09/23/2026  08:47 AM             3,563 gold_correct.jsonl
+09/23/2026  08:47 AM             2,078 gold_negation.jsonl
+09/23/2026  08:47 AM             3,462 gold_our-we.jsonl
+09/23/2026  08:47 AM             1,573 gold_plan.jsonl
+09/23/2026  08:47 AM             1,050 gold_pronoun-ambiguous.jsonl
+09/23/2026  08:47 AM             1,749 gold_pronoun-clear.jsonl
+09/23/2026  08:47 AM             1,203 gold_question-inverse.jsonl
+09/23/2026  08:47 AM             1,140 gold_question-lowercase.jsonl
+09/23/2026  08:47 AM               807 gold_question-twohop.jsonl
+09/23/2026  08:47 AM             1,726 gold_question-wh.jsonl
+09/23/2026  08:47 AM             1,894 gold_question-yesno.jsonl
+09/23/2026  08:47 AM             1,343 gold_reported.jsonl
+09/23/2026  08:47 AM             2,538 gold_short-answer.jsonl
+09/23/2026  08:47 AM             1,719 gold_suppose.jsonl
+09/23/2026  08:47 AM             2,432 gold_tell-appositive.jsonl
+09/23/2026  08:47 AM             2,463 gold_tell-multi.jsonl
+09/23/2026  08:47 AM             1,971 gold_tell-plural.jsonl
+09/23/2026  08:47 AM             1,342 gold_tell-self.jsonl
+09/23/2026  08:47 AM             2,361 gold_tell-single.jsonl
+09/23/2026  08:47 AM             1,346 gold_tell-typo.jsonl
+09/23/2026  08:47 AM             2,083 gold_tell-verb.jsonl
+09/23/2026  08:47 AM             1,312 pred_chat.jsonl
+09/23/2026  08:47 AM             4,063 pred_check.jsonl
+09/23/2026  08:47 AM             7,419 pred_correct.jsonl
+09/23/2026  08:47 AM             4,323 pred_negation.jsonl
+09/23/2026  08:47 AM             7,329 pred_our-we.jsonl
+09/23/2026  08:47 AM             3,333 pred_plan.jsonl
+09/23/2026  08:47 AM             2,043 pred_pronoun-ambiguous.jsonl
+09/23/2026  08:47 AM             3,613 pred_pronoun-clear.jsonl
+09/23/2026  08:47 AM             2,174 pred_question-inverse.jsonl
+09/23/2026  08:47 AM             2,086 pred_question-lowercase.jsonl
+09/23/2026  08:47 AM             1,433 pred_question-twohop.jsonl
+09/23/2026  08:47 AM             3,224 pred_question-wh.jsonl
+09/23/2026  08:47 AM             3,892 pred_question-yesno.jsonl
+09/23/2026  08:47 AM             2,595 pred_reported.jsonl
+09/23/2026  08:47 AM             5,120 pred_short-answer.jsonl
+09/23/2026  08:47 AM             3,603 pred_suppose.jsonl
+09/23/2026  08:47 AM             5,189 pred_tell-appositive.jsonl
+09/23/2026  08:47 AM             5,387 pred_tell-multi.jsonl
+09/23/2026  08:47 AM             4,303 pred_tell-plural.jsonl
+09/23/2026  08:47 AM             2,756 pred_tell-self.jsonl
+09/23/2026  08:47 AM             4,791 pred_tell-single.jsonl
+09/23/2026  08:47 AM             2,774 pred_tell-typo.jsonl
+09/23/2026  08:47 AM             4,263 pred_tell-verb.jsonl
+09/23/2026  08:47 AM               253 score_chat.json
+09/23/2026  08:47 AM               258 score_check.json
+09/23/2026  08:47 AM               356 score_correct.json
+09/23/2026  08:47 AM               257 score_negation.json
+09/23/2026  08:47 AM               294 score_our-we.json
+09/23/2026  08:47 AM               257 score_plan.json
+09/23/2026  08:47 AM               342 score_pronoun-ambiguous.json
+09/23/2026  08:47 AM               338 score_pronoun-clear.json
+09/23/2026  08:47 AM               289 score_question-inverse.json
+09/23/2026  08:47 AM               289 score_question-lowercase.json
+09/23/2026  08:47 AM               289 score_question-twohop.json
+09/23/2026  08:47 AM               304 score_question-wh.json
+09/23/2026  08:47 AM               301 score_question-yesno.json
+09/23/2026  08:47 AM               256 score_reported.json
+09/23/2026  08:47 AM               338 score_short-answer.json
+09/23/2026  08:47 AM               257 score_suppose.json
+09/23/2026  08:47 AM               342 score_tell-appositive.json
+09/23/2026  08:47 AM               369 score_tell-multi.json
+09/23/2026  08:47 AM               356 score_tell-plural.json
+09/23/2026  08:47 AM               339 score_tell-self.json
+09/23/2026  08:47 AM               359 score_tell-single.json
+09/23/2026  08:47 AM               339 score_tell-typo.json
+09/23/2026  08:47 AM               356 score_tell-verb.json
+09/23/2026  08:47 AM               587 turns_chat.jsonl
+09/23/2026  08:47 AM               896 turns_check.jsonl
+09/23/2026  08:47 AM             2,142 turns_correct.jsonl
+09/23/2026  08:47 AM               983 turns_negation.jsonl
+09/23/2026  08:47 AM             1,515 turns_our-we.jsonl
+09/23/2026  08:47 AM               879 turns_plan.jsonl
+09/23/2026  08:47 AM               657 turns_pronoun-ambiguous.jsonl
+09/23/2026  08:47 AM               904 turns_pronoun-clear.jsonl
+09/23/2026  08:47 AM               589 turns_question-inverse.jsonl
+09/23/2026  08:47 AM               484 turns_question-lowercase.jsonl
+09/23/2026  08:47 AM               395 turns_question-twohop.jsonl
+09/23/2026  08:47 AM               860 turns_question-wh.jsonl
+09/23/2026  08:47 AM               589 turns_question-yesno.jsonl
+09/23/2026  08:47 AM               683 turns_reported.jsonl
+09/23/2026  08:47 AM             1,244 turns_short-answer.jsonl
+09/23/2026  08:47 AM               813 turns_suppose.jsonl
+09/23/2026  08:47 AM               893 turns_tell-appositive.jsonl
+09/23/2026  08:47 AM               975 turns_tell-multi.jsonl
+09/23/2026  08:47 AM               684 turns_tell-plural.jsonl
+09/23/2026  08:47 AM               585 turns_tell-self.jsonl
+09/23/2026  08:47 AM             1,181 turns_tell-single.jsonl
+09/23/2026  08:47 AM               593 turns_tell-typo.jsonl
+09/23/2026  08:47 AM               954 turns_tell-verb.jsonl
+              92 File(s)        157,531 bytes
+
+ Directory of C:\Users\benja\lis300\work\persrc
+
+09/23/2026  08:39 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  08:39 AM           190,622 gold_o0a2.jsonl
+09/23/2026  08:39 AM           287,466 gold_o0b_l2.jsonl
+09/23/2026  08:39 AM            89,743 gold_opus_dev.jsonl
+09/23/2026  08:39 AM           117,789 pred_o0a2.jsonl
+09/23/2026  08:39 AM           157,225 pred_o0b_l2.jsonl
+09/23/2026  08:39 AM            52,990 pred_opus_dev.jsonl
+               6 File(s)        895,835 bytes
+
+ Directory of C:\Users\benja\lis300\work\run
+
+09/23/2026  08:12 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  08:12 AM    <DIR>          adapter
+09/23/2026  08:12 AM    <DIR>          merged
+09/23/2026  08:12 AM               589 summary.json
+09/23/2026  08:12 AM            22,149 train_log.jsonl
+               2 File(s)         22,738 bytes
+
+ Directory of C:\Users\benja\lis300\work\run\adapter
+
+09/23/2026  08:12 AM    <DIR>          .
+09/23/2026  08:12 AM    <DIR>          ..
+09/23/2026  08:12 AM             1,237 adapter_config.json
+09/23/2026  08:12 AM        89,697,856 adapter_model.safetensors
+09/23/2026  08:12 AM             9,241 chat_template.jinja
+09/23/2026  08:12 AM             5,208 README.md
+09/23/2026  08:12 AM         9,894,271 tokenizer.json
+09/23/2026  08:12 AM               477 tokenizer_config.json
+               6 File(s)     99,608,290 bytes
+
+ Directory of C:\Users\benja\lis300\work\run\merged
+
+09/23/2026  08:12 AM    <DIR>          .
+09/23/2026  08:12 AM    <DIR>          ..
+09/23/2026  08:12 AM             9,241 chat_template.jinja
+09/23/2026  08:12 AM               784 config.json
+09/23/2026  08:12 AM               227 generation_config.json
+09/23/2026  08:12 AM     2,161,290,944 model.safetensors
+09/23/2026  08:12 AM         9,894,271 tokenizer.json
+09/23/2026  08:12 AM               477 tokenizer_config.json
+               6 File(s)  2,171,195,944 bytes
+
+     Total Files Listed:
+           33596 File(s)  9,201,624,078 bytes
+           10064 Dir(s)  58,632,220,672 bytes free
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis300-20260923/dev && scp -o ConnectTimeout=20 benspc:'C:/Users/benja/lis300/work/data/dev.jsonl' artifacts/claude-lis300-20260923/dev/dev.jsonl && scp -o ConnectTimeout=20 benspc:'C:/Users/benja/lis300/work/dev_rows.jsonl' artifacts/claude-lis300-20260923/dev/dev_rows.jsonl && scp -o ConnectTimeout=20 benspc:'C:/Users/benja/lis300/work/dev_pred.jsonl' artifacts/claude-lis300-20260923/dev/dev_pred.jsonl && echo ALL-COPIED && wc -c artifacts/claude-lis300-20260923/dev/*
+ALL-COPIED
+  328004 artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+   85845 artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+  567831 artifacts/claude-lis300-20260923/dev/dev.jsonl
+  981680 total
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-lis300-20260923/SEAL-run.sha256.txt 2>&1; echo "exit=$?"
+artifacts/claude-lis300-20260923/THRESHOLD.txt: OK
+artifacts/claude-lis300-20260923/dev_sweep.txt: OK
+shasum: C:/Users/benja/lis300/work/run/merged/model.safetensors (BensPC, RTX 5070 Ti run 2026-09-23; weights never in git): No such file or directory
+C:/Users/benja/lis300/work/run/merged/model.safetensors (BensPC, RTX 5070 Ti run 2026-09-23; weights never in git): FAILED open or read
+shasum: WARNING: 1 listed file could not be read
+exit=1
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-lis300-20260923/dev/*
+87dc35cba25bfc6fffdaa7b0c56943f26aba4fd51a5613c7c5a928a87e59367d  artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+5ec11e3491f2b6342db43f39f6fbb137d42422b8d13a8f3c5fb40c605a2b15ef  artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+c44a228978e0f6d1604ed9c36f667da95da2a2623073b482020399af7ed17f22  artifacts/claude-lis300-20260923/dev/dev.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 -o BatchMode=yes benspc 'certutil -hashfile C:\Users\benja\lis300\work\run\merged\model.safetensors SHA256 & certutil -hashfile C:\Users\benja\lis300\work\data\dev.jsonl SHA256 & certutil -hashfile C:\Users\benja\lis300\work\dev_rows.jsonl SHA256 & certutil -hashfile C:\Users\benja\lis300\work\dev_pred.jsonl SHA256' 2>&1
+SHA256 hash of C:\Users\benja\lis300\work\run\merged\model.safetensors:
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324
+CertUtil: -hashfile command completed successfully.
+SHA256 hash of C:\Users\benja\lis300\work\data\dev.jsonl:
+c44a228978e0f6d1604ed9c36f667da95da2a2623073b482020399af7ed17f22
+CertUtil: -hashfile command completed successfully.
+SHA256 hash of C:\Users\benja\lis300\work\dev_rows.jsonl:
+5ec11e3491f2b6342db43f39f6fbb137d42422b8d13a8f3c5fb40c605a2b15ef
+CertUtil: -hashfile command completed successfully.
+SHA256 hash of C:\Users\benja\lis300\work\dev_pred.jsonl:
+87dc35cba25bfc6fffdaa7b0c56943f26aba4fd51a5613c7c5a928a87e59367d
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m$ [0mwc -l artifacts/claude-lis300-20260923/dev/*; echo "---full list---"; wc -c artifacts/claude-lis300-20260923/* artifacts/claude-lis300-20260923/dev/*; echo "---status---"; git status --porcelain -- artifacts/claude-lis300-20260923/ 2>&1 | head -20
+867 artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+     867 artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+     867 artifacts/claude-lis300-20260923/dev/dev.jsonl
+    2601 total
+---full list---
+wc: artifacts/claude-lis300-20260923/dev: read: Is a directory
+     809 artifacts/claude-lis300-20260923/dev_sweep.txt
+     557 artifacts/claude-lis300-20260923/panel_score_T0.json
+     520 artifacts/claude-lis300-20260923/panel_score.json
+    5445 artifacts/claude-lis300-20260923/RESULTS.md
+     407 artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+    1691 artifacts/claude-lis300-20260923/THRESHOLD.txt
+   22149 artifacts/claude-lis300-20260923/train_log.jsonl
+     589 artifacts/claude-lis300-20260923/train_summary.json
+  328004 artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+   85845 artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+  567831 artifacts/claude-lis300-20260923/dev/dev.jsonl
+ 1013847 total
+---status---
+[0m
+[0m$ [0mgit status --porcelain 2>&1 | head -20; echo "---ignore---"; git check-ignore -v artifacts/claude-lis300-20260923/RESULTS.md artifacts/claude-lis300-20260923/dev/dev.jsonl 2>&1; echo "---ledger P300---"; grep -c "P300" artifacts/fable-predictions-ledger.md 2>&1
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+---ignore---
+.gitignore:5:artifacts/	artifacts/claude-lis300-20260923/RESULTS.md
+.gitignore:5:artifacts/	artifacts/claude-lis300-20260923/dev/dev.jsonl
+---ledger P300---
+6
+[0m
