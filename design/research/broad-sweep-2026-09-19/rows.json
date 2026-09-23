@@ -1,0 +1,2413 @@
+{
+ "headline": "All 133 verified ideas fit into 100 distinct groups after merging near-duplicates; nothing was dropped, because no idea was a pure duplicate and none scored fit<=2. The sweep converges hard on a handful of measured failures: the Think loop was probably never given a fair trial (gate initialised at exactly zero, residual init scaled for 6 branches while 20 run, no normalisation between loops), the card row hands the decoder only value+age+row_type while the key, entity ids and source tag are written and thrown away, and the ASK loss is order-free so the second hop is never forced to ask for a different relation. A second cluster is pure method hygiene that would make every future number trustworthy: use the idle 5070 Ti, run 5 seeds instead of 1, decay the learning rate at the end, keep the best-on-validation checkpoint, and replace linear probes with causal swap tests before believing the pooling diagnosis. On the data side, question wording is not yet a separable split axis and 13 of 22 question banks have a single train phrasing, so the 23% held-out number cannot currently say what is broken. Several of the strongest items are cheap \"make the good part better\" moves on things that already work: deep supervision already decodes 8 answers per question that get thrown away, the oracle already knows the full derivation, and generation plus evaluation are nearly free.",
+ "themes": [
+  "The Think loop was never fairly tested: zero gate init, wrong residual scale for the unrolled depth, no inter-loop normalisation, and a readout that hides the drift - four independent bugs all pushing toward 'recurrence is useless'",
+  "The card row is the real bottleneck candidate, not only the pool: key, entity ids, source tag and line index are written to the store and never shown to the decoder, and every diagnostic so far changed the pool instead",
+  "Second-hop failure looks like a loss-shape problem: an order-free set objective is satisfied by one gold card, so nothing ever teaches the second query to name a different relation",
+  "Method hygiene is the cheapest upside in the whole sweep: the GPU is idle, every headline number is one seed, there is no LR decay and no best-on-validation checkpoint",
+  "Probes cannot settle the pooling story; four independent lenses all landed on causal swap / interchange interventions as the test that would",
+  "Question wording is not a separate split axis, so the held-out collapse cannot be attributed; and the model is answering from the wrong answer space, which a tiny question-type head or an oracle type tag would separate in minutes",
+  "Several strengths are being wasted: 8 per-loop answers discarded, the oracle derivation discarded, free generation not used to make more data or bigger eval cells",
+  "Vision items (sleep, VQ codebook, knowledge slots, motivation) are coherent but nearly all C-tier until the measured failures above move"
+ ],
+ "cautions": [
+  "Before any reward-based or search-based idea, the measured shortcut floor matters: question-blind shortcuts already reach 53.7% where the model scores 32-36%, so 'right answer' is currently a partly hackable reward",
+  "Two ideas had verifier cite='wrong' (think-loops-2, synthetic-data-world-6) - the underlying code-level fix still looks right, but check the cited source before quoting it",
+  "Answer-token upweighting appears three times from three lenses; do it as a float weight, not a boolean mask, and keep it as the control arm for any trace-supervision result, or traces will get credit for gradient placement",
+  "Trace supervision can be filler: build the shuffled/filler control into the experiment from day one",
+  "Do not chain several of the Think-loop fixes at once - they are all one-liners, so run them as separate arms or the seed noise will swallow the attribution",
+  "Almost every A-tier item assumes multi-seed reporting; running them one-seed on CPU reproduces the same 503-vs-27 ambiguity that made the existing numbers hard to read",
+  "Reader-backbone swaps (signed recurrence, matrix state, more attention, Canon, chain attention) all carry transfer risk and touch the one thing that currently works; they belong after the card-row and ASK-loss arms",
+  "$30 cloud cap and the local 5070 Ti mean anything marked local-gpu-hours should be queued overnight, not run interactively"
+ ],
+ "rows": [
+  {
+   "rank": 1,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Give the Think loop a fair trial",
+   "score": 93,
+   "merged_from": [
+    "latent-thought-3",
+    "think-loops-2",
+    "think-loops-5",
+    "neurosymbolic-efficiency-5"
+   ],
+   "gid": "g6",
+   "targets": "Think loop looks useless: alpha 0.018-0.042, row-shared update norm ~8.7",
+   "what_it_is": "Retry the Think loop under fair conditions: damp residual init for the 20 branches that actually run, log the think-row norm per loop, and let the answer loss see that norm.",
+   "why_it_might_help": "The decoder's parameter-free norm hides the loop's growing scale from the loss, and init damps 6 branches while 20 run. Verifier: the 'dead gate' story is wrong, alpha does escape zero.",
+   "cheapest_test": "Free first: log think-row norm per loop on an existing checkpoint. Then 3 seeds x {baseline, residual_std/sqrt(8), soft norm penalty} on D-think-gated, step-matched; control is the untouched baseline.",
+   "cost": "5070 Ti minutes per arm; needs GPU plumbing",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; decide before dropping ASK/effort machinery that assumes Think is dead",
+   "sources": [
+    "https://arxiv.org/abs/2606.24898",
+    "https://arxiv.org/abs/2510.25741",
+    "https://arxiv.org/abs/2605.26733"
+   ]
+  },
+  {
+   "rank": 2,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Use the idle GPU, with a rank-agreement check",
+   "score": 92,
+   "merged_from": [
+    "tiny-lm-training-4",
+    "gpu-native-runtime-1",
+    "eval-methodology-7"
+   ],
+   "gid": "g1",
+   "targets": "Every Premonition run is CPU-only at 1,405-4,000 steps, one seed",
+   "what_it_is": "Thread a device argument through the toy, ladder and retrieval scripts so runs use the idle 5070 Ti, then check that the cheap CPU screen ranks arms the same way longer GPU runs do.",
+   "why_it_might_help": "More steps and seeds per hour turns 'one seed, 1,405 steps' into real evidence. Verifier: expect 3-10x, not 10-50x; skip torch.compile reduce-overhead, dynamic shapes will break CUDA graphs.",
+   "cheapest_test": "Re-run one already-scored arm on GPU in fp32 (autocast off, so device is separated from precision), same seed, steps and batch digests; control is the saved CPU run.",
+   "cost": "Free; a few GPU hours including plumbing",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for nearly every other row here",
+   "sources": [
+    "https://pytorch.org/blog/pytorch-2-7/",
+    "https://arxiv.org/pdf/2507.07101",
+    "https://arxiv.org/pdf/2202.06387"
+   ]
+  },
+  {
+   "rank": 3,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Per-hop ordered ASK loss with a coverage term",
+   "score": 92,
+   "merged_from": [
+    "multihop-retrieval-2",
+    "memory-store-8"
+   ],
+   "gid": "g48",
+   "targets": "Second fetch picks the wrong relation: 0-9/171 held out, both cards 1/189",
+   "what_it_is": "Change the ASK loss so one gold card in the top-k no longer satisfies it: add a coverage term requiring every still-needed card to outscore the best non-gold, normalised per question.",
+   "why_it_might_help": "Today one good card ends the pressure, so the second hop gets almost no gradient. Verifier: 'unsupervised' is overstated (set-CE recurs each loop) and index-time association learning failed its own held-out control.",
+   "cheapest_test": "Three arms, 3 seeds, step-matched: set-CE; set-CE + coverage; + latent hop ordering last. Read the existing hop_recall breakdown on held-out combinations only; practised ones are the control.",
+   "cost": "5070 Ti minutes to an hour per arm",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends the second-hop work; run before H2 query-reuse distillation",
+   "sources": [
+    "https://arxiv.org/abs/2101.00436",
+    "https://arxiv.org/pdf/2605.28522",
+    "https://arxiv.org/pdf/2604.20850"
+   ]
+  },
+  {
+   "rank": 4,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Typed card row: key, tags, entity ids, line index",
+   "score": 91,
+   "merged_from": [
+    "binding-4",
+    "memory-store-4"
+   ],
+   "gid": "g15",
+   "targets": "Card rows carry value + age + row_type only; choosing sits at 166-182/512",
+   "what_it_is": "Feed the decoder more of the card that the store already writes: the entity-id sum, a source tag, the line index and the retrieval key, projected into the card row as separate arms.",
+   "why_it_might_help": "Answers the project's own open question, row format or pooling, which three pool repairs never tested. Verifier: key and value come from the same pooled vector, so the entity-id sum is the only genuinely new signal.",
+   "cheapest_test": "Three arms, 3 seeds, otherwise byte-identical: baseline; +key+tag; +entity-id sum alone. Score exp1 choose:one_hop and check the added signal cannot identify the gold card by itself.",
+   "cost": "Mac minutes; tiny parameter cost",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with the planned pool controls; run alongside them",
+   "sources": [
+    "https://arxiv.org/abs/2604.19052",
+    "https://arxiv.org/abs/2310.17191",
+    "https://arxiv.org/html/2606.01435v1"
+   ]
+  },
+  {
+   "rank": 5,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Five-seed protocol, report the split not the mean",
+   "score": 90,
+   "merged_from": [
+    "eval-methodology-1",
+    "motivation-rl-6"
+   ],
+   "gid": "g2",
+   "targets": "Seed instability: same setting scores 503/512 and 27/512",
+   "what_it_is": "Run every arm at five to eight seeds, keep the best-on-validation checkpoint, and report how many seeds cleared a precommitted threshold plus min and max, never the mean.",
+   "why_it_might_help": "The result is bimodal, so a mean of 265/512 describes no real run, and 1-seed A/Bs on arms differing by a few items are noise. Verifier: drop successive halving, it kills exactly the slow seeds you care about.",
+   "cheapest_test": "Re-run the 503-vs-27 arm at seeds 0-4 on GPU, step-matched; controls are the saved CPU seed-0 number and a fp32 device-parity run. Add a validation hook first (eval_every is 0).",
+   "cost": "Free; under an hour on the 5070 Ti",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for pool controls, H1 and H2 to mean anything",
+   "sources": [
+    "https://arxiv.org/html/2504.07086v2",
+    "https://arxiv.org/abs/2503.09543"
+   ]
+  },
+  {
+   "rank": 6,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Make question wording its own split axis",
+   "score": 90,
+   "merged_from": [
+    "wording-generalization-1",
+    "synthetic-data-world-1"
+   ],
+   "gid": "g28",
+   "targets": "Held-out questions change wording, names and style at once; 23.4% unexplained",
+   "what_it_is": "Score the existing 4M checkpoint on a held-out set that keeps training question phrasings while everything else stays new, so the wording penalty is measured with all else matched.",
+   "why_it_might_help": "It decides whether the next month goes into more phrasings or into architecture. Verifier: do not add a fifth split axis; force the q.* banks to draw from the train split instead, keeping the manifest intact.",
+   "cheapest_test": "Regenerate 600 validation visits with train-split question banks, re-score the saved checkpoint (5.5 s eval); control is the same checkpoint on the unchanged held-out set. Report per bank.",
+   "cost": "Mac minutes; no training",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; prerequisite for any data-versus-architecture decision",
+   "sources": [
+    "https://arxiv.org/html/2510.16096v1",
+    "https://arxiv.org/html/2609.13144",
+    "https://arxiv.org/pdf/2412.02980"
+   ]
+  },
+  {
+   "rank": 7,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Causal swap tests instead of linear probes",
+   "score": 89,
+   "merged_from": [
+    "binding-5",
+    "interpretability-tooling-2",
+    "eval-methodology-5",
+    "latent-thought-7"
+   ],
+   "gid": "g22",
+   "targets": "Pooling diagnosis rests on linear probes (person 131/2304, 97.9% value mass)",
+   "what_it_is": "Instead of asking whether a probe can read the person, swap one card's person component, or a whole card row, in from a paired visit and see whether the answer follows the swap.",
+   "why_it_might_help": "A probe cannot tell 'not there' from 'there but ignored', and three pooling repairs already failed. Verifier: binding-swap evidence comes from 13B-65B models where it strengthens with scale, so a null here proves little.",
+   "cheapest_test": "256 matched pairs on existing checkpoints, including one where person is decodable (1818/2048). Controls: random same-norm direction, whole card, irrelevant card. Score both-members-correct, not flip rate.",
+   "cost": "Mac minutes; forward passes only",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with pool controls; run before funding a fourth pooling fix",
+   "sources": [
+    "https://arxiv.org/html/2310.17191",
+    "https://proceedings.mlr.press/v236/geiger24a/geiger24a.pdf",
+    "https://arxiv.org/html/2606.12689"
+   ]
+  },
+  {
+   "rank": 8,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "LR cooldown, EMA, best-on-validation checkpoint",
+   "score": 88,
+   "merged_from": [
+    "tiny-lm-training-1",
+    "think-loops-6"
+   ],
+   "gid": "g4",
+   "targets": "Constant learning rate, final-weights-only saving, no EMA",
+   "what_it_is": "Add the standard small-model recipe: decay the learning rate over the last part of each run, keep an EMA copy of the weights, and save the best-on-validation checkpoint rather than the last one.",
+   "why_it_might_help": "Runs are stopped mid-noise, so seeds land in different basins. TRM's own tiny recursive ablation loses 7.5 points without EMA. Verifier: that was a 5M Sudoku model, and cooldown shape is not settled.",
+   "cheapest_test": "2x2 over {EMA on/off} x {decay on/off} on the 503-vs-27 arm, seeds 0-2, step-matched; control is the current constant-LR run. Score raw and EMA weights both.",
+   "cost": "5070 Ti minutes; 6-12 short runs",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Pairs with g2; both precede the planned pool controls",
+   "sources": [
+    "https://arxiv.org/pdf/2508.01483",
+    "https://arxiv.org/html/2510.04871v1",
+    "https://arxiv.org/html/2509.02046v2"
+   ]
+  },
+  {
+   "rank": 9,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Supervise choosing directly with hard negatives",
+   "score": 88,
+   "merged_from": [
+    "binding-6"
+   ],
+   "gid": "g26",
+   "targets": "Choosing 166-182/512 was trained with answer loss only",
+   "what_it_is": "Add a small head that scores each supplied card against the question, trained listwise against deliberately confusable negatives: same person different relation, same relation different person, same value different owner.",
+   "why_it_might_help": "No gradient anywhere currently says which supplied row is right, so 'choosing is weak' partly measures a signal that was removed. Oracle negatives are privileged information, so a win locates the deficit, it is not reasoning.",
+   "cheapest_test": "Two arms, 3 seeds, step-matched: answer CE alone versus answer CE plus listwise selection CE. Score choose:one_hop plus the paired irrelevant-change count, and mandatorily re-score with the head detached.",
+   "cost": "Mac minutes per arm; small extra head",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New control that must precede further pooling work",
+   "sources": [
+    "https://arxiv.org/pdf/2603.18005",
+    "https://arxiv.org/abs/2505.20896"
+   ]
+  },
+  {
+   "rank": 10,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Answer-type head that gates the decoder",
+   "score": 87,
+   "merged_from": [
+    "wording-generalization-7",
+    "neurosymbolic-efficiency-3"
+   ],
+   "gid": "g34",
+   "targets": "Held-out answers come from the wrong answer space (Q12, Q6 collapses)",
+   "what_it_is": "Train a tiny head to predict the answer space a question asks for (place, person, direction, count, yes/no, rule, plan) and use it to softly bias the first answer token toward that space.",
+   "why_it_might_help": "Errors are wrong-language errors, and answer tokens are only 1-2% of loss. Verifier: label the bank, not qtype, since Q10 equals 'not told' and already leaks; keep 'not told' legal in every mask.",
+   "cheapest_test": "Zero training first: re-score the saved 4M checkpoint with the oracle type supplying the mask (5.5 s eval), control the same checkpoint unmasked. That is a ceiling, not a result.",
+   "cost": "Mac minutes; then one 600 s GPU pilot",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; pair with g28's wording measurement before data work",
+   "sources": [
+    "https://arxiv.org/html/2510.16096v1",
+    "https://arxiv.org/html/2609.01217",
+    "https://arxiv.org/html/2501.10868v1"
+   ]
+  },
+  {
+   "rank": 11,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Factorised query: who in one field, relation in another",
+   "score": 87,
+   "merged_from": [
+    "latent-thought-2",
+    "multihop-retrieval-3"
+   ],
+   "gid": "g51",
+   "targets": "Held-out two-hop 14/189; hop-2 asks right relation 0-9/171; both facts fetched 1/189",
+   "what_it_is": "Split the ASK query into two fields, one saying who and one saying which relation, each matched against its own half of a card's key.",
+   "why_it_might_help": "Hop 2 asks by habit, not from the question. Verifier: selection is detached and L_ask order-free, so new fields get no gradient unless paired with per-hop targets. Evidence is from frozen pretrained vision agents.",
+   "cheapest_test": "2x2 on the toy ladder: split vs single query, with vs without a per-hop ASK target, 3 seeds. Guardrail readout: one-hop retrieval 356/512.",
+   "cost": "Minutes per arm; CPU today, GPU needs device plumbing",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for H2 query-reuse distillation; overlaps g49",
+   "sources": [
+    "https://arxiv.org/html/2604.03266",
+    "https://arxiv.org/abs/2107.02367",
+    "https://arxiv.org/pdf/2002.05969"
+   ]
+  },
+  {
+   "rank": 12,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Role and identity tags on cards and slot writes",
+   "score": 86,
+   "merged_from": [
+    "binding-3",
+    "slots-pointers-1",
+    "memory-net-era-autopsy-3"
+   ],
+   "gid": "g16",
+   "targets": "Choosing among distractors 166-182/512; irrelevant-change flips 150/256; pooled card to person 131/2304",
+   "what_it_is": "Add an explicit identity tag to every card and slot write: a per-visit entity vector added at write time, plus role projections so subject, object and value slots differ.",
+   "why_it_might_help": "Pooled cards barely encode person (131/2304); a tag makes 'whose card is this' a dot product. Verifier: slot-conditioning already exists, so the real additions are a persistent slot key and unit-norm erasure.",
+   "cheapest_test": "Toy ladder, 3 seeds, tag scale learned and initialised near zero so step 0 matches baseline. Score choose:one_hop (chance 32/512), flip count, person probe.",
+   "cost": "Minutes per arm; ~4k extra params at d=32",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; complements pool controls and H1 sensitivity work",
+   "sources": [
+    "https://arxiv.org/abs/2310.17191",
+    "https://arxiv.org/abs/2012.14601",
+    "https://ar5iv.labs.arxiv.org/html/1612.03969"
+   ]
+  },
+  {
+   "rank": 13,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Supervise the retrieval program: relation plus argument",
+   "score": 86,
+   "merged_from": [
+    "neurosymbolic-efficiency-4",
+    "trace-supervision-5"
+   ],
+   "gid": "g49",
+   "targets": "Hop-2 requested relation 0-9/171 held-out; both cards fetched 1/189; order-free ASK loss",
+   "what_it_is": "Make retrieval supervision a tiny two-step program: per hop a relation id and an argument pointer, and build the ASK query out of those two typed fields.",
+   "why_it_might_help": "The ASK loss is order-free, so hop 2 is barely supervised. Verifier: a relation head alone just reads the relation token off the question and saturates; constructing the query is the load-bearing part.",
+   "cheapest_test": "Toy ladder, 3 seeds: typed-field query vs unchanged set-CE, relation head only as a readout. Raise relations above 3 first. Score fetch2-relation/171.",
+   "cost": "Tens of minutes per arm; small code change",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for H2 query-reuse distillation; competes with g50",
+   "sources": [
+    "https://arxiv.org/abs/2211.14275",
+    "https://arxiv.org/abs/2405.15071",
+    "https://arxiv.org/abs/2502.18001"
+   ]
+  },
+  {
+   "rank": 14,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Weight answer tokens with a float, not a mask",
+   "score": 85,
+   "merged_from": [
+    "tiny-lm-training-2",
+    "synthetic-data-world-6",
+    "trace-supervision-2"
+   ],
+   "gid": "g37",
+   "targets": "Core track: answer tokens are 3.05% of gradient; held-out 23% vs train-split 44%",
+   "what_it_is": "Replace the boolean loss mask with a float weight so answer tokens count more: sum(w times CE) divided by sum(w). Sweep the weight instead of masking narration out.",
+   "why_it_might_help": "Answer tokens carry 3.05% of the gradient. Verifier: no answer labels exist in the stream yet, so derive them from the [answer]/[feedback] special ids, and divide by weight sum or the learning rate silently changes.",
+   "cheapest_test": "Four matched 600 s 4M runs at w = 1 (control), 3, 10, 30, same seed and corpus. Watch per-type held-out accuracy, narration loss, train-holdout gap.",
+   "cost": "~40 min GPU total; two-three files changed",
+   "confidence": "medium",
+   "citation_status": "unverified",
+   "relation_to_current_plan": "New; prerequisite control for every Core-track A/B",
+   "sources": [
+    "https://arxiv.org/html/2404.07965v3",
+    "https://arxiv.org/html/2507.07817",
+    "https://arxiv.org/abs/2309.14316"
+   ]
+  },
+  {
+   "rank": 15,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Re-read the fetched line to build the next query",
+   "score": 84,
+   "merged_from": [
+    "multihop-retrieval-4"
+   ],
+   "gid": "g52",
+   "targets": "Hop-2 query conditioned only on a barely-used think state; both facts fetched 1/189",
+   "what_it_is": "On each fetch, crop the card's stored source tokens and re-run them with the question through the same reader, then build the next query from that state. No new parameters.",
+   "why_it_might_help": "Reading works (one-hop 1024/1024) while think gates barely open (0.018-0.042). Verifier: the FLOP counter misses the minGRU scan, so gate on wall clock too; evidence comes from large pretrained retrievers.",
+   "cheapest_test": "Decisive screen first: an arm that re-reads the GOLD hop-1 line. If that oracle does not fix hop 2, skip the learned version. 3 seeds.",
+   "cost": "GPU-hours; extra reader pass per fetch",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends plan's shared repeated reader and bounded-reread steps",
+   "sources": [
+    "https://arxiv.org/abs/2406.12775",
+    "https://arxiv.org/abs/2608.13006",
+    "https://github.com/facebookresearch/multihop_dense_retrieval"
+   ]
+  },
+  {
+   "rank": 16,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Exact ASK-score attribution, token by token",
+   "score": 82,
+   "merged_from": [
+    "interpretability-tooling-4"
+   ],
+   "gid": "g23",
+   "targets": "Why hop-2 asks the wrong relation (0-9/171); query built from register 0 alone",
+   "what_it_is": "Exact attribution of retrieval scores: since the key is a weighted sum and the key map is linear, each ASK score splits into per-source-token pieces, with cosine and age-bias shown separately.",
+   "why_it_might_help": "Separates three diagnoses needing different fixes: the query lacks the relation, the keys do not separate relations, or age bias swamps cosine. Verifier: think-layer attribution is exact only with attention frozen.",
+   "cheapest_test": "No training. On the existing longread checkpoint, dump per-token key contributions for the 171 held-out hop-2 questions and the 341 practised ones, then compare.",
+   "cost": "Mac-minutes; forward passes only",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite diagnostic for g51 and g49",
+   "sources": [
+    "https://arxiv.org/abs/2506.09944",
+    "https://openreview.net/pdf?id=EytBpUGB1Z",
+    "https://transformer-circuits.pub/2026/workspace/index.html"
+   ]
+  },
+  {
+   "rank": 17,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Build the shortcut floor in before any reward",
+   "score": 82,
+   "merged_from": [
+    "motivation-rl-7"
+   ],
+   "gid": "g80",
+   "targets": "Choosing 32-36% sits below a measured 53.7% question-blind shortcut; three unresolved data leaks",
+   "what_it_is": "Run three fixed non-learning policies (question-blind most-frequent answer, most-recent card, random attribute card) through the same scorer at every eval and print their scores beside every reported cell.",
+   "why_it_might_help": "If a shortcut beats the model, a correctness reward rewards the shortcut. Verifier: the 53.7% figure exists only as prose, measured in a different card condition, so re-derive it with a committed scorer first.",
+   "cheapest_test": "Write the three policies as scorers, run over existing test sets and saved checkpoints; later a shortcut-broken paired set, validated by those policies dropping to chance.",
+   "cost": "Mac-minutes; no training for part one",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for every scored or reward-based arm",
+   "sources": [
+    "https://arxiv.org/html/2605.20744v1",
+    "https://arxiv.org/html/2604.13602v1",
+    "https://limit-of-rlvr.github.io/"
+   ]
+  },
+  {
+   "rank": 18,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Is the seed split just learning-rate brittleness?",
+   "score": 80,
+   "merged_from": [
+    "sequence-backbones-6"
+   ],
+   "gid": "g5",
+   "targets": "Seed instability 503/512 vs 27/512 at identical settings; constant LR 1e-3, no decay",
+   "what_it_is": "Sweep the learning rate and constant-versus-cosine schedule, changing no architecture, to test whether the seed split is the known narrow-learning-rate brittleness of recurrent backbones.",
+   "why_it_might_help": "Published work finds recurrent models succeed only in a narrow LR window while transformers stay robust. Either a stable band appears, making one seed meaningful and later A/Bs cheaper, or the split is a real finding.",
+   "cheapest_test": "3 LRs x 3 seeds x {constant, cosine} on the retrieval script, not the exp1 ladder, since 503/512 is a gold_read number. Add best-on-validation checkpointing.",
+   "cost": "9-18 short runs; needs device plumbing first",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for every later single-seed A/B comparison",
+   "sources": [
+    "https://arxiv.org/html/2508.19029v2",
+    "https://arxiv.org/html/2507.06457v2"
+   ]
+  },
+  {
+   "rank": 19,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Oracle question-type tag as diagnostic, then scaffold",
+   "score": 80,
+   "merged_from": [
+    "synthetic-data-world-4"
+   ],
+   "gid": "g35",
+   "targets": "Core wall: question-type identification, e.g. Q12 emits 'zero' 196 and 'not told' 202 of 448",
+   "what_it_is": "Prepend a word naming the question type to every question, in training and evaluation, to measure the ceiling you would reach if type identification were free. Optionally fade it later.",
+   "why_it_might_help": "Dumps show the model answering from the wrong answer space entirely. Verifier: write the marker as ordinary text, not a new special token, so the tokenizer digest stays comparable; the faded-scaffold second step is unproven.",
+   "cheapest_test": "Two matched 600 s 4M runs, same seed and corpus, tagged versus untagged. Compare per-type held-out accuracy and wrong-answer-space counts. Report strictly as a ceiling.",
+   "cost": "~20 min GPU for both runs",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; decides whether next effort goes to data or architecture",
+   "sources": [
+    "https://arxiv.org/html/2505.11643",
+    "https://proceedings.mlr.press/v291/wang25a.html",
+    "https://ar5iv.labs.arxiv.org/html/2112.00086"
+   ]
+  },
+  {
+   "rank": 20,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Train the second hop first (reverse replay)",
+   "score": 80,
+   "merged_from": [
+    "neuro-inspired-4"
+   ],
+   "gid": "g50",
+   "targets": "Hop-2 requested relation 0-9/171; both cards fetched 1/189; held-out two-hop 14/189",
+   "what_it_is": "Make the teacher insert the link card first so hop order is deterministic, instead of drawing a random remaining gold card; optionally then train the answer hop first (reverse curriculum).",
+   "why_it_might_help": "Verifier: the loss is not truly order-free; the defect is the teacher drawing a uniform random remaining card, so no consistent hop-2 policy is learnable. Link-first ordering uses simulator knowledge: a ceiling diagnostic.",
+   "cheapest_test": "Three arms, 3 seeds, matched steps: current teacher, deterministic link-first teacher, reverse curriculum. Decision cells: fetch2 requested relation correct /171 and held-out two-hop /189.",
+   "cost": "Minutes per arm; small teacher-side change",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with g49; cheaper first attempt at same failure",
+   "sources": [
+    "https://www.biorxiv.org/content/10.1101/225664v4.full.pdf",
+    "https://arxiv.org/pdf/2102.11914"
+   ]
+  },
+  {
+   "rank": 21,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Measure pass@k with the oracle before any search",
+   "score": 80,
+   "merged_from": [
+    "verifier-and-test-time-search-1"
+   ],
+   "gid": "g76",
+   "targets": "Plan questions ~0.4-0.7% greedy, and choosing 166-182/512, below the 53.7% shortcut floor",
+   "what_it_is": "Sample k answers per question instead of one greedy answer, grade every sample with the oracle you already have, and plot how often at least one is right.",
+   "why_it_might_help": "No gain by itself, but it kills or unlocks every search/verifier idea. Verifier: greedy plan accuracy is ~0.4-0.7%, not 0, so pass@k may be non-zero.",
+   "cheapest_test": "Premonition choosing first, not plans: k=1..32 at T=0.7 and 1.0 on 500 fixed questions; controls are pass@1 at same temperature and random-pick-of-k.",
+   "cost": "5070 Ti ~minutes; small sampling path to add",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; prerequisite for any verifier or search work",
+   "sources": [
+    "https://arxiv.org/abs/2606.16999",
+    "https://arxiv.org/abs/2607.17531",
+    "https://arxiv.org/abs/2609.01274"
+   ]
+  },
+  {
+   "rank": 22,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Tune the baselines before claiming a win",
+   "score": 80,
+   "merged_from": [
+    "gpu-native-runtime-7"
+   ],
+   "gid": "g90",
+   "targets": "The headline claim that D beats baselines A (plain transformer) and C (BM25 lookup)",
+   "what_it_is": "Repair handicapped baselines before comparing: C's stopword list deletes the wh-words and its evidence budget truncates; A weights answer tokens the same as every other token.",
+   "why_it_might_help": "If D's margin survives tuned rivals it is real; if not, better to know now. Verifier: divide weighted loss by the weight sum, or the arms get different learning rates.",
+   "cheapest_test": "Free half first: rerun C's gold recall@8 with wh-words kept and the budget skipping rather than breaking, against as-is C. Report recall, not accuracy (wh-words leak question type).",
+   "cost": "Mac minutes free half; A half GPU hours",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; prerequisite for the H1/H2 efficiency claims",
+   "sources": [
+    "https://arxiv.org/abs/2306.07179",
+    "https://arxiv.org/abs/2406.07887"
+   ]
+  },
+  {
+   "rank": 23,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Train 8 seeds at once with vmap",
+   "score": 78,
+   "merged_from": [
+    "gpu-native-runtime-4"
+   ],
+   "gid": "g3",
+   "targets": "Seed instability 503/512 versus 27/512; every headline number is one seed",
+   "what_it_is": "Run several seeds of the same arm at once on the one 16 GB card, and report each seed plus the median instead of a single number.",
+   "why_it_might_help": "The failure is two attractors, not noise, so the mean of 503 and 27 describes no run that happened. Verifier: vmap will likely break on CardStore mutation and top-k.",
+   "cheapest_test": "Time 5 concurrent same-arm processes against 1 process as control. First lower the per-process 14 GiB memory guard, which cannot see siblings and will OOM.",
+   "cost": "5070 Ti ~one run's wall clock; small",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; prerequisite for trusting every planned A/B",
+   "sources": [
+    "https://docs.pytorch.org/tutorials/intermediate/ensembling.html",
+    "https://arxiv.org/abs/2109.08203"
+   ]
+  },
+  {
+   "rank": 24,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Soft differentiable card read (relaxed top-k)",
+   "score": 78,
+   "merged_from": [
+    "multihop-retrieval-1",
+    "neurosymbolic-efficiency-7"
+   ],
+   "gid": "g44",
+   "targets": "No answer-loss gradient reaches the query head; both facts fetched 1/189",
+   "what_it_is": "Make card selection differentiable while training: Gumbel relaxed top-k weights, or a soft score-weighted read of all cards, with the hard top-4 still used at evaluation, annealed sharp.",
+   "why_it_might_help": "Wrong answers could finally teach the query which card to ask for. Verifier: the two-pool prerequisite already failed, and soft mixing may blur cards, since answers already behave like a bag of values.",
+   "cheapest_test": "Use the own-retrieval arms, not supplied-card ones: relaxed mask versus identical hard-detached control, 3 seeds, matched steps; score gold recall@4, right-relation/171, both-fetched/189, plus query gradient norms.",
+   "cost": "5070 Ti an evening; M+ engineering",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with H2 query-reuse distillation; extends the second-hop work",
+   "sources": [
+    "https://aclanthology.org/2025.acl-long.354/",
+    "https://arxiv.org/pdf/2002.06504",
+    "https://arxiv.org/pdf/2305.03742"
+   ]
+  },
+  {
+   "rank": 25,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Write the derivation as a short oracle-checkable trace",
+   "score": 78,
+   "merged_from": [
+    "trace-supervision-1",
+    "trace-supervision-7"
+   ],
+   "gid": "g72",
+   "targets": "Answer tokens 3% of loss; Q11 why 0%, Q8 rule 4%, Q7 7.2%",
+   "what_it_is": "Write the oracle's own derivation \u2014 evidence lines then rule families \u2014 into the training text just before the answer, on the same line, since a newline stops generation.",
+   "why_it_might_help": "Names the answer space and shows the steps, and gives a free per-item 'right for the right reason' score. Verifier: it is a derivation fingerprint, not a re-runnable program.",
+   "cheapest_test": "Data-side first, seconds: check the rendered trace round-trips to the oracle's evidence, families and depth for all 13 types. Then two token-matched 4M runs, traced versus untraced, same world seed.",
+   "cost": "Free data check; two 600 s GPU runs",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; extends H1 by supervising the derivation, not the answer",
+   "sources": [
+    "https://arxiv.org/html/2407.20311v1",
+    "https://arxiv.org/abs/2307.03381",
+    "https://arxiv.org/abs/2312.09241"
+   ]
+  },
+  {
+   "rank": 26,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Feed the question back in at every loop",
+   "score": 76,
+   "merged_from": [
+    "think-loops-1"
+   ],
+   "gid": "g7",
+   "targets": "Think loop measurably unused; gates nearly closed; rows collapse toward each other",
+   "what_it_is": "At every think loop, re-add the original rows (question, freshly written card, slots) and normalise between loops, so the loop refines a state instead of drifting away from it.",
+   "why_it_might_help": "Both ingredients are simply absent today, and they are the usual cause of dead loops. Verifier: the evidence is 44M-1.3B language models; the dynamics argument transfers, the gains probably do not.",
+   "cheapest_test": "2x2 on the currently winning ladder arm with Think switched on: injection on/off by inter-loop LayerNorm on/off, 3 seeds, step-matched; log gate alpha, row cosine, choose:one_hop.",
+   "cost": "5070 Ti under an hour; ~15 lines",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; extends the bounded-reread step with a working loop",
+   "sources": [
+    "https://arxiv.org/html/2604.11791v1",
+    "https://arxiv.org/html/2604.12946v1",
+    "https://arxiv.org/abs/2605.26733"
+   ]
+  },
+  {
+   "rank": 27,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Ten times more data; redo 4M vs 28M fairly",
+   "score": 76,
+   "merged_from": [
+    "tiny-lm-training-6",
+    "synthetic-data-world-5"
+   ],
+   "gid": "g39",
+   "targets": "13.7 epochs over 24M tokens; 28M saw 119M tokens versus 4M's 396M",
+   "what_it_is": "Generate roughly ten times more village visits \u2014 generation is 74 seconds per 20,000 \u2014 and redo 4M against 28M at equal token count instead of equal wall clock.",
+   "why_it_might_help": "Separates plain memorising from the real walls and gives the first fair capacity answer. Verifier: 200k visits is still 1.6-1.9 epochs, and at token parity 28M gets fewer steps.",
+   "cheapest_test": "4M on old versus new corpus at 600 s (old corpus is the control), then 4M versus 28M at a matched token budget. Add a strong-weight-decay arm, cheaply.",
+   "cost": "~30 min generation; 1-2 h GPU",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for pool controls and H1; removes a confound",
+   "sources": [
+    "https://arxiv.org/abs/2305.16264",
+    "https://arxiv.org/html/2605.01640",
+    "https://arxiv.org/html/2405.15071v2"
+   ]
+  },
+  {
+   "rank": 28,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Stop permanent eviction; let a card be re-fetched",
+   "score": 76,
+   "merged_from": [
+    "memory-store-6",
+    "memory-net-era-autopsy-5"
+   ],
+   "gid": "g60",
+   "targets": "Fetched cards are permanently ineligible while the 16 card rows wrap and overwrite",
+   "what_it_is": "When the ring buffer recycles a row, clear that card's fetched flag and zero the row, and swap the permanent ban for a decaying penalty on re-fetching.",
+   "why_it_might_help": "Two separately designed mechanisms collide and can delete evidence mid-question. Verifier: existing metrics count fetched-ever, and held-out hop-2 cards are never even requested (0/171), so treat this as hygiene.",
+   "cheapest_test": "Read the existing hop_recall and card_stats files first \u2014 no run at all \u2014 for gold cards evicted after fetch; only fixed-8-loop arms can overflow 16 rows.",
+   "cost": "Free file read; ~5 lines to fix",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; prerequisite for the shared repeated second-hop reader",
+   "sources": [
+    "https://arxiv.org/abs/2605.25475",
+    "https://ar5iv.labs.arxiv.org/html/1610.09027",
+    "https://ar5iv.labs.arxiv.org/html/1904.10278"
+   ]
+  },
+  {
+   "rank": 29,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Key and value from different parts of the line",
+   "score": 74,
+   "merged_from": [
+    "binding-1",
+    "memory-net-era-autopsy-2"
+   ],
+   "gid": "g17",
+   "targets": "One pooled vector serves as both key and value; 97.9% mass on value token",
+   "what_it_is": "Give the card writer several pooling scores, each filling its own slice of the card (who, relation, value), or build the value from different token positions than the key.",
+   "why_it_might_help": "Disjoint coordinates cannot overwrite each other, so person identity survives. Verifier: two pooling repairs already failed, and the published span-separation effect is about 3 points, not 24.",
+   "cheapest_test": "Toy ladder, three arms by three seeds: baseline, the already-coded two-pool control, role-block; score choose:one_hop against the 53.7% floor plus pooled-to-person probes. Cheapest arm is a learned key mask.",
+   "cost": "Mac CPU minutes; toy d=32, 8-dim slices",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with H1 triplet loss; another pooling repair attempt",
+   "sources": [
+    "https://arxiv.org/abs/2310.17191",
+    "https://ar5iv.labs.arxiv.org/html/1606.03126",
+    "https://arxiv.org/abs/2604.19052"
+   ]
+  },
+  {
+   "rank": 30,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Build phrasings from a grammar, not from Qwen",
+   "score": 74,
+   "merged_from": [
+    "wording-generalization-2"
+   ],
+   "gid": "g29",
+   "targets": "13 of 22 question banks have exactly one training phrasing; held-out wording wall",
+   "what_it_is": "Write a small grammar per question type \u2014 lead-in, frame, argument order, tail \u2014 and combine the pieces, holding out whole constructors, instead of buying more sentences from Qwen.",
+   "why_it_might_help": "Hundreds of phrasings from ~15 hand-written pieces, and a real test of wording generalisation. Verifier: pick genuinely starved banks; q.direction already has four train patterns, so its collapse is something else.",
+   "cheapest_test": "Grammar for q.who_has and q.plan_get only, regenerate, one matched 600 s 4M run against the current corpus at identical seed; the untouched question types are the control.",
+   "cost": "~1 h writing; one 600 s GPU run",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; attacks the Core wording wall, independent of mini-D",
+   "sources": [
+    "https://arxiv.org/html/2609.13144",
+    "https://arxiv.org/html/2510.16096v1"
+   ]
+  },
+  {
+   "rank": 31,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Watch the seed lottery happen, probe during training",
+   "score": 72,
+   "merged_from": [
+    "interpretability-tooling-5"
+   ],
+   "gid": "g24",
+   "targets": "Seed lottery: gold_read one_hop 503/512 (seed 0) vs 27/512 (seed 1)",
+   "what_it_is": "Run the probe panel you already have at every eval step, not just at the end, and save a checkpoint each time. Three seeds, one short arm.",
+   "why_it_might_help": "Shows whether seed 1 never learned person info or learned then lost it. Either way you get a step to intervene at, plus best-on-validation checkpoints for free.",
+   "cheapest_test": "3 seeds x 1500 steps with probes each eval; control is the same arm that gave 503/512 vs 27/512.",
+   "cost": "5070 Ti ~30 min; small",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; instruments the pool controls already planned",
+   "sources": [
+    "https://arxiv.org/pdf/2508.15841",
+    "https://www.alignmentforum.org/posts/TjaeCWvLZtEDAS5Ex/towards-developmental-interpretability"
+   ]
+  },
+  {
+   "rank": 32,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Say each world fact several ways in the corpus",
+   "score": 72,
+   "merged_from": [
+    "synthetic-data-world-2"
+   ],
+   "gid": "g33",
+   "targets": "Core 23.4% held-out vs 44% train-split; the 0.245 generalisation gap",
+   "what_it_is": "Re-simulate each visit 3-5 times with fresh wording and shuffled scene order, so every world fact appears in several renderings, not just every question.",
+   "why_it_might_help": "Allen-Zhu found single-rendering facts get memorised but not retrieved. Transfer risk is real: his models were far bigger, and village already varies wording per line, so the gain may be small.",
+   "cheapest_test": "Token-matched corpora: 20k villages once vs 4k villages x5. Same 4M, 600s each; score both on villages neither saw.",
+   "cost": "5070 Ti ~25 min; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; a data fix, parallel to the architecture plan",
+   "sources": [
+    "https://arxiv.org/abs/2309.14316",
+    "https://arxiv.org/abs/2409.07431",
+    "https://arxiv.org/pdf/2505.16178"
+   ]
+  },
+  {
+   "rank": 33,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "MemN2N recipe: linear start, dummies, best-of-ten",
+   "score": 72,
+   "merged_from": [
+    "memory-net-era-autopsy-1"
+   ],
+   "gid": "g62",
+   "targets": "Seed instability (503 vs 27/512); no regularisation in the reasoner",
+   "what_it_is": "Borrow MemN2N's recipe: add 10% empty dummy card rows as a regulariser, and pick the best of 3 seeds by validation score rather than trusting one run.",
+   "why_it_might_help": "Turns the seed lottery into a managed number so later A/Bs mean something. Note: MemN2N actually picked lowest training error; validation picking is Universal Transformer's and EntNet's protocol.",
+   "cheapest_test": "Ladder at 1500 steps: baseline vs +dummy rows, 3 seeds each; report the seed spread, selecting on validation only.",
+   "cost": "5070 Ti ~2 h; small",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for every planned A/B comparison",
+   "sources": [
+    "https://ar5iv.labs.arxiv.org/html/1503.08895",
+    "https://ar5iv.labs.arxiv.org/html/1807.03819",
+    "https://ar5iv.labs.arxiv.org/html/1612.03969"
+   ]
+  },
+  {
+   "rank": 34,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Sample several ASK chains and score the whole chain",
+   "score": 72,
+   "merged_from": [
+    "verifier-and-test-time-search-2"
+   ],
+   "gid": "g77",
+   "targets": "Two-hop 14/189; both gold cards fetched only 1/189",
+   "what_it_is": "At eval only, add noise to card scores and run the fetch loop 8 times, giving 8 different evidence sets. Keep the chain whose answer the decoder is most confident about.",
+   "why_it_might_help": "Cheaply measures the ceiling: how often any of 8 chains grabs both gold cards. If it stays near 1/189, the query head genuinely cannot ask the second relation and query work must come first.",
+   "cheapest_test": "No training. Seed-0 checkpoint, 189 held-out items, sweep temperature; control is fully random 4-card fetch, already coded.",
+   "cost": "5070 Ti ~20 min; small",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for H2 query-reuse distillation",
+   "sources": [
+    "https://arxiv.org/abs/2607.05712",
+    "https://arxiv.org/abs/2608.25115",
+    "https://arxiv.org/abs/2607.17531"
+   ]
+  },
+  {
+   "rank": 35,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Loop-resolved Think dashboard during training",
+   "score": 70,
+   "merged_from": [
+    "interpretability-tooling-3"
+   ],
+   "gid": "g8",
+   "targets": "Think gates nearly closed; unnormalised residual, row-shared update norm ~8.7",
+   "what_it_is": "Log five cheap numbers per think loop during training: row norm, shared-drift share, row cosine, effective rank, and gradient reaching Think parameters.",
+   "why_it_might_help": "Separates \"recurrence does not help\" from \"recurrence was never trainable\". Caveat: the loop-collapse paper's regime is much larger models, so a clean dashboard at 2M would not be surprising.",
+   "cheapest_test": "Add scalars to the existing log; two short arms differing only in residual init, same seed and the alpha gate unfrozen in both.",
+   "cost": "5070 Ti ~20 min; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; instrumentation, does not compete with the plan",
+   "sources": [
+    "https://arxiv.org/abs/2605.18797",
+    "https://arxiv.org/pdf/2602.10097"
+   ]
+  },
+  {
+   "rank": 36,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "Reactive hint ladder: help only what just failed",
+   "score": 70,
+   "merged_from": [
+    "motivation-rl-4"
+   ],
+   "gid": "g57",
+   "targets": "Own-retrieval one_hop 124/512 vs gold_read 503/512; unlearnable default curriculum",
+   "what_it_is": "Drop the fixed clock. Attempt each question with the model's own fetch; if wrong, retry that item with the gold card supplied and train on the hinted try at lower weight.",
+   "why_it_might_help": "Matches help to difficulty and stops the train/test retrieval mismatch. Reuse the correctness signal already computed for HALT (no extra forward pass), and cap the hint rate or a bad seed gets hinted on everything.",
+   "cheapest_test": "One reactive arm vs best fixed curriculum, 3 seeds, equal FLOPs; read own-retrieval one_hop and the hint-rate curve.",
+   "cost": "5070 Ti ~1 h; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends the hint ladder; no checker head needed",
+   "sources": [
+    "https://arxiv.org/abs/2510.09388",
+    "https://arxiv.org/pdf/2604.00698",
+    "https://arxiv.org/pdf/2505.16322"
+   ]
+  },
+  {
+   "rank": 37,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Turn the leak panel into an acceptance gate",
+   "score": 70,
+   "merged_from": [
+    "synthetic-data-world-7",
+    "verifier-and-test-time-search-6"
+   ],
+   "gid": "g81",
+   "targets": "Three open leaks: not-told 60.5% vs 50%, person 38.0% vs 18.3%, yes/no 57.8%",
+   "what_it_is": "Feed the leak panel back into the generator: sample not-told at the world's own per-type base rate instead of a forced flat rate, balance answer classes, and report the same four selection numbers whenever a verifier or search is claimed to help.",
+   "why_it_might_help": "Tells you how much of 23.4% is reachable without reading the world. Skip the regenerate-until-clean loop (that is just multiple-comparisons fishing), and fold the selection numbers into g77's output rather than a separate scorer.",
+   "cheapest_test": "Regenerate validation (~6s), rerun leaks.py, re-score the existing 4M checkpoint; control is that checkpoint on the current split.",
+   "cost": "Mac, minutes; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite: makes every planned A/B interpretable",
+   "sources": [
+    "https://arxiv.org/pdf/2002.04108",
+    "https://ar5iv.labs.arxiv.org/html/2112.00086",
+    "https://arxiv.org/abs/2607.17531",
+    "https://arxiv.org/abs/2606.16999"
+   ]
+  },
+  {
+   "rank": 38,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Power-first eval sets: generate to a target n",
+   "score": 70,
+   "merged_from": [
+    "eval-methodology-4"
+   ],
+   "gid": "g83",
+   "targets": "7 of 17 leak classes under the 100-item floor; twin test n=210, p=0.048",
+   "what_it_is": "Decide the smallest effect worth detecting per cell first, compute the n that gives 80% power, then generate until each cell reaches it, rejection-sampling rare question types.",
+   "why_it_might_help": "Generation is nearly free, so tiny cells are a choice, not a constraint. The verifier already ran the sums: 670 usable twins needed, about 3,830 pair-visits, roughly 40 seconds of generating.",
+   "cheapest_test": "Arithmetic only, then generate; control is re-scoring the same checkpoint and checking the estimate holds while the interval narrows.",
+   "cost": "Mac, minutes; small",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for the leak gate and every eval cell",
+   "sources": [
+    "https://arxiv.org/html/2504.07086v2",
+    "https://arxiv.org/abs/2004.02709",
+    "https://github.com/babylm/evaluation-pipeline-2025"
+   ]
+  },
+  {
+   "rank": 39,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Village-sequence retention benchmark, already coded",
+   "score": 70,
+   "merged_from": [
+    "continual-sleep-1"
+   ],
+   "gid": "g92",
+   "targets": "No evidence for the headline claim that anything retains skill over time",
+   "what_it_is": "Use the ContinualMatrix class already in the repo: train the 4M model on four villages in sequence, score all four after each stage, print forgetting and transfer.",
+   "why_it_might_help": "First real number for the project's central claim. Honest limits: villages share rules and tokenizer so they are neighbourhoods, not different tasks, and 23% held-out is a noisy base to measure forgetting on.",
+   "cheapest_test": "Four 5k-visit villages with disjoint name and place pools, 300s each; controls are joint training and four independent models.",
+   "cost": "5070 Ti ~1-2 h; medium",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New capability; the missing baseline for all sleep work",
+   "sources": [
+    "https://arxiv.org/html/2606.24752",
+    "https://arxiv.org/html/2607.15587"
+   ]
+  },
+  {
+   "rank": 40,
+   "tier": "A-try-soon",
+   "category": "Fix weak part",
+   "idea": "A continuous progress score, not exact match",
+   "score": 68,
+   "merged_from": [
+    "eval-methodology-6"
+   ],
+   "gid": "g84",
+   "targets": "All results are exact-match counts; no best-on-validation checkpointing exists",
+   "what_it_is": "Log continuous measures at each eval (gold-answer margin over the best distractor, recall@4 minus random fetch, pool entropy) and keep the best-on-validation checkpoint instead of the last one.",
+   "why_it_might_help": "Lets you rank arms early and rescue runs that peak then collapse. But the 503-vs-27 seeds differ in mechanism, not just metric sharpness, so do not expect a smooth metric to dissolve that split.",
+   "cheapest_test": "Re-score existing checkpoints; check whether the margin at step 400 ranks seeds the same as exact match at 1405.",
+   "cost": "5070 Ti ~15 min; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends g24; cheap plumbing under the whole plan",
+   "sources": [
+    "https://arxiv.org/abs/2304.15004",
+    "https://arxiv.org/abs/2301.05217"
+   ]
+  },
+  {
+   "rank": 41,
+   "tier": "A-try-soon",
+   "category": "Make good part better",
+   "idea": "Free self-consistency: vote across the loop answers",
+   "score": 66,
+   "merged_from": [
+    "verifier-and-test-time-search-7"
+   ],
+   "gid": "g13",
+   "targets": "Think-loop inertness and the halting policy; held-out answer accuracy",
+   "what_it_is": "The model already decodes an answer at each of up to 8 think loops during training. Decode all 8 at test time too and take the majority vote.",
+   "why_it_might_help": "Mostly a diagnostic. If the 8 answers differ, voting may gain a little; if they agree, that is clean proof the loop is inert. Not free: 8x decode cost.",
+   "cheapest_test": "Log per-loop decodes on existing test slices; report inter-loop agreement, halted-loop accuracy, modal accuracy, oracle-best-loop. Matched control: accuracy of one randomly chosen loop.",
+   "cost": "Mac minutes; small logging change",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New cheap diagnostic; run alongside pool controls",
+   "sources": [
+    "https://arxiv.org/abs/2607.20519",
+    "https://arxiv.org/abs/2607.17531",
+    "https://arxiv.org/abs/2609.20089"
+   ]
+  },
+  {
+   "rank": 42,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Relation-Network head over the card rows",
+   "score": 66,
+   "merged_from": [
+    "memory-net-era-autopsy-7"
+   ],
+   "gid": "g27",
+   "targets": "Choosing the right card: 166-182/512, below a 53.7% question-blind shortcut",
+   "what_it_is": "A Relation-Network head: a small MLP run over every ordered pair of the 16 card rows with the question appended, then summed. It compares two cards at once.",
+   "why_it_might_help": "Attention scores each card alone; nothing compares pairs. Sort-of-CLEVR shows a small module carrying a large relational gain, but that was images with plentiful data, not a 2M from-scratch model.",
+   "cheapest_test": "2x2 on the distractor sweep (0-3 distractors), 3 seeds: RN head on/off crossed with a listwise card-selection loss. Success = flatter decay. Feed slot rows, not pooled card values.",
+   "cost": "5070 Ti ~1 hour; medium code",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; needs a pooling repair first, pairs with listwise loss",
+   "sources": [
+    "https://ar5iv.labs.arxiv.org/html/1706.01427",
+    "https://ar5iv.labs.arxiv.org/html/2312.04927"
+   ]
+  },
+  {
+   "rank": 43,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Canon layers: a 4-tap causal conv in every block",
+   "score": 66,
+   "merged_from": [
+    "sequence-backbones-1"
+   ],
+   "gid": "g63",
+   "targets": "Reader has only one attention layer; within-visit binding; choose 166-182/512",
+   "what_it_is": "A Canon layer: add a learned weighted sum of the last four hidden states (a 4-tap causal depthwise conv) with a residual, inside each block. About 128 extra parameters per site at the ladder's width 32.",
+   "why_it_might_help": "Cheap local mixing could bind the words inside one short fact line before the card is written. Published gains come from 1.3B pretraining, and four taps cannot reach the ladder's 128-token filler gap.",
+   "cheapest_test": "Toy ladder, current best arm, Canon in the reader only, 3 seeds, step-matched. Read choose:one_hop against the 53.7% shortcut line. Control: the identical arm without Canon.",
+   "cost": "Minutes per arm after device plumbing",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; orthogonal to the pooling fixes and to qread",
+   "sources": [
+    "https://arxiv.org/abs/2512.17351",
+    "https://arxiv.org/html/2508.19029v2"
+   ]
+  },
+  {
+   "rank": 44,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "MQAR state-size screen and a fair comparison frame",
+   "score": 66,
+   "merged_from": [
+    "memory-net-era-autopsy-8"
+   ],
+   "gid": "g91",
+   "targets": "Whether the card store can ever beat a plain transformer within one visit",
+   "what_it_is": "An MQAR screen: sequences of N key-value pairs, sweeping N and width, training Premonition's actual reader (including its one window-64 attention layer) against a parameter-matched transformer block.",
+   "why_it_might_help": "Recurrent recall capacity grows with the number of pairs to recall, while attention gets within-visit recall nearly free. This tells you the facts-per-visit at which the reader breaks, before spending more on D.",
+   "cheapest_test": "Sweep N=4,8,16,32,64 at widths 64/128/256 for both architectures; plot recall vs N and report wall-clock alongside parameters. Control: the parameter-matched transformer at each width.",
+   "cost": "5070 Ti afternoon; needs device port",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for any fair D-versus-plain-transformer claim",
+   "sources": [
+    "https://ar5iv.labs.arxiv.org/html/2312.04927",
+    "https://ar5iv.labs.arxiv.org/html/1502.05698",
+    "https://ar5iv.labs.arxiv.org/html/1610.09027"
+   ]
+  },
+  {
+   "rank": 45,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Pack several visits per row with segment masking",
+   "score": 64,
+   "merged_from": [
+    "tiny-lm-training-3"
+   ],
+   "gid": "g38",
+   "targets": "About 40% of Core GPU time spent on padding; held-out 23.4%",
+   "what_it_is": "Put two or three visits into one 2048-token row, with an attention mask that blocks crossing a visit boundary and position ids reset at each boundary.",
+   "why_it_might_help": "Roughly 1.6x more real visits per second at the same wall clock. Core uses learned absolute positions, so failing to reset them would silently undo the visit-window win rather than crash.",
+   "cheapest_test": "First assert a packed batch holding one visit gives identical logits to the padded version. Then two matched 600s runs, same seed: tokens/s, real tokens, loss, held-out accuracy.",
+   "cost": "Two 600s runs; medium-hard code",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends the visit-window fix already adopted in Core",
+   "sources": [
+    "https://arxiv.org/html/2402.13991",
+    "https://github.com/karpathy/llm.c/discussions/690"
+   ]
+  },
+  {
+   "rank": 46,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "DMN+: per-hop weights and an order-aware update",
+   "score": 64,
+   "merged_from": [
+    "memory-net-era-autopsy-4"
+   ],
+   "gid": "g54",
+   "targets": "Second fetch asks the wrong relation 0-9/171; both facts fetched 1/189",
+   "what_it_is": "Give each think loop its own small query weights (a low-rank delta) instead of one shared query, and read the fetched cards in fetch order with a small recurrence instead of summing them.",
+   "why_it_might_help": "DMN+ found untied per-hop weights plus an order-aware read enough to beat MemN2N without supporting-fact labels. Its biggest piece, input fusion, is untested here, and eight loops cannot all be untied.",
+   "cheapest_test": "Toy ladder, own-retrieval, 3 seeds, arms: A baseline, B per-loop query delta, C plus ordered card read. Read held-out fetch2 relation-correct and both-fetched. Precommit the weight-sharing rule.",
+   "cost": "5070 Ti under an hour; medium",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Cheap precursor to the deferred H2 query-reuse distillation",
+   "sources": [
+    "https://ar5iv.labs.arxiv.org/html/1603.01417",
+    "https://ar5iv.labs.arxiv.org/html/1502.05698"
+   ]
+  },
+  {
+   "rank": 47,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "More inferred facts; balance relations across hops",
+   "score": 64,
+   "merged_from": [
+    "multihop-retrieval-7",
+    "synthetic-data-world-3"
+   ],
+   "gid": "g55",
+   "targets": "Held-out two-hop 14/189; hop-2 relation 0/171 held-out versus 341/341 practised",
+   "what_it_is": "Generator-side knobs: raise the share of composed multi-hop questions per atomic fact, and make every relation appear equally often at hop 1 and hop 2.",
+   "why_it_might_help": "Grokking work shows the inferred-to-atomic ratio drives composition. But both cited papers report zero out-of-distribution composition, and the toy's hop 1 is always the single link relation, so balancing needs a world redesign.",
+   "cheapest_test": "Cheap ruling-out: three corpora at roughly 1x, 4x and 12x the composed ratio, phrasing bank held fixed, same 600s budget, score held-out depth-2+ only. Control: current ratio, same seeds.",
+   "cost": "Three 600s runs; generation ~74s",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends deferred data decisions; competes with architectural retrieval fixes",
+   "sources": [
+    "https://arxiv.org/abs/2504.20752",
+    "https://arxiv.org/html/2606.09338",
+    "https://arxiv.org/html/2405.15071v2"
+   ]
+  },
+  {
+   "rank": 48,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Evidence-sufficiency checker from free oracle labels",
+   "score": 64,
+   "merged_from": [
+    "verifier-and-test-time-search-3"
+   ],
+   "gid": "g78",
+   "targets": "Order-free ASK objective; halt head 525/1024; both-gold-fetched 1/189",
+   "what_it_is": "A tiny head (about 500 parameters, 25k with a hidden layer) that predicts whether the cards currently held are enough to answer, trained on the oracle's existing gold_lines labels.",
+   "why_it_might_help": "It is the first signal saying you still need a different second card, and could replace a halt head barely above chance. But it is another oracle-privileged label, not self-supervision.",
+   "cheapest_test": "Toy ladder, matched seeds: baseline versus baseline plus sufficiency loss at weight 0.3. Report both-gold-fetched and held-out two-hop, plus a null head fed only loop index and fetch count.",
+   "cost": "CPU-hours today; GPU needs porting",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for hint ladder, self-tutoring and dream-checking",
+   "sources": [
+    "https://arxiv.org/abs/2506.03570",
+    "https://arxiv.org/abs/2510.00492",
+    "https://arxiv.org/abs/2110.14168"
+   ]
+  },
+  {
+   "rank": 49,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Fix the scan and count its compute honestly",
+   "score": 64,
+   "merged_from": [
+    "gpu-native-runtime-2"
+   ],
+   "gid": "g87",
+   "targets": "Equal-FLOPs budget undercounts D; uncounted minGRU scan cost",
+   "what_it_is": "First profile how much of a training step the minGRU scan really costs. Only then swap the log-space chunk loop for a real-space chunked cumulative product at the same chunk size.",
+   "why_it_might_help": "It either clears or invalidates every claim that D beats A at equal compute. Mamba-2-style matmul scans do not fit: minGRU's decay is per-channel, so the decay matrix costs more memory than it saves.",
+   "cheapest_test": "torch.profiler on one step of D and of A: scan share of step time, seconds per nominal FLOP for each. Rewrite only if the scan exceeds 20%, or D exceeds 3x A.",
+   "cost": "Profiling minutes; rewrite riskier",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for every fair compute comparison in the plan",
+   "sources": [
+    "https://arxiv.org/html/2405.21060v1",
+    "https://arxiv.org/abs/2311.06281",
+    "https://arxiv.org/html/2410.01201v3"
+   ]
+  },
+  {
+   "rank": 50,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Sleep as a transaction: snapshot, replay, commit or undo",
+   "score": 64,
+   "merged_from": [
+    "continual-sleep-5"
+   ],
+   "gid": "g94",
+   "targets": "Seed instability 503/512 versus 27/512; no best-checkpoint selection anywhere",
+   "what_it_is": "Two separate things: save the best-on-validation checkpoint (do now, in both trainers), and after a second village interpolate between the pre-village snapshot and the final weights at several coefficients.",
+   "why_it_might_help": "Best-checkpoint saving is nearly free and is the likeliest single fix for the seed collapse. The merge curve yields an acceptance-rate-shaped number, but with no lesion test it is not the real sleep transaction.",
+   "cheapest_test": "Add best-on-validation saving; then score five interpolations on both villages' held-out sets, about a minute total. Control: w=1, the ordinary sequential model. Choose w on validation, precommitted.",
+   "cost": "Under a minute of GPU; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for sleep-as-transaction; checkpointing is independent of everything",
+   "sources": [
+    "https://arxiv.org/abs/2501.05559",
+    "https://arxiv.org/pdf/2507.23311",
+    "https://arxiv.org/pdf/2401.08623"
+   ]
+  },
+  {
+   "rank": 51,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Dual-state cards: a separate identity state",
+   "score": 62,
+   "merged_from": [
+    "slots-pointers-2"
+   ],
+   "gid": "g18",
+   "targets": "Card pooling collapse: person decodable only 116/2048, and the 503/512-vs-27/512 seed split.",
+   "what_it_is": "Give each card two vectors: content trained by the answer loss, plus an identity vector trained by a cheap same-person/different-person contrastive loss built from entity ids the model already sees.",
+   "why_it_might_help": "Two jobs currently race inside one pooled vector. A second, separately supervised path for identity should stop that race and collapse the seed spread. Evidence is video slot attention, so text transfer is unproven.",
+   "cheapest_test": "Toy ladder, 3 seeds: baseline versus baseline plus the identity contrastive loss. Read seed spread on gold_read one_hop, choose:one_hop, and the existing person/value probes. Drop the competition-modulation arm.",
+   "cost": "5070 Ti, minutes per arm; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; complements the planned pool controls",
+   "sources": [
+    "https://arxiv.org/html/2606.12601v1",
+    "https://arxiv.org/abs/2507.23755"
+   ]
+  },
+  {
+   "rank": 52,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Fresh phrasing per visit per epoch",
+   "score": 62,
+   "merged_from": [
+    "wording-generalization-5"
+   ],
+   "gid": "g31",
+   "targets": "Train-split 44% versus held-out 23.4%; whether 13.7 epochs are memorising sentences.",
+   "what_it_is": "Cache each visit and re-render its sentences with a fresh phrasing draw every epoch, the same anti-memorisation trick already used for entity names.",
+   "why_it_might_help": "The model never sees the same sentence twice, so it cannot memorise wording. But most question banks have one phrasing, so this really measures narration memorisation, not the wording wall.",
+   "cheapest_test": "render.py already accepts a per-visit render_seed, so pre-render four phrasing variants by seed; one 600 s 4M run each against a matched run on the 1x corpus repeated.",
+   "cost": "5070 Ti, ~20 min per arm; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends adopted entity-permutation trick; independent of pool controls",
+   "sources": [
+    "https://arxiv.org/html/2510.16096v1",
+    "https://arxiv.org/html/2609.13144"
+   ]
+  },
+  {
+   "rank": 53,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "EMDR2-style latent-card loss, keeping hard top-k",
+   "score": 62,
+   "merged_from": [
+    "memory-store-1"
+   ],
+   "gid": "g45",
+   "targets": "Retrieval selection is detached: the answer loss never reaches the query or key weights.",
+   "what_it_is": "Keep the hard top-4, but add EMDR2's extra term: score each selected card alone, freeze those answer likelihoods, and push retrieval probability toward whichever card made answering easiest.",
+   "why_it_might_help": "First signal saying 'this card was useful'; today only oracle labels touch selection. EMDR2 (52.5 versus FiD 50.4 EM) used pretrained BERT-base retrievers, so switch the term on only after the gold curriculum.",
+   "cheapest_test": "Toy ladder with model-selected cards, 3 seeds, step-matched: baseline versus plus-EMDR2. Report choose:one_hop and both-cards-fetched as median and range. Needs K decoder passes with other card rows masked.",
+   "cost": "5070 Ti, ~1 h for six runs",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with deferred D-soft; feeds H1 selection training",
+   "sources": [
+    "https://ar5iv.labs.arxiv.org/html/2106.05346",
+    "https://arxiv.org/abs/2510.11472"
+   ]
+  },
+  {
+   "rank": 54,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Rebalance the reader: more attention, less recurrence",
+   "score": 62,
+   "merged_from": [
+    "sequence-backbones-4"
+   ],
+   "gid": "g66",
+   "targets": "Reader has one block-local attention layer; card identity weak, both facts fetched 1/189.",
+   "what_it_is": "Sweep the reader stack (currently gru, attn, gru) toward more attention layers at matched parameters, since hybrid studies find recall lives in attention and recurrence mostly carries style.",
+   "why_it_might_help": "Cheap config sweep, but those papers measure full attention with an addressable cache; Premonition's attention is block-local width 64, so 'attention does recall' may not transfer. Reader states already decode person 2304/2304.",
+   "cheapest_test": "Four reader layer patterns, two seeds, matched parameters on the toy ladder; report choose:one_hop and the person probe. Keep window at 64: W=256 would bridge the ladder's deliberate gap.",
+   "cost": "5070 Ti, ~1 h for eight runs",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; runs alongside the planned pool controls",
+   "sources": [
+    "https://arxiv.org/html/2609.04434",
+    "https://arxiv.org/html/2507.06457v2",
+    "https://arxiv.org/html/2508.19029v2"
+   ]
+  },
+  {
+   "rank": 55,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Trace-length ladder: shorter is better at 4M",
+   "score": 62,
+   "merged_from": [
+    "trace-supervision-3"
+   ],
+   "gid": "g73",
+   "targets": "Held-out collapse by question type; whether Qwen should ever write explanations.",
+   "what_it_is": "Train the same model on five rungs of machine-generated derivation detail, from answer-only up to a verbose sentence-per-step trace, and find which length actually helps at 4M.",
+   "why_it_might_help": "Models under about 3B do worse with long chains and strong-reasoner distillation, better with short ones. Premonition is far smaller, so expect a low peak. The paper itself recommends mixing chain lengths, not dropping the teacher.",
+   "cheapest_test": "Five rungs, three seeds each, 600 s 4M runs, token-budget matched, same held-out set. Pre-register that a bare answer-type token winning kills the trace programme, but only if the leak panel does not worsen.",
+   "cost": "5070 Ti, ~2.5 h total; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; not part of the current conditional plan",
+   "sources": [
+    "https://arxiv.org/abs/2502.12143",
+    "https://arxiv.org/abs/2301.12726"
+   ]
+  },
+  {
+   "rank": 56,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Replace HALT with a post-hoc confidence exit",
+   "score": 60,
+   "merged_from": [
+    "think-loops-4",
+    "verifier-and-test-time-search-4",
+    "memory-net-era-autopsy-6"
+   ],
+   "gid": "g10",
+   "targets": "HALT trained on teacher-forced correctness, used on free decoding; 525/1024 at 2.74 loops.",
+   "what_it_is": "Stop training a learned halting gate. Weight the per-loop losses with a fixed prior (or PonderNet's halting distribution), and pick the exit afterwards from answer stability or confidence.",
+   "why_it_might_help": "Looped-transformer work finds joint gate training damages the trajectory, and post-hoc confidence readouts match learned gates. Mostly cleanup: with the Think gate nearly closed every loop gives the same state, so exit rules tie.",
+   "cheapest_test": "Add per-loop decoding to answer() (it does not exist at inference), re-score saved checkpoints at fixed depths 1-8 versus stability and entropy exits; try training changes only after the alpha fix.",
+   "cost": "Mac, tens of minutes; then GPU minutes",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends deferred halting ideas; blocked until Think gate opens",
+   "sources": [
+    "https://arxiv.org/html/2607.20519",
+    "https://arxiv.org/abs/2605.25394",
+    "https://ar5iv.labs.arxiv.org/html/2107.05407"
+   ]
+  },
+  {
+   "rank": 57,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Shrink the embedding, spend it on the card writer",
+   "score": 60,
+   "merged_from": [
+    "neurosymbolic-efficiency-2"
+   ],
+   "gid": "g42",
+   "targets": "40.6% of 2.01M parameters is the embedding; the card writer gets 25k (1.2%).",
+   "what_it_is": "Factorise the token embedding (vocab times 32, then 32 to 128) to free roughly 600k parameters, and spend them on a much larger card writer at the same total parameter count.",
+   "why_it_might_help": "The writer is what every diagnostic blames, so this turns 'too small' into a test. Risk: the tied embedding is also the output head and carries entity ids, so a narrow bottleneck may break the perfect name copying.",
+   "cheapest_test": "Run at d=128 on village data, not the toy ladder (d=32, 68-token vocabulary, embedding is 0.1%, band guard inactive there). Keep the factorisation as its own separate arm.",
+   "cost": "5070 Ti, ~1 h; medium",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; makes the unrun 'Find the U' sweep affordable",
+   "sources": [
+    "https://arxiv.org/abs/2601.07372",
+    "https://arxiv.org/pdf/2412.09764",
+    "https://arxiv.org/abs/2404.05405"
+   ]
+  },
+  {
+   "rank": 58,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Hindsight guide query that knows the answer",
+   "score": 60,
+   "merged_from": [
+    "multihop-retrieval-5"
+   ],
+   "gid": "g53",
+   "targets": "Retrieval supervision is entirely oracle gold_lines; nothing trains cards to be findable.",
+   "what_it_is": "Add a second 'guide' query that may see the answer during training only, and train the real answer-blind query to match its card choices with a KL term. Guide deleted at evaluation.",
+   "why_it_might_help": "Gives retrieval a signal that does not come from the simulator's derivation. But in the toy the answer token IS the target card's value, so the guide can cheat by exact match and set an unreachable target.",
+   "cheapest_test": "Three arms, three seeds: oracle-only, oracle plus guide KL, guide KL alone. First check the guide is not just value-matching; mask the value field, or supervise only the first hop.",
+   "cost": "5070 Ti, a few hours; medium",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Competes with deferred H2 query-reuse distillation; needs per-hop coverage first",
+   "sources": [
+    "https://arxiv.org/abs/2110.07752",
+    "https://arxiv.org/pdf/2604.22722",
+    "https://aclanthology.org/2025.acl-long.354/"
+   ]
+  },
+  {
+   "rank": 59,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Anneal card reading from soft mixture to own picks",
+   "score": 60,
+   "merged_from": [
+    "memory-store-2"
+   ],
+   "gid": "g56",
+   "targets": "Own-retrieval one_hop 124/512 versus 503/512 with gold cards; p_own_max stuck at 0.75.",
+   "what_it_is": "Read a soft score-weighted mixture of eligible cards early in training, then anneal to hard top-4 and to the model's own picks all of the time before training ends.",
+   "why_it_might_help": "The model is never trained on the distribution it is evaluated under. Largely a schedule change: the source method anneals a write gate over tokens, not a choice between competing facts, and costs 1.2% on retrieval benchmarks.",
+   "cheapest_test": "One matched pair, three seeds, through train_d (the ladder has no ASK): current curriculum versus soft-to-hard anneal ending at own-picks 1.0. Read own-retrieval one_hop and all-needed-cards-fetched.",
+   "cost": "5070 Ti, a few hours; medium",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends adopted scheduled sampling; prerequisite for honest own-retrieval numbers",
+   "sources": [
+    "https://arxiv.org/html/2605.14037",
+    "https://ar5iv.labs.arxiv.org/html/2106.05346"
+   ]
+  },
+  {
+   "rank": 60,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Read the visit twice before writing cards",
+   "score": 60,
+   "merged_from": [
+    "sequence-backbones-5"
+   ],
+   "gid": "g68",
+   "targets": "Cards are causal summaries of a line; both required cards fetched 1/189.",
+   "what_it_is": "Before writing a card, mix each line's token states non-causally with a small two-layer mixer, so the card can use the whole line rather than only what came before it.",
+   "why_it_might_help": "Attacks pooling collapse from the input side rather than the objective side. But within a line the person token already precedes the value token, so the added flow is the direction nobody needs.",
+   "cheapest_test": "Free first: probe whether person decodes from the value-token reader state in existing checkpoints. If it does, drop this without writing code. Keep the full two-pass reader out of scope.",
+   "cost": "Mac minutes for the probe; small",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for the deferred shared repeated reader",
+   "sources": [
+    "https://arxiv.org/abs/2407.05483",
+    "https://arxiv.org/html/2609.04434"
+   ]
+  },
+  {
+   "rank": 61,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Rejection-sampling fine-tuning on accepted plans",
+   "score": 60,
+   "merged_from": [
+    "verifier-and-test-time-search-5"
+   ],
+   "gid": "g79",
+   "targets": "Q12 plan questions: 12% of the gate, near-zero right out of ~550 oracle-checked",
+   "what_it_is": "Weight plan answer tokens properly, then sample k plans per question, keep the ones the free oracle simulator accepts, and train on the model's own working plans.",
+   "why_it_might_help": "The oracle already accepted non-canonical plans (3 exact, 1 other in one run), so signal exists. Verifier: phrasing starvation, not token weight, likely dominates, so cross with a phrasing fix.",
+   "cheapest_test": "Three matched 600s 4M arms, same seed and data: baseline; plan-token upweight crossed with a question-phrasing fix; RFT only if plan pass@k is non-zero. Report per-qtype accuracy.",
+   "cost": "5070 Ti ~1-2 h; medium",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends deferred answer-token weighting; prerequisite for any simulator-checked RL",
+   "sources": [
+    "https://arxiv.org/abs/2609.01274",
+    "https://arxiv.org/abs/2601.09253",
+    "https://arxiv.org/abs/2608.08570"
+   ]
+  },
+  {
+   "rank": 62,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Assume launch-bound: CUDA graphs or torch.compile",
+   "score": 60,
+   "merged_from": [
+    "gpu-native-runtime-3"
+   ],
+   "gid": "g88",
+   "targets": "Every training step: 2M model, 76-row Think tensors, Python loop over fetch slots",
+   "what_it_is": "Suspect the GPU sits idle between thousands of tiny kernel launches. Capture the repeated step once as a CUDA graph and replay it with a single launch.",
+   "why_it_might_help": "PyTorch's blog shows a graphed batch-1 backbone drop 31ms to 6ms. Verifier: try CUDA graphs before torch.compile, whose CUDA backend needs Triton, awkward on Windows.",
+   "cheapest_test": "Diagnose first: torch.profiler GPU-busy fraction, and step time at batch 1 vs 2 vs 4. Roughly flat means launch-bound. Then graph only the static inner block.",
+   "cost": "5070 Ti ~30-60 min; medium",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; prerequisite for trusting any GPU speed-up claim",
+   "sources": [
+    "https://pytorch.org/blog/accelerating-pytorch-with-cuda-graphs/",
+    "https://pytorch.org/blog/pytorch-2-7/"
+   ]
+  },
+  {
+   "rank": 63,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Barcode keys: a content-free address per card",
+   "score": 58,
+   "merged_from": [
+    "neuro-inspired-1"
+   ],
+   "gid": "g19",
+   "targets": "Card key and value come from one pooled vector; person decodable in 116/2048 probes",
+   "what_it_is": "Build each card's address from a frozen random expansion of the line's identity tokens (names plus relation), like hippocampal barcodes, instead of from the pooled content vector.",
+   "why_it_might_help": "Near-orthogonal addresses stop similar lines blurring. Verifier: three pooling repairs already failed, so test on the retrieval arms with recall@k, and predict choosing will not move.",
+   "cheapest_test": "Add a barcode-key writer to the exp2 retrieval arms (bypass-k1/k4), three seeds, matched data and steps; read gold recall@k and hop_recall against the current writer.",
+   "cost": "5070 Ti minutes; small, needs device plumbing",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with pooling repairs and the direct_reader diagnostic",
+   "sources": [
+    "https://elifesciences.org/articles/103512"
+   ]
+  },
+  {
+   "rank": 64,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Tiny discrete codebook on the key or relation field",
+   "score": 58,
+   "merged_from": [
+    "latent-thought-1",
+    "neurosymbolic-efficiency-6"
+   ],
+   "gid": "g20",
+   "targets": "One blended 64-d query; second fetch asks the wrong relation 0-9/171",
+   "what_it_is": "Split the ASK query into an entity part and a relation part, and push the relation (or the whole key) through a tiny discrete codebook, FSQ or 32-code VQ, so it carries few bits.",
+   "why_it_might_help": "A discrete key cannot smuggle the value through, and a split query can finally name a relation. Verifier: the toy has only 3 relations, so raise to ~12-16 or purity means nothing.",
+   "cheapest_test": "Run on exp2 retrieval arms, where L_ask is the only key gradient, with a continuous split-query control. Report hop-2 right-relation, codebook usage, code-vs-relation purity; 3+ seeds with spread.",
+   "cost": "5070 Ti under 1 h; medium",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends failed two-pool arms; smallest real test of the codebook vision",
+   "sources": [
+    "https://arxiv.org/abs/2309.15505",
+    "https://arxiv.org/abs/2107.02367",
+    "https://arxiv.org/abs/2601.07372"
+   ]
+  },
+  {
+   "rank": 65,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Compare arms at two or three budgets",
+   "score": 58,
+   "merged_from": [
+    "tiny-lm-training-7"
+   ],
+   "gid": "g40",
+   "targets": "FLOP-matched arms landing at 1,405 vs 3,745 steps; load-bearing exp2 conclusions",
+   "what_it_is": "Compare arms at two budgets with a learning-rate cooldown at each, and check a couple of per-arm hyperparameters, instead of one constant-LR budget under shared settings.",
+   "why_it_might_help": "A large optimizer study found rankings flip during training because of learning-rate decay. Verifier: that result is about optimizers, not architecture variants, so treat it as a precaution.",
+   "cheapest_test": "Take one exp2 comparison where the step mismatch actually happened; rerun at 1x and 2x budget, two seeds, cooldown to zero. Eight runs. Logging steps-at-stop is free.",
+   "cost": "5070 Ti ~2-3 h; small-medium",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Strengthens existing FLOP-parity protocol; buys correctness, not accuracy",
+   "sources": [
+    "https://arxiv.org/html/2509.02046v2",
+    "https://arxiv.org/abs/2510.19093"
+   ]
+  },
+  {
+   "rank": 66,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Leave-one-card-out reward for per-hop credit",
+   "score": 58,
+   "merged_from": [
+    "motivation-rl-2"
+   ],
+   "gid": "g47",
+   "targets": "L_ask is an order-free set loss; both facts fetched 1/189; wrong-relation second fetch",
+   "what_it_is": "Score each fetched card by how much the answer loss rises when that one card is hidden, then use that number as per-hop credit instead of one order-free set target.",
+   "why_it_might_help": "It gives each hop its own credit with no oracle pairing. Verifier: it can only down-weight a useless fetch, not redirect the query, and the binder must be off or masking does nothing.",
+   "cheapest_test": "Evaluation only: on an existing card-bypass checkpoint with the binder disabled, log leave-one-card-out usefulness for gold versus distractor cards. If they overlap, stop there.",
+   "cost": "Minutes to log; GPU hours if retrained",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; an unprivileged alternative to deferred H2 query-reuse distillation",
+   "sources": [
+    "https://arxiv.org/pdf/2504.15275",
+    "https://arxiv.org/html/2606.27739",
+    "https://arxiv.org/html/2510.08049v3"
+   ]
+  },
+  {
+   "rank": 67,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Learned write gate: store surprising, decodable lines",
+   "score": 58,
+   "merged_from": [
+    "memory-store-5",
+    "neuro-inspired-3"
+   ],
+   "gid": "g58",
+   "targets": "Cards written unconditionally; nothing trains a card to be readable or findable",
+   "what_it_is": "Two paired add-ons: a small MLP write gate scored by the ordinary prediction loss, and a reconstruction loss making each card value decode its line's entity, relation and value.",
+   "why_it_might_help": "Reconstruction is the cheapest missing gradient. Verifier: run it alone, drop the surprise gate; the write gate does not reduce FIFO overflow as claimed, and readable cards did not improve choosing before.",
+   "cheapest_test": "Reconstruction only, weight 0.1, three linear heads excluded at inference: exp1 ladder, three seeds against an identical-data control; read pooled probes and choose:one_hop. Guard that gold lines are never refused.",
+   "cost": "5070 Ti minutes; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Builds the deferred gatekeeper; overlaps the pooling-repair line",
+   "sources": [
+    "https://arxiv.org/html/2606.03787v1",
+    "https://arxiv.org/html/2605.14037"
+   ]
+  },
+  {
+   "rank": 68,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Relational attention heads inside Think",
+   "score": 58,
+   "merged_from": [
+    "slots-pointers-3"
+   ],
+   "gid": "g70",
+   "targets": "Think gate trains nearly closed (alpha 0.018-0.042); its update is one row-shared vector",
+   "what_it_is": "Make one or two of Think's four heads relational: they return how the querying row compares with the attended row, not its content, so they cannot emit one shared vector.",
+   "why_it_might_help": "A 2026 BabyLM result gives +2.5 BLiMP at 123-136M, so expect a small effect here. Verifier: no-Think already scores 166/512 and gated Think 182/512, so beat 182, not 166.",
+   "cheapest_test": "Matched exp1 choosing arms with alpha initialised at 0.1 everywhere, since zero init gives Think no gradient; use 2 of 4 heads at d=32. Pre-register alpha>0.3 and choosing>200/512.",
+   "cost": "5070 Ti minutes; medium",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; depends on the alpha-init fix being made first",
+   "sources": [
+    "https://arxiv.org/abs/2405.16727",
+    "https://arxiv.org/html/2609.20530",
+    "https://arxiv.org/abs/2309.06629"
+   ]
+  },
+  {
+   "rank": 69,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Check the trace is load-bearing, not filler",
+   "score": 58,
+   "merged_from": [
+    "trace-supervision-6"
+   ],
+   "gid": "g75",
+   "targets": "Any future trace experiment; the pooling mechanism story is already only plausible-not-settled",
+   "what_it_is": "Before trusting a reasoning trace, check the answer really depends on it: corrupt one trace element, force a wrong trace, and train a matched-length dummy-token (pause) arm.",
+   "why_it_might_help": "Transformers can solve hard tasks using meaningless filler tokens, so a readable trace need not be doing the work. Verifier: swapping dummies in only at test time proves nothing.",
+   "cheapest_test": "Score any trained trace checkpoint on held-out four ways (real, corrupted, forced-wrong, dummy) at 5.5s per pass, plus one extra 600s arm trained on matched-length pause tokens.",
+   "cost": "Mac minutes; one 600 s GPU run",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Standing control on every future trace arm; protects a decision",
+   "sources": [
+    "https://arxiv.org/abs/2404.15758"
+   ]
+  },
+  {
+   "rank": 70,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Measure plasticity loss at 4M; test cheap resets",
+   "score": 58,
+   "merged_from": [
+    "continual-sleep-2"
+   ],
+   "gid": "g93",
+   "targets": "Constant 1e-3 learning rate, no decay; no continual-learning result exists yet",
+   "what_it_is": "Train on a sequence of villages and watch whether each new one is learned more slowly, reusing the weight-norm and dead-GELU logs you already have, then test three cheap resets.",
+   "why_it_might_help": "A 2026 fit (T = 1.3e-5 * P^0.8269) puts a 5M model's plasticity loss around task 6, so 4M should show it fast. Verifier: villages must be genuinely disjoint.",
+   "cheapest_test": "Piggyback logging on a sequential run: per-stage area under validation loss plus existing weight-norm and dead-GELU. Only if it degrades, rerun with shrink-and-perturb, L2-toward-init, dormant-unit resets.",
+   "cost": "Free logging; ~2 h if resets run",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for sleep work; needs a sequential harness first",
+   "sources": [
+    "https://arxiv.org/html/2606.24752",
+    "https://www.nature.com/articles/s41586-024-07711-7",
+    "https://arxiv.org/pdf/2406.02596"
+   ]
+  },
+  {
+   "rank": 71,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Two-speed forget gates (hierarchical recurrence)",
+   "score": 56,
+   "merged_from": [
+    "sequence-backbones-7"
+   ],
+   "gid": "g67",
+   "targets": "Identity surviving many lines; two-hop \"both facts fetched\" 1/189",
+   "what_it_is": "Split the reader's minGRU channels into a slow, coarse memory and a fast, token-level one, instead of only spreading forget-gate time constants log-uniformly at start-up. Costs almost no parameters.",
+   "why_it_might_help": "HGRN-2's two-level pathway doubled recall versus its own single-path ablation (HGRN). A slow channel is what a name mentioned ten lines back needs. Measured at 340M-1.3B, so transfer to 2M is unproven.",
+   "cheapest_test": "Free gate first: load an exp1/exp2 checkpoint, plot learned inp.bias[:d] time constants. If the log-uniform spread survived training, drop the idea. Control: unchanged init.",
+   "cost": "Free diagnostic; then 5070 Ti ~1 hour",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; must wait until the sign/positive-state question is settled",
+   "sources": [
+    "https://arxiv.org/html/2507.06457v2",
+    "https://arxiv.org/abs/2506.04761"
+   ]
+  },
+  {
+   "rank": 72,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Chain attention as a long-range binder",
+   "score": 56,
+   "merged_from": [
+    "slots-pointers-7"
+   ],
+   "gid": "g69",
+   "targets": "Multi-step binding inside one visit; second-hop failures",
+   "what_it_is": "Replace the reader's single local-attention layer with chain attention (ChaCAL), which sums over all attention paths in closed form via a triangular solve, so one layer can follow a chain of links.",
+   "why_it_might_help": "On the Boxes entity-tracking benchmark it reached 99.1% versus 97.0% for a model with four more layers. Its layer-count theorem is for pure transformers, so it argues less against D's hybrid reader; language perplexity got slightly worse.",
+   "cheapest_test": "Cannot run as written: the toy ladder has only 1-2 hops and no depth slices. First extend the generator to 3-5 hops, then swap one layer; control = one extra ordinary attention layer.",
+   "cost": "Generator work first; then GPU hours",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Competes with the shared repeated reader for second hop",
+   "sources": [
+    "https://arxiv.org/html/2410.05565v1",
+    "https://arxiv.org/abs/2502.10297"
+   ]
+  },
+  {
+   "rank": 73,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Determinism audit before the GPU port",
+   "score": 56,
+   "merged_from": [
+    "gpu-native-runtime-6"
+   ],
+   "gid": "g89",
+   "targets": "Seed instability (503/512 vs 27/512) and the planned GPU port",
+   "what_it_is": "Before porting to GPU, check that runs actually repeat. read_only proves nothing was mutated, not that a run reproduces; scatter-style writes use atomics on CUDA and can land in varying order.",
+   "why_it_might_help": "Stops a future class of unexplained GPU disagreements in a project already puzzling over seeds. The claimed duplicate-index bug is not established: the binder writes in a sequential Python loop, so treat this as hygiene, not a known bug.",
+   "cheapest_test": "Run the 126-test suite and 50 baseline steps twice with one seed under torch.use_deterministic_algorithms(True), fp32 not bf16, in separate processes. Control: the same double-run on CPU.",
+   "cost": "5070 Ti ~30 min; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Prerequisite for any GPU-native runtime work",
+   "sources": [
+    "https://docs.pytorch.org/docs/2.14/notes/randomness.html",
+    "https://pytorch.org/blog/accelerating-pytorch-with-cuda-graphs/"
+   ]
+  },
+  {
+   "rank": 74,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Alternate encoding and retrieval phases",
+   "score": 56,
+   "merged_from": [
+    "neuro-inspired-2"
+   ],
+   "gid": "g100",
+   "targets": "The 503/512 vs 27/512 seed split in pooled-card usage",
+   "what_it_is": "Stop training the retrieval loss and the answer loss in the same gradient step. Alternate: some steps train storing (ASK), others train answering with the stored cards detached, imitating the brain's separate encode and retrieve phases.",
+   "why_it_might_help": "Two objectives currently race for one pooled vector and a coin-flip decides the winner. Separating them may make both person and value decodable. The brain evidence is from Hebbian attractor models, not backprop, so it is motivation only.",
+   "cheapest_test": "Cheaper controls first: seed 1 run longer (3745 steps) and cosine LR decay, both already open. Then bypass-k1, 3 seeds, mixed versus alternating, step-matched, identical data digests.",
+   "cost": "5070 Ti ~1 hour; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with pool controls as the cheap seed-instability fix",
+   "sources": [
+    "https://onlinelibrary.wiley.com/doi/abs/10.1002/hipo.23676",
+    "https://arxiv.org/html/2512.13859"
+   ]
+  },
+  {
+   "rank": 75,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Sample the loop count during training",
+   "score": 55,
+   "merged_from": [
+    "think-loops-3"
+   ],
+   "gid": "g9",
+   "targets": "Loop count leaks oracle evidence size; answer loss weighting",
+   "what_it_is": "Instead of setting the think-loop count from the oracle's evidence-set size, draw it at random per question during training, backpropagate through the last few loops, and normalise the answer loss per question.",
+   "why_it_might_help": "Today \"more loops\" and \"harder question\" are the same variable, so difficulty silently reweights the loss; removing that is worth it for cleanliness. It probably will not unlock two-hop: the Think gate is nearly closed, so effective recurrence is about one loop.",
+   "cheapest_test": "Ladder, 3 seeds, step-matched: fixed-by-mode loops versus loops sampled 1-8 per question. Score at 1, 2, 4, 8 inference loops and look for a rising curve, not a flat one.",
+   "cost": "5070 Ti under an hour",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends think-loop work; only after the gate opens",
+   "sources": [
+    "https://arxiv.org/html/2604.12946v1",
+    "https://arxiv.org/html/2604.07822v1",
+    "https://arxiv.org/pdf/2502.05171"
+   ]
+  },
+  {
+   "rank": 76,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "More scratch rows when the loop runs deeper",
+   "score": 55,
+   "merged_from": [
+    "think-loops-7"
+   ],
+   "gid": "g14",
+   "targets": "Nearly closed Think gates; loop overwrites its own evidence rows",
+   "what_it_is": "Give the loop more protected scratch space: raise the writable registers from 4 to 16 and freeze the card rows after insertion, so thinking cannot scribble over the facts it fetched.",
+   "why_it_might_help": "A verified depth-state study finds recursion needs enough memory tokens: below about 8 it fails, 8-32 plateaus, 64 degrades. D's 4 registers sit under that threshold. It is Sudoku at 768 dims, so treat the number as a direction only.",
+   "cheapest_test": "2x2 by 3 seeds, step-matched: {4 vs 16 registers} x {cards writable vs frozen}. Report gate alpha, row-to-row cosine, choose one-hop, held-out two-hop. Card-bypass code already exists.",
+   "cost": "Twelve short 5070 Ti runs",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends registers/read-only-facts item; run after loop is stabilised",
+   "sources": [
+    "https://arxiv.org/pdf/2604.21999",
+    "https://arxiv.org/html/2604.11791v1",
+    "https://arxiv.org/html/2604.07822v1"
+   ]
+  },
+  {
+   "rank": 77,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "A diversity meter for the phrasing bank",
+   "score": 55,
+   "merged_from": [
+    "synthetic-data-world-8"
+   ],
+   "gid": "g30",
+   "targets": "Question-wording wall; bank quality checked by the model itself",
+   "what_it_is": "Measure how varied the phrasing candidates actually are, using model-free numbers: gzip compression ratio, part-of-speech template rate, and long-n-gram self-repetition. Report a combination, never a single score.",
+   "why_it_might_help": "Acceptance currently rests on Qwen checking itself. A template-rate ceiling gives an accept rule for the next top-up round and shows how much of Qwen's output collapses onto a few skeletons. It measures variety, not correctness, so it replaces no human veto.",
+   "cheapest_test": "Run on the existing 5,460-candidate pool per bank, before and after a top-up. Control: teacher banks (46-95 patterns) versus question banks (0-12); if the metric cannot separate them, discard it.",
+   "cost": "Mac minutes; no GPU",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Prerequisite for the planned phrasing-bank expansion",
+   "sources": [
+    "https://arxiv.org/pdf/2407.00211",
+    "https://arxiv.org/html/2403.00553v1",
+    "https://arxiv.org/abs/2504.12522"
+   ]
+  },
+  {
+   "rank": 78,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Visit-clustered bootstrap and a design effect",
+   "score": 55,
+   "merged_from": [
+    "eval-methodology-2"
+   ],
+   "gid": "g82",
+   "targets": "Error bars on every held-out number; pass/fail gate calls",
+   "what_it_is": "Resample whole visits, not single questions, when computing confidence intervals, and score both arms on the same resample for A/B tests. Pure post-processing on predictions already saved.",
+   "why_it_might_help": "Questions from one visit are not independent, so item-level intervals can be too narrow. But the verifier already ran it: 3,827 items, 1,156 visits, ICC about -0.015, design effect 0.96. The clustered interval came out 2% narrower, so no gate call changes.",
+   "cheapest_test": "Already done on the 20260919T092801Z 4M artifact. Only remaining work: parse visit ids from the id prefix, keep the function, and re-check on any future cell with few visits.",
+   "cost": "Mac minutes; essentially free",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Closes a deferred item; unblocks nothing else",
+   "sources": [
+    "https://arxiv.org/abs/2205.03285"
+   ]
+  },
+  {
+   "rank": 79,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "A test-set budget with a precommitted decision log",
+   "score": 55,
+   "merged_from": [
+    "eval-methodology-8"
+   ],
+   "gid": "g85",
+   "targets": "Held-out evidence quality; test split already consulted during pilot",
+   "what_it_is": "Budget and log every look at the test set: record date, checkpoint digest, arm and the decision it fed, and write down the pass/fail rule before scoring rather than after.",
+   "why_it_might_help": "Each adaptive look spends a little of the test set's independence; overtuning hits about 10% of cases and is worst in small-data settings like this. Much is already built, though: the ladder script logs test evals and refuses repeats, and 18 are recorded.",
+   "cheapest_test": "Reconstruct the historical ledger from saved artifacts to count looks spent, then score the current best checkpoint on a fresh test split from the same pinned generator. Control: the old split.",
+   "cost": "Mac minutes; no GPU",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends the existing test guard; precondition for a primary claim",
+   "sources": [
+    "https://arxiv.org/pdf/1506.02629",
+    "https://arxiv.org/pdf/2506.19540"
+   ]
+  },
+  {
+   "rank": 80,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Spend the budget on depth rather than width",
+   "score": 54,
+   "merged_from": [
+    "trace-supervision-8"
+   ],
+   "gid": "g43",
+   "targets": "\"28M no better than 4M\" null; held-out depth-4 at 12.2%",
+   "what_it_is": "Hold the 4M parameter budget fixed and change the shape instead: train a deeper, narrower model against today's 256-dim, 4-layer Core and a shallower, wider one, on identical data.",
+   "why_it_might_help": "On synthetic multi-step maths trained from scratch, a 16-layer 576-dim model beat a 4-layer 1920-dim one with twice the parameters; deeper layers tracked distant dependencies. That work was near 100M, so reaching down to 4M is unproven.",
+   "cheapest_test": "Three shapes, matched token count (not matched seconds), at least two seeds each, scored on the same held-out set with the existing by-depth slices. Control: the current shape.",
+   "cost": "5070 Ti, a few GPU hours",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends the 28M-vs-4M question; independent of trace supervision",
+   "sources": [
+    "https://arxiv.org/html/2407.20311v1",
+    "https://arxiv.org/abs/2502.12143"
+   ]
+  },
+  {
+   "rank": 81,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "JEPA target for the card writer, no oracle labels",
+   "score": 54,
+   "merged_from": [
+    "latent-thought-4"
+   ],
+   "gid": "g59",
+   "targets": "Card writer trained only by oracle evidence labels; and the held-out question-wording wall",
+   "what_it_is": "Hide one line of a visit and make the model predict that line's card embedding from the rest, plus a cheap anti-collapse term on the card embeddings.",
+   "why_it_might_help": "Pushes cards toward being wording-invariant and findable. Honest: on the toy, gold labels always exist, so this is only a regulariser; JEPA evidence is vision and big-LLM finetunes, and collapses easily at 2M.",
+   "cheapest_test": "Matched steps and seeds: baseline vs baseline+JEPA term. Two controls: matched-data CE (more steps, same data), and predicting a randomised-content line's card. Read gold recall@4.",
+   "cost": "5070 Ti ~1 hour; small",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; run after pool controls, never alongside H1",
+   "sources": [
+    "https://arxiv.org/abs/2509.14252",
+    "https://www.turingpost.com/p/lejepa"
+   ]
+  },
+  {
+   "rank": 82,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Let the reader's memory cancel, not only fade",
+   "score": 54,
+   "merged_from": [
+    "slots-pointers-4",
+    "sequence-backbones-2"
+   ],
+   "gid": "g64",
+   "targets": "Reader's carried recurrent state is positive-only: it can fade an old fact but never erase it",
+   "what_it_is": "Let the scan's decay go negative (or add a delta-rule step) so the state can cancel. Only the carried state is positive today; the layer's output is already signed.",
+   "why_it_might_help": "Proven that [0,1] eigenvalues cannot do parity or flip-style state tracking, which is what \"X had the key, now Y does\" needs. Risk: proofs are on clean, larger linear RNNs; real-space scans can overflow.",
+   "cheapest_test": "Train the reader alone on parity and a key-tracking task, positive scan vs signed scan, identical params/steps/3 seeds. The positive scan is the control. Toy has no transfers yet.",
+   "cost": "Mac minutes; GPU hours only if it passes",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; fixes the reader before the shared second-hop work",
+   "sources": [
+    "https://arxiv.org/abs/2411.12537",
+    "https://arxiv.org/abs/2502.10297",
+    "https://iclr.cc/virtual/2025/oral/31836"
+   ]
+  },
+  {
+   "rank": 83,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Harden the name pointerizer against new names",
+   "score": 54,
+   "merged_from": [
+    "slots-pointers-6"
+   ],
+   "gid": "g71",
+   "targets": "Pointerizer decides name-hood from corpus statistics, so a held-out name could be silently missed",
+   "what_it_is": "Do the unrun check, then, only if it finds collisions, decide name-hood from position/slot rather than from \"this word ever appeared lowercase in training\".",
+   "why_it_might_help": "Insurance, not accuracy. The scary examples (Rose, Will) cannot be generated; the real hole is a makeable four-letter name colliding with a lowercase word in Qwen teacher text. It does not explain the 0% fresh-name Core result.",
+   "cheapest_test": "Pure CPU: intersect the train split's lowercase-word set with casefolded validation/test cast lists, including teacher text. Control: the same intersection over the train cast, which should be empty.",
+   "cost": "Mac minutes; free",
+   "confidence": "high",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; cheap audit to run before the next verdict",
+   "sources": [
+    "https://arxiv.org/html/2310.17191",
+    "https://arxiv.org/pdf/2502.20332"
+   ]
+  },
+  {
+   "rank": 84,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Fade the trace away during training",
+   "score": 54,
+   "merged_from": [
+    "trace-supervision-4"
+   ],
+   "gid": "g74",
+   "targets": "Whether a visible trace is needed at answer time, and keeping equal-FLOPs comparisons honest",
+   "what_it_is": "Train with the full trace, then delete it one element at a time over training until the model answers directly, so the work moves inside the network.",
+   "why_it_might_help": "Would buy the trace's gain with no test-time token cost. Risks: 30x scale gap (GPT-2 Small, 124M), no best-on-validation checkpointing exists, and success makes the reasoning unreadable, against the mid-thought readability goal.",
+   "cheapest_test": "Only after a trace arm beats its matched control and a filler-token control shows the trace carries content. Then fine-tune that checkpoint with a deletion schedule; compare vs trace-emitted and answer-only arms.",
+   "cost": "5070 Ti a few GPU-hours; two runs",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends the unrun trace idea; gated behind it",
+   "sources": [
+    "https://arxiv.org/abs/2405.14838",
+    "https://arxiv.org/abs/2412.06769"
+   ]
+  },
+  {
+   "rank": 85,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Per-loop latent targets from the gold-card teacher",
+   "score": 52,
+   "merged_from": [
+    "latent-thought-5"
+   ],
+   "gid": "g11",
+   "targets": "Every Think loop decodes the same answer through the same decoder, so no loop does anything new",
+   "what_it_is": "Build a teacher that is handed the gold card for hop k at loop k, then train the student's loop-k state to match the teacher's, alongside the normal answer loss.",
+   "why_it_might_help": "Gives each loop its own job, and is a clean falsification test of \"the loops do nothing\". Honest: the teacher does not exist yet (gold mode preloads cards), and CODI/CoLaR are finetunes of billion-scale models.",
+   "cheapest_test": "Toy ladder, own retrieval: current deep supervision vs the same plus per-loop alignment, 3 seeds, matched steps. Pre-register that alignment loss must fall with the row-shared drift removed.",
+   "cost": "5070 Ti GPU-minutes, plus one teacher run",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Extends H2 query-reuse distillation; after ASK gate opens",
+   "sources": [
+    "https://arxiv.org/abs/2412.06769",
+    "https://arxiv.org/abs/2505.16552"
+   ]
+  },
+  {
+   "rank": 86,
+   "tier": "B-worth-a-look",
+   "category": "New capability",
+   "idea": "Muon on matrices, AdamW on embedding and head",
+   "score": 52,
+   "merged_from": [
+    "tiny-lm-training-5"
+   ],
+   "gid": "g41",
+   "targets": "One optimizer and one learning rate for everything, while the embedding is 40% of the weights",
+   "what_it_is": "Use Muon (orthogonalised momentum) on the 2-D matrices, keep AdamW for the embedding, head, biases and norms, and give the embedding its own learning rate.",
+   "why_it_might_help": "Muon's advantage grows as models shrink (1.4x at 0.1B, 1.1x at 1.2B), so 4M is mildly encouraging, not discouraging. Theory says the embedding wants roughly 11x the hidden learning rate at d=128.",
+   "cheapest_test": "Run the embedding-LR half first and alone: sweep upward (3x, 10x, 30x) against a fairly retuned AdamW baseline swept over three LRs at 600 s. Muon second.",
+   "cost": "5070 Ti ~1.5 hours; 6-8 short runs",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; independent of the retrieval plan, runnable anytime",
+   "sources": [
+    "https://kellerjordan.github.io/posts/muon/",
+    "https://arxiv.org/html/2509.02046v2",
+    "https://arxiv.org/pdf/2506.15025"
+   ]
+  },
+  {
+   "rank": 87,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "REINFORCE on the ASK choice only",
+   "score": 52,
+   "merged_from": [
+    "motivation-rl-1"
+   ],
+   "gid": "g46",
+   "targets": "Card selection is detached, so the answer loss never reaches the query or key weights",
+   "what_it_is": "Sample several card choices per question instead of taking the best, decode an answer for each, and push up the choices that beat the group's average score.",
+   "why_it_might_help": "Could finally train addressing on \"did this card help?\". But use top-1, not top-4 (top-4 still delivers distractors), and one checkpoint already shows recall@4 = 1.0 with 60/1024 accuracy, so selection is not always the bottleneck.",
+   "cheapest_test": "Free first: log recall@k on existing checkpoints. Then, on own-retrieval (not the supplied-card ladder), one sampling arm vs an identical-seed, identical-data, CE-only control, 3 seeds.",
+   "cost": "GPU-hours; needs a CPU-to-GPU port first",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Competes with H1 pool controls for the same diagnosis",
+   "sources": [
+    "https://limit-of-rlvr.github.io/",
+    "https://arxiv.org/abs/2511.18659"
+   ]
+  },
+  {
+   "rank": 88,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Reset the decoder periodically (iterated learning)",
+   "score": 52,
+   "merged_from": [
+    "latent-thought-6"
+   ],
+   "gid": "g61",
+   "targets": "Seed instability (503/512 vs 27/512) and no regularisation anywhere in the reasoner",
+   "what_it_is": "Every N steps re-initialise the decoder only, keeping reader, writer and Think, so any card code the writer invents has to stay quickly re-learnable by a fresh decoder.",
+   "why_it_might_help": "Aims at variance rather than the mean; a tight band would restore trust in nearly every toy conclusion. Evidence is a referential game with tiny message spaces, and the detailed numbers are unverified beyond the abstract.",
+   "cheapest_test": "Run the cheaper control first: a 3-seed cosine-decay rerun of bypass-k1 at 1500 steps. If decay alone tightens the band, drop this. Pre-register the spread metric.",
+   "cost": "5070 Ti GPU-minutes; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; prerequisite for trusting any toy A/B result",
+   "sources": [
+    "https://arxiv.org/html/2604.03266",
+    "https://arxiv.org/pdf/2403.14427"
+   ]
+  },
+  {
+   "rank": 89,
+   "tier": "B-worth-a-look",
+   "category": "Fix weak part",
+   "idea": "Matrix-valued recurrent state for recall capacity",
+   "score": 52,
+   "merged_from": [
+    "sequence-backbones-3"
+   ],
+   "gid": "g65",
+   "targets": "The reader's small vector state (d=32 in real runs) cannot hold identity and value together",
+   "what_it_is": "Give each head a small matrix state (say four 8x8 heads, 256 numbers) instead of one 32-number vector, because in-context recall capacity tracks state size.",
+   "why_it_might_help": "At d=32 the capacity argument is compelling. Counter-evidence first: probes already decode person and value 2304/2304 at the key token positions, so test this on the long-range own-retrieval path, not on pooling.",
+   "cheapest_test": "Build an MQAR-style probe from village data at N = 4, 8, 16, 32; vector-state control vs matrix state, 3 seeds. Drop the idea if both degrade identically.",
+   "cost": "GPU-minutes; needs flops.py recalibration",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends the reader fix in g64; upstream of pooling",
+   "sources": [
+    "https://arxiv.org/html/2508.19029v2",
+    "https://arxiv.org/abs/2407.05483",
+    "https://arxiv.org/html/2507.06457v2"
+   ]
+  },
+  {
+   "rank": 90,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Report four efficiency axes, not one",
+   "score": 52,
+   "merged_from": [
+    "gpu-native-runtime-5"
+   ],
+   "gid": "g86",
+   "targets": "One FLOP axis carries the efficiency claim, and the counter skips the scan's elementwise work",
+   "what_it_is": "Report every arm on accuracy per training token, per counted FLOP, and per isolated GPU second, and state plainly which axis the claim rests on.",
+   "why_it_might_help": "No accuracy change, a defensibility change. Accuracy-per-parameter adds nothing (config already forces all D variants into one narrow band), and seconds should wait until the scan is profiled, or an unoptimised loop kills a good design.",
+   "cheapest_test": "Post-process checkpoints already on disk into three columns plus one isolated timing pass each. The check is whether any arm's ranking changes between columns; if all agree, the old claim stands.",
+   "cost": "Minutes of GPU timing; otherwise free",
+   "confidence": "high",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends adopted FLOP-parity; applies across all experiments",
+   "sources": [
+    "https://arxiv.org/abs/2306.07179",
+    "https://arxiv.org/abs/2406.07887",
+    "https://arxiv.org/html/2405.21060v1"
+   ]
+  },
+  {
+   "rank": 91,
+   "tier": "B-worth-a-look",
+   "category": "Make good part better",
+   "idea": "Score each loop on what the last one missed",
+   "score": 50,
+   "merged_from": [
+    "motivation-rl-5"
+   ],
+   "gid": "g12",
+   "targets": "Think loop: no evidence later loops add anything; per-(question,loop) loss normalisation",
+   "what_it_is": "Keep deep supervision but weight each loop's answer loss by how often the previous loop got that question wrong \u2014 boosting inside the recurrence. No new parameters.",
+   "why_it_might_help": "Today the cheapest solution is an answer already right at loop 1 and unchanged after; weighting gives later loops a reason to exist. The cited papers are decorative, not evidence.",
+   "cheapest_test": "Free first: log accuracy-by-loop and alpha on existing checkpoints. Then alpha init 0.1 vs 0.0, then per-question normalisation; error-weighting only if loops differ. Control: uniform supervision.",
+   "cost": "5070 Ti minutes per arm; small",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; prerequisite for any honest claim about the think loop",
+   "sources": [
+    "https://arxiv.org/abs/2505.14970",
+    "https://arxiv.org/abs/2509.25438",
+    "https://arxiv.org/pdf/2504.15275"
+   ]
+  },
+  {
+   "rank": 92,
+   "tier": "C-later-or-vision",
+   "category": "New capability",
+   "idea": "Sparse knowledge slots written only in sleep",
+   "score": 48,
+   "merged_from": [
+    "continual-sleep-7",
+    "memory-store-7"
+   ],
+   "gid": "g98",
+   "targets": "No retention or continual-learning number exists; store is episode-scoped, no cross-visit knowledge",
+   "what_it_is": "Replace one feed-forward block in the 4M Core model with a large key-value slot table, and when learning new facts update only the few slots those facts activate.",
+   "why_it_might_help": "Published NaturalQuestions F1 drop: 89% full finetune, 71% LoRA, 11% slot-sparse. But all evidence is 0.5B+; at 4M from scratch slots may never learn keys, and selection needs usage history.",
+   "cheapest_test": "Train village 1; learn village 2 updating only top-activated slots, dense weights frozen. Controls: full finetune, and slot layer with all parameters trained. Decide parameter counting first.",
+   "cost": "5070 Ti 3-4 hours; ~12% more params",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; first retention evidence, run after pool controls",
+   "sources": [
+    "https://arxiv.org/abs/2510.15103",
+    "https://arxiv.org/html/2604.05248v1",
+    "https://arxiv.org/abs/2412.09764"
+   ]
+  },
+  {
+   "rank": 93,
+   "tier": "C-later-or-vision",
+   "category": "Fix weak part",
+   "idea": "Offline re-reading pass instead of harder thinking",
+   "score": 46,
+   "merged_from": [
+    "continual-sleep-3"
+   ],
+   "gid": "g95",
+   "targets": "Dead Think gates (alpha 0.018-0.042); card content, with held-out two-hop secondary",
+   "what_it_is": "Instead of thinking harder while answering, re-run the reader over the visit two or four extra times offline, feeding each pass's card values back in, then answer.",
+   "why_it_might_help": "A 2026 paper at this exact scale (4 layers, d=256, from scratch) found more offline passes help most on deeper multi-hop. Its fast-weight mechanism is rejected here; only 're-reading helps' transfers.",
+   "cheapest_test": "Free checks first: alpha init 0.1 and residual_std/sqrt(max_loops). Then N=1 (control) vs 2 vs 4 matched on wall-clock, since the FLOP counter misses minGRU. Three seeds.",
+   "cost": "5070 Ti minutes per arm; 3 seeds",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Competes with the planned bounded reread of selected evidence",
+   "sources": [
+    "https://arxiv.org/html/2605.26099v2",
+    "https://research.google/blog/introducing-nested-learning-a-new-ml-paradigm-for-continual-learning/"
+   ]
+  },
+  {
+   "rank": 94,
+   "tier": "C-later-or-vision",
+   "category": "New capability",
+   "idea": "Screen the sleep idea cheaply before building it",
+   "score": 46,
+   "merged_from": [
+    "neuro-inspired-8"
+   ],
+   "gid": "g99",
+   "targets": "Unbuilt sleep-as-transaction; no regulariser anywhere; large seed-to-seed spread",
+   "what_it_is": "A short offline phase every N steps that shrinks all weights toward baseline, replays a small buffer, and commits only if validation did not worsen \u2014 otherwise rolls back.",
+   "why_it_might_help": "It would be the first regulariser and builds the rollback harness the vision needs. But the newest evidence says the same intervention gives no measurable benefit under gradient training, so expect a null.",
+   "cheapest_test": "Precommitted screen: sleep ratio 0% (control), 10%, 20%, 30% on the standard 600 s Core run, three seeds. Snapshot model, AdamW state and RNG together, or results are noise.",
+   "cost": "5070 Ti 1-3 hours; 3 seeds",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New; harness is reusable, the shrink is a screen",
+   "sources": [
+    "https://arxiv.org/html/2601.08447v1",
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8426406/"
+   ]
+  },
+  {
+   "rank": 95,
+   "tier": "C-later-or-vision",
+   "category": "New capability",
+   "idea": "J-lens readability for Premonition-mini",
+   "score": 45,
+   "merged_from": [
+    "interpretability-tooling-1"
+   ],
+   "gid": "g25",
+   "targets": "No mid-thought readability tool; do Think loops change anything; does a card carry person",
+   "what_it_is": "Average the Jacobian from the decoder's answer logits back to each think row over a few hundred visits, then print any row as the answer tokens it is poised to say.",
+   "why_it_might_help": "Would give a loop-by-loop transcript. But Premonition's decoder is one block, so the averaged Jacobian is nearly exact \u2014 in practice this is a cross-attention-corrected logit lens, useful but modest.",
+   "cheapest_test": "On an existing checkpoint, 200 held-out visits: does the lens's top token on the gold-card row predict the model's first answer token better than a plain logit lens and a distractor row?",
+   "cost": "Mac minutes; no training",
+   "confidence": "medium",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "New tooling; would support pool controls and H1 diagnosis",
+   "sources": [
+    "https://transformer-circuits.pub/2026/workspace/index.html",
+    "https://arxiv.org/abs/2401.06102"
+   ]
+  },
+  {
+   "rank": 96,
+   "tier": "C-later-or-vision",
+   "category": "New capability",
+   "idea": "Meta-learn what a question wants from examples",
+   "score": 44,
+   "merged_from": [
+    "wording-generalization-6"
+   ],
+   "gid": "g36",
+   "targets": "Held-out wording collapse: Q6 62.4% to 1.1%, Q11 28.8% to 0.0%",
+   "what_it_is": "Put one or two same-type questions, worded differently and with their answers, earlier in the same visit, then ask the target question in an unseen phrasing.",
+   "why_it_might_help": "Attacks the measured failure directly \u2014 answering in the wrong answer space. Minnow shows from-scratch child-scale models can learn this. Risk: in-visit answers leak; the audit already flags 64 cases.",
+   "cheapest_test": "Must run on the Core village track, not the toy ladder, which has one surface form per type. Matched 600 s runs at k=0/1/2 demos; control: demos shuffled across types.",
+   "cost": "5070 Ti 600 s per arm; several arms",
+   "confidence": "medium",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; gated on first adding more training phrasings",
+   "sources": [
+    "https://arxiv.org/pdf/2502.14791",
+    "https://arxiv.org/html/2609.13144"
+   ]
+  },
+  {
+   "rank": 97,
+   "tier": "C-later-or-vision",
+   "category": "New capability",
+   "idea": "Oracle-checked dreams: verified self-generated replay",
+   "score": 44,
+   "merged_from": [
+    "continual-sleep-4"
+   ],
+   "gid": "g96",
+   "targets": "Unbuilt dream replay; no backward-transfer number for the adopted diary replay",
+   "what_it_is": "Let the model generate its own practice material at a village boundary, have the exact village oracle mark it, and train only on the parts that pass.",
+   "why_it_might_help": "Self-generated replay nearly eliminated forgetting in a 2026 study, and Premonition uniquely owns a checker. But at 23% held-out accuracy most dreams fail, and filtering entrenches what the model already knows.",
+   "cheapest_test": "Run no-replay vs exact 50:50 diary replay first. Then dream only question-answer pairs about visits already seen (no visit parser exists) and gate on the oracle acceptance rate.",
+   "cost": "5070 Ti 3x20 min plus generation",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "New; needs a continual-learning harness built first",
+   "sources": [
+    "https://arxiv.org/abs/2605.26097",
+    "https://arxiv.org/pdf/2403.01244",
+    "https://arxiv.org/html/2604.20943v1"
+   ]
+  },
+  {
+   "rank": 98,
+   "tier": "C-later-or-vision",
+   "category": "Fix weak part",
+   "idea": "Multiplicative (HRR) binding inside the card",
+   "score": 40,
+   "merged_from": [
+    "binding-2"
+   ],
+   "gid": "g21",
+   "targets": "One pooled card cannot hold person, relation and value; binder writes the same value everywhere",
+   "what_it_is": "Build the card as a sum of role-times-filler products (circular convolution), so 'who', 'relation' and 'value' can each be pulled back out by correlating with its role vector.",
+   "why_it_might_help": "A principled way to hold several fields in one vector. But capacity scales with dimension and the toy runs at d=32, where three superposed pairs likely become unreadable; past probes found answers card-blind anyway.",
+   "cheapest_test": "Seconds on the Mac first: at d=32 and d=128, how accurately does unbinding recover each filler, scored as cleanup against the toy's actual small vocabularies? If d=32 fails, stop.",
+   "cost": "Mac seconds to screen; GPU only if passed",
+   "confidence": "low",
+   "citation_status": "partly-verified",
+   "relation_to_current_plan": "Competes with H1 binding fixes; successor to slice binding",
+   "sources": [
+    "https://arxiv.org/abs/2405.09689",
+    "https://arxiv.org/pdf/2305.19534"
+   ]
+  },
+  {
+   "rank": 99,
+   "tier": "C-later-or-vision",
+   "category": "Make good part better",
+   "idea": "Different clocks for different modules",
+   "score": 40,
+   "merged_from": [
+    "continual-sleep-6"
+   ],
+   "gid": "g97",
+   "targets": "Card writer is 1.2% of params and loses the pooling race; seed instability",
+   "what_it_is": "Give the card writer its own slower clock \u2014 cleanest as an EMA slow copy of its parameters \u2014 while the reader and decoder keep updating every step.",
+   "why_it_might_help": "Tests the vision's 'weights change only in sleep' on one module for the price of a schedule change. But slowing both competing gradients equally is a weak fix, and no citation tests it.",
+   "cheapest_test": "Add as one extra arm inside the pool-controls run: K=1 (control) vs a slow EMA writer, three seeds. Precommit seed spread as the primary number; specify Adam state handling.",
+   "cost": "5070 Ti minutes; extra arm, no new run",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Extends pool controls as a cheap extra arm",
+   "sources": [
+    "https://research.google/blog/introducing-nested-learning-a-new-ml-paradigm-for-continual-learning/",
+    "https://arxiv.org/abs/2606.03979",
+    "https://arxiv.org/html/2605.26099v2"
+   ]
+  },
+  {
+   "rank": 100,
+   "tier": "C-later-or-vision",
+   "category": "Fix weak part",
+   "idea": "One phrasing per batch",
+   "score": 35,
+   "merged_from": [
+    "wording-generalization-3"
+   ],
+   "gid": "g32",
+   "targets": "Held-out question wording is the Core track's next wall; no per-phrasing batching",
+   "what_it_is": "Make each batch use a single phrasing instead of mixing phrasings, so gradients from different wordings stop averaging into a compromise that suits none of them.",
+   "why_it_might_help": "A 2026 head-to-head lifted worst-template score from 0.210 to 0.363 and beat the paraphrase-agreement loss Ben plans to build. But those were instruction-tuned 0.6-8B models that already knew the task.",
+   "cheapest_test": "Not free: a training row is a whole visit with about nine mixed questions, so this needs regenerating data with one phrasing per visit. Then two matched 600 s runs; report worst phrasing per type.",
+   "cost": "Data regeneration plus two 600 s runs",
+   "confidence": "low",
+   "citation_status": "verified",
+   "relation_to_current_plan": "Informs whether to build the planned paraphrase-agreement loss",
+   "sources": [
+    "https://arxiv.org/html/2609.01217",
+    "https://arxiv.org/pdf/2510.14242"
+   ]
+  }
+ ],
+ "omitted": [],
+ "assigned_ids": 133
+}

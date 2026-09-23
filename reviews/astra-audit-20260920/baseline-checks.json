@@ -1,0 +1,142 @@
+{
+  "existing_check_log": "\n1. PARAMETER COUNT\n  ok  primary `line` variant within +-3% of S's 94,838 -- 94629 parameters, ratio 0.9978\n  ok  `none` variant also within +-3% -- 92949 parameters\n  ok  `absolute` differs from `none` by exactly its position table -- 123669 parameters, +30720 = 640x48 (ratio 1.304: this arm is NOT matched and has MORE capacity, which is stated, not hidden)\n\n2. CAUSAL MASK\n  ok  editing the final token leaves every earlier position's logits bitwise equal\n  ok  editing the final token does change that position's own logits\n  ok  editing row 0 leaves the other rows untouched\n  ok  under a plain causal mask, editing a LATER story row leaves earlier story positions identical\n\n3. LOSS ON THE OUTPUT PART ONLY\n  ok  exactly one scored position per output token -- 35 scored positions, 35 output tokens\n  ok  the scored positions are exactly (last question token .. last output token - 1)\n  ok  the loss equals the mean cross entropy over exactly those positions -- 4.289582 vs 4.289582\n\n5. TEACHER-FORCED TARGETS == THE EXACT INTERPRETER'S TRUTH CHAIN\n  ok  steps-mode targets are the interpreter's intermediate entities then END\n  ok  the token before END is the interpreter's answer\n  ok  answer-only mode targets are exactly `y END`\n\n6. GREEDY DECODING STOPS AT END\n  ok  a scripted emitter returns exactly the tokens up to and including the first END -- [52, 53, 68]\n  ok  a model that never emits END returns exactly MAX_OUT tokens and no END\n  ok  no END is scored as a failure\n  ok  an immediate END stops after one step and answers nothing\n  ok  an untrained model never emits anything after its first END\n\n9. PAIR SCORING\n  ok  a changed-answer pair counts only when BOTH twins are correct\n  ok  an irrelevant-edit pair also requires identical twin answers\n  ok  strict requires both twins strict\n  ok  a single-side cell aggregates one row per unit\n\n11. THE CACHED/ROW-BATCHED PATH EQUALS A DENSE-MASK REFERENCE\n  ok  `line` production logits equal the dense reference -- max |delta| 1.19e-07\n  ok  `absolute` production logits equal the dense reference -- max |delta| 8.94e-08\n  ok  `none` production logits equal the dense reference -- max |delta| 8.94e-08\n\n1. THE RECORDED SUPPORTING ROW IS THE TRUTH CHAIN'S OWN ROW\n  ok  the chain used for supervision is the exact interpreter's chain\n  ok  every step's recorded row is the row [WORLD, subject, op, result] -- 8 questions, hop counts [1, 2, 3]\n  ok  intermediate steps are licensed by LINK rows, the last by the terminal attribute row\n  ok  no other row in the world could license the same (subject, op)\n  ok  slots past the chain (the END-predicting position and beyond) are -1 -- columns k..11 of batch.support\n\n2. WHICH POSITION IS SCORED AGAINST WHICH ROW  (probed, not read off source)\n  ok  all mass on every step's gold row drives the loss to 0 -- loss -1.79e-08\n  ok  shifting the same mass one position later collapses it -- loss 20.72; so the scored position for output token j is exactly q_len + j - 1 (the position that PREDICTS it)\n  ok  pointing a step at the NEXT step's row collapses the loss -- 7 multi-hop questions, loss 12.43\n  ok  scribbling on the END-predicting position (and every position after it) does not move the loss at all -- so END-predicting positions carry NO evidence target\n  ok  the question's final ANSWER token IS scored (it predicts output token 0) -- loss 8.289, expected 8.289 = the -log(1e-9) floor on 8 of 20 live steps; \"output position\" means the PREDICTING position\n  ok  the auxiliary loss is a mean pooled over live (question, step) pairs, not per question\n\n3. GOLD ROW vs WRONG ROW\n  ok  more mass on the gold row is always a lower loss -- 0.105 (gold share 0.9) < 0.693 (gold share 0.5) < 2.303 (gold share 0.1)\n  ok  the loss is exactly -log(mass on the gold row) -- 0.69315 vs 0.69315\n  ok  the loss is taken on the HEAD-MEAN attention, not per head -- one head fully right + one fully wrong == half the mass\n\n4. PADDED STORY POSITIONS CANNOT BE CREDITED  (row index 0 is a real row)\n  ok  the short story really does have padded flat slots -- 15 of 72 real\n  ok  those padded slots carry row index 0, which is also a REAL row index\n  ok  mass parked entirely on padding earns no credit for row 0 -- loss 20.72 (= -log(1e-9) floor), so the `* flat_valid` guard holds\n  ok  the same batch scores 0 when the mass is on the real row 0 tokens\n\n5. evidence_aux = 0 IS THE NO-AUX PATH, BIT FOR BIT\n  ok  evidence_aux=0. gives the same loss as a hand-written cross entropy -- 4.236245155334473\n  ok  every gradient is bitwise identical -- 39 parameter tensors\n  ok  asking for the attention trace does not change the logits\n  ok  the traced weights are a proper distribution over (story ++ own stream) -- shape (8, 2, 10, 319)\n\n6. THE AUXILIARY TERM ENTERS AT WEIGHT 0.5\n  ok  loss(with aux) - loss(plain) == 0.5 x the reported auxiliary term -- plain 4.23856, aux term 3.95031, total 6.21371\n  ok  the reported auxiliary term does not depend on its own weight\n  ok  the auxiliary term is a live part of the graph, not a detached number\n\n7. DEGENERATE INPUTS\n  ok  an item with no `support` key yields an all -1 support table\n  ok  with no live step the auxiliary loss is exactly 0 and contributes nothing\n  ok  a batch packed without support= raises instead of silently scoring nothing\n\nALL 28 CHECKS PASSED\n",
+  "baseline_checks": 25,
+  "evidence_checks": 28,
+  "dense_cache_parity": {
+    "line": {
+      "logit_max_abs": 1.2665987014770508e-07,
+      "gradient_max_abs": 1.7881393432617188e-07,
+      "loss_abs": 4.76837158203125e-07
+    },
+    "absolute": {
+      "logit_max_abs": 1.9371509552001953e-07,
+      "gradient_max_abs": 2.086162567138672e-07,
+      "loss_abs": 4.76837158203125e-07
+    },
+    "none": {
+      "logit_max_abs": 1.7182901501655579e-07,
+      "gradient_max_abs": 1.7881393432617188e-07,
+      "loss_abs": 4.76837158203125e-07
+    }
+  },
+  "checkpoint_probe": {
+    "steps-line-11k/seed-0": {
+      "all": {
+        "correct": 48,
+        "n": 94
+      },
+      "end": {
+        "correct": 32,
+        "n": 32
+      },
+      "link": {
+        "correct": 12,
+        "n": 30
+      },
+      "terminal": {
+        "correct": 4,
+        "n": 32
+      },
+      "one_hop": {
+        "correct": 1,
+        "n": 10
+      }
+    },
+    "steps-line-11k/seed-1": {
+      "all": {
+        "correct": 49,
+        "n": 94
+      },
+      "end": {
+        "correct": 32,
+        "n": 32
+      },
+      "link": {
+        "correct": 14,
+        "n": 30
+      },
+      "terminal": {
+        "correct": 3,
+        "n": 32
+      },
+      "one_hop": {
+        "correct": 0,
+        "n": 10
+      }
+    },
+    "steps-line-11k/seed-2": {
+      "all": {
+        "correct": 54,
+        "n": 94
+      },
+      "end": {
+        "correct": 32,
+        "n": 32
+      },
+      "link": {
+        "correct": 21,
+        "n": 30
+      },
+      "terminal": {
+        "correct": 1,
+        "n": 32
+      },
+      "one_hop": {
+        "correct": 1,
+        "n": 10
+      }
+    },
+    "dev/steps-line-990001": {
+      "all": {
+        "correct": 63,
+        "n": 94
+      },
+      "end": {
+        "correct": 32,
+        "n": 32
+      },
+      "link": {
+        "correct": 30,
+        "n": 30
+      },
+      "terminal": {
+        "correct": 1,
+        "n": 32
+      },
+      "one_hop": {
+        "correct": 1,
+        "n": 10
+      }
+    }
+  },
+  "output_step_gradient_norms": [
+    0.4162188768386841,
+    0.558810830116272,
+    0.253814160823822,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "lr_11k": {
+    "0": 1e-05,
+    "99": 0.001,
+    "7332": 0.001,
+    "7333": 0.001,
+    "10999": 0.0001002454322334333
+  },
+  "pure_decay_multiplier_11k": 0.39450513458372327,
+  "seconds": 4.023910083000374,
+  "no_training": true,
+  "device": "cpu",
+  "threads": 1
+}
