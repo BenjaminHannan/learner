@@ -1,0 +1,115 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main && git rev-parse --show-toplevel && uptime && df -g /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 2:35  up 2 days, 18:25, 4 users, load averages: 33.39 78.08 84.78
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    48%  484014 145685320    0%   /
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/241b-stylesheet.txt > /tmp/brief241b.txt; shasum -a 256 /tmp/brief241b.txt; wc -l /tmp/brief241b.txt; git show origin/main:artifacts/claude-grade241b-set2-20260923/rows.jsonl > /tmp/rows241b.jsonl; shasum -a 256 /tmp/rows241b.jsonl; wc -l /tmp/rows241b.jsonl
+16bdf0cf0403bce26886ea345f1ea44242e54537380f0ab3b8c7ed40f2dad8ef  /tmp/brief241b.txt
+      47 /tmp/brief241b.txt
+f4327edbc3cc891861e5df40684dc25cd38d110d468e5bc283784081f0be43d5  /tmp/rows241b.jsonl
+    1245 /tmp/rows241b.jsonl
+[0m
+[0m→ [0mRead /tmp/brief241b.txt
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=60, offset=831][0m
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=60, offset=891][0m
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=65, offset=951][0m
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=65, offset=1016][0m
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=65, offset=1081][0m
+[0m→ [0mRead /tmp/rows241b.jsonl[90m [limit=105, offset=1146][0m
+[0m
+[0m$ [0mls artifacts/ | head -50; ls artifacts/claude-grade241b-D-set2-20260923/ 2>&1 || echo "NO-DIR"
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-capab280-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag290-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+part1.jsonl
+[0m
+[0m$ [0mls -d artifacts/claude-grade241b-D-set2-20260923/ 2>&1; ls artifacts/claude-grade241b-D-set2-20260923/ 2>&1
+artifacts/claude-grade241b-D-set2-20260923/
+part1.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-grade241b-D-set2-20260923/part3.jsonl
+Wrote file successfully.
+[0m
+[0m$ [0mwc -l artifacts/claude-grade241b-D-set2-20260923/part3.jsonl && git status --short artifacts/claude-grade241b-D-set2-20260923/
+415 artifacts/claude-grade241b-D-set2-20260923/part3.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; p='artifacts/claude-grade241b-D-set2-20260923/part3.jsonl'; lines=open(p).read().strip().split(chr(10)); print('lines',len(lines)); ids=[json.loads(l)['id'] for l in lines]; print('unique',len(set(ids))); print('first',ids[0],'last',ids[-1]); exp=['g%04d'%i for i in range(831,1246)]; print('order-ok',ids==exp); fl=[json.loads(l) for l in lines if not json.loads(l)['grammatical']]; print('false',len(fl)); print('true',len(lines)-len(fl)); [print(x['id'],x['reason']) for x in fl]"
+
+lines 415
+unique 415
+first g0831 last g1245
+order-ok True
+false 18
+true 397
+g0856 rule 4 agreement: 'daughter ... are'
+g0882 rule 1 possessive: missing apostrophe in 'Ollstearks grandfather'
+g0896 rule 3 numbers: digit '7' for count under ten
+g0944 rule 4 agreement: 'I doesn't'
+g0969 rule 6 sentence form: doubled word 'Drumstior Drumstior'
+g0983 rule 4 agreement: 'I doesn't'
+g0996 rule 6 sentence form and rule 5 article: lowercase start and missing article in 'developer of ...'
+g1033 rule 6 sentence form and rule 5 article: lowercase start and missing article in 'boyfriend of ...'
+g1038 rule 4 agreement: 'I doesn't'
+g1082 rule 1 possessive: missing apostrophe in 'Umstorks plumber'
+g1093 rule 6 sentence form and rule 5 article: lowercase start and missing article in 'toy of ...'
+g1108 rule 8 machine text: '(E9295)'
+g1151 general raw database label: 'language of work or name'
+g1152 rule 4 agreement: 'are the architect'
+g1163 rule 8 machine text: '(E8889)'
+g1195 rule 3 numbers: digit '7' for count under ten
+g1212 rule 4 agreement: 'I doesn't'
+g1227 general raw database label: 'language of work or name'
+[0m
