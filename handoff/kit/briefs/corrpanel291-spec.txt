@@ -1,0 +1,18 @@
+BLIND PANEL SPEC: corrpanel291 (corrections, denials and openers, for the join merge 291). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+Follow handoff/kit/briefs/corrpanel252-schema.txt for the item fields, the scoring rules and the acceptance checks, with only the changes below. Never open design/v3/30-modes/291*, 138p*, 252*, 258*, 259*, 260*, any scripts/claude_fix25*, claude_fix260*, claude_loop138p*, claude_loop252*, claude_loop260*, any builder's artifacts folder, or any other panel's items (corrpanel252, corrtail258, openpanel260 included). Write every sentence yourself, with new fictional names (1-4 words).
+
+Changes from the 252 schema:
+- Folder artifacts/claude-corrpanel291-20260923/; ids "c291-001" ...; base file base138nb.jsonl.
+- Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; build as that folder's runner does; fresh work dir per dialog; setup, then turn, then followup, in one session).
+- Do NOT filter the cause families by whether the base gets them right. Write natural wordings first, run the base once, and report base_right, base_wrong_value, base_false_claim and junk writes per family.
+- Add base_false_claim (bool) as in corrtail258-spec.txt: the reply says it changed or removed something it did not.
+- Families (exact counts, 96 in total):
+  verb_denial 8, possessive_denial 8, contextual_denial 8, contextual_correction 8, explicit_correction 8 (cause families, at least 2 lowercase turns each);
+  tail_denial 8 (a denial or correction with a trailing comment clause: ", that's wrong", ", which is old news");
+  opener_teach 8 (a plain teach after an opener word such as "Oh,", "Well,", "Honestly,");
+  opener_correction 8 (an opener in front of a correction or denial);
+  unstored_denial 6; ambiguous 6; question_trap 8;
+  control 12 (as the schema says, byte-identical to the base).
+- Seal (repo-root paths): panel.jsonl, base138nb.jsonl, make_panel.py, run_base.py, score_panel.py -> SEAL.sha256.txt. score_panel.py implements the scoring rules and is used unchanged by builders.
+- README.md at category level only (like corrpanel252's). Never quote an item in README.md or in your final reply.
