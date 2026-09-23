@@ -77,3 +77,29 @@ joinpanel280m). Two things change:
 Bars: M1 agreement 100% under that rule, 0 overlaps, 0 writes on question and small-talk turns, 0 wrong called
 answers, and 0 unsupported claims (director). M2 as above, GATE identical to 260's. M3 smalltalkpanel234 equal to
 or better than 260.
+
+## 280n result and 280p, the last attempt (director, 2026-09-23 13:28 UTC)
+280n is a **registered FAIL**: agreement was 87/90, and the bar was 90/90.
+My recount from the raw rows of all five arms:
+- Ability 25/25, teach 8/8, called 12/12, small talk 25/25, mixed 10/10 (mechanical owner), control 7/10.
+- The 3 control misses are control questions where only 281's reply differs from 260's, and 280m equals 281.
+  My rule fixed controls to 260, so it did not expect the called reader to answer them.
+- 0 overlaps, 0 writes on non-teach turns, 0 store differences.
+- Called and control questions: 13 right, 4 clarify or abstain lines, 0 wrong.
+- The suites were a registered post-seal run: exactly 280's 3 moves, N06 and E04, with GATE identical.
+- smalltalkpanel234: 17/20 vs 16/20, 0 writes.
+Applying the mechanical rule to every turn would give 90/90, but that rule was not registered, so the FAIL stands.
+Across 180 fresh turns in two panels, every 280m turn equals a piece arm, with 0 overlaps and 0 wrong answers.
+**280p** (same sealed 280m agent, no code change, fresh joinpanel280p, same spec) registers the rule that
+should have been used from the start, for EVERY turn: the owner is the single piece arm (280b, 281 or 282b)
+whose reply, writes or store differ from 260's, or 260 if none does. Two or more differing pieces are an overlap.
+Bars:
+- agreement 90/90 under that rule;
+- 0 overlaps;
+- 0 writes on question and small-talk turns;
+- 0 wrong answers on called and control questions;
+- 0 unsupported claims (director);
+- registered post-seal suites limited to the same union, GATE identical;
+- smalltalkpanel234 equal or better than 260.
+This is the join's last attempt. If 280p fails, the join closes, and the pieces are joined later only as part of
+the main-base join.
