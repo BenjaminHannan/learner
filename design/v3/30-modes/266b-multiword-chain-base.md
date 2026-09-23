@@ -1,6 +1,6 @@
 # 266b: let the chain-subject lift accept two-word names (the one follow-up to 266)
 
-Director (Opus, reasoning line), 2026-09-23 ~06:20 UTC. New file; nothing edited.
+Director (Opus, reasoning line), 2026-09-23 ~05:55 UTC. New file; nothing edited.
 
 ## Why 266 failed (verified)
 
