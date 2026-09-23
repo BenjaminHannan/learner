@@ -1,0 +1,277 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main && echo FETCH_OK && git rev-parse --short origin/main && git status --short --branch | head -20
+FETCH_OK
+314dd7636
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/mimo/watcher.sh > ~/premonition-watch/watcher.sh.new && bash -n ~/premonition-watch/watcher.sh.new && echo SYNTAX_OK && wc -l ~/premonition-watch/watcher.sh.new && diff -u ~/premonition-watch/watcher.sh ~/premonition-watch/watcher.sh.new | head -100 || true
+SYNTAX_OK
+      59 /Users/ben-hannan/premonition-watch/watcher.sh.new
+--- /Users/ben-hannan/premonition-watch/watcher.sh	2026-09-22 21:52:46
++++ /Users/ben-hannan/premonition-watch/watcher.sh.new	2026-09-22 22:46:15
+@@ -13,12 +13,13 @@
+ export OPENCODE_CONFIG_CONTENT='{"snapshot": false}'
+ W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
+-IN=claude/project-thread-p68q5v; OUT=builder-outbox; MAX=${MAX:-3}
++IN=main; OUT=builder-outbox; MAX=${MAX:-3}
+ RUN="$W/handoff/kit/mimo/rungo4.sh"
+ mkdir -p "$Q"; LOG=$H/watch.log
+ log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
+ if [ ! -d "$O/.git" ]; then   # small separate repo that holds only builder results (no copy of the project)
+   mkdir -p "$O" && git -C "$O" init -q && git -C "$O" remote add origin "$(git -C "$W" remote get-url origin)"
++  git -C "$O" config user.name "$(git -C "$W" config user.name || echo Ben)"; git -C "$O" config user.email "$(git -C "$W" config user.email || echo ben@localhost)"
+   git -C "$O" checkout -q -b "$OUT"
+   if git -C "$O" fetch -q origin "$OUT" 2>/dev/null; then git -C "$O" reset -q --hard FETCH_HEAD; fi
+ fi
+@@ -36,6 +37,10 @@
+ log "watcher started (pid $$)"
+ while [ ! -e "$H/STOP" ]; do
+   git -C "$W" fetch -q origin "$IN" 2>>"$LOG"
++  # self-update: when the watcher on $IN changes, restart into the new version (running tasks keep going)
++  if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
++    bash -n "$H/watcher.new" && { mv "$H/watcher.new" "$0"; log "self-update, restarting"; exec bash "$0"; }
++  fi
+   for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
+   for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
+     n=$(basename "$f" .md)
+[0m
+[0m$ [0mls -l ~/premonition-watch/ && tail -5 ~/premonition-watch/watch.log; echo "---"; date '+%F %T'; touch ~/premonition-watch/STOP && ls -l ~/premonition-watch/STOP
+total 24
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 22 22:30 outbox
+drwxr-xr-x  45 ben-hannan  staff  1440 Sep 22 22:46 queue
+-rw-r--r--   1 ben-hannan  staff  3145 Sep 22 22:46 watch.log
+-rw-r--r--   1 ben-hannan  staff  3428 Sep 22 21:52 watcher.sh
+-rw-r--r--   1 ben-hannan  staff  3950 Sep 22 22:46 watcher.sh.new
+On branch builder-outbox
+nothing to commit, working tree clean
+2026-09-22 22:31:32 pushed 261b-build
+2026-09-22 22:46:05 launch 000-watcher-upgrade
+2026-09-22 22:46:05 launch talk-241b-restart
+---
+2026-09-22 22:46:17
+-rw-r--r--  1 ben-hannan  staff  0 Sep 22 22:46 /Users/ben-hannan/premonition-watch/STOP
+[0m
+[0m$ [0mfor i in $(seq 1 60); do line=$(tail -n 1 ~/premonition-watch/watch.log); echo "[$i $(date '+%F %T')] $line"; case "$line" in *"watcher stopped"*) echo STOPPED_DETECTED; break;; esac; sleep 5; done; echo "---final---"; tail -5 ~/premonition-watch/watch.log
+[1 2026-09-22 22:46:21] 2026-09-22 22:46:05 launch talk-241b-restart
+[2 2026-09-22 22:46:26] 2026-09-22 22:46:05 launch talk-241b-restart
+[3 2026-09-22 22:46:31] 2026-09-22 22:46:05 launch talk-241b-restart
+[4 2026-09-22 22:46:36] 2026-09-22 22:46:05 launch talk-241b-restart
+[5 2026-09-22 22:46:41] 2026-09-22 22:46:05 launch talk-241b-restart
+[6 2026-09-22 22:46:46] 2026-09-22 22:46:05 launch talk-241b-restart
+[7 2026-09-22 22:46:51] 2026-09-22 22:46:05 launch talk-241b-restart
+[8 2026-09-22 22:46:56] 2026-09-22 22:46:05 launch talk-241b-restart
+[9 2026-09-22 22:47:01] 2026-09-22 22:46:05 launch talk-241b-restart
+[10 2026-09-22 22:47:06] 2026-09-22 22:46:05 launch talk-241b-restart
+[11 2026-09-22 22:47:11] 2026-09-22 22:46:05 launch talk-241b-restart
+[12 2026-09-22 22:47:16] 2026-09-22 22:46:05 launch talk-241b-restart
+[13 2026-09-22 22:47:21] 2026-09-22 22:46:05 launch talk-241b-restart
+[14 2026-09-22 22:47:26] 2026-09-22 22:46:05 launch talk-241b-restart
+[15 2026-09-22 22:47:31] 2026-09-22 22:46:05 launch talk-241b-restart
+[16 2026-09-22 22:47:36] 2026-09-22 22:46:05 launch talk-241b-restart
+[17 2026-09-22 22:47:41] 2026-09-22 22:46:05 launch talk-241b-restart
+[18 2026-09-22 22:47:46] 2026-09-22 22:46:05 launch talk-241b-restart
+[19 2026-09-22 22:47:51] 2026-09-22 22:46:05 launch talk-241b-restart
+[20 2026-09-22 22:47:56] 2026-09-22 22:46:05 launch talk-241b-restart
+[21 2026-09-22 22:48:02] 2026-09-22 22:46:05 launch talk-241b-restart
+[22 2026-09-22 22:48:07] 2026-09-22 22:48:05 watcher stopped
+STOPPED_DETECTED
+---final---
+nothing to commit, working tree clean
+2026-09-22 22:31:32 pushed 261b-build
+2026-09-22 22:46:05 launch 000-watcher-upgrade
+2026-09-22 22:46:05 launch talk-241b-restart
+2026-09-22 22:48:05 watcher stopped
+[0m
+[0m$ [0mrm -f ~/premonition-watch/STOP && mv ~/premonition-watch/watcher.sh.new ~/premonition-watch/watcher.sh && ls -l ~/premonition-watch/ && bash -n ~/premonition-watch/watcher.sh && echo SWAP_OK
+total 16
+drwxr-xr-x   6 ben-hannan  staff   192 Sep 22 22:30 outbox
+drwxr-xr-x  45 ben-hannan  staff  1440 Sep 22 22:46 queue
+-rw-r--r--   1 ben-hannan  staff  3181 Sep 22 22:48 watch.log
+-rw-r--r--   1 ben-hannan  staff  3950 Sep 22 22:46 watcher.sh
+SWAP_OK
+[0m
+[0m$ [0m(nohup caffeinate -i bash ~/premonition-watch/watcher.sh > /dev/null 2>&1 &); sleep 10; tail -3 ~/premonition-watch/watch.log
+2026-09-22 22:46:05 launch talk-241b-restart
+2026-09-22 22:48:05 watcher stopped
+2026-09-22 22:48:10 watcher started (pid 8626)
+[0m
+[0m$ [0mpgrep -fl "premonition-watch/watcher.sh"; echo "---count---"; pgrep -fc "premonition-watch/watcher.sh" || true
+1305 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8283 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8626 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8628 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+---count---
+usage: pgrep [-Lfilnoqvx] [-d delim] [-F pidfile] [-G gid]
+             [-P ppid] [-U uid] [-g pgrp] [-t tty] [-u euid]
+             pattern ...
+[0m
+[0m$ [0mps -o pid,ppid,etime,command -p 1305 -p 8283 -p 8626 -p 8628 2>&1; echo "---"; tail -10 ~/premonition-watch/watch.log; echo "---"; ls -l ~/premonition-watch/STOP 2>&1 || echo NO_STOP_FILE
+PID  PPID ELAPSED COMMAND
+ 8626     1   00:18 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8628  8626   00:18 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 1305     1   27:11 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8283     1   02:23 bash /Users/ben-hannan/premonition-watch/watcher.sh
+---
+2026-09-22 22:21:17 launch 263-panel
+2026-09-22 22:29:24 pushed 263-panel
+2026-09-22 22:30:37 pushed 261b-build
+On branch builder-outbox
+nothing to commit, working tree clean
+2026-09-22 22:31:32 pushed 261b-build
+2026-09-22 22:46:05 launch 000-watcher-upgrade
+2026-09-22 22:46:05 launch talk-241b-restart
+2026-09-22 22:48:05 watcher stopped
+2026-09-22 22:48:10 watcher started (pid 8626)
+---
+ls: /Users/ben-hannan/premonition-watch/STOP: No such file or directory
+NO_STOP_FILE
+[0m
+[0m→ [0mRead /Users/ben-hannan/premonition-watch/watcher.sh
+[0m
+[0m$ [0mps -ef | grep -F "premonition-watch/watcher" | grep -v grep; echo "---"; for p in 1305 8283 8626; do echo "== $p =="; ps -o pid,ppid,pgid,etime,lstart,command -p $p 2>&1; lsof -p $p 2>&1 | head -20; echo; done
+502  8626     1   0 10:48PM ??         0:00.03 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8628  8626   0 10:48PM ??         0:00.03 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  1305     1   0 10:21PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8255     1   0 10:46PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8283     1   0 10:46PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+---
+== 1305 ==
+  PID  PPID  PGID ELAPSED STARTED                      COMMAND
+ 1305     1 97591   27:23 Tue Sep 22 22:21:17 2026     bash /Users/ben-hannan/premonition-watch/watcher.sh
+COMMAND  PID       USER   FD   TYPE DEVICE SIZE/OFF                NODE NAME
+bash    1305 ben-hannan  cwd    DIR   1,13      928            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bash    1305 ben-hannan  txt    REG   1,13  1961872 1152921500312607307 /bin/bash
+bash    1305 ben-hannan  txt    REG   1,13    81288 1152921500312621033 /usr/share/locale/en_US.UTF-8/LC_COLLATE
+bash    1305 ben-hannan  txt    REG   1,13  4129840 1152921500312609216 /usr/lib/dyld
+bash    1305 ben-hannan    0r   CHR    3,2      0t0                 336 /dev/null
+bash    1305 ben-hannan    1w   CHR    3,2      0t0                 336 /dev/null
+bash    1305 ben-hannan    2w   CHR    3,2      0t0                 336 /dev/null
+
+== 8283 ==
+  PID  PPID  PGID ELAPSED STARTED                      COMMAND
+ 8283     1 97591   02:35 Tue Sep 22 22:46:05 2026     bash /Users/ben-hannan/premonition-watch/watcher.sh
+COMMAND  PID       USER   FD   TYPE DEVICE SIZE/OFF                NODE NAME
+bash    8283 ben-hannan  cwd    DIR   1,13      928            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bash    8283 ben-hannan  txt    REG   1,13  1961872 1152921500312607307 /bin/bash
+bash    8283 ben-hannan  txt    REG   1,13    81288 1152921500312621033 /usr/share/locale/en_US.UTF-8/LC_COLLATE
+bash    8283 ben-hannan  txt    REG   1,13  4129840 1152921500312609216 /usr/lib/dyld
+bash    8283 ben-hannan    0r   CHR    3,2      0t0                 336 /dev/null
+bash    8283 ben-hannan    1w   CHR    3,2      0t0                 336 /dev/null
+bash    8283 ben-hannan    2w   CHR    3,2      0t0                 336 /dev/null
+
+== 8626 ==
+  PID  PPID  PGID ELAPSED STARTED                      COMMAND
+ 8626     1  8623   00:30 Tue Sep 22 22:48:10 2026     bash /Users/ben-hannan/premonition-watch/watcher.sh
+COMMAND  PID       USER   FD   TYPE DEVICE SIZE/OFF                NODE NAME
+bash    8626 ben-hannan  cwd    DIR   1,13      928            22725047 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+bash    8626 ben-hannan  txt    REG   1,13  1961872 1152921500312607307 /bin/bash
+bash    8626 ben-hannan  txt    REG   1,13    81288 1152921500312621033 /usr/share/locale/en_US.UTF-8/LC_COLLATE
+bash    8626 ben-hannan  txt    REG   1,13  4129840 1152921500312609216 /usr/lib/dyld
+bash    8626 ben-hannan    0r   CHR    3,2      0t0                 336 /dev/null
+bash    8626 ben-hannan    1w   CHR    3,2      0t0                 336 /dev/null
+bash    8626 ben-hannan    2w   CHR    3,2      0t0                 336 /dev/null
+bash    8626 ben-hannan  255r   REG   1,13     3950            52377495 /Users/ben-hannan/premonition-watch/watcher.sh
+[0m
+[0m$ [0mpgrep -fl "premonition-watch/watcher.sh"; echo "==="; ps -ef | grep -F "premonition-watch" | grep -v grep; echo "==="; tail -5 ~/premonition-watch/watch.log; echo "==="; ps -o pid,ppid,pgid,etime,lstart,stat,command -p 1305 -p 8255 -p 8283 -p 8626 2>&1 || true
+1305 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8283 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8626 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8628 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+===
+  502  8626     1   0 10:48PM ??         0:00.03 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8628  8626   0 10:48PM ??         0:00.03 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  1305     1   0 10:21PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  1307  1305   0 10:21PM ttys001    0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/263-build.md
+  502  8255     1   0 10:46PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8257  8255   0 10:46PM ttys001    0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-watcher-upgrade.md
+  502  8283     1   0 10:46PM ttys001    0:00.00 bash /Users/ben-hannan/premonition-watch/watcher.sh
+  502  8286  8283   0 10:46PM ttys001    0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/talk-241b-restart.md
+===
+2026-09-22 22:31:32 pushed 261b-build
+2026-09-22 22:46:05 launch 000-watcher-upgrade
+2026-09-22 22:46:05 launch talk-241b-restart
+2026-09-22 22:48:05 watcher stopped
+2026-09-22 22:48:10 watcher started (pid 8626)
+===
+  PID  PPID  PGID ELAPSED STARTED                      STAT COMMAND
+ 8626     1  8623   00:49 Tue Sep 22 22:48:10 2026     SN   bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 1305     1 97591   27:42 Tue Sep 22 22:21:17 2026     SN   bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8255     1 97591   02:54 Tue Sep 22 22:46:05 2026     SN   bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8283     1 97591   02:54 Tue Sep 22 22:46:05 2026     SN   bash /Users/ben-hannan/premonition-watch/watcher.sh
+[0m
+[0m$ [0mpgrep -a -f "premonition-watch/watcher"; echo "==="; pgrep -a -f "watcher.sh"; echo "==="; ps -p 8255 -o pid,ppid,command; cat /proc/8255/cmdline 2>&1 || ps -ww -p 8255 -o command 2>&1; echo "==="; ps ww -ef | grep 8255 | cat
+1305
+8255
+8283
+8289
+8626
+8628
+8785
+===
+1305
+8255
+8283
+8289
+8626
+8628
+8785
+===
+  PID  PPID COMMAND
+ 8255     1 bash /Users/ben-hannan/premonition-watch/watcher.sh
+cat: /proc/8255/cmdline: No such file or directory
+COMMAND
+bash /Users/ben-hannan/premonition-watch/watcher.sh
+===
+ps: illegal option -- f
+usage: ps [-AaCcEefhjlMmrSTvwXx] [-O fmt | -o fmt] [-G gid[,gid...]]
+          [-u]
+          [-p pid[,pid...]] [-t tty[,tty...]] [-U user[,user...]]
+       ps [-L]
+[0m
+[0m$ [0mpgrep -fl "premonition-watch/watcher.sh"; echo "exit:$?"; sleep 2; pgrep -fl "premonition-watch/watcher.sh"
+1305 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8283 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8626 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8628 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+exit:0
+1305 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8283 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8626 bash /Users/ben-hannan/premonition-watch/watcher.sh
+8628 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+[0m
+[0m$ [0mps -Ao pid,ppid,etime,command | grep -F "premonition-watch/watcher" | grep -v grep; echo "==="; ps -Ao pid,ppid,etime,command | grep -E "8255|8289" | head
+8626     1          01:11 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8628  8626          01:11 caffeinate -i bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 1305     1          28:04 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8255     1          03:16 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8283     1          03:16 bash /Users/ben-hannan/premonition-watch/watcher.sh
+===
+  987   864    02-14:37:08 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/153.0.8010.52/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=network --metrics-client-id=b9cef6c0-5ee9-4b03-a258-0c3084207b4c --shared-files --metrics-shmem-handle=1752395122,r,16123232828967447396,2590221501984101136,524288 --field-trial-handle=1718379636,r,11372677101598992431,10331595387189463418,262144 --variations-seed-version=20260919-030035.172000-production --pseudonymization-salt-handle=1935764596,r,9899204175423037368,16008876379612406944,4 --trace-process-track-uuid=3190708989122997041 --seatbelt-client=16
+ 8812  8289          00:00 /bin/zsh -c ps -Ao pid,ppid,etime,command | grep -F "premonition-watch/watcher" | grep -v grep; echo "==="; ps -Ao pid,ppid,etime,command | grep -E "8255|8289" | head
+ 8817  8812          00:00 grep -E 8255|8289
+ 8255     1          03:16 bash /Users/ben-hannan/premonition-watch/watcher.sh
+ 8257  8255          03:16 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/000-watcher-upgrade.md
+ 8289  8257          03:16 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:000-watcher-upgrade.go1.8257 WATCHER UPGRADE (director, 2026-09-23). Small housekeeping task on Ben's Mac. Change nothing else.\0121. cd /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 && git fetch -q origin main\0122. git show origin/main:handoff/kit/mimo/watcher.sh > ~/premonition-watch/watcher.sh.new && bash -n ~/premonition-watch/watcher.sh.new (stop and report if this fails).\0123. touch ~/premonition-watch/STOP, then wait (sleep in a loop, max 5 min) until ~/premonition-watch/watch.log's last line contains "watcher stopped" printed after you touched STOP.\0124. rm -f ~/premonition-watch/STOP && mv ~/premonition-watch/watcher.sh.new ~/premonition-watch/watcher.sh\0125. Start it detached: (nohup caffeinate -i bash ~/premonition-watch/watcher.sh > /dev/null 2>&1 &) ; sleep 10; tail -3 ~/premonition-watch/watch.log\0126. Confirm exactly one watcher loop runs: pgrep -fl "premonition-watch/watcher.sh" (running task subshells also match; report the list).\012Never kill any process. Final reply: the outputs of steps 2, 5 and 6, then WATCHER-UPGRADED.
+[0m
