@@ -1,0 +1,54 @@
+00 'Priya Dunmore works at Juniper Lane Books.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'Who does Priya Dunmore work for?' -> "I don't know anyone called Priya Dunmore."
+00 'Where does Priya Dunmore work?' -> "I don't know anyone called Priya Dunmore."
+00 'Who works at Juniper Lane Books?' -> "I don't know anyone called Juniper Lane Books."
+00 'Silas Wendt owns Juniper Lane Books.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'Who owns Juniper Lane Books?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'Max lives in Oslo.' -> "Saved: Max's city is Oslo."
+00 'Iris lives in Oslo.' -> "Saved: Iris's city is Oslo."
+00 'Ines lives in Oslo.' -> "Saved: Ines's city is Oslo."
+00 'Who lives in Oslo?' -> "Max's city is Oslo. Iris's city is Oslo. Ines's city is Oslo. (worked out backwards)"
+00 'Where does Max live?' -> "Max's city is Oslo."
+00 'Odo speaks Norlish.' -> "Saved: Odo's language is Norlish."
+00 'What language does Odo speak?' -> "Odo's language is Norlish."
+00 'Juniper Lane Books was founded in 1987.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'When was Juniper Lane Books founded?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'Ada Pell was born in Ashford.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+00 'Where was Ada Pell born?' -> "I don't know anyone called Ada Pell."
+00   STORED [('Max', 'city', 'Oslo'), ('Iris', 'city', 'Oslo'), ('Ines', 'city', 'Oslo'), ('Odo', 'language', 'Norlish')]
+01 "Silas's sister is Ines." -> "Saved: Silas's sister is Ines."
+01 "Silas's sister is Ula." -> "Saved: Silas's sister is Ula. (I also have Ines.)"
+01 "Silas's sister is Eve." -> "Saved: Silas's sister is Eve. (I also have Ines and Ula.)"
+01 "Who are Silas's sisters?" -> "Silas's sister is Ines, Ula and Eve."
+01 "Is Ines Silas's sister?" -> "Yes, Silas's sister is Ines."
+01 "Is Eve Silas's sister?" -> "Yes, Silas's sister is Eve."
+01 "Is Ada Silas's sister?" -> "Not that I know of. I have Eve, Ula and Ines as Silas's sister."
+01 "Silas's sister is not Ula." -> 'I can take one fact at a time — could you split that?'
+01 "Forget Silas's sister Eve." -> "Forgotten: Silas's sister Eve."
+01 "Who is Silas's sister?" -> "You told me something new about Silas's sister that I could not store. I can take one fact at a time — could you say it again as one fact?"
+01 "Who is Silas's mother?" -> "I don't know Silas's mother."
+01 "Who is Ines's brother?" -> "I don't know Ines's brother."
+01   STORED [('Silas', 'sister', 'Ines'), ('Silas', 'sister', 'Ula')]
+02 "Max's cat is Juniper." -> "Saved: Max's cat is Juniper."
+02 "Who is Max's cat?" -> "Max's cat is Juniper."
+02 "Rex's owner is Silas." -> "Saved: Rex's owner is Silas."
+02 "Who is Rex's owner?" -> "Rex's owner is Silas."
+02 "Who is Max's cat's owner?" -> "Max's cat is Juniper, which is not someone I can look up."
+02 "Lux's boss is Oz." -> "Saved: Lux's boss is Oz."
+02 "Who is Lux's boss?" -> "Lux's boss is Oz."
+02 "Oz's city is Ely." -> "Saved: Oz's city is Ely."
+02 "Who is Lux's boss's city?" -> "Lux's boss's city is Ely."
+02 "Where does Lux's boss live?" -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+02   STORED [('Max', 'cat', 'Juniper'), ('Rex', 'owner', 'Silas'), ('Lux', 'boss', 'Oz'), ('Oz', 'city', 'Ely')]
+03 'Kellan Voss is my boss.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+03 'Who is my boss?' -> "I don't know your boss yet."
+03 'My sisters are Ula and Eve.' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+03 'My sister is Ula.' -> 'Saved: your sister is Ula.'
+03 'My sister is Eve.' -> 'Saved: your sister is Eve. (I also have Ula.)'
+03 'Who are my sisters?' -> 'Your sister is Ula and Eve.'
+03 'Who is my sister?' -> 'Your sister is Ula and Eve.'
+03 'How many sisters do I have?' -> "I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know — could you say it another way?"
+03 'What do you know about me?' -> 'You never told me your name, so I do not know it.'
+03 'Forget my sister Eve.' -> "I don't know anyone called my sister."
+03 'Who is my sister?' -> 'Your sister is Ula and Eve.'
+03   STORED [('USER', 'sister', 'Ula'), ('USER', 'sister', 'Eve')]

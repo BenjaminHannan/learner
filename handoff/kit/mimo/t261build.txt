@@ -1,0 +1,9 @@
+
+YOUR TASK: the builder for exp 261 (the ear with an entailment checker).
+Read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/261-earcheck.txt and follow it exactly. It is your whole task. The shared panel schema is in /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/earpanel261-spec.txt (read the spec only; never open the panel folder before your own seal).
+Help for the BensPC side (read-only references; never edit them):
+- 257's code: scripts/claude_smolear257_*.py (infer, table, tau, score, armb, panel, devset). Its artifacts: artifacts/claude-smolear257-20260922/ (PASSMARKS.md, RESULTS.md, dev/, run/). These show exactly how 257 ran the v4.1 ear on BensPC over ssh (ssh benspc), how it read predictions back, and how it scored. Reuse by import or by calling them; put all new code in new files.
+- The earpanel257 panel is TEST-ONLY. You may run it only once, at the very end, report-only, exactly as the brief says.
+- If llama-server does not start, or the model file is missing, or VRAM spills and a lower -ngl does not fix it, stop and report. Do not download or install anything.
+- Waiting for the panel: poll for artifacts/claude-earpanel261-20260922/SEAL.sha256.txt every 2 minutes with a bash sleep loop, up to 60 minutes after your own seal.
+- Before your final reply, stop llama-server by its exact PID and confirm with nvidia-smi that the GPU memory is released.

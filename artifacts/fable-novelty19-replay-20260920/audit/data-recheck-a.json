@@ -1,0 +1,157 @@
+{
+ "protected_api": {
+  "rebuild_returncodes": [
+   0,
+   0,
+   0
+  ],
+  "awake_census_identical": true,
+  "awake_census_new": {
+   "label": "awake",
+   "questions": 6400,
+   "types": {
+    "LINK 8": 1072,
+    "LINK 9": 1060,
+    "10": 709,
+    "8": 730,
+    "LINK LINK 9": 1075,
+    "LINK LINK 8": 1117,
+    "9": 637
+   },
+   "length_relation_cells": {
+    "c=2,r=8": 1072,
+    "c=2,r=9": 1060,
+    "c=1,r=10": 709,
+    "c=1,r=8": 730,
+    "c=3,r=9": 1075,
+    "c=3,r=8": 1117,
+    "c=1,r=9": 637
+   },
+   "malformed": 0,
+   "composite_r10_hits": [],
+   "composite_r10_count": 0,
+   "c45_r10_count": 0
+  },
+  "awake_census_old": {
+   "label": "awake",
+   "questions": 6400,
+   "types": {
+    "LINK 8": 1072,
+    "LINK 9": 1060,
+    "10": 709,
+    "8": 730,
+    "LINK LINK 9": 1075,
+    "LINK LINK 8": 1117,
+    "9": 637
+   },
+   "length_relation_cells": {
+    "c=2,r=8": 1072,
+    "c=2,r=9": 1060,
+    "c=1,r=10": 709,
+    "c=1,r=8": 730,
+    "c=3,r=9": 1075,
+    "c=3,r=8": 1117,
+    "c=1,r=9": 637
+   },
+   "malformed": 0,
+   "composite_r10_hits": [],
+   "composite_r10_count": 0,
+   "c45_r10_count": 0
+  },
+  "memory_census_identical": true,
+  "memory_counts_match_recount": true,
+  "memory_distinct_worlds": 1024,
+  "old_distinct_worlds": 1024,
+  "transition_probs_new": null,
+  "note": "the stream/memory content produced by the PROTECTED API is compared through my own parser, not through file hashes: the block schema gained world_signature, so the .pt bytes are expected to differ",
+  "chunk_sha_old": "762311363565974610ee9847d44f0996773ad24f87686f1e8a040867e587361d",
+  "chunk_sha_new": "210eadc4b15d514ee513706231dc862a78ae44c337fa2e6fa42a7cb5b26f1e55",
+  "index_has_wall_clock": [],
+  "index_meta_sidecar": {
+   "created_unix": 1789931576.8642619,
+   "seconds": 1.1085751056671143
+  }
+ },
+ "audit_roster": {
+  "returncode": 0,
+  "expected_checks": 36,
+  "checks_run": 36,
+  "checks_expected": 36,
+  "checks_absent": [],
+  "passed": true,
+  "failures": [],
+  "stderr": "",
+  "flags_required": {
+   "audit": {
+    "--stream": true,
+    "--memory": true,
+    "--buffers": true,
+    "--dev-panels": true,
+    "--operator-history": true
+   },
+   "awake-stream": {
+    "--dev-panels": true
+   },
+   "buffers": {
+    "--dev-panels": true
+   }
+  }
+ },
+ "missing_check_fails": {
+  "passed": false,
+  "failures": [
+   "expected_checks_absent"
+  ],
+  "checks_absent": [
+   "a_check_that_never_runs"
+  ],
+  "checks_run": 36,
+  "checks_expected": 37
+ },
+ "manifest_reproducible": {
+  "same_path_twice_identical": true,
+  "differing": [],
+  "other_path_identical": [
+   "F-c1-r8.json",
+   "L-c6-prac.json",
+   "N-c4-p6.json",
+   "forbidden-semantics.json",
+   "forbidden-worlds-primary.json",
+   "forbidden-worlds.json"
+  ],
+  "other_path_differing": [
+   "manifest.json"
+  ],
+  "meta_sidecars": [
+   "F-c1-r8.meta.json",
+   "L-c6-prac.meta.json",
+   "N-c4-p6.meta.json",
+   "forbidden-semantics.meta.json"
+  ],
+  "wall_clock_keys_in_manifest": []
+ },
+ "execution_profile": {
+  "keys": [
+   "implementation",
+   "machine",
+   "platform",
+   "python",
+   "script_sha256",
+   "sources",
+   "torch"
+  ],
+  "python": "3.12.14",
+  "torch": "2.14.0",
+  "implementation": "CPython",
+  "machine": "arm64",
+  "script_sha256": "6e5c8f70c9351135e7498032d4c41146245b37df1e3c209d345e3b53781e5d89",
+  "runtime_local_json_pinned": false,
+  "present_in": [
+   "awakeB/index.json",
+   "memB/manifest.json",
+   "bufB/manifest.json",
+   "dev/manifest.json",
+   "ophist/manifest.json"
+  ]
+ }
+}

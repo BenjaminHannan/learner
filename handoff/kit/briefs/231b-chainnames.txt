@@ -1,0 +1,33 @@
+EXP 231b BRIEF: chains in table questions, re-run with multi-word names working. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why. Exp 231 (artifacts/claude-chain231-20260922/RESULTS.md, read it fully) was a registered FAIL. The main reason is that 58 of the 72 blind items could not be set up, because the base cannot save verb teaches with two-word subjects ("Gideon Pelk lives in Tarrowby."). Exp 232c (artifacts/claude-fullname232c-20260922/RESULTS.md) fixed that and PASSED. The director decided that 231b is 231 on top of 232c, run on the SAME sealed panel with the same marks and no other change. That shows whether 231's chain answering holds once the panel can actually be taught.
+
+One change. Both arms get 232c's fix. Do not add anything else: not 236 (first-name resolution), not table v1.1.
+- base arm "221+232c": loop221 + 232c's fix
+- new arm "231b": loop221 + 232c's fix + Chain231Mixin outermost, as in 231
+Parts:
+- 231: scripts/claude_loop231_agent.py and artifacts/claude-chain231-20260922/loop231-config.json. Read 231's design note design/v3/30-modes/231-chain-opus.md.
+- 232c: scripts/claude_loop232c_agent.py and its fix module. Read 232c's PASSMARKS/RESULTS for where its mixin sits.
+- loop221: scripts/fable_loop221_agent.py and artifacts/claude-tableask221-20260922/loop221-config.json.
+Rules:
+- SrcGuardMixin228 is first in every daemon's bases, and install_srcguard228() runs at import (copy scripts/claude_loop228_agent.py).
+- New files only: scripts/claude_loop231b_agent.py, scripts/claude_loop221x232c_agent.py (the base arm) and artifacts/claude-chain231b-20260922/. Ledger lines are P231b.n.
+
+Marks. Use 231's sealed PASSMARKS bars and 231's sealed scorer UNCHANGED, on the same sealed panel artifacts/claude-chainpanel231-20260922/panel.jsonl. Check its seal first; the SHA begins e7aacaec. The 231 arm is replaced by 231b and the 221 arm by 221+232c. Also report plain 221 and plain 231 from 231's saved rows.
+- M1a WRONG on all 72 = 0. Item c231-013 was flagged in 231 as a scorer flag on a true reply. Report it separately. M1a counts the other 71, plus c231-013 only if its 231b reply differs from 231's.
+- M1b question writes = 0.
+- M1c answerable: 231b right ≥ (221+232c) right + 20.
+- M1d answerable answer + yes/no items: 231b right ≥ 85 %.
+- M1e: 0 items right on 221+232c but not on 231b, and 0 items right on 231 but not on 231b.
+- M2 is 231's dev set (dev231.jsonl) re-run on 231b. It must match 231's dev result: 54/54 answerable, 15/15 traps, 0 WRONG, 0 writes.
+- M3: suitediff218 --only rt136,rt143,sessions152,bench against 231's saved rows. 0 new WRONG / WRONG-WRITE / junk / lost OK. The moves must equal your predicted list exactly, which should be 232c's own moves (rt143 K5 wording) and nothing else; check that before sealing.
+- M4: the sleep smoke matches 231.
+- M5: median per panel question, 231b ms minus (221+232c) ms, is at most +10 ms.
+Answerable = every setup turn saved on the 231b arm. Report blocked items per arm, with the failing setup sentence, grouped by cause.
+
+Order of work:
+1. Build both arms. Pilot on 231's dev set, the suites and the sleep smoke only.
+2. Write PASSMARKS.md and predicted_moves231b.json. Seal the code, configs, PASSMARKS, predictions and a copy of 231's scorer with its sha.
+3. After the seal, run the panel ONCE per arm. Score it.
+4. Write RESULTS.md, listing every item, every move and every miss with a one-line cause. In particular, mark misses caused by first-name-only questions: that is 236's job, and it stays out of this run.
+Never open any other panel. Keep each registered run under 25 minutes.

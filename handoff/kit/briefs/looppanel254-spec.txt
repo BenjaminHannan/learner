@@ -1,0 +1,73 @@
+LOOP WORDING PANEL 254: SPEC. The director wrote this on 2026-09-22. It is shared by the panel writer and the builder that later runs it (exp 256, the ear in the loop).
+
+Purpose: measure how well the whole assistant (reader + notebook + answers) handles everyday wording, in short dialogs.
+
+Folder: artifacts/claude-looppanel254-20260922/
+Files:
+- panel.jsonl (160 lines)
+- base138l.jsonl (160 lines, same ids, same order)
+- make_panel.py (holds the items by hand; writes panel.jsonl deterministically; runs the self-checks)
+- run_base.py (runs the base and writes base138l.jsonl)
+- README.md (TEST-ONLY, category level only)
+- SEAL.sha256.txt, made from the repo root:
+  shasum -a 256 artifacts/claude-looppanel254-20260922/panel.jsonl artifacts/claude-looppanel254-20260922/base138l.jsonl artifacts/claude-looppanel254-20260922/make_panel.py artifacts/claude-looppanel254-20260922/run_base.py > artifacts/claude-looppanel254-20260922/SEAL.sha256.txt
+
+Base agent: scripts/claude_loop138l_agent.py with artifacts/claude-merge138l-20260922/loop138l-config.json.
+- Run each dialog in its own fresh work dir, all turns in one session, in this order: setup turns, then turn, then followup (if any).
+- Use the probe runner in OPUS-RULES.txt as a model for driving the agent, and read stored triples the same way it does.
+
+panel.jsonl: one JSON object per line with EXACTLY these 9 fields:
+  id            "l254-001" ... "l254-160", in the family-block order below.
+  family        one of the 8 families below.
+  setup         list of user turns (may be empty).
+  turn          string. The scored user turn.
+  followup      string or null. A plain question asked after turn, used to check a teach landed. Required for teach-scored families; null otherwise.
+  gold_store    list of {subject, relation, relation_aliases, value}: facts that MUST be stored after turn.
+                - subject and value are the exact words as typed in the dialog (any case). "me" stands for the user.
+                - relation is a plain snake_case name. relation_aliases lists other acceptable names; keep one fixed alias list per relation in make_panel.py.
+                - In ask-scored families, this is the facts the setup stored (the store must not change).
+  gold_answer   string or null. The value(s) the scored reply must contain; "A; B" means every part.
+                - teach-scored families: checked on the followup reply.
+                - ask-scored families: checked on the reply to turn.
+                - null: no value may be asserted (no_save), see must_not.
+  must_not      list of strings. Values that must NOT appear (whole word, case-insensitive) in the reply to turn or followup: wrong-direction values, values from negated/hypothetical/hearsay clauses, neighbouring facts.
+  note          string: the wording feature tested, plus tags ("lower", "typo", "noq" for a question without "?", "pron" for pronoun reference, "back" for a backwards question).
+
+Families (exact counts, 160 in total). Teach-scored: T. Ask-scored: A.
+  teach_varied    30  T  Everyday ways to state one or two facts that are NOT "X's R is V.": verbs ("works as", "teaches at", "moved to", "grew up in"), appositives, "I have a dog called ...", "my cat is named ...", "she's married to ...", two facts in one sentence, full names of 2-4 words. followup is a plain question (e.g. "Where does X live?").
+  ask_varied      30  A  setup states facts plainly ("X's R is V." or "My R is V."); turn asks in everyday wording: verb questions, "what's ... called?", "do you know ...", "remind me ...", "who's ...", possessives, questions about the user ("what's my dog called?").
+  both_varied     20  T+A  setup uses everyday teach wording; turn asks in everyday wording. followup null; gold_answer is checked on the reply to turn; gold_store must also hold after turn.
+  casual          20  mixed (10 T, 10 A; say which in note as "T" or "A")  lowercase, missing apostrophes, missing "?", common typos ("freind", "favrite", "wats"), chat fillers ("ok so", "btw", "lol").
+  backwards       15  A  setup states facts plainly; turn asks in the reverse direction ("Who works at Y?" after "X works at Y.", "Whose sister is Z?", "Who lives in Y?"). must_not holds the forward value that a wrong-direction reading would give. gold_answer is the correct reverse value, or null when the honest answer is "I don't know".
+  chain           15  A  setup states two linked facts plainly; turn asks the two-hop question in everyday wording (including "my ..." chains).
+  no_save         20  -  Turns that must store NOTHING: statement-shaped questions ("so X lives in Y?", "X works at Y, right?"), hypotheticals ("if X moved to Y ..."), hearsay ("someone told me X ..."), negations ("X doesn't have a dog"), plans ("X might move to Y next year"), and chit-chat that mentions names. setup may give context. gold_store = exactly the facts the setup stored. gold_answer null. must_not holds the value a wrong save would create.
+  control         10  mixed  Plain forms the base already handles ("X's city is Y." then "What is X's city?"), for checking that nothing breaks.
+
+base138l.jsonl: one JSON object per line with EXACTLY these 8 fields:
+  id, setup_replies (list), stored_after_setup (list of [s, r, v]), turn_reply, stored_after_turn (list of [s, r, v]), followup_reply (string or null), base_right (bool), base_wrong_value (bool)
+
+Scoring rules. The writer's base_right and every later scorer must be identical.
+- Entities: compare case-insensitively after trimming edge punctuation and a leading the/a/an. The first-person set {i, me, my, myself, mine, user} is one entity.
+- Relations: a stored relation matches a gold one if it equals the gold relation or any alias after lower-casing and treating _ - and space alike. (The builder may add a canonical-table mapping on top; the writer uses only this rule.)
+- store_ok: every gold_store fact is stored after turn (subject, value and relation all match), AND every triple stored after turn that was not stored after setup matches some gold_store fact. The second condition means no junk writes.
+- answer_ok: if gold_answer is set, every part appears (case-insensitive) in the scored reply, and that reply does not start with "I don't know" or "I do not know". If gold_answer is null, the scored reply contains no must_not value.
+- wrong_value: any must_not value appears, whole word and case-insensitive, in the reply to turn or in the followup reply.
+- followup_write: the store after followup differs from the store after turn. It counts as a question write.
+- right = store_ok AND answer_ok AND NOT wrong_value AND NOT followup_write.
+- no_save items: right = the store after turn equals the store after setup, AND NOT wrong_value.
+- control items: additionally, the replies must be byte-identical to base138l's. The builder's scorer checks this; for the writer it is true by construction.
+- Schema check on load: all files present; exact fields; 8 families with exact counts; ids match across both files. Any mismatch prints SCHEMA-MISMATCH, exits with code 3, and gives no verdict.
+
+Writer acceptance rules:
+- Every plain setup teach in ask_varied, backwards, chain, no_save and control was saved by the base exactly as gold_store says (so ask failures are about question wording, not teach wording). Replace any item where it was not.
+- Do NOT filter the everyday families by whether the base gets them right. Write natural wordings first, run the base once, and report base_right per family. The panel measures real coverage, not only known failures.
+- control: 10/10 base_right true.
+- Fictional names only (1 to 4 words), never names from any README you read. Spread over at least 12 relations, including pets, relatives, jobs, workplaces, cities, languages, birthplaces and favourites.
+- Quotas: at least 25 lowercase turns; at least 15 typo'd turns; at least 20 questions without "?"; at least 10 "pron" turns (a pronoun that refers back to a named person, in teach turns); at least 20 turns about the user ("I", "my"); at least 10 turns that state two facts at once.
+- At least half of the items in every family use a wording NOT listed as an example in this spec. Never copy an example word for word.
+- make_panel.py checks: family counts; no duplicate turn; every gold_store subject and value (other than "me") appears word for word somewhere in the dialog; gold_answer parts appear among gold_store values or setup values; the quotas.
+
+Writer rules:
+- Blind. Read only this spec, OPUS-RULES.txt, and the base agent/config paths above (only to run them, never to read their code beyond what running needs).
+- Never read agent code, relation tables, design notes, results, other panels, judges' files or any builder's folder.
+- Report at category level only: counts, base_right per family, quota counts, the SEAL lines. Never quote items in the final message.

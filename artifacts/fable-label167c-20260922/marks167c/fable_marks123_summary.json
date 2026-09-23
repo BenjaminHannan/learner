@@ -1,0 +1,89 @@
+{
+ "agent": "scripts/fable_loop167c_agent.py",
+ "config": "artifacts/fable-label167c-20260922/loop167c-config.json",
+ "suites": [
+  "p2",
+  "p3",
+  "p4",
+  "rt110",
+  "q1",
+  "bench",
+  "rt81",
+  "sleep",
+  "soak"
+ ],
+ "table": [
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "64 cases, OK->BUG 2, still-BUG 4",
+   "status": "FAIL",
+   "seconds": 3.3
+  },
+  {
+   "suite": "p3",
+   "bar": "L1-L6 all PASS",
+   "number": "l1:P/l2:P/l3:P/l4:P/l5z1:P/l5z2:P/l6:P",
+   "status": "PASS",
+   "seconds": 31.1
+  },
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "30 sents, refusals 0, nonpass 0",
+   "status": "PASS",
+   "seconds": 1.1
+  },
+  {
+   "suite": "rt110",
+   "bar": "62/62 executed, 0 harness-error",
+   "number": "62 cases, OK->BUG 2, still-BUG 8, herr 0",
+   "status": "PASS",
+   "seconds": 118.7
+  },
+  {
+   "suite": "q1",
+   "bar": "F5+M5 both OK",
+   "number": "F5=FAIL M5=FAIL",
+   "status": "FAIL",
+   "seconds": 1.0
+  },
+  {
+   "suite": "bench",
+   "bar": "scorer v2; split-A 0 wrong (200+200)",
+   "number": "fable_edit_200 {'correct': 150, 'abstain': 50, 'wrong': 0}; s2fresh_4hop {'correct': 157, 'abstain': 43, 'wrong': 0}",
+   "status": "PASS",
+   "seconds": 15.5
+  },
+  {
+   "suite": "rt81",
+   "bar": "74/74 OK, 0 wrong writes",
+   "number": "{'n': 74, 'ok': 61, 'bug': 0, 'unclear': 13}",
+   "status": "FAIL",
+   "seconds": 2.0
+  },
+  {
+   "suite": "sleep",
+   "bar": "Z1-Z5 if sleep path else SKIP+reason",
+   "number": "SKIP: agent fable_loop167c_agent.py has no Sleep104 maternal-grandmother install path ",
+   "status": "SKIP",
+   "seconds": 0.0
+  },
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "turns=2000 kills=3 lost=0 wrong=0 doubled=0",
+   "status": "PASS",
+   "seconds": 137.2
+  },
+  {
+   "suite": "q4",
+   "bar": "0 relation-name underscore leaks",
+   "number": "leaks=['also_mira', 'city_and', 'country_of', 'who_is']",
+   "status": "FAIL",
+   "seconds": 0.0
+  }
+ ],
+ "total_seconds": 188.5,
+ "pass": false
+}

@@ -1,0 +1,79 @@
+CORRECTION-TAIL PANEL 258: EXACT SCHEMA. The director fixed it on 2026-09-22. Three parties share it: the blind panel writer, the 258 builder and the 259 builder.
+
+Purpose: measure how the assistant handles denials and corrections that carry an extra clause ("..., that's outdated", "... (that's stale)", ", it's wrong now").
+
+Folder: artifacts/claude-corrtail258-20260922/
+Files:
+- panel.jsonl (80 lines)
+- base252b.jsonl (80 lines, same ids, same order)
+- make_panel.py (holds the items by hand; writes panel.jsonl deterministically; runs the self-checks)
+- run_base.py (runs the base and writes base252b.jsonl)
+- README.md (TEST-ONLY, category level only)
+- SEAL.sha256.txt, made from the repo root:
+  shasum -a 256 artifacts/claude-corrtail258-20260922/panel.jsonl artifacts/claude-corrtail258-20260922/base252b.jsonl artifacts/claude-corrtail258-20260922/make_panel.py artifacts/claude-corrtail258-20260922/run_base.py > artifacts/claude-corrtail258-20260922/SEAL.sha256.txt
+
+Base agent: scripts/claude_loop252b_agent.py with artifacts/claude-correct252b-20260922/loop252b-config.json.
+- Each dialog runs in its own fresh work dir, in one session: setup turns, then turn, then followup.
+- Drive the agent and read stored triples the way the probe runner in OPUS-RULES.txt does.
+
+panel.jsonl: one JSON object per line with EXACTLY these 11 fields:
+  id             "t258-001" ... "t258-080", in the family-block order below.
+  family         one of the 8 families below.
+  setup          list of strings, non-empty. The teach turns. In contextual items (note tag "ctx"), the LAST setup turn is a question whose base reply states exactly ONE stored fact, the one the user then disputes.
+  turn           string. The one scored user turn.
+  followup       string. A plain question asked right after turn about the disputed relation (or, for keep/control, about what turn taught or asked).
+  stated_facts   list of [subject, relation, value]: what the base stored after the setup, copied exactly.
+  target         [subject, relation, value] of the stored fact the turn disputes, or null when the turn disputes no stored fact.
+  expect_gone    list of [subject, relation, value]: triples that must NOT be stored after turn.
+  expect_store   list of [subject, relation, value]: triples that MUST be stored after turn.
+                 - denials: stated_facts minus expect_gone.
+                 - corrections: the new value plus every untouched stated fact.
+                 - question_tail and unstored_tail: exactly stated_facts.
+                 - keep and control: what the base stores after turn, copied exactly.
+  gold_followup  string or null. The value(s) the followup reply must contain; "A; B" means every part. null means the followup must give NO value from expect_gone.
+  note           string: the wording feature tested, plus tags: "ctx" (contextual), "lower", "typo", "first" (about the user, "I"/"my"), "that" or "other" (the kind of tail).
+
+Families (exact counts, 80 in total):
+  that_denial        12  An explicit denial of a stored fact, followed by a commentary clause about the old fact. The clause starts after a comma, dash, semicolon or opening bracket with that's / that is / that was / that isn't / that's not / which is / which was / this is (also typed without the apostrophe). Examples of the shape: "X doesn't work at Y, that's old news.", "X's boss isn't Y (that was last year)." expect_gone = [target].
+  that_correction    12  A correction followed by the same kind of commentary clause. Include both contextual ("ctx": after the assistant stated one fact, "No, it's Z, that's outdated.") and explicit ("X works at Z now, not Y - that's old.") forms. expect_gone = [target]; expect_store includes the new value; gold_followup = the new value.
+  pure_denial_that   10  "ctx" only. After the assistant stated ONE fact, a denial with no new value followed by a commentary clause ("That's wrong, that's old news.", "nope, that's outdated"). expect_gone = [target]; gold_followup null. Nothing new may be stored.
+  other_tail_denial  10  An explicit denial followed by a trailing clause that does NOT start with that/which/this: ", it's wrong now", ", not anymore", " - she quit", ", sadly", " lol", " btw". expect_gone = [target].
+  keep                8  Turns that are NOT denials or corrections but contain a comma clause with that's/which is/this is: teach turns with an appositive ("X works at Y, which is a bakery."), a question with such a clause, chat. They must behave exactly as on the base (byte-identical replies and stores), whatever the base does.
+  question_tail       6  Questions about a stored fact with a tail ("Doesn't X work at Y, or is that outdated?", "X lives in Y, is that still right?"). Nothing may change.
+  unstored_tail       6  A denial with a tail of a fact that was never stored: a known person with another value, or an unknown person. Nothing may change, and the reply must not say that something was removed or updated.
+  control            16  Plain denials, corrections, teaches and questions without a tail that the base already handles right.
+
+base252b.jsonl: one JSON object per line with EXACTLY these 10 fields:
+  id, setup_replies (list), stored_after_setup (list of [s, r, v]), turn_reply, stored_after_turn, followup_reply, stored_after_followup, base_right (bool), base_wrong_value (bool), base_false_claim (bool)
+
+Scoring rules. The writer's base fields and every builder's scorer must be identical. Triples compare case-insensitively on all three parts.
+  store_ok       = expect_store ⊆ stored_after_turn, AND no expect_gone triple is in stored_after_turn, AND stored_after_turn ⊆ (stored_after_setup ∪ expect_store). The last condition means no junk writes.
+  junk_write     = stored_after_turn ⊄ (stored_after_setup ∪ expect_store), or the same for stored_after_followup.
+  followup_ok    = if gold_followup is set: every part appears in followup_reply (case-insensitive), and followup_reply does not start with "I don't know" or "I do not know".
+                   If gold_followup is null: no value from expect_gone appears in followup_reply (whole word, case-insensitive).
+  wrong_value    = followup_reply contains a value from expect_gone (whole word, case-insensitive).
+  followup_write = stored_after_followup differs from stored_after_turn.
+  false_claim    = target is not null AND target is in stored_after_setup AND target is still in stored_after_turn AND turn_reply contains "don't have" or "do not have" (case-insensitive) AND the target value appears in turn_reply (whole word, case-insensitive). This catches replies like "I don't have Y, that's outdated as X's employer" when Y is stored.
+  right          = store_ok AND followup_ok AND NOT followup_write AND NOT false_claim.
+  keep and control items are right only if turn_reply, followup_reply and every stored list are ALSO byte-identical to base252b's. The writer's base_right for keep is true by construction; a builder's scorer checks it.
+  unstored_tail items are also not right if turn_reply contains "removed" or "updated" (case-insensitive).
+Schema check on load: all files present; exact fields; 8 families with exact counts; ids match across both files. Any mismatch prints SCHEMA-MISMATCH, exits with code 3, and gives no verdict (VOID).
+
+Writer acceptance rules:
+- Every setup teach was saved by the base exactly, and stated_facts == stored_after_setup.
+- In "ctx" items, the base's reply to the last setup turn contains exactly one stored value, the disputed one.
+- Do NOT filter the cause families (that_denial, that_correction, pure_denial_that, other_tail_denial) by whether the base gets them right. Write natural wordings first, run the base once, and report base_right, base_wrong_value, base_false_claim and junk writes per family.
+- control: 16/16 base_right true. Replace any control the base gets wrong.
+- keep: pick turns that genuinely contain the clause shapes; do not filter them by base behaviour.
+- Fictional names only (1 to 4 words), spread over at least 6 relations (jobs, workplaces, cities, bosses, languages, pets, relatives...). Never use a name from any README you read.
+- Quotas:
+  - in each cause family, at least 3 lowercase items and at least 2 first-person items;
+  - at least 3 items in the whole panel typed without apostrophes ("thats", "doesnt");
+  - that_correction has at least 5 "ctx" items and at least 5 explicit ones;
+  - at least half of the items in every family use a wording NOT shown as an example in this spec. Never copy an example word for word.
+- make_panel.py checks: family counts; no duplicate turn; every stated fact's subject and value (other than "me") appears word for word in the setup; the target is in stated_facts when set; the quotas.
+
+Writer rules:
+- Blind. Read only this spec, OPUS-RULES.txt and the base agent/config paths above (only to run them; never read code beyond what running needs).
+- Never read agent code, relation tables, design notes, results, other panels, judges' files, dev sets or any builder's folder (including artifacts/claude-correct252*-20260922/).
+- Report at category level only: counts, base fields per family, quota counts, the SEAL lines. Never quote items in the final message.

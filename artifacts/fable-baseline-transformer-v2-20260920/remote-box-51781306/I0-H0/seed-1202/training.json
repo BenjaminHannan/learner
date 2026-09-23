@@ -1,0 +1,107 @@
+{
+  "arm": "I0-H0",
+  "arm_is_primary": false,
+  "baseline": "fable-baseline-transformer-v2",
+  "betas": [
+    0.9,
+    0.99
+  ],
+  "checkpoint": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/I0-H0/seed-1202/baseline.pt",
+  "checkpoint_sha256": "5f7edcbd80fa40a673d7fa77ae2701107744d9815e2da535e091d53e8fd974f4",
+  "chunk_seconds_ceiling": 1200,
+  "clip": 1.0,
+  "complete": true,
+  "config": {
+    "heads": 4,
+    "hidden": 208,
+    "layers": 3,
+    "positions": "line",
+    "vocab": 69,
+    "width": 48
+  },
+  "data_rng_initial_state_sha256": "3c5741215b14e8d865486900f25af0b003fed92c2245a441cb878687acb9f7dc",
+  "dropout": 0.0,
+  "end_token": 68,
+  "eps": 1e-08,
+  "evidence_aux": 0.0,
+  "exclusions": {
+    "count": 5888,
+    "sources": [
+      {
+        "count": 1792,
+        "new": 1792,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-dispatcher-v3-20260920/panels/forbidden-semantics.json",
+        "sha256": "5511295d725cd48e0bdff67efc9514159d6882651f1729cff8125e4038283a4f"
+      },
+      {
+        "count": 2048,
+        "new": 2048,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/fit-panels/forbidden-semantics.json",
+        "sha256": "7df8d8fa7cb0854d39ed2f0d81702db13ff51e22f6804eb4c6f47504d255651f"
+      },
+      {
+        "count": 2048,
+        "new": 2048,
+        "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/confirm-panels/forbidden-semantics.json",
+        "sha256": "1837457f203fe5b79dc28faeb61b2879a95120397b3d6086fb114c586762fc4b"
+      }
+    ],
+    "union_sha256": "2d638287a8b6153cc97d770ada9e9c382edbc2d42b394a09d07085bd23556e38"
+  },
+  "final_update_only": true,
+  "final_weight_fingerprint": "0c407e0d5cab192fd96d0b7d46730f74d56b863e744115e7bc6df1b0955c6754",
+  "flop_convention": "matmul only, 2 FLOPs per MAC, x3 for forward+backward; embeddings/softmax/norm/optimiser excluded; padded positions charged because they are executed",
+  "incomplete_note": "a time cap is INCOMPLETE (\"under-trained -- inconclusive\"), never an architecture failure",
+  "init": "default",
+  "init_rule": "operator-rescale multiplies EVERY nn.Linear weight by 1/(sqrt(3*fan_in)*0.02), i.e. the same normal draws rescaled to std 1/sqrt(3*fan_in); embeddings and biases untouched",
+  "initial_weight_fingerprint": "6cd2acc4632de9d946baded84880715f71fe314eacbc6b008310b8b2342a452d",
+  "lr": 0.001,
+  "lr_final": 0.0001,
+  "max_output_tokens": 12,
+  "mode": "steps",
+  "no_checkpoint_selection": true,
+  "no_resume": true,
+  "padded_story_tokens_per_update": 7316.48,
+  "parameter_ratio": 0.9977962420126953,
+  "parameter_target": 94838,
+  "parameters": 94629,
+  "position_note": "positions, depth, width, curriculum and query format are UNCHANGED from v1.  The draft registers sinusoidal/shared position functions and the untrained output-index rows as a SEPARATE later diagnostic, so nothing about them is implemented or varied here.",
+  "positions": "line",
+  "primary_arm": "I1-H1",
+  "questions_per_world": 4,
+  "real_story_tokens_per_update": 4825.707,
+  "registered_seed": true,
+  "registered_seeds": [
+    1200,
+    1201,
+    1202
+  ],
+  "registration": "design/v3/18-baseline-v2-preregistration-draft.md",
+  "rescale_function": "premonition_token_initialization_probe.rescale",
+  "rescale_is_operator_function": true,
+  "seconds": 978.0229119550204,
+  "seed": 1202,
+  "source_sha256": "7ec2215d0bfaa702070b4ee2a69da489ea61bd77c6663cadfa33dd20586e7502",
+  "supervision_note": "steps mode receives the gold intermediate entities as output targets. The H1 arms additionally receive v1's supporting-line attention loss at coefficient 0.5 on the LAST layer's head-mean attention at every result-predicting position, END excluded -- analogous to, NOT identical to, the operator's allocation of evidence loss across three reads.",
+  "time_cap": 1200.0,
+  "time_capped": false,
+  "torch_rng_after_init_sha256": "962ee393144245b27cf2ae9e39f4c7fde4c13bb47cd90b2e565d14b669455718",
+  "train_hops": [
+    1,
+    2,
+    3
+  ],
+  "train_namespace": "astra-baseline-v2-fit",
+  "train_people": 6,
+  "training_flops": 28041853501440.0,
+  "training_flops_per_update": 4673642250.24,
+  "updates": 6000,
+  "updates_per_second": 6.134825602404642,
+  "updates_requested": 6000,
+  "v1_source_sha256": "d767ee87835716951c1871fa2c978449123da02e61cb6e7a483194f573ddaea2",
+  "v3_source_sha256": "8fa4674d1b1dbcad5ae4fe51f4bfe74fe3fb6be3361569b825a4183be3aa8d53",
+  "visits_per_update": 16,
+  "vocab": 69,
+  "warmup": 100,
+  "weight_decay": 0.1
+}

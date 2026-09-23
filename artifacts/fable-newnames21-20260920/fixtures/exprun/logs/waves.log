@@ -1,0 +1,36 @@
+2026-09-20T23:18:48Z [data] wave start: pool -> panels -> audit -> control-equivalence
+2026-09-20T23:18:48Z [data] START pool  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/pool.log)
+2026-09-20T23:18:52Z [data] OK pool
+2026-09-20T23:18:52Z [data] START panels  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/panels.log)
+2026-09-20T23:19:05Z [data] OK panels
+2026-09-20T23:19:05Z [data] OK audit (audit clear; panel signatures 208 ; replay 10 of 6000 updates (PARTIAL))
+2026-09-20T23:19:05Z [data] START equivalence  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/equivalence.log)
+2026-09-20T23:19:14Z [data] OK equivalence
+2026-09-20T23:19:14Z [data] OK equivalence (8 updates: identical parameter fingerprints and identical losses; registered anchor reproduced)
+2026-09-20T23:19:14Z [data] DATA_DONE
+2026-09-20T23:19:14Z [train] wave start: 6 runs (2 arms x 3 seeds) in parallel, 20 updates each
+2026-09-20T23:19:14Z [train] START treatment-9  (20 updates, one thread; log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/train-treatment-9.log)
+2026-09-20T23:19:14Z [train] START control-9  (20 updates, one thread; log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/train-control-9.log)
+2026-09-20T23:19:22Z [train] OK control-9 ("seconds": 4.726634874998126)
+2026-09-20T23:19:22Z [train] OK treatment-9 ("seconds": 4.800577333000547)
+2026-09-20T23:19:22Z [train] TRAIN_DONE
+2026-09-20T23:19:22Z [score] wave start: score 6 runs (3 at a time) -> gates -> report
+2026-09-20T23:19:22Z [score] START control-9  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/score-control-9.log)
+2026-09-20T23:19:22Z [score] START treatment-9  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/score-treatment-9.log)
+2026-09-20T23:19:26Z [score] OK control-9
+2026-09-20T23:19:28Z [score] OK treatment-9
+2026-09-20T23:19:28Z [score] START gates  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/gates.log)
+2026-09-20T23:19:30Z [score] START report  (log: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/logs/report.log)
+2026-09-20T23:19:32Z [score] VERDICT INCOMPLETE -- missing runs: control-2100, control-2101, control-2102, treatment-2100, treatment-2101, treatment-2102 | signatures: {"never_started": [], "attributes_fine_link_at_chance": []}
+2026-09-20T23:19:32Z [score] SCORE_DONE
+2026-09-20T23:19:41Z [data] wave start: pool -> panels -> audit -> control-equivalence
+2026-09-20T23:19:41Z [data] SKIP pool -- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/pool/pool.json already present (refusing to overwrite)
+2026-09-20T23:19:41Z [data] SKIP panels -- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-newnames21-20260920/fixtures/exprun/panels/manifest.json already present (refusing to overwrite)
+2026-09-20T23:19:41Z [data] OK audit (audit clear; panel signatures 208 ; replay 10 of 6000 updates (PARTIAL))
+2026-09-20T23:19:41Z [data] SKIP equivalence -- control-equivalence.json already present
+2026-09-20T23:19:41Z [data] OK equivalence-check (8 updates: identical parameter fingerprints and identical losses; registered anchor reproduced)
+2026-09-20T23:19:41Z [data] DATA_DONE
+2026-09-20T23:19:41Z [train] wave start: 6 runs (2 arms x 3 seeds) in parallel, 20 updates each
+2026-09-20T23:19:41Z [train] SKIP control-9 -- completion.json already present
+2026-09-20T23:19:41Z [train] SKIP treatment-9 -- completion.json already present
+2026-09-20T23:19:41Z [train] TRAIN_DONE

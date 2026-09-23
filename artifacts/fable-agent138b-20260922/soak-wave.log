@@ -1,0 +1,110 @@
+plan: 6000 turns {'teach': 3901, 'correct': 878, 'ask': 1221}
+restarts: [(1063, 'kill'), (1075, 'kill'), (1232, 'kill'), (1585, 'kill'), (2067, 'kill'), (2266, 'kill'), (2891, 'kill'), (3862, 'kill'), (4677, 'kill'), (5844, 'kill')]
+ckpt 1000: 186,163328,562104,429.9,1818.2
+restart 1/10 kill at turn 1066: stop=-1.00s verify=0.01s boot=6.27s audit_ok=True aim={'victim': 1065, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 2/10 kill at turn 1078: stop=-1.00s verify=0.01s boot=5.29s audit_ok=True aim={'victim': 1077, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 3/10 kill at turn 1235: stop=-1.00s verify=0.01s boot=6.77s audit_ok=True aim={'victim': 1234, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 4/10 kill at turn 1588: stop=-1.00s verify=0.01s boot=4.61s audit_ok=True aim={'victim': 1587, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+ckpt 2000: 632,215920,991565,1175.6,2811.1
+restart 5/10 kill at turn 2070: stop=-1.00s verify=0.02s boot=2.31s audit_ok=True aim={'victim': 2069, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 6/10 kill at turn 2269: stop=-1.00s verify=0.01s boot=2.02s audit_ok=True aim={'victim': 2268, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+restart 7/10 kill at turn 2894: stop=-1.00s verify=0.03s boot=1.10s audit_ok=True aim={'victim': 2893, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+ckpt 3000: 968,219760,1367759,915.3,2105.2
+restart 8/10 kill at turn 3865: stop=-1.00s verify=0.03s boot=1.14s audit_ok=True aim={'victim': 3864, 'aimed': True, 'outbox_before_kill': False, 'attempts': 1}
+ckpt 4000: 1429,221904,1707757,1075.6,4626.0
+{
+ "status": "FAIL",
+ "seed": 931,
+ "turns_done": 4225,
+ "turns_planned": 6000,
+ "wall_s": 1500.6,
+ "plan_kinds": {
+  "teach": 3901,
+  "correct": 878,
+  "ask": 1221
+ },
+ "restarts": [
+  [
+   1063,
+   "kill"
+  ],
+  [
+   1075,
+   "kill"
+  ],
+  [
+   1232,
+   "kill"
+  ],
+  [
+   1585,
+   "kill"
+  ],
+  [
+   2067,
+   "kill"
+  ],
+  [
+   2266,
+   "kill"
+  ],
+  [
+   2891,
+   "kill"
+  ],
+  [
+   3862,
+   "kill"
+  ],
+  [
+   4677,
+   "kill"
+  ],
+  [
+   5844,
+   "kill"
+  ]
+ ],
+ "marks": {
+  "K1": {
+   "desc": "0 wrong answers and 0 wrong writes over 6000 turns",
+   "pass": false,
+   "wrong": 1
+  },
+  "K2": {
+   "desc": "no replied taught fact lost/duplicated over 10 restarts",
+   "pass": false
+  },
+  "K3": {
+   "desc": "final boot+verify < 10 s",
+   "pass": true,
+   "boot_s": 1.136,
+   "verify_s": 0.02
+  },
+  "K4": {
+   "desc": "p99 at end < 10x p99 at 1,000 turns",
+   "pass": true,
+   "p99_1k_ms": 630.03,
+   "p99_end_ms": 4626.05
+  },
+  "K5": {
+   "desc": "whole soak < 25 min Mac CPU",
+   "pass": false,
+   "wall_s": 1500.6,
+   "turns_done": 4225
+  }
+ },
+ "fail": {
+  "mark": "K5",
+  "detail": "budget 1500.0s exceeded"
+ },
+ "final_stop_s": 0.28241896629333496,
+ "exactly_once": {
+  "replies_checked": 4225,
+  "doubled_sentence_replies": 0,
+  "doubled_seqs": [],
+  "receipt_ids": 4225,
+  "receipts_not_exactly_once": {}
+ }
+}
+SOAK108 FAIL

@@ -1,0 +1,41 @@
+schema OK; seal 2 files OK
+M1a: FAIL  compose right 10/16 (bar >= 90%)
+M1b: PASS  wrong values 0 (bar 0)
+M1c: PASS  question writes 0 (bar 0)
+M1d: PASS  control byte-identical 12/12
+M1e: PASS  other-family losses 0, untaught 10/10, new direction leaks 0
+M5: PASS  median added q time -0.89 ms (mine 5.87, base 7.20; bar <= +5)
+per family right (ANSWER families): {'compose': '10/16', 'no_apos': '0/16', 'whats': '0/12', 'first_person': '0/12', 'verb_subject': '0/12', 'my_relation': '0/16', 'combo': '0/8'}
+M1f combo (no bar, 8):
+  q243-095 right=False wrong=[] 'whats Mokixs city?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-096 right=False wrong=[] 'whos Vrox Zizans spouse?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-097 right=False wrong=[] "whats my sister's city?" -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-098 right=False wrong=[] 'who is garkar dombyns spouse?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-099 right=False wrong=[] 'whos Fantar married to?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-100 right=False wrong=[] 'What is my sisters city?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-101 right=False wrong=[] 'Who is my boss married to?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+  q243-102 right=False wrong=[] 'What is my brothers employer?' -> 'I do not know that from what you taught me. I have no record of it, so I will no'
+wrong values (0):
+question writes (0):
+other-family losses (0):
+direction leaks already in base228 (6):
+  q243-085 ['Gedund'] (base228 ['Gedund'])
+  q243-086 ['Dendund'] (base228 ['Dendund'])
+  q243-087 ['Brathin'] (base228 ['Brathin'])
+  q243-088 ['Fyra'] (base228 ['Fyra'])
+  q243-089 ['Kraembek'] (base228 ['Kraembek'])
+  q243-090 ['Foxan'] (base228 ['Foxan'])
+new direction leaks (0):
+moves vs base228.jsonl (10):
+  q243-001 [compose] 'Who is Kydora married to?': 'I do not know that from what you taught me. I have no record' -> "Kydora's spouse is Milte Quirkith."
+  q243-002 [compose] "Who's Vudix married to?": 'I do not know that from what you taught me. I have no record' -> "Vudix's spouse is Nynund Vryrnan."
+  q243-003 [compose] 'Who is the spouse of Dorna?': 'I do not know that from what you taught me. I have no record' -> "Dorna's spouse is Maskix Tyrnith."
+  q243-004 [compose] 'To whom is Zethin married?': 'I do not know that from what you taught me. I have no record' -> "Zethin's spouse is Gremb Dogyn."
+  q243-005 [compose] 'Whom is Nuvith married to?': 'I do not know that from what you taught me. I have no record' -> "Nuvith's spouse is Ryrkan Herkyn."
+  q243-007 [compose] 'who is Mernix married to?': 'I do not know that from what you taught me. I have no record' -> "Mernix's spouse is Tylkin Brezund."
+  q243-011 [compose] 'What country is Gelva a citizen of?': 'I do not know that from what you taught me. I have no record' -> "Gelva's country of citizenship is Stervel."
+  q243-012 [compose] 'Which country is Muskix a citizen of?': 'I do not know that from what you taught me. I have no record' -> "Muskix's country of citizenship is Korvyn."
+  q243-014 [compose] 'Who employs Vrindett?': 'I do not know that from what you taught me. I have no record' -> "Vrindett's employer is Quurvora."
+  q243-016 [compose] 'Who is Helva Zaeskel married to?': 'I do not know that from what you taught me. I have no record' -> "Helva Zaeskel's spouse is Yandyn Poryn."
+same-session base228 rerun != base228.jsonl (0):
+PANEL: FAIL

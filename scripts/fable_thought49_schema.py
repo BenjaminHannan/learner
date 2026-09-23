@@ -26,11 +26,16 @@ WHY THIS EXISTS
 ADAPTERS
   to_v1()    -> a legal fable_notebook_contract.assert_fact() payload.  Lossy by
                 design: qualifiers are not projected into relation/value (they survive
-                only inside the embedded v2 record), so the old hop loop answers the
-                bare claim.
+                only inside the embedded v2 record).  Answering through that projection
+                is GATED by the wrapper (Ben ruling 2026-09-21): a qualified row only
+                answers when the question carries matching qualifiers, else MISSING_FACT.
   from_v1()  -> ThoughtV2 from any v1 FACT event.  Exact when the event carries the
                 embedded v2 record; otherwise DEGRADED (qualifiers=(), confidence=None,
                 literal -> text value) -- degraded fields are blank, never guessed.
+
+RELATION IDS (Ben ruling 2026-09-21): suggest a canonical id when the raw relation
+string exactly matches one of WebRED's 521 relation names; the raw string is ALWAYS
+kept as ``relation``; a non-match stays id-less.  Never invents or maps semantically.
 """
 
 from __future__ import annotations
@@ -39,6 +44,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import Optional, Tuple
 
 FORMAT_VERSION = 2
@@ -61,6 +67,42 @@ LEGACY_DOCUMENT = "v1-legacy"          # only document allowed an empty sentence
 _ENTITY_RE = re.compile(r"^E\d+$")
 _DATE_RE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")   # YYYY / YYYY-MM / YYYY-MM-DD
 _URL_RE = re.compile(r"^https?://")
+
+# view marks recorded by append-only THOUGHT_MARK events (never a delete)
+MARK_SUPERSEDED_BY_PROMOTION = "superseded-by-promotion"
+
+
+def norm_relation(text: str) -> str:
+    return " ".join(str(text).strip().lower().split())
+
+
+_VOCAB_CACHE: Optional[dict] = None
+
+
+def webred_relation_vocabulary() -> "dict[str, str]":
+    """normalized WebRED relation name -> canonical name (the 521). Empty if absent."""
+    global _VOCAB_CACHE
+    if _VOCAB_CACHE is None:
+        path = (Path(__file__).resolve().parent.parent / "data" / "open" / "webred"
+                / "frames" / "relations.json")
+        names: dict = {}
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for name in (data.get("counts") or {}):
+                names[norm_relation(name)] = name
+        except (OSError, ValueError):
+            names = {}
+        _VOCAB_CACHE = names
+    return _VOCAB_CACHE
+
+
+def suggest_relation_id(relation: str, vocabulary: Optional[dict] = None) -> Optional[str]:
+    """Exact normalized match against WebRED's relations; None when no match.
+
+    Suggestion only: the raw ``relation`` string is never rewritten.
+    """
+    vocab = webred_relation_vocabulary() if vocabulary is None else vocabulary
+    return vocab.get(norm_relation(relation))
 
 
 class SchemaError(ValueError):
@@ -291,6 +333,8 @@ class ThoughtV2:
     rule_id: Optional[str] = None                  # for source == inferred
     deps: Tuple[str, ...] = field(default_factory=tuple)
     thought_id: Optional[str] = None               # assigned by the notebook (fact id)
+    mark: Optional[str] = None                     # view mark (e.g. superseded-by-promotion)
+    marked_by: Optional[str] = None                # fact id whose promotion caused the mark
 
     def __post_init__(self) -> None:
         self.validate(strict=False)
@@ -305,6 +349,10 @@ class ThoughtV2:
             raise SchemaError("relation must not have surrounding whitespace")
         if self.relation_id is not None and not str(self.relation_id).strip():
             raise SchemaError("relation_id must be a non-empty string or None")
+        if self.mark is not None and (not isinstance(self.mark, str) or not self.mark):
+            raise SchemaError("mark must be a non-empty string or None")
+        if self.marked_by is not None and not str(self.marked_by).startswith("F"):
+            raise SchemaError("marked_by must be a fact id or None")
         if self.source not in V1_SOURCES:
             raise SchemaError("unknown source %r" % (self.source,))
         if self.confidence is not None:
@@ -421,6 +469,10 @@ class ThoughtV2:
         }
         if self.relation_id is not None:
             out["relation_id"] = self.relation_id
+        if self.mark is not None:
+            out["mark"] = self.mark
+        if self.marked_by is not None:
+            out["marked_by"] = self.marked_by
         if self.rule_id is not None:
             out["rule_id"] = self.rule_id
         if self.thought_id is not None:
@@ -441,6 +493,8 @@ class ThoughtV2:
             rule_id=data.get("rule_id"),
             deps=tuple(data.get("deps") or ()),
             thought_id=data.get("thought_id"),
+            mark=data.get("mark"),
+            marked_by=data.get("marked_by"),
         )
 
     def content_event_id(self) -> str:

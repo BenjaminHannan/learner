@@ -1,0 +1,26 @@
+{
+ "agent": "scripts/claude_loop138k_agent.py",
+ "config": "artifacts/claude-merge138k-20260922/loop138k-config.json",
+ "suites": [
+  "p2",
+  "soak"
+ ],
+ "table": [
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "64 cases, OK->BUG 6, still-BUG 6",
+   "status": "FAIL",
+   "seconds": 3.8
+  },
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "turns=2000 kills=3 lost=0 wrong=40 doubled=0",
+   "status": "FAIL",
+   "seconds": 247.3
+  }
+ ],
+ "total_seconds": 251.4,
+ "pass": false
+}

@@ -1,0 +1,48 @@
+{
+ "mark": "L4",
+ "thinker_module": "fable_webfix89_thinking",
+ "thinker_class": "QuarantinedThinking89",
+ "cases": [
+  {
+   "id": "RT79-09",
+   "title": "1 domain + its subdomain",
+   "observed": "web-verified=0 (subdomain not independent)",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-18",
+   "title": "claim with None value, quote contains 'none'",
+   "observed": "kept=0 dropped=['missing field']",
+   "verdict": "OK",
+   "note": ""
+  },
+  {
+   "id": "RT79-53",
+   "title": "same host, different port",
+   "observed": "web-verified=0 (port not independent)",
+   "verdict": "OK",
+   "note": ""
+  }
+ ],
+ "site_counts": [
+  {
+   "pair": "RT79-09-subdomain",
+   "sites": [
+    "example.org"
+   ],
+   "n_sites": 1,
+   "web_verified": 0
+  },
+  {
+   "pair": "RT79-53-port",
+   "sites": [
+    "example.org"
+   ],
+   "n_sites": 1,
+   "web_verified": 0
+  }
+ ],
+ "pass": true,
+ "seconds": 0.1
+}

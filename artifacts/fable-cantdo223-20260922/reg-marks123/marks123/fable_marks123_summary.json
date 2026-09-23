@@ -1,0 +1,49 @@
+{
+ "agent": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop223_agent.py",
+ "config": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-cantdo223-20260922/loop223-config.json",
+ "suites": [
+  "p4",
+  "q1",
+  "bench",
+  "rt81"
+ ],
+ "table": [
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "30 sents, refusals 1, nonpass 2",
+   "status": "FAIL",
+   "seconds": 1.2
+  },
+  {
+   "suite": "q1",
+   "bar": "F5+M5 both OK",
+   "number": "F5=OK M5=OK",
+   "status": "PASS",
+   "seconds": 1.0
+  },
+  {
+   "suite": "bench",
+   "bar": "scorer v2; split-A 0 wrong (200+200)",
+   "number": "fable_edit_200 {'correct': 50, 'abstain': 51, 'wrong': 99}; s2fresh_4hop {'correct': 0, 'abstain': 6, 'wrong': 194}",
+   "status": "FAIL",
+   "seconds": 12.0
+  },
+  {
+   "suite": "rt81",
+   "bar": "74/74 OK, 0 wrong writes",
+   "number": "{'n': 74, 'ok': 59, 'bug': 1, 'unclear': 14}",
+   "status": "FAIL",
+   "seconds": 3.5
+  },
+  {
+   "suite": "q4",
+   "bar": "0 relation-name underscore leaks",
+   "number": "leaks=[]",
+   "status": "PASS",
+   "seconds": 0.0
+  }
+ ],
+ "total_seconds": 18.8,
+ "pass": false
+}

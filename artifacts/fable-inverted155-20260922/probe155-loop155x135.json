@@ -1,0 +1,145 @@
+{
+ "agent": "loop155x135",
+ "cases_file": "cases155x135.json",
+ "wall_seconds": 2.9,
+ "counts": {
+  "OK": 5
+ },
+ "must_write_ok": 3,
+ "must_write_n": 3,
+ "cases": [
+  {
+   "id": "M1",
+   "group": "must-write",
+   "frame": "F3",
+   "teach": "The mother of Ann is Rita.",
+   "expect": [
+    "Ann",
+    "mother",
+    "Rita"
+   ],
+   "want_reply": "any",
+   "ask": "Who is Ann's mother?",
+   "want": "Rita",
+   "stored": [
+    [
+     "Ann",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: Ann's mother is Rita.",
+   "ask_reply": "Ann's mother is Rita.",
+   "verdict": "OK",
+   "seconds": 2.832
+  },
+  {
+   "id": "M2",
+   "group": "must-write",
+   "frame": "F3",
+   "teach": "The mother of Tom Riddle is Sue.",
+   "expect": [
+    "Tom Riddle",
+    "mother",
+    "Sue"
+   ],
+   "want_reply": "any",
+   "ask": "Who is Tom Riddle's mother?",
+   "want": "Sue",
+   "stored": [
+    [
+     "Tom Riddle",
+     "mother",
+     "Sue"
+    ]
+   ],
+   "reply": "Saved: Tom Riddle's mother is Sue.",
+   "ask_reply": "Tom Riddle's mother is Sue.",
+   "verdict": "OK",
+   "seconds": 0.023
+  },
+  {
+   "id": "M3",
+   "group": "must-write",
+   "frame": "F1",
+   "teach": "Rita is Ann's mother.",
+   "expect": [
+    "Ann",
+    "mother",
+    "Rita"
+   ],
+   "want_reply": "any",
+   "ask": "Who is Ann's mother?",
+   "want": "Rita",
+   "stored": [
+    [
+     "Ann",
+     "mother",
+     "Rita"
+    ]
+   ],
+   "reply": "Saved: Ann's mother is Rita.",
+   "ask_reply": "Ann's mother is Rita.",
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "O1",
+   "group": "must-not-write-wrong",
+   "frame": "F3",
+   "teach": "The president of Zorvia is Mel Ash.",
+   "expect": {
+    "base": [
+     [
+      "president of Zorvia",
+      "officeholder",
+      "Mel Ash"
+     ]
+    ]
+   },
+   "want_reply": "saved",
+   "ask": null,
+   "want": null,
+   "stored": [
+    [
+     "president of Zorvia",
+     "officeholder",
+     "Mel Ash"
+    ]
+   ],
+   "reply": "Saved: president of Zorvia's officeholder is Mel Ash.",
+   "ask_reply": null,
+   "verdict": "OK",
+   "seconds": 0.005
+  },
+  {
+   "id": "O2",
+   "group": "must-not-write-wrong",
+   "frame": "F3",
+   "teach": "The mayor of Zorvia is Mel Ash.",
+   "expect": {
+    "base": [
+     [
+      "mayor of Zorvia",
+      "officeholder",
+      "Mel Ash"
+     ]
+    ]
+   },
+   "want_reply": "saved",
+   "ask": null,
+   "want": null,
+   "stored": [
+    [
+     "mayor of Zorvia",
+     "officeholder",
+     "Mel Ash"
+    ]
+   ],
+   "reply": "Saved: mayor of Zorvia's officeholder is Mel Ash.",
+   "ask_reply": null,
+   "verdict": "OK",
+   "seconds": 0.004
+  }
+ ]
+}

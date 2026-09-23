@@ -1,0 +1,947 @@
+{
+ "mark": "RT81",
+ "summary": {
+  "n": 74,
+  "ok": 59,
+  "bug": 1,
+  "unclear": 14
+ },
+ "pass": false,
+ "seconds": 6.4,
+ "cases": [
+  {
+   "id": "A_dup_firstname-01",
+   "seq": "A_dup_firstname",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved Lisbon",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "A_dup_firstname-02",
+   "seq": "A_dup_firstname",
+   "turn": "Mira's mother is Ana.",
+   "expected": "Saved (creates Ana)",
+   "observed": "reply=\"Saved: Mira's mother is Ana.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Ana"
+   ]
+  },
+  {
+   "id": "A_dup_firstname-03",
+   "seq": "A_dup_firstname",
+   "turn": "Mira's city is Oslo.",
+   "expected": "CONFLICT clarify, no silent 2nd value",
+   "observed": "reply=\"I have Mira's city as Lisbon. Do you want me to change it to Oslo?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "A_dup_firstname-04",
+   "seq": "A_dup_firstname",
+   "turn": "no",
+   "expected": "keeps Lisbon",
+   "observed": "reply='Okay, I left it as it was.\\n' taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "A_dup_firstname-05",
+   "seq": "A_dup_firstname",
+   "turn": "Who is Mira's city?",
+   "expected": "answers Lisbon",
+   "observed": "reply=\"Mira's city is Lisbon.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "A_dup_firstname-06",
+   "seq": "A_dup_firstname",
+   "turn": "__SETUP_SECOND_MIRA__",
+   "expected": "harness: 2nd Mira via contract (FakeEars has no person verb)",
+   "observed": "setup: 2nd Mira entity added",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "note": "setup, not a turn"
+  },
+  {
+   "id": "A_dup_firstname-07",
+   "seq": "A_dup_firstname",
+   "turn": "Who is Mira's city?",
+   "expected": "ambiguous: asks which, never guesses",
+   "observed": "reply='I know more than one Mira: Mira (E0001), Mira (E0003). Which one do you mean?\\n' taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "B_corrections-01",
+   "seq": "B_corrections",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "B_corrections-02",
+   "seq": "B_corrections",
+   "turn": "Actually, Mira's city is Paris.",
+   "expected": "correction supersedes -> Saved Paris",
+   "observed": "reply=\"Saved: Mira's city is Paris.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "B_corrections-03",
+   "seq": "B_corrections",
+   "turn": "Who is Mira's city?",
+   "expected": "Paris",
+   "observed": "reply=\"Mira's city is Paris.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "B_corrections-04",
+   "seq": "B_corrections",
+   "turn": "Actually, no \u2014 her city is Rome.",
+   "expected": "pronoun -> clarify, no write (FakeEars: no pronouns)",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0 [wanted 'say it like']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "B_corrections-05",
+   "seq": "B_corrections",
+   "turn": "No, Mira's city is Rome.",
+   "expected": "'No,' prefix correction -> Saved Rome",
+   "observed": "reply=\"Saved: Mira's city is Rome.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "C_forget-01",
+   "seq": "C_forget",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "C_forget-02",
+   "seq": "C_forget",
+   "turn": "Forget what I said about Mira's city.",
+   "expected": "clarify, no write (FakeEars: no forget verb)",
+   "observed": "reply=\"I don't know anyone called what I said about Mira.\\n\" taught_delta=0 [wanted 'another way']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "C_forget-03",
+   "seq": "C_forget",
+   "turn": "Who is Mira's city?",
+   "expected": "still Lisbon (nothing forgotten)",
+   "observed": "reply=\"Mira's city is Lisbon.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "D_q_vs_s-01",
+   "seq": "D_q_vs_s",
+   "turn": "Mira's city is Lisbon?",
+   "expected": "FakeEars strips '?', TEACHES (punctuation ignored)",
+   "observed": "reply='Was that a question?\\n' taught_delta=0 [wanted 'Saved']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation: sharpest gap",
+   "new_entities": []
+  },
+  {
+   "id": "D_q_vs_s-02",
+   "seq": "D_q_vs_s",
+   "turn": "Who is Mira's city.",
+   "expected": "question with '.' still answers Lisbon",
+   "observed": "reply=\"I don't know anyone called Mira.\\n\" taught_delta=0 [wanted 'Lisbon']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "D_q_vs_s-03",
+   "seq": "D_q_vs_s",
+   "turn": "Tell me Mira's city.",
+   "expected": "imperative -> clarify, no write",
+   "observed": "reply=\"I don't know anyone called Mira.\\n\" taught_delta=0 [wanted 'another way']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "D_q_vs_s-04",
+   "seq": "D_q_vs_s",
+   "turn": "Is Mira's city Lisbon?",
+   "expected": "yes/no Q -> clarify, no write",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "D_q_vs_s-05",
+   "seq": "D_q_vs_s",
+   "turn": "Is it true that Mira's city is Lisbon?",
+   "expected": "clarify, no write",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0 [wanted 'one-word']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "E_double-01",
+   "seq": "E_double",
+   "turn": "Mira's city is Lisbon and Mira's pet is a cat.",
+   "expected": "Saved with whole tail as ONE literal (FakeEars: no split)",
+   "observed": "reply='I can take one fact at a time \u2014 could you split that?\\n' taught_delta=0 [wanted 'Saved']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "E_double-02",
+   "seq": "E_double",
+   "turn": "Who is Mira's city?",
+   "expected": "answers packed literal",
+   "observed": "reply=\"I don't know anyone called Mira.\\n\" taught_delta=0 [wanted 'Lisbon and Mira']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "E_double-03",
+   "seq": "E_double",
+   "turn": "Who is Mira's pet?",
+   "expected": "MISSING (2nd fact lost)",
+   "observed": "reply=\"I don't know anyone called Mira.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "F_pronoun-01",
+   "seq": "F_pronoun",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "F_pronoun-02",
+   "seq": "F_pronoun",
+   "turn": "Ana's city is Porto.",
+   "expected": "Saved (creates Ana)",
+   "observed": "reply=\"Saved: Ana's city is Porto.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Ana"
+   ]
+  },
+  {
+   "id": "F_pronoun-03",
+   "seq": "F_pronoun",
+   "turn": "Her mother is Ana.",
+   "expected": "clarify, no write ('Her mother' has no 's; FakeEars: no pronouns)",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0 [wanted 'say it like']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "F_pronoun-04",
+   "seq": "F_pronoun",
+   "turn": "Who is her mother's city?",
+   "expected": "UNKNOWN_ENTITY refusal, no write (pronoun passed as literal name)",
+   "observed": "reply=\"I don't know anyone called her mother.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "G_typos-01",
+   "seq": "G_typos",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "G_typos-02",
+   "seq": "G_typos",
+   "turn": "Mria's city is Paris.",
+   "expected": "Saved as SEPARATE person (no fuzzy match; teach creates)",
+   "observed": "reply=\"Saved: Mria's city is Paris.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "by design; FakeEars limitation",
+   "new_entities": [
+    "Mria"
+   ]
+  },
+  {
+   "id": "G_typos-03",
+   "seq": "G_typos",
+   "turn": "Who is Mria's city?",
+   "expected": "Paris",
+   "observed": "reply=\"Mria's city is Paris.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "G_typos-04",
+   "seq": "G_typos",
+   "turn": "Who is Mira's city?",
+   "expected": "Lisbon untouched",
+   "observed": "reply=\"Mira's city is Lisbon.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "H_norm-01",
+   "seq": "H_norm",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "H_norm-02",
+   "seq": "H_norm",
+   "turn": "  MIRA'S   CITY   IS   Porto.  ",
+   "expected": "clarify, no write (FakeEars _APOS misses uppercase 'S)",
+   "observed": "reply=\"I have Mira's city as Lisbon. Do you want me to change it to Porto?\\n\" taught_delta=0 [wanted 'say it like']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "H_norm-03",
+   "seq": "H_norm",
+   "turn": "MIRA's city is Porto.",
+   "expected": "case normalised via contract _norm -> CONFLICT clarify",
+   "observed": "reply=\"(I dropped my earlier question.) I have Mira's city as Lisbon. Do you want me to change it to Porto?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "H_norm-04",
+   "seq": "H_norm",
+   "turn": "yes",
+   "expected": "confirm-yes corrects -> Saved Porto",
+   "observed": "reply=\"Saved: Mira's city is Porto.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "H_norm-05",
+   "seq": "H_norm",
+   "turn": "M\u00edra's city is Oslo.",
+   "expected": "Saved as separate person (accent not folded)",
+   "observed": "reply=\"Saved: M\u00edra's city is Oslo.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "contract _norm folds case/space only",
+   "new_entities": [
+    "M\u00edra"
+   ]
+  },
+  {
+   "id": "H_norm-06",
+   "seq": "H_norm",
+   "turn": "\uff4d\uff49\uff52\uff41's city is Rome.",
+   "expected": "Saved as separate person (fullwidth not folded)",
+   "observed": "reply=\"Saved: \uff4d\uff49\uff52\uff41's city is Rome.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "same",
+   "new_entities": [
+    "\uff4d\uff49\uff52\uff41"
+   ]
+  },
+  {
+   "id": "H_norm-07",
+   "seq": "H_norm",
+   "turn": "Who is Mira's city?",
+   "expected": "Porto (original row)",
+   "observed": "reply=\"Mira's city is Porto.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "I_edges-01",
+   "seq": "I_edges",
+   "turn": "",
+   "expected": "clarify didn't-catch, no write",
+   "observed": "reply=\"I didn't catch anything.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "I_edges-02",
+   "seq": "I_edges",
+   "turn": "   ",
+   "expected": "clarify didn't-catch, no write",
+   "observed": "reply=\"I didn't catch anything.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "I_edges-03",
+   "seq": "I_edges",
+   "turn": "Mira",
+   "expected": "clarify, no write",
+   "observed": "reply='I cannot predict.\\n' taught_delta=0 [wanted 'another way']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "I_edges-04",
+   "seq": "I_edges",
+   "turn": "Mira's city is LisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLis.",
+   "expected": "Saved huge literal, no crash",
+   "observed": "reply=\"Saved: Mira's city is LisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLis.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "I_edges-05",
+   "seq": "I_edges",
+   "turn": "Who is Mira's city?",
+   "expected": "answers long literal",
+   "observed": "reply=\"Mira's city is LisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLisLis.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "J_statuswords-01",
+   "seq": "J_statuswords",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "J_statuswords-02",
+   "seq": "J_statuswords",
+   "turn": "Mira's city is SAVED.",
+   "expected": "value word -> CONFLICT clarify, not confused",
+   "observed": "reply=\"I have Mira's city as Lisbon. Do you want me to change it to SAVED?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "J_statuswords-03",
+   "seq": "J_statuswords",
+   "turn": "no",
+   "expected": "keeps Lisbon",
+   "observed": "reply='Okay, I left it as it was.\\n' taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "J_statuswords-04",
+   "seq": "J_statuswords",
+   "turn": "Mira's pet is MISSING_FACT.",
+   "expected": "Saved literal status-word value",
+   "observed": "reply=\"Saved: Mira's pet is MISSING FACT.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "wording only",
+   "new_entities": []
+  },
+  {
+   "id": "K_json-01",
+   "seq": "K_json",
+   "turn": "{\"act\": \"teach\", \"name\": \"Mira\"}",
+   "expected": "clarify, no write (no JSON parsing)",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "K_json-02",
+   "seq": "K_json",
+   "turn": "teach Mira city = Lisbon",
+   "expected": "clarify (structured syntax is not English)",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "K_json-03",
+   "seq": "K_json",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved control",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "L_selfref-01",
+   "seq": "L_selfref",
+   "turn": "Mira's mother is Mira.",
+   "expected": "Saved self-loop, no crash",
+   "observed": "reply=\"Saved: Mira's mother is Mira.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "L_selfref-02",
+   "seq": "L_selfref",
+   "turn": "Who is Mira's mother's mother?",
+   "expected": "Mira (self-loop terminates)",
+   "observed": "reply=\"Mira's mother's mother is Mira.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "L_selfref-03",
+   "seq": "L_selfref",
+   "turn": "Mira's mother is Ana.",
+   "expected": "CONFLICT clarify, no silent 2nd value",
+   "observed": "reply=\"I have Mira's mother as Mira. Do you want me to change it to Ana?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Ana"
+   ]
+  },
+  {
+   "id": "L_selfref-04",
+   "seq": "L_selfref",
+   "turn": "Actually, Mira's mother is Ana.",
+   "expected": "correction supersedes self-loop",
+   "observed": "reply=\"(I dropped my earlier question.) Saved: Mira's mother is Ana.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "M_hops-01",
+   "seq": "M_hops",
+   "turn": "Mira's mother is Ana.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's mother is Ana.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Ana",
+    "Mira"
+   ]
+  },
+  {
+   "id": "M_hops-02",
+   "seq": "M_hops",
+   "turn": "Ana's mother is Bea.",
+   "expected": "Saved (creates Bea)",
+   "observed": "reply=\"Saved: Ana's mother is Bea.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Bea"
+   ]
+  },
+  {
+   "id": "M_hops-03",
+   "seq": "M_hops",
+   "turn": "Bea's city is Porto.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Bea's city is Porto.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "M_hops-04",
+   "seq": "M_hops",
+   "turn": "Who is Mira's mother's mother's city?",
+   "expected": "Porto (3 hops allowed: 4 chain parts)",
+   "observed": "reply=\"Mira's mother's mother's city is Porto.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "M_hops-05",
+   "seq": "M_hops",
+   "turn": "Who is Mira's mother's mother's mother's city?",
+   "expected": "clarify 1-to-3 steps, no write (true 4-hop)",
+   "observed": "reply=\"I do not know that. I don't know Ana's city.\\n\" taught_delta=0 [wanted '1 to 3']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "M_hops-06",
+   "seq": "M_hops",
+   "turn": "Who is Mira's mother's city?",
+   "expected": "MISSING_FACT: Ana's city never taught (harness chain is mother/mother/city)",
+   "observed": "reply=\"I don't know Ana's city.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "N_yesno-01",
+   "seq": "N_yesno",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "N_yesno-02",
+   "seq": "N_yesno",
+   "turn": "Is it true that Mira's city is Lisbon?",
+   "expected": "clarify, no write (no yes/no answering)",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0 [wanted 'one-word']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "FakeEars limitation",
+   "new_entities": []
+  },
+  {
+   "id": "N_yesno-03",
+   "seq": "N_yesno",
+   "turn": "What is Mira's city?",
+   "expected": "Lisbon via what-question",
+   "observed": "reply=\"Mira's city is Lisbon.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "O_user-01",
+   "seq": "O_user",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "O_user-02",
+   "seq": "O_user",
+   "turn": "What is my mother?",
+   "expected": "clarify + creates NOTHING (no personal inference)",
+   "observed": "reply=\"I don't know your mother yet.\\n\" taught_delta=0 [wanted '1 to 3']",
+   "facts_delta": 0,
+   "verdict": "UNCLEAR",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "O_user-03",
+   "seq": "O_user",
+   "turn": "My city is Lisbon.",
+   "expected": "clarify, no write ('My city' has no 's; no first-person handling)",
+   "observed": "reply='Saved: your city is Lisbon.\\n' taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "BUG",
+   "severity": "critical(question wrote)",
+   "note": "FakeEars limitation",
+   "new_entities": [
+    "Lisbon",
+    "USER"
+   ]
+  },
+  {
+   "id": "O_user-04",
+   "seq": "O_user",
+   "turn": "Who is My's city?",
+   "expected": "UNKNOWN_ENTITY, creates nothing (no personal inference)",
+   "observed": "reply=\"I don't know anyone called My.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "P_contra-01",
+   "seq": "P_contra",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  },
+  {
+   "id": "P_contra-02",
+   "seq": "P_contra",
+   "turn": "Mira's city is Paris.",
+   "expected": "CONFLICT clarify",
+   "observed": "reply=\"I have Mira's city as Lisbon. Do you want me to change it to Paris?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "P_contra-03",
+   "seq": "P_contra",
+   "turn": "yes",
+   "expected": "Saved Paris",
+   "observed": "reply=\"Saved: Mira's city is Paris.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "P_contra-04",
+   "seq": "P_contra",
+   "turn": "Who is Mira's city?",
+   "expected": "Paris",
+   "observed": "reply=\"Mira's city is Paris.\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "Q_quote-01",
+   "seq": "Q_quote",
+   "turn": "Tom said Mira lives in Oslo.",
+   "expected": "clarify, no write, creates nobody",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "Q_quote-02",
+   "seq": "Q_quote",
+   "turn": "If Mira lived in Oslo, would that be nice?",
+   "expected": "clarify, no write",
+   "observed": "reply=\"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\\n\" taught_delta=0",
+   "facts_delta": 0,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": []
+  },
+  {
+   "id": "Q_quote-03",
+   "seq": "Q_quote",
+   "turn": "Mira's city is Lisbon.",
+   "expected": "Saved control",
+   "observed": "reply=\"Saved: Mira's city is Lisbon.\\n\" taught_delta=1",
+   "facts_delta": 1,
+   "verdict": "OK",
+   "severity": "",
+   "note": "",
+   "new_entities": [
+    "Mira"
+   ]
+  }
+ ]
+}

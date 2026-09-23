@@ -1,0 +1,74 @@
+EXP 255 BRIEF: fixed-reply text pass. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Goal (Ben): grammar at 99%+, and talking with Premonition should be as close to talking with a person as possible, with no simple mistakes. The grammar layer (exp 241/241b) passes fixed replies through unchanged. This experiment fixes the fixed replies' TEXT on the current head.
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json (PASS; verifier CONFIRMED WITH CONCERNS: artifacts/claude-verify-20260922/138m/, which you may read).
+- One change: a single outermost text mixin, scripts/claude_fix255_text.py, placed in scripts/claude_loop255_agent.py. SrcGuardMixin228 stays first.
+- It rewrites exact fixed-reply texts (match whole templates, not fragments of free text) and changes nothing else: no routing, no reading, no writing, no new decisions.
+- Artifacts: artifacts/claude-fixedtext255-20260922/. Ledger lines: P255.n. Never edit an existing file.
+
+What to fix (text only). The sources are 238's bug classes (artifacts/claude-grammar238-20260922/bugclasses.md), 241's "outside A" list (artifacts/claude-mouth241-20260922/PASSMARKS.md §2), the 138m verifier and the conversation judges.
+1. One honest decline. 138m's 224c line ("I didn't understand that question — could you say it another way?") replaced an honest "I don't know" in 8 verifier probes and 11 judged conversation turns.
+   - Write exactly two short sentences.
+   - The first says it doesn't know ("I don't know that.").
+   - The second says it may have misread the question and invites asking another way.
+   - Use the same idea for the statement-shaped decline ("I didn't understand that well enough to save it.").
+2. The "USER" leak. Any fixed reply that echoes a stored fact about the user renders the subject as the user ("your name is Marek", "you live in …"), never "USER's". Example: "The first thing you taught me was: USER's name is Marek." Find every template that can echo stored triples: first-taught, sources, forget confirmations, "what do you know about me", restart answers.
+3. The mode-name leak. "Right now I am back in LISTENING mode, waiting for your next turn." Replies never say internal mode names in capitals. Use plain English ("I'm listening, ready for your next message."). Check THINKING, SLEEP and WORK texts too.
+4. Greetings (TEACH_ME_LIKE). 'Hi! Teach me like "Tom's boss is Ann." Ask me like "Who is Tom's boss?"' becomes one grammatical greeting that:
+   - says its name once ("I'm Premonition");
+   - shows one teach example and one ask example.
+5. DOUBLE_DASH. "… I can't do 'not' -- could you say it without that part?" becomes proper sentences.
+6. QUESTION_NO_QMARK. 'Could you say it another way, like "Kim's boss is Lee."' becomes a real question with "?", for example 'Could you say it another way? For example: "Kim's boss is Lee."'
+7. PLACEHOLDER_LEAK. "… forget it in turn ?." must never show a placeholder.
+8. PRETEND_PAREN + SAY_FRAGMENT, text form only. A pretend echo is a proper sentence with a capital letter and balanced punctuation. The routing of "Say my name." is not yours.
+9. Every other fixed text you find (sweep the fixed-reply sources under the head) must pass the director's style sheet v2 (briefs/241b-stylesheet.txt, sealed, sha256 in briefs/241b-stylesheet.sha256.txt). List every template you changed, before and after, in PASSMARKS.
+
+Constraints
+- Meaning never changes. A decline stays a decline and a confirmation stays a confirmation. Anything that names a fact keeps the same fact.
+- Frozen-scorer anchors. 241's PASSMARKS §1 lists every substring the frozen scorers and 224a's decline detector match on.
+  - Keep the anchors, or add a NEW scorer version: copy the file, extend its anchors, never edit the old one.
+  - A new version must pass an identity check: exactly the old verdicts on every saved row the old version scored (S1 below).
+- Out of scope: routing and reading problems. List them in RESULTS as "not mine" with an example:
+  - "hello there" gets a save-failure reply;
+  - "Hi! What's your name?" gets the user-name reply;
+  - "Say my name." goes to pretend;
+  - name questions are blocked by the 212/216 gates;
+  - "I'm Sabella." is not saved;
+  - "Please, Kestrel's job is fisher." saves a junk person;
+  - "Who lives in Oslo?" gets "I have no opinions.".
+
+Registered marks (bars fixed now)
+- M1, fixed-text grammar.
+  - Render every changed template 5 times with fresh fictional fillers, from a sealed seed. Also render every unchanged fixed template you swept once.
+  - Write fixedtext.jsonl (id, template_id, text), seal it into SEAL2, and message the director. The director's two independent graders grade it with style sheet v2.
+  - Bar: 100% of changed-template renders graded GRAMMATICAL by both graders. Report unchanged templates' grades with no bar.
+- M2, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench against 138m's registered rows (artifacts/claude-merge138m-20260922/run/).
+  - Moves are reply-only and exactly your predicted list.
+  - 0 verdict changes (new scorer versions on your rows, old ones on 138m's).
+  - 0 flips toward an abstain.
+  - 0 store changes.
+- M3, the 239 conversation panel (TEST-ONLY: run it only after your seal, never read it before).
+  - Run all 30 conversations once on your arm.
+  - Write transcripts and a changes file against 138m, in the same format as artifacts/claude-convpanel239-138m-20260922/.
+  - Message the director. The judges grade the changed turns. Bars, computed by the director:
+    - 0 changed turns graded less correct, except where Judge A's rule 8 now credits your decline as "I don't know";
+    - ≥ 90% of changed turns graded grammatical;
+    - 0 store changes.
+- M4, the 138m verifier's probes (artifacts/claude-verify-20260922/138m/probes*.json, dev material). Every changed reply is listed and labelled better / worse / same. 0 worse on meaning.
+- M5, sleep smoke: identical to 138m's except labels, paths and timing.
+- M6, restart dialogs (the files 138m's M6 used): 0 ghosts, 0 failed duplicate checks, and replies identical except predicted moves.
+- M7, latency: median added time per turn ≤ +2 ms against 138m, measured in the same session.
+- S1, identity check for any new scorer version: exactly the old verdicts on 100% of the saved rows it replaces.
+
+Order of work
+1. Sweep and list every fixed-reply template reachable on 138m. Reproduce each defect.
+2. Build the mixin and unit tests.
+3. Pilot on the suites, the verifier probes, the sleep smoke and the restart dialogs.
+4. Write PASSMARKS.md with every predicted move by id, and seal.
+5. Registered runs once each: M2, M4, M5, M6 and M7, then M1 (message the director) and M3 (message the director).
+6. Finish with RESULTS.md, a final message as OPUS-RULES requires, and a design note: design/v3/30-modes/255-fixedtext-opus.md.
+
+Keep every registered run under 25 minutes.
+- Check the load and `df -g /` first. Stop if free disk is under 3 GB.
+- Use at most 4 parallel processes.

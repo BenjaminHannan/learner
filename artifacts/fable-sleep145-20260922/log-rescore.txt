@@ -1,0 +1,46 @@
+rescored 116-rerun: OK=38/38
+A1: OK -- installed=0 abstain=1 status=MISSING_FACT reply=I don't know K07's maternal_grandmother.
+A2: OK -- installed=0 abstain=1 status=MISSING_FACT reply=I don't know K02's maternal_grandmother.
+A3: OK -- reply=I don't know K03's paternal_grandmother. status=MISSING_FACT norel=1
+A4: OK -- installed=0 abstain=1 status=MISSING_FACT reply=I don't know K05's maternal_grandmother.
+B1: OK -- installed=1 abstain=0 src=sleep-derived reply=T01's maternal grandmother is H01.
+B2: OK -- installed=1 abstain=0 src=sleep-derived reply=T02's maternal grandmother is H02.
+B3: OK -- installed=1 abstain=0 src=sleep-derived reply=T03's maternal grandmother is H03.
+B4: OK -- installed=1 abstain=0 src=sleep-derived reply=T04's maternal grandmother is H04.
+C1: OK -- reply=I have Sam's mother as M01. Do you want me to change it to M02? active=['M01'] wrote=0
+C2: OK -- reply=Sam's mother is M01. status=OK answer=M01
+C3: OK -- C3a=src=sleep-derived reply=K01's maternal grandmother is G01.; C3b=src=sleep-derived reply=K02's ma
+C3a: OK -- src=sleep-derived reply=K01's maternal grandmother is G01.
+C3b: OK -- src=sleep-derived reply=K02's maternal grandmother is G02.
+C4: OK -- q=["Sam's mother is M01.", "K01's maternal grandmother is G01.", "K02's maternal grandmother is G02.
+D1: OK -- double-teach=I have K01's mother as M01. Do you want me to change it to M01b? wrote=0 final=['M01b']
+D2: OK -- correction=Saved: K01's mother is M01b. active=['M01b']
+D3: OK -- installed=1 src=sleep-derived reply=K01's maternal grandmother is G01b.
+D4: OK -- taught=17/17 dupes=0 ow=0 ctrl=K02's maternal grandmother is G02.
+E1: OK -- reply=Saved: T01's maternal_grandmother is Z01. wrote=True stored={'1': True, '2': True, '3': True}
+E2: OK -- stored; installed=1 abstain=0 src=taught reply=T01's maternal grandmother is Z01.
+E3: OK -- stored; installed=1 abstain=0 src=taught reply=T02's maternal grandmother is Z02.
+E4: OK -- taught intact src=taught reply=T03's maternal grandmother is Z03.
+F1: OK -- wrong-vs-truth X01, provenance sleep-derived (measured)
+F2: OK -- trail-head=['F00025'] reports=['F00025']
+F3: OK -- taught=24/24 dupes=0 ow=0
+F4: OK -- src=sleep-derived reply=K09's maternal grandmother is G09.
+G1: OK -- replies=200/200
+G2: OK -- clean-stop=1 [carried; no record read]
+G3: OK -- sleeps=6 attempted-first=True extra-attempted=0 installed=1 [carried; no record read]
+G4: OK -- z040=K01's mother is M01.; z080=K02's mother is M02.; z120=K03's mother is M03.; z160=K04's mother i
+G5: OK -- D2 rescore: exit=0 stopped=1 recipe-attempted=1 (raw saw-marker=0 is the renamed sleep145-SLEEPING; 
+G6: OK -- trigger reply present=1 [carried; no record read]
+G7: OK -- boot_ok=True taught=16/16 dupes=0 ow=0 word=absent [carried; no record read]
+G8: OK -- word=absent replies=["K01's maternal grandmother is G01.", "K01's maternal grandmother is G01.", "K0
+H1: OK -- attempted=False installed=False abstain=[True, True] replies=["I don't know K01's maternal_grandmoth
+H2: OK -- attempted=True installed=True abstain=[False, False] replies=["K01's maternal grandmother is G01.", 
+H3: OK -- attempted=True installed=True abstain=[False, False] replies=["K01's maternal grandmother is G01.", 
+H4: OK -- D2 recheck: report-rows=0, no 145/104 word file, frozen evidence
+T1 PASS src={'E2': 'taught', 'E3': 'taught', 'E4': 'taught'}
+T2 PASS diffs=[]
+T3 PASS diffs=[]
+T4 PASS TA=PASS src=taught TB=PASS src=sleep-derived ow=0
+T6 PASS TA=PASS src=taught TB=PASS src=sleep-derived grew=True ow=0
+M1 PASS
+M4 PASS worse=[]

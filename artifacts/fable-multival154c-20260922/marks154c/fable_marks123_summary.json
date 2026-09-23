@@ -1,0 +1,89 @@
+{
+ "agent": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop154c_agent.py",
+ "config": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-multival154c-20260922/loop154c-config.json",
+ "suites": [
+  "p2",
+  "p3",
+  "p4",
+  "rt110",
+  "q1",
+  "bench",
+  "rt81",
+  "sleep",
+  "soak"
+ ],
+ "table": [
+  {
+   "suite": "p2",
+   "bar": "0 OK->BUG, 0 still-BUG (64 cases)",
+   "number": "64 cases, OK->BUG 0, still-BUG 0",
+   "status": "PASS",
+   "seconds": 8.8
+  },
+  {
+   "suite": "p3",
+   "bar": "L1-L6 all PASS",
+   "number": "l1:P/l2:P/l3:P/l4:P/l5z1:F/l5z2:F/l6:P",
+   "status": "FAIL",
+   "seconds": 60.9
+  },
+  {
+   "suite": "p4",
+   "bar": "<= 2 false refusals, 0 non-pass (30)",
+   "number": "30 sents, refusals 0, nonpass 0",
+   "status": "PASS",
+   "seconds": 1.9
+  },
+  {
+   "suite": "rt110",
+   "bar": "62/62 executed, 0 harness-error",
+   "number": "62 cases, OK->BUG 1, still-BUG 5, herr 0",
+   "status": "PASS",
+   "seconds": 151.4
+  },
+  {
+   "suite": "q1",
+   "bar": "F5+M5 both OK",
+   "number": "F5=OK M5=OK",
+   "status": "PASS",
+   "seconds": 1.2
+  },
+  {
+   "suite": "bench",
+   "bar": "scorer v2; split-A 0 wrong (200+200)",
+   "number": "fable_edit_200 {'correct': 149, 'abstain': 51, 'wrong': 0}; s2fresh_4hop {'correct': 195, 'abstain': 5, 'wrong': 0}",
+   "status": "PASS",
+   "seconds": 19.5
+  },
+  {
+   "suite": "rt81",
+   "bar": "74/74 OK, 0 wrong writes",
+   "number": "{'n': 74, 'ok': 60, 'bug': 0, 'unclear': 14}",
+   "status": "FAIL",
+   "seconds": 5.2
+  },
+  {
+   "suite": "sleep",
+   "bar": "Z1-Z5 if sleep path else SKIP+reason",
+   "number": "SKIP: agent fable_loop154c_agent.py has no Sleep104 maternal-grandmother install path ",
+   "status": "SKIP",
+   "seconds": 0.0
+  },
+  {
+   "suite": "soak",
+   "bar": "0 lost / 0 wrong / 0 doubled (2000 turns, 3 kill-9)",
+   "number": "turns=2000 kills=3 lost=0 wrong=0 doubled=0",
+   "status": "PASS",
+   "seconds": 245.8
+  },
+  {
+   "suite": "q4",
+   "bar": "0 relation-name underscore leaks",
+   "number": "leaks=[]",
+   "status": "PASS",
+   "seconds": 0.0
+  }
+ ],
+ "total_seconds": 496.8,
+ "pass": false
+}

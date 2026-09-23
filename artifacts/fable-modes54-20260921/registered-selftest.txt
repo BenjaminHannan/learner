@@ -1,0 +1,42 @@
+PASS  naive:pass  s01_cold_start_is_thinking
+PASS  naive:FAIL  s02_inbox_enters_listening
+PASS  naive:FAIL  s03_listening_replies_and_logs_reason
+PASS  naive:FAIL  s04_inbox_drain_returns_to_thinking
+PASS  naive:FAIL  s05_work_queue_enters_work
+PASS  naive:FAIL  s06_work_beats_sleep_when_memory_full
+PASS  naive:FAIL  s07_single_step_job_completes_to_thinking
+PASS  naive:FAIL  s08_three_step_job_runs_every_step
+PASS  naive:FAIL  s09_open_ended_job_enters_creative
+PASS  naive:FAIL  s10_creative_found_round2_resumes_work
+PASS  naive:FAIL  s11_found_then_job_completes
+PASS  naive:FAIL  s12_giveup_exactly_at_fixed_n_rounds
+PASS  naive:FAIL  s13_giveup_parks_the_job
+PASS  naive:FAIL  s14_giveup_asks_ben_exactly_once
+PASS  naive:FAIL  s15_log_shows_creative_to_thinking_giveup
+PASS  naive:FAIL  s16_two_distinct_failures_hand_to_creative
+PASS  naive:FAIL  s17_creative_rounds_never_exceed_fixed_n
+PASS  naive:FAIL  s18_memory_full_enters_sleep
+PASS  naive:pass  s19_below_threshold_never_sleeps
+PASS  naive:FAIL  s20_inbox_preempts_sleep_with_rollback
+PASS  naive:FAIL  s21_inbox_preempts_creative_at_boundary_with_park
+PASS  naive:FAIL  s22_job_resumes_after_listening
+PASS  naive:FAIL  s23_full_priority_sequence_listening_work_sleep_thinking
+PASS  naive:FAIL  s24_listening_first_when_all_three_present
+PASS  naive:FAIL  s25_parked_job_does_not_block_sleep
+PASS  naive:FAIL  s26_sleep_commits_and_clears_memory
+PASS  naive:FAIL  s27_no_sleep_entry_while_job_runnable
+PASS  naive:FAIL  s28_parked_job_skips_queued_job_runs_next
+PASS  naive:FAIL  s29_resolve_question_requeues_job
+PASS  naive:pass  s30_mode_log_complete_with_reasons
+PASS  naive:pass  s31_idle_steps_do_not_churn_modes
+PASS  naive:FAIL  s32_creative_commands_rejected_scheduler_decides
+PASS  naive:FAIL  s33_two_jobs_get_separate_creative_budgets
+PASS  naive:FAIL  s34_memory_grows_with_turns_and_finished_work_only
+
+scenarios: total 34, ours 34, naive fails 30
+S1 PASS - ours 34/34 (need >= 34/34)
+S2 PASS - naive fails 30/34 (need >= 12)
+S3 PASS - log field violations 0, count mismatches 0
+S4 PASS - round-limit 0, unclosed creative 0, ask-count 0 (all need 0)
+S5 PASS - unsafe sleep entries 0, commit-after-abort 0 (need 0)
+SELFTEST PASS

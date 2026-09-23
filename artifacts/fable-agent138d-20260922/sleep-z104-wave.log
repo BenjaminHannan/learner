@@ -1,0 +1,19 @@
+seed 1: sleep@t075.txt installed=1 episodes=20 sleep_s=102.11 probes=5/5 taught=50/50 wrong_install=1 116.0s
+seed 2: sleep@t075.txt installed=1 episodes=20 sleep_s=107.7 probes=5/5 taught=50/50 wrong_install=1 122.1s
+seed 3: sleep@t075.txt installed=1 episodes=20 sleep_s=129.22 probes=5/5 taught=50/50 wrong_install=1 147.2s
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop138d_sleepdrive.py", line 65, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop138d_sleepdrive.py", line 60, in main
+    rc |= run_z104()
+          ^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_loop138d_sleepdrive.py", line 47, in run_z104
+    return D104.main(["--root", str(ART138B / "runs-104"),
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_sleep104_drive.py", line 459, in main
+    out["z4"] = run_z4(root)
+                ^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_sleep104_drive.py", line 326, in run_z4
+    raise RuntimeError("daemon died before the kill")
+RuntimeError: daemon died before the kill

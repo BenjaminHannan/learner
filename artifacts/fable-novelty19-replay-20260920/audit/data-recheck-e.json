@@ -1,0 +1,441 @@
+{
+ "tamper_matrix": {
+  "baseline_all_consumers_pass": true,
+  "baseline": {
+   "awake-stream (reads dev panels)": {
+    "returncode": 0,
+    "ok": true,
+    "stderr": ""
+   },
+   "buffers (reads dev panels)": {
+    "returncode": 0,
+    "ok": true,
+    "stderr": ""
+   },
+   "dev-panels (reads operator history)": {
+    "returncode": 0,
+    "ok": true,
+    "stderr": ""
+   },
+   "audit (reads every artifact)": {
+    "returncode": 0,
+    "ok": true,
+    "stderr": ""
+   }
+  },
+  "total_cases": 45,
+  "all_refused": true,
+  "accepted": [],
+  "manifest_attacks": {
+   "manifest deleted": {
+    "awake-stream (reads dev panels)": {
+     "refused": true,
+     "message": "no artifact manifest (manifest.json or index.json) in dev: an exclusion file without the manifest that produced it cannot be verified, so it may not b"
+    },
+    "buffers (reads dev panels)": {
+     "refused": true,
+     "message": "no artifact manifest (manifest.json or index.json) in dev: an exclusion file without the manifest that produced it cannot be verified, so it may not b"
+    }
+   },
+   "published_exclusions stripped": {
+    "awake-stream (reads dev panels)": {
+     "refused": true,
+     "message": "dev/manifest.json records no published_exclusions; its exclusion files cannot be verified and may not be consumed"
+    },
+    "buffers (reads dev panels)": {
+     "refused": true,
+     "message": "dev/manifest.json records no published_exclusions; its exclusion files cannot be verified and may not be consumed"
+    }
+   },
+   "published_exclusions sha blanked": {
+    "awake-stream (reads dev panels)": {
+     "refused": true,
+     "message": "dev/manifest.json published_exclusions has no questions_sha256; the exclusion files cannot be verified"
+    },
+    "buffers (reads dev panels)": {
+     "refused": true,
+     "message": "dev/manifest.json published_exclusions has no questions_sha256; the exclusion files cannot be verified"
+    }
+   }
+  },
+  "manifest_all_refused": true,
+  "matrix": {
+   "dev/forbidden-semantics.json": {
+    "truncated": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json holds 5 entries but /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json holds 5 entries but /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "same-count-tampered": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json hashes to a21b566feecd22e91d160d8621d9d923b2feca4b9214365237f3d43c5aab3ea2 but /Users/ben-hann"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json hashes to a21b566feecd22e91d160d8621d9d923b2feca4b9214365237f3d43c5aab3ea2 but /Users/ben-hann"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "duplicate-padded": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "unsorted": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "emptied": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a non-empty list"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-question file at dev/forbidden-semantics.json is not a non-empty list"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    }
+   },
+   "dev/forbidden-worlds-primary.json": {
+    "truncated": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json holds 5 entries but /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json holds 5 entries but /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/workt"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "same-count-tampered": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json hashes to 63da79526ae0501cdccbb4ca258d38a8ede4cbc0ec54952ce2b711841c8a52c4 but /User"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json hashes to 63da79526ae0501cdccbb4ca258d38a8ede4cbc0ec54952ce2b711841c8a52c4 but /User"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "duplicate-padded": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "unsorted": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "emptied": {
+     "awake-stream (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a non-empty list"
+     },
+     "buffers (reads dev panels)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-primary-world file at dev/forbidden-worlds-primary.json is not a non-empty list"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    }
+   },
+   "ophist/forbidden-worlds.json": {
+    "truncated": {
+     "dev-panels (reads operator history)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-world file at ophist/forbidden-worlds.json holds 5 entries but /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-exp"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "same-count-tampered": {
+     "dev-panels (reads operator history)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-world file at ophist/forbidden-worlds.json hashes to 59c11494a703b9e087e07f99e754676f3a3004a0c5edb675fe1258a60aa8a3fd but /Users/ben-hannan/"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "duplicate-padded": {
+     "dev-panels (reads operator history)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-world file at ophist/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "unsorted": {
+     "dev-panels (reads operator history)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-world file at ophist/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "emptied": {
+     "dev-panels (reads operator history)": {
+      "refused": true,
+      "returncode": 1,
+      "message": "forbidden-world file at ophist/forbidden-worlds.json is not a non-empty list"
+     },
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    }
+   },
+   "bufB/forbidden-worlds.json": {
+    "truncated": {
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "same-count-tampered": {
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "duplicate-padded": {
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "unsorted": {
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    },
+    "emptied": {
+     "audit (reads every artifact)": {
+      "refused": true,
+      "returncode": 1,
+      "message": ""
+     }
+    }
+   }
+  }
+ },
+ "operator_history_loader": {
+  "cases": {
+   "truncated": "SystemExit: forbidden-world file at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-h",
+   "same-count-tampered": "SystemExit: forbidden-world file at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-h",
+   "duplicate-padded": "SystemExit: forbidden-world file at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-h",
+   "unsorted": "SystemExit: forbidden-world file at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-h",
+   "emptied": "SystemExit: forbidden-world file at /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-h",
+   "restored": "accepted (control)"
+  },
+  "all_tampered_refused": true
+ },
+ "consumed_exclusions": {
+  "per_artifact": {
+   "dev panels": {
+    "present": true,
+    "value": [
+     {
+      "count": 1792,
+      "name": "legacy",
+      "new": 1792,
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-dispatcher-v3-20260920/panels/forbidden-semantics.json",
+      "sha256": "5511295d725cd48e0bdff67efc9514159d6882651f1729cff8125e4038283a4f"
+     },
+     {
+      "count": 2048,
+      "name": "legacy",
+      "new": 2048,
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/fit-panels/forbidden-semantics.json",
+      "sha256": "7df8d8fa7cb0854d39ed2f0d81702db13ff51e22f6804eb4c6f47504d255651f"
+     },
+     {
+      "count": 2048,
+      "name": "legacy",
+      "new": 2048,
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-baseline-transformer-v2-20260920/confirm-panels/forbidden-semantics.json",
+      "sha256": "1837457f203fe5b79dc28faeb61b2879a95120397b3d6086fb114c586762fc4b"
+     },
+     {
+      "count": 14336,
+      "name": "legacy",
+      "new": 14336,
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-confirmation-panels-20260920/dispatcher/forbidden-semantics.json",
+      "sha256": "2fc98d09caeab0e30beff3503fea285c0122ca1bb26b8428be1e9b08d8b94de6"
+     },
+     {
+      "count": 6656,
+      "name": "legacy",
+      "new": 6656,
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-confirmation-panels-20260920/operator/forbidden-semantics.json",
+      "sha256": "98de96af2b91dc6dc0ee68e94afe14800e6d4343a2b43fdc6de51559effb725e"
+     },
+     {
+      "manifest": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/ophist/manifest.json",
+      "name": "operator_history",
+      "path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/ophist",
+      "questions": 732586,
+      "questions_sha256": "5830d97bbf92836d0c1ca85d69799c47a90353bbbf7a1dea331dc8f25467ed20",
+      "verified": true,
+      "worlds": 96000,
+      "worlds_sha256": "361936c57589cee4f1e5b5c1074d954f03020426056fc6103597422fc176e78a"
+     }
+    ]
+   },
+   "awake stream": {
+    "present": false,
+    "value": null
+   },
+   "buffers": {
+    "present": false,
+    "value": null
+   }
+  },
+  "every_consumer_records_it": false
+ },
+ "audit_roster": {
+  "returncode": 0,
+  "expected": 37,
+  "checks_run": 37,
+  "checks_absent": [],
+  "passed": true,
+  "failures": [],
+  "new_since_recheck2": [
+   "dev_panel_world_exclusions_published",
+   "awake_published_exclusions",
+   "memory_published_exclusions",
+   "buffers_published_exclusions",
+   "exclusion_files_match_their_manifests"
+  ]
+ },
+ "content_equality": {
+  "awake_census_identical": true,
+  "memory_census_identical": true,
+  "memory_distinct_worlds": 1024,
+  "dev_panel_purity_tables_identical": true,
+  "purity_mismatches": [],
+  "dev_panel_ruling6_identical": true,
+  "ruling6_mismatches": [],
+  "chunk_sha_now": "911bb49326ece52ed148476b9cf00da2edd8bf51aae94fc6753e543b1d9ce5a8",
+  "chunk_sha_recheck2": "210eadc4b15d514ee513706231dc862a78ae44c337fa2e6fa42a7cb5b26f1e55",
+  "chunk_embeds_execution_profile": true,
+  "chunk_script_sha": "ef1df0e149aa4741a22f7185fadb9eaeb054b072d50c09a1ad2a196a998ae9de",
+  "note": "the .pt chunk metadata embeds execution_profile.script_sha256, so its sha256 MUST move when the script changes; content equality is therefore established through decoded content, not file hashes"
+ }
+}

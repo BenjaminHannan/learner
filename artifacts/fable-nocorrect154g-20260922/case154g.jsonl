@@ -1,0 +1,95 @@
+{"reset": true}
+{"expect": "Saved: Zara's language is Hindi.", "n": 1, "turn": "Zara's language is Hindi."}
+{"expect": "Saved: Zara's language is Urdu. (It was Hindi.)", "n": 2, "state": {"Zara|language": ["Urdu"]}, "turn": "No, Zara's language is Urdu."}
+{"expect": "Zara's language is Urdu.", "n": 3, "turn": "What is Zara's language?"}
+{"expect": "Saved: Zara's language is Tamil. (It was Urdu.)", "n": 4, "state": {"Zara|language": ["Tamil"]}, "turn": "Actually, Zara's language is Tamil."}
+{"expect": "Zara's language is Tamil.", "n": 5, "turn": "What is Zara's language?"}
+{"expect": "Saved: Zara's language is Bengali. (It was Tamil.)", "n": 6, "state": {"Zara|language": ["Bengali"]}, "turn": "Correction: Zara's language is Bengali."}
+{"expect": "Zara's language is Bengali.", "n": 7, "turn": "What is Zara's language?"}
+{"expect": "Saved: Omar's language is Punjabi.", "n": 8, "turn": "Omar's language is Punjabi."}
+{"events0": true, "expect": "I already have that.", "n": 9, "state": {"Omar|language": ["Punjabi"]}, "turn": "No, Omar's language is Punjabi."}
+{"expect": "Saved: Omar's language is Sindhi. (It was Punjabi.)", "n": 10, "state": {"Omar|language": ["Sindhi"]}, "turn": "No, Omar's language is Sindhi."}
+{"expect": "Omar's language is Sindhi.", "n": 11, "turn": "What is Omar's language?"}
+{"expect": "Saved: Priya's language is Marathi.", "n": 12, "turn": "Priya's language is Marathi."}
+{"expect": "Saved: Priya's language is Gujarati. (It was Marathi.)", "n": 13, "state": {"Priya|language": ["Gujarati"]}, "turn": "Actually, Priya's language is Gujarati."}
+{"expect": "Priya's language is Gujarati.", "n": 14, "turn": "What is Priya's language?"}
+{"expect": "Saved: Priya's language is Kannada. (It was Gujarati.)", "n": 15, "state": {"Priya|language": ["Kannada"]}, "turn": "No, Priya's language is Kannada."}
+{"expect": "Priya's language is Kannada.", "n": 16, "turn": "What is Priya's language?"}
+{"expect": "Saved: Tariq's language is Arabic.", "n": 17, "turn": "Tariq's language is Arabic."}
+{"expect": "Saved: Tariq's language is Farsi. (It was Arabic.)", "n": 18, "state": {"Tariq|language": ["Farsi"]}, "turn": "Correction: Tariq's language is Farsi."}
+{"expect": "Tariq's language is Farsi.", "n": 19, "turn": "What is Tariq's language?"}
+{"expect": "Saved: Nadia's language is Thai.", "n": 20, "turn": "Nadia's language is Thai."}
+{"expect": "Saved: Nadia's language is Lao. (It was Thai.)", "n": 21, "state": {"Nadia|language": ["Lao"]}, "turn": "No, Nadia's language is Lao."}
+{"expect": "Nadia's language is Lao.", "full_state": {"Nadia|language": ["Lao"], "Omar|language": ["Sindhi"], "Priya|language": ["Kannada"], "Tariq|language": ["Farsi"], "Zara|language": ["Bengali"]}, "n": 22, "turn": "What is Nadia's language?"}
+{"reset": true}
+{"expect": "Saved: Kiran's language is Hindi.", "n": 23, "turn": "Kiran's language is Hindi."}
+{"expect": "Saved: Kiran's language is Tamil. (I also have Hindi.)", "n": 24, "turn": "Kiran's language is Tamil."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi or Tamil?", "n": 25, "state": {"Kiran|language": ["Hindi", "Tamil"]}, "turn": "No, Kiran's language is Urdu."}
+{"expect": "Saved: Kiran's language is Urdu. (It was Hindi.)", "n": 26, "state": {"Kiran|language": ["Tamil", "Urdu"]}, "turn": "Hindi."}
+{"expect": "Kiran's language is Tamil and Urdu.", "n": 27, "turn": "What is Kiran's language?"}
+{"events0": true, "expect": "Which one should Bengali replace: Tamil or Urdu?", "n": 28, "state": {"Kiran|language": ["Tamil", "Urdu"]}, "turn": "Actually, Kiran's language is Bengali."}
+{"expect": "Saved: Kiran's language is Bengali. (It was Urdu.)", "n": 29, "state": {"Kiran|language": ["Tamil", "Bengali"]}, "turn": "Urdu."}
+{"expect": "Kiran's language is Tamil and Bengali.", "n": 30, "turn": "What is Kiran's language?"}
+{"expect": "Saved: Dev's language is Hindi.", "n": 31, "turn": "Dev's language is Hindi."}
+{"expect": "Saved: Dev's language is Tamil. (I also have Hindi.)", "n": 32, "turn": "Dev's language is Tamil."}
+{"expect": "Saved: Dev's language is Telugu. (I also have Hindi and Tamil.)", "n": 33, "turn": "Dev's language is Telugu."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi, Tamil or Telugu?", "n": 34, "state": {"Dev|language": ["Hindi", "Tamil", "Telugu"]}, "turn": "No, Dev's language is Urdu."}
+{"expect": "Saved: Dev's language is Urdu. (It was Tamil.)", "n": 35, "state": {"Dev|language": ["Hindi", "Telugu", "Urdu"]}, "turn": "Tamil."}
+{"expect": "Dev's language is Hindi, Telugu and Urdu.", "n": 36, "turn": "What is Dev's language?"}
+{"expect": "Saved: Asha's language is Swahili.", "n": 37, "turn": "Asha's language is Swahili."}
+{"expect": "Saved: Asha's language is Amharic. (I also have Swahili.)", "n": 38, "turn": "Asha's language is Amharic."}
+{"events0": true, "expect": "Which one should Somali replace: Swahili or Amharic?", "n": 39, "state": {"Asha|language": ["Swahili", "Amharic"]}, "turn": "Correction: Asha's language is Somali."}
+{"expect": "Saved: Asha's language is Somali. (It was Amharic.)", "n": 40, "state": {"Asha|language": ["Swahili", "Somali"]}, "turn": "Amharic."}
+{"expect": "Asha's language is Swahili and Somali.", "n": 41, "turn": "What is Asha's language?"}
+{"expect": "Saved: Ravi's language is Korean.", "n": 42, "turn": "Ravi's language is Korean."}
+{"expect": "Saved: Ravi's language is Japanese. (I also have Korean.)", "n": 43, "turn": "Ravi's language is Japanese."}
+{"events0": true, "expect": "Which one should Mandarin replace: Korean or Japanese?", "n": 44, "state": {"Ravi|language": ["Korean", "Japanese"]}, "turn": "Actually, Ravi's language is Mandarin."}
+{"expect": "Saved: Ravi's language is Mandarin. (It was Korean.)", "n": 45, "state": {"Ravi|language": ["Japanese", "Mandarin"]}, "turn": "Korean."}
+{"expect": "Ravi's language is Japanese and Mandarin.", "n": 46, "turn": "What is Ravi's language?"}
+{"events0": true, "expect": "Which one should Punjabi replace: Tamil or Bengali?", "n": 47, "state": {"Kiran|language": ["Tamil", "Bengali"]}, "turn": "No, Kiran's language is Punjabi."}
+{"expect": "Saved: Kiran's language is Punjabi. (It was Bengali.)", "n": 48, "state": {"Kiran|language": ["Tamil", "Punjabi"]}, "turn": "Bengali."}
+{"expect": "Kiran's language is Tamil and Punjabi.", "full_state": {"Asha|language": ["Swahili", "Somali"], "Dev|language": ["Hindi", "Telugu", "Urdu"], "Kiran|language": ["Tamil", "Punjabi"], "Ravi|language": ["Japanese", "Mandarin"]}, "n": 49, "turn": "What is Kiran's language?"}
+{"reset": true}
+{"expect": "Saved: Lena's language is Hindi.", "n": 50, "turn": "Lena's language is Hindi."}
+{"expect": "Saved: Lena's language is Tamil. (I also have Hindi.)", "n": 51, "turn": "Lena's language is Tamil."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi or Tamil?", "n": 52, "state": {"Lena|language": ["Hindi", "Tamil"]}, "turn": "No, Lena's language is Urdu."}
+{"events0": true, "expect": "Lena's language is Hindi and Tamil.", "n": 53, "state": {"Lena|language": ["Hindi", "Tamil"]}, "turn": "What is Lena's language?"}
+{"expect": "Saved: Vivek's language is Hindi.", "n": 54, "turn": "Vivek's language is Hindi."}
+{"expect": "Saved: Vivek's language is Tamil. (I also have Hindi.)", "n": 55, "turn": "Vivek's language is Tamil."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi or Tamil?", "n": 56, "state": {"Vivek|language": ["Hindi", "Tamil"]}, "turn": "No, Vivek's language is Urdu."}
+{"expect": "Saved: Vivek's language is Bengali. (I also have Hindi and Tamil.)", "n": 57, "state": {"Vivek|language": ["Hindi", "Tamil", "Bengali"]}, "turn": "Vivek's language is Bengali."}
+{"expect": "Vivek's language is Hindi, Tamil and Bengali.", "n": 58, "turn": "What is Vivek's language?"}
+{"expect": "Saved: Noor's language is Hindi.", "n": 59, "turn": "Noor's language is Hindi."}
+{"expect": "Saved: Noor's language is Tamil. (I also have Hindi.)", "n": 60, "turn": "Noor's language is Tamil."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi or Tamil?", "n": 61, "state": {"Noor|language": ["Hindi", "Tamil"]}, "turn": "No, Noor's language is Urdu."}
+{"expect": "Saved: Noor's language is Urdu. (I also have Hindi and Tamil.) (I didn't have Telugu.)", "n": 62, "state": {"Noor|language": ["Hindi", "Tamil", "Urdu"]}, "turn": "No, Noor's language is Urdu, not Telugu."}
+{"expect": "Noor's language is Hindi, Tamil and Urdu.", "n": 63, "turn": "What is Noor's language?"}
+{"expect": "Saved: Hadi's language is Hindi.", "n": 64, "turn": "Hadi's language is Hindi."}
+{"expect": "Saved: Hadi's language is Tamil. (I also have Hindi.)", "n": 65, "turn": "Hadi's language is Tamil."}
+{"events0": true, "expect": "Which one should Urdu replace: Hindi or Tamil?", "n": 66, "state": {"Hadi|language": ["Hindi", "Tamil"]}, "turn": "No, Hadi's language is Urdu."}
+{"expect": "Saved: Hadi's boss is Sam.", "n": 67, "state": {"Hadi|boss": ["Sam"], "Hadi|language": ["Hindi", "Tamil"]}, "turn": "No, Hadi's boss is Sam."}
+{"expect": "Hadi's language is Hindi and Tamil.", "full_state": {"Hadi|boss": ["Sam"], "Hadi|language": ["Hindi", "Tamil"], "Lena|language": ["Hindi", "Tamil"], "Noor|language": ["Hindi", "Tamil", "Urdu"], "Vivek|language": ["Hindi", "Tamil", "Bengali"]}, "n": 68, "turn": "What is Hadi's language?"}
+{"reset": true}
+{"expect": "Saved: Farah's language is Urdu.", "n": 69, "state": {"Farah|language": ["Urdu"]}, "turn": "No, Farah's language is Urdu."}
+{"expect": "Farah's language is Urdu.", "n": 70, "turn": "What is Farah's language?"}
+{"expect": "Saved: Basil's language is Thai.", "n": 71, "state": {"Basil|language": ["Thai"]}, "turn": "Actually, Basil's language is Thai."}
+{"expect": "Saved: Cleo's language is Greek.", "n": 72, "state": {"Cleo|language": ["Greek"]}, "turn": "Correction: Cleo's language is Greek."}
+{"expect": "Saved: Eli's language is Hindi.", "n": 73, "turn": "Eli's language is Hindi."}
+{"expect": "Saved: Eli's language is Urdu. (I also have Hindi.)", "n": 74, "turn": "Eli's language is Urdu."}
+{"expect": "Eli's language is Hindi and Urdu.", "n": 75, "turn": "What is Eli's language?"}
+{"expect": "Saved: Eli's boss is Sam.", "n": 76, "turn": "No, Eli's boss is Sam."}
+{"expect": "Saved: Eli's boss is Lee.", "n": 77, "turn": "No, Eli's boss is Lee."}
+{"expect": "Eli's boss is Lee.", "n": 78, "turn": "What is Eli's boss?"}
+{"expect": "Saved: Eli's language is Tamil. (I also have Urdu.)", "n": 79, "state": {"Eli|language": ["Urdu", "Tamil"]}, "turn": "No, Eli's language is Tamil, not Hindi."}
+{"expect": "Saved: Eli's language is Greek. (I also have Urdu and Tamil.) (I didn't have Latin.)", "n": 80, "state": {"Eli|language": ["Urdu", "Tamil", "Greek"]}, "turn": "No, Eli's language is Greek, not Latin."}
+{"expect": "Forgotten: Eli's language Urdu.", "n": 81, "state": {"Eli|language": ["Tamil", "Greek"]}, "turn": "Forget Eli's language Urdu."}
+{"expect": "Eli's language is Tamil and Greek.", "n": 82, "turn": "What is Eli's language?"}
+{"events0": true, "expect": "I already have that.", "n": 83, "state": {"Eli|language": ["Tamil", "Greek"]}, "turn": "Eli's language is Tamil."}
+{"expect": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.", "n": 84, "turn": "Quote Zara said the sky is green."}
+{"expect": "I don't know anyone called Zed.", "n": 85, "turn": "What is Zed's language?"}
+{"expect": "Saved: Finn's citizenship is India.", "n": 86, "turn": "Finn's citizenship is India."}
+{"expect": "I have Finn's citizenship as India. Do you want me to change it to Nepal?", "n": 87, "turn": "Finn's citizenship is Nepal."}
+{"expect": "Okay, I left it as it was.", "n": 88, "turn": "no."}
+{"expect": "Finn's citizenship is India.", "n": 89, "turn": "What is Finn's citizenship?"}
+{"expect": "Saved: Eli's sister is Ana.", "n": 90, "state": {"Eli|sister": ["Ana"]}, "turn": "No, Eli's sister is Ana."}
+{"expect": "Eli's sister is Ana.", "full_state": {"Basil|language": ["Thai"], "Cleo|language": ["Greek"], "Eli|boss": ["Lee"], "Eli|language": ["Tamil", "Greek"], "Eli|sister": ["Ana"], "Farah|language": ["Urdu"], "Finn|citizenship": ["India"]}, "n": 91, "turn": "What is Eli's sister?"}

@@ -1,0 +1,55 @@
+MERGE 252c BRIEF: 252b + 258 + 259, the correction line. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full. Read its note on python3 at the end.
+
+Why
+- 258 (commentary-clause strip) and 259 (value boundary) are both registered FAILs on the blind panel corrtail258, and both are safe on every other mark.
+- Each fixes a different part:
+  - 258 removes "…, that's old news" tails before 252's parse, which fixes the junk writes (b252-035, t258-009, t258-026).
+  - 259 makes an explicit denial whose value runs into a tail remove the stored value, instead of falsely saying "I don't have V". It also drops a trailing "anymore".
+- The director's recount found that the two are needed together:
+  - 258 alone still gives a false reply on corrpanel252 c252-022 ("I don't have Tobin anymore as Quenby's manager." while Tobin is stored);
+  - 259 alone keeps both junk writes and has one garbled false claim (t258-003).
+- Both builders' reports, RESULTS.md and PASSMARKS.md are in artifacts/claude-comment258-20260922/ and artifacts/claude-boundary259-20260922/. Read them first.
+
+Base: 252b = scripts/claude_loop252b_agent.py with artifacts/claude-correct252b-20260922/loop252b-config.json (the stack: 138k + 252 + 252b's value screen).
+- Layer order: 258's clause strip is outermost at the turn level, then 252b's detection and parse, then 259's boundary inside 252's explicit-denial path.
+- Import both pieces read-only. SrcGuardMixin228 stays first, and install_srcguard228() runs at import.
+- Agent: scripts/claude_loop252c_agent.py. Config: artifacts/claude-merge252c-20260922/loop252c-config.json. Artifacts: artifacts/claude-merge252c-20260922/. Ledger lines: P252c.n. Design note: design/v3/30-modes/252c-merge-opus.md.
+- Never edit an existing file.
+
+Phase 1: the overlap analysis. List every turn shape both pieces act on, which one acts first, and the combined result. The two builders' dev sets are dev258.jsonl and dev259.jsonl, and dev252b is 252b's.
+- Rule: combined, a denial or correction either removes or changes exactly the stored fact it disputes, or leaves the store unchanged with an honest reply.
+- It never:
+  - stores a tail as a value;
+  - says "I don't have V" while (S, R, V) is stored;
+  - removes a fact the turn didn't dispute.
+
+Registered marks. PASS only if all pass.
+- M1, corrtail258. It is now a known set: both builders read their failing rows, so it is a regression check, not a blind test. Run it once on 252c after your seal, scored with the corrtail258 spec's rules (briefs/corrtail258-spec.txt). Compare with 258's and 259's registered rows (artifacts/claude-comment258-20260922/run/corrtail258-258.jsonl and artifacts/claude-boundary259-20260922/run/panel258-259.jsonl).
+  - Every item right on 258 or on 259 is right on 252c.
+  - 0 false claims over all 80.
+  - 0 junk writes over all 80.
+  - No item has a wrong value on 252c where 258 or 259 had none.
+  - keep 8/8 and control 16/16 right and byte-identical to base252b.jsonl.
+  - question_tail 6/6 and unstored_tail 6/6.
+- M2, dev252b (scripts/claude_corr252b_score.py dev, against 252b's rows made in the same session):
+  - 0 junk writes;
+  - 0 false replies (a reply containing "don't have"/"do not have" plus a value V where (S, R, V) is stored after the turn);
+  - 0 wrong removals and 0 question writes;
+  - controls identical except ms_per_turn;
+  - moved ids exactly your predicted list, each with its exact predicted record. Expected: the union of 258's 29 and 259's 6, with the overlap explained.
+- M3, dev258 and dev259 (both builders' own dev sets). On every item, 252c's record equals the own arm of the piece that acts on it, except items you predict by id, with the reason, from the overlap analysis. 0 false replies, 0 junk.
+- M4, corrpanel252 (TEST-ONLY: run once after your seal, never read its items). Rows vs 252b's registered rows (artifacts/claude-correct252b-20260922/run/panel-252b.jsonl):
+  - moves exactly as predicted by a sealed mechanical rule, in the style of 259's (259's "anymore" drop included), with c252-022 predicted as a correct removal of Tobin;
+  - 0 new wrong values, 0 new junk, 0 false replies.
+- M5, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench, as 258 and 259 ran it. The move list equals 252b's; 0 new WRONG, WRONG-WRITE, junk or lost OK.
+- M6, sleep smoke: identical to 252b's except labels, paths and timing.
+- M7, restart dialogs (the files 252b used for its M6): 0 ghosts, 0 failed duplicate checks, and replies identical to 252b's except predicted moves.
+- M8, latency: median added time per turn ≤ +5 ms against 252b, measured in the same session.
+
+Order: overlap analysis → build → pilots (M2, M3, M5–M8) → PASSMARKS with every predicted move → seal → ledger → registered runs once each (M2, M3, M5–M8, then M4, then M1) → RESULTS.md.
+
+Limits
+- Check `uptime` and `df -g /` first. Stop if free disk is under 3 GB (it is about 5 GB).
+- At most 4 parallel processes. Keep each registered run under 25 minutes.
+
+Final message as OPUS-RULES requires: verdict, marks table with integer counts (252b, 258, 259 and 252c side by side for M1), every move, every miss, deviations, and what it means and doesn't mean.

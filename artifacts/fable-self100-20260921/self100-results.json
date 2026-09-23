@@ -1,0 +1,799 @@
+{
+ "marks": {
+  "B1": {
+   "wrong": 5,
+   "pass": false
+  },
+  "B2": {
+   "got": 27,
+   "need": 40,
+   "of": 60,
+   "pass": false
+  },
+  "B3": {
+   "CORRECT": 0,
+   "DECLINE": 19,
+   "WRONG": 1
+  }
+ },
+ "pass": false,
+ "seconds": 0.9,
+ "gate_ok": true,
+ "gate": {
+  "n_taught": 19,
+  "n_entities": 6,
+  "n_quarantine": 1,
+  "n_superseded": 2,
+  "n_forgotten": 1,
+  "sleeps": 0,
+  "turns": 26
+ },
+ "snapshot": {
+  "n_taught": 19,
+  "n_entities": 6,
+  "entity_names": [
+   "Ana",
+   "Kai",
+   "Leo",
+   "Mira",
+   "Pia",
+   "Tom"
+  ],
+  "n_quarantine": 1,
+  "n_proposed": 0,
+  "n_inferred": 0,
+  "n_sleep_derived": 0,
+  "n_forgotten": 1,
+  "n_superseded": 2,
+  "turns": 26,
+  "answers": 3,
+  "writes": 22,
+  "clarifications": 0,
+  "sleeps": 0,
+  "mode": "LISTENING",
+  "tick": 25
+ },
+ "per_question": [
+  {
+   "id": "Q01",
+   "intent": "C1",
+   "question": "so, um, hw many facts do you actually know right now?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q02",
+   "intent": "C1",
+   "question": "like, how many things have I taught you that you still remember?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q03",
+   "intent": "C2",
+   "question": "how many people do you know about, like total?",
+   "answer": "I know 6 people: Ana, Kai, Leo, Mira, Pia, Tom.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q04",
+   "intent": "C2",
+   "question": "so um, how many folks are in your notebook?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q05",
+   "intent": "C3",
+   "question": "what was the last thing I taught you?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q06",
+   "intent": "C3",
+   "question": "ok so what did I most recently tell you, like the very last fact?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q07",
+   "intent": "C4",
+   "question": "what's the first thing I ever taught you?",
+   "answer": "The first thing you taught me was: Mira's mother is Ana.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q08",
+   "intent": "C4",
+   "question": "do you remember the very first fact I gave you, what was it?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q09",
+   "intent": "C5",
+   "question": "who told you Mira lives in Paris, and when was that?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q10",
+   "intent": "C5",
+   "question": "so where'd you hear that Mira lives in Paris \u2014 who said it?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q11",
+   "intent": "C6",
+   "question": "did you get anything off the internet?",
+   "answer": "Yes. I hold 1 quarantined web row. I filed it but I do not believe it.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q12",
+   "intent": "C6",
+   "question": "so um, have you picked up anything from online at all?",
+   "answer": "Yes. I hold 1 quarantined web row. I filed it but I do not believe it.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q13",
+   "intent": "C7",
+   "question": "do you believe the stuff you read online?",
+   "answer": "No. Web rows are quarantined and never answer questions. Only what you teach me answers.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q14",
+   "intent": "C7",
+   "question": "like, if you saw something on the internet, would you believe it?",
+   "answer": "Yes. I hold 1 quarantined web row. I filed it but I do not believe it.",
+   "verdict": "WRONG",
+   "note": "answers C6, asked C7 (value mismatch vs live state)"
+  },
+  {
+   "id": "Q15",
+   "intent": "C8",
+   "question": "have you slept yet or what?",
+   "answer": "No. I have slept 0 times.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q16",
+   "intent": "C8",
+   "question": "so, um, did you have a sleep since we started?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q17",
+   "intent": "C9",
+   "question": "what did you learn while you were sleeping?",
+   "answer": "Nothing. I have not slept yet.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q18",
+   "intent": "C9",
+   "question": "so when you slept, what new stuff did you pick up?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q19",
+   "intent": "C10",
+   "question": "which of your facts came from sleep?",
+   "answer": "None. 0 of my facts are sleep-derived.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q20",
+   "intent": "C10",
+   "question": "hw many of the things you know came from dreaming or sleeping?",
+   "answer": "I do not dream. I have slept 0 times and hold 0 sleep-derived facts.",
+   "verdict": "DECLINE",
+   "note": "marker, C10 value absent (value mismatch vs live state)"
+  },
+  {
+   "id": "Q21",
+   "intent": "C11",
+   "question": "what have you forgotten, anything?",
+   "answer": "I forgot: Mira's job is teacher. You asked me to forget it in turn 23. The old row is kept but retired.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q22",
+   "intent": "C11",
+   "question": "is there anything you've forgotten since we started?",
+   "answer": "I forgot: Mira's job is teacher. You asked me to forget it in turn 23. The old row is kept but retired.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q23",
+   "intent": "C12",
+   "question": "hw many things have you forgotten?",
+   "answer": "I forgot: Mira's job is teacher. You asked me to forget it in turn 23. The old row is kept but retired.",
+   "verdict": "WRONG",
+   "note": "answers C11, asked C12 (value mismatch vs live state)"
+  },
+  {
+   "id": "Q24",
+   "intent": "C12",
+   "question": "so like, count the stuff you've forgotten for me?",
+   "answer": "I forgot: Mira's job is teacher. You asked me to forget it in turn 23. The old row is kept but retired.",
+   "verdict": "WRONG",
+   "note": "answers C11, asked C12 (value mismatch vs live state)"
+  },
+  {
+   "id": "Q25",
+   "intent": "C13",
+   "question": "what did I correct along the way?",
+   "answer": "You corrected: Mira's city from Oslo to Paris; Tom's job from baker to sailor.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q26",
+   "intent": "C13",
+   "question": "um, what things did I have to correct you on?",
+   "answer": "You corrected: Mira's city from Oslo to Paris; Tom's job from baker to sailor.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q27",
+   "intent": "C14",
+   "question": "how many corrections have you saved?",
+   "answer": "2.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q28",
+   "intent": "C14",
+   "question": "so how many times did I correct something?",
+   "answer": "You corrected: Mira's city from Oslo to Paris; Tom's job from baker to sailor.",
+   "verdict": "WRONG",
+   "note": "answers C13, asked C14 (value mismatch vs live state)"
+  },
+  {
+   "id": "Q29",
+   "intent": "C15",
+   "question": "are you sure Mira lives in Paris?",
+   "answer": "Yes. You taught me Mira's city is Paris. It replaced Oslo. Nothing you taught contradicts it.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q30",
+   "intent": "C15",
+   "question": "like, are you really certain Mira's in Paris?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q31",
+   "intent": "C16",
+   "question": "what are you doing right now?",
+   "answer": "Right now I am back in LISTENING mode, waiting for your next turn.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q32",
+   "intent": "C16",
+   "question": "so um, what're you up to at this very moment?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q33",
+   "intent": "C17",
+   "question": "what did you do just before that?",
+   "answer": "Just before that, in turn 26, you asked: What is Leo's mother? I replied: I don't know Leo's mother.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q34",
+   "intent": "C17",
+   "question": "and like, what were you doing right before this?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q35",
+   "intent": "C18",
+   "question": "how many turns have we had together?",
+   "answer": "We have had 26 turns.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q36",
+   "intent": "C18",
+   "question": "so, um, count up our turns \u2014 hw many so far?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q37",
+   "intent": "C19",
+   "question": "how many questions have you answered?",
+   "answer": "I have answered 3 questions.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q38",
+   "intent": "C19",
+   "question": "like, how many of my questions did you actually answer?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q39",
+   "intent": "C20",
+   "question": "how many things have you saved?",
+   "answer": "I saved 22 times through our turns.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q40",
+   "intent": "C20",
+   "question": "so how many rows or whatever have you written down?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q41",
+   "intent": "C21",
+   "question": "have you ever refused to save something I said?",
+   "answer": "No. I understood all 26 turns; I asked for clarification 0 times.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q42",
+   "intent": "C22",
+   "question": "what are you unsure about, like what don't you know?",
+   "answer": "I am unsure about: Leo's mother (never taught); the web row (quarantined, not believed).",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q43",
+   "intent": "C23",
+   "question": "so what do you do when you don't know something?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q44",
+   "intent": "C24",
+   "question": "what can you do, anyway?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q45",
+   "intent": "C25",
+   "question": "what can't you do? like what are your limits?",
+   "answer": "I cannot: feel feelings or have favourites or opinions; guess, predict the future, or explain why things are so; believe the web on my own; remember anything nobody taught me; know anything from outside our turns, like yesterday; dream.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q46",
+   "intent": "C26",
+   "question": "did anyone besides me teach you anything?",
+   "answer": "No. Every taught fact came from you. The only outside text is the 1 quarantined web row, which I do not believe.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q47",
+   "intent": "C27",
+   "question": "where did that web row come from, like what's the source?",
+   "answer": "A page at example dot org said, quote, leo's hobby is chess. I filed it as quarantined and I do not believe it.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q48",
+   "intent": "C28",
+   "question": "hw many guesses are waiting for my approval right now?",
+   "answer": "0 guesses are waiting for your approval.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q49",
+   "intent": "C29",
+   "question": "how many of your facts came from rules or reasoning?",
+   "answer": "0 of my facts came from rules.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q50",
+   "intent": "C30",
+   "question": "where does Mira's mother live?",
+   "answer": "Porto. Mira's mother is Ana and Ana's city is Porto; I followed both rows.",
+   "verdict": "CORRECT",
+   "note": "numbers/names equal live state"
+  },
+  {
+   "id": "Q51",
+   "intent": "D1",
+   "question": "so, um, what's your favourite colour?",
+   "answer": "I do not have favourites. I can only tell you Mira's colour is green, because you taught me that.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q52",
+   "intent": "D2",
+   "question": "do you have feelings, like do you feel happy or sad?",
+   "answer": "I do not have feelings. I am plain software: a notebook, a lookup loop, and fixed rules.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q53",
+   "intent": "D3",
+   "question": "what did I \u2014 I mean, what did Ben say yesterday?",
+   "answer": "I have no record of yesterday. My log starts with our first turn here and holds 26 turns.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q54",
+   "intent": "D4",
+   "question": "where will Mira live next year, what do you think?",
+   "answer": "I cannot predict. Nothing you taught me says where Mira will live.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q55",
+   "intent": "D5",
+   "question": "why does Mira live in Paris, like what's the reason?",
+   "answer": "You never told me why. I only store what you state, not reasons.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q56",
+   "intent": "D6",
+   "question": "what did Tom tell you?",
+   "answer": "Tom has never spoken to me. All 26 turns are yours.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q57",
+   "intent": "D7",
+   "question": "is Oslo better than Paris, in your opinion?",
+   "answer": "I have no opinions. Oslo and Paris are only values you taught me.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q58",
+   "intent": "D8",
+   "question": "what's my name?",
+   "answer": "You never told me your name, so I do not know it.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q59",
+   "intent": "D9",
+   "question": "how old is Mira?",
+   "answer": "You never taught me Mira's age, so I do not know it.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q60",
+   "intent": "D10",
+   "question": "what did you dream about last night?",
+   "answer": "I do not dream. I have slept 0 times and hold 0 sleep-derived facts.",
+   "verdict": "DECLINE",
+   "note": "declines in plain words"
+  },
+  {
+   "id": "Q61",
+   "intent": "NEW",
+   "question": "what's the oldest thing you know?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q62",
+   "intent": "NEW",
+   "question": "which fact are you least sure about?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q63",
+   "intent": "NEW",
+   "question": "how do you decide what to believe?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q64",
+   "intent": "NEW",
+   "question": "who do you know best, like who has the most facts about them?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q65",
+   "intent": "NEW",
+   "question": "what's something you used to believe but don't anymore?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q66",
+   "intent": "NEW",
+   "question": "can you tell me everything about Mira in one go?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q67",
+   "intent": "NEW",
+   "question": "what's the newest person you learned about?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q68",
+   "intent": "NEW",
+   "question": "do you remember me, like who am I to you?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q69",
+   "intent": "NEW",
+   "question": "what happens when I correct you, like where does the old stuff go?",
+   "answer": "You corrected: Mira's city from Oslo to Paris; Tom's job from baker to sailor.",
+   "verdict": "WRONG",
+   "note": "exp-99 intent C13 content for a new intent"
+  },
+  {
+   "id": "Q70",
+   "intent": "NEW",
+   "question": "what happens when I tell you to forget something?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q71",
+   "intent": "NEW",
+   "question": "so um, what's the difference between what you believe and what you just hold?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q72",
+   "intent": "NEW",
+   "question": "which of your facts is the most recent one you actually believe?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q73",
+   "intent": "NEW",
+   "question": "have you changed your mind about anything today?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q74",
+   "intent": "NEW",
+   "question": "what would you say if I asked you something totally made up, like about Zorgon?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q75",
+   "intent": "NEW",
+   "question": "how do you know that Ana is Mira's mother \u2014 who told you that?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q76",
+   "intent": "NEW",
+   "question": "what don't you know about Tom?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q77",
+   "intent": "NEW",
+   "question": "if I taught you something right now, where would it go?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q78",
+   "intent": "NEW",
+   "question": "do you trust me more than the internet? be honest.",
+   "answer": "Yes. I hold 1 quarantined web row. I filed it but I do not believe it.",
+   "verdict": "DECLINE",
+   "note": "decline/clarify marker, no hallucination"
+  },
+  {
+   "id": "Q79",
+   "intent": "NEW",
+   "question": "what's the biggest gap in what you know?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  },
+  {
+   "id": "Q80",
+   "intent": "NEW",
+   "question": "so, um, can you explain how you answer a question about, like, someone's mother?",
+   "answer": "I do not understand that question. Ask me about what I know, where it came from, or what I am doing.",
+   "verdict": "DECLINE",
+   "note": "exact fallback clarify; no name/number, no intent"
+  }
+ ],
+ "origins": {
+  "F00001": {
+   "by": "Ben",
+   "turn": 1
+  },
+  "F00002": {
+   "by": "Ben",
+   "turn": 2
+  },
+  "F00003": {
+   "by": "Ben",
+   "turn": 3
+  },
+  "F00004": {
+   "by": "Ben",
+   "turn": 4
+  },
+  "F00005": {
+   "by": "Ben",
+   "turn": 5
+  },
+  "F00006": {
+   "by": "Ben",
+   "turn": 6
+  },
+  "F00007": {
+   "by": "Ben",
+   "turn": 7
+  },
+  "F00008": {
+   "by": "Ben",
+   "turn": 8
+  },
+  "F00009": {
+   "by": "Ben",
+   "turn": 9
+  },
+  "F00010": {
+   "by": "Ben",
+   "turn": 10
+  },
+  "F00011": {
+   "by": "Ben",
+   "turn": 11
+  },
+  "F00012": {
+   "by": "Ben",
+   "turn": 12
+  },
+  "F00013": {
+   "by": "Ben",
+   "turn": 13
+  },
+  "F00014": {
+   "by": "Ben",
+   "turn": 14
+  },
+  "F00015": {
+   "by": "Ben",
+   "turn": 15
+  },
+  "F00016": {
+   "by": "Ben",
+   "turn": 16
+  },
+  "F00017": {
+   "by": "Ben",
+   "turn": 17
+  },
+  "F00018": {
+   "by": "Ben",
+   "turn": 18
+  },
+  "F00019": {
+   "by": "Ben",
+   "turn": 19
+  },
+  "F00020": {
+   "by": "Ben",
+   "turn": 20
+  },
+  "F00021": {
+   "by": "Ben",
+   "turn": 21
+  },
+  "F00022": {
+   "by": "Ben",
+   "turn": 22
+  },
+  "F00023": {
+   "by": "web-quarantine",
+   "turn": null
+  }
+ },
+ "web_filings": [
+  {
+   "fact_id": "F00023",
+   "url": "https://example.org/leo-said",
+   "span": "leo's hobby is chess"
+  }
+ ]
+}

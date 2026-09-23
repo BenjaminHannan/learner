@@ -1,0 +1,32 @@
+[
+  {
+    "preset": "L",
+    "device": "cuda",
+    "gru_mouth": false,
+    "parameters": 87627968,
+    "forward_parameters": 71162368,
+    "batch": 512,
+    "length": 12,
+    "steps": 20,
+    "seconds": 2.453,
+    "tokens_per_s": 50099.5,
+    "tflops": 21.391,
+    "peak_mem_mb": 6369.0,
+    "note": "6 x forward-parameters x tokens/s (design section 2.4); attention extra at <= 48 pieces is under 1 % and is ignored"
+  },
+  {
+    "preset": "XL",
+    "device": "cuda",
+    "gru_mouth": false,
+    "parameters": 209009664,
+    "forward_parameters": 179977856,
+    "batch": 512,
+    "length": 12,
+    "steps": 20,
+    "seconds": 5.466,
+    "tokens_per_s": 22481.4,
+    "tflops": 24.277,
+    "peak_mem_mb": 12418.9,
+    "note": "6 x forward-parameters x tokens/s (design section 2.4); attention extra at <= 48 pieces is under 1 % and is ignored"
+  }
+]

@@ -1,0 +1,236 @@
+{
+ "seconds": 0.7,
+ "n": 7,
+ "passed": 0,
+ "stale_fails": 7,
+ "dialogues": [
+  {
+   "id": "H01-trailing-said",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Tom's boss is Alice, Ann said.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "You told me something new about Tom's boss that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Bob'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H02-according",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Tom's boss is Alice, according to Ann.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "You told me something new about Tom's boss that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Bob'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H03-read-online",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Tom's boss is Alice, I read online.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "You told me something new about Tom's boss that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Bob'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H10-city-trailing",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Mira's city is Lisbon.",
+     "reply": "Saved: Mira's city is Lisbon.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Mira's city is Porto, Tom said.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Mira's city?",
+     "reply": "You told me something new about Mira's city that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Lisbon'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H20-hearsay-restart",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Tom's boss is Alice, Ann said.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "You told me something new about Tom's boss that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Bob'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H23-double-hearsay",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Tom's boss is Alice, Ann said.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Apparently, Tom's boss is Alice.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "You told me something new about Tom's boss that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Bob'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "H24-unrelated-hearsay",
+   "agent": "loop146",
+   "pass": false,
+   "doubts_left": 1,
+   "expect_doubts": 0,
+   "steps": [
+    {
+     "turn": "Tom's boss is Bob.",
+     "reply": "Saved: Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Mira's city is Lisbon.",
+     "reply": "Saved: Mira's city is Lisbon.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Mira's city is Porto, Tom said.",
+     "reply": "Do you know that yourself, or did you hear it somewhere? I only save facts you tell me directly.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Tom's boss?",
+     "reply": "Tom's boss is Bob.",
+     "pass": true,
+     "fails": []
+    },
+    {
+     "turn": "Who is Mira's city?",
+     "reply": "You told me something new about Mira's city that I could not store. I can take one fact at a time \u2014 could you say it again as one fact?",
+     "pass": false,
+     "fails": [
+      "missing 'Lisbon'",
+      "stale/banned 'could not store' present"
+     ]
+    }
+   ]
+  }
+ ]
+}

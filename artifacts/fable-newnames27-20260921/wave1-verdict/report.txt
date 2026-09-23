@@ -1,0 +1,55 @@
+# 27 / M1-F "new names", name scale frozen at 1.2 -- reserved-code panels
+
+source fingerprint  6bb75f53575a0b776072fce5a28083d4408bf430d2892f490ca0d190b0e8878e
+verdict             PARTIAL  (2/3 F seeds; reported as partial, no claim)
+frozen code_scale   1.2  (arm F: a constant buffer; arm L: the start value of a learned scalar)
+control seeds met the ten cutoffs   3/3
+arm F seeds passed                  2/3
+arm L seeds passed (DESCRIPTIVE)    0/3
+run integrity       6 runs, 1 source version(s), all full registered runs
+
+## R (fixed loop) per cell; the F and L columns are the RESERVED-code scoring
+cell    cutoff  cont-2103  cont-2104  cont-2105  F-2103  F-2104  F-2105  L-2103  L-2104  L-2105
+c1          487     512     512     512     512     512     512       -       -       -
+c2          487     512     512     512     498     502     503       -       -       -
+c3          461     512     512     512     500     504     505       -       -       -
+c4          461     512     512     512     487     494     496       -       -       -
+c5          461     512     512     512     495     500     503       -       -       -
+c6          461     512     512     512     503     505     503       -       -       -
+p12-1       487     512     511     511     507     511     510       -       -       -
+p12-2       487     512     512     512     479     490     498       -       -       -
+p12-3       461     512     512     512     469     493     501       -       -       -
+s3          461     512     512     512     491     504     501       -       -       -
+
+## paired reserved minus training-pool (mark: >= -13/512; warning if |d| > 13)
+cell    F-2103  F-2104  F-2105  L-2103  L-2104  L-2105
+c1           +1      +1      +0       -       -       -
+c2           -7      -3      -2       -       -       -
+c3           -3      -5      +1       -       -       -
+c4           -3      -9      +1       -       -       -
+c5           -8      -7      -3       -       -       -
+c6           +5      -2      -3       -       -       -
+p12-1        -3      +1      -1       -       -       -
+p12-2       -15      -4      +0       -       -       -
+p12-3       -19      -9      +4       -       -       -
+s3           +0      +1      +0       -       -       -
+paired warnings: {"F-2103": ["p12-2", "p12-3"]}
+
+## pre-named failure signatures (descriptive; they never move a verdict)
+F-2103: reserved_gap
+    first-stage LINK accuracy  c2=0.973  c3=0.977  c4=0.979  c5=0.965  c6=0.979  p12-2=0.938  p12-3=0.918  s3=0.977
+F-2104: none
+    first-stage LINK accuracy  c2=0.980  c3=0.984  c4=0.979  c5=0.980  c6=0.988  p12-2=0.967  p12-3=0.969  s3=0.992
+F-2105: none
+    first-stage LINK accuracy  c2=0.982  c3=0.984  c4=0.986  c5=0.982  c6=0.986  p12-2=0.969  p12-3=0.980  s3=0.982
+control-2103: none
+    first-stage LINK accuracy  c2=1.000  c3=1.000  c4=1.000  c5=1.000  c6=1.000  p12-2=1.000  p12-3=1.000  s3=1.000
+control-2104: none
+    first-stage LINK accuracy  c2=1.000  c3=1.000  c4=1.000  c5=1.000  c6=1.000  p12-2=1.000  p12-3=1.000  s3=1.000
+control-2105: none
+    first-stage LINK accuracy  c2=1.000  c3=1.000  c4=1.000  c5=1.000  c6=1.000  p12-2=1.000  p12-3=1.000  s3=1.000
+
+## training trace (every 100 updates; arms F and L)
+F-2103  final code_scale 1.2000  min |scale| from 500 1.2  bias 1.171  |answer| 11.84  effective scale 14.21
+F-2104  final code_scale 1.2000  min |scale| from 500 1.2  bias 1.093  |answer| 11.88  effective scale 14.25
+F-2105  final code_scale 1.2000  min |scale| from 500 1.2  bias 1.022  |answer| 11.94  effective scale 14.33

@@ -1,0 +1,91 @@
+{
+ "confirmation_clean": {
+  "confirmation_worlds": 64,
+  "training_worlds": 1600,
+  "dev_worlds": 2240,
+  "overlap_with_training": 0,
+  "overlap_with_development": 0,
+  "union_applied": {
+   "questions": 15749,
+   "worlds": 3840
+  },
+  "sources": [
+   {
+    "manifest": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/awakeB/index.json",
+    "name": "stream_9991",
+    "questions": 6400,
+    "questions_sha256": "a0152a2a9b3d0dafec87886409786aa2daed3fd3d4fe86eea5855345de43ace6",
+    "verified": true,
+    "worlds": 1600,
+    "worlds_sha256": "9e2a7a9773b6d833375a61d0599caa8397b563c1a4d131895a69afb2ff4b3578"
+   },
+   {
+    "manifest": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/memB/manifest.json",
+    "name": "memory_9991",
+    "questions": 4096,
+    "questions_sha256": "66b5accc4a008198a7f4fba1ee531cf925597063631a494835a42f0f091c0bd1",
+    "verified": true,
+    "worlds": 1024,
+    "worlds_sha256": "de3a5cae32b893cff6f967b8c860b7392a373fc68a21974dc3bbed9ec55092a9"
+   },
+   {
+    "manifest": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/bufB/manifest.json",
+    "name": "buffers_9991",
+    "questions": 11205,
+    "questions_sha256": "edf4acb67c617d1109ce47fff60dca9ba35128ebdaac391e9f09fc67baaaccdd",
+    "verified": true,
+    "worlds": 1024,
+    "worlds_sha256": "de3a5cae32b893cff6f967b8c860b7392a373fc68a21974dc3bbed9ec55092a9"
+   },
+   {
+    "manifest": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-novelty19-replay-20260920/audit/scratch3/dev/manifest.json",
+    "name": "dev_panels",
+    "questions": 2240,
+    "questions_sha256": "64a082da2d2a1b28b3cc291bc0af2439c9cd0904814de8a21fb5aeac5e07992e",
+    "verified": true,
+    "worlds": 2240,
+    "worlds_sha256": "e7709aed7a147e44570b1004e1c2293abe8b7750316243fc347f6fb555b40917"
+   }
+  ],
+  "every_source_carries_a_verified_sha": true,
+  "consumed_exclusions_present": true,
+  "operator_history": "0730f99e6e627fa00db03cef5919b814599dfacb3a299a8ded440d28f0dc900a",
+  "dev_passed": "dd31133354c7c12f243b00827cbfbd47c16fdef372d014e920a8fa77cce1793e"
+ },
+ "confirmation_attacks": {
+  "cases": {
+   "awakeB/forbidden-worlds.json": {
+    "truncated": "SystemExit: 9-replay-20260920/audit/scratch3/awakeB/index.json records 1600; refusing a truncated or padded exclusion file",
+    "same-count-tampered": "SystemExit: n records 9e2a7a9773b6d833375a61d0599caa8397b563c1a4d131895a69afb2ff4b3578; refusing a tampered exclusion file",
+    "duplicate-padded": "SystemExit: ke-9991/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "unsorted": "SystemExit: ke-9991/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "emptied": "SystemExit: able-novelty19-replay-20260920/audit/scratch3/exp9991/awake-9991/forbidden-worlds.json is not a non-empty list"
+   },
+   "bufB/forbidden-worlds.json": {
+    "truncated": "SystemExit: -replay-20260920/audit/scratch3/bufB/manifest.json records 1024; refusing a truncated or padded exclusion file",
+    "same-count-tampered": "SystemExit: n records de3a5cae32b893cff6f967b8c860b7392a373fc68a21974dc3bbed9ec55092a9; refusing a tampered exclusion file",
+    "duplicate-padded": "SystemExit: rs-9991/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "unsorted": "SystemExit: rs-9991/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "emptied": "SystemExit: le-novelty19-replay-20260920/audit/scratch3/exp9991/buffers-9991/forbidden-worlds.json is not a non-empty list"
+   },
+   "ophist/forbidden-worlds.json": {
+    "truncated": "SystemExit: play-20260920/audit/scratch3/ophist/manifest.json records 96000; refusing a truncated or padded exclusion file",
+    "same-count-tampered": "SystemExit: n records 361936c57589cee4f1e5b5c1074d954f03020426056fc6103597422fc176e78a; refusing a tampered exclusion file",
+    "duplicate-padded": "SystemExit: history/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "unsorted": "SystemExit: history/forbidden-worlds.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "emptied": "SystemExit: ovelty19-replay-20260920/audit/scratch3/exp9991/operator-history/forbidden-worlds.json is not a non-empty list"
+   },
+   "dev/forbidden-semantics.json": {
+    "truncated": "SystemExit: 9-replay-20260920/audit/scratch3/dev/manifest.json records 2240; refusing a truncated or padded exclusion file",
+    "same-count-tampered": "SystemExit: n records 64a082da2d2a1b28b3cc291bc0af2439c9cd0904814de8a21fb5aeac5e07992e; refusing a tampered exclusion file",
+    "duplicate-padded": "SystemExit: nels/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "unsorted": "SystemExit: nels/forbidden-semantics.json is not a sorted list of distinct signatures; refusing a rewritten exclusion file",
+    "emptied": "SystemExit: e-novelty19-replay-20260920/audit/scratch3/exp9991/dev-panels/forbidden-semantics.json is not a non-empty list"
+   }
+  },
+  "total": 20,
+  "all_refused": true,
+  "accepted": [],
+  "control_after_restore": "builds"
+ }
+}

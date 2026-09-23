@@ -1,0 +1,2380 @@
+{
+ "records": 20,
+ "unfaithful": 16,
+ "buckets": {
+  "boundary-only": 7,
+  "truncation-only": 0,
+  "both": 9,
+  "other": 0
+ },
+ "junk_prefixes": {
+  "ing": 6,
+  ":": 7,
+  "ingrmate": 1,
+  "s": 2
+ },
+ "prompt_mismatch": 0,
+ "mask_report": {
+  "prefix_len": 25,
+  "seq_len": 49,
+  "first_target_index": 25,
+  "first_target_covered": false,
+  "masked_positions": [
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33
+  ],
+  "n_masked": 23,
+  "n_target_tokens": 24
+ },
+ "pieces": {
+  "Farah": [
+   {
+    "ctx": " Farah",
+    "toks": [
+     "\u0120F",
+     "ar",
+     "a",
+     "h"
+    ]
+   },
+   {
+    "ctx": " Farah's",
+    "toks": [
+     "\u0120F",
+     "ar",
+     "a",
+     "h",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Farah",
+    "toks": [
+     "F",
+     "ar",
+     "a",
+     "h"
+    ]
+   }
+  ],
+  "Ashford": [
+   {
+    "ctx": " Ashford",
+    "toks": [
+     "\u0120As",
+     "h",
+     "for",
+     "d"
+    ]
+   },
+   {
+    "ctx": " Ashford's",
+    "toks": [
+     "\u0120As",
+     "h",
+     "for",
+     "d",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Ashford",
+    "toks": [
+     "As",
+     "h",
+     "for",
+     "d"
+    ]
+   }
+  ],
+  "Gideon": [
+   {
+    "ctx": " Gideon",
+    "toks": [
+     "\u0120G",
+     "ide",
+     "on"
+    ]
+   },
+   {
+    "ctx": " Gideon's",
+    "toks": [
+     "\u0120G",
+     "ide",
+     "on",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Gideon",
+    "toks": [
+     "G",
+     "ide",
+     "on"
+    ]
+   }
+  ],
+  "Amos": [
+   {
+    "ctx": " Amos",
+    "toks": [
+     "\u0120Am",
+     "os"
+    ]
+   },
+   {
+    "ctx": " Amos's",
+    "toks": [
+     "\u0120Am",
+     "os",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Amos",
+    "toks": [
+     "Am",
+     "os"
+    ]
+   }
+  ],
+  "Mabel": [
+   {
+    "ctx": " Mabel",
+    "toks": [
+     "\u0120M",
+     "a",
+     "b",
+     "el"
+    ]
+   },
+   {
+    "ctx": " Mabel's",
+    "toks": [
+     "\u0120M",
+     "a",
+     "b",
+     "el",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Mabel",
+    "toks": [
+     "M",
+     "a",
+     "b",
+     "el"
+    ]
+   }
+  ],
+  "Ximena": [
+   {
+    "ctx": " Ximena",
+    "toks": [
+     "\u0120",
+     "X",
+     "im",
+     "ena"
+    ]
+   },
+   {
+    "ctx": " Ximena's",
+    "toks": [
+     "\u0120",
+     "X",
+     "im",
+     "ena",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Ximena",
+    "toks": [
+     "X",
+     "im",
+     "ena"
+    ]
+   }
+  ],
+  "cousin": [
+   {
+    "ctx": " cousin",
+    "toks": [
+     "\u0120c",
+     "ous",
+     "in"
+    ]
+   },
+   {
+    "ctx": " cousin's",
+    "toks": [
+     "\u0120c",
+     "ous",
+     "in",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "cousin",
+    "toks": [
+     "c",
+     "ous",
+     "in"
+    ]
+   }
+  ],
+  "Umar": [
+   {
+    "ctx": " Umar",
+    "toks": [
+     "\u0120U",
+     "m",
+     "ar"
+    ]
+   },
+   {
+    "ctx": " Umar's",
+    "toks": [
+     "\u0120U",
+     "m",
+     "ar",
+     "'s"
+    ]
+   },
+   {
+    "ctx": "Umar",
+    "toks": [
+     "U",
+     "m",
+     "ar"
+    ]
+   }
+  ]
+ },
+ "other_examples": [],
+ "trunc_examples": [
+  {
+   "idx": 1,
+   "status": "UNKNOWN",
+   "raw": "ing, I don't know Fara's spouse.",
+   "reference": "I don't know Farah's spouse; nobody said.",
+   "missing": [
+    "Farah"
+   ]
+  },
+  {
+   "idx": 4,
+   "status": "OK",
+   "raw": ": Opal's employer's roommate's father is Ash.",
+   "reference": "Opal's employer's roommate's father is Ashford, no doubt.",
+   "missing": [
+    "Ashford"
+   ]
+  },
+  {
+   "idx": 5,
+   "status": "FORGOT",
+   "raw": "ing've forgotten Gide's nurse.",
+   "reference": "Still, I've forgotten Gideon's nurse.",
+   "missing": [
+    "Gideon"
+   ]
+  },
+  {
+   "idx": 6,
+   "status": "OK",
+   "raw": ": Amosos's teammate is Sten source.",
+   "reference": "Amos's teammate is Sten -- ask me again and I will say the same.",
+   "missing": [
+    "Amos"
+   ]
+  },
+  {
+   "idx": 7,
+   "status": "UNKNOWN",
+   "raw": "ing, I don't know Ma's hometown.",
+   "reference": "I don't know Mabel's hometown.",
+   "missing": [
+    "Mabel"
+   ]
+  },
+  {
+   "idx": 8,
+   "status": "SAVED",
+   "raw": ": Fara's school's father is Runa.",
+   "reference": "Saved it: Farah's school's father is Runa.",
+   "missing": [
+    "Farah"
+   ]
+  },
+  {
+   "idx": 13,
+   "status": "OK",
+   "raw": ": Ximenaenaenain's roommate's aunt is Ash.",
+   "reference": "Right: Ximena's cousin's roommate's aunt is Ashford.",
+   "missing": [
+    "Ximena",
+    "cousin",
+    "Ashford"
+   ]
+  },
+  {
+   "idx": 14,
+   "status": "OK",
+   "raw": ": Umarar's lawyer's hometown is Greenbank.",
+   "reference": "Umar's lawyer's hometown is Greenbank, ever since you told me.",
+   "missing": [
+    "Umar"
+   ]
+  },
+  {
+   "idx": 19,
+   "status": "SAVED",
+   "raw": ": Fara's hometown's mother is Runa.",
+   "reference": "I have saved that: Farah's hometown's mother is Runa.",
+   "missing": [
+    "Farah"
+   ]
+  }
+ ],
+ "attn_probes": [
+  {
+   "idx": 1,
+   "missing": [
+    "Farah"
+   ],
+   "prefix_tail": [
+    "\u0120sp",
+    "ouse",
+    "\u0120hop",
+    "\u0120",
+    "2",
+    "\u0120source",
+    "\u0120taught",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 1.0,
+     "emit": "ing",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.578
+      },
+      {
+       "tok": "\u0120taught",
+       "w": 0.069
+      },
+      {
+       "tok": "\u0120end",
+       "w": 0.069
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 1.0,
+     "emit": ",",
+     "top_attn": [
+      {
+       "tok": "h",
+       "w": 0.254
+      },
+      {
+       "tok": "a",
+       "w": 0.248
+      },
+      {
+       "tok": "\u0120father",
+       "w": 0.091
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 1.0,
+     "emit": " I",
+     "top_attn": [
+      {
+       "tok": "\u0120F",
+       "w": 0.815
+      },
+      {
+       "tok": "\u0120F",
+       "w": 0.098
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.047
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 1.0,
+     "emit": " don",
+     "top_attn": [
+      {
+       "tok": "h",
+       "w": 0.287
+      },
+      {
+       "tok": "h",
+       "w": 0.15
+      },
+      {
+       "tok": "\u0120name",
+       "w": 0.087
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 1.0,
+     "emit": "'t",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.295
+      },
+      {
+       "tok": "us",
+       "w": 0.214
+      },
+      {
+       "tok": "ord",
+       "w": 0.135
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 1.0,
+     "emit": " know",
+     "top_attn": [
+      {
+       "tok": "h",
+       "w": 0.405
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.33
+      },
+      {
+       "tok": "\u0120taught",
+       "w": 0.087
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.004,
+     "emit": " F",
+     "top_attn": [
+      {
+       "tok": "\u0120F",
+       "w": 0.889
+      },
+      {
+       "tok": "\u0120F",
+       "w": 0.111
+      },
+      {
+       "tok": "\u0120sp",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.0,
+     "emit": "ar",
+     "top_attn": [
+      {
+       "tok": "ar",
+       "w": 0.569
+      },
+      {
+       "tok": "ar",
+       "w": 0.431
+      },
+      {
+       "tok": "ouse",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 0.0,
+     "emit": "a",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.691
+      },
+      {
+       "tok": "a",
+       "w": 0.299
+      },
+      {
+       "tok": "h",
+       "w": 0.009
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120su",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120sp",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": " sp",
+     "top_attn": [
+      {
+       "tok": "\u0120sp",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120father",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120F",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.0,
+     "emit": "ouse",
+     "top_attn": [
+      {
+       "tok": "ouse",
+       "w": 0.983
+      },
+      {
+       "tok": "ouse",
+       "w": 0.017
+      },
+      {
+       "tok": "b",
+       "w": 0.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 4,
+   "missing": [
+    "Ashford"
+   ],
+   "prefix_tail": [
+    "for",
+    "d",
+    "\u0120source",
+    "\u0120in",
+    "f",
+    "er",
+    "red",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 0.997,
+     "emit": ":",
+     "top_attn": [
+      {
+       "tok": "\u0120O",
+       "w": 0.721
+      },
+      {
+       "tok": "h",
+       "w": 0.19
+      },
+      {
+       "tok": "al",
+       "w": 0.042
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 0.0,
+     "emit": " O",
+     "top_attn": [
+      {
+       "tok": "\u0120O",
+       "w": 1.0
+      },
+      {
+       "tok": "al",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120As",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 0.0,
+     "emit": "p",
+     "top_attn": [
+      {
+       "tok": "p",
+       "w": 0.999
+      },
+      {
+       "tok": "K",
+       "w": 0.001
+      },
+      {
+       "tok": "\u0120O",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 0.0,
+     "emit": "al",
+     "top_attn": [
+      {
+       "tok": "al",
+       "w": 1.0
+      },
+      {
+       "tok": "for",
+       "w": 0.0
+      },
+      {
+       "tok": "h",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 0.973,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "al",
+       "w": 0.977
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.018
+      },
+      {
+       "tok": "er",
+       "w": 0.004
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.0,
+     "emit": " em",
+     "top_attn": [
+      {
+       "tok": "\u0120em",
+       "w": 1.0
+      },
+      {
+       "tok": "oy",
+       "w": 0.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.0,
+     "emit": "pl",
+     "top_attn": [
+      {
+       "tok": "pl",
+       "w": 1.0
+      },
+      {
+       "tok": "oy",
+       "w": 0.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.895,
+     "emit": "oy",
+     "top_attn": [
+      {
+       "tok": "oy",
+       "w": 1.0
+      },
+      {
+       "tok": "er",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 0.169,
+     "emit": "er",
+     "top_attn": [
+      {
+       "tok": "er",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.0
+      },
+      {
+       "tok": "oy",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120room",
+       "w": 1.0
+      },
+      {
+       "tok": "er",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": " room",
+     "top_attn": [
+      {
+       "tok": "\u0120room",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.0
+      },
+      {
+       "tok": " em",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.0,
+     "emit": "m",
+     "top_attn": [
+      {
+       "tok": "m",
+       "w": 0.997
+      },
+      {
+       "tok": "pl",
+       "w": 0.003
+      },
+      {
+       "tok": "pl",
+       "w": 0.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 5,
+   "missing": [
+    "Gideon"
+   ],
+   "prefix_tail": [
+    "\u0120",
+    "1",
+    "\u0120source",
+    "\u0120in",
+    "f",
+    "er",
+    "red",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 1.0,
+     "emit": "ing",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.294
+      },
+      {
+       "tok": "1",
+       "w": 0.183
+      },
+      {
+       "tok": "\u0120in",
+       "w": 0.073
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 1.0,
+     "emit": "'",
+     "top_attn": [
+      {
+       "tok": "\u0120su",
+       "w": 0.216
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.143
+      },
+      {
+       "tok": "ject",
+       "w": 0.128
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 1.0,
+     "emit": "ve",
+     "top_attn": [
+      {
+       "tok": "se",
+       "w": 0.668
+      },
+      {
+       "tok": "se",
+       "w": 0.197
+      },
+      {
+       "tok": "\u0120n",
+       "w": 0.039
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 1.0,
+     "emit": " forgotten",
+     "top_attn": [
+      {
+       "tok": "\u0120G",
+       "w": 0.536
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.332
+      },
+      {
+       "tok": "\u0120G",
+       "w": 0.033
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 0.001,
+     "emit": " G",
+     "top_attn": [
+      {
+       "tok": "\u0120G",
+       "w": 0.617
+      },
+      {
+       "tok": "\u0120G",
+       "w": 0.383
+      },
+      {
+       "tok": "\u0120n",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.0,
+     "emit": "ide",
+     "top_attn": [
+      {
+       "tok": "ide",
+       "w": 0.961
+      },
+      {
+       "tok": "ide",
+       "w": 0.031
+      },
+      {
+       "tok": "ur",
+       "w": 0.008
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.994,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.902
+      },
+      {
+       "tok": "on",
+       "w": 0.095
+      },
+      {
+       "tok": "on",
+       "w": 0.003
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.0,
+     "emit": " n",
+     "top_attn": [
+      {
+       "tok": "\u0120n",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120n",
+       "w": 0.0
+      },
+      {
+       "tok": " G",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 0.0,
+     "emit": "ur",
+     "top_attn": [
+      {
+       "tok": "ur",
+       "w": 0.992
+      },
+      {
+       "tok": "ur",
+       "w": 0.008
+      },
+      {
+       "tok": "b",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.0,
+     "emit": "se",
+     "top_attn": [
+      {
+       "tok": "se",
+       "w": 0.988
+      },
+      {
+       "tok": "se",
+       "w": 0.012
+      },
+      {
+       "tok": "\u0120source",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.954,
+     "emit": ".",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120su",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120hop",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.999,
+     "emit": "",
+     "top_attn": [
+      {
+       "tok": "\u0120G",
+       "w": 0.894
+      },
+      {
+       "tok": "\u0120G",
+       "w": 0.072
+      },
+      {
+       "tok": " G",
+       "w": 0.012
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 6,
+   "missing": [
+    "Amos"
+   ],
+   "prefix_tail": [
+    "\u0120S",
+    "ten",
+    "\u0120source",
+    "\u0120sleep",
+    "-",
+    "der",
+    "ived",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 0.996,
+     "emit": ":",
+     "top_attn": [
+      {
+       "tok": "m",
+       "w": 0.326
+      },
+      {
+       "tok": "os",
+       "w": 0.188
+      },
+      {
+       "tok": "\u0120Am",
+       "w": 0.134
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 0.001,
+     "emit": " Am",
+     "top_attn": [
+      {
+       "tok": "\u0120Am",
+       "w": 1.0
+      },
+      {
+       "tok": "os",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120S",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 0.0,
+     "emit": "os",
+     "top_attn": [
+      {
+       "tok": "os",
+       "w": 0.758
+      },
+      {
+       "tok": "\u0120Am",
+       "w": 0.241
+      },
+      {
+       "tok": " Am",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 0.04,
+     "emit": "os",
+     "top_attn": [
+      {
+       "tok": "os",
+       "w": 0.743
+      },
+      {
+       "tok": "\u0120team",
+       "w": 0.223
+      },
+      {
+       "tok": "m",
+       "w": 0.017
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 0.953,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120team",
+       "w": 0.581
+      },
+      {
+       "tok": "os",
+       "w": 0.309
+      },
+      {
+       "tok": "os",
+       "w": 0.062
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.0,
+     "emit": " team",
+     "top_attn": [
+      {
+       "tok": "\u0120team",
+       "w": 1.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120rel",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.0,
+     "emit": "m",
+     "top_attn": [
+      {
+       "tok": "m",
+       "w": 1.0
+      },
+      {
+       "tok": "os",
+       "w": 0.0
+      },
+      {
+       "tok": "ten",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.79,
+     "emit": "ate",
+     "top_attn": [
+      {
+       "tok": "ate",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120team",
+       "w": 0.0
+      },
+      {
+       "tok": "os",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 1.0,
+     "emit": " is",
+     "top_attn": [
+      {
+       "tok": "\u0120answer",
+       "w": 0.909
+      },
+      {
+       "tok": "\u0120S",
+       "w": 0.044
+      },
+      {
+       "tok": "ate",
+       "w": 0.016
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.0,
+     "emit": " S",
+     "top_attn": [
+      {
+       "tok": "\u0120S",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120sleep",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120answer",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": "ten",
+     "top_attn": [
+      {
+       "tok": "ten",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120S",
+       "w": 0.0
+      },
+      {
+       "tok": "-",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.0,
+     "emit": " source",
+     "top_attn": [
+      {
+       "tok": "\u0120source",
+       "w": 0.991
+      },
+      {
+       "tok": "-",
+       "w": 0.006
+      },
+      {
+       "tok": "m",
+       "w": 0.002
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 7,
+   "missing": [
+    "Mabel"
+   ],
+   "prefix_tail": [
+    "omet",
+    "own",
+    "\u0120hop",
+    "\u0120",
+    "3",
+    "\u0120source",
+    "\u0120taught",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 1.0,
+     "emit": "ing",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.494
+      },
+      {
+       "tok": "\u0120end",
+       "w": 0.11
+      },
+      {
+       "tok": "\u0120source",
+       "w": 0.067
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 1.0,
+     "emit": ",",
+     "top_attn": [
+      {
+       "tok": "\u0120h",
+       "w": 0.683
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.203
+      },
+      {
+       "tok": "\u0120M",
+       "w": 0.041
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 1.0,
+     "emit": " I",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.489
+      },
+      {
+       "tok": "\u0120M",
+       "w": 0.437
+      },
+      {
+       "tok": "\u0120M",
+       "w": 0.041
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 1.0,
+     "emit": " don",
+     "top_attn": [
+      {
+       "tok": "b",
+       "w": 0.434
+      },
+      {
+       "tok": "b",
+       "w": 0.171
+      },
+      {
+       "tok": ",",
+       "w": 0.075
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 1.0,
+     "emit": "'t",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.336
+      },
+      {
+       "tok": "us",
+       "w": 0.156
+      },
+      {
+       "tok": "ord",
+       "w": 0.107
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 1.0,
+     "emit": " know",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.358
+      },
+      {
+       "tok": "\u0120h",
+       "w": 0.267
+      },
+      {
+       "tok": "ess",
+       "w": 0.114
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.01,
+     "emit": " M",
+     "top_attn": [
+      {
+       "tok": "\u0120M",
+       "w": 0.757
+      },
+      {
+       "tok": "\u0120M",
+       "w": 0.243
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.0,
+     "emit": "a",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.725
+      },
+      {
+       "tok": "a",
+       "w": 0.275
+      },
+      {
+       "tok": "\u0120M",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 0.923,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "b",
+       "w": 0.564
+      },
+      {
+       "tok": "b",
+       "w": 0.436
+      },
+      {
+       "tok": "\u0120",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.0,
+     "emit": " h",
+     "top_attn": [
+      {
+       "tok": "\u0120h",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120em",
+       "w": 0.0
+      },
+      {
+       "tok": "own",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": "omet",
+     "top_attn": [
+      {
+       "tok": "omet",
+       "w": 0.993
+      },
+      {
+       "tok": "omet",
+       "w": 0.007
+      },
+      {
+       "tok": "own",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.997,
+     "emit": "own",
+     "top_attn": [
+      {
+       "tok": "own",
+       "w": 0.977
+      },
+      {
+       "tok": "own",
+       "w": 0.018
+      },
+      {
+       "tok": "or",
+       "w": 0.002
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 8,
+   "missing": [
+    "Farah"
+   ],
+   "prefix_tail": [
+    "un",
+    "a",
+    "\u0120source",
+    "\u0120in",
+    "f",
+    "er",
+    "red",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 1.0,
+     "emit": ":",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.641
+      },
+      {
+       "tok": "D",
+       "w": 0.085
+      },
+      {
+       "tok": "\u0120source",
+       "w": 0.063
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 0.002,
+     "emit": " F",
+     "top_attn": [
+      {
+       "tok": "\u0120F",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120R",
+       "w": 0.0
+      },
+      {
+       "tok": "a",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 0.001,
+     "emit": "ar",
+     "top_attn": [
+      {
+       "tok": "ar",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120S",
+       "w": 0.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 0.0,
+     "emit": "a",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 0.998
+      },
+      {
+       "tok": "h",
+       "w": 0.002
+      },
+      {
+       "tok": "\u0120school",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "h",
+       "w": 0.999
+      },
+      {
+       "tok": "\u0120father",
+       "w": 0.0
+      },
+      {
+       "tok": "a",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.001,
+     "emit": " school",
+     "top_attn": [
+      {
+       "tok": "\u0120school",
+       "w": 1.0
+      },
+      {
+       "tok": "'s",
+       "w": 0.0
+      },
+      {
+       "tok": "a",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120father",
+       "w": 0.997
+      },
+      {
+       "tok": "h",
+       "w": 0.003
+      },
+      {
+       "tok": "D",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.0,
+     "emit": " father",
+     "top_attn": [
+      {
+       "tok": "\u0120father",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120answer",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120in",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 1.0,
+     "emit": " is",
+     "top_attn": [
+      {
+       "tok": "\u0120answer",
+       "w": 0.899
+      },
+      {
+       "tok": "\u0120father",
+       "w": 0.087
+      },
+      {
+       "tok": " father",
+       "w": 0.009
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.0,
+     "emit": " R",
+     "top_attn": [
+      {
+       "tok": "\u0120R",
+       "w": 1.0
+      },
+      {
+       "tok": "a",
+       "w": 0.0
+      },
+      {
+       "tok": " F",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": "un",
+     "top_attn": [
+      {
+       "tok": "un",
+       "w": 0.999
+      },
+      {
+       "tok": "a",
+       "w": 0.001
+      },
+      {
+       "tok": "ar",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.006,
+     "emit": "a",
+     "top_attn": [
+      {
+       "tok": "a",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120source",
+       "w": 0.0
+      },
+      {
+       "tok": "a",
+       "w": 0.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 13,
+   "missing": [
+    "Ximena",
+    "cousin",
+    "Ashford"
+   ],
+   "prefix_tail": [
+    "for",
+    "d",
+    "\u0120source",
+    "\u0120in",
+    "f",
+    "er",
+    "red",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 0.997,
+     "emit": ":",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 0.715
+      },
+      {
+       "tok": "h",
+       "w": 0.201
+      },
+      {
+       "tok": "im",
+       "w": 0.013
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 0.0,
+     "emit": " ",
+     "top_attn": [
+      {
+       "tok": "\u0120",
+       "w": 1.0
+      },
+      {
+       "tok": "X",
+       "w": 0.0
+      },
+      {
+       "tok": "im",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 0.0,
+     "emit": "X",
+     "top_attn": [
+      {
+       "tok": "X",
+       "w": 1.0
+      },
+      {
+       "tok": "im",
+       "w": 0.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 0.0,
+     "emit": "im",
+     "top_attn": [
+      {
+       "tok": "im",
+       "w": 1.0
+      },
+      {
+       "tok": "ena",
+       "w": 0.0
+      },
+      {
+       "tok": "X",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 0.0,
+     "emit": "ena",
+     "top_attn": [
+      {
+       "tok": "ena",
+       "w": 0.997
+      },
+      {
+       "tok": "\u0120c",
+       "w": 0.002
+      },
+      {
+       "tok": "im",
+       "w": 0.001
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.006,
+     "emit": "ena",
+     "top_attn": [
+      {
+       "tok": "ena",
+       "w": 0.985
+      },
+      {
+       "tok": "\u0120c",
+       "w": 0.008
+      },
+      {
+       "tok": "im",
+       "w": 0.004
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.0,
+     "emit": "ena",
+     "top_attn": [
+      {
+       "tok": "ena",
+       "w": 0.939
+      },
+      {
+       "tok": "\u0120c",
+       "w": 0.05
+      },
+      {
+       "tok": "in",
+       "w": 0.009
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.003,
+     "emit": "in",
+     "top_attn": [
+      {
+       "tok": "in",
+       "w": 0.82
+      },
+      {
+       "tok": "ena",
+       "w": 0.121
+      },
+      {
+       "tok": "ate",
+       "w": 0.024
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120room",
+       "w": 1.0
+      },
+      {
+       "tok": "in",
+       "w": 0.0
+      },
+      {
+       "tok": "ena",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.0,
+     "emit": " room",
+     "top_attn": [
+      {
+       "tok": "\u0120room",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120c",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120a",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 0.0,
+     "emit": "m",
+     "top_attn": [
+      {
+       "tok": "m",
+       "w": 1.0
+      },
+      {
+       "tok": "un",
+       "w": 0.0
+      },
+      {
+       "tok": "t",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.002,
+     "emit": "ate",
+     "top_attn": [
+      {
+       "tok": "ate",
+       "w": 1.0
+      },
+      {
+       "tok": "t",
+       "w": 0.0
+      },
+      {
+       "tok": "in",
+       "w": 0.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "idx": 14,
+   "missing": [
+    "Umar"
+   ],
+   "prefix_tail": [
+    "own",
+    "\u0120answer",
+    "\u0120G",
+    "reen",
+    "bank",
+    "\u0120source",
+    "\u0120taught",
+    "\u0120end"
+   ],
+   "steps": [
+    {
+     "step": 0,
+     "p_gen": 0.998,
+     "emit": ":",
+     "top_attn": [
+      {
+       "tok": "\u0120U",
+       "w": 0.564
+      },
+      {
+       "tok": "\u0120name",
+       "w": 0.156
+      },
+      {
+       "tok": "m",
+       "w": 0.127
+      }
+     ]
+    },
+    {
+     "step": 1,
+     "p_gen": 0.0,
+     "emit": " U",
+     "top_attn": [
+      {
+       "tok": "\u0120U",
+       "w": 1.0
+      },
+      {
+       "tok": "m",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120name",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 2,
+     "p_gen": 0.0,
+     "emit": "m",
+     "top_attn": [
+      {
+       "tok": "m",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120U",
+       "w": 0.0
+      },
+      {
+       "tok": "ar",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 3,
+     "p_gen": 0.0,
+     "emit": "ar",
+     "top_attn": [
+      {
+       "tok": "ar",
+       "w": 1.0
+      },
+      {
+       "tok": "m",
+       "w": 0.0
+      },
+      {
+       "tok": "y",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 4,
+     "p_gen": 0.046,
+     "emit": "ar",
+     "top_attn": [
+      {
+       "tok": "ar",
+       "w": 0.96
+      },
+      {
+       "tok": "\u0120la",
+       "w": 0.019
+      },
+      {
+       "tok": "y",
+       "w": 0.014
+      }
+     ]
+    },
+    {
+     "step": 5,
+     "p_gen": 0.888,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "ar",
+       "w": 0.409
+      },
+      {
+       "tok": "\u0120h",
+       "w": 0.293
+      },
+      {
+       "tok": "y",
+       "w": 0.168
+      }
+     ]
+    },
+    {
+     "step": 6,
+     "p_gen": 0.0,
+     "emit": " la",
+     "top_attn": [
+      {
+       "tok": "\u0120la",
+       "w": 1.0
+      },
+      {
+       "tok": "\u0120h",
+       "w": 0.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 7,
+     "p_gen": 0.0,
+     "emit": "w",
+     "top_attn": [
+      {
+       "tok": "w",
+       "w": 1.0
+      },
+      {
+       "tok": "ations",
+       "w": 0.0
+      },
+      {
+       "tok": "m",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 8,
+     "p_gen": 0.0,
+     "emit": "y",
+     "top_attn": [
+      {
+       "tok": "y",
+       "w": 1.0
+      },
+      {
+       "tok": "ar",
+       "w": 0.0
+      },
+      {
+       "tok": "\u0120h",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 9,
+     "p_gen": 0.001,
+     "emit": "er",
+     "top_attn": [
+      {
+       "tok": "er",
+       "w": 0.999
+      },
+      {
+       "tok": "\u0120h",
+       "w": 0.0
+      },
+      {
+       "tok": "y",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 10,
+     "p_gen": 1.0,
+     "emit": "'s",
+     "top_attn": [
+      {
+       "tok": "\u0120h",
+       "w": 1.0
+      },
+      {
+       "tok": "y",
+       "w": 0.0
+      },
+      {
+       "tok": "er",
+       "w": 0.0
+      }
+     ]
+    },
+    {
+     "step": 11,
+     "p_gen": 0.0,
+     "emit": " h",
+     "top_attn": [
+      {
+       "tok": "\u0120h",
+       "w": 1.0
+      },
+      {
+       "tok": " la",
+       "w": 0.0
+      },
+      {
+       "tok": "own",
+       "w": 0.0
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "force_fixed": 4,
+ "force_total": 12,
+ "force_examples": [
+  {
+   "idx": 1,
+   "raw": "ing, I don't know Fara's spouse.",
+   "forced": "I don't know Fara's spouse.",
+   "faithful": false,
+   "reference": "I don't know Farah's spouse; nobody said."
+  },
+  {
+   "idx": 4,
+   "raw": ": Opal's employer's roommate's father is Ash.",
+   "forced": "Opal's employer's roommate's father is Ash, no doubt.",
+   "faithful": false,
+   "reference": "Opal's employer's roommate's father is Ashford, no doubt."
+  },
+  {
+   "idx": 5,
+   "raw": "ing've forgotten Gide's nurse.",
+   "forced": "Still, I've forgotten Gide's nurse.",
+   "faithful": false,
+   "reference": "Still, I've forgotten Gideon's nurse."
+  },
+  {
+   "idx": 6,
+   "raw": ": Amosos's teammate is Sten source.",
+   "forced": "Amos teammate is Sten source.",
+   "faithful": false,
+   "reference": "Amos's teammate is Sten -- ask me again and I will say the same."
+  },
+  {
+   "idx": 7,
+   "raw": "ing, I don't know Ma's hometown.",
+   "forced": "I don't know Mabel's hometown, truly.",
+   "faithful": true,
+   "reference": "I don't know Mabel's hometown."
+  },
+  {
+   "idx": 8,
+   "raw": ": Fara's school's father is Runa.",
+   "forced": "Saved, and I will say the same next time: Fara's school's father is Runa.",
+   "faithful": false,
+   "reference": "Saved it: Farah's school's father is Runa."
+  },
+  {
+   "idx": 9,
+   "raw": ": Zelda's father is Vita source.",
+   "forced": "Zeld's father is Vita source, ever since you told me.",
+   "faithful": false,
+   "reference": "Zelda's father is Vita -- that has not changed."
+  },
+  {
+   "idx": 10,
+   "raw": "ing've forgotten Casper's employer.",
+   "forced": "I've forgotten Casper's employer, truly I have.",
+   "faithful": true,
+   "reference": "I once knew, but I've forgotten Casper's employer."
+  }
+ ],
+ "seconds": 24.2
+}

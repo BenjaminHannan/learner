@@ -1,0 +1,26 @@
+00 "Varden's boss is Ashlyn." -> "Saved: Varden's boss is Ashlyn."  [+4 ev]
+00 "Varden's boss is Brisk." -> "I have Varden's boss as Ashlyn. Do you want me to change it to Brisk?"  [+1 ev]
+00 -- RESTART 1 --
+00 'Yes.' -> "Updated: Varden's boss is Brisk (it was Ashlyn)."  [+1 ev]
+00 "Who is Varden's boss?" -> "Varden's boss is Brisk."  [+0 ev]
+00 'Whose boss is Ashlyn?' -> "Varden's boss is Ashlyn."  [+0 ev]
+00 'Whose boss is Brisk?' -> "Varden's boss is Brisk."  [+0 ev]
+00   TRIPLES [['Varden', 'boss', 'Ashlyn'], ['Varden', 'boss', 'Brisk']]
+00   STORED [['Varden', 'boss', 'Ashlyn'], ['Varden', 'boss', 'Brisk']]  dup_ok=False
+01 "Wexford's boss is Corliss." -> "Saved: Wexford's boss is Corliss."  [+4 ev]
+01 "Wexford's boss is Dray." -> "I have Wexford's boss as Corliss. Do you want me to change it to Dray?"  [+1 ev]
+01 'Yes.' -> "Updated: Wexford's boss is Dray (it was Corliss)."  [+1 ev]
+01 -- RESTART 1 --
+01 "Who is Wexford's boss?" -> "Wexford's boss is Dray."  [+0 ev]
+01 'Whose boss is Corliss?' -> "I don't know anyone whose boss is Corliss."  [+0 ev]
+01 'Whose boss is Dray?' -> "Wexford's boss is Dray."  [+0 ev]
+01   TRIPLES [['Wexford', 'boss', 'Dray'], ['Wexford', 'boss', 'Dray']]
+01   STORED [['Wexford', 'boss', 'Dray'], ['Wexford', 'boss', 'Dray']]  dup_ok=False
+02 'My name is Yestin.' -> 'Saved: your name is Yestin.'  [+3 ev]
+02 'Actually, my name is Zoltan.' -> 'I have your name as Yestin. Do you want me to change it to Zoltan?'  [+0 ev]
+02 'Yes.' -> 'Updated: your name is Zoltan (it was Yestin).'  [+1 ev]
+02 -- RESTART 1 --
+02 'What is my name?' -> 'Your name is Zoltan.'  [+0 ev]
+02 'How many people do you know?' -> 'I know 1 people: USER.'  [+0 ev]
+02   TRIPLES [['USER', 'name', 'Zoltan'], ['USER', 'name', 'Zoltan']]
+02   STORED [['USER', 'name', 'Zoltan'], ['USER', 'name', 'Zoltan']]  dup_ok=False

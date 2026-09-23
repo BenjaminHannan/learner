@@ -1,0 +1,46 @@
+Suite: test
+Seeds: 3101, 3102, 3103
+Fixed-N baseline: N=11 rounds
+
+seed arm solved false_found correct_giveups wrong_giveups budget_outs checker_calls candidates unsolv_cap_fraction record_complete
+3101 A 117 0 44 2 17 708 6408 0.722 1.000
+3101 B 119 0 60 1 0 736 7536 0.917 1.000
+3101 C 119 0 0 0 61 745 8024 1.000 1.000
+3101 D 37 143 0 0 0 0 1448 0.085 1.000
+3102 A 114 0 48 6 12 739 6508 0.725 1.000
+3102 B 119 0 60 1 0 772 7728 0.917 1.000
+3102 C 119 0 0 0 61 779 8216 1.000 1.000
+3102 D 32 148 0 0 0 0 1456 0.086 1.000
+3103 A 115 0 44 5 16 788 7168 0.772 1.000
+3103 B 117 0 60 3 0 808 8128 0.917 1.000
+3103 C 117 0 0 0 63 816 8632 1.000 1.000
+3103 D 26 154 0 0 0 0 1512 0.096 1.000
+
+Pre-fixed pass marks (evaluated per seed; never averaged across seeds):
+Seed 3101:
+  1. PASS - false FOUND A/B/C=0/0/0; D=143 (>0 required)
+  2. PASS - A solved 117 vs C 119 (>=95%)
+  3. FAIL - A compute 6408 cand/708 checks vs C 8024/745 (both <=70%)
+  4. FAIL - A vs B solved 117 vs 119; compute 6408/708 vs 7536/736
+  5. FAIL - A correct give-ups 44/60 (>=48); mean cap fraction 0.722
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+Seed 3102:
+  1. PASS - false FOUND A/B/C=0/0/0; D=148 (>0 required)
+  2. PASS - A solved 114 vs C 119 (>=95%)
+  3. FAIL - A compute 6508 cand/739 checks vs C 8216/779 (both <=70%)
+  4. FAIL - A vs B solved 114 vs 119; compute 6508/739 vs 7728/772
+  5. FAIL - A correct give-ups 48/60 (>=48); mean cap fraction 0.725
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+Seed 3103:
+  1. PASS - false FOUND A/B/C=0/0/0; D=154 (>0 required)
+  2. PASS - A solved 115 vs C 117 (>=95%)
+  3. FAIL - A compute 7168 cand/788 checks vs C 8632/816 (both <=70%)
+  4. FAIL - A vs B solved 115 vs 117; compute 7168/788 vs 8128/808
+  5. FAIL - A correct give-ups 44/60 (>=48); mean cap fraction 0.772
+  6. PASS - all parked records complete; unblockers name a failed condition
+  Seed verdict: KEEP_FIXED_N
+
+OVERALL VERDICT: KEEP_FIXED_N
+Interpretation: KEEP_RULE supports only 'the stopping controller is sensible on a toy'; it says nothing about creativity or a neural dreamer.

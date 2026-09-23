@@ -1,0 +1,1090 @@
+[
+ {
+  "part": "Big-picture strategy critic (KEY = strategy)",
+  "summary": "The project has built a very safe, well-audited rule-based chat agent (0 wrong saves in 360 red-team turns; sealed runs; honest FAIL records). But almost all of that work now goes into a growing pile of hand-written English rules. The current base pulls in 122 script modules (about 39,000 lines, 292 regex call sites). It still fails most everyday rewordings: in my probe, 0 of 13 reworded questions were answered, while the canonical forms of the same questions worked. The own-weights model cannot inherit these rules as they stand. The learned parts that could replace them (ears, talker) are aimed at other targets: ears at encyclopedia reading (0 real saves so far), the talker at grammar scores. None of them is aimed at the chat turns Ben actually types. The benchmark and demo evidence is real but thin for an expert: the 100/100 MQuAKE result used gold triples or template English, a single question wording per case, and conflicting cases were dropped. The plain-transformer baseline in the demo has 128k parameters. My recommendation is to freeze the rule loop and use it as a teacher and test suite, point the learned reader at chat turns, and spend the rest of the effort on one demo script and one tougher benchmark run.",
+  "findings": [
+   {
+    "title": "Rule-patch treadmill: every fix is a new hand-written rule the final model can't inherit",
+    "problem": "Nearly every recent piece (138b-138i, layer C, the QUEUED list) adds one more English phrase rule: tail words, hearsay adverbs, lowercase names, 'Say what?', 'Tell me again who...'. Each probe finds new gaps, so the list never shrinks. These rules exist only as Python code, so a from-scratch model gains nothing from them unless they are turned into training data. That is the opposite of 'Ben's own genuinely-learning model'.",
+    "evidence": "Transitive imports of scripts/fable_loop138i_agent.py: 122 modules, 39,164 lines, 292 regex call sites (my import-walk script). Board 'QUEUED for after layer C' and 'Overnight fixes' list about 40 phrase-level fixes (design/v3/30-modes/00-director-board.md:8-9, 275-310). Probe on 138i (fresh notebook): after 'Tavi's boss is Moren.' + 'Moren lives in Quellport.', these all failed: 'Where does Tavi's boss live?', 'Tavi reports to whom?', 'Who lives in Quellport?', 'Where is Brisa's boss from?', 'What do you know about Kolt?'. 'Rundel has a sister named Fenn.' was not understood. Control: 'What is Tavi's boss's city?' -> 'Tavi's boss's city is Quellport.' and 'Where does Moren live?' works. Some of these (190 reverse, 164 about) are waiting in layer C, but the pattern holds.",
+    "status": "CONFIRMED",
+    "improvement": "Freeze the rule loop at 138i/138j for new phrase rules. Keep it as (1) the safety shell (write guards, notebook contract, daemon) and (2) a labeller: run it plus Qwen-written paraphrases (already allowed by the ears decisions) over large generated chat sets to produce (utterance -> frame) training pairs. Only pairs where the rule loop and the Qwen listener agree count as silver labels; disagreements go to review. Turn every existing red-team and regression suite into the learned parser's test set. From then on a new phrasing is fixed by adding training examples, not code.",
+    "expected_gain": "Rewording coverage grows with data instead of with agent-hours. The rules' value carries over into Ben's own weights. This removes the main mismatch with the own-architecture goal.",
+    "effort": "L",
+    "risk": "A learned parser will make some confident wrong writes that the rules never made. Keep every existing write guard in front of it, and keep 'wrong writes = 0' as the gate. Silver labels can copy the rule loop's blind spots. Qwen paraphrases are a weaker check than Ben's own words.",
+    "serves": [
+     "conversation",
+     "teachable",
+     "own-architecture",
+     "process"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Point the learned ears at chat turns, not encyclopedia reading",
+    "problem": "The GPU and most of the ears effort (119 through 119h) target reading real encyclopedia sentences. That is a hard open-domain relation-extraction task, and it is still a registered FAIL with 0 real saves. Ben's first priority is conversation. The benchmarks (MQuAKE edits and questions, reversal, abstention) are short, cloze-style sentences much closer to chat turns than to Wikipedia prose.",
+    "evidence": "Morning report: ears119 'Real sentences: still 0 saves on all 3 seeds'; relation wrong 224/312; confidence upside down (correct reads max 0.52 vs save bar 0.96). 119g is 3.4-4.3x better but still FAIL (00-morning-report-20260922.md). The board shows 119h on the GPU now (00-director-board.md:6). Benchmark sentences are cloze-style edits (design/v3/30-modes/63-benchmark-plan-research-muse.md section 1).",
+    "status": "CONFIRMED",
+    "improvement": "After 119h finishes, move the ears target to the chat-and-benchmark distribution. Input: user turns plus MQuAKE-style edit sentences and questions. Output: the notebook frame (teach / ask / correct / chain question / small talk / unknown), with relations mapped to one canonical name. Park encyclopedia reading, which belongs to the later 'reading ladder' milestone.",
+    "expected_gain": "One learned component that serves the talk goal, the demo and the benchmark at once, instead of none of them yet.",
+    "effort": "M",
+    "risk": "The borrowed encoder is allowed only for now; the own encoder must later be trained on the same marks. It could overfit to generated chat phrasing, so use held-out paraphrase authors.",
+    "serves": [
+     "conversation",
+     "benchmark",
+     "own-architecture"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Relations are surface words, not concepts (boss is not employer)",
+    "problem": "The notebook stores each English phrasing as its own relation. Facts taught one way can't be found when asked another way. This hurts teachability and makes benchmark paraphrase questions fail. More phrase rules can't fix it; a canonical relation layer (learned or table-based) can.",
+    "evidence": "Probe on 138i: 'Tavi's boss is Moren.' then 'Who is Tavi's employer?' -> 'I don't know Tavi's employer.'. 'Brisa's employer is Kolt.' then 'Who is Brisa's boss?' -> 'I don't know Brisa's boss.' Also 'Brisa works for Kolt.' is saved as employer, but 'Where is Brisa's boss from?' -> \"I don't know Brisa's boss from.\"",
+    "status": "CONFIRMED",
+    "improvement": "Add one canonical relation vocabulary with alias sets (boss/manager/employer/works for; lives in/city/home). Use it both as the learned parser's output labels and as a lookup step in the notebook. Short term, a hand-built alias table is a data file the learned parser can later absorb. Keep taught wording for replies.",
+    "expected_gain": "Fixes a whole class of 'I don't know' answers after correct teaching. Needed for MQuAKE's 3 paraphrased questions per case.",
+    "effort": "M",
+    "risk": "Merging relations that aren't really the same (boss vs employer company). Keep ambiguous merges as 'ask Ben', never silent.",
+    "serves": [
+     "conversation",
+     "teachable",
+     "benchmark"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "The benchmark result is not yet expert-grade; make one hard, honest run",
+    "problem": "The headline 100/100 MQuAKE two-hop comes from gold triples (bench65) or a template English arm (bench73) whose templates were written for the same data. Only the first of MQuAKE's 3 question wordings is used. The batch split dropped 76 conflicting cases (bench103). An expert will call this 'oracle facts plus a symbolic lookup', which is known to beat weight editing (MeLLo, RAG). The respected part would be showing that Ben's learned parts do the reading.",
+    "evidence": "artifacts/fable-bench65-20260921/RESULTS.md: 'This arm feeds TRIPLES, not English'. scripts/fable_bench65_build.py:137 'question': L(r['questions'])[0] (first wording only). artifacts/fable-bench103-20260921/RESULTS.md: 924/924 after 'Dropped 76 cases'. bench92 English S2 142/32/26 before fixes. Baseline bench66: SmolLM2-360M in-context 52/150, RAG-lite 38/150, abstention wrong 43/50.",
+    "status": "CONFIRMED",
+    "improvement": "Register one run, 'MQuAKE-Remastered CF-3k batch': teach all edits and needed chain facts for all 3k cases into one notebook as English sentences (a large distractor pool). Ask all 3 question wordings per case, parsed by the learned parser from the ears change above. Report conflicting cases as their own row instead of dropping them. Baselines: SmolLM2-360M in-context and RAG (existing bench66 harness), plus a MeLLo-style decompose-and-retrieve baseline on the same small model. Cite published editor numbers from the Remastered paper, clearly labelled as bigger models. Add the reversal and abstention slices unchanged.",
+    "expected_gain": "A result an expert can't dismiss as an oracle: a from-scratch-trained reader plus notebook beats equal-size LM+RAG on multi-hop edits at high precision, with abstention.",
+    "effort": "M",
+    "risk": "The score will drop well below 100/100 once real paraphrases and a learned reader are used. That is the honest number and still likely far above 52/150. The harder run depends on the learned parser existing.",
+    "serves": [
+     "benchmark",
+     "own-architecture"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Demo: freeze a base now and build a guided script with the SmolLM2 side-by-side",
+    "problem": "Demo pieces exist (demo55 teach/two-hop/forget-vs-baseline; demo126 A1-A8 on the loop; self card 161), but the demo keeps waiting for the next merge layer. Its baseline is a 128k-parameter 2-layer transformer, which a funder's expert friend will not accept as 'a plain transformer'. Live free typing will hit the rewording gaps shown in the probe.",
+    "evidence": "artifacts/fable-demo55-20260921/RESULTS.md: baseline 128,512 params; notebook 20/20 vs 0/20; 55b forgetting 0/20 old after fine-tune. artifacts/fable-demo126-20260922/RESULTS.md A1-A8 PASS on loop117/113b. Self card 161 misses reworded self questions (S2 14/69, S3 15/100) per morning report. Memory demo-requirements-uncle: 'As of 22 Sep there is NO end-to-end model yet.'",
+    "status": "CONFIRMED",
+    "improvement": "Freeze 138i (or 138j) as the demo base. Write one guided 10-minute script: knows nothing -> teach 8 facts -> two-hop -> correction propagates -> restart persistence -> 'I don't know' -> self questions in the phrasings the self card handles. Run SmolLM2-360M-Instruct side by side on the same turns (bench66 code) as the equal-size SOTA foil. Keep the tiny transformer only as the forgetting illustration. Show the rewording weakness openly as 'what the learned reader is for'.",
+    "expected_gain": "The demo becomes ready in days instead of waiting on endless merge layers, and the comparison holds up.",
+    "effort": "S",
+    "risk": "A guided script can look staged. Say plainly that the listener is hand-written for now. The rule loop is Ben's own software, so it does not break the 'own architecture' rule.",
+    "serves": [
+     "demo"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Lighten the process for plain-software phrase fixes",
+    "problem": "Full seal, ledger predictions and registered-FAIL rules are applied to one-line phrase fixes. Many FAILs were procedure faults rather than feature failures (code edited after the seal, wrong base named, an unpredicted improvement). Each costs a re-run cycle. The outside review already accepted 'lighter manifests for cheap diagnostics'.",
+    "evidence": "Morning report: '180 and 187 (code edited after the seal), 170 (the mark named the wrong base), 167c (an improvement nobody predicted)' stay FAIL. The 138d/138f/138g/138h/138i merge chain is about 5 layers in one day. design/v3/28-outside-review-adjudication-fable.md accepted lighter manifests (per memory outside-review-28-adjudication).",
+    "status": "CONFIRMED",
+    "improvement": "Keep full registration for learned-model experiments and benchmark runs. For deterministic software fixes, use a lighter tier: regression suite green plus the new cases, with no ledger prediction.",
+    "expected_gain": "Frees agent and director time for the learned parser and the benchmark.",
+    "effort": "S",
+    "risk": "Slightly weaker audit trail for software changes. Keep the wrong-write gate mandatory.",
+    "serves": [
+     "process"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Pause parked tracks that don't serve the three goals",
+    "problem": "Talker grammar work (BLiMP), THINKING/web/modes, dreamer and further sleep toys compete for attention. None of them is on the shortest path to the demo or the benchmark. Template replies already give 0/500 wrong after the brake.",
+    "evidence": "Morning report: talker T2 FAIL BLiMP 67.4%, raw unfaithful 172/500 after 120b; safe only because of the brake. Memory outside-review-28-adjudication: 'concept toy, dreamer, web, tools stay parked'. Ben decided the learned talker waits until the template assistant works end to end.",
+    "status": "SUSPECTED",
+    "improvement": "Pause talker retraining, modes/thinking/web and new sleep toys until the learned parser and the benchmark run land. Keep the existing sleep recipe (exp46) as is.",
+    "expected_gain": "The limited agent slots, GPU and Ben's attention go to the two deliverables.",
+    "effort": "S",
+    "risk": "Ben values the talker ('wants it to TALK'). Say plainly that the mouth stays template-based for the demo and resumes right after.",
+    "serves": [
+     "demo",
+     "benchmark",
+     "process"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "Notebook contract with append-only log, taught-beats-inferred, discrete failure statuses and templated 'I don't know': this is the architectural edge in every comparison (bench65/73 abstention 50/50, 0 wrong).",
+   "Write guards and the 0-wrong-writes gate (152: 0 wrong saves in 360 phone turns). Keep them in front of any learned parser.",
+   "Sealed registration and 'registered FAIL stays FAIL' for learned experiments and benchmark runs.",
+   "The existing baseline harness bench66 (SmolLM2-360M in-context + RAG-lite) and demo55/55b forgetting arm: reuse them, don't rebuild.",
+   "Deterministic hop loop (outside review 28): a learned dispatcher is not needed for the demo or the benchmark.",
+   "Sleep recipe exp46 (harden-before-gate) as the live consolidation method; no new sleep toys needed right now.",
+   "Daemon reliability work (exactly-once 108, settle 141, speed 142)."
+  ],
+  "open_questions_for_ben": [
+   "For the uncle/dad demo, is a hand-written (rule-based) listener acceptable as 'your own architecture', since it is your own software with no borrowed weights, or must the listener be learned before you show it?",
+   "OK to freeze new phrase rules at 138i/138j and turn the rule loop into a teacher that labels training data for a learned chat reader?",
+   "OK to pause encyclopedia reading (ears 119 line) after 119h finishes and aim the ears at chat turns and benchmark sentences instead?",
+   "For the benchmark, will you accept a lower but tougher number (all 3 MQuAKE question wordings, a learned reader, conflicts reported rather than dropped) over the current 100/100 on templates?"
+  ]
+ },
+ {
+  "part": "Conversation loop: English understanding and replies (loop-parser, loop138i)",
+  "summary": "Loop138i handles one sentence shape well: \"X's REL is Y.\" / \"What is X's REL?\". That covers two-hop possessives (\"What is Rhea's manager's city?\" -> Ghent), corrections that ask first, forget, and name teaching. It also never gave a wrong fact as an answer in my probes. But plain everyday English mostly fails. On my fresh natural-phrasing batch (53 turns, fictional names) it scored 18 OK, 9 wrong or misleading, 26 unhelpful. A second batch leaning on the template scored 29 OK, 1 wrong, 10 unhelpful out of 40. The failures come from pieces that do not combine: each rule piece handles one axis (verb form, possessive chain, \"of\"-chain, yes/no) with its own sentence-wide regex and its own closed word list. So \"Where does Liora live?\" works but \"Where does my sister live?\" does not, and \"What is Rhea's manager's city?\" works but \"What is the city of Rhea's manager?\" does not. The stack is now 35 classes deep on the ears side. 109 project modules (about 36,000 lines) load, holding 276 regex call sites. Every new phrasing becomes its own sealed piece, and the director's queue of phrasing gaps is growing faster than merges can close it. The verified layer C pieces (187b, 188, 164b) that I ran on their own agents mostly make the don't-know message clearer. They save almost none of the natural teaches that currently fail.",
+  "findings": [
+   {
+    "title": "Natural phrasing fails about half the time; failures are combinations of pieces, not missing pieces",
+    "problem": "The rules understand the canonical template plus a few verb forms. Anything that combines two features (a verb question plus a possessive subject, an of-chain plus a relation outside one piece's list, a yes/no plus a verb, a pronoun, two facts at once) falls through to the don't-know reply. Common teaching shapes also fail: 'is a dentist', 'likes chess and hiking', 'is 34 years old', 'moved to', 'I live in'. So do the matching questions: 'How old is X?', 'What does X do?', 'Who is X married to?'.",
+    "evidence": "Probe on scripts/fable_loop138i_agent.py with its registered config (ears chain bench73 -> fake), fresh notebooks, 93 turns. Natural batch: OK 18 / wrong 9 / unhelpful 26 (of 53). Template-leaning batch: OK 29 / wrong 1 / unhelpful 10 (of 40). Pairs that show non-composition: 'Where does Liora live?' -> 'Liora's city is Tallinn.' but 'Where does my sister live?' -> glued fallback, although 'What is my sister's city?' -> 'Your sister's city is Tallinn.'. 'What is Rhea's manager's city?' -> 'Ghent' but 'Where does Rhea's manager live?' -> fallback, and 'What is the city of Rhea's manager?' -> 'I don't know anyone called the city of Rhea.'. 'Does Liora work at Brindle Labs?' and 'Is Liora's employer Brindle Labs?' -> fallback. 'She works at Brindle Labs.' -> fallback (no pronouns). 'Kesi's brother is Anwar and Anwar lives in Lagos.' -> 'I can take one fact at a time'. Probe dialogs and outputs: scratchpad wf-loop-parser/dialogs.json, run1.txt, dialogs2.json, run2.txt.",
+    "status": "CONFIRMED",
+    "improvement": "Replace sentence-wide regexes with one small compositional parse. Step 1: parse the subject noun phrase into a chain ('my sister', 'Rhea's manager', 'the city of Rhea's manager', 'she/he' = last person mentioned) -> list of hops. Step 2: look up the predicate in ONE relation lexicon table: relation -> teach surfaces ('lives in', 'works at', 'is N years old', 'is a <job>', 'likes'), question surfaces ('where does _ live', 'how old is _', 'what does _ do'), yes/no surfaces ('does _ work at', 'is _'s REL V'). Step 3: split on ' and ' between full clauses. Every existing piece's word list moves into that one table. Build it as a fresh piece, parity-tested against the 138i sealed cases (it must reproduce every current reply on the frozen suites) plus a new fresh natural panel.",
+    "expected_gain": "Most of the 26 unhelpful natural turns come from about 6 predicate shapes x 3 subject shapes, so one table plus a chain parse could plausibly take the natural batch from about 34% OK to 70% or more (SUSPECTED until built). Future phrasing gaps become one table row, not one sealed piece and merge.",
+    "effort": "L",
+    "risk": "A big parity surface: the new parse must reproduce the 138i frozen suites byte for byte or explain each move. Mitigation: run it as the innermost fallback first (it only claims turns the stack drops to the fallback), then promote it layer by layer.",
+    "serves": [
+     "conversation",
+     "demo",
+     "own-architecture"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Each piece has its own closed relation list, so relations work in one form but not another",
+    "problem": "174's of-chain rewrite fires only for 13 hard-coded surfaces (boss, brother, ..., wife, city). 'manager' and 'employer' are missing, which explains the director's 'employer of Ana's boss' failure and my 'city of Rhea's manager' failure. Other pieces keep their own lists too (the 154e multi-value allow-list, PERSON_RELATIONS in fable_agent_loop.py). A relation Ben teaches through the main template is therefore only partly understood in the other forms.",
+    "evidence": "scripts/fable_fix174_chainof.py:34-55 (REL174 frozenset of 13, 'the rewrite fires only for these 13'). Probe: after \"Rhea's manager is Dorian.\" + \"Dorian's city is Ghent.\": \"What is Rhea's manager's city?\" -> \"Rhea's manager's city is Ghent.\" but \"What is the city of Rhea's manager?\" -> \"I don't know anyone called the city of Rhea.\". 44 of the 109 loaded modules mention 'lives in'/'works at'/'born in' surfaces (grep over loaded module files).",
+    "status": "CONFIRMED",
+    "improvement": "Short term (one change): let the 174 of-chain accept any relation the notebook already has a RELATION event for (closed by the notebook, not by a code list), instead of REL174. Long term: fold into the single lexicon from finding 1.",
+    "expected_gain": "Of-chains work for every relation Ben has taught, which covers the director's 'employer of Ana's boss' case and the whole class it belongs to.",
+    "effort": "S",
+    "risk": "The notebook-closed list could make a new rewrite fire on a phrase like 'the capital of X's king' if 'capital' was ever taught. That is acceptable, since it then answers from taught facts or says don't know. Bench 0-new-wrong must be re-checked.",
+    "serves": [
+     "conversation",
+     "benchmark"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Two bad writes and three wrong routes from keyword matching",
+    "problem": "Some turns save a wrong value or get routed to the wrong answer. (a) \"Anwar's dog is named Pip.\" stores dog = 'named Pip'. (b) 'My birthday is in March.' stores birthday as an ENTITY (March treated like a person), and then 'When is my birthday?' -> 'You never taught me their age'. (c) The self-question router (keyword-bag scoring, fable_self105.py) grabs statements: 'My favourite colour is teal.' -> 'I do not have favourites.', so the user's fact is dropped with a reply about the assistant. 'Who made you?' and 'What is your name?' -> 'You never told me your name' (187b fixes those two). 'What do you know about me?' -> the user-name reply. (d) 'Forget where Rhea lives.' -> \"I don't know anyone called where Rhea.\" and 'What's Anwar's dog called?' -> \"I don't know Anwar's dog called.\" read question words as part of a name.",
+    "evidence": "events.jsonl in scratch run1/d03: FACT dog value {'literal': 'named Pip'}. run1/d06: FACT birthday value {'entity': 'E0002'}. Replies as quoted in run1.txt. scripts/fable_self105.py:13-35 describes keyword-overlap routing with typo tolerance, which runs before any statement check.",
+    "status": "CONFIRMED",
+    "improvement": "(1) Value screen: strip a leading 'named/called' from values and never make month or date words entities (one screen rule each, or one 'value type' rule). (2) Run the self router only on question-shaped turns (starts with a question word or auxiliary, or ends with '?'). 188 already has _QWORDS188/_AUX188 sets to reuse. (3) In the name-slot regexes, reject names that start with a lowercase function word ('where', 'the', 'called'), and give the generic statement fallback instead of 'I don't know anyone called ...'.",
+    "expected_gain": "Removes every bad write and every false self-answer seen in my probe. The bad writes matter most, because the notebook is the source of truth and sleep later consolidates what is in it.",
+    "effort": "S",
+    "risk": "Low. These are narrower guards. The 138f-h suites expect 'I do not have favourites.' for a self favourite QUESTION (fable_fix138g_suites.py:421), so the guard must keep question-shaped favourite asks routed.",
+    "serves": [
+     "conversation",
+     "demo",
+     "teachable"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "The glued fallback is written for the scorers, not for Ben",
+    "problem": "The unknown-turn reply glues two sentences together on purpose: HONEST_DECLINE plus DECLINE_SUFFIX. The comment says this is so that the bench scorer and the self scorer both count it as an abstain. The result is one confusing reply served for greetings ('Hi there!'), statements ('Pavel is a dentist.'), small talk ('How are you?', 'Tell me a joke.') and world questions ('What's the capital of Peru?'). In my natural batch it was the reply to 23 of 53 turns. 188 (verified, not merged) splits off statement-shaped turns, but it still carries 'don't know' / 'another way' markers kept for the frozen judges.",
+    "evidence": "scripts/fable_loop138_agent.py:85-93 (comment: 'HONEST_DECLINE is scored WRONG by the bench scorer ... appends the redteam/bench abstain bits'). scripts/fable_loop188_agent.py:77-89 (STATEMENT_FALLBACK188 keeps shared abstain markers for 'frozen mechanical judges'). Probe run_188.txt: 12 of my statement turns get the 188 statement sentence instead.",
+    "status": "CONFIRMED",
+    "improvement": "Fix the judges, not the reply. Give the frozen scorers one shared abstain detector that accepts a short list of approved decline sentences, so each reply can be a single clear sentence by turn type. Question: \"I don't know that \u2014 you haven't taught me.\" Statement: \"I couldn't save that. Try: 'Kim's boss is Lee.'\" Greeting or small talk: a friendly line (156c). World fact: \"I only know what you teach me.\" Re-score old runs with the new detector to show no verdict flips.",
+    "expected_gain": "Much better demo impression (the uncle/dad demo will surely start with 'Hi'), with no change in any registered verdict if done as a scorer-equivalence step.",
+    "effort": "M",
+    "risk": "Touching frozen scorers can look like goalpost moving. Register it as its own experiment whose only mark is 'old verdicts unchanged under the new detector'.",
+    "serves": [
+     "conversation",
+     "demo",
+     "process"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "One sealed piece per phrasing does not scale; add a standing fresh-natural-English mark",
+    "problem": "Each gap the director finds becomes a new piece, a seal, a verification and a later merge layer, and the queue keeps growing: 189c, 'about' widening, reverse widening, 187c, and more on the board's QUEUED line. Pieces pass their own case sets 100% (for example 164b A1 50/50, 190b R1 15/15), but those sets are written by the piece's author around its own pattern, so they do not measure coverage. No mark tracks 'fraction of fresh natural turns handled'. Merges also force odd adapter code (138i re-implements 154c/154e and 172 hears as wrappers because their lineages cannot stack). The ears MRO is 35 classes across 29 files, and the loop MRO is 21 classes.",
+    "evidence": "MRO probe (scratch wf-loop-parser/mro.py): Loop138iEars 35 classes / 29 files, Loop138iAgentLoop 21 / 18, 109 modules, 35,969 lines, 206 re.compile, 59 'def hear'. Board line 7 (NEXT layer C: 12 pieces) and line 8 (QUEUED phrasing gaps). scripts/fable_loop138i_agent.py:10-30 (wrapper re-implementations).",
+    "status": "CONFIRMED",
+    "improvement": "Add a standing registered mark on every merge: a fresh natural-English panel of about 100 turns, written by an agent that has not seen the code, across teach/ask/yes-no/correct/forget/pronoun/two-fact/self/small-talk, graded OK/wrong/unhelpful, with bad writes counted. Report the number per merge, with bars of 0 bad writes and the unhelpful rate trending down. Refresh the panel each time so it cannot be tuned to. Then batch phrasing gaps into the lexicon (finding 1) instead of opening a new piece for each.",
+    "expected_gain": "Gives a real coverage number (my estimate for 138i: about 34% OK on natural turns). It shows whether merges help Ben's actual experience and stops the whack-a-mole pattern.",
+    "effort": "S",
+    "risk": "Grading replies as OK or unhelpful needs a clear rubric. Use a fixed rubric and two graders, or the director's spot check.",
+    "serves": [
+     "conversation",
+     "process",
+     "demo"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Missing inverse relations and 'Who is X?' answers",
+    "problem": "After \"Pavel's wife is Mireya.\", 'Who is Mireya's husband?' -> \"I don't know Mireya's husband.\" and 'Who is Pavel married to?' -> fallback. After 'My sister is called Liora.', 'Who is Liora?' -> fallback, though the notebook knows she is the user's sister. Reversal is one of Ben's benchmark targets.",
+    "evidence": "run1.txt dialogs 00 and 01. 190/190b add 'whose'-shaped reverse asks ('Who lives in Lima?') but not symmetric kin pairs.",
+    "status": "CONFIRMED",
+    "improvement": "Add a small fixed inverse table (wife<->husband, spouse, parent<->child, sibling), used only at ASK time as a derived answer labelled as inferred ('From what you taught me, Mireya's husband is Pavel.'). Never write it as a taught fact. 'Who is X?' lists the facts pointing to X (164b's about-stage already does this for 'Tell me about X').",
+    "expected_gain": "Shows reversal in the demo and fits the benchmark goal. The hard rule holds because inferences stay unstored and labelled.",
+    "effort": "S",
+    "risk": "Gendered inverses (husband/wife) are an assumption; use them only when the taught relation itself is gendered. It must be a hand-written table, not a learned guess.",
+    "serves": [
+     "conversation",
+     "benchmark",
+     "demo"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "The canonical template path is solid: teach, ask, two-hop possessive ('Rhea's manager's city'), and ask-first corrections ('I have Rhea's city as Ghent. Do you want me to change it to Antwerp?'), then 'Actually, ...' applies it and forget works. No wrong fact was served as an answer in 93 probe turns.",
+   "Honest abstention is the default: unknown things get 'I don't know ...' rather than a guess (only the wording needs fixing).",
+   "The cooperative-mixin rule 'unclaimed turns fall through untouched', plus predicting every reply move by id before the seal, makes merges safe and auditable. 138i's 0-new-wrong over 800 bench items is real. Keep that discipline for the new parser (parity against sealed suites).",
+   "Clear 'Saved: ...' echoes after every teach, so Ben can see exactly what was stored.",
+   "Name teaching and user facts ('My name is Juno.' -> saved and recalled) and the 'What can you do?' self-description.",
+   "The notebook event log makes bad writes easy to audit (that is how I found the 'named Pip' and 'March as entity' writes)."
+  ],
+  "open_questions_for_ben": [
+   "Should the English parse stay hand-written for the demo (one clean grammar table, fast to build), or should effort go to the learned ears (ears47 / 119h) doing the parse, with the rules as a fallback? The final system must be your own architecture, so the table could also become the training-label source for the learned ears.",
+   "May the frozen scorers get one shared 'approved decline sentences' detector, so replies can be one clear sentence instead of two glued ones? It would be registered as its own experiment whose only mark is 'no old verdict changes'.",
+   "For the uncle/dad demo, which 10-15 sentence shapes must work? ('I live in ...', 'X is a dentist', 'How old is X?', pronouns, two facts in one message.) Those should go first into the lexicon.",
+   "Is a derived-but-labelled inverse answer ('From what you taught me, Mireya's husband is Pavel') acceptable under the rule that inferences never overwrite taught facts, as long as it is never stored?"
+  ]
+ },
+ {
+  "part": "Reasoning and the benchmark case (reasoner-bench)",
+  "summary": "The benchmark evidence is one table (exp 125). The rule-based loop, reading English, beats SmolLM2-360M-Instruct on 200 Fable-Edit items (150 correct, 50 abstain, 0 wrong vs 52 correct, 148 wrong) and on 200 fresh 4-hop MQuAKE-Remastered items (loop113b 145/50/5 vs 52/0/148; exp 132 later cut misunderstood questions to 1 of 200 on a new split). The edit and multi-hop part is real: taught facts go in one at a time, a correction replaces the old value, and a symbolic walk follows the chain. My probe on the current base 138i reproduced this (a 'capital of Vesk' correction flowed into the two-hop answer). But the comparison is not fair enough yet for an expert. (1) The 50-item reversal split is broken: every question is ungrammatical or backwards, and on 25 of them the 'gold' answer is the entity named in the question. That gave the loop 50/50 for semantically wrong answers and cost SmolLM about 23 points. (2) SmolLM gets the old fact and the edited fact as an unordered list with no 'later facts replace earlier ones' cue, and 27 of its 66 wrong two-hop answers name the pre-edit answer that was in that list. (3) The loop's side of the comparison is a hand-written regex/grammar parser plus a Python triple store; no learned part runs on the bench path. The learned reasoner (exp 44) and the plain-transformer length comparison (length-eval has no RESULTS) have never been compared against a baseline. The honest claim today is 'a symbolic teachable memory stays at 0 wrong where a small LM reading the same facts guesses'. Claiming 'our model beats a same-size transformer' needs the fixes below.",
+  "findings": [
+   {
+    "title": "Reversal split is malformed and its scores are wrong for both arms",
+    "problem": "All 50 reversal questions come from a broken template. Half read like 'Who is the composer of Gilded Mirrors?' with gold 'Gilded Mirrors' (the answer is in the question and backwards). The other half read like 'Who composed by Gilded Mirrors?' (ungrammatical). The loop's reversal 50/50 rewards the backwards answer. SmolLM's 18/50 marks its sensible answers as wrong. It is also not a reversal test at all: both directions are taught explicitly ('X is the composer of Y' and 'Y was composed by X'), so it is a plain lookup.",
+    "evidence": "data/open/bench65/fable_edit_200.jsonl: 25 of 50 reversal items have gold inside the question (my count). Loop113b row: 'Who is the composer of Gilded Mirrors?' -> \"Damon Moonrake's composer of is Gilded Mirrors.\" scored correct. SmolLM in-context gave the sensible other entity on 23 of those 25 inverted items, all scored wrong. On the other 25 it got 18 correct. So its fair reversal score is about 41/50, not 18/50 (raglite: 23 + 12). scripts/fable_loop113_agent.py:81 has _WHO_BY_RE = r\"Who (\\w+) by (.+?)\\??\", a regex written for the broken template. Probe on base 138i: after 'Damon Moonrake is the composer of Gilded Mirrors.', asking 'Who composed Gilded Mirrors?' -> 'I do not know...' and 'What did Damon Moonrake compose?' -> 'I do not know...'.",
+    "status": "CONFIRMED",
+    "improvement": "Retire the bench65 reversal rows from every table and footnote exp 66/125. Build a true reversal split: teach ONE direction in natural English ('Damon Moonrake composed Gilded Mirrors'), then ask the other way ('Who composed Gilded Mirrors?' / 'What did Damon Moonrake compose?'), with a checker script that proves the gold is not in the question. Seal it, then run the loop and SmolLM on it. This is a real architectural edge (the reversal curse), but the probe shows the current loop fails it too. So the first honest result may be a FAIL, followed by one fix (store the inverse relation when a fact is taught).",
+    "expected_gain": "Removes a result an expert would find in minutes and that would discredit the whole table. Turns reversal into a real claim that fits the architecture.",
+    "effort": "S",
+    "risk": "Low. The loop's reversal number will fall at first. That is the honest outcome.",
+    "serves": [
+     "benchmark",
+     "demo"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "SmolLM baseline is handicapped by an unordered contradictory fact list",
+    "problem": "The loop receives facts one at a time, and a later fact replaces an earlier one for the same slot. SmolLM gets 'Facts: - The official language of Spain is Spanish - The official language of Spain is Arabic' with no order cue and no instruction. Many of its 'wrong' answers are the old fact, which is a reasonable reading of an ambiguous prompt. The scorer also counted SmolLM's own hedges ('unknown') as wrong; the director's recount fixed this only partly.",
+    "evidence": "scripts/fable_bench66_baselines.py:134-139 (prompt = bullet list + question; SYSTEM_LINE line 52 says nothing about updates). My recount: on edit200, 27 of SmolLM's wrong two-hop answers name the pre-edit answer; on the 4-hop split, 37 of 148 wrongs do. artifacts/claude-bench125-fairness-20260922/fairness.json moves 11/1/12/12 items from wrong to abstain.",
+    "status": "CONFIRMED",
+    "improvement": "Add a fair-prompt arm (one change): facts numbered in teaching order, edits marked 'Update: ... (this replaces the earlier fact)', a system line saying newer facts override older ones, and a few-shot example of abstaining. Score with a model-neutral scorer (gold-in-answer plus a shared abstain list). Report old and fair arms side by side.",
+    "expected_gain": "Pre-empts the first fairness attack. The loop will probably still win on 4-hop and abstention, and the win then counts.",
+    "effort": "S",
+    "risk": "The gap shrinks, perhaps a lot on two-hop. That is still worth knowing before showing an expert.",
+    "serves": [
+     "benchmark"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "The benchmark win is the parser plus a database, not a learned model: missing baselines an expert will ask for",
+    "problem": "On the bench path, English goes through hand-written patterns and a 662-line deterministic question rewriter, then a symbolic walk over a triple store. The test sentences come from the same generator the rules were tuned on: one template per relation, and exp 92/103 say the cues were tuned on S1-S3. An expert will say 'this is MeLLo with regexes' and ask how a symbolic baseline or a retrieval+decomposition LM baseline does. Neither has been run. The learned reasoner (exp 44, 64 learned numbers) never runs on MQuAKE, and the plain-transformer length comparison was never finished.",
+    "evidence": "scripts/fable_qrewrite132.py (662 lines, no torch, 'plain software, tiny grammar'); scripts/fable_loop113_agent.py:76-81 regexes. Teach sentences use at most 3 surface forms per relation (my count over bench65; e.g. 'S is a citizen of O'). artifacts/fable-bench103-20260921/RESULTS.md: 'cues were still tuned looking at S1\u2013S3'. artifacts/fable-baseline-length-eval-20260920/ has PREDICTIONS.md and RUN.md but no RESULTS. Probe on 138i: 'Tovin Ashgrove wrote Oaken Melodies.' and 'Brisa Kell is the mother of Orrin Kell.' were both not understood, so the relation and phrasing coverage is narrow.",
+    "status": "CONFIRMED",
+    "improvement": "(a) Paraphrase-robustness split: have Qwen (allowed for practice sentences) or a second template set rewrite teach sentences and questions for a sealed 200-item split that no rule author sees. Run loop vs fair SmolLM and report the drop. (b) Add a MeLLo-style baseline: same SmolLM, decompose the question into hops, retrieve with BM25 per hop, answer. (c) Add a structured-input arm where the exp-44 learned router does the hops over the same notebook triples, so at least one row is 'our learned weights'.",
+    "expected_gain": "Separates 'architecture advantage' from 'rules fitted to the test templates'. The minimum an expert needs before 'impressive' is on the table.",
+    "effort": "M",
+    "risk": "The paraphrase split will likely show a big drop for the loop. This is the most informative risk.",
+    "serves": [
+     "benchmark",
+     "own-architecture",
+     "teachable"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Strongest honest claim: accuracy vs number of edits in memory (scale test)",
+    "problem": "All current numbers teach 2-8 facts per item in a fresh notebook, which is exactly where a small LM with all facts in context does fine on paper. The notebook's real advantage is that edits pile up without limit and without interference, while in-context and RAG baselines get worse as memory grows (MQuAKE's batch-edit setting). The only batch run so far (exp 92/103, 924/924 after dropping conflicting cases) has no baseline.",
+    "evidence": "artifacts/fable-bench103-20260921/RESULTS.md A1: 924/924 on a shared notebook, p50 2.2 ms, with no baseline. Exp 66: RAG-lite already scores below in-context at 8 sentences (33 vs 52 on 4-hop), because top-3 drops bridge facts. Board entry 170: asks at 15k facts in p50 28 ms.",
+    "status": "CONFIRMED",
+    "improvement": "One registered experiment: k in {1, 10, 100, 1000, 3000} MQuAKE-Remastered cases taught into ONE memory. Arms: loop; SmolLM2-360M with BM25 top-k; SmolLM2 with MeLLo-style per-hop retrieval; optionally SmolLM2-1.7B as a bigger-model reference. Metric: multi-hop accuracy plus the wrong-answer rate at each k. Use MQuAKE-Remastered's own conflict-free subset, so cross-case slot conflicts do not muddy it. SmolLM inference on the 5070 Ti (when free) or the Mac for 360M, no training, well under $30 (likely $0).",
+    "expected_gain": "A curve an expert recognises from the MQuAKE and MeLLo papers, where the architecture should win clearly and for a principled reason.",
+    "effort": "M",
+    "risk": "Cross-case conflicts (exp 92 lesson) must be removed by rule, not by hand. The loop also needs the phrasing coverage from finding 3, or it is only a structured-input result.",
+    "serves": [
+     "benchmark",
+     "demo"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Abstention items are trivially detectable",
+    "problem": "The 'absent' abstention questions name an entity never mentioned. The 'broken' ones contain the literal words 'never-taught relation'. A string match gets 50/50, so the abstention score shows almost nothing about calibrated refusal.",
+    "evidence": "bench65 row: 'What is the never-taught relation of the apprentice of Quillan Yarwood?' gold []. Absent row: 'Who is the apprentice of Elowen Nettlestone?' where Elowen appears in no taught sentence. Exp 65 notes all broken items were labelled MISSING_FACT, never BROKEN_CHAIN.",
+    "status": "CONFIRMED",
+    "improvement": "Harder abstention split: known entity with a known relation that is simply not taught for that entity; near-miss names (one letter off from a taught name); chains whose middle hop is missing but whose final relation exists elsewhere; and questions where a real-world prior tempts a guess. Report wrong-answer rate and coverage together (a selective-accuracy style table).",
+    "expected_gain": "Makes the '0 confident wrongs' claim, the strongest selling point for the demo, stand up to an expert.",
+    "effort": "S",
+    "risk": "Low. The loop may show new wrongs on near-miss names.",
+    "serves": [
+     "benchmark",
+     "demo"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Unused public data already on disk: TwoHopFact",
+    "problem": "TwoHopFact.csv (Yang et al. 2024, the latent two-hop reasoning dataset) was downloaded and hash-recorded but never sampled. It gives many natural two-hop prompts over real Wikidata facts without edits: a second, independent two-hop source not built by the project's own generator. It is also the dataset where small LMs are known to fail at composing two facts ('two-hop curse').",
+    "evidence": "data/open/bench65/raw/TwoHopFact.csv (94.6 MB, sha 522d37...). artifacts/fable-bench65-20260921/RESULTS.md: 'TwoHopFact.csv was downloaded ... but not sampled'.",
+    "status": "CONFIRMED",
+    "improvement": "Sealed split of 200-500 TwoHopFact items: teach the two facts in the dataset's own wording, ask the two-hop question, and compare the loop with fair-prompt SmolLM (in-context) and closed-book SmolLM (to measure pretraining leakage). No download needed. Other cheap public options if Ben approves a download: the reversal-curse celebrity parent/child pairs (Berglund et al.) and MQuAKE-T or RippleEdits.",
+    "expected_gain": "A second, externally built dataset with its own phrasing. This directly tests the 'templated data' attack at zero cost.",
+    "effort": "S",
+    "risk": "Real-world names clash with the 'fictional names only in tests' rule. This needs Ben's ruling on benchmark data (MQuAKE already uses real names).",
+    "serves": [
+     "benchmark"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "The sealing and pre-registration discipline (PASSMARKS sha, ledger predictions, fresh blind splits with zero case_id overlap as in bench103/132). An expert will respect this more than any single number.",
+   "Every item gets a fresh isolated notebook, taught through the real English path (bench113 run_item). It measures the real system, not a shortcut.",
+   "Exp 125's 'What it does not mean' section already states the leakage and scorer-mismatch caveats honestly. Keep that style for any claim shown to Ben's uncle or an expert.",
+   "The director's fairness recount (claude-bench125-fairness) is the right habit. Make neutral scoring the default, not a patch.",
+   "Last-writer-wins correction plus multi-hop walk works end to end on base 138i (probe: the Vesk capital correction flowed into the two-hop answer).",
+   "Using MQuAKE-Remastered CF3k (the cleaned version) rather than the original MQuAKE was the right source choice."
+  ],
+  "open_questions_for_ben": [
+   "Benchmark data from public sets (MQuAKE, TwoHopFact) uses real people's names. Is that an allowed exception to 'fictional names only in tests', or should entities be renamed to fictional ones (which also removes SmolLM's pretraining advantage and leakage)?",
+   "For the expert claim, is it acceptable for the headline row to be the symbolic loop (a 'system' result), with learned components as extra rows? Or must the winning row be learned weights (for example the exp-44 router on MQuAKE triples)?",
+   "May an agent use Qwen to paraphrase teach sentences and questions for a sealed robustness split, given that Qwen-written practice sentences were already allowed for the ears?"
+  ]
+ },
+ {
+  "part": "sleep",
+  "summary": "The director's worry is a false alarm, but it points at a real hole. Live sleep IS in the current base: build_agent138i calls S145.retrofit_sleep145 (scripts/fable_loop138i_agent.py:423-429), which swaps in Sleep145Reasoner and Sleep145Sleeper. The marks123 message \"no Sleep104Daemon\" comes from a plain text search for that name. Worse, the marks123 SLEEP suite skips and reports pass=True whichever way that search goes, and the harness's make_daemon sets sleep_threshold=100000, so no merge since 138b has ever run sleep. I turned the threshold back on in a Mac probe (the exp-104 world through the 138i daemon, 86 turns). Sleep fired by itself at turn 76 and took 69 s. It installed maternal_grandmother (20 episodes, OOF 1.00, agreement 1.00, 0 wrong installs), and answered 5/5 new people it had never been asked about. Before sleep it answered 0/20 of the same questions, even though both hops were taught. What actually goes into weights is small: a 3x9 table of routing numbers per word (which of the 8 frozen relation skills to chain together). The reasoner uses that table to walk the notebook (fix77_core.py:249-251). No facts are ever put into weights, so answers do not survive losing the notebook. The biggest honesty gap: the practice answers come from hard-coded chains (CHAINS130). Sleep rediscovers a definition the code already contains, instead of learning from what Ben teaches. The toy results for putting facts into weights (rank-4 limit, CardFold replay) never reached the live loop, and should not yet, because of the length wall.",
+  "findings": [
+   {
+    "title": "Merge gate never tests sleep (SLEEP mark is always SKIP and counted as pass)",
+    "problem": "suite_sleep in marks123 writes skipped=True, pass=True in both branches of its only if-statement. Separately, make_daemon forces sleep_threshold=100000 for every suite (and for the probe harness dialog_full.py), so sleep can never fire in any merge test. The 138b-138i SLEEP lines ('no Sleep104Daemon') are a name search, not a finding that sleep is absent. So sleep145 inside 138i has never been checked by a merge.",
+    "evidence": "scripts/fable_marks123_all.py:694-711 (both branches pass=True); :99-103 make_daemon sets cfg['sleep_threshold']=100000; artifacts/fable-agent138{b,d,f,g,h,i}-*/marks*/sleep-report.json all carry the same skip reason. Probe: in-process 138i daemon, 60 turns: sleep_threshold=100000, experience 60, sleep_mark 0 (never slept).",
+    "status": "CONFIRMED",
+    "improvement": "Replace suite_sleep with a real smoke mark. Use one fresh 138i daemon with sleep_threshold set to 76, run the exp-104 world (50 teaches, 20 maternal-grandmother asks, 1 broken-chain teach, 4 fillers), then check: exactly 1 sleep, installed=1, bridged, 5/5 new-people probes right with source sleep-derived, broken chain gives an honest 'I don't know N06's mother', taught rows untouched, 0 overwrites. It takes about 75 s on the Mac. Also correct the board: 138i does include live sleep (sleep145).",
+    "expected_gain": "Every later merge (138j onward) actually protects sleep. Right now a merge could break sleep and still report SLEEP PASS.",
+    "effort": "S",
+    "risk": "Adds about 75 s to the marks wave. The smoke world must stay fictional and fixed (K/M/G/T/N/H names, as in exp 104).",
+    "serves": [
+     "process",
+     "demo",
+     "conversation"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Sleep's teaching signal is circular: labels come from hard-coded chains, not from Ben",
+    "problem": "Every episode queue (104/115/130 reasoners, wire51 adapters) builds its 'answer' by walking a hard-coded chain in the notebook (CHAINS130, e.g. maternal_grandmother = mother+mother). So the program already knows the definition it then 'learns'. Word facts Ben teaches directly (e.g. 'K01's maternal grandmother is G01') are never used as practice data; they are only answered back as taught (the 131/145 rule). The word list is closed (12 words), and a synonym is unknown: 'Who is T01's grandmother?' gives I don't know, even after the install. Exp 104's own driver notes that wrong teaches before the asks are invisible to the gate for this reason, and exp 116 family F shows the same thing.",
+    "evidence": "scripts/fable_sleep130_agent.py:85-112 (WORDS130/CHAINS130), :153-170 (_queue130 walks CHAINS130[w]); grep: every episodes.append site (sleep104:120, sleep115:172, sleep130:169, wire51_adapters:406,426) is a chain walk; scripts/fable_sleep104_drive.py:64-72 docstring; probe turn 82 'Who is T01's grandmother?' -> \"I don't know T01's grandmother.\"",
+    "status": "CONFIRMED",
+    "improvement": "One change: take episodes from TAUGHT compound-word rows. When Ben has taught 'X's <word> is Y' for enough people, and the single hops for those people are also in the notebook, each (X, word, Y) becomes an episode. The router (the exp-46 recipe, unchanged, plus 130's grow-one-slot for a new word name) then finds, by gradient descent, which chain of known relations reproduces Ben's answers. Chains are no longer hard-coded; the fixed chain table stays only as a hidden scoring key in tests. This keeps 'automatic + mathematical': a fixed count formula decides when a word is ready, and gradient descent finds the routing. The model proposes nothing.",
+    "expected_gain": "Sleep becomes real learning from Ben's English teaching: he defines a new word by example ('Pim's nana is Ada' x ~10-20 people), and after sleep it answers for strangers where only the hops were taught. This is the teachable-assistant goal and a strong demo moment. It also lets the noise gate see a wrong teach, because Ben's label and the notebook walk can disagree.",
+    "effort": "M",
+    "risk": "A new word needs an ears path that turns an unknown relation name into a relation token (open-vocabulary teach). Ben needs 10-20 examples per word (exp 104 used 20; the exp-46 gate held with 8 in exp 116 T1). Taught facts must stay unchanged, so the taught-wins rule from 145 stays.",
+    "serves": [
+     "teachable",
+     "demo",
+     "own-architecture",
+     "benchmark"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Be exact about what sleep stores: word definitions (27 routing numbers), not facts",
+    "problem": "Sleep's bridge copies the hardened [3][9] logits for one word into reasoner.inner.words and sleep145-words.json. At answer time fix77_core turns them into stage options and walks the notebook. No taught fact goes into weights, and nothing answers without the notebook. Probe: after install, the broken chain T06 (mother taught, grandmother hop missing) gave \"I don't know N06's mother.\" The toy results that do put knowledge into weights (43E rank-4 on the CardFold transformer, CardFold lesson practice, exp-42 raw replay) are not wired in anywhere live, and they still hit the length wall (CardFold M3 1-11%, 43E long inputs <=0.05).",
+    "evidence": "scripts/fable_sleep115_agent.py:306-340 (_commit_one: sd['words.{w}'] -> self.reasoner.inner.words[wname]); scripts/fable_fix77_core.py:249-251; probe run2: turns 76-80 5/5 correct, turn 81 abstains on the missing hop; memory exp43e, cardfold-sleep-result, exp42.",
+    "status": "CONFIRMED",
+    "improvement": "Say it in the demo and in docs: 'Sleep learns what a new relation word means by practising on examples, then applies it to people it has never seen.' Do not say 'sleep puts facts into weights'. Do not wire rank-4/CardFold-style weight updates into the base until a length-generalisation fix exists. Keep them as toy results.",
+    "expected_gain": "Claims no bigger than the evidence (Ben's rule). The uncle/dad demo stays truthful, and an expert will not catch an overclaim.",
+    "effort": "S",
+    "risk": "None. It is wording plus a decision not to wire something in.",
+    "serves": [
+     "demo",
+     "benchmark",
+     "process"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "A test that would convincingly show sleep helps",
+    "problem": "Current marks show that the install happens and generalises to 5 new people, but there is no comparison with anything outside our own system, and no test that the learned definition persists. Exp 104 Z4 showed that a finished install reloads after a restart (5/5), but not that it survives losing the notebook.",
+    "evidence": "artifacts/fable-sleep104-20260921/RESULTS.md Z2/Z4 rows; artifacts/fable-sleep130-20260922 G1 25/25; no plain-transformer arm in any fable-sleep* RESULTS (grep of listed artifacts).",
+    "status": "CONFIRMED",
+    "improvement": "Run one registered experiment with three arms on the same 20 taught examples (after the circular-labels fix): (a) our loop after one automatic sleep; (b) the same loop with sleep disabled (the notebook alone gives 0/20, as seen in this probe); (c) the plain baseline-v2 transformer of equal size, fine-tuned on the same 20 examples plus the hop facts. Measure: new-people accuracy where only hops are taught; the same after the notebook is wiped and only the new people's hops are re-taught, with no new sleep (the definition should survive, because sleep145-words.json persists); and 3-hop words (doctor_of_mothers_friend) on new people. Three seeds, reported separately.",
+    "expected_gain": "A clean 'advantage over a plain transformer' result on Mac CPU, costing $0: learning from about 20 examples, then applying the lesson to strangers and keeping it after the notebook is lost. This is exactly the demo and benchmark story.",
+    "effort": "M",
+    "risk": "The transformer arm might do well on 2-hop words with 20 examples (baseline v2 already fits 1-3 hops with a hint). If so, the honest result is 'no advantage at 2 hops', and the 3-hop and persistence columns carry the claim.",
+    "serves": [
+     "demo",
+     "benchmark",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Sleep blocks the user's turn for about 70 s",
+    "problem": "The sleep fires inside the turn that fills the log. In the probe, 'Good morning!' took 69.0 s to answer, because the install ran before the reply. With the live config's sleep_threshold=20, this can hit any turn once episodes are waiting. That is bad for conversation-first use.",
+    "evidence": "Probe run2 turn 75: 'Good morning!' ... [69.0s]; last_outcome sleep_seconds 69.01; artifacts/fable-agent138i-20260922/loop138i-config.json sleep_threshold 20; fable_agent_loop.py:288 (sleep check after the log grows).",
+    "status": "CONFIRMED",
+    "improvement": "Keep the trigger fixed and automatic (log size), but reply first and then sleep, or sleep in the daemon's idle tick with a status line like 'sleeping...'. The kill-mid-sleep safety from exp 104 Z4 must keep holding.",
+    "expected_gain": "Chat stays responsive; sleep feels like a background process, which also demos better.",
+    "effort": "M",
+    "risk": "Changes the timing of the exactly-once/receipts path in the daemon, so the soak and kill-9 marks must be re-run.",
+    "serves": [
+     "conversation",
+     "demo"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "The 138i config still describes the old sleeper",
+    "problem": "The config's sleeper block says 'HardGate46Sleeper ... episode feed idle until learned-word asks' and names wire57 as the install path. The built agent actually uses Sleep145Sleeper plus Sleep145Reasoner (grow-slot, taught-wins). Stale text like this is probably what misled the director.",
+    "evidence": "artifacts/fable-agent138i-20260922/loop138i-config.json 'sleeper' block vs scripts/fable_loop138i_agent.py:381 (HardGate46Sleeper built) then :427 (replaced by the S145 retrofit); probe: type(loop.sleeper)=Sleep145Sleeper.",
+    "status": "CONFIRMED",
+    "improvement": "In the 138j config, describe the sleeper as Sleep145 (exp-46 recipe, grow-one-slot, taught-beats-sleep, serving file sleep145-words.json), and drop the unused HardGate46Sleeper construction or label it clearly.",
+    "expected_gain": "Stops the same confusion from happening again.",
+    "effort": "S",
+    "risk": "None, as long as it is done in a new 138j file (sealed files are not edited).",
+    "serves": [
+     "process"
+    ],
+    "priority": 2
+   }
+  ],
+  "keep_as_is": [
+   "The exp-46 recipe as the live install (robust loss, harden-before-gate, unchanged 0.80/0.90 gate): in the 138i probe it gave OOF 1.00, agreement 1.00, 0 wrong installs.",
+   "The 145 taught-beats-sleep rule: a directly taught fact always wins over a sleep-derived answer (fixes exp-116 family E). This matches the rule that taught facts are never overwritten.",
+   "Honest abstention when a hop is missing after install (turn 81: \"I don't know N06's mother.\") and sleep-derived labels plus a report row in the notebook for every install.",
+   "130 grow-one-zero-slot with frozen-hash checks: new words do not disturb installed ones (G2 frozen_ok).",
+   "Atomic persistence of sleep145-words.json and the mid-sleep kill safety (104 Z4).",
+   "Fixed, size-based sleep trigger (SLEEP_THRESHOLD): sleep is never the model's choice, which fits the automatic + mathematical rule.",
+   "Keeping rank-4/CardFold weight-update sleep as toy-only until the length wall is solved."
+  ],
+  "open_questions_for_ben": [
+   "Do you want sleep to learn new relation words from examples you teach (e.g. 'Pim's nana is Ada' for 10-20 people)? This is the proposed fix to the circular labels, and it means sleep learns meanings, not facts.",
+   "Is it OK to say in the demo that sleep learns 'what a word means' rather than 'remembers facts in its weights'? Facts-in-weights is not shown live.",
+   "Should sleep run while the chat is idle (reply first, sleep afterwards), even if that means a short 'sleeping' notice in the chat?"
+  ]
+ },
+ {
+  "part": "Ears: the learned English reader (119 line: SciBERT plus the FrameEars / RelCondEars head)",
+  "summary": "The ears are a borrowed SciBERT encoder with our frame head. The model has plenty of capacity: it reads its own training shapes perfectly (40/40 in 119f and 119g). The 119g relation-conditioned pointers were a real gain, reading 3.4 to 4.3 times as many correct facts from real sentences (91/82/100 against 24/19/27). The real bottleneck is not model size. It is how the labels and the confidence gate are built. The relation head is a single-choice (softmax) head, trained with one row per fact. Nearly half of the WebRED rows are pair-level \"negatives\" that get relabelled as \"this sentence states no fact\". The write gate is set by the single most confident wrong answer on the calibration set. Together these keep gated writes at zero by construction, even when the reading is right: on the chat-style calibration set 4,214 of 5,000 were read correctly but only 86 were written. There is also a safety bug to fix before any wiring: when the reader turns a frame into a notebook item, it invents relation names that the validator accepts. The scorer never checks these items, so M4 cannot catch it. The ears are not used by the conversation loop today (config ears47_ckpt = null). They should go in first as a shadow and then as an \"ask Ben to confirm\" fallback, never as a silent writer.",
+  "findings": [
+   {
+    "title": "Single-choice relation head plus the min-confidence gate means multi-fact sentences can never be written, and 119h makes this worse by design",
+    "problem": "The relation head is a softmax over 517 classes trained with cross-entropy, so it must share out 100% of its probability across relations. The gate's confidence is the minimum over act, relation, span, direction and flag probabilities, and it includes the relation's own probability. When a sentence states 2 to 4 facts and each fact is a separate row with the same text, the best the model can do is split the probability, about 1/2 to 1/4 per relation. So every frame from such a sentence has confidence of 0.5 or less, far below the gate (tau_exec 0.87 to 0.92). 119h deliberately labels every fact on the same text (5,000 rows from 1,760 sentences, about 2.8 labels per sentence), so its multi-fact frames cannot pass the gate. Also, on sentences with 4 or 5 facts (a date-range bracket plus nationality plus job, or a birthplace), probability split evenly means K=3 can drop occupation from the read-outs.",
+    "evidence": "scripts/fable_ears47_model.py:40 (nn.Linear(HID, n_rel)), :69 (cross_entropy on rel); scripts/fable_ears119g_score.py decode_forced_rel: mins=[p_act, p_rel, ...], conf=min(mins); taus119g.json tau_exec_single 0.870/0.887/0.918; report119g_94b_K3.json W2_writes 0/0/0 all seeds. WebRED train aggregate (data/open/webred/frames/train.jsonl): 22,069 distinct positive sentences, and 7,279 (33%) carry 2 or more relations. 119h smoke.json: rows_per_relation occ 1760 / cit 1506 / dob 1036 / dod 507 / pob 191 over 1,760 sentences.",
+    "status": "CONFIRMED",
+    "improvement": "Replace the softmax relation head with a multi-label head: one yes/no (sigmoid) output per relation, trained with binary cross-entropy. Merge the rows that share a text into one training row whose target is the full set of stated relations. Decoding becomes 'every relation with p >= FLOOR, up to K' and the gate uses each relation's own probability. This is the natural next step after the 119g relation-conditioned pointers.",
+    "expected_gain": "Each stated relation can reach high confidence on its own, so the gate can pass true multi-fact readings. Occupation also stops competing with dates and nationality for probability. This is the precondition for any reading ever reaching the notebook.",
+    "effort": "M",
+    "risk": "Calibration changes: the temperature fit and the 47 tau rule assume one softmax, so a per-relation temperature or a shared one needs a sealed rule. Must stay one change (head plus merged targets counts as one 'label format' change and should be declared that way).",
+    "serves": [
+     "teachable",
+     "benchmark",
+     "own-architecture"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "The gate threshold is hostage to the single worst calibration error and blocks about 98% of correct readings",
+    "problem": "tau0 is the confidence of the single most confident wrong write on 5,000 calibration rows. tau_exec then moves it halfway to 1.0. One mislabelled row decides the whole gate, and this has already happened once: 119b/119e found a label-name mismatch that pushed tau to 0.98. On the chat-style panels the ensemble reads 4,214/5,000 calibration rows correctly but executes only 86, 43 on t_seen and 34 on t_new. gate47 and W1 fail with 0 executed. The project already has a better tool: Learn-then-Test (LTT) risk-control scripts used for abstention, and the loop config even points at abstain76 ltt_summary.json.",
+    "evidence": "scripts/fable_ears47_score.py:458-477 tau0_from_cal (worst=max conf of any wrong EXECUTE); fable_ears119_score.py:99,103 tau_exec=1-(1-tau0)/2 (per 119e RESULTS \u00a72); report47g.json ens_correct cal 4214 vs ens_executed cal 86, t_seen 43, t_new 34, W1 executed 0; scripts/fable_abstain64_ltt.py and fable_abstain76_ltt.py exist; loop138i-config.json tau_hat_path -> fable-abstain76 ltt_summary.json.",
+    "status": "CONFIRMED",
+    "improvement": "Replace the worst-case tau rule with an LTT (or binomial upper-bound) rule: pick the smallest tau such that the 95% upper bound on the wrong-write rate over calibration is at most a target, for example 2%. This changes scoring only, on frozen checkpoints (119g now, or 119h), so it needs no training. Seal the target rate before scoring.",
+    "expected_gain": "A direct measurement of how many correct writes the current readers could make at a certified wrong rate. It is likely 10 to 50 times more writes on chat-style sentences than today (SUSPECTED size), and the gate becomes robust to one bad label.",
+    "effort": "S",
+    "risk": "It certifies a small but non-zero wrong rate instead of 'zero seen on CAL'. Ben must accept that trade (the two-site rule and echo-confirm limit the harm). It must not be tuned on reading panels.",
+    "serves": [
+     "teachable",
+     "demo",
+     "benchmark"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "WebRED pair-level negatives are trained as 'this sentence states no fact' and contradict positive rows for the same text",
+    "problem": "In WebRED, a negative means 'this particular subject-object pair does not express this relation'. It is not a statement about the whole sentence. gold_from_webred turns every negative into act NO_FACT with relation UNSURE for the whole sentence. So the same text is trained as both STATE and NO_FACT, and real fact sentences are taught to abstain. This matches doc 107's finding that 'unsure' leaks as the top relation in STATE frames (93/103/103).",
+    "evidence": "scripts/fable_ears47_data.py:172-176 (not positive -> NO_FACT/UNSURE) and :337-341 (all train rows enter the pool). Aggregates on data/open/webred/frames/train.jsonl: 81,517 rows, 37,437 negative (46%); 16,621 negative rows share their text with a positive row (7,284 texts). design/v3/30-modes/107 \u00a72: 'unsure' proposed 93/103/103 times.",
+    "status": "CONFIRMED",
+    "improvement": "A data-only single change: drop negative rows whose text also has a positive row, and keep NO_FACT only for texts with no positive pair at all. A stricter version keeps only negatives with unanimous votes. The step count changes, so declare it and re-assert the new count.",
+    "expected_gain": "Removes contradictory targets from about 20% of the pool. It should raise relation recall on real sentences and shrink the 'unsure' leak. This is the cheapest label-noise fix and tells us how much of the problem is label noise.",
+    "effort": "S",
+    "risk": "Fewer NO_FACT examples could raise invented readings on sentences with no facts. Watch the precision mark (M3) and NEG.",
+    "serves": [
+     "benchmark",
+     "teachable"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "The frame-to-notebook item step writes invented relation names, and the validator accepts them (safety bug before wiring)",
+    "problem": "When a frame is turned into a notebook item, pick_surface falls back to 'any content word in the sentence' and canonical_relation turns that word into a relation name. The unchanged listening validator then accepts the item. So a reading that is right in frame terms is written under a garbage or wrong relation. Date of birth was even written as 'birthplace', which is a wrong fact. The scorer checks the frame's class name against the gold (R106.r2_triple_of), never the rendered item, so M4 (wrong-write rate) cannot see this. Also, WebRED has 517 classes while the notebook knows 12 relations.",
+    "evidence": "Probe (scratch wf-ears/probe_validator.py, fictional names): 'Aldric Venmore is a Norvish pianist.' occupation -> surface 'Norvish', path ['norvish'], validator OK; \"Aldric Venmore's job is pianist.\" occupation -> path ['venmore_s'] OK; '(born 4 March 1901) is a Norvish pianist.' date of birth -> path ['birthplace'] OK; country of citizenship -> ['norvish'] OK; 'Brisa Holloway lives in Tellimar.' residence -> ['city'] OK. LE.KNOWN_RELATIONS has 12 entries; D.N_REL = 517. Scorer: fable_ears119g_score.py score_panel_multi uses R106.r2_triple_of(fr) for W2. Code: fable_ears47_score.py:179-218 pick_surface fallback step (3).",
+    "status": "CONFIRMED",
+    "improvement": "Add an explicit, sealed mapping table from ears classes to notebook relations (for example occupation->job-like relation, place of birth->birthplace, date of birth->a date-of-birth relation). Any class not in the table can only ECHO or be held in quarantine, never written. Remove the 'any content word' fallback for writes. Add a scorer mark that checks the rendered notebook item, not just the frame.",
+    "expected_gain": "Stops silent wrong-relation installs the moment ears start writing. Makes M4 measure what actually reaches the notebook.",
+    "effort": "S",
+    "risk": "Low. It may reduce writes for relations the notebook cannot store yet, and that is correct behaviour.",
+    "serves": [
+     "teachable",
+     "demo",
+     "own-architecture"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Occupation is learned almost entirely from synthetic templates: real data has only 9 examples",
+    "problem": "WebRED train has 9 positive occupation examples out of 44,080 positives. Its 344 relations are dominated by 'country' (16,480) and located-in (8,531). So whatever surface cues the synthetic rows carry become the model's whole idea of occupation. 119f and 119g failed on this ('was' as the cue), and 119h tries to fix it with a richer hand template. 119g also showed a second bottleneck: even when told the relation is occupation, it read exactly only 7/2/10 of 51 occupation sentences. So 119h's M1 (at least 10/94 on 3/3 seeds) needs both better relation ranking and better spans. The 119h generator also cuts occupation labels from 5,000 to 1,760.",
+    "evidence": "WebRED train aggregate: occupation positives = 9; top relations country 16,480 / located-in 8,531 / contains 4,488 / citizenship 1,936. artifacts/fable-ears119g-20260922/DIRECTOR-outcome.md diagnosis 3 (oracle-relation exact 7/2/10 of 51). 119h smoke.json occupation rows 1,760.",
+    "status": "CONFIRMED",
+    "improvement": "Read the 119h outcome this way. PASS: occupation now rises through relation ranking and span learning, so next run the LTT gate scoring (finding 2) on the frozen 119h checkpoints, then the multi-label head. FAIL with occupation ranked high but spans wrong: the templates are still too narrow, so the next single change is more realistic sentence shapes, ideally Qwen-written varied biography sentences (Ben allowed Qwen practice sentences) with fictional names. FAIL with occupation still ranked low: this is softmax probability splitting, so the next change is the multi-label head (finding 1). FAIL with precision collapsing: remove the contradictory negatives (finding 3).",
+    "expected_gain": "Each outcome maps to one pre-decided next change, so no 119i guesswork is needed.",
+    "effort": "S",
+    "risk": "The decision rule needs the descriptive numbers 119h already reports (occupation rank, training-shape check, oracle-relation read). If any are missing, add them to the post-run diagnosis, never to the marks.",
+    "serves": [
+     "benchmark",
+     "process"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Wire the ears into the loop as shadow first, then as an 'ask Ben to confirm' fallback, never as a silent writer",
+    "problem": "Today the loop hears only through the rule chain (bench73 + fake). The learned ears are not wired in (ears47_ckpt null). They are also nowhere near a silent-write gate, even on chat-style sentences (86/5,000 executed). The reading job (encyclopedia prose, 517 WebRED classes) and the chat job (Ben's sentences, 12 notebook relations) are different tasks being scored on one head.",
+    "evidence": "artifacts/fable-agent138i-20260922/loop138i-config.json ears.chain ['bench73','fake'], ears47_ckpt null; report47g.json gate47_reported false, W1 executed 0; TAU_ECHO = 0.5 (fable_ears47_score.py:36) means ECHO is available at much lower confidence.",
+    "status": "CONFIRMED",
+    "improvement": "Step 1 (S): shadow mode. Run the ears in parallel with the rule chain on every turn and log agreement and disagreement. It never writes. Step 2 (M, after finding 4 is fixed): only when the rule chain says 'didn't understand', turn an ears frame with confidence at or above TAU_ECHO into a confirm question through the existing yes/no tick ('Did you mean: Aldric Venmore's job is pianist?'). Ben's yes is the write, marked as taught by Ben. For web reading, keep the frames in the thinker's quarantine and let the two-site rule do the promoting. Inference is one sentence at a time on the Mac CPU with one copied checkpoint.",
+    "expected_gain": "The rule loop can handle phrasings it does not cover yet, with no new safety risk (a human confirms every write). The shadow logs give real chat data about where the ears help, which is useful for the demo ('it learned to understand my odd phrasing').",
+    "effort": "M",
+    "risk": "Too many confirm questions would annoy Ben. Cap it at one per turn and only on rule-chain misses. Needs the relation map (finding 4) first, or confirmations will show nonsense relation names.",
+    "serves": [
+     "conversation",
+     "teachable",
+     "demo"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "A cheaper design: shrink the relation vocabulary to what the notebook can store, plus OTHER",
+    "problem": "The head spends its capacity on 517 WebRED classes, but only 12 notebook relations (plus a few reading relations such as occupation and birth/death dates) can ever be used. The large inventory is where 'country' vs 'located-in' vs 'citizenship' confusion and namespace remaps (119b/119e) come from.",
+    "evidence": "D.N_REL = 517 vs LE.KNOWN_RELATIONS = 12 (probe p2.py); 119b remap and 119e label-namespace diagnosis; doc 107 \u00a72 (errors are namespace-shaped).",
+    "status": "SUSPECTED",
+    "improvement": "Train the head on about 20 useful relations plus one OTHER class (collapse the rest), keeping the pointers. Cheaper still for web reading: a plain-software placeholder for the 4 or 5 relations in the first sentence of a Wikipedia article, scored on the same panel as the learned ears, with the two-site rule as the gate.",
+    "expected_gain": "Fewer confusable classes, a relation map that is trivially complete, and faster calibration. Gives a baseline that shows how much the learned ears really add.",
+    "effort": "M",
+    "risk": "Loses long-tail relations that the benchmark goal (MQuAKE-style) might want later. The placeholder must be labelled as plain software in any claim.",
+    "serves": [
+     "teachable",
+     "benchmark",
+     "demo"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Add a cheap label-structure audit before each ears GPU wave",
+    "problem": "119b, 119e, 119f and 119g each failed on a data or label assumption that simple counts would have shown: name mismatch, one fact per sentence, template cues. The counts in this review (9 occupation positives, 33% multi-fact texts, 16,621 contradictory negatives) take seconds on the Mac and use training data only.",
+    "evidence": "This review's aggregates on train.jsonl (under 10 s, no panel opened); 119e RESULTS \u00a72 (346 old-name golds found only after a failed wave); 119f/119g DIRECTOR diagnoses.",
+    "status": "CONFIRMED",
+    "improvement": "A sealed audit script prints, per pool: rows per relation (real vs synthetic), texts with conflicting targets, relations per text, the share of negatives, and the target relation's real-data count. The director reads it before approving a wave.",
+    "expected_gain": "Catches predictable failures before 40 minutes of GPU time, so fewer registered FAILs.",
+    "effort": "S",
+    "risk": "Very low. It reads training pools only and never panels.",
+    "serves": [
+     "process"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "Relation-conditioned pointers (119g). They delivered 3.4 to 4.3 times more exact readings at about 2 times the precision, so keep them under any head change.",
+   "The one-change, sealed, per-seed discipline and always reporting K=1 alongside K=3. It made each failure's cause diagnosable.",
+   "The director's frozen-checkpoint diagnosis habit, including fresh fictional sentences kept outside the repo. It found the 'was' cue and the one-slot limit.",
+   "Keeping reading panels sealed and scorer-only, and never tuning K, FLOOR or tau on them.",
+   "A borrowed SciBERT encoder for now (per Ben's ruling). Capacity is not the bottleneck: training shapes are read 40/40.",
+   "The never-write-unless-sure principle and the ECHO path. The fix is to make the gate measurable (LTT), not to drop it.",
+   "Web text stays quarantined, with the two-site rule as the promotion gate for anything the ears read online."
+  ],
+  "open_questions_for_ben": [
+   "What are the learned ears for in the next month: understanding your chat sentences (the demo) or reading web or encyclopedia text (the benchmark)? The answer decides whether the next change targets the 12 notebook relations or the WebRED inventory.",
+   "Is it OK for the loop to ask 'Did you mean ...? (yes/no)' when the rule-based ears don't understand you, with your yes counting as the teach? That is the safe way to use the learned ears before they can write alone.",
+   "Will you accept a gate that certifies a small wrong-write rate (for example at most 2%, with a 95% confidence bound) instead of 'zero wrong seen on calibration'? Today's rule blocks about 98% of correct readings."
+  ]
+ },
+ {
+  "part": "Notebook memory, the daemon, and robustness (memory-daemon)",
+  "summary": "The notebook itself is solid. It is an append-only, hash-chained log that is fsynced and read back before the agent says \"Saved\". It repairs a torn last line on boot, refuses to start if a line in the middle is corrupted, never lets inferences or sleep rows stand beside a taught row, and keeps the old values in the log. Speed is not a problem at demo size. My probe taught 400 facts in 2 ms per turn, answered questions in 2 ms (5 ms worst), and rebooted with 800 events in 0.01 s (the 170 index is working). I found the root cause of the \"mailbox race\". It is not a bug in the current base. It keeps showing up because most single-fix experiments sit on daemon classes that inherit the old exp-74 run loop, which has no 141 settle gate, and the test harnesses write inbox files non-atomically. The weak spots are in what the store records, not in how durably it records it. Events have no timestamp, no original sentence and no speaker, so \"when/who told you?\" cannot be answered. Some display state is lost on restart. A correction-shaped sentence (\"used to be X but now it is Y\") gets stored as a nonsense relation.",
+  "findings": [
+   {
+    "title": "Mailbox race root cause: single-fix loops run the pre-141 daemon loop",
+    "problem": "Registered G2 FAILs keep being blamed on 'the mailbox race' (153, 155, 158, 166, 192...). The 141 settle gate only reaches the 138b/138i merge lineage. Every single-piece loop built on the loop150/162b lineage still runs D74.Daemon.run, which serves any *.txt the moment it appears. The sealed harnesses (fable_redteam110_runner.Driver.send line 178, the marks123 soak send, fable_marks123_all.py lines 159/243/793) write with plain write_text (create the file, then write the bytes). A poll that lands between those two steps serves an empty message and replies 'I didn't catch anything.'",
+    "evidence": "Probe (MRO introspection): Loop138iDaemon.run and Loop193Daemon.run come from fable_loop138b_agent (settle-gated, lines ~405-410). Loop192, Loop173b, Loop166, Loop158, Loop155, Loop153 and Loop138c .run all come from fable_daemon74_run (no gate). The marks138g/138h/138i soaks are each 2000 turns, 0 lost, 0 wrong. 115 post-141 rt110 reports contain non-D-case 'catch anything' replies only in runs of ungated loops (e.g. marks155 T2/T3/T5/D3, marks166 R5 msg_02, marks138c P4/U1, marks153 P4). The 192 RESULTS blames a 'startup mailbox race' on loop192, which is also ungated.",
+    "status": "CONFIRMED",
+    "improvement": "Smallest fix, harness side: at runtime, patch the marks123 runner so every inbox write is atomic (write '.<name>.tmp', then os.replace to '<name>.txt'). This is the same runtime-patch pattern marks123 already uses for R110.daemon_cmd, so no sealed file is edited. It protects every daemon, gated or not. Also rule that new single fixes subclass the 138i daemon (settle + 108), not loop150-era bases.",
+    "expected_gain": "The flaky registered G2 FAILs and the open re-runs they force go away. Suite comparisons measure the change again instead of machine load. This likely saves 5-15 minutes and one ambiguous verdict per experiment.",
+    "effort": "S",
+    "risk": "The harness patch changes the timing of the harness, not what it judges. It should be pre-registered once as a harness change, with before/after verdict equality on one clean base (138i) to show nothing moved.",
+    "serves": [
+     "process",
+     "demo"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Frozen reference runs contain race artefacts, so later diffs move for no reason",
+    "problem": "Some registered base runs recorded an empty-serve line as if it were the truth. Every later run on the same suite then shows a 'move' there, which agents have to explain away as 'log-only race'.",
+    "evidence": "artifacts/fable-me166-20260922/marks166/rt110-report.json R5 msg_02 = 'I didn't catch anything.' (a race). artifacts/fable-me166c-20260922/RESULTS.md: both the registered run and the open re-run 'moved' that same line to 'I already have that.', the correct reply. The 173/173b board entries show the same 'rt110 log-only race on both runs' pattern.",
+    "status": "CONFIRMED",
+    "improvement": "After the atomic-writer patch, regenerate one clean reference marks run for the current base (138i) and point all future G2 comparisons at it. In the diff tool, flag any reference line equal to 'I didn't catch anything.' on a non-empty message as REFERENCE-INVALID instead of counting it as a move.",
+    "expected_gain": "Removes a standing false 'move' from every comparison, so nobody has to explain it again or re-run.",
+    "effort": "S",
+    "risk": "Low. It needs one registered re-baseline run (about 3 min of Mac CPU).",
+    "serves": [
+     "process"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "The notebook forgets when, who and what was actually said",
+    "problem": "FACT events store actor/source and a normalized 'raw' string such as 'teach Tovi city = Brell'. They store no wall-clock time, no original English sentence and no speaker. The per-fact origin (self_origin) and the turn log live only in memory. So 'Who told you that?', 'When did I tell you?' and 'How do you know X?' all fail, even though these are exactly the 'questions about itself' the uncle/dad demo wants. It also blocks recency-aware forgetting and time-scoped facts later.",
+    "evidence": "Probe: last event JSON has keys actor, deps, event_id, fact_id, kind, n, prev, provenance(null), raw('correct Rukakax city = Zzorbo'), relation, rule_id, source, subject, supersedes, v, value. There is no time or sentence field. Probe replies: 'Who taught you that Tovi's city is Brell?', 'How do you know Tovi's city?' and 'What did I teach you?' each got the double refusal, before and after a reboot. fable_loop138_agent.py:232-243 keeps self_origin/self_turn_log in memory only.",
+    "status": "CONFIRMED",
+    "improvement": "One additive change: the listening path puts {'t': ISO time, 'said': original sentence, 'by': 'Ben'} into the FACT event's existing 'provenance' field (it is already in the schema and null for taught rows). The self-answerer then reads origin from the notebook instead of from memory. No existing rule changes. The hash chain covers the new fields automatically.",
+    "expected_gain": "Enables demo lines like 'You told me that on Sept 22 at 9:14: \"Tovi's city is Brell.\"', which a plain transformer cannot do. It survives restarts and gives the base for forgetting and 'used to be' later.",
+    "effort": "M",
+    "risk": "Changes event bytes, so frozen byte-level comparisons of events.jsonl will move (expected, predictable). It must not alter the dedupe keys (value equality), or re-teaches would stop deduping.",
+    "serves": [
+     "demo",
+     "teachable",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "'X's city used to be A but now it is B' writes a junk relation",
+    "problem": "A natural correction sentence is saved as a brand-new functional relation named 'city_used_to_be_brell_but_now_it' with value Varn. The real city stays Brell, and the reply echoes the junk back as 'Saved'. This is a wrong write that the relation-name path lets through because any 'X's <words> is Y' becomes a relation.",
+    "evidence": "Probe dialog 03: 'Tovi's city is Brell.' then 'Tovi's city used to be Brell but now it is Varn.' -> 'Saved: Tovi's city used to be brell but now it is Varn.' events.jsonl: RELATION 'city_used_to_be_brell_but_now_it' functional=True; FACT value Varn. 'What is Tovi's city?' -> 'Tovi's city is Brell.' Open-vocabulary relations also accept 'second city' and 'favourite thing in the whole world' (these may be fine).",
+    "status": "CONFIRMED",
+    "improvement": "Add a store-side relation-name screen: refuse (clarify) any new relation name that contains a copula or tense word ('is', 'was', 'used to be', 'but', 'now', 'no longer'), or that is longer than about 4 words. Better still, route 'used to be A but now B' to the correction path. This is one guard at the point where RELATION events get declared.",
+    "expected_gain": "Closes a class of wrong writes that is easy to trigger in a live demo. Keeps the notebook's relation list clean as it grows.",
+    "effort": "S",
+    "risk": "It could refuse some legitimate long relation names. Measure it against the 600-row bench and the session suites (expect 0 moves).",
+    "serves": [
+     "teachable",
+     "demo",
+     "benchmark"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Display-case fix (166c) is lost on restart",
+    "problem": "The capital letter learned from the first Title-case mention is kept only in memory (loop._dc166c), so answers change after a reboot. A demo that restarts the daemon (or crashes) will show the inconsistency.",
+    "evidence": "Probe: 'pip's city is Varn.', 'Pip is nice.', 'What is pip's city?' -> \"Pip's city is Varn.\" After rebuilding the daemon on the same directory: -> \"pip's city is Varn.\" fable_loop138i_agent.py sets loop._dc166c = {}; fable_loop166c_agent.py:114-117,183 has no persistence.",
+    "status": "CONFIRMED",
+    "improvement": "Rebuild _dc166c on boot by replaying the display rule over the notebook's ENTITY/ALIAS events and the turn log. Or record a small DISPLAY event (append-only, it does not touch facts).",
+    "expected_gain": "Answers look the same before and after a restart.",
+    "effort": "S",
+    "risk": "Low. It is cosmetic, but it moves reply text in suites that restart mid-case (p2 restart cases).",
+    "serves": [
+     "demo",
+     "conversation"
+    ],
+    "priority": 2
+   },
+   {
+    "title": "Most off-script inputs get a contradictory double refusal",
+    "problem": "Unhandled turns reply with two stacked fallbacks: 'I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?' This says both 'I don't know' and 'I didn't understand'. It will appear whenever the uncle/dad go off-script.",
+    "evidence": "Probe: 'Who told you that?', 'How sure are you about Tovi's city?', \"Tovi doesn't speak Ketan anymore.\", 'My friend Quen says ...', 'Who lives in Ci...?' and 'Pip is nice.' all returned this exact 2-part text.",
+    "status": "CONFIRMED",
+    "improvement": "When the ears produce no parse, emit only the 'didn't understand' template and suppress the notebook 'no record' template (the question never reached the notebook). This is one guard where the replies get joined.",
+    "expected_gain": "Every failure sounds honest and clear instead of confused, which matters most in the live demo.",
+    "effort": "S",
+    "risk": "Moves many reply texts in the suites (predictable, text only, no writes).",
+    "serves": [
+     "demo",
+     "conversation"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Exactly-once relies on re-executing turns being harmless",
+    "problem": "108's boot_reconcile re-runs a mailbox turn whose reply was not yet durable. That is safe for teaches, asks and same-value corrections, which dedupe by value. It is not proven for stateful turns: a 'yes' that answers a pending change question, a two-step clarify, or a turn that lands during sleep. Event ids include the turn counter, so dedupe rests only on value equality.",
+    "evidence": "design/v3/30-modes/108-daemon-exactly-once-muse.md section 2 ('Re-execution is fact-safe: teaches dedupe..., corrections supersede to the same value'). Event id format seen in probe: 'turn00402-fact-5b841e90'. 141 R4 tested 12 aimed kill-9s on teach/ask streams only.",
+    "status": "SUSPECTED",
+    "improvement": "Make the event_id deterministic from the mailbox file name plus the action index (e.g. 's00123-a0'). The existing _dup(event_id) check then gives true exactly-once for every write, whatever the pending-question state. Test with kill-9 aimed at 'yes' and forget turns.",
+    "expected_gain": "Turns crash safety from 'probably idempotent' into a guarantee, which is a claim an expert reviewer can check.",
+    "effort": "M",
+    "risk": "Changes event ids. In-process test callers that don't use file names need a fallback id.",
+    "serves": [
+     "own-architecture",
+     "benchmark"
+    ],
+    "priority": 2
+   }
+  ],
+  "keep_as_is": [
+   "Append-only hash-chained events.jsonl with fsync plus read-back before 'Saved' (fable_notebook_contract.py:164-178): the right durability core.",
+   "Torn-tail repair keeps the torn bytes in torn-tail.txt, and a bad middle line makes the daemon refuse to boot (loud, never silent).",
+   "current() never lets inferred or sleep rows stand beside a taught row. A conflict on a functional relation asks before changing, and old values stay in the log (probe: contradiction -> 'Do you want me to change it to Zzorbo?', 'Actually,...' supersedes, answer updates, reboot keeps it).",
+   "Forget is a RETRACT event, not a delete, and re-teaching works afterwards (probe).",
+   "Multi-valued relations work ('Tovi speaks Ketan/Morvish' -> both kept).",
+   "Per-turn cost is flat: 2 ms per teach from 50 to 400 facts, ask median 2 ms, reboot of 800 events 0.01 s (the 170 index keeps it this fast).",
+   "The 141 settle gate plus 108 reconcile in the 138b/138i daemon lineage (138g/h/i soaks: 2000 turns, 0 lost, 0 wrong).",
+   "The demo client fable_demo126_run.py already writes inbox files atomically (tmp + os.replace, lines 311-314), and the settle daemon skips dot/tmp files."
+  ],
+  "open_questions_for_ben": [
+   "Should new single-fix experiments be required to build on the 138i daemon (settle + exactly-once), so the old exp-74 loop is retired from registered runs?",
+   "Is it OK to add time + original sentence + speaker to every taught fact's provenance? It is the basis for 'when/who told you' demo answers, but it changes event bytes going forward.",
+   "For open-vocabulary relations ('second city', 'favourite thing in the whole world'): do you want these saved, or should long or odd relation names get a clarify question?"
+  ]
+ },
+ {
+  "part": "strategy (big-picture critic)",
+  "summary": "The safe core works well. The notebook contract, the zero-wrong-writes discipline, the demo harness (demo126 PASS) and the notebook arm on Fable-Edit-200 (100/100 two-hop, 50/50 reversal, 50/50 abstain) are all solid. But since about piece 129, most build effort has gone into hand-written English phrase rules for the conversation loop (pieces 129-193: tail words, fillers, titles, apostrophes, lowercase, small talk, say-again, and so on). Ben's final own-weights model cannot inherit these rules, and they still generalise poorly. My probe of the current base 138i understood only about 7 of 16 natural fictional turns. It also stores boss, employer and manager as three unrelated relations, so two-hop questions over naturally taught facts fail. The learned parts are pointed at the wrong targets. The ears are grinding on encyclopedia sentences (WebRED occupation 1/94), not on the chat and edit-sentence English that conversation and MQuAKE need. The benchmark result so far feeds the notebook triples, so it measures a database, not Ben's model. Also, its design is essentially the published GWalk baseline on MQuAKE-Remastered, which an expert will point out. The path converges only if the rule loop is changed from \"the product\" into \"the teacher and safety checker\" for an own-weights reader, and if the benchmark is run on the public corrected dataset with English input.",
+  "findings": [
+   {
+    "title": "Stop the phrase-rule treadmill; make the rule loop the teacher for an own-weights chat reader",
+    "problem": "Each new phrasing gets its own sealed piece (60+ pieces since 129, mostly one wording each). Every fix finds more gaps, and none of this work carries over into Ben's own-weights model. Coverage of natural English is still low.",
+    "evidence": "design/v3/30-modes/ piece files 129-193 (tailwords 139c/d/e, filler 157/157b/157c, title 157c, smalltalk 156/b/c, sayagain 189/189b, apos 193, lowercase 180/180b...). Board line 5 'QUEUED for after layer C' lists more phrase-list fixes (189c repeat phrasings, 'about' widening). Probe on loop138i (scratchpad wf-strategy/run1): 'My sister Oriel is a nurse.', 'Oriel moved to Brask last year.', 'Kell is in Varnia.', 'Where does Kavo's boss live?', 'Which city is Kavo's boss based in?', 'Is Dovan from Varnia?' all got the generic don't-understand reply. 'What country was Dovan born in?' got the city Kell.",
+    "status": "CONFIRMED",
+    "improvement": "Freeze the rule loop at 138j for anything that is not a safety fix. Build one learned own-weights reader that maps a chat utterance to the same structured line the loop already produces. Train it on (a) every utterance-to-structured-line pair the loop and its suites have logged, and (b) many generated paraphrases (Qwen/GPT may write practice sentences, per ears-decisions), labelled by the loop where it is confident. The notebook contract plus echo-confirm stays as the safety gate, so a learned reader can never silently write a wrong fact. Score it against the rule loop on a sealed fresh-paraphrase panel. The learned reader should win on coverage while wrong writes stay at 0.",
+    "expected_gain": "Every later hour of work goes into Ben's own weights rather than throwaway rules. Coverage of natural phrasing should grow much faster than one phrasing per piece. This learned reader is also the part that makes the benchmark and the demo 'his model'.",
+    "effort": "L",
+    "risk": "A small from-scratch reader may be weaker than the rules at first. Keep the rules as fallback and safety net and switch per utterance by confidence. Training data written by the placeholder LLM is weaker than real user text.",
+    "serves": [
+     "conversation",
+     "teachable",
+     "own-architecture",
+     "benchmark",
+     "process"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Benchmark on public MQuAKE-Remastered with English input, and compare to GWalk",
+    "problem": "The expert-facing result so far is Fable-Edit-200, a home-built 200-item set, and the notebook arm was fed triples, not English. The notebook design (walk a knowledge graph of edited facts) is essentially GWalk, the ICLR 2025 baseline that already beats state of the art on MQuAKE-Remastered. An expert will ask 'how is this different from GWalk, and who did the parsing?'. The comparison model, SmolLM2-360M, is not the same size and was not trained on the same data, and the RAG-lite arm scored below plain in-context (38 vs 52 of 150), which suggests it was a weak baseline.",
+    "evidence": "artifacts/fable-bench65-20260921/RESULTS.md ('This arm feeds TRIPLES, not English'). artifacts/fable-bench66-20260921/RESULTS.md (RAG-lite 38/150 < in-context 52/150, P66.2 FALSE). artifacts/fable-bench125-20260922 (English loop113 145/50/5 on s2fresh 4-hop). grep: no RESULTS.md mentions MQuAKE-Remastered; it appears only in plan docs 63/70/71/92. GWalk: https://github.com/henryzhongsc/MQuAKE-Remastered and https://iclr.cc/virtual/2025/poster/28478",
+    "status": "CONFIRMED",
+    "improvement": "Register one run on MQuAKE-Remastered CF-3k with the standard multi-hop accuracy metric. Arms: (1) notebook fed the benchmark's English edit sentences and questions through the own-weights reader (or the rule loop, labelled as such); (2) the published GWalk and MeLLo numbers; (3) Ben's own same-size plain transformer, trained on the same text; (4) a proper retrieval baseline. Present the claim honestly: 'a tiny own-weights system matches a GWalk-style editor that normally uses a large LLM, and abstains instead of guessing'. The small size and the abstention are the parts an expert can respect.",
+    "expected_gain": "A result on a public, corrected, cited dataset with a known state-of-the-art line, instead of a self-built set. This is the one benchmark result an expert is likely to take seriously.",
+    "effort": "M",
+    "risk": "MQuAKE question wording is varied, and the rule parser may do poorly on it. That is informative and it motivates finding 1. Never tune on the test split; build the parser only on CF-6334 train.",
+    "serves": [
+     "benchmark",
+     "demo"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Point the ears at the English that matters now; pause the WebRED occupation grind",
+    "problem": "The learned ears (borrowed encoder) have spent the 119, 119b-h waves on real encyclopedia sentences. That serves web reading in THINKING mode, which is parked and lower priority. Conversation and MQuAKE need short chat and cloze-style sentences, where the ears were already fairly good but too timid.",
+    "evidence": "Board: 119f registered FAIL (occupation 1/94). 119g FAIL (occupation 1/94 on every seed). Morning report: real-text reading 0 saves on 3/3 seeds. artifacts/fable-ears47-20260921/RESULTS.md: on generated sentences R2-NEW 2,682/3,000 correct but only 640 executed, and 0 of 46 WebRED executed.",
+    "status": "CONFIRMED",
+    "improvement": "After the 119h wave finishes, pause WebRED waves. Re-target the same ears training setup to the conversation domain plus MQuAKE edit sentences, which merges it with finding 1 (one learned reader, not two). Calibrate the execute threshold on a chat-domain panel so it stops being timid.",
+    "expected_gain": "The GPU goes to the reader Ben will actually talk to and to the benchmark, instead of a mode that is parked.",
+    "effort": "M",
+    "risk": "Real-web reading is delayed. That is acceptable because web text cannot go into weights without two sites anyway.",
+    "serves": [
+     "conversation",
+     "benchmark",
+     "own-architecture"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Relations are not canonical: boss, employer and manager become three different relations",
+    "problem": "Facts taught in natural words go under different relation names, so a two-hop question worded differently from how the fact was taught fails. This hits the core pitch (two-hop over taught facts) in a live demo.",
+    "evidence": "Probe: 'Kavo works for Lirae.' -> 'Saved: Kavo's employer is Lirae.'; 'Lirae lives in Tamsin.' saved; 'Where does Kavo's boss live?' -> don't-understand; 'Kavo's manager is Lirae.' -> 'Saved: Kavo's manager is Lirae.' (a new relation, not recognised as a repeat).",
+    "status": "CONFIRMED",
+    "improvement": "Add a relation-canonicalisation layer: a small fixed synonym map now, and in the learned reader, output one canonical relation ID with aliases. Echo-confirm when a new relation name looks close to an existing one.",
+    "expected_gain": "Two-hop questions work over facts taught in any wording. This is also needed for MQuAKE, whose relations are Wikidata IDs.",
+    "effort": "S",
+    "risk": "Over-merging near-synonyms (boss vs employer can differ). The echo-confirm prevents silent errors.",
+    "serves": [
+     "conversation",
+     "demo",
+     "benchmark"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Shortest demo path: freeze a base and compare against Ben's own same-size transformer",
+    "problem": "The demo needs to show an advantage over a plain transformer of equal size. The current side-by-side uses a borrowed SmolLM2-360M, a different size and different training data. Meanwhile Ben already has a from-scratch talker pretrained on 617M tokens, own weights, which is a natural 'plain transformer, same data' control.",
+    "evidence": "artifacts/fable-demo126-20260922/RESULTS.md (A1-A8 PASS on loop117 and loop113b, run in about 7 s). Morning report: talker pretraining done (617M tokens, BLiMP 67.4%); talker120b raw unfaithful 172/500, 0/500 after the brake.",
+    "status": "CONFIRMED",
+    "improvement": "Freeze 138j (or 138i) plus the demo126 script as the demo base. Add the grounded self card. As the plain-transformer foil, use Ben's own pretrained talker with the taught sentences in its prompt, scored with the same script (teach, two-hop, correct, restart, 'I don't know'). The mouth can be the braked talker for flavour. Then stop adding features for the demo.",
+    "expected_gain": "A demo ready in about a day with a fair, easy-to-explain comparison: same person, same data, same size, one with the notebook architecture and one without.",
+    "effort": "M",
+    "risk": "The foil may still get a few two-hop items right in-context, which is fine and honest. Rehearse off-script questions, since the rule loop fails on many natural phrasings (finding 1).",
+    "serves": [
+     "demo",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Garbled double refusal in replies",
+    "problem": "When a turn is not understood, the reply joins two templates into one confusing sentence. Uncle and dad would see this on any off-script question.",
+    "evidence": "Probe, many turns: \"I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?\"",
+    "status": "CONFIRMED",
+    "improvement": "Give one reply per failure status: 'I didn't understand that; could you say it another way?' vs 'I don't know that yet.'",
+    "expected_gain": "Clearer and more honest behaviour in the demo; it also separates 'I didn't understand' from 'I don't know' (abstention) in logs.",
+    "effort": "S",
+    "risk": "Frozen suites will show predicted reply-only moves.",
+    "serves": [
+     "demo",
+     "conversation"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Use lighter process for plain-software reply and phrase pieces; refresh the stale Next-up list",
+    "problem": "Full sealing, ledgers and registered-FAIL rules on wording-level rule changes cost a lot of agent and director time (disk, database and network incidents, re-registrations such as 180 -> 180b, 187 -> 187b, 164 -> 164b). The board's 'Next up' section still lists 21-Sep items (mouth53 re-dispatch, 'first registered benchmark run from 63').",
+    "evidence": "Board lines 260-268 (Next up) are stale compared with the Running section. Morning report lists registered FAILs 180, 187, 170, 167c where 'the feature often works'. The outside review (design/v3/28) already accepted 'lighter manifests for cheap diagnostics'.",
+    "status": "CONFIRMED",
+    "improvement": "Keep full sealing for learned-model experiments and benchmark runs. For plain-software reply and phrase fixes, use a single regression suite with a zero-wrong-writes gate. Rewrite Next-up around the three direction changes above.",
+    "expected_gain": "Frees director and agent capacity for the learned reader and the benchmark.",
+    "effort": "S",
+    "risk": "Some loss of rigour on rule pieces, which matters little if they are frozen anyway.",
+    "serves": [
+     "process"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "Notebook contract (append-only, stable IDs, discrete statuses, taught beats inferred): it is the part that makes answers true by construction and is the natural safety gate for any learned reader.",
+   "Zero-wrong-writes safety discipline and echo-confirm on risky writes (360-turn red team 152: 0 wrong writes).",
+   "Sealed registration, pre-registered marks and 'FAIL stays FAIL' for learned-model and benchmark experiments.",
+   "demo126 harness (teach, two-hop, forget, refuse, clarify, abstain; A1-A8 PASS) as the demo backbone.",
+   "bench125-style same-metric tables with correct/abstain/wrong reported separately, never averaged.",
+   "Braked own-weights talker (0/500 wrong after the brake): a real own-architecture mouth.",
+   "Automatic router/rank-limited sleep line (exp 43E/43I/44/46): a genuine own-weights learning mechanism worth keeping as research."
+  ],
+  "open_questions_for_ben": [
+   "Are you OK freezing the rule-based conversation loop (safety fixes only) and moving build effort to one learned own-weights reader that the rules help train?",
+   "For the uncle/dad demo, may the 'plain transformer' foil be your own pretrained talker, given the same taught sentences in its prompt? That is the fairest same-size, same-data comparison.",
+   "For the benchmark, are you comfortable stating plainly that the memory design resembles GWalk (ICLR 2025), with the claimed advantage being a tiny own-weights system plus honest abstention?",
+   "Can the ears GPU time move from encyclopedia reading (WebRED) to chat and MQuAKE sentences after the 119h wave?"
+  ]
+ },
+ {
+  "part": "process",
+  "summary": "The honesty machinery works. Seals are checked, post-seal edits get caught (180, 187, 164, 167 were all turned into registered FAILs), and each accepted piece gets a held-out probe from the director. That is worth keeping. The time goes to four places. (1) Every piece writes its own comparison harness, about 700 lines for 192, and these hand-written harnesses cause many of the post-seal edits and case-file bugs. (2) The frozen suites grade reply wording as if it were correctness. marks123 shows FAIL on 5 of its 10 suites even for the accepted base, and changing only the reply text registers as \"wrong\". (3) Agents are built on old bases (192 on 167e, 190 on 138g) while the real base moves on, so merges pile up to 9\u201311 pieces. The 11-piece merge 138d failed, and wording clashes like 192 vs 154g only show up at merge time. (4) Wait time: after a network drop the agent sat idle about 45\u201355 minutes before relaunch, and finished reports waited another 45\u201355 minutes for the director to verify them. A clean small piece takes about 1 hour from brief to verified (193: 09:56 to 10:50). A piece hit by an outage takes about 3.2\u20133.6 hours (192, 196), and roughly half of that is waiting.",
+  "findings": [
+   {
+    "title": "One shared, sealed comparison tool instead of a new diff harness per piece",
+    "problem": "Each piece writes its own suites/marksdiff/bench drivers. They are rewritten, not copied, so each one is a fresh chance for bugs. Agents also spend much of their run reading the 1156-line marks123 source to work out why a case moved. Driver bugs found after the seal force disclosed re-runs, or turn into registered FAILs.",
+    "evidence": "96 per-piece harness scripts in scripts/ (marksdiff/_suites/_bench). 192: 231 lines of feature code in fable_fix192_correctreply.py vs about 730 lines of harness (bench 132, marksdiff 204, probe 141, suites 254). 138i: m1pieces 542 + suites 557 + m2 237. The harness pairs share little code: fix167e_marksdiff vs fix192_marksdiff differ on 159 of about 220 lines; fix188_suites vs fix193_suites differ on 514 lines. Transcript 192 go1 mentions fable_marks123_all 23 times, mostly sed/grep reads of its source (lines 100-140, 460-510, 767-875). Board: post-seal driver fixes on 163, 164, 166b, 173b, 171b, 154d.",
+    "status": "CONFIRMED",
+    "improvement": "Director builds and seals one tool once, e.g. scripts/fable_suitediff.py --agent X --config Y --base-rows Z. It runs redteam136, redteam143, sessions152, marks123 and the bench, and writes a per-case moves JSON (id, old verdict/reply/stored, new verdict/reply/stored, class: reply-only / stored / verdict). Briefs then say: 'predicted moves = a JSON list of ids plus class; the tool checks it.' Base rows are cached per accepted base, so a piece only runs its own side. Piece agents write only the feature code and the piece's own case file.",
+    "expected_gain": "Roughly 30-40% of agent time per piece, and it removes a whole class of post-seal driver fixes. The director can verify by running one command.",
+    "effort": "M",
+    "risk": "A bug in the shared tool would hit every piece. To guard against that, seal it, test it on two past pieces whose results are known (192, 190b) before adopting it, and change it only in its own registered experiment.",
+    "serves": [
+     "process"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Frozen suites grade reply wording as correctness; retire the stale suite-level bars",
+    "problem": "marks123's suite-level PASS/FAIL no longer means anything. The accepted base reads FAIL on p2, p3, p4, bench and rt81. The soak counts a correct write as 'wrong' unless the reply starts with 'Saved:'. So any reply-text change produces scary FAIL or 'wrong' numbers that every agent must explain, and that the director has to rule 'FAIL by construction'. The same kind of literal-text check also produced a registered FAIL for 137d (the judges expected the old HEARSAY_MSG).",
+    "evidence": "scripts/fable_marks123_all.py:854 `if not (reply.strip().startswith(\"Saved:\") or reply.strip() == \"I already have that.\"): wrong += 1`. artifacts/fable-agent138i-20260922/marks138i/fable_marks123_summary.json: p2 FAIL, p3 FAIL (l2/l5z1/l5z2), p4 FAIL, bench FAIL (edit_200 wrong 99, s2fresh 0 correct under the stock driver), rt81 FAIL. 138i RESULTS says 'suite bars read FAIL at suite level by construction'. 192 RESULTS: soak 'wrong 41 = 39 Actually->Updated' with the notebook audit clean; redteam143 Q1-Q7 turned into HARNESS-ERROR; rt81 5 OK->UNCLEAR; l5z1 9 SAVED->WRITE_OTHER, all caused by the wording alone. Board 07:49: 137d registered FAIL on 7 reply-text checks with 0 stores.",
+    "status": "CONFIRMED",
+    "improvement": "Register 'frozen suites v2' as one director experiment. Every judge scores the stored facts and events (what the notebook actually holds), plus a separate 'reply mentions the right value' check. No literal checks on prefixes like 'Saved:'. Suite-level bars are re-set to the current base's absolute counts: wrong writes, wrong answers, lost/doubled facts. The main gate stays per-case diff vs base. Keep v1 frozen for history, but stop requiring agents to explain its suite labels.",
+    "expected_gain": "Removes most of the 'FAIL by construction' prose and the per-case wording triage (in 192 this took a large share of both runs). Verdicts become easier to read and harder to misread, for Ben and for the uncle demo story.",
+    "effort": "M",
+    "risk": "Re-baselining could hide a real regression if done carelessly. Do it once, sealed, on the accepted base, and have both versions report side by side for a few pieces.",
+    "serves": [
+     "process",
+     "benchmark"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Build every piece on the current base and merge in small batches",
+    "problem": "Pieces are built on whatever base existed when they were briefed (192 on 167e, 190 on 138g, 164b on 138h), while the base moves 138g -> 138h -> 138i. Merges then stack 9-11 pieces, need port plans and long lists of cross-piece 'interaction classes', and reveal clashes late. For example, 192's 'Updated: ... (it was Sam).' and 154g's 'Saved: ... (It was Z.)' are two wordings for the same event, found only when planning the 138j merge. Big merges are the slowest and most failure-prone step.",
+    "evidence": "Board 07:42: 138d (11 pieces) registered FAIL on M4/M5/M6. 138i RESULTS M1: 173b 58/94, 167d 22/32, 171b 120/122, each diff a listed 'interaction class'. 196 brief is about 5.4 KB and needed a director resume note. Board line 9: 205 merge138j has 11 pieces with a 150 min deadline, and the director had to rule on a wording clash. 192 brief: 'ONE CHANGE on loop167e'. 190b base is loop190, which sits on 138g.",
+    "status": "CONFIRMED",
+    "improvement": "Rule: a new piece always builds on the newest accepted base. Right after it is verified, a small 'land' step (1-3 pieces, run by the shared diff tool) makes it the new base. Pieces already running on old bases get merged in batches of at most 4. The one-change rule is kept: 'land' changes no behaviour, and its marks are just replay-identical to each piece.",
+    "expected_gain": "Removes the multi-hour layer merges and most interaction-class bookkeeping. Clashes appear within one piece instead of 10. The time saving here is estimated, not measured.",
+    "effort": "S",
+    "risk": "Pieces running in parallel against the same base can conflict with each other. Landing order must be serial, and a piece whose base went stale gets a quick re-run on the new base before landing.",
+    "serves": [
+     "process",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Cut the waiting time: automatic resume and a mechanical verify step",
+    "problem": "In the two slow pieces, agent work was about 2 hours but total time was about 3.5 hours. About 45-55 minutes went on relaunching after network or database failures, and another 45-55 minutes on reports waiting for the director to verify them one at a time. The mechanical checks (seal intact, what changed after the seal, whether RESULTS numbers match the JSON) are done by hand each time.",
+    "evidence": "File timestamps in the mimo queue: 192 go1 09:49-11:16 (died on neterr 'socket connection was closed'), go2 started 12:00 (44 min idle), done 12:28, verified on the board 13:23 (55 min). 196 go1 10:11-11:06 (neterr), go2 11:59 (53 min idle), done 12:36, accepted 13:22 (46 min). 193 without an outage: 09:56 -> 10:47 -> verified 10:50. 6 .neterr files. Board: network drop 11:07-11:18 plus a database lock, TLS errors 12:55-13:11 on 203; 'rungo4 resumes' exists now.",
+    "status": "CONFIRMED",
+    "improvement": "(a) A watchdog relaunches a dead agent on the same brief within 2 minutes, with the resume note filled in automatically. (b) A verify script runs as soon as a .done file appears. It runs shasum -c, lists files changed after the SEAL time (mtime plus err-log edit lines), re-reads each number in the RESULTS table from its JSON, and writes a short stub for the director. The director then only reads the stub and runs the held-out probe, which is the valuable human step.",
+    "expected_gain": "About 1-1.5 hours saved on every piece hit by an outage, and about 30-45 minutes on every piece that waits in the verify queue. Together with the shared diff tool this is the main path to roughly 2x throughput.",
+    "effort": "S",
+    "risk": "An automatic verify stub could be trusted too much. Keep the rule that the director signs every acceptance and runs the held-out probe. The stub only helps and never accepts anything.",
+    "serves": [
+     "process"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Many registered FAILs come from test design, not the feature; add a pre-seal case-file check",
+    "problem": "A large share of registered FAILs happened because the sealed tests themselves were wrong. Each one costs a full re-registration cycle (1-3 hours). Examples: case-file bugs or impossible setups (163, 167), a sealed expectation that demanded the old bug (139c P4-09), the mark naming the wrong base (170), an improvement nobody predicted (167c), soak flakes under load or a startup race (153, 158, 192's 2 lost teaches). FAIL should stay FAIL, but these are preventable before the seal.",
+    "evidence": "Board lines 50, 51, 78, 109, 123, 150, 155: 170 'mark named the wrong base; the speed-up itself works', 167c 'an unpredicted improvement', 167 'case-file bug', 163 '7 sealed noMerge cases had an impossible setup', 139c 'sealed expectation requires the old bug', 158 soak '10 wrong under load' (0 when the director re-ran it alone), 153 'soak x2' (0 diffs when re-run alone). 192 RESULTS: soak 'lost first teach (startup mailbox race, proven in daemon log)'. Re-registrations needed: 164b, 187b, 180b, 162b, 139e.",
+    "status": "CONFIRMED",
+    "improvement": "Before sealing, the director (or the shared tool) runs a mechanical check. Every case's expected value must be reachable from its setup on the base agent. Every expected output must differ from the base's current output only where the piece intends a change. The base name in the marks must match the brief. Fix the soak race: wait for daemon readiness before the first teach, and run the soak only when the Mac load is below a threshold (record the load in the report). For the 'unpredicted improvement' case, allow predictions in the form 'moves only in direction X' (e.g. wrong->correct or abstain, never ->wrong), which stays falsifiable without listing exact ids.",
+    "expected_gain": "Fewer re-registration cycles. Judging from today's board, perhaps a quarter to a third of registered FAILs would not happen. This is an estimate from the board, not a measured rate.",
+    "effort": "M",
+    "risk": "Direction-only predictions are looser. Limit them to reply-text or abstain moves, and keep exact-id predictions for anything touching stored facts.",
+    "serves": [
+     "process"
+    ],
+    "priority": 3
+   },
+   {
+    "title": "Ledger predictions are mostly certain restatements; separate rule checks from real forecasts",
+    "problem": "Predictions are written after the full pilot on the final code, and the code is deterministic, so they mostly restate the pilot numbers. About a quarter are process rules (run under 1500 s, no post-seal edits) at 0.95. The ledger therefore records very few surprises and says little about how good the director's foresight is. It also costs agent time and 400 KB of append-only text.",
+    "evidence": "artifacts/fable-predictions-ledger.md lines 1700-2126: 253 prediction lines, 60 of them process-rule predictions (1500 s / post-seal / shasum); outcomes 179 TRUE vs 11 FALSE. P192.5/P192.6 and P138i.6/P138i.7 are rule checks. P138i.1 lists exact pilot counts (76/81/92/38; t1b 75/83), which were known before it was written.",
+    "status": "CONFIRMED",
+    "improvement": "Keep the sealed pass marks, which carry the honesty. In the ledger, (a) turn the rule checks into a fixed checklist line in RESULTS instead of numbered predictions, and (b) ask for 1-2 genuine forecasts made at brief time by the director, before any pilot (e.g. 'bench moves <= 5', 'probe pass >= 80%'). Those forecasts are what show whether the director's model of the system is right.",
+    "expected_gain": "Small time saving per piece. The bigger gain is that the ledger starts measuring something useful (director calibration), which helps the expert/benchmark story.",
+    "effort": "S",
+    "risk": "Almost none, as long as registered bars and seals are unchanged.",
+    "serves": [
+     "process"
+    ],
+    "priority": 2
+   }
+  ],
+  "keep_as_is": [
+   "Sealing agent code, config and cases together with shasum before registered runs, plus the 09:56 rule that any post-seal change to them is a registered FAIL. It caught 180, 187, 164 and 167.",
+   "Registered FAIL stays FAIL, followed by one diagnosed follow-up with one change (e.g. 139d -> 139e, 162 -> 162b).",
+   "The director's held-out probe on every accepted piece with fresh fictional names. It keeps finding real gaps (e.g. 189b phrasings, 157c comma-less fillers).",
+   "Per-case comparison against the base agent (0 new wrong / wrong-write, moves only as predicted by id). This is the gate that actually matters.",
+   "Pilot-before-seal, and every case/seed reported as an integer count, never averaged.",
+   "Short final agent answers ('What it means' / 'What it does not mean') and plain-language board entries.",
+   "Disk guard and kill-by-exact-PID practice after the overnight incidents."
+  ],
+  "open_questions_for_ben": [
+   "May the director re-baseline the frozen suites once (score stored facts, not reply wording) as its own sealed experiment, keeping the old suite outputs for history?",
+   "Is it OK to change the workflow so every new piece is built on the newest accepted base and landed right away, instead of collecting 9-11 pieces into big layer merges?",
+   "Is a direction-only prediction ('may move only toward correct or abstain') acceptable for reply-text changes, so an unexpected improvement no longer counts as a registered FAIL?"
+  ]
+ },
+ {
+  "part": "talker",
+  "summary": "The from-scratch talker exists, but it is not connected to the conversation loop. It is a 28.8M-parameter transformer with a copy head, pretrained on 617M tokens of SimpleStories: validation loss 1.56, BLiMP grammar test 67.4% against a 70% bar (FAIL). It was then fine-tuned to turn notebook records into sentences (talker120/120b/120d). After the plain-software brake it made 0 wrong statements in 500 test records, but its raw output was still unfaithful in 172/500 records (O6 FAIL, bar 50). Most remaining errors are cut-off names like 'Fara' for Farah. The current base agent loop138i still speaks through the hand-written template mouth (config 'mouth.stand_in: Loop138bMouth'), and the borrowed SmolLM mouth53 is not wired in either. So nothing trained by Ben produces the words a visitor sees. I ran a realistic uncle/dad conversation (43 turns) through loop138i. Teaching and asking in the robot possessive form works well, including 3-hop chains (\"What is my sister's city's country?\" -> \"Your sister's city's country is Norwin.\"), plus corrections, forgetting, yes/no and 'What can you do?'. But about half of ordinary turns got the same long, clumsy three-sentence refusal, including 'Hello there.', 'Who are you?', 'Tell me about Mira.' and the natural two-hop 'What country does Mira live in?'. One turn made a wrong save ('Mira dog = called Pip'). A non-technical listener would conclude it barely understands English, even though the reasoning underneath is strong. Several fixes that passed on their own (156c small talk, 187b self questions, 188 statement fallback, 190 reverse questions, 192 correction wording) are not in 138i yet. They are waiting in the 138j merge, which is running now.",
+  "findings": [
+   {
+    "title": "Everyday two-hop questions fail even though the reasoner can answer them",
+    "problem": "The main advantage for the demo (joining two taught facts) only works when the question uses the stiff 'X's R's R' form. Natural wordings of the same question fall through to the refusal. This happens even when both facts are stored and the robot form of the same question works.",
+    "evidence": "Probe run2/run3 on loop138i. Taught 'My sister is Mira.' / 'Mira lives in Kestrel Bay.' / 'Kestrel Bay's country is Norwin.' (all 3 saved; events.jsonl raw: 'teach USER sister -> Mira', 'teach Mira city = Kestrel Bay', 'teach Kestrel Bay country = Norwin'). 'What is my sister's city's country?' -> 'Your sister's city's country is Norwin.' (correct). But 'Where does my sister live?', 'What country does Mira live in?', 'Which country does my sister live in?' and 'What country is Mira's city in?' all -> the generic decline. Also 'Kestrel Bay is in Norwin.' was not saved at all (run1). I found no board line that owns 'what country does X live in' or 'X is in Y' shapes.",
+    "status": "CONFIRMED",
+    "improvement": "Add one ears piece that rewrites a small closed set of natural two-hop shapes into the possessive chain the composer already handles, then passes the result to the existing composer. Shapes: 'where does <chain> live' -> <chain>'s city; 'what/which country does <chain> live in' -> <chain>'s city's country; 'what country is <X> in' -> X's country. It should use the existing verb/city mapping. Add the teach shape '<Place> is in <Place>.' -> place's country, but only when the subject is already a stored city value, so ordinary sentences don't get misread. It never writes on an ask.",
+    "expected_gain": "The headline demo moment (teach two facts, ask one natural question, get the joined answer) works in plain English. That is the single turn most likely to impress the uncle/dad and the benchmark two-hop story.",
+    "effort": "M",
+    "risk": "False rewrites on look-alike sentences. Guard it the way 174/190 did: clarify-only, closed shapes, frozen-suite parity.",
+    "serves": [
+     "demo",
+     "conversation",
+     "benchmark"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "The fallback reply is a three-sentence patchwork built to satisfy scorers, and it is what visitors see most",
+    "problem": "When the notebook misses and the router declines, the agent replies 'I do not know that from what you taught me. I have no record of it, so I will not guess. I didn't understand that, I don't know \u2014 could you say it another way?'. The code comment says this text was stitched together so that three different frozen judges (self scorer, bench scorer, redteam) each find their own marker phrase. The marks shaped the wording, not the listener. 188 fixes this only for statement-shaped turns; question turns keep the patchwork.",
+    "evidence": "scripts/fable_loop138_agent.py:82-93 (DECLINE_SUFFIX comment: 'the bare frozen HONEST_DECLINE is scored WRONG by the bench scorer... appends the redteam/bench abstain bits'). scripts/fable_loop188_agent.py:83-99 keeps QUESTION_FALLBACK188 = S105.HONEST_DECLINE + DECLINE_SUFFIX. Probes: this exact string was served on 26 of 43 probe turns, including 'Hello there.', 'How are you?', 'Who are you?', 'Tell me about yourself.', 'Can you talk?'.",
+    "status": "CONFIRMED",
+    "improvement": "Use one short sentence with a helpful example, picked by the kind of turn. A question gets something like 'I don't know that \u2014 nobody has taught me. You can teach me, like \"Kim's boss is Lee.\"'. Chat gets small talk. Update the frozen judges' abstain phrase lists once, in a sealed and disclosed judge change. Don't keep stacking phrases into the reply. The board already queues 'one fallback sentence'; this makes it a priority and says to change the judges.",
+    "expected_gain": "The most common reply stops sounding broken. A visitor hears one calm 'I don't know yet, teach me' line instead of a contradictory run-on ('I do not know... I didn't understand').",
+    "effort": "S",
+    "risk": "Changing a judge's phrase list must be its own sealed, disclosed change, or earlier registered results become hard to compare. Keep the old strings in the judge list too.",
+    "serves": [
+     "demo",
+     "conversation",
+     "process"
+    ],
+    "priority": 5
+   },
+   {
+    "title": "Wrong save: 'Mira's dog is called Pip.' stores the value 'called Pip'",
+    "problem": "A very natural teaching sentence stores a garbage value. Later 'What is Mira's dog called?' answers 'I don't know Mira's dog called.' Related shapes also fail: \"Mira's dog's name is Pip.\" -> decline, and 'What is the name of Mira's dog?' -> 'I don't know anyone called the name of Mira.'",
+    "evidence": "Probe run1 events.jsonl: '\"raw\": \"teach Mira dog = called Pip\"' (relation dog, non-functional); reply was 'Saved: Mira's dog is called Pip.', which hides the bad value. Run2: \"Mira's dog's name is Pip.\" -> decline; \"What is the name of Mira's dog?\" -> \"I don't know anyone called the name of Mira.\"",
+    "status": "CONFIRMED",
+    "improvement": "One ears change: 'X's R is called/named V' and 'X's R's name is V' -> teach X R = V. Ask forms 'what is X's R called' and 'what is the name of X's R' -> ask X R. Add 'called/named' as a leading value word to the 167b/139b value screen, so it can never become the start of a stored value.",
+    "expected_gain": "Removes a real wrong write, which breaks the 0-wrong-writes promise, on a sentence people commonly use when teaching about pets and family.",
+    "effort": "S",
+    "risk": "Low; it follows the pattern of the existing value screens.",
+    "serves": [
+     "conversation",
+     "demo",
+     "teachable"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "Answers sound robotic: no names in the chain, no 'because', 'city' instead of 'lives in'",
+    "problem": "Even correct answers read like database output: 'Your sister's city's country is Norwin.', 'Mira's city is Dunmore.', 'I don't know Mira's city.' For the uncle/dad, the impressive part is seeing the steps ('Your sister Mira lives in Kestrel Bay, and Kestrel Bay is in Norwin'). That shows the advantage over a plain transformer. The template mouth throws the chain away. (I confirmed the wording by probe; that the reasoner record carries the middle values is my inference, not checked.)",
+    "evidence": "Probe run3: 'What is my sister's city's country?' -> 'Your sister's city's country is Norwin.'; run1: 'Where does Mira live?' -> \"Mira's city is Kestrel Bay.\" loop138i config: mouth.stand_in = 'Loop138bMouth (Loop138Mouth + 148b screen texts)'.",
+    "status": "CONFIRMED",
+    "improvement": "Add a template 'explain-the-hops' reply for OK multi-hop answers. Name each middle value and use relation phrases like 'lives in' for city and 'is in' for country: 'Norwin. (Your sister is Mira, Mira lives in Kestrel Bay, and Kestrel Bay is in Norwin.)'. It stays plain software, so the brake/faithfulness rule holds trivially. Later this is exactly the job for the talker.",
+    "expected_gain": "Each correct two-hop answer also shows its reasoning. That is the clearest 'this is different from a chatbot' moment for a non-expert, and it matches the demo requirement.",
+    "effort": "S",
+    "risk": "Reply-text change only, but frozen judges that match exact reply strings will move. Predict those as a reply-only class, the way 192 did.",
+    "serves": [
+     "demo",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "No demo gate on the current agent; the only demo transcript is on loop117/113b",
+    "problem": "The 126 demo harness passed, but only on old agents (loop117, loop113b). Its scripted evening uses the robot phrasing the agent already handles, so it cannot catch the natural-English gaps above. No scripted 'uncle conversation' is run against each new merged base.",
+    "evidence": "artifacts/fable-demo126-20260922/RESULTS.md: 'Two registered runs... loop117 (7.1 s) + loop113b (6.8 s)'. Probe on loop138i: 26/43 natural demo turns got the generic decline.",
+    "status": "CONFIRMED",
+    "improvement": "Write a fixed, sealed 'uncle script' of about 40 natural turns: greeting, who are you, what can you do, teach 5 family/place facts in everyday wording, ask back, natural two-hop, correction, 'what do you know about X', a question it must refuse, goodbye. Agents write it, not Ben. Score each merged base on it: count of natural replies, count of generic declines, wrong writes. Run it after every layer merge (it takes seconds) and show the transcript next to the plain-transformer comparison panel already in 126.",
+    "expected_gain": "The director's next fixes get aimed at what the demo audience will actually say, and each merge shows whether the demo got better.",
+    "effort": "S",
+    "risk": "Overfitting to one script. Keep a second held-out script the builders never see.",
+    "serves": [
+     "demo",
+     "process",
+     "conversation"
+    ],
+    "priority": 4
+   },
+   {
+    "title": "The from-scratch talker is not in the loop; give it a safe slot so Ben's own weights actually speak",
+    "problem": "Ben's top priority is a from-scratch model he can talk to. Today the talker (his weights) is only exercised in offline scoring and a replay harness. The live agent uses templates. The talker's remaining weak spot is copying multi-piece names (cut-offs like 'Fara', 'Gide', 'Ximenaenaenain'). (Not-wired and the O6 numbers are confirmed; that say(record) drops straight into the loop's mouth slot is my inference.)",
+    "evidence": "artifacts/fable-talker120b-20260922/RESULTS.md and morning report line 27: O6 raw unfaithful 313 -> 172/500 after the mask fix, truncation from 3\u20134-BPE-piece names. Board 07:49: 120d registered PASS (0 wrong writes, 12/3/0/6 identical to wire51). Checkpoint present at artifacts/claude-talker120b-run-20260922/fable_talker120b_ckpt_last.pt. loop138i config mouth.replacement names mouth53, not the talker. Talker120dMouth.say(record) at scripts/fable_talker120d_mouth.py:119.",
+    "status": "CONFIRMED",
+    "improvement": "Two steps, one change each. (a) Retrain the fine-tune with names replaced by slot tokens: record names become <N1>, <N2> and places <P1> in both prompt and target, and the real strings are put back after decoding. The copy head then never has to spell 'Farah', which should remove most of the 149 truncation-related raw misses. (b) Wire Talker120dMouth into the loop behind a config flag ('voice: talker'), keeping the brake and the template fallback. Log raw-pass vs fallback counts per session, so Ben can see how much of the conversation his own model actually spoke.",
+    "expected_gain": "Ben's own trained weights speak in the live conversation with the same 0-wrong guarantee. The per-session raw-pass rate becomes one honest number to improve and to show in the demo.",
+    "effort": "M",
+    "risk": "Slot tokens change the training data format, so this needs a fresh registration. Needs a GPU slot (the fine-tune took seconds there) or a slow CPU fine-tune. CPU decode latency is about 0.27 s per sentence (20 decodes in 5.3 s in the smoke), which is fine. Whether this counts as Ben's own architecture is an open question.",
+    "serves": [
+     "own-architecture",
+     "conversation",
+     "demo"
+    ],
+    "priority": 3
+   }
+  ],
+  "keep_as_is": [
+   "The faithfulness brake plus template fallback on every generated sentence (0/500 wrong after the brake for both mouth53 and talker120). Keep it permanently, even once the talker gets good.",
+   "120d's routing: statuses the talker never trained on go straight to the notebook's own template sentence (0 decodes on those turns), so there are no empty replies.",
+   "Honest self answer to 'What can you do?' (lists only real abilities), plus 'You never told me your name' when the name really is unknown.",
+   "Possessive-chain reasoning, corrections and forgetting in the live loop: 3-hop 'my sister's city's country' was correct, 'Actually, Mira lives in Dunmore.' was corrected, 'Forget Mira's city.' made it abstain afterwards, and yes/no answers were right.",
+   "Small talk as fixed closed-class replies that never write and never claim feelings (156c passed 44/44, 0 writes). Merge it soon; 'Hello there.' and 'How are you?' still fail on 138i.",
+   "The talker101 pretraining run and eval pipeline (sealed val split, BLiMP per-phenomenon breakdown). It is a solid, honest base to fine-tune from.",
+   "The 138j merge already in flight (187b self questions, 188 statement fallback, 190 reverse lookups such as 'Who is Delia's husband?', which fails on 138i today, and 192 'Updated: ... (it was Z)')."
+  ],
+  "open_questions_for_ben": [
+   "The talker is a standard transformer (RoPE, SwiGLU) with a copy head, trained from scratch by you. Does that count as 'your own architecture' for the mouth? Or does the mouth also need a design change of its own before it goes into the final system?",
+   "For the uncle/dad demo, do you want the reply to show its reasoning steps ('Your sister is Mira, Mira lives in Kestrel Bay, which is in Norwin'), or just the answer?",
+   "Should the demo run with the template voice (always fluent and safe), or with your own talker's voice (your weights, but more of its sentences fall back to templates)? Or would you like both shown side by side?"
+  ]
+ }
+]

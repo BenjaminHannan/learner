@@ -1,0 +1,2076 @@
+{
+ "agent": "loop165",
+ "cases_file": "cases165.json",
+ "wall_seconds": 2.3,
+ "counts": {
+  "OK": 53
+ },
+ "typo_ok": 29,
+ "typo_n": 29,
+ "guard_ok": 12,
+ "guard_n": 12,
+ "other_ok": 12,
+ "other_n": 12,
+ "identical_ok": 24,
+ "identical_n": 24,
+ "cases": [
+  {
+   "id": "T01",
+   "group": "typo",
+   "teaches": [
+    "Tom's mother is Ann.",
+    "Toms boss is Lee."
+   ],
+   "expect": [
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Toms boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    },
+    {
+     "q": "What is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 1.348
+  },
+  {
+   "id": "T02",
+   "group": "typo",
+   "teaches": [
+    "Mira's father is Bob.",
+    "miras boss is Kim."
+   ],
+   "expect": [
+    [
+     "Mira",
+     "father",
+     "Bob"
+    ],
+    [
+     "Mira",
+     "boss",
+     "Kim"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is miras boss?",
+     "want": "Kim",
+     "reply": "mira's boss is Kim."
+    },
+    {
+     "q": "What is Mira's boss?",
+     "want": "Kim",
+     "reply": "Mira's boss is Kim."
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "father",
+     "Bob"
+    ],
+    [
+     "Mira",
+     "boss",
+     "Kim"
+    ]
+   ],
+   "reply": "Saved: Mira's boss is Kim.",
+   "verdict": "OK",
+   "seconds": 0.026
+  },
+  {
+   "id": "T03",
+   "group": "typo",
+   "teaches": [
+    "Leo's sister is Joy.",
+    "Leos boss is Ned."
+   ],
+   "expect": [
+    [
+     "Leo",
+     "sister",
+     "Joy"
+    ],
+    [
+     "Leo",
+     "boss",
+     "Ned"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Leos boss?",
+     "want": "Ned",
+     "reply": "Leo's boss is Ned."
+    },
+    {
+     "q": "What is Leo's boss?",
+     "want": "Ned",
+     "reply": "Leo's boss is Ned."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "sister",
+     "Joy"
+    ],
+    [
+     "Leo",
+     "boss",
+     "Ned"
+    ]
+   ],
+   "reply": "Saved: Leo's boss is Ned.",
+   "verdict": "OK",
+   "seconds": 0.007
+  },
+  {
+   "id": "T04",
+   "group": "typo",
+   "teaches": [
+    "Ana's brother is Rex.",
+    "anas boss is Paz."
+   ],
+   "expect": [
+    [
+     "Ana",
+     "brother",
+     "Rex"
+    ],
+    [
+     "Ana",
+     "boss",
+     "Paz"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is anas boss?",
+     "want": "Paz",
+     "reply": "ana's boss is Paz."
+    },
+    {
+     "q": "What is Ana's boss?",
+     "want": "Paz",
+     "reply": "Ana's boss is Paz."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "brother",
+     "Rex"
+    ],
+    [
+     "Ana",
+     "boss",
+     "Paz"
+    ]
+   ],
+   "reply": "Saved: Ana's boss is Paz.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "T05",
+   "group": "typo",
+   "teaches": [
+    "Sam's boss is Lou.",
+    "Sams mother is Eve."
+   ],
+   "expect": [
+    [
+     "Sam",
+     "boss",
+     "Lou"
+    ],
+    [
+     "Sam",
+     "mother",
+     "Eve"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Sams mother?",
+     "want": "Eve",
+     "reply": "Sam's mother is Eve."
+    },
+    {
+     "q": "What is Sam's mother?",
+     "want": "Eve",
+     "reply": "Sam's mother is Eve."
+    }
+   ],
+   "stored": [
+    [
+     "Sam",
+     "boss",
+     "Lou"
+    ],
+    [
+     "Sam",
+     "mother",
+     "Eve"
+    ]
+   ],
+   "reply": "Saved: Sam's mother is Eve.",
+   "verdict": "OK",
+   "seconds": 0.023
+  },
+  {
+   "id": "T06",
+   "group": "typo",
+   "teaches": [
+    "Zoe's friend is Max.",
+    "zoes mother is Ivy."
+   ],
+   "expect": [
+    [
+     "Zoe",
+     "friend",
+     "Max"
+    ],
+    [
+     "Zoe",
+     "mother",
+     "Ivy"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is zoes mother?",
+     "want": "Ivy",
+     "reply": "zoe's mother is Ivy."
+    },
+    {
+     "q": "What is Zoe's mother?",
+     "want": "Ivy",
+     "reply": "Zoe's mother is Ivy."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "friend",
+     "Max"
+    ],
+    [
+     "Zoe",
+     "mother",
+     "Ivy"
+    ]
+   ],
+   "reply": "Saved: Zoe's mother is Ivy.",
+   "verdict": "OK",
+   "seconds": 0.018
+  },
+  {
+   "id": "T07",
+   "group": "typo",
+   "teaches": [
+    "Eli's teacher is Kay.",
+    "Elis mother is Fay."
+   ],
+   "expect": [
+    [
+     "Eli",
+     "teacher",
+     "Kay"
+    ],
+    [
+     "Eli",
+     "mother",
+     "Fay"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Elis mother?",
+     "want": "Fay",
+     "reply": "Eli's mother is Fay."
+    },
+    {
+     "q": "What is Eli's mother?",
+     "want": "Fay",
+     "reply": "Eli's mother is Fay."
+    }
+   ],
+   "stored": [
+    [
+     "Eli",
+     "teacher",
+     "Kay"
+    ],
+    [
+     "Eli",
+     "mother",
+     "Fay"
+    ]
+   ],
+   "reply": "Saved: Eli's mother is Fay.",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "T08",
+   "group": "typo",
+   "teaches": [
+    "Ana's boss is Gil.",
+    "anas mother is May."
+   ],
+   "expect": [
+    [
+     "Ana",
+     "boss",
+     "Gil"
+    ],
+    [
+     "Ana",
+     "mother",
+     "May"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is anas mother?",
+     "want": "May",
+     "reply": "ana's mother is May."
+    },
+    {
+     "q": "What is Ana's mother?",
+     "want": "May",
+     "reply": "Ana's mother is May."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "boss",
+     "Gil"
+    ],
+    [
+     "Ana",
+     "mother",
+     "May"
+    ]
+   ],
+   "reply": "Saved: Ana's mother is May.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "T09",
+   "group": "typo",
+   "teaches": [
+    "Max's friend is Hal.",
+    "Maxs father is Ian."
+   ],
+   "expect": [
+    [
+     "Max",
+     "friend",
+     "Hal"
+    ],
+    [
+     "Max",
+     "father",
+     "Ian"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Maxs father?",
+     "want": "Ian",
+     "reply": "Max's father is Ian."
+    },
+    {
+     "q": "What is Max's father?",
+     "want": "Ian",
+     "reply": "Max's father is Ian."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "friend",
+     "Hal"
+    ],
+    [
+     "Max",
+     "father",
+     "Ian"
+    ]
+   ],
+   "reply": "Saved: Max's father is Ian.",
+   "verdict": "OK",
+   "seconds": 0.024
+  },
+  {
+   "id": "T10",
+   "group": "typo",
+   "teaches": [
+    "Leo's boss is Jon.",
+    "leos father is Ken."
+   ],
+   "expect": [
+    [
+     "Leo",
+     "boss",
+     "Jon"
+    ],
+    [
+     "Leo",
+     "father",
+     "Ken"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is leos father?",
+     "want": "Ken",
+     "reply": "leo's father is Ken."
+    },
+    {
+     "q": "What is Leo's father?",
+     "want": "Ken",
+     "reply": "Leo's father is Ken."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "boss",
+     "Jon"
+    ],
+    [
+     "Leo",
+     "father",
+     "Ken"
+    ]
+   ],
+   "reply": "Saved: Leo's father is Ken.",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "T11",
+   "group": "typo",
+   "teaches": [
+    "Zoe's boss is Liv.",
+    "Zoes father is Mo."
+   ],
+   "expect": [
+    [
+     "Zoe",
+     "boss",
+     "Liv"
+    ],
+    [
+     "Zoe",
+     "father",
+     "Mo"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Zoes father?",
+     "want": "Mo",
+     "reply": "Zoe's father is Mo."
+    },
+    {
+     "q": "What is Zoe's father?",
+     "want": "Mo",
+     "reply": "Zoe's father is Mo."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "boss",
+     "Liv"
+    ],
+    [
+     "Zoe",
+     "father",
+     "Mo"
+    ]
+   ],
+   "reply": "Saved: Zoe's father is Mo.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "T12",
+   "group": "typo",
+   "teaches": [
+    "Sam's teacher is Nan.",
+    "sams father is Oli."
+   ],
+   "expect": [
+    [
+     "Sam",
+     "teacher",
+     "Nan"
+    ],
+    [
+     "Sam",
+     "father",
+     "Oli"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is sams father?",
+     "want": "Oli",
+     "reply": "sam's father is Oli."
+    },
+    {
+     "q": "What is Sam's father?",
+     "want": "Oli",
+     "reply": "Sam's father is Oli."
+    }
+   ],
+   "stored": [
+    [
+     "Sam",
+     "teacher",
+     "Nan"
+    ],
+    [
+     "Sam",
+     "father",
+     "Oli"
+    ]
+   ],
+   "reply": "Saved: Sam's father is Oli.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "T13",
+   "group": "typo",
+   "teaches": [
+    "Tom's boss is Lee.",
+    "Toms sister is Pam."
+   ],
+   "expect": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ],
+    [
+     "Tom",
+     "sister",
+     "Pam"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Toms sister?",
+     "want": "Pam",
+     "reply": "Tom's sister is Pam."
+    },
+    {
+     "q": "What is Tom's sister?",
+     "want": "Pam",
+     "reply": "Tom's sister is Pam."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ],
+    [
+     "Tom",
+     "sister",
+     "Pam"
+    ]
+   ],
+   "reply": "Saved: Tom's sister is Pam.",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "T14",
+   "group": "typo",
+   "teaches": [
+    "Mira's boss is Kim.",
+    "miras sister is Rae."
+   ],
+   "expect": [
+    [
+     "Mira",
+     "boss",
+     "Kim"
+    ],
+    [
+     "Mira",
+     "sister",
+     "Rae"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is miras sister?",
+     "want": "Rae",
+     "reply": "mira's sister is Rae."
+    },
+    {
+     "q": "What is Mira's sister?",
+     "want": "Rae",
+     "reply": "Mira's sister is Rae."
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "boss",
+     "Kim"
+    ],
+    [
+     "Mira",
+     "sister",
+     "Rae"
+    ]
+   ],
+   "reply": "Saved: Mira's sister is Rae.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "T15",
+   "group": "typo",
+   "teaches": [
+    "Eli's boss is Kay.",
+    "Elis sister is Sue."
+   ],
+   "expect": [
+    [
+     "Eli",
+     "boss",
+     "Kay"
+    ],
+    [
+     "Eli",
+     "sister",
+     "Sue"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Elis sister?",
+     "want": "Sue",
+     "reply": "Eli's sister is Sue."
+    },
+    {
+     "q": "What is Eli's sister?",
+     "want": "Sue",
+     "reply": "Eli's sister is Sue."
+    }
+   ],
+   "stored": [
+    [
+     "Eli",
+     "boss",
+     "Kay"
+    ],
+    [
+     "Eli",
+     "sister",
+     "Sue"
+    ]
+   ],
+   "reply": "Saved: Eli's sister is Sue.",
+   "verdict": "OK",
+   "seconds": 0.02
+  },
+  {
+   "id": "T16",
+   "group": "typo",
+   "teaches": [
+    "Max's boss is Hal.",
+    "maxs sister is Tess."
+   ],
+   "expect": [
+    [
+     "Max",
+     "boss",
+     "Hal"
+    ],
+    [
+     "Max",
+     "sister",
+     "Tess"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is maxs sister?",
+     "want": "Tess",
+     "reply": "max's sister is Tess."
+    },
+    {
+     "q": "What is Max's sister?",
+     "want": "Tess",
+     "reply": "Max's sister is Tess."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "boss",
+     "Hal"
+    ],
+    [
+     "Max",
+     "sister",
+     "Tess"
+    ]
+   ],
+   "reply": "Saved: Max's sister is Tess.",
+   "verdict": "OK",
+   "seconds": 0.012
+  },
+  {
+   "id": "T17",
+   "group": "typo",
+   "teaches": [
+    "Leo's mother is Joy.",
+    "Leos brother is Ulf."
+   ],
+   "expect": [
+    [
+     "Leo",
+     "mother",
+     "Joy"
+    ],
+    [
+     "Leo",
+     "brother",
+     "Ulf"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Leos brother?",
+     "want": "Ulf",
+     "reply": "Leo's brother is Ulf."
+    },
+    {
+     "q": "What is Leo's brother?",
+     "want": "Ulf",
+     "reply": "Leo's brother is Ulf."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "mother",
+     "Joy"
+    ],
+    [
+     "Leo",
+     "brother",
+     "Ulf"
+    ]
+   ],
+   "reply": "Saved: Leo's brother is Ulf.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "T18",
+   "group": "typo",
+   "teaches": [
+    "Ana's mother is May.",
+    "anas brother is Vik."
+   ],
+   "expect": [
+    [
+     "Ana",
+     "mother",
+     "May"
+    ],
+    [
+     "Ana",
+     "brother",
+     "Vik"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is anas brother?",
+     "want": "Vik",
+     "reply": "ana's brother is Vik."
+    },
+    {
+     "q": "What is Ana's brother?",
+     "want": "Vik",
+     "reply": "Ana's brother is Vik."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "mother",
+     "May"
+    ],
+    [
+     "Ana",
+     "brother",
+     "Vik"
+    ]
+   ],
+   "reply": "Saved: Ana's brother is Vik.",
+   "verdict": "OK",
+   "seconds": 0.02
+  },
+  {
+   "id": "T19",
+   "group": "typo",
+   "teaches": [
+    "Sam's mother is Eve.",
+    "Sams brother is Wes."
+   ],
+   "expect": [
+    [
+     "Sam",
+     "mother",
+     "Eve"
+    ],
+    [
+     "Sam",
+     "brother",
+     "Wes"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Sams brother?",
+     "want": "Wes",
+     "reply": "Sam's brother is Wes."
+    },
+    {
+     "q": "What is Sam's brother?",
+     "want": "Wes",
+     "reply": "Sam's brother is Wes."
+    }
+   ],
+   "stored": [
+    [
+     "Sam",
+     "mother",
+     "Eve"
+    ],
+    [
+     "Sam",
+     "brother",
+     "Wes"
+    ]
+   ],
+   "reply": "Saved: Sam's brother is Wes.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "T20",
+   "group": "typo",
+   "teaches": [
+    "Zoe's mother is Ivy.",
+    "zoes brother is Yan."
+   ],
+   "expect": [
+    [
+     "Zoe",
+     "mother",
+     "Ivy"
+    ],
+    [
+     "Zoe",
+     "brother",
+     "Yan"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is zoes brother?",
+     "want": "Yan",
+     "reply": "zoe's brother is Yan."
+    },
+    {
+     "q": "What is Zoe's brother?",
+     "want": "Yan",
+     "reply": "Zoe's brother is Yan."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "mother",
+     "Ivy"
+    ],
+    [
+     "Zoe",
+     "brother",
+     "Yan"
+    ]
+   ],
+   "reply": "Saved: Zoe's brother is Yan.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "T21",
+   "group": "typo",
+   "teaches": [
+    "Tom's father is Al.",
+    "Toms friend is Zeb."
+   ],
+   "expect": [
+    [
+     "Tom",
+     "father",
+     "Al"
+    ],
+    [
+     "Tom",
+     "friend",
+     "Zeb"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Toms friend?",
+     "want": "Zeb",
+     "reply": "Tom's friend is Zeb."
+    },
+    {
+     "q": "What is Tom's friend?",
+     "want": "Zeb",
+     "reply": "Tom's friend is Zeb."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "father",
+     "Al"
+    ],
+    [
+     "Tom",
+     "friend",
+     "Zeb"
+    ]
+   ],
+   "reply": "Saved: Tom's friend is Zeb.",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "T22",
+   "group": "typo",
+   "teaches": [
+    "Mira's mother is Dot.",
+    "miras friend is Abe."
+   ],
+   "expect": [
+    [
+     "Mira",
+     "mother",
+     "Dot"
+    ],
+    [
+     "Mira",
+     "friend",
+     "Abe"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is miras friend?",
+     "want": "Abe",
+     "reply": "mira's friend is Abe."
+    },
+    {
+     "q": "What is Mira's friend?",
+     "want": "Abe",
+     "reply": "Mira's friend is Abe."
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "mother",
+     "Dot"
+    ],
+    [
+     "Mira",
+     "friend",
+     "Abe"
+    ]
+   ],
+   "reply": "Saved: Mira's friend is Abe.",
+   "verdict": "OK",
+   "seconds": 0.011
+  },
+  {
+   "id": "T23",
+   "group": "typo",
+   "teaches": [
+    "Max's sister is Tess.",
+    "Maxs friend is Ben."
+   ],
+   "expect": [
+    [
+     "Max",
+     "sister",
+     "Tess"
+    ],
+    [
+     "Max",
+     "friend",
+     "Ben"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Maxs friend?",
+     "want": "Ben",
+     "reply": "Max's friend is Ben."
+    },
+    {
+     "q": "What is Max's friend?",
+     "want": "Ben",
+     "reply": "Max's friend is Ben."
+    }
+   ],
+   "stored": [
+    [
+     "Max",
+     "sister",
+     "Tess"
+    ],
+    [
+     "Max",
+     "friend",
+     "Ben"
+    ]
+   ],
+   "reply": "Saved: Max's friend is Ben.",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "T24",
+   "group": "typo",
+   "teaches": [
+    "Eli's father is Gus.",
+    "elis friend is Cal."
+   ],
+   "expect": [
+    [
+     "Eli",
+     "father",
+     "Gus"
+    ],
+    [
+     "Eli",
+     "friend",
+     "Cal"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is elis friend?",
+     "want": "Cal",
+     "reply": "eli's friend is Cal."
+    },
+    {
+     "q": "What is Eli's friend?",
+     "want": "Cal",
+     "reply": "Eli's friend is Cal."
+    }
+   ],
+   "stored": [
+    [
+     "Eli",
+     "father",
+     "Gus"
+    ],
+    [
+     "Eli",
+     "friend",
+     "Cal"
+    ]
+   ],
+   "reply": "Saved: Eli's friend is Cal.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "T25",
+   "group": "typo",
+   "teaches": [
+    "Leo's friend is Ulf.",
+    "Leos teacher is Dan."
+   ],
+   "expect": [
+    [
+     "Leo",
+     "friend",
+     "Ulf"
+    ],
+    [
+     "Leo",
+     "teacher",
+     "Dan"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Leos teacher?",
+     "want": "Dan",
+     "reply": "Leo's teacher is Dan."
+    },
+    {
+     "q": "What is Leo's teacher?",
+     "want": "Dan",
+     "reply": "Leo's teacher is Dan."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "friend",
+     "Ulf"
+    ],
+    [
+     "Leo",
+     "teacher",
+     "Dan"
+    ]
+   ],
+   "reply": "Saved: Leo's teacher is Dan.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "T26",
+   "group": "typo",
+   "teaches": [
+    "Ana's friend is Vik.",
+    "anas teacher is Esm."
+   ],
+   "expect": [
+    [
+     "Ana",
+     "friend",
+     "Vik"
+    ],
+    [
+     "Ana",
+     "teacher",
+     "Esm"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is anas teacher?",
+     "want": "Esm",
+     "reply": "ana's teacher is Esm."
+    },
+    {
+     "q": "What is Ana's teacher?",
+     "want": "Esm",
+     "reply": "Ana's teacher is Esm."
+    }
+   ],
+   "stored": [
+    [
+     "Ana",
+     "friend",
+     "Vik"
+    ],
+    [
+     "Ana",
+     "teacher",
+     "Esm"
+    ]
+   ],
+   "reply": "Saved: Ana's teacher is Esm.",
+   "verdict": "OK",
+   "seconds": 0.046
+  },
+  {
+   "id": "T27",
+   "group": "typo",
+   "teaches": [
+    "Sam's friend is Wes.",
+    "Sams teacher is Flo."
+   ],
+   "expect": [
+    [
+     "Sam",
+     "friend",
+     "Wes"
+    ],
+    [
+     "Sam",
+     "teacher",
+     "Flo"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Sams teacher?",
+     "want": "Flo",
+     "reply": "Sam's teacher is Flo."
+    },
+    {
+     "q": "What is Sam's teacher?",
+     "want": "Flo",
+     "reply": "Sam's teacher is Flo."
+    }
+   ],
+   "stored": [
+    [
+     "Sam",
+     "friend",
+     "Wes"
+    ],
+    [
+     "Sam",
+     "teacher",
+     "Flo"
+    ]
+   ],
+   "reply": "Saved: Sam's teacher is Flo.",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "T28",
+   "group": "typo",
+   "teaches": [
+    "Zoe's friend is Yan.",
+    "zoes teacher is Hal."
+   ],
+   "expect": [
+    [
+     "Zoe",
+     "friend",
+     "Yan"
+    ],
+    [
+     "Zoe",
+     "teacher",
+     "Hal"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is zoes teacher?",
+     "want": "Hal",
+     "reply": "zoe's teacher is Hal."
+    },
+    {
+     "q": "What is Zoe's teacher?",
+     "want": "Hal",
+     "reply": "Zoe's teacher is Hal."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "friend",
+     "Yan"
+    ],
+    [
+     "Zoe",
+     "teacher",
+     "Hal"
+    ]
+   ],
+   "reply": "Saved: Zoe's teacher is Hal.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "T29",
+   "group": "typo",
+   "teaches": [
+    "Chris's mother is Eve.",
+    "Chriss boss is Rex."
+   ],
+   "expect": [
+    [
+     "Chris",
+     "mother",
+     "Eve"
+    ],
+    [
+     "Chris",
+     "boss",
+     "Rex"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Chriss boss?",
+     "want": "Rex",
+     "reply": "Chris's boss is Rex."
+    },
+    {
+     "q": "What is Chris's boss?",
+     "want": "Rex",
+     "reply": "Chris's boss is Rex."
+    }
+   ],
+   "stored": [
+    [
+     "Chris",
+     "mother",
+     "Eve"
+    ],
+    [
+     "Chris",
+     "boss",
+     "Rex"
+    ]
+   ],
+   "reply": "Saved: Chris's boss is Rex.",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "G01",
+   "group": "guard",
+   "teaches": [
+    "Zorgs boss is Lee."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.006
+  },
+  {
+   "id": "G02",
+   "group": "guard",
+   "teaches": [
+    "Tom's mother is Ann."
+   ],
+   "expect": [
+    "Tom",
+    "mother",
+    "Ann"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Zorgs boss?",
+     "want": "didn't understand",
+     "reply": "I didn't understand that. Could you say it another way?"
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ]
+   ],
+   "reply": "Saved: Tom's mother is Ann.",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "G03",
+   "group": "guard",
+   "teaches": [
+    "Toms's boss is Lee.",
+    "Toms boss is Rex."
+   ],
+   "expect": [
+    "Toms",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is Toms's boss?",
+     "want": "Lee",
+     "reply": "Toms's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Toms",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.017
+  },
+  {
+   "id": "G04",
+   "group": "guard",
+   "teaches": [
+    "Toms's boss is Lee."
+   ],
+   "expect": [
+    "Toms",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Toms boss?",
+     "want": "didn't understand",
+     "reply": "I didn't understand that. Could you say it another way?"
+    }
+   ],
+   "stored": [
+    [
+     "Toms",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Toms's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 0.009
+  },
+  {
+   "id": "G05",
+   "group": "guard",
+   "teaches": [
+    "Chris's boss is Lee.",
+    "Chris boss is Rex."
+   ],
+   "expect": [
+    "Chris",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is Chris's boss?",
+     "want": "Lee",
+     "reply": "Chris's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Chris",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.019
+  },
+  {
+   "id": "G06",
+   "group": "guard",
+   "teaches": [
+    "The Beatles' founder is Lennon.",
+    "Beatles boss is Lee."
+   ],
+   "expect": [
+    "The Beatles",
+    "founder",
+    "Lennon"
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is the founder of The Beatles?",
+     "want": "Lennon",
+     "reply": "The Beatles's founder is Lennon."
+    }
+   ],
+   "stored": [
+    [
+     "The Beatles",
+     "founder",
+     "Lennon"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.045
+  },
+  {
+   "id": "G07",
+   "group": "guard",
+   "teaches": [
+    "The Toms' founder is Lennon.",
+    "Tom's mother is Ann.",
+    "Toms boss is Lee."
+   ],
+   "expect": [
+    [
+     "The Toms",
+     "founder",
+     "Lennon"
+    ],
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ]
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is Tom's mother?",
+     "want": "Ann",
+     "reply": "Tom's mother is Ann."
+    }
+   ],
+   "stored": [
+    [
+     "The Toms",
+     "founder",
+     "Lennon"
+    ],
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.029
+  },
+  {
+   "id": "G08",
+   "group": "guard",
+   "teaches": [
+    "Qaxs sister is Pam."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.01
+  },
+  {
+   "id": "G09",
+   "group": "guard",
+   "teaches": [
+    "Mira's boss is Kim."
+   ],
+   "expect": [
+    "Mira",
+    "boss",
+    "Kim"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What is Blargs mother?",
+     "want": "didn't understand",
+     "reply": "I didn't understand that. Could you say it another way?"
+    }
+   ],
+   "stored": [
+    [
+     "Mira",
+     "boss",
+     "Kim"
+    ]
+   ],
+   "reply": "Saved: Mira's boss is Kim.",
+   "verdict": "OK",
+   "seconds": 0.015
+  },
+  {
+   "id": "G10",
+   "group": "guard",
+   "teaches": [
+    "Tom's boss is Lee.",
+    "Toms best friend is Rex."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "G11",
+   "group": "guard",
+   "teaches": [
+    "Tom's boss is Lee.",
+    "Toms president is Rex."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "didnt",
+   "asks": [
+    {
+     "q": "Who is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.014
+  },
+  {
+   "id": "G12",
+   "group": "guard",
+   "teaches": [
+    "Rumor has it Toms boss is Lee."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.025
+  },
+  {
+   "id": "C01",
+   "group": "other",
+   "teaches": [
+    "Tom's boss is Lee."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    },
+    {
+     "q": "What is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 0.034
+  },
+  {
+   "id": "C02",
+   "group": "other",
+   "teaches": [
+    "mira's friend is Abe."
+   ],
+   "expect": [
+    "mira",
+    "friend",
+    "Abe"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is mira's friend?",
+     "want": "Abe",
+     "reply": "mira's friend is Abe."
+    }
+   ],
+   "stored": [
+    [
+     "mira",
+     "friend",
+     "Abe"
+    ]
+   ],
+   "reply": "Saved: mira's friend is Abe.",
+   "verdict": "OK",
+   "seconds": 0.025
+  },
+  {
+   "id": "C03",
+   "group": "other",
+   "teaches": [
+    "Tom is happy."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.013
+  },
+  {
+   "id": "C04",
+   "group": "other",
+   "teaches": [
+    "Tom's boss is Lee."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Tom?",
+     "want": "didn't understand",
+     "reply": "I didn't understand that. Could you say it another way?"
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 0.016
+  },
+  {
+   "id": "C05",
+   "group": "other",
+   "teaches": [
+    "Leo's Boss is Ned."
+   ],
+   "expect": [
+    "Leo",
+    "boss",
+    "Ned"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Leo's Boss?",
+     "want": "Ned",
+     "reply": "Leo's boss is Ned."
+    }
+   ],
+   "stored": [
+    [
+     "Leo",
+     "boss",
+     "Ned"
+    ]
+   ],
+   "reply": "Saved: Leo's boss is Ned.",
+   "verdict": "OK",
+   "seconds": 0.021
+  },
+  {
+   "id": "C06",
+   "group": "other",
+   "teaches": [
+    "Tom's mother is Ann.",
+    "Tom's father is Bob."
+   ],
+   "expect": [
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "father",
+     "Bob"
+    ]
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Tom's mother?",
+     "want": "Ann",
+     "reply": "Tom's mother is Ann."
+    },
+    {
+     "q": "Who is Tom's father?",
+     "want": "Bob",
+     "reply": "Tom's father is Bob."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "mother",
+     "Ann"
+    ],
+    [
+     "Tom",
+     "father",
+     "Bob"
+    ]
+   ],
+   "reply": "Saved: Tom's father is Bob.",
+   "verdict": "OK",
+   "seconds": 0.042
+  },
+  {
+   "id": "C07",
+   "group": "other",
+   "teaches": [
+    "Sam's mother is Eve."
+   ],
+   "expect": [
+    "Sam",
+    "mother",
+    "Eve"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What is Sam's mother?",
+     "want": "Eve",
+     "reply": "Sam's mother is Eve."
+    }
+   ],
+   "stored": [
+    [
+     "Sam",
+     "mother",
+     "Eve"
+    ]
+   ],
+   "reply": "Saved: Sam's mother is Eve.",
+   "verdict": "OK",
+   "seconds": 0.021
+  },
+  {
+   "id": "C08",
+   "group": "other",
+   "teaches": [
+    "toms boss is lee."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.008
+  },
+  {
+   "id": "C09",
+   "group": "other",
+   "teaches": [
+    "Zoe's boss is Liv."
+   ],
+   "expect": [
+    "Zoe",
+    "boss",
+    "Liv"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Zoe's boss?",
+     "want": "Liv",
+     "reply": "Zoe's boss is Liv."
+    }
+   ],
+   "stored": [
+    [
+     "Zoe",
+     "boss",
+     "Liv"
+    ]
+   ],
+   "reply": "Saved: Zoe's boss is Liv.",
+   "verdict": "OK",
+   "seconds": 0.024
+  },
+  {
+   "id": "C10",
+   "group": "other",
+   "teaches": [
+    "Tom's boss is Lee."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "Who is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 0.023
+  },
+  {
+   "id": "C11",
+   "group": "other",
+   "teaches": [
+    "Tom's boss is Lee."
+   ],
+   "expect": [
+    "Tom",
+    "boss",
+    "Lee"
+   ],
+   "want_reply": "saved",
+   "asks": [
+    {
+     "q": "What is Tom's boss?",
+     "want": "Lee",
+     "reply": "Tom's boss is Lee."
+    }
+   ],
+   "stored": [
+    [
+     "Tom",
+     "boss",
+     "Lee"
+    ]
+   ],
+   "reply": "Saved: Tom's boss is Lee.",
+   "verdict": "OK",
+   "seconds": 0.028
+  },
+  {
+   "id": "C12",
+   "group": "other",
+   "teaches": [
+    "Anas Boss is Paz."
+   ],
+   "expect": "nowrite",
+   "want_reply": "didnt",
+   "asks": [],
+   "stored": [],
+   "reply": "I didn't understand that. Could you say it another way?",
+   "verdict": "OK",
+   "seconds": 0.035
+  }
+ ]
+}

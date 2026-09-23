@@ -1,0 +1,86 @@
+{"reset": true}
+{"expect": "Saved: Omar's citizenship is Spain.", "n": 1, "turn": "Omar's citizenship is Spain."}
+{"expect": "I have Omar's citizenship as Spain. Do you want me to change it to Portugal?", "n": 2, "turn": "Omar's citizenship is Portugal."}
+{"expect": "Okay, I left it as it was.", "n": 3, "turn": "no."}
+{"expect": "Omar's citizenship is Spain.", "n": 4, "state": {"Omar|citizenship": ["Spain"]}, "turn": "Who is Omar's citizenship?"}
+{"expect": "Saved: Lionel Messi's country of citizenship is Argentina.", "n": 5, "turn": "Lionel Messi is a citizen of Argentina."}
+{"expect": "I have Lionel Messi's country of citizenship as Argentina. Do you want me to change it to Portugal?", "n": 6, "turn": "Lionel Messi is a citizen of Portugal."}
+{"expect": "Lionel Messi's country of citizenship is Argentina.", "n": 7, "turn": "Who is Lionel Messi's citizenship?"}
+{"expect": "(I dropped my earlier question.) Saved: Mira's language is Spanish.", "n": 8, "state": {"Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"]}, "turn": "Mira's language is Spanish."}
+{"expect": "I have Mira's language as Spanish. Do you want me to change it to French?", "n": 9, "turn": "Mira's language is French."}
+{"expect": "Okay, I left it as it was.", "n": 10, "turn": "no."}
+{"expect": "Mira's language is Spanish.", "n": 11, "turn": "Who is Mira's language?"}
+{"expect": "Saved: Tom's occupation is Mason.", "n": 12, "state": {"Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"], "Tom|occupation": ["Mason"]}, "turn": "Tom's occupation is Mason."}
+{"expect": "I have Tom's occupation as Mason. Do you want me to change it to Baker?", "n": 13, "turn": "Tom's occupation is Baker."}
+{"expect": "Okay, I left it as it was.", "n": 14, "turn": "no."}
+{"expect": "Tom's occupation is Mason.", "n": 15, "turn": "Who is Tom's occupation?"}
+{"expect": "Saved: Ann's employer is Initech.", "n": 16, "state": {"Ann|employer": ["Initech"], "Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"], "Tom|occupation": ["Mason"]}, "turn": "Ann's employer is Initech."}
+{"expect": "I have Ann's employer as Initech. Do you want me to change it to Hooli?", "n": 17, "turn": "Ann's employer is Hooli."}
+{"expect": "Okay, I left it as it was.", "n": 18, "turn": "no."}
+{"expect": "Saved: Dan's team is Reno.", "n": 19, "turn": "Dan's team is Reno."}
+{"expect": "I have Dan's team as Reno. Do you want me to change it to Vega?", "n": 20, "state": {"Ann|employer": ["Initech"], "Dan|team": ["Reno"], "Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"], "Tom|occupation": ["Mason"]}, "turn": "Dan's team is Vega."}
+{"expect": "Okay, I left it as it was.", "n": 21, "turn": "no."}
+{"expect": "Dan's team is Reno.", "n": 22, "turn": "Who is Dan's team?"}
+{"expect": "Saved: Lea's country is Chile.", "n": 23, "turn": "Lea's country is Chile."}
+{"expect": "I have Lea's country as Chile. Do you want me to change it to Peru?", "n": 24, "state": {"Ann|employer": ["Initech"], "Dan|team": ["Reno"], "Lea|country": ["Chile"], "Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"], "Tom|occupation": ["Mason"]}, "turn": "Lea's country is Peru."}
+{"expect": "Okay, I left it as it was.", "n": 25, "turn": "no."}
+{"expect": "I can take one fact at a time — could you split that?", "n": 26, "turn": "No, Omar's citizenship is Portugal, not Spain."}
+{"expect": "I don't know Tom's occupation baker.", "n": 27, "turn": "Forget Tom's occupation Baker."}
+{"expect": "Tom's occupation is Mason.", "n": 28, "state": {"Ann|employer": ["Initech"], "Dan|team": ["Reno"], "Lea|country": ["Chile"], "Lionel Messi|country_of_citizenship": ["Argentina"], "Mira|language": ["Spanish"], "Omar|citizenship": ["Spain"], "Tom|occupation": ["Mason"]}, "turn": "Who is Tom's occupation?"}
+{"reset": true}
+{"expect": "Saved: Kim's sister is Ana.", "n": 29, "turn": "Kim's sister is Ana."}
+{"expect": "Saved: Kim's sister is Bea. (I also have Ana.)", "n": 30, "turn": "Kim's sister is Bea."}
+{"expect": "Kim's sister is Ana and Bea.", "n": 31, "turn": "Who is Kim's sister?"}
+{"expect": "Saved: Hal's brother is Cid.", "n": 32, "state": {"Hal|brother": ["Cid"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Hal's brother is Cid."}
+{"expect": "Saved: Hal's brother is Dan. (I also have Cid.)", "n": 33, "turn": "Hal's brother is Dan."}
+{"expect": "Hal's brother is Cid and Dan.", "n": 34, "turn": "Who is Hal's brother?"}
+{"expect": "Saved: Ivy's sibling is Eve.", "n": 35, "turn": "Ivy's sibling is Eve."}
+{"expect": "Saved: Ivy's sibling is Fay. (I also have Eve.)", "n": 36, "state": {"Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Ivy's sibling is Fay."}
+{"expect": "Ivy's sibling is Eve and Fay.", "n": 37, "turn": "Who is Ivy's sibling?"}
+{"expect": "Saved: Al's friend is Cal.", "n": 38, "turn": "Al's friend is Cal."}
+{"expect": "Saved: Al's friend is Gus. (I also have Cal.)", "n": 39, "turn": "Al's friend is Gus."}
+{"expect": "Al's friend is Cal and Gus.", "n": 40, "state": {"Al|friend": ["Cal", "Gus"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Who is Al's friend?"}
+{"expect": "Saved: Paz's child is Uma.", "n": 41, "turn": "Paz's child is Uma."}
+{"expect": "Saved: Paz's child is Vik. (I also have Uma.)", "n": 42, "turn": "Paz's child is Vik."}
+{"expect": "Paz's child is Uma and Vik.", "n": 43, "turn": "Who is Paz's child?"}
+{"expect": "Saved: Rex's son is Max.", "n": 44, "state": {"Al|friend": ["Cal", "Gus"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max"]}, "turn": "Rex's son is Max."}
+{"expect": "Saved: Rex's son is Noa. (I also have Max.)", "n": 45, "turn": "Rex's son is Noa."}
+{"expect": "Rex's son is Max and Noa.", "n": 46, "turn": "Who is Rex's son?"}
+{"expect": "Saved: Zoe's daughter is Mia.", "n": 47, "turn": "Zoe's daughter is Mia."}
+{"expect": "Saved: Zoe's daughter is Nia. (I also have Mia.)", "n": 48, "state": {"Al|friend": ["Cal", "Gus"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max", "Noa"], "Zoe|daughter": ["Mia", "Nia"]}, "turn": "Zoe's daughter is Nia."}
+{"expect": "Zoe's daughter is Mia and Nia.", "n": 49, "turn": "Who is Zoe's daughter?"}
+{"expect": "Saved: Sam's pet is Pip.", "n": 50, "turn": "Sam's pet is Pip."}
+{"expect": "Saved: Sam's pet is Sky. (I also have Pip.)", "n": 51, "turn": "Sam's pet is Sky."}
+{"expect": "Sam's pet is Pip and Sky.", "n": 52, "state": {"Al|friend": ["Cal", "Gus"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max", "Noa"], "Sam|pet": ["Pip", "Sky"], "Zoe|daughter": ["Mia", "Nia"]}, "turn": "Who is Sam's pet?"}
+{"expect": "Saved: Ned's dog is Rex.", "n": 53, "turn": "Ned's dog is Rex."}
+{"expect": "Saved: Ned's dog is Fido. (I also have Rex.)", "n": 54, "turn": "Ned's dog is Fido."}
+{"expect": "Ned's dog is Rex and Fido.", "n": 55, "turn": "Who is Ned's dog?"}
+{"expect": "Saved: Eli's cat is Tom.", "n": 56, "state": {"Al|friend": ["Cal", "Gus"], "Eli|cat": ["Tom"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Ned|dog": ["Rex", "Fido"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max", "Noa"], "Sam|pet": ["Pip", "Sky"], "Zoe|daughter": ["Mia", "Nia"]}, "turn": "Eli's cat is Tom."}
+{"expect": "Saved: Eli's cat is Kit. (I also have Tom.)", "n": 57, "turn": "Eli's cat is Kit."}
+{"expect": "Eli's cat is Tom and Kit.", "n": 58, "turn": "Who is Eli's cat?"}
+{"expect": "Saved: Ava's cousin is Leo.", "n": 59, "turn": "Ava's cousin is Leo."}
+{"expect": "Saved: Ava's cousin is Mia. (I also have Leo.)", "n": 60, "state": {"Al|friend": ["Cal", "Gus"], "Ava|cousin": ["Leo", "Mia"], "Eli|cat": ["Tom", "Kit"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Ned|dog": ["Rex", "Fido"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max", "Noa"], "Sam|pet": ["Pip", "Sky"], "Zoe|daughter": ["Mia", "Nia"]}, "turn": "Ava's cousin is Mia."}
+{"expect": "Ava's cousin is Leo and Mia.", "n": 61, "turn": "Who is Ava's cousin?"}
+{"expect": "Saved: Gibson's notable work is Neuromancer.", "n": 62, "turn": "Gibson's notable work is Neuromancer."}
+{"expect": "Saved: Gibson's notable work is Pattern. (I also have Neuromancer.)", "n": 63, "turn": "Gibson's notable work is Pattern."}
+{"expect": "Gibson's notable work is Neuromancer and Pattern.", "n": 64, "state": {"Al|friend": ["Cal", "Gus"], "Ava|cousin": ["Leo", "Mia"], "Eli|cat": ["Tom", "Kit"], "Gibson|notable_work": ["Neuromancer", "Pattern"], "Hal|brother": ["Cid", "Dan"], "Ivy|sibling": ["Eve", "Fay"], "Kim|sister": ["Ana", "Bea"], "Ned|dog": ["Rex", "Fido"], "Paz|child": ["Uma", "Vik"], "Rex|son": ["Max", "Noa"], "Sam|pet": ["Pip", "Sky"], "Zoe|daughter": ["Mia", "Nia"]}, "turn": "Who is Gibson's notable work?"}
+{"reset": true}
+{"expect": "Saved: Kim's sister is Ana.", "n": 65, "turn": "Kim's sister is Ana."}
+{"expect": "Saved: Kim's sister is Bea. (I also have Ana.)", "n": 66, "turn": "Kim's sister is Bea."}
+{"expect": "Saved: Hal's brother is Cid.", "n": 67, "turn": "Hal's brother is Cid."}
+{"expect": "Saved: Hal's brother is Dan. (I also have Cid.)", "n": 68, "state": {"Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Hal's brother is Dan."}
+{"expect": "Saved: Al's friend is Cal.", "n": 69, "turn": "Al's friend is Cal."}
+{"expect": "Saved: Al's friend is Gus. (I also have Cal.)", "n": 70, "turn": "Al's friend is Gus."}
+{"expect": "Saved: Ana's city is Rome.", "n": 71, "turn": "Ana's city is Rome."}
+{"expect": "Saved: Bea's city is Madrid.", "n": 72, "state": {"Al|friend": ["Cal", "Gus"], "Ana|city": ["Rome"], "Bea|city": ["Madrid"], "Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Bea's city is Madrid."}
+{"expect": "Kim's sister is Ana and Bea. Which one do you mean?", "n": 73, "turn": "Who is Kim's sister's city?"}
+{"expect": "Saved: Cid's city is Oslo.", "n": 74, "turn": "Cid's city is Oslo."}
+{"expect": "Saved: Dan's city is Quito.", "n": 75, "turn": "Dan's city is Quito."}
+{"expect": "Hal's brother is Cid and Dan. Which one do you mean?", "n": 76, "state": {"Al|friend": ["Cal", "Gus"], "Ana|city": ["Rome"], "Bea|city": ["Madrid"], "Cid|city": ["Oslo"], "Dan|city": ["Quito"], "Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Who is Hal's brother's city?"}
+{"expect": "Saved: Cal's city is Lima.", "n": 77, "turn": "Cal's city is Lima."}
+{"expect": "Saved: Gus's city is Nice.", "n": 78, "turn": "Gus's city is Nice."}
+{"expect": "Al's friend is Cal and Gus. Which one do you mean?", "n": 79, "turn": "Who is Al's friend's city?"}
+{"expect": "Saved: Ana's boss is Zed.", "n": 80, "state": {"Al|friend": ["Cal", "Gus"], "Ana|boss": ["Zed"], "Ana|city": ["Rome"], "Bea|city": ["Madrid"], "Cal|city": ["Lima"], "Cid|city": ["Oslo"], "Dan|city": ["Quito"], "Gus|city": ["Nice"], "Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Ana's boss is Zed."}
+{"expect": "Kim's sister is Ana and Bea. Which one do you mean?", "n": 81, "turn": "Who is Kim's sister's boss?"}
+{"expect": "Saved: Cid's boss is Yan.", "n": 82, "turn": "Cid's boss is Yan."}
+{"expect": "Hal's brother is Cid and Dan. Which one do you mean?", "full_state": {"Al|friend": ["Cal", "Gus"], "Ana|boss": ["Zed"], "Ana|city": ["Rome"], "Bea|city": ["Madrid"], "Cal|city": ["Lima"], "Cid|boss": ["Yan"], "Cid|city": ["Oslo"], "Dan|city": ["Quito"], "Gus|city": ["Nice"], "Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "n": 83, "state": {"Al|friend": ["Cal", "Gus"], "Ana|boss": ["Zed"], "Ana|city": ["Rome"], "Bea|city": ["Madrid"], "Cal|city": ["Lima"], "Cid|boss": ["Yan"], "Cid|city": ["Oslo"], "Dan|city": ["Quito"], "Gus|city": ["Nice"], "Hal|brother": ["Cid", "Dan"], "Kim|sister": ["Ana", "Bea"]}, "turn": "Who is Hal's brother's boss?"}
