@@ -1,0 +1,1111 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | head -c 20000
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 s
+[0m
+[0m$ [0mgit show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | sed -n '200,600p'
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 seeds × 15 min)
+**Change:** the 6 set slots + count head replace a single-fact output (E1/E2 arms use 1 slot + "more" flag).
+Marks: plural and appositive dev turns: all facts found ≥ 90% (261 was 4/16); turns with count ≠ filled slots are
+asked about, never half-saved. Recall reported three ways (read right, saved right, sent back as a question).
+**Proved wrong if** plural recall < 60%.
+
+### E4 — own ear against ear v4.1 on a fresh blind panel
+**Change:** swap ear v4.1 for the own ear inside the current pipeline; gate (Qwen QA from 264) unchanged.
+Panel: written blind by a separate agent from a spec, sealed before the run, ≥ 150 turns, same marks as 261b
+(wrong saves ≤ 1, exact TEACH ≥ 85%, ASK ≥ 90%, median ≤ 800 ms). Report wrong saves per saved fact and per turn,
+plus recall. Also report the shared-blind-spot count of §4.4 on dev.
+**Proved wrong if** the own ear has more wrong saves *before the gate* than ear v4.1 on the same panel.
+
+### E5 — certification run (later)
+Freeze everything first (weights, tokenizer, relation table, compiler, thresholds, grading rules). A fresh,
+representative sample of **≥ 368 independent everyday-chat turns** for writes and ≥ 368 replies for grammar: with 0
+errors in each, both rates are below 1% *together* at 95% (2.5% error allowed per claim). 300 turns certify one rate
+alone. Report the rate per turn (a turn with any wrong save) and, separately, per saved fact (with turns as clusters),
+plus automatic recall ≥ 85% and how often it asked. Confirmed-after-asking facts are reported apart, never counted as
+automatic recall. A failed certification is not re-run until it passes under the same 95% claim; any retry is
+pre-registered with its own error budget. The certificate names the kind of chat it was tested on.
+
+### M1 — whole-name copy in talker101 (GPU ≈ 1 min, or Mac CPU)
+**Change:** slot tokens instead of word-piece copy, vs talker120b.
+Marks: truncated names 0/500; raw unfaithful before the brake ≤ 50/500 (120b: 172/500); status right ≥ 489/500.
+**Proved wrong if** raw unfaithful stays > 120/500: the names were not the main problem.
+
+### M2 — read-back check with the own ear (needs E3)
+**Change:** add the §3.1(2) meaning check before the reply is sent; 241 layer as fallback.
+Marks: 0 unfaithful after the check on 1,200 renders, *including* act, negation and direction (the old brake misses
+these, doc 240 §0.2); fallback rate ≤ 10%.
+
+### M3 — grammar and naturalness, blind
+**Change:** none (a measurement of M2), graded with the 241 style sheet v2 by a blind grader.
+Marks: grammar ≥ 99% over ≈ 1,200 renders and ≥ 97% per act; blind pairwise naturalness vs 241b ≥ 60% wins.
+**Proved wrong if** grammar < 97%: then the pre-named fix (§3.1 step 3) is the next single change.
+
+### B — the comparison (after E4 and M3)
+See §7. Marks fixed before the baselines are trained.
+
+### T1 — small talk through the thought (after B)
+Doc 24 S1/S2 (thinker + gist) on top of the own ear and mouth, with doc 24's marks.
+
+---
+
+## 7. A fair comparison with a same-size plain transformer
+
+Benchmarks (all synthetic, fictional names, generated by our generator, sealed before any baseline is trained):
+- **two-hop:** facts taught in separate turns, asked as one question;
+- **reversal:** taught "Ada is Bo's mother", asked "Who is Ada's child?" (the reversal curse, arXiv 2309.12288);
+- **abstention:** untaught facts and never-mentioned people, plus the wipe test (empty notebook → "I don't know");
+- **MQuAKE-style edits:** teach a chain, correct one link, ask the multi-hop question (MQuAKE, arXiv 2305.14795);
+- **3- and 4-hop** chains longer than any in training;
+- grammar of the answers.
+
+Arms:
+
+| Arm | Size | Memory | Why it's there |
+|---|---|---|---|
+| **Premonition-own** | **61,783,463** (§7.1) | notebook | the system |
+| **B-plain** | **61,783,680** (§7.1), decoder-only, same 8,192 tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
+| **B-RAG** | 61,783,680; B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
+| **B-notebook** | 61,783,680; B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+
+### 7.1 Parameter counts (design counts, recomputed from the shapes; the builder re-counts from the built models)
+
+Every learned number the benchmark path uses is counted, including all ear heads, the whole mouth and the reasoner.
+
+| Part | Shape | Parameters |
+|---|---|---:|
+| Ear embeddings | 8,192 × 512 | 4,194,304 |
+| Ear encoder | 8 blocks × (attention 4·512² + MLP 8·512² + 2 norms) + final norm | 25,174,528 |
+| Ear slot layer | 1 cross-attention layer for the 6 slot queries + the queries | 1,052,672 |
+| Ear pointers | owner, value and relation-cue start/end projections (6 × 512²) | 1,572,864 |
+| Ear question pointers | question-owner start/end (2 × 512²) | 524,288 |
+| Ear classifiers | relation (154 classes) per slot + 3 for questions, slot mode (9), act (9), count (7), exists, inverse | 329,859 |
+| Ear special tokens | `ME`, `WE`, `SEP` | 1,536 |
+| **Ear total** | | **32,850,051** |
+| Mouth (talker101, incl. its 0.52M copy head) | as trained; `artifacts/fable-talker101-20260921/RESULTS.md` | 28,847,105 |
+| Mouth slot tokens | 8 new tokens × 512 (M1) | 4,096 |
+| Reasoner | the existing lookup operator | 79,316 |
+| **Premonition-own total** | | **61,783,463** (the first version of this doc said "≈ 59M" and left out the ear heads) |
+| **Each baseline** | decoder-only, 12 blocks, width 640, SwiGLU MLP width 1,600, 8,192 tied embeddings, RMSNorm | **61,783,680** (+217, +0.0004%) |
+
+B-RAG and B-notebook reuse B-plain's pretrained weights (retrieval and rows are test-time inputs), and the
+3 seeds are for the dialogue-training stage; the long pretraining runs once per side, as in §8.
+Retrieval in B-RAG uses plain word-overlap search (no learned parameters), and B-notebook gets the rows as text, so
+all three baselines have the same count. If the built system's audited count differs, the baselines are re-sized to
+within 0.2% before any baseline is trained, and both counts go in the PASSMARKS.
+
+Three tests keep the sources of a win apart: (1) **language boundary**: English → each reader → the same compiler and
+notebook, score the fact sets; (2) **reasoning**: gold facts and gold questions in, no ear; (3) **end to end**.
+If Premonition-own beats only B-plain, the honest claim is "an external-memory assistant works better", not "a
+better reasoner".
+
+Fairness rules (fixed in advance):
+- same pretraining text and the same number of training FLOPs as ear + mouth pretraining together (so each baseline ≈
+  62M × 617M tokens), the same generated teach/ask/correct dialogues as training text, 3 seeds each (training time and FLOPs reported too:
+  equal parameters do not mean equal compute for an encoder + decoder versus one decoder);
+- the same test items, greedy decoding, the same answer extractor for every arm;
+- report the ear's reading accuracy separately, so a win is not credited to the notebook when the reading failed,
+  and a loss is not blamed on the notebook when the reading failed;
+- parameter counts audited from the built models (shared tensors counted once); the baselines are sized to within 1%
+  of Premonition-own's audited count, not "about the same";
+- say plainly what the notebook gives for free (exact storage, edits by overwrite) and where the learned parts
+  (ear, reasoner, mouth) had to earn it.
+
+Expected (untested): B-plain loses on 3–4 hops and on long conversations. It may **not** lose on reversal: the
+reversal-curse paper (arXiv 2309.12288) found models *can* reverse a fact that is in their context window; the curse is
+about facts learned in the weights. So reversal is only a fair win if B-plain actually fails it when measured.
+Success = a paired gain of ≥ 5 points in each benchmark family, over ≥ 500 independent fictional worlds per family,
+with the confidence interval above zero after correcting for the four families, across 3 seeds (no best-seed picking).
+If B-RAG or B-notebook ties Premonition-own, that is the headline.
+
+---
+
+## 8. Compute and money
+
+Anchor (shown): talker101, 28.85M parameters, 617M tokens, about 49,000 tokens/s on BensPC's RTX 5070 Ti, about
+3.5 h. Planning rule (untested): time scales with parameters × tokens.
+
+| Job | BensPC (free) | One rented RTX 5090 (≈ 3× faster on a small model, shown on the 4M model; $0.27–0.60/h listed) |
+|---|---|---|
+| O0 tiny ear | Mac CPU ≤ 25 min | — |
+| E1 ear pretraining, 29M × 600M tokens | ≈ 3.5 h | ≈ 1.2 h ≈ $0.50–0.75 |
+| E1–E3 frame training, 8 short runs | ≈ 2 h | ≈ 0.7 h |
+| M1 mouth fine-tune | ≈ 1 min | — |
+| Each baseline, 61.8M × 617M tokens | ≈ 7.5 h (two resumable runs of ≤ 6 h, D8) | ≈ 2.5 h ≈ $1–1.50 |
+| B-RAG and all evaluations | ≈ 1 h | — |
+| **Total** | **≈ 11–12 GPU-hours, $0** | **≈ 3.5–4 h, ≈ $2–2.50; hard cap $5** |
+
+BensPC is shared: Qwen (the 264 checker, 261b) takes about 15 GB of the 16 GB card, so it can check or train, never
+both. The $30 cap is shared across all lines; the ledger must be read before any rental.
+
+---
+
+## 9. The decision for Ben
+
+**Decided by Ben (2026-09-23 03:00 UTC): "Anything that starts and finishes overnight, use rtx 5070-ti as a blanket
+rule."** So E1 ear pretraining (≈ 3.5 h) and each baseline pretraining run (≈ 7.5 h, split into two resumable runs)
+go on BensPC overnight, free. A rental would only come up again for a job that can't fit in a night, and that would
+be a new question to Ben. The options below are kept as they were asked.
+
+**Where should the first long GPU job run (own-ear pretraining, E1, ≈ 3.5 h on BensPC)?**
+- **Rent one RTX 5090 for about 1.2 hours (≈ $1, hard cap $3)** — runs in parallel with the other lines, which keep
+  BensPC for the Qwen checker work. *Recommended*, because the GPU is the thing every line is waiting on.
+- Run it on BensPC overnight, free — nothing else can use the GPU for those hours.
+- Wait until the checker work is finished.
+
+Either way it starts only after O0 passes on the Mac CPU. O0 needs no decision and can start now.
+
+---
+
+## 10. Risks and the strongest objection
+
+- **Objection:** "The own ear is a slot-filling parser; the hard part is still the act and binding decisions, and a
+  30M model trained on template-ish data will fail on how Ben really types." True risk. Answers: pretraining (E1)
+  plus Qwen placeholder paraphrases for variety; the L3 outside-wording split; and the gate stays independent until
+  E4/E5 measure the own ear on fresh blind turns. If E4 fails, the borrowed ear stays and the own ear becomes the
+  second, different reader of §4.4.
+- **Rival design considered:** a 60M own decoder that writes frame text (like ear v4.1, but ours). Simpler, and it
+  reuses talker101's code. Rejected as the first choice because free-text output can invent spans and glue leftover
+  words, the two things pointers remove for free. It stays available as an arm for E1 if E1's pointer ear fails.
+- **Mouth grammar:** talker101 scored 67.4% on BLiMP-10. Replies are a much narrower language than BLiMP, and M2
+  falls back to the 241 layer, so a failure costs naturalness, not truth.
+
+## 11. What the two outside answers changed (Ben relayed them, 02:45 UTC)
+
+Both answers (to research prompt 3) recommend the same thing: a span/pointer reader whose output is only a proposal,
+and a small rule-checked writer. I checked each claim against the repo and the rest of this plan.
+
+**Adopted:**
+- the write compiler as the only writer, with source spans, atomic turns and provenance (§4.1);
+- "our/we" as its own token, not silently "me" (§2.1);
+- a pointer to the relation words, whole cues only ("sister-in-law") (§2.1);
+- a mode per fact, so a turn can state and ask at once (§2.1);
+- the oracle-coverage check before any GPU run (O0);
+- equal-extra-budget controls for every training change (§6);
+- the same-compiler autoregressive reader as the decisive ear control (E1), and a notebook-equipped plain baseline
+  (§7);
+- the reversal caveat: plain transformers can reverse facts that are in context (arXiv 2309.12288) (§7);
+- certification: 368 per claim for two claims together, per-turn vs per-fact, frozen before testing (E5);
+- freeze the relation table before scoring ("pet" vs "dog" must be declared, as 261b now does).
+
+**Not adopted, and why:**
+- *A hand-written grammar inside the compiler that re-parses the turn and decides.* It would bring back the retired
+  rule tables, and both answers call it the design's weakest point. Kept only as a measured option (O0).
+- *Paying an outside AI service (~$20) for paraphrases.* It spends the shared $30 cap and sends data outside; Qwen on
+  BensPC already does this for free.
+- *Their GPU-hour estimates (17–67 h per 1.2B tokens).* They assumed 5,000–20,000 tokens/s without a measurement. This
+  repo measured about 49,000 tokens/s for a 29M model on the 5070 Ti (talker101), so §8's numbers stand.
+- *A 33M total with a new 14M mouth.* talker101 (29M, already ours and trained) is the mouth; retraining a smaller one
+  costs GPU hours before any test says it's needed. Baseline sizes follow the audited total either way.
+
+Note for the reasoner line (outside this plan): both answers suggest the reasoner return the ids of the rows it used,
+with code checking they are still current. That belongs to the base, not to the ear or mouth.
+
+## Sources
+
+Pointer-generator networks arXiv 1704.04368 · Repeat After Me arXiv 2402.01032 · Set prediction networks arXiv
+2011.01675 · CycleGT arXiv 2006.04702 · TinyStories arXiv 2305.07759 · SimpleStories arXiv 2504.09184 ·
+TinyDialogues arXiv 2408.03617 · Pointer networks arXiv 1506.03134 · PICARD arXiv 2109.05093 · COGS arXiv 2010.05465 ·
+CycleGAN hides information arXiv 1712.02950 · Reversal curse arXiv 2309.12288 · MQuAKE / MeLLo arXiv 2305.14795 · Grokked
+transformers are implicit reasoners arXiv 2405.15071 · UniversalNER arXiv 2308.03279 ·
+vast.ai RTX 5090 pricing https://vast.ai/pricing/gpu/RTX-5090 · price comparison
+https://getdeploying.com/gpus/nvidia-rtx-5090. Repo inputs: design/v3/24, 24b, 30-modes/87, 235, 240, 257
+PASSMARKS, director board entries 04:42 / 05:08 / 05:44, research note v3
+(`/mnt/project-files/research-2026-09-23/`).
+[0m
+[0m$ [0mls artifacts/claude-smolear257-20260922/ 2>&1; echo ---; ls scripts/ | head -50; echo ---; uptime; df -g / | head -5
+data
+data41
+dev
+on235b
+PASSMARKS.md
+relation_table_v2.json
+RESULTS.md
+run
+SEAL.sha256.txt
+train
+train41
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+---
+ 0:05  up 2 days, 15:55, 4 users, load averages: 69.82 68.67 72.39
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        19    40%  484014 201017760    0%   /
+[0m
+[0m$ [0mpython3 -c "import json; d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json')); print(type(d)); print(len(d) if hasattr(d,'__len__') else ''); print(str(d)[:1500])"
+<class 'dict'>
+8
+{'version': 'v2', 'date': '2026-09-22', 'purpose': 'One relation table for (a) the hand-written reader (rule table) and (b) training labels for a learned reader. Facts are (X, R, Y) read as "X\'s R is Y". v2 (exp 257): v1 rows unchanged except added informal aliases; new rows appended.', 'template_syntax': {'value_kinds': {'person': 'a named individual (people and named pets; 171 NAME_KEYS)', 'place': 'a place name', 'organization': 'a company or group', 'work': 'a title of a work', 'date': 'month / day / year', 'number': 'a number', 'language': 'a language name', 'literal': 'any short phrase'}, 'slots': {'X': 'subject', 'Y': 'value', 'R': 'relation word (canonical or alias)', 'WH': "question word from 'wh'"}, 'alternation': '(a|b)', 'optional': '[word]', 'where_values': {'live': 'handled by some piece in the 138i stack today', 'layer_c': 'handled by a layer-C piece being merged now (not yet in 138i)', 'not_live': 'exists in repo code but not in the 138i stack', 'NEW': 'no code handles it today'}, 'status_values': {'known': 'relation name appears in code or frozen suite/bench data', 'NEW': 'relation name appears nowhere in code or data'}}, 'rules': {'taught_facts_win': 'Taught facts are never overwritten by inferences; inverse and narrower answers are read-only.', 'inverse_never_stored': "Inverse phrasings are answered at question time by scanning live taught facts (like fable_fix190_reverse.py:149 reverse_subjects190), labelled 'worked out backwards', and never written.", 'a
+[0m
+[0m$ [0muv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import torch; print(torch.__version__)"; ls artifacts/ | grep -i own; ls artifacts/claude-own-o0d-20260923/ 2>&1
+2.14.0
+claude-own-o0a-20260923
+claude-own-o0c-20260923
+ls: artifacts/claude-own-o0d-20260923/: No such file or directory
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+print(list(d.keys()))
+rels=d.get('relations', d.get('rows', None))
+print(type(rels))
+if isinstance(rels,list): print(len(rels)); print(str(rels[0])[:500])
+elif isinstance(rels,dict): print(len(rels)); ks=list(rels.keys())[:10]; print(ks)
+"
+['version', 'date', 'purpose', 'template_syntax', 'rules', 'generic_patterns', 'inventory_exclusions', 'relations']
+<class 'list'>
+153
+{'name': 'mother', 'status': 'known', 'value_kind': 'person', 'cardinality': 'single', 'yesno_can_say_no': True, 'aliases': ['mom', 'mum', 'mommy', 'mummy', 'ma', 'mam', 'mama'], 'storage_keys': ['mother'], 'inverse_storage_keys': [], 'narrower': [], 'generic': ['possessive', 'my', 'of_form', 'inverted', 'reverse'], 'wh': ['Who', 'What'], 'teach': [], 'ask': [], 'yesno': [], 'inverse': [{'t': "Who are {Y}'s children?", 'where': 'NEW', 'src': 'NEW (collects mother and father facts)', 'never_store
+[0m
+[0m$ [0mls -la artifacts/fable-predictions-ledger.md 2>&1; tail -5 artifacts/fable-predictions-ledger.md 2>&1
+-rw-r--r--  1 ben-hannan  staff  522340 Sep 23 00:05 artifacts/fable-predictions-ledger.md
+- Pown0a.3 no-save-mode facts writable 0/76; bar = 0: PASS (0 by construction via mode gate).
+- Pown0a OUTCOME: strict v0 write rules ceiling ~68% even with a perfect reader, so no ear training can reach 85% recall under them; rules must change before any GPU run. Seal 4/4 OK after run; no deviations from task order.
+- Pown0c.1 (2026-09-23, own-O0c pipeline sample, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0c-20260923; 4000 SimpleStories + 15000 webred sample, seed 7, CPU only) shards round-trip exactly on 1000 sampled docs: 1000/1000, 0 misses.
+- Pown0c.2 same (seed 7, step 0) data order twice byte-identical (same sha256); step 1 differs.
+- Pown0c.3 total planned download 2.23 GB + 316 MB = 2.546 GB <= 7 GB (plan S5 numbers quoted; remote bytes not re-verifiable offline, nothing downloaded).
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import scipy" 2>&1 | tail -2
+File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'scipy'
+[0m
+[0m# [0mTodos
+[•] Write scripts/claude_own_o0d_model.py (BPE, encoder, heads, loss, whole-word decoding)
+[ ] Write scripts/claude_own_o0d_train.py (MLM + frame modes, ckpt resume)
+[ ] Pilot, write PASSMARKS.md, seal, append ledger predictions
+[ ] Write scripts/claude_own_o0d_test.py and run registered tests
+[ ] Write RESULTS.md and final report
+[0m
+[0m← [0mWrite scripts/claude_own_o0d_model.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_model.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+@@ -415,11 +415,9 @@
+     return (best, sc)
+ 
+ 
+ def is_whole_word_span(s, e, word_ids):
+-    start, end = ByteBPE.word_start_end(None, word_ids) \
+-        if False else (None, None)
+-    # standalone check (no tokenizer instance needed)
++    """True iff [s,e] covers whole words only (s at a word start, e at end)."""
+     if not (0 <= s <= e < len(word_ids)):
+         return False
+     if s > 0 and word_ids[s] == word_ids[s - 1]:
+         return False
+
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_model.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+@@ -459,51 +459,42 @@
+     return P[best]                                     # (B,6)
+ 
+ 
+ def slot_match_cost(out, gold, b):
+-    """Negative-log-prob cost matrix (6 x G) for batch item b (vectorized ops)."""
++    """Negative-log-prob cost matrix (6 x G) for batch item b.
++
++    Gold fact keys: rel, mode, val_s, val_e, cue_s, cue_e, own_s, own_e,
++    own_special (None = plain token span, 0 = ME, 1 = WE). Owner logits are
++    extended as [ME, WE, tok0..tokT-1] for both start and end.
++    """
+     G = len(gold)
+     device = out["exists"].device
+-    cost = torch.zeros(6, G, dtype=torch.float32, device=device)
++    S = out["exists"].size(1)
++    cost = torch.zeros(S, G, dtype=torch.float32, device=device)
+     for g, gf in enumerate(gold):
+-        # exists: prefer slots saying exists
+         cost[:, g] += F.softplus(-out["exists"][b])          # -log sigm(exists)
+         cost[:, g] += F.cross_entropy(
+-            out["rel_slot"][b], torch.full((6,), gf["rel"],
++            out["rel_slot"][b], torch.full((S,), gf["rel"],
+                                            dtype=torch.long, device=device),
+             reduction="none")
+         cost[:, g] += F.cross_entropy(
+-            out["mode"][b], torch.full((6,), gf["mode"],
++            out["mode"][b], torch.full((S,), gf["mode"],
+                                        dtype=torch.long, device=device),
+             reduction="none")
+-        for head, key in [("own_s", "own_s"), ("own_e", "own_e"),
+-                          ("val_s", "val_s"), ("val_e", "val_e"),
++        for head, key in [("val_s", "val_s"), ("val_e", "val_e"),
+                           ("cue_s", "cue_s"), ("cue_e", "cue_e")]:
+-            tgt = torch.full((6,), gf[key], dtype=torch.long, device=device)
++            tgt = torch.full((S,), gf[key], dtype=torch.long, device=device)
+             cost[:, g] += F.cross_entropy(out["span"][head][b], tgt,
+                                           reduction="none")
+-        # owner ME/WE pseudo-targets: cross-entropy over (ME, WE, T...) when special
+-        if gf.get("own_special") is not None:
+-            sp = out["own_sp"][b]                            # (6,2)
+-            ext = torch.cat([sp, out["span"]["own_s"][b][:, :0]], dim=1)
+-            # full distribution over ME/WE + T token starts
+-            full_s = torch.cat([sp, out["span"]["own_s"][b]], dim=1)
+-            full_e = torch.cat([out["own_sp"][b][:, [0]] * 0, full_s[:, 1:]], dim=1)
+-            # simpler: special target index into (ME=0, WE=1, toks=2..)
+-            tgt = torch.full((6,), 2 + gf["own_s"] if gf["own_special"] == -1
+-                             else gf["own_special"], dtype=torch.long,
+-                             device=device)
+-            # NOTE: kept simple; the frame trainer below uses own_special in
+-            # {-1 = token span} U {0 = ME, 1 = WE}; cost via extended logits:
+-            ext_s = torch.cat([out["own_sp"][b], out["span"]["own_s"][b]], dim=1)
+-            ext_e = torch.cat([out["own_sp"][b], out["span"]["own_e"][b]], dim=1)
+-            ts = 0 if gf["own_special"] == 0 else (1 if gf["own_special"] == 1
+-                                                  else 2 + gf["own_s"])
+-            te = 0 if gf["own_special"] == 0 else (1 if gf["own_special"] == 1
+-                                                  else 2 + gf["own_e"])
+-            cost[:, g] += F.cross_entropy(
+-                ext_s, torch.full((6,), ts, dtype=torch.long, device=device),
+-                reduction="none")
+-            cost[:, g] += F.cross_entropy(
+-                ext_e, torch.full((6,), te, dtype=torch.long, device=device),
+-                reduction="none")
++        ext_s = torch.cat([out["own_sp"][b], out["span"]["own_s"][b]], dim=1)
++        ext_e = torch.cat([out["own_sp"][b], out["span"]["own_e"][b]], dim=1)
++        if gf.get("own_special") is None:
++            ts, te = 2 + gf["own_s"], 2 + gf["own_e"]
++        else:
++            ts = te = int(gf["own_special"])  # 0 = ME, 1 = WE
++        cost[:, g] += F.cross_entropy(
++            ext_s, torch.full((S,), ts, dtype=torch.long, device=device),
++            reduction="none")
++        cost[:, g] += F.cross_entropy(
++            ext_e, torch.full((S,), te, dtype=torch.long, device=device),
++            reduction="none")
+     return cost
+
+[0m
+[0m← [0mWrite scripts/claude_own_o0d_train.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+from claude_own_o0d_model import *
+import torch
+tok = ByteBPE.train(['Mira is here.','My dog is Pip.','Who is Ada?'], 300)
+print('toksize', len(tok.vocab))
+ids, wids = tok.encode(\"Mira's dog is Pip.\")
+print(ids, wids)
+m = valid = tok.valid_span_mask(wids)
+cfg = EarConfig(vocab_size=300, d_model=32, n_layers=1, n_heads=4, max_len=48)
+model = OwnEar(cfg)
+bid = torch.tensor([ids]); mask=torch.ones(1,len(ids),bool)
+out = model(bid, mask)
+print('fwd ok', out['act'].shape, out['rel_slot'].shape)
+print('audit', model.audit())
+cfg2 = EarConfig()
+model2 = OwnEar(cfg2)
+import json
+a = model2.audit(); print(json.dumps(a, indent=0))
+print('plan match:', {k: a[k]==v for k,v in PLAN_COUNTS.items()})
+"
+Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py", line 132, in encode
+    node = node[node[raw[j]]]
+           ~~~~^^^^^^^^^^^^^^
+TypeError: unhashable type: 'dict'
+toksize 275
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_model.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+@@ -128,9 +128,9 @@
+ node = self._trie
+ j = i
+ last = None
+ while j < len(raw) and raw[j] in node:
+-    node = node[node[raw[j]]]
++    node = node[raw[j]]
+     j += 1
+     if "$" in node:
+         last = (node["$"], j)
+ if last is None:  # cannot happen (all single bytes in vocab)
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+from claude_own_o0d_model import *
+import torch, json
+tok = ByteBPE.train(['Mira is here.','My dog is Pip.','Who is Ada?'], 300)
+print('toksize', len(tok.vocab))
+ids, wids = tok.encode(\"Mira's dog is Pip.\")
+print(ids, wids)
+cfg = EarConfig(vocab_size=300, d_model=32, n_layers=1, n_heads=4, max_len=48)
+model = OwnEar(cfg)
+bid = torch.tensor([ids]); mask=torch.ones(1,len(ids),bool)
+out = model(bid, mask)
+print('fwd ok', out['act'].shape, out['rel_slot'].shape)
+cfg2 = EarConfig()
+model2 = OwnEar(cfg2)
+a = model2.audit(); print(json.dumps(a))
+print('plan match:', {k: a[k]==v for k,v in PLAN_COUNTS.items()})
+"
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+TypeError: ones(): argument 'size' failed to unpack the object at pos 3 with error "type must be tuple of ints,but got type"
+toksize 275
+[259, 39, 115, 266, 256, 269] [0, 0, 0, 1, 2, 3]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+from claude_own_o0d_model import *
+import torch, json
+tok = ByteBPE.train(['Mira is here.','My dog is Pip.','Who is Ada?'], 300)
+ids, wids = tok.encode(\"Mira's dog is Pip.\")
+cfg = EarConfig(vocab_size=300, d_model=32, n_layers=1, n_heads=4, max_len=48)
+model = OwnEar(cfg)
+bid = torch.tensor([ids]); mask=torch.ones(1,len(ids),dtype=torch.bool)
+out = model(bid, mask)
+print('fwd ok', out['act'].shape, out['rel_slot'].shape)
+cfg2 = EarConfig()
+model2 = OwnEar(cfg2)
+a = model2.audit(); print(json.dumps(a))
+print('plan match:', {k: a[k]==v for k,v in PLAN_COUNTS.items()})
+"
+fwd ok torch.Size([1, 9]) torch.Size([1, 6, 154])
+{"embeddings": 4194304, "encoder": 25174528, "slot_layer": 1052672, "pointers": 1572864, "question_pointers": 524288, "classifiers": 329859, "special_tokens": 1536, "total": 32850051}
+plan match: {'embeddings': True, 'encoder': True, 'slot_layer': True, 'pointers': True, 'question_pointers': True, 'classifiers': True, 'special_tokens': True, 'total': True}
+[0m
+[0m← [0mWrite artifacts/claude-own-o0d-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_own_o0d_test.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
+@@ -186,13 +186,13 @@
+  while time.time() - t0 < 590:
+      if os.path.exists(target):
+          break
+      time.sleep(2)
+-本土 = os.path.exists(target)
++ landed = os.path.exists(target)
+  proc.kill()  # SIGKILL-equivalent: no cleanup, tests atomicity
+  proc.wait()
+- check("kill-landed",本土, f"ckpt@{N} present={本土}")
+- if not本土:
++ check("kill-landed", landed, f"ckpt@{N} present={landed}")
++ if not landed:
+      return
+  # resume in foreground to 2N
+  p2 = run_train(workdir=b, **kw)
+  check("kill-resume-runs", p2.returncode == 0,
+
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_test.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_test.py
+@@ -218,10 +218,10 @@
+ for t in range(T):
+     wids.append(w)
+     if t in cutset:
+         w += 1
+-m = ByteBPE.valid_span_mask(None, wids) if False else None
+-# build mask without an instance
++# build whole-word validity mask from the layout (same rule as
++# ByteBPE.valid_span_mask)
+ start, end = [True] * T, [True] * T
+ for t in range(1, T):
+     if wids[t] == wids[t - 1]:
+         start[t] = False
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, pickle; sys.path.insert(0,'scripts')
+from claude_own_o0d_train import gen_pretrain_texts, gen_frame_items
+from claude_own_o0d_model import ByteBPE
+texts = gen_pretrain_texts(300,7)+[i['text'] for i in gen_frame_items(300,8)]
+tok = ByteBPE.train(texts, 512)
+print('vocab', len(tok.vocab))
+pickle.dump(tok, open('/tmp/o0d_tok.pkl','wb'))
+" && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0d_train.py --mode frame --workdir /tmp/o0d_pilot --tok /tmp/o0d_tok.pkl --vocab 512 --width 64 --layers 2 --heads 4 --max-steps 6 --seed 3 --ckpt-steps 5 --items 200
+vocab 474
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 457, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 451, in main
+    run_frame(args, tok, rel_index)
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 339, in run_frame
+    loss = frame_loss(model, out, gold, aids, cids, bmask)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 176, in frame_loss
+    assign = hungarian_match(full.unsqueeze(0))[0]  # (6,) slot->gold/empty
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py", line 457, in hungarian_match
+    tot = full.gather(2, idx).sum(-1)                  # (B,720)
+          ^^^^^^^^^^^^^^^^^^^
+RuntimeError: Size does not match at dimension 1 expected index [1, 720, 6] to be no larger than self [1, 6, 6] apart from dimension 2
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_model.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+@@ -451,11 +451,10 @@
+ full = torch.zeros(B, 6, 6, dtype=cost.dtype, device=cost.device)
+ full[:, :, :G] = cost
+ # unmatched slots take the empty column: cost 0 (columns G..5 are zeros)
+ P = _perms6().to(cost.device)                      # (720,6): perm[p,s]=gold
+-# gather: (B,720,6)
+-idx = P.unsqueeze(0).expand(B, -1, -1)
+-tot = full.gather(2, idx).sum(-1)                  # (B,720)
++rows = torch.arange(S, device=cost.device)
++tot = full[:, rows, P.T].sum(1)                    # (B,720)
+ best = tot.argmin(-1)                              # (B,)
+ return P[best]                                     # (B,6)
+ 
+ 
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0d_train.py --mode frame --workdir /tmp/o0d_pilot --tok /tmp/o0d_tok.pkl --vocab 512 --width 64 --layers 2 --heads 4 --max-steps 6 --seed 3 --ckpt-steps 5 --items 200
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 457, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 451, in main
+    run_frame(args, tok, rel_index)
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 339, in run_frame
+    loss = frame_loss(model, out, gold, aids, cids, bmask)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_train.py", line 176, in frame_loss
+    assign = hungarian_match(full.unsqueeze(0))[0]  # (6,) slot->gold/empty
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py", line 456, in hungarian_match
+    tot = full[:, rows, P.T].sum(1)                    # (B,720)
+          ~~~~^^^^^^^^^^^^^^
+IndexError: shape mismatch: indexing tensors could not be broadcast together with shapes [6], [6, 720]
+[0m
+[0m← [0mEdit scripts/claude_own_o0d_model.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0d_model.py
+@@ -452,9 +452,9 @@
+ full[:, :, :G] = cost
+ # unmatched slots take the empty column: cost 0 (columns G..5 are zeros)
+ P = _perms6().to(cost.device)                      # (720,6): perm[p,s]=gold
+ rows = torch.arange(S, device=cost.device)
+-tot = full[:, rows, P.T].sum(1)                    # (B,720)
++tot = full[:, rows[:, None], P.T].sum(1)          # (B,720)
+ best = tot.argmin(-1)                              # (B,)
+ return P[best]                                     # (B,6)
+ 
+ 
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0d_train.py --mode frame --workdir /tmp/o0d_pilot --tok /tmp/o0d_tok.pkl --vocab 512 --width 64 --layers 2 --heads 4 --max-steps 6 --seed 3 --ckpt-steps 5 --items 200
+frame done steps 0->6 loss0=1.9799 loss1=1.7643
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0d_train.py --mode mlm --workdir /tmp/o0d_pilot_mlm --tok /tmp/o0d_tok.pkl --vocab 512 --width 64 --layers 2 --heads 4 --max-steps 3 --seed 3 --ckpt-steps 0 --items 200
+mlm done steps 0->3 loss0=51.7523 loss1=51.7523
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_o0d_model.py scripts/claude_own_o0d_train.py scripts/claude_own_o0d_test.py artifacts/claude-own-o0d-20260923/PASSMARKS.md > artifacts/claude-own-o0d-20260923/SEAL.sha256.txt && cat artifacts/claude-own-o0d-20260923/SEAL.sha256.txt
+3fdafa999d2098f52c02478c14461131a84e4a645eeeb277fd09628054e48461  scripts/claude_own_o0d_model.py
+dccdc6316c17d5485c3b55f4a7b6ef145e174f43f8c380819e9341f8281cf1c9  scripts/claude_own_o0d_train.py
+6829957a16234cfd92c68af3a5ba9f21875ff06eb2f16860105640258d4116f9  scripts/claude_own_o0d_test.py
+5aeb1ed74d5f0fcadb87280ce4e569c27e9884af7dc907298b5c6832f7ff2c2c  artifacts/claude-own-o0d-20260923/PASSMARKS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0d.1 (2026-09-23, own-O0d ear code+trainer, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0d-20260923; CPU only): all unit tests pass; bar = every unit test passes.
+- Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
+- Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
+- Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.
+EOF
+tail -4 artifacts/fable-predictions-ledger.md
+- Pown0d.1 (2026-09-23, own-O0d ear code+trainer, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0d-20260923; CPU only): all unit tests pass; bar = every unit test passes.
+- Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
+- Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
+- Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_own_o0d_model.py (BPE, encoder, heads, loss, whole-word decoding)
+[✓] Write scripts/claude_own_o0d_train.py (MLM + frame modes, ckpt resume)
+[✓] Pilot, write PASSMARKS.md, seal, append ledger predictions
+[•] Write scripts/claude_own_o0d_test.py and run registered tests
+[ ] Write RESULTS.md and final report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0d_test.py
+[PASS] bpe-trains vocab=474
+[FAIL] bpe-roundtrip 5 sentences
+[PASS] word-ids ids=[387, 83, 116, 105, 108] wids=[0, 1, 1, 1, 1]
+[FAIL] mask-blocks-cuts T=7 wids=[0, 0, 0, 0, 0, 0, 0]
+[FAIL] decode-whole-word-only bad=1703/2000
+[PASS] hungarian-optimal maxgap=0.00e+00
+[PASS] forward-shapes 
+[PASS] relation-table-153 n=153
+[PASS] audit-within-0.5pct total=32850051 diff=0.000000
+part | audited | plan | match
+embeddings | 4194304 | 4194304 | True
+encoder | 25174528 | 25174528 | True
+slot_layer | 1052672 | 1052672 | True
+pointers | 1572864 | 1572864 | True
+question_pointers | 524288 | 524288 | True
+classifiers | 329859 | 329859 | True
+special_tokens | 1536 | 1536 | True
+total | 32850051 | 32850051 | True
+[PASS] kill-A-runs 
+[PASS] kill-landed ckpt@30 present=True
+[PASS] kill-resume-runs 
+[PASS] kill-identical A=054dbec63839 B=054dbec63839
+[FAIL] fuzz-10000-zero bad=11418/10000(+owners)
+[PASS] smoke-runs 
+[PASS] smoke-loss-falls early=1.3347 late=0.3635 steps=120 t=2s
+[PASS] mlm-pilot-runs 
+DONE ok=False t=12s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, pickle; sys.path.insert(0,'scripts')
+import torch
+from claude_own_o0d_model import ByteBPE, decode_span, is_whole_word_span
+tok = pickle.load(open('artifacts/claude-own-o0d-20260923/tok.pkl','rb'))
+for s in [\"Mira's DOG is Pip.\", 'My sisters are Mira, Tal and Oona.']:
+    ids, wids = tok.encode(s)
+    print(repr(s), '->', repr(tok.decode(ids)))
+ids, wids = tok.encode('sister-in-law')
+print('ids', ids, 'wids', wids)
+m = tok.valid_span_mask(wids)
+print('mask sum', m.sum().item(), 'T', len(ids))
+print('mask0row', m[0].tolist())
+sl = torch.randn(len(ids)); el = torch.randn(len(ids))
+print('decode', decode_span(sl, el, m))
+print('whole?', is_whole_word_span(*decode_span(sl, el, m)[:2], wids))
+"
+"Mira's DOG is Pip." -> "Mira'sDOGisPip."
+'My sisters are Mira, Tal and Oona.' -> 'MysistersareMira,TalandOona.'
+ids [268, 45, 269, 45, 108, 97, 119] wids [0, 0, 0, 0, 0, 0, 0]
+mask sum 7 T 7
+mask0row [True, True, True, True, True, True, True]
+decode (0, 1, 0.6122447848320007)
+whole? False
+[0m
+[0m$ [0mshasum -c artifacts/claude-own-o0d-20260923/SEAL.sha256.txt
+scripts/claude_own_o0d_model.py: OK
+scripts/claude_own_o0d_train.py: OK
+scripts/claude_own_o0d_test.py: OK
+artifacts/claude-own-o0d-20260923/PASSMARKS.md: OK
+[0m
+[0m← [0mWrite artifacts/claude-own-o0d-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Write scripts/claude_own_o0d_model.py (BPE, encoder, heads, loss, whole-word decoding)
+[✓] Write scripts/claude_own_o0d_train.py (MLM + frame modes, ckpt resume)
+[✓] Pilot, write PASSMARKS.md, seal, append ledger predictions
+[✓] Write scripts/claude_own_o0d_test.py and run registered tests
+[✓] Write RESULTS.md and final report
+[0m

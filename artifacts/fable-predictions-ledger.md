@@ -2665,3 +2665,7 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
 - Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
 - Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
 - Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.
+- Pown0b.1 (own-O0b frame generator, sealed 2026-09-23, artifacts/claude-own-o0b-20260923) independent re-deriver mismatches = 0 on 10,000 sampled rows (seed 7). Pilot: 0/10,000 on seeds 3 and 43 pre-seal.
+- Pown0b.2 (own-O0b) 0 train rows carry an L2 frame id (split by frame before generating; 20% of frame ids held out).
+- Pown0b.3 (own-O0b) 0 non-whole-word spans across all 210,000 rows.
+- Pown0b.4 (own-O0b) each of the 10 families in [9%, 11%] of the 200,000 train rows (bar: >= 3% each).
