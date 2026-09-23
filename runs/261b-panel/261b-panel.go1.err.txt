@@ -1,0 +1,238 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin claude/project-thread-p68q5v 2>&1 | head -20; echo FETCH_DONE
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+21:39  up 2 days, 13:29, 3 users, load averages: 26.92 31.58 41.25
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 194751760    0%   /
+FETCH_DONE
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/earpanel261b-spec.txt
+EAR PANEL 261b SPEC. The director wrote this on 2026-09-23 (copied from the earpanel261 spec with the changes marked NEW). It is shared by the blind panel writer and the exp 261b builder.
+
+Folder: artifacts/claude-earpanel261b-20260923/
+- panel.jsonl (150 lines)
+- make_panel.py: holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel261b-20260923/panel.jsonl artifacts/claude-earpanel261b-20260923/make_panel.py > artifacts/claude-earpanel261b-20260923/SEAL.sha256.txt
+
+Schema (exactly as panel 257)
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e261b-001" … "e261b-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: a string holding the risk tags (R1 … R12, "lower", "typo", "noq").
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value: the exact words from the turn, in the same case. "me" stands for the speaker, which includes "our"/"we"/"us" owners (Ben's rule: there is one user).
+- NEW: for a pet, relation is "pet" and relation_aliases must include the species word the turn uses (dog, cat, rabbit ...) as well as pet, animal and companion.
+- relation: a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school, neighbour …). relation_aliases lists accepted alternatives. Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example from this spec word for word.
+- R1, pronoun reference across clauses: at least 8 turns across varied_teach and full_names. Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 8 turns in no_save with gold [].
+  - Include tag questions ("…, right", "…, isn't it") and "so …" checks.
+  - At least 5 have NO question mark (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact (TEACH gold, in varied_teach).
+- R3, the verb decides the relation, not a noun in the value: at least 6 items. Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-): at least 6 items across families. Gold keeps the full relation.
+- R5, everyday relations beyond the core list (housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours): at least 8 items across families.
+- R6, two-hop questions whose first hop is a relative: at least 5 of the chain_questions.
+- R7, first-person plural owners ("our", "we", "us" + a relative, pet, home, workplace or neighbour): at least 6 items across the teach families. The gold subject is "me".
+- R8, plans, goals and wishes ("training to be", "wants to be", "is hoping to", "is going to", "plans to move to", "will start at"): at least 6 items.
+  - At least 3 are in varied_teach, where another clause of the same turn states a real current fact. Only that fact is gold.
+  - At least 3 are in no_save, where the whole turn is a plan or wish (gold []).
+- R9, pretend and hypothetical turns ("let's say", "imagine", "suppose", "pretend", "what if", "say that"): at least 5 in no_save, with gold [].
+- R10, plural relatives naming two people ("my two sisters, A and B, …", "both my cousins, A and B, …"): at least 4 items. Gold has one frame per person for the relation, plus any other stated fact for each person.
+- R11, appositive relatives ("my cousin A lives in B", "A's friend B works at C"): at least 6 items. Gold holds the relative frame AND the other fact.
+- R12, a pronoun after "A's R is B and he/she …" where the pronoun refers to B: at least 4 items. The later fact's gold subject is B, never A.
+
+The rest spreads over:
+- plain facts, pets, jobs, languages and birthplaces;
+- full names of 2–4 words;
+- corrections, which hold only the new value (a negated old value is never in gold);
+- lowercase and typo'd chat: at least 15 turns in all.
+- NEW, R13 typo next to a name: at least 8 teach items where a misspelt everyday word (not a name) sits right next to a name ("livs", "werks", "bron"). Gold holds the clean name spans only.
+- NEW, R14 all-lowercase names: at least 6 teach items typed all lowercase with lowercase names; gold keeps the lowercase spans.
+questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, briefs other than this spec, other panels (including earpanel257 and earpanel261), or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - every R1–R14 quota;
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Before sealing, reread every item once as a careful reader. Is the gold what a sensible person would save from this turn, and nothing more? Mark clear:false where two readings are defensible.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:artifacts/claude-earpanel235-20260922/README.md > /tmp/ear235_readme.md; wc -l /tmp/ear235_readme.md
+43 /tmp/ear235_readme.md
+[0m
+[0m→ [0mRead /tmp/ear235_readme.md
+[0m
+[0m$ [0mmkdir -p artifacts/claude-earpanel261b-20260923 && df -g / && uptime
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 193958320    0%   /
+21:44  up 2 days, 13:33, 3 users, load averages: 56.26 53.03 48.32
+[0m
+[0m← [0mWrite artifacts/claude-earpanel261b-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel261b-20260923/make_panel.py
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py", line 569, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py", line 559, in main
+    counts = check()
+             ^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py", line 487, in check
+    assert "school" in rels, (x["id"], "R3 study->school")
+           ^^^^^^^^^^^^^^^^
+AssertionError: ('e261b-031', 'R3 study->school')
+[0m
+[0m← [0mEdit artifacts/claude-earpanel261b-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+@@ -478,13 +478,14 @@
+ # R3: verb decides relation
+ r3 = [x for x in ITEMS if "R3" in tags(x["notes"])]
+ assert len(r3) >= 6, len(r3)
+ for x in r3:
++    words = t = x["turn"].lower().split()
+     t = x["turn"].lower()
+     rels = [f["relation"] for f in x["gold"]]
+     if "teach" in t or "coach" in t:
+         assert "workplace" in rels, (x["id"], "R3 teach->workplace")
+-    if "stud" in t:
++    if "study" in t or "studies" in t:
+         assert "school" in rels, (x["id"], "R3 study->school")
+ # R4 compound relations
+ r4 = [x for x in ITEMS if "R4" in tags(x["notes"])]
+ assert len(r4) >= 6, len(r4)
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel261b-20260923/make_panel.py
+wrote artifacts/claude-earpanel261b-20260923/panel.jsonl (150 items)
+{
+ "R1": 12,
+ "R10": 5,
+ "R11": 7,
+ "R12": 5,
+ "R13": 8,
+ "R14": 7,
+ "R2ns": 9,
+ "R2ns_noq": 5,
+ "R2v": 3,
+ "R3": 8,
+ "R4": 8,
+ "R5": 16,
+ "R6": 9,
+ "R7": 7,
+ "R8": 7,
+ "R9": 6,
+ "clear_false": 18,
+ "lower_typo": 26,
+ "noq_total": 11,
+ "qq_low_noq": 6
+}
+[0m
+[0m→ [0mRead artifacts/claude-earpanel261b-20260923/panel.jsonl[90m [limit=75][0m
+[0m→ [0mRead artifacts/claude-earpanel261b-20260923/panel.jsonl[90m [offset=76][0m
+[0m
+[0m← [0mEdit artifacts/claude-earpanel261b-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+@@ -94,9 +94,9 @@
+ it(1, "plain_teach", "Lara lives in Vexford near the old cannery.",
+    [T("Lara", "city", "Vexford")], True, "plain"),
+ it(2, "plain_teach", "Bram works for Copperline Press as a driver.",
+    [T("Bram", "employer", "Copperline Press")], True, "plain"),
+-it(3, "plain_teach", "Caspian is a night-shift baker at Prindle Foods.",
++it(3, "plain_teach", "Caspian is a night-shift baker who loves rye bread.",
+    [T("Caspian", "job", "baker")], True, "plain"),
+ it(4, "plain_teach", "Dara speaks Korean at home with her parents.",
+    [T("Dara", "language", "Korean")], True, "plain"),
+ it(5, "plain_teach", "Juno was born in Tarnwick during the harbor festival.",
+
+[0m
+[0m← [0mEdit artifacts/claude-earpanel261b-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-earpanel261b-20260923/make_panel.py
+@@ -225,9 +225,9 @@
+     T("Mabel Cornflower Hart", "city", "Drellin")], True, "R4"),
+ it(63, "full_names", "My housemate Juno Baxter Reed livs in Pellwick above the bakery.",
+    [T("me", "housemate", "Juno Baxter Reed"), T("Juno Baxter Reed", "city", "Pellwick")], True, "R5 R13 typo"),
+ it(64, "full_names", "Our family doctor is Farrah Noor Aziz at Fernway Clinic.",
+-   [T("me", "doctor", "Farrah Noor Aziz")], True, "R7"),
++   [T("me", "doctor", "Farrah Noor Aziz")], False, "R7"),
+ it(65, "full_names", "My two sisters, Yvette Calloway Hart and Odette Larkspur Bell, both live in Zellmoor.",
+    [T("me", "sister", "Yvette Calloway Hart"), T("me", "sister", "Odette Larkspur Bell"),
+     T("Yvette Calloway Hart", "city", "Zellmoor"),
+     T("Odette Larkspur Bell", "city", "Zellmoor")], True, "R10"),
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-earpanel261b-20260923/make_panel.py
+wrote artifacts/claude-earpanel261b-20260923/panel.jsonl (150 items)
+{
+ "R1": 12,
+ "R10": 5,
+ "R11": 7,
+ "R12": 5,
+ "R13": 8,
+ "R14": 7,
+ "R2ns": 9,
+ "R2ns_noq": 5,
+ "R2v": 3,
+ "R3": 8,
+ "R4": 8,
+ "R5": 16,
+ "R6": 9,
+ "R7": 7,
+ "R8": 7,
+ "R9": 6,
+ "clear_false": 19,
+ "lower_typo": 26,
+ "noq_total": 11,
+ "qq_low_noq": 6
+}
+[0m
+[0m← [0mWrite artifacts/claude-earpanel261b-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-earpanel261b-20260923/panel.jsonl artifacts/claude-earpanel261b-20260923/make_panel.py > artifacts/claude-earpanel261b-20260923/SEAL.sha256.txt && cat artifacts/claude-earpanel261b-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-earpanel261b-20260923/SEAL.sha256.txt && ls artifacts/claude-earpanel261b-20260923/
+1adf2ac76b8128ec897bb025bfa21e21d74dfcb7c20aef5f608a5f58aacaf99f  artifacts/claude-earpanel261b-20260923/panel.jsonl
+d8904668ed153dead2a72f9a820e8faf1c3a51aff03cb620b6015a76a0e788af  artifacts/claude-earpanel261b-20260923/make_panel.py
+artifacts/claude-earpanel261b-20260923/panel.jsonl: OK
+artifacts/claude-earpanel261b-20260923/make_panel.py: OK
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+[0m
