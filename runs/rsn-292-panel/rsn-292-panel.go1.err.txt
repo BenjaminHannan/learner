@@ -1,0 +1,1520 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main; git rev-parse --show-toplevel; pwd; uptime; df -g /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 7:11  up 2 days, 23 hrs, 4 users, load averages: 38.07 48.88 55.99
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 137964480    0%   /
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt; echo "=====SPEC====="; git show origin/main:handoff/kit/briefs/mixpanel292-spec.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+=====SPEC=====
+BLIND PANEL SPEC: mixpanel292 (two-step, backwards and yes/no questions after corrections). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/26*, 29*, scripts/claude_fix26*, claude_fix29*, claude_loop26*, claude_loop29*, claude_26*, claude_29*, any builder's artifacts folder, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names (at least 20 items with two-word names).
+
+Base: 291 = scripts/claude_loop291_agent.py with scripts/claude_fix291_glue.py and artifacts/claude-join291-20260923/loop291-config.json (copy these and the files they import unchanged from origin/builder-outbox; use the module's DEFAULT_CONFIG291 if the config file has absolute paths; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-mixpanel292-20260923/ with panel.jsonl (80 items), base291.jsonl (80 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "m292-001", "family": ..., "setup": [1-4 plain teaches, each its own turn], "question": "...", "expect": "value" | "yes" | "no" | "unknown" | "control", "gold": [strings that must appear], "note": "..."}. JSON lists. Check every setup stores what you expect on the base.
+
+Families and exact counts (80):
+- chain_verb 12: "Where does A's R1 live?", "Where does A's R1 work?", "Who does A's R1 work for?" with both links taught; 8 with a two-word first name. expect value.
+- backwards_bug 10: "A's R is V." plus "V's R2 is W." (R over spouse, author, founder, parent/child, composer), then a backwards question about V ("Whose R is V?", "Who is married to V?", "What did V write?"). expect value, gold [A].
+- yesno 14: "Does A have a/an R?", "Does A live in V?", "Does A work at V?", "Is V the R of A?" with multi-word names (yes, no and unknown, about a third each). "no" only for boss, mother, father, city, employer, birthplace.
+- mixed 12 (reported, no bar): yes/no about a chain ("Does A's boss live in V?"), a backwards question about a chain value, a two-step question after a correction ("Actually A's boss is B."), a yes/no after a correction. Write natural wordings; expect from the facts.
+- broken_chain 8: one link missing. expect unknown (right = the reply contains "don't know", "couldn't" or "not that I know" and names no untaught value).
+- forward_control 10: plain who/what/where and one-hop questions. expect control.
+- statement_control 8: statements containing a chain or "does"/"is"/"has" that the base does not store. expect control.
+- correction_control 6: a plain correction ("Actually A's city is C.") then "Where does A live?". expect value.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged): value = every gold string appears (case-insensitive); yes/no = the reply starts with "Yes"/"No" and contains every gold string; unknown = contains "don't know", "couldn't" or "not that I know" and does not start with "Yes" or "No"; control = identical to base291's row; wrong = a yes/no reply with the opposite answer, or a value/unknown reply naming a taught value or person not in gold without every gold string (not an abstain); question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "builder-outbox|loop291|fix291|join291" | head -50; echo ---; git ls-tree -r --name-only origin/main | grep -E "mixpanel292|panel292" | head; echo ---; ls
+---
+handoff/kit/briefs/mixpanel292-spec.txt
+---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit branch -a | head -30; echo ---; git ls-tree -r --name-only origin/main | grep -iE "291" | head -30; echo ---; ls scripts/ | head -50; echo ---; ls artifacts/ | head -50
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+artifacts/fable-officechain138e-20260922/scratch-nb/nb00291/events.fix77.seal.json
+design/v3/30-modes/291-join-138nb-138p.md
+design/v3/30-modes/292-merge-onto-291.md
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/queue/rsn-291-build.md
+handoff/queue/rsn-291-panel.md
+handoff/queue/rsn-291-publish.md
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -iE "291" | head -30; echo ---; git ls-tree -r --name-only origin/builder-outbox | head -40; echo ---; git log --oneline origin/builder-outbox -5
+artifacts/claude-corrpanel291-20260923/README.md
+artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt
+artifacts/claude-corrpanel291-20260923/base138nb.jsonl
+artifacts/claude-corrpanel291-20260923/make_panel.py
+artifacts/claude-corrpanel291-20260923/panel.jsonl
+artifacts/claude-corrpanel291-20260923/run_base.py
+artifacts/claude-corrpanel291-20260923/score_panel.py
+artifacts/claude-join291-20260923/PASSMARKS.md
+artifacts/claude-join291-20260923/RESULTS.md
+artifacts/claude-join291-20260923/SEAL.sha256.txt
+artifacts/claude-join291-20260923/loop291-config.json
+artifacts/claude-join291-20260923/m7-check.json
+artifacts/claude-join291-20260923/m8-check.json
+artifacts/claude-join291-20260923/predicted_moves291.json
+artifacts/claude-join291-20260923/run/bench1.log
+artifacts/claude-join291-20260923/run/bench1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-join291-20260923/run/bench1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-diff.json
+artifacts/claude-join291-20260923/run/bench1/bench-edit200-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2.log
+artifacts/claude-join291-20260923/run/bench2/SUITEDIFF218-SUMMARY.json
+artifacts/claude-join291-20260923/run/bench2/bench-bench132_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-diff.json
+artifacts/claude-join291-20260923/run/bench2/bench-edit200-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-new_121_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench2/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-join291-20260923/run/bench3.log
+artifacts/claude-join291-20260923/run/bench3/SUITEDIFF218-SUMMARY.json
+---
+artifacts/claude-called281-20260923/PASSMARKS.md
+artifacts/claude-called281-20260923/RESULTS.md
+artifacts/claude-called281-20260923/SEAL.sha256.txt
+artifacts/claude-called281-20260923/devcases281.json
+artifacts/claude-called281-20260923/loop281-config.json
+artifacts/claude-called281-20260923/pilot/dev-score.json
+artifacts/claude-called281-20260923/pilot/dev260.json
+artifacts/claude-called281-20260923/pilot/dev281.json
+artifacts/claude-called281-20260923/pilot/reg/regscore.txt
+artifacts/claude-called281-20260923/pilot/reg/regscore281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate-281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate.log
+artifacts/claude-called281-20260923/pilot/reg/sd.log
+artifacts/claude-called281-20260923/pilot/reg/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-rows.json
+artifacts/claude-called281-20260923/pilot/reg/sd136.log
+artifacts/claude-called281-20260923/pilot/reg/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-rows.json
+artifacts/claude-called281-20260923/pilot/reg/uptime.log
+artifacts/claude-called281-20260923/pilot/reg/vp-281.json
+artifacts/claude-called281-20260923/pilot/reg/vp-281.log
+artifacts/claude-called281-20260923/pilot/reg/vs-281.json
+artifacts/claude-called281-20260923/pilot/reg/vs-281.log
+artifacts/claude-called281-20260923/pilot/regscore-pilot.json
+artifacts/claude-called281-20260923/predicted_moves281.json
+artifacts/claude-called281-20260923/run/own-seal-check.txt
+artifacts/claude-called281-20260923/run/panel-260.json
+artifacts/claude-called281-20260923/run/panel-260.log
+artifacts/claude-called281-20260923/run/panel-281.json
+artifacts/claude-called281-20260923/run/panel-281.log
+artifacts/claude-called281-20260923/run/panel-files.txt
+artifacts/claude-called281-20260923/run/panel-score.txt
+artifacts/claude-called281-20260923/run/panel-score281.json
+---
+5b3599e0b watcher status
+e5fd26043 watcher status
+ed531cf22 builder results: rsn-291-publish
+79800d871 watcher status
+5dd3e3d19 builder results: 271-threshold
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "scripts/claude_(loop291|fix291)" ; echo ---; git ls-tree -r --name-only origin/builder-outbox | grep -E "^scripts/" | head -40
+scripts/claude_fix291_glue.py
+scripts/claude_loop291_agent.py
+---
+scripts/claude_138nb_devrepro.py
+scripts/claude_138nb_m1.py
+scripts/claude_138nb_m2.py
+scripts/claude_138nb_m6.py
+scripts/claude_138nb_runall.sh
+scripts/claude_138nb_score.py
+scripts/claude_138p_l1.py
+scripts/claude_138p_panel.sh
+scripts/claude_138p_runall.sh
+scripts/claude_138p_score.py
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+scripts/claude_263_openpanel.sh
+scripts/claude_263_panel.sh
+scripts/claude_263_runall.sh
+scripts/claude_266_devscore.py
+scripts/claude_266_panelrun.py
+scripts/claude_266_runall.sh
+scripts/claude_266_score.py
+scripts/claude_266b_devscore.py
+scripts/claude_266b_panelrun.py
+scripts/claude_266b_runall.sh
+scripts/claude_266b_score.py
+scripts/claude_268_devrepro.py
+scripts/claude_268_panelrun.py
+scripts/claude_268_runall.sh
+scripts/claude_268_score.py
+scripts/claude_268_supp.py
+scripts/claude_268b_devrepro.py
+scripts/claude_268b_m1run.py
+scripts/claude_268b_newdev.py
+scripts/claude_268b_panelrun.py
+scripts/claude_268b_runall.sh
+scripts/claude_268b_score.py
+scripts/claude_268b_score_fix1.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-join291-20260923/loop291-config.json; echo "=====GLUE head====="; git show origin/builder-outbox:scripts/claude_fix291_glue.py | head -100
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 20,
+ "daemon": {
+  "module": "Loop291Daemon (scripts/claude_loop291_agent.py) over Loop138kDaemon with the 138nb classes + 252c + 260"
+ },
+ "self": {
+  "router": "route127 (frozen novelty-guard router, scripts/fable_self127.py) + classify_self187 paraphrase gate (scripts/fable_loop187_agent.py) on the notebook-missed path",
+  "answerer": "grounded_self_answer (fix168 gate over Self99Agent.answer_self on live loop138g state; facts only from live state, plain replies otherwise)",
+  "rule": "loop138 verbatim (138c OFF): notebook answers win; notebook-missed turns serve the grounded self reply on non-DECLINE, the honest decline + suffix on DECLINE",
+  "rule219": "D8 denial checked against notebook: stored USER name wins ('Yes. Your name is X.'); else byte-identical; never writes",
+  "rule230": "219 'Yes. Your name is X.' keeps 'Yes. ' only when the turn starts with an auxiliary verb; else 'Your name is X.'; never writes",
+  "rule230b": "a 'Yes. Your name is X.' reply to a name check naming a specific name compares it with the stored name (case-insensitive, whole name); different -> 'No. Your name is X.'; never writes",
+  "rule230c": "on a 'Yes. Your name is X.' line: Yes/No only when the asked name was extracted and compared; if the turn holds a possible name that could not be extracted -> 'Your name is X.'; never writes",
+  "rule227": "identity '?' turns with a second-person word + exact sealed-template match get the fixed sheet answer (reply-only, 0 writes); everything else byte-identical to loop138i",
+  "rule227b": "identity-sheet NAME answer is 'My name is Premonition.' (was \"I don't have a name yet.\"); everything else byte-identical to loop227",
+  "rule227c": "after the 227 exact gate misses, the widened 227c matcher serves the sheet (contractions, no '?', fillers, synonyms) plus NAMECHECK and RENAME; reply-only, 0 writes",
+  "rule224": "224 + 224c instance wrappers (scripts/fable_loop224_agent.py, scripts/claude_loop224c_agent.py): the exact glued decline with intent DECLINE becomes one sentence per turn type; Q1 only when confirmed",
+  "rule233": "233 polite negative questions rewritten to the plain question (scripts/claude_loop233_agent.py polite_rewrite)",
+  "rule234": "234 how-are-you turns with 0 writes get the fixed small-talk reply (scripts/claude_loop234_agent.py)",
+  "rule260": "260 (scripts/claude_fix260_openers.py): listed openers/greetings at the start of a turn (at most 2) are dropped when the head gives the rest a non-clarify reply; bare greetings get the head's reply to 'Hello.'; no stored subject may start with a listed opener + comma"
+ },
+ "sleep": {
+  "retrofit": "Sleep145Reasoner + Sleep145Sleeper via retrofit_sleep145",
+  "recipe": "exp-46 recipe + taught-beats-sleep answer rule (all words)"
+ },
+ "merge138k": {
+  "base": "loop138j (scripts/fable_loop138j_agent.py)",
+  "added": [
+   "228 src guard (scripts/claude_fix228_srcguard.py)",
+   "220 restart index (scripts/fable_fix220_restartindex.py)"
+  ]
+ },
+ "merge138l": {
+  "base": "loop138k (scripts/claude_loop138k_agent.py)",
+  "added": [
+   "209 write screen",
+   "212 self-router statement gate",
+   "216 decline-intent cue gate",
+   "222 a/an of-teach gate (with 215 of-teach rewrite)",
+   "223 cant-do negation-screen bypass",
+   "226 source questions about the last reply"
+  ],
+  "ears_mro": [
+   "Loop138lEars",
+   "WriteScreen209EarsMixin",
+   "Loop223Ears",
+   "Loop138jEars",
+   "Case180bMixin",
+   "Apos193Mixin",
+   "About164bMixin",
+   "Reverse190bMixin",
+   "Reverse190Mixin",
+   "Negate154fEarsMixin",
+   "Replace154gEarsMixin",
+   "Loop222Ears"
+  ],
+  "loop_mro": [
+   "Loop138lAgentLoop",
+   "Source226Mixin",
+   "Loop212AgentLoop",
+   "Loop216AgentLoop",
+   "WriteScreen209LoopMixin",
+   "Loop138jAgentLoop",
+   "Disp180bTickMixin",
+   "About164bTickMixin",
+   "CorrectReply192Mixin",
+   "Negate154fActMixin",
+   "Replace154gActMixin",
+   "Loop138iAgentLoop"
+  ]
+ },
+ "merge138m": {
+  "base": "loop138l (scripts/claude_loop138l_agent.py)",
+  "added": [
+   "219 D8 user-name notebook check",
+   "230 'Yes.' only on yes/no questions",
+   "230b/230c name check compares or fails closed",
+   "227/227b/227c identity sheet (My name is Premonition.)",
+   "224/224c one decline sentence per turn type, honest Q1",
+   "233 polite negative questions rewritten",
+   "234 how-are-you fixed reply"
+  ],
+  "loop_mro": [
+   "Loop138mAgentLoop",
+   "Loop233AgentLoop",
+   "Loop223AgentLoop",
+   "Source226Mixin",
+   "Loop234Mixin",
+   "NameLine230cMixin",
+   "Identity227cMixin",
+   "Loop212AgentLoop",
+   "Loop216AgentLoop",
+   "WriteScreen209LoopMixin",
+   "Loop138jAgentLoop",
+   "Disp180bTickMixin"
+  ],
+  "instance": [
+   "turn224c(turn224(class turn))"
+  ]
+ },
+ "table221_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-table237-20260922/relation_table_v1_1.json",
+ "table229_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-relationtable-20260922/relation_table_v1.json",
+ "merge138n": {
+  "base": "loop138m (scripts/claude_loop138m_agent.py)",
+  "added": [
+   "221 relation-table questions (fable_fix221_tableask)",
+   "237 table v1.1 reader (claude_loop237_agent.TableAsk237Mixin)",
+   "221b stored-relation fallback (claude_loop221b_agent)",
+   "221c question normalisation (claude_loop221c_agent)",
+   "236 first-name resolution (claude_loop236_agent)",
+   "229 table teaches on base-missed statements, table v1 (claude_loop229_agent)",
+   "232c multi-word verb names (claude_loop232c_agent over claude_loop232_agent)"
+  ],
+  "ears_mro": [
+   "Loop138nEars",
+   "QNorm221cMixin",
+   "FirstName138nMixin",
+   "FirstName236Mixin",
+   "StoredRel221bMixin",
+   "TableAsk237Mixin",
+   "TableAsk221Mixin",
+   "TableTeach138nMixin",
+   "TableTeach229Mixin",
+   "Loop138lEars",
+   "WriteScreen209EarsMixin",
+   "...",
+   "ChainOf174Mixin",
+   "Typo165Mixin",
+   "Verb232Mixin",
+   "ValueScreen167bMixin",
+   "..."
+  ],
+  "loop_extra": "Loop232AgentLoop directly above Loop138iAgentLoop; Cap138nMixin (G3) outermost",
+  "glue": [
+   "G1 236 skips 'First <232c particle> Last' candidates",
+   "G2 229 no-save reason for a 232c-valid subject",
+   "G3 capital 'Your' at the start of a reply"
+  ]
+ },
+ "merge138nb": {
+  "base": "loop138n (scripts/claude_loop138n_agent.py)",
+  "added": [
+   "label 190 reverse answers (scripts/claude_fix138nb_label.py Label138nbMixin, outermost reply-text rule over 138n's loop)"
+  ],
+  "loop_extra": "Label138nbMixin outermost over Loop138nAgentLoop"
+ },
+ "fix252": "Correct252EarsMixin outermost on the inner ears + Correct252LoopMixin on the loop (scripts/claude_fix252_correct.py)",
+ "fix252b": "value_ok252 stopword check on non-letter-split pieces (scripts/claude_fix252b_screen.py)",
+ "fix258": "Comment258EarsMixin outermost on the inner ears: trailing commentary clause removed on 252b denial/correction turns (scripts/claude_fix258_comment.py)",
+ "fix259": "Boundary259EarsMixin on top of the 252 ears mixin: denied value ends at a clause boundary (scripts/claude_fix259_boundary.py)",
+ "fix252c": "inner ears: Comment258 > Merge252c > Boundary259 > Correct252; glue: 258's cut point counts as 259's boundary on the 154f route (scripts/claude_fix252c_merge.py)",
+ "exp260": {
+  "base": "loop138nb (scripts/claude_loop138nb_agent.py)",
+  "added": [
+   "260 turn openers + greetings layer (outermost, instance)",
+   "291 glue (scripts/claude_fix291_glue.py: 229 skips opener-led statements; opener-led teach subjects clarify)"
+  ],
+  "instance": [
+   "turn260(turn224c(turn224(class turn)))"
+  ]
+ },
+ "merge291": {
+  "base": "loop138nb (scripts/claude_loop138nb_agent.py)",
+  "added": [
+   "252c corrections (252b + 258 + glue + 259, inner ears)",
+   "260 turn openers + greetings (outermost, instance)",
+   "291 glue (scripts/claude_fix291_glue.py)"
+  ],
+  "loop_mro": [
+   "Correct252_Loop138nbAgentLoop",
+   "Correct252LoopMixin",
+   "Loop138nbAgentLoop",
+   "Label138nbMixin",
+   "Loop138nAgentLoop",
+   "... (138nb)"
+  ],
+  "instance": [
+   "turn260(turn224c(turn224(class turn)))"
+  ],
+  "inner_ears": [
+   "Comment258",
+   "Merge252c",
+   "Boundary259",
+   "Correct252",
+   "Loop138nEars(221c > FirstName138n > 221b > 237 > 229 > Loop138lEars(209 > 223 > layer C > 222/215 ...) ...)"
+  ]
+ }
+}=====GLUE head=====
+#!/usr/bin/env python3
+"""Exp 291 glue -- two narrow interaction rules where 138nb's reading line
+meets 260's opener handling (additive, 291 only; every other module is
+imported read-only).
+
+Background (design/v3/30-modes/291-join-muse.md + pilot amendment): on the
+138m base, opener-led teaches ("so Marnie lives in Tollan.") either save
+through the base ears or clarify in words 260 recognises, so 260's
+strip-and-rerun path saves them cleanly. On the 138nb base two reading
+layers claim those turns first:
+
+G1. 229 table-teach parses "so Marnie ..." with subject "so Marnie" and
+    refuses ("I did not save that: I read it as ... does not look like a
+    name."). That clarify shape is not in 260's CLARIFY_MARKS260, and
+    there is no comma, so 260's turn260 returns the refusal without ever
+    stripping. (The stripped rest saves fine on its own.) A first attempt
+    (skip 229 on opener-led turns) was REJECTED in the pilot: 229's verdict
+    is load-bearing input for 252's correction logic ("Actually, Hesta
+    lives in Lowick, not Umbry" broke), and 229's saves are 260's
+    registered behaviour on titles ("Hey Jude", "So Long Summer").
+G2. 137 filler-teach writes opener-led subjects with no comma ("Hi
+    Orrin"), which 260's comma-only junk-subject guard does not catch, so
+    the original writes junk and 260 (which never overrides a write) keeps
+    it. A first attempt (guard every opener-led teach subject) was
+    REJECTED in the pilot: it mangled titles 260 keeps ("Hey Jude",
+    "So Long Summer"). 138m's own verdicts split exactly on the
+    apostrophe: verb teaches with opener-led subjects clarify on 138m
+    ("Hi Orrin lives in Varn.", "Hey Jude lives in Varn."), while
+    possessive titles save whole ("Hey Jude's writer is Fenn.").
+    Corrections/denials ("not", "n't", "it's", "that's") carry
+    apostrophes too.
+
+Rules (questions never match):
+
+R1 (refusal rerun): the outermost turn wrapper. When the whole head
+    returns exactly 229's no-save clarify on a statement turn that begins
+    with a 260-listed opener/greeting AND carries no denial marker (not /
+    n't / never -- corrections and denials keep 229's reply verbatim), the
+    stripped rest is run through the whole head; the rest reply wins only
+    when the rest wrote or is not itself a clarify, else the original
+    stands. Titles are untouched (229 saves them, so no refusal fires).
+R2 (junk-subject guard): a teach/correct action whose subject starts with
+    a 260-listed opener/greeting word is replaced by 260's own clarify
+    action -- but ONLY on plain active-verb turns: turns with an
+    apostrophe (possessive titles, corrections, denials, particle names),
+    denial markers (not / n't / never), or passive-agent shape (was/were
+    ... by, where 138m and 138nb's loop121 layer both keep title subjects
+    whole) always pass through. Guarded at ears-hear and at _act level
+    (outside 260's own guards); 260 then strips and re-runs the rest.
+
+New file only; no existing file is edited.
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix260_openers as F260  # noqa: E402 (lists + clarify, read-only)
+
+_GUARD_ALT291 = "|".join(
+    F260._phrase_re(p) for p in
+    sorted(set(F260._GUARD_WORDS), key=lambda s: (-len(s), s)))
+# Subject starting with a listed opener/greeting word (comma or not).
+_JUNK_SUBJECT_RE291 = re.compile(
+    r"^\s*(?:" + _GUARD_ALT291 + r")(?:[\s,]+(?:" + F260._TAIL_ALT + r")){0,2}"
+    r"(?=[\s,!.:\-–—]|$)", re.IGNORECASE)
+# 229's no-save clarify prefix (G2 may rewrite the reason tail).
+_NOSAVE_PREFIX291 = "I did not save that:"
+# Denial markers: corrections/denials never rerun (229's reply stands).
+_DENIAL_RE291 = re.compile(r"\bnot\b|n['\u2019]t\b|\bnever\b",
+                           re.IGNORECASE)
+# Passive-agent shape (was/were ... by): 138m and the loop121 layer keep
+# title subjects whole ("Hey Jude was performed by ...").
+_PASSIVE_BY_RE291 = re.compile(r"\bwas\b.*\bby\b|\bwere\b.*\bby\b",
+                               re.IGNORECASE)
+
+
+def starts_with_opener291(turn: str) -> bool:
+    """A statement turn 260 would try to strip (listed opener present)."""
+    t = str(turn or "")
+    if not t.strip() or t.rstrip().endswith("?"):
+        return False
+    try:
+        return F260.split_openers260(t) is not None
+    except Exception:  # noqa: BLE001 -- never break the base turn
+        return False
+
+
+def junk_subject291(name) -> bool:
+    """A teach subject starting with a listed opener/greeting word."""
+    return bool(_JUNK_SUBJECT_RE291.match(str(name or "")))
+
+
+def _junk_action291(a, turn: str) -> bool:
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_loop291_agent.py | head -200
+#!/usr/bin/env python3
+"""Merge 291 -- 138nb + 260 (openers) + 252c (corrections: 252b + 258 + 259).
+New file only; every piece module is imported read-only and its OWN
+functions/classes are reused. No existing file is edited.
+
+291 = 138nb (scripts/claude_loop138nb_agent.py: 138n reading line +
+         Label138nbMixin outermost text rule for loop190-reverse answers)
+     + 252c inner-ears stack (scripts/claude_fix252c_merge.py,
+         claude_fix258_comment.py, claude_fix259_boundary.py,
+         claude_fix252_correct.py + claude_fix252b_screen.py):
+           Comment258 > Merge252c > Boundary259 > Correct252, outermost
+           on the loop's inner ears (base swapped from 138k's plain 138j
+           ears to 138nb's 138n ears), plus Correct252LoopMixin on the loop
+           (_prev252 memory + negate252 action through 154f's path)
+     + 260 turn260 instance wrapper (scripts/claude_fix260_openers.py),
+         outermost, outside 224/224c, with the opener-comma write guards.
+
+ORDER (outermost first) and why -- see
+design/v3/30-modes/291-join-muse.md:
+  turn291 (291 glue: a 229-refusal on an opener-led pure teach re-runs
+           the stripped rest; anything else passes through verbatim)
+  turn260 (260: stripped rest runs through the whole head as if typed
+           alone; the original runs first, so 252c's own correction
+           reading always wins when it acts; 260 never overrides a write)
+  turn224c(turn224(class turn)) (224/224c: exact glued decline only)
+  Correct252LoopMixin (records _prev252 from the labelled reply the user
+           got; negate252 through 154f's retraction path, never via 209)
+  Label138nbMixin (138nb's own outermost class: 190-reverse subject
+           answers gain " (worked out backwards)"; text only)
+  233 rewrite + 226 + 234 + NameLine230c + Identity227c (as on 138nb)
+  212 / 216 / 209 (as on 138nb; 209's _act sits below 252's, so a 252
+           removal never passes through it)
+  Loop138jAgentLoop chain; inner ears Comment258 > Merge252c >
+  Boundary259 > Correct252 > Loop138nEars(221c > FirstName138n > 221b >
+  237 > 229 > Loop138lEars(209 > 223 > layer C > 222/215 ...) with 232c
+  after 174/165, before 167b).
+
+Install order inside _build291 (the instance wrappers capture
+loop.turn bound at install time, so every class swap comes first):
+  138nb classes (plain, no wrappers) -> 252 loop/ears swaps + 259 + glue
+  + 258 -> 224 -> 224c -> 260 last. The 252b value screen is installed
+  at import (as on 252c/138p).
+SrcGuardMixin228 stays first in the daemon; install_srcguard228() at import.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+from claude_fix228_srcguard import SrcGuardMixin228  # noqa: E402
+
+G228.install_srcguard228()  # 228 first, at import
+
+import claude_fix138nb_label as LB138NB  # noqa: E402 (read-only)
+import claude_fix252b_screen as F252B  # noqa: E402 (read-only; installs 252b)
+import claude_fix252_correct as F252  # noqa: E402 (read-only)
+import claude_fix252c_merge as F252C  # noqa: E402 (258 + glue + 259)
+import claude_fix260_openers as F260  # noqa: E402 (openers, read-only)
+import claude_fix291_glue as G291  # noqa: E402 (291 glue: 229+137 vs 260)
+import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+import claude_loop138m_agent as M138  # noqa: E402 (read-only, _Swap/_ORIG)
+import claude_loop138n_agent as N138  # noqa: E402 (read-only, ears base)
+import claude_loop138nb_agent as NB138  # noqa: E402 (base classes, read-only)
+import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+import fable_loop224_agent as L224  # noqa: E402 (read-only)
+import claude_loop224c_agent as L224C  # noqa: E402 (read-only)
+
+F252B.install_screen252b()
+
+Loop291Ears = NB138.Loop138nbEars  # ears base unchanged from 138nb
+
+
+def _build291_plain(cfg):
+    """138nb classes without the 224/224c instance wrappers (those wrap
+    last, after the 252c class swaps, so the 252 loop mixin stays inside
+    the captured turn chain)."""
+    with M138._Swap([(L138J, "Loop138jEars", NB138.Loop138nbEars),
+                     (L138J, "Loop138jAgentLoop", NB138.Loop138nbAgentLoop),
+                     (L138J, "build_agent138j", M138._ORIG_BUILD)]):
+        return L138K.build_agent138k(cfg)
+
+
+def _build291(cfg=None):
+    """138nb classes, then 252c, then 224/224c, then 260, then 291 glue."""
+    loop = _build291_plain(cfg)
+    F252.install_correct252(loop)  # 252 loop mixin + ears mixin first
+    F252C.install_merge252c(loop)  # then 259 + glue + 258
+    L224.install_decline224(loop)
+    L224C.install_q1honest224c(loop)
+    F260.install_openers260(loop)  # outermost turn chain...
+    G291.install_guards291(loop)  # ...junk-subject guards outside 260,
+    G291.install_turn291(loop)  # ...then the 291 turn wrapper outermost
+    return loop
+
+
+def _with_291(fn, *args, **kwargs):
+    with M138._Swap([(L138J, "Loop138jEars", NB138.Loop138nbEars),
+                     (L138J, "Loop138jAgentLoop", NB138.Loop138nbAgentLoop),
+                     (L138J, "build_agent138j", _build291)]):
+        return fn(*args, **kwargs)
+
+
+NOTE291 = ("loop291: loop138nb + 252c corrections (252b + 258 + glue + 259, "
+           "inner ears) + 260 turn openers/greetings (outermost)")
+
+
+def _mro_names(cls) -> list[str]:
+    return [c.__name__ for c in cls.__mro__]
+
+
+DEFAULT_CONFIG291: dict = copy.deepcopy(NB138.DEFAULT_CONFIG138NB)
+DEFAULT_CONFIG291["daemon"]["module"] = (
+    "Loop291Daemon (scripts/claude_loop291_agent.py) over Loop138kDaemon "
+    "with the 138nb classes + 252c + 260")
+DEFAULT_CONFIG291["self"] = dict(DEFAULT_CONFIG291.get("self", {}))
+DEFAULT_CONFIG291["self"]["rule260"] = (
+    "260 (scripts/claude_fix260_openers.py): listed openers/greetings at the "
+    "start of a turn (at most 2) are dropped when the head gives the rest a "
+    "non-clarify reply; bare greetings get the head's reply to 'Hello.'; no "
+    "stored subject may start with a listed opener + comma")
+DEFAULT_CONFIG291["fix252"] = (
+    "Correct252EarsMixin outermost on the inner ears + Correct252LoopMixin "
+    "on the loop (scripts/claude_fix252_correct.py)")
+DEFAULT_CONFIG291["fix252b"] = (
+    "value_ok252 stopword check on non-letter-split pieces "
+    "(scripts/claude_fix252b_screen.py)")
+DEFAULT_CONFIG291["fix258"] = (
+    "Comment258EarsMixin outermost on the inner ears: trailing commentary "
+    "clause removed on 252b denial/correction turns "
+    "(scripts/claude_fix258_comment.py)")
+DEFAULT_CONFIG291["fix259"] = (
+    "Boundary259EarsMixin on top of the 252 ears mixin: denied value ends "
+    "at a clause boundary (scripts/claude_fix259_boundary.py)")
+DEFAULT_CONFIG291["fix252c"] = (
+    "inner ears: Comment258 > Merge252c > Boundary259 > Correct252; glue: "
+    "258's cut point counts as 259's boundary on the 154f route "
+    "(scripts/claude_fix252c_merge.py)")
+DEFAULT_CONFIG291["exp260"] = {
+    "base": "loop138nb (scripts/claude_loop138nb_agent.py)",
+    "added": ["260 turn openers + greetings layer (outermost, instance)",
+              "291 glue (scripts/claude_fix291_glue.py: 229 skips "
+              "opener-led statements; opener-led teach subjects clarify)"],
+    "instance": ["turn291(turn260(turn224c(turn224(class turn))))"],
+}
+DEFAULT_CONFIG291["merge291"] = {
+    "base": "loop138nb (scripts/claude_loop138nb_agent.py)",
+    "added": ["252c corrections (252b + 258 + glue + 259, inner ears)",
+              "260 turn openers + greetings (outermost, instance)",
+              "291 glue (scripts/claude_fix291_glue.py)"],
+    "loop_mro": ["Correct252_Loop138nbAgentLoop",
+                 "Correct252LoopMixin", "Loop138nbAgentLoop",
+                 "Label138nbMixin", "Loop138nAgentLoop", "... (138nb)"],
+    "instance": ["turn291(turn260(turn224c(turn224(class turn))))"],
+    "inner_ears": ["Comment258", "Merge252c", "Boundary259", "Correct252",
+                   "Loop138nEars(221c > FirstName138n > 221b > 237 > 229 > "
+                   "Loop138lEars(209 > 223 > layer C > 222/215 ...) ...)"],
+}
+
+
+def _check(loop):
+    if not isinstance(loop, NB138.Loop138nbAgentLoop):
+        raise RuntimeError("291: loop is not Loop138nbAgentLoop")
+    if not isinstance(getattr(loop, "_inner138j_ears", None),
+                      NB138.Loop138nbEars):
+        raise RuntimeError("291: inner ears are not Loop138nbEars")
+    if not G228.is_installed():
+        raise RuntimeError("291: 228 guard not installed")
+    t = vars(loop).get("turn")
+    if getattr(t, "__name__", "") != "turn291":
+        raise RuntimeError("291: turn291 not installed")
+    if getattr(loop.turn291_inner, "__name__", "") != "turn260":
+        raise RuntimeError("291: turn260 not under turn291")
+    if getattr(loop.turn260_inner, "__name__", "") != "turn224c":
+        raise RuntimeError("291: 224c not under turn260")
+    inner = getattr(loop, "_inner138j_ears", None)
+    for mix in ("Comment258EarsMixin", "Merge252cEarsMixin",
+                "Boundary259EarsMixin", "Correct252EarsMixin"):
+        if mix not in _mro_names(type(inner)):
+            raise RuntimeError(f"291: {mix} not on inner ears")
+    if "Correct252LoopMixin" not in _mro_names(type(loop)):
+        raise RuntimeError("291: Correct252LoopMixin not on loop")
+    if "Label138nbMixin" not in _mro_names(type(loop)):
+        raise RuntimeError("291: Label138nbMixin not on loop")
+    import claude_fix252_correct as F252
+    if F252.value_ok252.__name__ != "value_ok252b":
+        raise RuntimeError("291: 252b screen not installed")
+    loop.notes.append(NB138.NOTE138NB)
+    loop.notes.append(NOTE291)
+
+
+def build_agent291(cfg: dict | None = None):
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_loop291_agent.py | sed -n '200,420p'
+def build_agent291(cfg: dict | None = None):
+    G228.install_srcguard228()
+    F252B.install_screen252b()
+    cfg = dict(DEFAULT_CONFIG291, **(cfg or {}))
+    loop = _with_291(L138K.build_agent138k, cfg)
+    _check(loop)
+    return loop
+
+
+class Classes291Mixin:
+    """Daemon mixin: 138k's daemon __init__ with the 138nb classes and the
+    291-installing build swapped in for the build."""
+
+    def __init__(self, *args, **kwargs):
+        G228.install_srcguard228()
+        F252B.install_screen252b()
+        _with_291(super().__init__, *args, **kwargs)
+        _check(self.loop)
+
+
+class Loop291Daemon(SrcGuardMixin228, Classes291Mixin,
+                    L138K.RestartIndex220Mixin, L138J.Loop138jDaemon):
+    """Loop138kDaemon's own bases (228 guard > 220 restart index >
+    Loop138jDaemon) with SrcGuardMixin228 first and the 291 build mixin
+    (138nb classes + 252c + 224/224c + 260) ahead of the 220 mixin, as 138p's
+    Classes138pMixin sits ahead of Loop138kDaemon."""
+
+
+assert [c.__name__ for c in Loop291Daemon.__mro__][:5] == [
+    "Loop291Daemon", "SrcGuardMixin228", "Classes291Mixin",
+    "RestartIndex220Mixin", "Loop138jDaemon"]
+
+
+def main(argv=None) -> int:
+    import fable_loop90_agent as L90  # noqa: E402 (read-only)
+
+    ap = argparse.ArgumentParser(description="Merge 291 (138nb + 260 + 252c)")
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--write-config", default=None)
+    ap.add_argument("--daemon", action="store_true")
+    ap.add_argument("--dir", default=None)
+    ap.add_argument("--idle-seconds", type=float, default=30.0)
+    ap.add_argument("--once", default=None)
+    ap.add_argument("--state-dir", default=None)
+    args = ap.parse_args(argv)
+    if args.write_config:
+        out = copy.deepcopy(DEFAULT_CONFIG291)
+        out["thinker"]["module"] = L90.THINKER_MODULE
+        Path(args.write_config).write_text(json.dumps(out, indent=1),
+                                           encoding="utf-8")
+        print(f"Wrote {args.write_config}")
+        return 0
+    cfg = copy.deepcopy(DEFAULT_CONFIG291)
+    if args.config:
+        cfg.update(json.loads(Path(args.config).read_text(encoding="utf-8")))
+    if args.daemon or (args.dir and not args.once):
+        if not args.dir:
+            ap.error("--daemon needs --dir")
+        return Loop291Daemon(args.dir, cfg=cfg,
+                             idle_seconds=args.idle_seconds).run()
+    if args.once:
+        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
+        print(" ".join(build_agent291(cfg).turn(args.once)), flush=True)
+        return 0
+    ap.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m✗ [0mGrep "last_stage" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls /private/tmp/claude-502/ 2>/dev/null; ls scratchpad/ 2>/dev/null | head; echo ---; git show origin/builder-outbox:scripts/claude_loop291_agent.py | grep -n "sleep_threshold\|state_dir" | head
+-private-tmp-claude-502--Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27-76c622f5-1395-42cc-b432-71b65f256cf4-scratchpad
+-private-tmp-claude-502--Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27-76c622f5-1395-42cc-b432-71b65f256cf4-scratchpad-modes
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-moe
+-Users-ben-hannan-Desktop-projects-polymarket
+-Users-ben-hannan-Desktop-projects-polymarket-scout
+-Users-ben-hannan-Desktop-projects-polymarket-scout--claude-worktrees-remote-control-102b24
+-Users-ben-hannan-Desktop-projects-school-access
+bash-edit-diff
+bench.py
+bench2.py
+bench3.py
+box_baseline.sh
+box_linkiso.sh
+budget
+cache-break-state-04645748-af22-4559-8d2c-b16d57e1c797.json
+cache-break-state-093229f1-ce0d-43eb-b27e-95949d661707.json
+cache-break-state-0e21eef0-2532-4468-b1e7-d73ce6c0fd84.json
+cache-break-state-114f51e2-f497-4eca-bbaf-5ff9129aec06.json
+cache-break-state-1389667a-1798-4061-941b-10f2b5415a69.json
+cache-break-state-23d31e21-d151-4f3a-8d63-ed2dd4a1461d.json
+cache-break-state-284b8269-fe3c-4a66-acb7-53ef0f5863e2.json
+cache-break-state-2e4e7329-d9eb-4324-884b-210558917008.json
+cache-break-state-311b6c5d-5d2b-47f1-a07d-c0bf58ba1eac.json
+cache-break-state-332995c0-d3b3-4969-a669-ccc822e605fa.json
+cache-break-state-356ed645-6d9c-4025-9ade-47833fdc1985.json
+cache-break-state-369c5476-94cd-4aa5-b822-73f7483f97d5.json
+cache-break-state-36be73cd-e35b-4660-894f-188a1836e3b4.json
+cache-break-state-43fe942e-9f22-4a2d-8794-e6cc6be856ca.json
+cache-break-state-49021cff-276c-4182-85d9-0453920b9c1c.json
+cache-break-state-4dac35f8-c591-4574-93c8-ce4ce27ce181.json
+cache-break-state-5d38a30d-918b-4124-b8cf-691787625529.json
+cache-break-state-6594f1a7-19b4-4893-8cba-03707b690f5c.json
+cache-break-state-6b747289-48c0-44cf-a9d9-9af76d845eb5.json
+cache-break-state-6be2c723-7c52-4162-a083-6fcae6f2d49e.json
+cache-break-state-7029ad18-6314-49d6-b21f-59eaae3e592d.json
+cache-break-state-76c622f5-1395-42cc-b432-71b65f256cf4.json
+cache-break-state-7736a5ad-9752-40bd-bebc-4c0aa7d3de8b.json
+cache-break-state-78498c2d-4cde-4abc-8e7b-1e28ea1dadd4.json
+cache-break-state-7a55a7d2-df31-4e5b-8565-800e286b604f.json
+cache-break-state-8ad54ea6-8bc7-4e83-9689-88317ccf43af.json
+cache-break-state-8f87d164-22e3-47a1-8ec2-5dc4ea6d2c18.json
+cache-break-state-91b22db1-dd19-43bb-81dd-9bd1a7ba2872.json
+cache-break-state-981d3066-1714-46ac-a536-13b5432d853b.json
+cache-break-state-9c7eff8a-27ad-45c7-b445-36673551d656.json
+cache-break-state-9d6a31b4-ba6f-498f-b75f-3dde818373cc.json
+cache-break-state-a5eeeec9-3ee5-41da-9156-fa158f86bdf3.json
+cache-break-state-ae208d2a-6d2b-4ca2-a1e9-07b492211678.json
+cache-break-state-ae8b783e-7921-48cc-8800-3c3a353c1b64.json
+cache-break-state-b127bea0-c2f2-473b-afc4-a2ad007ea028.json
+cache-break-state-b3f8a43b-063c-4e1d-9ba0-3727251459c3.json
+cache-break-state-b4c39a28-0c1a-46ef-a92a-0a1091b1c4ae.json
+cache-break-state-b56914af-50d5-42d6-92f7-f1f8a0536066.json
+cache-break-state-bbbaf353-ff34-4543-9bc0-8e6a2933925a.json
+cache-break-state-bc860ad2-15b6-47aa-973b-19140ae69ec4.json
+cache-break-state-bd6e7abc-ee45-435e-a39f-64f0eaac57c2.json
+cache-break-state-d0b22b3f-33d6-45d4-b46e-313954261ba2.json
+cache-break-state-d19d3d6d-5b0e-4b2b-a7c9-fc944a94a580.json
+cache-break-state-d4fe947b-ec0f-4c42-94b3-257ca12df81e.json
+cache-break-state-d65a15a1-15e6-454d-add0-ad492176624e.json
+cache-break-state-da786cde-22f8-4c75-ab7f-c0e1bf648e4a.json
+cache-break-state-de631bf7-7a70-4c90-aef0-394df24df8b2.json
+cache-break-state-e6ab3c70-f56b-47f4-abac-f366177a9744.json
+cache-break-state-e7b80831-1d63-41d2-96d3-9717b1311b2a.json
+cache-break-state-e8012fb0-be50-48ca-aa68-249eb4638556.json
+cache-break-state-ee12a9b9-e997-4b23-82d5-2e00d7543624.json
+cache-break-state-f160f9e6-20cb-439b-8b5a-2ab0321f9903.json
+cache-break-state-f63e7bf6-c354-44bf-9afb-4029fd7394a8.json
+cache-break-state-fcf77c65-ce74-4cd6-b19c-e1aa6c68b7e5.json
+chain1.sh
+chain2.sh
+chain3.sh
+chain4.sh
+chain4b.sh
+chain5.sh
+chain5b.sh
+cuda_launch.py
+dl.log
+dl2.log
+gpuwave.bat
+linkiso_files.txt
+mirror.tgz
+pre_resume.txt
+smoke
+trial
+o0c-scratch-20260923
+srv270b.ps1
+stop270b.ps1
+w255
+w255b
+---
+261:        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ 2>/dev/null | head -20; echo ---; ls scripts/fable_loop138j_agent.py scripts/dialog_nb.py 2>&1; echo ---; find / -maxdepth 6 -name "dialog_nb.py" 2>/dev/null | head
+about.json
+adj3.json
+adv.json
+art_add.txt
+bigfiles.txt
+briefs
+c160.json
+cap.json
+cases140.json
+chain120.sh
+changes239.py
+chk119g.ps1
+chk189.py
+cmpmarks.py
+corr.json
+corr167e.json
+ctoy_diag.py
+ctoy_probe.py
+ctoy_reasons.py
+ctoy_sum.py
+---
+ls: scripts/dialog_nb.py: No such file or directory
+scripts/fable_loop138j_agent.py
+---
+[0m
+[0m$ [0mls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ | grep -i dialog; echo ---; ls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/ | wc -l
+dialog.py
+dialogroots.json
+move_dialogs.py
+rev_dialogs.json
+---
+     173
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog.py
+[0m
+[0m$ [0mgrep -rn "last_stage" scripts/*.py | head -20; echo ===; grep -n "def turn" scripts/fable_loop138j_agent.py scripts/claude_loop138n_agent.py 2>/dev/null | head; echo ===; grep -n "stored\|triples\|notebook" scripts/fable_loop138j_agent.py | head -30
+scripts/claude_138nb_devrepro.py:62:            st = getattr(getattr(loop, "_inner138j_ears", None), "last_stage", "") or getattr(getattr(loop, "ears", None), "last_stage", "")
+scripts/claude_221b_run.py:134:            "stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_221b_unit.py:57:        stage = str(getattr(loop.ears, "last_stage", ""))
+scripts/claude_221b_unit.py:66:    stage = str(getattr(loop.ears, "last_stage", ""))
+scripts/claude_268_devrepro.py:401:        st = getattr(obj, "last_stage", "")
+scripts/claude_268_panelrun.py:53:            stage = getattr(getattr(loop, "ears", None), "last_stage", "")
+scripts/claude_268_supp.py:79:        st = getattr(obj, "last_stage", "")
+scripts/claude_268b_devrepro.py:62:        st = getattr(obj, "last_stage", "")
+scripts/claude_268b_m1run.py:17:id, setup_replies, question_reply, question_stage (loop.ears.last_stage,
+scripts/claude_268b_m1run.py:85:            stage = getattr(getattr(loop, "ears", None), "last_stage", "")
+scripts/claude_293_reg.py:78:                   "question_stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_293_repro.py:105:               "stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_293_repro.py:106:               "inner_stage": str(getattr(inner, "last_stage", "")) if inner is not None else None,
+scripts/claude_chain231_run.py:163:                     "stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_diag290_bisect.py:80:                   "stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_diag290_bisect2.py:65:               "stage": str(getattr(loop.ears, "last_stage", "")),
+scripts/claude_diag290_pilot.py:22:        s = getattr(o, "last_stage", "")
+scripts/claude_diag290_probe.py:48:        oe = getattr(loop.ears, "last_stage", "")
+scripts/claude_diag290_probe.py:49:        inw = getattr(getattr(loop, "_inner138j_ears", None), "last_stage", "")
+scripts/claude_diag290_run.py:4:Records reply, ears.last_stage, emitted acts, last_routed intent, event
+zsh:1: == not found
+[0m
+[0m→ [0mRead scripts/claude_138nb_devrepro.py[90m [limit=120][0m
+[0m
+[0m$ [0mgrep -n "stored\|notebook\|question_wrote\|wrote" scripts/claude_221b_run.py | head -30; echo ===; grep -n "def \|class " scripts/claude_221b_run.py | head -20
+7:router intent, notebook fact-hash change (write), and wall ms.
+18:               time (L90.notebook_triples), minus any value whose text is
+125:                      "wrote": facts_hash(loop.nb) != h0})
+126:    stored = [list(x) for x in L90.notebook_triples(loop.nb)]
+132:    return {"setup": turns, "stored": stored, "reply": reply,
+137:            "q_wrote": facts_hash(loop.nb) != h0}
+147:    for _s, _r, v in run["stored"]:
+186:                        "routed": r["routed"], "q_wrote": r["q_wrote"],
+187:                        "setup_wrote": [x["wrote"] for x in r["setup"]],
+188:                        "ms": r["ms"], "stored": r["stored"]}
+205:            "question_writes": sum(r[arm]["q_wrote"] for r in rows),
+zsh:1: == not found
+[0m
+[0m→ [0mRead scripts/claude_221b_run.py[90m [limit=145][0m
+[0m
+[0m$ [0mls scripts/ | grep -E "291|260|252|258|259|224|138nb" ; echo ===; git status --short | head; echo ===; git log --oneline -3
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_fix138nb_label.py
+claude_fix252_correct.py
+claude_fix252b_screen.py
+claude_fix252c_merge.py
+claude_fix258_comment.py
+claude_fix259_boundary.py
+claude_fix260_openers.py
+claude_fix291_glue.py
+claude_loop138nb_agent.py
+claude_loop224c_agent.py
+claude_loop252_agent.py
+claude_loop252b_agent.py
+claude_loop252c_agent.py
+claude_loop258_agent.py
+claude_loop259_agent.py
+claude_loop260_agent.py
+claude_loop291_agent.py
+claude_merge252c_runall.sh
+claude_merge252c_score.py
+claude_nhopdiag_20260923_pilot.py
+claude_nhopdiag_20260923_repro.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+fable_decline224_a2.py
+fable_decline224_b1.py
+fable_decline224_b2.py
+fable_decline224_b3.py
+fable_decline224.py
+fable_loop224_agent.py
+fable_rescore224.py
+zsh:1: == not found
+[0m
+[0m$ [0mfor f in scripts/claude_loop291_agent.py scripts/claude_fix291_glue.py artifacts/claude-join291-20260923/loop291-config.json; do if [ -e "$f" ]; then git show origin/builder-outbox:"$f" > /tmp/bo_check.tmp 2>/dev/null && diff -q "$f" /tmp/bo_check.tmp >/dev/null 2>&1 && echo "SAME $f" || echo "DIFF-or-missing $f"; else echo "ABSENT(worktree) $f"; fi; done; echo ===; git show origin/builder-outbox:artifacts/claude-join291-20260923/loop291-config.json > /tmp/cfg_bo.json 2>&1 && diff -q artifacts/claude-join291-20260923/loop291-config.json /tmp/cfg_bo.json >/dev/null 2>&1 && echo SAME-config || echo DIFF-config; ls artifacts/ | grep join291
+SAME scripts/claude_loop291_agent.py
+SAME scripts/claude_fix291_glue.py
+SAME artifacts/claude-join291-20260923/loop291-config.json
+zsh:1: == not found
+[0m
+[0m← [0mWrite /tmp/p292_probe.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/p292_probe.py
+two-word teach t0: stage=loop138b-fix137 reply="Saved: Mara Quinn's boss is Lena Vale." stored=[['Mara Quinn', 'boss', 'Lena Vale']]
+two-word teach t1: stage=fake reply="Mara Quinn's boss is Lena Vale." stored=[['Mara Quinn', 'boss', 'Lena Vale']]
+chain t0: stage=loop138b-fix137 reply="Saved: Mara Quinn's boss is Lena Vale." stored=[['Mara Quinn', 'boss', 'Lena Vale']]
+chain t1: stage=loop138b-fix137 reply="Saved: Lena Vale's employer is Harrow Mill." stored=[['Mara Quinn', 'boss', 'Lena Vale'], ['Lena Vale', 'employer', 'Harrow Mill']]
+chain t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Mara Quinn', 'boss', 'Lena Vale'], ['Lena Vale', 'employer', 'Harrow Mill']]
+chain-live t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+chain-live t1: stage=loop138b-fix137 reply="Saved: Petra Lark's city is Tollan." stored=[['Nilo', 'boss', 'Petra Lark'], ['Petra Lark', 'city', 'Tollan']]
+chain-live t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Petra Lark'], ['Petra Lark', 'city', 'Tollan']]
+chain-who t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+chain-who t1: stage=loop138b-fix137 reply="Saved: Petra Lark's employer is Bram Hall." stored=[['Nilo', 'boss', 'Petra Lark'], ['Petra Lark', 'employer', 'Bram Hall']]
+chain-who t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Petra Lark'], ['Petra Lark', 'employer', 'Bram Hall']]
+back-spouse t0: stage=fake reply="Saved: Talia's spouse is Wren Bell." stored=[['Talia', 'spouse', 'Wren Bell']]
+back-spouse t1: stage=loop138b-fix137 reply="Saved: Wren Bell's mother is Zara Finch." stored=[['Talia', 'spouse', 'Wren Bell'], ['Wren Bell', 'mother', 'Zara Finch']]
+back-spouse t2: stage=bench73 reply='Was that a question?' stored=[['Talia', 'spouse', 'Wren Bell'], ['Wren Bell', 'mother', 'Zara Finch']]
+back-whose t0: stage=fake reply="Saved: Talia's spouse is Wren Bell." stored=[['Talia', 'spouse', 'Wren Bell']]
+back-whose t1: stage=loop138b-fix137 reply="Saved: Wren Bell's mother is Zara Finch." stored=[['Talia', 'spouse', 'Wren Bell'], ['Wren Bell', 'mother', 'Zara Finch']]
+back-whose t2: stage=loop190-reverse reply="Talia's spouse is Wren Bell. (worked out backwards)" stored=[['Talia', 'spouse', 'Wren Bell'], ['Wren Bell', 'mother', 'Zara Finch']]
+back-author t0: stage=fake reply="Saved: Corvin's author is Ilsa Marlowe." stored=[['Corvin', 'author', 'Ilsa Marlowe']]
+back-author t1: stage=loop138b-fix137 reply="Saved: Ilsa Marlowe's city is Umbry." stored=[['Corvin', 'author', 'Ilsa Marlowe'], ['Ilsa Marlowe', 'city', 'Umbry']]
+back-author t2: stage=loop221-table-inverse reply="Corvin's author is Ilsa Marlowe. (worked out backwards)" stored=[['Corvin', 'author', 'Ilsa Marlowe'], ['Ilsa Marlowe', 'city', 'Umbry']]
+yes-yes t0: stage=fake reply="Saved: Sorrel's city is Tollan." stored=[['Sorrel', 'city', 'Tollan']]
+yes-yes t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Sorrel', 'city', 'Tollan']]
+yes-no t0: stage=fake reply="Saved: Sorrel's boss is Bram Hall." stored=[['Sorrel', 'boss', 'Bram Hall']]
+yes-no t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Sorrel', 'boss', 'Bram Hall']]
+yes-unk t0: stage=fake reply="Saved: Sorrel's boss is Bram Hall." stored=[['Sorrel', 'boss', 'Bram Hall']]
+yes-unk t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Sorrel', 'boss', 'Bram Hall']]
+broken t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+broken t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Petra Lark']]
+corr t0: stage=fake reply="Saved: Juno's city is Tollan." stored=[['Juno', 'city', 'Tollan']]
+corr t1: stage=correct252-replace reply="Updated: Juno's city is Lowick (it was Tollan)." stored=[['Juno', 'city', 'Lowick']]
+corr t2: stage=fake reply="Juno's city is Lowick." stored=[['Juno', 'city', 'Lowick']]
+stmt t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+stmt t1: stage=loop229-table-teach-nosave reply="I did not save that: I read it as Nilo's boss's city is Tollan, but Nilo's boss does not look like a name." stored=[['Nilo', 'boss', 'Petra Lark']]
+fwd t0: stage=fake reply="Saved: Juno's teacher is Moss Pike." stored=[['Juno', 'teacher', 'Moss Pike']]
+fwd t1: stage=fake reply="Juno's teacher is Moss Pike." stored=[['Juno', 'teacher', 'Moss Pike']]
+[0m
+[0m← [0mWrite /tmp/p292_probe2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/p292_probe2.py
+yn-have-y t0: stage=fake reply="Saved: Juno's teacher is Moss Pike." stored=[['Juno', 'teacher', 'Moss Pike']]
+yn-have-y t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'teacher', 'Moss Pike']]
+yn-have-n t0: stage=fake reply="Saved: Juno's boss is Bram Hall." stored=[['Juno', 'boss', 'Bram Hall']]
+yn-have-n t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'boss', 'Bram Hall']]
+yn-is-y t0: stage=fake reply="Saved: Juno's teacher is Moss Pike." stored=[['Juno', 'teacher', 'Moss Pike']]
+yn-is-y t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'teacher', 'Moss Pike']]
+yn-is-n t0: stage=fake reply="Saved: Juno's boss is Bram Hall." stored=[['Juno', 'boss', 'Bram Hall']]
+yn-is-n t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'boss', 'Bram Hall']]
+yn-live-y t0: stage=fake reply="Saved: Juno's city is Tollan." stored=[['Juno', 'city', 'Tollan']]
+yn-live-y t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'city', 'Tollan']]
+yn-work-y t0: stage=loop138b-fix137 reply="Saved: Lena Vale's employer is Harrow Mill." stored=[['Lena Vale', 'employer', 'Harrow Mill']]
+yn-work-y t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Lena Vale', 'employer', 'Harrow Mill']]
+yn-is-city t0: stage=fake reply="Saved: Juno's city is Tollan." stored=[['Juno', 'city', 'Tollan']]
+yn-is-city t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'city', 'Tollan']]
+yn-birth-y t0: stage=fake reply="Saved: Juno's birthplace is Umbry." stored=[['Juno', 'birthplace', 'Umbry']]
+yn-birth-y t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'birthplace', 'Umbry']]
+chain-single t0: stage=fake reply="Saved: Nilo's boss is Lee." stored=[['Nilo', 'boss', 'Lee']]
+chain-single t1: stage=fake reply="Saved: Lee's city is Tollan." stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'city', 'Tollan']]
+chain-single t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'city', 'Tollan']]
+chain-single2 t0: stage=fake reply="Saved: Nilo's boss is Lee." stored=[['Nilo', 'boss', 'Lee']]
+chain-single2 t1: stage=fake reply="Saved: Lee's employer is Harrow Mill." stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'employer', 'Harrow Mill']]
+chain-single2 t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'employer', 'Harrow Mill']]
+chain-single3 t0: stage=fake reply="Saved: Nilo's boss is Lee." stored=[['Nilo', 'boss', 'Lee']]
+chain-single3 t1: stage=fake reply="Saved: Lee's employer is Bram Hall." stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'employer', 'Bram Hall']]
+chain-single3 t2: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Nilo', 'boss', 'Lee'], ['Lee', 'employer', 'Bram Hall']]
+back-married2 t0: stage=fake reply="Saved: Talia's spouse is Wren Bell." stored=[['Talia', 'spouse', 'Wren Bell']]
+back-married2 t1: stage=loop221-table-ask reply="I don't know Wren Bell's spouse." stored=[['Talia', 'spouse', 'Wren Bell']]
+back-founder t0: stage=loop138b-fix137 reply="Saved: Harrow Mill's founder is Bram Hall." stored=[['Harrow Mill', 'founder', 'Bram Hall']]
+back-founder t1: stage=loop138b-fix137 reply="Saved: Bram Hall's city is Tollan." stored=[['Harrow Mill', 'founder', 'Bram Hall'], ['Bram Hall', 'city', 'Tollan']]
+back-founder t2: stage=loop221-table-ask reply="Harrow Mill's founder is Bram Hall." stored=[['Harrow Mill', 'founder', 'Bram Hall'], ['Bram Hall', 'city', 'Tollan']]
+back-whose-founder t0: stage=loop138b-fix137 reply="Saved: Harrow Mill's founder is Bram Hall." stored=[['Harrow Mill', 'founder', 'Bram Hall']]
+back-whose-founder t1: stage=loop138b-fix137 reply="Saved: Bram Hall's city is Tollan." stored=[['Harrow Mill', 'founder', 'Bram Hall'], ['Bram Hall', 'city', 'Tollan']]
+back-whose-founder t2: stage=loop221-table-label153 reply='Bram Hall is the founder of Harrow Mill. (worked out backwards)' stored=[['Harrow Mill', 'founder', 'Bram Hall'], ['Bram Hall', 'city', 'Tollan']]
+back-mother t0: stage=fake reply="Saved: Bex's mother is Talia." stored=[['Bex', 'mother', 'Talia']]
+back-mother t1: stage=fake reply="Saved: Talia's city is Tollan." stored=[['Bex', 'mother', 'Talia'], ['Talia', 'city', 'Tollan']]
+back-mother t2: stage=loop190-reverse reply="Bex's mother is Talia. (worked out backwards)" stored=[['Bex', 'mother', 'Talia'], ['Talia', 'city', 'Tollan']]
+back-composer t0: stage=fake reply="Saved: Corvin's composer is Ilsa Marlowe." stored=[['Corvin', 'composer', 'Ilsa Marlowe']]
+back-composer t1: stage=loop138b-fix137 reply="Saved: Ilsa Marlowe's city is Umbry." stored=[['Corvin', 'composer', 'Ilsa Marlowe'], ['Ilsa Marlowe', 'city', 'Umbry']]
+back-composer t2: stage=loop221-table-inverse reply="Corvin's composer is Ilsa Marlowe. (worked out backwards)" stored=[['Corvin', 'composer', 'Ilsa Marlowe'], ['Ilsa Marlowe', 'city', 'Umbry']]
+unk-lives t0: stage=fake reply="Saved: Juno's city is Tollan." stored=[['Juno', 'city', 'Tollan']]
+unk-lives t1: stage=loop190b-reverse-nomatch reply="I don't know anyone whose city is Varn." stored=[['Juno', 'city', 'Tollan']]
+unk-mother t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+unk-mother t1: stage=fake reply="I don't know Nilo's mother." stored=[['Nilo', 'boss', 'Petra Lark']]
+unk-mother2 t0: stage=fake reply="Saved: Nilo's boss is Petra Lark." stored=[['Nilo', 'boss', 'Petra Lark']]
+unk-mother2 t1: stage=fake reply="I don't know Petra Lark's mother." stored=[['Nilo', 'boss', 'Petra Lark']]
+unk-father t0: stage=fake reply="Saved: Juno's city is Tollan." stored=[['Juno', 'city', 'Tollan']]
+unk-father t1: stage=fake reply="I don't know Juno's father." stored=[['Juno', 'city', 'Tollan']]
+yn-unknown t0: stage=fake reply="Saved: Juno's boss is Bram Hall." stored=[['Juno', 'boss', 'Bram Hall']]
+yn-unknown t1: stage=none reply="I didn't understand that question — could you say it another way?" stored=[['Juno', 'boss', 'Bram Hall']]
+[0m
+[0m← [0mWrite /tmp/p292_probe3.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/p292_probe3.py
+q="Juno's teacher is Moss Pike."
+  outer loop.ears.last_stage='fake'
+  inner='fake'
+  reply="Saved: Juno's teacher is Moss Pike."
+q="Who is Juno's teacher?"
+  outer loop.ears.last_stage='fake'
+  inner='fake'
+  reply="Juno's teacher is Moss Pike."
+q='Whose teacher is Moss Pike?'
+  outer loop.ears.last_stage='loop190-reverse'
+  inner='loop190-reverse'
+  reply="Juno's teacher is Moss Pike. (worked out backwards)"
+q='Does Juno have a teacher?'
+  outer loop.ears.last_stage='none'
+  inner='none'
+  reply="I didn't understand that question — could you say it another way?"
+[0m
+[0m← [0mWrite artifacts/claude-mixpanel292-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-mixpanel292-20260923/run_base.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-mixpanel292-20260923/score_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-mixpanel292-20260923/make_panel.py && uptime && df -g /
+Wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mixpanel292-20260923/panel.jsonl (80 items)
+ 7:21  up 2 days, 23:10, 4 users, load averages: 150.54 106.20 79.31
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 136845560    0%   /
+[0m
+[0m$ [0msleep 240; uptime; df -g /
+7:25  up 2 days, 23:14, 4 users, load averages: 110.01 120.08 93.45
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 136421280    0%   /
+[0m
+[0m$ [0msleep 300; uptime
+7:30  up 2 days, 23:19, 4 users, load averages: 84.83 94.54 89.21
+[0m
+[0m$ [0msleep 420; uptime
+7:37  up 2 days, 23:26, 4 users, load averages: 90.91 86.39 87.45
+[0m
+[0m$ [0msleep 540; uptime
+7:46  up 2 days, 23:35, 4 users, load averages: 102.66 109.26 100.72
+[0m
+[0m$ [0msleep 600; uptime
+7:56  up 2 days, 23:45, 4 users, load averages: 62.66 59.14 72.57
+[0m
+[0m$ [0msleep 300; uptime; df -g /
+8:01  up 2 days, 23:50, 4 users, load averages: 51.54 55.79 67.04
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132076600    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-mixpanel292-20260923/run_base.py
+[01/80] m292-001 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[02/80] m292-002 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[03/80] m292-003 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[04/80] m292-004 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[05/80] m292-005 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[06/80] m292-006 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[07/80] m292-007 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[08/80] m292-008 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[09/80] m292-009 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[10/80] m292-010 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[11/80] m292-011 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[12/80] m292-012 chain_verb stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[13/80] m292-013 backwards_bug stage=loop190-reverse wrote=False q="Hester Blom's spouse is Wren Bell. (worked out backwards)"
+[14/80] m292-014 backwards_bug stage=bench73 wrote=False q='Was that a question?'
+[15/80] m292-015 backwards_bug stage=loop221-table-inverse wrote=False q="Vex's author is Ilsa Marlowe. (worked out backwards)"
+[16/80] m292-016 backwards_bug stage=loop221-table-label153 wrote=False q='Ondine Vail is the founder of Kestrel Yard. (worked out backwards)'
+[17/80] m292-017 backwards_bug stage=loop190-reverse wrote=False q="Bex Alden's mother is Talia Voss. (worked out backwards)"
+[18/80] m292-018 backwards_bug stage=loop221-table-inverse wrote=False q="Duskmere's composer is Liora Senn. (worked out backwards)"
+[19/80] m292-019 backwards_bug stage=loop221-table-inverse wrote=False q="Morlath's author is Fenwick Hale. (worked out backwards)"
+[20/80] m292-020 backwards_bug stage=loop190-reverse wrote=False q="Tam Brack's father is Ulf Harrow. (worked out backwards)"
+[21/80] m292-021 backwards_bug stage=loop221-table-label153 wrote=False q='Kell Marris is the founder of Vetch Works. (worked out backwards)'
+[22/80] m292-022 backwards_bug stage=bench73 wrote=False q='Was that a question?'
+[23/80] m292-023 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[24/80] m292-024 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[25/80] m292-025 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[26/80] m292-026 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[27/80] m292-027 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[28/80] m292-028 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[29/80] m292-029 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[30/80] m292-030 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[31/80] m292-031 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[32/80] m292-032 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[33/80] m292-033 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[34/80] m292-034 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[35/80] m292-035 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[36/80] m292-036 yesno stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[37/80] m292-037 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[38/80] m292-038 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[39/80] m292-039 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[40/80] m292-040 mixed stage=loop190-reverse wrote=False q="Juno Slate's boss is Bram Hall. (worked out backwards)"
+[41/80] m292-041 mixed stage=loop190-reverse wrote=False q="Nilo Frost's teacher is Odo Crane. (worked out backwards)"
+[42/80] m292-042 mixed stage=loop190-reverse wrote=False q="Mara Quinn's mother is Zara Finch. (worked out backwards)"
+[43/80] m292-043 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[44/80] m292-044 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[45/80] m292-045 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[46/80] m292-046 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[47/80] m292-047 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[48/80] m292-048 mixed stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[49/80] m292-049 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[50/80] m292-050 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[51/80] m292-051 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[52/80] m292-052 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[53/80] m292-053 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[54/80] m292-054 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[55/80] m292-055 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[56/80] m292-056 broken_chain stage=none wrote=False q="I didn't understand that question — could you say it another way?"
+[57/80] m292-057 forward_control stage=fake wrote=False q="Juno Slate's boss is Bram Hall."
+[58/80] m292-058 forward_control stage=fake wrote=False q="Nilo Frost's city is Tollan."
+[59/80] m292-059 forward_control stage=fake wrote=False q="Mara Quinn's city is Lowick."
+[60/80] m292-060 forward_control stage=loop190-reverse wrote=False q="Petra Lark's city is Tollan. (worked out backwards)"
+[61/80] m292-061 forward_control stage=fake wrote=False q="Bex Alden's mother is Talia Voss."
+[62/80] m292-062 forward_control stage=fake wrote=False q="Dain Mercer's birthplace is Pellin."
+[63/80] m292-063 forward_control stage=fake wrote=False q="Liora Senn's teacher is Odo Crane."
+[64/80] m292-064 forward_control stage=loop138-nhop wrote=False q="Kell Marris's employer is Sorby Looms."
+[65/80] m292-065 forward_control stage=loop215-ofteach-q wrote=False q="Hollowcrown's author is Fenwick Hale."
+[66/80] m292-066 forward_control stage=fake wrote=False q="Tam Brack's father is Ulf Harrow."
+[67/80] m292-067 statement_control stage=loop229-table-teach-nosave wrote=False q="I did not save that: I read it as Juno Slate's boss's city is Tollan, "
+[68/80] m292-068 statement_control stage=loop229-table-teach-nosave wrote=False q="I did not save that: I read it as Nilo Frost's boss's employer is Harr"
+[69/80] m292-069 statement_control stage=loop229-table-teach-nosave wrote=False q="I did not save that: I read it as Mara Quinn's teacher's employer is D"
+[70/80] m292-070 statement_control stage=loop229-table-teach-nosave wrote=False q="I did not save that: I read it as Petra Lark's mother's city is Lowick"
+[71/80] m292-071 statement_control stage=none wrote=False q="I couldn't save that as a fact. I don't know that shape yet. Could you"
+[72/80] m292-072 statement_control stage=none wrote=False q="I couldn't save that as a fact. I don't know that shape yet. Could you"
+[73/80] m292-073 statement_control stage=none wrote=False q="I couldn't save that as a fact. I don't know that shape yet. Could you"
+[74/80] m292-074 statement_control stage=loop229-table-teach-table wrote=False q='I already have that.'
+[75/80] m292-075 correction_control stage=fake wrote=False q="Juno Slate's city is Lowick."
+[76/80] m292-076 correction_control stage=fake wrote=False q="Nilo Frost's city is Pellin."
+[77/80] m292-077 correction_control stage=fake wrote=False q="Mara Quinn's city is Sorby."
+[78/80] m292-078 correction_control stage=fake wrote=False q="Dain's city is Aldmere."
+[79/80] m292-079 correction_control stage=fake wrote=False q="Bex Alden's city is Harlow."
+[80/80] m292-080 correction_control stage=fake wrote=False q="Tam's city is Dunmore."
+Wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-mixpanel292-20260923/base291.jsonl (80 rows)
+[0m
+[0m← [0mWrite /tmp/p292_check.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/p292_check.py
+FAILS: 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-mixpanel292-20260923/score_panel.py; echo "exit=$?"
+family n right wrong miss writes stages
+chain_verb 12 0 0 12 0 none=12
+backwards_bug 10 8 0 2 0 bench73=2,loop190-reverse=3,loop221-table-inverse=3,loop221-table-label153=2
+yesno 14 0 0 14 0 none=14
+mixed 12 3 0 9 0 loop190-reverse=3,none=9
+broken_chain 8 0 0 8 0 none=8
+forward_control 10 10 0 0 0 fake=7,loop138-nhop=1,loop190-reverse=1,loop215-ofteach-q=1
+statement_control 8 8 0 0 0 loop229-table-teach-nosave=4,loop229-table-teach-table=1,none=3
+correction_control 6 6 0 0 0 fake=6
+TOTAL 80 35 0 45
+exit=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, re
+from pathlib import Path
+d = Path('artifacts/claude-mixpanel292-20260923/panel.jsonl')
+n = 0; ids = []
+pat = re.compile(r'[A-Z][a-z]+ [A-Z][a-z]+')
+for line in d.read_text().splitlines():
+    it = json.loads(line)
+    txt = ' '.join(it['setup']) + ' ' + it['question']
+    if pat.search(txt):
+        n += 1; ids.append(it['id'])
+print('two-word-name items:', n)
+"
+two-word-name items: 80
+[0m
+[0m← [0mWrite artifacts/claude-mixpanel292-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-mixpanel292-20260923/panel.jsonl artifacts/claude-mixpanel292-20260923/base291.jsonl artifacts/claude-mixpanel292-20260923/make_panel.py artifacts/claude-mixpanel292-20260923/run_base.py artifacts/claude-mixpanel292-20260923/score_panel.py > artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt && cat artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt && shasum -c artifacts/claude-mixpanel292-20260923/SEAL.sha256.txt && ls -la artifacts/claude-mixpanel292-20260923/ && git status --short | head -20
+40164ef4530c1f71d36be25c0bf72187e63b327abb8c207f9544d9c2849ca519  artifacts/claude-mixpanel292-20260923/panel.jsonl
+2ade0bf063e40728668b51d2fae967a090ca9e735b9f9c6e12b02aad0ff5d155  artifacts/claude-mixpanel292-20260923/base291.jsonl
+7b63cd01e7a135a3af57be1bc45126c3358d32fd8fd7bdc96bf97f401bb933bc  artifacts/claude-mixpanel292-20260923/make_panel.py
+f1362940455db2c68e7f0b3aacec9e4a646bcb15e132aa18be5c84bc3439b4e9  artifacts/claude-mixpanel292-20260923/run_base.py
+5a7e2f78af9e2315e72b78ee46687fb4728ae752c3c312c1c4c2e67b83952450  artifacts/claude-mixpanel292-20260923/score_panel.py
+artifacts/claude-mixpanel292-20260923/panel.jsonl: OK
+artifacts/claude-mixpanel292-20260923/base291.jsonl: OK
+artifacts/claude-mixpanel292-20260923/make_panel.py: OK
+artifacts/claude-mixpanel292-20260923/run_base.py: OK
+artifacts/claude-mixpanel292-20260923/score_panel.py: OK
+total 200
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 23 08:02 .
+drwxr-xr-x@ 440 ben-hannan  staff  14080 Sep 23 08:00 ..
+-rw-r--r--    1 ben-hannan  staff  34891 Sep 23 08:01 base291.jsonl
+-rw-r--r--    1 ben-hannan  staff  23062 Sep 23 07:20 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  18826 Sep 23 07:21 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   3303 Sep 23 08:02 README.md
+-rw-r--r--    1 ben-hannan  staff   3490 Sep 23 07:20 run_base.py
+-rw-r--r--    1 ben-hannan  staff   7421 Sep 23 07:21 score_panel.py
+-rw-r--r--    1 ben-hannan  staff    587 Sep 23 08:02 SEAL.sha256.txt
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+[0m
+[0m$ [0mgit status --short | grep mixpanel292
+(no output)
+[0m
+[0m$ [0mgit status | grep -i "292\|mixpanel" | head; echo ===; git check-ignore artifacts/claude-mixpanel292-20260923/panel.jsonl && echo IGNORED || echo NOT-IGNORED
+design/v3/30-modes/292-merge-muse.md
+	scripts/claude_292_m5.sh
+	scripts/claude_292_m5run.py
+	scripts/claude_292_panelrun.py
+	scripts/claude_292_runall.sh
+	scripts/claude_292_score.py
+	scripts/claude_loop292_agent.py
+zsh:1: == not found
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-mixpanel292-20260923; git check-ignore -v artifacts/claude-mixpanel292-20260923/panel.jsonl
+.gitignore:5:artifacts/	artifacts/claude-mixpanel292-20260923/panel.jsonl
+[0m
