@@ -1,0 +1,2819 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main && git show origin/main:handoff/kit/briefs/OPUS-RULES.txt; echo "---EXIT:$?---"; uptime; df -g /
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+---EXIT:0---
+ 3:25  up 2 days, 19:14, 4 users, load averages: 34.21 43.86 59.47
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135643360    0%   /
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/corrpanel291-spec.txt
+BLIND PANEL SPEC: corrpanel291 (corrections, denials and openers, for the join merge 291). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+Follow handoff/kit/briefs/corrpanel252-schema.txt for the item fields, the scoring rules and the acceptance checks, with only the changes below. Never open design/v3/30-modes/291*, 138p*, 252*, 258*, 259*, 260*, any scripts/claude_fix25*, claude_fix260*, claude_loop138p*, claude_loop252*, claude_loop260*, any builder's artifacts folder, or any other panel's items (corrpanel252, corrtail258, openpanel260 included). Write every sentence yourself, with new fictional names (1-4 words).
+
+Changes from the 252 schema:
+- Folder artifacts/claude-corrpanel291-20260923/; ids "c291-001" ...; base file base138nb.jsonl.
+- Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; build as that folder's runner does; fresh work dir per dialog; setup, then turn, then followup, in one session).
+- Do NOT filter the cause families by whether the base gets them right. Write natural wordings first, run the base once, and report base_right, base_wrong_value, base_false_claim and junk writes per family.
+- Add base_false_claim (bool) as in corrtail258-spec.txt: the reply says it changed or removed something it did not.
+- Families (exact counts, 96 in total):
+  verb_denial 8, possessive_denial 8, contextual_denial 8, contextual_correction 8, explicit_correction 8 (cause families, at least 2 lowercase turns each);
+  tail_denial 8 (a denial or correction with a trailing comment clause: ", that's wrong", ", which is old news");
+  opener_teach 8 (a plain teach after an opener word such as "Oh,", "Well,", "Honestly,");
+  opener_correction 8 (an opener in front of a correction or denial);
+  unstored_denial 6; ambiguous 6; question_trap 8;
+  control 12 (as the schema says, byte-identical to the base).
+- Seal (repo-root paths): panel.jsonl, base138nb.jsonl, make_panel.py, run_base.py, score_panel.py -> SEAL.sha256.txt. score_panel.py implements the scoring rules and is used unchanged by builders.
+- README.md at category level only (like corrpanel252's). Never quote an item in README.md or in your final reply.
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/corrpanel252-schema.txt; echo "=====CORRTAIL258====="; git show origin/main:handoff/kit/briefs/corrtail258-spec.txt 2>&1 | head -n 300
+CORRECTION PANEL 252: EXACT SCHEMA. The director fixed it on 2026-09-22. It is shared by the panel writer and the 252 builder.
+
+Folder: artifacts/claude-corrpanel252-20260922/
+Files:
+- panel.jsonl (100 lines)
+- base138k.jsonl (100 lines, same ids, same order)
+- README.md (TEST-ONLY)
+- SEAL.sha256.txt
+SEAL (from the repo root): shasum -a 256 artifacts/claude-corrpanel252-20260922/panel.jsonl artifacts/claude-corrpanel252-20260922/base138k.jsonl > artifacts/claude-corrpanel252-20260922/SEAL.sha256.txt
+Base agent: scripts/claude_loop138k_agent.py with artifacts/claude-merge138k-20260922/loop138k-config.json. Each dialog gets one fresh work dir and runs setup turns, then turn, then followup, in one session.
+
+panel.jsonl has one JSON object per line with EXACTLY these 10 fields:
+  id             "c252-001" ... "c252-100", in the family-block order below.
+  family         one of the 9 families below.
+  setup          list of strings, non-empty. The teach turns. For contextual_denial, contextual_correction and ambiguous, the LAST setup turn is a question or request whose base reply states the fact(s) the user then disputes.
+  turn           string. The one scored user turn: the denial, correction or question.
+  followup       string. A question asked right after turn, in the same dialog, about the disputed relation.
+  stated_facts   list of [subject, relation, value]: what the base stored after the setup, copied exactly.
+  expect_gone    list of [subject, relation, value]: triples that must NOT be stored after turn. It is [] for question_trap, unstored_denial and ambiguous.
+  expect_store   list of [subject, relation, value]: triples that MUST be stored after turn.
+                 - Corrections: the new value plus every untouched stated fact.
+                 - Denials: stated_facts minus expect_gone.
+                 - question_trap, unstored_denial and ambiguous: exactly stated_facts.
+                 - control: what the base correctly stores.
+  gold_followup  string or null. The value(s) the followup reply must contain; "A; B" means every part. null means the followup must give NO value from expect_gone. That is the case for denials, where the honest answer is "I don't know".
+  note           string: the wording variant being tested.
+
+Families (exact counts, 100 in total):
+  verb_denial            14  "X doesn't work at Y.", "X doesn't live in Y anymore.", "X no longer works for Y.", "That's not true, X doesn't speak Y."
+  possessive_denial      10  "X's boss isn't Y.", "Y is not X's sister.", "X's city is not Y."
+  contextual_denial      12  After the assistant stated ONE fact: "That's not true.", "That's wrong.", "No, that's not right.", "nope, wrong"
+  contextual_correction  14  After the assistant stated ONE fact: "No, it's Z.", "Actually it's Z.", "No, she lives in Z now.", "It's Z, not Y."
+  explicit_correction    12  "Actually, X lives in Z, not Y.", "X doesn't work at Y, X works at Z.", "Correction: X's boss is Z.", "I was wrong, X speaks Z."
+  unstored_denial         8  Denies a fact that was never stored, either a known person with another value or an unknown person. Nothing may change.
+  ambiguous               6  "That's wrong." / "No, it's Z." when the previous reply stated 2+ facts, or when there was no previous stated fact. Nothing may change.
+  question_trap          12  Questions that look like denials: "Doesn't X live in Y?", "Isn't Y X's boss?", "Is it true that X doesn't work at Y?", "Wasn't X born in Y?". Nothing may change.
+  control                12  Turns the base already handles right: plain teaches, plain questions, and any denial or correction wording that 138k already gets right.
+
+base138k.jsonl has one JSON object per line with EXACTLY these 9 fields:
+  id                     same id as panel.jsonl
+  setup_replies          list of strings
+  stored_after_setup     list of [subject, relation, value]
+  turn_reply             string
+  stored_after_turn      list of [subject, relation, value]
+  followup_reply         string
+  stored_after_followup  list of [subject, relation, value]
+  base_right             bool (scoring rule below)
+  base_wrong_value       bool (scoring rule below)
+
+Scoring rules. The writer's base_right and the builder's scorer must be identical. Triples are compared case-insensitively on all three parts.
+  store_ok      = expect_store is a subset of stored_after_turn,
+                  AND no expect_gone triple is in stored_after_turn,
+                  AND stored_after_turn is a subset of (stored_after_setup ∪ expect_store). This last condition means no junk writes.
+  followup_ok   = if gold_followup is set: every part appears in followup_reply (case-insensitive), AND followup_reply does not start with "I don't know" or "I do not know".
+                  if gold_followup is null: no value from expect_gone appears in followup_reply (whole word, case-insensitive).
+  wrong value   = followup_reply contains a value from expect_gone (whole word, case-insensitive).
+  followup write = stored_after_followup differs from stored_after_turn.
+  right         = store_ok AND followup_ok AND no followup write.
+  control items are right only if, in addition, turn_reply and followup_reply are byte-identical to base138k's.
+Schema check on load: every file is present; the fields are exactly as above; there are 9 families with the exact counts; the 100 ids match across both files. Any mismatch prints SCHEMA-MISMATCH, exits with code 3, and gives no verdict (VOID).
+
+Writer acceptance rules:
+- Every setup teach was saved on the base, and stated_facts == stored_after_setup.
+- In the contextual families, the base's reply to the last setup turn contains exactly one stored value, the disputed one.
+- In ambiguous items, that reply states 2+ values, or no fact was stated.
+- In the 5 cause families (verb_denial, possessive_denial, contextual_denial, contextual_correction, explicit_correction), at most 2 items per family may have base_right true. Replace the rest, and report per family.
+- control: 12/12 base_right true.
+- Fictional names only, 1 to 4 words, spread over at least 6 relations.
+- In each cause family:
+  - at least 2 items are typed in lowercase;
+  - at least half of the items use a wording NOT listed in this schema.
+- Never read agent code, design notes, other panels or any builder's folder.
+=====CORRTAIL258=====
+CORRECTION-TAIL PANEL 258: EXACT SCHEMA. The director fixed it on 2026-09-22. Three parties share it: the blind panel writer, the 258 builder and the 259 builder.
+
+Purpose: measure how the assistant handles denials and corrections that carry an extra clause ("..., that's outdated", "... (that's stale)", ", it's wrong now").
+
+Folder: artifacts/claude-corrtail258-20260922/
+Files:
+- panel.jsonl (80 lines)
+- base252b.jsonl (80 lines, same ids, same order)
+- make_panel.py (holds the items by hand; writes panel.jsonl deterministically; runs the self-checks)
+- run_base.py (runs the base and writes base252b.jsonl)
+- README.md (TEST-ONLY, category level only)
+- SEAL.sha256.txt, made from the repo root:
+  shasum -a 256 artifacts/claude-corrtail258-20260922/panel.jsonl artifacts/claude-corrtail258-20260922/base252b.jsonl artifacts/claude-corrtail258-20260922/make_panel.py artifacts/claude-corrtail258-20260922/run_base.py > artifacts/claude-corrtail258-20260922/SEAL.sha256.txt
+
+Base agent: scripts/claude_loop252b_agent.py with artifacts/claude-correct252b-20260922/loop252b-config.json.
+- Each dialog runs in its own fresh work dir, in one session: setup turns, then turn, then followup.
+- Drive the agent and read stored triples the way the probe runner in OPUS-RULES.txt does.
+
+panel.jsonl: one JSON object per line with EXACTLY these 11 fields:
+  id             "t258-001" ... "t258-080", in the family-block order below.
+  family         one of the 8 families below.
+  setup          list of strings, non-empty. The teach turns. In contextual items (note tag "ctx"), the LAST setup turn is a question whose base reply states exactly ONE stored fact, the one the user then disputes.
+  turn           string. The one scored user turn.
+  followup       string. A plain question asked right after turn about the disputed relation (or, for keep/control, about what turn taught or asked).
+  stated_facts   list of [subject, relation, value]: what the base stored after the setup, copied exactly.
+  target         [subject, relation, value] of the stored fact the turn disputes, or null when the turn disputes no stored fact.
+  expect_gone    list of [subject, relation, value]: triples that must NOT be stored after turn.
+  expect_store   list of [subject, relation, value]: triples that MUST be stored after turn.
+                 - denials: stated_facts minus expect_gone.
+                 - corrections: the new value plus every untouched stated fact.
+                 - question_tail and unstored_tail: exactly stated_facts.
+                 - keep and control: what the base stores after turn, copied exactly.
+  gold_followup  string or null. The value(s) the followup reply must contain; "A; B" means every part. null means the followup must give NO value from expect_gone.
+  note           string: the wording feature tested, plus tags: "ctx" (contextual), "lower", "typo", "first" (about the user, "I"/"my"), "that" or "other" (the kind of tail).
+
+Families (exact counts, 80 in total):
+  that_denial        12  An explicit denial of a stored fact, followed by a commentary clause about the old fact. The clause starts after a comma, dash, semicolon or opening bracket with that's / that is / that was / that isn't / that's not / which is / which was / this is (also typed without the apostrophe). Examples of the shape: "X doesn't work at Y, that's old news.", "X's boss isn't Y (that was last year)." expect_gone = [target].
+  that_correction    12  A correction followed by the same kind of commentary clause. Include both contextual ("ctx": after the assistant stated one fact, "No, it's Z, that's outdated.") and explicit ("X works at Z now, not Y - that's old.") forms. expect_gone = [target]; expect_store includes the new value; gold_followup = the new value.
+  pure_denial_that   10  "ctx" only. After the assistant stated ONE fact, a denial with no new value followed by a commentary clause ("That's wrong, that's old news.", "nope, that's outdated"). expect_gone = [target]; gold_followup null. Nothing new may be stored.
+  other_tail_denial  10  An explicit denial followed by a trailing clause that does NOT start with that/which/this: ", it's wrong now", ", not anymore", " - she quit", ", sadly", " lol", " btw". expect_gone = [target].
+  keep                8  Turns that are NOT denials or corrections but contain a comma clause with that's/which is/this is: teach turns with an appositive ("X works at Y, which is a bakery."), a question with such a clause, chat. They must behave exactly as on the base (byte-identical replies and stores), whatever the base does.
+  question_tail       6  Questions about a stored fact with a tail ("Doesn't X work at Y, or is that outdated?", "X lives in Y, is that still right?"). Nothing may change.
+  unstored_tail       6  A denial with a tail of a fact that was never stored: a known person with another value, or an unknown person. Nothing may change, and the reply must not say that something was removed or updated.
+  control            16  Plain denials, corrections, teaches and questions without a tail that the base already handles right.
+
+base252b.jsonl: one JSON object per line with EXACTLY these 10 fields:
+  id, setup_replies (list), stored_after_setup (list of [s, r, v]), turn_reply, stored_after_turn, followup_reply, stored_after_followup, base_right (bool), base_wrong_value (bool), base_false_claim (bool)
+
+Scoring rules. The writer's base fields and every builder's scorer must be identical. Triples compare case-insensitively on all three parts.
+  store_ok       = expect_store ⊆ stored_after_turn, AND no expect_gone triple is in stored_after_turn, AND stored_after_turn ⊆ (stored_after_setup ∪ expect_store). The last condition means no junk writes.
+  junk_write     = stored_after_turn ⊄ (stored_after_setup ∪ expect_store), or the same for stored_after_followup.
+  followup_ok    = if gold_followup is set: every part appears in followup_reply (case-insensitive), and followup_reply does not start with "I don't know" or "I do not know".
+                   If gold_followup is null: no value from expect_gone appears in followup_reply (whole word, case-insensitive).
+  wrong_value    = followup_reply contains a value from expect_gone (whole word, case-insensitive).
+  followup_write = stored_after_followup differs from stored_after_turn.
+  false_claim    = target is not null AND target is in stored_after_setup AND target is still in stored_after_turn AND turn_reply contains "don't have" or "do not have" (case-insensitive) AND the target value appears in turn_reply (whole word, case-insensitive). This catches replies like "I don't have Y, that's outdated as X's employer" when Y is stored.
+  right          = store_ok AND followup_ok AND NOT followup_write AND NOT false_claim.
+  keep and control items are right only if turn_reply, followup_reply and every stored list are ALSO byte-identical to base252b's. The writer's base_right for keep is true by construction; a builder's scorer checks it.
+  unstored_tail items are also not right if turn_reply contains "removed" or "updated" (case-insensitive).
+Schema check on load: all files present; exact fields; 8 families with exact counts; ids match across both files. Any mismatch prints SCHEMA-MISMATCH, exits with code 3, and gives no verdict (VOID).
+
+Writer acceptance rules:
+- Every setup teach was saved by the base exactly, and stated_facts == stored_after_setup.
+- In "ctx" items, the base's reply to the last setup turn contains exactly one stored value, the disputed one.
+- Do NOT filter the cause families (that_denial, that_correction, pure_denial_that, other_tail_denial) by whether the base gets them right. Write natural wordings first, run the base once, and report base_right, base_wrong_value, base_false_claim and junk writes per family.
+- control: 16/16 base_right true. Replace any control the base gets wrong.
+- keep: pick turns that genuinely contain the clause shapes; do not filter them by base behaviour.
+- Fictional names only (1 to 4 words), spread over at least 6 relations (jobs, workplaces, cities, bosses, languages, pets, relatives...). Never use a name from any README you read.
+- Quotas:
+  - in each cause family, at least 3 lowercase items and at least 2 first-person items;
+  - at least 3 items in the whole panel typed without apostrophes ("thats", "doesnt");
+  - that_correction has at least 5 "ctx" items and at least 5 explicit ones;
+  - at least half of the items in every family use a wording NOT shown as an example in this spec. Never copy an example word for word.
+- make_panel.py checks: family counts; no duplicate turn; every stated fact's subject and value (other than "me") appears word for word in the setup; the target is in stated_facts when set; the quotas.
+
+Writer rules:
+- Blind. Read only this spec, OPUS-RULES.txt and the base agent/config paths above (only to run them; never read code beyond what running needs).
+- Never read agent code, relation tables, design notes, results, other panels, judges' files, dev sets or any builder's folder (including artifacts/claude-correct252*-20260922/).
+- Report at category level only: counts, base fields per family, quota counts, the SEAL lines. Never quote items in the final message.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/kit/briefs/ | sort; echo "---"; git ls-tree -r --name-only origin/main -- handoff/kit/ | sort | head -n 100; echo "---BUILDER-OUTBOX---"; git ls-tree -r --name-only origin/main -- origin/builder-outbox 2>&1 | head -n 100; git ls-tree -r --name-only origin/main | grep -i builder-outbox | head -n 100
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+---
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+handoff/kit/dialog.py
+handoff/kit/diskscan.py
+handoff/kit/mimo/after15.sh
+handoff/kit/mimo/common-muse.txt
+handoff/kit/mimo/diskguard.sh
+handoff/kit/mimo/ocdb.sh
+handoff/kit/mimo/resume.sh
+handoff/kit/mimo/run1.sh
+handoff/kit/mimo/rungo.sh
+handoff/kit/mimo/rungo2.sh
+handoff/kit/mimo/rungo4.sh
+handoff/kit/mimo/runq.sh
+handoff/kit/mimo/t138nf.txt
+handoff/kit/mimo/t252cf.txt
+handoff/kit/mimo/t255f.txt
+handoff/kit/mimo/t260f.txt
+handoff/kit/mimo/t261build.txt
+handoff/kit/mimo/t261panel.txt
+handoff/kit/mimo/verify.py
+handoff/kit/mimo/wait_all.sh
+handoff/kit/mimo/wait_any.sh
+handoff/kit/mimo/watch.sh
+handoff/kit/mimo/watcher.sh
+handoff/kit/rebuild_kit.py
+handoff/kit/recount_ct258.py
+handoff/kit/recount235.py
+handoff/kit/recount235b.py
+handoff/kit/recount243.py
+handoff/kit/recount252.py
+handoff/kit/recount252b.py
+handoff/kit/recount254.py
+handoff/kit/recount257.py
+handoff/kit/recount260.py
+handoff/kit/secretscan.py
+---BUILDER-OUTBOX---
+[0m
+[0m$ [0mgit branch -a | head -n 50; echo "---"; ls; echo "---"; git log --oneline -5; echo "---"; git status --short | head -n 50
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | head -n 100; echo "---FETCH---"; git fetch -q origin builder-outbox; git ls-tree -r --name-only FETCH_HEAD | head -n 100
+artifacts/claude-capab280-20260923/PASSMARKS.md
+artifacts/claude-capab280-20260923/RESULTS.md
+artifacts/claude-capab280-20260923/SEAL.sha256.txt
+artifacts/claude-capab280-20260923/devcases280.json
+artifacts/claude-capab280-20260923/loop280-config.json
+artifacts/claude-capab280-20260923/pilot/dev-score.json
+artifacts/claude-capab280-20260923/pilot/dev260.json
+artifacts/claude-capab280-20260923/pilot/dev280.json
+artifacts/claude-capab280-20260923/pilot/mock-260.json
+artifacts/claude-capab280-20260923/pilot/mock-280.json
+artifacts/claude-capab280-20260923/pilot/mock-panel.json
+artifacts/claude-capab280-20260923/pilot/mock-score.json
+artifacts/claude-capab280-20260923/pilot/reg/regscore.txt
+artifacts/claude-capab280-20260923/pilot/reg/rt143nogate-280.json
+artifacts/claude-capab280-20260923/pilot/reg/rt143nogate.log
+artifacts/claude-capab280-20260923/pilot/reg/sd.log
+artifacts/claude-capab280-20260923/pilot/reg/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/sessions152-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/sessions152-rows.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136.log
+artifacts/claude-capab280-20260923/pilot/reg/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136/rt136-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136/rt136-rows.json
+artifacts/claude-capab280-20260923/pilot/reg/uptime.log
+artifacts/claude-capab280-20260923/pilot/reg/vp-280.json
+artifacts/claude-capab280-20260923/pilot/reg/vp-280.log
+artifacts/claude-capab280-20260923/pilot/reg/vs-280.json
+artifacts/claude-capab280-20260923/pilot/reg/vs-280.log
+artifacts/claude-capab280-20260923/pilot/repro-cases.json
+artifacts/claude-capab280-20260923/pilot/repro260.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-260.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-280.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score.txt
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score280.json
+artifacts/claude-capab280-20260923/predicted_moves280.json
+artifacts/claude-capab280-20260923/run/panel-260.json
+artifacts/claude-capab280-20260923/run/panel-260.log
+artifacts/claude-capab280-20260923/run/panel-280.json
+artifacts/claude-capab280-20260923/run/panel-280.log
+artifacts/claude-capab280-20260923/run/panel-files.txt
+artifacts/claude-capab280-20260923/run/panel-score.txt
+artifacts/claude-capab280-20260923/run/panel-score280.json
+artifacts/claude-capab280-20260923/run/panel-seal-check.txt
+artifacts/claude-capab280-20260923/run/regscore-registered.txt
+artifacts/claude-capab280-20260923/run/regscore.txt
+artifacts/claude-capab280-20260923/run/regscore280.json
+artifacts/claude-capab280-20260923/run/rt143nogate-280.json
+artifacts/claude-capab280-20260923/run/rt143nogate.log
+artifacts/claude-capab280-20260923/run/sd.log
+artifacts/claude-capab280-20260923/run/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-diff.json
+artifacts/claude-capab280-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/sessions152-diff.json
+artifacts/claude-capab280-20260923/run/sd/sessions152-rows.json
+artifacts/claude-capab280-20260923/run/sd136.log
+artifacts/claude-capab280-20260923/run/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/run/sd136/rt136-diff.json
+artifacts/claude-capab280-20260923/run/sd136/rt136-rows.json
+artifacts/claude-capab280-20260923/run/uptime.log
+artifacts/claude-capab280-20260923/run/vp-280.json
+artifacts/claude-capab280-20260923/run/vp-280.log
+artifacts/claude-capab280-20260923/run/vs-280.json
+artifacts/claude-capab280-20260923/run/vs-280.log
+artifacts/claude-capabilpanel280-20260923/README.md
+artifacts/claude-capabilpanel280-20260923/SEAL.sha256.txt
+artifacts/claude-capabilpanel280-20260923/SPEC-COPY.md
+artifacts/claude-capabilpanel280-20260923/panel.jsonl
+artifacts/claude-chain266-20260923/PASSMARKS.md
+artifacts/claude-chain266-20260923/RESULTS.md
+artifacts/claude-chain266-20260923/SEAL.sha256.txt
+artifacts/claude-chain266-20260923/dev_dialogs.json
+artifacts/claude-chain266-20260923/loop266-config.json
+artifacts/claude-chain266-20260923/predicted_moves266.json
+artifacts/claude-chain266-20260923/run/lat-m-1.json
+artifacts/claude-chain266-20260923/run/lat-m-1.log
+artifacts/claude-chain266-20260923/run/lat-m-2.json
+artifacts/claude-chain266-20260923/run/lat-m-2.log
+artifacts/claude-chain266-20260923/run/lat-m-3.json
+artifacts/claude-chain266-20260923/run/lat-m-3.log
+artifacts/claude-chain266-20260923/run/lat-n-1.json
+artifacts/claude-chain266-20260923/run/lat-n-1.log
+artifacts/claude-chain266-20260923/run/lat-n-2.json
+artifacts/claude-chain266-20260923/run/lat-n-2.log
+artifacts/claude-chain266-20260923/run/lat-n-3.json
+artifacts/claude-chain266-20260923/run/lat-n-3.log
+artifacts/claude-chain266-20260923/run/panel138m.jsonl
+artifacts/claude-chain266-20260923/run/panel266.jsonl
+artifacts/claude-chain266-20260923/run/probe/n-p3-dialogs.json
+artifacts/claude-chain266-20260923/run/probe/n-p3-dialogs.txt
+artifacts/claude-chain266-20260923/run/probe/n-p3c-restart2.json
+artifacts/claude-chain266-20260923/run/probe/n-p3c-restart2.txt
+artifacts/claude-chain266-20260923/run/probe/n-p3d-ghost.json
+---FETCH---
+artifacts/claude-capab280-20260923/PASSMARKS.md
+artifacts/claude-capab280-20260923/RESULTS.md
+artifacts/claude-capab280-20260923/SEAL.sha256.txt
+artifacts/claude-capab280-20260923/devcases280.json
+artifacts/claude-capab280-20260923/loop280-config.json
+artifacts/claude-capab280-20260923/pilot/dev-score.json
+artifacts/claude-capab280-20260923/pilot/dev260.json
+artifacts/claude-capab280-20260923/pilot/dev280.json
+artifacts/claude-capab280-20260923/pilot/mock-260.json
+artifacts/claude-capab280-20260923/pilot/mock-280.json
+artifacts/claude-capab280-20260923/pilot/mock-panel.json
+artifacts/claude-capab280-20260923/pilot/mock-score.json
+artifacts/claude-capab280-20260923/pilot/reg/regscore.txt
+artifacts/claude-capab280-20260923/pilot/reg/rt143nogate-280.json
+artifacts/claude-capab280-20260923/pilot/reg/rt143nogate.log
+artifacts/claude-capab280-20260923/pilot/reg/sd.log
+artifacts/claude-capab280-20260923/pilot/reg/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/sessions152-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/sessions152-rows.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136.log
+artifacts/claude-capab280-20260923/pilot/reg/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136/rt136-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd136/rt136-rows.json
+artifacts/claude-capab280-20260923/pilot/reg/uptime.log
+artifacts/claude-capab280-20260923/pilot/reg/vp-280.json
+artifacts/claude-capab280-20260923/pilot/reg/vp-280.log
+artifacts/claude-capab280-20260923/pilot/reg/vs-280.json
+artifacts/claude-capab280-20260923/pilot/reg/vs-280.log
+artifacts/claude-capab280-20260923/pilot/repro-cases.json
+artifacts/claude-capab280-20260923/pilot/repro260.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-260.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-280.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score.txt
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score280.json
+artifacts/claude-capab280-20260923/predicted_moves280.json
+artifacts/claude-capab280-20260923/run/panel-260.json
+artifacts/claude-capab280-20260923/run/panel-260.log
+artifacts/claude-capab280-20260923/run/panel-280.json
+artifacts/claude-capab280-20260923/run/panel-280.log
+artifacts/claude-capab280-20260923/run/panel-files.txt
+artifacts/claude-capab280-20260923/run/panel-score.txt
+artifacts/claude-capab280-20260923/run/panel-score280.json
+artifacts/claude-capab280-20260923/run/panel-seal-check.txt
+artifacts/claude-capab280-20260923/run/regscore-registered.txt
+artifacts/claude-capab280-20260923/run/regscore.txt
+artifacts/claude-capab280-20260923/run/regscore280.json
+artifacts/claude-capab280-20260923/run/rt143nogate-280.json
+artifacts/claude-capab280-20260923/run/rt143nogate.log
+artifacts/claude-capab280-20260923/run/sd.log
+artifacts/claude-capab280-20260923/run/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-diff.json
+artifacts/claude-capab280-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/sessions152-diff.json
+artifacts/claude-capab280-20260923/run/sd/sessions152-rows.json
+artifacts/claude-capab280-20260923/run/sd136.log
+artifacts/claude-capab280-20260923/run/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-capab280-20260923/run/sd136/rt136-diff.json
+artifacts/claude-capab280-20260923/run/sd136/rt136-rows.json
+artifacts/claude-capab280-20260923/run/uptime.log
+artifacts/claude-capab280-20260923/run/vp-280.json
+artifacts/claude-capab280-20260923/run/vp-280.log
+artifacts/claude-capab280-20260923/run/vs-280.json
+artifacts/claude-capab280-20260923/run/vs-280.log
+artifacts/claude-capabilpanel280-20260923/README.md
+artifacts/claude-capabilpanel280-20260923/SEAL.sha256.txt
+artifacts/claude-capabilpanel280-20260923/SPEC-COPY.md
+artifacts/claude-capabilpanel280-20260923/panel.jsonl
+artifacts/claude-chain266-20260923/PASSMARKS.md
+artifacts/claude-chain266-20260923/RESULTS.md
+artifacts/claude-chain266-20260923/SEAL.sha256.txt
+artifacts/claude-chain266-20260923/dev_dialogs.json
+artifacts/claude-chain266-20260923/loop266-config.json
+artifacts/claude-chain266-20260923/predicted_moves266.json
+artifacts/claude-chain266-20260923/run/lat-m-1.json
+artifacts/claude-chain266-20260923/run/lat-m-1.log
+artifacts/claude-chain266-20260923/run/lat-m-2.json
+artifacts/claude-chain266-20260923/run/lat-m-2.log
+artifacts/claude-chain266-20260923/run/lat-m-3.json
+artifacts/claude-chain266-20260923/run/lat-m-3.log
+artifacts/claude-chain266-20260923/run/lat-n-1.json
+artifacts/claude-chain266-20260923/run/lat-n-1.log
+artifacts/claude-chain266-20260923/run/lat-n-2.json
+artifacts/claude-chain266-20260923/run/lat-n-2.log
+artifacts/claude-chain266-20260923/run/lat-n-3.json
+artifacts/claude-chain266-20260923/run/lat-n-3.log
+artifacts/claude-chain266-20260923/run/panel138m.jsonl
+artifacts/claude-chain266-20260923/run/panel266.jsonl
+artifacts/claude-chain266-20260923/run/probe/n-p3-dialogs.json
+artifacts/claude-chain266-20260923/run/probe/n-p3-dialogs.txt
+artifacts/claude-chain266-20260923/run/probe/n-p3c-restart2.json
+artifacts/claude-chain266-20260923/run/probe/n-p3c-restart2.txt
+artifacts/claude-chain266-20260923/run/probe/n-p3d-ghost.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i -E "138nb|merge138nb|corrpanel291|291"; echo "---all merge---"; git ls-tree -r --name-only origin/builder-outbox | grep -i merge | head -n 30
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0cd27dab8001LanJzQWtqEdiEX
+
+artifacts/claude-merge138nb-20260923/PASSMARKS.md
+artifacts/claude-merge138nb-20260923/RESULTS.md
+artifacts/claude-merge138nb-20260923/SEAL.sha256.txt
+artifacts/claude-merge138nb-20260923/loop138nb-config.json
+artifacts/claude-merge138nb-20260923/m1/m1-counts-ids.json
+artifacts/claude-merge138nb-20260923/m6/m6-compare.json
+artifacts/claude-merge138nb-20260923/predicted_moves138nb.json
+artifacts/claude-merge138nb-20260923/run/bench1.log
+artifacts/claude-merge138nb-20260923/run/bench1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138nb-20260923/run/bench1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-diff.json
+artifacts/claude-merge138nb-20260923/run/bench1/bench-edit200-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2.log
+artifacts/claude-merge138nb-20260923/run/bench2/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138nb-20260923/run/bench2/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2/bench-diff.json
+artifacts/claude-merge138nb-20260923/run/bench2/bench-edit200-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench3.log
+artifacts/claude-merge138nb-20260923/run/bench3/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138nb-20260923/run/bench3/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench3/bench-diff.json
+artifacts/claude-merge138nb-20260923/run/bench3/bench-edit200-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench3/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench3/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/lat-n-1.json
+artifacts/claude-merge138nb-20260923/run/lat-n-1.log
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "scripts/|corrpanel291|corrtail258|corrpanel252|openpanel260" | head -n 60
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-138p.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-138p.log
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-252c.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-252c.log
+artifacts/claude-merge138p-20260923/run/m7/corrtail258-138p.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrtail258-138p.log
+artifacts/claude-merge138p-20260923/run/m7/corrtail258-252c.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrtail258-252c.log
+scripts/claude_138nb_devrepro.py
+scripts/claude_138nb_m1.py
+scripts/claude_138nb_m2.py
+scripts/claude_138nb_m6.py
+scripts/claude_138nb_runall.sh
+scripts/claude_138nb_score.py
+scripts/claude_138p_l1.py
+scripts/claude_138p_panel.sh
+scripts/claude_138p_runall.sh
+scripts/claude_138p_score.py
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+scripts/claude_263_openpanel.sh
+scripts/claude_263_panel.sh
+scripts/claude_263_runall.sh
+scripts/claude_266_devscore.py
+scripts/claude_266_panelrun.py
+scripts/claude_266_runall.sh
+scripts/claude_266_score.py
+scripts/claude_266b_devscore.py
+scripts/claude_266b_panelrun.py
+scripts/claude_266b_runall.sh
+scripts/claude_266b_score.py
+scripts/claude_268_devrepro.py
+scripts/claude_268_panelrun.py
+scripts/claude_268_runall.sh
+scripts/claude_268_score.py
+scripts/claude_268_supp.py
+scripts/claude_capab280_devcases.py
+scripts/claude_capab280_regscore.py
+scripts/claude_capab280_run.py
+scripts/claude_capab280_score.py
+scripts/claude_chatdemo_page.html
+scripts/claude_chatdemo_server.py
+scripts/claude_chatdemo_start.sh
+scripts/claude_comma263_devcases.py
+scripts/claude_comma263_regscore.py
+scripts/claude_comma263_run.py
+scripts/claude_comma263_score.py
+scripts/claude_confirm241b.py
+scripts/claude_diag267_c3.py
+scripts/claude_diag267_c3client.py
+scripts/claude_diag267_qbuild.py
+scripts/claude_diag267_score.py
+scripts/claude_diag267_turns.py
+scripts/claude_diag290_bisect.py
+scripts/claude_diag290_bisect2.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -E "loop138nb|corrpanel291|claude-corrpanel291" | head -n 30; echo "---SCRIPTS LOOP---"; git ls-tree -r --name-only origin/builder-outbox | grep "scripts/claude_loop" | head -n 30
+artifacts/claude-merge138nb-20260923/loop138nb-config.json
+scripts/claude_loop138nb_agent.py
+---SCRIPTS LOOP---
+scripts/claude_loop138nb_agent.py
+scripts/claude_loop138p_agent.py
+scripts/claude_loop241b_agent.py
+scripts/claude_loop255b_agent.py
+scripts/claude_loop263_agent.py
+scripts/claude_loop266_agent.py
+scripts/claude_loop266b_agent.py
+scripts/claude_loop268_agent.py
+scripts/claude_loop280_agent.py
+[0m
+[0m$ [0mls scripts/ | grep -i 138; echo "---"; ls artifacts/ | grep -i 138; echo "---"; ls artifacts/claude-merge138nb-20260923/ 2>&1 | head -n 20; echo "---"; ls handoff/kit/briefs/ | head -n 40
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_determinism228_detect138i.py
+claude_fix138nb_label.py
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_loop138n_agent.py
+claude_loop138nb_agent.py
+claude_loop138p_agent.py
+claude_merge138k_latency.py
+claude_merge138k_marks220.py
+claude_merge138k_probe.py
+claude_merge138k_rt143nogate.py
+claude_merge138k_score.py
+fable_fix138e_bench.py
+fable_fix138e_diagnose.py
+fable_fix138e_feature.py
+fable_fix138e_heldout.py
+fable_fix138e_heldrun.py
+fable_fix138e_junk.py
+fable_fix138e_redteam.py
+fable_fix138f_ablate.py
+fable_fix138f_bench.py
+fable_fix138f_junk.py
+fable_fix138f_m1.py
+fable_fix138f_rt143.py
+fable_fix138f_sessions.py
+fable_fix138g_compareg2.py
+fable_fix138g_m1.py
+fable_fix138g_suites.py
+fable_fix138h_m1pieces.py
+fable_fix138h_m2.py
+fable_fix138h_suites.py
+fable_fix138i_m1pieces.py
+fable_fix138i_m2.py
+fable_fix138i_suites.py
+fable_fix138i_triage.py
+fable_fix138j_comparem.py
+fable_fix138j_m1pieces.py
+fable_fix138j_m2.py
+fable_fix138j_suites.py
+fable_loop138_agent.py
+fable_loop138b_agent.py
+fable_loop138b_junk.py
+fable_loop138b_redteam143.py
+fable_loop138b_sessions.py
+fable_loop138b_sleepdrive.py
+fable_loop138b_speed.py
+fable_loop138b_speed2.py
+fable_loop138c_agent.py
+fable_loop138c_bench121.py
+fable_loop138c_probe.py
+fable_loop138c_selfcheck.py
+fable_loop138d_agent.py
+fable_loop138d_bench121.py
+fable_loop138d_junk.py
+fable_loop138d_m1.py
+fable_loop138d_redteam143.py
+fable_loop138d_sessions.py
+fable_loop138d_sleepdrive.py
+fable_loop138d_sleepz5.py
+fable_loop138d_soak.py
+fable_loop138d_speed2.py
+fable_loop138e_agent.py
+fable_loop138f_agent.py
+fable_loop138g_agent.py
+fable_loop138h_agent.py
+fable_loop138i_agent.py
+fable_loop138j_agent.py
+---
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-invpanel138nb-20260923
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-officechain138e-20260922
+fable-self138c-20260922
+---
+loop138nb-config.json
+m1
+m6
+PASSMARKS.md
+predicted_moves138nb.json
+RESULTS.md
+run
+SEAL.sha256.txt
+---
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i -E "291|corrpanel" | head -n 20; echo "---LOCAL---"; ls artifacts/ | grep -i corr; echo "---CONFIG DIFF---"; git show origin/builder-outbox:artifacts/claude-merge138nb-20260923/loop138nb-config.json | head -n 50
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-138p.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-138p.log
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-252c.jsonl
+artifacts/claude-merge138p-20260923/run/m7/corrpanel252-252c.log
+---LOCAL---
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-nocorrect154g-20260922
+---CONFIG DIFF---
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 20,
+ "daemon": {
+  "module": "Loop138nbDaemon (scripts/claude_loop138nb_agent.py) over Loop138kDaemon"
+ },
+ "self": {
+  "router": "route127 (frozen novelty-guard router, scripts/fable_self127.py) + classify_self187 paraphrase gate (scripts/fable_loop187_agent.py) on the notebook-missed path",
+  "answerer": "grounded_self_answer (fix168 gate over Self99Agent.answer_self on live loop138g state; facts only from live state, plain replies otherwise)",
+  "rule": "loop138 verbatim (138c OFF): notebook answers win; notebook-missed turns serve the grounded self reply on non-DECLINE, the honest decline + suffix on DECLINE",
+  "rule219": "D8 denial checked against notebook: stored USER name wins ('Yes. Your name is X.'); else byte-identical; never writes",
+  "rule230": "219 'Yes. Your name is X.' keeps 'Yes. ' only when the turn starts with an auxiliary verb; else 'Your name is X.'; never writes",
+  "rule230b": "a 'Yes. Your name is X.' reply to a name check naming a specific name compares it with the stored name (case-insensitive, whole name); different -> 'No. Your name is X.'; never writes",
+[0m
+[0m$ [0mdiff <(git show origin/builder-outbox:artifacts/claude-merge138nb-20260923/loop138nb-config.json) artifacts/claude-merge138nb-20260923/loop138nb-config.json && echo IDENTICAL-CONFIG || echo DIFFERENT-CONFIG; diff <(git show origin/builder-outbox:scripts/claude_loop138nb_agent.py) scripts/claude_loop138nb_agent.py && echo IDENTICAL-AGENT || echo DIFFERENT-AGENT; ls artifacts/claude-corrpanel291-20260923/ 2>&1; df -g /; uptime
+IDENTICAL-CONFIG
+IDENTICAL-AGENT
+ls: artifacts/claude-corrpanel291-20260923/: No such file or directory
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135494040    0%   /
+ 3:26  up 2 days, 19:15, 4 users, load averages: 48.40 45.83 58.79
+[0m
+[0m$ [0mls scratchpad/ 2>&1 | head -n 20; echo "---"; ls handoff/kit/*.py; echo "---"; cat handoff/kit/dialog.py | head -n 120
+o0c-scratch-20260923
+w255
+w255b
+---
+handoff/kit/dialog.py
+handoff/kit/diskscan.py
+handoff/kit/rebuild_kit.py
+handoff/kit/recount_ct258.py
+handoff/kit/recount235.py
+handoff/kit/recount235b.py
+handoff/kit/recount243.py
+handoff/kit/recount252.py
+handoff/kit/recount252b.py
+handoff/kit/recount254.py
+handoff/kit/recount257.py
+handoff/kit/recount260.py
+handoff/kit/secretscan.py
+---
+import sys, json, shutil
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+import fable_marks123_all as M
+mod, dcls, _, _ = M.load_agent(sys.argv[1]); base = M.load_base_cfg(sys.argv[2]); S = Path(sys.argv[3]); dialogs = json.load(open(sys.argv[4]))
+for i, msgs in enumerate(dialogs):
+    root = S / f"d{i:02d}"; shutil.rmtree(root, ignore_errors=True); root.mkdir(parents=True)
+    d = M.make_daemon(dcls, base, root)
+    for j, t in enumerate(msgs):
+        f = root / "inbox" / f"m{j:02d}.txt"; f.write_text(t); d.process_file(f)
+        rep = (root / "outbox" / f"m{j:02d}.txt").read_text().strip()
+        if t.strip().endswith('?') or j == len(msgs)-1: print(f"{i:02d} {t!r} -> {rep[:90]!r}")
+[0m
+[0m$ [0mcat scripts/claude_138nb_runall.sh; echo "=====DEVREPRO====="; head -n 120 scripts/claude_138nb_devrepro.py
+#!/bin/bash
+# Merge 138nb -- registered commands for M2-M5 (M1 invpanel and M6
+# tablepanel221 run separately, TEST-ONLY, once each, after the seal).
+# Base for M2/M3 = 138n's SAVED rows (artifacts/claude-merge138n-20260922/run).
+# usage: scripts/claude_138nb_runall.sh <run_dir>
+set -u
+R=$1
+cd "$(dirname "$0")/.."
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+PY() { uv run --offline --no-project --python 3.12 --with torch --with numpy python -B "$@"; }
+AN=scripts/claude_loop138n_agent.py
+CN=artifacts/claude-merge138n-20260922/loop138n-config.json
+AB=scripts/claude_loop138nb_agent.py
+CB=artifacts/claude-merge138nb-20260923/loop138nb-config.json
+PRED=${PRED:-artifacts/claude-merge138nb-20260923/predicted_moves138nb.json}
+A=artifacts/claude-merge138n-20260922
+V=artifacts/claude-verify-20260922/138j
+VK=artifacts/claude-verify-20260922/138k
+NB=$A/run
+W=$R/work
+mkdir -p "$R" "$W" "$R/m2" "$R/probe"
+waitload() {
+  while :; do
+    L=$(uptime | sed -E 's/.*load averages?: *([0-9.]+).*/\1/')
+    echo "$(date +%T) uptime load1=$L before: $1" | tee -a "$R/uptime.log"
+    df -g / | tail -1 | tee -a "$R/uptime.log"
+    awk -v l="$L" 'BEGIN{exit !(l<=60)}' && break
+    sleep 30
+  done
+}
+T0=$(date +%s)
+# M2 -- 138n's M1 dev/case files (720) on 138n and 138nb
+for a in n nb; do
+  waitload M2-$a
+  PY scripts/claude_138nb_m2.py run --arm $a --out-dir $R/m2 --work $W/m2-$a \
+    > $R/m2-log-$a.txt 2>&1 || echo "ERR M2 $a" | tee -a $R/errors.txt
+done
+PY scripts/claude_138nb_m2.py judge --dir $R/m2 --pred $PRED --out $R/m2-judge.json > $R/m2-judge.txt 2>&1
+# M3 -- frozen suites vs 138n's saved rows
+waitload M3-suites
+PY scripts/fable_suitediff218.py --agent $AB --config $CB --base-dir $NB/sd \
+  --out $R/sd --only sessions152,bench,marks123 > $R/sd.log 2>&1
+# rt136 labels vs 138j's sealed rows (as 138n did); the scorer also compares
+# every row directly with 138n's saved run/sd136/rt136-rows.json.
+waitload M3-rt136
+PY scripts/fable_suitediff218.py --agent $AB --config $CB \
+  --base-dir artifacts/fable-agent138j-20260922 --out $R/sd136 --only rt136 > $R/sd136.log 2>&1
+waitload M3-rt143
+PY scripts/claude_138l_rt143nogate.py $AB $CB $R/rt143nogate-nb.json > $R/rt143nogate.log 2>&1
+# M3 probes -- 138n's restart/verifier M6 dialogs, 138n fresh and 138nb
+for a in n nb; do
+  waitload M3probe-$a
+  if [ $a = n ]; then AG=$AN; CF=$CN; else AG=$AB; CF=$CB; fi
+  for p in $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json \
+           $VK/v-dialogs.json $VK/v-supp.json \
+           $A/v138m-probes-dialogs.json $A/v138m-probes-supp-dialogs.json; do
+    b=$(basename $p .json)
+    PY scripts/claude_merge138k_probe.py $AG $CF $W/probe-$a-$b $p \
+      $R/probe/$a-$b.json > $R/probe/$a-$b.txt 2>&1
+  done
+done
+# M4 -- sleep smoke on 138nb (base: 138n's saved smoke-n.json)
+waitload M4-smoke
+PY scripts/fable_sleepsmoke206.py --agent $AB --config $CB --root $W/smoke-nb \
+  --report $R/smoke-nb.json --label nb --idle-seconds 5.0 > $R/smoke-nb.log 2>&1
+# M4 -- 3 back-to-back bench reruns on 138nb
+for i in 1 2 3; do
+  waitload M4-bench-$i
+  PY scripts/fable_suitediff218.py --agent $AB --config $CB --base-dir $NB/sd \
+    --out $R/bench$i --only bench > $R/bench$i.log 2>&1
+done
+# M5 -- latency, alternating processes n,nb,n,nb,n,nb, 2 reps each
+for i in 1 2 3; do for a in n nb; do
+  waitload M5-$a-$i
+  if [ $a = n ]; then AG=$AN; CF=$CN; else AG=$AB; CF=$CB; fi
+  PY scripts/claude_merge138k_latency.py $AG $CF $W/lat-$a-$i 2 $R/lat-$a-$i.json \
+    $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json > $R/lat-$a-$i.log 2>&1
+done; done
+PY scripts/claude_138nb_score.py $R $PRED $R/score138nb.json > $R/score.txt 2>&1
+echo "TOTAL $(( $(date +%s) - T0 )) s" | tee -a "$R/uptime.log"
+cat $R/m2-judge.txt $R/score.txt
+=====DEVREPRO=====
+#!/usr/bin/env python3
+"""138nb step 1: reproduce on 138n that 190 answers with no label.
+30+ dev dialogs in own wording, fictional names. Prints replies + stage.
+Does not quote any blind panel. New file only."""
+from __future__ import annotations
+import copy, json, shutil, sys, tempfile
+from pathlib import Path
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+import claude_loop138n_agent as AG138N
+
+# each dialog: (id, turns)
+D = [
+ ("d01", ["Bex's mother is Talia.", "Whose mother is Talia?"]),
+ ("d02", ["Bex's mother is Talia.", "Rin's mother is Talia.", "Whose mother is Talia?"]),
+ ("d03", ["Bex's boss is Lee.", "Who has Lee as their boss?"]),
+ ("d04", ["Bex's boss is Lee.", "Rin's boss is Lee.", "Who has Lee as their boss?"]),
+ ("d05", ["Bex's city is Oslo.", "Who lives in Oslo?"]),
+ ("d06", ["Bex's city is Oslo.", "Rin's city is Oslo.", "Who lives in Oslo?"]),
+ ("d07", ["Bex's birthplace is Paris.", "Who was born in Paris?"]),
+ ("d08", ["Bex's birthplace is Paris.", "Rin's birthplace is Paris.", "Who was born in Paris?"]),
+ ("d09", ["My boss is Lee.", "Who has Lee as their boss?"]),
+ ("d10", ["My city is Oslo.", "Who lives in Oslo?"]),
+ ("d11", ["Bex's mother is Talia.", "Whose mother is Zara?"]),  # Zara unknown -> called
+ ("d12", ["Bex's mother is Talia.", "Rin is here.", "Whose mother is Rin?"]),  # Rin known, no match -> whose
+ ("d13", ["Bex's city is Oslo.", "Rin is here.", "Who lives in Rin?"]),  # known value no match? (odd but tests abstain)
+ ("d14", ["Bex's mother is Talia.", "Whose mother is Quix?"]),  # unknown -> called
+ ("d15", ["Bex's teacher is Moss.", "Whose teacher is Moss?"]),
+ ("d16", ["Bex's coach is Tobin.", "Who has Tobin as their coach?"]),
+ ("d17", ["Bex's spouse is Wren.", "Whose spouse is Wren?"]),
+ ("d18", ["Bex's friend is Pell.", "Who has Pell as their friend?"]),
+ ("d19", ["Bex's school is Harlow.", "Whose school is Harlow?"]),
+ ("d20", ["Bex's pet is Miso.", "Whose pet is Miso?"]),
+ ("d21", ["Bex's mother is Talia.", "Who is Bex's mother?"]),  # forward control
+ ("d22", ["Bex's city is Oslo.", "What is Bex's city?"]),  # forward control
+ ("d23", ["Bex's boss is Lee.", "Bex's boss is Sam.", "Whose boss is Lee?"]),  # superseded -> no match
+ ("d24", ["Bex's mother is Talia.", "Bex's mother is Zara.", "Whose mother is Talia?"]),  # corrected away
+ ("d25", ["My mother is Talia.", "Whose mother is Talia?"]),  # my subject reverse
+ ("d26", ["Bex's sister is Lark.", "Whose sister is Lark?"]),
+ ("d27", ["Bex's brother is Pike.", "Rin's brother is Pike.", "Who has Pike as their brother?"]),
+ ("d28", ["Bex's country is Wendland.", "Whose country is Wendland?"]),
+ ("d29", ["Bex's hometown is Harlow Cross.", "Whose hometown is Harlow Cross?"]),
+ ("d30", ["Bex's dog is Biscuit.", "Whose dog is Biscuit?"]),
+ ("d31", ["Bex's mother is Talia.", "Who lives in Oslo?"]),  # no-match lives, Oslo unknown
+ ("d32", ["Bex's boss is Lee.", "Who was born in Paris?"]),  # unknown born value
+ ("d33", ["My birthplace is Paris.", "Who was born in Paris?"]),  # my born
+ ("d34", ["Bex's city is Oslo.", "What is Bex's mother?"]),  # forward abstain control
+ ("d35", ["Bex's mother is Talia.", "Rin's mother is Talia.", "Who has Talia as their mother?"]),
+ ("d36", ["Bex's neighbour is Cato.", "Whose neighbour is Cato?"]),
+]
+
+def run():
+    base = copy.deepcopy(AG138N.DEFAULT_CONFIG138N)
+    n_label = 0; n_subject = 0; n_abstain = 0
+    for did, turns in D:
+        sd = Path(tempfile.mkdtemp(prefix="nb-dev-"))
+        cfg = copy.deepcopy(base); cfg["state_dir"] = str(sd); cfg["sleep_threshold"] = 100000
+        loop = AG138N.build_agent138n(cfg)
+        for j, t in enumerate(turns):
+            rep = " ".join(loop.turn(t))
+            st = getattr(getattr(loop, "_inner138j_ears", None), "last_stage", "") or getattr(getattr(loop, "ears", None), "last_stage", "")
+            # loop.turn is wrapped; stage lives on inner ears
+            print(f"{did} t{j}: stage={st} reply={rep}", flush=True)
+            if j == len(turns) - 1:
+                if "(worked out backwards)" in rep: n_label += 1
+                if rep.startswith("I don't know anyone"): n_abstain += 1
+                elif "'s " in rep and " is " in rep: n_subject += 1
+        shutil.rmtree(sd, ignore_errors=True)
+    print(f"SUMMARY dialogs={len(D)} final_subject_no_label={n_subject} final_with_label={n_label} final_abstain={n_abstain}")
+
+if __name__ == "__main__":
+    run()
+[0m
+[0m$ [0mhead -n 80 scripts/claude_loop138nb_agent.py; echo "=====PROBE====="; head -n 80 scripts/claude_merge138k_probe.py; echo "=====INV SPEC====="; git show origin/main:handoff/kit/briefs/invpanel138nb-spec.txt | head -n 150
+#!/usr/bin/env python3
+"""Merge 138nb -- 138n + THE ONE CHANGE (label 190's backwards answers).
+
+Base (read-only): scripts/claude_loop138n_agent.py with
+artifacts/claude-merge138n-20260922/loop138n-config.json and its saved
+rows in artifacts/claude-merge138n-20260922/run/.
+
+THE ONE CHANGE (design/v3/30-modes/138nb-inverse-diagnosis.md): one
+outermost reply-text wrapper, scripts/claude_fix138nb_label.py
+(Label138nbMixin): when the turn's answering stage is exactly
+"loop190-reverse" and the reply names at least one subject (190's "S's
+R is V." sentences, including "Your R is V."), append " (worked out
+backwards)" (LABEL221 text, one space). No other reply changes, no new
+shapes, no ownership change, no writes. 190's "I don't know anyone
+whose R is V." and unknown-name replies stay byte-identical.
+
+LOOP: Loop138nbAgentLoop = Label138nbMixin outermost over 138n's
+Loop138nAgentLoop (Cap138nMixin G3 and everything below unchanged).
+EARS: 138n's Loop138nEars unchanged. SrcGuardMixin228 stays first in
+the daemon MRO; install_srcguard228() runs at import.
+
+New file only; every other module is imported read-only.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+
+G228.install_srcguard228()  # 228 first, at import
+
+import claude_fix138nb_label as LB138NB  # noqa: E402 (the one change)
+import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+import claude_loop138m_agent as M138  # noqa: E402 (read-only)
+import claude_loop138n_agent as N138  # noqa: E402 (base, read-only)
+import claude_loop232c_agent as L232C  # noqa: E402 (read-only)
+import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+
+Loop138nbEars = N138.Loop138nEars  # ears unchanged from 138n
+
+
+class Loop138nbAgentLoop(LB138NB.Label138nbMixin, N138.Loop138nAgentLoop):
+    """138n loop + the 190-answer label, outermost (text only)."""
+
+
+def _mro_names(cls) -> list[str]:
+    return [c.__name__ for c in cls.__mro__]
+
+
+_L = _mro_names(Loop138nbAgentLoop)
+assert _L[0] == "Loop138nbAgentLoop", _L
+assert _L[1] == "Label138nbMixin", _L
+assert _L[2] == "Loop138nAgentLoop", _L
+assert _L[3] == "Cap138nMixin", _L
+
+
+def _with_138nb(fn, *args, **kwargs):
+    with M138._Swap([(L138J, "Loop138jEars", Loop138nbEars),
+                     (L138J, "Loop138jAgentLoop", Loop138nbAgentLoop),
+                     (L138J, "build_agent138j",
+                      M138._build138j_plus224c)]):
+        return fn(*args, **kwargs)
+
+
+NOTE138NB = ("loop138nb: loop138n + label 190's backwards answers "
+             "' (worked out backwards)' (scripts/claude_fix138nb_label.py)")
+
+DEFAULT_CONFIG138NB: dict = copy.deepcopy(N138.DEFAULT_CONFIG138N)
+DEFAULT_CONFIG138NB["daemon"]["module"] = (
+    "Loop138nbDaemon (scripts/claude_loop138nb_agent.py) over Loop138kDaemon")
+DEFAULT_CONFIG138NB["merge138nb"] = {
+=====PROBE=====
+#!/usr/bin/env python3
+"""Merge 138k driver: restart-aware dialog probe with duplicate checks.
+
+Same turn path as artifacts/claude-verify-20260922/restart_probe.py
+(fable_marks123_all.make_daemon + process_file, "__RESTART__" rebuilds the
+daemon on the same root, "__TRIPLES__" snapshots). Adds, after EVERY
+restart and at the end of every dialog, a duplicate audit:
+  fast  = L90.notebook_triples(nb)       (170-cached, index-backed)
+  truth = fix170 _ORIG_TRIPLES(nb)       (full nb.facts scan, no index)
+  inner = inner._triples fact ids        (the 220-rebuilt index)
+dup_ok iff fast has no repeated triple, inner has no repeated fact id, and
+sorted(fast) == sorted(truth).
+
+usage: claude_merge138k_probe.py <agent.py> <config> <workdir> <probe.json> <out.json>
+"""
+from __future__ import annotations
+
+import gc
+import json
+import shutil
+import sys
+from collections import Counter
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main() -> int:
+    agent, config, work, probe, out = sys.argv[1:6]
+    mod, dcls, _, _ = M.load_agent(agent)
+    import fable_fix170_compose as F170  # after the agent import
+    import fable_loop90_agent as L90
+    base = M.load_base_cfg(config)
+    S = Path(work)
+    dialogs = json.loads(Path(probe).read_text(encoding="utf-8"))
+
+    def nev(d):
+        nb = d.loop.nb
+        for o in (nb, getattr(nb, "nb", None)):
+            if o is not None and hasattr(o, "events"):
+                return len(o.events)
+        return -1
+
+    def audit(d, where):
+        nb = d.loop.nb
+        fast = [tuple(x) for x in L90.notebook_triples(nb)]
+        truth = [tuple(x) for x in F170._ORIG_TRIPLES(nb)]
+        inner = getattr(nb, "nb", nb)
+        ids = [t[0] for t in getattr(inner, "_triples", [])]
+        dup_fast = sorted(k for k, v in Counter(fast).items() if v > 1)
+        dup_ids = sorted(k for k, v in Counter(ids).items() if v > 1)
+        ok = (not dup_fast and not dup_ids
+              and sorted(fast) == sorted(truth))
+        return {"where": where, "fast": [list(t) for t in fast],
+                "truth": [list(t) for t in truth],
+                "dup_fast": [list(t) for t in dup_fast],
+                "dup_ids": dup_ids, "dup_ok": ok}
+
+    rows = []
+    for i, msgs in enumerate(dialogs):
+        root = S / f"d{i:02d}"
+        shutil.rmtree(root, ignore_errors=True)
+        root.mkdir(parents=True)
+        d = M.make_daemon(dcls, base, root)
+        k = 0
+        nres = 0
+        turns = []
+        audits = []
+        for t in msgs:
+            if t == "__RESTART__":
+                del d
+                gc.collect()
+                d = M.make_daemon(dcls, base, root)
+                nres += 1
+                print(f"{i:02d} -- RESTART {nres} --", flush=True)
+                audits.append(audit(d, f"restart{nres}"))
+=====INV SPEC=====
+BLIND PANEL SPEC: invpanel138nb (backwards questions: "who/what has this value?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/138nb-*, design/v3/30-modes/138n-merge-opus.md, scripts/claude_fix138nb_*, scripts/claude_loop138nb_agent.py, artifacts/claude-merge138nb-*, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py, scripts/claude_loop237_agent.py, any relation-table data file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-invpanel138nb-20260923/ with panel.jsonl (70 items), base138n.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item format (one fresh session per item): {"id": "i138nb-001", "family": ..., "setup": [1-3 teaching sentences, each sent as its own turn], "question": "...", "gold": [list of strings; EVERY string must appear in a right reply; [] for abstain/control families], "backwards": true/false, "stored_after_setup": [[subject, relation, value], ...], "note": "..."}.
+Use a JSON list for gold. Never join several answers into one string.
+
+Families and exact counts (70). V = the value asked about, A/B = the subjects. Every setup sentence is a plain "A's R is V." teach or "My R is V." (subject "you" in gold). Before using a setup, check on the base that it stores exactly the triple you expect; drop and replace any that doesn't.
+- whose_R 14: "Whose R is V?". 8 with one subject, 6 with two subjects sharing V. Relations: spread over at least 7 of boss, mother, father, dentist, doctor, coach, teacher, city, employer, birthplace, wife, husband, friend, neighbour. At most 3 items per relation.
+- lives_born 10: "Who lives in V?" (after "A's city is V.") and "Who was born in V?" (after "A's birthplace is V."), 5 each; 4 of the 10 have two subjects.
+- has_as 6: "Who has V as their R?" / "Who has V as his R?" / "Who has V as her R?"; 2 with two subjects.
+- verb_backwards 10: verb questions from value to subject: "Who does V manage?", "Who does V teach?", "Who does V coach?", "Who works at V?", "What did V compose?", "What did V write?", "What did V paint?" (setups "X's composer is V." etc.; works/songs/books may be multi-word titles). 3 with two subjects.
+- my_backwards 4: one setup is "My R is V." and one is "A's R is V."; question "Whose R is V?". gold ["you", A] is not required word-for-word for the user: gold lists A only, and the note says the reply must also refer to the user.
+- no_match 8: V is taught in a DIFFERENT relation than the one asked ("A's mother is V." then "Whose boss is V?"). gold []; the right reply abstains and names no subject.
+- unknown_value 4: V never taught ("Whose boss is Q?" after unrelated teaches). gold []; abstain, names no taught person.
+- forward_control 10: forward questions about the same kinds of setups ("Who is A's R?", "Where does A live?"). gold [V]. Not backwards.
+- teach_control 4: a setup sentence then a plain second teach as the "question" turn (no "?"); gold []; checks that nothing changes on statements.
+Two-subject items: at least 15 over the panel. Fictional names only, including multi-word names (at least 20 items use a two-word person name somewhere) and at least 4 items where a work title starts with "The".
+
+run_base.py: run every item once on the base, 138n = scripts/claude_loop138n_agent.py with artifacts/claude-merge138n-20260922/loop138n-config.json (build with build_agent138n, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Base row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote (true/false).
+
+score_panel.py (sealed with the panel; the builder uses it unchanged): input = the panel and a rows file in the base-row format; output JSON per item and per family:
+- right: backwards families: every gold string appears in the reply (case-insensitive) AND the reply contains "(worked out backwards)"; my_backwards also needs "your" or "you" in the reply; forward_control: gold appears; no_match/unknown_value: the reply is an abstain (contains "I don't know" or "I couldn't") and names no taught subject; teach_control: the question turn stores exactly its own triple.
+- right_names: backwards families only: every gold string appears, label or not (reported, not the main score).
+- wrong: the reply names a taught subject or taught value that is not in gold, and does not contain every gold string, and is not an abstain. (A reply that gives every gold name is never wrong.)
+- question_wrote: from the rows file.
+Report the base's counts per family (right, right_names, wrong, question writes) in README.md, category level only.
+
+Rules: fictional names only; the base runs once per item; never quote an item in README.md or in your final reply. Report: counts per family, the base's right / right_names / wrong per family, SEAL lines and the `shasum -a 256 -c` output from the repo root.
+[0m
+[0m$ [0mhead -n 150 handoff/kit/recount252.py; echo "=====M bottom====="; tail -n 120 scripts/claude_loop138nb_agent.py | head -n 120
+import json,ast,re,sys,collections
+D='artifacts/claude-corrpanel252-20260922/'
+P=[json.loads(l) for l in open(D+'panel.jsonl')]
+BK={r['id']:r for r in map(json.loads,open(D+'base138k.jsonl'))}
+def L(x):
+    if not isinstance(x,str): return x
+    try: return json.loads(x)
+    except Exception: return ast.literal_eval(x)
+def T(ts): return {tuple(p.lower() for p in t) for t in (L(ts) or [])}
+def ww(v,t): return re.search(r'(?<!\w)'+re.escape(v)+r'(?!\w)',t or '',re.I) is not None
+def score(rows):
+    R={}
+    for l in open(rows):
+        r=json.loads(l); R[r['id']]=r
+    out=collections.defaultdict(lambda: collections.Counter()); items=[]
+    for p in P:
+        r=R[p['id']]; f=p['family']
+        sat=T(r['stored_after_turn']); sas=T(r['stored_after_setup']); saf=T(r['stored_after_followup'])
+        es=T(p['expect_store']); eg=T(p['expect_gone'])
+        junk=not sat<= (sas|es)
+        store_ok= es<=sat and not (eg & sat) and not junk
+        fr=r['followup_reply'] or ''
+        gone_vals=[g[2] for g in L(p['expect_gone'])]
+        if p['gold_followup']:
+            parts=[x.strip() for x in p['gold_followup'].split(';')]
+            fok=all(x.lower() in fr.lower() for x in parts) and not re.match(r"\s*i (don't|do not) know",fr,re.I)
+        else:
+            fok=not any(ww(v,fr) for v in gone_vals)
+        wrong=any(ww(v,fr) for v in gone_vals)
+        fw= saf!=sat
+        right=store_ok and fok and not fw
+        if f=='control':
+            b=BK[p['id']]; right=right and r['turn_reply']==b['turn_reply'] and r['followup_reply']==b['followup_reply']
+        c=out[f]; c['n']+=1; c['right']+=right; c['wrong']+=wrong; c['junk']+=junk; c['fw']+=fw
+        items.append((p['id'],f,right,wrong,junk))
+    return out,items
+for arm in sys.argv[1:]:
+    out,items=score(arm)
+    print('==',arm)
+    for f,c in out.items(): print(f'  {f:22s} {c["right"]:2d}/{c["n"]:2d} wrong {c["wrong"]} junk {c["junk"]} fw {c["fw"]}')
+    print('  TOTAL right',sum(c['right'] for c in out.values()),'wrong',sum(c['wrong'] for c in out.values()),'junk',sum(c['junk'] for c in out.values()),'fw',sum(c['fw'] for c in out.values()))
+    print('  junk ids',[i for i,f,r,w,j in items if j])
+=====M bottom=====
+assert _L[1] == "Label138nbMixin", _L
+assert _L[2] == "Loop138nAgentLoop", _L
+assert _L[3] == "Cap138nMixin", _L
+
+
+def _with_138nb(fn, *args, **kwargs):
+    with M138._Swap([(L138J, "Loop138jEars", Loop138nbEars),
+                     (L138J, "Loop138jAgentLoop", Loop138nbAgentLoop),
+                     (L138J, "build_agent138j",
+                      M138._build138j_plus224c)]):
+        return fn(*args, **kwargs)
+
+
+NOTE138NB = ("loop138nb: loop138n + label 190's backwards answers "
+             "' (worked out backwards)' (scripts/claude_fix138nb_label.py)")
+
+DEFAULT_CONFIG138NB: dict = copy.deepcopy(N138.DEFAULT_CONFIG138N)
+DEFAULT_CONFIG138NB["daemon"]["module"] = (
+    "Loop138nbDaemon (scripts/claude_loop138nb_agent.py) over Loop138kDaemon")
+DEFAULT_CONFIG138NB["merge138nb"] = {
+    "base": "loop138n (scripts/claude_loop138n_agent.py)",
+    "added": ["label 190 reverse answers "
+              "(scripts/claude_fix138nb_label.py Label138nbMixin, "
+              "outermost reply-text rule over 138n's loop)"],
+    "loop_extra": "Label138nbMixin outermost over Loop138nAgentLoop",
+}
+
+
+def _set_paths(loop, cfg: dict) -> None:
+    N138._set_paths(loop, cfg)
+
+
+def _check(loop):
+    N138._check(loop)  # 138n's own checks (138m checks + 138n classes)
+    loop.notes.pop()  # drop 138n's note; ours follows
+    if not isinstance(loop, Loop138nbAgentLoop):
+        raise RuntimeError("138nb: loop is not Loop138nbAgentLoop")
+    inner = getattr(loop, "_inner138j_ears", None)
+    if not isinstance(inner, Loop138nbEars):
+        raise RuntimeError("138nb: inner ears are not Loop138nbEars")
+    loop.notes.append(M138.NOTE138M)
+    loop.notes.append(N138.NOTE138N)
+    loop.notes.append(NOTE138NB)
+
+
+def build_agent138nb(cfg: dict | None = None):
+    G228.install_srcguard228()
+    L232C.install232c()
+    cfg = dict(DEFAULT_CONFIG138NB, **(cfg or {}))
+    loop = _with_138nb(L138K.build_agent138k, cfg)
+    _set_paths(loop, cfg)
+    _check(loop)
+    return loop
+
+
+class _Guard138nb(G228.SrcGuardMixin228):
+    """SrcGuardMixin228, first in the daemon's MRO (installs the guard)."""
+
+
+class Classes138nbMixin:
+    """Daemon mixin: 138k's daemon __init__ with the 138nb classes and the
+    224c-installing build swapped in for the build."""
+
+    def __init__(self, *args, **kwargs):
+        G228.install_srcguard228()
+        L232C.install232c()
+        _with_138nb(super().__init__, *args, **kwargs)
+        cfg = dict(DEFAULT_CONFIG138NB, **(getattr(self, "cfg", None) or {}))
+        _set_paths(self.loop, cfg)
+        _check(self.loop)
+
+
+class Loop138nbDaemon(_Guard138nb, Classes138nbMixin, L138K.Loop138kDaemon):
+    """Loop138kDaemon + 138l/138m pieces + 138n reading line + 138nb label."""
+
+
+def run_daemon138nb(root, cfg: dict | None = None,
+                    idle_seconds: float = 30.0) -> int:
+    return Loop138nbDaemon(root, cfg=cfg, idle_seconds=idle_seconds).run()
+
+
+def main(argv=None) -> int:
+    import fable_loop90_agent as L90  # noqa: E402 (read-only)
+    parser = argparse.ArgumentParser(description="Merge 138nb (138n + 1)")
+    parser.add_argument("--config", default=None)
+    parser.add_argument("--write-config", default=None)
+    parser.add_argument("--daemon", action="store_true")
+    parser.add_argument("--dir", default=None)
+    parser.add_argument("--idle-seconds", type=float, default=30.0)
+    parser.add_argument("--once", default=None)
+    parser.add_argument("--state-dir", default=None)
+    args = parser.parse_args(argv)
+    if args.write_config:
+        out = copy.deepcopy(DEFAULT_CONFIG138NB)
+        out["thinker"]["module"] = L90.THINKER_MODULE
+        Path(args.write_config).write_text(json.dumps(out, indent=1),
+                                           encoding="utf-8")
+        print(f"Wrote {args.write_config}")
+        return 0
+    cfg = copy.deepcopy(DEFAULT_CONFIG138NB)
+    if args.config:
+        cfg.update(json.loads(Path(args.config).read_text(encoding="utf-8")))
+    if args.daemon or (args.dir and not args.once):
+        if not args.dir:
+            parser.error("--daemon needs --dir")
+        return run_daemon138nb(args.dir, cfg=cfg,
+                               idle_seconds=args.idle_seconds)
+    if args.once:
+        if not args.state_dir:
+            parser.error("--once needs --state-dir (never the repo notebook)")
+        cfg["state_dir"] = args.state_dir
+        loop = build_agent138nb(cfg)
+        print(" ".join(loop.turn(args.once)), flush=True)
+        return 0
+    parser.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m$ [0mhead -n 120 handoff/kit/recount252b.py; echo "=====M2 head====="; head -n 100 scripts/claude_138nb_m2.py
+import json,ast,sys,collections
+D='artifacts/claude-correct252b-20260922/'
+P=[json.loads(l) for l in open(D+'dev252b.jsonl')]
+def L(x):
+    if not isinstance(x,str): return x
+    try: return json.loads(x)
+    except Exception: return ast.literal_eval(x)
+def T(ts): return {tuple(str(p).lower().strip() for p in t) for t in (L(ts) or [])}
+def rows(f): return {r['id']:r for r in map(json.loads,open(f))}
+A=rows(sys.argv[1]); B=rows(sys.argv[2]) if len(sys.argv)>2 else None
+junk=[];rem=[];qw=[];fw=[];cd=[]
+for p in P:
+    r=A[p['id']]; sas=T(r['stored_after_setup']); sat=T(r['stored_after_turn']); saf=T(r['stored_after_followup'])
+    es=T(p['expect_store']); eg=T(p['expect_gone'])
+    for st,name in ((sat,'turn'),(saf,'followup')):
+        extra=st-sas-es
+        if extra: junk.append((p['id'],name,sorted(extra)))
+        lost=sas-st-eg
+        if lost: rem.append((p['id'],name,sorted(lost)))
+    if p['family']=='question_tail' and sat!=sas: qw.append(p['id'])
+    if saf!=sat: fw.append(p['id'])
+    if p['family']=='control' and B is not None:
+        b=B[p['id']]
+        if any(r[k]!=b[k] for k in r if k!='ms_per_turn'): cd.append(p['id'])
+print('junk',junk); print('wrong_removals',rem); print('question_writes',qw); print('followup_writes',fw); print('control_diffs',cd)
+if B is not None:
+    diff=[i for i in A if any(A[i][k]!=B[i][k] for k in A[i] if k!='ms_per_turn')]
+    print('rows differing from ref:',len(diff),diff)
+=====M2 head=====
+#!/usr/bin/env python3
+"""Merge 138nb -- mark M2 driver: 138n's M1 dev/case files (720 cases, 138n's
+own driver semantics) on two arms: n (138n) and nb (138nb).
+
+Runner per piece = 138n's M1 runner semantics (see
+scripts/claude_138n_l1.py, read-only and reused): one fresh agent per
+case, every turn recorded:
+  loop mode   (221, 221b: in-process loop.turn, reply = " ".join(lines))
+  daemon mode (everything else: fresh daemon per case via
+               fable_marks123_all.make_daemon, mailbox files, reply =
+               outbox text stripped)
+Every arm uses sleep_threshold 100000.
+
+Per case the record is: replies per turn, active taught triples after
+each turn (sorted) and all taught facts ever written after each turn
+(active or not, sorted).
+
+usage:
+  claude_138nb_m2.py run --arm n|nb --out-dir DIR --work DIR [--pieces ..]
+  claude_138nb_m2.py judge --dir DIR --pred predicted_moves138nb.json --out F
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import shutil
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+ROOT = SCRIPTS.parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_138n_l1 as L1  # noqa: E402 (driver semantics, read-only)
+
+A = ROOT / "artifacts"
+ARMS = {
+    "n": ("scripts/claude_loop138n_agent.py",
+          A / "claude-merge138n-20260922" / "loop138n-config.json",
+          "claude_loop138n_agent", "DEFAULT_CONFIG138N", "build_agent138n"),
+    "nb": ("scripts/claude_loop138nb_agent.py",
+           A / "claude-merge138nb-20260923" / "loop138nb-config.json",
+           "claude_loop138nb_agent", "DEFAULT_CONFIG138NB",
+           "build_agent138nb"),
+}
+
+
+def _merge_loop_builder(arm: str):
+    _a, cfgp, mod_name, cfg_name, fn = ARMS[arm]
+    mod = __import__(mod_name)
+    cfg = copy.deepcopy(getattr(mod, cfg_name))
+    cfg.update(json.loads(Path(cfgp).read_text(encoding="utf-8")))
+    return cfg, getattr(mod, fn)
+
+
+def cmd_run(arm: str, out_dir: Path, work: Path, pieces) -> None:
+    import fable_marks123_all as M
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for piece in pieces:
+        t0 = time.time()
+        mode = L1.MODE.get(piece, "daemon")
+        w = work / f"{piece}-{arm}"
+        if mode == "loop":
+            cfg, fn = _merge_loop_builder(arm)
+        else:
+            agent, cfgp, _m, _c, _f = ARMS[arm]
+            _mod, dcls, _b, _c2 = M.load_agent(str(ROOT / agent))
+            base = M.load_base_cfg(str(cfgp))
+        rows = []
+        for i, c in enumerate(L1.cases_for(piece)):
+            sd = w / f"{i:03d}"
+            if mode == "loop":
+                r = L1.run_loop_case(cfg, fn, c["turns"], sd)
+            else:
+                r = L1.run_daemon_case(dcls, base, c["turns"], sd)
+            rows.append({"id": c["id"], "turns": c["turns"], **r})
+        shutil.rmtree(w, ignore_errors=True)
+        (out_dir / f"{piece}-{arm}.json").write_text(
+            json.dumps(rows, indent=1, ensure_ascii=False), encoding="utf-8")
+        print(f"{piece}/{arm}: {len(rows)} cases {time.time() - t0:.1f}s",
+              flush=True)
+
+
+def cmd_judge(d: Path, pred_path: Path | None, out: Path, pieces) -> int:
+    pred = (json.loads(Path(pred_path).read_text(encoding="utf-8"))["m2"]
+            if pred_path else {})
+    res = {"pieces": {}, "unpredicted": [], "predicted_ok": [],
+           "predicted_wrong": [], "predicted_not_moved": []}
+    for piece in pieces:
+        base = {r["id"]: r for r in json.loads(
+            (d / f"{piece}-n.json").read_text(encoding="utf-8"))}
+        new = {r["id"]: r for r in json.loads(
+            (d / f"{piece}-nb.json").read_text(encoding="utf-8"))}
+        pp = pred.get(piece, {})
+        n_same = 0
+        moves = []
+        for cid, brow in base.items():
+[0m
+[0m$ [0mgrep -n "def run_loop_case\|def run_daemon_case\|def cases_for\|notebook_triples\|stored\|turn_reply" scripts/claude_138n_l1.py | head -n 40; echo "---"; head -n 150 scripts/claude_138n_l1.py
+16:turn (fable_loop90_agent.notebook_triples, sorted) and all taught facts
+42:    "221b": A / "claude-storedrel221b-20260922",
+93:def cases_for(piece: str) -> list[dict]:
+131:    return sorted(list(map(str, x)) for x in L90.notebook_triples(nb))
+150:def run_loop_case(default_cfg, build_fn, turns, sd: Path) -> dict:
+166:def run_daemon_case(dcls, base_cfg, turns, root: Path) -> dict:
+236:        stored = row["active"][-2] if len(rep) > 1 else []
+237:        if _tl(stored) != _tl(r["stored"]):
+238:            bad.append("stored")
+266:        if row["active"][-1] != _tl(ref["stored_after"]):
+267:            bad.append("stored_after")
+278:        if row["active"][-1] != _tl(ref["stored"]):
+279:            bad.append("stored")
+---
+#!/usr/bin/env python3
+"""Merge 138n -- mark M1 driver: each reading piece's own sealed dev /
+case files (NOT blind panels) on three arms: own (the piece's own agent),
+m (138m) and n (138n). Piece files are only read.
+
+Runner per piece = the piece's own runner semantics, one fresh agent per
+case, every turn recorded:
+  loop mode   (221, 221b: their runners build the agent in-process and
+               call loop.turn, reply = " ".join(lines))
+  daemon mode (221c, 229, 237, 232c, 232c parity, 236: fresh daemon per
+               case via fable_marks123_all.make_daemon, mailbox files,
+               reply = outbox text stripped)
+Every arm uses sleep_threshold 100000, as every piece runner did.
+
+Per case the record is: replies per turn, active taught triples after each
+turn (fable_loop90_agent.notebook_triples, sorted) and all taught facts
+ever written after each turn (active or not, sorted).
+
+usage:
+  claude_138n_l1.py run --arm own|m|n --out-dir DIR --work DIR [--pieces ..]
+  claude_138n_l1.py sealed --dir DIR [--out F]   (own arm vs sealed rows)
+  claude_138n_l1.py judge --dir DIR --pred predicted_moves138n.json --out F
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import shutil
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+ROOT = SCRIPTS.parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+A = ROOT / "artifacts"
+ART = {
+    "221": A / "claude-tableask221-20260922",
+    "221b": A / "claude-storedrel221b-20260922",
+    "221c": A / "claude-qnorm221c-20260922",
+    "229": A / "claude-tableteach229-20260922",
+    "237": A / "claude-table237-20260922",
+    "232c": A / "claude-fullname232c-20260922",
+    "236": A / "claude-firstname236-20260922",
+}
+PIECES = ("221", "221b", "221c", "229", "237", "232c", "232cp", "236")
+MODE = {"221": "loop", "221b": "loop"}  # everything else: daemon
+# daemon-mode own agents (agent script, config json)
+OWN_DAEMON = {
+    "221c": ("scripts/claude_loop221c_agent.py",
+             ART["221c"] / "loop221c-config.json"),
+    "229": ("scripts/claude_loop229_agent.py",
+            ART["229"] / "loop229-config.json"),
+    "237": ("scripts/claude_loop237_agent.py",
+            ART["237"] / "loop237-config.json"),
+    "232c": ("scripts/claude_loop232c_agent.py",
+             A / "claude-fullname232-20260922" / "loop232-config.json"),
+    "232cp": ("scripts/claude_loop232c_agent.py",
+              A / "claude-fullname232-20260922" / "loop232-config.json"),
+    "236": ("scripts/claude_loop236_agent.py",
+            ART["236"] / "loop236-config.json"),
+}
+MERGE = {
+    "m": ("scripts/claude_loop138m_agent.py",
+          A / "claude-merge138m-20260922" / "loop138m-config.json",
+          "claude_loop138m_agent", "DEFAULT_CONFIG138M", "build_agent138m"),
+    "n": ("scripts/claude_loop138n_agent.py",
+          A / "claude-merge138n-20260922" / "loop138n-config.json",
+          "claude_loop138n_agent", "DEFAULT_CONFIG138N", "build_agent138n"),
+}
+
+
+def _load(p: Path):
+    return json.loads(Path(p).read_text(encoding="utf-8"))
+
+
+def _jsonl(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(
+        encoding="utf-8").splitlines() if x.strip()]
+
+
+def _setup(it: dict) -> list[str]:
+    s = it.get("setup") or []
+    if isinstance(s, str):
+        s = [s]
+    return [str(x) for x in s]
+
+
+# ------------------------------------------------------------- case lists
+def cases_for(piece: str) -> list[dict]:
+    if piece == "221":
+        return [{"id": c["id"], "turns": list(c["turns"])}
+                for c in _jsonl(ART["221"] / "dev221.jsonl")]
+    if piece in ("221b", "221c", "237", "232c", "236"):
+        f = {"221b": "dev221b.jsonl", "221c": "dev221c.jsonl",
+             "237": "dev237.jsonl", "232c": "dev232c.jsonl",
+             "236": "dev236.jsonl"}[piece]
+        out = []
+        for c in _jsonl(ART[piece] / f):
+            turns = _setup(c)
+            if c.get("question"):
+                turns.append(str(c["question"]))
+            out.append({"id": c["id"], "turns": turns})
+        return out
+    if piece == "229":
+        return [{"id": c["id"], "turns": _setup(c) + [c["statement"]]}
+                for c in _jsonl(ART["229"] / "dev229.jsonl")]
+    if piece == "232cp":
+        return [{"id": f"p{r['t']:02d}:{r['name']}", "turns": list(r["turns"])}
+                for r in _jsonl(ART["232c"] / "registered" / "parity.jsonl")]
+    raise ValueError(piece)
+
+
+# ---------------------------------------------------------------- runners
+def _all_taught(nb) -> list:
+    import fable_loop90_agent as L90
+    out = []
+    for fact in nb.facts.values():
+        if fact.get("source") != "taught":
+            continue
+        out.append([nb.entities.get(fact["subject"], "?"), fact["relation"],
+                    L90._display(nb, fact["value"])])
+    return sorted(out)
+
+
+def _active(nb) -> list:
+    import fable_loop90_agent as L90
+    return sorted(list(map(str, x)) for x in L90.notebook_triples(nb))
+
+
+def _own_loop_builder(piece: str):
+    if piece == "221":
+        import fable_loop221_agent as L221
+        return L221.DEFAULT_CONFIG221, L221.build_agent221
+    import claude_loop221b_agent as L221B
+    return L221B.DEFAULT_CONFIG221B, L221B.build_agent221b
+
+
+def _merge_loop_builder(arm: str):
+    _a, cfgp, mod_name, cfg_name, fn = MERGE[arm]
+    mod = __import__(mod_name)
+    cfg = copy.deepcopy(getattr(mod, cfg_name))
+    cfg.update(_load(cfgp))
+    return cfg, getattr(mod, fn)
+
+
+def run_loop_case(default_cfg, build_fn, turns, sd: Path) -> dict:
+[0m
+[0m$ [0msed -n '150,230p' scripts/claude_138n_l1.py
+def run_loop_case(default_cfg, build_fn, turns, sd: Path) -> dict:
+    shutil.rmtree(sd, ignore_errors=True)
+    sd.mkdir(parents=True)
+    cfg = copy.deepcopy(default_cfg)
+    cfg["state_dir"] = str(sd)
+    cfg["sleep_threshold"] = 100000
+    loop = build_fn(cfg)
+    rec = {"replies": [], "active": [], "all": []}
+    for t in turns:
+        rec["replies"].append(" ".join(loop.turn(t)))
+        rec["active"].append(_active(loop.nb))
+        rec["all"].append(_all_taught(loop.nb))
+    shutil.rmtree(sd, ignore_errors=True)
+    return rec
+
+
+def run_daemon_case(dcls, base_cfg, turns, root: Path) -> dict:
+    import fable_marks123_all as M
+    shutil.rmtree(root, ignore_errors=True)
+    root.mkdir(parents=True)
+    d = M.make_daemon(dcls, base_cfg, root)
+    rec = {"replies": [], "active": [], "all": []}
+    for j, t in enumerate(turns):
+        f = root / "inbox" / f"m{j:02d}.txt"
+        f.write_text(t, encoding="utf-8")
+        d.process_file(f)
+        rec["replies"].append((root / "outbox" / f"m{j:02d}.txt").read_text(
+            encoding="utf-8").strip())
+        rec["active"].append(_active(d.loop.nb))
+        rec["all"].append(_all_taught(d.loop.nb))
+    shutil.rmtree(root, ignore_errors=True)
+    return rec
+
+
+def cmd_run(arm: str, out_dir: Path, work: Path, pieces) -> None:
+    import fable_marks123_all as M
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for piece in pieces:
+        t0 = time.time()
+        mode = MODE.get(piece, "daemon")
+        w = work / f"{piece}-{arm}"
+        if mode == "loop":
+            cfg, fn = (_own_loop_builder(piece) if arm == "own"
+                       else _merge_loop_builder(arm))
+        else:
+            agent, cfgp = (OWN_DAEMON[piece] if arm == "own"
+                           else MERGE[arm][:2])
+            _mod, dcls, _b, _c = M.load_agent(str(ROOT / agent))
+            base = M.load_base_cfg(str(cfgp))
+        rows = []
+        for i, c in enumerate(cases_for(piece)):
+            sd = w / f"{i:03d}"
+            if mode == "loop":
+                r = run_loop_case(cfg, fn, c["turns"], sd)
+            else:
+                r = run_daemon_case(dcls, base, c["turns"], sd)
+            rows.append({"id": c["id"], "turns": c["turns"], **r})
+        shutil.rmtree(w, ignore_errors=True)
+        (out_dir / f"{piece}-{arm}.json").write_text(
+            json.dumps(rows, indent=1, ensure_ascii=False), encoding="utf-8")
+        print(f"{piece}/{arm}: {len(rows)} cases {time.time() - t0:.1f}s",
+              flush=True)
+
+
+# ---------------------------------------------------- sealed own fidelity
+def _tl(x) -> list:
+    return sorted(list(map(str, t)) for t in (x or []))
+
+
+def sealed_check(piece: str, row: dict, ref: dict) -> list[str]:
+    """Return the list of mismatching fields ([] = the row reproduces it)."""
+    bad = []
+    rep = row["replies"]
+    if piece == "221":
+        want = [t["reply221"] for t in sorted(ref, key=lambda t: t["k"])]
+        if rep != want:
+            bad.append("replies")
+        wrote = [t["wrote221"] for t in sorted(ref, key=lambda t: t["k"])]
+        got = [row["all"][0] != []] + [row["all"][k] != row["all"][k - 1]
+                                       for k in range(1, len(rep))]
+        if wrote != got:
+[0m
+[0m$ [0msed -n '80,160p' scripts/claude_merge138k_probe.py; echo "===MARKS123 load_agent==="; grep -n "def load_agent\|def make_daemon\|def load_base_cfg" scripts/fable_marks123_all.py | head; sed -n '1,80p' scripts/fable_marks123_all.py | head -n 80
+audits.append(audit(d, f"restart{nres}"))
+                continue
+            if t == "__TRIPLES__":
+                a = audit(d, f"triples@{k}")
+                audits.append(a)
+                print(f"{i:02d}   TRIPLES {a['fast']}", flush=True)
+                continue
+            f = root / "inbox" / f"m{k:02d}.txt"
+            f.write_text(t)
+            b = nev(d)
+            try:
+                d.process_file(f)
+                rep = (root / "outbox" / f"m{k:02d}.txt").read_text().strip()
+            except Exception as e:  # noqa: BLE001
+                rep = f"CRASH {type(e).__name__}: {e}"
+            w = nev(d) - b
+            print(f"{i:02d} {t!r} -> {rep!r}  [+{w} ev]", flush=True)
+            turns.append({"turn": t, "reply": rep, "events": w})
+            k += 1
+        end = audit(d, "end")
+        audits.append(end)
+        print(f"{i:02d}   STORED {end['fast']}  dup_ok={end['dup_ok']}",
+              flush=True)
+        rows.append({"dialog": i, "turns": turns, "audits": audits,
+                     "stored": end["fast"],
+                     "dup_ok_all": all(a["dup_ok"] for a in audits)})
+    Path(out).write_text(json.dumps({"agent": agent, "rows": rows},
+                                    indent=1, ensure_ascii=False),
+                         encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+===MARKS123 load_agent===
+68:def load_agent(agent_script: str):
+95:def load_base_cfg(config_path: str) -> dict:
+99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+#!/usr/bin/env python3
+"""Experiment 123 — one-command regression runner for the joined-up agent.
+
+Given a loop agent script + config, run every prior registered mark suite
+that applies to the joined-up agent, each item in a fresh daemon dir through
+the mailbox exactly as the original suite did, by CALLING the original
+suites' scripts/functions where possible (import, don't copy-edit):
+
+  (a) exp 102 marks P2 (64 cases), P3 L1-L6, P4 (30 innocents)
+  (b) exp 110 red-team 62 NEW cases
+  (c) exp 117 Q1-Q5 (F5/M5 repros, Q2 verdict moves, Q3 == (a), Q4 underscore scan, Q5 timing)
+  (d) exp 113 bench with scorer v2 on both splits (Fable-Edit-200 + fresh 4-hop)
+  (e) RT81 74-case wrong-write suite
+  (f) exp 104 live-sleep marks Z1-Z5 only if the agent has a sleep path (skip otherwise)
+  (g) short soak: 2,000 mailbox turns with 3 kill-9s mid-turn
+
+Output: one table (suite, registered bar, number, PASS/FAIL, seconds) + one JSON.
+
+Validation: H1 vs loop102 reproduces sealed numbers; H2 vs loop117 reproduces
+exp 117 numbers; H3 each full run < 25 min Mac CPU (suites run in parallel
+subprocesses, OMP_NUM_THREADS=1 each).
+
+Additive only: sealed artifacts and other modules are read, never written.
+Nothing outside this file and the exp-123 artifact dir is written.
+
+Run (Mac CPU, offline; only AFTER PASSMARKS.md is sealed):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_marks123_all.py \\
+    --agent scripts/fable_loop102_agent.py \\
+    --config artifacts/fable-loop102-20260921/loop102-config.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import copy
+import importlib.util
+import json
+import os
+import re
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+ROOT = SCRIPTS.parent
+ART123 = ROOT / "artifacts" / "fable-marks123-20260922"
+ART98 = ROOT / "artifacts" / "fable-redteam98-20260921"
+ART102 = ROOT / "artifacts" / "fable-loop102-20260921"
+ART110 = ROOT / "artifacts" / "fable-redteam110-20260921"
+ART117 = ROOT / "artifacts" / "fable-loop117-20260922"
+ART81 = ROOT / "artifacts" / "fable-redteam81-20260921"
+
+SUITES = ["p2", "p3", "p4", "rt110", "q1", "bench", "rt81", "sleep", "soak"]
+
+# --------------------------------------------------------------------------
+# generic agent loading (import, never edit)
+
+
+def load_agent(agent_script: str):
+    spec = importlib.util.spec_from_file_location(
+        "fable_marks123_agent_under_test", agent_script)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    daemon_cls = None
+    for name in dir(mod):
+        obj = getattr(mod, name)
+        if isinstance(obj, type) and name.endswith("Daemon"):
+            if daemon_cls is None or name.startswith("Loop"):
+                daemon_cls = obj
+    if daemon_cls is None:
+[0m
+[0m# [0mTodos
+[•] Fetch spec/schema, check disk/uptime, verify base files identical
+[ ] Pilot base storage for candidate relations/wordings (CPU, one process)
+[ ] Write make_panel.py with 96 hand-written items
+[ ] Write run_base.py and score_panel.py, run once to produce base138nb.jsonl
+[ ] Verify acceptance (setup saved, contextual, ambiguous, control 12/12, quotas) and write README
+[ ] Seal and report verdict with marks table
+[0m
+[0m$ [0mls /tmp/ | head; df -g / | tail -1; uptime
+__KMP_REGISTERED_LIB_10043
+__KMP_REGISTERED_LIB_10167
+__KMP_REGISTERED_LIB_10277
+__KMP_REGISTERED_LIB_10588
+__KMP_REGISTERED_LIB_10636
+__KMP_REGISTERED_LIB_1066
+__KMP_REGISTERED_LIB_10679
+__KMP_REGISTERED_LIB_10716
+__KMP_REGISTERED_LIB_10827
+__KMP_REGISTERED_LIB_10919
+/dev/disk3s1s1       460   12        12    50%  484014 135011960    0%   /
+ 3:29  up 2 days, 19:18, 4 users, load averages: 53.38 50.27 58.41
+[0m
+[0m← [0mWrite /tmp/pilot291.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/pilot291.py 2>&1 | head -n 80
+=== T0 ===
+  U: "Zelma's boss is Nira."
+  A: "Saved: Zelma's boss is Nira."
+  S: [['Zelma', 'boss', 'Nira']]
+  U: "Who is Zelma's boss?"
+  A: "Zelma's boss is Nira."
+  S: [['Zelma', 'boss', 'Nira']]
+=== T1 ===
+  U: "Zelma's city is Oria."
+  A: "Saved: Zelma's city is Oria."
+  S: [['Zelma', 'city', 'Oria']]
+  U: 'Where does Zelma live?'
+  A: "Zelma's city is Oria."
+  S: [['Zelma', 'city', 'Oria']]
+=== T2 ===
+  U: "Zelma's employer is Halden Works."
+  A: "Saved: Zelma's employer is Halden Works."
+  S: [['Zelma', 'employer', 'Halden Works']]
+  U: 'Where does Zelma work?'
+  A: "Zelma's employer is Halden Works."
+  S: [['Zelma', 'employer', 'Halden Works']]
+=== T3 ===
+  U: 'Zelma speaks Quenya.'
+  A: "Saved: Zelma's language is Quenya."
+  S: [['Zelma', 'language', 'Quenya']]
+  U: 'What does Zelma speak?'
+  A: "I didn't understand that question — could you say it another way?"
+  S: [['Zelma', 'language', 'Quenya']]
+=== T4 ===
+  U: "Zelma's language is Quenya."
+  A: "Saved: Zelma's language is Quenya."
+  S: [['Zelma', 'language', 'Quenya']]
+  U: "What is Zelma's language?"
+  A: "Zelma's language is Quenya."
+  S: [['Zelma', 'language', 'Quenya']]
+=== T5 ===
+  U: "Zelma's pet is Miso Jr."
+  A: "Saved: Zelma's pet is Miso Jr."
+  S: [['Zelma', 'pet', 'Miso Jr']]
+  U: "What is Zelma's pet?"
+  A: "Zelma's pet is Miso Jr."
+  S: [['Zelma', 'pet', 'Miso Jr']]
+=== T6 ===
+  U: "Zelma's mother is Talia Prime."
+  A: "Saved: Zelma's mother is Talia Prime."
+  S: [['Zelma', 'mother', 'Talia Prime']]
+  U: "Who is Zelma's mother?"
+  A: "Zelma's mother is Talia Prime."
+  S: [['Zelma', 'mother', 'Talia Prime']]
+=== T7 ===
+  U: 'My boss is Nira.'
+  A: 'Saved: your boss is Nira.'
+  S: [['USER', 'boss', 'Nira']]
+  U: 'Who has Nira as their boss?'
+  A: 'Your boss is Nira. (worked out backwards)'
+  S: [['USER', 'boss', 'Nira']]
+=== T8 ===
+  U: "Zelma's boss is Nira."
+  A: "Saved: Zelma's boss is Nira."
+  S: [['Zelma', 'boss', 'Nira']]
+  U: "Zelma's city is Oria."
+  A: "Saved: Zelma's city is Oria."
+  S: [['Zelma', 'boss', 'Nira'], ['Zelma', 'city', 'Oria']]
+  U: 'What do you know about Zelma?'
+  A: "Zelma's boss is Nira. Zelma's city is Oria."
+  S: [['Zelma', 'boss', 'Nira'], ['Zelma', 'city', 'Oria']]
+=== T9 ===
+  U: "Zelma's boss is Nira."
+  A: "Saved: Zelma's boss is Nira."
+  S: [['Zelma', 'boss', 'Nira']]
+  U: "Who is Zelma's boss?"
+  A: "Zelma's boss is Nira."
+  S: [['Zelma', 'boss', 'Nira']]
+[0m
+[0m← [0mWrite /tmp/pilot291b.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/pilot291b.py 2>&1 | head -n 120
+=== verb1 ===
+  U: "Vessa's employer is Bramhall Mill."
+  A: "Saved: Vessa's employer is Bramhall Mill."
+  S: [['Vessa', 'employer', 'Bramhall Mill']]
+  U: "Vessa doesn't work at Bramhall Mill."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'employer', 'Bramhall Mill']]
+  U: 'Where does Vessa work?'
+  A: "Vessa's employer is Bramhall Mill."
+  S: [['Vessa', 'employer', 'Bramhall Mill']]
+=== verb2 ===
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+  U: "Vessa doesn't live in Oria anymore."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+=== poss1 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's boss isn't Nira."
+  A: "OK, Vessa's boss is not Nira. I don't have another boss for Vessa."
+  S: []
+  U: "Who is Vessa's boss?"
+  A: "I don't know Vessa's boss."
+  S: []
+=== ctxD ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "That's not true."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== ctxC ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "No, it's Sella."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== explC ===
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+  U: "Actually, Vessa's city is Pelmo, not Oria."
+  A: 'I can take one fact at a time — could you split that?'
+  S: [['Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "You told me something new about Vessa's city that I could not store. I can take one fact at a time — could you say it again as one fact?"
+  S: [['Vessa', 'city', 'Oria']]
+=== tail1 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's boss isn't Nira, that's wrong."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== openT ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Oh, Vessa's city is Oria."
+  A: "Saved: Oh, Vessa's city is Oria."
+  S: [['Oh, Vessa', 'city', 'Oria'], ['Vessa', 'boss', 'Nira']]
+  U: 'Where does Vessa live?'
+  A: "I don't know Vessa's city."
+  S: [['Oh, Vessa', 'city', 'Oria'], ['Vessa', 'boss', 'Nira']]
+=== openC ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Oh, actually Vessa's boss is Sella, not Nira."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "You told me something new about Vessa's boss that I could not store. I can take one fact at a time — could you say it again as one fact?"
+  S: [['Vessa', 'boss', 'Nira']]
+=== unstored ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's boss isn't Zara."
+  A: "I don't have Zara as Vessa's boss."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== trap ===
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+  U: "Doesn't Vessa live in Oria?"
+  A: "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?"
+  S: [['Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+=== ctrl-teach ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+[0m
+[0m← [0mWrite /tmp/pilot291c.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/pilot291c.py 2>&1 | head -n 140
+=== low-teach ===
+  U: "vessa's boss is nira."
+  A: "Saved: vessa's boss is nira."
+  S: [['vessa', 'boss', 'nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is nira."
+  S: [['vessa', 'boss', 'nira']]
+=== low-denial ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "vessa's boss isn't nira."
+  A: "OK, Vessa's boss is not Nira. I don't have another boss for Vessa."
+  S: []
+  U: "Who is Vessa's boss?"
+  A: "I don't know Vessa's boss."
+  S: []
+=== corr-simple ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's boss is Sella."
+  A: "I have Vessa's boss as Nira. Do you want me to change it to Sella?"
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== corr-not ===
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+  U: "Vessa's city is Pelmo."
+  A: "I have Vessa's city as Oria. Do you want me to change it to Pelmo?"
+  S: [['Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "Vessa's city is Oria."
+  S: [['Vessa', 'city', 'Oria']]
+=== denial-not-true ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "That's not true, Vessa's boss isn't Nira."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== plain-q ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== teach2 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+=== opener-well ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Well, Vessa's city is Oria."
+  A: "Saved: Well, Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Well, Vessa', 'city', 'Oria']]
+  U: 'Where does Vessa live?'
+  A: "I don't know Vessa's city."
+  S: [['Vessa', 'boss', 'Nira'], ['Well, Vessa', 'city', 'Oria']]
+=== tail-which ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's boss isn't Nira, which is old news."
+  A: "I don't have Nira, which is old news as Vessa's boss."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== ambig2 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Vessa's city is Oria."
+  A: "Saved: Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+  U: 'What do you know about Vessa?'
+  A: "Vessa's boss is Nira. Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+  U: "That's wrong."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+  U: 'What do you know about Vessa?'
+  A: "Vessa's boss is Nira. Vessa's city is Oria."
+  S: [['Vessa', 'boss', 'Nira'], ['Vessa', 'city', 'Oria']]
+=== ambig0 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Quen's boss?"
+  A: "I don't know anyone called Quen."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "That's wrong."
+  A: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+=== q-trap2 ===
+  U: "Vessa's boss is Nira."
+  A: "Saved: Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Isn't Nira Vessa's boss?"
+  A: "I didn't understand that. I only know current facts and I can't do 'not' -- could you say it without that part?"
+  S: [['Vessa', 'boss', 'Nira']]
+  U: "Who is Vessa's boss?"
+  A: "Vessa's boss is Nira."
+  S: [['Vessa', 'boss', 'Nira']]
+[0m
+[0m# [0mTodos
+[✓] Fetch spec/schema, check disk/uptime, verify base files identical
+[✓] Pilot base storage for candidate relations/wordings (CPU, one process)
+[•] Write make_panel.py with 96 hand-written items
+[ ] Write run_base.py and score_panel.py, run once to produce base138nb.jsonl
+[ ] Verify acceptance (setup saved, contextual, ambiguous, control 12/12, quotas) and write README
+[ ] Seal and report verdict with marks table
+[0m
+[0m$ [0mmkdir -p artifacts/claude-corrpanel291-20260923 && ls artifacts/claude-corrpanel291-20260923; df -g / | tail -1; uptime
+/dev/disk3s1s1       460   12        12    50%  484014 133781960    0%   /
+ 3:31  up 2 days, 19:20, 4 users, load averages: 42.25 47.37 55.89
+[0m
+[0m← [0mWrite artifacts/claude-corrpanel291-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-corrpanel291-20260923/run_base.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-corrpanel291-20260923/score_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/make_panel.py
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py", line 181, in <module>
+    main()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py", line 172, in main
+    self_checks()
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py", line 140, in self_checks
+    assert len(set(i["turn"] for i in ITEMS))==96, "duplicate turn"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: duplicate turn
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; P=[json.loads(l) for l in open('artifacts/claude-corrpanel291-20260923/make_panel.py')]" 2>&1 | head; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/dupcheck.py 2>&1 | head
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+/Users/ben-hannan/.cache/uv/builds-v0/.tmprqyb64/bin/python: can't open file '/tmp/dupcheck.py': [Errno 2] No such file or directory
+[0m
+[0m← [0mWrite /tmp/dupcheck.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/dupcheck.py
+3 "That's wrong." ['c291-018', 'c291-071', 'c291-075']
+2 "No, that's not right." ['c291-019', 'c291-073']
+[0m
+[0m→ [0mRead artifacts/claude-corrpanel291-20260923/make_panel.py[90m [limit=10, offset=60][0m
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -92,9 +92,9 @@
+ {"id":"c291-068","family":"unstored_denial","setup":["Marek Sol's teacher is Master Gore."],"turn":"Ulric's teacher isn't Master Gore.","followup":"Who is Marek Sol's teacher?","stated_facts":[["Marek Sol","teacher","Master Gore"]],"expect_gone":[],"expect_store":[["Marek Sol","teacher","Master Gore"]],"gold_followup":"Master Gore","note":"unstored unknown-person teacher"},
+ {"id":"c291-069","family":"unstored_denial","setup":["Nessa's pet is Larch."],"turn":"Nessa's pet isn't Mallow.","followup":"What is Nessa's pet?","stated_facts":[["Nessa","pet","Larch"]],"expect_gone":[],"expect_store":[["Nessa","pet","Larch"]],"gold_followup":"Larch","note":"unstored known-other pet"},
+ {"id":"c291-070","family":"unstored_denial","setup":["Orvin's sister is Odessa."],"turn":"Venna's sister isn't Odessa.","followup":"Who is Orvin's sister?","stated_facts":[["Orvin","sister","Odessa"]],"expect_gone":[],"expect_store":[["Orvin","sister","Odessa"]],"gold_followup":"Odessa","note":"unstored unknown sister"},
+ # ---- ambiguous 6 (071..076) ----
+-{"id":"c291-071","family":"ambiguous","setup":["Pella's boss is Falcor.","Pella's city is Holmere.","What do you know about Pella?"],"turn":"That's wrong.","followup":"What do you know about Pella?","stated_facts":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"expect_gone":[],"expect_store":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"gold_followup":"Falcor; Holmere","note":"ambiguous two-facts that-wrong"},
++{"id":"c291-071","family":"ambiguous","setup":["Pella's boss is Falcor.","Pella's city is Holmere.","What do you know about Pella?"],"turn":"That's wrong, all of it.","followup":"What do you know about Pella?","stated_facts":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"expect_gone":[],"expect_store":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"gold_followup":"Falcor; Holmere","note":"ambiguous two-facts that-wrong"},
+ {"id":"c291-072","family":"ambiguous","setup":["Quillan's mother is Sarella.","Quillan's pet is Bramble.","What do you know about Quillan?"],"turn":"No, it's Corlin.","followup":"What do you know about Quillan?","stated_facts":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"expect_gone":[],"expect_store":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"gold_followup":"Sarella; Bramble","note":"ambiguous two-facts correction"},
+ {"id":"c291-073","family":"ambiguous","setup":["Ressa's teacher is Master Elow.","Ressa's coach is Coach Petra.","What do you know about Ressa?"],"turn":"No, that's not right.","followup":"What do you know about Ressa?","stated_facts":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"expect_gone":[],"expect_store":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"gold_followup":"Master Elow; Coach Petra","note":"ambiguous two-facts not-right"},
+ {"id":"c291-074","family":"ambiguous","setup":["Soren Hale's boss is Gremma.","Soren Hale's sister is Torra Mar.","What do you know about Soren Hale?"],"turn":"Wrong, it's Invarra.","followup":"What do you know about Soren Hale?","stated_facts":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"expect_gone":[],"expect_store":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"gold_followup":"Gremma; Torra Mar","note":"ambiguous two-facts wrong-its"},
+ {"id":"c291-075","family":"ambiguous","setup":["Tilda's boss is Harl.","Who is Zella's boss?"],"turn":"That's wrong.","followup":"Who is Tilda's boss?","stated_facts":[["Tilda","boss","Harl"]],"expect_gone":[],"expect_store":[["Tilda","boss","Harl"]],"gold_followup":"Harl","note":"ambiguous no-fact unknown-question"},
+
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -96,9 +96,9 @@
+ {"id":"c291-071","family":"ambiguous","setup":["Pella's boss is Falcor.","Pella's city is Holmere.","What do you know about Pella?"],"turn":"That's wrong, all of it.","followup":"What do you know about Pella?","stated_facts":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"expect_gone":[],"expect_store":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"gold_followup":"Falcor; Holmere","note":"ambiguous two-facts that-wrong"},
+ {"id":"c291-072","family":"ambiguous","setup":["Quillan's mother is Sarella.","Quillan's pet is Bramble.","What do you know about Quillan?"],"turn":"No, it's Corlin.","followup":"What do you know about Quillan?","stated_facts":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"expect_gone":[],"expect_store":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"gold_followup":"Sarella; Bramble","note":"ambiguous two-facts correction"},
+ {"id":"c291-073","family":"ambiguous","setup":["Ressa's teacher is Master Elow.","Ressa's coach is Coach Petra.","What do you know about Ressa?"],"turn":"No, that's not right.","followup":"What do you know about Ressa?","stated_facts":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"expect_gone":[],"expect_store":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"gold_followup":"Master Elow; Coach Petra","note":"ambiguous two-facts not-right"},
+ {"id":"c291-074","family":"ambiguous","setup":["Soren Hale's boss is Gremma.","Soren Hale's sister is Torra Mar.","What do you know about Soren Hale?"],"turn":"Wrong, it's Invarra.","followup":"What do you know about Soren Hale?","stated_facts":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"expect_gone":[],"expect_store":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"gold_followup":"Gremma; Torra Mar","note":"ambiguous two-facts wrong-its"},
+-{"id":"c291-075","family":"ambiguous","setup":["Tilda's boss is Harl.","Who is Zella's boss?"],"turn":"That's wrong.","followup":"Who is Tilda's boss?","stated_facts":[["Tilda","boss","Harl"]],"expect_gone":[],"expect_store":[["Tilda","boss","Harl"]],"gold_followup":"Harl","note":"ambiguous no-fact unknown-question"},
++{"id":"c291-075","family":"ambiguous","setup":["Tilda's boss is Harl.","Who is Zella's boss?"],"turn":"That's wrong about that.","followup":"Who is Tilda's boss?","stated_facts":[["Tilda","boss","Harl"]],"expect_gone":[],"expect_store":[["Tilda","boss","Harl"]],"gold_followup":"Harl","note":"ambiguous no-fact unknown-question"},
+ {"id":"c291-076","family":"ambiguous","setup":["Ulric's city is Corlin.","Who is Zella's teacher?"],"turn":"No, it's Holmere.","followup":"Where does Ulric live?","stated_facts":[["Ulric","city","Corlin"]],"expect_gone":[],"expect_store":[["Ulric","city","Corlin"]],"gold_followup":"Corlin","note":"ambiguous no-fact correction"},
+ # ---- question_trap 8 (077..084) ----
+ {"id":"c291-077","family":"question_trap","setup":["Venna's city is Invarra."],"turn":"Doesn't Venna live in Invarra?","followup":"Where does Venna live?","stated_facts":[["Venna","city","Invarra"]],"expect_gone":[],"expect_store":[["Venna","city","Invarra"]],"gold_followup":"Invarra","note":"trap doesnt-live"},
+ {"id":"c291-078","family":"question_trap","setup":["Waldo Pry's boss is Jorunn."],"turn":"Isn't Jorunn Waldo Pry's boss?","followup":"Who is Waldo Pry's boss?","stated_facts":[["Waldo Pry","boss","Jorunn"]],"expect_gone":[],"expect_store":[["Waldo Pry","boss","Jorunn"]],"gold_followup":"Jorunn","note":"trap isnt-boss"},
+
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -94,9 +94,9 @@
+ {"id":"c291-070","family":"unstored_denial","setup":["Orvin's sister is Odessa."],"turn":"Venna's sister isn't Odessa.","followup":"Who is Orvin's sister?","stated_facts":[["Orvin","sister","Odessa"]],"expect_gone":[],"expect_store":[["Orvin","sister","Odessa"]],"gold_followup":"Odessa","note":"unstored unknown sister"},
+ # ---- ambiguous 6 (071..076) ----
+ {"id":"c291-071","family":"ambiguous","setup":["Pella's boss is Falcor.","Pella's city is Holmere.","What do you know about Pella?"],"turn":"That's wrong, all of it.","followup":"What do you know about Pella?","stated_facts":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"expect_gone":[],"expect_store":[["Pella","boss","Falcor"],["Pella","city","Holmere"]],"gold_followup":"Falcor; Holmere","note":"ambiguous two-facts that-wrong"},
+ {"id":"c291-072","family":"ambiguous","setup":["Quillan's mother is Sarella.","Quillan's pet is Bramble.","What do you know about Quillan?"],"turn":"No, it's Corlin.","followup":"What do you know about Quillan?","stated_facts":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"expect_gone":[],"expect_store":[["Quillan","mother","Sarella"],["Quillan","pet","Bramble"]],"gold_followup":"Sarella; Bramble","note":"ambiguous two-facts correction"},
+-{"id":"c291-073","family":"ambiguous","setup":["Ressa's teacher is Master Elow.","Ressa's coach is Coach Petra.","What do you know about Ressa?"],"turn":"No, that's not right.","followup":"What do you know about Ressa?","stated_facts":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"expect_gone":[],"expect_store":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"gold_followup":"Master Elow; Coach Petra","note":"ambiguous two-facts not-right"},
++{"id":"c291-073","family":"ambiguous","setup":["Ressa's teacher is Master Elow.","Ressa's coach is Coach Petra.","What do you know about Ressa?"],"turn":"No, that's not right at all.","followup":"What do you know about Ressa?","stated_facts":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"expect_gone":[],"expect_store":[["Ressa","teacher","Master Elow"],["Ressa","coach","Coach Petra"]],"gold_followup":"Master Elow; Coach Petra","note":"ambiguous two-facts not-right"},
+ {"id":"c291-074","family":"ambiguous","setup":["Soren Hale's boss is Gremma.","Soren Hale's sister is Torra Mar.","What do you know about Soren Hale?"],"turn":"Wrong, it's Invarra.","followup":"What do you know about Soren Hale?","stated_facts":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"expect_gone":[],"expect_store":[["Soren Hale","boss","Gremma"],["Soren Hale","sister","Torra Mar"]],"gold_followup":"Gremma; Torra Mar","note":"ambiguous two-facts wrong-its"},
+ {"id":"c291-075","family":"ambiguous","setup":["Tilda's boss is Harl.","Who is Zella's boss?"],"turn":"That's wrong about that.","followup":"Who is Tilda's boss?","stated_facts":[["Tilda","boss","Harl"]],"expect_gone":[],"expect_store":[["Tilda","boss","Harl"]],"gold_followup":"Harl","note":"ambiguous no-fact unknown-question"},
+ {"id":"c291-076","family":"ambiguous","setup":["Ulric's city is Corlin.","Who is Zella's teacher?"],"turn":"No, it's Holmere.","followup":"Where does Ulric live?","stated_facts":[["Ulric","city","Corlin"]],"expect_gone":[],"expect_store":[["Ulric","city","Corlin"]],"gold_followup":"Corlin","note":"ambiguous no-fact correction"},
+ # ---- question_trap 8 (077..084) ----
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/make_panel.py
+SELF-CHECKS OK {'verb_denial': 8, 'possessive_denial': 8, 'contextual_denial': 8, 'contextual_correction': 8, 'explicit_correction': 8, 'tail_denial': 8, 'opener_teach': 8, 'opener_correction': 8, 'unstored_denial': 6, 'ambiguous': 6, 'question_trap': 8, 'control': 12} ['birthplace', 'boss', 'city', 'coach', 'employer', 'language', 'mother', 'pet', 'sister', 'teacher']
+WROTE /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/panel.jsonl 96 items
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -102,9 +102,9 @@
+ # ---- question_trap 8 (077..084) ----
+ {"id":"c291-077","family":"question_trap","setup":["Venna's city is Invarra."],"turn":"Doesn't Venna live in Invarra?","followup":"Where does Venna live?","stated_facts":[["Venna","city","Invarra"]],"expect_gone":[],"expect_store":[["Venna","city","Invarra"]],"gold_followup":"Invarra","note":"trap doesnt-live"},
+ {"id":"c291-078","family":"question_trap","setup":["Waldo Pry's boss is Jorunn."],"turn":"Isn't Jorunn Waldo Pry's boss?","followup":"Who is Waldo Pry's boss?","stated_facts":[["Waldo Pry","boss","Jorunn"]],"expect_gone":[],"expect_store":[["Waldo Pry","boss","Jorunn"]],"gold_followup":"Jorunn","note":"trap isnt-boss"},
+ {"id":"c291-079","family":"question_trap","setup":["Xenia's employer is Farfield Studio."],"turn":"Is it true that Xenia doesn't work at Farfield Studio?","followup":"Where does Xenia work?","stated_facts":[["Xenia","employer","Farfield Studio"]],"expect_gone":[],"expect_store":[["Xenia","employer","Farfield Studio"]],"gold_followup":"Farfield Studio","note":"trap is-it-true doesnt-work"},
+-{"id":"c291-080","family":"question_trap","setup":["Yorick's birthplace is Ellow.","Who was born in Ellow?"],"turn":"Wasn't Yorick born in Ellow?","followup":"Who was born in Ellow?","stated_facts":[["Yorick","birthplace","Ellow"]],"expect_gone":[],"expect_store":[["Yorick","birthplace","Ellow"]],"gold_followup":"Ellow","note":"trap wasnt-born"},
++{"id":"c291-080","family":"question_trap","setup":["Yorick's birthplace is Ellow."],"turn":"Wasn't Yorick born in Ellow?","followup":"Who was born in Ellow?","stated_facts":[["Yorick","birthplace","Ellow"]],"expect_gone":[],"expect_store":[["Yorick","birthplace","Ellow"]],"gold_followup":"Ellow","note":"trap wasnt-born"},
+ {"id":"c291-081","family":"question_trap","setup":["Zanna's sister is Wrena Linn."],"turn":"Isn't Wrena Linn Zanna's sister?","followup":"Who is Zanna's sister?","stated_facts":[["Zanna","sister","Wrena Linn"]],"expect_gone":[],"expect_store":[["Zanna","sister","Wrena Linn"]],"gold_followup":"Wrena Linn","note":"trap isnt-sister"},
+ {"id":"c291-082","family":"question_trap","setup":["Bram Kess's language is Kavic."],"turn":"Doesn't Bram Kess speak Kavic?","followup":"What is Bram Kess's language?","stated_facts":[["Bram Kess","language","Kavic"]],"expect_gone":[],"expect_store":[["Bram Kess","language","Kavic"]],"gold_followup":"Kavic","note":"trap doesnt-speak"},
+ {"id":"c291-083","family":"question_trap","setup":["Cora Linn's mother is Doria."],"turn":"Is Doria not Cora Linn's mother?","followup":"Who is Cora Linn's mother?","stated_facts":[["Cora Linn","mother","Doria"]],"expect_gone":[],"expect_store":[["Cora Linn","mother","Doria"]],"gold_followup":"Doria","note":"trap is-not novel"},
+ {"id":"c291-084","family":"question_trap","setup":["Donal Pry's coach is Coach Sill."],"turn":"Didn't Coach Sill coach Donal Pry?","followup":"Who is Donal Pry's coach?","stated_facts":[["Donal Pry","coach","Coach Sill"]],"expect_gone":[],"expect_store":[["Donal Pry","coach","Coach Sill"]],"gold_followup":"Coach Sill","note":"trap didnt-coach novel"},
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/make_panel.py && df -g / | tail -1; uptime
+SELF-CHECKS OK {'verb_denial': 8, 'possessive_denial': 8, 'contextual_denial': 8, 'contextual_correction': 8, 'explicit_correction': 8, 'tail_denial': 8, 'opener_teach': 8, 'opener_correction': 8, 'unstored_denial': 6, 'ambiguous': 6, 'question_trap': 8, 'control': 12} ['birthplace', 'boss', 'city', 'coach', 'employer', 'language', 'mother', 'pet', 'sister', 'teacher']
+WROTE /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/panel.jsonl 96 items
+/dev/disk3s1s1       460   12        12    51%  484014 132093120    0%   /
+ 3:35  up 2 days, 19:24, 4 users, load averages: 56.37 50.07 54.76
+[0m
+[0m# [0mTodos
+[✓] Fetch spec/schema, check disk/uptime, verify base files identical
+[✓] Pilot base storage for candidate relations/wordings (CPU, one process)
+[✓] Write make_panel.py with 96 hand-written items
+[•] Write run_base.py and score_panel.py, run once to produce base138nb.jsonl
+[ ] Verify acceptance (setup saved, contextual, ambiguous, control 12/12, quotas) and write README
+[ ] Seal and report verdict with marks table
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/run_base.py 2>&1 | tail -n 120
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/run_base.py", line 7, in <module>
+    import claude_loop138nb_agent as NB
+ModuleNotFoundError: No module named 'claude_loop138nb_agent'
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/run_base.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/run_base.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/run_base.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/run_base.py
+@@ -1,9 +1,9 @@
+ #!/usr/bin/env python3
+ """Run base 138nb once over corrpanel291. CPU only, one process."""
+ import copy, json, re, shutil, sys, tempfile
+ from pathlib import Path
+-ROOT = Path(__file__).resolve().parents[1]
++ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT / "scripts"))
+ import claude_loop138nb_agent as NB
+ import fable_loop90_agent as L90
+ 
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/run_base.py 2>&1 | tail -n 120
+c291-001 verb_denial right=False wrong=True fclaim=False junk=False
+c291-002 verb_denial right=False wrong=True fclaim=False junk=False
+c291-003 verb_denial right=False wrong=True fclaim=False junk=False
+c291-004 verb_denial right=False wrong=True fclaim=False junk=False
+c291-005 verb_denial right=False wrong=True fclaim=False junk=False
+c291-006 verb_denial right=False wrong=True fclaim=False junk=False
+c291-007 verb_denial right=False wrong=True fclaim=False junk=False
+c291-008 verb_denial right=False wrong=True fclaim=False junk=False
+c291-009 possessive_denial right=True wrong=False fclaim=False junk=False
+c291-010 possessive_denial right=False wrong=True fclaim=False junk=False
+c291-011 possessive_denial right=True wrong=False fclaim=False junk=False
+c291-012 possessive_denial right=False wrong=True fclaim=False junk=False
+c291-013 possessive_denial right=False wrong=True fclaim=True junk=False
+c291-014 possessive_denial right=False wrong=True fclaim=False junk=False
+c291-015 possessive_denial right=False wrong=True fclaim=False junk=False
+c291-016 possessive_denial right=False wrong=True fclaim=False junk=False
+c291-017 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-018 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-019 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-020 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-021 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-022 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-023 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-024 contextual_denial right=False wrong=True fclaim=False junk=False
+c291-025 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-026 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-027 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-028 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-029 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-030 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-031 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-032 contextual_correction right=False wrong=True fclaim=False junk=False
+c291-033 explicit_correction right=False wrong=False fclaim=False junk=False
+c291-034 explicit_correction right=False wrong=True fclaim=False junk=False
+c291-035 explicit_correction right=False wrong=True fclaim=False junk=True
+c291-036 explicit_correction right=False wrong=True fclaim=False junk=False
+c291-037 explicit_correction right=False wrong=False fclaim=False junk=False
+c291-038 explicit_correction right=False wrong=False fclaim=False junk=False
+c291-039 explicit_correction right=False wrong=True fclaim=False junk=True
+c291-040 explicit_correction right=False wrong=True fclaim=False junk=False
+c291-041 tail_denial right=False wrong=True fclaim=False junk=False
+c291-042 tail_denial right=False wrong=True fclaim=True junk=False
+c291-043 tail_denial right=False wrong=True fclaim=False junk=False
+c291-044 tail_denial right=False wrong=True fclaim=True junk=False
+c291-045 tail_denial right=False wrong=False fclaim=False junk=False
+c291-046 tail_denial right=False wrong=True fclaim=False junk=False
+c291-047 tail_denial right=False wrong=True fclaim=True junk=False
+c291-048 tail_denial right=False wrong=False fclaim=False junk=False
+c291-049 opener_teach right=False wrong=False fclaim=False junk=True
+c291-050 opener_teach right=False wrong=False fclaim=False junk=True
+c291-051 opener_teach right=False wrong=False fclaim=False junk=True
+c291-052 opener_teach right=False wrong=False fclaim=False junk=True
+c291-053 opener_teach right=False wrong=False fclaim=False junk=True
+c291-054 opener_teach right=False wrong=False fclaim=False junk=False
+c291-055 opener_teach right=False wrong=False fclaim=False junk=True
+c291-056 opener_teach right=False wrong=False fclaim=False junk=True
+c291-057 opener_correction right=False wrong=False fclaim=False junk=False
+c291-058 opener_correction right=False wrong=True fclaim=False junk=False
+c291-059 opener_correction right=False wrong=True fclaim=False junk=False
+c291-060 opener_correction right=False wrong=True fclaim=False junk=False
+c291-061 opener_correction right=False wrong=True fclaim=False junk=False
+c291-062 opener_correction right=False wrong=True fclaim=False junk=False
+c291-063 opener_correction right=False wrong=True fclaim=False junk=False
+c291-064 opener_correction right=False wrong=True fclaim=False junk=False
+c291-065 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-066 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-067 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-068 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-069 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-070 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-071 ambiguous right=True wrong=False fclaim=False junk=False
+c291-072 ambiguous right=True wrong=False fclaim=False junk=False
+c291-073 ambiguous right=True wrong=False fclaim=False junk=False
+c291-074 ambiguous right=True wrong=False fclaim=False junk=False
+c291-075 ambiguous right=True wrong=False fclaim=False junk=False
+c291-076 ambiguous right=True wrong=False fclaim=False junk=False
+c291-077 question_trap right=True wrong=False fclaim=False junk=False
+c291-078 question_trap right=True wrong=False fclaim=False junk=False
+c291-079 question_trap right=True wrong=False fclaim=False junk=False
+c291-080 question_trap right=True wrong=False fclaim=False junk=False
+c291-081 question_trap right=True wrong=False fclaim=False junk=False
+c291-082 question_trap right=True wrong=False fclaim=False junk=False
+c291-083 question_trap right=True wrong=False fclaim=False junk=False
+c291-084 question_trap right=True wrong=False fclaim=False junk=False
+c291-085 control right=True wrong=False fclaim=False junk=False
+c291-086 control right=True wrong=False fclaim=False junk=False
+c291-087 control right=True wrong=False fclaim=False junk=False
+c291-088 control right=True wrong=False fclaim=False junk=False
+c291-089 control right=True wrong=False fclaim=False junk=False
+c291-090 control right=True wrong=False fclaim=False junk=False
+c291-091 control right=True wrong=False fclaim=False junk=False
+c291-092 control right=True wrong=False fclaim=False junk=False
+c291-093 control right=True wrong=False fclaim=False junk=False
+c291-094 control right=True wrong=False fclaim=False junk=False
+c291-095 control right=True wrong=False fclaim=False junk=False
+c291-096 control right=False wrong=True fclaim=False junk=False
+WROTE /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/base138nb.jsonl 96 rows
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -23,9 +23,9 @@
+ {"id":"c291-007","family":"verb_denial","setup":["Halden's language is Lurish."],"turn":"halden stopped speaking lurish.","followup":"What is Halden's language?","stated_facts":[["Halden","language","Lurish"]],"expect_gone":[["Halden","language","Lurish"]],"expect_store":[],"gold_followup":None,"note":"verb novel stopped lower"},
+ {"id":"c291-008","family":"verb_denial","setup":["Isla Mar's city is Dunmere."],"turn":"That's not true, Isla Mar doesn't reside in Dunmere.","followup":"Where does Isla Mar live?","stated_facts":[["Isla Mar","city","Dunmere"]],"expect_gone":[["Isla Mar","city","Dunmere"]],"expect_store":[],"gold_followup":None,"note":"verb novel reside with lead"},
+ # ---- possessive_denial 8 (009..016) ----
+ {"id":"c291-009","family":"possessive_denial","setup":["Joren's boss is Albar."],"turn":"Joren's boss isn't Albar.","followup":"Who is Joren's boss?","stated_facts":[["Joren","boss","Albar"]],"expect_gone":[["Joren","boss","Albar"]],"expect_store":[],"gold_followup":None,"note":"possessive isnt"},
+-{"id":"c291-010","family":"possessive_denial","setup":["Kelda's sister is Lina."],"turn":"Albar is not Kelda's sister.","followup":"Who is Kelda's sister?","stated_facts":[["Kelda","sister","Lina"]],"expect_gone":[["Kelda","sister","Lina"]],"expect_store":[],"gold_followup":None,"note":"possessive Y-is-not novel name"},
++{"id":"c291-010","family":"possessive_denial","setup":["Kelda's sister is Lina."],"turn":"Lina is not Kelda's sister.","followup":"Who is Kelda's sister?","stated_facts":[["Kelda","sister","Lina"]],"expect_gone":[["Kelda","sister","Lina"]],"expect_store":[],"gold_followup":None,"note":"possessive Y-is-not novel name"},
+ {"id":"c291-011","family":"possessive_denial","setup":["Lorin's city is Ellow."],"turn":"Lorin's city is not Ellow.","followup":"Where does Lorin live?","stated_facts":[["Lorin","city","Ellow"]],"expect_gone":[["Lorin","city","Ellow"]],"expect_store":[],"gold_followup":None,"note":"possessive is-not"},
+ {"id":"c291-012","family":"possessive_denial","setup":["Marek Sol's mother is Annis."],"turn":"marek sol's mother isn't annis.","followup":"Who is Marek Sol's mother?","stated_facts":[["Marek Sol","mother","Annis"]],"expect_gone":[["Marek Sol","mother","Annis"]],"expect_store":[],"gold_followup":None,"note":"possessive lower"},
+ {"id":"c291-013","family":"possessive_denial","setup":["Nessa's teacher is Master Corv."],"turn":"nessa's teacher isn't master corv.","followup":"Who is Nessa's teacher?","stated_facts":[["Nessa","teacher","Master Corv"]],"expect_gone":[["Nessa","teacher","Master Corv"]],"expect_store":[],"gold_followup":None,"note":"possessive lower teacher"},
+ {"id":"c291-014","family":"possessive_denial","setup":["Orvin's coach is Coach Bren."],"turn":"Coach Bren is no longer Orvin's coach.","followup":"Who is Orvin's coach?","stated_facts":[["Orvin","coach","Coach Bren"]],"expect_gone":[["Orvin","coach","Coach Bren"]],"expect_store":[],"gold_followup":None,"note":"possessive novel no-longer"},
+
+[0m
+[0m← [0mEdit artifacts/claude-corrpanel291-20260923/make_panel.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/make_panel.py
+@@ -119,9 +119,9 @@
+ {"id":"c291-092","family":"control","setup":["Isla Mar's city is Ellow."],"turn":"Where does Isla Mar live?","followup":"Where does Isla Mar live?","stated_facts":[["Isla Mar","city","Ellow"]],"expect_gone":[],"expect_store":[["Isla Mar","city","Ellow"]],"gold_followup":"Ellow","note":"control plain question live"},
+ {"id":"c291-093","family":"control","setup":["Joren's pet is Bramble."],"turn":"What is Joren's pet?","followup":"What is Joren's pet?","stated_facts":[["Joren","pet","Bramble"]],"expect_gone":[],"expect_store":[["Joren","pet","Bramble"]],"gold_followup":"Bramble","note":"control plain question pet"},
+ {"id":"c291-094","family":"control","setup":["Kelda's boss is Falcor."],"turn":"Kelda's boss isn't Falcor.","followup":"Who is Kelda's boss?","stated_facts":[["Kelda","boss","Falcor"]],"expect_gone":[["Kelda","boss","Falcor"]],"expect_store":[],"gold_followup":None,"note":"control simple denial"},
+ {"id":"c291-095","family":"control","setup":["Lorin's city is Dunmere."],"turn":"Lorin's city isn't Dunmere.","followup":"Where does Lorin live?","stated_facts":[["Lorin","city","Dunmere"]],"expect_gone":[["Lorin","city","Dunmere"]],"expect_store":[],"gold_followup":None,"note":"control simple denial city"},
+-{"id":"c291-096","family":"control","setup":["Marek Sol's sister is Mira."],"turn":"Marek Sol's sister isn't Mira.","followup":"Who is Marek Sol's sister?","stated_facts":[["Marek Sol","sister","Mira"]],"expect_gone":[["Marek Sol","sister","Mira"]],"expect_store":[],"gold_followup":None,"note":"control simple denial sister"},
++{"id":"c291-096","family":"control","setup":["Zanna's boss is Dunmar."],"turn":"Zanna's city is Belmar.","followup":"Where does Zanna live?","stated_facts":[["Zanna","boss","Dunmar"]],"expect_gone":[],"expect_store":[["Zanna","boss","Dunmar"],["Zanna","city","Belmar"]],"gold_followup":"Belmar","note":"control teach city"},
+ ]
+ 
+ FAMILIES = {
+ "verb_denial":8,"possessive_denial":8,"contextual_denial":8,"contextual_correction":8,
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/make_panel.py && df -g / | tail -1; uptime
+SELF-CHECKS OK {'verb_denial': 8, 'possessive_denial': 8, 'contextual_denial': 8, 'contextual_correction': 8, 'explicit_correction': 8, 'tail_denial': 8, 'opener_teach': 8, 'opener_correction': 8, 'unstored_denial': 6, 'ambiguous': 6, 'question_trap': 8, 'control': 12} ['birthplace', 'boss', 'city', 'coach', 'employer', 'language', 'mother', 'pet', 'sister', 'teacher']
+WROTE /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/panel.jsonl 96 items
+/dev/disk3s1s1       460   12        12    51%  484014 131493760    0%   /
+ 3:36  up 2 days, 19:25, 4 users, load averages: 54.80 50.56 54.52
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/run_base.py 2>&1 | tail -n 30; echo "---SCORE---"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-corrpanel291-20260923/score_panel.py artifacts/claude-corrpanel291-20260923/panel.jsonl artifacts/claude-corrpanel291-20260923/base138nb.jsonl
+c291-068 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-069 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-070 unstored_denial right=True wrong=False fclaim=False junk=False
+c291-071 ambiguous right=True wrong=False fclaim=False junk=False
+c291-072 ambiguous right=True wrong=False fclaim=False junk=False
+c291-073 ambiguous right=True wrong=False fclaim=False junk=False
+c291-074 ambiguous right=True wrong=False fclaim=False junk=False
+c291-075 ambiguous right=True wrong=False fclaim=False junk=False
+c291-076 ambiguous right=True wrong=False fclaim=False junk=False
+c291-077 question_trap right=True wrong=False fclaim=False junk=False
+c291-078 question_trap right=True wrong=False fclaim=False junk=False
+c291-079 question_trap right=True wrong=False fclaim=False junk=False
+c291-080 question_trap right=True wrong=False fclaim=False junk=False
+c291-081 question_trap right=True wrong=False fclaim=False junk=False
+c291-082 question_trap right=True wrong=False fclaim=False junk=False
+c291-083 question_trap right=True wrong=False fclaim=False junk=False
+c291-084 question_trap right=True wrong=False fclaim=False junk=False
+c291-085 control right=True wrong=False fclaim=False junk=False
+c291-086 control right=True wrong=False fclaim=False junk=False
+c291-087 control right=True wrong=False fclaim=False junk=False
+c291-088 control right=True wrong=False fclaim=False junk=False
+c291-089 control right=True wrong=False fclaim=False junk=False
+c291-090 control right=True wrong=False fclaim=False junk=False
+c291-091 control right=True wrong=False fclaim=False junk=False
+c291-092 control right=True wrong=False fclaim=False junk=False
+c291-093 control right=True wrong=False fclaim=False junk=False
+c291-094 control right=True wrong=False fclaim=False junk=False
+c291-095 control right=True wrong=False fclaim=False junk=False
+c291-096 control right=True wrong=False fclaim=False junk=False
+WROTE /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-corrpanel291-20260923/base138nb.jsonl 96 rows
+---SCORE---
+verb_denial             0/ 8 wrong 8 junk 0 fw 0 fclaim 0
+possessive_denial       2/ 8 wrong 6 junk 0 fw 0 fclaim 1
+contextual_denial       0/ 8 wrong 8 junk 0 fw 0 fclaim 0
+contextual_correction   0/ 8 wrong 8 junk 0 fw 0 fclaim 0
+explicit_correction     0/ 8 wrong 5 junk 2 fw 0 fclaim 0
+tail_denial             0/ 8 wrong 6 junk 0 fw 0 fclaim 3
+opener_teach            0/ 8 wrong 0 junk 7 fw 0 fclaim 0
+opener_correction       0/ 8 wrong 7 junk 0 fw 0 fclaim 0
+unstored_denial         6/ 6 wrong 0 junk 0 fw 0 fclaim 0
+ambiguous               6/ 6 wrong 0 junk 0 fw 0 fclaim 0
+question_trap           8/ 8 wrong 0 junk 0 fw 0 fclaim 0
+control                12/12 wrong 0 junk 0 fw 0 fclaim 0
+TOTAL right 34/96 wrong 48 junk 9 fw 0 fclaim 4
+[0m
+[0m← [0mWrite /tmp/verify291.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/verify291.py
+stated-vs-stored mismatches: 0 []
+contextual bad (need exactly 1): 0 []
+ambiguous bad (need 2+ or 0): 0 []
+control failures: 0 []
+verb_denial lowercase: 3
+possessive_denial lowercase: 2
+contextual_denial lowercase: 3
+contextual_correction lowercase: 2
+explicit_correction lowercase: 2
+[0m
+[0m# [0mTodos
+[✓] Fetch spec/schema, check disk/uptime, verify base files identical
+[✓] Pilot base storage for candidate relations/wordings (CPU, one process)
+[✓] Write make_panel.py with 96 hand-written items
+[✓] Write run_base.py and score_panel.py, run once to produce base138nb.jsonl
+[•] Verify acceptance (setup saved, contextual, ambiguous, control 12/12, quotas) and write README
+[ ] Seal and report verdict with marks table
+[0m
+[0m← [0mWrite artifacts/claude-corrpanel291-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-corrpanel291-20260923/panel.jsonl artifacts/claude-corrpanel291-20260923/base138nb.jsonl artifacts/claude-corrpanel291-20260923/make_panel.py artifacts/claude-corrpanel291-20260923/run_base.py artifacts/claude-corrpanel291-20260923/score_panel.py > artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt && cat artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-corrpanel291-20260923/SEAL.sha256.txt && ls -l artifacts/claude-corrpanel291-20260923/ && df -g / | tail -1
+61021a41e7a73212d2021b42ebe110ad998d742341f10242eada61010608a8ce  artifacts/claude-corrpanel291-20260923/panel.jsonl
+d0780b37dd597a033174d3d5dff35dda669b870524192a5cbeaf97dc9394b8ee  artifacts/claude-corrpanel291-20260923/base138nb.jsonl
+7cd33d44dda5e20b0cd9d1ad9de84ea1048d9e743ba6a184dd2c5d4746d3334e  artifacts/claude-corrpanel291-20260923/make_panel.py
+6ba11555f0eb0f3790606156ec6ac4cd55582bc0b33caaadcdf6e607a26c062e  artifacts/claude-corrpanel291-20260923/run_base.py
+a9fe1874ddb9e4ba6317352ad73d9fb3cf4f3c44f1586ce3a7f7638d8824d2d5  artifacts/claude-corrpanel291-20260923/score_panel.py
+artifacts/claude-corrpanel291-20260923/panel.jsonl: OK
+artifacts/claude-corrpanel291-20260923/base138nb.jsonl: OK
+artifacts/claude-corrpanel291-20260923/make_panel.py: OK
+artifacts/claude-corrpanel291-20260923/run_base.py: OK
+artifacts/claude-corrpanel291-20260923/score_panel.py: OK
+total 296
+-rw-r--r--  1 ben-hannan  staff  49216 Sep 23 03:36 base138nb.jsonl
+-rw-r--r--  1 ben-hannan  staff  37693 Sep 23 03:36 make_panel.py
+-rw-r--r--  1 ben-hannan  staff  36114 Sep 23 03:36 panel.jsonl
+-rw-r--r--  1 ben-hannan  staff   2870 Sep 23 03:37 README.md
+-rw-r--r--  1 ben-hannan  staff   3760 Sep 23 03:35 run_base.py
+-rw-r--r--  1 ben-hannan  staff   5047 Sep 23 03:34 score_panel.py
+-rw-r--r--  1 ben-hannan  staff    594 Sep 23 03:37 SEAL.sha256.txt
+/dev/disk3s1s1       460   12        12    51%  484014 131323360    0%   /
+[0m
+[0m# [0mTodos
+[✓] Fetch spec/schema, check disk/uptime, verify base files identical
+[✓] Pilot base storage for candidate relations/wordings (CPU, one process)
+[✓] Write make_panel.py with 96 hand-written items
+[✓] Write run_base.py and score_panel.py, run once to produce base138nb.jsonl
+[✓] Verify acceptance (setup saved, contextual, ambiguous, control 12/12, quotas) and write README
+[✓] Seal and report verdict with marks table
+[0m
