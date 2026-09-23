@@ -1,0 +1,31 @@
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel301-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-301, the one follow-up to the lis-300 FAIL. It is the same fine-tune as lis-300 with ONE change: extra hard-case training rows. You pick the confidence threshold on dev, then run the new sealed blind panel ONCE. Artifacts go in artifacts/claude-lis301-20260923/. The listener thread (Opus) wrote all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis301-20260923/PASSMARKS.md, design/v3/60-listener/frame-spec.md, design/v3/60-listener/frame-spec-notes-301.md, scripts/claude_lis301_data.py, and the lis-300 task handoff/queue/lis-300-train.md (steps 0-8 are the same unless changed below).
+
+0. GPU. GPU: yes. Use BensPC as in lis-300 (same venv and the same downloaded openbmb/MiniCPM5-1B snapshot are fine; check the safetensors sha256 matches the one in origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md). The vast.ai fallback and its rules are as in lis-300 ($3.00 / 3 h ceiling).
+1. DATA. Get origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. First run `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` and `shasum -a 256 -c artifacts/claude-lis301-20260923/SEAL.sha256.txt` from the repo root: both must be all OK. Then run:
+   python scripts/claude_lis301_data.py --o0b <o0b dir> --o0a2 <o0a2 dir> --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --out <work>/data
+   Record the printed counts.
+2. TRAIN. Same command and flags as lis-300 step 3 (--epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge), with --data <work>/data and --out <work>/run. If it runs out of memory, use --batch 8 once and report it.
+3. DEV + THRESHOLD. Same as lis-300 step 4, with <work>/data/dev.jsonl. Apply the threshold rule exactly. Write THRESHOLD.txt, dev_sweep.txt, and the dev numbers per src (o0b_l2, opus_dev, o0a2, opus301_dev) at T.
+4. SEAL. Run sha256 over THRESHOLD.txt, the merged safetensors and dev_sweep.txt into SEAL-run.sha256.txt BEFORE opening the panel.
+5. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt` (must be all OK). Run the reader on artifacts/claude-lispanel301-20260923/panel.jsonl, and score it against the key file that seal names at T, and at T = 0 (report only). Never print or quote panel turns; report by category only.
+6. RESULTS.md, result first: each P301.n with integer counts and PASS/FAIL, plus everything listed under "Report only" in PASSMARKS; device and median/p90/max ms; training minutes and tok/s; dollars. Append ledger lines P301.1 to P301.6 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis301-merged/ and record its sha256 in RESULTS.md. Keep it on BensPC too. Never push weights.
+8. Copy dev files for the listener thread: <work>/data/dev.jsonl, <work>/dev_rows.jsonl and <work>/dev_pred.jsonl go to artifacts/claude-lis301-20260923/dev/.
+PUSH: artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/SEAL-run.sha256.txt artifacts/claude-lis301-20260923/dev_sweep.txt artifacts/claude-lis301-20260923/panel_score.json artifacts/claude-lis301-20260923/panel_score_T0.json artifacts/claude-lis301-20260923/train_summary.json artifacts/claude-lis301-20260923/train_log.jsonl artifacts/claude-lis301-20260923/dev artifacts/fable-predictions-ledger.md

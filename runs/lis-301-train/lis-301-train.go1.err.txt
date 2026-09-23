@@ -1,0 +1,2520 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls; git fetch -q origin main 2>&1 | head; git branch -a | head -n 30; ls artifacts/claude-lis301-20260923/ 2>&1; ls design/v3/60-listener/ 2>&1; uptime; df -g / 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+ls: artifacts/claude-lis301-20260923/: No such file or directory
+ls: design/v3/60-listener/: No such file or directory
+13:59  up  3:52, 4 users, load averages: 60.46 50.41 46.16
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        21    38%  484014 224673520    0%   /
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head
+git fetch -q origin builder-outbox 2>&1 | head
+echo ---; git show origin/main:design/v3/60-listener/frame-spec.md 2>&1 | head -n 20
+echo ===; git ls-tree -r --name-only origin/main 2>&1 | grep -i -E "lis301|lis-301|opus-rules|PASSMARKS|frame-spec|lis-300" | head -n 50
+---
+# Listener frame spec v1 (lis- line, exps 300-319, 2026-09-23)
+
+This is the target format for the listener. The listener is Qwen3.5-0.8B, fine-tuned (Ben's 10:55 UTC decision). It reads one chat turn, plus the assistant's previous reply, and writes **one JSON object**. It proposes; plain code (the write compiler, `scripts/claude_lis300_compiler.py`) decides what gets saved. Key-writing rules in `design/v3/30-modes/key-writing-rules.md` apply in full.
+
+## Output
+
+```json
+{"act": "STATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pip", "mode": "ASSERT"}], "ask": null}
+```
+
+- `act` (whole turn): one of `STATE`, `CORRECT`, `ASK`, `CHECK`, `NEGATE`, `SUPPOSE`, `PLAN`, `CHAT`, `UNCLEAR`.
+  - A turn that both states and asks gets the act of its first clause. Each fact still carries its own mode.
+- `facts`: every fact the turn mentions, including facts that must not be saved (for those, the mode says why). Order them as they appear in the turn. The list is `[]` when there is none.
+  - `owner`:
+    - `"me"` for I / me / my / mine.
+    - `"we"` for we / us / our / ours. Never map "our" to "me"; the compiler asks whose.
+    - Otherwise, the owner's name **exactly as typed**, with the same case and any typo.
+    - A pronoun ("he", "she", "they") is resolved to the name it refers to, but only when that is clear from this turn or the previous reply. If it isn't clear, use mode `UNCLEAR`.
+  - `rel`: a name from `design/v3/60-listener/relation-names.txt` (153 names), or `"other"`. Pick the most specific name the words support ("dog", not "pet", when the turn says dog).
+  - `value`: exactly as typed. Keep the case and any typos; never fix spelling.
+zsh:4: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i -E "lis301|lis-301|opus-rules|PASSMARKS|frame-spec|lis-300|lis300" | head -n 50; echo ---BUILDER---; git ls-tree -r --name-only origin/builder-outbox | grep -i -E "lis301|lis300|panel301|o0b|o0a2" | head -n 60
+artifacts/claude-apos247-20260922/PASSMARKS.md
+artifacts/claude-boundary259-20260922/PASSMARKS.md
+artifacts/claude-chain231-20260922/PASSMARKS.md
+artifacts/claude-chain231b-20260922/PASSMARKS.md
+artifacts/claude-comment258-20260922/PASSMARKS.md
+artifacts/claude-correct252-20260922/PASSMARKS.md
+artifacts/claude-correct252b-20260922/PASSMARKS.md
+artifacts/claude-decline224c-20260922/PASSMARKS.md
+artifacts/claude-determinism228-20260922/PASSMARKS.md
+artifacts/claude-direction251-20260922/PASSMARKS.md
+artifacts/claude-earcheck261-20260922/PASSMARKS.md
+artifacts/claude-firstname236-20260922/PASSMARKS.md
+artifacts/claude-firstperson249-20260922/PASSMARKS.md
+artifacts/claude-fixedtext255-20260922/PASSMARKS.md
+artifacts/claude-fullname232-20260922/PASSMARKS.md
+artifacts/claude-fullname232b-20260922/PASSMARKS.md
+artifacts/claude-fullname232c-20260922/PASSMARKS.md
+artifacts/claude-identity227c-20260922/PASSMARKS.md
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+artifacts/claude-lis301-20260923/DATA-AUDIT.md
+artifacts/claude-lis301-20260923/PASSMARKS.md
+artifacts/claude-lis301-20260923/SEAL.sha256.txt
+artifacts/claude-lis301-20260923/data/agree_w4.json
+artifacts/claude-lis301-20260923/data/agree_w5.json
+artifacts/claude-lis301-20260923/data/agree_w6.json
+artifacts/claude-lis301-20260923/data/agreed_ids.txt
+artifacts/claude-lis301-20260923/data/agreed_w4.txt
+artifacts/claude-lis301-20260923/data/agreed_w5.txt
+artifacts/claude-lis301-20260923/data/agreed_w6.txt
+artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt
+artifacts/claude-lis301-20260923/data/dev_relabel_B.jsonl
+artifacts/claude-lis301-20260923/data/opus_w4.jsonl
+artifacts/claude-lis301-20260923/data/opus_w5.jsonl
+artifacts/claude-lis301-20260923/data/opus_w6.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w4.jsonl
+---BUILDER---
+artifacts/claude-lis300-20260923/RESULTS.md
+artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+artifacts/claude-lis300-20260923/THRESHOLD.txt
+artifacts/claude-lis300-20260923/dev/dev.jsonl
+artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+artifacts/claude-lis300-20260923/dev_sweep.txt
+artifacts/claude-lis300-20260923/panel_score.json
+artifacts/claude-lis300-20260923/panel_score_T0.json
+artifacts/claude-lis300-20260923/train_log.jsonl
+artifacts/claude-lis300-20260923/train_summary.json
+artifacts/claude-own-o0a2-20260923/PASSMARKS.md
+artifacts/claude-own-o0a2-20260923/RESULTS.md
+artifacts/claude-own-o0a2-20260923/SEAL-data.sha256.txt
+artifacts/claude-own-o0a2-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0a2-20260923/gold.jsonl
+artifacts/claude-own-o0a2-20260923/oracle_coverage_o0a2.json
+artifacts/claude-own-o0a2-20260923/turns.jsonl
+artifacts/claude-own-o0b-20260923/PASSMARKS.md
+artifacts/claude-own-o0b-20260923/RESULTS.md
+artifacts/claude-own-o0b-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0b-20260923/counts.json
+artifacts/claude-own-o0b-20260923/frame_split.json
+artifacts/claude-own-o0b-20260923/l1dev-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/l2dev-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/name_pools.json
+artifacts/claude-own-o0b-20260923/train-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-01.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-02.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-03.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-04.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-05.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-06.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-07.jsonl.gz
+runs/own-o0a2-oracle/own-o0a2-oracle.exit
+runs/own-o0a2-oracle/own-o0a2-oracle.go1.done
+runs/own-o0a2-oracle/own-o0a2-oracle.go1.err.txt
+runs/own-o0a2-oracle/own-o0a2-oracle.go1.reply.md
+runs/own-o0a2-oracle/own-o0a2-oracle.md
+runs/own-o0b-generator/own-o0b-generator.exit
+runs/own-o0b-generator/own-o0b-generator.go1.done
+runs/own-o0b-generator/own-o0b-generator.go1.err.txt
+runs/own-o0b-generator/own-o0b-generator.go1.reply.md
+runs/own-o0b-generator/own-o0b-generator.md
+scripts/claude_own_o0a2_compiler.py
+scripts/claude_own_o0b_check.py
+scripts/claude_own_o0b_gen.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "lis301|frame-spec-notes-301|lis301_data|lis-300-train|OPUS-RULES" | head -n 30; echo ---; git ls-tree -r --name-only origin/builder-outbox | grep -E "lis301|lispanel301" | head -n 40
+artifacts/claude-lis301-20260923/DATA-AUDIT.md
+artifacts/claude-lis301-20260923/PASSMARKS.md
+artifacts/claude-lis301-20260923/SEAL.sha256.txt
+artifacts/claude-lis301-20260923/data/agree_w4.json
+artifacts/claude-lis301-20260923/data/agree_w5.json
+artifacts/claude-lis301-20260923/data/agree_w6.json
+artifacts/claude-lis301-20260923/data/agreed_ids.txt
+artifacts/claude-lis301-20260923/data/agreed_w4.txt
+artifacts/claude-lis301-20260923/data/agreed_w5.txt
+artifacts/claude-lis301-20260923/data/agreed_w6.txt
+artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt
+artifacts/claude-lis301-20260923/data/dev_relabel_B.jsonl
+artifacts/claude-lis301-20260923/data/opus_w4.jsonl
+artifacts/claude-lis301-20260923/data/opus_w5.jsonl
+artifacts/claude-lis301-20260923/data/opus_w6.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w4.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w5.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w6.jsonl
+design/v3/60-listener/frame-spec-notes-301.md
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/queue/lis-300-train.md
+scripts/claude_lis301_data.py
+---
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "panel301|lispanel|claude-lis" | head -n 40; echo ---MAIN-SCRIPTS---; git ls-tree -r --name-only origin/main | grep -E "^scripts/claude_lis" | head -n 30; echo ---QUEUE---; git ls-tree -r --name-only origin/main | grep handoff/queue | head -n 30
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+artifacts/claude-lis301-20260923/DATA-AUDIT.md
+artifacts/claude-lis301-20260923/PASSMARKS.md
+artifacts/claude-lis301-20260923/SEAL.sha256.txt
+artifacts/claude-lis301-20260923/data/agree_w4.json
+artifacts/claude-lis301-20260923/data/agree_w5.json
+artifacts/claude-lis301-20260923/data/agree_w6.json
+artifacts/claude-lis301-20260923/data/agreed_ids.txt
+artifacts/claude-lis301-20260923/data/agreed_w4.txt
+artifacts/claude-lis301-20260923/data/agreed_w5.txt
+artifacts/claude-lis301-20260923/data/agreed_w6.txt
+artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt
+artifacts/claude-lis301-20260923/data/dev_relabel_B.jsonl
+artifacts/claude-lis301-20260923/data/opus_w4.jsonl
+artifacts/claude-lis301-20260923/data/opus_w5.jsonl
+artifacts/claude-lis301-20260923/data/opus_w6.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w4.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w5.jsonl
+artifacts/claude-lis301-20260923/data/relabel_w6.jsonl
+artifacts/claude-lispanel300-20260923/KEY-AUDIT.md
+artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt
+artifacts/claude-lispanel300-20260923/SEAL.sha256.txt
+artifacts/claude-lispanel300-20260923/SPEC-COUNTS.md
+artifacts/claude-lispanel300-20260923/key.jsonl
+artifacts/claude-lispanel300-20260923/key_v2.jsonl
+---MAIN-SCRIPTS---
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+scripts/claude_lis301_data.py
+---QUEUE---
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+handoff/queue/270-build.md
+handoff/queue/270-panel.md
+handoff/queue/270b-build.md
+handoff/queue/270b-panel.md
+handoff/queue/271-threshold.md
+handoff/queue/chat-demo-build.md
+handoff/queue/chat-weakspots.md
+handoff/queue/lis-300-publish.md
+handoff/queue/lis-300-train.md
+handoff/queue/lis-301-train.md
+handoff/queue/lis-310-chat-build.md
+[0m
+[0m$ [0mfor f in "artifacts/claude-lis301-20260923/PASSMARKS.md" "design/v3/60-listener/frame-spec-notes-301.md" "handoff/queue/lis-301-train.md" "handoff/queue/lis-300-train.md" "handoff/kit/briefs/OPUS-RULES.txt" "scripts/claude_lis301_data.py"; do echo "===== $f ====="; git show "origin/main:$f" 2>&1 | head -n 300; echo; done
+===== artifacts/claude-lis301-20260923/PASSMARKS.md =====
+# lis-301: our own reader, second try, with targeted hard-case training rows
+
+Written by the listener thread (Opus) on 2026-09-23, before any lis-301 training. lis-300 was a registered FAIL (P300.2 recall 71/137 = 51.8%). This is its one diagnosis-driven follow-up.
+
+## Diagnosis (lis-300 dev only; the lis-300 panel was read by category only)
+
+- The threshold rule needs 0 dev wrong-save turns. Dev never reached that (38 at T = 0, 6 at T = 0.995), so T fell back to 0.995, and recall collapsed.
+- Of the 6 dev wrong turns left at T = 0.995:
+  - 3 are dev-key errors: the o0a2 key "fixes" typos ("Lenn" becomes "Lena"), while the spec keeps values as typed.
+  - 1 is a value-boundary call ("2011 Corvan").
+  - 2 are real misreads: reported speech read as a plain statement.
+- The 38 dev wrong turns at T = 0 are hard cases that were rare in training:
+  - reported, check and suppose turns read as statements;
+  - relation direction flipped (founded, painted, wrote, teaches);
+  - verb relations confused (died in, studied at, worked in);
+  - unknown relation words mapped to near names;
+  - the wrong owner in contrast turns;
+  - garbled mixed tell-and-ask turns;
+  - typo keys.
+- On the panel at T = 0, 5 of the 7 wrong turns were ambiguous pronouns. The training set had 17 such rows, out of about 32,000.
+
+## The one change
+
+Training data. lis-300's data is rebuilt unchanged, then up to 1,500 new Opus-written rows are added (`data/opus_w4..w6.jsonl`, families weighted to the hard cases above, with person names A–M). Only rows that a blind second Opus labeller reproduced are kept (`scripts/claude_lis300_agree.py`). They are repeated 4 times, and 10% go to dev. The builder is `scripts/claude_lis301_data.py`.
+
+These stay identical to lis-300:
+- base model, LoRA settings, epochs, learning rate, batch, max length, seed 300;
+- prompt, frame format, confidence and reader code;
+- the compiler;
+- the threshold rule (the smallest grid T with 0 dev wrong-save turns, else 0.995);
+- the scorer.
+
+Conventions that frame-spec.md implied but did not state are written down in `design/v3/60-listener/frame-spec-notes-301.md`. The format is unchanged.
+
+**Dev key fix (key correction, not a system change).** A blind second Opus labeller relabelled every opus_dev and o0a2 dev turn. Rows where the two disagree on what is scored (the saved facts after the compiler, whether it asks whose, and the ask for ASK turns) are dropped from dev. Act-only differences are kept, because the act is not scored. The result is 394 of 439 kept, and 45 dropped (opus_dev 8, o0a2 37). Of the dropped rows, 22 disagree on saves: 5 are typo keys, several are "X's brother is Oren and he ..." pronoun calls, and several are o0a2 keys that assume facts the turn doesn't state. The ids are in `data/dev_agreed_ids.txt`, and the relabel is in `data/dev_relabel_B.jsonl`. This is the same agreement filter the training rows and panels already pass (key-writing rule 3). The o0b_l2 dev rows are kept.
+
+## Registered test
+
+`artifacts/claude-lispanel301-20260923/` is a fresh 240-turn panel:
+- written blind by a separate Opus agent;
+- same family counts as panel 300;
+- person names N–Z;
+- key audited by a second blind Opus labeller, with the key version sealed before the run.
+
+It runs once. Panel 300 is spent and is not reused.
+
+## Marks (same bars as lis-300)
+
+| Mark | Bar |
+|---|---|
+| P301.1 wrong-save turns | ≤ 1 of 240 |
+| P301.2 exact recall of gold writes | ≥ 85% |
+| P301.3 ASK turns read correctly | ≥ 90% |
+| P301.4 our/we turns that ask whose | ≥ 90% |
+| P301.5 unparseable outputs | ≤ 2% of turns |
+| P301.6 median read time (GPU) | ≤ 1,500 ms |
+
+Report only:
+- T and the dev sweep;
+- wrong facts per saved fact and per turn;
+- wrong-save turns and recall at T = 0;
+- misses by family, at category level only;
+- training loss and tok/s.
+
+**Proved wrong if:**
+- P301.1 fails (≥ 2 wrong-save turns); or
+- P301.2 < 75%; or
+- dev still has no zero-wrong T below 0.995.
+
+Any of these means more hard-case data alone does not make the reader safe and useful at once, and the next step is a different mechanism, not more rows.
+
+===== design/v3/60-listener/frame-spec-notes-301.md =====
+# Frame spec notes for lis-301 (clarifications, 2026-09-23)
+
+These notes add no new format. They write down conventions that frame-spec.md implies but does not state, so that data writers, key writers and blind labellers agree. They apply to lis-301 data, the lis-301 dev relabel and panel 301.
+
+1. **Direction.** A fact reads as "owner's rel is value".
+   - "Oren founded Halvo" and "Halvo was founded by Oren" are both (Halvo, founder, Oren).
+   - "Yola wrote Star Rain" is (Star Rain, author, Yola).
+   - "Peta painted Blue Lake" is (Blue Lake, painter, Peta).
+   - "Tavi teaches Sora" is (Sora, teacher, Tavi).
+   - "Halvo was founded in Dren" is (Halvo, location_of_formation, Dren).
+2. **Unknown relations.** A relation word that is not in relation-names.txt (for example "blicket" or "mentor-spirit") gets `rel: "other"`. Never map it to a near relation name.
+3. **Typos are kept as typed**, in owners and values alike. "My mom is Lenn" gives value "Lenn", even when a similar name was mentioned before.
+4. **Reported speech.** Any claim the speaker passes on from someone or something else gets mode REPORTED. This covers "X said", "X told me", "I heard", "apparently", "the letter says", "according to X", and "rumor is". The act is STATE when the turn has no other act.
+5. **Ambiguous pronouns.** When a pronoun could refer to two or more people named in the turn or the previous reply, the fact keeps the pronoun as its owner, as typed, with mode UNCLEAR. If that is the turn's only fact, the act is UNCLEAR. A pronoun with exactly one possible referent is resolved to that name.
+6. **Mixed turns.** In a turn that states a fact and then asks a question, the stated facts keep their own modes. The asked fact is listed with mode QUESTION, and `ask` is filled in. The act is the act of the first clause.
+
+===== handoff/queue/lis-301-train.md =====
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel301-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-301, the one follow-up to the lis-300 FAIL. It is the same fine-tune as lis-300 with ONE change: extra hard-case training rows. You pick the confidence threshold on dev, then run the new sealed blind panel ONCE. Artifacts go in artifacts/claude-lis301-20260923/. The listener thread (Opus) wrote all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis301-20260923/PASSMARKS.md, design/v3/60-listener/frame-spec.md, design/v3/60-listener/frame-spec-notes-301.md, scripts/claude_lis301_data.py, and the lis-300 task handoff/queue/lis-300-train.md (steps 0-8 are the same unless changed below).
+
+0. GPU. GPU: yes. Use BensPC as in lis-300 (same venv and the same downloaded openbmb/MiniCPM5-1B snapshot are fine; check the safetensors sha256 matches the one in origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md). The vast.ai fallback and its rules are as in lis-300 ($3.00 / 3 h ceiling).
+1. DATA. Get origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. First run `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` and `shasum -a 256 -c artifacts/claude-lis301-20260923/SEAL.sha256.txt` from the repo root: both must be all OK. Then run:
+   python scripts/claude_lis301_data.py --o0b <o0b dir> --o0a2 <o0a2 dir> --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --out <work>/data
+   Record the printed counts.
+2. TRAIN. Same command and flags as lis-300 step 3 (--epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge), with --data <work>/data and --out <work>/run. If it runs out of memory, use --batch 8 once and report it.
+3. DEV + THRESHOLD. Same as lis-300 step 4, with <work>/data/dev.jsonl. Apply the threshold rule exactly. Write THRESHOLD.txt, dev_sweep.txt, and the dev numbers per src (o0b_l2, opus_dev, o0a2, opus301_dev) at T.
+4. SEAL. Run sha256 over THRESHOLD.txt, the merged safetensors and dev_sweep.txt into SEAL-run.sha256.txt BEFORE opening the panel.
+5. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt` (must be all OK). Run the reader on artifacts/claude-lispanel301-20260923/panel.jsonl, and score it against the key file that seal names at T, and at T = 0 (report only). Never print or quote panel turns; report by category only.
+6. RESULTS.md, result first: each P301.n with integer counts and PASS/FAIL, plus everything listed under "Report only" in PASSMARKS; device and median/p90/max ms; training minutes and tok/s; dollars. Append ledger lines P301.1 to P301.6 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis301-merged/ and record its sha256 in RESULTS.md. Keep it on BensPC too. Never push weights.
+8. Copy dev files for the listener thread: <work>/data/dev.jsonl, <work>/dev_rows.jsonl and <work>/dev_pred.jsonl go to artifacts/claude-lis301-20260923/dev/.
+PUSH: artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/SEAL-run.sha256.txt artifacts/claude-lis301-20260923/dev_sweep.txt artifacts/claude-lis301-20260923/panel_score.json artifacts/claude-lis301-20260923/panel_score_T0.json artifacts/claude-lis301-20260923/train_summary.json artifacts/claude-lis301-20260923/train_log.jsonl artifacts/claude-lis301-20260923/dev artifacts/fable-predictions-ledger.md
+
+===== handoff/queue/lis-300-train.md =====
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel300-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-300. Fine-tune our own listener (openbmb/MiniCPM5-1B, Apache 2.0; Ben chose it on 2026-09-23 at 11:01 UTC, which is his yes to download it), pick the confidence threshold on dev, then run the sealed blind panel ONCE. Artifacts go in artifacts/claude-lis300-20260923/. The listener thread (Opus) wrote and CPU-smoke-tested all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis300-20260923/PASSMARKS.md (marks, threshold rule), design/v3/60-listener/frame-spec.md, and scripts/claude_lis300_{common,compiler,data,train,read,score,agree}.py.
+
+0. GPU. GPU: yes. Use BensPC (RTX 5070 Ti, free) if it has a working CUDA torch env; check with `python -c "import torch;print(torch.cuda.is_available())"` in <= 10 min. You need torch, transformers >= 5.6, peft, safetensors and huggingface_hub; installing those with pip in a NEW venv is fine. If BensPC is not usable, rent ONE vast.ai RTX 4090/5090 on demand under the rental rules in handoff/queue/269-resume.md:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - STOP if another instance is running;
+   - ceiling $3.00 and 3 h, enforced by a watchdog;
+   - destroy at the end and confirm the instance list is empty;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git.
+1. DATA. On the GPU machine, get the repo at origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. Then run:
+   python scripts/claude_lis300_data.py --o0b <o0b dir> --opus artifacts/claude-lis300-20260923/data --agree artifacts/claude-lis300-20260923/data/agreed_ids.txt --o0a2 <o0a2 dir> --out <work>/data
+   First check `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` from the repo root: it must be all OK. Record the printed counts.
+2. MODEL. Download openbmb/MiniCPM5-1B from Hugging Face with huggingface_hub.snapshot_download (about 2.1 GB). Record the commit hash and the sha256 of the safetensors file.
+3. TRAIN. Run:
+   python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge
+   If it runs out of memory, use --batch 8 once and report it. Keep train_log.jsonl and summary.json.
+4. DEV + THRESHOLD. Make <work>/dev_rows.jsonl from <work>/data/dev.jsonl (fields id, turn, prev_reply). Then run:
+   python scripts/claude_lis300_read.py --model <work>/run/merged --rows <work>/dev_rows.jsonl --out <work>/dev_pred.jsonl
+   Then run claude_lis300_score.py --gold <work>/data/dev.jsonl --pred <work>/dev_pred.jsonl --sweep. Apply the PASSMARKS threshold rule exactly: T is the smallest grid value with 0 wrong-save turns on the whole dev set, else 0.995. Write T to THRESHOLD.txt along with the sweep table. Also report the dev numbers for each src (o0b_l2, opus_dev, o0a2) at T.
+5. SEAL. Run sha256 over THRESHOLD.txt, the merged model's safetensors, and the dev sweep output. Put the hashes in SEAL-run.sha256.txt BEFORE opening the panel.
+6. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt` (must be all OK). Then run the reader on panel.jsonl, and score it against the key file that seal names, at T and also at T = 0 (the latter is report only). Never print or quote panel turns. Report by category only.
+7. RESULTS.md, result first:
+   - each P300.n with integer counts, PASS/FAIL;
+   - wrong facts per saved fact and per turn;
+   - recall by family;
+   - device, median/p90/max read ms;
+   - training minutes and tok/s;
+   - dollars spent.
+   Append ledger lines P300.1 to P300.6 (cat >> artifacts/fable-predictions-ledger.md).
+8. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis300-merged/ (make the folder) and record its sha256 in RESULTS.md. The chat page will load it from there later. Also keep it on BensPC if trained there. Never push weights.
+PUSH: artifacts/claude-lis300-20260923/{RESULTS.md,THRESHOLD.txt,SEAL-run.sha256.txt,dev_sweep.txt,panel_score.json,panel_score_T0.json,train_summary.json,train_log.jsonl} artifacts/fable-predictions-ledger.md
+
+===== handoff/kit/briefs/OPUS-RULES.txt =====
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+
+===== scripts/claude_lis301_data.py =====
+#!/usr/bin/env python3
+"""lis-301 training data builder = lis-300 data + targeted hard-case Opus rows (the one change).
+
+Steps:
+  1. Build the lis-300 data exactly as before (scripts/claude_lis300_data.py, same args, same seed).
+  2. Dev key fix (not a system change): keep an opus_dev / o0a2 dev row only if a blind second
+     Opus labeller agreed with its gold frame (--dev-agree ids file). o0b_l2 dev rows are kept.
+  3. Add the new Opus rows (opus_w4..w6) that a blind second labeller reproduced (--agree301):
+     10% to dev (src opus301_dev), the rest repeated --opus-repeat times in train (src opus301).
+
+python3 scripts/claude_lis301_data.py --o0b DIR --o0a2 DIR --opus300 DIR --agree300 FILE \
+    --opus301 DIR --agree301 FILE --dev-agree FILE --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from claude_lis300_common import build_prompt, frame_text  # noqa: E402
+
+
+def read_jsonl(p):
+    return [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--o0b", required=True)
+    ap.add_argument("--o0a2", required=True)
+    ap.add_argument("--opus300", required=True)
+    ap.add_argument("--agree300", required=True)
+    ap.add_argument("--opus301", required=True)
+    ap.add_argument("--agree301", required=True)
+    ap.add_argument("--dev-agree", required=True, help="ids of opus_dev/o0a2 dev rows a blind relabel agreed on")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--opus-repeat", type=int, default=4)
+    ap.add_argument("--opus-dev-frac", type=float, default=0.1)
+    a = ap.parse_args()
+    out = Path(a.out)
+    base = out / "base300"
+    subprocess.run([sys.executable, str(HERE / "claude_lis300_data.py"), "--o0b", a.o0b, "--opus", a.opus300,
+                    "--agree", a.agree300, "--o0a2", a.o0a2, "--out", str(base)], check=True)
+    train = read_jsonl(base / "train.jsonl")
+    dev0 = read_jsonl(base / "dev.jsonl")
+    keep = set(Path(a.dev_agree).read_text().split())
+    dev = [r for r in dev0 if r["src"] == "o0b_l2" or r["id"] in keep]
+    dropped = Counter(r["src"] for r in dev0 if r not in dev)
+    agree = set(Path(a.agree301).read_text().split())
+    rows = []
+    for p in sorted(Path(a.opus301).glob("opus_w*.jsonl")):
+        rows += [r for r in read_jsonl(p) if r["id"] in agree]
+    rng = random.Random(301)
+    rng.shuffle(rows)
+    ndev = int(len(rows) * a.opus_dev_frac)
+    for i, r in enumerate(rows):
+        row = {"id": r["id"], "prompt": build_prompt(r["turn"], r.get("prev_reply", "")),
+               "target": frame_text(r["frame"]), "src": "opus301", "family": r.get("family", "")}
+        if i < ndev:
+            dev.append(dict(row, src="opus301_dev", turn=r["turn"], prev_reply=r.get("prev_reply", ""),
+                            frame=r["frame"]))
+        else:
+            train.extend([row] * a.opus_repeat)
+    rng.shuffle(train)
+    for name, rs in (("train", train), ("dev", dev)):
+        with open(out / f"{name}.jsonl", "w", encoding="utf-8") as fh:
+            for r in rs:
+                fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(json.dumps({"train": len(train), "dev": len(dev), "opus301_agreed": len(rows),
+                      "dev_dropped_by_relabel": dict(dropped),
+                      "train_src": Counter(r["src"] for r in train),
+                      "dev_src": Counter(r["src"] for r in dev)}, indent=1))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i panel | head -n 30; echo ---OUTBOX-ALL---; git ls-tree -r --name-only origin/builder-outbox | grep -i panel | head -n 30; echo ---OUTBOX-LIS---; git ls-tree -r --name-only origin/builder-outbox | grep -i lis | head -n 30
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/base221.jsonl
+artifacts/claude-aliaspanel237b-20260922/panel.jsonl
+artifacts/claude-apos247-20260922/reg-panel-rows.jsonl
+artifacts/claude-apos247-20260922/reg-panel-score.json
+artifacts/claude-apos247-20260922/reg-panel-score.txt
+artifacts/claude-askpanel243-20260922/README.md
+artifacts/claude-askpanel243-20260922/SEAL.sha256.txt
+artifacts/claude-askpanel243-20260922/base228.jsonl
+artifacts/claude-askpanel243-20260922/panel.jsonl
+artifacts/claude-boundary259-20260922/run/m1-panel-seal-check.txt
+artifacts/claude-boundary259-20260922/run/panel252-259.jsonl
+artifacts/claude-boundary259-20260922/run/panel252-259.log
+artifacts/claude-boundary259-20260922/run/panel258-252b.jsonl
+artifacts/claude-boundary259-20260922/run/panel258-252b.log
+artifacts/claude-boundary259-20260922/run/panel258-259.jsonl
+artifacts/claude-boundary259-20260922/run/panel258-259.log
+artifacts/claude-boundary259-20260922/run/panel258-259.score.json
+artifacts/claude-chain231-20260922/panel-138i.log
+artifacts/claude-chain231-20260922/panel-221.log
+artifacts/claude-chain231-20260922/panel-231.log
+artifacts/claude-chain231-20260922/panel-score.log
+artifacts/claude-chain231-20260922/panel/cases.md
+artifacts/claude-chain231-20260922/panel/rows-138i.jsonl
+artifacts/claude-chain231-20260922/panel/rows-221.jsonl
+---OUTBOX-ALL---
+artifacts/claude-called281-20260923/run/panel-260.json
+artifacts/claude-called281-20260923/run/panel-260.log
+artifacts/claude-called281-20260923/run/panel-281.json
+artifacts/claude-called281-20260923/run/panel-281.log
+artifacts/claude-called281-20260923/run/panel-files.txt
+artifacts/claude-called281-20260923/run/panel-score.txt
+artifacts/claude-called281-20260923/run/panel-score281.json
+artifacts/claude-called281-20260923/run/panel-seal-check.txt
+artifacts/claude-called281b-20260923/run/panel-281.json
+artifacts/claude-called281b-20260923/run/panel-281.log
+artifacts/claude-called281b-20260923/run/panel-281b.json
+artifacts/claude-called281b-20260923/run/panel-281b.log
+artifacts/claude-called281b-20260923/run/panel-files.txt
+artifacts/claude-called281b-20260923/run/panel-score.txt
+artifacts/claude-called281b-20260923/run/panel-score281b.json
+artifacts/claude-called281b-20260923/run/panel-seal-check.txt
+artifacts/claude-calledpanel281-20260923/README.md
+artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt
+artifacts/claude-calledpanel281-20260923/SPEC-COPY.md
+artifacts/claude-calledpanel281-20260923/panel.jsonl
+artifacts/claude-calledpanel281b-20260923/README.md
+artifacts/claude-calledpanel281b-20260923/SEAL.sha256.txt
+artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md
+artifacts/claude-calledpanel281b-20260923/panel.jsonl
+artifacts/claude-capab280-20260923/pilot/mock-panel.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-260.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-280.json
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score.txt
+artifacts/claude-capab280-20260923/pilot/void-attempt/panel-score280.json
+artifacts/claude-capab280-20260923/run/panel-260.json
+---OUTBOX-LIS---
+artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+artifacts/claude-lis300-20260923/RESULTS.md
+artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+artifacts/claude-lis300-20260923/THRESHOLD.txt
+artifacts/claude-lis300-20260923/dev/dev.jsonl
+artifacts/claude-lis300-20260923/dev/dev_pred.jsonl
+artifacts/claude-lis300-20260923/dev/dev_rows.jsonl
+artifacts/claude-lis300-20260923/dev_sweep.txt
+artifacts/claude-lis300-20260923/panel_score.json
+artifacts/claude-lis300-20260923/panel_score_T0.json
+artifacts/claude-lis300-20260923/train_log.jsonl
+artifacts/claude-lis300-20260923/train_summary.json
+artifacts/claude-lis310-20260923/PASSMARKS.md
+artifacts/claude-lis310-20260923/RESULTS.md
+artifacts/claude-lis310-20260923/SEAL.sha256.txt
+artifacts/claude-lis311-20260923/PASSMARKS.md
+artifacts/claude-lis311-20260923/SEAL.sha256.txt
+artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+runs/lis-300-publish/lis-300-publish.exit
+runs/lis-300-publish/lis-300-publish.go1.done
+runs/lis-300-publish/lis-300-publish.go1.err.txt
+runs/lis-300-publish/lis-300-publish.go1.reply.md
+runs/lis-300-publish/lis-300-publish.md
+runs/lis-300-train/lis-300-train.exit
+runs/lis-300-train/lis-300-train.go1.done
+runs/lis-300-train/lis-300-train.go1.err.txt
+runs/lis-300-train/lis-300-train.go1.reply.md
+runs/lis-300-train/lis-300-train.md
+runs/lis-310-chat-build/lis-310-chat-build.exit
+runs/lis-310-chat-build/lis-310-chat-build.go1.done
+[0m
+[0m$ [0mls artifacts/ 2>&1 | head -n 60; echo ---; git ls-tree -r --name-only origin/main | grep -E "lispanel30|lis30|lis31" | head; echo ---ALL-BRANCHES---; git branch -a; echo ---; git log --oneline -5 origin/main; git log --oneline -5 origin/builder-outbox
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+---
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+---ALL-BRANCHES---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+79fc1f56b lis-301: hard-case training rows (1,377 blind-agreed), dev key fix, fresh blind panel 301, sealed; queue GPU run
+7ae6ebafd watcher restart instructions for a Mac Claude session
+88cadad45 lis-311b: time-capped re-run of the listener chat page (Mac slept during lis-311)
+8c7dd49c7 board: 280p verified PASS; 241b wall +4.3% report-only; 292t queued
+cab2fc53a queue talk-280p-probe, talk-292t-build, talk-292t-panel
+eec8fe55e watcher status
+3b5dc9d61 builder results: lis-311-chat292
+98b521cc3 watcher status
+53094f655 builder results: talk-280p-run
+7212bdcd1 builder results: lis-300-publish
+[0m
+[0m$ [0mgit fetch origin main 2>&1 | head; git log --oneline -3; git ls-tree -r --name-only HEAD | grep -iE "panel301|lis301" | head -n 40
+From github.com:BenjaminHannan/learner
+ * branch                main       -> FETCH_HEAD
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+[0m
+[0m$ [0mgit rev-parse origin/main; git log --oneline -3 origin/main; git ls-tree -r --name-only origin/main | grep -iE "panel301" | head
+79fc1f56ba2cc789531f3a5e811890c7397d11d9
+79fc1f56b lis-301: hard-case training rows (1,377 blind-agreed), dev key fix, fresh blind panel 301, sealed; queue GPU run
+7ae6ebafd watcher restart instructions for a Mac Claude session
+88cadad45 lis-311b: time-capped re-run of the listener chat page (Mac slept during lis-311)
+artifacts/claude-lispanel301-20260923/ADJUDICATION.md
+artifacts/claude-lispanel301-20260923/KEY-AUDIT.md
+artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt
+artifacts/claude-lispanel301-20260923/SEAL.sha256.txt
+artifacts/claude-lispanel301-20260923/SPEC-COUNTS.md
+artifacts/claude-lispanel301-20260923/key.jsonl
+artifacts/claude-lispanel301-20260923/key_v2.jsonl
+artifacts/claude-lispanel301-20260923/label_B.jsonl
+artifacts/claude-lispanel301-20260923/panel.jsonl
+[0m
+[0m$ [0mfor f in "artifacts/claude-lis300-20260923/PASSMARKS.md" "artifacts/claude-lis301-20260923/SEAL.sha256.txt" "artifacts/claude-lis300-20260923/SEAL.sha256.txt" "artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt" "artifacts/claude-lispanel301-20260923/SPEC-COUNTS.md" "artifacts/claude-lis301-20260923/DATA-AUDIT.md"; do echo "===== $f ====="; git show "origin/main:$f" 2>&1 | head -n 120; echo; done
+===== artifacts/claude-lis300-20260923/PASSMARKS.md =====
+# lis-300: our own reader (MiniCPM5-1B fine-tuned) + write compiler, first registered test
+
+Written by the listener thread (Opus), 2026-09-23, **before** any fine-tuning run. Ben's decisions: an own ~1B reader (10:55 UTC); base model openbmb/MiniCPM5-1B, Apache 2.0 (11:01 UTC).
+
+## The one change
+
+The borrowed ear (v4.1 + 27B yes/no gate, 261b/264) is replaced by **one fine-tuned 1B reader + the plain-code write compiler**. Everything after the notebook write is unchanged. Chat-page wiring is a separate later experiment.
+
+## System under test
+
+- **Reader:** `scripts/claude_lis300_train.py` is LoRA (rank 32, alpha 64, every linear layer) on MiniCPM5-1B. It runs 2 epochs at lr 2e-4, batch 16, max length 256, with seed 300, and the LoRA is merged before reading. The prompt and frame text are in `scripts/claude_lis300_common.py`, and the frame format is `design/v3/60-listener/frame-spec.md`.
+- **Data:** `scripts/claude_lis300_data.py` builds it. It uses 3,000 own-O0b rows per family, dropping the whole `binding` family, because its pronoun owners are either the pronoun itself or a guess from assumed gender (found here, confirmed by the own-model thread). It adds the Opus-written rows (`data/opus_w{1,2,3}.jsonl`) that a blind second Opus labeller reproduced (`scripts/claude_lis300_agree.py`), each repeated 4 times, with 10% held out as dev.
+- **Confidence:** `scripts/claude_lis300_read.py` scores each fact by the lowest token probability over the act and that fact's JSON.
+- **Compiler:** `scripts/claude_lis300_compiler.py` is the only writer. A fact is written only if:
+  - its mode is ASSERT or CORRECT;
+  - its owner is `me` or a whole-word span of the turn or previous reply (never a pronoun);
+  - its value is a whole-word span of the turn, or of the assistant's question for a short answer;
+  - its relation is in the table;
+  - its confidence is at or above the threshold T.
+
+  Writes are all-or-nothing per turn. `we` triggers ask-whose.
+- **Threshold rule (fixed now, computed on dev only):** T is the smallest value on the grid in `claude_lis300_score.py --sweep` that gives **0 wrong-save turns** on the whole dev set (o0b L2 sample + Opus dev + the 300 fresh own-O0a2 turns). If no grid value reaches 0, T = 0.995.
+- **Scorer:** `scripts/claude_lis300_score.py` grades gold and predicted frames through the same compiler. Ruling 1 applies: a narrower relation counts as a hit.
+
+## Registered test
+
+`artifacts/claude-lispanel300-20260923/`: 240 turns written blind by a separate Opus agent from the spec, with names from N to Z only (training names run A to M). The key is audited by a second blind Opus labeller and adjudicated, and the key version used is sealed before the run. It is run **once**, after the seal.
+
+## Marks (arm A = reader + compiler at T)
+
+| Mark | Bar |
+|---|---|
+| P300.1 wrong-save turns (any written fact not in the gold writes) | ≤ 1 of 240 |
+| P300.2 exact recall of gold writes (hits / gold writable facts) | ≥ 85% |
+| P300.3 ASK turns read correctly (owner, relation, inverse, via) | ≥ 90% |
+| P300.4 our/we turns that ask whose | ≥ 90% |
+| P300.5 unparseable outputs | ≤ 2% of turns |
+| P300.6 median read time on the GPU used (device reported) | ≤ 1,500 ms |
+
+Report only, with no bar:
+- wrong facts per saved fact and per turn;
+- wrong-save turns and recall at T = 0, to show what the threshold buys;
+- misses by family, at category level only;
+- training loss and tokens per second;
+- held-back (asked-back) facts.
+
+**Proved wrong if:** P300.1 fails (≥ 2 wrong-save turns), since the reader is then not safe enough to write even with the threshold; or P300.2 comes out < 75%, since the threshold or compiler is then too strict to be useful.
+
+A FAIL gets exactly one diagnosis-driven follow-up (lis-301+).
+
+===== artifacts/claude-lis301-20260923/SEAL.sha256.txt =====
+c214b6e0c2ec3c35195efdb8e26cd0b2fe8a8a527edc9ccd8f66ad89ec4c2a20  artifacts/claude-lis301-20260923/PASSMARKS.md
+5f40c83a2b96d51186a8a327bb83280cf15b23ab73220c1b188ec0f53d29bbfa  artifacts/claude-lis301-20260923/DATA-AUDIT.md
+390187ffce087d73a7bc623d1d10d14c3e35aecd4c2c90bb2361a8e6faa891e2  artifacts/claude-lis301-20260923/data/opus_w4.jsonl
+e78540065528d85907dd2c8314e4c4007134141522309ea95a7225a2e1e6c203  artifacts/claude-lis301-20260923/data/opus_w5.jsonl
+ea7da476114587ac2c44238d7449f68b124a2e87970978e6d763c5f02fc38d6b  artifacts/claude-lis301-20260923/data/opus_w6.jsonl
+8cce7a28c095c3de4c927107527e5831b74f3fca13d1ae7b72df6446af644f5b  artifacts/claude-lis301-20260923/data/relabel_w4.jsonl
+3602b2a12e190bc6b59a1cb77063e656e95d9e22c07fdcf128659100c4ac9ed0  artifacts/claude-lis301-20260923/data/relabel_w5.jsonl
+433d47535f8d74f45127d54135abfdd16c815d83d373c8a6b2c2e2f1c912f1f8  artifacts/claude-lis301-20260923/data/relabel_w6.jsonl
+ae6350080804ea6f38d8aa8e3522b7db055ce091513ba0e32f9a020637777609  artifacts/claude-lis301-20260923/data/agreed_ids.txt
+0e9a027ee8cf3a469fc23038c3b68a23b93d38b3e959f759fb1a02ea92e26b55  artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt
+e04a8024c58afefb34683c6fd8c6fde000683ad8c8cdae078055449f33002594  artifacts/claude-lis301-20260923/data/dev_relabel_B.jsonl
+822c07af772d9f74d8644504ceb0646d65b6fd4f1a3b2f340ce38dd5a3b6bcac  scripts/claude_lis301_data.py
+7b639b100b0395652ef3db9405367506daba8aa56629b54abcc1c95325f2b8a9  design/v3/60-listener/frame-spec-notes-301.md
+
+===== artifacts/claude-lis300-20260923/SEAL.sha256.txt =====
+3b146670bfe254284948161e3d58ee916bd06702ae0749eecd4d1112acd04073  artifacts/claude-lis300-20260923/PASSMARKS.md
+69ca82561a27764e7982f9481e9492fd747e06ffc9e9ce582d916f2a3e81421f  artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+7b79adc59de8e1358c2eaae1008ead154e771e6b0edfc14b5f251fe30e6eeb8b  artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+4f11e46e32ce0589202f61e3f52b942fbbf52ec21993a7dbaa25a7c536a5edb9  artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+8b3ee54bf90ad2bbcfa09adf1d742e916f9ed4bc2c8c823a2a2de55a65e47ec1  artifacts/claude-lis300-20260923/data/agreed_ids.txt
+890b40d3c3af92eb0445a678aa9f032960973620c363e5b6024d042913878f00  scripts/claude_lis300_common.py
+e96e1f2c3c218084873ad79d0e42fb1558f0bc02306f3214538be3ca8029cb21  scripts/claude_lis300_compiler.py
+5f0649eedc9573ff4c29ba779590b165ed18608bcfffcebcf9bb38bbaf08cd09  scripts/claude_lis300_data.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+c9fb3f23ccf0bb2884f8f5258ae77cf3d2ba90f45757275fee0f6ea612104e8f  scripts/claude_lis300_read.py
+ba132e4874dfe6e916f3823a357287d12ec343a9bc6a266082b86e148f0bd372  scripts/claude_lis300_score.py
+190c799f218742d68be667f5f4208475a0435ee07c58940f240e7733e4f9ce61  scripts/claude_lis300_agree.py
+b9626c2281c9363b5cb16ef64d1ccd0b45c780c0aaafdbb4db8c85594c1e24b2  design/v3/60-listener/frame-spec.md
+b12a776b47bd628a85215b203ac44adf05e0c3ed3b3bc072b1c1cbf89bd5a2ed  design/v3/60-listener/relation-names.txt
+
+===== artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt =====
+44b687c1852c1c5d1bbb9e2e94f77c5f55f52125c71ccc768f6d2969618769f0  artifacts/claude-lispanel301-20260923/panel.jsonl
+89891a6413bdd51749f911cfd887a948e39f5a202d7f2e59e91db740788bd62d  artifacts/claude-lispanel301-20260923/key_v2.jsonl
+
+===== artifacts/claude-lispanel301-20260923/SPEC-COUNTS.md =====
+# lis-301 blind test panel (lispanel301): counts per family
+
+Written blind: no access to the lis-300 or lis-301 training data, the lis300/lis301 scripts, or any other panel. The only files read were frame-spec.md, frame-spec-notes-301.md, relation-names.txt, key-writing-rules.md, and the lispanel300 SPEC-COUNTS.md (for the family counts and key conventions).
+240 turns in total. Ids p301-001 to p301-240, shuffled with a fixed seed (random.Random(301)) so the families are mixed.
+Person first names start with N to Z. All people, places, organisations, works and pets are fictional.
+
+| family | count |
+|---|---|
+| tell-single | 14 |
+| tell-multi (2-3 facts in one sentence) | 10 |
+| tell-plural | 8 |
+| tell-appositive | 10 |
+| tell-verb (works at / born in / allergic to / founded / wrote / painted / teaches ...) | 12 |
+| tell-typo | 8 |
+| tell-self | 8 |
+| **tell subtotal** | **70** |
+| correct (uses prev_reply) | 20 |
+| short-answer (uses prev_reply) | 15 |
+| our-we | 20 |
+| pronoun-clear | 9 |
+| pronoun-ambiguous | 6 |
+| **pronoun subtotal** | **15** |
+| negation | 12 |
+| check | 12 |
+| suppose | 10 |
+| plan | 10 |
+| reported | 8 |
+| chat (likes / small talk) | 8 |
+| **no-save subtotal** | **60** |
+| question-wh | 12 |
+| question-inverse | 8 |
+| question-yesno | 8 |
+| question-twohop | 5 |
+| question-lowercase (no "?") | 7 |
+| **question subtotal** | **40** |
+| **total** | **240** |
+
+## Key conventions (copied from lispanel300, with the changes marked)
+
+- check: act CHECK, fact mode CHECK, and `ask` is filled as a yes/no confirm (`value` set), per key-writing rule 2.
+- reported: act STATE, fact mode REPORTED (the act list has no REPORTED act).
+- pronoun-ambiguous: act UNCLEAR, fact mode UNCLEAR, owner is the pronoun as typed (notes-301 item 5).
+- short-answer: the fact's owner or value may come from prev_reply only.
+- correct: `old` is given only when the turn itself names the old value.
+- **question-twohop (changed from panel 300):** uses the spec's `via` form, `{"owner", "via": <first hop>, "rel": <final hop>, "inverse": false}`. There is no `then` field.
+- Yes/no questions list the asked fact with mode QUESTION. Wh and inverse questions have `facts: []`.
+- negation turns always name a value (no "has no dog" items without a value).
+
+## frame-spec-notes-301.md applied
+
+- Direction: a fact reads "owner's rel is value" ("X founded Y" is (Y, founder, X); "X teaches Y" is (Y, teacher, X)). Inverse questions put the known entity in `owner` with `inverse: true` ("Who does Tamsin teach?" is owner Tamsin, rel teacher, inverse true).
+- Unknown relation words get rel "other" (none needed in this panel's turns).
+- Typos are kept as typed in owners and values; lowercase names stay lowercase.
+- Reported wording ("says", "told me", "I heard", "apparently", "according to", "the letter says", "rumor is") gives mode REPORTED.
+- Mixed turns (state then ask): stated facts keep their modes, the asked fact is listed with mode QUESTION only for yes/no questions, `ask` is filled, and the act is the first clause's act (STATE).
+- our/we facts have owner "we" (never "me"), including "ours".
+
+===== artifacts/claude-lis301-20260923/DATA-AUDIT.md =====
+# lis-301 data audit (2026-09-23)
+
+- **New rows:** three Opus writers each wrote 500 rows (opus_w4, opus_w5, opus_w6), with families weighted to the lis-300 dev errors (PASSMARKS). Three separate blind Opus labellers relabelled the rows without seeing the frames (relabel_w4..w6). `claude_lis300_agree.py` compares each pair.
+- **Agreed rows:** w4 454/500, w5 483/500, w6 440/500, so 1,377 rows in total (agreed_ids.txt).
+- **Main disputes:**
+  - "Y, not X" contrast turns: act STATE plus a NEGATED fact, or act CORRECT.
+  - "lives in": city or home.
+  - Some pronoun calls.
+
+  Disputed rows are dropped, not adjudicated.
+- **Agreed rows by family:** direction 180, reported 135, pronoun_ambiguous 131, verb_rel 120, pronoun_clear 118, check 117, mixed_tell_ask 96, suppose 73, typo 69, correct 68, other_rel 60, plan 60, short_answer 56, plain_tell 55, contrast_owner 39.
+- **Dev key fix:** a blind relabel of the 439 opus_dev and o0a2 dev turns. 394 were kept (dev_agreed_ids.txt), and 45 were dropped because the scored fields disagree.
+- **CPU smoke run of `claude_lis301_data.py`:**
+  - train 36,972 rows: o0b 27,000, opus 5,012, opus301 4,960;
+  - dev 959 rows: o0b_l2 428, opus_dev 131, o0a2 263, opus301_dev 137.
+
+  The lis-300 part rebuilt to the same counts as before (27,000 + 5,012 train, 867 dev).
+- **Longest row:** prompt plus target is 701 characters, which is under the 256-token max length.
+- **Blind panel 301:** only 1 panel turn is also a training turn, a 2-word chat line.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md 2>&1 | head -n 150
+# lis-300 registered result: FAIL (P300.2 recall 71/137 = 51.8%, bar 85%)
+
+Builder run 2026-09-23 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel run once. Category counts only; no panel turn is quoted.
+
+## Marks table (arm A = reader + compiler at T = 0.995)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| P300.1 wrong-save turns | ≤ 1 of 240 | 1 of 240 | PASS |
+| P300.2 exact recall of gold writes | ≥ 85% | 71 of 137 = 51.8% | FAIL |
+| P300.3 ASK turns read correctly | ≥ 90% | 38 of 40 = 95.0% | PASS |
+| P300.4 our/we turns that ask whose | ≥ 90% | 20 of 20 = 100% | PASS |
+| P300.5 unparseable outputs | ≤ 2% of turns | 0 of 240 = 0% | FAIL-free, PASS |
+| P300.6 median read time on GPU | ≤ 1,500 ms | 1492.45 ms | PASS |
+
+Overall verdict: FAIL. P300.2 also lands under 75%, which trips the PASSMARKS
+"proved wrong" clause: at the sealed threshold rule the threshold/compiler is
+too strict to be useful.
+
+## What the threshold buys (report only)
+
+- At T = 0.995: 72 pred writes, 71 hits, 1 wrong fact, 1 wrong turn, 66 held-back facts.
+- At T = 0: 140 pred writes, 133 hits, 7 wrong facts, 7 wrong turns, 1 held-back fact.
+- Wrong facts per saved fact: 1/72 at T, 7/140 at T = 0.
+- Wrong facts per turn: 1/240 at T, 7/240 at T = 0.
+- Recall: 71/137 (51.8%) at T, 133/137 (97.1%) at T = 0.
+- The reader itself reads well (97.1% with no gate); the 0.995 gate holds back
+  66 of 137 gold facts yet still lets 1 wrong save through.
+
+## Recall by family at T (hits / gold writes, category level only)
+
+- tell-single: 11/14 turns exact-ish 11/14 writes hit; tell-multi 8/21; tell-plural 11/17;
+  tell-appositive 6/20; tell-verb 7/12; tell-typo 5/8; tell-self 6/8.
+- correct (uses prev_reply): 7/17. short-answer (uses prev_reply): 4/8.
+- pronoun-clear: 6/12. pronoun-ambiguous: 0 writes gold, 1 wrong-save turn.
+- our-we: 0 gold writes, 0 wrong turns (all 20 asked whose).
+- negation/check/suppose/plan/reported/chat: 0 gold writes each, 0 wrong turns each.
+- questions: wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5 ask-ok.
+- The single wrong-save turn is in pronoun-ambiguous (a no-save turn).
+- At T = 0 the 7 wrong turns are: 5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo.
+
+## Timing, training, money
+
+- Read device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode.
+- Panel read ms (240 turns): median 1492.45, p90 2051.0, max 3115.1.
+- Dev read ms (867 turns): median 1505.3, p90 2169.9, max 3745.2.
+- Training: 4002/4002 steps, 2 epochs, 21.78 minutes, 4851.9 tok/s,
+  dev loss 0.0842, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc,
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (2,161,290,912 bytes).
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+  kept at ~/premonition-models/lis300-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis300/work/run/merged/. Never in git.
+- Dollars spent: $0. BensPC used (free). No vast.ai rental. No other instance running.
+
+## Data built (recorded counts)
+
+- SEAL.sha256.txt check from repo root on BensPC: 14/14 OK before building.
+- Built set: train 32,012 (o0b 27,000 + opus 5,012 = 1,253 agreed x4),
+  dev 867 (o0b_l2 428 + opus_dev 139 + o0a2 300),
+  opus agreed 1,392, o0b pronoun-owner dropped 20,000. Matches DATA-AUDIT.md.
+- Threshold: no sweep grid value reached 0 wrong-save dev turns (min 6 at 0.995),
+  so T = 0.995 by the sealed rule. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+- Panel key seal: 2/2 OK (panel.jsonl + key_v2.jsonl). Reader ran on the 240-turn
+  panel exactly once; scored at T and at T = 0.
+
+## Deviations (env only; sealed code untouched)
+
+1. Windows cp1252 default broke opus jsonl reads -> set PYTHONUTF8=1 (env var only).
+2. BensPC has a stale system REQUESTS_CA_BUNDLE pointing at a deleted file ->
+   pointed it at the venv certifi bundle (env var only).
+3. New venv first got a CPU-only torch -> installed torch 2.11.0+cu128 from the
+   PyTorch cu128 index into the same NEW venv (pip install allowed by brief).
+   Final env: torch 2.11.0+cu128, transformers 5.17.0, peft 0.21.0.
+4. Detached (`start`) processes die when the SSH session closes (probe proved it:
+   a 30-s ping-to-file never wrote). Training ran in the foreground of one SSH
+   call; it survived a client-side tool timeout and finished server-side.
+5. No OOM at batch 16, so the batch-8 fallback was not used. max-minutes 150
+   cap never bound (run took 21.78 min).
+
+## What it means (plain high-school English)
+
+- The home-trained 1B listener reads sentences about as well as hoped when the
+  safety gate is off (133 of 137 facts right), asks whose for every our/we turn
+  (20 of 20), and reads questions right (38 of 40).
+- But the safety rule picked on dev (only save when 99.5% sure) throws away
+  about half the true facts (66 of 137 held back) and still lets one wrong save
+  through on the blind panel. Safe-and-useful was not reached together.
+
+## What it doesn't mean
+
+- It doesn't mean the reader can't read: with no threshold it gets 97.1%.
+- It doesn't mean the panel was easy or leaked: names N-Z never trained on
+  (A-M only), run once, seals checked first.
+- One diagnosis-driven follow-up (lis-301+) is allowed by PASSMARKS.
+[0m
+[0m# [0mTodos
+[•] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[ ] Set up GPU path (BensPC SSH, check venv + model sha)
+[ ] Step 1 DATA: seal checks + run claude_lis301_data.py
+[ ] Step 2 TRAIN on GPU
+[ ] Step 3 DEV + threshold
+[ ] Steps 4-5 SEAL + PANEL once
+[ ] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-300-train/lis-300-train.md 2>&1 | head -n 200
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel300-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-300. Fine-tune our own listener (openbmb/MiniCPM5-1B, Apache 2.0; Ben chose it on 2026-09-23 at 11:01 UTC, which is his yes to download it), pick the confidence threshold on dev, then run the sealed blind panel ONCE. Artifacts go in artifacts/claude-lis300-20260923/. The listener thread (Opus) wrote and CPU-smoke-tested all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis300-20260923/PASSMARKS.md (marks, threshold rule), design/v3/60-listener/frame-spec.md, and scripts/claude_lis300_{common,compiler,data,train,read,score,agree}.py.
+
+0. GPU. GPU: yes. Use BensPC (RTX 5070 Ti, free) if it has a working CUDA torch env; check with `python -c "import torch;print(torch.cuda.is_available())"` in <= 10 min. You need torch, transformers >= 5.6, peft, safetensors and huggingface_hub; installing those with pip in a NEW venv is fine. If BensPC is not usable, rent ONE vast.ai RTX 4090/5090 on demand under the rental rules in handoff/queue/269-resume.md:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - STOP if another instance is running;
+   - ceiling $3.00 and 3 h, enforced by a watchdog;
+   - destroy at the end and confirm the instance list is empty;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git.
+1. DATA. On the GPU machine, get the repo at origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. Then run:
+   python scripts/claude_lis300_data.py --o0b <o0b dir> --opus artifacts/claude-lis300-20260923/data --agree artifacts/claude-lis300-20260923/data/agreed_ids.txt --o0a2 <o0a2 dir> --out <work>/data
+   First check `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` from the repo root: it must be all OK. Record the printed counts.
+2. MODEL. Download openbmb/MiniCPM5-1B from Hugging Face with huggingface_hub.snapshot_download (about 2.1 GB). Record the commit hash and the sha256 of the safetensors file.
+3. TRAIN. Run:
+   python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge
+   If it runs out of memory, use --batch 8 once and report it. Keep train_log.jsonl and summary.json.
+4. DEV + THRESHOLD. Make <work>/dev_rows.jsonl from <work>/data/dev.jsonl (fields id, turn, prev_reply). Then run:
+   python scripts/claude_lis300_read.py --model <work>/run/merged --rows <work>/dev_rows.jsonl --out <work>/dev_pred.jsonl
+   Then run claude_lis300_score.py --gold <work>/data/dev.jsonl --pred <work>/dev_pred.jsonl --sweep. Apply the PASSMARKS threshold rule exactly: T is the smallest grid value with 0 wrong-save turns on the whole dev set, else 0.995. Write T to THRESHOLD.txt along with the sweep table. Also report the dev numbers for each src (o0b_l2, opus_dev, o0a2) at T.
+5. SEAL. Run sha256 over THRESHOLD.txt, the merged model's safetensors, and the dev sweep output. Put the hashes in SEAL-run.sha256.txt BEFORE opening the panel.
+6. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt` (must be all OK). Then run the reader on panel.jsonl, and score it against the key file that seal names, at T and also at T = 0 (the latter is report only). Never print or quote panel turns. Report by category only.
+7. RESULTS.md, result first:
+   - each P300.n with integer counts, PASS/FAIL;
+   - wrong facts per saved fact and per turn;
+   - recall by family;
+   - device, median/p90/max read ms;
+   - training minutes and tok/s;
+   - dollars spent.
+   Append ledger lines P300.1 to P300.6 (cat >> artifacts/fable-predictions-ledger.md).
+8. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis300-merged/ (make the folder) and record its sha256 in RESULTS.md. The chat page will load it from there later. Also keep it on BensPC if trained there. Never push weights.
+PUSH: artifacts/claude-lis300-20260923/{RESULTS.md,THRESHOLD.txt,SEAL-run.sha256.txt,dev_sweep.txt,panel_score.json,panel_score_T0.json,train_summary.json,train_log.jsonl} artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mls artifacts/ | grep -i lis; echo ---; ls ~/premonition-models/ 2>&1; echo ---; cat ~/.ssh/config 2>&1 | head -n 40
+claude-lis300-20260923
+claude-lis310-20260923
+claude-lis311-20260923
+fable-english-listening-20260921
+---
+lis300-merged
+---
+Host benspc
+  HostName 100.75.113.114
+  User benja
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-300-train/lis-300-train.go1.reply.md 2>&1 | head -n 250
+Starting lis-300 build — reading rules and specs first.
+Files are on origin/main. Reading the remaining specs and scripts.
+Code reviewed. Now checking BensPC GPU availability.
+BensPC is up, GPU idle (15.4 GB free). Checking its Python/torch env.
+71.8 GB free on C:. Setting up the venv and work dirs on BensPC now.
+TLS cert env issue on BensPC. Checking env vars.
+TLS fixed. Installing the training stack (torch CUDA + transformers + peft + safetensors + HF hub) — this is a big download.
+Install complete: torch 2.14.0, transformers 5.17.0, peft 0.21.0. Verifying CUDA in the venv.
+CPU-only torch wheel — need the CUDA build from the PyTorch index.
+Reinstall is downloading now (blocked as expected). Polling the log.
+CUDA works. Now packaging the code + data for BensPC via git archive.
+No Unix tools on cmd — I'll write a small seal-check script on the Mac and copy it over.
+SEAL all OK (14/14). Building the training data.
+Classic cmd trailing-space gotcha — retrying with quoted set.
+Model downloaded (2.16 GB). Getting the commit hash.
+Commit `87179e5c`. Now launching training detached (writes log, survives SSH exit).
+No python running — the detached launch didn't survive. Testing detach behavior with a trivial probe first.
+My tool timeout hit (10 min) while training runs. Checking whether it survived on BensPC.
+Training survived and is computing (97% util, 225W). Checking progress.
+Step 1840/4002 at ~10 min, ~4877 tok/s. ETA ~12 more min. Updating todos and waiting.
+Training finished. Reading the summary.
+Dev read done. Running the threshold sweep.
+Files were written (the counter display had a short-circuit bug). Verifying per-file counts.
+Per-src dev numbers captured. Saving the sweep table to file and pulling it down.
+T=0.995 confirmed. Creating THRESHOLD.txt and dev_sweep.txt (new files), then sealing before the panel.
+Seal written before panel. Now step 6 — verifying the panel key seal first (without opening any items).
+Key seal OK (2/2). Writing a rows-maker that never prints turn text.
+240 rows, schema as expected. Running the reader on the panel — once.
+Panel read once (240 rows). Checking key schema (field names only) before scoring.
+All counts reconcile (240 turns, 137 gold writes, 71 hits). Pulling the score files.
+Copying the merged model to the Mac (2.16 GB) while I draft RESULTS.md.
+Model hash matches. Writing RESULTS.md.
+Final check: PUSH set complete, worktree has only additions.
+Verdict: FAIL (P300.2 recall 71/137 = 51.8%, bar ≥85%; also under 75%, so the PASSMARKS "proved wrong" clause trips).
+
+Marks table (arm A = reader + compiler at T = 0.995, 240 blind panel turns, run once on BensPC RTX 5070 Ti):
+
+| Mark | Bar | Integer counts | Result |
+|---|---|---|---|
+| P300.1 wrong-save turns | ≤ 1 of 240 | 1 of 240 | PASS |
+| P300.2 exact recall of gold writes | ≥ 85% | 71 of 137 (51.8%) | FAIL |
+| P300.3 ASK read correctly | ≥ 90% | 38 of 40 (95.0%) | PASS |
+| P300.4 our/we ask whose | ≥ 90% | 20 of 20 (100%) | PASS |
+| P300.5 unparseable outputs | ≤ 2% | 0 of 240 | PASS |
+| P300.6 median read ms | ≤ 1,500 | median 1492.45, p90 2051.0, max 3115.1 | PASS |
+
+Every move / miss (category level only, nothing quoted):
+- The 1 wrong-save turn is in pronoun-ambiguous (a no-save turn). All no-save families otherwise had 0 wrong turns: negation 12, check 12, suppose 10, plan 10, reported 8, chat 8, our-we 20 turns with 0 gold writes.
+- Recall hits by family at T: tell-single 11/14, tell-multi 8/21, tell-plural 11/17, tell-appositive 6/20, tell-verb 7/12, tell-typo 5/8, tell-self 6/8, correct 7/17, short-answer 4/8, pronoun-clear 6/12; 66 gold facts held back.
+- ASK misses: 2, both in question-twohop (3/5); wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7.
+- Report-only: wrong facts per saved fact 1/72 at T (7/140 at T=0); per turn 1/240 at T (7/240 at T=0). At T=0: recall 133/137 (97.1%), 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo), turn-exact 98/102.
+- Training: 4002/4002 steps, 21.78 min, 4851.9 tok/s, dev loss 0.0842, batch 16, no OOM. Base MiniCPM5-1B commit 87179e5c, safetensors sha256 7ab8fd86…; merged sha256 112880d6…, kept at ~/premonition-models/lis300-merged/ (hash verified) and on BensPC. Dollars spent: $0 (BensPC free, no rental).
+
+Deviations (environment only; sealed code imported and run unmodified, never patched):
+1. Windows cp1252 default broke opus jsonl reads → set PYTHONUTF8=1 (env only).
+2. BensPC's system REQUESTS_CA_BUNDLE points at a deleted file → pointed at the venv certifi bundle (env only).
+3. Fresh venv got CPU-only torch → installed torch 2.11.0+cu128 from the PyTorch cu128 index into the NEW venv (pip install explicitly allowed). Final: torch 2.11.0+cu128, transformers 5.17.0, peft 0.21.0.
+4. `start`-detached processes die when SSH closes (probe proved it), so training ran in the foreground of one SSH call and survived a client-side timeout server-side.
+5. Batch-8 fallback not needed; 150-min cap never bound. Seals: data 14/14 OK, key 2/2 OK, SEAL-run written before the panel.
+
+What it means (plain high-school English): the home-trained 1B listener can read — with the safety gate off it gets 133 of 137 facts, asks whose on all 20 our/we turns, and reads 38 of 40 questions. But the dev-picked safety rule (save only at 99.5% sure) throws away half the true facts (66 of 137) and still lets 1 wrong save through, so safe-and-useful was not reached together.
+
+What it doesn't mean: it doesn't mean the reader is a bad reader (97.1% ungated), and it doesn't mean the test leaked (N–Z names never trained on, seals checked, panel run exactly once). One diagnosis-driven follow-up (lis-301+) is allowed.
+
+PUSH files are on disk: artifacts/claude-lis300-20260923/{RESULTS.md,THRESHOLD.txt,SEAL-run.sha256.txt,dev_sweep.txt,panel_score.json,panel_score_T0.json,train_summary.json,train_log.jsonl} plus 6 appended ledger lines P300.1–P300.6.
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-300-train/lis-300-train.go1.err.txt 2>&1 | head -n 150; echo ...; git show origin/builder-outbox:runs/lis-300-train/lis-300-train.go1.err.txt 2>&1 | wc -l
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mRead artifacts/claude-lis300-20260923/PASSMARKS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis300-20260923/PASSMARKS.md
+[0m✗ [0mRead design/v3/60-listener/frame-spec.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/frame-spec.md
+[0m
+[0m$ [0mls artifacts/claude-lis300-20260923/; echo ---; ls scripts/claude_lis300_* 2>&1; echo ---; git fetch -q origin main 2>&1 | head; git log --oneline -3; echo ---; uptime; df -g / | head -5
+ls: artifacts/claude-lis300-20260923/: No such file or directory
+zsh:1: no matches found: scripts/claude_lis300_*
+---
+---
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+---
+ 7:32  up 2 days, 23:21, 4 users, load averages: 99.42 98.52 91.70
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135748960    0%   /
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; git fetch -q origin builder-outbox 2>&1 | head -5; git branch -a | head -20; echo ---; git ls-tree --name-only origin/main artifacts/ | head -30; echo ---; git ls-tree --name-only origin/builder-outbox artifacts/ 2>&1 | head -30
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+artifacts/claude-aliaspanel237-20260922
+artifacts/claude-aliaspanel237b-20260922
+artifacts/claude-apos247-20260922
+artifacts/claude-askpanel243-20260922
+artifacts/claude-bench125-fairness-20260922
+artifacts/claude-boundary259-20260922
+artifacts/claude-chain231-20260922
+artifacts/claude-chain231b-20260922
+artifacts/claude-chainpanel231-20260922
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comment258-20260922
+artifacts/claude-convjudge239-A-20260922
+artifacts/claude-convjudge239-B-20260922
+artifacts/claude-convpanel239-138l-20260922
+artifacts/claude-convpanel239-138m-20260922
+artifacts/claude-convpanel239-138n-20260922
+artifacts/claude-convpanel239-20260922
+artifacts/claude-correct252-20260922
+artifacts/claude-correct252b-20260922
+artifacts/claude-corrpanel252-20260922
+artifacts/claude-corrtail258-20260922
+artifacts/claude-decline224c-20260922
+artifacts/claude-demo-dryrun-20260922
+artifacts/claude-determinism228-20260922
+artifacts/claude-diag243-20260922
+artifacts/claude-direction251-20260922
+artifacts/claude-earcheck261-20260922
+artifacts/claude-earloop256-20260922
+artifacts/claude-earpanel235-20260922
+---
+artifacts/claude-called281-20260923
+artifacts/claude-called281b-20260923
+artifacts/claude-calledpanel281-20260923
+artifacts/claude-calledpanel281b-20260923
+artifacts/claude-capab280-20260923
+artifacts/claude-capab280b-20260923
+artifacts/claude-capabilpanel280-20260923
+artifacts/claude-capabilpanel280b-20260923
+artifacts/claude-chain266-20260923
+artifacts/claude-chain266b-20260923
+artifacts/claude-chainpanel266-20260923
+artifacts/claude-chainpanel266b-20260923
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comma263-20260923
+artifacts/claude-commapanel263-20260923
+artifacts/claude-corrpanel291-20260923
+artifacts/claude-devset267-20260923
+artifacts/claude-diag267-20260923
+artifacts/claude-diag271-20260923
+artifacts/claude-diag290-20260923
+artifacts/claude-diag293-20260923
+artifacts/claude-ear265-20260923
+artifacts/claude-ear269-20260923
+artifacts/claude-earcheck261b-20260923
+artifacts/claude-earcheck264-20260923
+artifacts/claude-earpanel261b-20260923
+artifacts/claude-earpanel264-20260923
+artifacts/claude-fixedtext255b-20260923
+artifacts/claude-grade241b-A-20260923
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/ | grep -i lis; echo ---MAIN-SCRIPTS---; git ls-tree --name-only origin/main scripts/ | grep -i lis; echo ---OUTBOX-LIS---; git ls-tree --name-only origin/builder-outbox artifacts/ | grep -i lis; echo ---FRAME---; git ls-tree --name-only origin/main design/v3/60-listener/ 2>&1 | head
+artifacts/claude-lis300-20260923
+artifacts/claude-lispanel300-20260923
+artifacts/fable-english-listening-20260921
+---MAIN-SCRIPTS---
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+scripts/fable_bench103_english_arm.py
+scripts/fable_bench73_english_arm.py
+scripts/fable_bench92_english_arm.py
+scripts/fable_brake118b_trainlist.py
+scripts/fable_fix154c_allowlist.py
+scripts/fable_fix154e_allowlist.py
+scripts/fable_listening_english.py
+scripts/fable_listening_m1.py
+scripts/gen_english.py
+---OUTBOX-LIS---
+artifacts/claude-lis310-20260923
+---FRAME---
+design/v3/60-listener/frame-spec.md
+design/v3/60-listener/relation-names.txt
+design/v3/60-listener/task-lis300-train.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main artifacts/claude-lis300-20260923/; echo ---; git ls-tree -r --name-only origin/main artifacts/claude-lispanel300-20260923/; echo ---; git ls-tree -r --name-only origin/builder-outbox artifacts/ | grep -iE "o0b|o0a2|own-o0"
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+---
+...
+    2262
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-300-train/lis-300-train.go1.err.txt > /tmp/lis300err.txt 2>/dev/null; grep -iE "ssh benspc|C:/Users|venv|work/|snapshot|model dir|snapshot_download" /tmp/lis300err.txt | sort -u | head -n 60
+python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 584, in _lazy_init
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 766, in get_device_name
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 799, in get_device_properties
+[0m$ [0mcp /tmp/dev_sweep.txt artifacts/claude-lis300-20260923/dev_sweep.txt && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/run/summary.json /tmp/train_summary.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/run/train_log.jsonl /tmp/train_log.jsonl && cp /tmp/train_summary.json artifacts/claude-lis300-20260923/train_summary.json && cp /tmp/train_log.jsonl artifacts/claude-lis300-20260923/train_log.jsonl && wc -l artifacts/claude-lis300-20260923/
+[0m$ [0mmkdir -p ~/premonition-models/lis300-merged && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis300/work/run/merged/*" ~/premonition-models/lis300-merged/ && ls -la ~/premonition-models/lis300-merged/
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/fam_scores.py benspc:C:/Users/benja/lis300/fam_scores.py && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\fam_scores.py C:\\Users\\benja\\lis300\\repo C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\panel.jsonl C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\key_v2.jsonl C:\\Users\\benja\\lis300\\work\\perfam 0.995"
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/lis300_dlmodel.py benspc:C:/Users/benja/lis300/lis300_dlmodel.py && ssh -o ConnectTimeout=15 benspc "set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\lis300_dlmodel.py C:\\Users\\benja\\lis300\\model > C:\\Users\\benja\\lis300\\dlmodel.log 2>&1 & echo STARTED"
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/lis300-main.tar benspc:C:/Users/benja/lis300/lis300-main.tar && scp -o ConnectTimeout=30 /tmp/lis300-outbox.tar benspc:C:/Users/benja/lis300/lis300-outbox.tar && echo COPIED
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/make_panel_rows.py benspc:C:/Users/benja/lis300/make_panel_rows.py && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\make_panel_rows.py C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\panel.jsonl C:\\Users\\benja\\lis300\\work\\panel_rows.jsonl"
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/train.bat benspc:C:/Users/benja/lis300/train.bat && ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=memory.free,utilization.gpu,power.draw --format=csv" && ssh -o ConnectTimeout=20 benspc "start /min C:\\Users\\benja\\lis300\\train.bat & echo LAUNCHED"
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/verify_seal.py benspc:C:/Users/benja/lis300/verify_seal.py && ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\verify_seal.py C:\\Users\\benja\\lis300\\repo artifacts\\claude-lis300-20260923\\SEAL.sha256.txt"
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_sweep.txt /tmp/dev_sweep.txt && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_score_T.json /tmp/dev_score_T.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_o0b_l2.json /tmp/dev_o0b_l2.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_opus_dev.json /tmp/dev_opus_dev.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_o0a2.json /tmp/dev_o0a2.json && echo PULLED
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/panel_score.json /tmp/panel_score.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/panel_score_T0.json /tmp/panel_score_T0.json && cp /tmp/panel_score.json artifacts/claude-lis300-20260923/panel_score.json && cp /tmp/panel_score_T0.json artifacts/claude-lis300-20260923/panel_score_T0.json && echo STAGED
+[0m$ [0msleep 100; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/dlmodel.log').read()[-1500:])\""
+[0m$ [0msleep 120; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip-torch2.log').read()[-1200:])\""
+[0m$ [0msleep 150; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read()[-2000:])\""
+[0m$ [0msleep 360; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-8:]))\""
+[0m$ [0msleep 540; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-4:]))\""
+[0m$ [0msleep 90; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip-torch.log').read()[-1500:])\""
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=10 benspc "nvidia-smi --query-gpu=memory.free,utilization.gpu --format=csv && cd C:\\Users\\benja\\lis300\\repo && set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_train.py --model C:\\Users\\benja\\lis300\\model --data C:\\Users\\benja\\lis300\\work\\data --out C:\\Users\\benja\\lis300\\work\\run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge > C:\\Users\\benja\\lis300\\train.log 2>&1 & echo TRAIN_STARTED"
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=20 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis300\\work\\run\\merged --rows C:\\Users\\benja\\lis300\\work\\dev_rows.jsonl --out C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl"
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=20 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis300\\work\\run\\merged --rows C:\\Users\\benja\\lis300\\work\\panel_rows.jsonl --out C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib,os; os.chdir('C:/Users/benja/lis300/repo'); ok=1; n=0; f=open('artifacts/claude-lis300-20260923/SEAL.sha256.txt').read().splitlines(); print(len(f), 'sealed lines'); [exec('') ] \" 2>&1 | head -5"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__)\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip.log').read()[-2000:])\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip config list"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip setuptools wheel"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\verify_seal.py C:\\Users\\benja\\lis300\\repo artifacts\\claude-lispanel300-20260923\\SEAL-key.sha256.txt"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel300-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel300-20260923\\panel.jsonl --threshold 0 --out C:\\Users\\benja\\lis300\\work\\panel_score_T0.json"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel300-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel300-20260923\\panel.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\panel_score.json"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --sweep > C:\\Users\\benja\\lis300\\work\\dev_sweep.txt 2>&1 & echo SWEPT"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --sweep"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_score_T.json"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_o0b_l2.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_o0b_l2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_o0b_l2.json & C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_opus_dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_opus_dev.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_opus_dev.json & C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_o0a2.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_o0a2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_o0a2.json & echo SRC_DONE"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set PYTHONUTF8=1 && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis300\\work\\run\\merged && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; rows=[json.loads(l) for l in open('C:/Users/benja/lis300/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; w=open('C:/Users/benja/lis300/work/dev_rows.jsonl','w',encoding='utf-8'); [w.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')},ensure_ascii=False)+'\n') for r in rows]; print('dev_rows',len(rows))\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\lis300 2>&1 & mkdir C:\\Users\\benja\\lis300\\work 2>&1 & mkdir C:\\Users\\benja\\lis300\\repo 2>&1 & python -m venv C:\\Users\\benja\\lis300\\venv 2>&1 & echo VENV_DONE"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-6:]))\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib; h=hashlib.sha256(); f=open('C:/Users/benja/lis300/work/run/merged/model.safetensors','rb'); [h.update(c) for c in iter(lambda:f.read(1<<20),b'')]; print(h.hexdigest())\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json,glob; [print(p, sum(1 for _ in open(p,encoding='utf-8'))) for p in sorted(glob.glob('C:/Users/benja/lis300/work/persrc/*.jsonl'))]\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; d=json.load(open('C:/Users/benja/lis300/work/run/summary.json')); print(json.dumps(d,indent=1))\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis300/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; pred={json.loads(l)['id']:l for l in open('C:/Users/benja/lis300/work/dev_pred.jsonl',encoding='utf-8') if l.strip()}; import os; os.makedirs('C:/Users/benja/lis300/work/persrc',exist_ok=True); from collections import Counter; c=Counter(); fhs={}; [fhs.setdefault(r['src'],open('C:/Users/benja/lis300/work/persrc/gold_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; phs={}; [w.write(json.dumps(r,ensure_ascii=False)+'\n') or c.update([r['src']]) for r in gold for w in [fhs[r['src']]]]; [v.close() for v in fhs.values()]; ifhs={}; [ifhs.setdefault(r['src'],open('C:/Users/benja/lis300/work/persrc/pred_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; [ifhs[r['src']].write(pred[r['id']]) for r in gold]; [v.close() for v in ifhs.values()]; print(dict(c))\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; r=json.loads(open('C:/Users/benja/lis300/repo/artifacts/claude-lispanel300-20260923/key_v2.jsonl',encoding='utf-8').readline()); print('key keys='+','.join(sorted(r.keys()))); f=r.get('frame',{}); print('frame keys='+','.join(sorted(f.keys())) if isinstance(f,dict) else 'frame not dict')\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/dlmodel.log',encoding='utf-8',errors='replace').read()[-1500:])\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"from huggingface_hub import HfApi; print(HfApi().model_info('openbmb/MiniCPM5-1B').sha)\""
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE= && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install --index-url https://download.pytorch.org/whl/cu128 --force-reinstall --no-deps torch > C:\\Users\\benja\\lis300\\pip-torch2.log 2>&1 & echo STARTED"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install --index-url https://download.pytorch.org/whl/cu128 torch > C:\\Users\\benja\\lis300\\pip-torch.log 2>&1 & echo STARTED"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install torch transformers peft safetensors huggingface_hub > C:\\Users\\benja\\lis300\\pip.log 2>&1 & echo STARTED"
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install torch transformers peft safetensors huggingface_hub 2>&1 | tail -20"
+0. GPU. GPU: yes. Use BensPC (RTX 5070 Ti, free) if it has a working CUDA torch env; check with `python -c "import torch;print(torch.cuda.is_available())"` in <= 10 min. You need torch, transformers >= 5.6, peft, safetensors and huggingface_hub; installing those with pip in a NEW venv is fine. If BensPC is not usable, rent ONE vast.ai RTX 4090/5090 on demand under the rental rules in handoff/queue/269-resume.md:
+2. MODEL. Download openbmb/MiniCPM5-1B from Hugging Face with huggingface_hub.snapshot_download (about 2.1 GB). Record the commit hash and the sha256 of the safetensors file.
+C:/Users/benja/lis300/work/persrc\gold_o0a2.jsonl 300
+C:/Users/benja/lis300/work/persrc\gold_o0b_l2.jsonl 428
+C:/Users/benja/lis300/work/persrc\gold_opus_dev.jsonl 139
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_score.py 2>&1 | head -n 120
+#!/usr/bin/env python3
+"""lis-300 scorer: grades the listener + write compiler against gold frames.
+
+Both gold and predicted frames go through the SAME compiler (gold with confidence 1).
+A predicted write counts as:
+  hit     same owner and value (case-insensitive), and the same relation or a narrower one
+          (Ruling 1, 261b-decision.md; pet also covers rabbit/hamster/parrot/horse);
+  broader same owner and value, and the predicted relation is broader than the gold one
+          (true but vague: not a wrong save, not a recall hit);
+  wrong   anything else.
+
+python claude_lis300_score.py --gold GOLD.jsonl --pred PRED.jsonl [--turns TURNS.jsonl]
+        [--threshold T | --sweep] [--out OUT.json]
+GOLD rows: {"id","frame"[, "turn","prev_reply","family"]}; TURNS supplies turn/prev_reply
+if GOLD lacks them. PRED rows: {"id","frame","conf","ms"} from claude_lis300_read.py.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_compiler import compile_frame  # noqa: E402
+
+NARROWER = {"parent": {"mother", "father"}, "sibling": {"sister", "brother"},
+            "spouse": {"wife", "husband"}, "child": {"son", "daughter"},
+            "grandchild": {"grandson", "granddaughter"},
+            "pet": {"dog", "cat", "rabbit", "hamster", "parrot", "horse"}}
+
+
+def norm(x):
+    return " ".join(str(x or "").lower().split())
+
+
+def match(p, g):
+    if norm(p.get("owner")) != norm(g.get("owner")) or norm(p.get("value")) != norm(g.get("value")):
+        return None
+    pr, gr = p.get("rel"), g.get("rel")
+    if pr == gr or pr in NARROWER.get(gr, ()):
+        return "hit"
+    if gr in NARROWER.get(pr, ()):
+        return "broader"
+    return None
+
+
+def ask_ok(p, g):
+    if not isinstance(p, dict) or not isinstance(g, dict):
+        return False
+    via_g = g.get("via") or g.get("then")
+    rel_ok = p.get("rel") == g.get("rel") or p.get("rel") in NARROWER.get(g.get("rel"), ())
+    return (norm(p.get("owner")) == norm(g.get("owner")) and rel_ok
+            and bool(p.get("inverse")) == bool(g.get("inverse"))
+            and norm(p.get("via")) == norm(via_g if isinstance(via_g, str) else ""))
+
+
+def load(p):
+    return {r["id"]: r for r in (json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip())}
+
+
+def score(gold, pred, turns, threshold):
+    S = Counter()
+    fam_wrong = Counter()
+    ms = []
+    for i, g in gold.items():
+        t = turns.get(i, g)
+        turn, prev = t.get("turn", ""), t.get("prev_reply", "")
+        gd = compile_frame(g["frame"], turn, prev)
+        p = pred.get(i, {})
+        pf = p.get("frame")
+        S["turns"] += 1
+        if pf is None:
+            S["parse_fail"] += 1
+        if "ms" in p:
+            ms.append(p["ms"])
+        pd = compile_frame(pf, turn, prev, conf=p.get("conf"), threshold=threshold)
+        G, W = gd["write"], pd["write"]
+        S["gold_writes"] += len(G)
+        S["pred_writes"] += len(W)
+        wrong = 0
+        used = set()
+        for w in W:
+            lvl = None
+            for k, gf in enumerate(G):
+                if k not in used:
+                    lvl = match(w, gf)
+                    if lvl:
+                        used.add(k)
+                        break
+            if lvl == "hit":
+                S["hits"] += 1
+            elif lvl == "broader":
+                S["broader"] += 1
+            else:
+                wrong += 1
+        S["wrong_facts"] += wrong
+        if wrong:
+            S["wrong_turns"] += 1
+            fam_wrong[g.get("family", "?")] += 1
+            if not G:
+                S["wrong_turns_on_nosave_turns"] += 1
+        if G:
+            S["gold_write_turns"] += 1
+            S["turn_exact"] += int(wrong == 0 and len(used) == len(G) and len(W) == len(G))
+            S["held_back_facts"] += sum(1 for k, gf in enumerate(G) if k not in used) if pd["ask_back"] else 0
+        if gd["ask_whose"]:
+            S["we_turns"] += 1
+            S["we_asked"] += int(bool(pd["ask_whose"]))
+        ga = g["frame"].get("ask") if g["frame"].get("act") == "ASK" else None
+        if ga:
+            S["ask_turns"] += 1
+            S["ask_ok"] += int(isinstance(pf, dict) and pf.get("act") == "ASK" and ask_ok(pf.get("ask"), ga))
+    res = dict(S)
+    res["threshold"] = threshold
+    res["recall_exact"] = S["hits"] / max(1, S["gold_writes"])
+    res["ask_acc"] = S["ask_ok"] / max(1, S["ask_turns"])
+    res["we_ask_rate"] = S["we_asked"] / max(1, S["we_turns"])
+[0m
+[0m$ [0muptime; df -g / | head -5; ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=name,memory.free,utilization.gpu --format=csv" 2>&1 | head
+14:00  up  3:53, 4 users, load averages: 54.52 50.79 46.61
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        21    38%  484014 224205600    0%   /
+name, memory.free [MiB], utilization.gpu [%]
+NVIDIA GeForce RTX 5070 Ti, 15459 MiB, 0 %
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__, torch.cuda.is_available())\" && dir C:\\Users\\benja\\lis300\\model 2>&1 | head -20" 2>&1 | head -30
+2.11.0+cu128 True
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis300\\model" 2>&1 | head -n 25; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import transformers, peft; print(transformers.__version__); print(peft.__version__)\"" 2>&1 | head -n 5
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\model
+
+09/23/2026  07:43 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  07:42 AM    <DIR>          .cache
+09/23/2026  07:42 AM             1,519 .gitattributes
+09/23/2026  07:42 AM             9,062 chat_template.jinja
+09/23/2026  07:42 AM               726 config.json
+09/23/2026  07:42 AM               213 generation_config.json
+09/23/2026  07:43 AM     2,161,290,912 model-00000-of-00001.safetensors
+09/23/2026  07:42 AM            18,004 model.safetensors.index.json
+09/23/2026  07:42 AM            22,108 README-cn.md
+09/23/2026  07:42 AM            23,472 README.md
+09/23/2026  07:42 AM               551 special_tokens_map.json
+09/23/2026  07:42 AM         9,894,271 tokenizer.json
+09/23/2026  07:42 AM            94,416 tokenizer_config.json
+              11 File(s)  2,171,355,254 bytes
+               3 Dir(s)  61,152,133,120 bytes free
+5.17.0
+0.21.0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib; h=hashlib.sha256(); f=open('C:/Users/benja/lis300/model/model-00000-of-00001.safetensors','rb'); [h.update(c) for c in iter(lambda:f.read(1<<20),b'')]; print(h.hexdigest())\""
+7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d
+[0m
+[0m$ [0mgit archive origin/main -o /tmp/lis301-main.tar && git archive origin/builder-outbox artifacts/claude-own-o0b-20260923 artifacts/claude-own-o0a2-20260923 -o /tmp/lis301-outbox.tar && ls -la /tmp/lis301-*.tar
+-rw-r--r--  1 ben-hannan  wheel  974909440 Sep 23 14:01 /tmp/lis301-main.tar
+-rw-r--r--  1 ben-hannan  wheel   13568000 Sep 23 14:01 /tmp/lis301-outbox.tar
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-lis300-20260923 artifacts/claude-lis301-20260923 artifacts/claude-lispanel301-20260923 design handoff -o /tmp/lis301-main.tar && ls -la /tmp/lis301-main.tar && scp -o ConnectTimeout=30 /tmp/lis301-main.tar benspc:C:/Users/benja/lis301/lis301-main.tar && scp -o ConnectTimeout=30 /tmp/lis301-outbox.tar benspc:C:/Users/benja/lis301/lis301-outbox.tar && echo COPIED
+-rw-r--r--  1 ben-hannan  wheel  27023360 Sep 23 14:01 /tmp/lis301-main.tar
+scp: dest open "C:/Users/benja/lis301/lis301-main.tar": No such file or directory
+scp: failed to upload file /tmp/lis301-main.tar to C:/Users/benja/lis301/lis301-main.tar
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\lis301 && mkdir C:\\Users\\benja\\lis301\\work && mkdir C:\\Users\\benja\\lis301\\repo && echo DIRS_OK"
+DIRS_OK
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/lis301-main.tar "benspc:C:/Users/benja/lis301/lis301-main.tar" && scp -o ConnectTimeout=30 /tmp/lis301-outbox.tar "benspc:C:/Users/benja/lis301/lis301-outbox.tar" && echo COPIED
+COPIED
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && tar -xf C:\\Users\\benja\\lis301\\lis301-main.tar && tar -xf C:\\Users\\benja\\lis301\\lis301-outbox.tar && dir artifacts" 2>&1 | head -n 20
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\repo\artifacts
+
+09/23/2026  02:01 PM    <DIR>          .
+09/23/2026  02:01 PM    <DIR>          ..
+09/23/2026  12:42 PM    <DIR>          claude-lis300-20260923
+09/23/2026  12:42 PM    <DIR>          claude-lis301-20260923
+09/23/2026  12:42 PM    <DIR>          claude-lispanel301-20260923
+09/23/2026  01:59 PM    <DIR>          claude-own-o0a2-20260923
+09/23/2026  01:59 PM    <DIR>          claude-own-o0b-20260923
+               0 File(s)              0 bytes
+               7 Dir(s)  61,067,214,848 bytes free
+[0m
+[0m# [0mTodos
+[✓] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[✓] Set up GPU path (BensPC SSH, check venv + model sha)
+[•] Step 1 DATA: seal checks + run claude_lis301_data.py
+[ ] Step 2 TRAIN on GPU
+[ ] Step 3 DEV + threshold
+[ ] Steps 4-5 SEAL + PANEL once
+[ ] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib,os; ok=1; n=0; files=['artifacts/claude-lis300-20260923/SEAL.sha256.txt','artifacts/claude-lis301-20260923/SEAL.sha256.txt']; [exec('pass')] ; print('noop')\" && echo SEALPY_OK"
+noop
+SEALPY_OK
+[0m
+[0m← [0mWrite /tmp/verify_seal301.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/verify_seal301.py "benspc:C:/Users/benja/lis301/verify_seal301.py" && ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis301\\verify_seal301.py C:\\Users\\benja\\lis301\\repo artifacts\\claude-lis300-20260923\\SEAL.sha256.txt artifacts\\claude-lis301-20260923\\SEAL.sha256.txt"
+artifacts\claude-lis300-20260923\SEAL.sha256.txt 14/14 OK
+artifacts\claude-lis301-20260923\SEAL.sha256.txt 13/13 OK
+ALL_OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis301_data.py --o0b artifacts\\claude-own-o0b-20260923 --o0a2 artifacts\\claude-own-o0a2-20260923 --opus300 artifacts\\claude-lis300-20260923\\data --agree300 artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --opus301 artifacts\\claude-lis301-20260923\\data --agree301 artifacts\\claude-lis301-20260923\\data\\agreed_ids.txt --dev-agree artifacts\\claude-lis301-20260923\\data\\dev_agreed_ids.txt --out C:\\Users\\benja\\lis301\\work\\data"
+{
+ "train": 32012,
+ "dev": 867,
+ "opus_agreed": 1392,
+ "o0b_pronoun_owner_dropped": 20000,
+ "train_src": {
+  "o0b": 27000,
+  "opus": 5012
+ },
+ "dev_src": {
+  "o0b_l2": 428,
+  "opus_dev": 139,
+  "o0a2": 300
+ }
+}
+{
+ "train": 36972,
+ "dev": 959,
+ "opus301_agreed": 1377,
+ "dev_dropped_by_relabel": {
+  "opus_dev": 8,
+  "o0a2": 37
+ },
+ "train_src": {
+  "o0b": 27000,
+  "opus301": 4960,
+  "opus": 5012
+ },
+ "dev_src": {
+  "o0b_l2": 428,
+  "opus_dev": 131,
+  "o0a2": 263,
+  "opus301_dev": 137
+ }
+}
+[0m
+[0m# [0mTodos
+[✓] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[✓] Set up GPU path (BensPC SSH, check venv + model sha)
+[✓] Step 1 DATA: seal checks + run claude_lis301_data.py
+[•] Step 2 TRAIN on GPU (~22 min, foreground SSH)
+[ ] Step 3 DEV + threshold
+[ ] Steps 4-5 SEAL + PANEL once
+[ ] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=120 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_train.py --model C:\\Users\\benja\\lis300\\model --data C:\\Users\\benja\\lis301\\work\\data --out C:\\Users\\benja\\lis301\\work\\run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge"
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  33%|███▎      | 72/219 [00:00<00:00, 605.31it/s]Loading weights:  61%|██████    | 133/219 [00:00<00:00, 399.52it/s]Loading weights:  81%|████████  | 177/219 [00:00<00:00, 331.68it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 395.62it/s]
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+{'step': 1, 'total': 4622, 'loss': 3.1047, 'lr': 2.5974022974040683e-06, 'tok_per_s': 2696.3, 'min': 0.01}
+{'step': 20, 'total': 4622, 'loss': 1.4465, 'lr': 2.7271467298259723e-05, 'tok_per_s': 4463.2, 'min': 0.12}
+{'step': 40, 'total': 4622, 'loss': 0.2066, 'lr': 5.323691390073909e-05, 'tok_per_s': 4613.0, 'min': 0.23}
+{'step': 60, 'total': 4622, 'loss': 0.0631, 'lr': 7.918784394618896e-05, 'tok_per_s': 4748.5, 'min': 0.34}
+{'step': 80, 'total': 4622, 'loss': 0.0539, 'lr': 0.00010511706473102641, 'tok_per_s': 4796.6, 'min': 0.45}
+{'step': 100, 'total': 4622, 'loss': 0.0351, 'lr': 0.00013101739022369234, 'tok_per_s': 4849.7, 'min': 0.55}
+{'step': 120, 'total': 4622, 'loss': 0.0251, 'lr': 0.0001568816432785827, 'tok_per_s': 4519.8, 'min': 0.71}
+{'step': 140, 'total': 4622, 'loss': 0.0485, 'lr': 0.00018270265784768282, 'tok_per_s': 4562.9, 'min': 0.82}
+{'step': 160, 'total': 4622, 'loss': 0.0653, 'lr': 0.00019940922548544753, 'tok_per_s': 4607.2, 'min': 0.93}
+{'step': 180, 'total': 4622, 'loss': 0.0183, 'lr': 0.000199252496769756, 'tok_per_s': 4558.2, 'min': 1.06}
+{'step': 200, 'total': 4622, 'loss': 0.0193, 'lr': 0.0001990774265643381, 'tok_per_s': 4594.5, 'min': 1.17}
+{'step': 220, 'total': 4622, 'loss': 0.0211, 'lr': 0.00019888404722151224, 'tok_per_s': 4611.8, 'min': 1.28}
+{'step': 240, 'total': 4622, 'loss': 0.0055, 'lr': 0.00019867239447705676, 'tok_per_s': 4635.7, 'min': 1.39}
+{'step': 260, 'total': 4622, 'loss': 0.0175, 'lr': 0.0001984425074436063, 'tok_per_s': 4646.1, 'min': 1.5}
+{'step': 280, 'total': 4622, 'loss': 0.0628, 'lr': 0.00019819442860342376, 'tok_per_s': 4657.4, 'min': 1.61}
+{'step': 300, 'total': 4622, 'loss': 0.004, 'lr': 0.0001979282038005498, 'tok_per_s': 4670.9, 'min': 1.72}
+{'step': 320, 'total': 4622, 'loss': 0.0057, 'lr': 0.00019764388223233103, 'tok_per_s': 4676.8, 'min': 1.83}
+{'step': 340, 'total': 4622, 'loss': 0.0206, 'lr': 0.00019734151644032854, 'tok_per_s': 4684.9, 'min': 1.94}
+{'step': 360, 'total': 4622, 'loss': 0.0258, 'lr': 0.00019702116230060844, 'tok_per_s': 4691.4, 'min': 2.05}
+{'step': 380, 'total': 4622, 'loss': 0.0153, 'lr': 0.0001966828790134161, 'tok_per_s': 4703.6, 'min': 2.16}
+{'step': 400, 'total': 4622, 'loss': 0.0058, 'lr': 0.00019632672909223616, 'tok_per_s': 4713.8, 'min': 2.27}
+{'step': 420, 'total': 4622, 'loss': 0.0089, 'lr': 0.0001959527783522404, 'tok_per_s': 4709.5, 'min': 2.38}
+{'step': 440, 'total': 4622, 'loss': 0.0225, 'lr': 0.00019556109589812518, 'tok_per_s': 4709.2, 'min': 2.49}
+{'step': 460, 'total': 4622, 'loss': 0.0114, 'lr': 0.00019515175411134129, 'tok_per_s': 4713.5, 'min': 2.61}
+{'step': 480, 'total': 4622, 'loss': 0.024, 'lr': 0.00019472482863671804, 'tok_per_s': 4716.7, 'min': 2.72}
+{'step': 500, 'total': 4622, 'loss': 0.0351, 'lr': 0.0001942803983684844, 'tok_per_s': 4650.2, 'min': 2.87}
+{'step': 520, 'total': 4622, 'loss': 0.0083, 'lr': 0.00019381854543568965, 'tok_per_s': 4663.1, 'min': 2.97}
+{'step': 540, 'total': 4622, 'loss': 0.029, 'lr': 0.00019333935518702625, 'tok_per_s': 4665.5, 'min': 3.09}
+{'step': 560, 'total': 4622, 'loss': 0.0224, 'lr': 0.0001928429161750577, 'tok_per_s': 4677.2, 'min': 3.19}
+{'step': 580, 'total': 4622, 'loss': 0.0079, 'lr': 0.00019232932013985436, 'tok_per_s': 4677.3, 'min': 3.3}
+{'step': 600, 'total': 4622, 'loss': 0.0099, 'lr': 0.00019179866199204026, 'tok_per_s': 4679.3, 'min': 3.42}
+{'step': 620, 'total': 4622, 'loss': 0.0043, 'lr': 0.00019125103979525393, 'tok_per_s': 4681.9, 'min': 3.53}
+{'step': 640, 'total': 4622, 'loss': 0.0284, 'lr': 0.0001906865547480266, 'tok_per_s': 4687.5, 'min': 3.64}
+{'step': 660, 'total': 4622, 'loss': 0.019, 'lr': 0.00019010531116508115, 'tok_per_s': 4691.3, 'min': 3.75}
+{'step': 680, 'total': 4622, 'loss': 0.0315, 'lr': 0.00018950741645805508, 'tok_per_s': 4695.0, 'min': 3.86}
+{'step': 700, 'total': 4622, 'loss': 0.0184, 'lr': 0.00018889298111565128, 'tok_per_s': 4685.6, 'min': 3.98}
+{'step': 720, 'total': 4622, 'loss': 0.0013, 'lr': 0.00018826211868322012, 'tok_per_s': 4688.9, 'min': 4.1}
+{'step': 740, 'total': 4622, 'loss': 0.0011, 'lr': 0.0001876149457417767, 'tok_per_s': 4688.4, 'min': 4.21}
+{'step': 760, 'total': 4622, 'loss': 0.0126, 'lr': 0.00018695158188645707, 'tok_per_s': 4691.6, 'min': 4.32}
+{'step': 780, 'total': 4622, 'loss': 0.0037, 'lr': 0.00018627214970441759, 'tok_per_s': 4694.4, 'min': 4.43}
+{'step': 800, 'total': 4622, 'loss': 0.0004, 'lr': 0.00018557677475218112, 'tok_per_s': 4700.2, 'min': 4.54}
+{'step': 820, 'total': 4622, 'loss': 0.0082, 'lr': 0.00018486558553243486, 'tok_per_s': 4700.3, 'min': 4.65}
+{'step': 840, 'total': 4622, 'loss': 0.0051, 'lr': 0.00018413871347028343, 'tok_per_s': 4708.6, 'min': 4.76}
+{'step': 860, 'total': 4622, 'loss': 0.0072, 'lr': 0.00018339629288896187, 'tok_per_s': 4716.0, 'min': 4.87}
+{'step': 880, 'total': 4622, 'loss': 0.0092, 'lr': 0.0001826384609850135, 'tok_per_s': 4716.2, 'min': 4.98}
+{'step': 900, 'total': 4622, 'loss': 0.0048, 'lr': 0.00018186535780293625, 'tok_per_s': 4709.5, 'min': 5.1}
+{'step': 920, 'total': 4622, 'loss': 0.0027, 'lr': 0.00018107712620930305, 'tok_per_s': 4715.5, 'min': 5.21}
+{'step': 940, 'total': 4622, 'loss': 0.0021, 'lr': 0.00018027391186636069, 'tok_per_s': 4720.2, 'min': 5.31}
+{'step': 960, 'total': 4622, 'loss': 0.0117, 'lr': 0.00017945586320511193, 'tok_per_s': 4718.9, 'min': 5.43}
+{'step': 980, 'total': 4622, 'loss': 0.0051, 'lr': 0.00017862313139788589, 'tok_per_s': 4719.0, 'min': 5.54}
+{'step': 1000, 'total': 4622, 'loss': 0.0062, 'lr': 0.00017777587033040225, 'tok_per_s': 4716.7, 'min': 5.66}
+{'step': 1020, 'total': 4622, 'loss': 0.0184, 'lr': 0.00017691423657333345, 'tok_per_s': 4716.4, 'min': 5.77}
+{'step': 1040, 'total': 4622, 'loss': 0.008, 'lr': 0.0001760383893533712, 'tok_per_s': 4717.6, 'min': 5.88}
+{'step': 1060, 'total': 4622, 'loss': 0.0035, 'lr': 0.00017514849052380194, 'tok_per_s': 4719.7, 'min': 5.99}
+{'step': 1080, 'total': 4622, 'loss': 0.0017, 'lr': 0.00017424470453459683, 'tok_per_s': 4719.6, 'min': 6.1}
+{'step': 1100, 'total': 4622, 'loss': 0.0186, 'lr': 0.0001733271984020223, 'tok_per_s': 4721.9, 'min': 6.21}
+{'step': 1120, 'total': 4622, 'loss': 0.0081, 'lr': 0.00017239614167777577, 'tok_per_s': 4726.2, 'min': 6.32}
+{'step': 1140, 'total': 4622, 'loss': 0.006, 'lr': 0.0001714517064176533, 'tok_per_s': 4730.1, 'min': 6.43}
+{'step': 1160, 'total': 4622, 'loss': 0.0097, 'lr': 0.0001704940671497543, 'tok_per_s': 4734.0, 'min': 6.54}
+{'step': 1180, 'total': 4622, 'loss': 0.0028, 'lr': 0.00016952340084222932, 'tok_per_s': 4737.9, 'min': 6.64}
+{'step': 1200, 'total': 4622, 'loss': 0.0034, 'lr': 0.00016853988687057713, 'tok_per_s': 4737.0, 'min': 6.76}
+{'step': 1220, 'total': 4622, 'loss': 0.0058, 'lr': 0.00016754370698449659, 'tok_per_s': 4738.3, 'min': 6.87}
+{'step': 1240, 'total': 4622, 'loss': 0.0032, 'lr': 0.00016653504527430025, 'tok_per_s': 4738.7, 'min': 6.98}
+{'step': 1260, 'total': 4622, 'loss': 0.0004, 'lr': 0.00016551408813689496, 'tok_per_s': 4738.8, 'min': 7.09}
+{'step': 1280, 'total': 4622, 'loss': 0.0113, 'lr': 0.00016448102424133644, 'tok_per_s': 4736.5, 'min': 7.2}
+{'step': 1300, 'total': 4622, 'loss': 0.0251, 'lr': 0.00016343604449396403, 'tok_per_s': 4737.9, 'min': 7.31}
+{'step': 1320, 'total': 4622, 'loss': 0.0101, 'lr': 0.00016237934200312185, 'tok_per_s': 4738.1, 'min': 7.42}
+{'step': 1340, 'total': 4622, 'loss': 0.0012, 'lr': 0.0001613111120434731, 'tok_per_s': 4739.4, 'min': 7.53}
+{'step': 1360, 'total': 4622, 'loss': 0.0016, 'lr': 0.00016023155201991412, 'tok_per_s': 4740.1, 'min': 7.65}
+{'step': 1380, 'total': 4622, 'loss': 0.0034, 'lr': 0.00015914086143109448, 'tok_per_s': 4731.0, 'min': 7.77}
+{'step': 1400, 'total': 4622, 'loss': 0.0102, 'lr': 0.00015803924183255066, 'tok_per_s': 4731.9, 'min': 7.89}
+{'step': 1420, 'total': 4622, 'loss': 0.0007, 'lr': 0.00015692689679945918, 'tok_per_s': 4732.4, 'min': 8.0}
+{'step': 1440, 'total': 4622, 'loss': 0.0106, 'lr': 0.00015580403188901668, 'tok_per_s': 4732.6, 'min': 8.11}
+{'step': 1460, 'total': 4622, 'loss': 0.0006, 'lr': 0.00015467085460245375, 'tok_per_s': 4725.0, 'min': 8.24}
+{'step': 1480, 'total': 4622, 'loss': 0.0004, 'lr': 0.00015352757434668947, 'tok_per_s': 4719.2, 'min': 8.36}
+{'step': 1500, 'total': 4622, 'loss': 0.0026, 'lr': 0.0001523744023956338, 'tok_per_s': 4714.3, 'min': 8.48}
+{'step': 1520, 'total': 4622, 'loss': 0.0097, 'lr': 0.00015121155185114494, 'tok_per_s': 4717.0, 'min': 8.59}
+{'step': 1540, 'total': 4622, 'loss': 0.0008, 'lr': 0.00015003923760364892, 'tok_per_s': 4714.6, 'min': 8.71}
+{'step': 1560, 'total': 4622, 'loss': 0.0111, 'lr': 0.00014885767629242868, 'tok_per_s': 4714.0, 'min': 8.82}
+{'step': 1580, 'total': 4622, 'loss': 0.0003, 'lr': 0.00014766708626558979, 'tok_per_s': 4716.2, 'min': 8.93}
+{'step': 1600, 'total': 4622, 'loss': 0.0015, 'lr': 0.0001464676875397108, 'tok_per_s': 4717.2, 'min': 9.04}
+{'step': 1620, 'total': 4622, 'loss': 0.0017, 'lr': 0.00014525970175918477, 'tok_per_s': 4720.0, 'min': 9.15}
+{'step': 1640, 'total': 4622, 'loss': 0.0008, 'lr': 0.00014404335215526036, 'tok_per_s': 4721.5, 'min': 9.26}
+{'step': 1660, 'total': 4622, 'loss': 0.0005, 'lr': 0.00014281886350478936, 'tok_per_s': 4722.2, 'min': 9.37}
+{'step': 1680, 'total': 4622, 'loss': 0.0207, 'lr': 0.00014158646208868903, 'tok_per_s': 4721.4, 'min': 9.48}
+{'step': 1700, 'total': 4622, 'loss': 0.0002, 'lr': 0.00014034637565012598, 'tok_per_s': 4721.4, 'min': 9.6}
+{'step': 1720, 'total': 4622, 'loss': 0.0009, 'lr': 0.0001390988333524303, 'tok_per_s': 4715.1, 'min': 9.72}
+{'step': 1740, 'total': 4622, 'loss': 0.0015, 'lr': 0.00013784406573674675, 'tok_per_s': 4716.6, 'min': 9.83}
+{'step': 1760, 'total': 4622, 'loss': 0.0004, 'lr': 0.000136582304679432, 'tok_per_s': 4718.0, 'min': 9.94}
+{'step': 1780, 'total': 4622, 'loss': 0.0022, 'lr': 0.0001353137833492044, 'tok_per_s': 4718.2, 'min': 10.06}
+{'step': 1800, 'total': 4622, 'loss': 0.0025, 'lr': 0.00013403873616405548, 'tok_per_s': 4720.0, 'min': 10.17}
+{'step': 1820, 'total': 4622, 'loss': 0.0002, 'lr': 0.0001327573987479303, 'tok_per_s': 4722.5, 'min': 10.27}
+{'step': 1840, 'total': 4622, 'loss': 0.0014, 'lr': 0.0001314700078871851, 'tok_per_s': 4724.4, 'min': 10.38}
+{'step': 1860, 'total': 4622, 'loss': 0.0006, 'lr': 0.00013017680148682994, 'tok_per_s': 4726.5, 'min': 10.49}
+{'step': 1880, 'total': 4622, 'loss': 0.0075, 'lr': 0.00012887801852656488, 'tok_per_s': 4728.7, 'min': 10.6}
+{'step': 1900, 'total': 4622, 'loss': 0.0051, 'lr': 0.00012757389901661733, 'tok_per_s': 4724.6, 'min': 10.72}
+{'step': 1920, 'total': 4622, 'loss': 0.0045, 'lr': 0.00012626468395338913, 'tok_per_s': 4725.8, 'min': 10.83}
+{'step': 1940, 'total': 4622, 'loss': 0.0024, 'lr': 0.00012495061527492124, 'tok_per_s': 4726.4, 'min': 10.94}
+{'step': 1960, 'total': 4622, 'loss': 0.0014, 'lr': 0.00012363193581618463, 'tok_per_s': 4727.6, 'min': 11.05}
+{'step': 1980, 'total': 4622, 'loss': 0.0003, 'lr': 0.00012230888926420506, 'tok_per_s': 4729.5, 'min': 11.16}
+{'step': 2000, 'total': 4622, 'loss': 0.0007, 'lr': 0.0001209817201130309, 'tok_per_s': 4730.7, 'min': 11.27}
+{'step': 2020, 'total': 4622, 'loss': 0.0067, 'lr': 0.00011965067361855133, 'tok_per_s': 4732.9, 'min': 11.37}
+{'step': 2040, 'total': 4622, 'loss': 0.0003, 'lr': 0.00011831599575317411, 'tok_per_s': 4734.1, 'min': 11.49}
+{'step': 2060, 'total': 4622, 'loss': 0.0001, 'lr': 0.00011697793316037069, 'tok_per_s': 4734.4, 'min': 11.6}
+{'step': 2080, 'total': 4622, 'loss': 0.0063, 'lr': 0.0001156367331090975, 'tok_per_s': 4737.7, 'min': 11.7}
+{'step': 2100, 'total': 4622, 'loss': 0.0004, 'lr': 0.00011429264344810157, 'tok_per_s': 4737.8, 'min': 11.81}
+{'step': 2120, 'total': 4622, 'loss': 0.0063, 'lr': 0.00011294591256011893, 'tok_per_s': 4738.0, 'min': 11.92}
+{'step': 2140, 'total': 4622, 'loss': 0.0078, 'lr': 0.00011159678931597449, 'tok_per_s': 4738.3, 'min': 12.04}
+{'step': 2160, 'total': 4622, 'loss': 0.0004, 'lr': 0.00011024552302859165, 'tok_per_s': 4733.8, 'min': 12.16}
+{'step': 2180, 'total': 4622, 'loss': 0.0005, 'lr': 0.00010889236340692014, 'tok_per_s': 4735.1, 'min': 12.27}
+{'step': 2200, 'total': 4622, 'loss': 0.0054, 'lr': 0.0001075375605097908, 'tok_per_s': 4736.1, 'min': 12.38}
+{'step': 2220, 'total': 4622, 'loss': 0.0002, 'lr': 0.00010618136469970561, 'tok_per_s': 4738.6, 'min': 12.48}
+{'step': 2240, 'total': 4622, 'loss': 0.0001, 'lr': 0.00010482402659657162, 'tok_per_s': 4741.1, 'min': 12.59}
+{'step': 2260, 'total': 4622, 'loss': 0.002, 'lr': 0.00010346579703138744, 'tok_per_s': 4742.1, 'min': 12.7}
+{'step': 2280, 'total': 4622, 'loss': 0.0002, 'lr': 0.0001021069269998904, 'tok_per_s': 4742.0, 'min': 12.81}
+{'step': 2300, 'total': 4622, 'loss': 0.0002, 'lr': 0.00010074766761617369, 'tok_per_s': 4741.0, 'min': 12.93}
+{'step': 2320, 'total': 4622, 'loss': 0.0008, 'lr': 9.938827006628138e-05, 'tok_per_s': 4740.6, 'min': 13.04}
+{'step': 2340, 'total': 4622, 'loss': 0.0001, 'lr': 9.802898556179003e-05, 'tok_per_s': 4740.4, 'min': 13.16}
+{'step': 2360, 'total': 4622, 'loss': 0.0002, 'lr': 9.667006529338589e-05, 'tok_per_s': 4741.7, 'min': 13.26}
+{'step': 2380, 'total': 4622, 'loss': 0.0001, 'lr': 9.53117603844457e-05, 'tok_per_s': 4741.3, 'min': 13.38}
+{'step': 2400, 'total': 4622, 'loss': 0.0019, 'lr': 9.395432184463021e-05, 'tok_per_s': 4742.8, 'min': 13.48}
+{'step': 2420, 'total': 4622, 'loss': 0.0005, 'lr': 9.259800052349815e-05, 'tok_per_s': 4742.4, 'min': 13.6}
+{'step': 2440, 'total': 4622, 'loss': 0.0014, 'lr': 9.124304706415067e-05, 'tok_per_s': 4743.4, 'min': 13.71}
+{'step': 2460, 'total': 4622, 'loss': 0.0001, 'lr': 8.988971185691305e-05, 'tok_per_s': 4744.7, 'min': 13.81}
+{'step': 2480, 'total': 4622, 'loss': 0.0014, 'lr': 8.85382449930637e-05, 'tok_per_s': 4745.2, 'min': 13.93}
+{'step': 2500, 'total': 4622, 'loss': 0.0002, 'lr': 8.71888962186181e-05, 'tok_per_s': 4745.6, 'min': 14.04}
+{'step': 2520, 'total': 4622, 'loss': 0.005, 'lr': 8.584191488817678e-05, 'tok_per_s': 4746.6, 'min': 14.15}
+{'step': 2540, 'total': 4622, 'loss': 0.0003, 'lr': 8.449754991884551e-05, 'tok_per_s': 4747.0, 'min': 14.26}
+{'step': 2560, 'total': 4622, 'loss': 0.0009, 'lr': 8.315604974423635e-05, 'tok_per_s': 4746.8, 'min': 14.37}
+{'step': 2580, 'total': 4622, 'loss': 0.0003, 'lr': 8.181766226855786e-05, 'tok_per_s': 4746.0, 'min': 14.48}
+{'step': 2600, 'total': 4622, 'loss': 0.0004, 'lr': 8.048263482080366e-05, 'tok_per_s': 4746.2, 'min': 14.59}
+{'step': 2620, 'total': 4622, 'loss': 0.0002, 'lr': 7.915121410904675e-05, 'tok_per_s': 4746.9, 'min': 14.7}
+{'step': 2640, 'total': 4622, 'loss': 0.0001, 'lr': 7.782364617484883e-05, 'tok_per_s': 4747.9, 'min': 14.81}
+{'step': 2660, 'total': 4622, 'loss': 0.0082, 'lr': 7.65001763477927e-05, 'tok_per_s': 4746.8, 'min': 14.92}
+{'step': 2680, 'total': 4622, 'loss': 0.0001, 'lr': 7.518104920014629e-05, 'tok_per_s': 4747.2, 'min': 15.04}
+{'step': 2700, 'total': 4622, 'loss': 0.0001, 'lr': 7.386650850166668e-05, 'tok_per_s': 4742.0, 'min': 15.17}
+{'step': 2720, 'total': 4622, 'loss': 0.0002, 'lr': 7.255679717455238e-05, 'tok_per_s': 4741.9, 'min': 15.28}
+{'step': 2740, 'total': 4622, 'loss': 0.0048, 'lr': 7.125215724855199e-05, 'tok_per_s': 4742.2, 'min': 15.39}
+{'step': 2760, 'total': 4622, 'loss': 0.0002, 'lr': 6.995282981623833e-05, 'tok_per_s': 4742.5, 'min': 15.5}
+{'step': 2780, 'total': 4622, 'loss': 0.0004, 'lr': 6.865905498845519e-05, 'tok_per_s': 4743.4, 'min': 15.61}
+{'step': 2800, 'total': 4622, 'loss': 0.0001, 'lr': 6.737107184994596e-05, 'tok_per_s': 4743.3, 'min': 15.73}
+{'step': 2820, 'total': 4622, 'loss': 0.0025, 'lr': 6.608911841517132e-05, 'tok_per_s': 4743.7, 'min': 15.84}
+{'step': 2840, 'total': 4622, 'loss': 0.0002, 'lr': 6.481343158432547e-05, 'tok_per_s': 4745.1, 'min': 15.94}
+{'step': 2860, 'total': 4622, 'loss': 0.0002, 'lr': 6.354424709955761e-05, 'tok_per_s': 4745.8, 'min': 16.05}
+{'step': 2880, 'total': 4622, 'loss': 0.0, 'lr': 6.228179950140778e-05, 'tok_per_s': 4747.2, 'min': 16.16}
+{'step': 2900, 'total': 4622, 'loss': 0.0075, 'lr': 6.102632208546448e-05, 'tok_per_s': 4747.9, 'min': 16.27}
+{'step': 2920, 'total': 4622, 'loss': 0.0043, 'lr': 5.977804685925272e-05, 'tok_per_s': 4747.5, 'min': 16.38}
+{'step': 2940, 'total': 4622, 'loss': 0.0005, 'lr': 5.853720449935987e-05, 'tok_per_s': 4747.5, 'min': 16.49}
+{'step': 2960, 'total': 4622, 'loss': 0.0002, 'lr': 5.730402430880738e-05, 'tok_per_s': 4748.7, 'min': 16.6}
+{'step': 2980, 'total': 4622, 'loss': 0.0002, 'lr': 5.607873417467642e-05, 'tok_per_s': 4744.2, 'min': 16.73}
+{'step': 3000, 'total': 4622, 'loss': 0.0001, 'lr': 5.486156052599541e-05, 'tok_per_s': 4744.6, 'min': 16.84}
+{'step': 3020, 'total': 4622, 'loss': 0.0001, 'lr': 5.3652728291896646e-05, 'tok_per_s': 4741.3, 'min': 16.97}
+{'step': 3040, 'total': 4622, 'loss': 0.0001, 'lr': 5.245246086005018e-05, 'tok_per_s': 4738.3, 'min': 17.09}
+{'step': 3060, 'total': 4622, 'loss': 0.0001, 'lr': 5.126098003538264e-05, 'tok_per_s': 4740.0, 'min': 17.2}
+{'step': 3080, 'total': 4622, 'loss': 0.0002, 'lr': 5.007850599908866e-05, 'tok_per_s': 4741.7, 'min': 17.31}
+{'step': 3100, 'total': 4622, 'loss': 0.0001, 'lr': 4.890525726794212e-05, 'tok_per_s': 4741.4, 'min': 17.42}
+{'step': 3120, 'total': 4622, 'loss': 0.0001, 'lr': 4.774145065391495e-05, 'tok_per_s': 4742.0, 'min': 17.53}
+{'step': 3140, 'total': 4622, 'loss': 0.0003, 'lr': 4.6587301224111226e-05, 'tok_per_s': 4742.0, 'min': 17.64}
+{'step': 3160, 'total': 4622, 'loss': 0.0002, 'lr': 4.544302226102357e-05, 'tok_per_s': 4742.6, 'min': 17.75}
+{'step': 3180, 'total': 4622, 'loss': 0.0011, 'lr': 4.4308825223119375e-05, 'tok_per_s': 4743.8, 'min': 17.86}
+{'step': 3200, 'total': 4622, 'loss': 0.0028, 'lr': 4.318491970576392e-05, 'tok_per_s': 4743.9, 'min': 17.97}
+{'step': 3220, 'total': 4622, 'loss': 0.0011, 'lr': 4.2071513402487994e-05, 'tok_per_s': 4743.9, 'min': 18.09}
+{'step': 3240, 'total': 4622, 'loss': 0.0022, 'lr': 4.096881206660705e-05, 'tok_per_s': 4744.7, 'min': 18.2}
+{'step': 3260, 'total': 4622, 'loss': 0.0013, 'lr': 3.987701947319865e-05, 'tok_per_s': 4746.4, 'min': 18.3}
+{'step': 3280, 'total': 4622, 'loss': 0.0005, 'lr': 3.879633738144553e-05, 'tok_per_s': 4746.8, 'min': 18.41}
+{'step': 3300, 'total': 4622, 'loss': 0.0001, 'lr': 3.772696549735128e-05, 'tok_per_s': 4747.4, 'min': 18.52}
+{'step': 3320, 'total': 4622, 'loss': 0.0001, 'lr': 3.666910143683564e-05, 'tok_per_s': 4746.9, 'min': 18.64}
+{'step': 3340, 'total': 4622, 'loss': 0.0001, 'lr': 3.562294068921548e-05, 'tok_per_s': 4744.5, 'min': 18.76}
+{'step': 3360, 'total': 4622, 'loss': 0.0003, 'lr': 3.458867658107939e-05, 'tok_per_s': 4745.7, 'min': 18.87}
+{'step': 3380, 'total': 4622, 'loss': 0.0002, 'lr': 3.356650024056144e-05, 'tok_per_s': 4746.6, 'min': 18.97}
+{'step': 3400, 'total': 4622, 'loss': 0.0001, 'lr': 3.2556600562021586e-05, 'tok_per_s': 4747.5, 'min': 19.08}
+{'step': 3420, 'total': 4622, 'loss': 0.0002, 'lr': 3.155916417113859e-05, 'tok_per_s': 4748.8, 'min': 19.19}
+{'step': 3440, 'total': 4622, 'loss': 0.0011, 'lr': 3.057437539042228e-05, 'tok_per_s': 4749.4, 'min': 19.3}
+{'step': 3460, 'total': 4622, 'loss': 0.0004, 'lr': 2.9602416205151573e-05, 'tok_per_s': 4749.6, 'min': 19.41}
+{'step': 3480, 'total': 4622, 'loss': 0.0, 'lr': 2.8643466229744187e-05, 'tok_per_s': 4749.6, 'min': 19.52}
+{'step': 3500, 'total': 4622, 'loss': 0.0008, 'lr': 2.7697702674564496e-05, 'tok_per_s': 4750.0, 'min': 19.63}
+{'step': 3520, 'total': 4622, 'loss': 0.0001, 'lr': 2.6765300313175822e-05, 'tok_per_s': 4750.5, 'min': 19.74}
+{'step': 3540, 'total': 4622, 'loss': 0.0002, 'lr': 2.5846431450042986e-05, 'tok_per_s': 4751.5, 'min': 19.85}
+{'step': 3560, 'total': 4622, 'loss': 0.0001, 'lr': 2.494126588869089e-05, 'tok_per_s': 4751.2, 'min': 19.97}
+{'step': 3580, 'total': 4622, 'loss': 0.0001, 'lr': 2.4049970900325712e-05, 'tok_per_s': 4752.1, 'min': 20.08}
+{'step': 3600, 'total': 4622, 'loss': 0.0001, 'lr': 2.3172711192923547e-05, 'tok_per_s': 4752.6, 'min': 20.19}
+{'step': 3620, 'total': 4622, 'loss': 0.0012, 'lr': 2.2309648880793267e-05, 'tok_per_s': 4754.6, 'min': 20.29}
+{'step': 3640, 'total': 4622, 'loss': 0.0, 'lr': 2.146094345461811e-05, 'tok_per_s': 4750.6, 'min': 20.42}
+{'step': 3660, 'total': 4622, 'loss': 0.0006, 'lr': 2.062675175198273e-05, 'tok_per_s': 4751.1, 'min': 20.53}
+{'step': 3680, 'total': 4622, 'loss': 0.0, 'lr': 1.9807227928389838e-05, 'tok_per_s': 4751.3, 'min': 20.65}
+{'step': 3700, 'total': 4622, 'loss': 0.0001, 'lr': 1.900252342877319e-05, 'tok_per_s': 4749.3, 'min': 20.76}
+{'step': 3720, 'total': 4622, 'loss': 0.0, 'lr': 1.821278695951083e-05, 'tok_per_s': 4750.0, 'min': 20.88}
+{'step': 3740, 'total': 4622, 'loss': 0.0, 'lr': 1.743816446094495e-05, 'tok_per_s': 4749.8, 'min': 20.99}
+{'step': 3760, 'total': 4622, 'loss': 0.0001, 'lr': 1.6678799080412498e-05, 'tok_per_s': 4750.2, 'min': 21.1}
+{'step': 3780, 'total': 4622, 'loss': 0.0001, 'lr': 1.5934831145792128e-05, 'tok_per_s': 4752.2, 'min': 21.2}
+{'step': 3800, 'total': 4622, 'loss': 0.0003, 'lr': 1.5206398139572187e-05, 'tok_per_s': 4751.5, 'min': 21.32}
+{'step': 3820, 'total': 4622, 'loss': 0.0005, 'lr': 1.4493634673444467e-05, 'tok_per_s': 4751.1, 'min': 21.43}
+{'step': 3840, 'total': 4622, 'loss': 0.0001, 'lr': 1.3796672463428329e-05, 'tok_per_s': 4750.2, 'min': 21.55}
+{'step': 3860, 'total': 4622, 'loss': 0.0, 'lr': 1.311564030553023e-05, 'tok_per_s': 4750.4, 'min': 21.66}
+{'step': 3880, 'total': 4622, 'loss': 0.0, 'lr': 1.2450664051942651e-05, 'tok_per_s': 4752.0, 'min': 21.76}
+{'step': 3900, 'total': 4622, 'loss': 0.0002, 'lr': 1.1801866587787124e-05, 'tok_per_s': 4752.9, 'min': 21.87}
+{'step': 3920, 'total': 4622, 'loss': 0.0001, 'lr': 1.1169367808405385e-05, 'tok_per_s': 4753.4, 'min': 21.98}
+{'step': 3940, 'total': 4622, 'loss': 0.0004, 'lr': 1.0553284597203306e-05, 'tok_per_s': 4752.4, 'min': 22.09}
+{'step': 3960, 'total': 4622, 'loss': 0.0001, 'lr': 9.953730804051253e-06, 'tok_per_s': 4751.9, 'min': 22.21}
+{'step': 3980, 'total': 4622, 'loss': 0.0001, 'lr': 9.370817224245054e-06, 'tok_per_s': 4752.1, 'min': 22.32}
+{'step': 4000, 'total': 4622, 'loss': 0.0001, 'lr': 8.804651578031309e-06, 'tok_per_s': 4752.5, 'min': 22.43}
+{'step': 4020, 'total': 4622, 'loss': 0.0004, 'lr': 8.255338490701314e-06, 'tok_per_s': 4752.6, 'min': 22.54}
+{'step': 4040, 'total': 4622, 'loss': 0.0001, 'lr': 7.722979473256586e-06, 'tok_per_s': 4752.3, 'min': 22.66}
+{'step': 4060, 'total': 4622, 'loss': 0.0002, 'lr': 7.207672903649987e-06, 'tok_per_s': 4752.9, 'min': 22.76}
+{'step': 4080, 'total': 4622, 'loss': 0.0, 'lr': 6.709514008605844e-06, 'tok_per_s': 4752.8, 'min': 22.88}
+{'step': 4100, 'total': 4622, 'loss': 0.0, 'lr': 6.228594846022496e-06, 'tok_per_s': 4748.5, 'min': 23.01}
+{'step': 4120, 'total': 4622, 'loss': 0.0001, 'lr': 5.765004287960296e-06, 'tok_per_s': 4749.7, 'min': 23.12}
+{'step': 4140, 'total': 4622, 'loss': 0.0003, 'lr': 5.318828004218302e-06, 'tok_per_s': 4750.2, 'min': 23.23}
+{'step': 4160, 'total': 4622, 'loss': 0.0001, 'lr': 4.890148446502929e-06, 'tok_per_s': 4750.5, 'min': 23.34}
+{'step': 4180, 'total': 4622, 'loss': 0.0097, 'lr': 4.479044833191137e-06, 'tok_per_s': 4749.3, 'min': 23.46}
+{'step': 4200, 'total': 4622, 'loss': 0.0005, 'lr': 4.085593134691212e-06, 'tok_per_s': 4749.8, 'min': 23.57}
+{'step': 4220, 'total': 4622, 'loss': 0.0001, 'lr': 3.709866059403633e-06, 'tok_per_s': 4749.5, 'min': 23.68}
+{'step': 4240, 'total': 4622, 'loss': 0.0001, 'lr': 3.3519330402848936e-06, 'tok_per_s': 4750.3, 'min': 23.79}
+{'step': 4260, 'total': 4622, 'loss': 0.0002, 'lr': 3.0118602220165716e-06, 'tok_per_s': 4750.4, 'min': 23.9}
+{'step': 4280, 'total': 4622, 'loss': 0.0, 'lr': 2.689710448782001e-06, 'tok_per_s': 4750.6, 'min': 24.01}
+{'step': 4300, 'total': 4622, 'loss': 0.0009, 'lr': 2.385543252652889e-06, 'tok_per_s': 4750.3, 'min': 24.13}
+{'step': 4320, 'total': 4622, 'loss': 0.0007, 'lr': 2.0994148425880323e-06, 'tok_per_s': 4750.6, 'min': 24.24}
+{'step': 4340, 'total': 4622, 'loss': 0.0, 'lr': 1.8313780940461655e-06, 'tok_per_s': 4751.6, 'min': 24.34}
+{'step': 4360, 'total': 4622, 'loss': 0.0003, 'lr': 1.5814825392146516e-06, 'tok_per_s': 4752.7, 'min': 24.45}
+{'step': 4380, 'total': 4622, 'loss': 0.0002, 'lr': 1.3497743578562483e-06, 'tok_per_s': 4751.8, 'min': 24.57}
+{'step': 4400, 'total': 4622, 'loss': 0.0, 'lr': 1.1362963687751582e-06, 'tok_per_s': 4752.1, 'min': 24.68}
+{'step': 4420, 'total': 4622, 'loss': 0.0002, 'lr': 9.410880219043572e-07, 'tok_per_s': 4752.5, 'min': 24.79}
+{'step': 4440, 'total': 4622, 'loss': 0.0, 'lr': 7.641853910153263e-07, 'tok_per_s': 4752.9, 'min': 24.9}
+{'step': 4460, 'total': 4622, 'loss': 0.0004, 'lr': 6.056211670518174e-07, 'tok_per_s': 4752.9, 'min': 25.01}
+{'step': 4480, 'total': 4622, 'loss': 0.0001, 'lr': 4.654246520886085e-07, 'tok_per_s': 4751.2, 'min': 25.13}
+{'step': 4500, 'total': 4622, 'loss': 0.0, 'lr': 3.436217539166786e-07, 'tok_per_s': 4752.0, 'min': 25.24}
+{'step': 4520, 'total': 4622, 'loss': 0.0002, 'lr': 2.4023498125547164e-07, 'tok_per_s': 4752.1, 'min': 25.35}
+{'step': 4540, 'total': 4622, 'loss': 0.0, 'lr': 1.5528343959343439e-07, 'tok_per_s': 4752.8, 'min': 25.46}
+{'step': 4560, 'total': 4622, 'loss': 0.0, 'lr': 8.878282765734103e-08, 'tok_per_s': 4752.7, 'min': 25.57}
+{'step': 4580, 'total': 4622, 'loss': 0.0004, 'lr': 4.074543451123569e-08, 'tok_per_s': 4753.0, 'min': 25.68}
+{'step': 4600, 'total': 4622, 'loss': 0.0003, 'lr': 1.1180137285493608e-08, 'tok_per_s': 4751.8, 'min': 25.8}
+{'step': 4620, 'total': 4622, 'loss': 0.0001, 'lr': 9.239953633333187e-11, 'tok_per_s': 4752.4, 'min': 25.91}
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.60s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.60s/it]
+{
+ "steps": 4622,
+ "planned_steps": 4622,
+ "stopped": null,
+ "train_rows": 36972,
+ "dev_rows": 959,
+ "dev_loss": 0.05454379542905796,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 26.05,
+ "tok_per_s": 4727.7,
+ "device": "cuda",
+ "args": {
+  "model": "C:\\Users\\benja\\lis300\\model",
+  "data": "C:\\Users\\benja\\lis301\\work\\data",
+  "out": "C:\\Users\\benja\\lis301\\work\\run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+[0m
+[0m# [0mTodos
+[✓] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[✓] Set up GPU path (BensPC SSH, check venv + model sha)
+[✓] Step 1 DATA: seal checks + run claude_lis301_data.py
+[✓] Step 2 TRAIN on GPU (~22 min, foreground SSH)
+[•] Step 3 DEV + threshold (dev read ~25 min + sweep)
+[ ] Steps 4-5 SEAL + PANEL once
+[ ] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis301\\work\\run\\merged && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; rows=[json.loads(l) for l in open('C:/Users/benja/lis301/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; w=open('C:/Users/benja/lis301/work/dev_rows.jsonl','w',encoding='utf-8'); [w.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')},ensure_ascii=False)+'\n') for r in rows]; print('dev_rows',len(rows))\""
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\run\merged
+
+09/23/2026  02:28 PM    <DIR>          .
+09/23/2026  02:28 PM    <DIR>          ..
+09/23/2026  02:28 PM             9,241 chat_template.jinja
+09/23/2026  02:28 PM               784 config.json
+09/23/2026  02:28 PM               227 generation_config.json
+09/23/2026  02:28 PM     2,161,290,944 model.safetensors
+09/23/2026  02:28 PM         9,894,271 tokenizer.json
+09/23/2026  02:28 PM               477 tokenizer_config.json
+               6 File(s)  2,171,195,944 bytes
+               2 Dir(s)  58,768,482,304 bytes free
+dev_rows 959
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=120 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis301\\work\\run\\merged --rows C:\\Users\\benja\\lis301\\work\\dev_rows.jsonl --out C:\\Users\\benja\\lis301\\work\\dev_pred.jsonl"
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  39%|███▉      | 86/219 [00:00<00:00, 779.04it/s]Loading weights:  75%|███████▍  | 164/219 [00:00<00:00, 591.09it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 626.32it/s]
+read 959 rows on cuda
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis301\\work\\dev_pred.jsonl --sweep"
+t=0.000 wrong_turns=11 recall=732/761 ask=77/81 we=13/13
+t=0.300 wrong_turns=10 recall=732/761 ask=77/81 we=13/13
+t=0.500 wrong_turns=9 recall=726/761 ask=77/81 we=13/13
+t=0.600 wrong_turns=8 recall=722/761 ask=77/81 we=13/13
+t=0.700 wrong_turns=7 recall=715/761 ask=77/81 we=13/13
+t=0.800 wrong_turns=6 recall=705/761 ask=77/81 we=13/13
+t=0.850 wrong_turns=6 recall=699/761 ask=77/81 we=13/13
+t=0.900 wrong_turns=5 recall=684/761 ask=77/81 we=13/13
+t=0.930 wrong_turns=4 recall=668/761 ask=77/81 we=13/13
+t=0.950 wrong_turns=4 recall=646/761 ask=77/81 we=13/13
+t=0.970 wrong_turns=3 recall=607/761 ask=77/81 we=13/13
+t=0.980 wrong_turns=2 recall=592/761 ask=77/81 we=13/13
+t=0.990 wrong_turns=2 recall=542/761 ask=77/81 we=13/13
+t=0.995 wrong_turns=2 recall=462/761 ask=77/81 we=13/13
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis301\\work\\dev_pred.jsonl --sweep > C:\\Users\\benja\\lis301\\work\\dev_sweep.txt 2>&1 & echo SWEPT" && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis301/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; pred={json.loads(l)['id']:l for l in open('C:/Users/benja/lis301/work/dev_pred.jsonl',encoding='utf-8') if l.strip()}; import os; os.makedirs('C:/Users/benja/lis301/work/persrc',exist_ok=True); from collections import Counter; c=Counter(); fhs={}; [fhs.setdefault(r['src'],open('C:/Users/benja/lis301/work/persrc/gold_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; [w.write(json.dumps(r,ensure_ascii=False)+'\n') or c.update([r['src']]) for r in gold for w in [fhs[r['src']]]]; [v.close() for v in fhs.values()]; ifhs={}; [ifhs.setdefault(r['src'],open('C:/Users/benja/lis301/work/persrc/pred_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; [ifhs[r['src']].write(pred[r['id']]) for r in gold]; [v.close() for v in ifhs.values()]; print(dict(c))\""
+SWEPT
+{}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import glob; [print(p.split(chr(92))[-1], sum(1 for _ in open(p,encoding='utf-8'))) for p in sorted(glob.glob('C:/Users/benja/lis301/work/persrc/*.jsonl'))]\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis301/work/dev_sweep.txt').read())\""
+gold_o0a2.jsonl 263
+gold_o0b_l2.jsonl 428
+gold_opus301_dev.jsonl 137
+gold_opus_dev.jsonl 131
+pred_o0a2.jsonl 263
+pred_o0b_l2.jsonl 428
+pred_opus301_dev.jsonl 137
+pred_opus_dev.jsonl 131
+t=0.000 wrong_turns=11 recall=732/761 ask=77/81 we=13/13
+t=0.300 wrong_turns=10 recall=732/761 ask=77/81 we=13/13
+t=0.500 wrong_turns=9 recall=726/761 ask=77/81 we=13/13
+t=0.600 wrong_turns=8 recall=722/761 ask=77/81 we=13/13
+t=0.700 wrong_turns=7 recall=715/761 ask=77/81 we=13/13
+t=0.800 wrong_turns=6 recall=705/761 ask=77/81 we=13/13
+t=0.850 wrong_turns=6 recall=699/761 ask=77/81 we=13/13
+t=0.900 wrong_turns=5 recall=684/761 ask=77/81 we=13/13
+t=0.930 wrong_turns=4 recall=668/761 ask=77/81 we=13/13
+t=0.950 wrong_turns=4 recall=646/761 ask=77/81 we=13/13
+t=0.970 wrong_turns=3 recall=607/761 ask=77/81 we=13/13
+t=0.980 wrong_turns=2 recall=592/761 ask=77/81 we=13/13
+t=0.990 wrong_turns=2 recall=542/761 ask=77/81 we=13/13
+t=0.995 wrong_turns=2 recall=462/761 ask=77/81 we=13/13
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\persrc\\gold_o0b_l2.jsonl --pred C:\\Users\\benja\\lis301\\work\\persrc\\pred_o0b_l2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\dev_o0b_l2.json && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\persrc\\gold_opus_dev.jsonl --pred C:\\Users\\benja\\lis301\\work\\persrc\\pred_opus_dev.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\dev_opus_dev.json && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\persrc\\gold_o0a2.jsonl --pred C:\\Users\\benja\\lis301\\work\\persrc\\pred_o0a2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\dev_o0a2.json && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\persrc\\gold_opus301_dev.jsonl --pred C:\\Users\\benja\\lis301\\work\\persrc\\pred_opus301_dev.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\dev_opus301_dev.json && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis301\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis301\\work\\dev_pred.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\dev_score_T.json && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json,glob; [print(p.split(chr(92))[-1], json.load(open(p))) for p in sorted(glob.glob('C:/Users/benja/lis301/work/dev_*.json'))]\""
+{
+ "turns": 428,
+ "gold_writes": 352,
+ "pred_writes": 239,
+ "wrong_facts": 0,
+ "ask_turns": 59,
+ "ask_ok": 59,
+ "hits": 239,
+ "gold_write_turns": 242,
+ "turn_exact": 171,
+ "held_back_facts": 112,
+ "threshold": 0.995,
+ "recall_exact": 0.6789772727272727,
+ "ask_acc": 1.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1451.6,
+ "ms_p90": 2144.9,
+ "ms_max": 3457.1
+}
+{
+ "turns": 131,
+ "gold_writes": 74,
+ "pred_writes": 32,
+ "wrong_facts": 0,
+ "gold_write_turns": 54,
+ "turn_exact": 24,
+ "held_back_facts": 42,
+ "hits": 32,
+ "ask_turns": 17,
+ "ask_ok": 14,
+ "we_turns": 4,
+ "we_asked": 4,
+ "threshold": 0.995,
+ "recall_exact": 0.43243243243243246,
+ "ask_acc": 0.8235294117647058,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1456.1,
+ "ms_p90": 2178.3,
+ "ms_max": 3684.1
+}
+{
+ "turns": 263,
+ "gold_writes": 238,
+ "pred_writes": 143,
+ "hits": 141,
+ "wrong_facts": 2,
+ "gold_write_turns": 186,
+ "turn_exact": 110,
+ "held_back_facts": 93,
+ "wrong_turns": 2,
+ "we_turns": 8,
+ "we_asked": 8,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.592436974789916,
+ "ask_acc": 0.0,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 2
+ },
+ "ms_median": 1545.6,
+ "ms_p90": 2328.2,
+ "ms_max": 3675.0
+}
+{
+ "turns": 137,
+ "gold_writes": 97,
+ "pred_writes": 50,
+ "wrong_facts": 0,
+ "gold_write_turns": 80,
+ "turn_exact": 42,
+ "held_back_facts": 47,
+ "hits": 50,
+ "ask_turns": 5,
+ "ask_ok": 4,
+ "we_turns": 1,
+ "we_asked": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.5154639175257731,
+ "ask_acc": 0.8,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1558.6,
+ "ms_p90": 2210.5,
+ "ms_max": 3197.9
+}
+{
+ "turns": 959,
+ "gold_writes": 761,
+ "pred_writes": 464,
+ "wrong_facts": 2,
+ "ask_turns": 81,
+ "ask_ok": 77,
+ "hits": 462,
+ "gold_write_turns": 562,
+ "turn_exact": 347,
+ "held_back_facts": 294,
+ "we_turns": 13,
+ "we_asked": 13,
+ "wrong_turns": 2,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.607095926412615,
+ "ask_acc": 0.9506172839506173,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 2
+ },
+ "ms_median": 1482.1,
+ "ms_p90": 2213.7,
+ "ms_max": 3684.1
+}
+dev_o0a2.json {'turns': 263, 'gold_writes': 238, 'pred_writes': 143, 'hits': 141, 'wrong_facts': 2, 'gold_write_turns': 186, 'turn_exact': 110, 'held_back_facts': 93, 'wrong_turns': 2, 'we_turns': 8, 'we_asked': 8, 'wrong_turns_on_nosave_turns': 1, 'threshold': 0.995, 'recall_exact': 0.592436974789916, 'ask_acc': 0.0, 'we_ask_rate': 1.0, 'wrong_turns_by_family': {'o0a2': 2}, 'ms_median': 1545.6, 'ms_p90': 2328.2, 'ms_max': 3675.0}
+dev_o0b_l2.json {'turns': 428, 'gold_writes': 352, 'pred_writes': 239, 'wrong_facts': 0, 'ask_turns': 59, 'ask_ok': 59, 'hits': 239, 'gold_write_turns': 242, 'turn_exact': 171, 'held_back_facts': 112, 'threshold': 0.995, 'recall_exact': 0.6789772727272727, 'ask_acc': 1.0, 'we_ask_rate': 0.0, 'wrong_turns_by_family': {}, 'ms_median': 1451.6, 'ms_p90': 2144.9, 'ms_max': 3457.1}
+dev_opus301_dev.json {'turns': 137, 'gold_writes': 97, 'pred_writes': 50, 'wrong_facts': 0, 'gold_write_turns': 80, 'turn_exact': 42, 'held_back_facts': 47, 'hits': 50, 'ask_turns': 5, 'ask_ok': 4, 'we_turns': 1, 'we_asked': 1, 'threshold': 0.995, 'recall_exact': 0.5154639175257731, 'ask_acc': 0.8, 'we_ask_rate': 1.0, 'wrong_turns_by_family': {}, 'ms_median': 1558.6, 'ms_p90': 2210.5, 'ms_max': 3197.9}
+dev_opus_dev.json {'turns': 131, 'gold_writes': 74, 'pred_writes': 32, 'wrong_facts': 0, 'gold_write_turns': 54, 'turn_exact': 24, 'held_back_facts': 42, 'hits': 32, 'ask_turns': 17, 'ask_ok': 14, 'we_turns': 4, 'we_asked': 4, 'threshold': 0.995, 'recall_exact': 0.43243243243243246, 'ask_acc': 0.8235294117647058, 'we_ask_rate': 1.0, 'wrong_turns_by_family': {}, 'ms_median': 1456.1, 'ms_p90': 2178.3, 'ms_max': 3684.1}
+dev_score_T.json {'turns': 959, 'gold_writes': 761, 'pred_writes': 464, 'wrong_facts': 2, 'ask_turns': 81, 'ask_ok': 77, 'hits': 462, 'gold_write_turns': 562, 'turn_exact': 347, 'held_back_facts': 294, 'we_turns': 13, 'we_asked': 13, 'wrong_turns': 2, 'wrong_turns_on_nosave_turns': 1, 'threshold': 0.995, 'recall_exact': 0.607095926412615, 'ask_acc': 0.9506172839506173, 'we_ask_rate': 1.0, 'wrong_turns_by_family': {'o0a2': 2}, 'ms_median': 1482.1, 'ms_p90': 2213.7, 'ms_max': 3684.1}
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis300-20260923/THRESHOLD.txt 2>&1 | head -n 30; echo ===; git show origin/builder-outbox:artifacts/claude-lis300-20260923/SEAL-run.sha256.txt 2>&1 | head
+T=0.995
+
+Threshold rule (PASSMARKS.md): T is the smallest grid value with 0 wrong-save
+turns on the whole dev set (867 turns: 428 o0b_l2 + 139 opus_dev + 300 o0a2),
+else 0.995. No grid value reached 0 wrong-save turns (minimum 6 at t=0.995),
+so T = 0.995.
+
+Dev sweep (whole dev set, sealed scorer claude_lis300_score.py --sweep):
+t=0.000 wrong_turns=38 recall=634/688 ask=73/78 we=12/12
+t=0.300 wrong_turns=38 recall=633/688 ask=73/78 we=12/12
+t=0.500 wrong_turns=33 recall=629/688 ask=73/78 we=12/12
+t=0.600 wrong_turns=30 recall=626/688 ask=73/78 we=12/12
+t=0.700 wrong_turns=29 recall=615/688 ask=73/78 we=12/12
+t=0.800 wrong_turns=20 recall=605/688 ask=73/78 we=12/12
+t=0.850 wrong_turns=19 recall=598/688 ask=73/78 we=12/12
+t=0.900 wrong_turns=17 recall=574/688 ask=73/78 we=12/12
+t=0.930 wrong_turns=16 recall=561/688 ask=73/78 we=12/12
+t=0.950 wrong_turns=14 recall=533/688 ask=73/78 we=12/12
+t=0.970 wrong_turns=13 recall=510/688 ask=73/78 we=12/12
+t=0.980 wrong_turns=9 recall=487/688 ask=73/78 we=12/12
+t=0.990 wrong_turns=7 recall=428/688 ask=73/78 we=12/12
+t=0.995 wrong_turns=6 recall=374/688 ask=73/78 we=12/12
+
+Dev numbers at T=0.995, per src (sealed scorer, --threshold 0.995):
+- o0b_l2 (428 turns): gold_writes=352 hits=226 recall=64.2% wrong_turns=0 ask=59/59 we=n/a
+- opus_dev (139 turns): gold_writes=79 hits=32 recall=40.5% wrong_turns=1 ask=14/19 we=4/4
+- o0a2 (300 turns): gold_writes=257 hits=116 recall=45.1% wrong_turns=5 ask=n/a we=8/8
+- whole dev (867 turns): gold_writes=688 hits=374 recall=54.4% wrong_turns=6
+  (5 of the 6 on no-save turns) wrong_facts=6 ask=73/78 we=12/12
+  turn_exact=266/499 held_back_facts=309 ms_median=1505.3ms p90=2169.9ms max=3745.2ms
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis300-20260923/SEAL-run.sha256.txt 2>&1 | head -n 10; echo ---DONE---
+95368ef10a4cf4e239beb832e39d6f0882079726379e53a30fdc81e4d3a43740  artifacts/claude-lis300-20260923/THRESHOLD.txt
+479d27fdb73b0c9670e7268a15dd0833a4eea575dbddb13f2527313e06972a53  artifacts/claude-lis300-20260923/dev_sweep.txt
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  C:/Users/benja/lis300/work/run/merged/model.safetensors (BensPC, RTX 5070 Ti run 2026-09-23; weights never in git)
+---DONE---
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis301-20260923/dev && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/dev_sweep.txt" /tmp/dev_sweep301.txt && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/run/summary.json" /tmp/train_summary301.json && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/run/train_log.jsonl" /tmp/train_log301.jsonl && wc -l /tmp/dev_sweep301.txt /tmp/train_log301.jsonl && cp /tmp/dev_sweep301.txt artifacts/claude-lis301-20260923/dev_sweep.txt && cp /tmp/train_summary301.json artifacts/claude-lis301-20260923/train_summary.json && cp /tmp/train_log301.jsonl artifacts/claude-lis301-20260923/train_log.jsonl && echo STAGED_DEV_TRAIN
+14 /tmp/dev_sweep301.txt
+     232 /tmp/train_log301.jsonl
+     246 total
+STAGED_DEV_TRAIN
+[0m
+[0m$ [0mcat /tmp/train_summary301.json; echo ---; cat /tmp/dev_sweep301.txt
+{
+ "steps": 4622,
+ "planned_steps": 4622,
+ "stopped": null,
+ "train_rows": 36972,
+ "dev_rows": 959,
+ "dev_loss": 0.05454379542905796,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 26.05,
+ "tok_per_s": 4727.7,
+ "device": "cuda",
+ "args": {
+  "model": "C:\\Users\\benja\\lis300\\model",
+  "data": "C:\\Users\\benja\\lis301\\work\\data",
+  "out": "C:\\Users\\benja\\lis301\\work\\run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}---
+t=0.000 wrong_turns=11 recall=732/761 ask=77/81 we=13/13
+t=0.300 wrong_turns=10 recall=732/761 ask=77/81 we=13/13
+t=0.500 wrong_turns=9 recall=726/761 ask=77/81 we=13/13
+t=0.600 wrong_turns=8 recall=722/761 ask=77/81 we=13/13
+t=0.700 wrong_turns=7 recall=715/761 ask=77/81 we=13/13
+t=0.800 wrong_turns=6 recall=705/761 ask=77/81 we=13/13
+t=0.850 wrong_turns=6 recall=699/761 ask=77/81 we=13/13
+t=0.900 wrong_turns=5 recall=684/761 ask=77/81 we=13/13
+t=0.930 wrong_turns=4 recall=668/761 ask=77/81 we=13/13
+t=0.950 wrong_turns=4 recall=646/761 ask=77/81 we=13/13
+t=0.970 wrong_turns=3 recall=607/761 ask=77/81 we=13/13
+t=0.980 wrong_turns=2 recall=592/761 ask=77/81 we=13/13
+t=0.990 wrong_turns=2 recall=542/761 ask=77/81 we=13/13
+t=0.995 wrong_turns=2 recall=462/761 ask=77/81 we=13/13
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib; h=hashlib.sha256(); f=open('C:/Users/benja/lis301/work/run/merged/model.safetensors','rb'); [h.update(c) for c in iter(lambda:f.read(1<<20),b'')]; print(h.hexdigest())\""
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890
+[0m
+[0m← [0mWrite artifacts/claude-lis301-20260923/THRESHOLD.txt
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/dev_sweep.txt
+996a1c81221a8a455e868fcb1dcac79f74c11741a9e7c250ea5dc87af40eed5e  artifacts/claude-lis301-20260923/THRESHOLD.txt
+62189988bbbffabcd5f5857b82abf25fd2b00a8de30fda9d3460a22d47e5ff7d  artifacts/claude-lis301-20260923/dev_sweep.txt
+[0m
+[0m← [0mWrite artifacts/claude-lis301-20260923/SEAL-run.sha256.txt
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[✓] Set up GPU path (BensPC SSH, check venv + model sha)
+[✓] Step 1 DATA: seal checks + run claude_lis301_data.py
+[✓] Step 2 TRAIN on GPU (~22 min, foreground SSH)
+[✓] Step 3 DEV + threshold (dev read ~25 min + sweep)
+[✓] Step 4 SEAL-run written BEFORE panel
+[•] Step 5 PANEL key-seal check + single blind run + scores
+[ ] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis301\\verify_seal301.py C:\\Users\\benja\\lis301\\repo artifacts\\claude-lispanel301-20260923\\SEAL-key.sha256.txt"
+artifacts\claude-lispanel301-20260923\SEAL-key.sha256.txt 2/2 OK
+ALL_OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; rows=[json.loads(l) for l in open('C:/Users/benja/lis301/repo/artifacts/claude-lispanel301-20260923/panel.jsonl',encoding='utf-8') if l.strip()]; print('n_rows',len(rows)); print('row_keys',sorted(rows[0].keys())); w=open('C:/Users/benja/lis301/work/panel_rows.jsonl','w',encoding='utf-8'); [w.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')},ensure_ascii=False)+'\n') for r in rows]; print('panel_rows',len(rows))\""
+n_rows 240
+row_keys ['id', 'prev_reply', 'turn']
+panel_rows 240
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=60 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis301\\work\\run\\merged --rows C:\\Users\\benja\\lis301\\work\\panel_rows.jsonl --out C:\\Users\\benja\\lis301\\work\\panel_pred.jsonl"
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  37%|███▋      | 80/219 [00:00<00:00, 713.95it/s]Loading weights:  69%|██████▉   | 152/219 [00:00<00:00, 594.10it/s]Loading weights:  97%|█████████▋| 213/219 [00:00<00:00, 565.55it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 599.79it/s]
+read 240 rows on cuda
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; r=json.loads(open('C:/Users/benja/lis301/repo/artifacts/claude-lispanel301-20260923/key_v2.jsonl',encoding='utf-8').readline()); print('key_keys='+','.join(sorted(r.keys()))); f=r.get('frame',{}); print('frame_keys='+','.join(sorted(f.keys())) if isinstance(f,dict) else 'frame_not_dict'); print('n_key',sum(1 for _ in open('C:/Users/benja/lis301/repo/artifacts/claude-lispanel301-20260923/key_v2.jsonl',encoding='utf-8')))\""
+key_keys=family,frame,id
+frame_keys=act,ask,facts
+n_key 240
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis301\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel301-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis301\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel301-20260923\\panel.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis301\\work\\panel_score.json && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel301-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis301\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel301-20260923\\panel.jsonl --threshold 0 --out C:\\Users\\benja\\lis301\\work\\panel_score_T0.json"
+{
+ "turns": 240,
+ "gold_writes": 145,
+ "pred_writes": 51,
+ "wrong_facts": 0,
+ "gold_write_turns": 105,
+ "turn_exact": 43,
+ "held_back_facts": 93,
+ "we_turns": 18,
+ "we_asked": 17,
+ "ask_turns": 40,
+ "ask_ok": 34,
+ "hits": 51,
+ "threshold": 0.995,
+ "recall_exact": 0.35172413793103446,
+ "ask_acc": 0.85,
+ "we_ask_rate": 0.9444444444444444,
+ "wrong_turns_by_family": {},
+ "ms_median": 1522.7,
+ "ms_p90": 2158.8,
+ "ms_max": 2942.8
+}
+{
+ "turns": 240,
+ "gold_writes": 145,
+ "pred_writes": 147,
+ "hits": 142,
+ "wrong_facts": 5,
+ "gold_write_turns": 105,
+ "turn_exact": 102,
+ "held_back_facts": 0,
+ "we_turns": 18,
+ "we_asked": 17,
+ "ask_turns": 40,
+ "ask_ok": 34,
+ "wrong_turns": 4,
+ "wrong_turns_on_nosave_turns": 2,
+ "threshold": 0.0,
+ "recall_exact": 0.9793103448275862,
+ "ask_acc": 0.85,
+ "we_ask_rate": 0.9444444444444444,
+ "wrong_turns_by_family": {
+  "pronoun-ambiguous": 1,
+  "tell-typo": 1,
+  "our-we": 1,
+  "tell-appositive": 1
+ },
+ "ms_median": 1522.7,
+ "ms_p90": 2158.8,
+ "ms_max": 2942.8
+}
+[0m
+[0m← [0mWrite /tmp/fam_scores301.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/fam_scores301.py "benspc:C:/Users/benja/lis301/fam_scores301.py" && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis301\\fam_scores301.py C:\\Users\\benja\\lis301\\repo\\scripts C:\\Users\\benja\\lis301\\work\\panel_pred.jsonl C:\\Users\\benja\\lis301\\repo\\artifacts\\claude-lispanel301-20260923\\panel.jsonl C:\\Users\\benja\\lis301\\repo\\artifacts\\claude-lispanel301-20260923\\key_v2.jsonl C:\\Users\\benja\\lis301\\work 0.995"
+UNPARSEABLE 0 of 240
+chat {'turns': 8, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+check {'turns': 12, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+correct {'turns': 20, 'gold_writes': 19, 'pred_writes': 9, 'wrong_facts': 0, 'gold_write_turns': 18, 'exact': 9, 'hits': 9}
+negation {'turns': 12, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+our-we {'turns': 20, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0, 'we_turns': 18, 'we_asked': 17, 'ask_turns': 2, 'ask_ok': 2}
+plan {'turns': 10, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+pronoun-ambiguous {'turns': 6, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+pronoun-clear {'turns': 9, 'gold_writes': 13, 'pred_writes': 5, 'wrong_facts': 0, 'gold_write_turns': 9, 'exact': 3, 'hits': 5}
+question-inverse {'turns': 8, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0, 'ask_turns': 8, 'ask_ok': 6}
+question-lowercase {'turns': 7, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0, 'ask_turns': 7, 'ask_ok': 5}
+question-twohop {'turns': 5, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0, 'ask_turns': 5, 'ask_ok': 3}
+question-wh {'turns': 12, 'gold_writes': 1, 'pred_writes': 0, 'wrong_facts': 0, 'ask_turns': 11, 'ask_ok': 11, 'gold_write_turns': 1, 'exact': 0}
+question-yesno {'turns': 8, 'gold_writes': 1, 'pred_writes': 1, 'wrong_facts': 0, 'ask_turns': 7, 'ask_ok': 7, 'hits': 1, 'gold_write_turns': 1, 'exact': 1}
+reported {'turns': 8, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+short-answer {'turns': 15, 'gold_writes': 7, 'pred_writes': 3, 'wrong_facts': 0, 'gold_write_turns': 7, 'exact': 3, 'hits': 3}
+suppose {'turns': 10, 'gold_writes': 0, 'pred_writes': 0, 'wrong_facts': 0}
+tell-appositive {'turns': 10, 'gold_writes': 21, 'pred_writes': 0, 'wrong_facts': 0, 'gold_write_turns': 10, 'exact': 0}
+tell-multi {'turns': 10, 'gold_writes': 24, 'pred_writes': 2, 'wrong_facts': 0, 'gold_write_turns': 10, 'exact': 1, 'hits': 2}
+tell-plural {'turns': 8, 'gold_writes': 18, 'pred_writes': 9, 'wrong_facts': 0, 'gold_write_turns': 8, 'exact': 4, 'hits': 9}
+tell-self {'turns': 8, 'gold_writes': 7, 'pred_writes': 5, 'hits': 5, 'wrong_facts': 0, 'gold_write_turns': 7, 'exact': 5}
+tell-single {'turns': 14, 'gold_writes': 14, 'pred_writes': 6, 'wrong_facts': 0, 'gold_write_turns': 14, 'exact': 6, 'hits': 6}
+tell-typo {'turns': 8, 'gold_writes': 8, 'pred_writes': 5, 'hits': 5, 'wrong_facts': 0, 'gold_write_turns': 8, 'exact': 5}
+tell-verb {'turns': 12, 'gold_writes': 12, 'pred_writes': 6, 'wrong_facts': 0, 'gold_write_turns': 12, 'exact': 6, 'hits': 6}
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/panel_score.json" /tmp/panel_score301.json && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/panel_score_T0.json" /tmp/panel_score_T030.json && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/data/dev.jsonl" /tmp/dev301.jsonl && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/dev_rows.jsonl" /tmp/dev_rows301.jsonl && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/dev_pred.jsonl" /tmp/dev_pred301.jsonl && wc -l /tmp/panel_score301.json /tmp/panel_score_T030.json /tmp/dev301.jsonl /tmp/dev_rows301.jsonl /tmp/dev_pred301.jsonl
+21 /tmp/panel_score301.json
+      28 /tmp/panel_score_T030.json
+     959 /tmp/dev301.jsonl
+     959 /tmp/dev_rows301.jsonl
+     959 /tmp/dev_pred301.jsonl
+    2926 total
+[0m
+[0m$ [0mcp /tmp/panel_score301.json artifacts/claude-lis301-20260923/panel_score.json && cp /tmp/panel_score_T030.json artifacts/claude-lis301-20260923/panel_score_T0.json && cp /tmp/dev301.jsonl artifacts/claude-lis301-20260923/dev/dev.jsonl && cp /tmp/dev_rows301.jsonl artifacts/claude-lis301-20260923/dev/dev_rows.jsonl && cp /tmp/dev_pred301.jsonl artifacts/claude-lis301-20260923/dev/dev_pred.jsonl && cat /tmp/panel_score301.json
+{
+ "turns": 240,
+ "gold_writes": 145,
+ "pred_writes": 51,
+ "wrong_facts": 0,
+ "gold_write_turns": 105,
+ "turn_exact": 43,
+ "held_back_facts": 93,
+ "we_turns": 18,
+ "we_asked": 17,
+ "ask_turns": 40,
+ "ask_ok": 34,
+ "hits": 51,
+ "threshold": 0.995,
+ "recall_exact": 0.35172413793103446,
+ "ask_acc": 0.85,
+ "we_ask_rate": 0.9444444444444444,
+ "wrong_turns_by_family": {},
+ "ms_median": 1522.7,
+ "ms_p90": 2158.8,
+ "ms_max": 2942.8
+}
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/lis301-merged && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/run/merged/*" ~/premonition-models/lis301-merged/ && ls -la ~/premonition-models/lis301-merged/ && shasum -a 256 ~/premonition-models/lis301-merged/model.safetensors
+total 4247576
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 15:02 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:02 ..
+-rw-------  1 ben-hannan  staff        9241 Sep 23 15:02 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 15:02 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 15:02 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:02 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 15:02 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 15:02 tokenizer.json
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+[0m
+[0m← [0mWrite artifacts/claude-lis301-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mgrep -E "^P300" artifacts/fable-predictions-ledger.md | head -n 10
+(no output)
+[0m
+[0m$ [0mgrep -iE "P300|lis-?300" artifacts/fable-predictions-ledger.md | head -n 10; echo ---TAIL---; tail -n 10 artifacts/fable-predictions-ledger.md
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save turns 1/240 (pronoun-ambiguous no-save turn; bar <=1: PASS).
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo); held-back 66; $0 spent; merged sha256 112880d6 kept at ~/premonition-models/lis300-merged/ and on BensPC. See artifacts/claude-lis300-20260923/RESULTS.md.
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis311-20260923) all 10 stub scenarios pass, exit 0: T1 2-facts-save-2 with 292 mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK already-have + 0; T6 notebook answer + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0.
+---TAIL---
+- Pownm0.1 (pred, sealed pre-run 2026-09-23, builder; exp own-M0 conversational-mouth pairs, CPU only, seeds 20260923/20260924, sealed 3 files SEAL.sha256.txt artifacts/claude-own-m0-20260923) registered build writes 20000 train + 1000 dev rows, filter drops 0 per rule.
+- Pownm0.2 (same) fresh re-run of claude_own_m0_check on every row fails 0 train + 0 dev; max single-reply share <= 3% every status train+dev; distinct templates >= 40 every status train+dev; dev∩train names 0 and combos 0; exit 0.
+- P-vast-rescue (2026-09-23 18:41 UTC, director rescue of own-m1-train dead rental) contract 52276877 RTX 5090 1x public_ip 180.189.55.38 actual_status=offline cur_state=running: start 2026-09-23T18:29:42Z, destroyed 18:41Z, alive ~677 s (11.28 min) x $0.485185/hr = ~$0.09 (per-instance billing not readable via API: /invoices shows only stripe top-ups, /users/current credit 6.3913 balance 0 unchanged; estimate used per task rule); post-destroy show instances 0; own-m1-train runner PIDs 23817/23847/27733/27734 killed, queue marker own-m1-train.running removed (exit rc=143). See runs/000-vast-rescue/instances.txt.
+- PF1.1 (pred, sealed pre-run 2026-09-23, builder; exp F1 = 292t + 241b render_line outermost, CPU only, sealed 41 files SEAL.sha256.txt artifacts/claude-f1-20260923; blind panels never opened item by item) M2: 0 unfaithful lines and 0 store/event changes on suites, probes, joinpanel regression, and convbench-f0.
+- PF1.2 (same) M3 registered: sessions152 exactly 57 reply-only moves; bench (NEW-1, 241b sealed confirm) exactly 648 reply-only moves; rt136 exactly 52 reply-only with 0 other-field diffs; rt143 0 triples/expected diffs; vp exactly 63 and vs exactly 11 reply-only diffs; every gate clean; every reply diff route A in the mouth log; sev-1 only the "I can: ..." line class. Frozen-harness bench shows exactly the 10 missing-yes needle artifacts (pilot proof).
+- PF1.3 (same) convbench-f0 (40 dialogs, 286 turns): 50-130 changed turns, every changed line route A, 0 store/event diffs; changed-lines.jsonl complete (armA=292t, armB=F1).
+- PF1.4 (same) joinpanel292t regression once per arm with 292t's sealed runner: 90/90 turns 0 store/ev diffs, every reply diff route-A attributed, 0 probe store diffs.
+- PF1.5 (same) M5 wall PASS with margin (ratio ~1.00-1.03); never-quiet => VOID.
+- PF1.6 (same) M1 grammar bar passes (p ~ 0.6); riskiest CONFLICT articles, "Saved: Your" capital, "a red" adjectives. M4 judge passes (p ~ 0.65). Both director-graded, not run here.
+- PF1.7 (same) S1 anchor: NEW-1 == frozen confirm on 721/721 saved 292t conflict replies.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P301.1 (2026-09-23, builder; MiniCPM5-1B same snapshot as lis-300 sha 7ab8fd86 re-verified, LoRA r32 2ep 26.05min 4727.7tok/s on BensPC 5070 Ti, +1377 blind-agreed hard-case opus301 rows x4 with 137 to dev, dev key fix drops 45, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + 13/13 + key 2/2 OK, panel 301 run ONCE, code unmodified): wrong-save turns 0/240 (bar <=1: PASS).
+- P301.2 (same) exact recall 51/145 = 35.2% (bar >=85%: FAIL; also <75% so proved-wrong clause trips alongside the dev no-zero-wrong-T clause: more hard-case rows alone do not make the reader safe and useful at once).
+- P301.3 (same) ASK 34/40 = 85.0% (wh 11/11, inverse 6/8, yesno 7/7, lowercase 5/7, twohop 3/5; bar >=90%: FAIL).
+- P301.4 (same) our/we ask-whose 17/18 = 94.4% (bar >=90%: PASS).
+- P301.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P301.6 (same) read ms median 1522.7 p90 2158.8 max 2942.8 on cuda/5070 Ti (bar median <=1500: FAIL). Report-only: wrong facts per saved fact 0/51, per turn 0/240; at T=0 recall 142/145 with 4 wrong turns (1 pronoun-ambiguous, 1 tell-typo, 1 our-we, 1 tell-appositive); held-back 93; dev at T 462/761 with 2 wrong turns (both o0a2); $0 spent; merged sha256 b4fd93a2 kept at ~/premonition-models/lis301-merged/ and on BensPC. See artifacts/claude-lis301-20260923/RESULTS.md.
+EOF
+tail -n 6 artifacts/fable-predictions-ledger.md | cut -c1-80
+- P301.1 (2026-09-23, builder; MiniCPM5-1B same snapshot as lis-300 sha 7ab8fd86
+- P301.2 (same) exact recall 51/145 = 35.2% (bar >=85%: FAIL; also <75% so prove
+- P301.3 (same) ASK 34/40 = 85.0% (wh 11/11, inverse 6/8, yesno 7/7, lowercase 5
+- P301.4 (same) our/we ask-whose 17/18 = 94.4% (bar >=90%: PASS).
+- P301.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P301.6 (same) read ms median 1522.7 p90 2158.8 max 2942.8 on cuda/5070 Ti (bar
+[0m
+[0m$ [0mgit status --porcelain | head -n 20; echo ---; ls -la artifacts/claude-lis301-20260923/ artifacts/claude-lis301-20260923/dev/; echo ---; uptime; df -g / | head -3
+M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+---
+artifacts/claude-lis301-20260923/:
+total 120
+drwxr-xr-x   11 ben-hannan  staff    352 Sep 23 15:03 .
+drwxr-xr-x@ 452 ben-hannan  staff  14464 Sep 23 14:54 ..
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 23 15:02 dev
+-rw-------    1 ben-hannan  staff    800 Sep 23 14:54 dev_sweep.txt
+-rw-------    1 ben-hannan  staff    594 Sep 23 15:02 panel_score_T0.json
+-rw-------    1 ben-hannan  staff    450 Sep 23 15:02 panel_score.json
+-rw-r--r--    1 ben-hannan  staff   5903 Sep 23 15:03 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    407 Sep 23 14:54 SEAL-run.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   1842 Sep 23 14:54 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff  25636 Sep 23 14:54 train_log.jsonl
+-rw-------    1 ben-hannan  staff    589 Sep 23 14:54 train_summary.json
+
+artifacts/claude-lis301-20260923/dev/:
+total 2168
+drwxr-xr-x   5 ben-hannan  staff     160 Sep 23 15:02 .
+drwxr-xr-x  11 ben-hannan  staff     352 Sep 23 15:03 ..
+-rw-------   1 ben-hannan  staff  371449 Sep 23 15:02 dev_pred.jsonl
+-rw-------   1 ben-hannan  staff   95313 Sep 23 15:02 dev_rows.jsonl
+-rw-------   1 ben-hannan  staff  635402 Sep 23 15:02 dev.jsonl
+---
+15:03  up  4:56, 4 users, load averages: 98.83 94.92 80.35
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        14    47%  484014 150494840    0%   /
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-lis301-20260923 artifacts/fable-predictions-ledger.md; echo ---; git diff --stat -- artifacts/fable-predictions-ledger.md
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+[0m
+[0m$ [0mgit status --porcelain | grep -E "lis301|ledger"; echo ---COUNT---; git status --porcelain | wc -l
+M artifacts/fable-predictions-ledger.md
+---COUNT---
+     257
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/dev/dev.jsonl 2>&1; echo ---; git check-ignore -v artifacts/fable-predictions-ledger.md 2>&1; echo ---; head -n 30 .gitignore 2>/dev/null
+.gitignore:5:artifacts/	artifacts/claude-lis301-20260923/RESULTS.md
+.gitignore:5:artifacts/	artifacts/claude-lis301-20260923/dev/dev.jsonl
+---
+---
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+[0m
+[0m# [0mTodos
+[✓] Read remaining specs (frame-spec, score/threshold rule, train/read scripts usage)
+[✓] Set up GPU path (BensPC SSH, check venv + model sha)
+[✓] Step 1 DATA: seal checks + run claude_lis301_data.py
+[✓] Step 2 TRAIN on GPU (~22 min, foreground SSH)
+[✓] Step 3 DEV + threshold (dev read ~25 min + sweep)
+[✓] Step 4 SEAL-run written BEFORE panel
+[✓] Step 5 PANEL key-seal check + single blind run + scores
+[✓] Steps 6-8 RESULTS, ledger, model keep, dev copy, stage PUSH files
+[0m
