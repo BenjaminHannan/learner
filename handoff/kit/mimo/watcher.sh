@@ -13,7 +13,7 @@ set -u
 export OPENCODE_CONFIG_CONTENT='{"snapshot": false}'
 W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
 H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
-IN=main; OUT=builder-outbox; MAX=${MAX:-8}
+IN=main; OUT=builder-outbox; MAX=${MAX:-5}
 RUN="$W/handoff/kit/mimo/rungo4.sh"
 mkdir -p "$Q"; LOG=$H/watch.log
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
@@ -48,9 +48,11 @@ while [ ! -e "$H/STOP" ]; do
     running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
     [ "$running" -ge "$MAX" ] && break
     load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
-    if [ "$running" -ge 3 ] && [ "$load" -gt 90 ]; then log "load $load, holding new launches ($running running)"; break; fi
+    if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then log "load $load, holding new launches ($running running)"; break; fi
     freegb=$(df -g / | tail -1 | awk '{print $4}'); if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"; break; fi
     git -C "$W" show "origin/$IN:$f" > "$Q/$n.md.tmp"
+    if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
+    if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
     if grep -q '^GPU: yes' "$Q/$n.md.tmp" && grep -l '^GPU: yes' $(ls "$Q"/*.running 2>/dev/null | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then
       rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
     fi
