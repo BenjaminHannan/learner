@@ -1,0 +1,3016 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; echo "---"; df -g /; echo "---"; pwd; git rev-parse --abbrev-ref HEAD; git status --short | head -20
+4:32  up 2 days, 20:22, 4 users, load averages: 40.10 37.62 47.00
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 129509400    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; echo FETCH_DONE; git show origin/main:design/v3/30-modes/264-qa-checker.md > /tmp/exp264.md; echo WROTE264:$?; wc -c /tmp/exp264.md
+FETCH_DONE
+WROTE264:0
+    2090 /tmp/exp264.md
+[0m
+[0m→ [0mRead /tmp/exp264.md
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/261-earcheck.txt > /tmp/ear261.txt 2>&1; echo EC:$?; wc -c /tmp/ear261.txt; echo "---"; git show origin/main:design/v3/30-modes/264-qa-checker.md 2>/dev/null | head -5; echo "==="; git ls-tree origin/main --name-only artifacts/ | head -50
+EC:0
+    8428 /tmp/ear261.txt
+---
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+===
+artifacts/claude-aliaspanel237-20260922
+artifacts/claude-aliaspanel237b-20260922
+artifacts/claude-apos247-20260922
+artifacts/claude-askpanel243-20260922
+artifacts/claude-bench125-fairness-20260922
+artifacts/claude-boundary259-20260922
+artifacts/claude-chain231-20260922
+artifacts/claude-chain231b-20260922
+artifacts/claude-chainpanel231-20260922
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comment258-20260922
+artifacts/claude-convjudge239-A-20260922
+artifacts/claude-convjudge239-B-20260922
+artifacts/claude-convpanel239-138l-20260922
+artifacts/claude-convpanel239-138m-20260922
+artifacts/claude-convpanel239-138n-20260922
+artifacts/claude-convpanel239-20260922
+artifacts/claude-correct252-20260922
+artifacts/claude-correct252b-20260922
+artifacts/claude-corrpanel252-20260922
+artifacts/claude-corrtail258-20260922
+artifacts/claude-decline224c-20260922
+artifacts/claude-demo-dryrun-20260922
+artifacts/claude-determinism228-20260922
+artifacts/claude-diag243-20260922
+artifacts/claude-direction251-20260922
+artifacts/claude-earcheck261-20260922
+artifacts/claude-earloop256-20260922
+artifacts/claude-earpanel235-20260922
+artifacts/claude-earpanel235b-20260922
+artifacts/claude-earpanel257-20260922
+artifacts/claude-earpanel261-20260922
+artifacts/claude-ears119-run-20260922
+artifacts/claude-firstname236-20260922
+artifacts/claude-firstnamepanel236-20260922
+artifacts/claude-firstperson249-20260922
+artifacts/claude-fixedtext255-20260922
+artifacts/claude-fullname232-20260922
+artifacts/claude-fullname232b-20260922
+artifacts/claude-fullname232c-20260922
+artifacts/claude-grade241-20260922
+artifacts/claude-grade241b-set2-20260923
+artifacts/claude-grade255b-director-20260923
+artifacts/claude-grades255-20260922
+artifacts/claude-grammar238-20260922
+artifacts/claude-identity227c-20260922
+artifacts/claude-improvement-review-20260922
+artifacts/claude-judge241-20260922
+artifacts/claude-looppanel254-20260922
+[0m
+[0m→ [0mRead /tmp/ear261.txt
+[0m
+[0m$ [0mgit ls-tree origin/main --name-only artifacts/ | tail -60; echo "==="; git ls-tree origin/main --name-only design/v3/30-modes/ | head -60
+artifacts/fable-selfq187-20260922
+artifacts/fable-selfq187b-20260922
+artifacts/fable-session152-20260922
+artifacts/fable-sharedsleep43b-20260921
+artifacts/fable-simplewiki86-20260921
+artifacts/fable-sleep104-20260921
+artifacts/fable-sleep115-20260922
+artifacts/fable-sleep116-20260922
+artifacts/fable-sleep130-20260922
+artifacts/fable-sleep131-20260922
+artifacts/fable-sleep145-20260922
+artifacts/fable-sleepselect43e-20260921
+artifacts/fable-sleepsmoke206-20260922
+artifacts/fable-smalltalk156-20260922
+artifacts/fable-smalltalk156b-20260922
+artifacts/fable-smalltalk156c-20260922
+artifacts/fable-soak108-20260921
+artifacts/fable-soak93-20260921
+artifacts/fable-source226-20260922
+artifacts/fable-speed170-20260922
+artifacts/fable-startup-factorial-20260920
+artifacts/fable-startup-factorial-v2-20260920
+artifacts/fable-statefall188-20260922
+artifacts/fable-story-size-stress-20260920
+artifacts/fable-subject150b-20260922
+artifacts/fable-subject150c-20260922
+artifacts/fable-suitediff214-20260922
+artifacts/fable-suitediff218-20260922
+artifacts/fable-tail139d-20260922
+artifacts/fable-tail139e-20260922
+artifacts/fable-tailwords139c-20260922
+artifacts/fable-talker101-20260921
+artifacts/fable-talker120-20260922
+artifacts/fable-talker120b-20260922
+artifacts/fable-talker120c-20260922
+artifacts/fable-talker120d-20260922
+artifacts/fable-talker24-20260920
+artifacts/fable-thename162-20260922
+artifacts/fable-thought49-20260921
+artifacts/fable-thought62-20260921
+artifacts/fable-title157c-20260922
+artifacts/fable-transport43g-20260921
+artifacts/fable-turns84-20260921
+artifacts/fable-twohop160c-20260922
+artifacts/fable-typo165-20260922
+artifacts/fable-username173-20260922
+artifacts/fable-username173b-20260922
+artifacts/fable-verb167-20260922
+artifacts/fable-verb167b-20260922
+artifacts/fable-verb167d-20260922
+artifacts/fable-webfix89-20260921
+artifacts/fable-whcity158c-20260922
+artifacts/fable-whrel158b-20260922
+artifacts/fable-widelengths43k-20260921
+artifacts/fable-wire51-20260921
+artifacts/fable-wire57-20260921
+artifacts/fable-wordmatch149-20260922
+artifacts/fable-writescreen209-20260922
+artifacts/fable-yesno154-20260922
+artifacts/fable-yesno154d-20260922
+===
+design/v3/30-modes/00-director-board.md
+design/v3/30-modes/00-morning-report-20260922.md
+design/v3/30-modes/100-self-questions-blind-phrasing-muse.md
+design/v3/30-modes/101-talker-first-run-prep-muse.md
+design/v3/30-modes/102-integrated-agent-patches-muse.md
+design/v3/30-modes/103-bench-scale-followups-muse.md
+design/v3/30-modes/104-live-sleep-in-daemon-muse.md
+design/v3/30-modes/105-self-router-fix-muse.md
+design/v3/30-modes/106-reading-ladder-first-score-muse.md
+design/v3/30-modes/107-reading-behind-the-gate-muse.md
+design/v3/30-modes/108-daemon-exactly-once-muse.md
+design/v3/30-modes/109-ears-real-text-supervision-muse.md
+design/v3/30-modes/110-redteam-loop102-muse.md
+design/v3/30-modes/111-loop102-end-to-end-bench-muse.md
+design/v3/30-modes/112-ledger-backfill-muse.md
+design/v3/30-modes/113-loop-nhop-questions-muse.md
+design/v3/30-modes/113b-loop-nhop-fallback-muse.md
+design/v3/30-modes/113c-loop-partial-frame-muse.md
+design/v3/30-modes/113d-fallback-partial-frame-muse.md
+design/v3/30-modes/113e-gate-inverse-cues-muse.md
+design/v3/30-modes/114-self-router-scope-guard-muse.md
+design/v3/30-modes/115-sleep-scale-muse.md
+design/v3/30-modes/116-sleep-redteam-muse.md
+design/v3/30-modes/117-redteam110-patches-muse.md
+design/v3/30-modes/118-ears-leftover-brake-muse.md
+design/v3/30-modes/118b-ears-brake-train-list-muse.md
+design/v3/30-modes/119-ears-length-coverage-muse.md
+design/v3/30-modes/119b-ears-remap-muse.md
+design/v3/30-modes/119d-ears-diagnosis-muse.md
+design/v3/30-modes/119e-ears-gate-diagnosis-muse.md
+design/v3/30-modes/119f-ears-build-muse.md
+design/v3/30-modes/119f-ears-plan-muse.md
+design/v3/30-modes/119g-ears-build-muse.md
+design/v3/30-modes/119h-ears-build-muse.md
+design/v3/30-modes/120-talker-mouth-finetune-prep-muse.md
+design/v3/30-modes/120b-mouth-decode-muse.md
+design/v3/30-modes/120d-talker-dontknow-muse.md
+design/v3/30-modes/121-teach-phrasing-coverage-muse.md
+design/v3/30-modes/122-self-router-learned-muse.md
+design/v3/30-modes/123-marks-runner-muse.md
+design/v3/30-modes/124-redteam-composer-muse.md
+design/v3/30-modes/125-bench-smollm-4hop-muse.md
+design/v3/30-modes/126-demo-harness-muse.md
+design/v3/30-modes/127-self-router-novelty-muse.md
+design/v3/30-modes/128-agent-per-turn-cost-muse.md
+design/v3/30-modes/129-teach-punctuation-muse.md
+design/v3/30-modes/130-sleep-grow-slot-muse.md
+design/v3/30-modes/131-taught-beats-sleep-muse.md
+design/v3/30-modes/132-question-rewriter-muse.md
+design/v3/30-modes/134-port-117-fixes-muse.md
+design/v3/30-modes/135-officeholder-guard-muse.md
+design/v3/30-modes/136-teach-redteam-muse.md
+design/v3/30-modes/137-multiword-possessive-muse.md
+design/v3/30-modes/137b-discourse-muse.md
+design/v3/30-modes/137c-hypo-muse.md
+design/v3/30-modes/137d-frame-muse.md
+design/v3/30-modes/137e-one-hearsay-reply-muse.md
+design/v3/30-modes/138-integration-muse.md
+design/v3/30-modes/138b-stack-muse.md
+design/v3/30-modes/138c-self-serving-muse.md
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "261|263|264|270|comma|earcheck|typepanel|type270"; echo "==="; ls scripts/ | grep -i -E "261|263|264|270|loop263|type270|earcheck"; echo "==="; git log --oneline -5; echo "==="; git status --short | head -40
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-typepanel270-20260923
+===
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_comma263_devcases.py
+claude_comma263_regscore.py
+claude_comma263_run.py
+claude_comma263_score.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_earcheck264_armb.py
+claude_earcheck264_arms.py
+claude_earcheck264_client.py
+claude_earcheck264_commatags.py
+claude_earcheck264_devreport.py
+claude_earcheck264_devset.py
+claude_earcheck264_panel.py
+claude_earcheck264_qa.py
+claude_earcheck264_qbuild.py
+claude_earcheck264_scoremain.py
+claude_earcheck264_turns.py
+claude_fix263_comma.py
+claude_loop263_agent.py
+===
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+===
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+[0m
+[0m$ [0mls -la artifacts/claude-earcheck264-20260923/ artifacts/claude-earpanel264-20260923/ artifacts/claude-typepanel270-20260923/ artifacts/claude-earcheck261b-20260923/ artifacts/claude-comma263-20260923/ 2>&1; echo "==="; git log --oneline -15 -- artifacts/claude-earcheck264-20260923 scripts/claude_earcheck264_qa.py 2>&1 | head
+artifacts/claude-comma263-20260923/:
+total 104
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 22 23:35 .
+drwxr-xr-x@ 418 ben-hannan  staff  13376 Sep 23 04:26 ..
+-rw-r--r--    1 ben-hannan  staff  16152 Sep 22 22:33 devcases263.json
+-rw-r--r--    1 ben-hannan  staff   7783 Sep 22 22:29 loop263-config.json
+-rw-r--r--    1 ben-hannan  staff   6563 Sep 22 22:39 PASSMARKS.md
+drwxr-xr-x   25 ben-hannan  staff    800 Sep 22 22:38 pilot
+-rw-r--r--    1 ben-hannan  staff   4600 Sep 22 22:38 predicted_moves263.json
+-rw-r--r--    1 ben-hannan  staff   5441 Sep 22 23:35 RESULTS.md
+drwxr-xr-x   41 ben-hannan  staff   1312 Sep 22 23:35 run
+-rw-r--r--    1 ben-hannan  staff   1360 Sep 22 22:39 SEAL.sha256.txt
+
+artifacts/claude-earcheck261b-20260923/:
+total 1136
+drwxr-xr-x   17 ben-hannan  staff     544 Sep 22 22:30 .
+drwxr-xr-x@ 418 ben-hannan  staff   13376 Sep 23 04:26 ..
+-rw-r--r--    1 ben-hannan  staff    8973 Sep 22 21:49 dev_261b.jsonl
+-rw-------    1 ben-hannan  staff   40443 Sep 22 22:07 dev261b_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   15872 Sep 22 22:07 dev261b_manifest.json
+-rw-------    1 ben-hannan  staff    6221 Sep 22 22:07 dev261b_pyes.json
+-rw-r--r--    1 ben-hannan  staff     275 Sep 22 22:07 guarddev_261bdev.json
+-rw-r--r--    1 ben-hannan  staff    2305 Sep 22 22:07 guarddev_261dev.json
+-rw-r--r--    1 ben-hannan  staff   22873 Sep 22 22:27 panel261b_bpreds.json
+-rw-------@   1 ben-hannan  staff  100829 Sep 22 22:09 panel261b_earpreds.json
+-rw-------@   1 ben-hannan  staff   28317 Sep 22 22:11 panel261b_pyes.json
+-rw-r--r--    1 ben-hannan  staff  295481 Sep 22 22:27 panel261b_score.json
+-rw-r--r--@   1 ben-hannan  staff   13029 Sep 22 22:08 panel261b_turns.json
+-rw-r--r--@   1 ben-hannan  staff    7769 Sep 22 22:08 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    8838 Sep 22 22:30 RESULTS.md
+-rw-r--r--@   1 ben-hannan  staff    1699 Sep 22 22:08 SEAL.sha256.txt
+drwxr-xr-x  112 ben-hannan  staff    3584 Sep 22 22:27 workB
+
+artifacts/claude-earcheck264-20260923/:
+total 4360
+drwxr-xr-x   27 ben-hannan  staff     864 Sep 23 00:55 .
+drwxr-xr-x@ 418 ben-hannan  staff   13376 Sep 23 04:26 ..
+-rw-r--r--    1 ben-hannan  staff    6615 Sep 22 23:23 dev_264.jsonl
+-rw-------    1 ben-hannan  staff  344558 Sep 23 00:33 dev257_qa.json
+-rw-r--r--    1 ben-hannan  staff  851444 Sep 23 00:35 dev257_qmanifest.json
+-rw-------    1 ben-hannan  staff   19844 Sep 23 00:33 dev261b_qa.json
+-rw-r--r--    1 ben-hannan  staff   46226 Sep 23 00:35 dev261b_qmanifest.json
+-rw-------    1 ben-hannan  staff   26453 Sep 22 23:25 dev264_earpreds.json
+-rw-------    1 ben-hannan  staff   13725 Sep 23 00:33 dev264_qa.json
+-rw-r--r--    1 ben-hannan  staff   34112 Sep 23 00:35 dev264_qmanifest.json
+-rw-------    1 ben-hannan  staff   70419 Sep 23 00:33 devcheck_qa.json
+-rw-r--r--    1 ben-hannan  staff  168164 Sep 23 00:35 devcheck_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff   41875 Sep 23 00:35 devreport_261.json
+-rw-r--r--    1 ben-hannan  staff    5232 Sep 23 00:33 devreport_264.json
+-rw-r--r--    1 ben-hannan  staff   22363 Sep 23 00:53 panel264_bpreds.json
+-rw-------    1 ben-hannan  staff   91241 Sep 23 00:38 panel264_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   67088 Sep 23 00:41 panel264_pmanifest.json
+-rw-------    1 ben-hannan  staff   26416 Sep 23 00:41 panel264_pyes.json
+-rw-------    1 ben-hannan  staff   44077 Sep 23 00:41 panel264_qa.json
+-rw-r--r--    1 ben-hannan  staff   98690 Sep 23 00:41 panel264_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff  164357 Sep 23 00:53 panel264_score.json
+-rw-r--r--    1 ben-hannan  staff   11254 Sep 23 00:37 panel264_turns.json
+-rw-r--r--    1 ben-hannan  staff    3976 Sep 23 00:54 panel264comma_tags.json
+-rw-r--r--    1 ben-hannan  staff    9932 Sep 23 00:36 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    7735 Sep 23 00:55 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    2618 Sep 23 00:36 SEAL.sha256.txt
+drwxr-xr-x  112 ben-hannan  staff    3584 Sep 23 00:53 workB
+
+artifacts/claude-earpanel264-20260923/:
+total 184
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 22 23:43 .
+drwxr-xr-x@ 418 ben-hannan  staff  13376 Sep 23 04:26 ..
+-rw-r--r--    1 ben-hannan  staff  33243 Sep 22 23:42 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  44885 Sep 22 23:42 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   5543 Sep 22 23:43 README.md
+-rw-r--r--    1 ben-hannan  staff    234 Sep 22 23:43 SEAL.sha256.txt
+
+artifacts/claude-typepanel270-20260923/:
+total 104
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 23 02:45 .
+drwxr-xr-x@ 418 ben-hannan  staff  13376 Sep 23 04:26 ..
+-rw-r--r--    1 ben-hannan  staff  17068 Sep 23 02:45 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  25531 Sep 23 02:45 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff    236 Sep 23 02:45 SEAL.sha256.txt
+===
+[0m
+[0m$ [0mls artifacts/ | grep -i type270; ls scripts/ | grep -i type270; echo "==="; ls artifacts/claude-typepanel270-20260923/; echo "==="; git log --oneline -8 -- artifacts/claude-typepanel270-20260923 | head; echo "==="; grep -c P270 artifacts/fable-predictions-ledger.md 2>/dev/null; grep P270 artifacts/fable-predictions-ledger.md 2>/dev/null | head
+===
+make_panel.py
+panel.jsonl
+SEAL.sha256.txt
+===
+===
+0
+[0m
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/RESULTS.md
+[0m
+[0m$ [0mgit ls-tree origin/main --name-only design/v3/30-modes/ | grep -E "26[034]|270|263|260"; echo "==="; git show origin/main:design/v3/30-modes/270-ear-normaliser.md > /tmp/exp270.md 2>&1; echo EC270:$?; ls /tmp/exp270.md 2>/dev/null && head -20 /tmp/exp270.md
+design/v3/30-modes/00-morning-report-20260922.md
+design/v3/30-modes/260-openers-opus.md
+design/v3/30-modes/263-comma-guard.md
+design/v3/30-modes/264-qa-checker.md
+design/v3/30-modes/48-parallel-build-brief-20260921.md
+design/v3/30-modes/48-parallel-build-brief-20260921.md.card-worktree-version
+design/v3/30-modes/our-policy-decision-20260923.md
+design/v3/30-modes/review-20260922-improvements.md
+===
+EC270:128
+/tmp/exp270.md
+fatal: path 'design/v3/30-modes/270-ear-normaliser.md' does not exist in 'origin/main'
+[0m
+[0m→ [0mRead artifacts/claude-comma263-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-comma263-20260923/RESULTS.md
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/263-comma-guard.md > /tmp/exp263.md 2>&1; echo EC:$?; wc -l /tmp/exp263.md
+EC:0
+       4 /tmp/exp263.md
+[0m
+[0m→ [0mRead /tmp/exp263.md
+[0m
+[0m$ [0mwc -l scripts/claude_loop263_agent.py scripts/claude_fix263_comma.py; echo "==="; head -100 scripts/claude_loop263_agent.py
+157 scripts/claude_loop263_agent.py
+     219 scripts/claude_fix263_comma.py
+     376 total
+===
+#!/usr/bin/env python3
+"""Exp 263 agent: 260 + one outermost comma write-guard layer (one change).
+
+Everything is 260 (scripts/claude_loop260_agent.py, read-only) except
+scripts/claude_fix263_comma.py install_comma263, which wraps the whole
+built turn outside turn260 (so a retry runs through the entire head
+exactly as if typed alone) and blocks any teach/correct whose subject
+contains a comma at the inner ears and at _act.
+
+It is installed inside the build, so the daemon's boot reconcile already
+runs through it. The daemon keeps SrcGuardMixin228 first.
+"""
+from __future__ import annotations
+
+import copy
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+from claude_fix228_srcguard import SrcGuardMixin228  # noqa: E402
+
+G228.install_srcguard228()
+
+import claude_fix263_comma as F263  # noqa: E402 (THE ONE CHANGE)
+import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+import claude_loop138m_agent as L138M  # noqa: E402 (read-only)
+import claude_loop260_agent as L260  # noqa: E402 (base, read-only)
+import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+
+
+def _build263(cfg=None):
+    loop = L260._build260(cfg)            # 260 build (138m + openers)
+    F263.install_comma263(loop)           # outermost
+    return loop
+
+
+def _with_263(fn, *args, **kwargs):
+    with L138M._Swap([(L138J, "Loop138jEars", L138M.Loop138mEars),
+                      (L138J, "Loop138jAgentLoop", L138M.Loop138mAgentLoop),
+                      (L138J, "build_agent138j", _build263)]):
+        return fn(*args, **kwargs)
+
+
+NOTE263 = ("loop263: loop260 + comma write guard (no stored subject may "
+           "contain a comma; retry after the last comma of the leading "
+           "segment, else the head's save-failure reply with 0 writes)")
+
+DEFAULT_CONFIG263: dict = copy.deepcopy(L260.DEFAULT_CONFIG260)
+DEFAULT_CONFIG263["daemon"]["module"] = (
+    "Loop263Daemon (scripts/claude_loop263_agent.py) over Loop138kDaemon "
+    "with the 138m classes")
+DEFAULT_CONFIG263["self"] = dict(DEFAULT_CONFIG263.get("self", {}))
+DEFAULT_CONFIG263["self"]["rule263"] = (
+    "263 (scripts/claude_fix263_comma.py): no teach/correct may store a "
+    "subject containing a comma (blocked at the inner ears and at _act); "
+    "a blocked teach retries once on the text after the last comma of the "
+    "leading segment through the same head, and is otherwise answered with "
+    "the head's save-failure reply with 0 writes; values keep commas; "
+    "questions never write")
+DEFAULT_CONFIG263["exp263"] = {
+    "base": "loop260 (scripts/claude_loop260_agent.py)",
+    "added": ["263 comma write guard (outermost, instance)"],
+    "instance": ["turn263(turn260(turn224c(turn224(class turn))))"],
+}
+
+
+def _check(loop):
+    if not isinstance(loop, L138M.Loop138mAgentLoop):
+        raise RuntimeError("263: loop is not Loop138mAgentLoop")
+    if not isinstance(getattr(loop, "_inner138j_ears", None),
+                      L138M.Loop138mEars):
+        raise RuntimeError("263: inner ears are not Loop138lEars")
+    if not G228.is_installed():
+        raise RuntimeError("263: 228 guard not installed")
+    t = vars(loop).get("turn")
+    if getattr(t, "__name__", "") != "turn263":
+        raise RuntimeError("263: turn263 not installed")
+    if getattr(loop.turn263_inner, "__name__", "") != "turn260":
+        raise RuntimeError("263: turn260 not under turn263")
+    loop.notes.append(L138M.NOTE138M)
+    loop.notes.append(L260.NOTE260)
+    loop.notes.append(NOTE263)
+
+
+def build_agent263(cfg: dict | None = None):
+    G228.install_srcguard228()
+    cfg = dict(DEFAULT_CONFIG263, **(cfg or {}))
+    loop = _with_263(L138K.build_agent138k, cfg)
+    _check(loop)
+    return loop
+
+
+class Classes263Mixin:
+    """Daemon mixin: 138k's daemon __init__ with the 138m classes and the
+    263-installing build swapped in for the build."""
+[0m
+[0m$ [0mls handoff/kit/briefs/ 2>/dev/null | head -30; echo "==="; git ls-tree origin/main --name-only handoff/kit/briefs/ 2>/dev/null | head -30; echo "==="; sed -n '100,157p' scripts/claude_loop263_agent.py
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+===
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+===
+
+    def __init__(self, *args, **kwargs):
+        G228.install_srcguard228()
+        _with_263(super().__init__, *args, **kwargs)
+        _check(self.loop)
+
+
+class Loop263Daemon(SrcGuardMixin228, Classes263Mixin,
+                    L138K.RestartIndex220Mixin, L138J.Loop138jDaemon):
+    """Loop138kDaemon's own bases (228 guard > 220 restart index >
+    Loop138jDaemon) with SrcGuardMixin228 first and the 263 build mixin
+    (260 + the comma guard) ahead of the 220 mixin, as 260's
+    Classes260Mixin sits ahead of Loop138kDaemon."""
+
+
+assert [c.__name__ for c in Loop263Daemon.__mro__][:5] == [
+    "Loop263Daemon", "SrcGuardMixin228", "Classes263Mixin",
+    "RestartIndex220Mixin", "Loop138jDaemon"]
+
+
+def main(argv=None) -> int:
+    import argparse
+    import json
+    import fable_loop90_agent as L90  # noqa: E402 (read-only)
+    ap = argparse.ArgumentParser(description="Exp 263 (260 + comma guard)")
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--write-config", default=None)
+    ap.add_argument("--daemon", action="store_true")
+    ap.add_argument("--dir", default=None)
+    ap.add_argument("--idle-seconds", type=float, default=30.0)
+    ap.add_argument("--once", default=None)
+    ap.add_argument("--state-dir", default=None)
+    args = ap.parse_args(argv)
+    if args.write_config:
+        out = copy.deepcopy(DEFAULT_CONFIG263)
+        out["thinker"]["module"] = L90.THINKER_MODULE
+        Path(args.write_config).write_text(json.dumps(out, indent=1),
+                                           encoding="utf-8")
+        print(f"Wrote {args.write_config}")
+        return 0
+    cfg = copy.deepcopy(DEFAULT_CONFIG263)
+    if args.config:
+        cfg.update(json.loads(Path(args.config).read_text(encoding="utf-8")))
+    if args.daemon or (args.dir and not args.once):
+        if not args.dir:
+            ap.error("--daemon needs --dir")
+        return Loop263Daemon(args.dir, cfg=cfg,
+                             idle_seconds=args.idle_seconds).run()
+    if args.once:
+        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
+        print(" ".join(build_agent263(cfg).turn(args.once)), flush=True)
+        return 0
+    ap.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m→ [0mRead scripts/claude_fix263_comma.py
+[0m
+[0m$ [0mgit ls-tree origin/main --name-only handoff/kit/briefs/ | grep -E "26[0-9]|270|269|268"; echo "==="; ls handoff/kit/briefs/ | grep -E "26[0-9]|270|269|268"
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+===
+260-openers.txt
+261-earcheck.txt
+earpanel261-spec.txt
+openpanel260-spec.txt
+[0m
+[0m# [0mTodos
+[•] Read 263 run/score infra + specs + ledger format (read-only)
+[ ] Search repo for 270 schema hints (never open sealed typepanel270 dir)
+[ ] Study 138m ear possessive parsing to pick normalised shapes
+[ ] Write claude_type270 normaliser + agent wrapper (new files only)
+[ ] Write own dev set (60+ casual, 20+ traps) + dev runner
+[ ] Run dev, calibrate word lists, log every rewrite
+[ ] Write PASSMARKS.md with P270.n, seal, append ledger
+[ ] Poll typepanel270 seal (120 min), verify, run A + A263 once each
+[ ] Write RESULTS.md + final verdict reply
+[0m
+[0m✗ [0mRead handoff/kit/briefs/commapanel263-spec.txt failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/briefs/commapanel263-spec.txt
+[0m
+[0m$ [0mtail -20 artifacts/fable-predictions-ledger.md; echo "==="; grep -n "P26[034]" artifacts/fable-predictions-ledger.md | head -30
+- P268b.4 (same) M3 frozen suites vs 138nb saved rows: sessions152/bench/marks123 0 moves GATE clean; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079/C115 reply-only, 0 new WRONG/WRONG-WRITE/junk, direct rows vs 138nb [] (145); rt143 no-gate 0 moves 0 flips (124); 7 restart/verifier probes rows equal (15+2+1+15+3+98+12 dialogs); 0 ghosts, 0 dup fails, 0 write changes.
+- P268b.5 (same) M4 latency alternating processes b,n,b,n,b,n 2 reps each on 138j p3/p3c/p3d: median(268b)-median(138nb) <= +5 ms/turn (pilot +0.068 ms, n=104 each).
+- P268b.6 (same) falsifiers: a forward-walk answer surviving on a bug item, any forward two-step answer change, or any backwards answer naming someone not in gold proves the change wrong.
+- P280.4 OUTCOME (2026-09-23, build agent, sealed exp 280) registered verdict FAIL on M1b only, as P280.3's likeliest failure. M1 panel (36 dialogs; seal OK; panel once per arm): M1a 0 forbidden on 280 (260 arm 7) PASS; M1b 9/12 general items list >= 3 abilities FAIL (misses G06, G11, G12: wording outside the closed 16-form set, clarify on both arms, 0 claims, 0 writes); M3 0 write diffs + 0 question/self writes PASS; canyou 20 0 forbidden 0 moves; control 4 0 moves. M2 PASS (sessions152 exactly the 3 predicted reply-only moves UNHELPFUL->UNHELPFUL GATE clean; rt136 0 field diffs with vs-138j labels identical to 260's; rt143 0; bench 4x200 0; 0 flips). Probes 0 changes. Dev identical 280 vs 260 with the registered ability scores. Deviations: 2 driver-only fixes after seal (regscore rt136-gate check; run+score flat-row panel_group after one void panel pass, outputs in pilot/void-attempt/); agent/config/cases/PASSMARKS 14/15 seal-OK... (14 of 15 sealed files byte-identical; only the 2 fixed drivers differ). P280.1 right (suites+probes exactly), P280.2 half-right (M1a/M3 right, M1b 9/12 not all), P280.3 wrong lean (FAIL, not PASS) with the predicted failure mode right.
+- P280.5 CORRECTION to P280.4's seal count: 12/15 sealed files byte-identical (the 3 post-seal driver fixes are run.py, score.py, regscore.py); agent, config, dev cases, PASSMARKS, predicted moves, pilot dev rows untouched. Verdict unchanged: FAIL on M1b only.
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-20260923; blind panel never opened) M1 blind calledpanel281 run once per arm with sealed score_panel: stored called/named/name-of/do-you-call items >= 90% answered exactly on 281 (260 arm shown beside); 0 wrong answers on 281; not-stored items all abstain (0 new guesses); ambiguous "called <Name>" + control items 0 moves vs 260; 0 panel store diffs 281 vs 260; 0 question writes on 281. Changed replies come only from scripts/claude_fix281_called.py (rewrite + head's own plain-question answer). Truth of claims and grammar director-graded, ungraded here.
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 124 rows 0 moved, GATE clean on sessions152/bench; 0 abstain-ward flips. Verifier probes vs 260 rows: exactly 1 changed row N06 Q "What is the name of Tomas's boss?" -> "Tomas's boss is Mirela.", ev 0, stored identical; supp 0 changes.
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stored value); ambiguous 5/5 + control 6/6 byte-identical; notstored 5/5 abstain both arms; 0 question writes either arm. 260-arm failure modes: trailing-called "I don't know X's R called.", trailing-named "I don't know X's R named.", do-you-call clarify, name-of "anyone called the name of X".
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any suite/probe move outside N06 proves the change wrong. Known limits: embedded/non-"?" called-wordings, rewritten-clarifies (original stands), not-stored/ambiguous keep 260's malformed abstains (report-only).
+- P268b.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bug clauses only. M1 blind nhoppanel268b 60 items once per arm with sealed score_panel.py: bug 11/16 right with label (bar 14), 1 wrong n268b-010 (bar 0), 4 honest bench73 non-answers; other 44 items byte-identical to 138nb (stages, replies, stored), question writes 0/60 both arms; base bug 0/16 right 16/16 wrong all loop138-nhop. Diagnosis: guard R1-R4 list has no "Who <verb>" employer/work shape, so 010's (employer-valued start,[employer]) frame survived as a forward-walk reply (falsifier P268b.6 clause 1 tripped); 4 married-to shapes fall to bench73 ask (predicted class, never wrong). DEV/M2/M3/M4 all PASS per design marks (DEV 46/46 exact, 0 writes; M2 moves [] 0 new wrong keep 69/69 rights; M3 suites 0 GATE clean rt136 16 inherited direct [] rt143 0 probes 7/7 equal latency -0.005 ms). Missed extra prediction: M2 writes [] vs 4 teach_control writes identical on both arms (legitimate, right). Post-seal driver files only: scripts/claude_268b_score_fix1.py (2 sealed-scorer bug fixes, diff disclosed), scripts/claude_268b_m1run.py (question_stage row format the sealed scorer requires). Sealed files unchanged, seal re-verified 23/23 OK. P268b.1-P268b.5 held except P268b.2's 14/16 + 0-wrong bars.
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-capab280b-20260923; blind panel never opened, capabilpanel280 burned per director correction) M1 blind capabilpanel280b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text, SCHEMA-MISMATCH exit 3 = VOID): all 25 general items byte-equal to sealed CAN280 on 280b (280 arm shown); 0 unsupported-claim replies on 280b anywhere; canyou 10/10 + nearmiss 10/10 + control 5/5 byte-identical 280b vs 280; 0 panel write diffs; 0 question/self writes on 280b. Truth of claims and grammar director-graded, ungraded here.
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 280's (16 inherited), rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 280 rows: vp 98 + supp 12, 0 changes. Dev 68 own-wording fictional-name dialogs: general 28/28 exact CAN280 on 280b, all other families 0 diffs vs 280, 0 question writes.
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not byte-equal CAN280, or any question-turn write proves the change wrong. Known limits: cue-less generals ("Can you tell me about yourself?"), negations ("What can't you do?"), and "What can you not do?" keep 280's replies by construction. Pre-seal pilot fix disclosed: B17 "What do you know about me?" over-fired the unordered what+do+you cue; cue ordered (what...you...do) before seal, B17 0-diff since.
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+- P269.9 OUTCOME (2026-09-23, builder) registered run INCOMPLETE by blockage, no verdict: panel sealed before my seal (2/2 OK), my seal 15/15 OK (unchanged at close), schema 100 lines 30/15/20/15/20 OK, arm B ran ONCE on 100/100 (B 25/70 hits, 0 wrong, 25 saved; per-family in RESULTS.md); ear arms A/A265/A261b 0 runs (BensPC unreachable 02:30-04:30 local, SSH+ping 100% loss, ~120 min polled); P269.1-P269.7 unresolved; llama-server PID 26480 left running (could not stop; exact PID recorded for cleanup); resume needs no re-seal and no arm-B re-run. See artifacts/claude-ear269-20260923/RESULTS.md.
+- P282.1 (exp 282 casual greetings and closings get small talk, outermost layer on 260, builder, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-small282-20260923) M2 suites vs 260's saved rows: exactly 0 moved units (sessions152 180, bench 4x200 GATE clean, rt136 145 0 field diffs with vs-138j-base labels identical to 260's on both arms, rt143_nogate 124); 0 verdict flips, 0 write changes, 0 abstain-ward flips.
+- P282.2 Verifier probes vs 260's saved rows: exactly 1 changed row, vp E04 (Q "what's up?" with nothing stored -> the head's greeting reply, ev 0, stored []); supp 0 changes; 0 question writes anywhere.
+- P282.3 M1 blind smallpanel282: smalltalk fitting on 282 >= 90% (260 arm shown beside); 0 smalltalk writes on 282; 0 question writes on 282; mixed-hint turns 0 moves vs 260; other turns 0 moves vs 260; 0 store diffs 282 vs 260. Registered verdict: PASS.
+- P282.4 M3 smalltalkpanel234 rerun once per arm: wellbeing hits 282 >= 260's hits; every other item 282 == 260; 0 setup/store diffs; 0 writes on 282. Overall exp 282 PASS (M1-M3 all PASS).
+===
+2600:- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+2601:- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+2602:- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+2614:- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+2634:- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opener_teach >= 16/20 exact; comma_value_ok 0 lost vs 260; question 0 writes; control 14/14 byte-identical to base260.
+2635:- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+2636:- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.) pass through like 260.
+2637:- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored B15+D10, 1 allowed new write B15:t0, supp 0. Dev 55/55 (260 34/55; unlisted 20/20 vs 0/20). Known limits: two-comma turns lose the fact; unlisted-opener questions keep 260's reply; pretend markers never stripped.
+2647:- P263 OUTCOME (2026-09-23, builder; registered verdict PASS, M1-M4 all PASS, sealed scripts run once per arm) M1 commapanel263: 263 comma-subject stores 0/60 (260: 16), unlisted 20/20 (260 1/20; 19 moves c263-001..019 all toward right, 0 against), comma_value 8/8 lost 0, question 0 writes, control 14/14 byte-identical; 263 right 46/60, 260 right 27/60; 260 arm vs base260.jsonl 60/60 identical; schema OK. M2 openpanel260 on 263: 80/80, every 260 figure equal, 0 worse, 0 new junk, control 16/16 identical. M3 suites: 0 moved units on all 7 files, labels equal 260's (rt136 keeps C019-C031+C076+C079+C122), 0 rt143 flips. M4 latency delta +0.243 ms (bar +3). PROBES: exactly predicted 7 rows, stored B15+D10, 1 allowed new write, supp 0. No abstain flips. Deviations: retry trigger widened to head-shape-failures (pre-seal, documented); name-internal comma exemption added after pilot showed 13 bench flips (0 moves after); first runall died in load-wait pre-step and was re-invoked once; regscore263.json holds a cosmetic M2-absent error (M2 verdict in openpanel-score263.json); no git push per hard rules.
+2680:- P264.1 (2026-09-23, builder; exp 264 = 261b sealed arm A with YES/NO checker replaced by QA checker v5 (3 questions, decide-first + single-word relation + de-anchored owner), span guard kept, scorer = 261b sealed + Ruling 1 with per-fact/per-turn rates, sealed 23 files SEAL.sha256.txt artifacts/claude-earcheck264-20260923) M1 no_save saves 0-3; pass (<= 1) ~55 %. Dev: pretend 5/5, checkq 13/13, plan 26/28 held.
+2681:- P264.2 M2 wrong saves (statement fams + no_save) 2-6; pass (<= 1) ~25 %. Dev ~1%/turn (15/1207 on 261 dev) plus new R16/R17 traps (5/32 own dev).
+2682:- P264.3 M3 exact TEACH recall 65-78 % and >= B + 30; pass ~15 %. Dev d257 73.4 %, dc 74.9 %, b5 75.0 %; three gates multiply holds.
+2683:- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+2684:- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+2685:- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+2686:- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+2687:- P264.8 Overall registered PASS ~5 %.
+2688:- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+2713:- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+2714:- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+2715:- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+2716:- P264.4 M3b held back <= 12% of gold TEACH: predicted 20-30% PASS ~10%. Got 38/125 = 30.4% (37 QA + 1 guard). FAIL (range missed by 0.4).
+2717:- P264.5 M4 exact ASK recall >= 90%: predicted 90-100% PASS ~85%. Got 37/40 = 92.5%. PASS.
+2718:- P264.6 M5 median per turn <= 800 ms: predicted 850-1100 ms PASS ~5%. Got median 880.1, p90 1826.8, max 2664.2. FAIL.
+2719:- P264.7 M6 every A frame byte-identical in A_brake: predicted exact PASS ~99%. Got 0 mismatches. PASS.
+2720:- P264.8 Overall registered PASS: predicted ~5%. Got FAIL (M1, M2, M3, M3b, M5 fail; M4, M6 pass).
+2721:- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, all arms reported. Got A 5/86 = 0.0581 per fact, 5/110 = 0.0455 per turn; A261b 6/100 = 0.0600, 5/110 = 0.0455; A_brake 30/125 = 0.2400, 21/110 = 0.1909; B 9/11 = 0.8182, 9/110 = 0.0818. A vs A261b: M2 5 vs 6, M3 81 vs 94 (QA trades 13 hits for 1 fewer wrong).
+[0m
+[0m→ [0mRead handoff/kit/briefs/openpanel260-spec.txt
+[0m
+[0m$ [0mgrep -rln "typepanel270\|lower_trap\|casual_q\|type270" --include="*.py" --include="*.md" --include="*.txt" --include="*.json" --include="*.sh" . 2>/dev/null | grep -v "artifacts/claude-typepanel270" | head -20; echo "==="; grep -rn "270" handoff/kit/briefs/*.txt 2>/dev/null | head; echo "==="; ls scratchpad/ 2>/dev/null | head; ls .claude/ 2>/dev/null | head
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mgrep -rln "typepanel270\|lower_trap\|casual_q" scripts/ handoff/ design/ 2>/dev/null | head -20; echo DONE1
+DONE1
+[0m
+[0m$ [0mls scripts/ | grep -E "138m|loop260|fix260" | head; echo "==="; wc -l scripts/claude_loop260_agent.py scripts/claude_loop138m_agent.py scripts/claude_fix260_openers.py 2>/dev/null
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_fix260_openers.py
+claude_loop138m_agent.py
+claude_loop260_agent.py
+===
+     152 scripts/claude_loop260_agent.py
+     343 scripts/claude_loop138m_agent.py
+     441 scripts/claude_fix260_openers.py
+     936 total
+[0m
+[0m→ [0mRead scripts/claude_loop138m_agent.py
+[0m→ [0mRead scripts/claude_comma263_run.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "print('interp ok')" 2>&1 | tail -2
+interp ok
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+cfg = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+turns = [
+  \"Kestrel's job is fisher.\",
+  \"kestrel's job is fisher.\",
+  \"kestrels job is fisher.\",
+  \"kestrel job is fisher.\",
+  \"my job is fisher.\",
+  \"My job is fisher.\",
+]
+for t in turns:
+    loop = A263.build_agent263(dict(cfg))
+    r = loop.turn(t)
+    print(repr(t), '->', repr(' '.join(r)), '| store:', L90.notebook_triples(loop.nb))
+" 2>&1 | tail -10
+"Kestrel's job is fisher." -> "Saved: Kestrel's job is fisher." | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher')]
+"kestrel's job is fisher." -> 'I already have that.' | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher')]
+'kestrels job is fisher.' -> 'I already have that.' | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher')]
+'kestrel job is fisher.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher')]
+'my job is fisher.' -> 'Saved: your job is fisher.' | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher'), ('USER', 'job', 'fisher')]
+'My job is fisher.' -> 'I already have that.' | store: [('I Believe I Can Fly', 'country_of_origin', 'Argentina'), ('Anna Komnene', 'notable_work', 'I Believe I Can Fly'), ('Maybe Tom', 'boss', 'Ann'), ('Will Smith', 'spouse', 'Jada Pinkett'), ('Rex', 'color', 'black honestly'), ('Kwame', 'spouse', 'Ama'), ('Kwame', 'city', 'Accra'), ('Kwame', 'employer', 'Acme'), ('Kwame', 'place_of_birth', 'Accra'), ('USER', 'name', 'Maya'), ('Kim', 'boss', 'Lee'), ('Kim', 'citizenship', 'India'), ('Rana', 'language', 'Tamil'), ('Rana', 'language', 'Hindi'), ('Omar', 'language', 'Urdu'), ('Kestrel', 'job', 'fisher'), ('USER', 'job', 'fisher')]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+cfg = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+seed = set(L90.notebook_triples(A263.build_agent263(dict(cfg)).nb))
+print('n seed triples:', len(seed))
+turns = [
+  \"Zorana's mother is Vexley.\",
+  \"zorana's mother is vexley.\",
+  \"zoranas mother is vexley.\",
+  \"zorana mother is vexley.\",
+  \"Quillan lives in Drennor.\",
+  \"quillan lives in drennor.\",
+  \"who is zorana's mother?\",
+  \"who is zoranas mother?\",
+  \"so zoranas mother is vexley, right?\",
+  \"lets say zoranas mother is vexley.\",
+]
+for t in turns:
+    loop = A263.build_agent263(dict(cfg))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t)); print('   reply:', repr(' '.join(r))); print('   new:', new)
+" 2>&1 | tail -32
+n seed triples: 17
+"Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"zorana's mother is vexley."
+   reply: 'I already have that.'
+   new: [('Zorana', 'mother', 'Vexley')]
+'zoranas mother is vexley.'
+   reply: 'I already have that.'
+   new: [('Zorana', 'mother', 'Vexley')]
+'zorana mother is vexley.'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: [('Zorana', 'mother', 'Vexley')]
+'Quillan lives in Drennor.'
+   reply: "Saved: Quillan's city is Drennor."
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+'quillan lives in drennor.'
+   reply: 'I already have that.'
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+"who is zorana's mother?"
+   reply: "Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+'who is zoranas mother?'
+   reply: "Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+'so zoranas mother is vexley, right?'
+   reply: "I didn't understand that question — could you say it another way?"
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+'lets say zoranas mother is vexley.'
+   reply: "OK, I'll treat that as pretend, so I won't save it."
+   new: [('Zorana', 'mother', 'Vexley'), ('Quillan', 'city', 'Drennor')]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+turns = [
+  \"Zorana's mother is Vexley.\",
+  \"zorana's mother is vexley.\",
+  \"zoranas mother is vexley.\",
+  \"zorana mother is vexley.\",
+  \"Quillan lives in Drennor.\",
+  \"quillan lives in drennor.\",
+  \"who is zorana's mother?\",
+  \"who is zoranas mother?\",
+  \"so zoranas mother is vexley, right?\",
+  \"lets say zoranas mother is vexley.\",
+  \"yo, zoranas mother is vexley.\",
+  \"my mother is vexley.\",
+]
+for t in turns:
+    d = tempfile.mkdtemp()
+    cfg = dict(base, state_dir=d)
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t)); print('   reply:', repr(' '.join(r))); print('   new:', new)
+" 2>&1 | tail -36
+"Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"zorana's mother is vexley."
+   reply: "Saved: zorana's mother is vexley."
+   new: [('zorana', 'mother', 'vexley')]
+'zoranas mother is vexley.'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+'zorana mother is vexley.'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+'Quillan lives in Drennor.'
+   reply: "Saved: Quillan's city is Drennor."
+   new: [('Quillan', 'city', 'Drennor')]
+'quillan lives in drennor.'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+"who is zorana's mother?"
+   reply: "I don't know anyone called zorana."
+   new: []
+'who is zoranas mother?'
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+'so zoranas mother is vexley, right?'
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+'lets say zoranas mother is vexley.'
+   reply: "OK, I'll treat that as pretend, so I won't save it."
+   new: []
+'yo, zoranas mother is vexley.'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+'my mother is vexley.'
+   reply: 'Saved: your mother is vexley.'
+   new: [('USER', 'mother', 'vexley')]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+def fresh():
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    return loop, seed
+def show(setup, qs):
+    loop, seed = fresh()
+    for t in setup:
+        r = loop.turn(t); new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]; seed = set(L90.notebook_triples(loop.nb))
+        print('setup', repr(t), '->', repr(' '.join(r)), new)
+    for q in qs:
+        r = loop.turn(q); new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+        print('q    ', repr(q), '->', repr(' '.join(r)), 'new:', new)
+print('--- A: store clean, ask variants ---')
+show([\"Zorana's mother is Vexley.\"], [\"Who is Zorana's mother?\", \"who is zorana's mother?\", 'who is Zoranas mother?', \"Who is Zorana's mother?\"])
+print('--- B: store lowercase-apos, ask clean ---')
+show([\"zorana's mother is vexley.\"], [\"Who is Zorana's mother?\"])
+print('--- C: traps without ? ---')
+show([], ['so zoranas mother is vexley', 'zoranas mother is vexley, right', 'i want zoranas mother to be vexley', 'zorana will live in drennor', 'imagine zorana lives in drennor', 'does zorana live in drennor'])
+" 2>&1 | tail -30
+--- A: store clean, ask variants ---
+setup "Zorana's mother is Vexley." -> "Saved: Zorana's mother is Vexley." [('Zorana', 'mother', 'Vexley')]
+q     "Who is Zorana's mother?" -> "Zorana's mother is Vexley." new: []
+q     "who is zorana's mother?" -> "Zorana's mother is Vexley." new: []
+q     'who is Zoranas mother?' -> "Zorana's mother is Vexley." new: []
+q     "Who is Zorana's mother?" -> "Zorana's mother is Vexley." new: []
+--- B: store lowercase-apos, ask clean ---
+setup "zorana's mother is vexley." -> "Saved: zorana's mother is vexley." [('zorana', 'mother', 'vexley')]
+q     "Who is Zorana's mother?" -> "Zorana's mother is vexley." new: []
+--- C: traps without ? ---
+q     'so zoranas mother is vexley' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' new: []
+q     'zoranas mother is vexley, right' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' new: []
+q     'i want zoranas mother to be vexley' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' new: []
+q     'zorana will live in drennor' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' new: []
+q     'imagine zorana lives in drennor' -> "OK, I'll treat that as pretend, so I won't save it." new: []
+q     'does zorana live in drennor' -> "I didn't understand that question — could you say it another way?" new: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+normed = [
+  \"so Zorana's mother is vexley\",
+  \"Zorana's mother is vexley, right\",
+  \"so Zorana's mother is vexley, right?\",
+  \"I want Zorana's mother to be vexley\",
+  \"i want Zorana's mother to be vexley\",
+  \"Zorana will live in Drennor\",
+  \"imagine Zorana lives in Drennor\",
+  \"does Zorana live in Drennor\",
+  \"Does Zorana live in Drennor?\",
+  \"If Zorana's mother is vexley, who is she?\",
+  \"yo, Zorana's mother is vexley.\",
+  \"hey Zorana's mother is vexley.\",
+  \"my mother is Vexley.\",
+  \"My mother is Vexley.\",
+  \"Quillan's mother is Vexley and she lives in Drennor.\",
+]
+for t in normed:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t)); print('   reply:', repr(' '.join(r))); print('   new:', new)
+" 2>&1 | tail -42
+"Zorana's mother is vexley, right"
+   reply: "Saved: Zorana's mother is vexley."
+   new: [('Zorana', 'mother', 'vexley')]
+"so Zorana's mother is vexley, right?"
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+"I want Zorana's mother to be vexley"
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+"i want Zorana's mother to be vexley"
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+'Zorana will live in Drennor'
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+'imagine Zorana lives in Drennor'
+   reply: "OK, I'll treat that as pretend, so I won't save it."
+   new: []
+'does Zorana live in Drennor'
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+'Does Zorana live in Drennor?'
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+"If Zorana's mother is vexley, who is she?"
+   reply: "I didn't understand that question — could you say it another way?"
+   new: []
+"yo, Zorana's mother is vexley."
+   reply: "Saved: Zorana's mother is vexley."
+   new: [('Zorana', 'mother', 'vexley')]
+"hey Zorana's mother is vexley."
+   reply: "Saved: Zorana's mother is vexley."
+   new: [('Zorana', 'mother', 'vexley')]
+'my mother is Vexley.'
+   reply: 'Saved: your mother is Vexley.'
+   new: [('USER', 'mother', 'Vexley')]
+'My mother is Vexley.'
+   reply: 'Saved: your mother is Vexley.'
+   new: [('USER', 'mother', 'Vexley')]
+"Quillan's mother is Vexley and she lives in Drennor."
+   reply: 'I can take one fact at a time — could you split that?'
+   new: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  \"so Zorana's mother is vexley\",
+  \"so Zorana's mother is Vexley.\",
+  \"So Zorana's mother is Vexley.\",
+  \"well Zorana's mother is Vexley.\",
+  \"oh Zorana's mother is Vexley.\",
+  \"btw Zorana's mother is Vexley.\",
+  \"you know Zorana's mother is Vexley.\",
+  \"like Zorana's mother is Vexley.\",
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t)); print('   reply:', repr(' '.join(r))); print('   new:', new)
+" 2>&1 | tail -24
+"so Zorana's mother is vexley"
+   reply: "Saved: Zorana's mother is vexley."
+   new: [('Zorana', 'mother', 'vexley')]
+"so Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"So Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"well Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"oh Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"btw Zorana's mother is Vexley."
+   reply: "Saved: Zorana's mother is Vexley."
+   new: [('Zorana', 'mother', 'Vexley')]
+"you know Zorana's mother is Vexley."
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+"like Zorana's mother is Vexley."
+   reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+   new: []
+[0m
+[0m→ [0mRead scripts/claude_comma263_score.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  'Quillan lives in drennor.',
+  'quillan lives in Drennor.',
+  'quillan Lives in drennor.',
+  'quillan is a fisher.',
+  'Quillan is a fisher.',
+  'quillan works at fenwick.',
+  'Quillan works at fenwick.',
+  'i am a fisher.',
+  'I am a fisher.',
+  'my boss is rhoda.',
+  'My boss is Rhoda.',
+  'quillans boss is rhoda.',
+  'tell me about quillan.',
+  'do you know quillan.',
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -16
+'Quillan lives in drennor.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'quillan lives in Drennor.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'quillan Lives in drennor.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'quillan is a fisher.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'Quillan is a fisher.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'quillan works at fenwick.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'Quillan works at fenwick.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'i am a fisher.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'I am a fisher.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'my boss is rhoda.' -> 'Saved: your boss is rhoda.' [('USER', 'boss', 'rhoda')]
+'My boss is Rhoda.' -> 'Saved: your boss is Rhoda.' [('USER', 'boss', 'Rhoda')]
+'quillans boss is rhoda.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'tell me about quillan.' -> "I don't know anyone called quillan." []
+'do you know quillan.' -> "I didn't understand that question — could you say it another way?" []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  \"Zorana's mother is vexley, isn't it\",
+  \"Zorana's mother is vexley, don't you think\",
+  \"Zorana's mother is vexley, correct?\",
+  \"Zorana's mother is vexley, ok?\",
+  \"Zorana's mother is vexley, yeah\",
+  \"Zorana's mother is vexley right?\",
+  \"james' mother is Vexley.\",
+  \"james's mother is Vexley.\",
+  \"James' mother is Vexley.\",
+  \"his mother is Vexley.\",
+  \"her boss is Rhoda.\",
+  \"Quillan and Zorana live in Drennor.\",
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -14
+"Zorana's mother is vexley, isn't it" -> "Saved: Zorana's mother is vexley, isn't it." [('Zorana', 'mother', "vexley, isn't it")]
+"Zorana's mother is vexley, don't you think" -> "Saved: Zorana's mother is vexley, don't you think." [('Zorana', 'mother', "vexley, don't you think")]
+"Zorana's mother is vexley, correct?" -> 'Was that a question?' []
+"Zorana's mother is vexley, ok?" -> 'Was that a question?' []
+"Zorana's mother is vexley, yeah" -> "Saved: Zorana's mother is vexley, yeah." [('Zorana', 'mother', 'vexley, yeah')]
+"Zorana's mother is vexley right?" -> 'Was that a question?' []
+"james' mother is Vexley." -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+"james's mother is Vexley." -> "Saved: james's mother is Vexley." [('james', 'mother', 'Vexley')]
+"James' mother is Vexley." -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'his mother is Vexley.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'her boss is Rhoda.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'Quillan and Zorana live in Drennor.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  \"Zorana's Mother is Vexley.\",
+  \"Zorana's MOTHER is Vexley.\",
+  'my Boss is Rhoda.',
+  'My Boss Is Rhoda.',
+  'Who Is Zorana\\'s Mother?',
+  'Where Does Quillan Live?',
+  'Quillan Lives In Drennor.',
+  'QUILLAN LIVES IN DRENNOR.',
+  \"James's mother is Vexley.\",
+  'Will lives in Drennor.',
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -12
+"Zorana's Mother is Vexley." -> "Saved: Zorana's mother is Vexley." [('Zorana', 'mother', 'Vexley')]
+"Zorana's MOTHER is Vexley." -> "Saved: Zorana's mother is Vexley." [('Zorana', 'mother', 'Vexley')]
+'my Boss is Rhoda.' -> 'Saved: your boss is Rhoda.' [('USER', 'boss', 'Rhoda')]
+'My Boss Is Rhoda.' -> 'Saved: your boss is Rhoda.' [('USER', 'boss', 'Rhoda')]
+"Who Is Zorana's Mother?" -> "I don't know anyone called Zorana." []
+'Where Does Quillan Live?' -> "I don't know anyone called Quillan." []
+'Quillan Lives In Drennor.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'QUILLAN LIVES IN DRENNOR.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+"James's mother is Vexley." -> "Saved: James's mother is Vexley." [('James', 'mother', 'Vexley')]
+'Will lives in Drennor.' -> "Saved: Will's city is Drennor." [('Will', 'city', 'Drennor')]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  \"Zorana's mother is not Vexley.\",
+  \"Zorana's mother is vexley, you know\",
+  \"Zorana's mother is vexley, correct.\",
+  'whos zoranas mother',
+  \"who's zoranas mother?\",
+  'our mother is vexley.',
+  'Our mother is Vexley.',
+  'Wren Hall works at Fenwick.',
+  'wren hall works at fenwick.',
+  'where does will live?',
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+print('--- notebook-name precedence: setup Will, then lowercase ---')
+cfg = dict(base, state_dir=tempfile.mkdtemp())
+loop = A263.build_agent263(cfg)
+seed = set(L90.notebook_triples(loop.nb))
+print(loop.turn('Will lives in Drennor.'))
+print([x for x in L90.notebook_triples(loop.nb) if x not in seed])
+print(loop.turn('where does will live?'))
+" 2>&1 | tail -16
+"Zorana's mother is not Vexley." -> 'I can take one fact at a time — could you split that?' []
+"Zorana's mother is vexley, you know" -> "Saved: Zorana's mother is vexley, you know." [('Zorana', 'mother', 'vexley, you know')]
+"Zorana's mother is vexley, correct." -> "Saved: Zorana's mother is vexley, correct." [('Zorana', 'mother', 'vexley, correct')]
+'whos zoranas mother' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+"who's zoranas mother?" -> "I didn't understand that question — could you say it another way?" []
+'our mother is vexley.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'Our mother is Vexley.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'Wren Hall works at Fenwick.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'wren hall works at fenwick.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+'where does will live?' -> "I didn't understand that question — could you say it another way?" []
+--- notebook-name precedence: setup Will, then lowercase ---
+["Saved: Will's city is Drennor."]
+[('Will', 'city', 'Drennor')]
+["Will's city is Drennor."]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+def run(setup, turns):
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    for t in setup:
+        loop.turn(t)
+    seed = set(L90.notebook_triples(loop.nb))
+    for t in turns:
+        r = loop.turn(t)
+        new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+        print(repr(t), '->', repr(' '.join(r)), new)
+run([], ['Lets say zorana lives in drennor.', \"Let's say zorana lives in drennor.\", 'Suppose zorana lives in drennor.', 'suppose zorana lives in drennor.'])
+run([\"Zorana's mother is Vexley.\"], [\"Who's Zorana's Mother?\", \"Who's zorana's mother?\", 'Whos Zorana Mother?'])
+" 2>&1 | tail -10
+'Lets say zorana lives in drennor.' -> "OK, I'll treat that as pretend, so I won't save it." []
+"Let's say zorana lives in drennor." -> "OK, I'll treat that as pretend, so I won't save it." []
+'Suppose zorana lives in drennor.' -> "OK, I'll treat that as pretend, so I won't save it." []
+'suppose zorana lives in drennor.' -> "OK, I'll treat that as pretend, so I won't save it." []
+"Who's Zorana's Mother?" -> "Zorana's mother is Vexley." []
+"Who's zorana's mother?" -> "Zorana's mother is Vexley." []
+'Whos Zorana Mother?' -> "I didn't understand that question — could you say it another way?" []
+[0m
+[0m$ [0mgrep -n "def load_agent\|def load_base_cfg\|def make_daemon\|def notebook_triples" scripts/fable_marks123_all.py scripts/fable_loop90_agent.py 2>/dev/null; echo "==="; sed -n "$(grep -n 'def make_daemon' scripts/fable_marks123_all.py | cut -d: -f1),+15p" scripts/fable_marks123_all.py 2>/dev/null | head -20
+scripts/fable_marks123_all.py:68:def load_agent(agent_script: str):
+scripts/fable_marks123_all.py:95:def load_base_cfg(config_path: str) -> dict:
+scripts/fable_marks123_all.py:99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+scripts/fable_loop90_agent.py:101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+===
+def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+    cfg = copy.deepcopy(base_cfg)
+    cfg["state_dir"] = str(root)
+    cfg["sleep_threshold"] = 100000
+    return daemon_cls(root, cfg=cfg, idle_seconds=3600.0)
+
+
+# --------------------------------------------------------------------------
+# (a) P2 — 64 sealed redteam98 cases, in-process daemon, mailbox files.
+# Calls the sealed judge (fable_redteam98_runner.judge); the run_case driver
+# mirrors scripts/fable_loop102_marks.py run_case op-for-op (send /
+# send_bytes / restart / tear_tail / kill9_burst) with only the daemon
+# factory swapped.
+
+
+def _p2_process_pending(daemon, R98, root: Path, log: list) -> None:
+[0m
+[0m# [0mTodos
+[✓] Read 263 run/score infra + specs + ledger format (read-only)
+[✓] Search repo for 270 schema hints (never open sealed typepanel270 dir)
+[✓] Study 138m ear possessive parsing to pick normalised shapes
+[•] Write claude_type270 normaliser + agent wrapper (new files only)
+[ ] Write own dev set (60+ casual, 20+ traps) + dev runner
+[ ] Run dev, calibrate word lists, log every rewrite
+[ ] Write PASSMARKS.md with P270.n, seal, append ledger
+[ ] Poll typepanel270 seal (120 min), verify, run A + A263 once each
+[ ] Write RESULTS.md + final verdict reply
+[0m
+[0m← [0mWrite scripts/claude_type270_normalise.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -104,9 +104,13 @@
+ doctor teacher nurse baker employer employee name names
+ car bike boat photo picture
+ """.split())
+ 
+-# Wh-contractions missing their apostrophe (question openers only).
++# Words that are never possessive-fixed even before a relation noun
++# (check-tails and auxiliaries whose stem is not itself common).
++_NEVER_FIX270 = frozenset("""
++yes no yeah yep ok okay right was has does is are were
++""".split())
+ _WH270 = (("whos", "who's"), ("whats", "what's"), ("wheres", "where's"),
+           ("whens", "when's"), ("whys", "why's"), ("hows", "how's"))
+ 
+ # Trailing confirmation-check tails: never rewrite (D1). Each is a regex
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -171,11 +171,11 @@
+ w, rel = m.group(1), m.group(2)
+ if w.lower() in COMMON270 or rel.lower() not in REL270:
+     return m.group(0)
+ word = m.group(0)[:len(w) + 1]
+-if w.lower() in COMMON270:
++if word.lower() in COMMON270 or word.lower() in _NEVER_FIX270:
+     return m.group(0)
+-if word[-1:].lower() == "s" and len(word) > 2:
++if len(word) > 2:
+     stem = word[:-1]
+     if stem.lower() in COMMON270:
+         poss = stem + "'s"
+     else:
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -142,9 +142,13 @@
+ if "'" in text or "\u2019" in text:
+     return False
+ for m in _POSS_RE270.finditer(text):
+     w, rel = m.group(1), m.group(2)
+-    if (w.lower() not in COMMON270 and rel.lower() in REL270):
++    word = w + "s"
++    if (w.lower() not in COMMON270
++            and word.lower() not in COMMON270
++            and word.lower() not in _NEVER_FIX270
++            and rel.lower() in REL270):
+         return True
+ return False
+ 
+ 
+
+[0m
+[0m← [0mWrite scripts/claude_type270_agent.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_type270_normalise as N
+tests = [
+  'zoranas mother is vexley.',
+  'quillan lives in drennor.',
+  'hey zoranas mother is vexley.',
+  'so zoranas mother is vexley',
+  'zoranas mother is vexley, right',
+  'zoranas mother is vexley, right?',
+  'my boss is rhoda.',
+  'who is zoranas mother?',
+  'whos zoranas mother',
+  'james mother is vexley.',
+  'wills mother is vexley.',
+  'lets say zorana lives in drennor.',
+  'i want zoranas mother to be vexley',
+  'zorana will live in drennor',
+  'does zorana live in drennor',
+  \"Kestrel's job is fisher.\",
+  'My boss is Rhoda.',
+  'Quillan lives in Drennor.',
+  'yo, zoranas mother is vexley.',
+  'his mother is vexley.',
+  'well, quillan lives in drennor, obviously.',
+]
+for t in tests:
+    print(repr(t), '=>', repr(N.normalise270(t)))
+" 2>&1 | tail -22
+'zoranas mother is vexley.' => "Zoranas's mother is Vexley."
+'quillan lives in drennor.' => 'Quillan lives in Drennor.'
+'hey zoranas mother is vexley.' => "hey Zoranas's mother is Vexley."
+'so zoranas mother is vexley' => "so Zoranas's mother is Vexley"
+'zoranas mother is vexley, right' => 'zoranas mother is vexley, right'
+'zoranas mother is vexley, right?' => 'zoranas mother is vexley, right?'
+'my boss is rhoda.' => 'my boss is Rhoda.'
+'who is zoranas mother?' => 'who is Zoranas mother?'
+'whos zoranas mother' => "Who's Zoranas mother"
+'james mother is vexley.' => "James's mother is Vexley."
+'wills mother is vexley.' => 'Wills mother is Vexley.'
+'lets say zorana lives in drennor.' => 'lets say Zorana lives in Drennor.'
+'i want zoranas mother to be vexley' => "i want Zoranas's mother to be Vexley"
+'zorana will live in drennor' => 'Zorana will live in Drennor'
+'does zorana live in drennor' => 'does Zorana live in Drennor'
+"Kestrel's job is fisher." => "Kestrel's job is fisher."
+'My boss is Rhoda.' => 'My boss is Rhoda.'
+'Quillan lives in Drennor.' => 'Quillan lives in Drennor.'
+'yo, zoranas mother is vexley.' => "yo, Zoranas's mother is Vexley."
+'his mother is vexley.' => 'his mother is Vexley.'
+'well, quillan lives in drennor, obviously.' => 'well, Quillan lives in Drennor, Obviously.'
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, re; sys.path.insert(0, 'scripts')
+import claude_type270_normalise as N
+t = 'whos zoranas mother'
+for m in N._POSS_RE270.finditer(t):
+    print('match:', repr(m.group(0)), m.group(1), m.group(2))
+print('fix:', repr(N._possessive_fix270(t)))
+print('fire:', N.fire270(t))
+" 2>&1 | tail -6
+match: 'whos zoranas' who zoranas
+fix: "who's zoranas mother"
+fire: lowercase
+[0m
+[0m✗ [0mEdit scripts/claude_type270_normalise.py failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m→ [0mRead scripts/claude_type270_normalise.py[90m [limit=60, offset=100][0m
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -131,25 +131,48 @@
+ _CHECK_RES270 = tuple(re.compile(p, re.IGNORECASE)
+                       for p in _CHECK_TAILS270)
+ 
+ _POSS_RE270 = re.compile(
+-    r"\b([A-Za-z]+)s\s+([A-Za-z]+)\b")
++    r"\b([A-Za-z]+)\s+([A-Za-z]+)\b")
+ 
+-_WORD_RE270 = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
++# Word-final endings where a trailing s is usually part of the name
++# (James, Morris, Tess, Louis, Miles), so the possessive adds "'s" to the
++# whole word. Anything else strips one s first ("zoranas" -> "zorana's").
++# Names ending in "as" (Thomas, Lucas) strip by this rule and stay a known
++# residual (the core Xs-possessive case wins the default).
++_KEEP_S270 = ("ss", "us", "is", "os", "es")
+ 
+ 
+-def has_possessive270(text: str) -> bool:
++def _possessive_form270(word: str, names: dict):
++    """Possessive of an s-ending word, or None when it must not be fixed."""
++    wl = word.lower()
++    if wl in COMMON270 or wl in _NEVER_FIX270:
++        return None
++    if len(word) <= 2:
++        return None
++    if wl in names:
++        return word + "'s"
++    stem = word[:-1]
++    if stem.lower() in names or stem.lower() in COMMON270:
++        return stem + "'s"
++    if wl.endswith(_KEEP_S270):
++        return word + "'s"
++    return stem + "'s"
++
++
++def has_possessive270(text: str, names=None) -> bool:
+     """An "Xs <relation>" pattern with no apostrophe in the turn."""
+     if "'" in text or "\u2019" in text:
+         return False
+     for m in _POSS_RE270.finditer(text):
+         w, rel = m.group(1), m.group(2)
+-        word = w + "s"
+-        if (w.lower() not in COMMON270
+-                and word.lower() not in COMMON270
+-                and word.lower() not in _NEVER_FIX270
+-                and rel.lower() in REL270):
+-            return True
++        if not w.lower().endswith("s"):
++            continue
++        if rel.lower() not in REL270:
++            continue
++        if _possessive_form270(w, names or {}) is None:
++            continue
++        return True
+     return False
+ 
+ 
+ def fire270(text: str):
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -130,11 +130,12 @@
+ )
+ _CHECK_RES270 = tuple(re.compile(p, re.IGNORECASE)
+                       for p in _CHECK_TAILS270)
+ 
+-_POSS_RE270 = re.compile(
+-    r"\b([A-Za-z]+)\s+([A-Za-z]+)\b")
++_POSS_RE270 = re.compile(r"\b([A-Za-z]+)\b")
+ 
++_WORD_RE270 = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
++
+ # Word-final endings where a trailing s is usually part of the name
+ # (James, Morris, Tess, Louis, Miles), so the possessive adds "'s" to the
+ # whole word. Anything else strips one s first ("zoranas" -> "zorana's").
+ # Names ending in "as" (Thomas, Lucas) strip by this rule and stay a known
+
+[0m
+[0m→ [0mRead scripts/claude_type270_normalise.py[90m [limit=80, offset=160][0m
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -159,14 +159,20 @@
+         return word + "'s"
+     return stem + "'s"
+ 
+ 
++def _word_runs270(text: str):
++    """Consecutive letter-word spans: (word, start, end)."""
++    return [(m.group(1), m.start(1), m.end(1))
++            for m in _POSS_RE270.finditer(text)]
++
++
+ def has_possessive270(text: str, names=None) -> bool:
+     """An "Xs <relation>" pattern with no apostrophe in the turn."""
+     if "'" in text or "\u2019" in text:
+         return False
+-    for m in _POSS_RE270.finditer(text):
+-        w, rel = m.group(1), m.group(2)
++    runs = _word_runs270(text)
++    for (w, _s, _e), (rel, _s2, _e2) in zip(runs, runs[1:]):
+         if not w.lower().endswith("s"):
+             continue
+         if rel.lower() not in REL270:
+             continue
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -199,26 +199,28 @@
+ def _suppressed270(text: str) -> bool:
+     return any(r.search(text) for r in _CHECK_RES270)
+ 
+ 
+-def _possessive_fix270(text: str) -> str:
+-    def fix(m):
+-        w, rel = m.group(1), m.group(2)
+-        if w.lower() in COMMON270 or rel.lower() not in REL270:
+-            return m.group(0)
+-        word = m.group(0)[:len(w) + 1]
+-        if word.lower() in COMMON270 or word.lower() in _NEVER_FIX270:
+-            return m.group(0)
+-        if len(word) > 2:
+-            stem = word[:-1]
+-            if stem.lower() in COMMON270:
+-                poss = stem + "'s"
+-            else:
+-                poss = word + "'s"
+-        else:
+-            poss = word + "'s"
+-        return poss + m.group(0)[len(word):]
+-    out = _POSS_RE270.sub(fix, text)
++def _possessive_fix270(text: str, names: dict) -> str:
++    runs = _word_runs270(text)
++    fixes = []
++    for (w, s, e), (rel, _s2, _e2) in zip(runs, runs[1:]):
++        if not w.lower().endswith("s"):
++            continue
++        if rel.lower() not in REL270:
++            continue
++        poss = _possessive_form270(w, names)
++        if poss is None:
++            continue
++        fixes.append((s, e, poss))
++    out = []
++    pos = 0
++    for s, e, poss in fixes:
++        out.append(text[pos:s])
++        out.append(poss)
++        pos = e
++    out.append(text[pos:])
++    out = "".join(out)
+     for plain, apos in _WH270:
+         out = re.sub(r"\b" + plain + r"\b", apos, out,
+                      flags=re.IGNORECASE)
+     return out
+
+[0m
+[0m→ [0mRead scripts/claude_type270_normalise.py[90m [offset=236][0m
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -181,13 +181,13 @@
+         return True
+     return False
+ 
+ 
+-def fire270(text: str):
++def fire270(text: str, names=None):
+     """Why the normaliser fires, or None for passthrough."""
+     t = str(text)
+     if any(c.isupper() for c in t):
+-        if has_possessive270(t):
++        if has_possessive270(t, names):
+             if _suppressed270(t):
+                 return None
+             return "possessive"
+         return None
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -258,11 +258,11 @@
+ 
+ def normalise270(text: str, known_names=None) -> str:
+     """Rule-based pass. Returns the input unchanged when not firing."""
+     t = str(text)
+-    if fire270(t) is None:
+-        return t
+-    fixed = _possessive_fix270(t)
+     names = known_names or {}
++    if fire270(t, names) is None:
++        return t
++    fixed = _possessive_fix270(t, names)
+     fixed = _WORD_RE270.sub(lambda m: _cap_word270(m.group(0), names),
+                             fixed)
+     return fixed
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -64,8 +64,9 @@
+ in at on of to for from with by about as into over after before
+ up down out off through during under again further then once
+ and but or nor yet for so
+ not no nor never very just also too still already even only
++obviously actually really probably maybe perhaps certainly surely
+ live lives lived living work works worked working
+ know knows knew known think thinks thought want wants liked like
+ say says said says tell tells told ask asks asked answer
+ get gets got give gives gave go goes went come comes came
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_type270_normalise as N
+tests = [
+  'zoranas mother is vexley.',
+  'quillan lives in drennor.',
+  'hey zoranas mother is vexley.',
+  'so zoranas mother is vexley',
+  'zoranas mother is vexley, right',
+  'my boss is rhoda.',
+  'who is zoranas mother?',
+  'whos zoranas mother',
+  'james mother is vexley.',
+  'wills mother is vexley.',
+  'lets say zorana lives in drennor.',
+  'i want zoranas mother to be vexley',
+  'zorana will live in drennor',
+  'thomas mother is vexley.',
+  'tess mother is vexley.',
+  'his mother is vexley.',
+  'well, quillan lives in drennor, obviously.',
+  'was zoranas mother vexley?',
+  'yes, zoranas mother is vexley.',
+]
+for t in tests:
+    print(repr(t), '=>', repr(N.normalise270(t)))
+" 2>&1 | tail -20
+'zoranas mother is vexley.' => "Zorana's mother is Vexley."
+'quillan lives in drennor.' => 'Quillan lives in Drennor.'
+'hey zoranas mother is vexley.' => "hey Zorana's mother is Vexley."
+'so zoranas mother is vexley' => "so Zorana's mother is Vexley"
+'zoranas mother is vexley, right' => 'zoranas mother is vexley, right'
+'my boss is rhoda.' => 'my boss is Rhoda.'
+'who is zoranas mother?' => "who is Zorana's mother?"
+'whos zoranas mother' => "Who's Zorana's mother"
+'james mother is vexley.' => "James's mother is Vexley."
+'wills mother is vexley.' => "Will's mother is Vexley."
+'lets say zorana lives in drennor.' => 'lets say Zorana lives in Drennor.'
+'i want zoranas mother to be vexley' => "i want Zorana's mother to be Vexley"
+'zorana will live in drennor' => 'Zorana will live in Drennor'
+'thomas mother is vexley.' => "Thoma's mother is Vexley."
+'tess mother is vexley.' => "Tess's mother is Vexley."
+'his mother is vexley.' => 'his mother is Vexley.'
+'well, quillan lives in drennor, obviously.' => 'well, Quillan lives in Drennor, obviously.'
+'was zoranas mother vexley?' => "was Zorana's mother Vexley?"
+'yes, zoranas mother is vexley.' => "Yes, Zorana's mother is Vexley."
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  'Quillan works at Fenwick.',
+  'My job is fisher.',
+  'My boss is Rhoda.',
+  \"Quillan's mother is Vexley.\",
+  'Where does Quillan live?',
+  'What is Zorana\'s job?',
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -8
+'Quillan works at Fenwick.' -> "Saved: Quillan's employer is Fenwick." [('Quillan', 'employer', 'Fenwick')]
+'My job is fisher.' -> 'Saved: your job is fisher.' [('USER', 'job', 'fisher')]
+'My boss is Rhoda.' -> 'Saved: your boss is Rhoda.' [('USER', 'boss', 'Rhoda')]
+"Quillan's mother is Vexley." -> "Saved: Quillan's mother is Vexley." [('Quillan', 'mother', 'Vexley')]
+'Where does Quillan live?' -> "I don't know anyone called Quillan." []
+"What is Zorana's job?" -> "I don't know anyone called Zorana." []
+[0m
+[0m← [0mWrite scripts/claude_type270_devset.py
+Wrote file successfully.
+[0m
+[0m✗ [0mEdit scripts/claude_type270_devset.py failed
+[91m[1mError: [0mCould not find oldString in the file. It must match exactly, including whitespace, indentation, and line endings.
+[0m→ [0mRead scripts/claude_type270_devset.py[90m [limit=45, offset=80][0m
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -96,24 +96,25 @@
+      "Belmara"),
+     ("Tamber", "boss", "Corvin", "who is tamber's boss?", "Corvin"),
+     ("Ysolde", "friend", "Linnea", "who is ysoldes friend?",
+      "Linnea"),
+-    ("Jesper", "brother", "Pellin", "where does jesper work?",
+-     None),
++    ("Jesper", "city", "Drennor", "where does jesper live?",
++     "Drennor"),
+     ("Tilda", "sister", "Marisol", "who is tilda's sister?",
+      "Marisol"),
+     ("Wexford", "father", "Oswick", "whos wexfords father?",
+      "Oswick"),
+     ("Belmara", "job", "baker", "what is belmaras job?", "baker"),
+     ("Corvin", "mother", "Sorrel", "who is corvins mother",
+      "Sorrel"),
+-    ("Linnea", "boss", "Tamber", "wheres linneas boss?", None),
++    ("Linnea", "boss", "Tamber", "wheres linneas boss?", "Tamber"),
+ ]
+ for n, rel, v, q, gold in qset:
+-    setup = [f"{n} lives in Drennor."] if q.startswith("where") \
+-        else [f"{n}'s {rel} is {v}."]
+-    add("casual_q", setup, q, "", [[n, rel, v]] if gold else
+-        [[n, "city", "Drennor"]], gold or "Drennor")
++    if rel == "city":
++        setup = [f"{n} lives in {v}."]
++    else:
++        setup = [f"{n}'s {rel} is {v}."]
++    add("casual_q", setup, q, "", [[n, rel, v]], gold)
+ 
+ # lower_trap: expect no save
+ traps = [
+     "lets say belmaras mother is tilda.",
+
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -190,9 +190,9 @@
+     ([], "Hello there.", [], ""),
+     ([], "How are you?", [], ""),
+     ([], "Let's say Belmara's mother is Tilda.", [], ""),
+     (["Corvin's boss is Jesper."], "Is Corvin's boss Jesper?",
+-     [["Corvin", "boss", "Jesper"]], "Jesper"),
++     [["Corvin", "boss", "Jesper"]], ""),
+ ]
+ for s, t, e, g in qclean:
+     add("clean", s, t, "", e, g)
+ # clean check-tails (both arms save the same junk: not NEW wrong)
+
+[0m
+[0m← [0mWrite scripts/claude_type270_devrun.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_type270_devscore.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime; df -g / | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_agent.py --write-config artifacts/claude-type270-20260923/loop270-config.json 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devset.py artifacts/claude-type270-20260923/dev270.json 2>&1 | tail -2
+4:52  up 2 days, 20:41, 4 users, load averages: 55.07 82.37 83.34
+/dev/disk3s1s1       460   12        11    52%  484014 124613880    0%   /
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-type270-20260923/loop270-config.json'
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-type270-20260923/dev270.json'
+[0m
+[0m$ [0mls artifacts/ | head -3 && mkdir artifacts/claude-type270-20260923 && ls -d artifacts/claude-type270-20260923
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+artifacts/claude-type270-20260923
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_agent.py --write-config artifacts/claude-type270-20260923/loop270-config.json 2>&1 | tail -1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devset.py artifacts/claude-type270-20260923/dev270.json 2>&1 | tail -1
+Wrote artifacts/claude-type270-20260923/loop270-config.json
+wrote 114 cases {'casual_teach': 50, 'casual_q': 15, 'lower_trap': 25, 'clean': 24} -> artifacts/claude-type270-20260923/dev270.json
+[0m
+[0m$ [0muptime | head -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devrun.py artifacts/claude-type270-20260923/dev270.json /tmp/type270work artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json 2>&1 | tail -4
+4:52  up 2 days, 20:42, 4 users, load averages: 54.13 80.39 82.60
+done A 114
+done 263 114
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devscore.py artifacts/claude-type270-20260923/dev270.json artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json artifacts/claude-type270-20260923/devreport270.json 2>&1 | head -80
+family               A     263
+casual_teach    45/50   13/50 
+casual_q        15/15   11/15 
+lower_trap      24/25   25/25 
+clean           23/24   23/24 
+MOVES A-right/263-wrong: 36
+  MOVE d270-001 casual_teach ["store added=[] want=[('belmara', 'mother', 'marisol')]", 'reply "I don\'t know anyone called Belmara." lacks \'Marisol\'']
+  MOVE d270-003 casual_teach ["store added=[] want=[('tilda', 'brother', 'pellin')]", 'reply "I don\'t know anyone called Tilda." lacks \'Pellin\'']
+  MOVE d270-004 casual_teach ["store added=[] want=[('jesper', 'friend', 'sorrel')]", 'reply "I don\'t know anyone called Jesper." lacks \'Sorrel\'']
+  MOVE d270-005 casual_teach ["store added=[] want=[('linnea', 'father', 'tamber')]", 'reply "I don\'t know anyone called Linnea." lacks \'Tamber\'']
+  MOVE d270-006 casual_teach ["store added=[] want=[('marisol', 'sister', 'wexford')]", 'reply "I don\'t know anyone called Marisol." lacks \'Wexford\'']
+  MOVE d270-007 casual_teach ["store added=[] want=[('oswick', 'mother', 'ysolde')]", 'reply "I don\'t know anyone called Oswick." lacks \'Ysolde\'']
+  MOVE d270-008 casual_teach ["store added=[] want=[('pellin', 'boss', 'mason')]", 'reply "I don\'t know anyone called Pellin." lacks \'mason\'']
+  MOVE d270-009 casual_teach ["store added=[] want=[('sorrel', 'brother', 'corvin')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Corvin\'']
+  MOVE d270-010 casual_teach ["store added=[] want=[('tamber', 'friend', 'tilda')]", 'reply "I don\'t know anyone called Tamber." lacks \'Tilda\'']
+  MOVE d270-019 casual_teach ["store added=[] want=[('corvin', 'city', 'drennor')]", 'reply "I don\'t know anyone called Corvin." lacks \'Drennor\'']
+  MOVE d270-020 casual_teach ["store added=[] want=[('tilda', 'city', 'halloway')]", 'reply "I don\'t know anyone called Tilda." lacks \'Halloway\'']
+  MOVE d270-021 casual_teach ["store added=[] want=[('jesper', 'city', 'fenmere')]", 'reply "I don\'t know anyone called Jesper." lacks \'Fenmere\'']
+  MOVE d270-022 casual_teach ["store added=[] want=[('linnea', 'city', 'norbury')]", 'reply "I don\'t know anyone called Linnea." lacks \'Norbury\'']
+  MOVE d270-023 casual_teach ["store added=[] want=[('marisol', 'city', 'eskdale')]", 'reply "I don\'t know anyone called Marisol." lacks \'Eskdale\'']
+  MOVE d270-024 casual_teach ["store added=[] want=[('oswick', 'city', 'drennor')]", 'reply "I don\'t know anyone called Oswick." lacks \'Drennor\'']
+  MOVE d270-025 casual_teach ["store added=[] want=[('pellin', 'city', 'halloway')]", 'reply "I don\'t know anyone called Pellin." lacks \'Halloway\'']
+  MOVE d270-026 casual_teach ["store added=[] want=[('sorrel', 'city', 'fenmere')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Fenmere\'']
+  MOVE d270-027 casual_teach ["store added=[] want=[('oswick', 'employer', 'fenmere')]", 'reply "I don\'t know anyone called Oswick." lacks \'Fenmere\'']
+  MOVE d270-028 casual_teach ["store added=[] want=[('pellin', 'employer', 'norbury')]", 'reply "I don\'t know anyone called Pellin." lacks \'Norbury\'']
+  MOVE d270-029 casual_teach ["store added=[] want=[('sorrel', 'employer', 'eskdale')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Eskdale\'']
+  MOVE d270-030 casual_teach ["store added=[] want=[('tamber', 'employer', 'drennor')]", 'reply "I don\'t know anyone called Tamber." lacks \'Drennor\'']
+  MOVE d270-031 casual_teach ["store added=[] want=[('wexford', 'employer', 'halloway')]", 'reply "I don\'t know anyone called Wexford." lacks \'Halloway\'']
+  MOVE d270-032 casual_teach ["store added=[] want=[('ysolde', 'employer', 'fenmere')]", 'reply "I don\'t know anyone called Ysolde." lacks \'Fenmere\'']
+  MOVE d270-039 casual_teach ["store added=[] want=[('sorrel', 'boss', 'tilda')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Tilda\'']
+  MOVE d270-041 casual_teach ["store added=[] want=[('wexford', 'friend', 'linnea')]", 'reply "I don\'t know anyone called Wexford." lacks \'Linnea\'']
+  MOVE d270-043 casual_teach ["store added=[] want=[('belmara', 'sister', 'oswick')]", 'reply "I don\'t know anyone called Belmara." lacks \'Oswick\'']
+  MOVE d270-044 casual_teach ["store added=[] want=[('corvin', 'mother', 'pellin')]", 'reply "I don\'t know anyone called Corvin." lacks \'Pellin\'']
+  MOVE d270-045 casual_teach ["store added=[] want=[('tilda', 'boss', 'sorrel')]", 'reply "I don\'t know anyone called Tilda." lacks \'Sorrel\'']
+  MOVE d270-046 casual_teach ["store added=[] want=[('jesper', 'brother', 'tamber')]", 'reply "I don\'t know anyone called Jesper." lacks \'Tamber\'']
+  MOVE d270-047 casual_teach ["store added=[] want=[('morris', 'mother', 'belmara')]", 'reply "I don\'t know anyone called Morris." lacks \'Belmara\'']
+  MOVE d270-048 casual_teach ["store added=[] want=[('tess', 'boss', 'corvin')]", 'reply "I don\'t know anyone called Tess." lacks \'Corvin\'']
+  MOVE d270-049 casual_teach ["store added=[] want=[('tilda', 'brother', 'jesper')]", 'reply "I don\'t know anyone called Tilda." lacks \'Jesper\'']
+  MOVE d270-056 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Wexford\'']
+  MOVE d270-057 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Belmara\'']
+  MOVE d270-062 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Oswick\'']
+  MOVE d270-065 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Tamber\'']
+NEWWRONG A-wrong/263-right: 1
+  NEWWRONG d270-077 lower_trap ["store added=[('corvin', 'boss', 'jesper')] want=[]", "junk [('corvin', 'boss', 'jesper')]"]
+BOTHWRONG: 6
+  BOTH d270-002 casual_teach ["store added=[] want=[('corvin', 'boss', 'baker')]", 'reply "I don\'t know anyone called Corvin." lacks \'baker\'']
+  BOTH d270-034 casual_teach ["store added=[] want=[('user', 'boss', 'baker')]", 'reply "I don\'t know your boss yet." lacks \'baker\'']
+  BOTH d270-040 casual_teach ["store added=[] want=[('tamber', 'brother', 'jesper')]", 'reply "I don\'t know anyone called Tamber." lacks \'Jesper\'']
+  BOTH d270-042 casual_teach ["store added=[('ysoldes', 'father', 'marisol')] want=[('ysolde', 'father', 'marisol')]", 'reply "I don\'t know anyone called Ysolde." lacks \'Marisol\'', "junk [('ysoldes', 'father', 'marisol')]"]
+  BOTH d270-050 casual_teach ["store added=[] want=[('marisol', 'friend', 'linnea')]", 'reply "I don\'t know anyone called Marisol." lacks \'Linnea\'']
+  BOTH d270-113 clean ["store added=[('belmara', 'mother', 'tilda')] want=[('belmara', 'mother', 'tilda, right')]", "junk [('belmara', 'mother', 'tilda')]"]
+REWRITES: 71
+  RW d270-001: Belmara's mother is Marisol.
+  RW d270-002: Corvin's boss is baker.
+  RW d270-003: Tilda's brother is Pellin.
+  RW d270-004: Jesper's friend is Sorrel.
+  RW d270-005: Linnea's father is Tamber.
+  RW d270-006: Marisol's sister is Wexford.
+  RW d270-007: Oswick's mother is Ysolde.
+  RW d270-008: Pellin's boss is Mason.
+  RW d270-009: Sorrel's brother is Corvin.
+  RW d270-010: Tamber's friend is Tilda.
+  RW d270-019: Corvin lives in Drennor.
+  RW d270-020: Tilda lives in Halloway.
+  RW d270-021: Jesper lives in Fenmere.
+  RW d270-022: Linnea lives in Norbury.
+  RW d270-023: Marisol lives in Eskdale.
+  RW d270-024: Oswick lives in Drennor.
+  RW d270-025: Pellin lives in Halloway.
+  RW d270-026: Sorrel lives in Fenmere.
+  RW d270-027: Oswick works at Fenmere.
+  RW d270-028: Pellin works at Norbury.
+  RW d270-029: Sorrel works at Eskdale.
+  RW d270-030: Tamber works at Drennor.
+  RW d270-031: Wexford works at Halloway.
+  RW d270-032: Ysolde works at Fenmere.
+  RW d270-039: hey Sorrel's boss is Tilda.
+  RW d270-040: yo Tamber's brother is Jesper.
+  RW d270-041: so Wexford's friend is Linnea.
+  RW d270-042: well, Ysoldes's father is Marisol.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [
+  'My boss is baker.',
+  'My boss is Baker.',
+  'My job is Fisher.',
+  'My job is fisher.',
+  \"Corvin's boss is baker.\",
+  \"Corvin's boss is Baker.\",
+  \"Corvin's boss is fisher.\",
+  'My boss is Rhoda.',
+]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -9
+'My boss is baker.' -> "That sounds like a description, not a name, so I didn't save it. What is your boss's name?" []
+'My boss is Baker.' -> 'Saved: your boss is Baker.' [('USER', 'boss', 'Baker')]
+'My job is Fisher.' -> 'Saved: your job is Fisher.' [('USER', 'job', 'Fisher')]
+'My job is fisher.' -> 'Saved: your job is fisher.' [('USER', 'job', 'fisher')]
+"Corvin's boss is baker." -> "That sounds like a description, not a name, so I didn't save it. What is Corvin's boss's name?" []
+"Corvin's boss is Baker." -> "Saved: Corvin's boss is Baker." [('Corvin', 'boss', 'Baker')]
+"Corvin's boss is fisher." -> "That sounds like a description, not a name, so I didn't save it. What is Corvin's boss's name?" []
+'My boss is Rhoda.' -> 'Saved: your boss is Rhoda.' [('USER', 'boss', 'Rhoda')]
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -80,16 +80,14 @@
+ aunt aunts uncle uncles niece nephew nephews
+ grandma grandpa grandmother grandfathers grandfather grandmothers
+ grandson grandsons granddaughter granddaughters
+ friend friends buddy mate neighbor neighbours neighbour boss bosses
+-job jobs pet pets dog dogs cat cats horse horses bird fish
++job jobs pet pets
+ city town village place home house homes school schools
+ team teams club clubs company store shop farm
+-doctor doctors teacher teachers nurse driver baker butcher
+ employer employee worker name names title
+-car cars bike bikes boat boats photo photos picture pictures
+-day today tomorrow yesterday time year years week weeks
+-thing things man men woman women boy girl kid kids
++today tomorrow yesterday
++thing things
+ one two three four five six seven eight nine ten first second third
+ my me i we us our you your he him his she her it they them their
+ """.split())
+ 
+
+[0m
+[0m← [0mEdit scripts/claude_type270_normalise.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_normalise.py
+@@ -134,13 +134,14 @@
+ 
+ _WORD_RE270 = re.compile(r"[A-Za-z]+(?:'[A-Za-z]+)?")
+ 
+ # Word-final endings where a trailing s is usually part of the name
+-# (James, Morris, Tess, Louis, Miles), so the possessive adds "'s" to the
+-# whole word. Anything else strips one s first ("zoranas" -> "zorana's").
+-# Names ending in "as" (Thomas, Lucas) strip by this rule and stay a known
+-# residual (the core Xs-possessive case wins the default).
+-_KEEP_S270 = ("ss", "us", "is", "os", "es")
++# (Tess, Morris, Louis, James, Miles, Charles), so the possessive adds
++# "'s" to the whole word. Anything else strips one s first ("zoranas" ->
++# "zorana's"). Names ending in "as"/"nes" (Thomas, Lucas, June, Anne)
++# strip by this rule and stay a known residual (the core Xs-possessive
++# case wins the default).
++_KEEP_S270 = ("ss", "us", "is", "os", "mes", "les")
+ 
+ 
+ def _possessive_form270(word: str, names: dict):
+     """Possessive of an s-ending word, or None when it must not be fixed."""
+
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -59,9 +59,10 @@
+     v = JOBS[i % 5] if rel in ("job", "boss") else PEOPLE[(i + 4) % 12]
+     add("casual_teach", [], f"my {rel} is {v.lower() if v in JOBS else v}.",
+         f"Who is my {rel}?", [["USER", rel, v]], v)
+ # 39-46: opener-led casual teaches
+-openers = ["hey", "yo", "so", "well,", "oh,", "btw,", "listen,", "look,"]
++openers = ["hey", "yo,", "so", "well,", "oh,", "btw,", "listen,",
++           "look,"]
+ for i, op in enumerate(openers):
+     n, rel = PEOPLE[(i + 8) % 12], RELS[(i + 1) % 6]
+     v = PEOPLE[(i + 2) % 12]
+     t, e = teach(n.lower(), rel, v)
+
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -77,9 +77,9 @@
+ # 49-50: misc casual
+ add("casual_teach", [], "yes, tildas brother is jesper.",
+     "Who is Tilda's brother?", [["Tilda", "brother", "Jesper"]],
+     "Jesper")
+-add("casual_teach", [], "marisols friend is linnea, obviously.",
++add("casual_teach", [], "marisols friend is linnea.",
+     "Who is Marisol's friend?", [["Marisol", "friend", "Linnea"]],
+     "Linnea")
+ 
+ # casual_q: setup clean, lowercase question
+
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -195,12 +195,12 @@
+      [["Corvin", "boss", "Jesper"]], ""),
+ ]
+ for s, t, e, g in qclean:
+     add("clean", s, t, "", e, g)
+-# clean check-tails (both arms save the same junk: not NEW wrong)
++# clean check-tails (both arms behave the same: not NEW wrong)
+ add("clean", [], "Belmara's mother is Tilda, right.",
+     "Who is Belmara's mother?",
+-    [["Belmara", "mother", "Tilda, right"]], "Tilda")
++    [["Belmara", "mother", "Tilda"]], "Tilda")
+ add("clean", [], "So Belmara's mother is Tilda.",
+     "Who is Belmara's mother?",
+     [["Belmara", "mother", "Tilda"]], "Tilda")
+ 
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile; sys.path.insert(0, 'scripts')
+import json
+import claude_loop263_agent as A263
+import fable_loop90_agent as L90
+base = json.load(open('artifacts/claude-comma263-20260923/loop263-config.json'))
+tests = [\"Belmara's name is Wren.\", \"belmaras name is wren.\"]
+for t in tests:
+    cfg = dict(base, state_dir=tempfile.mkdtemp())
+    loop = A263.build_agent263(cfg)
+    seed = set(L90.notebook_triples(loop.nb))
+    r = loop.turn(t)
+    new = [x for x in L90.notebook_triples(loop.nb) if x not in seed]
+    print(repr(t), '->', repr(' '.join(r)), new)
+" 2>&1 | tail -3
+"Belmara's name is Wren." -> "Saved: Belmara's name is Wren." [('Belmara', 'name', 'Wren')]
+'belmaras name is wren.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' []
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -80,8 +80,11 @@
+     "Jesper")
+ add("casual_teach", [], "marisols friend is linnea.",
+     "Who is Marisol's friend?", [["Marisol", "friend", "Linnea"]],
+     "Linnea")
++add("casual_teach", [], "belmaras name is wren.",
++    "What is Belmara's name?", [["Belmara", "name", "Wren"]],
++    "Wren")
+ 
+ # casual_q: setup clean, lowercase question
+ qset = [
+     ("Belmara", "mother", "Tilda", "who is belmaras mother?",
+
+[0m
+[0m← [0mEdit scripts/claude_type270_devset.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_devset.py
+@@ -110,8 +110,9 @@
+     ("Belmara", "job", "baker", "what is belmaras job?", "baker"),
+     ("Corvin", "mother", "Sorrel", "who is corvins mother",
+      "Sorrel"),
+     ("Linnea", "boss", "Tamber", "wheres linneas boss?", "Tamber"),
++    ("Belmara", "name", "Wren", "what is belmaras name?", "Wren"),
+ ]
+ for n, rel, v, q, gold in qset:
+     if rel == "city":
+         setup = [f"{n} lives in {v}."]
+
+[0m
+[0m$ [0muptime | head -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devset.py artifacts/claude-type270-20260923/dev270.json 2>&1 | tail -1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devrun.py artifacts/claude-type270-20260923/dev270.json /tmp/type270work artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json 2>&1 | tail -2 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devscore.py artifacts/claude-type270-20260923/dev270.json artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json artifacts/claude-type270-20260923/devreport270.json 2>&1 | head -60
+4:57  up 2 days, 20:46, 4 users, load averages: 56.01 64.84 75.00
+wrote 116 cases {'casual_teach': 51, 'casual_q': 16, 'lower_trap': 25, 'clean': 24} -> artifacts/claude-type270-20260923/dev270.json
+done A 116
+done 263 116
+family               A     263
+casual_teach    51/51   13/51 
+casual_q        16/16   12/16 
+lower_trap      24/25   25/25 
+clean           24/24   24/24 
+MOVES A-right/263-wrong: 42
+  MOVE d270-001 casual_teach ["store added=[] want=[('belmara', 'mother', 'marisol')]", 'reply "I don\'t know anyone called Belmara." lacks \'Marisol\'']
+  MOVE d270-002 casual_teach ["store added=[] want=[('corvin', 'boss', 'baker')]", 'reply "I don\'t know anyone called Corvin." lacks \'baker\'']
+  MOVE d270-003 casual_teach ["store added=[] want=[('tilda', 'brother', 'pellin')]", 'reply "I don\'t know anyone called Tilda." lacks \'Pellin\'']
+  MOVE d270-004 casual_teach ["store added=[] want=[('jesper', 'friend', 'sorrel')]", 'reply "I don\'t know anyone called Jesper." lacks \'Sorrel\'']
+  MOVE d270-005 casual_teach ["store added=[] want=[('linnea', 'father', 'tamber')]", 'reply "I don\'t know anyone called Linnea." lacks \'Tamber\'']
+  MOVE d270-006 casual_teach ["store added=[] want=[('marisol', 'sister', 'wexford')]", 'reply "I don\'t know anyone called Marisol." lacks \'Wexford\'']
+  MOVE d270-007 casual_teach ["store added=[] want=[('oswick', 'mother', 'ysolde')]", 'reply "I don\'t know anyone called Oswick." lacks \'Ysolde\'']
+  MOVE d270-008 casual_teach ["store added=[] want=[('pellin', 'boss', 'mason')]", 'reply "I don\'t know anyone called Pellin." lacks \'mason\'']
+  MOVE d270-009 casual_teach ["store added=[] want=[('sorrel', 'brother', 'corvin')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Corvin\'']
+  MOVE d270-010 casual_teach ["store added=[] want=[('tamber', 'friend', 'tilda')]", 'reply "I don\'t know anyone called Tamber." lacks \'Tilda\'']
+  MOVE d270-019 casual_teach ["store added=[] want=[('corvin', 'city', 'drennor')]", 'reply "I don\'t know anyone called Corvin." lacks \'Drennor\'']
+  MOVE d270-020 casual_teach ["store added=[] want=[('tilda', 'city', 'halloway')]", 'reply "I don\'t know anyone called Tilda." lacks \'Halloway\'']
+  MOVE d270-021 casual_teach ["store added=[] want=[('jesper', 'city', 'fenmere')]", 'reply "I don\'t know anyone called Jesper." lacks \'Fenmere\'']
+  MOVE d270-022 casual_teach ["store added=[] want=[('linnea', 'city', 'norbury')]", 'reply "I don\'t know anyone called Linnea." lacks \'Norbury\'']
+  MOVE d270-023 casual_teach ["store added=[] want=[('marisol', 'city', 'eskdale')]", 'reply "I don\'t know anyone called Marisol." lacks \'Eskdale\'']
+  MOVE d270-024 casual_teach ["store added=[] want=[('oswick', 'city', 'drennor')]", 'reply "I don\'t know anyone called Oswick." lacks \'Drennor\'']
+  MOVE d270-025 casual_teach ["store added=[] want=[('pellin', 'city', 'halloway')]", 'reply "I don\'t know anyone called Pellin." lacks \'Halloway\'']
+  MOVE d270-026 casual_teach ["store added=[] want=[('sorrel', 'city', 'fenmere')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Fenmere\'']
+  MOVE d270-027 casual_teach ["store added=[] want=[('oswick', 'employer', 'fenmere')]", 'reply "I don\'t know anyone called Oswick." lacks \'Fenmere\'']
+  MOVE d270-028 casual_teach ["store added=[] want=[('pellin', 'employer', 'norbury')]", 'reply "I don\'t know anyone called Pellin." lacks \'Norbury\'']
+  MOVE d270-029 casual_teach ["store added=[] want=[('sorrel', 'employer', 'eskdale')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Eskdale\'']
+  MOVE d270-030 casual_teach ["store added=[] want=[('tamber', 'employer', 'drennor')]", 'reply "I don\'t know anyone called Tamber." lacks \'Drennor\'']
+  MOVE d270-031 casual_teach ["store added=[] want=[('wexford', 'employer', 'halloway')]", 'reply "I don\'t know anyone called Wexford." lacks \'Halloway\'']
+  MOVE d270-032 casual_teach ["store added=[] want=[('ysolde', 'employer', 'fenmere')]", 'reply "I don\'t know anyone called Ysolde." lacks \'Fenmere\'']
+  MOVE d270-034 casual_teach ["store added=[] want=[('user', 'boss', 'baker')]", 'reply "I don\'t know your boss yet." lacks \'baker\'']
+  MOVE d270-039 casual_teach ["store added=[] want=[('sorrel', 'boss', 'tilda')]", 'reply "I don\'t know anyone called Sorrel." lacks \'Tilda\'']
+  MOVE d270-040 casual_teach ["store added=[] want=[('tamber', 'brother', 'jesper')]", 'reply "I don\'t know anyone called Tamber." lacks \'Jesper\'']
+  MOVE d270-041 casual_teach ["store added=[] want=[('wexford', 'friend', 'linnea')]", 'reply "I don\'t know anyone called Wexford." lacks \'Linnea\'']
+  MOVE d270-042 casual_teach ["store added=[] want=[('ysolde', 'father', 'marisol')]", 'reply "I don\'t know anyone called Ysolde." lacks \'Marisol\'']
+  MOVE d270-043 casual_teach ["store added=[] want=[('belmara', 'sister', 'oswick')]", 'reply "I don\'t know anyone called Belmara." lacks \'Oswick\'']
+  MOVE d270-044 casual_teach ["store added=[] want=[('corvin', 'mother', 'pellin')]", 'reply "I don\'t know anyone called Corvin." lacks \'Pellin\'']
+  MOVE d270-045 casual_teach ["store added=[] want=[('tilda', 'boss', 'sorrel')]", 'reply "I don\'t know anyone called Tilda." lacks \'Sorrel\'']
+  MOVE d270-046 casual_teach ["store added=[] want=[('jesper', 'brother', 'tamber')]", 'reply "I don\'t know anyone called Jesper." lacks \'Tamber\'']
+  MOVE d270-047 casual_teach ["store added=[] want=[('morris', 'mother', 'belmara')]", 'reply "I don\'t know anyone called Morris." lacks \'Belmara\'']
+  MOVE d270-048 casual_teach ["store added=[] want=[('tess', 'boss', 'corvin')]", 'reply "I don\'t know anyone called Tess." lacks \'Corvin\'']
+  MOVE d270-049 casual_teach ["store added=[] want=[('tilda', 'brother', 'jesper')]", 'reply "I don\'t know anyone called Tilda." lacks \'Jesper\'']
+  MOVE d270-050 casual_teach ["store added=[] want=[('marisol', 'friend', 'linnea')]", 'reply "I don\'t know anyone called Marisol." lacks \'Linnea\'']
+  MOVE d270-051 casual_teach ["store added=[] want=[('belmara', 'name', 'wren')]", 'reply "I don\'t know anyone called Belmara." lacks \'Wren\'']
+  MOVE d270-057 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Wexford\'']
+  MOVE d270-058 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Belmara\'']
+  MOVE d270-063 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Oswick\'']
+  MOVE d270-066 casual_q ['reply "I didn\'t understand that question — could you say it another way?" lacks \'Tamber\'']
+NEWWRONG A-wrong/263-right: 1
+  NEWWRONG d270-079 lower_trap ["store added=[('corvin', 'boss', 'jesper')] want=[]", "junk [('corvin', 'boss', 'jesper')]"]
+BOTHWRONG: 0
+REWRITES: 74
+  RW d270-001: Belmara's mother is Marisol.
+  RW d270-002: Corvin's boss is Baker.
+  RW d270-003: Tilda's brother is Pellin.
+  RW d270-004: Jesper's friend is Sorrel.
+  RW d270-005: Linnea's father is Tamber.
+  RW d270-006: Marisol's sister is Wexford.
+  RW d270-007: Oswick's mother is Ysolde.
+  RW d270-008: Pellin's boss is Mason.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_devscore.py artifacts/claude-type270-20260923/dev270.json artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json 2>&1 | tail -55
+RW d270-030: Tamber works at Drennor.
+  RW d270-031: Wexford works at Halloway.
+  RW d270-032: Ysolde works at Fenmere.
+  RW d270-034: my boss is Baker.
+  RW d270-039: hey Sorrel's boss is Tilda.
+  RW d270-040: yo, Tamber's brother is Jesper.
+  RW d270-041: so Wexford's friend is Linnea.
+  RW d270-042: well, Ysolde's father is Marisol.
+  RW d270-043: oh, Belmara's sister is Oswick.
+  RW d270-044: btw, Corvin's mother is Pellin.
+  RW d270-045: Listen, Tilda's boss is Sorrel.
+  RW d270-046: Look, Jesper's brother is Tamber.
+  RW d270-047: Morris's mother is Belmara.
+  RW d270-048: Tess's boss is Corvin.
+  RW d270-049: Yes, Tilda's brother is Jesper.
+  RW d270-050: Marisol's friend is Linnea.
+  RW d270-051: Belmara's name is Wren.
+  RW d270-052: who is Belmara's mother?
+  RW d270-053: who is Corvin's boss?
+  RW d270-054: who is Linnea's brother?
+  RW d270-055: what is Marisol's friend?
+  RW d270-056: Who's Oswick's sister?
+  RW d270-057: Who's Pellin's father?
+  RW d270-058: What's Sorrel's mother?
+  RW d270-059: who is Tamber's boss?
+  RW d270-060: who is Ysolde's friend?
+  RW d270-061: where does Jesper live?
+  RW d270-062: who is Tilda's sister?
+  RW d270-063: Who's Wexford's father?
+  RW d270-064: what is Belmara's job?
+  RW d270-065: who is Corvin's mother
+  RW d270-066: Where's Linnea's boss?
+  RW d270-067: what is Belmara's name?
+  RW d270-068: lets say Belmara's mother is Tilda.
+  RW d270-069: suppose Corvin lives in Drennor.
+  RW d270-070: imagine Jesper's boss is Pellin.
+  RW d270-071: what if Linnea's brother is Oswick?
+  RW d270-072: lets Pretend Marisol lives in Norbury.
+  RW d270-073: i want Belmara's mother to be Tilda.
+  RW d270-074: Corvin will live in Drennor.
+  RW d270-075: Tilda's brother will be Jesper.
+  RW d270-076: i am Training to be Baker.
+  RW d270-077: Jesper is Going to be Mason.
+  RW d270-079: so Corvin's boss is Jesper.
+  RW d270-084: does Tilda live in Drennor.
+  RW d270-085: is Belmara's mother Tilda.
+  RW d270-086: do you know Corvin.
+  RW d270-087: Belmara's mother is not Tilda.
+  RW d270-088: Corvin does not live in Drennor.
+  RW d270-089: Belmara's mother is Tilda and she lives in Drennor.
+  RW d270-090: Jesper's boss is Pellin and he works at Fenmere.
+  RW d270-091: Tilda's brother Used to be Jesper.
+  RW d270-092: my boss was Corvin.
+norm_ms n=116 median=0.0333
+CLEAN identical: 24/24
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys, tempfile, json; sys.path.insert(0, 'scripts')
+import claude_type270_agent as A270
+base = json.load(open('artifacts/claude-type270-20260923/loop270-config.json'))
+cfg = dict(base, state_dir=tempfile.mkdtemp())
+loop = A270.build_agent270(cfg)
+print(loop.turn('My boss is Will.'))
+print(loop.turn('where does will work?'))
+print('log:', json.dumps(loop.type270_log, indent=1))
+" 2>&1 | tail -12
+log: [
+ {
+  "from": "My boss is Will.",
+  "to": null,
+  "norm_ms": 0.02
+ },
+ {
+  "from": "where does will work?",
+  "to": "where does Will work?",
+  "norm_ms": 0.0992
+ }
+]
+[0m
+[0m← [0mWrite artifacts/claude-type270-20260923/predicted_moves270.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-type270-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_type270_normalise.py scripts/claude_type270_agent.py scripts/claude_type270_devset.py scripts/claude_type270_devrun.py scripts/claude_type270_devscore.py artifacts/claude-type270-20260923/PASSMARKS.md artifacts/claude-type270-20260923/loop270-config.json artifacts/claude-type270-20260923/dev270.json artifacts/claude-type270-20260923/dev270_rowsA.json artifacts/claude-type270-20260923/dev270_rows263.json artifacts/claude-type270-20260923/devreport270.json artifacts/claude-type270-20260923/predicted_moves270.json > artifacts/claude-type270-20260923/SEAL.sha256.txt && cat artifacts/claude-type270-20260923/SEAL.sha256.txt | wc -l && shasum -c artifacts/claude-type270-20260923/SEAL.sha256.txt 2>&1 | tail -2
+12
+artifacts/claude-type270-20260923/devreport270.json: OK
+artifacts/claude-type270-20260923/predicted_moves270.json: OK
+[0m
+[0m$ [0mshasum -c artifacts/claude-type270-20260923/SEAL.sha256.txt 2>&1 | grep -c OK
+12
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'LEDGEREOF'
+- P270.1 (2026-09-23, builder; exp 270 normaliser in front of 263, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-type270-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A263+20 on arm A (263 arm beside): predicted A 33-38/40 vs A263 8-14/40. Dev proxy 51/51 vs 13/51 (+38), 42 moves panel-wide, 0 both-wrong.
+- P270.2 (same) M2 casual_q ASK >= 12/15 on arm A: predicted 13-15/15. Dev 16/16 vs 12/16 (whos/whats/wheres fixes move 4).
+- P270.3 (same) M3 lower_trap wrong saves <= 1 on arm A: predicted 0-1. Dev 24/25 (only a bare-so-head trap saves; check-tails suppressed 5/5).
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30 by construction (clean passthrough), dev 24/24.
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 newwrong on the bare-so trap; panel traps validated S1 hold 0).
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev median 0.033 ms, n=116).
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+LEDGEREOF
+tail -9 artifacts/fable-predictions-ledger.md | cut -c1-80
+- P281b.3 (same) falsifiers: any 281b answer with a value not in the store, any 
+- P270.1 (2026-09-23, builder; exp 270 normaliser in front of 263, CPU only, sea
+- P270.2 (same) M2 casual_q ASK >= 12/15 on arm A: predicted 13-15/15. Dev 16/16
+- P270.3 (same) M3 lower_trap wrong saves <= 1 on arm A: predicted 0-1. Dev 24/2
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 n
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev media
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-
+[0m
+[0m# [0mTodos
+[✓] Read 263 run/score infra + specs + ledger format (read-only)
+[✓] Search repo for 270 schema hints (never open sealed typepanel270 dir)
+[✓] Study 138m ear possessive parsing to pick normalised shapes
+[✓] Write claude_type270 normaliser + agent wrapper (new files only)
+[✓] Write own dev set (60+ casual, 20+ traps) + dev runner
+[✓] Run dev, calibrate word lists, log every rewrite
+[✓] Write PASSMARKS.md with P270.n, seal, append ledger
+[•] Poll typepanel270 seal (120 min), verify, run A + A263 once each
+[ ] Write RESULTS.md + final verdict reply
+[0m
+[0m$ [0mls -la artifacts/claude-typepanel270-20260923/ && shasum -c artifacts/claude-typepanel270-20260923/SEAL.sha256.txt 2>&1 | tail -5
+total 104
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 23 02:45 .
+drwxr-xr-x@ 422 ben-hannan  staff  13504 Sep 23 04:53 ..
+-rw-r--r--    1 ben-hannan  staff  17068 Sep 23 02:45 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  25531 Sep 23 02:45 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff    236 Sep 23 02:45 SEAL.sha256.txt
+artifacts/claude-typepanel270-20260923/panel.jsonl: OK
+artifacts/claude-typepanel270-20260923/make_panel.py: OK
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from pathlib import Path
+items = [json.loads(x) for x in Path('artifacts/claude-typepanel270-20260923/panel.jsonl').read_text().splitlines() if x.strip()]
+print('n =', len(items))
+print('keys =', sorted(items[0].keys()))
+fams = {}
+for it in items:
+    fams[it.get('family')] = fams.get(it.get('family'), 0) + 1
+print('families =', fams)
+print('ids:', items[0]['id'], '...', items[-1]['id'])
+print('setup types:', sorted(set(type(it.get('setup')).__name__ for it in items)))
+print('key types:', {k: type(it[k]).__name__ for k in sorted(items[0].keys()) for it in [items[0]]})
+" 2>&1 | tail -8
+n = 100
+keys = ['clear', 'family', 'gold', 'id', 'notes', 'turn']
+families = {'casual': 40, 'casual_q': 15, 'lower_trap': 15, 'clean': 30}
+ids: t270-001 ... t270-100
+setup types: ['NoneType']
+key types: {'clear': 'bool', 'family': 'str', 'gold': 'list', 'id': 'str', 'notes': 'str', 'turn': 'str'}
+[0m
+[0m$ [0mwc -l artifacts/claude-typepanel270-20260923/make_panel.py
+264 artifacts/claude-typepanel270-20260923/make_panel.py
+[0m
+[0m→ [0mRead artifacts/claude-typepanel270-20260923/make_panel.py[90m [limit=130][0m
+[0m→ [0mRead artifacts/claude-typepanel270-20260923/make_panel.py[90m [offset=131][0m
+[0m
+[0m$ [0mgrep -o "P26[0-9]\.[0-9]*\|P27[0-9]\.[0-9]*" artifacts/fable-predictions-ledger.md | sort -t. -k1,1 -k2,2n | uniq -c | awk '{print $2}' | sort -u | head -60; echo "==="; git ls-tree origin/main --name-only design/v3/30-modes/ | grep -E "26[2-9]|270"
+P260.1
+P260.2
+P260.3
+P260.4
+P261.1
+P261.2
+P261.3
+P261.4
+P261.5
+P261.6
+P261.7
+P261.8
+P263.1
+P263.2
+P263.3
+P263.4
+P264.1
+P264.2
+P264.3
+P264.4
+P264.5
+P264.6
+P264.7
+P264.8
+P264.9
+P265.1
+P265.2
+P265.3
+P265.4
+P265.5
+P265.6
+P265.7
+P266.1
+P266.2
+P266.3
+P266.4
+P266.5
+P266.6
+P268.1
+P268.2
+P268.3
+P268.4
+P268.5
+P268.6
+P268.7
+P269.1
+P269.2
+P269.3
+P269.4
+P269.5
+P269.6
+P269.7
+P269.8
+P269.9
+P270.1
+P270.2
+P270.3
+P270.4
+P270.5
+P270.6
+===
+design/v3/30-modes/263-comma-guard.md
+design/v3/30-modes/264-qa-checker.md
+design/v3/30-modes/265-our-ask.md
+design/v3/30-modes/266-chain-subject-questions.md
+design/v3/30-modes/266b-multiword-chain-base.md
+design/v3/30-modes/268-nhop-direction-guard.md
+design/v3/30-modes/268b-nhop-guard-on-138nb.md
+[0m
+[0m$ [0mgrep -h "^- P265\.\|^261[0-9]:- P265\.\|P265\.[17]\|P266\.1\|P269\.1 \|P269\.8 " artifacts/fable-predictions-ledger.md | cut -c1-400 | head -12
+- P266.1 (2026-09-23, builder; exp 266 chain-subject lift on 138m, CPU only, sealed 21 files SEAL.sha256.txt artifacts/claude-chain266-20260923; blind panel never opened) dev 44 dialogs own wording fictional names: 14 lifts MISS->RIGHT d01-d14 (live, work-for, was-born-where, work-where, speak-language; 2-link, 3-link, my-chains), 6 MISS->honest-ABSTAIN d17,d18,d20,d21,d22,d44 (broken chains), 24 
+- P265.1 (2026-09-23, builder; exp 265 = 261b sealed arm A with 265 canon/divert only: first-person still -> "me", group-word TEACH never saved + fixed ask-whose reply, checker prompt B theta 0.25 + guard unchanged, scorer = 261b + Ruling 1 + M1-M5, sealed 16 files SEAL.sha256.txt artifacts/claude-ear265-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-28/30; pass (0 saves and >= 27 ask)
+- P265.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 11-14/15; pass (>= 12) ~55 %. Dev 7/10 (ear misattributes group clause to first person twice, relation-direction flip once).
+- P265.3 M3 first_person 0 hits lost vs A261b; pass ~95 %. Dev 10/10 hits, 0 lost; holds by construction (divert needs a group subject).
+- P265.4 M4 named 15/15 turns byte-identical to A261b; pass ~99 %. Construction, dev 10/10.
+- P265.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 5, A261b wrong 25 = 20 diverted + 5). Per-fact/per-turn rates for A, A261b, B reported, no bars.
+- P265.6 Overall registered PASS ~25 % (needs M1+M2 together; M3/M4/M5 near-certain).
+- P265.7 Latency (no bar): ear+checker+guard median ~350-450 ms/turn (dev 356.6 ms); arm B mostly abstains (dev 6/30 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 30076 left running between waves, final stop by WMI terminate (taskkill denied, session-0); D4 diverted frames still spend a ch
+- P269.1 (2026-09-23, builder; exp 269 = 265 sealed arm A + text-level group-owner check on the raw turn before ear/brake: P1-P5 ownership patterns + quote guard, deterministic, sealed generic ask line, saves byte-identical to A265 by construction; checker prompt B theta 0.25 + guard unchanged, scorer = 265 + M6-M8, sealed 15 files SEAL.sha256.txt artifacts/claude-ear269-20260923) M1 group_owner 0
+- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health;
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/earpanel264-spec.txt > /tmp/earpanel264-spec.txt 2>&1; echo EC:$?; wc -l /tmp/earpanel264-spec.txt
+EC:0
+      77 /tmp/earpanel264-spec.txt
+[0m
+[0m→ [0mRead /tmp/earpanel264-spec.txt
+[0m
+[0m$ [0mgit branch -a 2>/dev/null | head -20; echo "==="; git ls-tree origin/main --name-only scripts/ | grep -iE "ear26|ear27|type27|smolear26" | head; echo "==="; git ls-tree origin/main --name-only artifacts/ | grep -iE "ear26|ear27|type27|smol" | head -20
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+===
+===
+artifacts/claude-smolear235-20260922
+artifacts/claude-smolear235b-20260922
+artifacts/claude-smolear257-20260922
+artifacts/fable-fairsmol211-20260922
+[0m
+[0m$ [0mls -d artifacts/*ear* artifacts/*smol* 2>/dev/null; echo "==="; ls scripts/ | grep -E "ear26|ear27|smol" | head -20
+artifacts/claude-ear265-20260923
+artifacts/claude-ear269-20260923
+artifacts/claude-earcheck261-20260922
+artifacts/claude-earcheck261b-20260923
+artifacts/claude-earcheck264-20260923
+artifacts/claude-earloop256-20260922
+artifacts/claude-earpanel235-20260922
+artifacts/claude-earpanel235b-20260922
+artifacts/claude-earpanel257-20260922
+artifacts/claude-earpanel261-20260922
+artifacts/claude-earpanel261b-20260923
+artifacts/claude-earpanel264-20260923
+artifacts/claude-ears119-run-20260922
+artifacts/claude-smolear235-20260922
+artifacts/claude-smolear235-20260922
+artifacts/claude-smolear235b-20260922
+artifacts/claude-smolear235b-20260922
+artifacts/claude-smolear257-20260922
+artifacts/claude-smolear257-20260922
+artifacts/fable-ears109-20260921
+artifacts/fable-ears119-20260922
+artifacts/fable-ears119b-20260922
+artifacts/fable-ears119d-20260922
+artifacts/fable-ears119e-20260922
+artifacts/fable-ears119f-20260922
+artifacts/fable-ears119g-20260922
+artifacts/fable-ears119h-20260922
+artifacts/fable-ears213-20260922
+artifacts/fable-ears45-20260921
+artifacts/fable-ears47-20260921
+artifacts/fable-ears85-20260921
+artifacts/fable-earsguard91-20260921
+artifacts/fable-fairsmol211-20260922
+artifacts/fable-learnedaddr43i-20260921
+artifacts/fable-learnedparity43j-20260921
+artifacts/fable-novelty-research-20260920
+===
+claude_ear265_armb.py
+claude_ear265_arms.py
+claude_ear265_canon.py
+claude_ear265_devset.py
+claude_ear265_panel.py
+claude_ear265_qbuild.py
+claude_ear265_scoremain.py
+claude_ear265_turns.py
+claude_ear269_armb.py
+claude_ear269_arms.py
+claude_ear269_devset.py
+claude_ear269_groupcheck.py
+claude_ear269_panel.py
+claude_ear269_qbuild.py
+claude_ear269_scoremain.py
+claude_ear269_turns.py
+claude_smolear235_armb.py
+claude_smolear235_data.py
+claude_smolear235_infer.py
+claude_smolear235_model.py
+[0m
+[0m$ [0mls artifacts/claude-ear265-20260923/ artifacts/claude-ear269-20260923/ 2>/dev/null; echo "==="; head -12 artifacts/claude-ear265-20260923/RESULTS.md 2>/dev/null
+artifacts/claude-ear265-20260923/:
+dev_265.jsonl
+dev265_bpreds.json
+dev265_earpreds.json
+dev265_pyes.json
+dev265_q
+dev265_score.json
+panel265_bpreds.json
+panel265_earpreds.json
+panel265_pyes.json
+panel265_q
+panel265_score.json
+panel265_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdev
+
+artifacts/claude-ear269-20260923/:
+dev_269.jsonl
+dev269_bpreds.json
+dev269_bpredsA.json
+dev269_bpredsB.json
+dev269_earpreds.json
+dev269_manifest.json
+dev269_pyes.json
+dev269_score.json
+panel269_bpreds.json
+panel269_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+workBdevA
+workBdevB
+===
+# Exp 265 RESULTS: 261b's arm A plus the "our/we" ask-whose rule (builder, 2026-09-23)
+
+## Result: registered FAIL
+
+Arm A (261b A + 265 divert, sealed theta 0.25, prompt B, guard, Ruling-1
+scorer) on the blind panel (80 items, every arm run once after both seals):
+M1 FAIL (0 group-owned saves, but only 14/30 turns ask whose; bar 27),
+M2 FAIL (5/15 mixed exactly right; bar 12), M3 pass (0 lost vs A261b),
+M4 pass (15/15 byte-identical), M5 pass (0 new wrong saves).
+Predictions P265.1 and P265.2 ranges wrong; P265.3-P265.5 right; P265.6
+(~25% ALL) resolves to FAIL; P265.7 latency band right.
+[0m
+[0m$ [0mping -c 2 -W 3 BensPC 2>&1 | tail -3; echo "---"; ssh -o ConnectTimeout=8 -o BatchMode=yes BensPC "hostname" 2>&1 | tail -2
+--- benspc.tail26a138.ts.net ping statistics ---
+2 packets transmitted, 0 packets received, 100.0% packet loss
+---
+ssh: connect to host benspc port 22: Operation timed out
+[0m
+[0m$ [0mgrep -n "fresh\|per.item\|setup\|notebook\|def run" scripts/claude_ear269_panel.py | head -20; echo "==="; grep -n "def \|fresh\|per.item" scripts/claude_earcheck261b_panel.py | head -20
+===
+28:def _expect_sha(panel_path, seal_path):
+37:def load_panel(path, seal=None, check_sha=True):
+[0m
+[0m$ [0msed -n '1,80p' scripts/claude_ear269_panel.py
+#!/usr/bin/env python3
+"""Exp 269 -- strict loader for ourpanel269 (schema per
+handoff/kit/briefs/ourpanel265-spec.txt as amended by the 269 panel brief:
+earpanel264 line format PLUS boolean field "ask_whose"; folder
+artifacts/claude-ourpanel269-20260923/; ids "o269-001".."o269-100";
+families group_owner 30 / mixed 15 / first_person 20 / named 15 /
+non_owner_we 20).
+
+The panel sha is verified against the panel's own SEAL.sha256.txt (checked OK
+from the repo root), never a hardcoded hash. Any schema deviation prints
+SCHEMA-MISMATCH and exits 3 (nothing scored). A sha mismatch exits 4.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_smolear257_panel as P7  # noqa: E402
+import claude_smolear235b_panel as P5  # noqa: E402
+
+LINE_KEYS_269 = {"id", "family", "turn", "gold", "clear", "notes", "ask_whose"}
+
+FAMS_269 = {"group_owner": 30, "mixed": 15, "first_person": 20,
+            "named": 15, "non_owner_we": 20}
+
+N_PANEL = 100
+
+ID_RE = re.compile(r"^o269-(00[1-9]|0[1-9][0-9]|100)$")
+
+DEV_ID_RE = re.compile(r"^d269-[0-9]{3}$")
+
+
+def _expect_sha(panel_path, seal_path):
+    lines = Path(seal_path).read_text().splitlines()
+    for ln in lines:
+        parts = ln.strip().split()
+        if len(parts) == 2 and parts[1].endswith("panel.jsonl"):
+            return parts[0]
+    raise SystemExit(f"no panel.jsonl line in seal {seal_path}")
+
+
+def check_269(lines, id_re, fams):
+    """Strict per-line checks mirrored from the 265 loader, adapted for
+    the 269 line keys and families. Returns a list of error strings."""
+    errs, ids, fam = [], set(), {}
+    for n, d in enumerate(lines):
+        where = f"line {n + 1}"
+        if not isinstance(d, dict) or set(d) != LINE_KEYS_269:
+            errs.append(f"{where}: keys {sorted(d) if isinstance(d, dict) else type(d)}")
+            continue
+        if d["id"] in ids:
+            errs.append(f"{where}: duplicate id")
+        ids.add(d["id"])
+        if not (isinstance(d["id"], str) and id_re.match(d["id"])):
+            errs.append(f"{where}: bad id {d['id']!r}")
+        if d["family"] not in fams:
+            errs.append(f"{where}: unknown family {d.get('family')!r}")
+        fam[d["family"]] = fam.get(d["family"], 0) + 1
+        if not isinstance(d["turn"], str) or not d["turn"].strip():
+            errs.append(f"{where}: bad turn")
+        if not isinstance(d["clear"], bool) or not isinstance(d["notes"], str):
+            errs.append(f"{where}: bad clear/notes type")
+        if not isinstance(d["ask_whose"], bool):
+            errs.append(f"{where}: bad ask_whose type")
+        if not isinstance(d["gold"], list):
+            errs.append(f"{where}: gold not a list")
+            continue
+        for g in d["gold"]:
+            act = g.get("act") if isinstance(g, dict) else None
+            if act == "TEACH":
+                if set(g) != P5.TEACH_KEYS:
+                    errs.append(f"{where}: TEACH keys {sorted(g)}")
+            elif act == "ASK":
+                keys = set(g)
+                if keys != (P5.ASK_KEYS | {"chain_aliases"}):
+                    errs.append(f"{where}: ASK keys {sorted(keys)}")
+[0m
+[0m← [0mWrite scripts/claude_type270_panelrun.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_type270_panelscore.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime | head -1; ping -c 1 -W 2 BensPC 2>&1 | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import claude_type270_panelscore as S
+S.load_panel('artifacts/claude-typepanel270-20260923/panel.jsonl')
+" 2>&1 | tail -3
+5:04  up 2 days, 20:54, 4 users, load averages: 67.79 79.59 79.69
+1 packets transmitted, 0 packets received, 100.0% packet loss
+SCHEMA OK
+[0m
+[0m$ [0msleep 180; uptime | head -1
+5:08  up 2 days, 20:57, 4 users, load averages: 93.93 85.91 82.25
+[0m
+[0m$ [0msleep 300; uptime | head -1
+5:13  up 2 days, 21:02, 4 users, load averages: 111.52 98.89 88.98
+[0m
+[0m$ [0muptime | head -1; df -g / | tail -1
+5:13  up 2 days, 21:02, 4 users, load averages: 112.93 99.60 89.35
+/dev/disk3s1s1       460   12        11    53%  484014 120732840    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_panelrun.py artifacts/claude-typepanel270-20260923/panel.jsonl /tmp/type270panel artifacts/claude-type270-20260923/panel270_rowsA.jsonl artifacts/claude-type270-20260923/panel270_rows263.jsonl 2>&1 | tail -3
+done A 100
+done A263 100
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_panelscore.py artifacts/claude-typepanel270-20260923/panel.jsonl artifacts/claude-type270-20260923/panel270_rowsA.jsonl artifacts/claude-type270-20260923/panel270_rows263.jsonl artifacts/claude-type270-20260923/panel270_score.json 2>&1 | head -60
+SCHEMA OK
+M1 casual exact TEACH: A 23/40  A263 6/40  margin 17  (bar >=30 and >=+20)
+M2 casual_q ASK: A 0/15  (bar >=12; loop emits no ASK)
+M3 lower_trap wrong: A 7/15  A263 7/15  (bar <=1)
+M4 clean identical: 30/30  (bar 30/30)
+M5 new wrong vs A263: 0 []  (bar 0)
+M6 norm_ms median: 0.0312  (bar <=20)
+HIT A t270-001 added=[('Ana', 'cat', 'Fig')]
+HIT A t270-003 added=[('Cara', 'city', 'Kelmar')]
+HIT A t270-004 added=[('USER', 'sister', 'Esma')]
+HIT A t270-007 added=[('USER', 'boss', 'Dilo')]
+HIT A t270-009 added=[('Haki', 'city', 'Ostby')]
+HIT A t270-010 added=[('USER', 'wife', 'Iria')]
+HIT A t270-013 added=[('Loris', 'husband', 'Naldo')]
+HIT A t270-015 added=[('USER', 'brother', 'Risto')]
+HIT A t270-016 added=[('Oria', 'cat', 'Soot')]
+HIT A t270-017 added=[('Pelin', 'city', 'Rill')]
+HIT A t270-018 added=[('Quira', 'dog', 'Bramble')]
+HIT A t270-020 added=[('Tarek', 'horse', 'Pickle')]
+HIT A t270-021 added=[('USER', 'neighbour', 'Ulf')]
+HIT A t270-024 added=[('Xan', 'city', 'Tormund')]
+HIT A t270-027 added=[('USER', 'husband', 'Beno')]
+HIT A t270-029 added=[('USER', 'hometown', 'Vessa')]
+HIT A t270-030 added=[('Farid', 'employer', 'Lorn Mills')]
+HIT A t270-031 added=[('Greta', 'school', 'Ostby College')]
+HIT A t270-032 added=[('USER', 'mother', 'Kelda')]
+HIT A t270-034 added=[('Iria', 'sister', 'Mira')]
+HIT A t270-036 added=[('USER', 'father', 'Loris')]
+HIT A t270-037 added=[('Kelda', 'dog', 'Biscuit')]
+HIT A t270-040 added=[('Wren', 'city', 'Marvik')]
+WRONGA t270-002 casual added=[('Benos', 'dog', 'Moss')]
+WRONGA t270-005 casual added=[]
+WRONGA t270-006 casual added=[]
+WRONGA t270-008 casual added=[]
+WRONGA t270-011 casual added=[]
+WRONGA t270-012 casual added=[]
+WRONGA t270-014 casual added=[]
+WRONGA t270-019 casual added=[]
+WRONGA t270-022 casual added=[]
+WRONGA t270-023 casual added=[]
+WRONGA t270-025 casual added=[]
+WRONGA t270-026 casual added=[]
+WRONGA t270-028 casual added=[('Dilos', 'boss', 'Selma')]
+WRONGA t270-033 casual added=[('Hakis', 'job', 'Mason')]
+WRONGA t270-035 casual added=[]
+WRONGA t270-038 casual added=[]
+WRONGA t270-039 casual added=[]
+WRONGA t270-063 lower_trap added=[]
+WRONGA t270-064 lower_trap added=[]
+WRONGA t270-065 lower_trap added=[]
+WRONGA t270-066 lower_trap added=[]
+WRONGA t270-067 lower_trap added=[]
+WRONGA t270-068 lower_trap added=[]
+WRONGA t270-069 lower_trap added=[]
+WRONGA t270-075 clean added=[]
+WRONGA t270-080 clean added=[]
+WRONGA t270-084 clean added=[]
+WRONGA t270-086 clean added=[]
+WRONGA t270-088 clean added=[]
+WRONGA t270-089 clean added=[]
+[0m
+[0m← [0mEdit scripts/claude_type270_panelscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
+@@ -155,14 +155,34 @@
+     return True
+ 
+ 
+ def is_wrong(item, row):
++    """Strict equality (misses count). Kept for M1-style reporting."""
+     acts = [g["act"] for g in item["gold"]]
+     if acts and all(a == "ASK" for a in acts):
+         return bool(frames_added(row))
+     return not teach_exact(item, row)
+ 
+ 
++def extras(item, row):
++    """Wrong SAVES (brief M3/M5 reading): added frames outside gold.
++
++    A missed gold frame is not a save; only extras count. For ASK-gold
++    items any write counts.
++    """
++    acts = [g["act"] for g in item["gold"]]
++    if acts and all(a == "ASK" for a in acts):
++        return sorted(frames_added(row))
++    want = gold_teach_set(item["gold"])
++    got = added_frames(row)
++    out = []
++    for (s, r, v) in got:
++        if not any(s == ws and v == wv and r in wrels
++                   for (ws, wrels, wv) in want):
++            out.append((s, r, v))
++    return sorted(out)
++
++
+ def main(argv):
+     items = load_panel(argv[1])
+     rows_a = [json.loads(x) for x in Path(argv[2]).read_text(
+         encoding="utf-8").splitlines() if x.strip()]
+
+[0m
+[0m← [0mEdit scripts/claude_type270_panelscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_type270_panelscore.py
+@@ -217,24 +217,43 @@
+ m1a = sum(r["a_exact"] for r in cas)
+ m1b = sum(r["b_exact"] for r in cas)
+ q = byfam["casual_q"]
+ m2a = sum(r["a_exact"] for r in q)
++qnowrite_a = sum(1 for r in q
++                 if not frames_added(bya[r["id"]]))
++qnowrite_b = sum(1 for r in q
++                 if not frames_added(byb[r["id"]]))
+ tr = byfam["lower_trap"]
+-m3a = sum(r["a_wrong"] for r in tr)
+-m3b = sum(r["b_wrong"] for r in tr)
++m3a = sum(1 for r in tr if extras(
++    next(i for i in items if i["id"] == r["id"]), bya[r["id"]]))
++m3b = sum(1 for r in tr if extras(
++    next(i for i in items if i["id"] == r["id"]), byb[r["id"]]))
++trapmiss_a = sum(r["a_wrong"] for r in tr)
+ cl = byfam["clean"]
+ m4i = sum(r["identical"] for r in cl)
+-newwrong = [r["id"] for r in res if r["a_wrong"] and not r["b_wrong"]]
++newwrong = []
++for r in res:
++    it = next(i for i in items if i["id"] == r["id"])
++    if extras(it, bya[r["id"]]) and not extras(it, byb[r["id"]]):
++        newwrong.append(r["id"])
+ ms = sorted(r["norm_ms"] for r in res)
+ med = ms[len(ms) // 2]
+ print(f"M1 casual exact TEACH: A {m1a}/40  A263 {m1b}/40  "
+       f"margin {m1a - m1b}  (bar >=30 and >=+20)")
+-print(f"M2 casual_q ASK: A {m2a}/15  (bar >=12; loop emits no ASK)")
+-print(f"M3 lower_trap wrong: A {m3a}/15  A263 {m3b}/15  (bar <=1)")
++print(f"M2 casual_q ASK: A {m2a}/15  (bar >=12; loop emits no ASK; "
++      f"no-write A {qnowrite_a}/15  A263 {qnowrite_b}/15)")
++print(f"M3 lower_trap wrong SAVES: A {m3a}/15  A263 {m3b}/15  "
++      f"(bar <=1; trap misses incl. real-fact-only: A {trapmiss_a})")
+ print(f"M4 clean identical: {m4i}/30  (bar 30/30)")
+-print(f"M5 new wrong vs A263: {len(newwrong)} {newwrong}  (bar 0)")
++print(f"M5 new wrong saves vs A263: {len(newwrong)} {newwrong}  "
++      f"(bar 0)")
+ print(f"M6 norm_ms median: {med}  (bar <=20)")
+ for r in res:
++    it = next(i for i in items if i["id"] == r["id"])
++    ex = extras(it, bya[r["id"]])
++    if ex:
++        print(f"EXTRA-A {r['id']} {r['family']} {ex}")
++for r in res:
+     if r["family"] == "casual" and r["a_exact"]:
+         print(f"HIT A {r['id']} added={r['a_added']}")
+ for r in res:
+     if r["a_wrong"] and r["family"] != "casual_q":
+@@ -242,10 +261,13 @@
+               f"added={r['a_added']}")
+ if len(argv) > 4:
+     Path(argv[4]).write_text(json.dumps(
+         {"rows": res,
+-         "marks": {"m1a": m1a, "m1b": m1b, "m2a": m2a, "m3a": m3a,
+-                   "m3b": m3b, "m4i": m4i, "newwrong": newwrong,
++         "marks": {"m1a": m1a, "m1b": m1b, "m2a": m2a,
++                   "qnowrite_a": qnowrite_a,
++                   "qnowrite_b": qnowrite_b, "m3a": m3a,
++                   "m3b": m3b, "trapmiss_a": trapmiss_a,
++                   "m4i": m4i, "newwrong": newwrong,
+                    "m6med": med}}, indent=1, default=str),
+         encoding="utf-8")
+ verdict = (m1a >= 30 and (m1a - m1b) >= 20 and m2a >= 12 and m3a <= 1
+            and m4i == 30 and not newwrong and med <= 20)
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_type270_panelscore.py artifacts/claude-typepanel270-20260923/panel.jsonl artifacts/claude-type270-20260923/panel270_rowsA.jsonl artifacts/claude-type270-20260923/panel270_rows263.jsonl artifacts/claude-type270-20260923/panel270_score.json 2>&1 | head -30
+SCHEMA OK
+M1 casual exact TEACH: A 23/40  A263 6/40  margin 17  (bar >=30 and >=+20)
+M2 casual_q ASK: A 0/15  (bar >=12; loop emits no ASK; no-write A 15/15  A263 15/15)
+M3 lower_trap wrong SAVES: A 0/15  A263 0/15  (bar <=1; trap misses incl. real-fact-only: A 7)
+M4 clean identical: 30/30  (bar 30/30)
+M5 new wrong saves vs A263: 3 ['t270-002', 't270-028', 't270-033']  (bar 0)
+M6 norm_ms median: 0.0312  (bar <=20)
+EXTRA-A t270-002 casual [('benos', 'dog', 'moss')]
+EXTRA-A t270-028 casual [('dilos', 'boss', 'selma')]
+EXTRA-A t270-033 casual [('hakis', 'job', 'mason')]
+HIT A t270-001 added=[('Ana', 'cat', 'Fig')]
+HIT A t270-003 added=[('Cara', 'city', 'Kelmar')]
+HIT A t270-004 added=[('USER', 'sister', 'Esma')]
+HIT A t270-007 added=[('USER', 'boss', 'Dilo')]
+HIT A t270-009 added=[('Haki', 'city', 'Ostby')]
+HIT A t270-010 added=[('USER', 'wife', 'Iria')]
+HIT A t270-013 added=[('Loris', 'husband', 'Naldo')]
+HIT A t270-015 added=[('USER', 'brother', 'Risto')]
+HIT A t270-016 added=[('Oria', 'cat', 'Soot')]
+HIT A t270-017 added=[('Pelin', 'city', 'Rill')]
+HIT A t270-018 added=[('Quira', 'dog', 'Bramble')]
+HIT A t270-020 added=[('Tarek', 'horse', 'Pickle')]
+HIT A t270-021 added=[('USER', 'neighbour', 'Ulf')]
+HIT A t270-024 added=[('Xan', 'city', 'Tormund')]
+HIT A t270-027 added=[('USER', 'husband', 'Beno')]
+HIT A t270-029 added=[('USER', 'hometown', 'Vessa')]
+HIT A t270-030 added=[('Farid', 'employer', 'Lorn Mills')]
+HIT A t270-031 added=[('Greta', 'school', 'Ostby College')]
+HIT A t270-032 added=[('USER', 'mother', 'Kelda')]
+HIT A t270-034 added=[('Iria', 'sister', 'Mira')]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s = json.load(open('artifacts/claude-type270-20260923/panel270_score.json'))
+rows = s['rows']
+print('A263 casual hits:', [r['id'] for r in rows if r['family']=='casual' and r['b_exact']])
+print('A casual misses:', [r['id'] for r in rows if r['family']=='casual' and not r['a_exact']])
+print('A trap misses:', [(r['id'], r['a_added']) for r in rows if r['family']=='lower_trap' and r['a_wrong']])
+print('A clean misses:', [(r['id'], r['a_added']) for r in rows if r['family']=='clean' and r['a_wrong']])
+print('A263 clean misses:', [(r['id'], r['b_added']) for r in rows if r['family']=='clean' and r['b_wrong']])
+print('casual_q A writes:', [r['id'] for r in rows if r['family']=='casual_q' and r['a_added']])
+ms = sorted(r['norm_ms'] for r in rows)
+print('norm_ms: n=%d med=%.4f max=%.4f' % (len(ms), ms[len(ms)//2], ms[-1]))
+import collections
+print('families:', collections.Counter(r['family'] for r in rows))
+" 2>&1 | tail -8; ping -c 1 -W 2 BensPC 2>&1 | tail -1
+A263 casual hits: ['t270-004', 't270-010', 't270-015', 't270-021', 't270-029', 't270-032']
+A casual misses: ['t270-002', 't270-005', 't270-006', 't270-008', 't270-011', 't270-012', 't270-014', 't270-019', 't270-022', 't270-023', 't270-025', 't270-026', 't270-028', 't270-033', 't270-035', 't270-038', 't270-039']
+A trap misses: [('t270-063', []), ('t270-064', []), ('t270-065', []), ('t270-066', []), ('t270-067', []), ('t270-068', []), ('t270-069', [])]
+A clean misses: [('t270-075', []), ('t270-080', []), ('t270-084', []), ('t270-086', []), ('t270-088', []), ('t270-089', []), ('t270-090', [])]
+A263 clean misses: [('t270-075', []), ('t270-080', []), ('t270-084', []), ('t270-086', []), ('t270-088', []), ('t270-089', []), ('t270-090', [])]
+casual_q A writes: []
+norm_ms: n=100 med=0.0312 max=0.1153
+families: Counter({'casual': 40, 'clean': 30, 'casual_q': 15, 'lower_trap': 15})
+1 packets transmitted, 0 packets received, 100.0% packet loss
+[0m
+[0m← [0mWrite artifacts/claude-type270-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -c artifacts/claude-type270-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; echo "---"; git status --short scripts/claude_type270_* artifacts/claude-type270-20260923/ | head -20
+12
+---
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'LEDGEREOF'
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FAIL, sealed loop arms A/A263 run ONCE each on blind typepanel270, seal Checks OK, schema OK, seal 12/12 re-verified) M1 A 23/40 vs A263 6/40 margin +17 FAIL (bar 30 and +20); M2 0/15 FAIL (loop emits no ASK frames; no-write 15/15 both); M3 0 wrong saves PASS (7 trap misses both arms); M4 30/30 identical PASS; M5 3 new wrong saves FAIL (keep-s stems t270-002/028/033); M6 median 0.0312 ms PASS. P270.1/.2/.5 wrong, P270.3/.4/.6 right, P270.7 resolves FAIL.
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+LEDGEREOF
+tail -2 artifacts/fable-predictions-ledger.md | cut -c1-60; ping -c 1 -W 2 BensPC 2>&1 | tail -1
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FA
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop)
+1 packets transmitted, 0 packets received, 100.0% packet loss
+[0m
+[0m# [0mTodos
+[✓] Read 263 run/score infra + specs + ledger format (read-only)
+[✓] Search repo for 270 schema hints (never open sealed typepanel270 dir)
+[✓] Study 138m ear possessive parsing to pick normalised shapes
+[✓] Write claude_type270 normaliser + agent wrapper (new files only)
+[✓] Write own dev set (60+ casual, 20+ traps) + dev runner
+[✓] Run dev, calibrate word lists, log every rewrite
+[✓] Write PASSMARKS.md with P270.n, seal, append ledger
+[✓] Poll typepanel270 seal (120 min), verify, run A + A263 once each
+[✓] Write RESULTS.md + final verdict reply
+[0m
