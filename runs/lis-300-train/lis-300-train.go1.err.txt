@@ -1,0 +1,2262 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mRead artifacts/claude-lis300-20260923/PASSMARKS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis300-20260923/PASSMARKS.md
+[0m✗ [0mRead design/v3/60-listener/frame-spec.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/60-listener/frame-spec.md
+[0m
+[0m$ [0mls artifacts/claude-lis300-20260923/; echo ---; ls scripts/claude_lis300_* 2>&1; echo ---; git fetch -q origin main 2>&1 | head; git log --oneline -3; echo ---; uptime; df -g / | head -5
+ls: artifacts/claude-lis300-20260923/: No such file or directory
+zsh:1: no matches found: scripts/claude_lis300_*
+---
+---
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+---
+ 7:32  up 2 days, 23:21, 4 users, load averages: 99.42 98.52 91.70
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135748960    0%   /
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; git fetch -q origin builder-outbox 2>&1 | head -5; git branch -a | head -20; echo ---; git ls-tree --name-only origin/main artifacts/ | head -30; echo ---; git ls-tree --name-only origin/builder-outbox artifacts/ 2>&1 | head -30
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+artifacts/claude-aliaspanel237-20260922
+artifacts/claude-aliaspanel237b-20260922
+artifacts/claude-apos247-20260922
+artifacts/claude-askpanel243-20260922
+artifacts/claude-bench125-fairness-20260922
+artifacts/claude-boundary259-20260922
+artifacts/claude-chain231-20260922
+artifacts/claude-chain231b-20260922
+artifacts/claude-chainpanel231-20260922
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comment258-20260922
+artifacts/claude-convjudge239-A-20260922
+artifacts/claude-convjudge239-B-20260922
+artifacts/claude-convpanel239-138l-20260922
+artifacts/claude-convpanel239-138m-20260922
+artifacts/claude-convpanel239-138n-20260922
+artifacts/claude-convpanel239-20260922
+artifacts/claude-correct252-20260922
+artifacts/claude-correct252b-20260922
+artifacts/claude-corrpanel252-20260922
+artifacts/claude-corrtail258-20260922
+artifacts/claude-decline224c-20260922
+artifacts/claude-demo-dryrun-20260922
+artifacts/claude-determinism228-20260922
+artifacts/claude-diag243-20260922
+artifacts/claude-direction251-20260922
+artifacts/claude-earcheck261-20260922
+artifacts/claude-earloop256-20260922
+artifacts/claude-earpanel235-20260922
+---
+artifacts/claude-called281-20260923
+artifacts/claude-called281b-20260923
+artifacts/claude-calledpanel281-20260923
+artifacts/claude-calledpanel281b-20260923
+artifacts/claude-capab280-20260923
+artifacts/claude-capab280b-20260923
+artifacts/claude-capabilpanel280-20260923
+artifacts/claude-capabilpanel280b-20260923
+artifacts/claude-chain266-20260923
+artifacts/claude-chain266b-20260923
+artifacts/claude-chainpanel266-20260923
+artifacts/claude-chainpanel266b-20260923
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comma263-20260923
+artifacts/claude-commapanel263-20260923
+artifacts/claude-corrpanel291-20260923
+artifacts/claude-devset267-20260923
+artifacts/claude-diag267-20260923
+artifacts/claude-diag271-20260923
+artifacts/claude-diag290-20260923
+artifacts/claude-diag293-20260923
+artifacts/claude-ear265-20260923
+artifacts/claude-ear269-20260923
+artifacts/claude-earcheck261b-20260923
+artifacts/claude-earcheck264-20260923
+artifacts/claude-earpanel261b-20260923
+artifacts/claude-earpanel264-20260923
+artifacts/claude-fixedtext255b-20260923
+artifacts/claude-grade241b-A-20260923
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main artifacts/ | grep -i lis; echo ---MAIN-SCRIPTS---; git ls-tree --name-only origin/main scripts/ | grep -i lis; echo ---OUTBOX-LIS---; git ls-tree --name-only origin/builder-outbox artifacts/ | grep -i lis; echo ---FRAME---; git ls-tree --name-only origin/main design/v3/60-listener/ 2>&1 | head
+artifacts/claude-lis300-20260923
+artifacts/claude-lispanel300-20260923
+artifacts/fable-english-listening-20260921
+---MAIN-SCRIPTS---
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+scripts/fable_bench103_english_arm.py
+scripts/fable_bench73_english_arm.py
+scripts/fable_bench92_english_arm.py
+scripts/fable_brake118b_trainlist.py
+scripts/fable_fix154c_allowlist.py
+scripts/fable_fix154e_allowlist.py
+scripts/fable_listening_english.py
+scripts/fable_listening_m1.py
+scripts/gen_english.py
+---OUTBOX-LIS---
+artifacts/claude-lis310-20260923
+---FRAME---
+design/v3/60-listener/frame-spec.md
+design/v3/60-listener/relation-names.txt
+design/v3/60-listener/task-lis300-train.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main artifacts/claude-lis300-20260923/; echo ---; git ls-tree -r --name-only origin/main artifacts/claude-lispanel300-20260923/; echo ---; git ls-tree -r --name-only origin/builder-outbox artifacts/ | grep -iE "o0b|o0a2|own-o0"
+artifacts/claude-lis300-20260923/DATA-AUDIT.md
+artifacts/claude-lis300-20260923/PASSMARKS.md
+artifacts/claude-lis300-20260923/SEAL.sha256.txt
+artifacts/claude-lis300-20260923/data/agree_w1.json
+artifacts/claude-lis300-20260923/data/agree_w2.json
+artifacts/claude-lis300-20260923/data/agree_w3.json
+artifacts/claude-lis300-20260923/data/agreed_ids.txt
+artifacts/claude-lis300-20260923/data/agreed_w1.txt
+artifacts/claude-lis300-20260923/data/agreed_w2.txt
+artifacts/claude-lis300-20260923/data/agreed_w3.txt
+artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w1.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w2.jsonl
+artifacts/claude-lis300-20260923/data/relabel_w3.jsonl
+---
+artifacts/claude-lispanel300-20260923/KEY-AUDIT.md
+artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt
+artifacts/claude-lispanel300-20260923/SEAL.sha256.txt
+artifacts/claude-lispanel300-20260923/SPEC-COUNTS.md
+artifacts/claude-lispanel300-20260923/key.jsonl
+artifacts/claude-lispanel300-20260923/key_v2.jsonl
+artifacts/claude-lispanel300-20260923/label_B.jsonl
+artifacts/claude-lispanel300-20260923/panel.jsonl
+---
+artifacts/claude-own-o0a-20260923/PASSMARKS.md
+artifacts/claude-own-o0a-20260923/RESULTS.md
+artifacts/claude-own-o0a-20260923/SEAL-data.sha256.txt
+artifacts/claude-own-o0a-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0a-20260923/gold.jsonl
+artifacts/claude-own-o0a-20260923/oracle_coverage.json
+artifacts/claude-own-o0a-20260923/turns.jsonl
+artifacts/claude-own-o0a2-20260923/PASSMARKS.md
+artifacts/claude-own-o0a2-20260923/RESULTS.md
+artifacts/claude-own-o0a2-20260923/SEAL-data.sha256.txt
+artifacts/claude-own-o0a2-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0a2-20260923/gold.jsonl
+artifacts/claude-own-o0a2-20260923/oracle_coverage_o0a2.json
+artifacts/claude-own-o0a2-20260923/turns.jsonl
+artifacts/claude-own-o0a3-20260923/PASSMARKS.md
+artifacts/claude-own-o0a3-20260923/RESULTS.md
+artifacts/claude-own-o0a3-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0a3-20260923/mutations.jsonl
+artifacts/claude-own-o0a3-20260923/summary.json
+artifacts/claude-own-o0b-20260923/PASSMARKS.md
+artifacts/claude-own-o0b-20260923/RESULTS.md
+artifacts/claude-own-o0b-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0b-20260923/counts.json
+artifacts/claude-own-o0b-20260923/frame_split.json
+artifacts/claude-own-o0b-20260923/l1dev-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/l2dev-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/name_pools.json
+artifacts/claude-own-o0b-20260923/train-00.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-01.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-02.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-03.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-04.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-05.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-06.jsonl.gz
+artifacts/claude-own-o0b-20260923/train-07.jsonl.gz
+artifacts/claude-own-o0c-20260923/PASSMARKS.md
+artifacts/claude-own-o0c-20260923/RESULTS.md
+artifacts/claude-own-o0c-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0c-20260923/index-sample.json
+artifacts/claude-own-o0c-20260923/tokenizer-sample.json
+artifacts/claude-own-o0d-20260923/PASSMARKS.md
+artifacts/claude-own-o0d-20260923/RESULTS.md
+artifacts/claude-own-o0d-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0d-20260923/kill_A/losses.json
+artifacts/claude-own-o0d-20260923/kill_B/losses.json
+artifacts/claude-own-o0d-20260923/smoke_frame/losses.json
+artifacts/claude-own-o0d-20260923/smoke_mlm/losses.json
+artifacts/claude-own-o0d-20260923/test_results.json
+artifacts/claude-own-o0d-20260923/tok.pkl
+artifacts/claude-own-o0d2-20260923/PASSMARKS.md
+artifacts/claude-own-o0d2-20260923/RESULTS.md
+artifacts/claude-own-o0d2-20260923/kill_A/losses.json
+artifacts/claude-own-o0d2-20260923/kill_B/losses.json
+artifacts/claude-own-o0d2-20260923/smoke_frame/losses.json
+artifacts/claude-own-o0d2-20260923/smoke_mlm/losses.json
+artifacts/claude-own-o0d2-20260923/test_results.json
+artifacts/claude-own-o0d2-20260923/tok.pkl
+artifacts/claude-own-o0e-20260923/PASSMARKS.md
+artifacts/claude-own-o0e-20260923/RESULTS.md
+artifacts/claude-own-o0e-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0e-20260923/TESTLOG.md
+artifacts/claude-own-o0e-20260923/killA/vocab.json
+artifacts/claude-own-o0e-20260923/killB/vocab.json
+artifacts/claude-own-o0e-20260923/smoke/vocab.json
+artifacts/claude-own-o0e2-20260923/PASSMARKS.md
+artifacts/claude-own-o0e2-20260923/RESULTS.md
+artifacts/claude-own-o0e2-20260923/SEAL.sha256.txt
+artifacts/claude-own-o0e2-20260923/TESTLOG.md
+artifacts/claude-own-o0e2-20260923/killA/vocab.json
+artifacts/claude-own-o0e2-20260923/killB/vocab.json
+artifacts/claude-own-o0e2-20260923/smoke/vocab.json
+[0m
+[0m$ [0mgit show origin/main:design/v3/60-listener/frame-spec.md
+# Listener frame spec v1 (lis- line, exps 300-319, 2026-09-23)
+
+This is the target format for the listener. The listener is Qwen3.5-0.8B, fine-tuned (Ben's 10:55 UTC decision). It reads one chat turn, plus the assistant's previous reply, and writes **one JSON object**. It proposes; plain code (the write compiler, `scripts/claude_lis300_compiler.py`) decides what gets saved. Key-writing rules in `design/v3/30-modes/key-writing-rules.md` apply in full.
+
+## Output
+
+```json
+{"act": "STATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pip", "mode": "ASSERT"}], "ask": null}
+```
+
+- `act` (whole turn): one of `STATE`, `CORRECT`, `ASK`, `CHECK`, `NEGATE`, `SUPPOSE`, `PLAN`, `CHAT`, `UNCLEAR`.
+  - A turn that both states and asks gets the act of its first clause. Each fact still carries its own mode.
+- `facts`: every fact the turn mentions, including facts that must not be saved (for those, the mode says why). Order them as they appear in the turn. The list is `[]` when there is none.
+  - `owner`:
+    - `"me"` for I / me / my / mine.
+    - `"we"` for we / us / our / ours. Never map "our" to "me"; the compiler asks whose.
+    - Otherwise, the owner's name **exactly as typed**, with the same case and any typo.
+    - A pronoun ("he", "she", "they") is resolved to the name it refers to, but only when that is clear from this turn or the previous reply. If it isn't clear, use mode `UNCLEAR`.
+  - `rel`: a name from `design/v3/60-listener/relation-names.txt` (153 names), or `"other"`. Pick the most specific name the words support ("dog", not "pet", when the turn says dog).
+  - `value`: exactly as typed. Keep the case and any typos; never fix spelling.
+  - `mode`, one per fact:
+    - `ASSERT`: the speaker tells it as true.
+    - `CORRECT`: it replaces an earlier value. Add `"old": "<old value as typed>"` when the turn names it.
+    - `NEGATED`: "doesn't have", "isn't", "no longer".
+    - `CHECK`: the speaker is checking it. This covers "so X is Y" without "?", "X is Y right", and "X is Y, yeah".
+    - `SUPPOSE`: pretend, suppose, imagine, "let's say", "what if".
+    - `PLAN`: wants, plans, will, hopes, might.
+    - `REPORTED`: someone else claims it ("Tal says...", "I heard...").
+    - `QUESTION`: part of a question.
+    - `UNCLEAR`: the owner or value can't be pinned down.
+- `ask`: `null` unless the turn asks a question. For a question, `{"owner": ..., "rel": ..., "inverse": false}`.
+  - `inverse: true` means the question asks for the owner. For example, "Whose dog is Pip?" is `{"owner": "Pip", "rel": "dog", "inverse": true}`.
+  - For a yes/no question ("Is Mira's dog Pip?"), add `"value": "Pip"`.
+
+- Two-hop questions ("who is my sister's husband") use `"via"` for the first hop: `{"owner": "me", "via": "sister", "rel": "husband", "inverse": false}`.
+- Negations that name no value ("Kofi has no kids") have `facts: []` and act `NEGATE`. A reported fact ("Dev says his boss is Mara") has act `STATE`, and its fact has mode `REPORTED`.
+
+## One fact per value
+
+"My sisters are Mira and Tal" gives two facts: (me, sister, Mira) and (me, sister, Tal).
+"My boss, Tal, has a cat named Fig" gives (me, boss, Tal) and (Tal, cat, Fig).
+
+## What the compiler writes (for reference; the listener never decides this)
+
+A turn's facts are written all together or not at all. A fact is written only if **all** of these hold:
+1. Its mode is `ASSERT` or `CORRECT`.
+2. Its owner is `me`, or a whole-word span of the turn or the previous reply. `we` is never written: the system asks whose.
+3. Its value is a whole-word span of the turn.
+4. Its relation is in the table.
+5. The reader's confidence clears the threshold set on dev. Below it, the system asks back.
+
+Anything else writes nothing: `NEGATED`, `CHECK`, `SUPPOSE`, `PLAN`, `REPORTED`, `QUESTION` and `UNCLEAR` never write.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis300-20260923/PASSMARKS.md; echo =====SEAL=====; git show origin/main:artifacts/claude-lis300-20260923/SEAL.sha256.txt
+# lis-300: our own reader (MiniCPM5-1B fine-tuned) + write compiler, first registered test
+
+Written by the listener thread (Opus), 2026-09-23, **before** any fine-tuning run. Ben's decisions: an own ~1B reader (10:55 UTC); base model openbmb/MiniCPM5-1B, Apache 2.0 (11:01 UTC).
+
+## The one change
+
+The borrowed ear (v4.1 + 27B yes/no gate, 261b/264) is replaced by **one fine-tuned 1B reader + the plain-code write compiler**. Everything after the notebook write is unchanged. Chat-page wiring is a separate later experiment.
+
+## System under test
+
+- **Reader:** `scripts/claude_lis300_train.py` is LoRA (rank 32, alpha 64, every linear layer) on MiniCPM5-1B. It runs 2 epochs at lr 2e-4, batch 16, max length 256, with seed 300, and the LoRA is merged before reading. The prompt and frame text are in `scripts/claude_lis300_common.py`, and the frame format is `design/v3/60-listener/frame-spec.md`.
+- **Data:** `scripts/claude_lis300_data.py` builds it. It uses 3,000 own-O0b rows per family, dropping the whole `binding` family, because its pronoun owners are either the pronoun itself or a guess from assumed gender (found here, confirmed by the own-model thread). It adds the Opus-written rows (`data/opus_w{1,2,3}.jsonl`) that a blind second Opus labeller reproduced (`scripts/claude_lis300_agree.py`), each repeated 4 times, with 10% held out as dev.
+- **Confidence:** `scripts/claude_lis300_read.py` scores each fact by the lowest token probability over the act and that fact's JSON.
+- **Compiler:** `scripts/claude_lis300_compiler.py` is the only writer. A fact is written only if:
+  - its mode is ASSERT or CORRECT;
+  - its owner is `me` or a whole-word span of the turn or previous reply (never a pronoun);
+  - its value is a whole-word span of the turn, or of the assistant's question for a short answer;
+  - its relation is in the table;
+  - its confidence is at or above the threshold T.
+
+  Writes are all-or-nothing per turn. `we` triggers ask-whose.
+- **Threshold rule (fixed now, computed on dev only):** T is the smallest value on the grid in `claude_lis300_score.py --sweep` that gives **0 wrong-save turns** on the whole dev set (o0b L2 sample + Opus dev + the 300 fresh own-O0a2 turns). If no grid value reaches 0, T = 0.995.
+- **Scorer:** `scripts/claude_lis300_score.py` grades gold and predicted frames through the same compiler. Ruling 1 applies: a narrower relation counts as a hit.
+
+## Registered test
+
+`artifacts/claude-lispanel300-20260923/`: 240 turns written blind by a separate Opus agent from the spec, with names from N to Z only (training names run A to M). The key is audited by a second blind Opus labeller and adjudicated, and the key version used is sealed before the run. It is run **once**, after the seal.
+
+## Marks (arm A = reader + compiler at T)
+
+| Mark | Bar |
+|---|---|
+| P300.1 wrong-save turns (any written fact not in the gold writes) | ≤ 1 of 240 |
+| P300.2 exact recall of gold writes (hits / gold writable facts) | ≥ 85% |
+| P300.3 ASK turns read correctly (owner, relation, inverse, via) | ≥ 90% |
+| P300.4 our/we turns that ask whose | ≥ 90% |
+| P300.5 unparseable outputs | ≤ 2% of turns |
+| P300.6 median read time on the GPU used (device reported) | ≤ 1,500 ms |
+
+Report only, with no bar:
+- wrong facts per saved fact and per turn;
+- wrong-save turns and recall at T = 0, to show what the threshold buys;
+- misses by family, at category level only;
+- training loss and tokens per second;
+- held-back (asked-back) facts.
+
+**Proved wrong if:** P300.1 fails (≥ 2 wrong-save turns), since the reader is then not safe enough to write even with the threshold; or P300.2 comes out < 75%, since the threshold or compiler is then too strict to be useful.
+
+A FAIL gets exactly one diagnosis-driven follow-up (lis-301+).
+zsh:1: ====SEAL===== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis300-20260923/SEAL.sha256.txt; echo ---AUDIT---; git show origin/main:artifacts/claude-lis300-20260923/DATA-AUDIT.md | head -50
+3b146670bfe254284948161e3d58ee916bd06702ae0749eecd4d1112acd04073  artifacts/claude-lis300-20260923/PASSMARKS.md
+69ca82561a27764e7982f9481e9492fd747e06ffc9e9ce582d916f2a3e81421f  artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+7b79adc59de8e1358c2eaae1008ead154e771e6b0edfc14b5f251fe30e6eeb8b  artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+4f11e46e32ce0589202f61e3f52b942fbbf52ec21993a7dbaa25a7c536a5edb9  artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+8b3ee54bf90ad2bbcfa09adf1d742e916f9ed4bc2c8c823a2a2de55a65e47ec1  artifacts/claude-lis300-20260923/data/agreed_ids.txt
+890b40d3c3af92eb0445a678aa9f032960973620c363e5b6024d042913878f00  scripts/claude_lis300_common.py
+e96e1f2c3c218084873ad79d0e42fb1558f0bc02306f3214538be3ca8029cb21  scripts/claude_lis300_compiler.py
+5f0649eedc9573ff4c29ba779590b165ed18608bcfffcebcf9bb38bbaf08cd09  scripts/claude_lis300_data.py
+d9e4b3db4cacc6890ab4fc440a8bfa63739f42455c5114a7ab63f1bbe5ea1f1a  scripts/claude_lis300_train.py
+c9fb3f23ccf0bb2884f8f5258ae77cf3d2ba90f45757275fee0f6ea612104e8f  scripts/claude_lis300_read.py
+ba132e4874dfe6e916f3823a357287d12ec343a9bc6a266082b86e148f0bd372  scripts/claude_lis300_score.py
+190c799f218742d68be667f5f4208475a0435ee07c58940f240e7733e4f9ce61  scripts/claude_lis300_agree.py
+b9626c2281c9363b5cb16ef64d1ccd0b45c780c0aaafdbb4db8c85594c1e24b2  design/v3/60-listener/frame-spec.md
+b12a776b47bd628a85215b203ac44adf05e0c3ed3b3bc072b1c1cbf89bd5a2ed  design/v3/60-listener/relation-names.txt
+---AUDIT---
+# lis-300 training-data audit (2026-09-23)
+
+Three Opus writers hand-wrote 1,500 turns with frames: w1 (casual statements), w2 (no-save turns and questions) and w3 (our/we, pronouns, corrections, short answers). Names start with A to M; the panel's names start with N to Z. Three more Opus agents relabelled each file blind, without seeing the frames. A row is kept only when both labels give the same saved facts, the same whose-ask, the same act and the same ask (`scripts/claude_lis300_agree.py`).
+
+| file | rows | agreed | main disagreement |
+|---|---|---|---|
+| w1 | 500 | 465 | writes 27 (casual tells, "negate + correct" mixes, rambles) |
+| w2 | 500 | 477 | act 15 (mostly "forget" requests, which the spec has no act for) |
+| w3 | 500 | 450 | writes 30, act 16, whose 10 (our/we, pronouns, corrections) |
+| total | 1,500 | 1,392 | |
+
+Disagreeing rows are dropped, not adjudicated.
+
+Practice-generator rows come from own-O0b: 3,000 per family across 9 families (27,000 rows). The binding family is dropped because its pronoun labels are wrong or rest on a guessed gender.
+
+Built set: 32,012 training rows (27,000 O0b + 1,253 agreed Opus rows × 4) and 867 dev rows (428 O0b L2, 139 Opus, 300 fresh own-O0a2 turns). Training rows average 97 tokens (max 225), about 3.1M tokens per epoch.
+[0m
+[0m$ [0mfor f in scripts/claude_lis300_common.py scripts/claude_lis300_data.py scripts/claude_lis300_train.py; do echo "=== $f LINES ==="; git show origin/main:$f | wc -l; done; echo ---; git show origin/main:design/v3/60-listener/task-lis300-train.md
+=== scripts/claude_lis300_common.py LINES ===
+      50
+=== scripts/claude_lis300_data.py LINES ===
+     145
+=== scripts/claude_lis300_train.py LINES ===
+     139
+---
+YOUR TASK: builder for lis-300. Fine-tune our own listener (openbmb/MiniCPM5-1B, Apache 2.0; Ben chose it on 2026-09-23 at 11:01 UTC, which is his yes to download it), pick the confidence threshold on dev, then run the sealed blind panel ONCE. Artifacts go in artifacts/claude-lis300-20260923/. The listener thread (Opus) wrote and CPU-smoke-tested all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis300-20260923/PASSMARKS.md (marks, threshold rule), design/v3/60-listener/frame-spec.md, and scripts/claude_lis300_{common,compiler,data,train,read,score,agree}.py.
+
+0. GPU. GPU: yes. Use BensPC (RTX 5070 Ti, free) if it has a working CUDA torch env; check with `python -c "import torch;print(torch.cuda.is_available())"` in <= 10 min. You need torch, transformers >= 5.6, peft, safetensors and huggingface_hub; installing those with pip in a NEW venv is fine. If BensPC is not usable, rent ONE vast.ai RTX 4090/5090 on demand under the rental rules in handoff/queue/269-resume.md:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - STOP if another instance is running;
+   - ceiling $3.00 and 3 h, enforced by a watchdog;
+   - destroy at the end and confirm the instance list is empty;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git.
+1. DATA. On the GPU machine, get the repo at origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. Then run:
+   python scripts/claude_lis300_data.py --o0b <o0b dir> --opus artifacts/claude-lis300-20260923/data --agree artifacts/claude-lis300-20260923/data/agreed_ids.txt --o0a2 <o0a2 dir> --out <work>/data
+   First check `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` from the repo root: it must be all OK. Record the printed counts.
+2. MODEL. Download openbmb/MiniCPM5-1B from Hugging Face with huggingface_hub.snapshot_download (about 2.1 GB). Record the commit hash and the sha256 of the safetensors file.
+3. TRAIN. Run:
+   python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge
+   If it runs out of memory, use --batch 8 once and report it. Keep train_log.jsonl and summary.json.
+4. DEV + THRESHOLD. Make <work>/dev_rows.jsonl from <work>/data/dev.jsonl (fields id, turn, prev_reply). Then run:
+   python scripts/claude_lis300_read.py --model <work>/run/merged --rows <work>/dev_rows.jsonl --out <work>/dev_pred.jsonl
+   Then run claude_lis300_score.py --gold <work>/data/dev.jsonl --pred <work>/dev_pred.jsonl --sweep. Apply the PASSMARKS threshold rule exactly: T is the smallest grid value with 0 wrong-save turns on the whole dev set, else 0.995. Write T to THRESHOLD.txt along with the sweep table. Also report the dev numbers for each src (o0b_l2, opus_dev, o0a2) at T.
+5. SEAL. Run sha256 over THRESHOLD.txt, the merged model's safetensors, and the dev sweep output. Put the hashes in SEAL-run.sha256.txt BEFORE opening the panel.
+6. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt` (must be all OK). Then run the reader on panel.jsonl, and score it against the key file that seal names, at T and also at T = 0 (the latter is report only). Never print or quote panel turns. Report by category only.
+7. RESULTS.md, result first:
+   - each P300.n with integer counts, PASS/FAIL;
+   - wrong facts per saved fact and per turn;
+   - recall by family;
+   - device, median/p90/max read ms;
+   - training minutes and tok/s;
+   - dollars spent.
+   Append ledger lines P300.1 to P300.6 (cat >> artifacts/fable-predictions-ledger.md).
+8. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis300-merged/ (make the folder) and record its sha256 in RESULTS.md. The chat page will load it from there later. Also keep it on BensPC if trained there. Never push weights.
+PUSH: artifacts/claude-lis300-20260923/{RESULTS.md,THRESHOLD.txt,SEAL-run.sha256.txt,dev_sweep.txt,panel_score.json,panel_score_T0.json,train_summary.json,train_log.jsonl} artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lispanel300-20260923/SPEC-COUNTS.md; echo ===SEALKEY===; git show origin/main:artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt; echo ===SEALPANEL===; git show origin/main:artifacts/claude-lispanel300-20260923/SEAL.sha256.txt
+# lis-300 blind test panel: counts per family
+
+Written blind: no access to the lis-300 training data, lis300 scripts or any other panel.
+240 turns in total. Ids p300-001 to p300-240, shuffled with a fixed seed so the families are mixed.
+
+| family | count |
+|---|---|
+| tell-single | 14 |
+| tell-multi (2-3 facts in one sentence) | 10 |
+| tell-plural | 8 |
+| tell-appositive | 10 |
+| tell-verb (lives in / works at / born in / allergic to ...) | 12 |
+| tell-typo | 8 |
+| tell-self | 8 |
+| **tell subtotal** | **70** |
+| correct (uses prev_reply) | 20 |
+| short-answer (uses prev_reply) | 15 |
+| our-we | 20 |
+| pronoun-clear | 9 |
+| pronoun-ambiguous | 6 |
+| **pronoun subtotal** | **15** |
+| negation | 12 |
+| check | 12 |
+| suppose | 10 |
+| plan | 10 |
+| reported | 8 |
+| chat (likes / small talk) | 8 |
+| **no-save subtotal** | **60** |
+| question-wh | 12 |
+| question-inverse | 8 |
+| question-yesno | 8 |
+| question-twohop | 5 |
+| question-lowercase (no "?") | 7 |
+| **question subtotal** | **40** |
+| **total** | **240** |
+
+## Key conventions where the spec leaves room (for the grader)
+
+- check: act CHECK, fact mode CHECK, and `ask` is filled as a yes/no confirm (`value` set), per key-writing rule 2.
+- reported: act STATE, fact mode REPORTED (the act list has no REPORTED act).
+- pronoun-ambiguous: act UNCLEAR, fact mode UNCLEAR, owner is the pronoun as typed.
+- short-answer: the fact's owner or value may come from prev_reply only.
+- correct: `old` is given only when the turn itself names the old value.
+- question-twohop: the spec has no two-hop form. `ask` holds the first hop (owner, rel), and an extra `"then": <rel>` field holds the second hop. Graders that ignore `then` score the first hop only.
+- Yes/no questions list the asked fact with mode QUESTION. Wh and inverse questions have `facts: []`.
+- negation turns always name a value (no "has no dog" items without a value).
+zsh:1: ==SEALKEY=== not found
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/269-resume.md 2>&1 | head -120
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: git fetch -q origin main, then read each named file with git show origin/main:<path>.
+
+YOUR TASK: builder for exp 264, the question-answering checker. Read design/v3/30-modes/264-qa-checker.md (the one change, exact prompts and save rule) and handoff/kit/briefs/261-earcheck.txt (BensPC, llama-server, ear, arms). In this worktree read artifacts/claude-earcheck261b-20260923/PASSMARKS.md + RESULTS.md and scripts/claude_earcheck261_*.py + scripts/claude_earcheck261b_*.py (read-only; import, never edit). New files only: scripts/claude_earcheck264_*.py, artifacts/claude-earcheck264-20260923/, ledger lines P264.n.
+GPU: yes
+
+YOUR TASK: resume exp 269's registered run. It was blocked because BensPC dropped off the network (see artifacts/claude-ear269-20260923/RESULTS.md). Do NOT change any sealed file.
+1. From the repo root, check artifacts/claude-ear269-20260923/SEAL.sha256.txt (15 OK) and artifacts/claude-ourpanel269-20260923/SEAL.sha256.txt (2 OK). Stop if either fails.
+2. On BensPC: the old run left llama-server PID 26480. If a process with that exact PID is still a llama-server, stop it by exact PID. Never touch pythonw 13036. If another task (e.g. 270-build) is using the GPU right now, wait for it to finish (poll nvidia-smi every 2 min, up to 120 min).
+3. Run the three unrun arms (A, A265, A261b) ONCE each on ourpanel269 with the sealed 269 scripts, exactly as the sealed RESULTS/PASSMARKS describe. Do not re-run arm B (it already ran once). Score with the sealed scorer; marks M1-M8 as sealed.
+4. Write RESULTS-resume.md (new file) in the same folder: verdict first, marks table, every move/miss, deviations. Stop any server you start by exact PID; confirm with nvidia-smi.
+PUSH: artifacts/claude-ear269-20260923 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt
+92e0bd54a19baa36bd19fbc0c04703fce9964f191acbbba6938df90b54503ec2  artifacts/claude-lispanel300-20260923/panel.jsonl
+ef11d0995a51dff5e5c53f5dc019aa608af37e35e7cdab80eace0f99003bbabd  artifacts/claude-lispanel300-20260923/key_v2.jsonl
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/261-earcheck.txt
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+[0m
+[0m$ [0mgit grep -l "BensPC" origin/main -- handoff/ | head; echo ---; git show origin/main:handoff/kit/briefs/261-earcheck.txt | grep -i -A3 -B3 "ssh" | head -40
+origin/main:handoff/HANDOFF.md
+origin/main:handoff/held/own-e1-pretrain.md
+origin/main:handoff/kit/briefs/213-earssafety.txt
+origin/main:handoff/kit/briefs/256-earloop.txt
+origin/main:handoff/kit/briefs/257-earv4.txt
+origin/main:handoff/kit/briefs/261-earcheck.txt
+origin/main:handoff/kit/mimo/t261build.txt
+origin/main:handoff/kit/mimo/watcher.sh
+origin/main:handoff/memory/MEMORY.md
+origin/main:handoff/memory/benspc-gpu-ops.md
+---
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+[0m
+[0m$ [0mgit show origin/main:handoff/memory/benspc-gpu-ops.md
+---
+name: benspc-gpu-ops
+description: "How the Qwen llama-server on BensPC respawns, how it was stopped, how to restore it, and how to run PowerShell/Python over SSH without quoting breakage"
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: daf7c42e-d7f3-43b9-ae1e-ebd0fe3a6e26
+  modified: 2026-09-18T11:17:35.488Z
+---
+
+- The Qwen3.8-27B `llama-server.exe` (port 8081, ~14 GB VRAM) is launched by `C:\llama\serve-8081.bat`, a `goto loop` restart wrapper (15 s delay) started by scheduled task `ScoutLlamaServer` (ONLOGON). Killing only the server PID is useless: it respawns within ~15 s.
+- 2026-09-18: with Ben's authorization, stopped the cmd.exe running serve-8081.bat and then the Qwen server; GPU went to ~15.3 GB free. It stays down until next logon. Restore with `schtasks /run /tn ScoutLlamaServer` on BensPC.
+- 2026-09-18 (later): at Ben's request, **disabled** the ScoutLlamaServer task so Qwen no longer autostarts at logon (frees the GPU for training). Re-enable with `Enable-ScheduledTask -TaskName ScoutLlamaServer` (then `schtasks /run /tn ScoutLlamaServer` to start it now).
+- SSH quoting: send PowerShell as `powershell.exe -NoProfile -NonInteractive -EncodedCommand <base64 UTF-16LE>`. Windows PowerShell 5.1 strips double quotes from native-exe args, so pass Python code via stdin (`$code | & python.exe -B -`), not `-c`.
+- BensPC env (measured 2026-09-18): Python 3.10.9, torch 2.11.0+cu128, cuDNN 9.19, RTX 5070 Ti sm_120 present in arch list.
+
+Related: [[gpt-bridge-serial-only]]
+- **Fast Qwen config for batch jobs (measured 2026-09-18):** `C:\llama-b10679\llama-server.exe -m C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf --host 127.0.0.1 --port 8081 -c 16384 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --spec-type draft-mtp --spec-draft-n-max 2 --parallel 1 -t 6` gives ~69 tok/s single stream (88 aggregate with 2 client threads) on ~1,100-token prompts, and 0.16 s per short yes/no check. The autostart config (q4_0 V cache, `--parallel 4`) collapsed to ~5 tok/s per slot on the same prompts. Start it detached via `Invoke-CimMethod Win32_Process Create` with `cmd /c ... >> C:\llama\server-8081-premonition.log`, and reach it from the Mac with `ssh -N -L 18081:127.0.0.1:8081 benspc` (the Tailscale link drops sometimes, so wrap it in a restart loop). Stop it before GPU training: it uses ~15 GB of VRAM.
+- **VRAM spill signature (seen 2026-09-22, exp 235).** When a training run creeps to ~15.9 of 16.3 GB, Windows WDDM spills into shared system RAM over PCIe. The run doesn't crash; it just crawls. The signs are nvidia-smi showing "100 %" utilisation at only ~78 W (real compute draws 250 W+), with step time jumping 4x (0.59 → 2.4 s/step). Fix: the same effective batch via a smaller micro-batch plus gradient accumulation. SmolLM2-360M full fine-tune: micro-batch 16 × 2 gives a 10.8 GB peak and 0.25 s/step. Check `nvidia-smi --query-gpu=memory.used,power.draw --format=csv` early in every GPU run.
+[0m
+[0m# [0mTodos
+[•] Read sealed lis300 specs + scripts (read-only)
+[ ] Check BensPC GPU availability (SSH, CUDA torch)
+[ ] On GPU machine: extract repo, verify SEAL, build data
+[ ] Download MiniCPM5-1B, record hash
+[ ] Fine-tune 2 epochs + merge
+[ ] Dev read + threshold sweep + THRESHOLD.txt
+[ ] SEAL-run BEFORE panel
+[ ] Run sealed panel ONCE, score at T and T=0
+[ ] Write RESULTS.md + ledger lines, keep model on Mac
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_common.py; echo "=====DATA====="; git show origin/main:scripts/claude_lis300_data.py
+#!/usr/bin/env python3
+"""lis-300 shared bits: the reader's prompt and the canonical frame text.
+
+The prompt is plain text (no chat template, no thinking tags) so that training and
+inference see exactly the same bytes. The target is compact JSON with keys in a fixed order.
+"""
+from __future__ import annotations
+
+import json
+
+SYSTEM = ("Read the user's chat turn into a frame. Copy names and values exactly as typed. "
+          "Output one JSON object.")
+END = "\n<END>"
+
+
+def build_prompt(turn: str, prev_reply: str = "") -> str:
+    return (f"{SYSTEM}\nAssistant said: {prev_reply.strip() or '(nothing)'}\n"
+            f"User said: {turn.strip()}\nFrame: ")
+
+
+FACT_KEYS = ["owner", "rel", "value", "mode", "old"]
+ASK_KEYS = ["owner", "rel", "via", "value", "inverse"]
+
+
+def canon_frame(fr: dict) -> dict:
+    facts = []
+    for f in fr.get("facts") or []:
+        facts.append({k: f[k] for k in FACT_KEYS if k in f and f[k] is not None})
+    ask = fr.get("ask")
+    if isinstance(ask, dict):
+        ask = {k: ask[k] for k in ASK_KEYS if k in ask and ask[k] is not None}
+    else:
+        ask = None
+    return {"act": fr.get("act"), "facts": facts, "ask": ask}
+
+
+def frame_text(fr: dict) -> str:
+    return json.dumps(canon_frame(fr), ensure_ascii=False, separators=(", ", ": ")) + END
+
+
+def parse_frame(text: str):
+    """Parse the model's output; None if it is not a valid frame."""
+    t = text.split("<END>")[0].strip()
+    try:
+        fr = json.loads(t)
+    except Exception:
+        return None
+    if not isinstance(fr, dict) or "act" not in fr or not isinstance(fr.get("facts", []), list):
+        return None
+    return fr
+=====DATA=====
+#!/usr/bin/env python3
+"""lis-300 training data builder.
+
+Sources:
+  1. own-O0b generator rows (builder-outbox artifacts/claude-own-o0b-20260923, sealed PASS),
+     converted from character spans to the frame-spec strings; a fixed-seed sample per family.
+  2. Opus-written natural rows (artifacts/claude-lis300-20260923/data/opus_w*.jsonl), only the
+     rows whose frame a blind second Opus labeller reproduced (audit_agree ids file).
+Output: train.jsonl / dev.jsonl with {"id","prompt","target","src","family"}.
+
+python3 scripts/claude_lis300_data.py --o0b DIR --opus DIR --agree FILE --out DIR [--per-family 3000] [--opus-repeat 4]
+"""
+from __future__ import annotations
+
+import argparse
+import gzip
+import json
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_common import build_prompt, frame_text  # noqa: E402
+
+ACT = {"STATE": "STATE", "CORRECT": "CORRECT", "DENY": "NEGATE", "ASK": "ASK", "CHECK": "CHECK",
+       "SUPPOSE": "SUPPOSE", "PLAN": "PLAN", "CHAT": "CHAT", "UNCLEAR": "UNCLEAR"}
+MODE = {"ASSERT": "ASSERT", "CORRECT": "CORRECT", "DENY": "NEGATED", "CHECK": "CHECK",
+        "SUPPOSE": "SUPPOSE", "PLAN": "PLAN", "REPORTED": "REPORTED", "ASK": "QUESTION",
+        "NONE": "UNCLEAR"}
+
+
+def span(turn, s):
+    if s == "ME":
+        return "me"
+    if s == "WE":
+        return "we"
+    return turn[s[0]:s[1]]
+
+
+PRONOUNS = {"he", "she", "his", "her", "hers", "him", "they", "them", "their", "it", "its"}
+
+
+def pronoun_owner(r):
+    """own-O0b bug found 2026-09-23: 9,903 binding rows store the pronoun itself as the owner."""
+    if r.get("family") == "binding":
+        return True  # whole family dropped: its pronoun labels rest on a gender guess (own-model thread, 11:0x UTC)
+    t = r["turn"]
+    return any(isinstance(f["owner"], list) and t[f["owner"][0]:f["owner"][1]].lower() in PRONOUNS
+               for f in r["facts"])
+
+
+def convert_o0b(r):
+    t = r["turn"]
+    facts = [{"owner": span(t, f["owner"]), "rel": f["relation"], "value": span(t, f["value_span"]),
+              "mode": MODE[f["mode"]]} for f in r["facts"]]
+    ask = None
+    q = r.get("question")
+    if q:
+        ask = {"owner": span(t, q["owner_span"]), "rel": (q.get("relations") or ["other"])[0],
+               "inverse": bool(q.get("inverse"))}
+    return {"act": ACT[r["act"]], "facts": facts, "ask": ask}
+
+
+def load_gz(paths):
+    for p in paths:
+        with gzip.open(p, "rt") as fh:
+            for line in fh:
+                yield json.loads(line)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--o0b", required=True)
+    ap.add_argument("--opus", required=True)
+    ap.add_argument("--agree", required=True, help="file with one agreed Opus row id per line")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--per-family", type=int, default=3000)
+    ap.add_argument("--opus-repeat", type=int, default=4)
+    ap.add_argument("--opus-dev-frac", type=float, default=0.1)
+    ap.add_argument("--o0a2", help="dir with own-O0a2 turns.jsonl + gold.jsonl (fresh dev turns)")
+    a = ap.parse_args()
+    rng = random.Random(300)
+    o0b = Path(a.o0b)
+    by_fam = {}
+    dropped = 0
+    for r in load_gz(sorted(o0b.glob("train-*.jsonl.gz"))):
+        if pronoun_owner(r):
+            dropped += 1
+            continue
+        by_fam.setdefault(r["family"], []).append(r)
+    train, dev = [], []
+    for fam, rows in sorted(by_fam.items()):
+        rng.shuffle(rows)
+        for r in rows[: a.per_family]:
+            train.append({"id": r["id"], "prompt": build_prompt(r["turn"], r["prev_reply"]),
+                          "target": frame_text(convert_o0b(r)), "src": "o0b", "family": fam})
+    for r in load_gz(sorted(o0b.glob("l2dev-*.jsonl.gz"))):
+        if rng.random() < 0.1 and not pronoun_owner(r):
+            dev.append({"id": r["id"], "prompt": build_prompt(r["turn"], r["prev_reply"]),
+                        "target": frame_text(convert_o0b(r)), "src": "o0b_l2", "family": r["family"],
+                        "turn": r["turn"], "prev_reply": r["prev_reply"], "frame": convert_o0b(r)})
+    agree = set(Path(a.agree).read_text().split())
+    opus = []
+    for p in sorted(Path(a.opus).glob("opus_w*.jsonl")):
+        for line in p.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                if r["id"] in agree:
+                    opus.append(r)
+    rng.shuffle(opus)
+    ndev = int(len(opus) * a.opus_dev_frac)
+    for i, r in enumerate(opus):
+        row = {"id": r["id"], "prompt": build_prompt(r["turn"], r.get("prev_reply", "")),
+               "target": frame_text(r["frame"]), "src": "opus", "family": r.get("family", "")}
+        if i < ndev:
+            dev.append(dict(row, src="opus_dev", turn=r["turn"], prev_reply=r.get("prev_reply", ""),
+                            frame=r["frame"]))
+        else:
+            train.extend([row] * a.opus_repeat)
+    if a.o0a2:
+        d = Path(a.o0a2)
+        turns = {r["id"]: r for r in map(json.loads, (d / "turns.jsonl").read_text().splitlines()) if r}
+        for g in map(json.loads, (d / "gold.jsonl").read_text().splitlines()):
+            t = turns[g["id"]]
+            facts = [{"owner": {"ME": "me", "WE": "we"}.get(f["owner"], f["owner"]), "rel": f["relation"],
+                      "value": f["value"], "mode": MODE.get(f["mode"], f["mode"])} for f in g["facts"]]
+            fr = {"act": "STATE" if facts else "CHAT", "facts": facts, "ask": None}
+            dev.append({"id": g["id"], "prompt": build_prompt(t["turn"], t.get("prev_reply", "")),
+                        "target": frame_text(fr), "src": "o0a2", "family": "o0a2",
+                        "turn": t["turn"], "prev_reply": t.get("prev_reply", ""), "frame": fr})
+    rng.shuffle(train)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, rows in (("train", train), ("dev", dev)):
+        with open(out / f"{name}.jsonl", "w") as fh:
+            for row in rows:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    print(json.dumps({"train": len(train), "dev": len(dev), "opus_agreed": len(opus), "o0b_pronoun_owner_dropped": dropped,
+                      "train_src": Counter(r["src"] for r in train),
+                      "dev_src": Counter(r["src"] for r in dev)}, indent=1))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_train.py
+#!/usr/bin/env python3
+"""lis-300 fine-tune: MiniCPM5-1B -> listener (LoRA on every linear layer, loss on the frame only).
+
+python claude_lis300_train.py --model DIR --data DIR --out DIR [--epochs 2] [--lr 2e-4] [--rank 32]
+       [--batch 16] [--max-len 256] [--max-minutes 150] [--limit N] [--merge]
+
+Writes OUT/adapter/, OUT/merged/ (with --merge), OUT/train_log.jsonl, OUT/summary.json.
+Plain torch loop, no Trainer. bf16 on CUDA, fp32 on CPU (CPU only for smoke tests).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import random
+import time
+from pathlib import Path
+
+import torch
+from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+
+def load_rows(p, limit=None):
+    rows = [json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip()]
+    return rows[:limit] if limit else rows
+
+
+def encode(tok, row, max_len):
+    p = tok(row["prompt"], add_special_tokens=False)["input_ids"]
+    t = tok(row["target"], add_special_tokens=False)["input_ids"] + [tok.eos_token_id]
+    ids = ([tok.bos_token_id] if tok.bos_token_id is not None else []) + p + t
+    labels = [-100] * (len(ids) - len(t)) + t
+    return ids[:max_len], labels[:max_len]
+
+
+def batches(encoded, bs, pad_id, shuffle, rng):
+    idx = list(range(len(encoded)))
+    if shuffle:
+        rng.shuffle(idx)
+    for i in range(0, len(idx), bs):
+        chunk = [encoded[j] for j in idx[i:i + bs]]
+        L = max(len(x[0]) for x in chunk)
+        ids = torch.full((len(chunk), L), pad_id)
+        lab = torch.full((len(chunk), L), -100)
+        att = torch.zeros((len(chunk), L), dtype=torch.long)
+        for k, (a, b) in enumerate(chunk):
+            ids[k, :len(a)] = torch.tensor(a)
+            lab[k, :len(b)] = torch.tensor(b)
+            att[k, :len(a)] = 1
+        yield ids, lab, att
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--epochs", type=float, default=2.0)
+    ap.add_argument("--lr", type=float, default=2e-4)
+    ap.add_argument("--rank", type=int, default=32)
+    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--max-len", type=int, default=256)
+    ap.add_argument("--max-minutes", type=float, default=150)
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--merge", action="store_true")
+    ap.add_argument("--seed", type=int, default=300)
+    a = ap.parse_args()
+    torch.manual_seed(a.seed)
+    rng = random.Random(a.seed)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+    tok = AutoTokenizer.from_pretrained(a.model)
+    pad_id = tok.pad_token_id if tok.pad_token_id is not None else tok.eos_token_id
+    model = AutoModelForCausalLM.from_pretrained(a.model, dtype=dtype).to(dev)
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    cfg = LoraConfig(r=a.rank, lora_alpha=2 * a.rank, lora_dropout=0.05, task_type="CAUSAL_LM",
+                     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"])
+    model = get_peft_model(model, cfg)
+    n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    n_all = sum(p.numel() for p in model.parameters())
+    train = [encode(tok, r, a.max_len) for r in load_rows(Path(a.data) / "train.jsonl", a.limit)]
+    devrows = [encode(tok, r, a.max_len) for r in load_rows(Path(a.data) / "dev.jsonl", a.limit and max(8, a.limit // 10))]
+    steps_per_epoch = math.ceil(len(train) / a.batch)
+    total = max(1, int(steps_per_epoch * a.epochs))
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=a.lr, weight_decay=0.0)
+    warm = max(1, total // 30)
+    sched = torch.optim.lr_scheduler.LambdaLR(
+        opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(1.0, s / total))))
+    log = open(out / "train_log.jsonl", "w")
+    t0 = time.time()
+    step, toks, stopped = 0, 0, None
+    model.train()
+    while step < total and stopped is None:
+        for ids, lab, att in batches(train, a.batch, pad_id, True, rng):
+            ids, lab, att = ids.to(dev), lab.to(dev), att.to(dev)
+            loss = model(input_ids=ids, attention_mask=att, labels=lab).loss
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step(); sched.step(); opt.zero_grad(set_to_none=True)
+            step += 1
+            toks += int(att.sum())
+            if step % 20 == 0 or step == 1:
+                el = time.time() - t0
+                rec = {"step": step, "total": total, "loss": round(loss.item(), 4),
+                       "lr": sched.get_last_lr()[0], "tok_per_s": round(toks / el, 1), "min": round(el / 60, 2)}
+                log.write(json.dumps(rec) + "\n"); log.flush()
+                print(rec, flush=True)
+            if (time.time() - t0) / 60 > a.max_minutes:
+                stopped = "time_cap"
+                break
+            if step >= total:
+                break
+    model.eval()
+    dl, dn = 0.0, 0
+    with torch.no_grad():
+        for ids, lab, att in batches(devrows, a.batch, pad_id, False, rng):
+            ids, lab, att = ids.to(dev), lab.to(dev), att.to(dev)
+            dl += model(input_ids=ids, attention_mask=att, labels=lab).loss.item() * ids.shape[0]
+            dn += ids.shape[0]
+    model.save_pretrained(out / "adapter")
+    tok.save_pretrained(out / "adapter")
+    if a.merge:
+        merged = model.merge_and_unload()
+        merged.save_pretrained(out / "merged", safe_serialization=True)
+        tok.save_pretrained(out / "merged")
+    summ = {"steps": step, "planned_steps": total, "stopped": stopped, "train_rows": len(train),
+            "dev_rows": len(devrows), "dev_loss": dl / max(1, dn), "trainable_params": n_train,
+            "all_params": n_all, "minutes": round((time.time() - t0) / 60, 2),
+            "tok_per_s": round(toks / max(1e-9, time.time() - t0), 1), "device": dev, "args": vars(a)}
+    (out / "summary.json").write_text(json.dumps(summ, indent=1))
+    print(json.dumps(summ, indent=1))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_read.py
+#!/usr/bin/env python3
+"""lis-300 reader: the fine-tuned MiniCPM5-1B listener, with a confidence per fact.
+
+Confidence of fact i = the lowest probability the model gave any token it emitted inside
+the turn's "act" value or inside fact i's JSON object (greedy decoding). The compiler asks
+back when this is below the threshold fixed on dev.
+
+Library:  r = Reader(model_dir); frame, confs, raw, ms = r.read(turn, prev_reply)
+CLI:      python claude_lis300_read.py --model DIR --rows ROWS.jsonl --out OUT.jsonl
+          ROWS rows need {"id","turn","prev_reply"}; OUT rows = {"id","frame","conf","raw","ms"}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_common import build_prompt, parse_frame  # noqa: E402
+
+
+def object_spans(text: str):
+    """Char spans of the act value and of each object inside the facts array."""
+    act = None
+    i = text.find('"act"')
+    if i >= 0:
+        j = text.find(",", i)
+        act = (i, j if j > 0 else len(text))
+    facts = []
+    k = text.find('"facts"')
+    if k >= 0:
+        k = text.find("[", k)
+        depth, start, instr, esc = 0, None, False, False
+        for p in range(k + 1, len(text)):
+            ch = text[p]
+            if instr:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    instr = False
+                continue
+            if ch == '"':
+                instr = True
+            elif ch == "{":
+                if depth == 0:
+                    start = p
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0 and start is not None:
+                    facts.append((start, p + 1))
+            elif ch == "]" and depth == 0:
+                break
+    return act, facts
+
+
+class Reader:
+    def __init__(self, model_dir, device=None, max_new_tokens=200):
+        self.dev = device or ("cuda" if torch.cuda.is_available() else
+                              "mps" if torch.backends.mps.is_available() else "cpu")
+        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.dev).eval()
+        self.max_new = max_new_tokens
+
+    @torch.no_grad()
+    def read(self, turn, prev_reply=""):
+        t0 = time.perf_counter()
+        p = self.tok(build_prompt(turn, prev_reply), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        out = self.model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=self.max_new,
+                                  do_sample=False, output_scores=True, return_dict_in_generate=True,
+                                  eos_token_id=self.tok.eos_token_id, pad_token_id=self.tok.eos_token_id,
+                                  stop_strings=["<END>"], tokenizer=self.tok)
+        gen = out.sequences[0, ids.shape[1]:].tolist()
+        probs = [torch.softmax(s[0].float(), -1)[t].item() for s, t in zip(out.scores, gen)]
+        # char offset where each generated token ends
+        ends, text = [], ""
+        for n in range(1, len(gen) + 1):
+            text = self.tok.decode(gen[:n], skip_special_tokens=True)
+            ends.append(len(text))
+        starts = [0] + ends[:-1]
+        frame = parse_frame(text)
+        act, fspans = object_spans(text)
+
+        def minp(spans):
+            vals = [pr for s, e, pr in zip(starts, ends, probs)
+                    if any(s < b and e > a for a, b in spans if a is not None)]
+            return min(vals) if vals else 0.0
+        confs = [minp([act, fs] if act else [fs]) for fs in fspans]
+        ms = (time.perf_counter() - t0) * 1000
+        return frame, confs, text, ms
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--rows", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--limit", type=int, default=None)
+    a = ap.parse_args()
+    r = Reader(a.model)
+    rows = [json.loads(l) for l in Path(a.rows).read_text(encoding="utf-8").splitlines() if l.strip()]
+    rows = rows[: a.limit] if a.limit else rows
+    with open(a.out, "w", encoding="utf-8") as fh:
+        for row in rows:
+            fr, cf, raw, ms = r.read(row["turn"], row.get("prev_reply", ""))
+            fh.write(json.dumps({"id": row["id"], "frame": fr, "conf": cf, "raw": raw,
+                                 "ms": round(ms, 1)}, ensure_ascii=False) + "\n")
+    print("read", len(rows), "rows on", r.dev)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_score.py
+#!/usr/bin/env python3
+"""lis-300 scorer: grades the listener + write compiler against gold frames.
+
+Both gold and predicted frames go through the SAME compiler (gold with confidence 1).
+A predicted write counts as:
+  hit     same owner and value (case-insensitive), and the same relation or a narrower one
+          (Ruling 1, 261b-decision.md; pet also covers rabbit/hamster/parrot/horse);
+  broader same owner and value, and the predicted relation is broader than the gold one
+          (true but vague: not a wrong save, not a recall hit);
+  wrong   anything else.
+
+python claude_lis300_score.py --gold GOLD.jsonl --pred PRED.jsonl [--turns TURNS.jsonl]
+        [--threshold T | --sweep] [--out OUT.json]
+GOLD rows: {"id","frame"[, "turn","prev_reply","family"]}; TURNS supplies turn/prev_reply
+if GOLD lacks them. PRED rows: {"id","frame","conf","ms"} from claude_lis300_read.py.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_compiler import compile_frame  # noqa: E402
+
+NARROWER = {"parent": {"mother", "father"}, "sibling": {"sister", "brother"},
+            "spouse": {"wife", "husband"}, "child": {"son", "daughter"},
+            "grandchild": {"grandson", "granddaughter"},
+            "pet": {"dog", "cat", "rabbit", "hamster", "parrot", "horse"}}
+
+
+def norm(x):
+    return " ".join(str(x or "").lower().split())
+
+
+def match(p, g):
+    if norm(p.get("owner")) != norm(g.get("owner")) or norm(p.get("value")) != norm(g.get("value")):
+        return None
+    pr, gr = p.get("rel"), g.get("rel")
+    if pr == gr or pr in NARROWER.get(gr, ()):
+        return "hit"
+    if gr in NARROWER.get(pr, ()):
+        return "broader"
+    return None
+
+
+def ask_ok(p, g):
+    if not isinstance(p, dict) or not isinstance(g, dict):
+        return False
+    via_g = g.get("via") or g.get("then")
+    rel_ok = p.get("rel") == g.get("rel") or p.get("rel") in NARROWER.get(g.get("rel"), ())
+    return (norm(p.get("owner")) == norm(g.get("owner")) and rel_ok
+            and bool(p.get("inverse")) == bool(g.get("inverse"))
+            and norm(p.get("via")) == norm(via_g if isinstance(via_g, str) else ""))
+
+
+def load(p):
+    return {r["id"]: r for r in (json.loads(l) for l in Path(p).read_text(encoding="utf-8").splitlines() if l.strip())}
+
+
+def score(gold, pred, turns, threshold):
+    S = Counter()
+    fam_wrong = Counter()
+    ms = []
+    for i, g in gold.items():
+        t = turns.get(i, g)
+        turn, prev = t.get("turn", ""), t.get("prev_reply", "")
+        gd = compile_frame(g["frame"], turn, prev)
+        p = pred.get(i, {})
+        pf = p.get("frame")
+        S["turns"] += 1
+        if pf is None:
+            S["parse_fail"] += 1
+        if "ms" in p:
+            ms.append(p["ms"])
+        pd = compile_frame(pf, turn, prev, conf=p.get("conf"), threshold=threshold)
+        G, W = gd["write"], pd["write"]
+        S["gold_writes"] += len(G)
+        S["pred_writes"] += len(W)
+        wrong = 0
+        used = set()
+        for w in W:
+            lvl = None
+            for k, gf in enumerate(G):
+                if k not in used:
+                    lvl = match(w, gf)
+                    if lvl:
+                        used.add(k)
+                        break
+            if lvl == "hit":
+                S["hits"] += 1
+            elif lvl == "broader":
+                S["broader"] += 1
+            else:
+                wrong += 1
+        S["wrong_facts"] += wrong
+        if wrong:
+            S["wrong_turns"] += 1
+            fam_wrong[g.get("family", "?")] += 1
+            if not G:
+                S["wrong_turns_on_nosave_turns"] += 1
+        if G:
+            S["gold_write_turns"] += 1
+            S["turn_exact"] += int(wrong == 0 and len(used) == len(G) and len(W) == len(G))
+            S["held_back_facts"] += sum(1 for k, gf in enumerate(G) if k not in used) if pd["ask_back"] else 0
+        if gd["ask_whose"]:
+            S["we_turns"] += 1
+            S["we_asked"] += int(bool(pd["ask_whose"]))
+        ga = g["frame"].get("ask") if g["frame"].get("act") == "ASK" else None
+        if ga:
+            S["ask_turns"] += 1
+            S["ask_ok"] += int(isinstance(pf, dict) and pf.get("act") == "ASK" and ask_ok(pf.get("ask"), ga))
+    res = dict(S)
+    res["threshold"] = threshold
+    res["recall_exact"] = S["hits"] / max(1, S["gold_writes"])
+    res["ask_acc"] = S["ask_ok"] / max(1, S["ask_turns"])
+    res["we_ask_rate"] = S["we_asked"] / max(1, S["we_turns"])
+    res["wrong_turns_by_family"] = dict(fam_wrong)
+    if ms:
+        ms.sort()
+        res["ms_median"] = statistics.median(ms)
+        res["ms_p90"] = ms[int(0.9 * (len(ms) - 1))]
+        res["ms_max"] = ms[-1]
+    return res
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--gold", required=True)
+    ap.add_argument("--pred", required=True)
+    ap.add_argument("--turns")
+    ap.add_argument("--threshold", type=float, default=0.0)
+    ap.add_argument("--sweep", action="store_true")
+    ap.add_argument("--out")
+    a = ap.parse_args()
+    gold, pred = load(a.gold), load(a.pred)
+    turns = load(a.turns) if a.turns else {}
+    if a.sweep:
+        grid = [0.0, 0.3, 0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.93, 0.95, 0.97, 0.98, 0.99, 0.995]
+        res = [score(gold, pred, turns, t) for t in grid]
+        for r in res:
+            print(f"t={r['threshold']:.3f} wrong_turns={r.get('wrong_turns', 0)} "
+                  f"recall={r.get('hits', 0)}/{r['gold_writes']} ask={r.get('ask_ok', 0)}/{r.get('ask_turns', 0)} "
+                  f"we={r.get('we_asked', 0)}/{r.get('we_turns', 0)}")
+    else:
+        res = score(gold, pred, turns, a.threshold)
+        print(json.dumps(res, indent=1))
+    if a.out:
+        Path(a.out).write_text(json.dumps(res, indent=1))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_compiler.py | head -120; echo "...LINES:"; git show origin/main:scripts/claude_lis300_compiler.py | wc -l
+#!/usr/bin/env python3
+"""lis-300 write compiler: the ONLY code that decides what the listener may save.
+
+The fine-tuned reader (MiniCPM5-1B) proposes a frame (design/v3/60-listener/frame-spec.md).
+This plain code turns it into a decision:
+  write      facts to save now (all of a turn's writable facts, or none)
+  ask_whose  facts owned by "we" (Ben's our/we ruling: ask whose, never save as me)
+  ask_back   facts that would be writable but fall below the confidence threshold
+  held       facts that can't be written, each with a reason
+  question   the reader's ask object when act == ASK
+
+A fact is written only when ALL hold: mode ASSERT/CORRECT; owner "me" or a whole-word span
+of the turn or previous reply; value a whole-word span of the turn; relation in the table;
+confidence >= threshold. If any writable-looking fact in the turn fails a check, the whole
+turn writes nothing (all-or-nothing) and the failing facts go to ask_back or held.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REL_NAMES = set((ROOT / "design/v3/60-listener/relation-names.txt").read_text().split())
+WRITE_MODES = {"ASSERT", "CORRECT"}
+PRONOUNS = {"he", "she", "his", "her", "hers", "him", "they", "them", "their", "it", "its",
+            "i", "my", "our", "us", "you", "your"}
+ME_WORDS = re.compile(r"\b(i|i'm|im|i've|ive|me|my|mine|myself)\b", re.I)
+
+
+def whole_word_span(needle: str, hay: str) -> bool:
+    """True if needle occurs in hay as whole words (exact case; typos kept as typed)."""
+    if not needle or not needle.strip():
+        return False
+    # a possessive or "is" contraction typed without an apostrophe is allowed: "anas boss", "hals my cousin"
+    pat = r"(?<![A-Za-z0-9])" + re.escape(needle.strip()) + r"(?:'s|’s|s)?(?![A-Za-z0-9])"
+    return re.search(pat, hay) is not None
+
+
+def check_fact(f: dict, turn: str, prev: str) -> str | None:
+    """Return None if structurally writable, else the reason it is not."""
+    mode = f.get("mode")
+    if mode not in WRITE_MODES:
+        return f"mode:{mode}"
+    owner = str(f.get("owner", ""))
+    if owner.lower() == "we":
+        return "we"
+    if f.get("rel") not in REL_NAMES:
+        return "rel_not_in_table"
+    if owner.strip().lower() in PRONOUNS:
+        return "pronoun_owner"
+    if owner.lower() == "me":
+        if not ME_WORDS.search(turn) and not ME_WORDS.search(prev or ""):
+            return "me_without_first_person"
+    elif not (whole_word_span(owner, turn) or whole_word_span(owner, prev or "")):
+        return "owner_not_span"
+    val = str(f.get("value", ""))
+    asked = (prev or "").strip().endswith("?")  # short answers: "Who is Kai?" -> "my cousin"
+    if not (whole_word_span(val, turn) or (asked and whole_word_span(val, prev))):
+        return "value_not_span"
+    if owner.strip().lower() == str(f.get("value", "")).strip().lower():
+        return "owner_equals_value"
+    return None
+
+
+def compile_frame(frame: dict, turn: str, prev: str = "", conf: list | None = None,
+                  threshold: float = 0.0) -> dict:
+    out = {"write": [], "ask_whose": [], "ask_back": [], "held": [],
+           "question": None, "act": None}
+    if not isinstance(frame, dict):
+        out["held"].append({"reason": "unparsed"})
+        return out
+    out["act"] = frame.get("act")
+    if frame.get("act") == "ASK" and isinstance(frame.get("ask"), dict):
+        out["question"] = frame["ask"]
+    facts = frame.get("facts") or []
+    conf = conf if conf is not None else [1.0] * len(facts)
+    cand, blocked = [], False
+    for i, f in enumerate(facts):
+        if not isinstance(f, dict):
+            blocked = True
+            out["held"].append({"fact": f, "reason": "bad_fact"})
+            continue
+        why = check_fact(f, turn, prev)
+        c = conf[i] if i < len(conf) else 0.0
+        if why == "we":
+            out["ask_whose"].append(f)
+        elif why is None:
+            if c >= threshold:
+                cand.append(f)
+            else:
+                blocked = True
+                out["ask_back"].append({"fact": f, "conf": c})
+        elif why.startswith("mode:"):
+            out["held"].append({"fact": f, "reason": why})
+        else:
+            # looked writable (ASSERT/CORRECT) but failed a structural check -> ask back
+            blocked = True
+            out["ask_back"].append({"fact": f, "conf": c, "reason": why})
+    if out["ask_whose"]:
+        blocked = True  # a turn that needs "whose?" saves nothing until answered
+    if blocked:
+        out["ask_back"] = [{"fact": f, "conf": None, "reason": "turn_blocked"} for f in cand] + out["ask_back"]
+    else:
+        out["write"] = cand
+    return out
+
+
+if __name__ == "__main__":
+    import json
+    tests = [
+        ({"act": "STATE", "facts": [{"owner": "me", "rel": "sister", "value": "mira", "mode": "ASSERT"},
+                                   {"owner": "me", "rel": "sister", "value": "tal", "mode": "ASSERT"}], "ask": None},
+         "my sisters are mira and tal", 2),
+        ({"act": "STATE", "facts": [{"owner": "we", "rel": "dog", "value": "Pip", "mode": "ASSERT"}], "ask": None},
+         "our dog is Pip", 0),
+        ({"act": "NEGATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pip", "mode": "NEGATED"}], "ask": None},
+         "Mira doesn't have a dog named Pip", 0),
+        ({"act": "STATE", "facts": [{"owner": "Mira", "rel": "dog", "value": "Pipp", "mode": "ASSERT"}], "ask": None},
+         "Mira's dog is Pip", 0),
+        ({"act": "STATE", "facts": [{"owner": "me", "rel": "sister", "value": "Mira Stil", "mode": "ASSERT"}], "ask": None},
+...LINES:
+     129
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "nvidia-smi --query-gpu=name,memory.total,memory.free,utilization.gpu,power.draw --format=csv" 2>&1 | head -10
+name, memory.total [MiB], memory.free [MiB], utilization.gpu [%], power.draw [W]
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 15422 MiB, 1 %, 9.05 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "python -c \"import torch, sys; print(sys.version); print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)\"; python -c \"import transformers, peft, safetensors, huggingface_hub; print(transformers.__version__, peft.__version__, safetensors.__version__, huggingface_hub.__version__)\"" 2>&1 | head -10
+3.10.9 (tags/v3.10.9:1dd9be6, Dec  6 2022, 20:01:21) [MSC v.1934 64 bit (AMD64)]
+2.11.0+cu128 True NVIDIA GeForce RTX 5070 Ti
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "python -c \"import transformers; print('tf', transformers.__version__)\" 2>&1; python -c \"import peft; print('peft', peft.__version__)\" 2>&1; python -c \"import safetensors; print('st', safetensors.__version__)\" 2>&1; python -c \"import huggingface_hub; print('hh', huggingface_hub.__version__)\" 2>&1"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\__init__.py", line 27, in <module>
+    from . import dependency_versions_check
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\dependency_versions_check.py", line 57, in <module>
+    require_version_core(deps[pkg])
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 117, in require_version_core
+    return require_version(requirement, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 111, in require_version
+    _compare_versions(op, got_ver, want_ver, requirement, pkg, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 44, in _compare_versions
+    raise ImportError(
+ImportError: huggingface-hub>=0.34.0,<1.0 is required for a normal functioning of this module, but found huggingface-hub==1.28.0.
+Try: `pip install transformers -U` or `pip install -e '.[dev]'` if you're working with git main
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "wmic logicaldisk get caption,freespace,size 2>&1; echo ---; python -m pip --version 2>&1"
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja | head -30"
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "python -m pip --version"
+pip 26.1.1 from C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\pip (python 3.10)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\
+
+12/19/2025  05:46 PM    <DIR>          AMD
+02/22/2024  01:33 AM           112,136 appverifUI.dll
+09/20/2026  01:45 PM    <DIR>          bm-fable
+04/11/2026  11:27 AM    <DIR>          Cakewalk Content
+04/11/2026  11:27 AM    <DIR>          Cakewalk Projects
+09/20/2026  09:50 PM    <DIR>          ComfyUI
+09/06/2026  07:38 PM    <DIR>          data
+08/15/2026  04:31 PM            12,288 DumpStack.log
+09/12/2024  04:40 PM    <DIR>          empty
+09/19/2024  08:24 AM    <DIR>          ESD
+08/20/2026  06:40 AM    <DIR>          inetpub
+09/21/2026  01:53 PM    <DIR>          llama
+08/29/2026  12:52 PM    <DIR>          llama-b10679
+08/28/2026  09:58 PM    <DIR>          llama.cpp
+09/13/2026  06:56 AM    <DIR>          llm
+09/09/2026  04:53 PM               923 llm_dl.py
+09/09/2026  05:03 PM             1,093 llm_dl2.py
+09/09/2026  05:06 PM               857 llm_dl3.py
+09/09/2026  06:13 PM               827 llm_dl_code.py
+09/09/2026  07:00 PM               850 llm_dl_code2.py
+09/09/2026  05:43 PM             2,146 llm_dl_final.py
+07/25/2025  09:58 PM               108 logUploaderSettings.ini
+07/25/2025  09:58 PM               108 logUploaderSettings_temp.ini
+12/31/2024  03:30 PM    <DIR>          MinecraftServer
+04/01/2024  03:26 AM    <DIR>          PerfLogs
+09/22/2026  09:20 PM    <DIR>          Program Files
+08/20/2026  06:45 AM    <DIR>          Program Files (x86)
+09/20/2026  10:51 PM    <DIR>          qwen21-logs
+03/29/2026  03:38 PM    <DIR>          Riot Games
+08/31/2026  07:27 PM    <DIR>          scout
+09/06/2026  11:37 PM    <DIR>          tmp
+09/20/2026  12:24 PM    <DIR>          triton_cache_comfy
+08/20/2026  02:47 AM    <DIR>          Users
+02/22/2024  01:34 AM            66,328 vfcompat.dll
+09/23/2026  04:37 AM    <DIR>          Windows
+05/28/2026  06:45 PM    <DIR>          XboxGames
+              11 File(s)        197,664 bytes
+              25 Dir(s)  71,794,692,096 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\lis300 2>&1 & mkdir C:\\Users\\benja\\lis300\\work 2>&1 & mkdir C:\\Users\\benja\\lis300\\repo 2>&1 & python -m venv C:\\Users\\benja\\lis300\\venv 2>&1 & echo VENV_DONE"
+VENV_DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip setuptools wheel"
+Requirement already satisfied: pip in c:\users\benja\lis300\venv\lib\site-packages (22.3.1)
+ERROR: Could not install packages due to an OSError: Could not find a suitable TLS CA certificate bundle, invalid path: C:\Users\benja\Downloads\pokemon\loop\research\ca_merged.pem
+
+WARNING: There was an error checking the latest version of pip.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set | findstr /I CERT"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set"
+ALLUSERSPROFILE=C:\ProgramData
+APCA_API_KEY_ID=PK7332VGGEMVI2MOJGOLULY5WK
+APCA_API_SECRET_KEY=CRE7fGyLPjQZ7Z5JbFVy8sgfnp7B3nnSbScHxdH6vfqC
+APPDATA=C:\Users\benja\AppData\Roaming
+c28fc6f98a2c44abbbd89d6a3037d0d9_POSIX_FD_STATE=AAAAAAICAgA=
+CommonProgramFiles=C:\Program Files\Common Files
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+CommonProgramW6432=C:\Program Files\Common Files
+COMPUTERNAME=BENSPC
+ComSpec=C:\WINDOWS\system32\cmd.exe
+DriverData=C:\Windows\System32\Drivers\DriverData
+FRED_API_KEY=5c4888a9761d706d6a88fb90041e4559
+HOME=C:\Users\benja
+HOMEDRIVE=C:
+HOMEPATH=\Users\benja
+KAGGLE_API_TOKEN=KGAT_4737508ec1cf986a16227dfdf234fe00
+LOCALAPPDATA=C:\Users\benja\AppData\Local
+LOGNAME=benja
+NUMBER_OF_PROCESSORS=12
+OneDrive=C:\Users\benja\OneDrive
+OS=Windows_NT
+Path=C:\Program Files\ImageMagick-7.1.2-Q16-HDRI;C:\Users\benja\AppData\Local\Programs\Python\Python310\;C:\Users\benja\AppData\Local\Programs\Python\Python310\Scripts\;C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot\bin;C:\Windows\System32;C:\Windows;C:\Windows\System32\wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\Git\cmd;;C:\Program Files (x86)\GnuPG\bin;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files\nodejs\;C:\Program Files\GitHub CLI\;C:\Program Files\Tailscale\;C:\Users\benja\AppData\Local\Programs\Python\Python310\Scripts\;C:\Users\benja\AppData\Local\Programs\Python\Python310\;C:\Users\benja\.cargo\bin;C:\Users\benja\AppData\Local\Programs\Python\Python313\Scripts\;C:\Users\benja\AppData\Local\Programs\Python\Python313\;C:\Users\benja\AppData\Local\Programs\Python\Launcher\;C:\Users\benja\AppData\Local\Microsoft\WindowsApps;C:\Users\benja\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\benja\AppData\Local\Microsoft\WinGet\Packages\astral-sh.uv_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Users\benja\.lmstudio\bin;C:\Users\benja\AppData\Local\Programs\Ollama;C:\Users\benja\AppData\Roaming\npm;C:\Users\benja\AppData\Local\Microsoft\WinGet\Packages\jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe;C:\Users\benja\AppData\Local\Microsoft\WindowsApps;C:\Users\benja\AppData\Local\Programs\MiKTeX\miktex\bin\x64\;C:\Users\benja\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.1-full_build\bin;C:\Users\benja\AppData\Local\Microsoft\WinGet\Packages\Rclone.Rclone_Microsoft.Winget.Source_8wekyb3d8bbwe\rclone-v1.74.4-windows-amd64;C:\Users\benja\AppData\Local\Microsoft\WinGet\Links;
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+PROCESSOR_ARCHITECTURE=AMD64
+PROCESSOR_IDENTIFIER=AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD
+PROCESSOR_LEVEL=25
+PROCESSOR_REVISION=6102
+ProgramData=C:\ProgramData
+ProgramFiles=C:\Program Files
+ProgramFiles(x86)=C:\Program Files (x86)
+ProgramW6432=C:\Program Files
+PROMPT=benja@BENSPC $P$G
+PSModulePath=C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+PUBLIC=C:\Users\Public
+REQUESTS_CA_BUNDLE=C:\Users\benja\Downloads\pokemon\loop\research\ca_merged.pem
+SHELL=c:\windows\system32\cmd.exe
+SSH_CLIENT=100.99.123.88 63890 22
+SSH_CONNECTION=100.99.123.88 63890 100.75.113.114 22
+SystemDrive=C:
+SystemRoot=C:\WINDOWS
+TEMP=C:\Users\benja\AppData\Local\Temp
+TIINGO_API_KEY=e99b1843f92a02bebfdff49ba8bcaaa06ce26aef
+TMP=C:\Users\benja\AppData\Local\Temp
+TORCHINDUCTOR_CACHE_DIR=C:\Users\benja\.unsloth\studio\TORCHINDUCTOR_CACHE_DIR
+TRITON_CACHE_DIR=C:\triton_cache_comfy
+USER=benja
+USERDOMAIN=WORKGROUP
+USERNAME=benja
+USERPROFILE=C:\Users\benja
+VBOX_HWVIRTEX_IGNORE_SVM_IN_USE=1
+windir=C:\WINDOWS
+WURST_OPENAI_KEY=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
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip config list"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE= && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip"
+Requirement already satisfied: pip in c:\users\benja\lis300\venv\lib\site-packages (22.3.1)
+ERROR: Could not install packages due to an OSError: Could not find a suitable TLS CA certificate bundle, invalid path:
+
+WARNING: There was an error checking the latest version of pip.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\Downloads\\pokemon\\loop\\research"
+The system cannot find the path specified.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "python -c \"import certifi; print(certifi.where())\""
+C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\certifi\cacert.pem
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install -U pip"
+Requirement already satisfied: pip in c:\users\benja\lis300\venv\lib\site-packages (22.3.1)
+Collecting pip
+  Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+     ---------------------------------------- 1.8/1.8 MB 11.5 MB/s eta 0:00:00
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 22.3.1
+    Uninstalling pip-22.3.1:
+      Successfully uninstalled pip-22.3.1
+Successfully installed pip-26.2.1
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install torch transformers peft safetensors huggingface_hub 2>&1 | tail -20"
+'tail' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__)\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'torch'
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install torch transformers peft safetensors huggingface_hub > C:\\Users\\benja\\lis300\\pip.log 2>&1 & echo STARTED"
+STARTED
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip.log').read()[-2000:])\""
+dna-3.20-py3-none-any.whl (69 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp310-cp310-win_amd64.whl (15 kB)
+Downloading psutil-7.2.2-cp37-abi3-win_amd64.whl (137 kB)
+Downloading typer-0.27.2-py3-none-any.whl (123 kB)
+Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+   ---------------------------------------- 1.3/1.3 MB 65.9 MB/s  0:00:00
+Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Installing collected packages: mpmath, typing-extensions, tomli, sympy, shellingham, setuptools, safetensors, regex, pyyaml, pygments, psutil, packaging, numpy, networkx, mdurl, MarkupSafe, idna, hf-xet, h11, fsspec, filelock, colorama, click, certifi, annotated-doc, tqdm, markdown-it-py, jinja2, httpcore, exceptiongroup, torch, rich, anyio, typer, httpx, huggingface_hub, tokenizers, accelerate, transformers, peft
+  Attempting uninstall: setuptools
+    Found existing installation: setuptools 65.5.0
+    Uninstalling setuptools-65.5.0:
+      Successfully uninstalled setuptools-65.5.0
+
+Successfully installed MarkupSafe-3.0.3 accelerate-1.15.0 annotated-doc-0.0.5 anyio-4.15.1 certifi-2026.7.22 click-8.5.0 colorama-0.4.6 exceptiongroup-1.3.1 filelock-4.0.1 fsspec-2026.9.0 h11-0.16.0 hf-xet-1.6.0 httpcore-1.0.9 httpx-0.28.1 huggingface_hub-1.32.0 idna-3.20 jinja2-3.1.6 markdown-it-py-4.2.0 mdurl-0.1.2 mpmath-1.3.0 networkx-3.4.2 numpy-2.2.6 packaging-26.3 peft-0.21.0 psutil-7.2.2 pygments-2.21.0 pyyaml-6.0.3 regex-2026.9.10 rich-15.0.0 safetensors-0.8.0 setuptools-84.0.0 shellingham-1.5.4 sympy-1.14.0 tokenizers-0.23.2 tomli-2.4.1 torch-2.14.0 tqdm-4.70.1 transformers-5.17.0 typer-0.27.2 typing-extensions-4.16.0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 766, in get_device_name
+    return get_device_properties(device).name
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 799, in get_device_properties
+    _lazy_init()  # will define _get_device_properties
+  File "C:\Users\benja\lis300\venv\lib\site-packages\torch\cuda\__init__.py", line 584, in _lazy_init
+    raise AssertionError("Torch not compiled with CUDA enabled")
+AssertionError: Torch not compiled with CUDA enabled
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install --index-url https://download.pytorch.org/whl/cu128 torch > C:\\Users\\benja\\lis300\\pip-torch.log 2>&1 & echo STARTED"
+STARTED
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip-torch.log').read()[-1500:])\""
+Looking in indexes: https://download.pytorch.org/whl/cu128
+Requirement already satisfied: torch in .\lis300\venv\lib\site-packages (2.14.0)
+Requirement already satisfied: filelock in .\lis300\venv\lib\site-packages (from torch) (4.0.1)
+Requirement already satisfied: typing-extensions>=4.10.0 in .\lis300\venv\lib\site-packages (from torch) (4.16.0)
+Requirement already satisfied: setuptools>=77.0.3 in .\lis300\venv\lib\site-packages (from torch) (84.0.0)
+Requirement already satisfied: sympy>=1.13.3 in .\lis300\venv\lib\site-packages (from torch) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in .\lis300\venv\lib\site-packages (from torch) (3.4.2)
+Requirement already satisfied: jinja2 in .\lis300\venv\lib\site-packages (from torch) (3.1.6)
+Requirement already satisfied: fsspec>=0.8.5 in .\lis300\venv\lib\site-packages (from torch) (2026.9.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in .\lis300\venv\lib\site-packages (from sympy>=1.13.3->torch) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in .\lis300\venv\lib\site-packages (from jinja2->torch) (3.0.3)
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set REQUESTS_CA_BUNDLE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && set SSL_CERT_FILE=C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\certifi\\cacert.pem && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -m pip install --index-url https://download.pytorch.org/whl/cu128 --force-reinstall --no-deps torch > C:\\Users\\benja\\lis300\\pip-torch2.log 2>&1 & echo STARTED"
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0msleep 120; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/pip-torch2.log').read()[-1200:])\""
+Looking in indexes: https://download.pytorch.org/whl/cu128
+Collecting torch
+  Downloading torch-2.11.0%2Bcu128-cp310-cp310-win_amd64.whl.metadata (29 kB)
+Downloading torch-2.11.0%2Bcu128-cp310-cp310-win_amd64.whl (2753.2 MB)
+   ---------------------------------------- 2.8/2.8 GB 25.3 MB/s  0:01:03
+Installing collected packages: torch
+  Attempting uninstall: torch
+    Found existing installation: torch 2.14.0
+    Uninstalling torch-2.14.0:
+      Successfully uninstalled torch-2.14.0
+Successfully installed torch-2.11.0+cu128
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))\""
+2.11.0+cu128 True NVIDIA GeForce RTX 5070 Ti
+[0m
+[0m$ [0mgit archive origin/main scripts design/v3/60-listener artifacts/claude-lis300-20260923 artifacts/claude-lispanel300-20260923 > /tmp/lis300-main.tar && ls -la /tmp/lis300-main.tar && git archive origin/builder-outbox artifacts/claude-own-o0b-20260923 artifacts/claude-own-o0a2-20260923 > /tmp/lis300-outbox.tar && ls -la /tmp/lis300-outbox.tar
+-rw-r--r--  1 ben-hannan  wheel  19701760 Sep 23 07:41 /tmp/lis300-main.tar
+-rw-r--r--  1 ben-hannan  wheel  13568000 Sep 23 07:41 /tmp/lis300-outbox.tar
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/lis300-main.tar benspc:C:/Users/benja/lis300/lis300-main.tar && scp -o ConnectTimeout=30 /tmp/lis300-outbox.tar benspc:C:/Users/benja/lis300/lis300-outbox.tar && echo COPIED
+COPIED
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300 && tar -xf lis300-main.tar -C repo && tar -xf lis300-outbox.tar -C repo && dir repo\\artifacts"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\repo\artifacts
+
+09/23/2026  07:41 AM    <DIR>          .
+09/23/2026  07:41 AM    <DIR>          ..
+09/23/2026  07:16 AM    <DIR>          claude-lis300-20260923
+09/23/2026  07:16 AM    <DIR>          claude-lispanel300-20260923
+09/23/2026  07:32 AM    <DIR>          claude-own-o0a2-20260923
+09/23/2026  07:32 AM    <DIR>          claude-own-o0b-20260923
+               0 File(s)              0 bytes
+               6 Dir(s)  63,331,737,600 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib,os; os.chdir('C:/Users/benja/lis300/repo'); ok=1; n=0; f=open('artifacts/claude-lis300-20260923/SEAL.sha256.txt').read().splitlines(); print(len(f), 'sealed lines'); [exec('') ] \" 2>&1 | head -5"
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m← [0mWrite /tmp/verify_seal.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/verify_seal.py benspc:C:/Users/benja/lis300/verify_seal.py && ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\verify_seal.py C:\\Users\\benja\\lis300\\repo artifacts\\claude-lis300-20260923\\SEAL.sha256.txt"
+seal=artifacts\claude-lis300-20260923\SEAL.sha256.txt ok=14 bad=0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+Traceback (most recent call last):
+  File "C:\Users\benja\lis300\repo\scripts\claude_lis300_data.py", line 145, in <module>
+    main()
+  File "C:\Users\benja\lis300\repo\scripts\claude_lis300_data.py", line 106, in main
+    for line in p.read_text().splitlines():
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\pathlib.py", line 1135, in read_text
+    return f.read()
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x90 in position 2708: character maps to <undefined>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set PYTHONUTF8=1 && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+Fatal Python error: preconfig_init_utf8_mode: invalid PYTHONUTF8 environment variable value
+Python runtime state: preinitializing
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_data.py --o0b artifacts\\claude-own-o0b-20260923 --opus artifacts\\claude-lis300-20260923\\data --agree artifacts\\claude-lis300-20260923\\data\\agreed_ids.txt --o0a2 artifacts\\claude-own-o0a2-20260923 --out C:\\Users\\benja\\lis300\\work\\data"
+{
+ "train": 32012,
+ "dev": 867,
+ "opus_agreed": 1392,
+ "o0b_pronoun_owner_dropped": 20000,
+ "train_src": {
+  "o0b": 27000,
+  "opus": 5012
+ },
+ "dev_src": {
+  "o0b_l2": 428,
+  "opus_dev": 139,
+  "o0a2": 300
+ }
+}
+[0m
+[0m← [0mWrite /tmp/lis300_dlmodel.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/lis300_dlmodel.py benspc:C:/Users/benja/lis300/lis300_dlmodel.py && ssh -o ConnectTimeout=15 benspc "set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\lis300_dlmodel.py C:\\Users\\benja\\lis300\\model > C:\\Users\\benja\\lis300\\dlmodel.log 2>&1 & echo STARTED"
+STARTED
+[0m
+[0m$ [0msleep 100; ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/dlmodel.log').read()[-1500:])\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x8f in position 390: character maps to <undefined>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/dlmodel.log',encoding='utf-8',errors='replace').read()[-1500:])\""
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:01,  5.10it/s]
+Fetching 11 files:  36%|███▋      | 4/11 [00:00<00:00, 14.78it/s]
+Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 26.27it/s]
+Fetching 11 files:  91%|█████████ | 10/11 [00:20<00:00, 26.27it/s]
+Fetching 11 files: 100%|██████████| 11/11 [00:36<00:00,  5.00s/it]
+Fetching 11 files: 100%|██████████| 11/11 [00:36<00:00,  3.35s/it]
+local_dir=C:\Users\benja\lis300\model
+sha256 model-00000-of-00001.safetensors 7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d bytes=2161290912
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"from huggingface_hub import HfApi; print(HfApi().model_info('openbmb/MiniCPM5-1B').sha)\""
+87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m← [0mWrite /tmp/train.bat
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/train.bat benspc:C:/Users/benja/lis300/train.bat && ssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=memory.free,utilization.gpu,power.draw --format=csv" && ssh -o ConnectTimeout=20 benspc "start /min C:\\Users\\benja\\lis300\\train.bat & echo LAUNCHED"
+memory.free [MiB], utilization.gpu [%], power.draw [W]
+15420 MiB, 1 %, 9.13 W
+LAUNCHED
+[0m
+[0m$ [0msleep 150; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"print(open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read()[-2000:])\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'C:/Users/benja/lis300/train.log'
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu,power.draw --format=csv"
+memory.used [MiB], memory.free [MiB], utilization.gpu [%], power.draw [W]
+576 MiB, 15420 MiB, 0 %, 9.15 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE"
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis300\\train.bat"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300
+
+09/23/2026  07:45 AM               535 train.bat
+               1 File(s)            535 bytes
+               0 Dir(s)  60,914,532,352 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cmd /c start /b \"\" C:\\Users\\benja\\lis300\\train.bat & echo LAUNCHED2"
+LAUNCHED2
+[0m
+[0m$ [0msleep 60; ssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE"
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "start \"\" cmd /c \"ping -n 30 127.0.0.1 > C:\\Users\\benja\\lis300\\pingtest.txt 2>&1\" & echo PINGLAUNCHED"
+PINGLAUNCHED
+[0m
+[0m$ [0msleep 45; ssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis300\\pingtest.txt"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300
+
+File Not Found
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=10 benspc "nvidia-smi --query-gpu=memory.free,utilization.gpu --format=csv && cd C:\\Users\\benja\\lis300\\repo && set \"REQUESTS_CA_BUNDLE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"SSL_CERT_FILE=C:\\Users\\benja\\lis300\\venv\\Lib\\site-packages\\certifi\\cacert.pem\" && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_train.py --model C:\\Users\\benja\\lis300\\model --data C:\\Users\\benja\\lis300\\work\\data --out C:\\Users\\benja\\lis300\\work\\run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge > C:\\Users\\benja\\lis300\\train.log 2>&1 & echo TRAIN_STARTED"
+memory.free [MiB], utilization.gpu [%]
+15420 MiB, 1 %
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 600000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=memory.used,utilization.gpu,power.draw --format=csv"
+memory.used [MiB], utilization.gpu [%], power.draw [W]
+13737 MiB, 97 %, 225.04 W
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE"
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                    1720 Services                   0      4,260 K
+python.exe                    9580 Services                   0  1,984,568 K
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-6:]))\""
+102 lines
+{'step': 1740, 'total': 4002, 'loss': 0.0003, 'lr': 0.0001203456013052634, 'tok_per_s': 4876.4, 'min': 9.42}
+{'step': 1760, 'total': 4002, 'loss': 0.0017, 'lr': 0.00011880598387473651, 'tok_per_s': 4876.6, 'min': 9.53}
+{'step': 1780, 'total': 4002, 'loss': 0.019, 'lr': 0.00011726173098561067, 'tok_per_s': 4877.2, 'min': 9.64}
+{'step': 1800, 'total': 4002, 'loss': 0.0007, 'lr': 0.00011571322327845116, 'tok_per_s': 4876.2, 'min': 9.75}
+{'step': 1820, 'total': 4002, 'loss': 0.0009, 'lr': 0.00011416084244258702, 'tok_per_s': 4877.4, 'min': 9.85}
+{'step': 1840, 'total': 4002, 'loss': 0.0003, 'lr': 0.00011260497112202895, 'tok_per_s': 4878.1, 'min': 9.96}
+[0m
+[0m# [0mTodos
+[✓] Read sealed lis300 specs + scripts (read-only)
+[✓] Check BensPC GPU availability (SSH, CUDA torch)
+[✓] On GPU machine: extract repo, verify SEAL, build data
+[✓] Download MiniCPM5-1B, record hash
+[•] Fine-tune 2 epochs + merge
+[ ] Dev read + threshold sweep + THRESHOLD.txt
+[ ] SEAL-run BEFORE panel
+[ ] Run sealed panel ONCE, score at T and T=0
+[ ] Write RESULTS.md + ledger lines, keep model on Mac
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-4:]))\""
+186 lines
+{'step': 3460, 'total': 4002, 'loss': 0.0001, 'lr': 8.91564247597747e-06, 'tok_per_s': 4877.3, 'min': 18.73}
+{'step': 3480, 'total': 4002, 'loss': 0.0034, 'lr': 8.278869849454718e-06, 'tok_per_s': 4876.9, 'min': 18.84}
+{'step': 3500, 'total': 4002, 'loss': 0.0, 'lr': 7.664705425953755e-06, 'tok_per_s': 4877.5, 'min': 18.95}
+{'step': 3520, 'total': 4002, 'loss': 0.0, 'lr': 7.073300589936993e-06, 'tok_per_s': 4878.4, 'min': 19.05}
+[0m
+[0m$ [0msleep 360; ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"d=open('C:/Users/benja/lis300/train.log',encoding='utf-8',errors='replace').read().splitlines(); print(len(d),'lines'); print('\n'.join(d[-8:]))\""
+241 lines
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; d=json.load(open('C:/Users/benja/lis300/work/run/summary.json')); print(json.dumps(d,indent=1))\""
+{
+ "steps": 4002,
+ "planned_steps": 4002,
+ "stopped": null,
+ "train_rows": 32012,
+ "dev_rows": 867,
+ "dev_loss": 0.08419716661690435,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 21.78,
+ "tok_per_s": 4851.9,
+ "device": "cuda",
+ "args": {
+  "model": "C:\\Users\\benja\\lis300\\model",
+  "data": "C:\\Users\\benja\\lis300\\work\\data",
+  "out": "C:\\Users\\benja\\lis300\\work\\run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis300\\work\\run\\merged && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; rows=[json.loads(l) for l in open('C:/Users/benja/lis300/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; w=open('C:/Users/benja/lis300/work/dev_rows.jsonl','w',encoding='utf-8'); [w.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')},ensure_ascii=False)+'\n') for r in rows]; print('dev_rows',len(rows))\""
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\work\run\merged
+
+09/23/2026  08:12 AM    <DIR>          .
+09/23/2026  08:12 AM    <DIR>          ..
+09/23/2026  08:12 AM             9,241 chat_template.jinja
+09/23/2026  08:12 AM               784 config.json
+09/23/2026  08:12 AM               227 generation_config.json
+09/23/2026  08:12 AM     2,161,290,944 model.safetensors
+09/23/2026  08:12 AM         9,894,271 tokenizer.json
+09/23/2026  08:12 AM               477 tokenizer_config.json
+               6 File(s)  2,171,195,944 bytes
+               2 Dir(s)  58,639,187,968 bytes free
+dev_rows 867
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=20 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis300\\work\\run\\merged --rows C:\\Users\\benja\\lis300\\work\\dev_rows.jsonl --out C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl"
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 61/219 [00:00<00:00, 580.85it/s]Loading weights:  55%|█████▍    | 120/219 [00:00<00:00, 467.25it/s]Loading weights:  77%|███████▋  | 168/219 [00:00<00:00, 378.09it/s]Loading weights:  95%|█████████▍| 208/219 [00:00<00:00, 366.58it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 413.51it/s]
+read 867 rows on cuda
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --sweep"
+t=0.000 wrong_turns=38 recall=634/688 ask=73/78 we=12/12
+t=0.300 wrong_turns=38 recall=633/688 ask=73/78 we=12/12
+t=0.500 wrong_turns=33 recall=629/688 ask=73/78 we=12/12
+t=0.600 wrong_turns=30 recall=626/688 ask=73/78 we=12/12
+t=0.700 wrong_turns=29 recall=615/688 ask=73/78 we=12/12
+t=0.800 wrong_turns=20 recall=605/688 ask=73/78 we=12/12
+t=0.850 wrong_turns=19 recall=598/688 ask=73/78 we=12/12
+t=0.900 wrong_turns=17 recall=574/688 ask=73/78 we=12/12
+t=0.930 wrong_turns=16 recall=561/688 ask=73/78 we=12/12
+t=0.950 wrong_turns=14 recall=533/688 ask=73/78 we=12/12
+t=0.970 wrong_turns=13 recall=510/688 ask=73/78 we=12/12
+t=0.980 wrong_turns=9 recall=487/688 ask=73/78 we=12/12
+t=0.990 wrong_turns=7 recall=428/688 ask=73/78 we=12/12
+t=0.995 wrong_turns=6 recall=374/688 ask=73/78 we=12/12
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis300/work/data/dev.jsonl',encoding='utf-8') if l.strip()]; pred={json.loads(l)['id']:l for l in open('C:/Users/benja/lis300/work/dev_pred.jsonl',encoding='utf-8') if l.strip()}; import os; os.makedirs('C:/Users/benja/lis300/work/persrc',exist_ok=True); from collections import Counter; c=Counter(); fhs={}; [fhs.setdefault(r['src'],open('C:/Users/benja/lis300/work/persrc/gold_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; phs={}; [w.write(json.dumps(r,ensure_ascii=False)+'\n') or c.update([r['src']]) for r in gold for w in [fhs[r['src']]]]; [v.close() for v in fhs.values()]; ifhs={}; [ifhs.setdefault(r['src'],open('C:/Users/benja/lis300/work/persrc/pred_%s.jsonl'%r['src'],'w',encoding='utf-8')) for r in gold]; [ifhs[r['src']].write(pred[r['id']]) for r in gold]; [v.close() for v in ifhs.values()]; print(dict(c))\""
+{}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json,glob; [print(p, sum(1 for _ in open(p,encoding='utf-8'))) for p in sorted(glob.glob('C:/Users/benja/lis300/work/persrc/*.jsonl'))]\""
+C:/Users/benja/lis300/work/persrc\gold_o0a2.jsonl 300
+C:/Users/benja/lis300/work/persrc\gold_o0b_l2.jsonl 428
+C:/Users/benja/lis300/work/persrc\gold_opus_dev.jsonl 139
+C:/Users/benja/lis300/work/persrc\pred_o0a2.jsonl 300
+C:/Users/benja/lis300/work/persrc\pred_o0b_l2.jsonl 428
+C:/Users/benja/lis300/work/persrc\pred_opus_dev.jsonl 139
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_score_T.json"
+{
+ "turns": 867,
+ "gold_writes": 688,
+ "pred_writes": 380,
+ "wrong_facts": 6,
+ "ask_turns": 78,
+ "ask_ok": 73,
+ "hits": 374,
+ "gold_write_turns": 499,
+ "turn_exact": 266,
+ "held_back_facts": 309,
+ "we_turns": 12,
+ "we_asked": 12,
+ "wrong_turns": 6,
+ "wrong_turns_on_nosave_turns": 5,
+ "threshold": 0.995,
+ "recall_exact": 0.5436046511627907,
+ "ask_acc": 0.9358974358974359,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "self_fact": 1,
+  "o0a2": 5
+ },
+ "ms_median": 1505.3,
+ "ms_p90": 2169.9,
+ "ms_max": 3745.2
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_o0b_l2.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_o0b_l2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_o0b_l2.json & C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_opus_dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_opus_dev.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_opus_dev.json & C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\persrc\\gold_o0a2.jsonl --pred C:\\Users\\benja\\lis300\\work\\persrc\\pred_o0a2.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\dev_o0a2.json & echo SRC_DONE"
+{
+ "turns": 428,
+ "gold_writes": 352,
+ "pred_writes": 226,
+ "wrong_facts": 0,
+ "ask_turns": 59,
+ "ask_ok": 59,
+ "hits": 226,
+ "gold_write_turns": 242,
+ "turn_exact": 157,
+ "held_back_facts": 126,
+ "threshold": 0.995,
+ "recall_exact": 0.6420454545454546,
+ "ask_acc": 1.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1482.85,
+ "ms_p90": 2154.6,
+ "ms_max": 3259.0
+}
+{
+ "turns": 139,
+ "gold_writes": 79,
+ "pred_writes": 33,
+ "wrong_facts": 1,
+ "gold_write_turns": 59,
+ "turn_exact": 25,
+ "held_back_facts": 46,
+ "hits": 32,
+ "ask_turns": 19,
+ "ask_ok": 14,
+ "we_turns": 4,
+ "we_asked": 4,
+ "wrong_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.4050632911392405,
+ "ask_acc": 0.7368421052631579,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "self_fact": 1
+ },
+ "ms_median": 1495.8,
+ "ms_p90": 2128.9,
+ "ms_max": 3745.2
+}
+{
+ "turns": 300,
+ "gold_writes": 257,
+ "pred_writes": 121,
+ "hits": 116,
+ "wrong_facts": 5,
+ "gold_write_turns": 198,
+ "turn_exact": 84,
+ "held_back_facts": 137,
+ "we_turns": 8,
+ "we_asked": 8,
+ "wrong_turns": 5,
+ "wrong_turns_on_nosave_turns": 5,
+ "threshold": 0.995,
+ "recall_exact": 0.45136186770428016,
+ "ask_acc": 0.0,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 5
+ },
+ "ms_median": 1543.6999999999998,
+ "ms_p90": 2184.1,
+ "ms_max": 3042.1
+}
+SRC_DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold C:\\Users\\benja\\lis300\\work\\data\\dev.jsonl --pred C:\\Users\\benja\\lis300\\work\\dev_pred.jsonl --sweep > C:\\Users\\benja\\lis300\\work\\dev_sweep.txt 2>&1 & echo SWEPT"
+SWEPT
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_sweep.txt /tmp/dev_sweep.txt && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_score_T.json /tmp/dev_score_T.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_o0b_l2.json /tmp/dev_o0b_l2.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_opus_dev.json /tmp/dev_opus_dev.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/dev_o0a2.json /tmp/dev_o0a2.json && echo PULLED
+PULLED
+[0m
+[0m→ [0mRead /tmp/dev_sweep.txt
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis300-20260923 && ls artifacts/ | head -5
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+[0m
+[0m← [0mWrite artifacts/claude-lis300-20260923/THRESHOLD.txt
+Wrote file successfully.
+[0m
+[0m$ [0mcp /tmp/dev_sweep.txt artifacts/claude-lis300-20260923/dev_sweep.txt && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/run/summary.json /tmp/train_summary.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/run/train_log.jsonl /tmp/train_log.jsonl && cp /tmp/train_summary.json artifacts/claude-lis300-20260923/train_summary.json && cp /tmp/train_log.jsonl artifacts/claude-lis300-20260923/train_log.jsonl && wc -l artifacts/claude-lis300-20260923/
+wc: artifacts/claude-lis300-20260923/: read: Is a directory
+[0m
+[0m$ [0mls -la artifacts/claude-lis300-20260923/ && wc -l artifacts/claude-lis300-20260923/train_log.jsonl
+total 72
+drwxr-xr-x@   6 ben-hannan  staff    192 Sep 23 08:40 .
+drwxr-xr-x@ 441 ben-hannan  staff  14112 Sep 23 08:40 ..
+-rw-------    1 ben-hannan  staff    809 Sep 23 08:40 dev_sweep.txt
+-rw-r--r--    1 ben-hannan  staff   1691 Sep 23 08:40 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff  22149 Sep 23 08:40 train_log.jsonl
+-rw-------    1 ben-hannan  staff    589 Sep 23 08:40 train_summary.json
+     201 artifacts/claude-lis300-20260923/train_log.jsonl
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-lis300-20260923/THRESHOLD.txt artifacts/claude-lis300-20260923/dev_sweep.txt
+95368ef10a4cf4e239beb832e39d6f0882079726379e53a30fdc81e4d3a43740  artifacts/claude-lis300-20260923/THRESHOLD.txt
+479d27fdb73b0c9670e7268a15dd0833a4eea575dbddb13f2527313e06972a53  artifacts/claude-lis300-20260923/dev_sweep.txt
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import hashlib; h=hashlib.sha256(); f=open('C:/Users/benja/lis300/work/run/merged/model.safetensors','rb'); [h.update(c) for c in iter(lambda:f.read(1<<20),b'')]; print(h.hexdigest())\""
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324
+[0m
+[0m← [0mWrite artifacts/claude-lis300-20260923/SEAL-run.sha256.txt
+Wrote file successfully.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\verify_seal.py C:\\Users\\benja\\lis300\\repo artifacts\\claude-lispanel300-20260923\\SEAL-key.sha256.txt"
+seal=artifacts\claude-lispanel300-20260923\SEAL-key.sha256.txt ok=2 bad=0
+[0m
+[0m← [0mWrite /tmp/make_panel_rows.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/make_panel_rows.py benspc:C:/Users/benja/lis300/make_panel_rows.py && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\make_panel_rows.py C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\panel.jsonl C:\\Users\\benja\\lis300\\work\\panel_rows.jsonl"
+keys=id,prev_reply,turn
+rows=240
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=20 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_read.py --model C:\\Users\\benja\\lis300\\work\\run\\merged --rows C:\\Users\\benja\\lis300\\work\\panel_rows.jsonl --out C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl"
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  36%|███▌      | 78/219 [00:00<00:00, 708.35it/s]Loading weights:  68%|██████▊   | 149/219 [00:00<00:00, 507.37it/s]Loading weights:  93%|█████████▎| 203/219 [00:00<00:00, 475.44it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 538.35it/s]
+read 240 rows on cuda
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python -c \"import json; r=json.loads(open('C:/Users/benja/lis300/repo/artifacts/claude-lispanel300-20260923/key_v2.jsonl',encoding='utf-8').readline()); print('key keys='+','.join(sorted(r.keys()))); f=r.get('frame',{}); print('frame keys='+','.join(sorted(f.keys())) if isinstance(f,dict) else 'frame not dict')\""
+key keys=family,frame,id
+frame keys=act,ask,facts
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel300-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel300-20260923\\panel.jsonl --threshold 0.995 --out C:\\Users\\benja\\lis300\\work\\panel_score.json"
+{
+ "turns": 240,
+ "gold_writes": 137,
+ "pred_writes": 72,
+ "wrong_facts": 1,
+ "we_turns": 20,
+ "we_asked": 20,
+ "hits": 71,
+ "gold_write_turns": 102,
+ "turn_exact": 56,
+ "held_back_facts": 66,
+ "ask_turns": 40,
+ "ask_ok": 38,
+ "wrong_turns": 1,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.5182481751824818,
+ "ask_acc": 0.95,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "pronoun-ambiguous": 1
+ },
+ "ms_median": 1492.45,
+ "ms_p90": 2051.0,
+ "ms_max": 3115.1
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\lis300\\repo && set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python scripts\\claude_lis300_score.py --gold artifacts\\claude-lispanel300-20260923\\key_v2.jsonl --pred C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl --turns artifacts\\claude-lispanel300-20260923\\panel.jsonl --threshold 0 --out C:\\Users\\benja\\lis300\\work\\panel_score_T0.json"
+{
+ "turns": 240,
+ "gold_writes": 137,
+ "pred_writes": 140,
+ "wrong_facts": 7,
+ "we_turns": 20,
+ "we_asked": 20,
+ "hits": 133,
+ "gold_write_turns": 102,
+ "turn_exact": 98,
+ "held_back_facts": 1,
+ "ask_turns": 40,
+ "ask_ok": 38,
+ "wrong_turns": 7,
+ "wrong_turns_on_nosave_turns": 5,
+ "threshold": 0.0,
+ "recall_exact": 0.9708029197080292,
+ "ask_acc": 0.95,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "pronoun-ambiguous": 5,
+  "tell-verb": 1,
+  "tell-typo": 1
+ },
+ "ms_median": 1492.45,
+ "ms_p90": 2051.0,
+ "ms_max": 3115.1
+}
+[0m
+[0m← [0mWrite /tmp/fam_scores.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/fam_scores.py benspc:C:/Users/benja/lis300/fam_scores.py && ssh -o ConnectTimeout=15 benspc "set \"PYTHONUTF8=1\" && C:\\Users\\benja\\lis300\\venv\\Scripts\\python C:\\Users\\benja\\lis300\\fam_scores.py C:\\Users\\benja\\lis300\\repo C:\\Users\\benja\\lis300\\work\\panel_pred.jsonl C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\panel.jsonl C:\\Users\\benja\\lis300\\repo\\artifacts\\claude-lispanel300-20260923\\key_v2.jsonl C:\\Users\\benja\\lis300\\work\\perfam 0.995"
+chat turns=8 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+check turns=12 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+correct turns=20 gold_writes=17 hits=7 wrong_turns=0 ask=0/0 parse_fail=0
+negation turns=12 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+our-we turns=20 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+plan turns=10 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+pronoun-ambiguous turns=6 gold_writes=0 hits=0 wrong_turns=1 ask=0/0 parse_fail=0
+pronoun-clear turns=9 gold_writes=12 hits=6 wrong_turns=0 ask=0/0 parse_fail=0
+question-inverse turns=8 gold_writes=0 hits=0 wrong_turns=0 ask=8/8 parse_fail=0
+question-lowercase turns=7 gold_writes=0 hits=0 wrong_turns=0 ask=7/7 parse_fail=0
+question-twohop turns=5 gold_writes=0 hits=0 wrong_turns=0 ask=3/5 parse_fail=0
+question-wh turns=12 gold_writes=0 hits=0 wrong_turns=0 ask=12/12 parse_fail=0
+question-yesno turns=8 gold_writes=0 hits=0 wrong_turns=0 ask=8/8 parse_fail=0
+reported turns=8 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+short-answer turns=15 gold_writes=8 hits=4 wrong_turns=0 ask=0/0 parse_fail=0
+suppose turns=10 gold_writes=0 hits=0 wrong_turns=0 ask=0/0 parse_fail=0
+tell-appositive turns=10 gold_writes=20 hits=6 wrong_turns=0 ask=0/0 parse_fail=0
+tell-multi turns=10 gold_writes=21 hits=8 wrong_turns=0 ask=0/0 parse_fail=0
+tell-plural turns=8 gold_writes=17 hits=11 wrong_turns=0 ask=0/0 parse_fail=0
+tell-self turns=8 gold_writes=8 hits=6 wrong_turns=0 ask=0/0 parse_fail=0
+tell-single turns=14 gold_writes=14 hits=11 wrong_turns=0 ask=0/0 parse_fail=0
+tell-typo turns=8 gold_writes=8 hits=5 wrong_turns=0 ask=0/0 parse_fail=0
+tell-verb turns=12 gold_writes=12 hits=7 wrong_turns=0 ask=0/0 parse_fail=0
+[0m
+[0m$ [0mtail -12 artifacts/fable-predictions-ledger.md
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 291, then 0 events growth under 310).
+- P270b OUTCOME (2026-09-23, builder; registered verdict FAIL: M1 margin, M3, M5 fail; M2, M4, M6 pass; panel seal 2/2 OK, schema clean, arms A/A261b ran ONCE each on BensPC GPU, sealed 18/18 OK after, no sealed file changed): M1 A 37/40 vs A261b 31/40 margin +6 (bar >=30 and +15: absolute met, margin missed by 9; P270b.1 margin half wrong, absolute right); M2 A 14/15 (P270b.2 right); M3 A 2 (061 hunter-occupation pYES 0.511, 068 may-occupation pYES 0.266; P270b.3 range right, bar missed by 1); M4 30/30 (P270b.4 right); M5 3 (040 capitalised-phrase-span, 061 value-span diff, 068 capitalised-decoy save; P270b.5 range wrong by 1); M6 median 0.0096 max 0.1146 (P270b.6 right); ALL FAIL (P270b.7 resolves). Post-seal scorer fix disclosed with diff (v1 symmetric-strip wrongly missed 5 correct s-name frames; v2 pred-anchored re-scores recorded rows, arms never re-ran; v1 file kept). Scorer artifact: u270-003 arm A HIT undeserved (true M1 36, margin +5). See artifacts/claude-type270b-20260923/RESULTS.md.
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P310.2 OUTCOME (same) 0 base-chain writes over the 5 T7 turns (each verified in-run to grow notebook events on raw 291 first, then 0 events/0 triples under 310). Hook turn310 outside turn291; me stored as USER with Me166 render; 209/252b screens on every listener save (0 hits); every turn in lis310_log.jsonl.
+- P280n.1 (2026-09-23, builder; exp 280n re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280n-20260923; blind panel never opened) M1 blind joinpanel280n run once on all five arms with sealed 280m runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed = single piece arm whose reply differs from 260 else 260, 2+ = overlap fail) = 100%; 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): 8/8 PASS exit 0, overlap mock 8/9 FAIL exit 1, empty exit 4, schema exit 3.
+- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. 280m deviation corrected (its suites ran only as pre-seal pilot).
+- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test wrong.
+- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10 with owners 280b:5/260:5, control 7/10); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. The 3 misses (ct00#1, ct01#1, ct04#1, control, ev 0) are turns where only 281 differs from 260 and 280m == 281 byte-identical: control wording firing the 281 rewrite, unpredicted by the fixed control->260 rule. All 90 turns equal some piece arm. M2 PASS exactly as P280n.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280n.1 figure wrong (87 not 100), 0-overlap/write/scan parts right; P280n.2 right; P280n.3 right; P280n.4 bar-miss clause tripped on the 3 controls. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280n-20260923/RESULTS.md.
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-merge292-20260923; blind panels never opened, only specs/README counts read) M1 four piece panels fidelity-100%-or-VOID then same runner+scorer on 292: right_lost [] new_wrong [] new_writes [] all panels; traveling 268b employer hole disclosed. M2 vs 291 rows: sessions152 [] bench [] marks123 exactly D_q_vs_s-04 OK->UNCLEAR reply-only; rt136 move set identical to 291 (21 inherited) 0 new; rt143 exactly M3 Q2->Yes + O5 Q2->IDK. M3 restart probes 0 moves; verifier exactly N02 rows[1] Q2->"I don't know Tomas's house." stores identical (lift-then-honest-abstain, stable 5/5); 0 ghosts/dup-fails/bad-writes. M4 median added <= +5 ms (pilot +0.57/+0.68/+0.64). M5 mixpanel292 once per arm: no piece-right item lost, 0 wrong beyond 291, 0 question writes, controls byte-identical to 291, mixed no bar.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/panel_score.json /tmp/panel_score.json && scp -o ConnectTimeout=30 benspc:C:/Users/benja/lis300/work/panel_score_T0.json /tmp/panel_score_T0.json && cp /tmp/panel_score.json artifacts/claude-lis300-20260923/panel_score.json && cp /tmp/panel_score_T0.json artifacts/claude-lis300-20260923/panel_score_T0.json && echo STAGED
+STAGED
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/lis300-merged && scp -o ConnectTimeout=30 "benspc:C:/Users/benja/lis300/work/run/merged/*" ~/premonition-models/lis300-merged/ && ls -la ~/premonition-models/lis300-merged/
+total 4248800
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 08:52 .
+drwxr-xr-x  3 ben-hannan  staff          96 Sep 23 08:47 ..
+-rw-------  1 ben-hannan  staff        9241 Sep 23 08:47 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 08:47 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 08:47 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 08:52 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 08:52 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 08:52 tokenizer.json
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/lis300-merged/model.safetensors
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  /Users/ben-hannan/premonition-models/lis300-merged/model.safetensors
+[0m
+[0m← [0mWrite artifacts/claude-lis300-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'LEDGER_EOF'
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save turns 1/240 (pronoun-ambiguous no-save turn; bar <=1: PASS).
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo); held-back 66; $0 spent; merged sha256 112880d6 kept at ~/premonition-models/lis300-merged/ and on BensPC. See artifacts/claude-lis300-20260923/RESULTS.md.
+LEDGER_EOF
+tail -7 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, seale
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wro
+[0m
+[0m$ [0mls -la artifacts/claude-lis300-20260923/ && git status --short | head -20
+total 112
+drwxr-xr-x@  10 ben-hannan  staff    320 Sep 23 08:52 .
+drwxr-xr-x@ 441 ben-hannan  staff  14112 Sep 23 08:51 ..
+-rw-------    1 ben-hannan  staff    809 Sep 23 08:40 dev_sweep.txt
+-rw-------    1 ben-hannan  staff    557 Sep 23 08:47 panel_score_T0.json
+-rw-------    1 ben-hannan  staff    520 Sep 23 08:47 panel_score.json
+-rw-r--r--    1 ben-hannan  staff   5445 Sep 23 08:52 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    407 Sep 23 08:40 SEAL-run.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   1691 Sep 23 08:40 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff  22149 Sep 23 08:40 train_log.jsonl
+-rw-------    1 ben-hannan  staff    589 Sep 23 08:40 train_summary.json
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+[0m
+[0m$ [0mgit status --short artifacts/claude-lis300-20260923/ artifacts/fable-predictions-ledger.md
+M artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis300-20260923/RESULTS.md; git status --short --untracked-files=all artifacts/claude-lis300-20260923/ | head
+.gitignore:5:artifacts/	artifacts/claude-lis300-20260923/RESULTS.md
+[0m
+[0m# [0mTodos
+[✓] Read sealed lis300 specs + scripts (read-only)
+[✓] Check BensPC GPU availability (SSH, CUDA torch)
+[✓] On GPU machine: extract repo, verify SEAL, build data
+[✓] Download MiniCPM5-1B, record hash
+[✓] Fine-tune 2 epochs + merge
+[✓] Dev read + threshold sweep + THRESHOLD.txt
+[✓] SEAL-run BEFORE panel
+[✓] Run sealed panel ONCE, score at T and T=0
+[✓] Write RESULTS.md + ledger lines, keep model on Mac
+[0m
