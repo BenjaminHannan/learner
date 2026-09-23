@@ -60,3 +60,19 @@ M2 frozen suites as in 280. M3 smalltalkpanel234 re-run once: every figure equal
 Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
 closings with tails, 15 mixed turns (a greeting or thanks plus a real teach or question, e.g. "hey, whats Ana's
 city"), 10 controls. Fictional names only.
+
+## 280b: the one follow-up to 280 (added 07:45 UTC after 280's registered FAIL on M1b 9/12)
+
+Diagnosis: 280's honest text only fires for 16 closed wordings; "So what stuff can you actually do?", "What do you
+do, exactly?" and "can u tell me what youre able to help with"-type turns keep 260's clarify line.
+The one change (on top of 280): a turn is a general ability question when it is question-shaped (or starts with
+"tell me"/"list"), addresses the assistant (you/u/your/yourself), contains an ability cue (can, able, good at,
+capable, help with, abilities, skills, "what do you do"), and names no stored or new entity and no relation word.
+Such turns get 280's sealed CAN280 text. "Can you <specific thing>?" questions are NOT in scope and keep 280's reply.
+Marks: M1 capabilpanel280b: every general item gets CAN280 (bar 100%; 280 arm shown); 0 unsupported claims
+anywhere (director checks); 0 "can you X" items changed vs 280; 0 writes. M2 frozen suites vs 280's rows: only
+predicted moves, GATE clean. M3 capabilpanel280 re-run once (report only).
+Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in wordings as varied as real people
+type (slang, typos, long and short, "tell me"/"list" forms, questions about what it is for); 10 "Can you <specific>?"
+turns; 10 near-misses that are NOT ability questions (questions about a person's abilities: "What can Mira do?",
+"What is Tomas good at?", teaches like "Ana can swim."); 5 controls. Fictional names only.
