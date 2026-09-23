@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premonition Chat (exp 260 demo)</title>
+<style>
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 0; color: #222; }
+  header { background: #f4f1ea; border-bottom: 1px solid #ddd; padding: 10px 16px; }
+  header h1 { font-size: 18px; margin: 0 0 4px 0; }
+  header p { font-size: 13px; margin: 0; color: #555; }
+  #wrap { display: flex; height: calc(100vh - 76px); }
+  #left { flex: 3; display: flex; flex-direction: column; border-right: 1px solid #ddd; min-width: 0; }
+  #right { flex: 2; padding: 10px 14px; overflow-y: auto; min-width: 220px; }
+  #chat { flex: 1; overflow-y: auto; padding: 12px 16px; }
+  .msg-user { text-align: right; margin: 8px 0; }
+  .msg-user span { display: inline-block; background: #e3f0ff; border-radius: 10px; padding: 6px 10px; max-width: 80%; }
+  .msg-bot { margin: 8px 0; }
+  .msg-bot .reply { display: inline-block; background: #f1f1ee; border-radius: 10px; padding: 6px 10px; max-width: 90%; }
+  .saved { font-size: 12px; color: #888; margin: 2px 0 0 2px; }
+  .whybox { font-size: 12px; color: #444; background: #fafafa; border: 1px solid #e2e2e2; padding: 4px 8px; margin-top: 4px; white-space: pre-wrap; word-break: break-word; display: none; }
+  .rowbtns { margin-top: 2px; }
+  .rowbtns button { font-size: 12px; margin-right: 6px; }
+  .flag-note { font-size: 11px; color: #888; }
+  #inputbar { display: flex; border-top: 1px solid #ddd; padding: 8px; }
+  #inputbar input { flex: 1; font-size: 15px; padding: 8px; }
+  #inputbar button { font-size: 15px; margin-left: 8px; padding: 8px 14px; }
+  #status { font-size: 12px; color: #888; padding: 4px 16px; }
+  table.nb { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.nb th, table.nb td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; }
+  tr.added td { background: #dff5df; }
+  tr.removed td { text-decoration: line-through; color: #999; }
+  #loading { padding: 20px; font-size: 16px; color: #666; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Premonition chat</h1>
+  <p>Premonition, exp 260 base (138m + openers). Starts knowing nothing. Talking to it never trains it.</p>
+</header>
+<div id="wrap">
+  <div id="left">
+    <div id="loading">loading...</div>
+    <div id="chat" style="display:none"></div>
+    <div id="status"></div>
+    <div id="inputbar" style="display:none">
+      <input id="text" type="text" placeholder="Say something to Premonition..." autocomplete="off">
+      <button id="send">Send</button>
+    </div>
+  </div>
+  <div id="right">
+    <h3 style="margin:4px 0">Notebook <button id="reset" title="start fresh">New notebook</button></h3>
+    <div id="nbstatus" style="font-size:12px;color:#888"></div>
+    <table class="nb"><thead><tr><th>who</th><th>relation</th><th>value</th></tr></thead>
+    <tbody id="nbbody"></tbody></table>
+    <p style="font-size:11px;color:#888">Facts added on the last turn are green; removed ones are struck through.</p>
+  </div>
+</div>
+<script>
+var lastAdded = [], lastRemoved = [];
+var pollTimer = null;
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function refreshNotebook(){
+  fetch("/notebook").then(function(r){ return r.json(); }).then(function(j){
+    if(!j.ready) return;
+    var nb = j.notebook || [];
+    var body = document.getElementById("nbbody");
+    body.innerHTML = "";
+    nb.forEach(function(t){
+      var tr = document.createElement("tr");
+      var key = t.join("|");
+      var isAdd = lastAdded.some(function(a){ return a.join("|") === key; });
+      if(isAdd) tr.className = "added";
+      tr.innerHTML = "<td>"+esc(t[0])+"</td><td>"+esc(t[1])+"</td><td>"+esc(t[2])+"</td>";
+      body.appendChild(tr);
+    });
+    lastRemoved.forEach(function(t){
+      var tr = document.createElement("tr");
+      tr.className = "removed";
+      tr.innerHTML = "<td>"+esc(t[0])+"</td><td>"+esc(t[1])+"</td><td>"+esc(t[2])+"</td>";
+      body.appendChild(tr);
+    });
+    document.getElementById("nbstatus").textContent = nb.length + " saved fact(s). " + (j.push_status || "");
+  }).catch(function(){});
+}
+
+function checkReady(){
+  fetch("/ready").then(function(r){ return r.json(); }).then(function(j){
+    if(j.ready){
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("chat").style.display = "";
+      document.getElementById("inputbar").style.display = "";
+      if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+      refreshNotebook();
+    }
+  }).catch(function(){});
+}
+
+function addExchange(user, data){
+  var chat = document.getElementById("chat");
+  var du = document.createElement("div");
+  du.className = "msg-user";
+  du.innerHTML = "<span></span>";
+  du.firstChild.textContent = user;
+  chat.appendChild(du);
+  var db = document.createElement("div");
+  db.className = "msg-bot";
+  var added = data.added || [], removed = data.removed || [];
+  var savedTxt;
+  if(added.length === 0 && removed.length === 0){ savedTxt = "saved nothing"; }
+  else {
+    var bits = [];
+    added.forEach(function(t){ bits.push("+" + t.join(" ")); });
+    removed.forEach(function(t){ bits.push("-" + t.join(" ")); });
+    savedTxt = "saved: " + bits.join("; ");
+  }
+  var why = data.why || {};
+  var whyTxt = "ears_stage: " + (why.ears_stage || "") + "\nears_score: " + (why.ears_score || 0) +
+    "\nrecords: " + JSON.stringify(why.records || [], null, 1);
+  var idx = data.turn_index;
+  db.innerHTML = '<div class="reply"></div>' +
+    '<div class="saved"></div>' +
+    '<div class="rowbtns"><button data-a="why">why</button>' +
+    '<button data-a="flag">Flag this</button> ' +
+    '<span class="flag-note">Flagged exchanges go to Claude through the private GitHub repo. Nothing else leaves this Mac.</span></div>' +
+    '<div class="whybox"></div>';
+  db.querySelector(".reply").textContent = data.reply;
+  db.querySelector(".saved").textContent = savedTxt + " (" + (data.seconds || 0) + "s)";
+  db.querySelector(".whybox").textContent = whyTxt;
+  db.querySelector('[data-a="why"]').onclick = function(){
+    var w = db.querySelector(".whybox");
+    w.style.display = (w.style.display === "none" || w.style.display === "") ? "block" : "none";
+  };
+  db.querySelector('[data-a="flag"]').onclick = function(){
+    var note = prompt("Optional one-line note for Claude:", "");
+    if(note === null) return;
+    fetch("/flag", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({turn_index: idx, note: note || ""})}).then(function(r){ return r.json(); }).then(function(j){
+      alert(j.ok ? ("Flag saved. " + (j.push || "")) : ("Flag failed: " + (j.error || "")));
+      refreshNotebook();
+    }).catch(function(e){ alert("Flag failed: " + e); });
+  };
+  chat.appendChild(db);
+  chat.scrollTop = chat.scrollHeight;
+  lastAdded = added; lastRemoved = removed;
+  refreshNotebook();
+}
+
+function send(){
+  var box = document.getElementById("text");
+  var text = box.value.trim();
+  if(!text) return;
+  box.value = "";
+  document.getElementById("status").textContent = "thinking...";
+  fetch("/turn", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({text: text})}).then(function(r){ return r.json(); }).then(function(j){
+    document.getElementById("status").textContent = "";
+    if(j.error){ alert("Error: " + j.error); return; }
+    addExchange(text, j);
+  }).catch(function(e){
+    document.getElementById("status").textContent = "";
+    alert("Send failed: " + e);
+  });
+}
+
+document.getElementById("send").onclick = send;
+document.getElementById("text").addEventListener("keydown", function(e){ if(e.key === "Enter") send(); });
+document.getElementById("reset").onclick = function(){
+  if(!confirm("Start a new notebook? The old state folder is moved aside (not deleted).")) return;
+  fetch("/reset", {method:"POST"}).then(function(r){ return r.json(); }).then(function(j){
+    if(j.error){ alert("Reset failed: " + j.error); return; }
+    document.getElementById("chat").innerHTML = "";
+    lastAdded = []; lastRemoved = [];
+    refreshNotebook();
+    alert("New notebook started. Old state moved to: " + (j.moved_to || ""));
+  }).catch(function(e){ alert("Reset failed: " + e); });
+};
+
+pollTimer = setInterval(checkReady, 1000);
+checkReady();
+</script>
+</body>
+</html>
