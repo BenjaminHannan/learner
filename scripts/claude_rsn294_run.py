@@ -16,8 +16,8 @@ COPY phase (what 292's code reasoner can already do: one- and two-step lookups, 
 action (cross-entropy) and the facts it used (support bits).
 PRACTICE phase (RL, a one-decision bandit with a group baseline, GRPO-style): every kind of
 question, including counting, comparing and before/after, which it is NEVER shown the answer
-to. It only gets a score for its own choice: +1 right, -1 wrong, +0.3 honest "I don't know",
--0.5 "I don't know" when the fact was there, -2 an answer when there is no fact; +0.2 when
+to. It only gets a score for its own choice: +1 right, -0.1 wrong, +0.3 honest "I don't know",
+-0.1 "I don't know" when the fact was there, -2 an answer when there is no fact; +0.2 when
 the cited facts are exactly right on a right answer. A copy batch keeps running beside it so
 old skills are not forgotten.
 Loop arm: trained with a random 2-12 passes; registered eval uses 12 passes.
@@ -119,6 +119,8 @@ def train(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     model = C.build(a.arm, a.size).to(dev)
+    if a.init:
+        model.load_state_dict(torch.load(a.init, map_location=dev, weights_only=True)["state"])
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, weight_decay=0.01)
     total = a.copy_steps + a.rl_steps
     sched = torch.optim.lr_scheduler.LambdaLR(
@@ -136,7 +138,8 @@ def train(a):
         if s % 100 == 0 or s == a.copy_steps - 1:
             log.write(json.dumps({"phase": "copy", "step": s, "loss": round(loss.item(), 4),
                                   "action_ce": round(la, 4), "min": round((time.time() - t0) / 60, 2)}) + "\n"); log.flush()
-    torch.save({"arm": a.arm, "size": a.size, "state": model.state_dict()}, out / "copy_only.pt")
+    if a.copy_steps:
+        torch.save({"arm": a.arm, "size": a.size, "state": model.state_dict()}, out / "copy_only.pt")
     rl_it = loader(ALL_KINDS, a.rl_batch, a.seed + 50, a.workers)
     for s in range(a.rl_steps):
         with ctx():
@@ -247,6 +250,7 @@ if __name__ == "__main__":
     t.add_argument("--batch", type=int, default=256)
     t.add_argument("--rl-batch", type=int, default=128)
     t.add_argument("--lr", type=float, default=3e-4)
+    t.add_argument("--init", default=None, help="start from this checkpoint (dev only)")
     t.add_argument("--workers", type=int, default=6)
     t.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     d = sp.add_parser("dev")

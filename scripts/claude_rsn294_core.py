@@ -510,12 +510,16 @@ def n_params(m: nn.Module) -> int:
 # reward (the code checker; used for practice only, never sees a panel)
 # ----------------------------------------------------------------------------------------
 def reward(pred: str, gold: str) -> float:
+    """Practice is safe to try: when the fact IS in the notebook, a wrong try costs the same as
+    "I don't know" (-0.1), so trying beats giving up.  (Dev smoke 19:55: with wrong = -1 and
+    "I don't know" = -0.5, the practice run learned to give up on counting and comparing.)
+    Answering when the fact is NOT there is still the big penalty: that is inventing."""
     p, g = _key(pred), _key(gold)
     if g == "unknown":
         return 0.3 if p == "unknown" else -2.0        # answering with no fact = inventing
     if p == "unknown":
-        return -0.5
-    return 1.0 if p == g else -1.0
+        return -0.1
+    return 1.0 if p == g else -0.1
 
 
 def supported(action: int, sup_bits: list[bool], info: dict) -> bool:
