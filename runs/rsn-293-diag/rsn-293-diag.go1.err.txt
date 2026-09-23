@@ -1,0 +1,1956 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; pwd; git fetch -q origin main 2>&1 | head -20; git rev-parse --abbrev-ref HEAD; git log --oneline -3; ls
+4:49  up 2 days, 20:39, 4 users, load averages: 58.47 100.29 88.62
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 125134640    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit branch -a | head -30; echo ---; git log --oneline origin/main -5; echo ---; git log --oneline origin/builder-outbox -5 2>&1 | head; echo ---; ls artifacts/ | head -50; echo ---; ls scripts/ | head -50
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+8c00e7915 reasoning line: queue 293-diag (yes/no questions not understood)
+af0922685 board: 241b verdict (registered FAIL on M5 wall only); fix my entry times
+a7c89c331 board: 281 verified FAIL, 280b VOID + re-run ruling, 281b queued
+0689d3a15 queue talk-280b-rerun, talk-281b-build, talk-281b-panel
+bca72b63c 280b re-run ruling (panel column VOID), 281 FAIL verified and 281b spec
+---
+abdec60c6 watcher status
+c04cfeb05 watcher status
+4a3c70c67 watcher status
+064d87b85 watcher status
+a0a065067 builder results: rsn-268b-panel
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag290-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+---
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-diag290-20260923/DIAG.md 2>&1 | head -150
+# DIAG 290 — why 138m says "I didn't understand that question" where 138k declined
+
+Verdict: CAUSE FOUND. One stage does it: the exp-224 decline rewrite
+(`install_decline224`), installed on every 138m build. It turns 138k's honest
+"don't know" decline into 138m's "didn't understand" Q2 sentence on exactly
+the turns the ears never parsed as questions (14 of 42 dev dialogs: all
+"Does A have an R?" turns plus two inverted word orders). The question was
+truly NOT parsed (no `ask` act, question branch never ran) — 138m did not
+parse-it-and-find-nothing. But the Q2 wording is still misleading: it claims a
+comprehension failure, while for the never-taught / taken-back arms the
+notebook genuinely holds no such fact, so 138k's "I have no record of it" was
+the true half of the old reply. 224c, 233, 234, 230c/219 and 227c are all
+exonerated by direct test.
+
+## Marks table (integer counts, all computed from rows.jsonl by script)
+
+| # | Check | Count |
+|---|-------|-------|
+| M1 | Dev dialogs written (own wording, fictional names), each run fresh on 138k, 138l, 138m | 42 dialogs, 126 runs |
+| M2 | 138k vs 138l full-matrix reply equality | 42 / 42 identical |
+| M3 | Parsed turns (ears emitted `ask`) with byte-identical reply on k, l, m | 28 / 28 |
+| M4 | Unparsed turns flipped glue -> Q2 from 138k to 138m | 14 / 14 |
+| M5 | 224-alone stack (138l+224) reproduces 138m's Q2 on the 14 | 14 / 14 |
+| M6 | 224c engagements anywhere (q1honest log entries, all stacks) | 0 |
+| M7 | 138m-class stack WITHOUT wrappers serves the old glue on the 14 (class layers exonerated) | 14 / 14 |
+| M8 | Question turns that wrote to the notebook | 0 / 180 |
+| M9 | d224 log entries on 138m that are kind Q2 with qbranch=False and acts (clarify, clarify) | 14 / 14 |
+
+## Shape x arm table (reply kind per agent; n = dialogs)
+
+138k and 138l are identical on all 42 (M2), so one column covers both.
+
+| Shape | Arm | n | 138k / 138l reply kind | 138m reply kind |
+|-------|-----|---|------------------------|-----------------|
+| What | taught | 2 | 2 answer | 2 answer (same text) |
+| What | never | 5 | 5 decline-targeted ("I don't know Bex's father/hobby/...") | 5 decline-targeted (same text) |
+| What | taken-back | 3 | 2 decline-targeted + 1 answer (replace-then-ask-new-value) | same 2 + 1 (same text) |
+| Where | taught | 2 | 2 answer | 2 answer (same text) |
+| Where | never | 4 | 4 decline-targeted | 4 decline-targeted (same text) |
+| Where | taken-back | 2 | 2 decline-targeted | 2 decline-targeted (same text) |
+| Who | taught | 2 | 2 answer | 2 answer (same text) |
+| Who | never | 4 | 4 decline-targeted | 4 decline-targeted (same text) |
+| Who | taken-back | 2 | 2 decline-targeted | 2 decline-targeted (same text) |
+| Does | taught | 2 | 2 decline-glue | 2 didn't-understand (Q2) |
+| Does | never | 4 | 4 decline-glue | 4 didn't-understand (Q2) |
+| Does | taken-back | 4 | 4 decline-glue | 4 didn't-understand (Q2) |
+| Does (boundary: "Has Bex a dog?", "Does Lena have mother?") | boundary | 2 | 2 decline-glue | 2 didn't-understand (Q2) |
+| Does (boundary: "Is Bex's mother Talia?") | boundary | 1 | 1 answer ("Yes, ...") | 1 answer (same text) |
+| What (boundary: "What is the city of Bex?") | boundary | 1 | 1 answer | 1 answer (same text) |
+| Where (boundary: "Where lives Bex?") | boundary | 1 | 1 decline-glue | 1 didn't-understand (Q2) |
+| Who (boundary: "Who is mother of Bex?") | boundary | 1 | 1 decline-glue | 1 didn't-understand (Q2) |
+
+Kind key: decline-glue = full 138k double decline ("I do not know that from
+what you taught me. ..."); decline-targeted = parsed lookup miss ("I don't
+know Bex's father.", "I don't know anyone called Zane."); didn't-understand =
+224 Q2 ("I didn't understand that question — could you say it another way?").
+
+## Which change caused it (exact file:line)
+
+`scripts/fable_loop224_agent.py:113-137`, function `turn224`, installed on
+every 138m build by `scripts/claude_loop138m_agent.py:210-215`
+(`_build138j_plus224c` calls `L224.install_decline224(loop)` at :213, then
+`L224C.install_q1honest224c(loop)` at :214). The kind decision is :121-127:
+
+- no `ask` act in the tapped ears acts -> not Q1;
+- `state["qbranch"]` is False on all 14 turns, but `_pipeline_question(text)`
+  (`:73-81`) returns True for any text ending in "?" -> kind Q2;
+- Q2 sentence served from `scripts/fable_decline224.py` (`Q2_SENTENCE`).
+
+Bisect proof: 138l + `install_decline224` alone flips 14/14 to the exact 138m
+Q2 text with parsed controls unchanged (M5); adding 224c changes nothing
+(q1c log 0 entries everywhere, M6); the full 138m class stack (233 rewrite,
+234 small talk, 230c/219 name line, 227c identity gate) with the two wrappers
+omitted serves the byte-identical 138k glue on 14/14 (M7).
+
+## Was the question parsed? (honesty test)
+
+No — genuinely not parsed, on all 14 turns, on every agent. Evidence per turn
+(recorded in rows.jsonl): ears acts = `[clarify]` only (heard twice: the 154d
+peek re-hear plus the real hear), `has_ask` = False, outer ears
+`last_stage` = "none", `last_routed.intent` = "DECLINE", notebook events
+unchanged (0 writes, M8). So 138m did NOT parse the question and find
+nothing; its pipeline never recognized these turns as questions at all.
+
+Two honesty caveats, both in 138m's disfavor:
+1. The Q2 verdict did not come from the pipeline treating the turn as a
+   question (`qbranch` False 14/14). It came from the text-shape fallback
+   ("ends with ?"), so the reply says "that question" about a turn the
+   pipeline itself only ever `clarify`-ed.
+2. For the never-taught (4 Does) and taken-back (4 Does) arms the notebook
+   truly holds no such fact, so the discarded knowledge-half of the old glue
+   ("I have no record of it, so I will not guess") was TRUE. 138m keeps only
+   the comprehension-half, misattributing a knowledge gap to a hearing gap.
+
+## Smallest single change restoring the honest decline
+
+One new guard condition in the 224 swap (new wrapper file; no frozen file
+touched, additive-only): when the tapped acts contain no `ask`, the question
+branch never ran, and the acts are `clarify`-only, pass the turn through with
+the original glue instead of serving Q2. That restores the byte-identical
+138k reply on exactly these 14 turns; parsed turns never reach the glue, and
+the Q1/S1 paths are untouched, so no other reply changes. (Diagnosis only —
+not implemented here.)
+
+## Every move, miss, deviation
+
+- Moves (k -> m reply changes): 14, all glue -> Q2, all on unparsed turns
+  (12 Does-shape + "Where lives Bex?" + "Who is mother of Bex?"). 0 moves on
+  the other 28 dialogs.
+- Misses (both agents wrong): `t-does-dog`, `t-does-mother` — fact TAUGHT and
+  stored, yet 138k serves the glue and 138m serves Q2 (2/2 taught-Does).
+  Pre-existing 138k limitation (Does-questions never parse), not caused by
+  the 138m change; the kind still flips there.
+- Correct controls: all 6 taught What/Where/Who answer on all agents;
+  `b-what-replace` answers the new value on all agents; "Is Bex's mother
+  Talia?" answers "Yes, ..." on all agents (yes/no path needs no `ask`).
+- Deviation (method): first bisect stack labeled `138m-no224` leaked the
+  wrappers (its build path re-entered the 224-installing builder;
+  `has224=True`), so its 18 rows are VOID. They match full-138m 18/18
+  (consistency check) and are superseded by `138m-no224v2` (asserted
+  wrapper-free, M7). Rows kept, relabeled, nothing deleted.
+- Env: load 36-51 (bar 60), disk 14 GB free (bar 3 GB), 1 process, CPU only,
+  no panels opened, no model changes.
+
+## What it means / what it doesn't mean
+
+- Means: if a user asks "Does A have an R?" (or an inverted "Where lives A?"),
+  138m will say it didn't understand even when the real problem is just that
+  nobody taught it that fact. The old "I have no record of it" told the truth;
+  the new sentence hides it. Any scorer or user reading "didn't understand" as
+  a hearing failure will misdiagnose a knowledge gap.
+- Doesn't mean: 138m is lying about parsing — it really didn't parse these.
+  It also doesn't mean What/Where/Who answers moved: all 28 parsed turns are
+  byte-identical across 138k, 138l and 138m, and 138m never invents facts here
+  (0 question-turn writes). The damage is exactly 14 turns wide and one
+  wrapper deep.
+
+## Repro
+
+- `scripts/claude_diag290_run.py` — 42 dialogs x 138k/138l/138m -> rows.jsonl
+- `scripts/claude_diag290_bisect.py` — S1/S2/void-S3 (18-dialog subset)
+- `scripts/claude_diag290_bisect2.py` — corrected S3 (`138m-no224v2`)
+- `scripts/claude_diag290_summary.py` — every count in the marks table
+- `scripts/claude_diag290_pilot.py`, `scripts/claude_diag290_probe.py`,
+  `scripts/claude_diag290_probe2.py` — pilots/probes (superset exploration)
+- Raw data: `artifacts/claude-diag290-20260923/rows.jsonl` (198 rows; 18
+  labeled `138m-no224` are VOID per above)
+- Runner: `export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline
+  --no-project --python 3.12 --with torch --with numpy python -B <script>`
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt > /tmp/rules.txt; echo ok
+# list relevant files on origin/main and builder-outbox
+git ls-tree -r --name-only origin/main -- scripts/ | grep -E "138nb|loop138|fix138" | head -30
+echo ---BUILDER---
+git ls-tree -r --name-only origin/builder-outbox -- scripts/ | grep -E "138nb|loop138|diag29" | head -30
+echo ---ART---
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-merge138nb-20260923/ | head -20
+ok
+scripts/claude_loop138k_agent.py
+scripts/claude_loop138l_agent.py
+scripts/claude_loop138m_agent.py
+scripts/claude_loop138n_agent.py
+scripts/fable_fix138e_bench.py
+scripts/fable_fix138e_diagnose.py
+scripts/fable_fix138e_feature.py
+scripts/fable_fix138e_heldout.py
+scripts/fable_fix138e_heldrun.py
+scripts/fable_fix138e_junk.py
+scripts/fable_fix138e_redteam.py
+scripts/fable_fix138f_ablate.py
+scripts/fable_fix138f_bench.py
+scripts/fable_fix138f_junk.py
+scripts/fable_fix138f_m1.py
+scripts/fable_fix138f_rt143.py
+scripts/fable_fix138f_sessions.py
+scripts/fable_fix138g_compareg2.py
+scripts/fable_fix138g_m1.py
+scripts/fable_fix138g_suites.py
+scripts/fable_fix138h_m1pieces.py
+scripts/fable_fix138h_m2.py
+scripts/fable_fix138h_suites.py
+scripts/fable_fix138i_m1pieces.py
+scripts/fable_fix138i_m2.py
+scripts/fable_fix138i_suites.py
+scripts/fable_fix138i_triage.py
+scripts/fable_fix138j_comparem.py
+scripts/fable_fix138j_m1pieces.py
+scripts/fable_fix138j_m2.py
+---BUILDER---
+scripts/claude_138nb_devrepro.py
+scripts/claude_138nb_m1.py
+scripts/claude_138nb_m2.py
+scripts/claude_138nb_m6.py
+scripts/claude_138nb_runall.sh
+scripts/claude_138nb_score.py
+scripts/claude_diag290_bisect.py
+scripts/claude_diag290_bisect2.py
+scripts/claude_diag290_pilot.py
+scripts/claude_diag290_probe.py
+scripts/claude_diag290_probe2.py
+scripts/claude_diag290_run.py
+scripts/claude_diag290_summary.py
+scripts/claude_fix138nb_label.py
+scripts/claude_loop138nb_agent.py
+scripts/claude_loop138p_agent.py
+---ART---
+artifacts/claude-merge138nb-20260923/PASSMARKS.md
+artifacts/claude-merge138nb-20260923/RESULTS.md
+artifacts/claude-merge138nb-20260923/SEAL.sha256.txt
+artifacts/claude-merge138nb-20260923/loop138nb-config.json
+artifacts/claude-merge138nb-20260923/m1/m1-counts-ids.json
+artifacts/claude-merge138nb-20260923/m6/m6-compare.json
+artifacts/claude-merge138nb-20260923/predicted_moves138nb.json
+artifacts/claude-merge138nb-20260923/run/bench1.log
+artifacts/claude-merge138nb-20260923/run/bench1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138nb-20260923/run/bench1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-diff.json
+artifacts/claude-merge138nb-20260923/run/bench1/bench-edit200-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2.log
+artifacts/claude-merge138nb-20260923/run/bench2/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138nb-20260923/run/bench2/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2/bench-diff.json
+artifacts/claude-merge138nb-20260923/run/bench2/bench-edit200-rows.jsonl
+artifacts/claude-merge138nb-20260923/run/bench2/bench-new_121_4hop-rows.jsonl
+[0m
+[0m$ [0mls scripts/claude_loop138nb_agent.py scripts/claude_fix138nb_label.py 2>&1; echo ---; ls artifacts/claude-merge138nb-20260923/ 2>&1 | head; echo ---LOCAL138?; ls scripts/ | grep 138; echo ---; ls artifacts/ | grep diag29
+scripts/claude_fix138nb_label.py
+scripts/claude_loop138nb_agent.py
+---
+loop138nb-config.json
+m1
+m6
+PASSMARKS.md
+predicted_moves138nb.json
+RESULTS.md
+run
+SEAL.sha256.txt
+zsh:1: no matches found: ---LOCAL138?
+[0m
+[0m→ [0mRead scripts/claude_loop138nb_agent.py
+[0m→ [0mRead scripts/claude_fix138nb_label.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-merge138nb-20260923/loop138nb-config.json | head -60; echo ===; ls /tmp/ 2>&1 | head
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+  "stand_in": "exp-89 QuarantinedThinking89 when scripts/fable_webfix89_thinking.py exists at run time, else m2 Thinking (quarantine + 2-site trust)",
+  "replacement": "no further replacement; web text stays quarantined"
+ },
+ "sleeper": {
+  "recipe": "HardGate46Sleeper: exp-46 recipe (robust loss eps=0.10, harden phi +/-30, unchanged 4-fold gate), called via scripts/fable_wire51_adapters.py",
+  "install_path": "wire57 SparseVillageSleeper subclass + word bridge (scripts/fable_wire57_e2e.py) once word episodes flow",
+  "stand_in": "recipe armed; episode feed idle until learned-word asks",
+  "replacement": "scripts/fable_wire57_e2e.py install path"
+ },
+ "sleep_threshold": 20,
+ "daemon": {
+  "module": "Loop138nbDaemon (scripts/claude_loop138nb_agent.py) over Loop138kDaemon"
+ },
+ "self": {
+  "router": "route127 (frozen novelty-guard router, scripts/fable_self127.py) + classify_self187 paraphrase gate (scripts/fable_loop187_agent.py) on the notebook-missed path",
+  "answerer": "grounded_self_answer (fix168 gate over Self99Agent.answer_self on live loop138g state; facts only from live state, plain replies otherwise)",
+  "rule": "loop138 verbatim (138c OFF): notebook answers win; notebook-missed turns serve the grounded self reply on non-DECLINE, the honest decline + suffix on DECLINE",
+  "rule219": "D8 denial checked against notebook: stored USER name wins ('Yes. Your name is X.'); else byte-identical; never writes",
+  "rule230": "219 'Yes. Your name is X.' keeps 'Yes. ' only when the turn starts with an auxiliary verb; else 'Your name is X.'; never writes",
+  "rule230b": "a 'Yes. Your name is X.' reply to a name check naming a specific name compares it with the stored name (case-insensitive, whole name); different -> 'No. Your name is X.'; never writes",
+  "rule230c": "on a 'Yes. Your name is X.' line: Yes/No only when the asked name was extracted and compared; if the turn holds a possible name that could not be extracted -> 'Your name is X.'; never writes",
+  "rule227": "identity '?' turns with a second-person word + exact sealed-template match get the fixed sheet answer (reply-only, 0 writes); everything else byte-identical to loop138i",
+  "rule227b": "identity-sheet NAME answer is 'My name is Premonition.' (was \"I don't have a name yet.\"); everything else byte-identical to loop227",
+  "rule227c": "after the 227 exact gate misses, the widened 227c matcher serves the sheet (contractions, no '?', fillers, synonyms) plus NAMECHECK and RENAME; reply-only, 0 writes",
+  "rule224": "224 + 224c instance wrappers (scripts/fable_loop224_agent.py, scripts/claude_loop224c_agent.py): the exact glued decline with intent DECLINE becomes one sentence per turn type; Q1 only when confirmed",
+  "rule233": "233 polite negative questions rewritten to the plain question (scripts/claude_loop233_agent.py polite_rewrite)",
+  "rule234": "234 how-are-you turns with 0 writes get the fixed small-talk reply (scripts/claude_loop234_agent.py)"
+ },
+ "sleep": {
+  "retrofit": "Sleep145Reasoner + Sleep145Sleeper via retrofit_sleep145",
+zsh:1: == not found
+[0m
+[0m$ [0mdiff <(git show origin/builder-outbox:scripts/claude_loop138nb_agent.py) scripts/claude_loop138nb_agent.py && echo SAME138NB || echo DIFF138NB
+diff <(git show origin/builder-outbox:scripts/claude_fix138nb_label.py) scripts/claude_fix138nb_label.py && echo SAMELABEL || echo DIFFLABEL
+diff <(git show origin/builder-outbox:artifacts/claude-merge138nb-20260923/loop138nb-config.json) artifacts/claude-merge138nb-20260923/loop138nb-config.json && echo SAMECFG || echo DIFFCFG
+echo ---; git show origin/builder-outbox:scripts/claude_diag290_run.py | head -120
+SAME138NB
+SAMELABEL
+SAMECFG
+---
+#!/usr/bin/env python3
+"""Exp 290-diag main run: 44 dev dialogs (own wording, fictional names) on
+138k, 138l, 138m. Fresh temp state_dir per dialog, sleep_threshold 100000.
+Records reply, ears.last_stage, emitted acts, last_routed intent, event
+counts (writes), decline224 / q1honest224c logs. Writes JSONL rows to
+artifacts/claude-diag290-20260923/rows.jsonl. New file only; additive."""
+from __future__ import annotations
+import copy, json, shutil, sys, tempfile
+from pathlib import Path
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+import claude_loop138k_agent as K
+import claude_loop138l_agent as L
+import claude_loop138m_agent as M
+import fable_decline224 as DEC
+
+ART = Path(__file__).resolve().parent.parent / "artifacts" / "claude-diag290-20260923"
+
+# (id, setup turns, final question, arm, shape)
+D = [
+    # taught forwards (expect answer; Does-shape is the known-unparsed case)
+    ("t-what-mother", ["Bex's mother is Talia."], "What is Bex's mother?", "taught", "What"),
+    ("t-what-city", ["Bex's city is Oslo."], "What is Bex's city?", "taught", "What"),
+    ("t-where-live", ["Rin's city is Bergen."], "Where does Rin live?", "taught", "Where"),
+    ("t-where-live2", ["Zane's city is Porto."], "Where does Zane live?", "taught", "Where"),
+    ("t-who-mother", ["Lena's mother is Wren."], "Who is Lena's mother?", "taught", "Who"),
+    ("t-who-boss", ["Marko's boss is Lee."], "Who is Marko's boss?", "taught", "Who"),
+    ("t-does-dog", ["Bex's dog is Biscuit."], "Does Bex have a dog?", "taught", "Does"),
+    ("t-does-mother", ["Lena's mother is Wren."], "Does Lena have a mother?", "taught", "Does"),
+    # never taught (expect honest decline)
+    ("n-what-father", ["Bex's mother is Talia."], "What is Bex's father?", "never", "What"),
+    ("n-what-hobby", ["Bex's mother is Talia."], "What is Bex's hobby?", "never", "What"),
+    ("n-what-teacher", ["Rin's boss is Lee."], "What is Rin's teacher?", "never", "What"),
+    ("n-what-school", ["Bex's mother is Talia."], "What is Bex's school?", "never", "What"),
+    ("n-what-pet", ["Rin's boss is Lee."], "What is Rin's pet?", "never", "What"),
+    ("n-where-live", ["Bex's mother is Talia."], "Where does Bex live?", "never", "Where"),
+    ("n-where-work", ["Bex's mother is Talia."], "Where does Bex work?", "never", "Where"),
+    ("n-where-unknown", ["Bex's mother is Talia."], "Where does Zane live?", "never", "Where"),
+    ("n-where-born", ["Bex's mother is Talia."], "Where was Bex born?", "never", "Where"),
+    ("n-who-father", ["Bex's mother is Talia."], "Who is Bex's father?", "never", "Who"),
+    ("n-who-boss", ["Lena's mother is Wren."], "Who is Lena's boss?", "never", "Who"),
+    ("n-who-coach", ["Rin's boss is Lee."], "Who is Rin's coach?", "never", "Who"),
+    ("n-who-sister", ["Bex's mother is Talia."], "Who is Bex's sister?", "never", "Who"),
+    ("n-does-dog", ["Bex's mother is Talia."], "Does Bex have a dog?", "never", "Does"),
+    ("n-does-hobby", ["Bex's mother is Talia."], "Does Bex have a hobby?", "never", "Does"),
+    ("n-does-unknown", ["Bex's mother is Talia."], "Does Zane have a dog?", "never", "Does"),
+    ("n-does-brother", ["Rin's boss is Lee."], "Does Rin have a brother?", "never", "Does"),
+    # taken back by a correction (expect honest decline about the old fact)
+    ("b-what-forget", ["Bex's mother is Talia.", "Forget Bex's mother."], "What is Bex's mother?", "taken-back", "What"),
+    ("b-what-isnot", ["Rin's boss is Lee.", "Rin's boss is not Lee."], "What is Rin's boss?", "taken-back", "What"),
+    ("b-what-replace", ["Lena's mother is Wren.", "Actually Lena's mother is Pell.", "Yes."], "What is Lena's mother?", "taken-back", "What"),
+    ("b-where-forget", ["Bex's city is Oslo.", "Forget Bex's city."], "Where does Bex live?", "taken-back", "Where"),
+    ("b-where-isnot", ["Zane's city is Porto.", "Zane's city is not Porto."], "Where does Zane live?", "taken-back", "Where"),
+    ("b-who-forget", ["Marko's boss is Lee.", "Forget Marko's boss."], "Who is Marko's boss?", "taken-back", "Who"),
+    ("b-who-isnot", ["Lena's mother is Wren.", "Lena's mother is not Wren."], "Who is Lena's mother?", "taken-back", "Who"),
+    ("b-does-forget", ["Bex's dog is Biscuit.", "Forget Bex's dog."], "Does Bex have a dog?", "taken-back", "Does"),
+    ("b-does-isnot", ["Bex's dog is Biscuit.", "Bex's dog is not Biscuit."], "Does Bex have a dog?", "taken-back", "Does"),
+    ("b-does-mother-isnot", ["Lena's mother is Wren.", "Lena's mother is not Wren."], "Does Lena have a mother?", "taken-back", "Does"),
+    ("b-does-replace", ["Lena's mother is Wren.", "Actually Lena's mother is Pell.", "Yes."], "Does Lena have a mother?", "taken-back", "Does"),
+    # shape boundary probes
+    ("x-where-inv", ["Bex's city is Oslo."], "Where lives Bex?", "boundary", "Where"),
+    ("x-who-of", ["Bex's mother is Talia."], "Who is mother of Bex?", "boundary", "Who"),
+    ("x-what-of", ["Bex's city is Oslo."], "What is the city of Bex?", "boundary", "What"),
+    ("x-does-noart", ["Lena's mother is Wren."], "Does Lena have mother?", "boundary", "Does"),
+    ("x-has", ["Bex's dog is Biscuit."], "Has Bex a dog?", "boundary", "Does"),
+    ("x-is", ["Bex's mother is Talia."], "Is Bex's mother Talia?", "boundary", "Does"),
+]
+
+GLUE = ("I do not know that from what you taught me. I have no record of it, "
+        "so I will not guess. I didn't understand that, I don't know "
+        "\u2014 could you say it another way?")
+Q1 = DEC.NEW_SENTENCES224["Q1"]
+Q2 = DEC.NEW_SENTENCES224["Q2"]
+S1 = DEC.NEW_SENTENCES224["S1"]
+
+def kind_of(reply):
+    if reply in (Q2, S1):
+        return "didnt-understand"
+    if reply == Q1:
+        return "decline-q1"
+    if reply == GLUE:
+        return "decline-glue"
+    low = reply.lower()
+    if "i don't know" in low or "i do not know" in low or "no record" in low:
+        return "decline-targeted"
+    return "answer-or-other"
+
+MODS = {"138k": (K, "build_agent138k", "DEFAULT_CONFIG138K"),
+        "138l": (L, "build_agent138l", "DEFAULT_CONFIG138L"),
+        "138m": (M, "build_agent138m", "DEFAULT_CONFIG138M")}
+
+def evcount(loop):
+    try:
+        return len(getattr(loop.nb, "nb", loop.nb).events)
+    except Exception:
+        return -1
+
+def run():
+    ART.mkdir(parents=True, exist_ok=True)
+    out = ART / "rows.jsonl"
+    if out.exists():
+        out.unlink()
+    n = 0
+    for tag, (mod, bname, cname) in MODS.items():
+        base = copy.deepcopy(getattr(mod, cname))
+        for did, setup, q, arm, shape in D:
+            sd = Path(tempfile.mkdtemp(prefix="nb290-"))
+            cfg = copy.deepcopy(base); cfg["state_dir"] = str(sd); cfg["sleep_threshold"] = 100000
+            loop = getattr(mod, bname)(cfg)
+            seen = []
+            outer = loop.ears.hear
+            def hear_wrap(turn, _o=outer):
+                a = _o(turn)
+                seen.append([dict(x) if isinstance(x, dict) else x for x in (a or [])])
+                return a
+            loop.ears.hear = hear_wrap
+            setup_replies = []
+            for t in setup:
+                seen.clear()
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_diag290_run.py | sed -n '120,220p'
+echo ====SUMMARY====; git show origin/builder-outbox:scripts/claude_diag290_summary.py | head -80
+seen.clear()
+                setup_replies.append(" ".join(loop.turn(t)))
+            seen.clear()
+            e0 = evcount(loop)
+            reply = " ".join(loop.turn(q))
+            e1 = evcount(loop)
+            acts = seen[-1] if seen else []
+            lr = getattr(loop, "last_routed", None)
+            row = {"agent": tag, "id": did, "arm": arm, "shape": shape,
+                   "setup": setup, "setup_replies": setup_replies,
+                   "question": q, "reply": reply, "kind": kind_of(reply),
+                   "stage": str(getattr(loop.ears, "last_stage", "")),
+                   "acts": acts,
+                   "has_ask": any(isinstance(a, dict) and a.get("act") == "ask" for a in acts),
+                   "intent": lr.get("intent") if isinstance(lr, dict) else None,
+                   "ev0": e0, "ev1": e1,
+                   "d224": loop.decline224_log[-1] if getattr(loop, "decline224_log", None) else None,
+                   "q1c": loop.q1honest224c_log[-1] if getattr(loop, "q1honest224c_log", None) else None}
+            with out.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(row) + "\n")
+            n += 1
+            print(f"{tag} {did} [{arm}/{shape}] kind={row['kind']} ask={row['has_ask']} intent={row['intent']} ev={e0}->{e1} reply={reply}", flush=True)
+            shutil.rmtree(sd, ignore_errors=True)
+    print(f"WROTE {n} rows to {out}")
+
+if __name__ == "__main__":
+    assert len(D) >= 40, len(D)
+    run()
+zsh:2: ===SUMMARY==== not found
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_diag290_summary.py | head -100
+#!/usr/bin/env python3
+"""Exp 290-diag summary: integer counts from rows.jsonl. Prints shape x arm
+kind tables per agent, k-vs-l equality, void-batch check, d224/q1c audit,
+write audit. New file only; additive. Read-only over rows.jsonl."""
+from __future__ import annotations
+import json
+from collections import Counter
+from pathlib import Path
+ART = Path(__file__).resolve().parent.parent / "artifacts" / "claude-diag290-20260923"
+rows = [json.loads(x) for x in (ART / "rows.jsonl").read_text(encoding="utf-8").splitlines() if x.strip()]
+print(f"total rows={len(rows)}")
+by_agent = Counter(r["agent"] for r in rows)
+print("rows per agent:", dict(sorted(by_agent.items())))
+
+VOID = "138m-no224"  # first attempt leaked wrappers; superseded by v2
+good = [r for r in rows if r["agent"] != VOID]
+print(f"void-excluded rows={len(good)}")
+
+# k vs l equality on the full matrix
+k = {(r["id"]): r for r in good if r["agent"] == "138k"}
+l = {(r["id"]): r for r in good if r["agent"] == "138l"}
+assert set(k) == set(l) and len(k) == 42, (len(k), len(l))
+diff = [i for i in k if k[i]["reply"] != l[i]["reply"] or k[i]["kind"] != l[i]["kind"]]
+print(f"138k-vs-138l reply diffs={len(diff)} {diff}")
+
+# void batch check: leaked stack should equal full 138m on same ids
+m = {(r["id"]): r for r in good if r["agent"] == "138m"}
+v = [r for r in rows if r["agent"] == VOID]
+veq = sum(1 for r in v if r["id"] in m and m[r["id"]]["reply"] == r["reply"])
+print(f"void-batch rows={len(v)} identical-to-138m={veq}")
+
+# shape x arm kind tables
+for tag in ["138k", "138l", "138m", "138l+224", "138l+224+224c", "138m-no224v2"]:
+    sub = [r for r in good if r["agent"] == tag] + ([r for r in rows if r["agent"] == tag] if tag.startswith("138m-no224v2") or tag.startswith("138l+") else [])
+    sub = [r for r in rows if r["agent"] == tag and (tag not in ("138k", "138l", "138m") or True)]
+    if tag in ("138k", "138l", "138m"):
+        sub = [r for r in sub if True]
+    t = Counter((r["shape"], r["arm"], r["kind"]) for r in sub)
+    print(f"--- {tag} n={len(sub)}")
+    for key in sorted(t):
+        print(f"  {key}: {t[key]}")
+
+# d224 audit on 138m
+m224 = [r for r in good if r["agent"] == "138m" and r["d224"]]
+print(f"138m turns with d224 entry={len(m224)}; kinds=",
+      Counter(r["d224"]["kind"] for r in m224),
+      "qbranchTrue=", sum(1 for r in m224 if r["d224"]["qbranch"]),
+      "acts=", Counter(tuple(r["d224"]["acts"]) for r in m224))
+m_q1c = [r for r in good if r["agent"] == "138m" and r["q1c"]]
+print(f"138m turns engaging 224c (q1c log)={len(m_q1c)}")
+s224 = [r for r in rows if r["agent"] in ("138l+224", "138l+224+224c") and r["d224"]]
+print(f"bisect S1/S2 d224 entries={len(s224)} kinds=", Counter(r["d224"]["kind"] for r in s224))
+s_q1c = [r for r in rows if r["agent"] == "138l+224+224c" and r["q1c"]]
+print(f"S2 q1c entries={len(s_q1c)}")
+
+# write audit: question turns must not write
+writes = [(r["agent"], r["id"]) for r in rows if r["ev0"] != r["ev1"]]
+print(f"question-turn writes={len(writes)} {writes}")
+
+# ask parity across k/l/m on full matrix
+for i in sorted(set(k)):
+    aks = {t: next(r for r in good if r["agent"] == t and r["id"] == i)["has_ask"] for t in ("138k", "138l", "138m")}
+    if len(set(aks.values())) != 1:
+        print("ASK-MISMATCH", i, aks)
+print("ask-parity check done")
+
+# list every unparsed (ask=False) final turn and its reply per agent
+print("--- unparsed turns (ask=False) ---")
+for r in good:
+    if r["agent"] in ("138k", "138l", "138m") and not r["has_ask"]:
+        print(f'{r["agent"]} {r["id"]} [{r["arm"]}/{r["shape"]}] kind={r["kind"]} reply={r["reply"][:60]}...')
+[0m
+[0m$ [0mls scripts/ | grep -E "loop138|ears|bench73|221|190|153|154" | head -60
+claude_221b_run.py
+claude_221b_unit.py
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_loop138n_agent.py
+claude_loop138nb_agent.py
+claude_loop138p_agent.py
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_qnorm221c_run.py
+fable_bench73_english_arm.py
+fable_demo88_rehearse.py
+fable_ears109_data.py
+fable_ears109_score.py
+fable_ears109_smoke.py
+fable_ears109_train.py
+fable_ears119_data.py
+fable_ears119_score.py
+fable_ears119_smoke.py
+fable_ears119_train.py
+fable_ears119_wave.bat
+fable_ears119b_audit.py
+fable_ears119b_data.py
+fable_ears119b_score.py
+fable_ears119b_smoke.py
+fable_ears119b_train.py
+fable_ears119b_wave.bat
+fable_ears119d_diagnose.py
+fable_ears119d_pairs.py
+fable_ears119e_diagnose.py
+fable_ears119e_score.py
+fable_ears119e_wave.bat
+fable_ears119f_data.py
+fable_ears119f_score.py
+fable_ears119f_smoke.py
+fable_ears119f_train.py
+fable_ears119f_wave.bat
+fable_ears119g_model.py
+fable_ears119g_score_d1.py
+fable_ears119g_score.py
+fable_ears119g_smoke.py
+fable_ears119g_train.py
+fable_ears119g_wave.bat
+fable_ears119h_data.py
+fable_ears119h_score.py
+fable_ears119h_smoke.py
+fable_ears119h_train.py
+fable_ears119h_wave.bat
+fable_ears213_relmap.py
+fable_ears213_score.py
+fable_ears213_wave.bat
+fable_ears45_data.py
+fable_ears45_frames.py
+fable_ears45_lexicon.py
+fable_ears45_model.py
+fable_ears45_report.py
+fable_ears45_score.py
+fable_ears45_selftest.py
+[0m
+[0m$ [0mls scripts/ | grep -E "fix(153|154|190|221|237)|loop(153|154|190|221|237|232|233|234|224)" | head -40; echo ---; grep -n "class Loop138nEars" scripts/claude_loop138n_agent.py | head; grep -n "last_stage\|def hear\|ask\|clarify\|DECLINE" scripts/claude_loop138n_agent.py | head -40
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_loop224c_agent.py
+claude_loop232_agent.py
+claude_loop232c_agent.py
+claude_loop233_agent.py
+claude_loop234_agent.py
+claude_loop237_agent.py
+claude_loop237b_agent.py
+fable_fix153_bench.py
+fable_fix153_probe.py
+fable_fix153_reverse.py
+fable_fix153_session.py
+fable_fix154_bench.py
+fable_fix154_probe.py
+fable_fix154_session152.py
+fable_fix154_yesno.py
+fable_fix154b_buildprobe.py
+fable_fix154b_g3.py
+fable_fix154b_multival.py
+fable_fix154b_probe.py
+fable_fix154b_regress.py
+fable_fix154b_scan.py
+fable_fix154c_allowlist.py
+fable_fix154c_buildprobe.py
+fable_fix154c_g3.py
+fable_fix154c_probe.py
+fable_fix154c_regress.py
+fable_fix154c_scan.py
+fable_fix154d_probe.py
+fable_fix154d_suites.py
+fable_fix154d_yesno.py
+fable_fix154e_allowlist.py
+fable_fix154e_buildprobe.py
+fable_fix154e_g3.py
+fable_fix154e_probe.py
+fable_fix154e_regress.py
+fable_fix154e_scan.py
+fable_fix154f_buildprobe.py
+---
+186:class Loop138nEars(L221C.QNorm221cMixin, FirstName138nMixin,
+17:                              abstaining one-hop asks (taught keys only)
+22:                              ears stack missed (not-understood clarify
+43:    ask / clarify actions -> questions never write;
+45:    not-understood clarify, so a gate that STOPS a write (209 split
+46:    clarify, 222/215 refusals, 167b no-write clarify, 150 subject veto)
+47:    is never overridden: those return their own clarify, not the
+54:  * inferred facts are never stored: 237/221 inverse answers are clarify
+55:    texts labelled "(worked out backwards)", 221b/236 only ask.
+88:import fable_fix221_tableask as T221  # noqa: E402 (piece, read-only)
+103:# REASON text of a 229 no-save clarify.
+124:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+141:            self._mark236("clarify")
+142:            return [{"act": "clarify", "stage": L236.STAGE236,
+144:                     "text": L236.clarify_text236(c["word"], c["names"])}]
+159:    that way"). Text only: the action stays a no-save clarify."""
+161:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+256:    "added": ["221 relation-table questions (fable_fix221_tableask)",
+[0m
+[0m→ [0mRead scripts/claude_loop138n_agent.py
+[0m
+[0m$ [0mgrep -n "def hear\|class .*Mixin\|last_stage\|ask\|yesno\|154d\|bench73\|STAGE" scripts/fable_fix154d_yesno.py | head -60
+echo ===154yesno===; grep -n "def hear\|class \|last_stage\|ask" scripts/fable_fix154_yesno.py | head -40
+echo ===bench73===; grep -n "def \|ask\|yes\|no\|Does\|Is " scripts/fable_bench73_english_arm.py | head -40
+2:"""Experiment 154d -- THE ONE CHANGE: grounded yes/no on loop138f (additive).
+6:abstain. The old 154 yes/no stage (scripts/fable_fix154_yesno.py) is OFF on
+28:    read-only from scripts/fable_fix154_yesno.py -- never the mixin) ->
+41:Cooperative MIXIN (YesNo154dMixin, loop level): _listening_tick peeks at
+61:from fable_fix154_yesno import SINGLE_VALUED_154  # noqa: E402 (code table only)
+78:def norm_value154d(span: str) -> str:
+83:def relation_key154d(surface: str) -> str:
+88:def show_value154d(nb, value: dict) -> str:
+97:def join_and154d(values: list[str]) -> str:
+105:def parse_yesno154d(turn: str) -> dict | None:
+132:    key = relation_key154d(rel)
+139:def ground_yesno154d(nb, parsed: dict) -> str | None:
+154:    displays = [show_value154d(nb, r.get("value")) for r in rows]
+155:    want = norm_value154d(parsed["v"])
+156:    if any(norm_value154d(d) == want for d in displays):
+158:    shown = join_and154d(displays)
+164:def is_miss154d(actions) -> bool:
+172:class YesNo154dMixin:
+191:            if base is not None and is_miss154d(base):
+192:                parsed = parse_yesno154d(text)
+195:                        reply = ground_yesno154d(
+200:                        return self._answer_yesno(text, reply)
+203:    def _answer_yesno(self, text: str, reply: str) -> dict:
+209:                                "last_stage", ""))
+213:            self.ears.last_stage = (  # type: ignore[attr-defined]
+214:                f"loop154d-yesno+{stage}")
+zsh:2: ==154yesno=== not found
+[0m
+[0m→ [0mRead scripts/fable_fix154d_yesno.py
+[0m
+[0m$ [0mgrep -rn "last_stage\s*=" scripts/claude_loop138k_agent.py | head -20; echo ===; grep -n "class Loop138.*Ears\|def hear\|last_stage" scripts/claude_loop138k_agent.py | head -40; echo ===M===; grep -n "class Loop138.*Ears\|def hear\|last_stage" scripts/claude_loop138m_agent.py | head -40
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -n "last_stage" scripts/claude_loop138k_agent.py | head -20
+(no output)
+[0m
+[0m$ [0mgrep -n "Ears" scripts/claude_loop138k_agent.py | head -30
+(no output)
+[0m
+[0m→ [0mRead scripts/claude_loop138k_agent.py
+[0m
+[0m$ [0mgrep -n "last_stage\|def hear\|class Loop138jEars\|STAGE" scripts/fable_loop138j_agent.py | head -50
+175:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+182:                        self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+206:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+230:                    self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+305:                self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+317:                self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+328:            self.last_stage, self.last_score = (  # type: ignore[attr-defined]
+346:class Loop138jEars(L180B.Case180bMixin, F193.Apos193Mixin,
+570:                        "last_stage", ""),
+596:            "stage": getattr(self.ears, "last_stage", ""),
+[0m
+[0m→ [0mRead scripts/fable_loop138j_agent.py[90m [limit=450, offset=1][0m
+[0m
+[0m$ [0mgrep -n "Loop138mEars\|Loop138lEars\|Loop138iEars\|class.*Ears" scripts/claude_loop138m_agent.py scripts/claude_loop138l_agent.py scripts/fable_loop138i_agent.py scripts/fable_loop138g_agent.py 2>&1 | head -40
+scripts/claude_loop138m_agent.py:7:           216, 222, 223, 226; its ears class Loop138lEars is reused as is)
+scripts/claude_loop138m_agent.py:185:Loop138mEars = L138L.Loop138lEars  # ears unchanged from 138l
+scripts/claude_loop138m_agent.py:219:    with _Swap([(L138J, "Loop138jEars", Loop138mEars),
+scripts/claude_loop138m_agent.py:265:    if not isinstance(inner, Loop138mEars):
+scripts/claude_loop138m_agent.py:266:        raise RuntimeError("138m: inner ears are not Loop138lEars")
+scripts/claude_loop138l_agent.py:21:  Loop222Ears > Loop215Ears > OfTeach215Mixin > Loop138iEars chain.
+scripts/claude_loop138l_agent.py:27:    222's sealed gate call `L138I.Loop138iEars.hear(self, turn)` still
+scripts/claude_loop138l_agent.py:79:class Loop138lEars(L209.WriteScreen209EarsMixin, L223.Loop223Ears,
+scripts/claude_loop138l_agent.py:97:_E = _mro_names(Loop138lEars)
+scripts/claude_loop138l_agent.py:98:assert _E[:4] == ["Loop138lEars", "WriteScreen209EarsMixin", "Loop223Ears",
+scripts/claude_loop138l_agent.py:102:    < _E.index("Loop138iEars"), _E
+scripts/claude_loop138l_agent.py:111:    L138J.Loop138jEars = Loop138lEars  # type: ignore[misc]
+scripts/claude_loop138l_agent.py:143:    if not isinstance(inner, Loop138lEars):
+scripts/claude_loop138l_agent.py:144:        raise RuntimeError("138l: inner ears are not Loop138lEars")
+scripts/fable_loop138i_agent.py:336:class Loop138iEars(C174.ChainOf174Mixin, T165.Typo165Mixin,
+scripts/fable_loop138i_agent.py:365:    "Loop138iEars (loop138h stack + layer B2 outside-in: 174 of-chain, "
+scripts/fable_loop138i_agent.py:383:    inner_ears = Loop138iEars(Loop96Ears(chain))
+scripts/fable_loop138g_agent.py:161:class Loop138gEars(L138F.Loop138fEars):
+[0m
+[0m→ [0mRead scripts/fable_loop138i_agent.py[90m [limit=120, offset=300][0m
+[0m→ [0mRead scripts/claude_loop138l_agent.py
+[0m
+[0m$ [0mgrep -n "def .*read\|def table.*question\|def hear\|STAGE221\|class " scripts/fable_fix221_tableask.py | head -30
+71:STAGE221 = "loop221-table"
+162:class Table221:
+269:def table_readings221(turn: str, table: Table221 | None = None) -> list[dict]:
+317:def unique_reading221(turn: str, table: Table221 | None = None):
+430:class TableAsk221Mixin:
+441:                f"{STAGE221}-{how}", 1.0)
+485:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+504:                   "relations": [key221(rd["rel"])], "stage": STAGE221}
+[0m
+[0m→ [0mRead scripts/fable_fix221_tableask.py[90m [limit=260, offset=260][0m
+[0m
+[0m$ [0mgrep -n "parse_reverse\|def \|STAGE153\|class " scripts/fable_fix153_reverse.py | head -30
+grep -n "table patterns\|Does\|Is \|patterns" scripts/fable_fix221_tableask.py | head -30
+60:def _norm(text: str) -> str:
+64:def parse_reverse(text: str) -> tuple[str, str] | None:
+95:def _simple(span: str) -> bool:
+103:def reverse_subjects(nb, rel_key: str, value: str) -> list[str]:
+118:def answer_reverse(rel_surface: str, value: str,
+127:def is_forward_miss(actions: list[dict]) -> bool:
+137:class Reverse153Mixin:
+148:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+152:        parsed = parse_reverse(turn)
+171:        gen = data["generic_patterns"]
+181:        # compiled question patterns: (rel, kind, regex, template)
+182:        self.patterns: list[tuple[str, str, re.Pattern, str]] = []
+207:                        self.patterns.append(
+285:    for rel, kind, rx, tmpl in table.patterns:
+560:    print(f"patterns={len(tb.patterns)} relations={len(tb.rels)}")
+[0m
+[0m→ [0mRead scripts/fable_fix153_reverse.py
+[0m
+[0m$ [0mgrep -n "Does\|Is \|yes.no\|YESNO\|parse_yesno\|_ISQ\|STAGE190\|class .*Mixin\|def hear" scripts/fable_fix190_reverse.py | head -40; echo ---237---; grep -n "STAGE237\|class .*Mixin\|def hear\|Does\|Is " scripts/claude_loop237_agent.py | head -40
+207:class Reverse190Mixin:
+219:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+---237---
+161:class TableAsk237Mixin(T221.TableAsk221Mixin):
+178:    def hear(self, turn: str) -> list[dict]:
+222:class Loop237Ears(TableAsk237Mixin, L138I.Loop138iEars):
+291:class Loop237Daemon(SrcGuardMixin228, L221.Loop221Daemon):
+[0m
+[0m→ [0mRead scripts/fable_fix190_reverse.py[90m [limit=130, offset=130][0m
+[0m→ [0mRead scripts/claude_loop237_agent.py[90m [limit=80, offset=150][0m
+[0m
+[0m$ [0mgrep -n "ask_templates\|question\|WH\|Does\|do you\|is \|Is " scripts/fable_bench73_english_arm.py | head -30; echo X; grep -n "generic_patterns\|ask\b" scripts/fable_fix221_tableask.py | head -20
+5:English strings (taught sentence_en strings, then the question string) through
+9:Ears interface (this arm):
+11:        None = cannot parse -> the triple is SKIPPED (never written).
+12:    hear_question(question_en, triples) -> (name, [relations]) | None
+22:                        is a smoke test only (import + forward on 3 sentences);
+28:was already heard with a different object is taught with correction=True so the
+29:edit supersedes, exactly like the structured arm's edit flag on this file.
+74:    (re.compile(r"The author of (.+?) is (.+?)"), "author"),
+75:    (re.compile(r"The capital of (.+?) is (.+?)"), "capital"),
+76:    (re.compile(r"The chairperson of (.+?) is (.+?)"), "chairperson"),
+77:    (re.compile(r"The chief executive officer of (.+?) is (.+?)"),
+79:    (re.compile(r"The company that produced (.+?) is (.+?)"), "manufacturer"),
+80:    (re.compile(r"The headquarters of (.+?) is located in the city of (.+?)"),
+82:    (re.compile(r"The name of the current head of state in (.+?) is (.+?)"),
+84:    (re.compile(r"The name of the current head of the (.+?) government is (.+?)"),
+86:    (re.compile(r"The official language of (.+?) is (.+?)"), "official_language"),
+87:    (re.compile(r"The type of music that (.+?) plays is (.+?)"), "genre"),
+88:    (re.compile(r"The univeristy where (.+?) was educated is (.+?)"), "educated_at"),
+90:    (re.compile(r"(.+?) is a citizen of (.+?)"), "country_of_citizenship"),
+91:    (re.compile(r"(.+?) is affiliated with the religion of (.+?)"),
+93:    (re.compile(r"(.+?) is associated with the sport of (.+?)"), "sport"),
+94:    (re.compile(r"(.+?) is famous for (.+?)"), "notable_work"),
+95:    (re.compile(r"(.+?) is located in the continent of (.+?)"), "continent"),
+96:    (re.compile(r"(.+?) is married to (.+?)"), "spouse"),
+97:    (re.compile(r"(.+?) is the apprentice of (.+?)\."), "apprentice_of"),
+98:    (re.compile(r"(.+?) is the author of (.+?)\."), "author_of"),
+99:    (re.compile(r"(.+?) is the composer of (.+?)\."), "composer_of"),
+100:    (re.compile(r"(.+?) is the discoverer of (.+?)\."), "discoverer_of"),
+101:    (re.compile(r"(.+?) is the envoy of (.+?)\."), "envoy_of"),
+102:    (re.compile(r"(.+?) is the founder of (.+?)\."), "founder_of"),
+X
+11:emits ask or clarify actions, never teach/correct/forget, so no write path
+16:    matched against the table's ask and inverse
+20:      forward reading -> a normal ask action {"act": "ask", "name": X,
+27:(b) EMPTY KEY. The base (or (a)) produced a single-hop ask on key k, the
+31:    group key holds a current value -> the ask is re-pointed to it. If
+171:        gen = data["generic_patterns"]
+187:                    if kind in ("ask", "inverse"):
+189:            for kind in ("ask", "inverse"):
+272:    Pure function of the turn text + the table. kind is "ask" (forward) or
+291:        if kind == "ask":
+347:    """Key choice for a single-hop ask on (name, key). Read-only.
+349:    Returns None (leave the ask alone), ("swap", new_key), or
+503:            act = {"act": "ask", "name": rd["X"],
+507:            self._mark221("ask")
+515:            if isinstance(a, dict) and a.get("act") == "ask":
+532:        ("Who composed Blue Rain?", ("composer", "ask", "Blue Rain", None)),
+534:        ("When is my birthday?", ("birthday", "ask", USER_KEY221, None)),
+535:        ("When is Pia's birthday?", ("birthday", "ask", "Pia", None)),
+536:        ("Who is the manager of Kim?", ("boss", "ask", "Kim", None)),
+537:        ("What is the manager of Kim?", ("boss", "ask", "Kim", None)),
+[0m
+[0m$ [0msed -n '160,260p' scripts/fable_fix221_tableask.py
+class Table221:
+    """Read-only view of relation_table_v1.json for the question side."""
+
+    def __init__(self, path: Path | str | None = None) -> None:
+        self.path = Path(path) if path else TABLE_PATH221
+        data = json.loads(self.path.read_text(encoding="utf-8"))
+        self.version = data.get("version")
+        self.rels: dict[str, dict] = {r["name"]: r for r in data["relations"]}
+        self.order = [r["name"] for r in data["relations"]]
+        gen = data["generic_patterns"]
+        # key -> relation name
+        self.key2rel: dict[str, str] = {}
+        self.invkey2rel: dict[str, str] = {}
+        for r in data["relations"]:
+            for k in ([r["name"]] + [key221(a) for a in r["aliases"]]
+                      + list(r.get("storage_keys", []))):
+                self.key2rel.setdefault(key221(k), r["name"])
+            for k in r.get("inverse_storage_keys", []):
+                self.invkey2rel.setdefault(key221(k), r["name"])
+        # compiled question patterns: (rel, kind, regex, template)
+        self.patterns: list[tuple[str, str, re.Pattern, str]] = []
+        for r in data["relations"]:
+            pats: list[tuple[str, dict]] = []
+            for fam in r["generic"]:
+                for kind, lst in gen[fam].items():
+                    if kind in ("ask", "inverse"):
+                        pats += [(kind, p) for p in lst]
+            for kind in ("ask", "inverse"):
+                pats += [(kind, p) for p in r[kind]]
+            surfaces = [r["name"].replace("_", " ")] + list(r["aliases"])
+            seen = set()
+            for kind, p in pats:
+                t = p["t"]
+                rs = surfaces if "{R}" in t else [None]
+                whs = r["wh"] if "{WH}" in t else [None]
+                for s in rs:
+                    for wh in whs:
+                        c = t
+                        if s is not None:
+                            c = c.replace("{R}", s)
+                        if wh is not None:
+                            c = c.replace("{WH}", wh)
+                        if (kind, c) in seen:
+                            continue
+                        seen.add((kind, c))
+                        self.patterns.append(
+                            (r["name"], kind, compile_template221(c), c))
+
+    def forward_keys(self, name: str, narrower: bool = True) -> list[str]:
+        r = self.rels[name]
+        out: list[str] = []
+        for k in ([r["name"]] + [key221(a) for a in r["aliases"]]
+                  + list(r.get("storage_keys", []))):
+            k = key221(k)
+            if k not in out:
+                out.append(k)
+        if narrower:
+            for n in r.get("narrower", []):
+                if n in self.rels:
+                    for k in self.forward_keys(n, narrower=False):
+                        if k not in out:
+                            out.append(k)
+        return out
+
+    def inverse_keys(self, name: str) -> list[str]:
+        return [key221(k) for k in
+                self.rels[name].get("inverse_storage_keys", [])]
+
+
+_TABLE_CACHE: dict[str, Table221] = {}
+
+
+def get_table221(path: Path | str | None = None) -> Table221:
+    p = str(Path(path) if path else TABLE_PATH221)
+    if p not in _TABLE_CACHE:
+        _TABLE_CACHE[p] = Table221(p)
+    return _TABLE_CACHE[p]
+
+
+# ---------------------------------------------------------------- reading
+def _slot_ok(v: str) -> bool:
+    v = v.strip()
+    if not v or len(v.split()) > 6:
+        return False
+    low = v.lower()
+    toks = re.findall(r"[a-z]+", low)
+    if not toks:
+        return not re.search(r"[?!;]", v) and bool(re.search(r"\d", v))
+    if any(t in _SELF_WORDS for t in toks):
+        return False
+    first = v.split()[0]
+    if first.lower() in _BAD_START:
+        return False
+    if first in _BAD_START_LOWER_ONLY:
+        return False
+    if "'s" in low or "’s" in low or " of the " in f" {low} ":
+        return False
+    words = v.split()
+    if words[-1].lower() in _BAD_END:
+[0m
+[0m$ [0mpython3 -c "import json; d=json.load(open('data/relation_table_v1.json')); print(list(d.get('generic_patterns',{}).keys())); import itertools; gp=d['generic_patterns']; [print(k, list(v.keys()) if isinstance(v,dict) else type(v)) for k,v in gp.items()]" 2>&1 | head -20; ls data/ | head -20
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'data/relation_table_v1.json'
+english
+models
+open
+tokenizer
+village
+[0m
+[0m$ [0mgrep -n "TABLE_PATH221\s*=" scripts/fable_fix221_tableask.py | head -5; grep -rn "relation_table" scripts/fable_fix221_tableask.py | head -5
+67:TABLE_PATH221 = (ROOT / "artifacts" / "claude-relationtable-20260922"
+scripts/fable_fix221_tableask.py:7:artifacts/claude-relationtable-20260922/relation_table_v1.json (design:
+scripts/fable_fix221_tableask.py:68:                 / "relation_table_v1.json")
+scripts/fable_fix221_tableask.py:163:    """Read-only view of relation_table_v1.json for the question side."""
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('artifacts/claude-relationtable-20260922/relation_table_v1.json')); gp=d['generic_patterns']; print(list(gp.keys())); [print('FAM',k,'kinds',list(v.keys())) for k,v in gp.items()]; n=0
+for k,v in gp.items():
+ for kind,lst in v.items():
+  for p in lst[:6]:
+   print(k,kind,p); n+=1
+   if n>40: break
+" 2>&1 | head -60
+['possessive', 'my', 'of_form', 'inverted', 'reverse']
+FAM possessive kinds ['teach', 'ask', 'yesno']
+FAM my kinds ['teach', 'ask', 'yesno']
+FAM of_form kinds ['teach', 'ask', 'yesno']
+FAM inverted kinds ['teach', 'ask', 'yesno']
+FAM reverse kinds ['inverse']
+possessive teach {'t': "{X}'s {R} is {Y}.", 'where': 'live', 'src': "scripts/fable_agent_loop.py:96 (_STATEMENT, open-vocabulary 'X's R is Y'; key rule FakeEars._relation :151)"}
+possessive ask {'t': "{WH} is {X}'s {R}?", 'where': 'live', 'src': "scripts/fable_agent_loop.py:94 (_QUESTION who/what/where is X's R [ 's R2 ...])"}
+possessive ask {'t': "What's {X}'s {R}?", 'where': 'NEW', 'src': 'NEW (contraction; 158 qform only folds some)'}
+possessive yesno {'t': "Is {X}'s {R} {Y}?", 'where': 'live', 'src': 'scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154'}
+possessive yesno {'t': "Is {Y} {X}'s {R}?", 'where': 'live', 'src': 'scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154'}
+my teach {'t': 'My {R} is {Y}.', 'where': 'live', 'src': 'scripts/fable_fix166_me.py (Me166Mixin; X = the user)'}
+my ask {'t': '{WH} is my {R}?', 'where': 'live', 'src': 'scripts/fable_fix166_me.py:62 _ASK / :71 _SYNONYMS'}
+my yesno {'t': 'Is my {R} {Y}?', 'where': 'NEW', 'src': 'NEW'}
+of_form teach {'t': 'The {R} of {X} is {Y}.', 'where': 'not_live', 'src': 'scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i); bench73 has it only for its own nouns'}
+of_form ask {'t': '{WH} is the {R} of {X}?', 'where': 'live', 'src': 'scripts/fable_fix174_chainof.py:50 REL174 / :61 _ONEHOP_RE (13 relation words only)'}
+of_form yesno {'t': 'Is {Y} the {R} of {X}?', 'where': 'live', 'src': 'scripts/fable_fix154_yesno.py:84 _ISQ_154 / :85 _OF_154'}
+inverted teach {'t': "{Y} is {X}'s {R}.", 'where': 'not_live', 'src': 'scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i)'}
+inverted teach {'t': '{Y} is the {R} of {X}.', 'where': 'not_live', 'src': 'scripts/fable_fix155_inverted.py:91-95 _FRAME1/2/3 (not in 138i); bench73 stores these as inverse _of keys'}
+reverse inverse {'t': 'Whose {R} is {Y}?', 'where': 'live', 'src': 'scripts/fable_fix153_reverse.py:75-88 (whose / is-the-R-of frames); widened in scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)', 'never_store': True, 'label': 'worked out backwards'}
+reverse inverse {'t': 'Who has {Y} as (their|his|her) {R}?', 'where': 'layer_c', 'src': 'scripts/fable_fix190_reverse.py:69 REVERSE_RELATIONS, :103 parse_reverse190 (layer C)', 'never_store': True, 'label': 'worked out backwards'}
+reverse inverse {'t': 'Who is {Y} the {R} of?', 'where': 'NEW', 'src': 'NEW', 'never_store': True, 'label': 'worked out backwards'}
+[0m
+[0m$ [0mgrep -n "YesNo154\|154_yesno\|_ISQ_154\|class.*154" scripts/fable_loop138g_agent.py scripts/fable_loop138f_agent.py scripts/fable_loop138h_agent.py scripts/fable_loop138i_agent.py 2>&1 | head -20
+grep -n "_ISQ_154\|_OF_154\|Does\|DOES" scripts/fable_fix154_yesno.py | head -30
+scripts/fable_loop138f_agent.py:50:    guards (unchanged). No YesNo154Mixin (154 REMOVED).
+scripts/fable_loop138f_agent.py:127:    No YesNo154Mixin (154 off). turn() is inherited verbatim from loop138
+scripts/fable_loop138h_agent.py:17:    scripts/fable_fix165_typo.py:164 (class :154). Sits OUTSIDE Plural162b
+scripts/fable_loop138i_agent.py:69:    YesNo154dMixin): loop-level _listening_tick outside 138h's tick.
+scripts/fable_loop138i_agent.py:159:from fable_fix154d_yesno import YesNo154dMixin  # noqa: E402 (154d, read-only)
+scripts/fable_loop138i_agent.py:203:class Multival154eMixin:
+scripts/fable_loop138i_agent.py:352:class Loop138iAgentLoop(YesNo154dMixin, Multival154eMixin,
+84:_ISQ_154 = re.compile(r"(?i)^\s*is\s+(.+?)\s*\?+\s*[!.]*\s*$")
+85:_OF_154 = re.compile(r"(?i)^(.+?)\s+the\s+(.+?)\s+of\s+(.+?)$")
+113:    m = _ISQ_154.match(t)
+119:    of = _OF_154.match(body)
+[0m
+[0m→ [0mRead scripts/fable_fix154_yesno.py
+[0m
+[0m# [0mTodos
+[•] Pilot 138nb single-turn probe + verify interpreter
+[ ] Write scripts/claude_diag293_run.py (60+ dialogs on 138nb)
+[ ] Write scripts/claude_diag293_summary.py (counts from rows.jsonl)
+[ ] Run full diag + summary, verify counts
+[ ] Trace file:line routing per shape + reader audit
+[ ] Write artifacts/claude-diag293-20260923/DIAG.md
+[0m
+[0m$ [0muptime; df -g / | head -5; ls artifacts/ | grep diag293 || echo NODIR293
+4:51  up 2 days, 20:40, 4 users, load averages: 58.14 89.78 85.82
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 124889280    0%   /
+NODIR293
+[0m
+[0m← [0mWrite scripts/claude_diag293_pilot.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag293_pilot.py 2>&1 | tail -30
+SETUP "Bex's mother is Talia." -> "Saved: Bex's mother is Talia."
+Q 'Does Bex have a mother?'
+  reply="I didn't understand that question — could you say it another way?"
+  outer_stage='none' inner_stage='none'
+  acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4 intent=DECLINE
+SETUP "Bex's mother is Talia." -> "Saved: Bex's mother is Talia."
+Q "Is Bex's mother Talia?"
+  reply="Yes, Bex's mother is Talia."
+  outer_stage='loop154d-yesno+none' inner_stage='none'
+  acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4 intent=None
+SETUP "Bex's mother is Talia." -> "Saved: Bex's mother is Talia."
+Q "Is Bex's mother Wren?"
+  reply="No, Bex's mother is Talia."
+  outer_stage='loop154d-yesno+none' inner_stage='none'
+  acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4 intent=None
+SETUP "Bex's city is Oslo." -> "Saved: Bex's city is Oslo."
+Q 'Does Bex live in Oslo?'
+  reply="I didn't understand that question — could you say it another way?"
+  outer_stage='none' inner_stage='none'
+  acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=3->3 intent=DECLINE
+PILOT DONE
+[0m
+[0m← [0mWrite scripts/claude_diag293_pilot2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag293_pilot2.py 2>&1 | tail -25
+is-inv-true Q="Is Talia Bex's mother?" -> "Yes, Bex's mother is Talia." stage='loop154d-yesno+none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+is-inv-false Q="Is Wren Bex's mother?" -> "No, Bex's mother is Talia." stage='loop154d-yesno+none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+is-unknown-rel Q="Is Bex's father Talia?" -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+is-unknown-subj Q="Is Zane's mother Talia?" -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+does-live-false Q='Does Bex live in Bergen?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=3->3
+does-live-unknown Q='Where does Bex live?' -> "I don't know Bex's city." stage='fake' acts=[{'act': 'ask', 'name': 'Bex', 'relations': ['city'], 'stage': 'fake'}] ev=4->4
+is-2word Q="Is Sela ben Tamsin's mother Wren?" -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=0->0
+does-2word Q='Does Sela ben Tamsin have a mother?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=0->0
+has-shape Q='Has Bex a mother?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+does-noart Q='Does Bex have mother?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+stmt-does Q='Bex does judo on Tuesdays.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=0->0
+stmt-is Q='Ana is happy.' -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=0->0
+wh-control Q="What is Bex's mother?" -> "Bex's mother is Talia." stage='fake' acts=[{'act': 'ask', 'name': 'Bex', 'relations': ['mother'], 'stage': 'fake'}] ev=4->4
+is-ofform Q='Is Talia the mother of Bex?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+does-come-true Q='Does Rin come from Bergen?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=3->3
+does-work-unknown Q='Does Rin work at Halden?' -> "I didn't understand that question — could you say it another way?" stage='none' acts=[{'act': 'clarify', 'text': "I didn't understand that. Could you say it another way?"}] ev=4->4
+PILOT2 DONE
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import copy, shutil, tempfile, sys
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+import claude_loop138nb_agent as NB
+base = copy.deepcopy(NB.DEFAULT_CONFIG138NB)
+for s in [\"Mary Ann's mother is Wren.\", \"Anna Lee's city is Oslo.\", \"Sela ben Tamsin's mother is Wren.\", \"Jo Marlowe's boss is Lee.\"]:
+    sd = Path(tempfile.mkdtemp(prefix='n293-'))
+    cfg = copy.deepcopy(base); cfg['state_dir']=str(sd); cfg['sleep_threshold']=100000
+    loop = NB.build_agent138nb(cfg)
+    e0=len(getattr(loop.nb,'nb',loop.nb).events)
+    r=' '.join(loop.turn(s))
+    e1=len(getattr(loop.nb,'nb',loop.nb).events)
+    print(repr(s),'->',repr(r),'ev',e0,e1)
+    q='What is Mary Ann'+chr(39)+'s mother?' if 'Mary Ann' in s else None
+    if q:
+        r2=' '.join(loop.turn(q)); print('  ',repr(q),'->',repr(r2))
+    shutil.rmtree(sd, ignore_errors=True)
+" 2>&1 | tail -12
+"Mary Ann's mother is Wren." -> "Saved: Mary Ann's mother is Wren." ev 0 4
+   "What is Mary Ann's mother?" -> "Mary Ann's mother is Wren."
+"Anna Lee's city is Oslo." -> "Saved: Anna Lee's city is Oslo." ev 0 3
+"Sela ben Tamsin's mother is Wren." -> 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' ev 0 0
+"Jo Marlowe's boss is Lee." -> "Saved: Jo Marlowe's boss is Lee." ev 0 4
+[0m
+[0m$ [0mgrep -n "def hear_question\|def hear\b\|is \|Is \|does\|Does" scripts/fable_bench73_english_arm.py | head -30
+9:Ears interface (this arm):
+11:        None = cannot parse -> the triple is SKIPPED (never written).
+22:                        is a smoke test only (import + forward on 3 sentences);
+28:was already heard with a different object is taught with correction=True so the
+29:edit supersedes, exactly like the structured arm's edit flag on this file.
+74:    (re.compile(r"The author of (.+?) is (.+?)"), "author"),
+75:    (re.compile(r"The capital of (.+?) is (.+?)"), "capital"),
+76:    (re.compile(r"The chairperson of (.+?) is (.+?)"), "chairperson"),
+77:    (re.compile(r"The chief executive officer of (.+?) is (.+?)"),
+79:    (re.compile(r"The company that produced (.+?) is (.+?)"), "manufacturer"),
+80:    (re.compile(r"The headquarters of (.+?) is located in the city of (.+?)"),
+82:    (re.compile(r"The name of the current head of state in (.+?) is (.+?)"),
+84:    (re.compile(r"The name of the current head of the (.+?) government is (.+?)"),
+86:    (re.compile(r"The official language of (.+?) is (.+?)"), "official_language"),
+87:    (re.compile(r"The type of music that (.+?) plays is (.+?)"), "genre"),
+88:    (re.compile(r"The univeristy where (.+?) was educated is (.+?)"), "educated_at"),
+90:    (re.compile(r"(.+?) is a citizen of (.+?)"), "country_of_citizenship"),
+91:    (re.compile(r"(.+?) is affiliated with the religion of (.+?)"),
+93:    (re.compile(r"(.+?) is associated with the sport of (.+?)"), "sport"),
+94:    (re.compile(r"(.+?) is famous for (.+?)"), "notable_work"),
+95:    (re.compile(r"(.+?) is located in the continent of (.+?)"), "continent"),
+96:    (re.compile(r"(.+?) is married to (.+?)"), "spouse"),
+97:    (re.compile(r"(.+?) is the apprentice of (.+?)\."), "apprentice_of"),
+98:    (re.compile(r"(.+?) is the author of (.+?)\."), "author_of"),
+99:    (re.compile(r"(.+?) is the composer of (.+?)\."), "composer_of"),
+100:    (re.compile(r"(.+?) is the discoverer of (.+?)\."), "discoverer_of"),
+101:    (re.compile(r"(.+?) is the envoy of (.+?)\."), "envoy_of"),
+102:    (re.compile(r"(.+?) is the founder of (.+?)\."), "founder_of"),
+103:    (re.compile(r"(.+?) is the herald of (.+?)\."), "herald_of"),
+104:    (re.compile(r"(.+?) is the inventor of (.+?)\."), "inventor_of"),
+[0m
+[0m$ [0mgrep -n "hear_question\|_QUESTION\|_WHO\|_WHAT\|_WHERE\|question" scripts/fable_bench73_english_arm.py | head -20; grep -n "hear_question" scripts/*.py | grep -v bench73 | head -10
+5:English strings (taught sentence_en strings, then the question string) through
+12:    hear_question(question_en, triples) -> (name, [relations]) | None
+130:# Noun -> _of key for reversal/abstain "Who is the <noun> of <Name>?" questions.
+138:# Verb -> _by key for reversal "Who <verb> by <Name>?" questions.
+145:# (mquake questions such as "Who is the founder of the company that ...").
+149:# Relation cues in questions (lowercase substrings; recall-biased on purpose:
+215:def _entity_mentions(question: str, entities: list[str]) -> list[str]:
+216:    """Taught entity strings mentioned in the question (longest-match)."""
+217:    q = question.lower()
+240:def _relation_mentions(question: str) -> set[str]:
+241:    q = question.lower()
+246:def compose_question(question: str,
+249:    """English question + parsed taught triples -> (name, relations), or None.
+255:    q = " ".join(str(question).split())
+290:    # MQuAKE two-hop: the question names exactly the chain start; walk the
+292:    # in the question (coverage gate, else MISSING rather than a guess).
+338:    def hear_question(self, question: str,
+341:        return compose_question(question, triples)
+356:    Sentence mapping is neural; question composition reuses the shared
+357:    compose_question() over neurally parsed triples. Full-bench decoding is
+scripts/claude_diag243_composers.py:4:Loop138Ears._hear_question (scripts/fable_loop138_agent.py:115) asks
+scripts/claude_diag243_trace.py:67:                    for m in ("hear", "hear_question", "hear_turn", "parse",
+scripts/claude_fix246_mentionwalk.py:9:MentionWalk246Mixin overrides Loop138Ears._hear_question ONLY for turns
+scripts/claude_fix246_mentionwalk.py:262:    """Fallback over Loop138Ears._hear_question (see module doc)."""
+scripts/claude_fix246_mentionwalk.py:264:    def _hear_question(self, text: str, turn: str) -> list[dict]:
+scripts/claude_fix246_mentionwalk.py:265:        base = super()._hear_question(text, turn)
+scripts/claude_loop246_agent.py:5:walk fallback over Loop138Ears._hear_question, used only when
+scripts/claude_loop246_agent.py:41:    _hear_question; every outer 138i stage unchanged)."""
+scripts/fable_bench103_english_arm.py:76:    def hear_question(self, question: str, triples):
+scripts/fable_bench103_english_arm.py:157:    check(TemplateEars103().hear_question(q, triples)
+[0m
+[0m# [0mTodos
+[✓] Pilot 138nb single-turn probe + verify interpreter
+[•] Write scripts/claude_diag293_run.py (60+ dialogs on 138nb)
+[ ] Write scripts/claude_diag293_summary.py (counts from rows.jsonl)
+[ ] Run full diag + summary, verify counts
+[ ] Trace file:line routing per shape + reader audit
+[ ] Write artifacts/claude-diag293-20260923/DIAG.md
+[0m
+[0m← [0mWrite scripts/claude_diag293_run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_diag293_summary.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime; df -g / | head -3
+4:52  up 2 days, 20:42, 4 users, load averages: 53.40 79.80 82.38
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 124365920    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag293_run.py 2>&1 | tail -75
+dh-true1 [taught-true/does-have] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dh-true2 [taught-true/does-have] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dh-true-2word [taught-true/does-have] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dh-never1 [unknown/does-have] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dh-never2 [unknown/does-have] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dh-never-2word [unknown/does-have] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dh-taken-forget [taken-back/does-have] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dh-taken-isnot [taken-back/does-have] kind=didnt-understand stage='none' ask=False ev=5->5 reply="I didn't understand that question — could you say it another way?"
+dh-corrected [taught-true/does-have] kind=didnt-understand stage='none' ask=False ev=6->6 reply="I didn't understand that question — could you say it another way?"
+dh-noart [taught-true/does-noart] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ip-true1 [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' ask=False ev=4->4 reply="Yes, Bex's mother is Talia."
+ip-true2 [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' ask=False ev=3->3 reply="Yes, Rin's city is Bergen."
+ip-true-2word [taught-true/is-poss] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ip-false1 [taught-false/is-poss] kind=no stage='loop154d-yesno+none' ask=False ev=4->4 reply="No, Bex's mother is Talia."
+ip-false2 [taught-false/is-poss] kind=no stage='loop154d-yesno+none' ask=False ev=3->3 reply="No, Rin's city is Bergen."
+ip-false-multi [taught-false/is-poss] kind=not-that-i-know stage='loop154d-yesno+none' ask=False ev=4->4 reply="Not that I know of. I have Ada as Bex's sister."
+ip-unknown-rel [unknown/is-poss] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ip-unknown-subj [unknown/is-poss] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ip-taken-forget [taken-back/is-poss] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ip-taken-isnot [taken-back/is-poss] kind=didnt-understand stage='none' ask=False ev=5->5 reply="I didn't understand that question — could you say it another way?"
+ip-correct-new [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' ask=False ev=6->6 reply="Yes, Lena's mother is Pell."
+ip-correct-old [taught-false/is-poss] kind=no stage='loop154d-yesno+none' ask=False ev=6->6 reply="No, Lena's mother is Pell."
+ip-ofform [taught-true/is-of] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ii-true1 [taught-true/is-inv] kind=yes stage='loop154d-yesno+none' ask=False ev=4->4 reply="Yes, Bex's mother is Talia."
+ii-false1 [taught-false/is-inv] kind=no stage='loop154d-yesno+none' ask=False ev=4->4 reply="No, Bex's mother is Talia."
+ii-unknown-subj [unknown/is-inv] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ii-unknown-rel [unknown/is-inv] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ii-2word [taught-true/is-inv] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ii-taken [taken-back/is-inv] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+ii-true2 [taught-true/is-inv] kind=yes stage='loop154d-yesno+none' ask=False ev=3->3 reply="Yes, Zane's city is Porto."
+ii-false2 [taught-false/is-inv] kind=no stage='loop154d-yesno+none' ask=False ev=3->3 reply="No, Zane's city is Porto."
+dl-true [taught-true/does-live] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dl-false [taught-false/does-live] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dl-unknown [unknown/does-live] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dl-2word-true [taught-true/does-live] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dl-taken-forget [taken-back/does-live] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dl-correct-new [taught-true/does-live] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dl-taken-isnot [taken-back/does-live] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dw-sameval [taught-true/does-work] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dw-diffval [taught-false/does-work] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dw-unknown [unknown/does-work] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+dw-2word [taught-true/does-work] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+dw-taken [taken-back/does-work] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+df-sameval [taught-true/does-from] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+df-diffval [taught-false/does-from] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+df-unknown [unknown/does-from] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+df-2word [taught-true/does-from] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+df-taken [taken-back/does-from] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+h-true [taught-true/has] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+h-never [unknown/has] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+h-taken [taken-back/has] kind=didnt-understand stage='none' ask=False ev=4->4 reply="I didn't understand that question — could you say it another way?"
+s-does1 [control/stmt] kind=decline-targeted stage='none' ask=False ev=0->0 reply="I couldn't save that as a fact. I don't know that shape yet. Could you"
+s-does2 [control/stmt] kind=decline-targeted stage='none' ask=False ev=0->0 reply="I couldn't save that as a fact. I don't know that shape yet. Could you"
+s-is1 [control/stmt] kind=decline-targeted stage='none' ask=False ev=0->0 reply="I couldn't save that as a fact. I don't know that shape yet. Could you"
+s-is2 [control/stmt] kind=decline-targeted stage='none' ask=False ev=0->0 reply="I couldn't save that as a fact. I don't know that shape yet. Could you"
+w-what-taught [control/wh] kind=answer-or-other stage='fake' ask=True ev=4->4 reply="Bex's mother is Talia."
+w-where-never [control/wh] kind=decline-targeted stage='fake' ask=True ev=4->4 reply="I don't know anyone called Zane."
+w-who-taken [control/wh] kind=decline-targeted stage='fake' ask=True ev=5->5 reply="I don't know Marko's boss."
+w-inv-boundary [control/wh] kind=didnt-understand stage='none' ask=False ev=3->3 reply="I didn't understand that question — could you say it another way?"
+w-where-taught [control/wh] kind=answer-or-other stage='fake' ask=True ev=3->3 reply="Rin's city is Bergen."
+w-born-never [control/wh] kind=decline-targeted stage='fake' ask=True ev=4->4 reply="I don't know Bex's place of birth."
+WROTE 61 rows to /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-diag293-20260923/rows.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag293_summary.py 2>&1 | tail -80
+dh-true2 [taught-true/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-true-2word [taught-true/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-never1 [unknown/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-never2 [unknown/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-never-2word [unknown/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-taken-forget [taken-back/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-taken-isnot [taken-back/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-corrected [taught-true/does-have] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dh-noart [taught-true/does-noart] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-true1 [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' reply="Yes, Bex's mother is Talia."
+  ip-true2 [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' reply="Yes, Rin's city is Bergen."
+  ip-true-2word [taught-true/is-poss] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-false1 [taught-false/is-poss] kind=no stage='loop154d-yesno+none' reply="No, Bex's mother is Talia."
+  ip-false2 [taught-false/is-poss] kind=no stage='loop154d-yesno+none' reply="No, Rin's city is Bergen."
+  ip-false-multi [taught-false/is-poss] kind=not-that-i-know stage='loop154d-yesno+none' reply="Not that I know of. I have Ada as Bex's sister."
+  ip-unknown-rel [unknown/is-poss] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-unknown-subj [unknown/is-poss] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-taken-forget [taken-back/is-poss] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-taken-isnot [taken-back/is-poss] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ip-correct-new [taught-true/is-poss] kind=yes stage='loop154d-yesno+none' reply="Yes, Lena's mother is Pell."
+  ip-correct-old [taught-false/is-poss] kind=no stage='loop154d-yesno+none' reply="No, Lena's mother is Pell."
+  ip-ofform [taught-true/is-of] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ii-true1 [taught-true/is-inv] kind=yes stage='loop154d-yesno+none' reply="Yes, Bex's mother is Talia."
+  ii-false1 [taught-false/is-inv] kind=no stage='loop154d-yesno+none' reply="No, Bex's mother is Talia."
+  ii-unknown-subj [unknown/is-inv] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ii-unknown-rel [unknown/is-inv] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ii-2word [taught-true/is-inv] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ii-taken [taken-back/is-inv] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  ii-true2 [taught-true/is-inv] kind=yes stage='loop154d-yesno+none' reply="Yes, Zane's city is Porto."
+  ii-false2 [taught-false/is-inv] kind=no stage='loop154d-yesno+none' reply="No, Zane's city is Porto."
+  dl-true [taught-true/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-false [taught-false/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-unknown [unknown/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-2word-true [taught-true/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-taken-forget [taken-back/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-correct-new [taught-true/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dl-taken-isnot [taken-back/does-live] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dw-sameval [taught-true/does-work] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dw-diffval [taught-false/does-work] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dw-unknown [unknown/does-work] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dw-2word [taught-true/does-work] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  dw-taken [taken-back/does-work] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  df-sameval [taught-true/does-from] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  df-diffval [taught-false/does-from] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  df-unknown [unknown/does-from] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  df-2word [taught-true/does-from] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  df-taken [taken-back/does-from] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  h-true [taught-true/has] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  h-never [unknown/has] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  h-taken [taken-back/has] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+  s-does1 [control/stmt] kind=decline-targeted stage='none' reply="I couldn't save that as a fact. I don't know that shape yet."
+  s-does2 [control/stmt] kind=decline-targeted stage='none' reply="I couldn't save that as a fact. I don't know that shape yet."
+  s-is1 [control/stmt] kind=decline-targeted stage='none' reply="I couldn't save that as a fact. I don't know that shape yet."
+  s-is2 [control/stmt] kind=decline-targeted stage='none' reply="I couldn't save that as a fact. I don't know that shape yet."
+  w-inv-boundary [control/wh] kind=didnt-understand stage='none' reply="I didn't understand that question — could you say it another"
+--- parsed (ask=True) final turns ---
+  w-what-taught [control/wh] kind=answer-or-other stage='fake' reply="Bex's mother is Talia."
+  w-where-never [control/wh] kind=decline-targeted stage='fake' reply="I don't know anyone called Zane."
+  w-who-taken [control/wh] kind=decline-targeted stage='fake' reply="I don't know Marko's boss."
+  w-where-taught [control/wh] kind=answer-or-other stage='fake' reply="Rin's city is Bergen."
+  w-born-never [control/wh] kind=decline-targeted stage='fake' reply="I don't know Bex's place of birth."
+question-turn writes=0 []
+d224 kinds on final turns: {'Q2': 41}
+final turns engaging 224c (q1c log)=0
+--- yes/no-shaped turns that answered vs didnt-understand ---
+  ('does-from', 'didnt-understand'): 5
+  ('does-have', 'didnt-understand'): 9
+  ('does-live', 'didnt-understand'): 7
+  ('does-noart', 'didnt-understand'): 1
+  ('does-work', 'didnt-understand'): 5
+  ('has', 'didnt-understand'): 3
+  ('is-inv', 'didnt-understand'): 4
+  ('is-inv', 'no'): 2
+  ('is-inv', 'yes'): 2
+  ('is-of', 'didnt-understand'): 1
+  ('is-poss', 'didnt-understand'): 5
+  ('is-poss', 'no'): 3
+  ('is-poss', 'not-that-i-know'): 1
+  ('is-poss', 'yes'): 3
+yesno-shape rows=51 answered(yes/no/not-that-i-know)=11 didnt-understand=40
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag293_summary.py 2>&1 | head -40
+total rows=61
+--- shape x arm x kind ---
+  ('does-from', 'taken-back', 'didnt-understand'): 1
+  ('does-from', 'taught-false', 'didnt-understand'): 1
+  ('does-from', 'taught-true', 'didnt-understand'): 2
+  ('does-from', 'unknown', 'didnt-understand'): 1
+  ('does-have', 'taken-back', 'didnt-understand'): 2
+  ('does-have', 'taught-true', 'didnt-understand'): 4
+  ('does-have', 'unknown', 'didnt-understand'): 3
+  ('does-live', 'taken-back', 'didnt-understand'): 2
+  ('does-live', 'taught-false', 'didnt-understand'): 1
+  ('does-live', 'taught-true', 'didnt-understand'): 3
+  ('does-live', 'unknown', 'didnt-understand'): 1
+  ('does-noart', 'taught-true', 'didnt-understand'): 1
+  ('does-work', 'taken-back', 'didnt-understand'): 1
+  ('does-work', 'taught-false', 'didnt-understand'): 1
+  ('does-work', 'taught-true', 'didnt-understand'): 2
+  ('does-work', 'unknown', 'didnt-understand'): 1
+  ('has', 'taken-back', 'didnt-understand'): 1
+  ('has', 'taught-true', 'didnt-understand'): 1
+  ('has', 'unknown', 'didnt-understand'): 1
+  ('is-inv', 'taken-back', 'didnt-understand'): 1
+  ('is-inv', 'taught-false', 'no'): 2
+  ('is-inv', 'taught-true', 'didnt-understand'): 1
+  ('is-inv', 'taught-true', 'yes'): 2
+  ('is-inv', 'unknown', 'didnt-understand'): 2
+  ('is-of', 'taught-true', 'didnt-understand'): 1
+  ('is-poss', 'taken-back', 'didnt-understand'): 2
+  ('is-poss', 'taught-false', 'no'): 3
+  ('is-poss', 'taught-false', 'not-that-i-know'): 1
+  ('is-poss', 'taught-true', 'didnt-understand'): 1
+  ('is-poss', 'taught-true', 'yes'): 3
+  ('is-poss', 'unknown', 'didnt-understand'): 2
+  ('stmt', 'control', 'decline-targeted'): 4
+  ('wh', 'control', 'answer-or-other'): 2
+  ('wh', 'control', 'decline-targeted'): 3
+  ('wh', 'control', 'didnt-understand'): 1
+--- shape x kind totals ---
+  ('does-from', 'didnt-understand'): 5
+  ('does-have', 'didnt-understand'): 9
+[0m
+[0m$ [0mgrep -rn "Could you say it another way" scripts/fable_agent_loop.py scripts/fable_loop90_agent.py scripts/fable_loop138_agent.py 2>&1 | head -10; grep -rn "couldn't save that as a fact" scripts/*.py 2>&1 | head -5
+scripts/fable_agent_loop.py:148:        return [_clarify("I didn't understand that. Could you say it another way?")]
+scripts/fable_loop90_agent.py:292:                 "text": "I didn't understand that. Could you say it another way?"}]
+scripts/fable_loop138_agent.py:27:      (HONEST_DECLINE + "Could you say it another way?", zero
+scripts/fable_loop138_agent.py:296:             "non-DECLINE, HONEST_DECLINE + 'Could you say it another way?' "
+scripts/claude_called281b_score.py:22:           "i only know current facts", "couldn't save that as a fact",
+scripts/claude_fix255_text.py:104:F188_OLD = ("I couldn't save that as a fact. I don't know that shape yet. "
+scripts/claude_fix255_text.py:106:F188_NEW = ("I couldn't save that as a fact. I don't know that kind of "
+scripts/fable_decline224.py:101:    ("I couldn't save that as a fact. I don't know that shape yet. Could "
+[0m
+[0m$ [0msed -n '130,160p' scripts/fable_agent_loop.py; echo ....; sed -n '280,300p' scripts/fable_loop90_agent.py
+correction = False
+        found = _CORRECTION.match(turn)
+        if found and found.group(1):
+            correction, turn = True, found.group(1)
+        found = _STATEMENT.match(turn)
+        if found:
+            left, value = found.group(1), found.group(2).rstrip(".")
+            parts = _chain(left)
+            if len(parts) != 2:
+                return [_clarify("Please say it like \"Mira's city is Lisbon.\".")]
+            name, relation = parts[0], self._relation(parts[1])
+            if " " in name:
+                return [_clarify("I can only handle one-word names so far.")]
+            if not value:
+                return [_clarify("I didn't get the value.")]
+            return [{"act": "correct" if correction else "teach", "name": name,
+                     "relation": relation, "value": value,
+                     "is_person": relation in PERSON_RELATIONS}]
+        return [_clarify("I didn't understand that. Could you say it another way?")]
+
+    @staticmethod
+    def _relation(surface: str) -> str:
+        return "_".join(surface.strip().lower().split())
+
+
+class FakeMouth:
+    """Template sentences. Every content word is copied out of the result record."""
+
+    def say(self, record: dict) -> str:
+        kind = record.get("kind")
+        if kind in ("write", "clarify", "note"):
+....
+                got = stage.hear(text, self.tau)
+            except Exception:
+                continue
+            if got is None:
+                continue
+            actions, score = got
+            if score < self.tau_hat:
+                continue  # certified gate: below tau-hat, never write
+            self.last_stage, self.last_score = stage.name, float(score)
+            return actions
+        self.last_stage, self.last_score = "none", 0.0
+        return [{"act": "clarify",
+                 "text": "I didn't understand that. Could you say it another way?"}]
+
+
+# ------------------------------------------------------------------ the loop
+class Loop90AgentLoop(A.AgentLoop):
+    """AgentLoop with the Loop90 notebook, structured teaches, seal on save."""
+
+    def __init__(self, state_dir, *, ears=None, mouth=None, reasoner=None,
+                 sleeper=None, thinker=None,
+[0m
+[0m$ [0msed -n '60,130p' scripts/fable_agent_loop.py
+@runtime_checkable
+class Ears(Protocol):
+    def hear(self, turn: str) -> list[dict]:
+        """English turn -> actions. An action it cannot read must be {'act': 'clarify'}."""
+
+
+@runtime_checkable
+class Mouth(Protocol):
+    def say(self, record: dict) -> str:
+        """Result record -> one English sentence. Content words come from the record only."""
+
+
+@runtime_checkable
+class Reasoner(Protocol):
+    def answer(self, question: dict, notebook) -> dict:
+        """{'name', 'relations', 'entity_id'?} -> result record with a discrete status."""
+
+
+@runtime_checkable
+class Sleeper(Protocol):
+    def sleep(self, experience: list[dict], notebook) -> dict:
+        """Called only when the log is full. Returns {'accepted': bool, ...}."""
+
+
+@runtime_checkable
+class Thinker(Protocol):
+    def think(self, notebook) -> dict | None:
+        """Optional idle work. None means 'nothing to do'."""
+
+
+# ------------------------------------------------------- deterministic offline fakes
+PERSON_RELATIONS = {"mother", "father", "sister", "brother", "friend", "boss",
+                    "teacher", "wife", "husband", "neighbour", "neighbor", "partner"}
+_APOS = r"['’]s\b\s*"
+_QUESTION = re.compile(r"^\s*(?:who|what|where)\s+(?:is|are)\s+(.+?)\s*[?.]?\s*$", re.I)
+_CORRECTION = re.compile(r"^\s*(?:actually|no,)\s*,?\s*(.*)$", re.I)
+_STATEMENT = re.compile(r"^\s*(.+?)\s+is\s+(.+?)\s*\.?\s*$", re.I)
+_PICK = re.compile(r"^\s*pick\s+(E\d+)\s*\.?\s*$", re.I)
+_YESNO = re.compile(r"^\s*(yes|no)\s*\.?\s*$", re.I)
+
+
+def _chain(text: str) -> list[str]:
+    return [part.strip() for part in re.split(_APOS, text.strip()) if part.strip()]
+
+
+def _clarify(text: str) -> dict:
+    return {"act": "clarify", "text": text}
+
+
+class FakeEars:
+    """A tiny template parser. Test scaffolding for the loop -- NOT the real ears."""
+
+    def hear(self, turn: str) -> list[dict]:
+        turn = " ".join(str(turn).split())
+        if not turn:
+            return [_clarify("I didn't catch anything.")]
+        found = _PICK.match(turn)
+        if found:
+            return [{"act": "answer", "value": "pick", "id": found.group(1)}]
+        found = _YESNO.match(turn)
+        if found:
+            return [{"act": "answer", "value": found.group(1).lower()}]
+        found = _QUESTION.match(turn)
+        if found:
+            parts = _chain(found.group(1))
+            if len(parts) < 2 or len(parts) > MAX_HOPS + 1:
+                return [_clarify(f"I can only follow 1 to {MAX_HOPS} steps, like "
+                                 f"\"Who is Mira's mother's city?\".")]
+            return [{"act": "ask", "name": parts[0],
+                     "relations": [self._relation(p) for p in parts[1:]]}]
+        correction = False
+[0m
+[0m$ [0mgrep -n "def \|Does\|_IS\|yesno\|YESNO\|is_\|does" scripts/claude_loop221c_agent.py | head -25; grep -n "def hear\|def .*229\|endswith\|question\|statement" scripts/claude_loop229_agent.py | head -15
+91:def _plural(word: str) -> list[str]:
+110:def plural_map221c(table: T221.Table221 | None = None) -> dict[str, str]:
+127:def _plural_res(table: T221.Table221):
+142:def _cap(s: str) -> str:
+146:def question_shaped221c(turn: str) -> bool:
+159:def normalise221c(turn: str, table: T221.Table221 | None = None) -> str:
+205:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+248:def build_agent221c(cfg: dict | None = None) -> Loop221cAgentLoop:
+306:    def __init__(self, root, cfg: dict | None = None,
+335:def run_daemon221c(root, cfg: dict | None = None,
+341:def selftest221c() -> int:
+349:        ("so, where does Pim Arlo work now?", "Where does Pim Arlo work?"),
+369:def main(argv=None) -> int:
+9:questions -- passes through byte-identical.
+146:def name_shape229(s: str, max_tokens: int = 6,
+178:def person_shape229(s: str) -> bool:
+186:def lower_phrase229(s: str, max_tokens: int = 3) -> bool:
+199:def value_ok229(rel: dict, value: str, how: str) -> str | None:
+249:def subject_ok229(x: str) -> str | None:
+315:def load_table229(path: str | Path | None = None) -> dict:
+378:def group_keys229(tb: dict, rel_name: str) -> set[str]:
+388:def table_teach_readings229(turn: str, tb: dict | None = None) -> list[dict]:
+389:    """Distinct (rel, X, Y) teach readings of a statement turn."""
+392:    if not t or t.endswith("?"):
+404:        return []  # question-shaped turn without "?": not a teach
+441:def canonical_sentence229(x: str, rel_name: str, y: str) -> str:
+448:def base_missed229(actions) -> bool:
+459:    """Outermost ears mixin: table teaches on base-missed statements."""
+[0m
+[0m$ [0msed -n '146,230p' scripts/claude_loop221c_agent.py
+def question_shaped221c(turn: str) -> bool:
+    t = " ".join(str(turn).split())
+    t = _LEAD.sub("", t)
+    if not t:
+        return False
+    if t.endswith("?"):
+        return True
+    if t[-1] in ".!":
+        return False
+    first = re.split(r"[\s'’,]", t, maxsplit=1)[0].lower()
+    return first in _QWORDS
+
+
+def normalise221c(turn: str, table: T221.Table221 | None = None) -> str:
+    """Rewritten text of a question-shaped turn (or the turn unchanged)."""
+    table = table or T221.get_table221()
+    raw = str(turn)
+    if not question_shaped221c(raw):
+        return raw
+    t = " ".join(raw.split())
+    t = _LEAD.sub("", t)
+    had_q = t.endswith("?")
+    body = t.rstrip(" ?").rstrip()
+    for rx, fn in _CONTRACT:
+        body = rx.sub(fn, body)
+    while True:
+        m = _TRAIL.search(body)
+        if not m:
+            break
+        f = m.group("f")
+        if f[:1].isupper() and not m.group("comma"):
+            break  # likely part of a title ("Right Now")
+        body = body[:m.start()].rstrip(" ,")
+    body = " ".join(body.split())
+    if body:
+        first, _, rest = body.partition(" ")
+        if first.lower() in _QWORDS:
+            body = (first.lower() + (" " + rest if rest else ""))
+    pm, rx_poss, rx_of = _plural_res(table)
+    m = rx_poss.match(body)
+    if m:
+        body = f"{m.group('wh').lower()} is {m.group('x')} " \
+               f"{pm[m.group('p').lower()]}"
+    else:
+        m = rx_of.match(body)
+        if m:
+            body = f"{m.group('wh').lower()} is the " \
+                   f"{pm[m.group('p').lower()]} of {m.group('x')}"
+    if not body:
+        return raw
+    del had_q  # the rewritten question always ends in "?"
+    return _cap(body) + "?"
+
+
+class QNorm221cMixin:
+    """Outermost ears stage: question normalisation (never writes)."""
+
+    last_qnorm221c: dict | None = None
+
+    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+        self.last_qnorm221c = None
+        try:
+            table = self._table221()  # type: ignore[attr-defined]
+            new = normalise221c(turn, table)
+        except Exception:  # noqa: BLE001 -- normaliser never breaks a turn
+            new = turn
+        if new != turn and new != " ".join(str(turn).split()) \
+                and T221.unique_reading221(new, table) is not None:
+            acts = super().hear(new)  # type: ignore[misc]
+            if isinstance(acts, list) and all(
+                    isinstance(a, dict) and a.get("act") in _WRITE_FREE
+                    for a in acts):
+                self.last_qnorm221c = {"turn": turn, "rewritten": new}
+                log = os.environ.get("QNORM221C_LOG")
+                if log:
+                    try:
+                        with open(log, "a", encoding="utf-8") as fh:
+                            fh.write(json.dumps(
+                                {"turn": turn, "rewritten": new}) + "\n")
+                    except OSError:
+                        pass
+                return acts
+        return super().hear(turn)  # type: ignore[misc]
+[0m
+[0m$ [0msed -n '246,300p' scripts/fable_bench73_english_arm.py
+def compose_question(question: str,
+                     triples: list[tuple[str, str, str]]
+                     ) -> tuple[str, list[str]] | None:
+    """English question + parsed taught triples -> (name, relations), or None.
+
+    Shared arm code (both ears choices): the pluggable ears map single
+    sentences to triples; query composition over those triples lives here so
+    ears47 drops in without new code.
+    """
+    q = " ".join(str(question).split())
+    if not q:
+        return None
+    ents: list[str] = []
+    for s, _, o in triples:
+        ents.extend([s, o])
+
+    m = re.fullmatch(r"What is the never-taught relation (\d+) of (.+?)\??", q)
+    if m:
+        return (m.group(2).strip(), [f"never_taught_rel_{m.group(1)}"])
+
+    m = re.fullmatch(
+        r"What is the never-taught relation of the ([\w /-]+?) of (.+?)\??", q)
+    if m:
+        key = REV_OF_NOUNS.get(m.group(1).strip().lower().replace(" ", "_"))
+        if key is None:
+            return None
+        # Second hop was never taught: use an undeclared key so the notebook
+        # structurally abstains (same mechanism as the structured arm).
+        return (m.group(2).strip(), [key, "never_taught_rel"])
+
+    m = re.fullmatch(r"Who is the ([\w /-]+?) of (.+?)\??", q)
+    if m:
+        label = m.group(1).strip().lower().replace(" ", "_")
+        name = m.group(2).strip()
+        if label in REV_OF_NOUNS and _bare_name_ok(name):
+            return _one_hop(name, REV_OF_NOUNS[label], triples)
+
+    m = re.fullmatch(r"Who (\w+) by (.+?)\??", q)
+    if m:
+        verb = m.group(1).strip().lower()
+        name = m.group(2).strip()
+        if verb in REV_BY_VERBS and _bare_name_ok(name):
+            return _one_hop(name, REV_BY_VERBS[verb], triples)
+
+    # MQuAKE two-hop: the question names exactly the chain start; walk the
+    # taught chain for hop order; require both hop relations to be mentioned
+    # in the question (coverage gate, else MISSING rather than a guess).
+    ment = _entity_mentions(q, ents)
+    if len(ment) != 1:
+        return None
+    start = ment[0]
+    r1s = [r for (s, r, _) in triples if s == start]
+    r1s = list(dict.fromkeys(r1s))
+    if len(r1s) != 1:
+        return None
+[0m
+[0m$ [0mgrep -n "def hear\|base_missed\|unique_reading\|ask\|def " scripts/claude_loop221b_agent.py | head -20; grep -n "def \|_IS\|Does\|parse" scripts/fable_loop190b_agent.py | head -15
+7:single-hop ask action, so no write path is reachable from it.
+10:  (A) the whole 221 stack understood nothing (base_missed221: no actions,
+12:  (B) the 221 stack produced exactly one single-hop ask on a named subject
+13:      that resolves, and NONE of that ask's keys has a current answering
+51:  * Exactly ONE stored relation key of the subject matches -> ask on it.
+53:The ask reply is the loop's normal one-hop answer, which names the
+81:import fable_fix221_tableask as T221  # noqa: E402 (helpers, read-only)
+107:def stem221b(w: str) -> str:
+123:def _toks(s: str) -> list[str]:
+127:def rel_words221b(key: str) -> list[str]:
+132:def _taught_keys(nb, eid: str) -> dict[str, int]:
+147:def _user_eid(nb):
+154:def _find_subject(nb, qtoks: list[str]):
+186:def match221b(nb, question: str):
+258:def _would_abstain(nb, act: dict) -> str | None:
+259:    """(B): single-hop named ask whose keys all have no current row ->
+262:    if act.get("act") != "ask" or len(rels) != 1 or act.get("entity_id"):
+287:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+296:        if T221.base_missed221(actions):
+310:        act = {"act": "ask", "name": m["name"], "relations": [key],
+11:190 shapes (E1-E4 parsed by fable_fix190_reverse.parse_reverse190) with
+15:parse as reverse and keep "I don't know anyone called Lima."
+20:"I don't know anyone called <V>." AND the turn parses as a closed 190
+22:parsed relation key. Everything else (matches, known no-match,
+32:import argparse
+43:import fable_fix190_reverse as R190  # noqa: E402 (parser, read-only)
+48:def _clean_value(text: str) -> str:
+52:def _display_rel(rel_key: str) -> str:
+56:def whose_sentence190b(rel_key: str, value: str) -> str:
+64:    def hear(self, turn: str) -> list[dict]:  # type: ignore[no-redef]
+73:        parsed = R190.parse_reverse190(turn)
+74:        if parsed is None:
+76:        rel_key, value = parsed
+77:        # Only rewrite when the called-name equals the parsed reverse
+79:        # that merely coincide with a reverse parse).
+[0m
+[0m# [0mTodos
+[✓] Pilot 138nb single-turn probe + verify interpreter
+[✓] Write scripts/claude_diag293_run.py (60+ dialogs on 138nb)
+[✓] Write scripts/claude_diag293_summary.py (counts from rows.jsonl)
+[✓] Run full diag + summary, verify counts
+[✓] Trace file:line routing per shape + reader audit
+[•] Write artifacts/claude-diag293-20260923/DIAG.md
+[0m
+[0m← [0mWrite artifacts/claude-diag293-20260923/DIAG.md
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+rows=[json.loads(x) for x in open('artifacts/claude-diag293-20260923/rows.jsonl')]
+print('n=',len(rows))
+from collections import Counter
+print('outer stages:',Counter(r['stage'] for r in rows))
+print('inner stages:',Counter(r['inner_stage'] for r in rows))
+print('qbranch:',Counter((r['d224'] or {}).get('qbranch') for r in rows if r.get('d224')))
+print('d224 acts:',Counter(tuple((r['d224'] or {}).get('acts',[]) or []) for r in rows if r.get('d224')))
+print('intents:',Counter(r['intent'] for r in rows))
+print('kinds:',Counter(r['kind'] for r in rows))
+print('setup replace check:', [r['id'] for r in rows if 'correct' in r['id']], [r['setup_replies'][-1][:40] if r['setup_replies'] else '' for r in rows if 'correct' in r['id']])
+" 2>&1 | tail -12; ls artifacts/claude-diag293-20260923/ scripts/claude_diag293_*.py
+n= 61
+outer stages: Counter({'none': 45, 'loop154d-yesno+none': 11, 'fake': 5})
+inner stages: Counter({'none': 56, 'fake': 5})
+qbranch: Counter({False: 41})
+d224 acts: Counter({('clarify', 'clarify'): 41})
+intents: Counter({'DECLINE': 45, None: 16})
+kinds: Counter({'didnt-understand': 41, 'decline-targeted': 7, 'yes': 5, 'no': 5, 'answer-or-other': 2, 'not-that-i-know': 1})
+setup replace check: ['dh-corrected', 'ip-correct-new', 'ip-correct-old', 'dl-correct-new'] ["Updated: Lena's mother is Pell (it was W", "Updated: Lena's mother is Pell (it was W", "Updated: Lena's mother is Pell (it was W", "Updated: Rin's city is Oslo (it was Berg"]
+scripts/claude_diag293_pilot.py
+scripts/claude_diag293_pilot2.py
+scripts/claude_diag293_run.py
+scripts/claude_diag293_summary.py
+
+artifacts/claude-diag293-20260923/:
+DIAG.md
+rows.jsonl
+[0m
+[0m# [0mTodos
+[✓] Pilot 138nb single-turn probe + verify interpreter
+[✓] Write scripts/claude_diag293_run.py (60+ dialogs on 138nb)
+[✓] Write scripts/claude_diag293_summary.py (counts from rows.jsonl)
+[✓] Run full diag + summary, verify counts
+[✓] Trace file:line routing per shape + reader audit
+[✓] Write artifacts/claude-diag293-20260923/DIAG.md
+[0m
