@@ -1,0 +1,22 @@
+BLIND PANEL SPEC: nhoppanel268b (backwards questions about a value that has facts of its own). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/268*, scripts/claude_fix268*, scripts/claude_loop268*, scripts/claude_268*, artifacts/claude-nhop268*, artifacts/claude-nhoppanel268-*, artifacts/claude-nhopdiag-*, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names.
+
+Base: 138nb = scripts/claude_loop138nb_agent.py and its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; build as that folder's runner does; a fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-nhoppanel268b-20260923/ with panel.jsonl (60 items), base138nb.jsonl (60 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "n268b-001", "family": ..., "setup": [2-4 plain teaches, each its own turn], "question": "...", "gold": [list of strings, all must appear; [] for abstain families], "note": "..."}. JSON list for gold.
+
+Families and exact counts (60):
+- bug 16: "A's R is V." plus a fact where V is the subject ("V's R2 is W."; R2 may equal R), then a backwards question about V, over relations with a chain cue (spouse/wife/husband, author, founder, employer, parent/child, composer): "Whose R is V?", "Who is married to V?", "What did V write?", "What did V found?", "Who works for V?", "What did V compose?" and similar. gold [A] (4 items with two subjects: gold [A, B]). KEEP AN ITEM ONLY IF the base answers it from stage loop138-nhop with a reply that names W or another non-gold value. Try as many candidates as you need; report how many you tried and dropped (counts only).
+- reverse_nochain 10: the same shapes; V has no facts of its own. gold [A].
+- forward_chain 12: forward two-step questions over the same relations with both links taught ("Who is A's spouse's employer?"). gold [final value].
+- forward_1hop 10: "Who is A's spouse?", "Who wrote X?", "Who founded Y?". gold [value].
+- uncued_reverse 6: backwards questions over boss, mother, friend (with and without a V chain). gold [A].
+- abstain 6: backwards questions about a V that was never taught. gold []; right = honest abstain naming no taught person.
+At least 15 items use a two-word name.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged): right = every gold string appears (case-insensitive), and for bug/reverse_nochain/uncued_reverse the reply also contains "(worked out backwards)"; right_names = gold appears, label or not; abstain family = contains "I don't know" or "I couldn't" and names no taught person; wrong = names a taught value or person not in gold, does not contain every gold string, and is not an abstain; question_wrote.
+README.md: the base's right, right_names, wrong, question writes and stage counts per family, category level only. Never quote an item.
