@@ -296,3 +296,16 @@ These are the arXiv IDs whose body text (methods or numbers) a claim above relie
 - **2004.02709**: contrast-set construction, as background for the rival rules.
 
 Classics cited by title and DOI only: Knight & Leveson 1986 (10.1109/TSE.1986.6312924), Eckhardt & Lee 1985 (10.1109/TSE.1985.231895), Littlewood & Miller 1989 (10.1109/32.58771), Blum & Mitchell 1998 (10.1145/279943.279962), de Marneffe et al. 2012 (10.1162/COLI_a_00097), Shriberg et al. 1998 (10.1177/002383099804100410).
+
+## Addendum (research thread, 2026-09-23 06:10 UTC): the 13 of 103 figure, and 267
+
+**What 13 of 103 means (shown).** It comes from the sealed dev sweep in `artifacts/claude-earcheck261-20260922/theta.json`:
+- at cutoff 0 (checker passes everything), 103 dev frames were scored wrong;
+- at the sealed cutoff 0.25, 13 were still passed, so the checker held back 90.
+
+Three cautions:
+- The 103 includes label artefacts from the scorer.
+- This dev set is the same one the prompt wording (B) and the 0.25 cutoff were chosen on. So 90 held is an in-sample figure.
+- On a fresh dev set from a separate writer, experiment 267 had the yes/no checker let 63 of 65 wrong frames through (23 of 25 after the relative-gold artefact).
+
+**Reading (suggested, not shown).** The drop from about 87% held on the tuning set to about 3–8% held on fresh wording supports the "0.25 is fitted to the practice set" hypothesis. The two sets have different error mixes, so this is not a controlled comparison.
