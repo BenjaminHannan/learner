@@ -1,0 +1,651 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; git rev-parse --show-toplevel 2>&1 | head -5
+9:56  up 3 days,  1:45, 4 users, load averages: 48.59 45.58 46.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102482600    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -20; echo FETCH_DONE; df -g / | head -5
+FETCH_DONE
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102588120    0%   /
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280m-talking-join.md > /tmp/280m_doc.md; wc -l /tmp/280m_doc.md; grep -n "280n result" /tmp/280m_doc.md | head
+105 /tmp/280m_doc.md
+81:## 280n result and 280p, the last attempt (director, 2026-09-23 13:28 UTC)
+[0m
+[0m$ [0msed -n '1,200p' /tmp/280m_doc.md
+# 280m: join of the talking line's three merge candidates. Director's note, 2026-09-23 10:25 UTC
+
+Label: 280m (a join, like 138m; not a new number, so no clash with the ear line's 269-289 or the reasoning line's 290+).
+
+## Base decision
+Base: **260** (scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json).
+Why 260, not 291: every piece below was built and graded on 260. 291 (138nb + 260 + 252c) is still building and
+has no verdict. Waiting would stall this line on another line's result. When 291 passes, a later join puts
+280m's layers on top of 291 as its own experiment. That join re-runs this note's panel as a regression check.
+
+## What is joined (no new behaviour)
+1. 281's called/named reader (scripts/claude_fix281_called.py, install_called281).
+2. 280's sealed ability table text plus 280b's general-question recogniser (scripts/claude_fix280_capab.py,
+   scripts/claude_fix280b_general.py), exactly as in scripts/claude_loop280b_agent.py.
+3. 282's small-talk layer plus 282b's vocabulary layer (scripts/claude_fix282_small.py,
+   scripts/claude_fix282b_vocab.py), exactly as in scripts/claude_loop282b_agent.py.
+Order, inner to outer: 260, then 281, then 280/280b, then 282/282b. All piece files are imported read-only and
+unchanged. The one new file is the join agent scripts/claude_loop280m_agent.py, plus its config. Before sealing,
+the builder shows on dev turns that the three triggers never fire on the same turn (0 overlaps). Any overlap
+must be reported. The seal cannot happen until the director rules on it.
+
+## Marks (fixed now)
+- **M1 joinpanel280m (fresh, blind), run once on five arms: 260, 280b, 281, 282b and 280m.**
+  - Agreement: every 280m reply, store and write count is byte-identical to the arm that owns its category
+    (ability items to 280b, called items to 281, small-talk items to 282b, controls to 260). Bar: 100%.
+  - 0 writes on question and small-talk items.
+  - 0 wrong answers on called items.
+  - 0 unsupported claims anywhere (the director checks this).
+  - Report only (no bar): the absolute rates per category, 260 beside 280m.
+- **M2 frozen suites** (fable_suitediff218 --only rt136,rt143,sessions152,bench) vs 260's rows. The only moves
+  allowed are the union of the pieces' registered moves: 280's 3 reply-only moves, and in the verifier probes
+  281's N06 and 282's E04. Anything else fails. GATE must be as clean as 260's.
+- **M3 smalltalkpanel234**, run once: every figure equal to or better than 260.
+- **M4** 0 notebook differences vs 260 on the suites, and on the panel except where a piece arm already differs.
+What would prove this wrong: any 280m reply that differs from its owner arm, any suite move outside the union,
+or any write on a question or small-talk turn.
+
+## Panel spec (joinpanel280m, 90 turns, fresh)
+- 25 general ability questions ("what can you do" in many wordings).
+- 8 plain teach turns "<Name>'s <relation> is <Value>." and 12 called/named questions in the four formal shapes,
+  each question after its teach in the same dialog.
+- 25 greetings, thanks and closings, typed casually.
+- 10 turns that mix small talk with an ability or called question.
+- 10 controls (plain teaches and plain questions).
+Columns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /
+control), gold. Mixed items are owned by 260 for M1 agreement unless the builder's PASSMARKS predicts a piece
+route for each one before the seal. Fictional names only.
+
+## Ordering with the reasoning line (added 2026-09-23 11:15 UTC, before any 280m result)
+291 is now the reasoning line's main base (73/96 on its blind panel, no losses against either parent), and 292 is
+queued on top of it. 280m stays on 260, as registered, because its bar is agreement with the 260-built piece arms.
+Order: 292 goes first on 291. Once 280m has a verdict and the main base is settled (291, or 292 if verified), the
+talking line registers a separate join that puts 280m's layers on the main base, with joinpanel280m re-run as a
+regression check. The reasoning thread was told this at 11:15 UTC. It does not wait on the talking line.
+
+## 280m result and 280n (director, 2026-09-23 11:54 UTC)
+280m is a **registered FAIL**: M1 agreement was 87/90, and the bar was 90/90. Director recount from the raw rows
+of all five arms: ability 25/25, called 8/8 dialogs, small talk 25/25, controls 5/5 dialogs and teach turns all
+agree with their owner. The misses are 3 of 10 mixed dialogs, which do not match 260 (the owner the builder
+predicted before the seal). On those 3, the reply is byte-identical to the 280b arm: 280's reply-only post-guard
+swaps 260's old ability sheet for the sealed honest text. So every one of the 90 turns equals some piece arm.
+Other findings:
+- 0 writes on non-teach turns.
+- Called questions: 10 right, 2 clarify lines, 0 wrong.
+- My claim check: the only ability text anywhere is CAN280, and there are 0 other claims.
+- smalltalkpanel234 differs from 260 on 1 row, the same row 282 moved.
+- Deviation: the builder ran the suites only as a pre-seal pilot, not as a registered run after the seal.
+
+The defect is in my ownership rule, which ignored reply-dependent post-guards, not in the join.
+280n re-tests the same sealed 280m agent, with no code change, on a fresh panel, joinpanel280n (same spec as
+joinpanel280m). Two things change:
+- The owner of each mixed turn is decided mechanically from the piece arms. The owner is the single piece arm
+  (280b, 281 or 282b) whose reply differs from 260's, or 260 if none differs. If two or more piece arms differ
+  from 260 on one turn, that turn counts as an overlap and fails.
+- The frozen suites and probes are re-run after the seal as a registered run, with the same allowed union as
+  280m (280's 3 sessions152 moves, N06 and E04).
+Bars: M1 agreement 100% under that rule, 0 overlaps, 0 writes on question and small-talk turns, 0 wrong called
+answers, and 0 unsupported claims (director). M2 as above, GATE identical to 260's. M3 smalltalkpanel234 equal to
+or better than 260.
+
+## 280n result and 280p, the last attempt (director, 2026-09-23 13:28 UTC)
+280n is a **registered FAIL**: agreement was 87/90, and the bar was 90/90.
+My recount from the raw rows of all five arms:
+- Ability 25/25, teach 8/8, called 12/12, small talk 25/25, mixed 10/10 (mechanical owner), control 7/10.
+- The 3 control misses are control questions where only 281's reply differs from 260's, and 280m equals 281.
+  My rule fixed controls to 260, so it did not expect the called reader to answer them.
+- 0 overlaps, 0 writes on non-teach turns, 0 store differences.
+- Called and control questions: 13 right, 4 clarify or abstain lines, 0 wrong.
+- The suites were a registered post-seal run: exactly 280's 3 moves, N06 and E04, with GATE identical.
+- smalltalkpanel234: 17/20 vs 16/20, 0 writes.
+Applying the mechanical rule to every turn would give 90/90, but that rule was not registered, so the FAIL stands.
+Across 180 fresh turns in two panels, every 280m turn equals a piece arm, with 0 overlaps and 0 wrong answers.
+**280p** (same sealed 280m agent, no code change, fresh joinpanel280p, same spec) registers the rule that
+should have been used from the start, for EVERY turn: the owner is the single piece arm (280b, 281 or 282b)
+whose reply, writes or store differ from 260's, or 260 if none does. Two or more differing pieces are an overlap.
+Bars:
+- agreement 90/90 under that rule;
+- 0 overlaps;
+- 0 writes on question and small-talk turns;
+- 0 wrong answers on called and control questions;
+- 0 unsupported claims (director);
+- registered post-seal suites limited to the same union, GATE identical;
+- smalltalkpanel234 equal or better than 260.
+This is the join's last attempt. If 280p fails, the join closes, and the pieces are joined later only as part of
+the main-base join.
+[0m
+[0m$ [0mls artifacts/claude-join280m-20260923/ 2>&1; echo ---; ls scripts/claude_join280m_* scripts/claude_280m_* 2>&1; echo ---; cat artifacts/claude-join280m-20260923/SEAL.sha256.txt 2>&1 | head -20
+devcases280m.json
+loop280m-config.json
+PASSMARKS.md
+pilot
+predicted_moves280m.json
+RESULTS.md
+run
+SEAL.sha256.txt
+---
+scripts/claude_280m_panel.sh
+scripts/claude_280m_runall.sh
+scripts/claude_join280m_regscore.py
+scripts/claude_join280m_run.py
+scripts/claude_join280m_score.py
+---
+cb56d1bbd6c1ab8eb204a6a7163a1c2f72d934e55dcc296478421f818a8dd179  scripts/claude_loop280m_agent.py
+b95956cf410bcee27e701c8a1329bf077d69ce54a85a5e30bdf82909f397de64  artifacts/claude-join280m-20260923/loop280m-config.json
+0ac2fa0daa54e1cc4dfb398238c54d160774c7fb2fcefee12034a3812fcfbb03  artifacts/claude-join280m-20260923/devcases280m.json
+9e55a6518d161b975fd1303b9a2bb1a14ebe3bdbf280809a60d940c617ce59ea  artifacts/claude-join280m-20260923/PASSMARKS.md
+ba07a9dfa370da349e658050182ea3d1a285c204bba81689e59bf26668a1edfc  artifacts/claude-join280m-20260923/predicted_moves280m.json
+757ccc1e4a0ccbda7145ea8b1e877e955c4b83269026d909135778cb8e7184d9  scripts/claude_join280m_run.py
+bbbf5550ae7c8a3d2cb803f8ae023ac728faaecf0b8c356b8383297805a8999f  scripts/claude_join280m_score.py
+436bae48809406fe28e86e2441b7a303cc886801480270696410395d34c86f20  scripts/claude_join280m_regscore.py
+128f6d5218988dd1b94976303c44c90af0279f09c1dd170461225fd615e0f11f  scripts/claude_280m_runall.sh
+536410fb050e018186528c771e70afa13328a4fb635aaf2f58dac5cd4190d1f8  scripts/claude_280m_panel.sh
+0eea64bceed585986763f42471f154878ee7f85b10ad855d8b8cd64f7f92de5e  artifacts/claude-join280m-20260923/pilot/devpilot-280m.json
+c502ae1de5dd811dbe1a5bdf27ff112fb0a582544b994189f746fde5690c1f00  artifacts/claude-join280m-20260923/pilot/suitepilot-280m.json
+[0m
+[0m→ [0mRead scripts/claude_join280m_score.py
+[0m→ [0mRead scripts/claude_join280m_run.py
+[0m→ [0mRead artifacts/claude-join280m-20260923/PASSMARKS.md
+[0m→ [0mRead scripts/claude_280m_panel.sh
+[0m→ [0mRead scripts/claude_280m_runall.sh
+[0m→ [0mRead scripts/claude_join280m_regscore.py
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-join280m-20260923/SEAL.sha256.txt 2>&1; echo EXIT:$?
+scripts/claude_loop280m_agent.py: OK
+artifacts/claude-join280m-20260923/loop280m-config.json: OK
+artifacts/claude-join280m-20260923/devcases280m.json: OK
+artifacts/claude-join280m-20260923/PASSMARKS.md: OK
+artifacts/claude-join280m-20260923/predicted_moves280m.json: OK
+scripts/claude_join280m_run.py: OK
+scripts/claude_join280m_score.py: OK
+scripts/claude_join280m_regscore.py: OK
+scripts/claude_280m_runall.sh: OK
+scripts/claude_280m_panel.sh: OK
+artifacts/claude-join280m-20260923/pilot/devpilot-280m.json: OK
+artifacts/claude-join280m-20260923/pilot/suitepilot-280m.json: OK
+EXIT:0
+[0m
+[0m$ [0mls artifacts/ | grep -i "join280p\|joinpanel280p" 2>&1; echo ---; ls scripts/ | grep -i "280p" 2>&1; echo ---; ls artifacts/claude-smalltalkpanel234-20260922/ 2>&1 | head; echo ---; ls artifacts/claude-openers260-20260922/run/ 2>&1 | head -20
+---
+---
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+lat-n-3.json
+lat-n-3.log
+panel-138m.jsonl
+panel-138m.log
+panel-260.jsonl
+panel-260.log
+panel-schema.txt
+panel-score.txt
+panel-score260.json
+panel-seal-check.txt
+[0m
+[0m← [0mWrite scripts/claude_join280p_score.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py 2>&1 | head -5; echo ---; /usr/bin/python3 --version 2>&1 | head -2
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_join280p_score.py", line 294, in <module>
+    sys.exit(main(sys.argv))
+             ^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_join280p_score.py", line 284, in main
+---
+Python 3.9.6
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+mkdir -p /tmp/mock280p
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'PY'
+import json, os
+d="/tmp/mock280p"
+panel=[
+ {"dialog_id":"m-ability","turn_index":0,"user_text":"What can you do?","category":"ability","gold":"ability"},
+ {"dialog_id":"m-called","turn_index":0,"user_text":"What is the name of Mara's cat?","category":"called","gold":"called"},
+ {"dialog_id":"m-teach","turn_index":0,"user_text":"Mara's cat is Miso.","category":"teach","gold":"teach"},
+ {"dialog_id":"m-small","turn_index":0,"user_text":"Hey, thanks a lot!","category":"smalltalk","gold":"small"},
+ {"dialog_id":"m-mixed","turn_index":0,"user_text":"Mara's cat is Miso.","category":"mixed","gold":"mix"},
+ {"dialog_id":"m-control","turn_index":0,"user_text":"Mara's cat is Miso.","category":"control","gold":"ctl"},
+ {"dialog_id":"m-overlap","turn_index":0,"user_text":"What can you name?","category":"mixed","gold":"mix"},
+]
+open(f"{d}/panel.json","w").write(json.dumps(panel))
+def mk(id_, turn, reply, ev=0, triples=[]):
+    return {"id":id_,"cats":["x"],"golds":["g"],"rows":[{"turn":turn,"reply":reply,"ev":ev,"triples":triples}],"stored":triples}
+turns={r["dialog_id"]:r["user_text"] for r in panel}
+R0="base reply."
+RA="ability reply CAN."
+RC="called reply."
+RS="small reply."
+RB2="second piece reply."
+# 260
+runs260={k:mk(k,t,R0) for k,t in turns.items()}
+# 280b differs only on ability + overlap
+runs280b={k:mk(k,t,R0) for k,t in turns.items()}
+runs280b["m-ability"]=mk("m-ability",turns["m-ability"],RA)
+runs280b["m-overlap"]=mk("m-overlap",turns["m-overlap"],RA)
+# 281 differs only on called + overlap
+runs281={k:mk(k,t,R0) for k,t in turns.items()}
+runs281["m-called"]=mk("m-called",turns["m-called"],RC)
+runs281["m-overlap"]=mk("m-overlap",turns["m-overlap"],RC)
+# 282b differs only on smalltalk
+runs282b={k:mk(k,t,R0) for k,t in turns.items()}
+runs282b["m-small"]=mk("m-small",turns["m-small"],RS)
+# 280m agrees with mech owner everywhere except overlap (equals 280b there)
+runs280m={k:mk(k,t,R0) for k,t in turns.items()}
+runs280m["m-ability"]=mk("m-ability",turns["m-ability"],RA)
+runs280m["m-called"]=mk("m-called",turns["m-called"],RC)
+runs280m["m-small"]=mk("m-small",turns["m-small"],RS)
+runs280m["m-overlap"]=mk("m-overlap",turns["m-overlap"],RA)
+for tag,r in [("260",runs260),("280b",runs280b),("281",runs281),("282b",runs282b),("280m",runs280m)]:
+    open(f"{d}/run-{tag}.json","w").write(json.dumps(list(r.values())))
+open(f"{d}/empty.json","w").write("{}")
+print("mock written")
+PY
+mock written
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel.json /tmp/mock280p/run-260.json /tmp/mock280p/run-280b.json /tmp/mock280p/run-281.json /tmp/mock280p/run-282b.json /tmp/mock280p/run-280m.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out.json; echo EXIT:$?; cat /tmp/mock280p/out.json
+dialogs=7 turns=7 agree=6/7
+by_cat={"ability": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "called": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "teach": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "smalltalk": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "mixed": {"n": 2, "agree": 1, "can280m": 0, "can260": 0}, "control": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}} mech_owners={'280b': 1, '281': 1, '260': 3, '282b': 1, 'OVERLAP': 1}
+moved=['m-overlap#0(mixed->OVERLAP)']
+overlaps=['m-overlap#0']
+280m question writes=[]; smalltalk writes=[]; store diffs vs 260=[]
+old-sheet hits on 280m=[] (director claim check)
+VERDICT: FAIL
+EXIT:1
+{
+ "n_dialogs": 7,
+ "n_turns": 7,
+ "by_cat": {
+  "ability": {
+   "n": 1,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  },
+  "called": {
+   "n": 1,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  },
+  "teach": {
+   "n": 1,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  },
+  "smalltalk": {
+   "n": 1,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  },
+  "mixed": {
+   "n": 2,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  },
+  "control": {
+   "n": 1,
+   "agree": 1,
+   "can280m": 0,
+   "can260": 0
+  }
+ },
+ "agree": {
+  "n": 6,
+  "denom": 7,
+  "moved_ids": [
+   "m-overlap#0(mixed->OVERLAP)"
+  ]
+ },
+ "overlaps": [
+  "m-overlap#0"
+ ],
+ "qwrite280m": [],
+ "smalltalk_writes280m": [],
+ "store_diffs_280m_vs_260": [],
+ "old_sheet_hits_280m": [],
+ "mech_owners": {
+  "280b": 1,
+  "281": 1,
+  "260": 3,
+  "282b": 1,
+  "OVERLAP": 1
+ },
+ "verdict": "FAIL"
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'PY'
+import json
+d="/tmp/mock280p"
+# clean panel: drop overlap dialog
+panel=json.load(open(f"{d}/panel.json"))
+clean=[r for r in panel if r["dialog_id"]!="m-overlap"]
+json.dump(clean, open(f"{d}/panel-clean.json","w"))
+for tag in ["260","280b","281","282b","280m"]:
+    rows=json.load(open(f"{d}/run-{tag}.json"))
+    rows=[r for r in rows if r["id"]!="m-overlap"]
+    json.dump(rows, open(f"{d}/run-{tag}-clean.json","w"))
+# writes/store-diff test: make 281 differ only by ev on control turn
+rows260=json.load(open(f"{d}/run-260-clean.json"))
+rows281=json.load(open(f"{d}/run-281-clean.json"))
+rows280m=json.load(open(f"{d}/run-280m-clean.json"))
+for r in rows281:
+    if r["id"]=="m-control":
+        r["rows"][0]["ev"]=1
+for r in rows280m:
+    if r["id"]=="m-control":
+        r["rows"][0]["ev"]=1
+json.dump(rows281, open(f"{d}/run-281-w.json","w"))
+json.dump(rows280m, open(f"{d}/run-280m-w.json","w"))
+# empty-text panel
+json.dump([{"dialog_id":"e","turn_index":0,"user_text":"  ","category":"control","gold":"g"}], open(f"{d}/panel-empty.json","w"))
+# bad-category panel
+json.dump([{"dialog_id":"e","turn_index":0,"user_text":"hi","category":"trap","gold":"g"}], open(f"{d}/panel-badcat.json","w"))
+# missing-key panel
+json.dump([{"dialog_id":"e","turn_index":0,"category":"control","gold":"g"}], open(f"{d}/panel-missing.json","w"))
+print("variants written")
+PY
+echo "--- CLEAN (expect PASS 6/6) ---"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel-clean.json /tmp/mock280p/run-260-clean.json /tmp/mock280p/run-280b-clean.json /tmp/mock280p/run-281-clean.json /tmp/mock280p/run-282b-clean.json /tmp/mock280p/run-280m-clean.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out-clean.json; echo EXIT:$?
+echo "--- WRITES-DIFF owner=281 agree (expect PASS) ---"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel-clean.json /tmp/mock280p/run-260-clean.json /tmp/mock280p/run-280b-clean.json /tmp/mock280p/run-281-w.json /tmp/mock280p/run-282b-clean.json /tmp/mock280p/run-280m-w.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out-w.json; echo EXIT:$?
+echo "--- EMPTY (expect exit 4) ---"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel-empty.json /tmp/mock280p/run-260-clean.json /tmp/mock280p/run-280b-clean.json /tmp/mock280p/run-281-clean.json /tmp/mock280p/run-282b-clean.json /tmp/mock280p/run-280m-clean.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out-e.json; echo EXIT:$?
+echo "--- BADCAT (expect exit 3) ---"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel-badcat.json /tmp/mock280p/run-260-clean.json /tmp/mock280p/run-280b-clean.json /tmp/mock280p/run-281-clean.json /tmp/mock280p/run-282b-clean.json /tmp/mock280p/run-280m-clean.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out-b.json; echo EXIT:$?
+echo "--- MISSINGKEY (expect exit 3) ---"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join280p_score.py panel /tmp/mock280p/panel-missing.json /tmp/mock280p/run-260-clean.json /tmp/mock280p/run-280b-clean.json /tmp/mock280p/run-281-clean.json /tmp/mock280p/run-282b-clean.json /tmp/mock280p/run-280m-clean.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/empty.json /tmp/mock280p/out-m.json; echo EXIT:$?
+variants written
+--- CLEAN (expect PASS 6/6) ---
+dialogs=6 turns=6 agree=6/6
+by_cat={"ability": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "called": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "teach": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "smalltalk": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "mixed": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "control": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}} mech_owners={'280b': 1, '281': 1, '260': 3, '282b': 1}
+moved=[]
+overlaps=[]
+280m question writes=[]; smalltalk writes=[]; store diffs vs 260=[]
+old-sheet hits on 280m=[] (director claim check)
+VERDICT: PASS
+EXIT:0
+--- WRITES-DIFF owner=281 agree (expect PASS) ---
+dialogs=6 turns=6 agree=6/6
+by_cat={"ability": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "called": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "teach": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "smalltalk": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "mixed": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}, "control": {"n": 1, "agree": 1, "can280m": 0, "can260": 0}} mech_owners={'280b': 1, '281': 2, '260': 2, '282b': 1}
+moved=[]
+overlaps=[]
+280m question writes=[]; smalltalk writes=[]; store diffs vs 260=[]
+old-sheet hits on 280m=[] (director claim check)
+VERDICT: PASS
+EXIT:0
+--- EMPTY (expect exit 4) ---
+EMPTY-TURN: row 0 has empty turn text; refusing to score
+EXIT:4
+--- BADCAT (expect exit 3) ---
+SCHEMA-MISMATCH: row 0 unexpected category 'trap'
+EXIT:3
+--- MISSINGKEY (expect exit 3) ---
+SCHEMA-MISMATCH: row 0 missing text key
+EXIT:3
+[0m
+[0m$ [0mtail -30 artifacts/fable-predictions-ledger.md 2>&1; echo ---; grep -n "P280" artifacts/fable-predictions-ledger.md 2>&1 | tail -10
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude-own-o0a3-20260923; 5886 one-change WRONG readings from 553 ACD + 190 no-save gold facts of the o0a/o0a2 dev sets, judged v0/v1/learned-licensed with WE never saved) P1 m1 clean-through >=95% all rules; P2 m2 same; P3 m3 same; P4 m4 clean-through >=90% all rules; P5 m5 clean-blocked 100% v0+v1, clean-through 100% licensed; P6a me2we clean-blocked 100% all; P6b name2me clean-through >=95% all; P6c we2me clean base empty, raw through >=70% each; P7 m7 clean-through >=90% all; P8 m8 empty(55)/OTHER-valued(1)/WE-valued(9) blocked 100% all, rest(125) licensed 100%, v1 75-95%, v0 40-65%, ordered lic>=v1>=v0.
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permission audit, one registered CPU run, 5886 wrong readings, seals 2/2 OK post-run, summary byte-identical to pilot, no post-seal change) Pown0a3.1 10/10 HIT: m1/m2/m3 clean-through 100% all rules; m4 100% (n 109-132); m5 clean-blocked 100% v0+v1, clean-through 100% licensed; m6 me2we blocked 100% all, name2me 100% through all, we2me raw 75/95/100% (clean base empty by construction); m7 100% all 9 sub-cells; m8 structural 65/65 blocked everywhere, rest lic 100% / v1 87.2% / v0 52.0%. Pown0a3.2 PASS 0 crashes. Pown0a3.3 PASS table complete 11x3. Clean through-share (wrong on savable truths): v0 68.1%, v1 68.1%, licensed 96.7%. Only cue absence (m5, v0/v1), WE owner, and mode/empty/OTHER stop a wrong reading; all else needs the reader or an independent checker. See artifacts/claude-own-o0a3-20260923/RESULTS.md.
+- P270b.1 (2026-09-23, builder; exp 270b = 270's normaliser with keep-s fixed in front of the EAR on 261b's arm A, CPU+Mac local + BensPC GPU, sealed 18 files SEAL.sha256.txt artifacts/claude-type270b-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A261b+15: predicted A 30-37/40, A261b 5-15/40, margin +18-28; PASS ~60%. Dev 63/64 (+25); blind risk ear-vocab shapes + so-head holds.
+- P270b.2 (same) M2 casual_q ASK >= 12/15: predicted A 12-15/15; PASS ~75%. Dev 16/16 (A261b 3/16); blind risk odd question shapes.
+- P270b.3 (same) M3 lower_trap wrong saves <= 1: predicted A 0-3; PASS ~45%. Dev 3 (will-future-possessive d270b-087, check-tail passthrough d270b-093, is-a d270b-102).
+- P270b.4 (same) M4 clean 30/30 identical to A261b: predicted 30/30 by construction, dev 24/24; PASS ~95%.
+- P270b.5 (same) M5 0 new wrong saves vs A261b: predicted 0-2; PASS ~55%. Dev 1 (087 span-difference class).
+- P270b.6 (same) M6 median added normaliser time <= 20 ms: predicted ~0.01-0.5 ms (dev median 0.0094); PASS ~99%.
+- P270b.7 (same) overall registered PASS: predicted ~10%. Needs M1+M2+M3+M5 together.
+- P270b.8 (same) dev basis (no bar): casual A 63/64 vs A261b 38/64; sname A 16/16 vs raw 6/16; seen 4/4; casual_q 16/16 vs 3/16; traps A 3 vs 6; clean 24/24; M5 dev 1; ear median 142.7 ms, checker medians 287.3/289.7 ms, 0 fallbacks, ckpt sha ok.
+- P310.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-310 = 291 + lis-300 listener turn310, CPU StubReader threshold 0.99, sealed 4 files SEAL.sha256.txt artifacts/claude-lis310-20260923) all 11 sealed unit tests pass, exit 0: T1 2-facts-save-2 with base mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK answered by base (already-have) + 0; T6 question answered from notebook + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0; T9 server-style load + demo mailbox turn saves 2.
+- P310.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 291, then 0 events growth under 310).
+- P270b OUTCOME (2026-09-23, builder; registered verdict FAIL: M1 margin, M3, M5 fail; M2, M4, M6 pass; panel seal 2/2 OK, schema clean, arms A/A261b ran ONCE each on BensPC GPU, sealed 18/18 OK after, no sealed file changed): M1 A 37/40 vs A261b 31/40 margin +6 (bar >=30 and +15: absolute met, margin missed by 9; P270b.1 margin half wrong, absolute right); M2 A 14/15 (P270b.2 right); M3 A 2 (061 hunter-occupation pYES 0.511, 068 may-occupation pYES 0.266; P270b.3 range right, bar missed by 1); M4 30/30 (P270b.4 right); M5 3 (040 capitalised-phrase-span, 061 value-span diff, 068 capitalised-decoy save; P270b.5 range wrong by 1); M6 median 0.0096 max 0.1146 (P270b.6 right); ALL FAIL (P270b.7 resolves). Post-seal scorer fix disclosed with diff (v1 symmetric-strip wrongly missed 5 correct s-name frames; v2 pred-anchored re-scores recorded rows, arms never re-ran; v1 file kept). Scorer artifact: u270-003 arm A HIT undeserved (true M1 36, margin +5). See artifacts/claude-type270b-20260923/RESULTS.md.
+- P310.1 OUTCOME (2026-09-23, builder, registered CPU run once, seals 4/4 OK post-run, no post-seal change) 11/11 PASS exit 0, every predicted move exact: T1 2 triples + base Saved reply; T2 exact whose-ask + 0; T3a exact ask-back + 0 then yes saves 1; T3b no saves 0; T3c drop + normal save; T4 negation 0; T5 CHECK base "already have" + 0 events; T6 notebook answer + 0; T7 below; T8 exact sorry + 0; T9 server-style load + demo mailbox turn saves 2. Misses 0, deviations 0. Real-model 20-turn chat skipped: ~/premonition-models/lis300-merged/ absent. See artifacts/claude-lis310-20260923/RESULTS.md.
+- P310.2 OUTCOME (same) 0 base-chain writes over the 5 T7 turns (each verified in-run to grow notebook events on raw 291 first, then 0 events/0 triples under 310). Hook turn310 outside turn291; me stored as USER with Me166 render; 209/252b screens on every listener save (0 hits); every turn in lis310_log.jsonl.
+- P280n.1 (2026-09-23, builder; exp 280n re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280n-20260923; blind panel never opened) M1 blind joinpanel280n run once on all five arms with sealed 280m runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed = single piece arm whose reply differs from 260 else 260, 2+ = overlap fail) = 100%; 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): 8/8 PASS exit 0, overlap mock 8/9 FAIL exit 1, empty exit 4, schema exit 3.
+- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. 280m deviation corrected (its suites ran only as pre-seal pilot).
+- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test wrong.
+- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10 with owners 280b:5/260:5, control 7/10); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. The 3 misses (ct00#1, ct01#1, ct04#1, control, ev 0) are turns where only 281 differs from 260 and 280m == 281 byte-identical: control wording firing the 281 rewrite, unpredicted by the fixed control->260 rule. All 90 turns equal some piece arm. M2 PASS exactly as P280n.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280n.1 figure wrong (87 not 100), 0-overlap/write/scan parts right; P280n.2 right; P280n.3 right; P280n.4 bar-miss clause tripped on the 3 controls. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280n-20260923/RESULTS.md.
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-merge292-20260923; blind panels never opened, only specs/README counts read) M1 four piece panels fidelity-100%-or-VOID then same runner+scorer on 292: right_lost [] new_wrong [] new_writes [] all panels; traveling 268b employer hole disclosed. M2 vs 291 rows: sessions152 [] bench [] marks123 exactly D_q_vs_s-04 OK->UNCLEAR reply-only; rt136 move set identical to 291 (21 inherited) 0 new; rt143 exactly M3 Q2->Yes + O5 Q2->IDK. M3 restart probes 0 moves; verifier exactly N02 rows[1] Q2->"I don't know Tomas's house." stores identical (lift-then-honest-abstain, stable 5/5); 0 ghosts/dup-fails/bad-writes. M4 median added <= +5 ms (pilot +0.57/+0.68/+0.64). M5 mixpanel292 once per arm: no piece-right item lost, 0 wrong beyond 291, 0 question writes, controls byte-identical to 291, mixed no bar.
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save turns 1/240 (pronoun-ambiguous no-save turn; bar <=1: PASS).
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-typo); held-back 66; $0 spent; merged sha256 112880d6 kept at ~/premonition-models/lis300-merged/ and on BensPC. See artifacts/claude-lis300-20260923/RESULTS.md.
+- P292.2 OUTCOME (2026-09-23, builder) registered verdict PASS M1-M5. M1: chain 67/70 fidelity exact + 0/0/0; nhop 55/60 (bug 11+1) + 0/0/0; yesno 85/85 + 0/0/0; corr 291-table 73/17/3/1 exact + 292 identical 96/96. M2: sessions 0, bench 0, marks123 D_q_vs_s-04 only, rt136 set == 291 (21 inherited), rt143 M3/O5 only, GATE clean. M3: restarts 0, verifier N02 only (stable, stores identical), 0 ghosts/dups/bad-writes. M4: +0.53/+0.41/+0.61 ms. M5: 291 35/0, 266b 24/10, 268b 29/6, 293 44/8, 292 73/0/7miss; union-right 56 lost 0; wrong beyond 291: 0; controls 24/24 identical; writes 0; mixed 9/12. Deviations: corr VOID×2 (wrong runner) redone with new mirror driver; m5 scorer-flag VOID rescored with flags; 3 pre-seal draft fixes + design amendment disclosed. Seal 10/10 OK post-run. P292.1 held on every line.
+---
+2826:- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+2827:- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+2828:- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+2829:- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+2830:- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, control 10/10, mixed 7/10); 0 question/smalltalk writes; 0 overlaps; 0 old-sheet hits; 0 store diffs. The 3 misses (x01/x03/x05 turn 0, mixed, ev 0) are smalltalk-filler-led ability wordings with no "?": 280m == 280b == sealed CAN280 exactly, 260 a 273-char non-CAN reply; cause is the sealed 280 reply-dependent post-guard firing on the head's old-sheet reply, unmodeled in the pre-seal turn-text ownership rule. No new behaviour (all 90 turns equal a piece arm), no falsifier beyond the bar miss. M2 pilot exactly as P280m.2 (sessions152 exactly the 3, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; 1 move s234-014, the same item 282 moved). M4 0 store diffs. P280m.1 wrong on the figure (87 not 100), right on 0-writes/claims-scan; P280m.2 right; P280m.3 right; P280m.4 no falsifier tripped (no 280m-vs-all-arms difference, no unpredicted suite move, no question write, no overlap).
+2846:- P280n.1 (2026-09-23, builder; exp 280n re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280n-20260923; blind panel never opened) M1 blind joinpanel280n run once on all five arms with sealed 280m runner + new mechanical scorer (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed = single piece arm whose reply differs from 260 else 260, 2+ = overlap fail) = 100%; 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): 8/8 PASS exit 0, overlap mock 8/9 FAIL exit 1, empty exit 4, schema exit 3.
+2847:- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. 280m deviation corrected (its suites ran only as pre-seal pilot).
+2848:- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+2849:- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test wrong.
+2850:- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 87/90 (ability 25/25, teach 8/8, called 12/12, smalltalk 25/25, mixed 10/10 with owners 280b:5/260:5, control 7/10); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. The 3 misses (ct00#1, ct01#1, ct04#1, control, ev 0) are turns where only 281 differs from 260 and 280m == 281 byte-identical: control wording firing the 281 rewrite, unpredicted by the fixed control->260 rule. All 90 turns equal some piece arm. M2 PASS exactly as P280n.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280n.1 figure wrong (87 not 100), 0-overlap/write/scan parts right; P280n.2 right; P280n.3 right; P280n.4 bar-miss clause tripped on the 3 controls. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280n-20260923/RESULTS.md.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'PY'
+import sys
+sys.path.insert(0,"scripts")
+import claude_join280m_run as R
+d=R.load_panel_dialogs("/tmp/mock280p/panel-clean.json")
+print("loader OK dialogs=",len(d),"turns=",sum(len(x['turns']) for x in d))
+try:
+    R.load_panel_dialogs("/tmp/mock280p/panel-empty.json")
+    print("EMPTY NOT REFUSED")
+except SystemExit as e:
+    print("empty refusal exit",e.code)
+try:
+    R.load_panel_dialogs("/tmp/mock280p/panel-badcat.json")
+    print("BADCAT NOT REJECTED")
+except SystemExit as e:
+    print("badcat SCHEMA exit",e.code)
+PY
+loader OK dialogs= 6 turns= 6
+EMPTY-TURN: row 0 (dialog 'e' turn_index 0) has empty turn text; refusing to run
+empty refusal exit 4
+SCHEMA-MISMATCH: row 0 unexpected category 'trap'
+badcat SCHEMA exit 3
+[0m
+[0m$ [0mls artifacts/claude-join280p-20260923/ 2>&1; ls artifacts/claude-joinpanel280p-20260923/ 2>&1 | head -5
+ls: artifacts/claude-join280p-20260923/: No such file or directory
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+[0m
+[0m$ [0mmkdir -p artifacts/claude-join280p-20260923/run && ls artifacts/claude-join280p-20260923/
+run
+[0m
+[0m← [0mWrite scripts/claude_280p_panel.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-join280p-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_join280p_score.py scripts/claude_280p_panel.sh
+shasum -a 256 scripts/claude_join280p_score.py artifacts/claude-join280p-20260923/PASSMARKS.md scripts/claude_280p_panel.sh > artifacts/claude-join280p-20260923/SEAL.sha256.txt
+cat artifacts/claude-join280p-20260923/SEAL.sha256.txt
+shasum -a 256 -c artifacts/claude-join280p-20260923/SEAL.sha256.txt && echo SEAL_OK
+b3f518dccdb9392a5b01f137a4d1a3a5e465aa5157ba5bf55f42fe469e860f24  scripts/claude_join280p_score.py
+7a7f4cef4144a6aa7b6d4ae1dc586ed67787335b7a072df3306655c9965a17e6  artifacts/claude-join280p-20260923/PASSMARKS.md
+c5d98b1b10b2281173884411ae885bbdb77032c949367dd63c90d755d8158851  scripts/claude_280p_panel.sh
+scripts/claude_join280p_score.py: OK
+artifacts/claude-join280p-20260923/PASSMARKS.md: OK
+scripts/claude_280p_panel.sh: OK
+SEAL_OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P280p.1 (2026-09-23, builder; exp 280p registered re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280p-20260923; blind panel never opened item by item) M1 blind joinpanel280p run once on all five arms with 280m's sealed runner + new mechanical scorer for EVERY turn (strict schema gate dialog_id/turn_index/user_text|user/category/gold, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the mechanical owner (single piece arm whose reply/writes/store differ from 260's, else 260; 2+ = overlap fail) = 100% (90/90); 0 overlaps; 0 writes on question and small-talk turns; 0 wrong called/control answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Mock pre-seal (in /tmp, not sealed): clean 6/6 PASS exit 0, overlap mock 6/7 FAIL exit 1 overlap listed, writes-only-diff owner PASS, empty exit 4, schema exit 3.
+- P280p.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with 280m's sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE identical to 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0.
+- P280p.3 (same) M3 smalltalkpanel234 once on 260 and 280m with sealed runner + new scorer: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280n observation 17/20 vs 16/20 expected barring flake). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel except where a piece arm differs.
+- P280p.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any turn with 2+ piece arms differing from 260 proves the re-test wrong. Last attempt: a fail closes the join.
+EOF
+echo LEDGER_APPENDED; tail -5 artifacts/fable-predictions-ledger.md | cut -c1-120
+LEDGER_APPENDED
+- P292.2 OUTCOME (2026-09-23, builder) registered verdict PASS M1-M5. M1: chain 67/70 fidelity exact + 0/0/0; nhop 55/60
+- P280p.1 (2026-09-23, builder; exp 280p registered re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEA
+- P280p.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with 280m's sealed runall/regscore: sessi
+- P280p.3 (same) M3 smalltalkpanel234 once on 260 and 280m with sealed runner + new scorer: wellbeing 280m >= 260, every
+- P280p.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the un
+[0m
+[0m$ [0mfor i in $(seq 1 60); do
+  if [ -f artifacts/claude-joinpanel280p-20260923/SEAL.sha256.txt ]; then echo "SEAL PRESENT at poll $i"; break; fi
+  sleep 120
+done
+shasum -a 256 -c artifacts/claude-joinpanel280p-20260923/SEAL.sha256.txt 2>&1 | tail -10; echo EXIT:$?
+SEAL PRESENT at poll 1
+artifacts/claude-joinpanel280p-20260923/panel.jsonl: OK
+artifacts/claude-joinpanel280p-20260923/SPEC-COPY.md: OK
+EXIT:0
+[0m
+[0m$ [0muptime; df -g / | head -3
+9:58  up 3 days,  1:48, 4 users, load averages: 42.90 45.07 46.20
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102243800    0%   /
+[0m
+[0m$ [0mbash scripts/claude_280p_panel.sh artifacts/claude-join280p-20260923/run 2>&1 | tail -30
+artifacts/claude-joinpanel280p-20260923/panel.jsonl: OK
+artifacts/claude-joinpanel280p-20260923/SPEC-COPY.md: OK
+panel file: artifacts/claude-joinpanel280p-20260923/panel.jsonl
+dialogs=73 turns=90 agree=90/90
+by_cat={"ability": {"n": 25, "agree": 25, "can280m": 22, "can260": 19}, "smalltalk": {"n": 25, "agree": 25, "can280m": 0, "can260": 0}, "teach": {"n": 8, "agree": 8, "can280m": 0, "can260": 0}, "called": {"n": 12, "agree": 12, "can280m": 0, "can260": 0}, "mixed": {"n": 10, "agree": 10, "can280m": 2, "can260": 1}, "control": {"n": 10, "agree": 10, "can280m": 0, "can260": 0}} mech_owners={'280b': 24, '260': 57, '282b': 5, '281': 4}
+moved=[]
+overlaps=[]
+280m question writes=[]; smalltalk writes=[]; store diffs vs 260=[]
+old-sheet hits on 280m=[] (director claim check)
+VERDICT: PASS
+exit 0
+n=56 wellbeing 260 16/20 280m 17/20 miss80m ['s234-015', 's234-016', 's234-020']
+other same 36/36 moved []
+families {"wellbeing": {"n": 20, "hit60": 16, "hit80m": 17, "same": 19}, "people_wellbeing": {"n": 12, "hit60": 0, "hit80m": 0, "same": 12}, "status": {"n": 8, "hit60": 0, "hit80m": 0, "same": 8}, "greeting_plus_question": {"n": 8, "hit60": 0, "hit80m": 0, "same": 8}, "plain_questions": {"n": 8, "hit60": 0, "hit80m": 0, "same": 8}}
+280m writes []; store diffs []; setup diffs []
+VERDICT: PASS
+exit 0
+TOTAL 43 s
+[0m
+[0m$ [0muptime; df -g / | head -3
+9:59  up 3 days,  1:48, 4 users, load averages: 39.19 43.60 45.59
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102272120    0%   /
+[0m
+[0m$ [0mbash scripts/claude_280m_runall.sh artifacts/claude-join280p-20260923/run 2>&1 | tail -20
+09:59:38 uptime load1=39.19 before: M2-suites
+09:59:59 uptime load1=37.38 before: M2-rt136
+10:00:01 uptime load1=37.59 before: M2-rt143
+10:00:06 uptime load1=39.95 before: VP
+TOTAL 37 s
+sessions152: {'n_moves': 3, 'summary': 'sessions152: n_moves=3 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=3) seconds=1.3', 'class_counts': {'reply-only move': 3}, 'move_ids': ['S2-casual-friends#1', 'S3-teachers-correction#0', 'S4-pets-identity#9']}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=18.2'} gate=GATE: clean (260: GATE: clean)
+rt136: {'n': 145, 'diffs': []} gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0) (260: GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0))
+rt143: n=124 diffs=[]
+vp diffs=['N06', 'E04'] vs diffs=[]
+VERDICT: PASS
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-join280p-20260923/SEAL.sha256.txt && echo OWN_SEAL_OK
+shasum -a 256 -c artifacts/claude-join280m-20260923/SEAL.sha256.txt > /dev/null 2>&1 && echo SEAL280M_OK
+shasum -a 256 -c artifacts/claude-joinpanel280p-20260923/SEAL.sha256.txt > /dev/null 2>&1 && echo PANEL_SEAL_OK
+ls artifacts/claude-join280p-20260923/run/ | head -30
+scripts/claude_join280p_score.py: OK
+artifacts/claude-join280p-20260923/PASSMARKS.md: OK
+scripts/claude_280p_panel.sh: OK
+OWN_SEAL_OK
+SEAL280M_OK
+PANEL_SEAL_OK
+panel-260.json
+panel-260.log
+panel-280b.json
+panel-280b.log
+panel-280m.json
+panel-280m.log
+panel-281.json
+panel-281.log
+panel-282b.json
+panel-282b.log
+panel-files.txt
+panel-score.txt
+panel-score280p.json
+panel-seal-check.txt
+probes-260.json
+probes-280b.json
+probes-280m.json
+probes-281.json
+probes-282b.json
+regscore.txt
+regscore280m.json
+rt143nogate-280m.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+st234-260.json
+st234-260.log
+st234-280m.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'PY'
+import json
+s=json.load(open("artifacts/claude-join280p-20260923/run/panel-score280p.json"))
+print("M1 verdict",s["verdict"],"agree",s["agree"]["n"],"/",s["agree"]["denom"])
+print("by_cat",json.dumps(s["by_cat"]))
+print("owners",s["mech_owners"],"overlaps",s["overlaps"])
+print("qwrites",s["qwrite280m"],"stwrites",s["smalltalk_writes280m"],"storediffs",s["store_diffs_280m_vs_260"],"oldhits",s["old_sheet_hits_280m"])
+t=json.load(open("artifacts/claude-join280p-20260923/run/st234-score280p.json"))
+print("M3 verdict",t["verdict"],"wb260",t["wellbeing"]["hit60"],"wb280m",t["wellbeing"]["hit80m"],"other",t["other"]["same"],"/",t["other"]["n"],"writes",t["writes80m"],"storediffs",t["store_diffs"],"setupdiffs",t["setup_diffs"])
+r=json.load(open("artifacts/claude-join280p-20260923/run/regscore280m.json"))
+print("M2 verdict",r["verdict"],"problems",r["problems"])
+print("sess",r["sessions152"]["move_ids"],"bench",r["bench"],"rt136",r["rt136"],"rt143",r["rt143"],"vp",r["vp"],"vs",r["vs"])
+PY
+M1 verdict PASS agree 90 / 90
+by_cat {"ability": {"n": 25, "agree": 25, "can280m": 22, "can260": 19}, "smalltalk": {"n": 25, "agree": 25, "can280m": 0, "can260": 0}, "teach": {"n": 8, "agree": 8, "can280m": 0, "can260": 0}, "called": {"n": 12, "agree": 12, "can280m": 0, "can260": 0}, "mixed": {"n": 10, "agree": 10, "can280m": 2, "can260": 1}, "control": {"n": 10, "agree": 10, "can280m": 0, "can260": 0}}
+owners {'280b': 24, '260': 57, '282b': 5, '281': 4} overlaps []
+qwrites [] stwrites [] storediffs [] oldhits []
+M3 verdict PASS wb260 16 wb280m 17 other 36 / 36 writes [] storediffs [] setupdiffs []
+M2 verdict PASS problems []
+sess ['S2-casual-friends#1', 'S3-teachers-correction#0', 'S4-pets-identity#9'] bench {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=18.2'} rt136 {'n': 145, 'diffs': []} rt143 {'n': 124, 'diffs': []} vp {'diffs': ['N06', 'E04']} vs {'diffs': []}
+[0m
+[0m← [0mWrite artifacts/claude-join280p-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P280p.5 OUTCOME (2026-09-23, builder, sealed exp 280p re-test of unchanged 280m, CPU only) registered verdict PASS M1-M4. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after): agree 90/90 (ability 25/25, called 12/12, teach 8/8, smalltalk 25/25, mixed 10/10, control 10/10; owners 280b:24/281:4/282b:5/260:57); 0 overlaps; 0 question/smalltalk writes; 0 store diffs; 0 old-sheet hits. M2 PASS exactly as P280p.2 (sessions152 exactly the 3 reply-only, bench/rt136/rt143 0, labels+gate identical to 260's, vp N06+E04, vs 0; registered after-seal run with sealed runall/regscore). M3 PASS (wellbeing 17/20 vs 16/20, other 36/36, 0 writes/diffs; same row 282 moved). M4 0 diffs. P280p.1-4 all held. No push performed (standing rules forbid commits/pushes). See artifacts/claude-join280p-20260923/RESULTS.md.
+EOF
+echo APPENDED
+shasum -a 256 -c artifacts/claude-join280p-20260923/SEAL.sha256.txt && echo OWN_SEAL_STILL_OK
+APPENDED
+scripts/claude_join280p_score.py: OK
+artifacts/claude-join280p-20260923/PASSMARKS.md: OK
+scripts/claude_280p_panel.sh: OK
+OWN_SEAL_STILL_OK
+[0m
