@@ -1,0 +1,785 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; git rev-parse --abbrev-ref HEAD; ls
+6:41  up 2 days, 22:30, 4 users, load averages: 48.21 60.63 54.93
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 120989280    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; git fetch -q origin builder-outbox 2>&1 | head -5; git branch -a | head -20; ls artifacts/ | head -40; ls scripts/ | grep -i own
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude_own_o0a_compiler.py
+claude_own_o0a2_compiler.py
+claude_own_o0b_check.py
+claude_own_o0b_gen.py
+claude_own_o0c_prep.py
+claude_own_o0c_tok.py
+claude_own_o0d_model.py
+claude_own_o0d_test.py
+claude_own_o0d_train.py
+claude_own_o0d2_model.py
+claude_own_o0d2_test.py
+claude_own_o0d2_train.py
+claude_own_o0e_model.py
+claude_own_o0e_serialize.py
+claude_own_o0e_tests.py
+claude_own_o0e_train.py
+claude_own_o0e2_model.py
+claude_own_o0e2_tests.py
+claude_own_o0f_bench.py
+[0m
+[0m$ [0mgit show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | head -100
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+[0m
+[0m$ [0mls artifacts/ | grep -i "own-o0a"; echo ---; ls artifacts/ | grep -i "own-"; echo ---; ls scripts/ | grep -i "own_o0a"
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+---
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+claude-own-o0e2-20260923
+---
+claude_own_o0a_compiler.py
+claude_own_o0a2_compiler.py
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/our-policy-decision-20260923.md; echo ===; ls artifacts/claude-own-o0a-20260923/; echo ===; ls artifacts/claude-own-o0a2-20260923/
+# Decision: "our" is not the speaker (Ben, 2026-09-23 02:49 UTC)
+
+Ben chose **Ask** on the decision card in the research thread. Question: save "our dog is Rex" as the speaker's dog, or ask whose dog?
+
+- From now on, a teach turn whose owner is we / us / our / ours / ourselves is **not** saved as the speaker's fact. The system asks whose it is, unless the group has been identified.
+- I / me / my / mine / myself still map to the speaker.
+- Today's code does the opposite: `scripts/claude_earcheck261_canon.py` line 21 maps we/us/our/ours/ourselves to "me". That file is sealed (261); the change goes into a new, separately numbered experiment. Answer keys for panels written from now on should mark such turns as "ask", not as speaker facts.
+- Why: both GPT-6 Pro answers to prompt 3 said "our" names a group, and a wrong save is worse than a question (`reviews/gpt6pro-2026-09-23/3-answers-adjudication.md`).
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/builder-outbox:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -5; echo ===; git log --oneline origin/builder-outbox -5 2>&1 | head; echo ===; git ls-tree origin/builder-outbox --name-only 2>&1 | grep -i "o0a" | head -20
+fatal: path 'design/v3/50-own-model/01-own-ear-mouth-plan.md' does not exist in 'origin/builder-outbox'
+zsh:1: == not found
+[0m
+[0m$ [0mls artifacts/claude-own-o0a-20260923/
+gold.jsonl
+oracle_coverage.json
+PASSMARKS.md
+RESULTS.md
+SEAL-data.sha256.txt
+SEAL.sha256.txt
+turns.jsonl
+[0m
+[0m$ [0mls artifacts/claude-own-o0a2-20260923/
+gold.jsonl
+oracle_coverage_o0a2.json
+PASSMARKS.md
+RESULTS.md
+SEAL-data.sha256.txt
+SEAL.sha256.txt
+turns.jsonl
+[0m
+[0m→ [0mRead scripts/claude_own_o0a_compiler.py
+[0m→ [0mRead scripts/claude_own_o0a2_compiler.py
+[0m→ [0mRead artifacts/claude-own-o0a-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-own-o0a2-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-own-o0a-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-own-o0a2-20260923/RESULTS.md
+[0m
+[0m$ [0mhead -c 3000 artifacts/claude-own-o0a-20260923/turns.jsonl; echo; echo '---GOLD---'; head -c 3000 artifacts/claude-own-o0a-20260923/gold.jsonl
+{"id": "S001", "kind": "statement", "prev": null, "turn": "Mira's dog is Pip."}
+{"id": "S002", "kind": "statement", "prev": null, "turn": "tal's cat is fig"}
+{"id": "S003", "kind": "statement", "prev": null, "turn": "Oona's mom is Linnea."}
+{"id": "S004", "kind": "statement", "prev": null, "turn": "Jesper's dad is Petteri."}
+{"id": "S005", "kind": "statement", "prev": null, "turn": "Sanna's sister is Aino."}
+{"id": "S006", "kind": "statement", "prev": null, "turn": "Kwame's brother is Yaw."}
+{"id": "S007", "kind": "statement", "prev": null, "turn": "Ama's boss is Renata."}
+{"id": "S008", "kind": "statement", "prev": null, "turn": "Efua's city is Accra."}
+{"id": "S009", "kind": "statement", "prev": null, "turn": "Sefu's school is Dunmere High."}
+{"id": "S010", "kind": "statement", "prev": null, "turn": "Zola's teacher is Ingrid."}
+{"id": "S011", "kind": "statement", "prev": null, "turn": "Nia's wife is Wren."}
+{"id": "S012", "kind": "statement", "prev": null, "turn": "Tamati's husband is Bram."}
+{"id": "S013", "kind": "statement", "prev": null, "turn": "Aroha's cousin is Lotte."}
+{"id": "S014", "kind": "statement", "prev": null, "turn": "Fenna's aunt is Saskia."}
+{"id": "S015", "kind": "statement", "prev": null, "turn": "Jeroen's uncle is Pieter."}
+{"id": "S016", "kind": "statement", "prev": null, "turn": "Saskia's friend is Anouk."}
+{"id": "S017", "kind": "statement", "prev": null, "turn": "Cosimo's nickname is Clay."}
+{"id": "S018", "kind": "statement", "prev": null, "turn": "Renata's hobby is sailing."}
+{"id": "S019", "kind": "statement", "prev": null, "turn": "Aldo's car is a Volvo."}
+{"id": "S020", "kind": "statement", "prev": null, "turn": "Farah's birthday is May 3."}
+{"id": "S021", "kind": "statement", "prev": null, "turn": "Yusuf's age is 34."}
+{"id": "S022", "kind": "statement", "prev": null, "turn": "Ingrid's employer is Halden Mills."}
+{"id": "S023", "kind": "statement", "prev": null, "turn": "Merriton's capital is Owlkirk."}
+{"id": "S024", "kind": "statement", "prev": null, "turn": "Elin's spouse is Tomas."}
+{"id": "S025", "kind": "statement", "prev": null, "turn": "Noora's son is Otso."}
+{"id": "S026", "kind": "statement", "prev": null, "turn": "Ville's daughter is Lilja."}
+{"id": "S027", "kind": "statement", "prev": null, "turn": "Aino's grandmother is Sigrun."}
+{"id": "S028", "kind": "statement", "prev": null, "turn": "Otso's grandfather is Ragnar."}
+{"id": "S029", "kind": "statement", "prev": null, "turn": "Lilja's neighbor is Emil."}
+{"id": "S030", "kind": "statement", "prev": null, "turn": "Ragnar's colleague is Daan."}
+{"id": "S031", "kind": "statement", "prev": null, "turn": "Sigrun's doctor is Yusuf."}
+{"id": "S032", "kind": "statement", "prev": null, "turn": "Emil's coach is Zane."}
+{"id": "S033", "kind": "statement", "prev": null, "turn": "Freja's mentor is Cosimo."}
+{"id": "S034", "kind": "statement", "prev": null, "turn": "Daan's pet is Pickle."}
+{"id": "S035", "kind": "statement", "prev": null, "turn": "Lotte's title is 
+---GOLD---
+{"id": "S001", "facts": [{"owner": "Mira", "relation": "dog", "value": "Pip", "mode": "ASSERT"}]}
+{"id": "S002", "facts": [{"owner": "Tal", "relation": "cat", "value": "Fig", "mode": "ASSERT"}]}
+{"id": "S003", "facts": [{"owner": "Oona", "relation": "mother", "value": "Linnea", "mode": "ASSERT"}]}
+{"id": "S004", "facts": [{"owner": "Jesper", "relation": "father", "value": "Petteri", "mode": "ASSERT"}]}
+{"id": "S005", "facts": [{"owner": "Sanna", "relation": "sister", "value": "Aino", "mode": "ASSERT"}]}
+{"id": "S006", "facts": [{"owner": "Kwame", "relation": "brother", "value": "Yaw", "mode": "ASSERT"}]}
+{"id": "S007", "facts": [{"owner": "Ama", "relation": "boss", "value": "Renata", "mode": "ASSERT"}]}
+{"id": "S008", "facts": [{"owner": "Efua", "relation": "city", "value": "Accra", "mode": "ASSERT"}]}
+{"id": "S009", "facts": [{"owner": "Sefu", "relation": "school", "value": "Dunmere High", "mode": "ASSERT"}]}
+{"id": "S010", "facts": [{"owner": "Zola", "relation": "teacher", "value": "Ingrid", "mode": "ASSERT"}]}
+{"id": "S011", "facts": [{"owner": "Nia", "relation": "wife", "value": "Wren", "mode": "ASSERT"}]}
+{"id": "S012", "facts": [{"owner": "Tamati", "relation": "husband", "value": "Bram", "mode": "ASSERT"}]}
+{"id": "S013", "facts": [{"owner": "Aroha", "relation": "cousin", "value": "Lotte", "mode": "ASSERT"}]}
+{"id": "S014", "facts": [{"owner": "Fenna", "relation": "aunt", "value": "Saskia", "mode": "ASSERT"}]}
+{"id": "S015", "facts": [{"owner": "Jeroen", "relation": "uncle", "value": "Pieter", "mode": "ASSERT"}]}
+{"id": "S016", "facts": [{"owner": "Saskia", "relation": "friend", "value": "Anouk", "mode": "ASSERT"}]}
+{"id": "S017", "facts": [{"owner": "Cosimo", "relation": "nickname", "value": "Clay", "mode": "ASSERT"}]}
+{"id": "S018", "facts": [{"owner": "Renata", "relation": "hobby", "value": "sailing", "mode": "ASSERT"}]}
+{"id": "S019", "facts": [{"owner": "Aldo", "relation": "car", "value": "Volvo", "mode": "ASSERT"}]}
+{"id": "S020", "facts": [{"owner": "Farah", "relation": "birthday", "value": "May 3", "mode": "ASSERT"}]}
+{"id": "S021", "facts": [{"owner": "Yusuf", "relation": "age", "value": "34", "mode": "ASSERT"}]}
+{"id": "S022", "facts": [{"owner": "Ingrid", "relation": "employer", "value": "Halden Mills", "mode": "ASSERT"}]}
+{"id": "S023", "facts": [{"owner": "Merriton", "relation": "capital", "value": "Owlkirk", "mode": "ASSERT"}]}
+{"id": "S024", "facts": [{"owner": "Elin", "relation": "spouse", "value": "Tomas", "mode": "ASSERT"}]}
+{"id": "S025", "facts": [{"owner": "Noora", "relation": "son", "value": "Otso", "mode": "ASSERT"}]}
+{"id": "S026", "facts": [{"owner": "Ville", "relation": "daughter", "value": "Lilja", "mode": "ASSERT"}]}
+{"id": "S027", "facts": [{"owner": "Aino", "relation": "grandmother", "value": "Sigrun", "mode": "ASSERT"}]}
+{"id": "S028", "facts": [{"owner": "Otso", "relation": "grandfather", "value": "Ragnar", "mode": "ASSERT"}]}
+{"id": "S029", "facts": [{"owner": "Lilja", "relation": "neighbour", "value": "Emil
+[0m
+[0m# [0mTodos
+[•] Read inputs: o0a/o0a2 turns+gold samples, relation table, ledger format
+[ ] Write pilot mutate script and pilot it
+[ ] Write PASSMARKS.md with numbered predictions, seal scripts+PASSMARKS, append ledger
+[ ] Registered run + RESULTS.md with kind x rule table
+[0m
+[0m$ [0mpython3 -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-own-o0a2-20260923/turns.jsonl')]; print(len(rows)); print('\n'.join(json.dumps(r) for r in rows[180:200]))"
+300
+{"id": "o0a2-q001", "turn": "Is Mira's dog Pip?"}
+{"id": "o0a2-q002", "turn": "Who is Ada's child?"}
+{"id": "o0a2-q003", "turn": "Where does Tal work?"}
+{"id": "o0a2-q004", "turn": "What is Bo's city?"}
+{"id": "o0a2-q005", "turn": "Is my boss Tal?"}
+{"id": "o0a2-q006", "turn": "Who teaches Sora?"}
+{"id": "o0a2-q007", "turn": "Did Rena move to Essel?"}
+{"id": "o0a2-q008", "turn": "When was Ada born?"}
+{"id": "o0a2-q009", "turn": "Is Bo married to Lea?"}
+{"id": "o0a2-q010", "turn": "What does Mira speak?"}
+{"id": "o0a2-q011", "turn": "Who are my sisters?"}
+{"id": "o0a2-q012", "turn": "Is Hana a citizen of Pola?"}
+{"id": "o0a2-q013", "turn": "Where was Kito born?"}
+{"id": "o0a2-q014", "turn": "Does Oren work as a nurse?"}
+{"id": "o0a2-q015", "turn": "Who wrote Star Rain?"}
+{"id": "o0a2-q016", "turn": "Is Sora's instrument drums?"}
+{"id": "o0a2-q017", "turn": "What is Lea's favorite book?"}
+{"id": "o0a2-q018", "turn": "Who is Zib's owner?"}
+{"id": "o0a2-q019", "turn": "Is our dog Pip?"}
+{"id": "o0a2-q020", "turn": "Which city does Sef live in?"}
+[0m
+[0m$ [0mpython3 -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-own-o0a2-20260923/gold.jsonl')]; print(len(rows)); print('\n'.join(json.dumps(r) for r in rows[180:200]))"
+300
+{"id": "o0a2-q001", "facts": [{"owner": "Mira", "relation": "dog", "value": "Pip", "mode": "ASK"}]}
+{"id": "o0a2-q002", "facts": [{"owner": "Ada", "relation": "child", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q003", "facts": [{"owner": "Tal", "relation": "employer", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q004", "facts": [{"owner": "Bo", "relation": "city", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q005", "facts": [{"owner": "ME", "relation": "boss", "value": "Tal", "mode": "ASK"}]}
+{"id": "o0a2-q006", "facts": [{"owner": "Sora", "relation": "teacher", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q007", "facts": [{"owner": "Rena", "relation": "city", "value": "Essel", "mode": "ASK"}]}
+{"id": "o0a2-q008", "facts": [{"owner": "Ada", "relation": "date_of_birth", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q009", "facts": [{"owner": "Bo", "relation": "spouse", "value": "Lea", "mode": "ASK"}]}
+{"id": "o0a2-q010", "facts": [{"owner": "Mira", "relation": "language", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q011", "facts": [{"owner": "ME", "relation": "sister", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q012", "facts": [{"owner": "Hana", "relation": "country_of_citizenship", "value": "Pola", "mode": "ASK"}]}
+{"id": "o0a2-q013", "facts": [{"owner": "Kito", "relation": "place_of_birth", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q014", "facts": [{"owner": "Oren", "relation": "occupation", "value": "nurse", "mode": "ASK"}]}
+{"id": "o0a2-q015", "facts": [{"owner": "Star Rain", "relation": "author", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q016", "facts": [{"owner": "Sora", "relation": "instrument", "value": "drums", "mode": "ASK"}]}
+{"id": "o0a2-q017", "facts": [{"owner": "Lea", "relation": "favorite_book", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q018", "facts": [{"owner": "Zib", "relation": "owner", "value": "", "mode": "ASK"}]}
+{"id": "o0a2-q019", "facts": [{"owner": "WE", "relation": "dog", "value": "Pip", "mode": "ASK"}]}
+{"id": "o0a2-q020", "facts": [{"owner": "Sef", "relation": "city", "value": "", "mode": "ASK"}]}
+[0m
+[0m$ [0mtail -20 artifacts/fable-predictions-ledger.md; echo '---O0A---'; grep -n "own-o0a" artifacts/fable-predictions-ledger.md | head
+- P293.1 (pred, sealed pre-run 2026-09-23, builder exp 293 yes/no reader on 138nb, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-yesno293-20260923) M1 blind yesnopanel293 once per arm with sealed score_panel.py: yes/no families together >= 90% right on 293 (138nb dev 11/51); 0 wrong (never Yes when not stored, never No when stored); taken_back 0 Yes; 0 question writes; is_single/wh/statement controls byte-identical to 138nb. Dev proxy 111 dialogs: exactly the 72 listed moves Q2->Yes/No/IDK, 7 Q2 left (5 chain + 1 inverted-wh + 1 lowercase), 0 writes; blind ids not predictable.
+- P293.2 (same) M2 invpanel138nb + chainpanel266b regression once per arm: 0 moves on both (pilot 0/70 + 0/70).
+- P293.3 (same) M3 frozen suites vs 138nb rows: sessions152 0 moves; bench 0; marks123 exactly 1 reply-only (rt81 D_q_vs_s-04 OK->UNCLEAR, honest IDK); rt136 0 field diffs vs 138nb rows; rt143nogate exactly 2 (M3 Q2->Yes of-form, O5 Q2->IDK); 0 new WRONG/WRONG-WRITE/junk/lost-OK.
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+---O0A---
+2657:- Pown0a.1 (2026-09-23, own-O0a oracle coverage, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0a-20260923; 300 hand dev turns, 272 ASSERT/CORRECT/DENY oracle facts, CPU-only compiler run once) auto-writable WE not allowed 184/272 = 67.6%; bar >= 85%: FAIL. Non-writable: 58 no-relation-cue (26 plural lists, 18 verb paraphrases, 8 bare possessives, 3 copula ages, 1 relation typo, 2 bare-correction), 12 OTHER, 10 WE, 5 typo, 2 DENY-old-value-not-repeated, 1 owner missing-apostrophe. Predicted 65-75% in PASSMARKS.
+[0m
+[0m$ [0mpython3 -c "
+import json
+t=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=t['relations']
+print(len(rels))
+print([r['name'] for r in rels][:60])
+print(json.dumps(rels[0], indent=1)[:800])
+"
+153
+['mother', 'father', 'parent', 'sister', 'brother', 'sibling', 'spouse', 'wife', 'husband', 'partner', 'child', 'son', 'daughter', 'grandchild', 'grandson', 'granddaughter', 'grandmother', 'grandfather', 'cousin', 'aunt', 'uncle', 'friend', 'best_friend', 'neighbour', 'boss', 'colleague', 'teacher', 'coach', 'doctor', 'mentor', 'apprentice', 'rival', 'envoy', 'herald', 'keeper', 'scout', 'warden', 'owner', 'pet', 'dog', 'cat', 'employer', 'occupation', 'work_location', 'school', 'educated_at', 'title', 'city', 'home', 'hometown', 'place_of_birth', 'place_of_death', 'country', 'country_of_citizenship', 'country_of_origin', 'capital', 'continent', 'headquarters_location', 'location_of_formation', 'composer']
+{
+ "name": "mother",
+ "status": "known",
+ "value_kind": "person",
+ "cardinality": "single",
+ "yesno_can_say_no": true,
+ "aliases": [
+  "mom",
+  "mum",
+  "mommy",
+  "mummy",
+  "ma",
+  "mam",
+  "mama"
+ ],
+ "storage_keys": [
+  "mother"
+ ],
+ "inverse_storage_keys": [],
+ "narrower": [],
+ "generic": [
+  "possessive",
+  "my",
+  "of_form",
+  "inverted",
+  "reverse"
+ ],
+ "wh": [
+  "Who",
+  "What"
+ ],
+ "teach": [],
+ "ask": [],
+ "yesno": [],
+ "inverse": [
+  {
+   "t": "Who are {Y}'s children?",
+   "where": "NEW",
+   "src": "NEW (collects mother and father facts)",
+   "never_store": true,
+   "label": "worked out backwards"
+  }
+ ],
+ "src": [
+  "scripts/fable_agent_loop.py:91 PERSON_RELATIONS",
+  "scripts/fable_fix154_yesno.py:64 SINGLE_VALUED_154",
+  "scripts/fable_fix171_nameval.py:48 NAME_KEYS",
+  "sc
+[0m
+[0m$ [0mgrep -n "Pown0a2\|Pown0a3\|own-o0a" artifacts/fable-predictions-ledger.md | head -20; echo '---'; wc -l artifacts/fable-predictions-ledger.md
+2657:- Pown0a.1 (2026-09-23, own-O0a oracle coverage, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0a-20260923; 300 hand dev turns, 272 ASSERT/CORRECT/DENY oracle facts, CPU-only compiler run once) auto-writable WE not allowed 184/272 = 67.6%; bar >= 85%: FAIL. Non-writable: 58 no-relation-cue (26 plural lists, 18 verb paraphrases, 8 bare possessives, 3 copula ages, 1 relation typo, 2 bare-correction), 12 OTHER, 10 WE, 5 typo, 2 DENY-old-value-not-repeated, 1 owner missing-apostrophe. Predicted 65-75% in PASSMARKS.
+2789:- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+2790:- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+2791:- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+2792:- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+---
+    2829 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mpython3 -c "
+import json
+from collections import Counter
+for art in ['artifacts/claude-own-o0a-20260923','artifacts/claude-own-o0a2-20260923']:
+    turns={json.loads(l)['id']:json.loads(l) for l in open(art+'/turns.jsonl')}
+    facts=[]
+    for l in open(art+'/gold.jsonl'):
+        d=json.loads(l)
+        for f in d['facts']: facts.append((d['id'],f))
+    print(art, len(turns), 'turns,', len(facts), 'facts')
+    print(' modes:', Counter(f['mode'] for _,f in facts))
+    print(' empty value:', sum(1 for _,f in facts if not f.get('value')))
+    print(' ME owner:', sum(1 for _,f in facts if f['owner']=='ME'), 'WE owner:', sum(1 for _,f in facts if f['owner']=='WE'))
+    print(' OTHER rel:', sum(1 for _,f in facts if f['relation'].startswith('OTHER')))
+    print(' typo flag:', sum(1 for _,f in facts if f.get('typo')))
+    print(' keys:', sorted(set(k for _,f in facts for k in f)))
+"
+artifacts/claude-own-o0a-20260923 300 turns, 348 facts
+ modes: Counter({'ASSERT': 258, 'ASK': 26, 'CHECK': 21, 'SUPPOSE': 11, 'PLAN': 10, 'DENY': 8, 'REPORTED': 8, 'CORRECT': 6})
+ empty value: 14
+ ME owner: 120 WE owner: 14
+ OTHER rel: 12
+ typo flag: 7
+ keys: ['mode', 'owner', 'relation', 'typo', 'value']
+artifacts/claude-own-o0a2-20260923 300 turns, 395 facts
+ modes: Counter({'ASSERT': 267, 'ASK': 56, 'SUPPOSE': 18, 'CHECK': 17, 'PLAN': 13, 'CORRECT': 12, 'REPORTED': 10, 'DENY': 2})
+ empty value: 41
+ ME owner: 106 WE owner: 17
+ OTHER rel: 13
+ typo flag: 5
+ keys: ['mode', 'owner', 'relation', 'typo', 'value']
+[0m
+[0m$ [0mpython3 -c "
+import json
+turns=[json.loads(l) for l in open('artifacts/claude-own-o0a2-20260923/turns.jsonl')]
+for r in turns[100:130]: print(r['id'], repr(r['turn']))
+"
+o0a2-s101 'Mira is married to Jor.'
+o0a2-s102 'Ada was born in Lina.'
+o0a2-s103 'Kito was born in the city of Dren.'
+o0a2-s104 'Rena is from Essel.'
+o0a2-s105 'Oren comes from Noro.'
+o0a2-s106 'Hana is a citizen of Pola.'
+o0a2-s107 'Mira speaks Tovan.'
+o0a2-s108 'Bo speaks the language of Ressic.'
+o0a2-s109 'Tavi teaches Sora.'
+o0a2-s110 'Sora goes to Kiva High.'
+o0a2-s111 'Lea studied at Essel College.'
+o0a2-s112 'Oren works as a nurse.'
+o0a2-s113 'Hana works as an engineer.'
+o0a2-s114 'Jor works in the field of pottery.'
+o0a2-s115 'Bo is called Bobo.'
+o0a2-s116 'Uma likes chess.'
+o0a2-s117 'Yola wrote Star Rain.'
+o0a2-s118 'Peta painted Blue Lake.'
+o0a2-s119 'Jor directed Glass Harbor.'
+o0a2-s120 'Oren founded Halvo.'
+o0a2-s121 'Sef invented the paper kite.'
+o0a2-s122 'Oren built Sare Bridge.'
+o0a2-s123 'Yola created the mural.'
+o0a2-s124 'Quilp was developed by Nilo.'
+o0a2-s125 'Ada was born in May.'
+o0a2-s126 'My father died in Sare.'
+o0a2-s127 'Oren worked in the city of Dren.'
+o0a2-s128 'Halvo was founded in the city of Dren.'
+o0a2-s129 'Quilp was created in the country of Pola.'
+o0a2-s130 'kwame left, but Sef lives in Rook now'
+[0m
+[0m$ [0mpython3 -c "
+import json
+from collections import Counter
+for art in ['artifacts/claude-own-o0a-20260923','artifacts/claude-own-o0a2-20260923']:
+    facts=[]
+    for l in open(art+'/gold.jsonl'):
+        d=json.loads(l)
+        for f in d['facts']: facts.append(f)
+    ns=[f for f in facts if f['mode'] not in ('ASSERT','CORRECT','DENY')]
+    print(art, 'nosave:', len(ns), 'empty-value nosave:', sum(1 for f in ns if not f.get('value')), Counter(f['mode'] for f in ns if not f.get('value')))
+    acd=[f for f in facts if f['mode'] in ('ASSERT','CORRECT','DENY')]
+    print(' acd empty-value:', sum(1 for f in acd if not f.get('value')), 'acd OTHER:', sum(1 for f in acd if f['relation'].startswith('OTHER')))
+"
+artifacts/claude-own-o0a-20260923 nosave: 76 empty-value nosave: 14 Counter({'ASK': 14})
+ acd empty-value: 0 acd OTHER: 12
+artifacts/claude-own-o0a2-20260923 nosave: 114 empty-value nosave: 41 Counter({'ASK': 37, 'PLAN': 3, 'REPORTED': 1})
+ acd empty-value: 0 acd OTHER: 5
+[0m
+[0m# [0mTodos
+[✓] Read inputs: o0a/o0a2 turns+gold samples, relation table, ledger format
+[•] Write pilot mutate script and pilot it
+[ ] Write PASSMARKS.md with numbered predictions, seal scripts+PASSMARKS, append ledger
+[ ] Registered run + RESULTS.md with kind x rule table
+[0m
+[0m← [0mWrite scripts/claude_own_o0a3_mutate.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0a3_mutate.py /tmp/o0a3pilot
+gold ACD 553, gold nosave 190, wrong readings 5886
+m1: v0 made=813 blocked=433 through=380 clean=363/0/363 | v1 made=813 blocked=49 through=764 clean=737/0/737 | licensed made=813 blocked=21 through=792 clean=764/0/764
+m2: v0 made=1639 blocked=763 through=876 clean=844/0/844 | v1 made=1639 blocked=159 through=1480 clean=1442/0/1442 | licensed made=1639 blocked=94 through=1545 clean=1507/0/1507
+m3: v0 made=353 blocked=168 through=185 clean=185/0/185 | v1 made=353 blocked=45 through=308 clean=308/0/308 | licensed made=353 blocked=25 through=328 clean=328/0/328
+m4: v0 made=137 blocked=4 through=133 clean=109/0/109 | v1 made=137 blocked=4 through=133 clean=129/0/129 | licensed made=137 blocked=4 through=133 clean=132/0/132
+m5: v0 made=1659 blocked=1659 through=0 clean=828/828/0 | v1 made=1659 blocked=1659 through=0 clean=1428/1428/0 | licensed made=1659 blocked=105 through=1554 clean=1503/0/1503
+m6:me2we: v0 made=180 blocked=180 through=0 clean=91/91/0 | v1 made=180 blocked=180 through=0 clean=168/168/0 | licensed made=180 blocked=180 through=0 clean=173/173/0
+m6:name2me: v0 made=353 blocked=167 through=186 clean=185/0/185 | v1 made=353 blocked=42 through=311 clean=308/0/308 | licensed made=353 blocked=22 through=331 clean=328/0/328
+m6:we2me: v0 made=20 blocked=5 through=15 clean=0/0/0 | v1 made=20 blocked=1 through=19 clean=0/0/0 | licensed made=20 blocked=0 through=20 clean=0/0/0
+m7:extend-next: v0 made=232 blocked=128 through=104 clean=104/0/104 | v1 made=232 blocked=21 through=211 clean=211/0/211 | licensed made=232 blocked=6 through=226 clean=226/0/226
+m7:extend-prev: v0 made=270 blocked=119 through=151 clean=151/0/151 | v1 made=270 blocked=37 through=233 clean=233/0/233 | licensed made=270 blocked=28 through=242 clean=242/0/242
+m7:trim: v0 made=40 blocked=18 through=22 clean=21/0/21 | v1 made=40 blocked=7 through=33 clean=32/0/32 | licensed made=40 blocked=6 through=34 clean=33/0/33
+m8: v0 made=190 blocked=125 through=65 clean=0/0/0 | v1 made=190 blocked=81 through=109 clean=0/0/0 | licensed made=190 blocked=65 through=125 clean=0/0/0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+rows=[json.loads(l) for l in open('/tmp/o0a3pilot/mutations.jsonl')]
+m8=[r for r in rows if r['kind']=='m8']
+print('m8 total', len(m8))
+def part(r):
+    g=r['gold']
+    if not g['value']: return 'empty-value'
+    if g['relation'].startswith('OTHER'): return 'OTHER'
+    if g['owner']=='WE': return 'WE-owner'
+    return 'rest'
+c=Counter(part(r)+'/'+('T' if r['verdicts'][rule]['writable'] else 'B') for r in m8 for rule in ('v0','v1','licensed'))
+for k in sorted(c): print(k, c[k])
+print()
+print('rest reasons v0:', Counter(r['verdicts']['v0']['reason'] for r in m8 if part(r)=='rest'))
+print('rest reasons lic:', Counter(r['verdicts']['licensed']['reason'] for r in m8 if part(r)=='rest'))
+print()
+w2m=[r for r in rows if r['kind']=='m6' and r['sub']=='we2me']
+print('we2me n=', len(w2m))
+for r in w2m: print(r['id'], repr(r['turn']), r['gold'], {k:v['reason'] for k,v in r['verdicts'].items()})
+"
+m8 total 190
+OTHER/B 3
+WE-owner/B 27
+empty-value/B 165
+rest/B 76
+rest/T 299
+
+rest reasons v0: Counter({'writable': 65, 'no-relation-cue': 60})
+rest reasons lic: Counter({'writable': 125})
+
+we2me n= 20
+S173 'our dog is Pip' {'owner': 'WE', 'relation': 'dog', 'value': 'Pip', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S174 'Our boss is Tal.' {'owner': 'WE', 'relation': 'boss', 'value': 'Tal', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S175 'our city is Rook' {'owner': 'WE', 'relation': 'city', 'value': 'Rook', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S176 'we have a cat called Fig' {'owner': 'WE', 'relation': 'cat', 'value': 'Fig', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S177 'our mom is Linnea and our dad is Petteri' {'owner': 'WE', 'relation': 'mother', 'value': 'Linnea', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S177 'our mom is Linnea and our dad is Petteri' {'owner': 'WE', 'relation': 'father', 'value': 'Petteri', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S178 'we live in Fernbrake' {'owner': 'WE', 'relation': 'city', 'value': 'Fernbrake', 'mode': 'ASSERT'} {'v0': 'no-relation-cue', 'v1': 'no-relation-cue', 'licensed': 'writable'}
+S179 'our favorite color is blue' {'owner': 'WE', 'relation': 'favorite_color', 'value': 'blue', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+S180 'our car is a Volvo' {'owner': 'WE', 'relation': 'car', 'value': 'Volvo', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+M014 'Our city is Rook. Have you been?' {'owner': 'WE', 'relation': 'city', 'value': 'Rook', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s157 'Our dog is Pip.' {'owner': 'WE', 'relation': 'dog', 'value': 'Pip', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s158 'Our cat is Moss.' {'owner': 'WE', 'relation': 'cat', 'value': 'Moss', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s159 'Our cousins are Dara and Kito.' {'owner': 'WE', 'relation': 'cousin', 'value': 'Dara', 'mode': 'ASSERT'} {'v0': 'no-relation-cue', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s159 'Our cousins are Dara and Kito.' {'owner': 'WE', 'relation': 'cousin', 'value': 'Kito', 'mode': 'ASSERT'} {'v0': 'no-relation-cue', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s160 'Our hometown is Essel.' {'owner': 'WE', 'relation': 'hometown', 'value': 'Essel', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s161 'Our dogs are Pip and Zib.' {'owner': 'WE', 'relation': 'dog', 'value': 'Pip', 'mode': 'ASSERT'} {'v0': 'no-relation-cue', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s161 'Our dogs are Pip and Zib.' {'owner': 'WE', 'relation': 'dog', 'value': 'Zib', 'mode': 'ASSERT'} {'v0': 'no-relation-cue', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-s162 'Our mom is Lena.' {'owner': 'WE', 'relation': 'mother', 'value': 'Lena', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-m022 'Our hometown is Essel. Where are you from?' {'owner': 'WE', 'relation': 'hometown', 'value': 'Essel', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+o0a2-m029 'Our dog is Pip. Should we get a cat?' {'owner': 'WE', 'relation': 'dog', 'value': 'Pip', 'mode': 'ASSERT'} {'v0': 'writable', 'v1': 'writable', 'licensed': 'writable'}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from collections import Counter
+for art in ['artifacts/claude-own-o0a-20260923','artifacts/claude-own-o0a2-20260923']:
+    n=Counter()
+    for l in open(art+'/gold.jsonl'):
+        d=json.loads(l)
+        for f in d['facts']:
+            if f['relation'].startswith('OTHER'):
+                n[f['mode']]+=1
+                print(art.split('-')[2], d['id'], f)
+    print(art, dict(n))
+"
+o0a S138 {'owner': 'ME', 'relation': 'OTHER:star sign', 'value': 'Leo', 'mode': 'ASSERT'}
+o0a S139 {'owner': 'Mira', 'relation': 'OTHER:lucky number', 'value': '7', 'mode': 'ASSERT'}
+o0a S140 {'owner': 'Bo', 'relation': 'OTHER:shoe size', 'value': '44', 'mode': 'ASSERT'}
+o0a S141 {'owner': 'ME', 'relation': 'OTHER:wifi password', 'value': 'badger42', 'mode': 'ASSERT'}
+o0a S142 {'owner': 'Tal', 'relation': 'OTHER:blood type', 'value': 'O negative', 'mode': 'ASSERT'}
+o0a S143 {'owner': 'Oona', 'relation': 'OTHER:favorite song', 'value': 'Starling Road', 'mode': 'ASSERT'}
+o0a S144 {'owner': 'Kwame', 'relation': 'OTHER:star sign', 'value': 'Aries', 'mode': 'ASSERT'}
+o0a S145 {'owner': 'Ama', 'relation': 'OTHER:bus route', 'value': 'number 12', 'mode': 'ASSERT'}
+o0a S146 {'owner': 'Jesper', 'relation': 'OTHER:license plate', 'value': 'Rook 441', 'mode': 'ASSERT'}
+o0a S147 {'owner': 'Linnea', 'relation': 'OTHER:coffee order', 'value': 'oat latte', 'mode': 'ASSERT'}
+o0a S148 {'owner': 'Sanna', 'relation': 'OTHER:wedding song', 'value': 'June Waltz', 'mode': 'ASSERT'}
+o0a S149 {'owner': 'Petteri', 'relation': 'OTHER:golf handicap', 'value': '18', 'mode': 'ASSERT'}
+artifacts/claude-own-o0a-20260923 {'ASSERT': 12}
+o0a2 o0a2-s168 {'owner': 'Mira', 'relation': 'OTHER:aura', 'value': 'blue', 'mode': 'ASSERT'}
+o0a2 o0a2-s169 {'owner': 'ME', 'relation': 'OTHER:blicket', 'value': 'red', 'mode': 'ASSERT'}
+o0a2 o0a2-s170 {'owner': 'Tal', 'relation': 'OTHER:zog', 'value': 'fast', 'mode': 'ASSERT'}
+o0a2 o0a2-s171 {'owner': 'Ada', 'relation': 'OTHER:mentor-spirit', 'value': 'Nib', 'mode': 'ASSERT'}
+o0a2 o0a2-s172 {'owner': 'Oren', 'relation': 'OTHER:gloof', 'value': 'heavy', 'mode': 'ASSERT'}
+o0a2 o0a2-q046 {'owner': 'Pip', 'relation': 'OTHER:talking', 'value': 'yes', 'mode': 'SUPPOSE'}
+o0a2 o0a2-m003 {'owner': 'Oren', 'relation': 'OTHER:knowing', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m019 {'owner': 'Ada', 'relation': 'OTHER:niceness', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m026 {'owner': 'Oren', 'relation': 'OTHER:liking', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m030 {'owner': 'Zib', 'relation': 'OTHER:adoption', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m033 {'owner': 'ME', 'relation': 'OTHER:playing', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m035 {'owner': 'Lea', 'relation': 'OTHER:twinhood', 'value': '', 'mode': 'ASK'}
+o0a2 o0a2-m040 {'owner': 'Jor', 'relation': 'OTHER:selling', 'value': '', 'mode': 'ASK'}
+artifacts/claude-own-o0a2-20260923 {'ASSERT': 5, 'SUPPOSE': 1, 'ASK': 7}
+[0m
+[0m← [0mWrite artifacts/claude-own-o0a3-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_o0a3_mutate.py artifacts/claude-own-o0a3-20260923/PASSMARKS.md > artifacts/claude-own-o0a3-20260923/SEAL.sha256.txt && cat artifacts/claude-own-o0a3-20260923/SEAL.sha256.txt
+f914cdad1bcdc584c5401e537d8e9a76c273aab49c0f82752da3b2efbe83ccd2  scripts/claude_own_o0a3_mutate.py
+b2aa11877b3c1165e0e72167aad812c4b5ee1d2114cd93d22c89542e7349646e  artifacts/claude-own-o0a3-20260923/PASSMARKS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude-own-o0a3-20260923; 5886 one-change WRONG readings from 553 ACD + 190 no-save gold facts of the o0a/o0a2 dev sets, judged v0/v1/learned-licensed with WE never saved) P1 m1 clean-through >=95% all rules; P2 m2 same; P3 m3 same; P4 m4 clean-through >=90% all rules; P5 m5 clean-blocked 100% v0+v1, clean-through 100% licensed; P6a me2we clean-blocked 100% all; P6b name2me clean-through >=95% all; P6c we2me clean base empty, raw through >=70% each; P7 m7 clean-through >=90% all; P8 m8 empty(55)/OTHER-valued(1)/WE-valued(9) blocked 100% all, rest(125) licensed 100%, v1 75-95%, v0 40-65%, ordered lic>=v1>=v0.
+EOF
+tail -2 artifacts/fable-predictions-ledger.md | cut -c1-120
+- P280m.5 OUTCOME (2026-09-23, builder, sealed exp 280m) registered verdict FAIL on the M1 bar only. M1 (90 turns once o
+- Pown0a3.1 (pred, sealed pre-run 2026-09-23, own-O0a3 permission audit, sealed 2 files SEAL.sha256.txt artifacts/claude
+[0m
+[0m# [0mTodos
+[✓] Read inputs: o0a/o0a2 turns+gold samples, relation table, ledger format
+[✓] Write pilot mutate script and pilot it
+[✓] Write PASSMARKS.md with numbered predictions, seal scripts+PASSMARKS, append ledger
+[•] Registered run + RESULTS.md with kind x rule table
+[0m
+[0m$ [0muptime; df -g / | tail -2; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0a3_mutate.py artifacts/claude-own-o0a3-20260923
+6:51  up 2 days, 22:40, 4 users, load averages: 50.32 55.62 55.11
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    54%  484014 115813080    0%   /
+gold ACD 553, gold nosave 190, wrong readings 5886
+m1: v0 made=813 blocked=433 through=380 clean=363/0/363 | v1 made=813 blocked=49 through=764 clean=737/0/737 | licensed made=813 blocked=21 through=792 clean=764/0/764
+m2: v0 made=1639 blocked=763 through=876 clean=844/0/844 | v1 made=1639 blocked=159 through=1480 clean=1442/0/1442 | licensed made=1639 blocked=94 through=1545 clean=1507/0/1507
+m3: v0 made=353 blocked=168 through=185 clean=185/0/185 | v1 made=353 blocked=45 through=308 clean=308/0/308 | licensed made=353 blocked=25 through=328 clean=328/0/328
+m4: v0 made=137 blocked=4 through=133 clean=109/0/109 | v1 made=137 blocked=4 through=133 clean=129/0/129 | licensed made=137 blocked=4 through=133 clean=132/0/132
+m5: v0 made=1659 blocked=1659 through=0 clean=828/828/0 | v1 made=1659 blocked=1659 through=0 clean=1428/1428/0 | licensed made=1659 blocked=105 through=1554 clean=1503/0/1503
+m6:me2we: v0 made=180 blocked=180 through=0 clean=91/91/0 | v1 made=180 blocked=180 through=0 clean=168/168/0 | licensed made=180 blocked=180 through=0 clean=173/173/0
+m6:name2me: v0 made=353 blocked=167 through=186 clean=185/0/185 | v1 made=353 blocked=42 through=311 clean=308/0/308 | licensed made=353 blocked=22 through=331 clean=328/0/328
+m6:we2me: v0 made=20 blocked=5 through=15 clean=0/0/0 | v1 made=20 blocked=1 through=19 clean=0/0/0 | licensed made=20 blocked=0 through=20 clean=0/0/0
+m7:extend-next: v0 made=232 blocked=128 through=104 clean=104/0/104 | v1 made=232 blocked=21 through=211 clean=211/0/211 | licensed made=232 blocked=6 through=226 clean=226/0/226
+m7:extend-prev: v0 made=270 blocked=119 through=151 clean=151/0/151 | v1 made=270 blocked=37 through=233 clean=233/0/233 | licensed made=270 blocked=28 through=242 clean=242/0/242
+m7:trim: v0 made=40 blocked=18 through=22 clean=21/0/21 | v1 made=40 blocked=7 through=33 clean=32/0/32 | licensed made=40 blocked=6 through=34 clean=33/0/33
+m8: v0 made=190 blocked=125 through=65 clean=0/0/0 | v1 made=190 blocked=81 through=109 clean=0/0/0 | licensed made=190 blocked=65 through=125 clean=0/0/0
+[0m
+[0m$ [0mshasum -c artifacts/claude-own-o0a3-20260923/SEAL.sha256.txt && diff -q /tmp/o0a3pilot/summary.json artifacts/claude-own-o0a3-20260923/summary.json && echo DETERMINISM-OK && ls -la artifacts/claude-own-o0a3-20260923/
+scripts/claude_own_o0a3_mutate.py: OK
+artifacts/claude-own-o0a3-20260923/PASSMARKS.md: OK
+DETERMINISM-OK
+total 7664
+drwxr-xr-x    6 ben-hannan  staff      192 Sep 23 06:51 .
+drwxr-xr-x@ 434 ben-hannan  staff    13888 Sep 23 06:51 ..
+-rw-r--r--    1 ben-hannan  staff  3897411 Sep 23 06:51 mutations.jsonl
+-rw-r--r--    1 ben-hannan  staff     5150 Sep 23 06:51 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff      214 Sep 23 06:51 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff     9436 Sep 23 06:51 summary.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('artifacts/claude-own-o0a3-20260923/summary.json'))
+for rule in ('v0','v1','licensed'):
+    M=sum(c[rule]['made'] for c in s['cells'].values()); B=sum(c[rule]['blocked'] for c in s['cells'].values()); T=sum(c[rule]['through'] for c in s['cells'].values())
+    CM=sum(c[rule]['clean_made'] for c in s['cells'].values()); CB=sum(c[rule]['clean_blocked'] for c in s['cells'].values()); CT=sum(c[rule]['clean_through'] for c in s['cells'].values())
+    print(rule, 'raw made=%d blocked=%d through=%d (%.1f%% through)'%(M,B,T,100.0*T/M))
+    print(rule, 'clean made=%d blocked=%d through=%d (%.1f%% through)'%(CM,CB,CT,100.0*CT/CM))
+"
+v0 raw made=5886 blocked=3769 through=2117 (36.0% through)
+v0 clean made=2881 blocked=919 through=1962 (68.1% through)
+v1 raw made=5886 blocked=2285 through=3601 (61.2% through)
+v1 clean made=4996 blocked=1596 through=3400 (68.1% through)
+licensed raw made=5886 blocked=556 through=5330 (90.6% through)
+licensed clean made=5236 blocked=173 through=5063 (96.7% through)
+[0m
+[0m← [0mWrite artifacts/claude-own-o0a3-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0a3.2 OUTCOME (2026-09-23, builder, own-O0a3 permission audit, one registered CPU run, 5886 wrong readings, seals 2/2 OK post-run, summary byte-identical to pilot, no post-seal change) Pown0a3.1 10/10 HIT: m1/m2/m3 clean-through 100% all rules; m4 100% (n 109-132); m5 clean-blocked 100% v0+v1, clean-through 100% licensed; m6 me2we blocked 100% all, name2me 100% through all, we2me raw 75/95/100% (clean base empty by construction); m7 100% all 9 sub-cells; m8 structural 65/65 blocked everywhere, rest lic 100% / v1 87.2% / v0 52.0%. Pown0a3.2 PASS 0 crashes. Pown0a3.3 PASS table complete 11x3. Clean through-share (wrong on savable truths): v0 68.1%, v1 68.1%, licensed 96.7%. Only cue absence (m5, v0/v1), WE owner, and mode/empty/OTHER stop a wrong reading; all else needs the reader or an independent checker. See artifacts/claude-own-o0a3-20260923/RESULTS.md.
+EOF
+shasum -c artifacts/claude-own-o0a3-20260923/SEAL.sha256.txt; ls artifacts/claude-own-o0a3-20260923/; git status --short | head
+scripts/claude_own_o0a3_mutate.py: OK
+artifacts/claude-own-o0a3-20260923/PASSMARKS.md: OK
+mutations.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+summary.json
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+[0m
+[0m# [0mTodos
+[✓] Read inputs: o0a/o0a2 turns+gold samples, relation table, ledger format
+[✓] Write pilot mutate script and pilot it
+[✓] Write PASSMARKS.md with numbered predictions, seal scripts+PASSMARKS, append ledger
+[✓] Registered run + RESULTS.md with kind x rule table
+[0m
