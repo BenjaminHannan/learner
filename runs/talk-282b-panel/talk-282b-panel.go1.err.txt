@@ -1,0 +1,228 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; ls
+5:19  up 2 days, 21:08, 4 users, load averages: 26.65 70.89 81.62
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 119346120    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/30-modes/280-282-chat-fixes.md > /tmp/spec282_full.md; wc -l /tmp/spec282_full.md
+152 /tmp/spec282_full.md
+[0m
+[0m$ [0mgrep -n "282 ruling\|Panel spec\|smallpanel282b\|^#\|^##" /tmp/spec282_full.md | head -40
+1:# 280, 281, 282: three chat fixes from the chat-demo probe. Director's note, 2026-09-23 04:30 UTC
+9:## 280: "What can you do?" says only what is true (honesty; first priority)
+27:Panel spec (capabilpanel280, 40 turns, fresh dialogs): 12 general ability questions in varied wording and register
+32:## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+44:Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+49:## 282: casual greetings and closings get small talk, not an error
+60:Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
+64:## 280b: the one follow-up to 280 (added 07:45 UTC after 280's registered FAIL on M1b 9/12)
+77:Panel spec (capabilpanel280b, 50 turns, fresh): 25 general ability questions in wordings as varied as real people
+82:## 280b re-run ruling (director, 2026-09-23 08:28 UTC, before any 280b panel row has run)
+95:## 281 result and the 281b follow-up (director, 2026-09-23 08:28 UTC)
+114:Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+119:## 282 ruling and the 282b follow-up (director, 2026-09-23 09:15 UTC)
+133:Marks: M1 smallpanel282b (fresh): at least 90% of the panel's greeting and closing items (the writer's categories,
+137:Panel spec (smallpanel282b, 60 turns): 20 greetings, 15 thanks and closings (casual, slang, typos in filler words,
+141:## 280b and 281b results (director, 2026-09-23 09:15 UTC)
+[0m
+[0m$ [0msed -n '119,140p' /tmp/spec282_full.md
+## 282 ruling and the 282b follow-up (director, 2026-09-23 09:15 UTC)
+
+282's PASSMARKS defined the M1 denominator as "turns the sealed matcher fires on". That is the fix's own recogniser,
+so the bar could not fail on a missed shape. This note's M1 bar (written before the build) says "at least 90% of
+small-talk items", and the small-talk items are the panel's greeting and closing items (35). Ruling: this note's bar
+governs. Director recount from run/panel-260b.json and run/panel-282b.json: 31/35 fitting on 282 (88.6%; bar 32/35),
+19/35 on 260. **282 is a registered FAIL by one item.** Everything else passed: 0 writes on small-talk items, mixed and
+control items unchanged, 0 store differences, suites 0 moves, M3 17/20 vs 16/20. 12 dialogs moved, all toward a fitting
+reply. Merge candidate. The director did not read the 4 missed items.
+The one follow-up, 282b (on top of 282), comes from the spec, not from the misses: instead of 282's closed word-order
+grammar, a whole turn is small talk when every word, after lowercasing and stripping punctuation and emoji, belongs to
+a sealed small-talk vocabulary (greetings, thanks, closings, "how are you" words, fillers such as "so", "ok", "lol",
+"man", "again", "all", "for", "now", "much", "a", "lot", and the assistant's own name), it has at least one greeting,
+thanks or closing word, and it names no stored or new entity and no relation word. Class = the first such word.
+Marks: M1 smallpanel282b (fresh): at least 90% of the panel's greeting and closing items (the writer's categories,
+never the matcher's) get the arm's own fitting reply (greeting -> the "Hello." reply; thanks or closing -> the
+"Thanks!" or "Bye." reply); 0 writes on them; mixed and control items identical to 282. M2 frozen suites vs 282's rows:
+only predicted moves, GATE clean. M3 smalltalkpanel234: every figure equal or better than 282.
+Panel spec (smallpanel282b, 60 turns): 20 greetings, 15 thanks and closings (casual, slang, typos in filler words,
+extra words, emoji), 15 mixed turns (small talk plus a real teach or question), 10 controls. Columns exactly:
+dialog_id, turn_index, user_text, category (greeting / closing / mixed / control), gold. Fictional names only.
+[0m
+[0m$ [0mls artifacts/ | grep -i "282b" ; echo "---"; ls artifacts/claude-smallpanel282b-20260923 2>&1; echo "done"
+---
+ls: artifacts/claude-smallpanel282b-20260923: No such file or directory
+done
+[0m
+[0m$ [0mmkdir -p artifacts/claude-smallpanel282b-20260923 && ls artifacts/claude-smallpanel282b-20260923
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+@@ -7,9 +7,9 @@
+ {"category": "greeting", "dialog_id": "d_greet_07", "gold": "smalltalk", "turn_index": 0, "user_text": "hey man, how are you"}
+ {"category": "greeting", "dialog_id": "d_greet_08", "gold": "smalltalk", "turn_index": 0, "user_text": "hiiii, how are you doing"}
+ {"category": "greeting", "dialog_id": "d_greet_09", "gold": "smalltalk", "turn_index": 0, "user_text": "yo yo yo"}
+ {"category": "greeting", "dialog_id": "d_greet_10", "gold": "smalltalk", "turn_index": 0, "user_text": "good morning!!"}
+-{"category": "greeting", "dialog_id": "d_greet_11", "gold": "smalltalk", "turn_index": 0, "user_text": "hey hey hey \u0001"}
++{"category": "greeting", "dialog_id": "d_greet_11", "gold": "smalltalk", "turn_index": 0, "user_text": "hey hey hey 😊"}
+ {"category": "greeting", "dialog_id": "d_greet_12", "gold": "smalltalk", "turn_index": 0, "user_text": "howdy man"}
+ {"category": "greeting", "dialog_id": "d_greet_13", "gold": "smalltalk", "turn_index": 0, "user_text": "heey, how are you doing today"}
+ {"category": "greeting", "dialog_id": "d_greet_14", "gold": "smalltalk", "turn_index": 0, "user_text": "hi hi hi lolol"}
+ {"category": "greeting", "dialog_id": "d_greet_15", "gold": "smalltalk", "turn_index": 0, "user_text": "yo, what's up man"}
+
+[0m
+[0m← [0mEdit artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+@@ -12,9 +12,9 @@
+ {"category": "greeting", "dialog_id": "d_greet_12", "gold": "smalltalk", "turn_index": 0, "user_text": "howdy man"}
+ {"category": "greeting", "dialog_id": "d_greet_13", "gold": "smalltalk", "turn_index": 0, "user_text": "heey, how are you doing today"}
+ {"category": "greeting", "dialog_id": "d_greet_14", "gold": "smalltalk", "turn_index": 0, "user_text": "hi hi hi lolol"}
+ {"category": "greeting", "dialog_id": "d_greet_15", "gold": "smalltalk", "turn_index": 0, "user_text": "yo, what's up man"}
+-{"category": "greeting", "dialog_id": "d_greet_16", "gold": "smalltalk", "turn_index": 0, "user_text": "hello, how are you \u0002"}
++{"category": "greeting", "dialog_id": "d_greet_16", "gold": "smalltalk", "turn_index": 0, "user_text": "hello, how are you 👋"}
+ {"category": "greeting", "dialog_id": "d_greet_17", "gold": "smalltalk", "turn_index": 0, "user_text": "heyy so how are you"}
+ {"category": "greeting", "dialog_id": "d_greet_18", "gold": "smalltalk", "turn_index": 0, "user_text": "hii man ok so hey"}
+ {"category": "greeting", "dialog_id": "d_greet_19", "gold": "smalltalk", "turn_index": 0, "user_text": "sup"}
+ {"category": "greeting", "dialog_id": "d_greet_20", "gold": "smalltalk", "turn_index": 0, "user_text": "hey again soo lol"}
+
+[0m
+[0m← [0mEdit artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+@@ -23,9 +23,9 @@
+ {"category": "closing", "dialog_id": "d_close_03", "gold": "smalltalk", "turn_index": 0, "user_text": "thx man lol"}
+ {"category": "closing", "dialog_id": "d_close_04", "gold": "smalltalk", "turn_index": 0, "user_text": "thanks a lot!!"}
+ {"category": "closing", "dialog_id": "d_close_05", "gold": "smalltalk", "turn_index": 0, "user_text": "ok thanks, bye"}
+ {"category": "closing", "dialog_id": "d_close_06", "gold": "smalltalk", "turn_index": 0, "user_text": "bye"}
+-{"category": "closing", "dialog_id": "d_close_07", "gold": "smalltalk", "turn_index": 0, "user_text": "byeee \u0002"}
++{"category": "closing", "dialog_id": "d_close_07", "gold": "smalltalk", "turn_index": 0, "user_text": "byeee 👋"}
+ {"category": "closing", "dialog_id": "d_close_08", "gold": "smalltalk", "turn_index": 0, "user_text": "goodbye for now"}
+ {"category": "closing", "dialog_id": "d_close_09", "gold": "smalltalk", "turn_index": 0, "user_text": "see you later man"}
+ {"category": "closing", "dialog_id": "d_close_10", "gold": "smalltalk", "turn_index": 0, "user_text": "good night!!"}
+ {"category": "closing", "dialog_id": "d_close_11", "gold": "smalltalk", "turn_index": 0, "user_text": "cya lol"}
+
+[0m
+[0m← [0mEdit artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+@@ -31,9 +31,9 @@
+ {"category": "closing", "dialog_id": "d_close_11", "gold": "smalltalk", "turn_index": 0, "user_text": "cya lol"}
+ {"category": "closing", "dialog_id": "d_close_12", "gold": "smalltalk", "turn_index": 0, "user_text": "thanks again, bye now"}
+ {"category": "closing", "dialog_id": "d_close_13", "gold": "smalltalk", "turn_index": 0, "user_text": "cheers man, later"}
+ {"category": "closing", "dialog_id": "d_close_14", "gold": "smalltalk", "turn_index": 0, "user_text": "ok bye for now, thanks a lot"}
+-{"category": "closing", "dialog_id": "d_close_15", "gold": "smalltalk", "turn_index": 0, "user_text": "thx!! bye!! \u0001"}
++{"category": "closing", "dialog_id": "d_close_15", "gold": "smalltalk", "turn_index": 0, "user_text": "thx!! bye!! 😊"}
+ {"category": "mixed", "dialog_id": "d_mix_01", "gold": "wombat|called|Zibbo", "turn_index": 0, "user_text": "heyy btw my wombat is called Zibbo"}
+ {"category": "mixed", "dialog_id": "d_mix_01", "gold": "Zibbo", "turn_index": 1, "user_text": "thanks man, so what is my wombat called"}
+ {"category": "mixed", "dialog_id": "d_mix_02", "gold": "ferret|called|Jonto", "turn_index": 0, "user_text": "yo!! my ferret is called Jonto lol"}
+ {"category": "mixed", "dialog_id": "d_mix_02", "gold": "Jonto", "turn_index": 1, "user_text": "ok so what is my ferret called again"}
+
+[0m
+[0m← [0mEdit artifacts/claude-smallpanel282b-20260923/panel.jsonl
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-smallpanel282b-20260923/panel.jsonl
+@@ -38,9 +38,9 @@
+ {"category": "mixed", "dialog_id": "d_mix_02", "gold": "ferret|called|Jonto", "turn_index": 0, "user_text": "yo!! my ferret is called Jonto lol"}
+ {"category": "mixed", "dialog_id": "d_mix_02", "gold": "Jonto", "turn_index": 1, "user_text": "ok so what is my ferret called again"}
+ {"category": "mixed", "dialog_id": "d_mix_03", "gold": "newt|called|Vesper", "turn_index": 0, "user_text": "hi, my newt is called Vesper"}
+ {"category": "mixed", "dialog_id": "d_mix_03", "gold": "Vesper", "turn_index": 1, "user_text": "bye for now... oh wait, what is my newt called"}
+-{"category": "mixed", "dialog_id": "d_mix_04", "gold": "quokka|called|Quilla", "turn_index": 0, "user_text": "hello!! my quokka is called Quilla \u0001"}
++{"category": "mixed", "dialog_id": "d_mix_04", "gold": "quokka|called|Quilla", "turn_index": 0, "user_text": "hello!! my quokka is called Quilla 😊"}
+ {"category": "mixed", "dialog_id": "d_mix_04", "gold": "Quilla", "turn_index": 1, "user_text": "lol ok what is my quokka called"}
+ {"category": "mixed", "dialog_id": "d_mix_05", "gold": "axolotl|called|Fizzmo", "turn_index": 0, "user_text": "hey man my axolotl is called Fizzmo"}
+ {"category": "mixed", "dialog_id": "d_mix_05", "gold": "Fizzmo", "turn_index": 1, "user_text": "thanks a lot, what is my axolotl called"}
+ {"category": "mixed", "dialog_id": "d_mix_06", "gold": "puffin|called|Niblo", "turn_index": 0, "user_text": "yo my puffin is called Niblo"}
+
+[0m
+[0m← [0mWrite artifacts/claude-smallpanel282b-20260923/SPEC-COPY.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-smallpanel282b-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, collections
+rows=[json.loads(l) for l in open('artifacts/claude-smallpanel282b-20260923/panel.jsonl', encoding='utf-8')]
+assert len(rows)==60, len(rows)
+keys={'dialog_id','turn_index','user_text','category','gold'}
+for i,r in enumerate(rows):
+    assert set(r)==keys, (i,set(r))
+    assert isinstance(r['turn_index'],int) and isinstance(r['user_text'],str) and r['user_text'].strip()
+    assert all(ord(c)>=32 or c in (9,) for c in r['user_text']), (i, repr(r['user_text']))
+c=collections.Counter(r['category'] for r in rows)
+assert set(c)=={'greeting','closing','mixed','control'}, set(c)
+print('counts:', dict(c))
+for r in rows:
+    if r['category'] in ('greeting','closing'): assert r['gold']=='smalltalk', r
+seq=collections.defaultdict(list)
+for r in rows: seq[r['dialog_id']].append(r['turn_index'])
+for d,v in seq.items(): assert v==list(range(len(v))), (d,v)
+print('dialogs:', len(seq), 'turn_index ok')
+triples=[r['gold'] for r in rows if '|' in r['gold']]
+assert all(t.count('|')==2 for t in triples)
+print('triples:', len(triples))
+names=set()
+import re
+for r in rows:
+    if '|' in r['gold']: names.add(r['gold'].split('|')[2])
+print('teach names:', len(names))
+"
+counts: {'greeting': 20, 'closing': 15, 'mixed': 15, 'control': 10}
+dialogs: 48 turn_index ok
+triples: 13
+teach names: 13
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-smallpanel282b-20260923/panel.jsonl artifacts/claude-smallpanel282b-20260923/SPEC-COPY.md > artifacts/claude-smallpanel282b-20260923/SEAL.sha256.txt && cat artifacts/claude-smallpanel282b-20260923/SEAL.sha256.txt && ls -la artifacts/claude-smallpanel282b-20260923 && rm -f /tmp/spec282_full.md && git status --porcelain -- artifacts/claude-smallpanel282b-20260923
+cf83b2001f01fa0de8b90ccd413bdedadefed7ab9f91360d25d915bcc63d2994  artifacts/claude-smallpanel282b-20260923/panel.jsonl
+32537032813801b1188222b1db5ef7bc42e847d5afa802f22bf9f08bdb504857  artifacts/claude-smallpanel282b-20260923/SPEC-COPY.md
+total 40
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 05:20 .
+drwxr-xr-x@ 423 ben-hannan  staff  13536 Sep 23 05:20 ..
+-rw-r--r--    1 ben-hannan  staff   7639 Sep 23 05:20 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   1621 Sep 23 05:20 README.md
+-rw-r--r--    1 ben-hannan  staff    239 Sep 23 05:20 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff    515 Sep 23 05:20 SPEC-COPY.md
+[0m
