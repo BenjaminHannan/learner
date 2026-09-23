@@ -1,0 +1,34 @@
+BLIND PANEL SPEC: yesnopanel293 (yes/no questions about taught facts). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/293*, scripts/claude_fix293*, scripts/claude_loop293*, scripts/claude_293*, scripts/claude_diag293*, artifacts/claude-diag293-*, artifacts/claude-yesno293-*, scripts/fable_fix154*, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names.
+
+Base: 138nb = scripts/claude_loop138nb_agent.py with its config in artifacts/claude-merge138nb-20260923/ (copy these files unchanged from origin/builder-outbox; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-yesnopanel293-20260923/ with panel.jsonl (85 items), base138nb.jsonl (85 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "y293-001", "family": ..., "setup": [1-4 plain teaches, each its own turn; taken_back items also include a denial such as "No, A's R isn't V." or "Actually A doesn't have an R."], "question": "...", "expect": "yes" | "no" | "unknown" | "control", "gold": [strings that must appear in a right reply, e.g. the stored value for yes/no; [] otherwise], "note": "..."}. JSON lists.
+Check every setup on the base: it must store exactly what you expect, and a taken-back fact must no longer be stored. Replace any setup that doesn't.
+
+Families and exact counts (85):
+- have_true 10: "Does A have a/an R?" / "Has A got a/an R?" with R taught (boss, dentist, sister, coach, doctor, friend ...). expect yes, gold [value].
+- have_unknown 8: the same shapes, R never taught for A (other facts about A taught). expect unknown.
+- live 10: "Does A live in V?" after "A's city is C." (5 with V = C: yes; 5 with V ≠ C: no, gold [C]).
+- work 8: "Does A work at/for V?" after "A's employer is E." (4 yes, 4 no; gold [E]).
+- born 6: "Does A come from V?" / "Was A born in V?" after "A's birthplace is P." (3 yes, 3 no; gold [P]).
+- is_multiword 8: "Is A's R V?" / "Is V A's R?" where A or V is a two- or three-word name (4 yes, 4 no, over single-valued relations: boss, mother, father, city, employer, birthplace, dentist, coach).
+- is_of_form 6: "Is V the R of A?" (3 yes, 3 no).
+- taken_back 6: a fact taught then denied or corrected in setup, then asked. expect unknown (after a denial) or no/yes by the corrected value (after a correction, gold = the new value); say which in note.
+- is_single_control 8: "Is A's R V?" / "Is V A's R?" with one-word names (the base already answers these). expect control.
+- wh_control 8: plain who/what/where questions about the same facts. expect control.
+- statement_control 7: statements containing "does", "is" or "has" ("Ana has a dentist called Tovi." is NOT allowed here; use statements the base does not store, e.g. "Mira does love the rain.", checked on the base). expect control.
+At least 20 items use a two-word name.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged):
+- yes: the reply starts with "Yes" (case-insensitive, after optional spaces) and contains every gold string.
+- no: the reply starts with "No" and contains every gold string.
+- unknown: the reply contains "don't know" or "not that I know" and does not start with "Yes" or "No".
+- control: right = identical to the base's row (reply and stores); a builder's scorer compares against base138nb.jsonl.
+- wrong: expect yes but the reply starts with "No"; expect no but the reply starts with "Yes"; expect unknown but the reply starts with "Yes" or "No".
+- question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
