@@ -1,0 +1,23 @@
+BLIND PANEL SPEC: mixpanel292 (two-step, backwards and yes/no questions after corrections). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/26*, 29*, scripts/claude_fix26*, claude_fix29*, claude_loop26*, claude_loop29*, claude_26*, claude_29*, any builder's artifacts folder, any relation-table file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself, with new fictional names (at least 20 items with two-word names).
+
+Base: 291 = scripts/claude_loop291_agent.py with scripts/claude_fix291_glue.py and artifacts/claude-join291-20260923/loop291-config.json (copy these and the files they import unchanged from origin/builder-outbox; use the module's DEFAULT_CONFIG291 if the config file has absolute paths; fresh temp state_dir per item outside the repo, sleep_threshold 100000; one process at a time). Record `loop.ears.last_stage` for the question turn.
+
+Folder: artifacts/claude-mixpanel292-20260923/ with panel.jsonl (80 items), base291.jsonl (80 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (the five data/code files, repo-root paths).
+
+Item: {"id": "m292-001", "family": ..., "setup": [1-4 plain teaches, each its own turn], "question": "...", "expect": "value" | "yes" | "no" | "unknown" | "control", "gold": [strings that must appear], "note": "..."}. JSON lists. Check every setup stores what you expect on the base.
+
+Families and exact counts (80):
+- chain_verb 12: "Where does A's R1 live?", "Where does A's R1 work?", "Who does A's R1 work for?" with both links taught; 8 with a two-word first name. expect value.
+- backwards_bug 10: "A's R is V." plus "V's R2 is W." (R over spouse, author, founder, parent/child, composer), then a backwards question about V ("Whose R is V?", "Who is married to V?", "What did V write?"). expect value, gold [A].
+- yesno 14: "Does A have a/an R?", "Does A live in V?", "Does A work at V?", "Is V the R of A?" with multi-word names (yes, no and unknown, about a third each). "no" only for boss, mother, father, city, employer, birthplace.
+- mixed 12 (reported, no bar): yes/no about a chain ("Does A's boss live in V?"), a backwards question about a chain value, a two-step question after a correction ("Actually A's boss is B."), a yes/no after a correction. Write natural wordings; expect from the facts.
+- broken_chain 8: one link missing. expect unknown (right = the reply contains "don't know", "couldn't" or "not that I know" and names no untaught value).
+- forward_control 10: plain who/what/where and one-hop questions. expect control.
+- statement_control 8: statements containing a chain or "does"/"is"/"has" that the base does not store. expect control.
+- correction_control 6: a plain correction ("Actually A's city is C.") then "Where does A live?". expect value.
+
+run_base.py rows: id, setup_replies, question_reply, question_stage, stored_after_setup_actual, stored_after_question_actual, question_wrote.
+score_panel.py (sealed; builders use it unchanged): value = every gold string appears (case-insensitive); yes/no = the reply starts with "Yes"/"No" and contains every gold string; unknown = contains "don't know", "couldn't" or "not that I know" and does not start with "Yes" or "No"; control = identical to base291's row; wrong = a yes/no reply with the opposite answer, or a value/unknown reply naming a taught value or person not in gold without every gold string (not an abstain); question_wrote from the rows.
+README.md: the base's right, wrong, question writes and stage counts per family, category level only. Never quote an item.
