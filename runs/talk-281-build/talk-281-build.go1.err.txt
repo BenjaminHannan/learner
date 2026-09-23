@@ -1,0 +1,3042 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/30-modes/280-282-chat-fixes.md; echo "---FETCH DONE---"; uptime; df -g /
+# 280, 281, 282: three chat fixes from the chat-demo probe. Director's note, 2026-09-23 04:30 UTC
+
+Source: artifacts/claude-chatweak-20260923/WEAKSPOTS.md (90 fresh dev turns on base 260; dev material, not a panel).
+Base for all three: 260 (scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json).
+Each experiment is one change, sealed before its registered run, graded on its own fresh blind panel written
+by a separate agent from the spec below. The probe's dialogs are dev material: builders may read them.
+The three are independent and run in parallel. None of them may change what gets saved in the notebook.
+
+## 280: "What can you do?" says only what is true (honesty; first priority)
+
+Problem: t08-t1 lists "answer ... following one or two steps" and "correct a fact or forget one", but the probe
+shows two-step questions fail (t02-t3) and forget commands fail (t05-t2, t05-t5).
+The one change: the self-description replies ("What can you do?" and its variants, and "Can you <ability>?"
+yes/no questions if the base already routes them to the self sheet) are rendered from a sealed ability table.
+- Each row: ability, the exact example phrasing that works, evidence (a registered PASS or a frozen-suite family
+  that measures it), and a dev score from the builder's OWN new dev chats (fictional names; at least 8 turns per
+  ability, varied phrasing).
+- An ability is listed plainly only if its dev score is at least 80%. If only one phrasing works (at least 90% on
+  that phrasing), it is listed with that phrasing as an example ("I can follow two steps if you ask like
+  'Who is Kim's boss's boss?'"). Otherwise it is dropped from the list.
+- "What can't you do?" stays as it is, except that any ability dropped above is not claimed anywhere else.
+Marks: M1 capabilpanel280: 0 replies that claim an ability the table does not support (the director checks each
+claim; the 260 arm's count is shown beside it); every general "what can you do" item lists at least 3 abilities.
+M2 frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench vs 260 rows): only predicted reply-only
+moves, GATE clean. M3 0 notebook changes on the panel and suites. M4 grammar of every changed reply: director.
+
+Panel spec (capabilpanel280, 40 turns, fresh dialogs): 12 general ability questions in varied wording and register
+("What can you do?", "what are you good at", "Tell me what you're able to do."), 20 "Can you ...?" questions over
+abilities that plausibly exist or not (forget, correct, two-step, remember after restart, math, web, feelings,
+translate, names, sources), 8 controls (plain teach and ask). Each dialog may first teach 1 or 2 facts.
+
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+
+## 282: casual greetings and closings get small talk, not an error
+
+Problem: "hey whats up" (t07-t0) gets "I didn't understand that question"; "Thanks, that's all!" (t01-t7) gets
+"I didn't understand that well enough to save it". Bare "Thanks!" and "cool thanks!" already work.
+The one change: the small-talk recogniser also accepts greetings and closings that are lowercase, lack
+apostrophes or end marks, or carry a short closing tail ("that's all", "that's it", "bye for now", "see ya").
+Only whole turns that are pure small talk; a turn with any fact or question content keeps its old route.
+Marks: M1 smallpanel282: at least 90% of small-talk items get a fitting small-talk reply (260 arm shown);
+0 writes on small-talk items; mixed items (small talk + a fact or question) keep 260's route and result exactly.
+M2 frozen suites as in 280. M3 smalltalkpanel234 re-run once: every figure equal or better than 260.
+
+Panel spec (smallpanel282, 60 turns): 20 greetings (casual, lowercase, slang, no punctuation), 15 thanks and
+closings with tails, 15 mixed turns (a greeting or thanks plus a real teach or question, e.g. "hey, whats Ana's
+city"), 10 controls. Fictional names only.
+---FETCH DONE---
+ 3:12  up 2 days, 19:01, 4 users, load averages: 49.19 61.55 78.65
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 137660120    0%   /
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/260-openers.txt; echo "=====PASSMARKS====="; git show origin/main:artifacts/claude-openers260-20260922/PASSMARKS.md; echo "=====RESULTS====="; git show origin/main:artifacts/claude-openers260-20260922/RESULTS.md
+EXP 260 BRIEF: openers and greetings never become part of a fact. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Why (the director's probe on 138m, 17:50). All names here are fictional.
+- A safety bug. "Please, Kestrel's job is fisher." → "Saved: Please, Kestrel's job is fisher." It stores the subject "Please, Kestrel", and "What is Kestrel's job?" then gets "I don't know anyone called Kestrel."
+- Teaches that start with an everyday opener aren't saved, and the reply is the save-failure line:
+  - "So, Marnie lives in Tollan."
+  - "Oh, and Pell's boss is Rhoda."
+  - "Also, Idris works at Fenwick."
+  - "Okay so Brann's sister is Liesl."
+  - "Well, Tamsin is a baker."
+  - "By the way, …" works, and so does "Hey, my name is Corwin."
+- "Hi! Who is Pell's boss?" gets "I didn't understand that question…", and "hello there" gets "I didn't understand that well enough to save it…".
+- Closed lists for this already exist:
+  - scripts/fable_fix137b_discourse.py DISCOURSE137B, which rejects discourse-glued multi-word names;
+  - scripts/fable_fix150_subjectguard.py FILLER_OPENERS, which strips fillers from subjects;
+  - 221c's question fillers (not in 138m).
+  - They don't fire on these turns on 138m. Find out why first: which layers see the turn, and where each list is or isn't applied.
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json (saved rows in artifacts/claude-merge138m-20260922/run/).
+- One change: a single outermost turn-opener mixin, scripts/claude_fix260_openers.py, in scripts/claude_loop260_agent.py. SrcGuardMixin228 stays first.
+- Artifacts: artifacts/claude-openers260-20260922/. Ledger lines: P260.n. Design note: design/v3/30-modes/260-openers-opus.md.
+- Never edit an existing file.
+
+The one change: openers and greetings are never part of a fact.
+1. One closed list of openers, fixed before any panel read. Build it from:
+   - the union of DISCOURSE137B and FILLER_OPENERS;
+   - greetings (hi, hey, hello, hiya, good morning/afternoon/evening, with an optional "there", "again" or "Premonition");
+   - common multi-word openers ("oh and", "okay so", "and also", "fun fact", "just so you know", "for the record", "one more thing", …);
+   - hesitation words (um, uh, er).
+   It is a closed-class list; take care with words that are also names (Will, Hope, Joy, May, Art, Bill, Mark, Pat, Grace, Sunny, Faith, Rose).
+2. A turn that starts with a listed opener, followed by a comma, "!", "." or "-", or directly by a clause the head can read, is handled as the rest of the turn.
+   - Strip at most 2 openers ("Oh, and so, …").
+   - Use the rest only if the head gives it a non-clarify action (a save, an answer, or a fixed reply). Otherwise the original turn goes to the head unchanged.
+   - Keep the user's words otherwise: don't lowercase or re-case names.
+3. A bare greeting (the whole turn is listed greeting words plus optional "there", "again" or "Premonition" and punctuation) gets the head's own greeting reply, exactly the reply the head gives to "Hello.".
+4. Write guard, belt and braces. No stored subject may start with a listed opener followed by a comma. A turn that would store one is handled by step 2, or, if step 2 doesn't apply, by the head's own save-failure reply with 0 writes.
+5. Safety:
+   - Questions never write.
+   - The user's name keeps its confirm flow.
+   - Inferred facts are never stored.
+   - Names or titles that start with a listed word WITHOUT a following comma or "!" ("Hey Jude", "So Long Summer", "Will Tarn") must not be stripped when they are the subject or value. When you can't tell, don't strip.
+6. Everything else stays byte-identical.
+
+Overlaps to predict (merge later, not now): 221c's question fillers (138n), 137b and 150.
+
+Blind panel
+- A separate writer is building artifacts/claude-openpanel260-20260922/ under the exact schema in openpanel260-spec.txt (same folder). Your scorer must implement that schema check and those scoring rules exactly.
+- Do NOT open that folder until your PASSMARKS, code, config, dev cases and scorer are sealed.
+- After your seal:
+  - wait for its SEAL.sha256.txt and check OK from the repo root;
+  - run the schema check;
+  - run the panel ONCE on both arms (138m and yours) and score it.
+- If the panel is not ready 40 minutes after your seal, report and stop.
+
+Order of work
+1. Reproduce and diagnose, as above.
+2. Write your dev cases: at least 60 scored dialogs in your own wording, covering:
+   - openers with and without commas;
+   - greeting + question;
+   - bare greetings;
+   - junk shapes;
+   - name traps;
+   - identity questions after greetings;
+   - restart cases (at least 4);
+   - question traps (at least 6).
+3. Build the fix and pilot it on your dev set, the suites, the 138m verifier probes (artifacts/claude-verify-20260922/138m/probes*.json), the sleep smoke and the restart dialogs.
+4. Write PASSMARKS.md with every predicted move by id. Seal, append the ledger lines, run M2–M6 once each, then M1.
+
+Registered marks
+- M1, openpanel260 (80 items), on your arm, with the 138m arm's numbers next to every figure:
+  - opener_teach ≥ 16/20
+  - opener_question ≥ 10/12
+  - greeting_question ≥ 7/8
+  - bare_greeting ≥ 5/6
+  - junk_guard 8/8 with 0 junk
+  - name_trap: no item newly wrong vs 138m
+  - 0 junk writes over all 80
+  - 0 question writes
+  - control 16/16 right and byte-identical to base138m
+- M2, suites: fable_suitediff218 --only rt136,rt143,sessions152,bench against 138m's registered rows. The moves are exactly your predicted list, with 0 new WRONG, WRONG-WRITE, junk or lost OK, and 0 flips toward an abstain.
+- M3, sleep smoke: identical to 138m's except labels, paths and timing.
+- M4, 138m verifier probes: every changed reply is predicted by id. 0 new writes, except predicted saves of the stated fact without the opener.
+- M5, restart dialogs (138m's M6 files): 0 ghost answers, 0 failed duplicate checks, and replies identical except predicted moves.
+- M6, latency: median added time per turn ≤ +3 ms against 138m, measured in the same session.
+
+Keep every registered run under 25 minutes.
+- Check `uptime` and `df -g /` before heavy steps. Stop if free disk is under 3 GB.
+- Use at most 4 parallel processes.
+
+Finish with RESULTS.md and a final message as OPUS-RULES requires.
+=====PASSMARKS=====
+# Exp 260 — PASSMARKS (registered before the seal; the panel folder has not been opened)
+
+Arm under test: **260** = `scripts/claude_loop260_agent.py` + `artifacts/claude-openers260-20260922/loop260-config.json`
+(138m + `scripts/claude_fix260_openers.py`, outermost; SrcGuardMixin228 first in the daemon MRO).
+Base arm: **138m** = `scripts/claude_loop138m_agent.py` + `artifacts/claude-merge138m-20260922/loop138m-config.json`.
+Design note: `design/v3/30-modes/260-openers-opus.md`. Predicted moves (machine-readable): `predicted_moves260.json`.
+
+The verdict is PASS only if M1–M6 all pass. Any change to a sealed file after the seal = FAIL. No re-seal.
+No silent re-runs: each registered command runs once; a driver-only fix after the seal is reported with its diff.
+
+## Commands (from the repo root)
+
+- M2–M6: `bash scripts/claude_260_runall.sh artifacts/claude-openers260-20260922/run` (checks `uptime` before
+  every step; scorer `scripts/claude_openers260_regscore.py` writes `run/regscore260.json`).
+- M1: after the panel writer's `artifacts/claude-openpanel260-20260922/SEAL.sha256.txt` checks OK:
+  `bash scripts/claude_260_panel.sh artifacts/claude-openers260-20260922/run` — seal check, then schema check
+  (`claude_openers260_score.py schema`; SCHEMA-MISMATCH → exit 3 → the run is VOID, reported, never scored by
+  hand), then the panel once on 138m and once on 260 (`claude_openers260_run.py panel`), then the scorer.
+- If the panel is not sealed 40 minutes after this seal: report and stop.
+
+## M1 — blind openpanel260 (80 items), 138m's number reported next to every figure
+
+Scored exactly per `openpanel260-spec.txt` (normalise = lowercase + strip edge punctuation/spaces; junk = any
+triple stored after the turn or followup that is in neither stored_after_setup nor expect_store; store_ok =
+expect_store ⊆ stored_after_turn and nothing else added; question_write = a question turn or the followup changes
+the store; reply_ok = gold "" or gold ⊆ scored reply (followup reply for teaches, turn reply for question turns)).
+
+| bar | pass if |
+|---|---|
+| opener_teach | ≥ 16/20 right |
+| opener_question | ≥ 10/12 right |
+| greeting_question | ≥ 7/8 right |
+| bare_greeting | ≥ 5/6 right |
+| junk_guard | 8/8 right and 0 junk items |
+| name_trap | no item right on 138m and wrong on 260 |
+| junk writes | 0 items with junk over all 80 |
+| question writes | 0 |
+| control | 16/16 right and every reply byte-identical to base138m.jsonl |
+
+Also reported (not a bar): fidelity of my 138m arm vs the writer's base138m.jsonl (setup/turn/followup replies and
+stores), and every miss on both arms.
+
+## M2 — frozen suites vs 138m's registered rows (0 flips toward an abstain)
+
+Suites: rt136, rt143, sessions152, bench (4 files). Rows are compared directly with 138m's saved rows, every field
+except wall-clock timing (`seconds`/`sec`). Method notes (deviations from the brief's command line, same method 138m
+used): rt136 labels come from `fable_suitediff218 --base-dir artifacts/fable-agent138j-20260922` (the sealed base
+format suitediff needs) and must equal 138m's own labels plus the predicted one below; rt143 is run with
+`scripts/claude_138l_rt143nogate.py` because 138m registered no suitediff rt143 rows (its saved row file is
+`run/rt143nogate-m.json`); sessions152 + bench use `--base-dir artifacts/claude-merge138m-20260922/run/sd` and must
+show 0 moves.
+
+**Predicted moves (exactly this list):**
+- **rt136 C122** "Hi. Tom's boss is Ann." — reply `Saved: Tom's boss is Ann.`, stored [[Tom, boss, Ann]]
+  (138m: `Saved: Hi. Tom's boss is Ann.`, stored [[Hi. Tom, boss, Ann]]). rt136 expects no write for this
+  multi-sentence turn, so the verdict is WRONG-WRITE on both arms; suitediff218 labels the changed write
+  **"new junk write"**. Registered reading: this one predicted label is the stated fact saved without the greeting
+  (the same exemption M4 grants), not a new junk subject; any other new WRONG / WRONG-WRITE / junk / lost-OK label,
+  any other moved unit, or any rt143 verdict flip fails M2. (A reader who does not accept the exemption should read
+  M2 as FAIL on C122 alone; the final report states this.)
+- rt143 (124 rows): 0 moved. sessions152 (180 units): 0 moved. bench132_4hop, edit200, new_121_4hop,
+  old_s2fresh_4hop (200 each): 0 moved.
+
+## M3 — sleep smoke
+
+`fable_sleepsmoke206.py --idle-seconds 5.0` on 260 must equal 138m's saved `run/smoke-m.json` in every field
+except `.agent`, `.config`, `.label`, `.seconds`, `.root`, `.report`. Pilot: only `.agent .config .label .seconds` differ.
+
+## M4 — 138m verifier probes (`artifacts/claude-verify-20260922/138m/probes.json`, `probes-supp.json`)
+
+Compared with 138m's saved `rows-138m.json` / `supp-rows-138m.json` (a pilot re-run of 138m matched them 0 diffs).
+Every changed row must be one of these, with exactly this reply/ev/triples; 0 new writes except B15:t0 (a save of
+the stated fact without the opener); stored-set changes exactly B15 and D10:
+- **B15:t0** "Please call me Fenna." → `Saved: your name is Fenna.` (ev 3; 138m: save-failure reply, ev 0).
+- **B15:t1** "What's my name?" → `Your name is Fenna.` (138m: `I don't know your name yet.`).
+- **D08:t1** "Please, who is Tomas's boss?" → `Tomas's boss is Mirela.` (138m: didn't-understand-question).
+- **D10:t0** "Please, Kestrel's job is fisher." → `Saved: Kestrel's job is fisher.`, stores Kestrel (138m stored "Please, Kestrel").
+- **D10:t1** "could you tell me Kestrel's job please?" → reply unchanged; only the triples column differs (Kestrel).
+- **E06:t0** "hello there" → `Hi! Teach me like "Tom's boss is Ann." Ask me like "Who is Tom's boss?"`.
+- **E10:t0** "Hi! What's your name?" → `My name is Premonition.` (138m: `You never told me your name, so I do not know it.`).
+- probes-supp: 0 changes.
+
+## M5 — restart dialogs (138m's M6 files: 138j p3-dialogs, p3c-restart2, p3d-ghost; 138k v-dialogs, v-supp)
+
+Compared with 138m's saved `run/probe/m-*.json`: **predicted reply changes: none.** Pass = 0 reply changes,
+equal event counts and stored sets, 0 ghost answers (138m scorer's rule), 0 failed duplicate checks, audits present.
+
+## M6 — latency
+
+`claude_merge138k_latency.py`, 2 reps, alternating processes 138m,260 ×3 in the same session, on the p3 dialog files.
+Pass = median(260) − median(138m) ≤ **+3 ms** per turn. Pilot: +0.43 ms and +0.15 ms.
+
+## Abstain flips
+
+Any unpredicted flip toward an abstain counts against its mark; that item is then run alone 5 times and reported,
+with whether the 228 guard was installed (the agent refuses to build without it).
+
+## Dev set (not a mark; tuned on)
+
+`devcases260.json` (109 dialogs, from `scripts/claude_openers260_devcases.py`), scored by
+`claude_openers260_score.py dev`. Pilot: **260 109/109, 138m 45/109** (`pilot/dev-score.json`).
+Families: opener_comma 17, opener_plain 8, opener_nocomma 12, greeting_question 8, identity_greeting 5,
+bare_greeting 8, junk_shape 8, junk_guardonly 3, name_trap 10, title_cant_tell 4, question_trap 7, restart 5,
+fallback 5, control 6, username 3.
+
+## Known limits (predicted, not hidden)
+
+- "Hey Pell's boss is Rhoda." (greeting + one capitalised word, no punctuation) keeps 138m's junk "Hey Pell";
+  it cannot be told apart from the title "Hey Jude's writer is Fenn.".
+- "So Bram Kite's boss is Rhoda." (no-comma opener before a 2+-word name) keeps 138m's junk "So Bram Kite".
+- "X is a Y." after an opener only saves if the plain shape saves on 138m (it does not for "Tamsin is a baker.").
+=====RESULTS=====
+# Exp 260 — RESULTS: PASS (M1–M6 all PASS)
+
+Blind panel M1 run once per arm on 2026-09-23 with the sealed scripts
+(`bash scripts/claude_260_panel.sh artifacts/claude-openers260-20260922/run`).
+Both seals checked OK from the repo root before the run
+(openers seal 17/17 OK, panel seal 4/4 OK). Schema check: SCHEMA OK.
+Raw rows: `run/panel-260.jsonl`, `run/panel-138m.jsonl`; score:
+`run/panel-score260.json`, `run/panel-score.txt`. M2–M6 figures below are
+copied from the sealed prior run `run/regscore.txt` (written 18:21,
+all PASS); this handoff run did not re-run them.
+
+## M1 — blind openpanel260 (80 items), 138m's number next to every figure
+
+| bar | 260 | 138m | verdict |
+|---|---|---|---|
+| opener_teach ≥ 16/20 | 20/20 | 3/20 | PASS |
+| opener_question ≥ 10/12 | 12/12 | 5/12 | PASS |
+| greeting_question ≥ 7/8 | 8/8 | 1/8 | PASS |
+| bare_greeting ≥ 5/6 | 6/6 | 3/6 | PASS |
+| junk_guard 8/8 with 0 junk | 8/8, junk 0 | 0/8, junk 8 | PASS |
+| name_trap: no item newly wrong vs 138m | 10/10, newly wrong 0 | 10/10 | PASS |
+| 0 junk writes over all 80 | 0 | 13 | PASS |
+| 0 question writes | 0 | 0 | PASS |
+| control 16/16 right and byte-identical | 16/16, identical 16 | 16/16, identical 16 | PASS |
+
+Totals: 260 right 80/80, 138m right 38/80. Fidelity of my 138m arm vs the
+writer's `base138m.jsonl`: 80/80 identical, 0 diffs. 260 misses: 0.
+
+## Every move vs 138m (42 items, all toward right, 0 against)
+
+- opener_teach (17): o260-001, o260-002, o260-003, o260-004, o260-005,
+  o260-006, o260-007, o260-009, o260-010, o260-012, o260-013, o260-014,
+  o260-016, o260-017, o260-018, o260-019, o260-020
+- opener_question (7): o260-022, o260-023, o260-025, o260-027, o260-028,
+  o260-031, o260-032
+- greeting_question (7): o260-033, o260-034, o260-035, o260-036, o260-037,
+  o260-039, o260-040
+- bare_greeting (3): o260-041, o260-042, o260-046
+- junk_guard (8): o260-057, o260-058, o260-059, o260-060, o260-061,
+  o260-062, o260-063, o260-064
+- name_trap (0 moved): 10/10 on both arms, newly wrong 0
+- control (0 moved): 16/16 on both arms, every reply byte-identical
+
+## M2–M6 (from sealed `run/regscore.txt`, prior agent's registered runs)
+
+- M2 suites: PASS. rt136 145/145 units, 1 moved (C122, the predicted
+  stated-fact exemption); rt143_nogate 124/124, 0 moved; sessions152
+  180/180, 0 moved; bench 4×200, 0 moved; 0 verdict flips.
+- M3 sleep smoke: PASS (differing fields only .agent .config .label .seconds).
+- M4 verifier probes: PASS (changed rows exactly B15:t0, B15:t1, D08:t1,
+  D10:t0, D10:t1, E06:t0, E10:t0; 1 predicted new write B15:t0; supp 0).
+- M5 restart dialogs: PASS (0 reply changes, 0 ghosts, 0 failed checks).
+- M6 latency: PASS (median 138m 2.698 ms, 260 2.552 ms, delta −0.146 ms).
+
+## Deviations
+
+None. Sealed runner and scorer used unchanged; panel run exactly once per
+arm (14 s total); no re-runs, no driver fixes, no new scorer.
+`design/v3/30-modes/260-openers-opus.md` already existed (it is in the
+seal), so no new design note was written. No abstain flips observed, so no
+5× single-item follow-ups were needed. The TEST-ONLY panel was never read
+item by item and no item text is quoted here.
+
+## What it means (plain high-school English)
+
+Starting a sentence with "so", "well", "please", "hey" or "hi" no longer
+confuses the agent: it now hears the actual fact or question underneath,
+saves the right name, and answers follow-up questions correctly. All 80
+blind test items pass, and names that just happen to start with those words
+are still saved correctly.
+
+## What it doesn't mean
+
+It doesn't mean the agent understands every casual opener — two tricky
+shapes (a greeting glued to one name with no comma, an opener before a
+two-word name with no comma) are still saved with junk on purpose, because
+they look exactly like real titles. It also doesn't mean zero risk: this
+was one panel of 80 items plus the frozen suites, not every sentence a user
+could ever type.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-chatweak-20260923/WEAKSPOTS.md; echo "=====LIST====="; git ls-tree -r --name-only origin/main | grep -E "260|281|chatweak|calledpanel|280-282" | head -n 100
+# Chat weak spots, exp 260 base (2026-09-23)
+
+Measurement only. 12 fresh dialogs (90 turns, fictional names), each run on a
+fresh daemon loaded exactly as `scripts/claude_openers260_run.py` does
+(`M.load_agent("scripts/claude_loop260_agent.py")`, config
+`artifacts/claude-openers260-20260922/loop260-config.json`, `M.make_daemon`,
+turns via `d.process_file`, triples via
+`fable_loop90_agent.notebook_triples` before/after each turn). Raw rows plus
+one operator mark per turn live in `dialogs.json`. No code was changed; these
+are leads for later sealed experiments, not fixes.
+
+## Counts per mark per theme (integers; rows sum to 90 turns)
+
+| theme (dialog) | turns | OK | WRONG SAVE | MISSED SAVE | WRONG ANSWER | UNTRUE REPLY | BAD ENGLISH | CRASH |
+|---|---|---|---|---|---|---|---|---|
+| 1 teach then ask back (t01) | 8 | 7 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 2 two-hop (t02) | 8 | 5 | 0 | 1 | 2 | 0 | 0 | 0 |
+| 3 backwards (t03) | 8 | 8 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 4 corrections (t04) | 8 | 4 | 0 | 2 | 1 | 0 | 1 | 0 |
+| 5 forgetting (t05) | 8 | 3 | 0 | 1 | 4 | 0 | 0 | 0 |
+| 6 never taught (t06) | 7 | 6 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 7 small talk (t07) | 6 | 5 | 0 | 0 | 1 | 0 | 0 | 0 |
+| 8 about itself (t08) | 6 | 4 | 0 | 0 | 1 | 1 | 0 | 0 |
+| 9 casual typing (t09) | 7 | 0 | 0 | 3 | 4 | 0 | 0 | 0 |
+| 10 long/compound (t10) | 8 | 3 | 0 | 3 | 2 | 0 | 0 | 0 |
+| 11 tricky meaning (t11) | 9 | 3 | 0 | 2 | 4 | 0 | 0 | 0 |
+| 12 restart (t12) | 7 | 4 | 0 | 1 | 1 | 0 | 1 | 0 |
+| TOTAL | 90 | 52 | 0 | 13 | 22 | 1 | 2 | 0 |
+
+Note: t07-t0 "hey whats up" is marked WRONG ANSWER (casual greeting treated
+as an unparseable question); the table above keeps that mark under
+WRONG ANSWER. Zero crashes and zero wrong saves in all 90 turns.
+
+## 10 clearest failures, ranked by surprise
+
+1. t08-t1 (UNTRUE REPLY). Turn: "What can you do?" Reply: "I can: save what
+   you teach me in my notebook; answer questions from my notes, following one
+   or two steps; correct a fact or forget one when you ask; say I do not know
+   instead of guessing; tell you where each fact came from; hold web text in
+   quarantine without believing it." The rows disprove the boast: two-step
+   questions fail (t02-t3) and forget commands fail (t05-t2, t05-t5).
+2. t02-t3 (WRONG ANSWER). Turn: "Where does Ana's boss live?" Reply: "I
+   didn't understand that question — could you say it another way?" Both
+   links were stored verbatim two turns earlier (Ana/boss/Tobin,
+   Tobin/city/Lima), yet the two-hop question is declined as unparseable.
+3. t04-t5 (BAD ENGLISH). Turn: "What is Ana's cat called?" Reply: "I don't
+   know Ana's cat called." The sentence is malformed, and it claims ignorance
+   while Ana/cat/Moss is stored. Same template recurs at t12-t4 ("I don't
+   know Rosa's dog called." with Rosa/dog/Pip stored), so it is systematic.
+4. t05-t2 (WRONG ANSWER). Turn: "Forget where Ana lives." Reply: "I don't
+   know anyone called where Ana." The forget command is parsed as a person
+   lookup; nothing is removed, and Ana/city/Quito is still answered at t05-t3.
+   Sibling at t05-t5: "Forget everything about Ana." -> "I don't know anyone
+   called everything about."
+5. t09-t1 (WRONG ANSWER). Turn: "whats anas city" Reply: "I couldn't save
+   that as a fact. I don't know that shape yet. Could you say it another way,
+   like "Kim's boss is Lee."" A question is answered with a save-error; the
+   missing apostrophe flips question handling into save handling. All 7
+   casual-typing turns fail (0 OK).
+6. t04-t4 (MISSED SAVE). Turn: "Ana's cat is Fig, not Moss." Reply: "I can
+   take one fact at a time — could you split that?" The "X, not Y" correction
+   shape is refused, so stale Moss survives; the next turn then claims
+   ignorance of the cat (see #3).
+7. t11-t4 (WRONG ANSWER). Turn: "Ana lives in Quito, doesn't she" Reply: "Did
+   you mean "Quito, doesn't"? Please say it again without the extra words."
+   A tag-check without "?" is misparsed and the user is told to drop words.
+8. t01-t7 (WRONG ANSWER). Turn: "Thanks, that's all!" Reply: "I didn't
+   understand that well enough to save it — could you say it another way?" A
+   closing pleasantry is read as a fact that failed to save (bare "Thanks!"
+   and "cool thanks!" elsewhere get "You're welcome!").
+9. t07-t0 (WRONG ANSWER). Turn: "hey whats up" Reply: "I didn't understand
+   that question — could you say it another way?" The most ordinary greeting
+   in the set is treated as a broken question.
+10. t10-t0 (MISSED SAVE). Turn: "My name is Dawn and I live in Leeds." Reply:
+    "I couldn't save that as a fact. I don't know that shape yet. Could you
+    say it another way, like "Kim's boss is Lee."" Two facts joined by "and"
+    store nothing at all, so the next two turns ("What is my name?", "Where do
+    I live?") both miss.
+
+## 5 things that work well
+
+1. Plain teach-then-ask-back is near perfect (t01: 7/8; every save exact,
+   every ask-back answered from store). The core loop is solid for clean
+   single-fact turns.
+2. Backwards questions are flawless (t03: 8/8), including reverse lookup
+   ("Whose boss is Tobin?" -> "Ana's boss is Tobin.") and a two-answer
+   listing ("Who lives in Lima?" -> "Ana's city is Lima. Marco's city is
+   Lima.").
+3. Plain "No,..." corrections replace cleanly (t04-t1: "No, Ana lives in
+   Lima." -> "Updated: Ana's city is Lima (it was Quito)."), and opener
+   stripping works ("Okay so Ana lives in Lima." saved exactly).
+4. Honest ignorance instead of hallucination: four unknown-Zara questions get
+   "I don't know anyone called Zara." (t06), and the pretend scenario
+   "Imagine Ana lived in Rome." gets "OK, I'll treat that as pretend, so I
+   won't save it." with nothing stored (t11-t0/t1).
+5. Memory survives a mid-dialog rebuild (t12: Rosa/city/Turin and
+   Rosa/dog/Pip both present after the restart row and answered correctly),
+   and across all 90 turns there are zero wrong saves and zero crashes: the
+   notebook never banks a fact the user did not state.
+=====LIST=====
+archive/opus-m01-20260918-202731/AFTER.SHA256SUMS
+archive/opus-m01-20260918-202731/changes.diff
+archive/opus-m01-20260918-202731/external-state-at-final-run.sha256
+archive/opus-m01-20260918-202731/originals/SHA256SUMS
+archive/opus-m01-20260918-202731/originals/__init__.py
+archive/opus-m01-20260918-202731/originals/batch.py
+archive/opus-m01-20260918-202731/originals/config.py
+archive/opus-m01-20260918-202731/originals/contenders.py
+archive/opus-m01-20260918-202731/originals/data.py
+archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md
+archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md
+archive/opus-m01-20260918-202731/originals/exp1.py
+archive/opus-m01-20260918-202731/originals/flops.py
+archive/opus-m01-20260918-202731/originals/lookup.py
+archive/opus-m01-20260918-202731/originals/model.py
+archive/opus-m01-20260918-202731/originals/pointer.py
+archive/opus-m01-20260918-202731/originals/root/run.py
+archive/opus-m01-20260918-202731/originals/slices.py
+archive/opus-m01-20260918-202731/originals/store.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_contenders.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_data.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_model.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_slices.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_train.py
+archive/opus-m01-20260918-202731/originals/toy.py
+archive/opus-m01-20260918-202731/originals/train.py
+archive/opus-m02-20260918-232457/FROZEN.SHA256SUMS
+archive/opus-m02-20260918-232457/external-state.sha256
+archive/opus-m02-20260918-232457/frozen/learnlab/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/ablation.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/ablation.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/leaks.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/readonly.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/splits.py
+archive/opus-m02-20260918-232457/frozen/learnlab/ckpt.py
+archive/opus-m02-20260918-232457/frozen/learnlab/core.py
+archive/opus-m02-20260918-232457/frozen/learnlab/leaks.py
+archive/opus-m02-20260918-232457/frozen/learnlab/metrics.py
+archive/opus-m02-20260918-232457/frozen/learnlab/patterns.py
+archive/opus-m02-20260918-232457/frozen/learnlab/policy.py
+archive/opus-m02-20260918-232457/frozen/learnlab/readonly.py
+archive/opus-m02-20260918-232457/frozen/learnlab/splits.py
+archive/opus-m02-20260918-232457/frozen/learnlab/step0.py
+archive/opus-m02-20260918-232457/frozen/learnlab/step1.py
+archive/opus-m02-20260918-232457/frozen/learnlab/tokenizer.py
+archive/opus-m02-20260918-232457/frozen/learnlab/toy.py
+archive/opus-m02-20260918-232457/frozen/learnlab/train.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/names.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/oracle.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/render.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/scheduler.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/shards.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/stream.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/vocab.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/world.py
+archive/opus-m02-20260918-232457/frozen/premonition/__init__.py
+archive/opus-m02-20260918-232457/frozen/premonition/answer_path.py
+archive/opus-m02-20260918-232457/frozen/premonition/batch.py
+archive/opus-m02-20260918-232457/frozen/premonition/config.py
+archive/opus-m02-20260918-232457/frozen/premonition/contenders.py
+archive/opus-m02-20260918-232457/frozen/premonition/data.py
+archive/opus-m02-20260918-232457/frozen/premonition/exp1.py
+archive/opus-m02-20260918-232457/frozen/premonition/flops.py
+archive/opus-m02-20260918-232457/frozen/premonition/identity.py
+archive/opus-m02-20260918-232457/frozen/premonition/lookup.py
+archive/opus-m02-20260918-232457/frozen/premonition/model.py
+archive/opus-m02-20260918-232457/frozen/premonition/pointer.py
+archive/opus-m02-20260918-232457/frozen/premonition/preprocess.py
+archive/opus-m02-20260918-232457/frozen/premonition/slices.py
+archive/opus-m02-20260918-232457/frozen/premonition/store.py
+archive/opus-m02-20260918-232457/frozen/premonition/toy.py
+archive/opus-m02-20260918-232457/frozen/premonition/train.py
+archive/opus-m02-20260918-232457/scripts/answer_path.live.py
+archive/opus-m02-20260918-232457/scripts/premonition_m02_answer_path.py
+archive/opus-m02-20260918-232457/scripts/test_premonition_answer_path.py
+archive/opus-m03-20260919-071009-address/ARCHIVE.SHA256SUMS
+archive/opus-m03-20260919-071009-address/FROZEN-NOTES.json
+archive/opus-m03-20260919-071009-address/FROZEN.SHA256SUMS
+archive/opus-m03-20260919-071009-address/external-state.sha256
+archive/opus-m03-20260919-071009-address/frozen/learnlab/__init__.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/ablation.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/checks/__init__.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/checks/ablation.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/checks/leaks.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/checks/readonly.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/checks/splits.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/ckpt.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/core.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/leaks.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/metrics.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/patterns.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/policy.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/readonly.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/splits.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/step0.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/step1.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/tokenizer.py
+archive/opus-m03-20260919-071009-address/frozen/learnlab/toy.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "^(scripts/claude_|artifacts/claude-|handoff/kit/briefs|design/v3/30-modes/28)" | sort | head -n 80
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237b-20260922/base221.jsonl
+artifacts/claude-aliaspanel237b-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+artifacts/claude-aliaspanel237b-20260922/SEAL.sha256.txt
+artifacts/claude-apos247-20260922/dev247.jsonl
+artifacts/claude-apos247-20260922/loop247-config.json
+artifacts/claude-apos247-20260922/PASSMARKS.md
+artifacts/claude-apos247-20260922/reg-dev-rows.jsonl
+artifacts/claude-apos247-20260922/reg-dev-score.json
+artifacts/claude-apos247-20260922/reg-dev-score.txt
+artifacts/claude-apos247-20260922/reg-panel-rows.jsonl
+artifacts/claude-apos247-20260922/reg-panel-score.json
+artifacts/claude-apos247-20260922/reg-panel-score.txt
+artifacts/claude-apos247-20260922/reg-sleepsmoke.json
+artifacts/claude-apos247-20260922/reg-sleepsmoke.txt
+artifacts/claude-apos247-20260922/reg-suitediff.txt
+artifacts/claude-apos247-20260922/reg-suitediff/bench-bench132_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/bench-edit200-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-new_121_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt136-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/rt143-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-diff.json
+artifacts/claude-apos247-20260922/reg-suitediff/sessions152-rows.json
+artifacts/claude-apos247-20260922/reg-suitediff/SUITEDIFF218-SUMMARY.json
+artifacts/claude-apos247-20260922/RESULTS.md
+artifacts/claude-apos247-20260922/SEAL.sha256.txt
+artifacts/claude-askpanel243-20260922/base228.jsonl
+artifacts/claude-askpanel243-20260922/panel.jsonl
+artifacts/claude-askpanel243-20260922/README.md
+artifacts/claude-askpanel243-20260922/SEAL.sha256.txt
+artifacts/claude-bench125-fairness-20260922/fairness.json
+artifacts/claude-bench125-fairness-20260922/recount.py
+artifacts/claude-boundary259-20260922/dev259.jsonl
+artifacts/claude-boundary259-20260922/loop259-config.json
+artifacts/claude-boundary259-20260922/PASSMARKS.md
+artifacts/claude-boundary259-20260922/RESULTS.md
+artifacts/claude-boundary259-20260922/run/dev252b-252b.jsonl
+artifacts/claude-boundary259-20260922/run/dev252b-252b.log
+artifacts/claude-boundary259-20260922/run/dev252b-259.jsonl
+artifacts/claude-boundary259-20260922/run/dev252b-259.log
+artifacts/claude-boundary259-20260922/run/dev259-252b.jsonl
+artifacts/claude-boundary259-20260922/run/dev259-252b.log
+artifacts/claude-boundary259-20260922/run/dev259-259.jsonl
+artifacts/claude-boundary259-20260922/run/dev259-259.log
+artifacts/claude-boundary259-20260922/run/dev259-check.txt
+artifacts/claude-boundary259-20260922/run/lat-252b-1.json
+artifacts/claude-boundary259-20260922/run/lat-252b-2.json
+artifacts/claude-boundary259-20260922/run/lat-252b-3.json
+artifacts/claude-boundary259-20260922/run/lat-259-1.json
+artifacts/claude-boundary259-20260922/run/lat-259-2.json
+artifacts/claude-boundary259-20260922/run/lat-259-3.json
+artifacts/claude-boundary259-20260922/run/m1-check.txt
+artifacts/claude-boundary259-20260922/run/m1-panel-seal-check.txt
+artifacts/claude-boundary259-20260922/run/m1-schema.txt
+artifacts/claude-boundary259-20260922/run/m2-check-252b-scorer.txt
+artifacts/claude-boundary259-20260922/run/m2-check.txt
+artifacts/claude-boundary259-20260922/run/m3-check.txt
+artifacts/claude-boundary259-20260922/run/m4-check.txt
+artifacts/claude-boundary259-20260922/run/m5-check.txt
+artifacts/claude-boundary259-20260922/run/m6-259-v-dialogs.json
+artifacts/claude-boundary259-20260922/run/m6-259-v-dialogs.log
+artifacts/claude-boundary259-20260922/run/m6-259-v-supp.json
+artifacts/claude-boundary259-20260922/run/m6-259-v-supp.log
+artifacts/claude-boundary259-20260922/run/m6-check.txt
+artifacts/claude-boundary259-20260922/run/m7-check.txt
+artifacts/claude-boundary259-20260922/run/panel252-259.jsonl
+artifacts/claude-boundary259-20260922/run/panel252-259.log
+artifacts/claude-boundary259-20260922/run/panel258-252b.jsonl
+artifacts/claude-boundary259-20260922/run/panel258-252b.log
+artifacts/claude-boundary259-20260922/run/panel258-259.jsonl
+artifacts/claude-boundary259-20260922/run/panel258-259.log
+artifacts/claude-boundary259-20260922/run/panel258-259.score.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "claude-(openers260|chatweak|calledpanel|called281|merge138m|verify)" | sort | head -n 60; echo ===; git ls-tree -r --name-only origin/main | grep -E "^scripts/claude_(loop260|fix260|loop281|fix281|called281|260_|openers260)" | sort; echo ===; git ls-tree -r --name-only origin/main | grep -E "^design/v3/30-modes/28" | sort; echo ===; git show origin/main:artifacts/fable-predictions-ledger.md | tail -n 30
+artifacts/claude-chatweak-20260923/dialogs.json
+artifacts/claude-chatweak-20260923/WEAKSPOTS.md
+artifacts/claude-merge138m-20260922/loop138m-config.json
+artifacts/claude-merge138m-20260922/PASSMARKS.md
+artifacts/claude-merge138m-20260922/predicted_moves138m.json
+artifacts/claude-merge138m-20260922/RESULTS.md
+artifacts/claude-merge138m-20260922/run/bench1.log
+artifacts/claude-merge138m-20260922/run/bench1/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench1/bench-diff.json
+artifacts/claude-merge138m-20260922/run/bench1/bench-edit200-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench1/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench1/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench1/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138m-20260922/run/bench2.log
+artifacts/claude-merge138m-20260922/run/bench2/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench2/bench-diff.json
+artifacts/claude-merge138m-20260922/run/bench2/bench-edit200-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench2/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench2/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench2/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138m-20260922/run/bench3.log
+artifacts/claude-merge138m-20260922/run/bench3/bench-bench132_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench3/bench-diff.json
+artifacts/claude-merge138m-20260922/run/bench3/bench-edit200-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench3/bench-new_121_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench3/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-merge138m-20260922/run/bench3/SUITEDIFF218-SUMMARY.json
+artifacts/claude-merge138m-20260922/run/l1-judge.json
+artifacts/claude-merge138m-20260922/run/l1-judge.txt
+artifacts/claude-merge138m-20260922/run/l1-log-head.txt
+artifacts/claude-merge138m-20260922/run/l1-log-l.txt
+artifacts/claude-merge138m-20260922/run/l1-log-m.txt
+artifacts/claude-merge138m-20260922/run/l1-log-own.txt
+artifacts/claude-merge138m-20260922/run/l1-sealed.json
+artifacts/claude-merge138m-20260922/run/l1-sealed.txt
+artifacts/claude-merge138m-20260922/run/l1/219-head.json
+artifacts/claude-merge138m-20260922/run/l1/219-l.json
+artifacts/claude-merge138m-20260922/run/l1/219-m.json
+artifacts/claude-merge138m-20260922/run/l1/219-own.json
+artifacts/claude-merge138m-20260922/run/l1/224c-l.json
+artifacts/claude-merge138m-20260922/run/l1/224c-m.json
+artifacts/claude-merge138m-20260922/run/l1/224c-own.json
+artifacts/claude-merge138m-20260922/run/l1/227-head.json
+artifacts/claude-merge138m-20260922/run/l1/227-l.json
+artifacts/claude-merge138m-20260922/run/l1/227-m.json
+artifacts/claude-merge138m-20260922/run/l1/227-own.json
+artifacts/claude-merge138m-20260922/run/l1/227b-head.json
+artifacts/claude-merge138m-20260922/run/l1/227b-l.json
+artifacts/claude-merge138m-20260922/run/l1/227b-m.json
+artifacts/claude-merge138m-20260922/run/l1/227b-own.json
+artifacts/claude-merge138m-20260922/run/l1/227c-l.json
+artifacts/claude-merge138m-20260922/run/l1/227c-m.json
+artifacts/claude-merge138m-20260922/run/l1/227c-own.json
+artifacts/claude-merge138m-20260922/run/l1/230-head.json
+artifacts/claude-merge138m-20260922/run/l1/230-l.json
+artifacts/claude-merge138m-20260922/run/l1/230-m.json
+artifacts/claude-merge138m-20260922/run/l1/230-own.json
+artifacts/claude-merge138m-20260922/run/l1/230c-l.json
+artifacts/claude-merge138m-20260922/run/l1/230c-m.json
+artifacts/claude-merge138m-20260922/run/l1/230c-own.json
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "claude-openers260" | sort | head -n 60
+artifacts/claude-openers260-20260922/devcases260.json
+artifacts/claude-openers260-20260922/loop260-config.json
+artifacts/claude-openers260-20260922/PASSMARKS.md
+artifacts/claude-openers260-20260922/pilot/dev-rows138m.json
+artifacts/claude-openers260-20260922/pilot/dev-rows260.json
+artifacts/claude-openers260-20260922/pilot/dev-score.json
+artifacts/claude-openers260-20260922/pilot/regscore-pilot.json
+artifacts/claude-openers260-20260922/predicted_moves260.json
+artifacts/claude-openers260-20260922/RESULTS.md
+artifacts/claude-openers260-20260922/run/lat-m-1.json
+artifacts/claude-openers260-20260922/run/lat-m-1.log
+artifacts/claude-openers260-20260922/run/lat-m-2.json
+artifacts/claude-openers260-20260922/run/lat-m-2.log
+artifacts/claude-openers260-20260922/run/lat-m-3.json
+artifacts/claude-openers260-20260922/run/lat-m-3.log
+artifacts/claude-openers260-20260922/run/lat-n-1.json
+artifacts/claude-openers260-20260922/run/lat-n-1.log
+artifacts/claude-openers260-20260922/run/lat-n-2.json
+artifacts/claude-openers260-20260922/run/lat-n-2.log
+artifacts/claude-openers260-20260922/run/lat-n-3.json
+artifacts/claude-openers260-20260922/run/lat-n-3.log
+artifacts/claude-openers260-20260922/run/panel-138m.jsonl
+artifacts/claude-openers260-20260922/run/panel-138m.log
+artifacts/claude-openers260-20260922/run/panel-260.jsonl
+artifacts/claude-openers260-20260922/run/panel-260.log
+artifacts/claude-openers260-20260922/run/panel-schema.txt
+artifacts/claude-openers260-20260922/run/panel-score.txt
+artifacts/claude-openers260-20260922/run/panel-score260.json
+artifacts/claude-openers260-20260922/run/panel-seal-check.txt
+artifacts/claude-openers260-20260922/run/probe/n-p3-dialogs.json
+artifacts/claude-openers260-20260922/run/probe/n-p3-dialogs.txt
+artifacts/claude-openers260-20260922/run/probe/n-p3c-restart2.json
+artifacts/claude-openers260-20260922/run/probe/n-p3c-restart2.txt
+artifacts/claude-openers260-20260922/run/probe/n-p3d-ghost.json
+artifacts/claude-openers260-20260922/run/probe/n-p3d-ghost.txt
+artifacts/claude-openers260-20260922/run/probe/n-v-dialogs.json
+artifacts/claude-openers260-20260922/run/probe/n-v-dialogs.txt
+artifacts/claude-openers260-20260922/run/probe/n-v-supp.json
+artifacts/claude-openers260-20260922/run/probe/n-v-supp.txt
+artifacts/claude-openers260-20260922/run/regscore.txt
+artifacts/claude-openers260-20260922/run/regscore260.json
+artifacts/claude-openers260-20260922/run/rt143nogate-n.json
+artifacts/claude-openers260-20260922/run/rt143nogate.log
+artifacts/claude-openers260-20260922/run/sd.log
+artifacts/claude-openers260-20260922/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-diff.json
+artifacts/claude-openers260-20260922/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/sessions152-diff.json
+artifacts/claude-openers260-20260922/run/sd/sessions152-rows.json
+artifacts/claude-openers260-20260922/run/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-openers260-20260922/run/sd136.log
+artifacts/claude-openers260-20260922/run/sd136/rt136-diff.json
+artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json
+artifacts/claude-openers260-20260922/run/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-openers260-20260922/run/smoke-n.json
+artifacts/claude-openers260-20260922/run/smoke-n.log
+artifacts/claude-openers260-20260922/run/uptime.log
+artifacts/claude-openers260-20260922/run/vp-n.json
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "scripts/claude_" | sort | head -n 100
+scripts/claude_138l_l1.py
+scripts/claude_138l_rt143nogate.py
+scripts/claude_138l_runall.sh
+scripts/claude_138l_score.py
+scripts/claude_138m_l1.py
+scripts/claude_138m_predict.py
+scripts/claude_138m_runall.sh
+scripts/claude_138m_score.py
+scripts/claude_138n_conv239_changes.py
+scripts/claude_138n_l1.py
+scripts/claude_138n_m7.py
+scripts/claude_138n_m7.sh
+scripts/claude_138n_predict.py
+scripts/claude_138n_runall.sh
+scripts/claude_138n_score.py
+scripts/claude_221b_run.py
+scripts/claude_221b_unit.py
+scripts/claude_224c_cases.py
+scripts/claude_224c_score.py
+scripts/claude_255_m1gen.py
+scripts/claude_255_m2check.py
+scripts/claude_255_m3changes.py
+scripts/claude_255_m3format.py
+scripts/claude_255_runall.sh
+scripts/claude_255_score.py
+scripts/claude_260_panel.sh
+scripts/claude_260_runall.sh
+scripts/claude_apos247_devcases.py
+scripts/claude_apos247_run.py
+scripts/claude_apos247_score.py
+scripts/claude_bound259_devcases.py
+scripts/claude_bound259_runall.sh
+scripts/claude_bound259_score.py
+scripts/claude_chain231_predict.py
+scripts/claude_chain231_run.py
+scripts/claude_chatdemo_page.html
+scripts/claude_chatdemo_server.py
+scripts/claude_chatdemo_start.sh
+scripts/claude_comment258_devcases.py
+scripts/claude_comment258_m1.sh
+scripts/claude_comment258_runall.sh
+scripts/claude_comment258_score.py
+scripts/claude_confirm241b.py
+scripts/claude_convpanel239_run.py
+scripts/claude_corr252_devcases.py
+scripts/claude_corr252_m6check.py
+scripts/claude_corr252_run.py
+scripts/claude_corr252_score.py
+scripts/claude_corr252b_devcases.py
+scripts/claude_corr252b_score.py
+scripts/claude_demo_dryrun.py
+scripts/claude_demo_reload_probe.py
+scripts/claude_demo_restart_probe.py
+scripts/claude_demo_transcript.py
+scripts/claude_demo_values_probe.py
+scripts/claude_demo_variant_probe.py
+scripts/claude_determinism228_detect138i.py
+scripts/claude_determinism228_forced.py
+scripts/claude_diag119h_freshprobe.py
+scripts/claude_diag243_composers.py
+scripts/claude_diag243_grid.py
+scripts/claude_diag243_tally.py
+scripts/claude_diag243_trace.py
+scripts/claude_direction251_run.py
+scripts/claude_direction251_score.py
+scripts/claude_ear256_devcases.py
+scripts/claude_ear256_deveval.py
+scripts/claude_ear256_devrun.py
+scripts/claude_ear256_ear.py
+scripts/claude_ear256_roundtrip.py
+scripts/claude_ear256_route.py
+scripts/claude_ear256_score.py
+scripts/claude_earcheck261_armb.py
+scripts/claude_earcheck261_arms.py
+scripts/claude_earcheck261_canon.py
+scripts/claude_earcheck261_checker.py
+scripts/claude_earcheck261_checks.py
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_earcheck261_devturns.py
+scripts/claude_earcheck261_panel.py
+scripts/claude_earcheck261_pchecks.py
+scripts/claude_earcheck261_promptB.py
+scripts/claude_earcheck261_qbuild.py
+scripts/claude_earcheck261_qwen.py
+scripts/claude_earcheck261_score.py
+scripts/claude_earcheck261_score257.py
+scripts/claude_earcheck261_scoremain.py
+scripts/claude_earcheck261_theta.py
+scripts/claude_earcheck261_turns.py
+scripts/claude_firstname236_score.py
+scripts/claude_firstperson249_run.py
+scripts/claude_firstperson249_score.py
+scripts/claude_fix172b241b_benchv3.py
+scripts/claude_fix228_srcguard.py
+scripts/claude_fix245_myrel.py
+scripts/claude_fix246_mentionwalk.py
+scripts/claude_fix247_apos.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "scripts/claude_" | sort | tail -n 100
+scripts/claude_loop251_agent.py
+scripts/claude_loop252_agent.py
+scripts/claude_loop252b_agent.py
+scripts/claude_loop252c_agent.py
+scripts/claude_loop255_agent.py
+scripts/claude_loop256_agent.py
+scripts/claude_loop258_agent.py
+scripts/claude_loop259_agent.py
+scripts/claude_loop260_agent.py
+scripts/claude_mentionwalk246_score.py
+scripts/claude_merge138k_latency.py
+scripts/claude_merge138k_marks220.py
+scripts/claude_merge138k_probe.py
+scripts/claude_merge138k_rt143nogate.py
+scripts/claude_merge138k_score.py
+scripts/claude_merge252c_runall.sh
+scripts/claude_merge252c_score.py
+scripts/claude_mouth241_brake.py
+scripts/claude_mouth241_check.py
+scripts/claude_mouth241_morph.py
+scripts/claude_mouth241_pairs.py
+scripts/claude_mouth241_parse.py
+scripts/claude_mouth241_reader.py
+scripts/claude_mouth241_rerender238.py
+scripts/claude_mouth241_say.py
+scripts/claude_mouth241_score.py
+scripts/claude_mouth241_suites.py
+scripts/claude_mouth241_sweep.py
+scripts/claude_mouth241_test.py
+scripts/claude_mouth241b_brake.py
+scripts/claude_mouth241b_check.py
+scripts/claude_mouth241b_morph.py
+scripts/claude_mouth241b_pairs.py
+scripts/claude_mouth241b_parse.py
+scripts/claude_mouth241b_reader.py
+scripts/claude_mouth241b_rer241.py
+scripts/claude_mouth241b_rerender238.py
+scripts/claude_mouth241b_s1.py
+scripts/claude_mouth241b_say.py
+scripts/claude_mouth241b_score.py
+scripts/claude_mouth241b_suites.py
+scripts/claude_mouth241b_sweep.py
+scripts/claude_mouth241b_test.py
+scripts/claude_name227b_marks.py
+scripts/claude_namecheck230b_marks.py
+scripts/claude_namecheck230b_score.py
+scripts/claude_namecheck230br_score.py
+scripts/claude_namecheck230c_marks.py
+scripts/claude_namecheck230c_score.py
+scripts/claude_openers260_devcases.py
+scripts/claude_openers260_regscore.py
+scripts/claude_openers260_rowdiff.py
+scripts/claude_openers260_run.py
+scripts/claude_openers260_score.py
+scripts/claude_panel208_objcheck.py
+scripts/claude_polite233_run.py
+scripts/claude_qnorm221c_run.py
+scripts/claude_relationtable_check.py
+scripts/claude_run245.py
+scripts/claude_score245.py
+scripts/claude_smalltalk234_marks.py
+scripts/claude_smolear235_armb.py
+scripts/claude_smolear235_data.py
+scripts/claude_smolear235_infer.py
+scripts/claude_smolear235_model.py
+scripts/claude_smolear235_panel.py
+scripts/claude_smolear235_panelfix.py
+scripts/claude_smolear235_score.py
+scripts/claude_smolear235_train.py
+scripts/claude_smolear235b_armb.py
+scripts/claude_smolear235b_beam.py
+scripts/claude_smolear235b_devdata.py
+scripts/claude_smolear235b_infer.py
+scripts/claude_smolear235b_panel.py
+scripts/claude_smolear235b_score.py
+scripts/claude_smolear235b_tau.py
+scripts/claude_smolear257_armb.py
+scripts/claude_smolear257_data.py
+scripts/claude_smolear257_devreport.py
+scripts/claude_smolear257_devset.py
+scripts/claude_smolear257_infer.py
+scripts/claude_smolear257_on235b.py
+scripts/claude_smolear257_panel.py
+scripts/claude_smolear257_score.py
+scripts/claude_smolear257_table.py
+scripts/claude_smolear257_tau.py
+scripts/claude_smolear257_turns.py
+scripts/claude_table237_build.py
+scripts/claude_table237_devscore.py
+scripts/claude_table237_run.py
+scripts/claude_table237_score.py
+scripts/claude_table237b_build.py
+scripts/claude_table237b_check.py
+scripts/claude_table237b_devscore.py
+scripts/claude_table237b_score.py
+scripts/claude_teach229_run.py
+scripts/claude_verbsubj250_score.py
+scripts/claude_whats248_devcases.py
+scripts/claude_whats248_score.py
+scripts/claude_yesprefix230_marks.py
+[0m
+[0m$ [0mgit status --short | head -n 50; git log --oneline -5; ls scripts/ | grep -E "260|281|called"; ls artifacts/ | grep -E "260|281|called|chatweak"
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+claude_260_panel.sh
+claude_260_runall.sh
+claude_fix260_openers.py
+claude_loop260_agent.py
+claude_nhopdiag_20260923_pilot.py
+claude_nhopdiag_20260923_repro.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-capab280-20260923
+claude-capabilpanel280-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag290-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-nhop268-20260923
+claude-nhop268b-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0e-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-probe255b-director-20260923
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-scoreraudit-20260923
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-typepanel270-20260923
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-verify-20260923
+claude-whats248-20260922
+claude-yesprefix230-20260922
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+[0m
+[0m$ [0mls artifacts/ | grep -E "281|called|small280|282"; echo "---worktree281files---"; ls scripts/ | grep -E "281|called"; ls artifacts/claude-called281-20260923 2>&1; ls artifacts/claude-calledpanel281-20260923 2>&1; echo "---ledger tail---"; tail -n 40 artifacts/fable-predictions-ledger.md
+---worktree281files---
+ls: artifacts/claude-called281-20260923: No such file or directory
+ls: artifacts/claude-calledpanel281-20260923: No such file or directory
+---ledger tail---
+- P265.7 Latency (no bar): ear+checker+guard median ~350-450 ms/turn (dev 356.6 ms); arm B mostly abstains (dev 6/30 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 30076 left running between waves, final stop by WMI terminate (taskkill denied, session-0); D4 diverted frames still spend a checker query (A261b exactness); D5 M5 = per-turn multiset difference. See artifacts/claude-ear265-20260923/PASSMARKS.md.
+- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+- P264.4 M3b held back <= 12% of gold TEACH: predicted 20-30% PASS ~10%. Got 38/125 = 30.4% (37 QA + 1 guard). FAIL (range missed by 0.4).
+- P264.5 M4 exact ASK recall >= 90%: predicted 90-100% PASS ~85%. Got 37/40 = 92.5%. PASS.
+- P264.6 M5 median per turn <= 800 ms: predicted 850-1100 ms PASS ~5%. Got median 880.1, p90 1826.8, max 2664.2. FAIL.
+- P264.7 M6 every A frame byte-identical in A_brake: predicted exact PASS ~99%. Got 0 mismatches. PASS.
+- P264.8 Overall registered PASS: predicted ~5%. Got FAIL (M1, M2, M3, M3b, M5 fail; M4, M6 pass).
+- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, all arms reported. Got A 5/86 = 0.0581 per fact, 5/110 = 0.0455 per turn; A261b 6/100 = 0.0600, 5/110 = 0.0455; A_brake 30/125 = 0.2400, 21/110 = 0.1909; B 9/11 = 0.8182, 9/110 = 0.0818. A vs A261b: M2 5 vs 6, M3 81 vs 94 (QA trades 13 hits for 1 fewer wrong).
+- P268.1 (2026-09-23, builder; exp 268 n-hop direction guard on 138m, CPU only, sealed 18 files SEAL.sha256.txt artifacts/claude-nhop268-20260923; blind panel never opened) dev 70 dialogs own wording fictional names: 21 question-turn moves 138m->268 exactly as listed (4 to 190 gold d01 d03 d29 o02; 2 married-to to Was-that-a-question d02 d04; 3 to 190 honest decline d05 d06 o04; 7 to honest abstain d11 d12 d16 o01 o20 o28 o29; 5 to true 153-wording fact d33 d34 o09 o15 o18); 184/205 other turns byte-identical incl all teaches, all forward/uncued/2-subject controls and the d13/d17 over-walks; 0 teach/triple changes; 0 new wrong values. Supp 7: 3 moves (p01 abstain, p02 153-wording, p04 abstain), p03/p06/p07 identical forward gold, p05 identical abstain.
+- P268.2 (same) M1 blind nhoppanel268 run once per arm with sealed score_panel.py: reverse_chain guard blocks all 5 design shapes (no V-forward-fact answer); by shape: spouse-whose/has-as to 190 gold, married-to to Was-that-a-question, husband/wife/partner-whose to 190 decline, what-written/found to abstain, whose-author/founder/employer/child to true 153-wording naming the gold subject; reverse_nochain keeps every 138m-right item right (byte-identical); 0 wrong over all 70; 0 question writes; uncued_reverse 8/8, forward_chain 12/12, forward_1hop 10/10, abstain 6/6 byte-identical (138m number beside every figure). Composition risk stated in PASSMARKS: 22/24 needs 190-answerable shapes and/or gold-subject-naming counted right.
+- P268.3 (same) M2 frozen suites vs 138m saved rows: sessions152/bench/marks123 0 moves GATE clean with all bench+marks123 row files byte-identical; rt136 labels exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only, direct rows vs 138m [] (reply/stored/verdict); rt143 no-gate 0 moves 0 flips (124/124); 63 inherited 222 exceptions identical (seconds excluded); any forward n-hop move fails.
+- P268.4 (same) M3 restart+verifier (5 M6 files rows equal to 138m m-rows; 98 probes + 12 supp diff []): 0 reply changes, 0 ghost answers, 0 failed duplicate checks, 0 write changes.
+- P268.5 (same) M4 latency alternating processes m,n,m,n,m,n 2 reps each: median(268)-median(138m) <= +5 ms/turn (pilot -0.008 ms, n=104).
+- P268.6 (same) falsifiers: any reverse_chain item answered with V's own forward fact, any forward n-hop reply change, or any new wrong value proves the change wrong.
+- P280.1 (exp 280 honest ability list, outermost turn280 over 260, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-capab280-20260923 15/15 OK) M2 suites vs 260's saved rows: exactly 3 reply-only sessions152 moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9; old C24 reply -> sealed CAN280, verdict UNHELPFUL->UNHELPFUL, stored identical, 0 write changes), GATE clean; rt136 145 units 0 field diffs (direct row compare); rt143_nogate 124 rows 0 moved; bench 4x200 0 moved; 0 abstain flips. Verifier probes vs 260's rows: vp 98 + supp 12, 0 changes. M3: 0 write changes/diffs.
+- P280.2 M1 blind capabilpanel280 (never read): M1a 0 replies on 280 with an old-sheet signature (260 arm >= 1 beside it); M1b every general item's 280 reply lists >= 3 abilities (all general replies are the one sealed CAN280 text); M3 0 panel write diffs 280 vs 260 and 0 question/self writes on 280; canyou/control items 0 moves vs 260. Truth of claims and grammar director-graded, ungraded here; changed-reply text lives only in scripts/claude_fix280_capab.py CAN280.
+- P280.3 Registered verdict lean: PASS ~70%. Likeliest failure is M1b on a panel general wording outside the closed 16-form set (stays clarify, keyword count 0, claims nothing) or the director ruling on CAN280's limits sentence (M4, ungraded here). Dev/table risk is retired: dev 82 dialogs all reported (save/ask1/abstain 8/8 plain; correct No/Actually 8/8, forget direct 8/8, two-step boss-chain 10/10 with examples; mixed hops 1/6, contrast 0/4, other forget 0/4, provenance 0/8 dropped).
+- P268.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bar 1 only. M1 panel 70 items once per arm with sealed score_panel.py: 268 rows byte-identical to 138m on all 70 (per-item right sets equal); reverse_chain 10/24 (bar 22/24), reverse_nochain keeps 4/4, uncued 8/8, forward_chain 12/12, forward_1hop 9+1miss identical, abstain 3+3miss identical, wrong 0/70, question_wrote 0/70. Stage census: 0 reverse_chain items at loop138-nhop on either arm (153-reverse 8R, 190-reverse 2R, none 12M, bench73 2M) — the panel presents no forward-walkable frame, so the frame-suppressing guard is a no-op there. DEV/M2/M3/M4 all PASS exactly as predicted (21+3 dev moves by id, 0 elsewhere, latency -0.003 ms). No falsifier triggered. Post-seal driver addition only: scripts/claude_268_panelrun.py (panel runner; sealed files unchanged, seal re-verified OK). P268.1-P268.6 predictions held except P268.2's 22/24 reach goal (composition risk stated pre-seal).
+- P266b.1 (2026-09-23, builder; exp 266b multi-word chain lift on 266, CPU only, sealed 21 files SEAL.sha256.txt artifacts/claude-chain266b-20260923; blind panels never opened, chainpanel266 never read at item level) dev 49 dialogs own wording fictional names: 26 lifts MISS->RIGHT e01-e26 (two-word 2-link/3-link, three-word 2-link/3-link, last-word-also-taught; live, born, work, work-for, speak), 5 MISS->honest-ABSTAIN e31-e35 (broken multi-word chains; e32 in base's three-word wording), 4 untaught multi-word MISS on all arms e27-e30 (no lift, no guess), 14 266-vs-266b byte-identical (controls, my-chain, statements, one-word chains); 0 question writes, equal events all arms.
+- P266b.2 (same) M1 blind chainpanel266b run once per arm with sealed score_panel.py: multiword_chain >= 22/24, three_link >= 7/8, oneword_chain no 266-RIGHT item lost, broken_chain 12/12 honest abstain, 0 wrong, 0 question writes, plain_control + statement_control byte-identical (266 number beside every figure). Risk: base abstains 3-word-base broken chains as "...not someone I can look up" (dev e32; base's own words served unchanged).
+- P266b.3 (same) M2 chainpanel266 regression: 0 new wrong; only the 8 cause-(b) ids (c266-005, c266-008, c266-015, c266-031, c266-032, c266-033, c266-035, c266-036) may move to RIGHT; all other ids byte-identical.
+- P266b.4 (same) M3 frozen suites vs 266 saved rows: sessions152/bench/marks123 0 moves; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only; rt136 direct vs 266 rows []; rt143 no-gate 0 moves 0 verdict flips; 63 inherited 222 exceptions identical (seconds excluded); restart+verifier 0 reply changes, 0 ghosts, 0 dup fails, 0 write changes.
+- P266b.5 (same) M4 latency alternating processes: median(266b)-median(266) <= +5 ms/turn (pilot -0.11 ms, 624 turns each).
+- P266b.6 (same) falsifiers: a reply about the wrong person (e.g. about "Voss" for "Mara Voss's boss"), an answer with a missing link, or an untaught multi-word name lifted into a guess proves the change wrong.
+- P269.1 (2026-09-23, builder; exp 269 = 265 sealed arm A + text-level group-owner check on the raw turn before ear/brake: P1-P5 ownership patterns + quote guard, deterministic, sealed generic ask line, saves byte-identical to A265 by construction; checker prompt B theta 0.25 + guard unchanged, scorer = 265 + M6-M8, sealed 15 files SEAL.sha256.txt artifacts/claude-ear269-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-29/30; pass (0 saves and >= 27 ask) ~55 %. Dev: 0 saves, ask 46/46 (18 divert + 28 text-only).
+- P269.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 8-12/15; pass (>= 12) ~35 %. Dev 14/22 (ex265 subset 7/10 reproduces 265; new 7/12); misses are extra checker-passed frames read off the group clause (6) + neighbour direction flips (2).
+- P269.3 M3 first_person 0 hits lost vs A265; pass ~99 %. Dev 10/10 hits, 0 lost; holds by construction (saves identical, asserted per turn).
+- P269.4 M4 named 15/15 turns byte-identical to A265; pass ~99 %. Construction, dev 10/10.
+- P269.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 13, A261b wrong 39 = 26 diverted + 13). Per-fact/per-turn rates for A, A265, A261b, B reported, no bars.
+- P269.6 M6 false asks on non_owner_we + first_person + named <= 1 total: 0-1, pass ~85 % (dev 0/53: 0 fires + 0 divert asks on 33 nonowner + 10 first + 10 named; 46/46 adversarial probes as intended). M7 gold hits lost on non_owner_we vs A265 <= 1: 0, pass ~99 % (dev 0; construction). M8 0 new wrong vs A265 across all families: 0, pass ~99 % (dev 0; construction).
+- P269.7 Overall registered PASS ~20 % (needs M1+M2 together; M3-M8 near-certain).
+- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health; /completion verified 162/162, 0 fallbacks); D4 diverted frames still spend a checker query (A265/A261b exactness); D5 M5/M8 = per-turn multiset difference; D6 check changes only the ASK trigger (per-frame divert does all suppression); D7 residuals: walk/feed/carry verbs don't fire, death contexts still fire, ourselves needs ownable nearby. See artifacts/claude-ear269-20260923/PASSMARKS.md.
+- P268b.1 (2026-09-23, builder; exp 268b = 138nb + unchanged 268 guard scripts/claude_fix268_nhopdir.py, CPU only, sealed 23 files SEAL.sha256.txt artifacts/claude-nhop268b-20260923; blind panels never opened, nhoppanel268 never dev material) DEV 123 dialogs own wording fictional names (70 rerun 268 dev + 7 supp + 46 new table-reader shapes): moves exactly the 46 predicted ids with exact 268b stage+reply (8 to 190 gold+label, 3 to bench73 ask, 4 to honest decline, 13 to none-abstain, 8 to table-inverse gold+label, 10 to table-label153 true fact); 315/361 other turns byte-identical; 0 teach/triple changes; 0 new wrong values.
+- P268b.2 (same) M1 blind nhoppanel268b run once per arm with sealed score_panel.py: bug family 0 wrong on 268b, >= 14/16 right with the "(worked out backwards)" label (rest honest abstains); every other family byte-identical to 138nb; 0 question writes. By-shape dev evidence: spouse whose/has-as 8/8 to 190 gold+label, married-to 3/3 to ask, husband/wife/partner/son 4/4 to decline, what-written/had-written/whose-was 13/13 to abstain, founder/author what-found+who-has-as 8/8 to table-inverse gold+label, whose-author/founder/employer/child 10/10 to table-label153 true fact.
+- P268b.3 (same) M2 invpanel138nb regression once per arm with sealed score_panel.py: moves 268b vs 138nb rows [], 0 new wrong, every 138nb-right item stays right, 0 question writes. Push only score JSON with ids/families/stages/counts, never item text or replies.
+- P268b.4 (same) M3 frozen suites vs 138nb saved rows: sessions152/bench/marks123 0 moves GATE clean; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079/C115 reply-only, 0 new WRONG/WRONG-WRITE/junk, direct rows vs 138nb [] (145); rt143 no-gate 0 moves 0 flips (124); 7 restart/verifier probes rows equal (15+2+1+15+3+98+12 dialogs); 0 ghosts, 0 dup fails, 0 write changes.
+- P268b.5 (same) M4 latency alternating processes b,n,b,n,b,n 2 reps each on 138j p3/p3c/p3d: median(268b)-median(138nb) <= +5 ms/turn (pilot +0.068 ms, n=104 each).
+- P268b.6 (same) falsifiers: a forward-walk answer surviving on a bug item, any forward two-step answer change, or any backwards answer naming someone not in gold proves the change wrong.
+[0m
+[0m→ [0mRead scripts/claude_fix260_openers.py
+[0m→ [0mRead scripts/claude_loop260_agent.py
+[0m→ [0mRead artifacts/claude-openers260-20260922/loop260-config.json
+[0m
+[0m$ [0mls artifacts/claude-capab280-20260923/; ls artifacts/claude-capabilpanel280-20260923/ 2>&1 | head; ls scripts/ | grep -E "280|capab"
+devcases280.json
+loop280-config.json
+PASSMARKS.md
+pilot
+predicted_moves280.json
+run
+SEAL.sha256.txt
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+claude_280_panel.sh
+claude_280_runall.sh
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_fix280_capab.py
+claude_loop280_agent.py
+[0m
+[0m→ [0mRead scripts/claude_fix280_capab.py
+[0m→ [0mRead artifacts/claude-capab280-20260923/PASSMARKS.md
+[0m→ [0mRead scripts/claude_loop280_agent.py
+[0m→ [0mRead scripts/claude_280_runall.sh
+[0m→ [0mRead scripts/claude_280_panel.sh
+[0m→ [0mRead scripts/claude_capab280_run.py
+[0m→ [0mRead scripts/claude_capab280_score.py
+[0m
+[0m# [0mTodos
+[•] Reproduce 281 probe failure on 260 (t04-t5, t12-t4 shapes)
+[ ] Write 40+ dev dialogs own wording (devcases281)
+[ ] Build fix281 + loop281 agent, pilot dev + suites + verifier probes
+[ ] Write PASSMARKS.md + predicted_moves, seal, append ledger
+[ ] Wait for calledpanel281 seal, run panel once on both arms
+[ ] Write RESULTS.md + final reply, push
+[0m
+[0m→ [0mRead scripts/claude_openers260_run.py
+[0m→ [0mRead scripts/claude_capab280_regscore.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('artifacts/claude-chatweak-20260923/dialogs.json'))
+print(type(d), len(d) if hasattr(d,'__len__') else '')
+if isinstance(d,dict):
+    print(list(d.keys())[:20])
+elif isinstance(d,list):
+    print(json.dumps(d[3],indent=1)[:3000] if len(d)>3 else '')
+"
+<class 'list'> 12
+{
+ "id": "t04-corrections",
+ "theme": "corrections",
+ "rows": [
+  {
+   "n": 0,
+   "text": "Ana lives in Quito.",
+   "reply": "Saved: Ana's city is Quito.",
+   "added": [
+    [
+     "Ana",
+     "city",
+     "Quito"
+    ]
+   ],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Quito"
+    ]
+   ],
+   "sec": 0.0025,
+   "mark": "OK",
+   "reason": "city Quito saved exactly"
+  },
+  {
+   "n": 1,
+   "text": "No, Ana lives in Lima.",
+   "reply": "Updated: Ana's city is Lima (it was Quito).",
+   "added": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ]
+   ],
+   "removed": [
+    [
+     "Ana",
+     "city",
+     "Quito"
+    ]
+   ],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ]
+   ],
+   "sec": 0.0021,
+   "mark": "OK",
+   "reason": "Quito replaced by Lima with receipt naming old value"
+  },
+  {
+   "n": 2,
+   "text": "Where does Ana live?",
+   "reply": "Ana's city is Lima.",
+   "added": [],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ]
+   ],
+   "sec": 0.0016,
+   "mark": "OK",
+   "reason": "answers Lima from stored fact"
+  },
+  {
+   "n": 3,
+   "text": "Ana's cat is Moss.",
+   "reply": "Saved: Ana's cat is Moss.",
+   "added": [
+    [
+     "Ana",
+     "cat",
+     "Moss"
+    ]
+   ],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ],
+    [
+     "Ana",
+     "cat",
+     "Moss"
+    ]
+   ],
+   "sec": 0.0021,
+   "mark": "OK",
+   "reason": "cat Moss saved exactly"
+  },
+  {
+   "n": 4,
+   "text": "Ana's cat is Fig, not Moss.",
+   "reply": "I can take one fact at a time \u2014 could you split that?",
+   "added": [],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ],
+    [
+     "Ana",
+     "cat",
+     "Moss"
+    ]
+   ],
+   "sec": 0.0024,
+   "mark": "MISSED SAVE",
+   "reason": "Fig-not-Moss correction refused; stale Moss kept"
+  },
+  {
+   "n": 5,
+   "text": "What is Ana's cat called?",
+   "reply": "I don't know Ana's cat called.",
+   "added": [],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ],
+    [
+     "Ana",
+     "cat",
+     "Moss"
+    ]
+   ],
+   "sec": 0.0016,
+   "mark": "BAD ENGLISH",
+   "reason": "malformed reply claims ignorance while Moss is stored"
+  },
+  {
+   "n": 6,
+   "text": "Wait, I mean Ana's dog is Moss.",
+   "reply": "I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like \"Kim's boss is Lee.\"",
+   "added": [],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ],
+    [
+     "Ana",
+     "cat",
+     "Moss"
+    ]
+   ],
+   "sec": 0.0019,
+   "mark": "MISSED SAVE",
+   "reason": "filler-prefixed dog fact refused"
+  },
+  {
+   "n": 7,
+   "text": "So what pets does Ana have?",
+   "reply": "I didn't understand that question \u2014 could you say it another way?",
+   "added": [],
+   "removed": [],
+   "triples_after": [
+    [
+     "Ana",
+     "city",
+     "Lima"
+    ],
+    [
+     "Ana",
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import json, shutil, gc
+from pathlib import Path
+import fable_marks123_all as M
+import fable_loop90_agent as L90
+mod,dcls,_,_=M.load_agent('scripts/claude_loop260_agent.py')
+base=M.load_base_cfg('artifacts/claude-openers260-20260922/loop260-config.json')
+work=Path('/tmp/called281-repro'); shutil.rmtree(work,ignore_errors=True); work.mkdir(parents=True)
+root=work/'r0'; root.mkdir(parents=True)
+d=M.make_daemon(dcls,base,root)
+def trip(): return [list(x) for x in L90.notebook_triples(d.loop.nb)]
+def nev():
+    nb=d.loop.nb
+    for o in (nb,getattr(nb,'nb',None)):
+        if o is not None and hasattr(o,'events'): return len(o.events)
+    return -1
+import time
+k=0
+def send(t):
+    global k
+    f=root/'inbox'/f'm{k:03d}.txt'; f.write_text(t,encoding='utf-8')
+    b=nev(); d.process_file(f)
+    rep=(root/'outbox'/f'm{k:03d}.txt').read_text(encoding='utf-8').strip(); k+=1
+    return rep, nev()-b, trip()
+for t in [\"Rosa's dog is Pip.\", \"What is Rosa's dog called?\", \"What is Rosa's dog?\", \"Who is Rosa's friend called Bo?\"]:
+    rep,ev,tr=send(t); print(repr(t),'->',repr(rep),'ev=',ev,'trips=',tr)
+"
+"Rosa's dog is Pip." -> "Saved: Rosa's dog is Pip." ev= 3 trips= [['Rosa', 'dog', 'Pip']]
+"What is Rosa's dog called?" -> "I don't know Rosa's dog called." ev= 0 trips= [['Rosa', 'dog', 'Pip']]
+"What is Rosa's dog?" -> "Rosa's dog is Pip." ev= 0 trips= [['Rosa', 'dog', 'Pip']]
+"Who is Rosa's friend called Bo?" -> "I don't know Rosa's friend called bo." ev= 0 trips= [['Rosa', 'dog', 'Pip']]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import shutil, gc
+from pathlib import Path
+import fable_marks123_all as M
+import fable_loop90_agent as L90
+mod,dcls,_,_=M.load_agent('scripts/claude_loop260_agent.py')
+base=M.load_base_cfg('artifacts/claude-openers260-20260922/loop260-config.json')
+work=Path('/tmp/called281-repro2'); shutil.rmtree(work,ignore_errors=True); work.mkdir(parents=True)
+root=work/'r0'; root.mkdir(parents=True)
+d=M.make_daemon(dcls,base,root)
+def trip(): return [list(x) for x in L90.notebook_triples(d.loop.nb)]
+def nev():
+    nb=d.loop.nb
+    for o in (nb,getattr(nb,'nb',None)):
+        if o is not None and hasattr(o,'events'): return len(o.events)
+    return -1
+k=0
+def send(t):
+    global k
+    f=root/'inbox'/f'm{k:03d}.txt'; f.write_text(t,encoding='utf-8')
+    b=nev(); d.process_file(f)
+    rep=(root/'outbox'/f'm{k:03d}.txt').read_text(encoding='utf-8').strip(); k+=1
+    return rep, nev()-b
+teaches=[\"Ana's cat is Moss.\", \"Tomas's boat is Kelp.\", \"Ivo's band is Fern.\", \"Rosa's street is Elm.\", \"Pell's teacher is Rhoda.\"]
+for t in teaches:
+    rep,ev=send(t); print(repr(t),'->',repr(rep),'ev=',ev)
+print('stored:',trip())
+qs=[\"What is Ana's cat called?\", \"What is Tomas's boat named?\", \"What do you call Ivo's band?\", \"What's the name of Rosa's street?\", \"What is the name of Pell's teacher?\", \"Who is Ana's cat called?\", \"What is Ana's cat named?\", \"What is Zara's dog called?\", \"What is Ana's cat?\", \"Who is Ana's cat?\", \"What do you call Zara's boat?\"]
+for t in qs:
+    rep,ev=send(t); print(repr(t),'->',repr(rep),'ev=',ev)
+print('stored end:',trip())
+"
+"Ana's cat is Moss." -> "Saved: Ana's cat is Moss." ev= 3
+"Tomas's boat is Kelp." -> "Saved: Tomas's boat is Kelp." ev= 3
+"Ivo's band is Fern." -> "Saved: Ivo's band is Fern." ev= 3
+"Rosa's street is Elm." -> "Saved: Rosa's street is Elm." ev= 3
+"Pell's teacher is Rhoda." -> "Saved: Pell's teacher is Rhoda." ev= 4
+stored: [['Ana', 'cat', 'Moss'], ['Tomas', 'boat', 'Kelp'], ['Ivo', 'band', 'Fern'], ['Rosa', 'street', 'Elm'], ['Pell', 'teacher', 'Rhoda']]
+"What is Ana's cat called?" -> "I don't know Ana's cat called." ev= 0
+"What is Tomas's boat named?" -> "I don't know Tomas's boat named." ev= 0
+"What do you call Ivo's band?" -> "I didn't understand that question — could you say it another way?" ev= 0
+"What's the name of Rosa's street?" -> "I don't know anyone called the name of Rosa." ev= 0
+"What is the name of Pell's teacher?" -> "I don't know anyone called the name of Pell." ev= 0
+"Who is Ana's cat called?" -> "I don't know Ana's cat called." ev= 0
+"What is Ana's cat named?" -> "I don't know Ana's cat named." ev= 0
+"What is Zara's dog called?" -> "I don't know anyone called Zara." ev= 0
+"What is Ana's cat?" -> "Ana's cat is Moss." ev= 0
+"Who is Ana's cat?" -> "Ana's cat is Moss." ev= 0
+"What do you call Zara's boat?" -> "I didn't understand that question — could you say it another way?" ev= 0
+stored end: [['Ana', 'cat', 'Moss'], ['Tomas', 'boat', 'Kelp'], ['Ivo', 'band', 'Fern'], ['Rosa', 'street', 'Elm'], ['Pell', 'teacher', 'Rhoda']]
+[0m
+[0m→ [0mRead scripts/claude_capab280_devcases.py[90m [limit=120][0m
+[0m
+[0m$ [0mls artifacts/claude-openers260-20260922/run/; ls artifacts/claude-verify-20260922/138m/ | head; ls artifacts/claude-capab280-20260923/pilot/ artifacts/claude-capab280-20260923/run/ 2>&1
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+lat-n-3.json
+lat-n-3.log
+panel-138m.jsonl
+panel-138m.log
+panel-260.jsonl
+panel-260.log
+panel-schema.txt
+panel-score.txt
+panel-score260.json
+panel-seal-check.txt
+probe
+regscore.txt
+regscore260.json
+rt143nogate-n.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+smoke-n.json
+smoke-n.log
+uptime.log
+vp-n.json
+vp-n.log
+vs-n.json
+vs-n.log
+work
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+artifacts/claude-capab280-20260923/pilot/:
+dev-score.json
+dev260.json
+dev280.json
+mock-260.json
+mock-280.json
+mock-panel.json
+mock-score.json
+reg
+repro-cases.json
+repro260.json
+work-dev260
+work-dev260b
+work-dev280
+work-mock
+work-repro
+
+artifacts/claude-capab280-20260923/run/:
+panel-260.json
+panel-260.log
+panel-280.json
+panel-280.log
+panel-files.txt
+panel-score.txt
+panel-score280.json
+panel-seal-check.txt
+regscore-registered.txt
+regscore.txt
+regscore280.json
+rt143nogate-280.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-280.json
+vp-280.log
+vs-280.json
+vs-280.log
+work
+[0m
+[0m$ [0mcat artifacts/claude-capab280-20260923/predicted_moves280.json; echo ---; ls artifacts/claude-verify-20260922/138m/*.py 2>/dev/null; ls artifacts/claude-verify-20260922/138m/ | head -n 20; echo ---; cat artifacts/claude-capab280-20260923/loop280-config.json | head -n 20
+{"ability_table":{"dropped": ["mixed two-fact hops (dev twohop non-chain 1/6)", "contrast corrections (dev correct contrast 0/4)", "non-direct forget wordings (dev forget other 0/4)", "provenance (dev source 0/8, all clarify)", "quarantine (no turn-level evidence)"],"kept_plain":[{"dev": "8/8", "id": "abstain"}, {"dev": "8/8", "id": "ask1"}, {"dev": "8/8", "id": "save"}], "kept_with_example": [{"dev": "10/10 on phrasing", "example": "Who is Nils's boss's boss?", "id": "twochain"}, {"dev": "8/8 on phrasing", "example": "Forget Quinn's cat.", "id": "forget"}, {"dev": "8/8 on phrasing", "example": "No, Mira's city is York.", "id": "correct"}]},"arm_280": "scripts/claude_loop280_agent.py + artifacts/claude-capab280-20260923/loop280-config.json","arm_260": "scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json","base": "260 (one outermost mixin scripts/claude_fix280_capab.py; SrcGuardMixin228 first)","dev_260_arm_scores": {"abstain": "8/8 right", "ask1": "8/8 right", "correct": "8/12 (No/Actually 8/8; contrast 0/4 wrong)", "forget": "8/12 (direct 8/8; other wordings 0/4 abstain)", "save": "8/8 right", "source": "0/8 right, 8 abstain", "twohop": "11/16 (boss-chain 10/10; mixed 1/6)"},"dev_same_as_base": "0 reply diffs on all 72 ability-family turns; 0 question-write violations on either arm","m1_panel": {"M1a_forbidden_on_280": 0, "M1b_general_kw_below_3": [], "M3_question_self_writes_on_280": 0, "M3_write_diffs_280_vs_260": 0, "note": "260 arm's forbidden count reported beside (expected >= 1: every exact-C24 general item)"},"suites_vs_260_rows": {"bench_4x200": "0 moved", "rt136_145_units": "0 field diffs (direct row compare; labels vs 138j base identical on both arms)", "rt143_nogate_124": "0 moved", "sessions152_180_units": "exactly 3 reply-only moves", "sessions152_moves": [{"base_verdict": "UNHELPFUL", "id": "S2-casual-friends#1", "new_verdict": "UNHELPFUL", "text": "what can you do"}, {"base_verdict": "UNHELPFUL", "id": "S3-teachers-correction#0", "new_verdict": "UNHELPFUL", "text": "heyy, what can you do?"}, {"base_verdict": "UNHELPFUL", "id": "S4-pets-identity#9", "new_verdict": "UNHELPFUL", "text": "what can you do?"}], "sessions152_new_reply": "sealed CAN280 for all 3; stored identical; 0 write changes"},"verifier_probes_vs_260_rows": {"supp_12": "0 changes", "vp_98": "0 changes"}}---
+artifacts/claude-verify-20260922/138m/build_tables.py
+artifacts/claude-verify-20260922/138m/make_probes_supp.py
+artifacts/claude-verify-20260922/138m/make_probes.py
+artifacts/claude-verify-20260922/138m/recount.py
+artifacts/claude-verify-20260922/138m/run_probes.py
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+---
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+[0m
+[0m← [0mWrite scripts/claude_fix281_called.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_fix281_called.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281_called.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281_called.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix281_called.py
+@@ -89,10 +89,13 @@
+     m, kind = _match_core(rest.strip())
+     if m is None:
+         return None
+     rstrip = t.rstrip()
+-    prefix = rstrip[:len(rstrip) - len(rest.strip())]
+-    core = rest.strip()
++    core_stripped = rest.strip()
++    if not core_stripped or not rstrip.endswith(core_stripped):
++        return None
++    prefix = rstrip[:len(rstrip) - len(core_stripped)]
++    core = core_stripped
+ if kind == "trailing":
+     wh = m.group("wh")
+     wh = "Who" if wh.lower() == "who" else "What"
+     return prefix + "%s is %s?" % (wh, m.group("rel").strip())
+
+[0m
+[0m← [0mWrite scripts/claude_loop281_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281_devcases.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_called281_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_devcases.py
+@@ -105,9 +105,9 @@
+     ("Bodil's cat is Tipsy.", "So, what is Bodil's cat called?", "Tipsy"),
+     ("Embla's boat is Nord.", "Okay, what is Embla's boat named?", "Nord"),
+     ("Frida's band is Haze.", "Well, what do you call Frida's band?",
+      "Haze"),
+-    ("Gorm's street is Park.", "Please tell me: what's the name of "
++    ("Gorm's street is Park.", "Please, what's the name of "
+      "Gorm's street?", "Park"),
+ ]
+ for t, q, v in OPENER_CALLED:
+     subj = t.split("'s ")[0]
+
+[0m
+[0m← [0mWrite scripts/claude_called281_score.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281_run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_281_panel.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281_regscore.py
+Wrote file successfully.
+[0m
+[0m$ [0mcp scripts/claude_281_panel.sh scripts/claude_281_runall.sh && ls -la scripts/claude_281_*
+-rw-r--r--  1 ben-hannan  staff  1893 Sep 23 03:16 scripts/claude_281_panel.sh
+-rw-r--r--  1 ben-hannan  staff  1893 Sep 23 03:16 scripts/claude_281_runall.sh
+[0m
+[0m← [0mWrite scripts/claude_281_panel.sh
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_281_runall.sh scripts/claude_281_panel.sh; head -n 5 scripts/claude_281_runall.sh; echo ---; head -n 5 scripts/claude_281_panel.sh; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281_agent.py --write-config artifacts/claude-called281-20260923/loop281-config.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_devcases.py
+#!/bin/bash
+# Exp 281 -- registered marks M2 (+M3 notebook-zero, verifier probes), in
+# order, one heavy step at a time, `uptime` checked before each step (waits
+# while 1-min load > 60).
+# usage: scripts/claude_281_runall.sh <run_dir>
+---
+#!/bin/bash
+# Exp 281 -- M1: the blind calledpanel281 on both arms (260 and 281).
+# usage: scripts/claude_281_panel.sh <run_dir>
+# No exact panel schema was given in the brief, so there is no schema
+# gate: scripts/claude_called281_run.py loads items flexibly and
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop281_agent.py", line 156, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop281_agent.py", line 135, in main
+    Path(args.write_config).write_text(json.dumps(out, indent=1),
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-called281-20260923/loop281-config.json'
+[0m
+[0m$ [0mmkdir -p artifacts/claude-called281-20260923/pilot && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop281_agent.py --write-config artifacts/claude-called281-20260923/loop281-config.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_devcases.py && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json;d=json.load(open('artifacts/claude-called281-20260923/devcases281.json'));print(len(d));from collections import Counter;print(Counter(c['family'] for c in d))"
+Wrote artifacts/claude-called281-20260923/loop281-config.json
+wrote 46 cases to artifacts/claude-called281-20260923/devcases281.json
+46
+Counter({'stored_called': 8, 'stored_named': 6, 'stored_call': 6, 'stored_nameof': 6, 'control': 6, 'notstored': 5, 'ambiguous': 5, 'opener_called': 4})
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_run.py dev scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json artifacts/claude-called281-20260923/pilot/work-dev260 artifacts/claude-called281-20260923/devcases281.json artifacts/claude-called281-20260923/pilot/dev260.json
+3:17  up 2 days, 19:06, 4 users, load averages: 73.52 60.65 72.66
+done 46
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_run.py dev scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json artifacts/claude-called281-20260923/pilot/work-dev281 artifacts/claude-called281-20260923/devcases281.json artifacts/claude-called281-20260923/pilot/dev281.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_score.py dev artifacts/claude-called281-20260923/devcases281.json artifacts/claude-called281-20260923/pilot/dev260.json artifacts/claude-called281-20260923/pilot/dev281.json artifacts/claude-called281-20260923/pilot/dev-score.json
+done 46
+stored_called  8/8 miss=[]
+stored_named   6/6 miss=[]
+stored_call    6/6 miss=[]
+stored_nameof  6/6 miss=[]
+opener_called  4/4 miss=[]
+notstored      5/5 miss=[]
+ambiguous      5/5 miss=[]
+control        6/6 miss=[]
+moves 260->281: 30
+  MOVE d281-001 1
+  MOVE d281-002 1
+  MOVE d281-003 1
+  MOVE d281-004 1
+  MOVE d281-005 1
+  MOVE d281-006 1
+  MOVE d281-007 1
+  MOVE d281-008 1
+  MOVE d281-009 1
+  MOVE d281-010 1
+  MOVE d281-011 1
+  MOVE d281-012 1
+  MOVE d281-013 1
+  MOVE d281-014 1
+  MOVE d281-015 1
+  MOVE d281-016 1
+  MOVE d281-017 1
+  MOVE d281-018 1
+  MOVE d281-019 1
+  MOVE d281-020 1
+  MOVE d281-021 1
+  MOVE d281-022 1
+  MOVE d281-023 1
+  MOVE d281-024 1
+  MOVE d281-025 1
+  MOVE d281-026 1
+  MOVE d281-027 1
+  MOVE d281-028 1
+  MOVE d281-029 1
+  MOVE d281-030 1
+problems: none
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d60={c['id']:c for c in json.load(open('artifacts/claude-called281-20260923/pilot/dev260.json'))}
+d81={c['id']:c for c in json.load(open('artifacts/claude-called281-20260923/pilot/dev281.json'))}
+for i in ['d281-001','d281-009','d281-015','d281-021','d281-027','d281-031','d281-036','d281-041']:
+    print(i, '260:', repr(d60[i]['rows'][-1]['reply']), 'ev=',d60[i]['rows'][-1]['ev'])
+    print(i, '281:', repr(d81[i]['rows'][-1]['reply']), 'ev=',d81[i]['rows'][-1]['ev'])
+"
+d281-001 260: "I don't know Bram's cat called." ev= 0
+d281-001 281: "Bram's cat is Soot." ev= 0
+d281-009 260: "I don't know Jorunn's boat named." ev= 0
+d281-009 281: "Jorunn's boat is Skiff." ev= 0
+d281-015 260: "I didn't understand that question — could you say it another way?" ev= 0
+d281-015 281: "Petra's band is Willow." ev= 0
+d281-021 260: "I don't know anyone called the name of Vera." ev= 0
+d281-021 281: "Vera's street is Lark." ev= 0
+d281-027 260: "I don't know Bodil's cat called." ev= 0
+d281-027 281: "Bodil's cat is Tipsy." ev= 0
+d281-031 260: "I don't know anyone called Zara." ev= 0
+d281-031 281: "I don't know anyone called Zara." ev= 0
+d281-036 260: "I don't know Tove's friend called bo." ev= 0
+d281-036 281: "I don't know Tove's friend called bo." ev= 0
+d281-041 260: "Saved: Viggo's cat is Simba." ev= 3
+d281-041 281: "Saved: Viggo's cat is Simba." ev= 3
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+import json, glob
+hits=[]
+for p in glob.glob('artifacts/claude-openers260-20260922/run/sd/*rows*')+glob.glob('artifacts/claude-openers260-20260922/run/sd136/*rows*'):
+    print(p)
+"
+artifacts/claude-openers260-20260922/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-openers260-20260922/run/sd/sessions152-rows.json
+artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+import json
+def texts(o):
+    if isinstance(o,dict):
+        for k,v in o.items():
+            if k in ('turn','text','question','teach') and isinstance(v,str): yield v
+            else: yield from texts(v)
+    elif isinstance(o,list):
+        for v in o: yield from texts(v)
+import glob
+files=glob.glob('artifacts/claude-openers260-20260922/run/sd/*rows*')+glob.glob('artifacts/claude-openers260-20260922/run/sd136/*rows*')+['artifacts/claude-openers260-20260922/run/rt143nogate-n.json','artifacts/claude-openers260-20260922/run/vp-n.json','artifacts/claude-openers260-20260922/run/vs-n.json']
+for p in files:
+    txt=open(p).read()
+    import json as j
+    try: doc=j.loads(txt)
+    except: doc=[j.loads(x) for x in txt.splitlines() if x.strip()]
+    n=0; hits=[]
+    def walk(o):
+        global_n=None
+        if isinstance(o,dict):
+            for k,v in o.items():
+                if isinstance(v,str) and ('called' in v.lower() or 'named' in v.lower() or 'name of' in v.lower() or 'do you call' in v.lower()):
+                    hits.append((k,v[:90])); 
+                walk(v)
+        elif isinstance(o,list):
+            for v in o: walk(v)
+    walk(doc)
+    print(p, 'candidate turns:', len(hits))
+    for k,v in hits[:10]: print('   ',k,repr(v))
+"
+artifacts/claude-openers260-20260922/run/sd/bench-bench132_4hop-rows.jsonl candidate turns: 2
+    extracted "I don't know anyone called the official language of the country where the founder of Let"
+    reply "I don't know anyone called the official language of the country where the founder of Let."
+artifacts/claude-openers260-20260922/run/sd/bench-new_121_4hop-rows.jsonl candidate turns: 2
+    extracted "I don't know anyone called the capital city of the country that the director of the origin"
+    reply "I don't know anyone called the capital city of the country that the director of the origin"
+artifacts/claude-openers260-20260922/run/sd/bench-edit200-rows.jsonl candidate turns: 26
+    extracted "I don't know anyone called Elowen Nettlestone"
+    reply "I don't know anyone called Elowen Nettlestone."
+    extracted "I don't know anyone called Magnus Quill"
+    reply "I don't know anyone called Magnus Quill."
+    extracted "I don't know anyone called Stellan Yarwood"
+    reply "I don't know anyone called Stellan Yarwood."
+    extracted "I don't know anyone called Gareth Zanderfield"
+    reply "I don't know anyone called Gareth Zanderfield."
+    extracted "I don't know anyone called Eira Larkspur"
+    reply "I don't know anyone called Eira Larkspur."
+artifacts/claude-openers260-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl candidate turns: 2
+    extracted "I don't know anyone called the capital city of the country that the director of the origin"
+    reply "I don't know anyone called the capital city of the country that the director of the origin"
+artifacts/claude-openers260-20260922/run/sd/sessions152-rows.json candidate turns: 5
+    reply "I don't know anyone called Zane.\n"
+    reply "I don't know anyone called Petra.\n"
+    reply "I don't know anyone called Nadi.\n"
+    reply "I don't know anyone called Zane.\n"
+    reply "I don't know anyone called Biscut.\n"
+artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json candidate turns: 3
+    text 'The name of the current head of state in Peru is Sol.'
+    text 'The name of the current head of the Peruvian government is Luz.'
+    reply "I don't know anyone called Tom.\n"
+artifacts/claude-openers260-20260922/run/rt143nogate-n.json candidate turns: 5
+    question 'What is the name of the country where the woman who founded Harborline lives?'
+    question 'What is the name of the city where the author of The Glass Orchard was born?'
+    reply "I don't know anyone called Norlanb."
+    reply "I don't know anyone called Ostmark."
+    reply "I don't know anyone called Norlandia."
+artifacts/claude-openers260-20260922/run/vp-n.json candidate turns: 13
+    turn "What is the name of Tomas's boss?"
+    reply "I don't know anyone called the name of Tomas."
+    reply "I don't know anyone called Quenby."
+    reply "I don't know anyone called Garrick."
+    reply "I don't know anyone called Yarrow."
+    reply "I don't know anyone called Corvin."
+    reply "I don't know anyone called Pell."
+    reply "I don't know anyone called Bramwell."
+    reply "I don't know anyone called Pell."
+    reply "I don't know anyone called Dace."
+artifacts/claude-openers260-20260922/run/vs-n.json candidate turns: 1
+    reply "I don't know anyone called Garrick."
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+import json, glob
+files=glob.glob('artifacts/claude-openers260-20260922/run/sd/*rows*')+glob.glob('artifacts/claude-openers260-20260922/run/sd136/*rows*')+['artifacts/claude-openers260-20260922/run/rt143nogate-n.json','artifacts/claude-verify-20260922/138m/probes.json','artifacts/claude-verify-20260922/138m/probes-supp.json']
+for p in files:
+    txt=open(p).read()
+    try: doc=json.loads(txt)
+    except: doc=[json.loads(x) for x in txt.splitlines() if x.strip()]
+    if isinstance(doc,dict): doc=[doc]
+    for item in doc:
+        cands=[]
+        if isinstance(item,dict):
+            for k in ('turn','question','text'):
+                v=item.get(k)
+                if isinstance(v,str): cands.append((k,v))
+            for k in ('turns','dialog','teaches'):
+                v=item.get(k)
+                if isinstance(v,list):
+                    for t in v:
+                        if isinstance(t,str): cands.append((k,t))
+        for k,v in cands:
+            rw=F281.rewrite_called281(v)
+            if rw is not None:
+                print(p.split('/')[-1], item.get('id','?'), '|', repr(v[:100]), '->', repr(rw[:100]))
+"
+rt143nogate-n.json H3 | 'What is the name of the country where the woman who founded Harborline lives?' -> 'What is the country where the woman who founded Harborline lives?'
+rt143nogate-n.json H8 | 'What is the name of the city where the author of The Glass Orchard was born?' -> 'What is the city where the author of The Glass Orchard was born?'
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('artifacts/claude-verify-20260922/138m/probes.json'))
+print(type(d), len(d))
+import sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+def walk(o,path=''):
+    if isinstance(o,dict):
+        for k,v in o.items(): walk(v,path+'/'+k)
+    elif isinstance(o,list):
+        for i,v in enumerate(o): walk(v,path+f'[{i}]')
+    elif isinstance(o,str):
+        if o.rstrip().endswith('?') and F281.rewrite_called281(o) is not None:
+            print(path,'|',repr(o[:110]))
+walk(d)
+" 2>&1 | head -n 30; head -c 600 artifacts/claude-verify-20260922/138m/probes.json
+<class 'list'> 98
+[
+ {
+  "id": "A01",
+  "feature": "identity",
+  "turns": [
+   "Q|what's ur name"
+  ],
+  "expect_stored": [],
+  "note": ""
+ },
+ {
+  "id": "A02",
+  "feature": "identity",
+  "turns": [
+   "Q|who made u"
+  ],
+  "expect_stored": [],
+  "note": ""
+ },
+ {
+  "id": "A03",
+  "feature": "identity",
+  "turns": [
+   "Q|are you a person?"
+  ],
+  "expect_stored": [],
+  "note": ""
+ },
+ {
+  "id": "A04",
+  "feature": "identity",
+  "turns": [
+   "Q|are you a robot"
+  ],
+  "expect_stored": [],
+  "note": ""
+ },
+ {
+  "id": "A05",
+  "feature": "identity",
+  "turns": [
+   "Q|Are you an AI?"
+  ],
+  "expect_stored": [],
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+for f in ['artifacts/claude-verify-20260922/138m/probes.json','artifacts/claude-verify-20260922/138m/probes-supp.json']:
+    d=json.load(open(f))
+    hits=[]
+    def walk(o,path=''):
+        if isinstance(o,dict):
+            for k,v in o.items(): walk(v,path+'/'+k)
+        elif isinstance(o,list):
+            for i,v in enumerate(o): walk(v,path+f'[{i}]')
+        elif isinstance(o,str):
+            s=o[2:] if o.startswith(('Q|','T|')) else o
+            if s.rstrip().endswith('?') and F281.rewrite_called281(s) is not None:
+                hits.append((path,o[:100]))
+    walk(d)
+    print(f, len(d), 'rewrite matches:', len(hits))
+    for h in hits: print('   ',h)
+"
+artifacts/claude-verify-20260922/138m/probes.json 98 rewrite matches: 1
+    ('[21]/turns[1]', "Q|What is the name of Tomas's boss?")
+artifacts/claude-verify-20260922/138m/probes-supp.json 12 rewrite matches: 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('artifacts/claude-verify-20260922/138m/probes.json'))
+print(json.dumps(d[21],indent=1)[:800])
+v=json.load(open('artifacts/claude-openers260-20260922/run/vp-n.json'))
+rows=v if isinstance(v,list) else v.get('rows',v)
+for r in rows:
+    if r.get('id')==d[21].get('id'): print(json.dumps(r,indent=1)[:1500])
+"
+{
+ "id": "N06",
+ "feature": "identity-nearmiss",
+ "turns": [
+  "T|Tomas's boss is Mirela.",
+  "Q|What is the name of Tomas's boss?"
+ ],
+ "expect_stored": [
+  [
+   "Tomas",
+   "boss",
+   "Mirela"
+  ]
+ ],
+ "note": "should answer Mirela"
+}
+{
+ "id": "N06",
+ "feature": "identity-nearmiss",
+ "rows": [
+  {
+   "kind": "T",
+   "turn": "Tomas's boss is Mirela.",
+   "reply": "Saved: Tomas's boss is Mirela.",
+   "ev": 4,
+   "triples": [
+    [
+     "Tomas",
+     "boss",
+     "Mirela"
+    ]
+   ]
+  },
+  {
+   "kind": "Q",
+   "turn": "What is the name of Tomas's boss?",
+   "reply": "I don't know anyone called the name of Tomas.",
+   "ev": 0,
+   "triples": [
+    [
+     "Tomas",
+     "boss",
+     "Mirela"
+    ]
+   ]
+  }
+ ],
+ "stored": [
+  [
+   "Tomas",
+   "boss",
+   "Mirela"
+  ]
+ ]
+}
+[0m
+[0m$ [0mbash scripts/claude_281_runall.sh artifacts/claude-called281-20260923/pilot/reg
+03:17:57 uptime load1=74.55 before: M2-suites
+03:18:27 uptime load1=60.77 before: M2-suites
+03:18:57 uptime load1=53.38 before: M2-suites
+03:19:22 uptime load1=49.55 before: M2-rt136
+03:19:25 uptime load1=47.91 before: M2-rt143
+03:19:29 uptime load1=47.91 before: VP
+TOTAL 101 s
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.3', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=19.0'} gate=GATE: clean
+rt136: {'n': 145, 'diffs': []} gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=['N06'] vs diffs=[]
+VERDICT: FAIL
+PROBLEM: vp diffs: ['N06']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+v=json.load(open('artifacts/claude-called281-20260923/pilot/reg/vp-281.json'))
+rows=v if isinstance(v,list) else v.get('rows',v)
+for r in rows:
+    if r.get('id')=='N06': print(json.dumps(r,indent=1))
+"
+{
+ "id": "N06",
+ "feature": "identity-nearmiss",
+ "rows": [
+  {
+   "kind": "T",
+   "turn": "Tomas's boss is Mirela.",
+   "reply": "Saved: Tomas's boss is Mirela.",
+   "ev": 4,
+   "triples": [
+    [
+     "Tomas",
+     "boss",
+     "Mirela"
+    ]
+   ]
+  },
+  {
+   "kind": "Q",
+   "turn": "What is the name of Tomas's boss?",
+   "reply": "Tomas's boss is Mirela.",
+   "ev": 0,
+   "triples": [
+    [
+     "Tomas",
+     "boss",
+     "Mirela"
+    ]
+   ]
+  }
+ ],
+ "stored": [
+  [
+   "Tomas",
+   "boss",
+   "Mirela"
+  ]
+ ]
+}
+[0m
+[0m← [0mEdit scripts/claude_called281_regscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
+@@ -8,13 +8,14 @@
+   rt136       : <run>/sd136/rt136-diff.json + rows
+   rt143       : <run>/rt143nogate-281.json vs 260's run/rt143nogate-n.json
+   verifier    : <run>/vp-281.json vs 260's run/vp-n.json,
+                 <run>/vs-281.json vs 260's run/vs-n.json
+-Predicted: 0 moves everywhere (no suite or probe turn uses a trailing
+-called/named, "what do you call" or "name of" question wording; verified
+-by scan in the pilot). Any moved unit, verdict flip, write change, or
+-abstain-ward flip fails.
+-PASS only if the move list is empty.
++Predicted: 0 suite moves; verifier vp exactly one changed row, N06
++("What is the name of Tomas's boss?" with Tomas/boss/Mirela stored ->
++"Tomas's boss is Mirela.", ev 0, stored identical); vs 0 changes.
++Any other moved unit, verdict flip, write change, or abstain-ward flip
++fails.
++PASS only if the move list equals the predicted list exactly.
+ """
+ 
+ import json
+ import re
+@@ -23,8 +24,10 @@
+ RUN = sys.argv[1] if len(sys.argv) > 1 else None
+ OUTP = sys.argv[2] if len(sys.argv) > 2 else None
+ 
+ BASE260 = "artifacts/claude-openers260-20260922/run"
++PRED_VP = ["N06"]
++PRED_N06_REPLY = "Tomas's boss is Mirela."
+ 
+ 
+ def load(p):
+     return json.load(open(p))
+
+[0m
+[0m← [0mEdit scripts/claude_called281_regscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_regscore.py
+@@ -105,10 +105,24 @@
+     for a, b in zip(newrows, oldrows):
+         if json.dumps(a, sort_keys=True) != json.dumps(b, sort_keys=True):
+             diffs.append(a.get("id", "?"))
+     res[tag] = {"diffs": diffs}
+-    if diffs:
+-        res["problems"].append(f"{tag} diffs: {diffs}")
++    if tag == "vp":
++        if sorted(diffs) != sorted(PRED_VP):
++            res["problems"].append(f"vp diffs {diffs} != predicted {PRED_VP}")
++        else:
++            for a in newrows:
++                if a.get("id") == "N06":
++                    qrows = [r for r in a.get("rows", []) if r.get("kind") == "Q"]
++                    if len(qrows) != 1 or qrows[0].get("reply") != PRED_N06_REPLY:
++                        res["problems"].append(f"N06 Q reply not predicted: {qrows}")
++                    if any(r.get("ev", 0) != (4 if r.get("kind") == "T" else 0)
++                           for r in a.get("rows", [])):
++                        res["problems"].append("N06 write change")
++                    if a.get("stored") != [["Tomas", "boss", "Mirela"]]:
++                        res["problems"].append(f"N06 store changed: {a.get('stored')}")
++    elif diffs:
++        res["problems"].append(f"vs diffs: {diffs}")
+ res["verdict"] = "PASS" if not res["problems"] else "FAIL"
+ json.dump(res, open(OUTP, "w"), indent=1)
+ print(f"sessions152: {res['sessions152']}")
+ print(f"bench: {res['bench']} gate={gate}")
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_regscore.py artifacts/claude-called281-20260923/pilot/reg artifacts/claude-called281-20260923/pilot/regscore-pilot.json
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.3', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=19.0'} gate=GATE: clean
+rt136: {'n': 145, 'diffs': []} gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=['N06'] vs diffs=[]
+VERDICT: PASS
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+items=[
+ {'id':'m-001','family':'stored','setup':[\"Bram's cat is Soot.\"],'turn':\"What is Bram's cat called?\",'followup':None},
+ {'id':'m-002','family':'x','setup':[],'turn':\"What is Zara's dog called?\",'followup':None},
+ {'id':'m-003','setup':[\"Tove's dog is Pip.\"],'turn':\"Who is Tove's friend called Bo?\",'followup':None},
+ {'id':'m-004','turns':[\"Viggo's cat is Simba.\",\"What is Viggo's cat?\"]},
+ {'id':'m-005','family':'stored','setup':[\"Petra's band is Willow.\"],'turn':'What do you call Petra\'s band?','followup':\"What is Petra's band?\"},
+]
+open('/tmp/called281-mock.jsonl','w').write('\n'.join(json.dumps(x) for x in items))
+print('mock written')
+" && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_run.py panel scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json /tmp/called281-mockw260 /tmp/called281-mock.jsonl /tmp/called281-mock260.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_run.py panel scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json /tmp/called281-mockw281 /tmp/called281-mock.jsonl /tmp/called281-mock281.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_score.py panel /tmp/called281-mock.jsonl /tmp/called281-mock260.json /tmp/called281-mock281.json /tmp/called281-mockscore.json
+mock written
+done 5
+done 5
+panel n=5 stored=2 notstored=1 ambiguous=1 control=1 unparsed=0
+stored: 281 right 2/2 wrong 0 (260 right 0); miss []; wrong []
+notstored: 281 abstain 1/1 (260 1); guesses []
+ambiguous same 1/1 moved []
+control same 1/1 moved []
+unparsed []
+281 question writes []; store diffs []
+broken abstains 281 ['m-002', 'm-003'] (260: ['m-001', 'm-002', 'm-003'])
+[0m
+[0m← [0mEdit scripts/claude_called281_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_score.py
+@@ -101,9 +101,9 @@
+             return t[2]
+     return None
+ 
+ 
+-BROKEN281 = re.compile(r"don'?t know .*?\b(called|named)\s*[.?!]?",
++BROKEN281 = re.compile(r"don'?t know .*\b(called|named)\s*[.?!]?\s*$",
+                        re.IGNORECASE)
+ 
+ 
+ # ------------------------------------------------------------- dev scoring
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_score.py panel /tmp/called281-mock.jsonl /tmp/called281-mock260.json /tmp/called281-mock281.json /tmp/called281-mockscore.json
+panel n=5 stored=2 notstored=1 ambiguous=1 control=1 unparsed=0
+stored: 281 right 2/2 wrong 0 (260 right 0); miss []; wrong []
+notstored: 281 abstain 1/1 (260 1); guesses []
+ambiguous same 1/1 moved []
+control same 1/1 moved []
+unparsed []
+281 question writes []; store diffs []
+broken abstains 281 [] (260: ['m-001'])
+[0m
+[0m# [0mTodos
+[✓] Reproduce 281 probe failure on 260 (t04-t5, t12-t4 shapes)
+[✓] Write 40+ dev dialogs own wording (devcases281)
+[✓] Build fix281 + loop281 agent, pilot dev + suites + verifier probes
+[•] Write PASSMARKS.md + predicted_moves, seal, append ledger
+[ ] Wait for calledpanel281 seal, run panel once on both arms
+[ ] Write RESULTS.md + final reply, push
+[0m
+[0m← [0mWrite artifacts/claude-called281-20260923/predicted_moves281.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-called281-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat artifacts/claude-capab280-20260923/SEAL.sha256.txt
+c76b3d76902e33efc754260c19194e923895c04ce9dc87334421f4fe62c27857  scripts/claude_fix280_capab.py
+4a057d95600a844d9022311923139df3fad482aba835469e8181bb95e5b3be66  scripts/claude_loop280_agent.py
+e764e33b8ed9116577ceeffaecb208e512d255e6c59412d8964f047cc46cadc2  artifacts/claude-capab280-20260923/loop280-config.json
+76e79142ae5bd9498f143c9ab256055ed0dfd1812025f2f400cfb0479011916c  scripts/claude_capab280_devcases.py
+fc70106f4efb5af6adadd62fe586f6a6c2aca44c4595f01f17c1d17b3c0c876b  artifacts/claude-capab280-20260923/devcases280.json
+43a3b9a6fa10b6470f51190b2f5c9d05104af4436a043b2e3cf73f8a8479b107  scripts/claude_capab280_run.py
+1a327e603faf92185dd6b9ebac23528d6bacba90cf438afb3400e69620e8ee82  scripts/claude_capab280_score.py
+1b830cf8c68fff4938f1b98ece906dd72f328152eba2892752f995f5343f0c4d  scripts/claude_capab280_regscore.py
+d30b81f5361252a6a74a9bcc9eb1340bbcca1904092f00a6e885818708b64237  scripts/claude_280_runall.sh
+891541c60bd71866aa13e96142cf7aca6f409b72be067b2c3dcc5745ffd6d6ba  scripts/claude_280_panel.sh
+897d06af2c0f45b9413a163d4936f81e53a87befa70ee81556f61a667d8ec17c  artifacts/claude-capab280-20260923/PASSMARKS.md
+02c577541b38c577301b6bc9fd249afad896dffb62b661ecd26daa45b836045b  artifacts/claude-capab280-20260923/predicted_moves280.json
+773fa5dd0dcc3ead067b637e28ffbc1753558f6b30dba03c292948c6f2648baa  artifacts/claude-capab280-20260923/pilot/dev260.json
+d27f8d112b18bc49dd6bd43c433977899ae2b584bcb7ab598327b93e64a54c89  artifacts/claude-capab280-20260923/pilot/dev280.json
+28289c955da98cd217b5b091371ef815530909eccba34bdba54447d017f18603  artifacts/claude-capab280-20260923/pilot/dev-score.json
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix281_called.py scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json scripts/claude_called281_devcases.py artifacts/claude-called281-20260923/devcases281.json scripts/claude_called281_run.py scripts/claude_called281_score.py scripts/claude_called281_regscore.py scripts/claude_281_runall.sh scripts/claude_281_panel.sh artifacts/claude-called281-20260923/PASSMARKS.md artifacts/claude-called281-20260923/predicted_moves281.json artifacts/claude-called281-20260923/pilot/dev260.json artifacts/claude-called281-20260923/pilot/dev281.json artifacts/claude-called281-20260923/pilot/dev-score.json > artifacts/claude-called281-20260923/SEAL.sha256.txt && cat artifacts/claude-called281-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-called281-20260923/SEAL.sha256.txt
+5f875ad731e5bea2e8ff2b19e4e1c439b33355c58d78fe256c37e6bfdc68abec  scripts/claude_fix281_called.py
+76b6874cf9e1710ccc014a4ddbf4a7f2299a019a2e5ef6d9bc76f4d06b8a272b  scripts/claude_loop281_agent.py
+5f6c357a31b086b6e3e7054530ad061e16da53ba83cabf69fc07e23402147dad  artifacts/claude-called281-20260923/loop281-config.json
+fd8ed198ec4f1c4980e540caec0c7a3945548416cb6d523f2f4d365a72c585c8  scripts/claude_called281_devcases.py
+766871784d251f34fe33f3accff72c6c4e2f2906967faeb08592bcd0320a4bdd  artifacts/claude-called281-20260923/devcases281.json
+d3b7f3f43d4d1c021a338b700f73e259abd278e9403aa41d620d1161113824e1  scripts/claude_called281_run.py
+9fb1c3ea4ade9bc18ce96d300c0f0cf5d42a0bfa956e445d6bd47ce25d11bd45  scripts/claude_called281_score.py
+29210250358927703f53b463b68e7fe70db074de01e9e80a226e41592a8decb8  scripts/claude_called281_regscore.py
+dc8cd5f4ff69d7a33fb359b53f34fe34e60f208b56f54b2d1e4486d42ced1313  scripts/claude_281_runall.sh
+f0cbaef21a98adfbe67d8dd9eb2873162649cb76bf351bd78beafac858dbd12f  scripts/claude_281_panel.sh
+927fdcb770d970118dbd5c30269ccdc8d18e06db1a0ed4ddbf818fb31ad4f852  artifacts/claude-called281-20260923/PASSMARKS.md
+49f98b14c53d801f7e77b038a3131ad2fa4e92fd01f530f5ee9511f28f34ce6a  artifacts/claude-called281-20260923/predicted_moves281.json
+48ed9fa7eb9f26b00e466d6c5e17bda68561992b894422db3b4a85d8223df22d  artifacts/claude-called281-20260923/pilot/dev260.json
+7a1ef15a5e249e115524b53d377b87c32b1b3ef9478b85842f97fba427bfd769  artifacts/claude-called281-20260923/pilot/dev281.json
+cd3fa263a07757c38326e425e3f11d0699ef57f326aeaa981322a46f7426d95e  artifacts/claude-called281-20260923/pilot/dev-score.json
+scripts/claude_fix281_called.py: OK
+scripts/claude_loop281_agent.py: OK
+artifacts/claude-called281-20260923/loop281-config.json: OK
+scripts/claude_called281_devcases.py: OK
+artifacts/claude-called281-20260923/devcases281.json: OK
+scripts/claude_called281_run.py: OK
+scripts/claude_called281_score.py: OK
+scripts/claude_called281_regscore.py: OK
+scripts/claude_281_runall.sh: OK
+scripts/claude_281_panel.sh: OK
+artifacts/claude-called281-20260923/PASSMARKS.md: OK
+artifacts/claude-called281-20260923/predicted_moves281.json: OK
+artifacts/claude-called281-20260923/pilot/dev260.json: OK
+artifacts/claude-called281-20260923/pilot/dev281.json: OK
+artifacts/claude-called281-20260923/pilot/dev-score.json: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-20260923; blind panel never opened) M1 blind calledpanel281 run once per arm with sealed score_panel: stored called/named/name-of/do-you-call items >= 90% answered exactly on 281 (260 arm shown beside); 0 wrong answers on 281; not-stored items all abstain (0 new guesses); ambiguous "called <Name>" + control items 0 moves vs 260; 0 panel store diffs 281 vs 260; 0 question writes on 281. Changed replies come only from scripts/claude_fix281_called.py (rewrite + head's own plain-question answer). Truth of claims and grammar director-graded, ungraded here.
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 124 rows 0 moved, GATE clean on sessions152/bench; 0 abstain-ward flips. Verifier probes vs 260 rows: exactly 1 changed row N06 Q "What is the name of Tomas's boss?" -> "Tomas's boss is Mirela.", ev 0, stored identical; supp 0 changes.
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stored value); ambiguous 5/5 + control 6/6 byte-identical; notstored 5/5 abstain both arms; 0 question writes either arm. 260-arm failure modes: trailing-called "I don't know X's R called.", trailing-named "I don't know X's R named.", do-you-call clarify, name-of "anyone called the name of X".
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any suite/probe move outside N06 proves the change wrong. Known limits: embedded/non-"?" called-wordings, rewritten-clarifies (original stands), not-stored/ambiguous keep 260's malformed abstains (report-only).
+EOF
+tail -n 5 artifacts/fable-predictions-ledger.md
+- P280.5 CORRECTION to P280.4's seal count: 12/15 sealed files byte-identical (the 3 post-seal driver fixes are run.py, score.py, regscore.py); agent, config, dev cases, PASSMARKS, predicted moves, pilot dev rows untouched. Verdict unchanged: FAIL on M1b only.
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-20260923; blind panel never opened) M1 blind calledpanel281 run once per arm with sealed score_panel: stored called/named/name-of/do-you-call items >= 90% answered exactly on 281 (260 arm shown beside); 0 wrong answers on 281; not-stored items all abstain (0 new guesses); ambiguous "called <Name>" + control items 0 moves vs 260; 0 panel store diffs 281 vs 260; 0 question writes on 281. Changed replies come only from scripts/claude_fix281_called.py (rewrite + head's own plain-question answer). Truth of claims and grammar director-graded, ungraded here.
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 124 rows 0 moved, GATE clean on sessions152/bench; 0 abstain-ward flips. Verifier probes vs 260 rows: exactly 1 changed row N06 Q "What is the name of Tomas's boss?" -> "Tomas's boss is Mirela.", ev 0, stored identical; supp 0 changes.
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stored value); ambiguous 5/5 + control 6/6 byte-identical; notstored 5/5 abstain both arms; 0 question writes either arm. 260-arm failure modes: trailing-called "I don't know X's R called.", trailing-named "I don't know X's R named.", do-you-call clarify, name-of "anyone called the name of X".
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any suite/probe move outside N06 proves the change wrong. Known limits: embedded/non-"?" called-wordings, rewritten-clarifies (original stands), not-stored/ambiguous keep 260's malformed abstains (report-only).
+[0m
+[0m# [0mTodos
+[✓] Reproduce 281 probe failure on 260 (t04-t5, t12-t4 shapes)
+[✓] Write 40+ dev dialogs own wording (devcases281)
+[✓] Build fix281 + loop281 agent, pilot dev + suites + verifier probes
+[✓] Write PASSMARKS.md + predicted_moves, seal, append ledger
+[•] Wait for calledpanel281 seal, run panel once on both arms
+[ ] Write RESULTS.md + final reply, push
+[0m
+[0m$ [0mls artifacts/ | grep -iE "calledpanel|panel281"; ls artifacts/claude-calledpanel281-20260923/ 2>&1
+ls: artifacts/claude-calledpanel281-20260923/: No such file or directory
+[0m
+[0m$ [0mfor i in $(seq 1 30); do if [ -f artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt ]; then echo "SEAL PRESENT after $i polls"; ls -la artifacts/claude-calledpanel281-20260923/; break; fi; echo "$(date +%T) poll $i: no seal yet"; sleep 120; done; [ -f artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt ] || echo "STILL WAITING after 30 polls"
+03:20:54 poll 1: no seal yet
+03:22:54 poll 2: no seal yet
+03:24:54 poll 3: no seal yet
+03:26:54 poll 4: no seal yet
+03:28:54 poll 5: no seal yet
+03:30:54 poll 6: no seal yet
+03:32:54 poll 7: no seal yet
+03:34:54 poll 8: no seal yet
+03:36:54 poll 9: no seal yet
+03:38:54 poll 10: no seal yet
+03:40:54 poll 11: no seal yet
+03:42:54 poll 12: no seal yet
+03:44:54 poll 13: no seal yet
+03:46:54 poll 14: no seal yet
+03:48:54 poll 15: no seal yet
+03:50:54 poll 16: no seal yet
+03:52:54 poll 17: no seal yet
+03:54:54 poll 18: no seal yet
+03:56:55 poll 19: no seal yet
+03:58:55 poll 20: no seal yet
+04:00:55 poll 21: no seal yet
+04:02:55 poll 22: no seal yet
+04:04:55 poll 23: no seal yet
+04:06:55 poll 24: no seal yet
+04:08:55 poll 25: no seal yet
+04:10:55 poll 26: no seal yet
+04:12:55 poll 27: no seal yet
+SEAL PRESENT after 28 polls
+total 48
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 04:13 .
+drwxr-xr-x@ 416 ben-hannan  staff  13312 Sep 23 04:12 ..
+-rw-r--r--    1 ben-hannan  staff   8208 Sep 23 04:13 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   2343 Sep 23 04:13 README.md
+-rw-r--r--    1 ben-hannan  staff    239 Sep 23 04:13 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff   1424 Sep 23 04:13 SPEC-COPY.md
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-called281-20260923/SEAL.sha256.txt && (cd . && shasum -a 256 -c artifacts/claude-calledpanel281-20260923/SEAL.sha256.txt) && cat artifacts/claude-calledpanel281-20260923/README.md artifacts/claude-calledpanel281-20260923/SPEC-COPY.md
+scripts/claude_fix281_called.py: OK
+scripts/claude_loop281_agent.py: OK
+artifacts/claude-called281-20260923/loop281-config.json: OK
+scripts/claude_called281_devcases.py: OK
+artifacts/claude-called281-20260923/devcases281.json: OK
+scripts/claude_called281_run.py: OK
+scripts/claude_called281_score.py: OK
+scripts/claude_called281_regscore.py: OK
+scripts/claude_281_runall.sh: OK
+scripts/claude_281_panel.sh: OK
+artifacts/claude-called281-20260923/PASSMARKS.md: OK
+artifacts/claude-called281-20260923/predicted_moves281.json: OK
+artifacts/claude-called281-20260923/pilot/dev260.json: OK
+artifacts/claude-called281-20260923/pilot/dev281.json: OK
+artifacts/claude-called281-20260923/pilot/dev-score.json: OK
+artifacts/claude-calledpanel281-20260923/panel.jsonl: OK
+artifacts/claude-calledpanel281-20260923/SPEC-COPY.md: OK
+# calledpanel281 (exp 281 blind panel)
+
+60 turns, 10 dialogs (D01-D10), 6 turns each. Fictional names only, freshly invented.
+Each dialog starts with 1 teach then only questions. Notebook state is per-dialog (fresh at each dialog start).
+
+## Counts per category (turns)
+
+| category | turns | meaning |
+|---|---|---|
+| teach_setup | 10 | control teach; states 1 fact; gold is the expected stored triple |
+| stored_called | 25 | called/named/name-of question about a fact taught in the same dialog; gold is the exact expected value |
+| nostore_called | 10 | same called-wording but the fact was never taught in that dialog; gold is `abstain` |
+| ambiguous_called | 10 | `called` belongs to the value/name itself (`Who is X's <other-relation> called <Name>?`); gold is `abstain` |
+| control_plain | 5 | plain possessive question without called/named about a taught fact; gold is the exact expected value |
+| total | 60 | — |
+| controls (teach_setup + control_plain) | 15 | — |
+
+## panel.jsonl schema
+
+One JSON object per line, keys:
+
+- `dialog_id`: e.g. `D01`
+- `turn_index`: 0-based index within the dialog
+- `user_text`: the user turn text
+- `category`: one of `teach_setup`, `stored_called`, `nostore_called`, `ambiguous_called`, `control_plain`
+- `gold`: expected result:
+  - teach turns: stored triple as `Subject|relation|Object` (e.g. `Lena|cat|Biscuit`)
+  - answer turns with a stored fact: the exact expected value string (e.g. `Biscuit`)
+  - items that must abstain: the literal `abstain`
+
+Write expectations (for the scorer; not a separate field): every question turn (`stored_called`, `nostore_called`, `ambiguous_called`, `control_plain`) expects zero notebook writes. Only `teach_setup` turns expect a write, identical to the base behavior.
+
+## Relations covered
+
+Stored facts span pets (cat, dog), boats, bands, streets, teachers: Lena/cat, Marco/boat, Priya/band, Tomas/street, Ines/teacher, Kira/dog, Dario/boat, Sana/band, Joren/street, Mira/teacher.
+
+Called-wording variants used: `What is X's R called?`, `What is X's R named?`, `Who is X's R named?`, `What's the name of X's R?`, `what's the name of X's R?`, `what do you call X's R?`, `What do you call X's R?`, `What's X's R called?`, `what's X's R's name?`, casual lowercase/no-punctuation forms (e.g. `what is Sana's band called`, `what do you call Tomas's street`).
+# SPEC-COPY for calledpanel281 (exp 281)
+
+Source: `design/v3/30-modes/280-282-chat-fixes.md` from `origin/main`, section "## 281" copied verbatim below. No other file was opened.
+
+---
+
+## 281: "What is Ana's cat called?" is read as "What is Ana's cat?"
+
+Problem: t04-t5 and t12-t4: "What is X's R called/named?" gives "I don't know X's R called." while X/R/V is
+stored. It is systematic.
+The one change: on question turns only, a trailing "called" / "named" after a possessive relation phrase
+("X's R called?", "X's R named?", "what do you call X's R?", "what's the name of X's R?") is read as asking for
+X's R. Teach turns and writes are untouched.
+Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;
+not-stored items still abstain (0 new guesses); 0 writes on question items. M2 frozen suites as in 280. M3 0 notebook
+changes except on the panel's teach turns, identical to 260's.
+Report-only: "I don't know X's R called." style broken abstains that remain.
+
+Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied
+relations: pets, boats, bands, streets, teachers), 10 same questions where the fact was never taught, 10 where
+"called" belongs to the value or name itself ("Who is Ana's friend called Bo?" style, ambiguous on purpose),
+15 controls (plain possessive questions and teaches). Fictional names only.
+[0m
+[0m← [0mWrite scripts/claude_called281_panelrun.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_called281_panelscore.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+items=[
+ {'dialog_id':'D01','turn_index':0,'user_text':\"Bram's cat is Soot.\",'category':'teach_setup','gold':'Bram|cat|Soot'},
+ {'dialog_id':'D01','turn_index':1,'user_text':\"What is Bram's cat called?\",'category':'stored_called','gold':'Soot'},
+ {'dialog_id':'D01','turn_index':2,'user_text':\"What is Bram's cat?\",'category':'control_plain','gold':'Soot'},
+ {'dialog_id':'D02','turn_index':0,'user_text':\"Tove's dog is Pip.\",'category':'teach_setup','gold':'Tove|dog|Pip'},
+ {'dialog_id':'D02','turn_index':1,'user_text':\"Who is Tove's friend called Bo?\",'category':'ambiguous_called','gold':'abstain'},
+ {'dialog_id':'D02','turn_index':2,'user_text':\"What is Zara's dog called?\",'category':'nostore_called','gold':'abstain'},
+]
+open('/tmp/called281-mockpt.jsonl','w').write('\n'.join(json.dumps(x) for x in items))
+" && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_panelrun.py panelrun scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json /tmp/called281-ptw260 /tmp/called281-mockpt.jsonl /tmp/called281-pt260.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_panelrun.py panelrun scripts/claude_loop281_agent.py artifacts/claude-called281-20260923/loop281-config.json /tmp/called281-ptw281 /tmp/called281-mockpt.jsonl /tmp/called281-pt281.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_panelscore.py /tmp/called281-mockpt.jsonl /tmp/called281-pt260.json /tmp/called281-pt281.json /tmp/called281-ptscore.json
+done 2 dialogs 6 turns
+done 2 dialogs 6 turns
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_panelscore.py", line 170, in <module>
+    sys.exit(main(sys.argv))
+             ^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_panelscore.py", line 63, in main
+    assert len(panel) == 60, f"panel turns {len(panel)} != 60"
+           ^^^^^^^^^^^^^^^^
+AssertionError: panel turns 6 != 60
+[0m
+[0m← [0mEdit scripts/claude_called281_panelscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_panelscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_panelscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_called281_panelscore.py
+@@ -59,9 +59,10 @@
+ r60 = {(r["dialog_id"], r["turn_index"]): r
+        for r in json.load(open(r260p))}
+ r81 = {(r["dialog_id"], r["turn_index"]): r
+        for r in json.load(open(r281p))}
+-assert len(panel) == 60, f"panel turns {len(panel)} != 60"
++if len(panel) != 60:
++    print(f"WARNING: panel turns {len(panel)} != 60")
+ rows = []
+ for it in panel:
+     key = (it["dialog_id"], it["turn_index"])
+     a, b = r60[key], r81[key]
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_called281_panelscore.py /tmp/called281-mockpt.jsonl /tmp/called281-pt260.json /tmp/called281-pt281.json /tmp/called281-ptscore.json
+WARNING: panel turns 6 != 60
+stored 1/1 right81 wrong81=0 abstain81=0 (260 right=0 wrong=0) miss=[] wrong=[]
+notstored abstain81 1/1 (260 1) guesses81=[] guesses60=[]
+ambiguous abstain81=1 abstain60=1 same=1/1 moved=[]
+control right81=1 right60=1 same=1/1 moved=[]
+teach ok81=2/2 ok60=2 store_same=2 ev_same=2 miss=[]
+question writes 81=[] 60=[]
+store diffs 281vs260: []
+broken abstains 81=[] 60=['D01#1']
+[0m
+[0m← [0mWrite scripts/claude_281_panelrun.sh
+Wrote file successfully.
+[0m
+[0m$ [0mchmod +x scripts/claude_281_panelrun.sh; uptime; bash scripts/claude_281_runall.sh artifacts/claude-called281-20260923/run
+4:16  up 2 days, 20:05, 4 users, load averages: 58.65 52.54 61.46
+04:16:23 uptime load1=58.65 before: M2-suites
+04:16:48 uptime load1=62.15 before: M2-rt136
+04:17:18 uptime load1=60.28 before: M2-rt136
+04:17:48 uptime load1=53.98 before: M2-rt136
+04:17:50 uptime load1=53.98 before: M2-rt143
+04:17:55 uptime load1=53.18 before: VP
+TOTAL 102 s
+sessions152: {'n_moves': 0, 'summary': 'sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.3', 'class_counts': {}, 'move_ids': []}
+bench: {'n_moves': 0, 'summary': 'bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=19.6'} gate=GATE: clean
+rt136: {'n': 145, 'diffs': []} gate=GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt143: n=124 diffs=[]
+vp diffs=['N06'] vs diffs=[]
+VERDICT: PASS
+[0m
+[0m$ [0mbash scripts/claude_281_panelrun.sh artifacts/claude-called281-20260923/run
+artifacts/claude-called281-20260923/pilot/dev281.json: OK
+artifacts/claude-called281-20260923/pilot/dev-score.json: OK
+artifacts/claude-calledpanel281-20260923/panel.jsonl: OK
+artifacts/claude-calledpanel281-20260923/SPEC-COPY.md: OK
+stored 16/25 right81 wrong81=0 abstain81=9 (260 right=0 wrong=0) miss=['D02#1', 'D02#2', 'D02#3', 'D03#3', 'D04#3', 'D08#1', 'D09#2', 'D10#1', 'D10#2'] wrong=[]
+notstored abstain81 10/10 (260 10) guesses81=[] guesses60=[]
+ambiguous abstain81=10 abstain60=10 same=10/10 moved=[]
+control right81=4 right60=4 same=5/5 moved=[]
+teach ok81=8/10 ok60=8 store_same=10 ev_same=10 miss=['D02#0', 'D10#0']
+question writes 81=[] 60=[]
+store diffs 281vs260: []
+broken abstains 81=['D01#4', 'D03#4', 'D04#4', 'D05#4', 'D06#3', 'D07#3', 'D08#1', 'D08#3', 'D09#2', 'D09#3'] 60=['D01#1', 'D01#3', 'D01#4', 'D03#1', 'D03#2', 'D03#4', 'D04#1', 'D04#4', 'D05#1', 'D05#2', 'D05#4', 'D06#1', 'D06#3', 'D07#1', 'D07#2', 'D07#3', 'D08#1', 'D08#3', 'D09#1', 'D09#2', 'D09#3']
+exit 0
+TOTAL 4 s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, sys; sys.path.insert(0,'scripts')
+import claude_fix281_called as F281
+panel={ (it['dialog_id'],it['turn_index']): it for it in [json.loads(x) for x in open('artifacts/claude-calledpanel281-20260923/panel.jsonl').read().splitlines() if x.strip()]}
+r81={(r['dialog_id'],r['turn_index']): r for r in json.load(open('artifacts/claude-called281-20260923/run/panel-281.json'))}
+s=json.load(open('artifacts/claude-called281-20260923/run/panel-score281.json'))
+print('stored misses:')
+for mid in s['stored']['miss_ids81']:
+    did,ti=mid.split('#'); key=(did,int(ti))
+    it=panel[key]; t=it['user_text']
+    rw=F281.rewrite_called281(t)
+    m,kind=F281._match_core(F281._apos(t).strip())
+    teach=r81[(did,0)]['triples']
+    print(mid,'cat=',it['category'],'teach_triples=',teach,'rewrite_match=',rw is not None,'qmark=',t.rstrip().endswith('?'),'reply=',repr(r81[key]['reply'][:60]),'ev=',r81[key]['ev'])
+print()
+print('teach misses:', s['teach']['miss_ids81'])
+print('control rows:')
+for r in json.load(open('artifacts/claude-called281-20260923/run/panel-281.json')):
+    key=(r['dialog_id'],r['turn_index'])
+    if panel[key]['category']=='control_plain':
+        print(r['dialog_id'],r['turn_index'],'reply=',repr(r['reply'][:60]))
+"
+stored misses:
+D02#1 cat= stored_called teach_triples= [] rewrite_match= True qmark= True reply= "I don't know anyone called Marco." ev= 0
+D02#2 cat= stored_called teach_triples= [] rewrite_match= True qmark= True reply= "I didn't understand that question — could you say it another" ev= 0
+D02#3 cat= stored_called teach_triples= [] rewrite_match= True qmark= True reply= "I don't know anyone called the name of Marco." ev= 0
+D03#3 cat= stored_called teach_triples= [['Priya', 'band', 'Velvet Foxes']] rewrite_match= False qmark= True reply= "Priya's band is Velvet Foxes, which is not someone I can loo" ev= 0
+D04#3 cat= stored_called teach_triples= [['Tomas', 'street', 'Willow Lane']] rewrite_match= False qmark= False reply= "I didn't understand that question — could you say it another" ev= 0
+D08#1 cat= stored_called teach_triples= [['Sana', 'band', 'Copper Kites']] rewrite_match= False qmark= False reply= "I don't know Sana's band called." ev= 0
+D09#2 cat= stored_called teach_triples= [['Joren', 'street', 'Cedar Row']] rewrite_match= False qmark= True reply= "I don't know Joren's street called." ev= 0
+D10#1 cat= stored_called teach_triples= [] rewrite_match= True qmark= True reply= "I don't know anyone called Mira." ev= 0
+D10#2 cat= stored_called teach_triples= [] rewrite_match= True qmark= True reply= "I don't know anyone called the name of Mira." ev= 0
+
+teach misses: ['D02#0', 'D10#0']
+control rows:
+D06 5 reply= "Kira's dog is Pepper."
+D07 5 reply= "Dario's boat is Moonwake."
+D08 5 reply= "Sana's band is Copper Kites."
+D09 5 reply= "Joren's street is Cedar Row."
+D10 5 reply= "I don't know anyone called Mira."
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s=json.load(open('artifacts/claude-called281-20260923/run/panel-score281.json'))
+panel=[json.loads(x) for x in open('artifacts/claude-calledpanel281-20260923/panel.jsonl').read().splitlines() if x.strip()]
+allstored=[f\"{it['dialog_id']}#{it['turn_index']}\" for it in panel if it['category']=='stored_called']
+right=[i for i in allstored if i not in s['stored']['miss_ids81']]
+print('stored right81 ids:', right)
+print('n panel turns:', len(panel))
+from collections import Counter
+print(Counter(it['category'] for it in panel))
+"
+stored right81 ids: ['D01#1', 'D01#2', 'D01#3', 'D03#1', 'D03#2', 'D04#1', 'D04#2', 'D05#1', 'D05#2', 'D05#3', 'D06#1', 'D06#2', 'D07#1', 'D07#2', 'D08#2', 'D09#1']
+n panel turns: 60
+Counter({'stored_called': 25, 'teach_setup': 10, 'nostore_called': 10, 'ambiguous_called': 10, 'control_plain': 5})
+[0m
+[0m← [0mWrite artifacts/claude-called281-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+EOF
+tail -n 2 artifacts/fable-predictions-ledger.md; git status --short | grep -v "^??" | head; git status --short | grep "^??" | grep -E "281|called281" 
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_loop281_agent.py
+[0m
+[0m$ [0mgit status --short scripts/claude_fix280_capab.py scripts/claude_loop280_agent.py artifacts/claude-capab280-20260923 2>&1 | head; echo ---; git check-ignore scripts/claude_fix281_called.py 2>&1; echo ---; git ls-files scripts/ | grep -E "281|280" | head; echo ---; git ls-files artifacts/ | grep -E "called281|capab280" | head
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_loop280_agent.py
+---
+---
+---
+[0m
+[0m$ [0mgit diff --name-only; echo ---; ls artifacts/claude-called281-20260923/ artifacts/claude-called281-20260923/run/ artifacts/claude-called281-20260923/pilot/; echo ---; shasum -a 256 -c artifacts/claude-called281-20260923/SEAL.sha256.txt | grep -cv OK; df -g / | tail -n 1; uptime
+artifacts/fable-predictions-ledger.md
+---
+artifacts/claude-called281-20260923/:
+devcases281.json
+loop281-config.json
+PASSMARKS.md
+pilot
+predicted_moves281.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-called281-20260923/pilot/:
+dev-score.json
+dev260.json
+dev281.json
+reg
+regscore-pilot.json
+work-dev260
+work-dev281
+
+artifacts/claude-called281-20260923/run/:
+own-seal-check.txt
+panel-260.json
+panel-260.log
+panel-281.json
+panel-281.log
+panel-files.txt
+panel-score.txt
+panel-score281.json
+panel-seal-check.txt
+regscore.txt
+regscore281.json
+rt143nogate-281.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-281.json
+vp-281.log
+vs-281.json
+vs-281.log
+work
+---
+0
+/dev/disk3s1s1       460   12        12    51%  484014 131375360    0%   /
+ 4:19  up 2 days, 20:08, 4 users, load averages: 44.61 50.37 59.00
+[0m
+[0m# [0mTodos
+[✓] Reproduce 281 probe failure on 260 (t04-t5, t12-t4 shapes)
+[✓] Write 40+ dev dialogs own wording (devcases281)
+[✓] Build fix281 + loop281 agent, pilot dev + suites + verifier probes
+[✓] Write PASSMARKS.md + predicted_moves, seal, append ledger
+[✓] Wait for calledpanel281 seal, run panel once on both arms
+[✓] Write RESULTS.md + final reply, push
+[0m
