@@ -1,0 +1,437 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin main 2>&1 | head -20; echo FETCH_DONE; ls
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 1:42  up 2 days, 17:31, 4 users, load averages: 25.77 64.93 69.62
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 164072320    0%   /
+FETCH_DONE
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-fixedtext255b-20260923/SEAL.sha256.txt; echo EXIT:$?
+ls artifacts/claude-fixedtext255b-20260923/; echo ---; ls artifacts/claude-merge138m-20260922/; echo ---; ls scripts/claude_255b_*
+scripts/claude_fix255b_text.py: OK
+scripts/claude_loop255b_agent.py: OK
+scripts/claude_fix255b_test.py: OK
+scripts/claude_255b_m1gen.py: OK
+scripts/claude_255b_m2check.py: OK
+scripts/claude_255b_m3changes.py: OK
+scripts/claude_255b_m3format.py: OK
+scripts/claude_255b_score.py: OK
+scripts/claude_255b_v255check.py: OK
+scripts/claude_255b_runall.sh: OK
+artifacts/claude-fixedtext255b-20260923/loop255b-config.json: OK
+artifacts/claude-fixedtext255b-20260923/PASSMARKS.md: OK
+artifacts/claude-fixedtext255b-20260923/predicted_moves255b.json: OK
+artifacts/claude-fixedtext255b-20260923/predicted-moves255b.md: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-bench132_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-edit200-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-new_121_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/bench-old_s2fresh_4hop-rows.jsonl: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam136-rows.json: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/redteam143-rows.json: OK
+artifacts/claude-fixedtext255b-20260923/base138m-rows/sessions152-rows.json: OK
+EXIT:0
+base138m-rows
+fixedtext.jsonl
+loop255b-config.json
+m3-reg
+PASSMARKS.md
+predicted_moves255b.json
+predicted-moves255b.md
+RESULTS.md
+run
+SEAL.sha256.txt
+SEAL2.sha256.txt
+---
+loop138m-config.json
+PASSMARKS.md
+predicted_moves138m.json
+RESULTS.md
+run
+SEAL.sha256.txt
+---
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+[0m
+[0m→ [0mRead scripts/claude_loop138m_agent.py
+[0m→ [0mRead scripts/claude_loop255b_agent.py
+[0m→ [0mRead artifacts/claude-fixedtext255b-20260923/loop255b-config.json
+[0m→ [0mRead artifacts/claude-merge138m-20260922/loop138m-config.json
+[0m→ [0mRead scripts/claude_255b_runall.sh
+[0m→ [0mRead scripts/claude_255b_score.py
+[0m→ [0mRead scripts/claude_255b_v255check.py
+[0m
+[0m$ [0mls scripts/claude_merge138k_*; ls artifacts/claude-verify-20260922/ 2>&1; ls artifacts/claude-verify-20260922/138m/ 2>&1 | head -30
+echo ---ORIGIN---; git show origin/main:scripts/claude_loop138m_agent.py 2>&1 | head -5; echo OK1; git show origin/main:scripts/claude_loop255b_agent.py 2>&1 | head -5; echo OK2
+scripts/claude_merge138k_latency.py
+scripts/claude_merge138k_marks220.py
+scripts/claude_merge138k_probe.py
+scripts/claude_merge138k_rt143nogate.py
+scripts/claude_merge138k_score.py
+138j
+138k
+138l
+138m
+220
+222
+223
+224
+226
+227
+227bc230
+228
+232c
+236
+243fixes
+restart_probe.py
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+---ORIGIN---
+#!/usr/bin/env python3
+"""Merge 138m -- 138l + the conversation line: 219, 230, 230c (with 230b),
+227, 227b, 227c, 224c (with 224), 233, 234. New file only; every piece
+module is imported read-only and its OWN functions/classes are reused.
+
+OK1
+fatal: path 'scripts/claude_loop255b_agent.py' exists on disk, but not in 'origin/main'
+OK2
+[0m
+[0m$ [0mgit status --short | head -30; echo ---; git log --oneline -5; echo ---; git show origin/main:artifacts/claude-fixedtext255b-20260923/loop255b-config.json 2>&1 | head -5
+echo ---BRANCH---; git branch --show-current; git rev-parse --abbrev-ref HEAD
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+---
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+---
+fatal: path 'artifacts/claude-fixedtext255b-20260923/loop255b-config.json' exists on disk, but not in 'origin/main'
+---BRANCH---
+claude/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m→ [0mRead scripts/claude_merge138k_probe.py
+[0m→ [0mRead artifacts/claude-verify-20260922/138m/run_probes.py
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import sys; sys.path.insert(0,'scripts'); import fable_marks123_all as M; help(M.make_daemon)" 2>&1 | head -60
+Help on function make_daemon in module fable_marks123_all:
+
+make_daemon(daemon_cls, base_cfg: 'dict', root: 'Path')
+[0m
+[0m✗ [0mGrep "def (make_daemon|load_agent|load_base_cfg|notebook_triples)" failed[90m in scripts[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0m/usr/bin/grep -n "def make_daemon\|def load_agent\|def load_base_cfg\|def notebook_triples" scripts/fable_marks123_all.py scripts/fable_loop90_agent.py | head -20
+ls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py 2>&1
+ls scratchpad/ | head -20
+scripts/fable_marks123_all.py:68:def load_agent(agent_script: str):
+scripts/fable_marks123_all.py:95:def load_base_cfg(config_path: str) -> dict:
+scripts/fable_marks123_all.py:99:def make_daemon(daemon_cls, base_cfg: dict, root: Path):
+scripts/fable_loop90_agent.py:101:def notebook_triples(nb) -> list[tuple[str, str, str]]:
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py: No such file or directory
+o0c-scratch-20260923
+w255
+w255b
+[0m
+[0m→ [0mRead scripts/fable_loop90_agent.py[90m [limit=30, offset=95][0m
+[0m→ [0mRead scripts/fable_marks123_all.py[90m [limit=130, offset=60][0m
+[0m
+[0m# [0mTodos
+[•] Verify seal + check disk/uptime
+[ ] Write fresh driver script for director probe dialogs
+[ ] Run probe on both arms, save transcripts.jsonl + transcripts.md
+[ ] Compute reply/triple diff counts by dialog+turn, final report
+[0m
+[0m$ [0muptime; df -g /; ls artifacts/ | /usr/bin/grep -i probe255b-director; echo NOEXIST_CHECK_DONE
+1:43  up 2 days, 17:32, 4 users, load averages: 26.40 56.64 66.10
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 163289200    0%   /
+NOEXIST_CHECK_DONE
+[0m
+[0m# [0mTodos
+[✓] Verify seal + check disk/uptime
+[•] Write fresh driver script for director probe dialogs
+[ ] Run probe on both arms, save transcripts.jsonl + transcripts.md
+[ ] Compute reply/triple diff counts by dialog+turn, final report
+[0m
+[0m← [0mWrite scripts/claude_probe255b_director.py
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Verify seal + check disk/uptime
+[✓] Write fresh driver script for director probe dialogs
+[•] Run probe on both arms, save transcripts.jsonl + transcripts.md
+[ ] Compute reply/triple diff counts by dialog+turn, final report
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+mkdir -p artifacts/claude-probe255b-director-20260923
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_probe255b_director.py /tmp/probe255b-director-work artifacts/claude-probe255b-director-20260923 2>&1 | tail -30
+138m D8 t1 'Hello!' -> 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"'  stored=[]
+138m D8 t2 'How many times have you slept?' -> "I didn't understand that question — could you say it another way?"  stored=[]
+255b D1 t0 "Ana's boss is Tobin." -> "Saved: Ana's boss is Tobin."  stored=[['Ana', 'boss', 'Tobin']]
+255b D1 t1 'whos anas boss tho' -> 'I couldn\'t save that as a fact. I don\'t know that kind of sentence yet. Could you say it another way? For example: "Kim\'s boss is Lee."'  stored=[['Ana', 'boss', 'Tobin']]
+255b D1 t2 "who is ana's bos" -> "I don't know Ana's bos."  stored=[['Ana', 'boss', 'Tobin']]
+255b D2 t0 'My name is Corla.' -> 'Saved: your name is Corla.'  stored=[['USER', 'name', 'Corla']]
+255b D2 t1 'whats my nmae?' -> "I didn't understand that. Could you say it another way?"  stored=[['USER', 'name', 'Corla']]
+255b D2 t2 'Do u know what im called' -> 'Your name is Corla.'  stored=[['USER', 'name', 'Corla']]
+255b D3 t0 'How many turns have we had?' -> 'We have had one turn.'  stored=[]
+255b D3 t1 'Have you slept?' -> "No. I haven't slept yet."  stored=[]
+255b D3 t2 'How many facts do you know?' -> "You haven't taught me any facts yet. I don't hold any web rows."  stored=[]
+255b D4 t0 'Did you ask me to clarify anything?' -> "I didn't understand that. Could you say it another way?"  stored=[]
+255b D4 t1 'How many questions have you answered?' -> "I haven't answered any questions yet."  stored=[]
+255b D4 t2 'Tell me about yesterday.' -> "I don't know anyone called yesterday."  stored=[]
+255b D5 t0 "Pim's city is Oslo." -> "Saved: Pim's city is Oslo."  stored=[['Pim', 'city', 'Oslo']]
+255b D5 t1 'where Pim live at' -> "I didn't understand that. Could you say it another way?"  stored=[['Pim', 'city', 'Oslo']]
+255b D5 t2 'Where does Pim live?' -> "Pim's city is Oslo."  stored=[['Pim', 'city', 'Oslo']]
+255b D6 t0 'Who talked to you besides me?' -> "I didn't understand that. Could you say it another way?"  stored=[]
+255b D6 t1 'whats ur name' -> 'You never told me your name, so I do not know it.'  stored=[]
+255b D6 t2 "Tobin's dog is Rufus." -> "Saved: Tobin's dog is Rufus."  stored=[['Tobin', 'dog', 'Rufus']]
+255b D6 t3 'rufus belongs to who' -> 'I couldn\'t save that as a fact. I don\'t know that kind of sentence yet. Could you say it another way? For example: "Kim\'s boss is Lee."'  stored=[['Tobin', 'dog', 'Rufus']]
+255b D7 t0 "Kell's teacher is Mara." -> "Saved: Kell's teacher is Mara."  stored=[['Kell', 'teacher', 'Mara']]
+255b D7 t1 'Mara teaches who?' -> "I didn't understand that. Could you say it another way?"  stored=[['Kell', 'teacher', 'Mara']]
+255b D7 t2 "who's kell's teachr" -> "I didn't understand that. Could you say it another way?"  stored=[['Kell', 'teacher', 'Mara']]
+255b D8 t0 'Have you stored any web rows?' -> "I didn't understand that. Could you say it another way?"  stored=[]
+255b D8 t1 'Hello!' -> 'Hi! I\'m Premonition. You can teach me a fact, for example: "Tom\'s boss is Ann." Then you can ask me about it, for example: "Who is Tom\'s boss?"'  stored=[]
+255b D8 t2 'How many times have you slept?' -> "I didn't understand that. Could you say it another way?"  stored=[]
+REPLY_DIFFS 15: [('D1', 1), ('D2', 1), ('D3', 0), ('D3', 1), ('D3', 2), ('D4', 0), ('D4', 1), ('D5', 1), ('D6', 0), ('D6', 3), ('D7', 1), ('D7', 2), ('D8', 0), ('D8', 1), ('D8', 2)]
+STORED_DIFFS 0: []
+wrote 50 turn records -> artifacts/claude-probe255b-director-20260923/transcripts.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+ls -la artifacts/claude-probe255b-director-20260923/; /usr/bin/wc -l artifacts/claude-probe255b-director-20260923/transcripts.jsonl artifacts/claude-probe255b-director-20260923/transcripts.md
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+recs=[json.loads(l) for l in open('artifacts/claude-probe255b-director-20260923/transcripts.jsonl')]
+print('lines',len(recs))
+from collections import Counter
+print(Counter((r['arm'],r['dialog']) for r in recs))
+by={}
+for r in recs: by.setdefault((r['dialog'],r['turn']),{})[r['arm']]=r
+rd=[k for k in sorted(by) if by[k]['138m']['reply']!=by[k]['255b']['reply']]
+sd=[k for k in sorted(by) if by[k]['138m']['stored']!=by[k]['255b']['stored']]
+print('reply_diffs',len(rd)); [print(k,repr(by[k]['138m']['reply']),'=>',repr(by[k]['255b']['reply'])) for k in rd]
+print('stored_diffs',len(sd),sd)
+"
+total 40
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 23 01:43 .
+drwxr-xr-x@ 398 ben-hannan  staff  12736 Sep 23 01:43 ..
+-rw-r--r--    1 ben-hannan  staff   8438 Sep 23 01:43 transcripts.jsonl
+-rw-r--r--    1 ben-hannan  staff   6893 Sep 23 01:43 transcripts.md
+      50 artifacts/claude-probe255b-director-20260923/transcripts.jsonl
+     219 artifacts/claude-probe255b-director-20260923/transcripts.md
+     269 total
+lines 50
+Counter({('138m', 'D6'): 4, ('255b', 'D6'): 4, ('138m', 'D1'): 3, ('138m', 'D2'): 3, ('138m', 'D3'): 3, ('138m', 'D4'): 3, ('138m', 'D5'): 3, ('138m', 'D7'): 3, ('138m', 'D8'): 3, ('255b', 'D1'): 3, ('255b', 'D2'): 3, ('255b', 'D3'): 3, ('255b', 'D4'): 3, ('255b', 'D5'): 3, ('255b', 'D7'): 3, ('255b', 'D8'): 3})
+reply_diffs 15
+('D1', 1) 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' => 'I couldn\'t save that as a fact. I don\'t know that kind of sentence yet. Could you say it another way? For example: "Kim\'s boss is Lee."'
+('D2', 1) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D3', 0) 'We have had 1 turns.' => 'We have had one turn.'
+('D3', 1) 'No. I have slept 0 times.' => "No. I haven't slept yet."
+('D3', 2) 'I know 0 facts you taught me. I also hold 0 web row, which I do not believe.' => "You haven't taught me any facts yet. I don't hold any web rows."
+('D4', 0) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D4', 1) 'I have answered 0 questions.' => "I haven't answered any questions yet."
+('D5', 1) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D6', 0) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D6', 3) 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' => 'I couldn\'t save that as a fact. I don\'t know that kind of sentence yet. Could you say it another way? For example: "Kim\'s boss is Lee."'
+('D7', 1) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D7', 2) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D8', 0) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+('D8', 1) 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"' => 'Hi! I\'m Premonition. You can teach me a fact, for example: "Tom\'s boss is Ann." Then you can ask me about it, for example: "Who is Tom\'s boss?"'
+('D8', 2) "I didn't understand that question — could you say it another way?" => "I didn't understand that. Could you say it another way?"
+stored_diffs 0 []
+[0m
+[0m→ [0mRead artifacts/claude-probe255b-director-20260923/transcripts.md[90m [limit=60][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+r=json.loads(open('artifacts/claude-probe255b-director-20260923/transcripts.jsonl').readline())
+print(sorted(r.keys())); print(r)
+"
+['arm', 'dialog', 'reply', 'stored', 'turn', 'user']
+{'arm': '138m', 'dialog': 'D1', 'turn': 0, 'user': "Ana's boss is Tobin.", 'reply': "Saved: Ana's boss is Tobin.", 'stored': [['Ana', 'boss', 'Tobin']]}
+[0m
+[0m$ [0mgit status --short | /usr/bin/grep -v "^??" | head -20; echo ---UNTRACKED-RELEVANT---; git status --short | /usr/bin/grep "probe255b-director\|claude_probe255b_director"; echo ---; df -g / | tail -2; uptime
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+---UNTRACKED-RELEVANT---
+?? scripts/claude_probe255b_director.py
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 163090400    0%   /
+ 1:44  up 2 days, 17:33, 4 users, load averages: 28.38 52.68 64.14
+[0m
+[0m$ [0mgit status --short | head -60; echo ---; git check-ignore -v artifacts/claude-probe255b-director-20260923/transcripts.jsonl 2>&1; echo ---; ls -la artifacts/claude-probe255b-director-20260923/
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+---
+.gitignore:5:artifacts/	artifacts/claude-probe255b-director-20260923/transcripts.jsonl
+---
+total 40
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 23 01:43 .
+drwxr-xr-x@ 398 ben-hannan  staff  12736 Sep 23 01:43 ..
+-rw-r--r--    1 ben-hannan  staff   8438 Sep 23 01:43 transcripts.jsonl
+-rw-r--r--    1 ben-hannan  staff   6893 Sep 23 01:43 transcripts.md
+[0m
+[0m# [0mTodos
+[✓] Verify seal + check disk/uptime
+[✓] Write fresh driver script for director probe dialogs
+[✓] Run probe on both arms, save transcripts.jsonl + transcripts.md
+[✓] Compute reply/triple diff counts by dialog+turn, final report
+[0m
