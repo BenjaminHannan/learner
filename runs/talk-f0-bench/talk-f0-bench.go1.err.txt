@@ -1,0 +1,223 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd && git fetch -q origin main && uptime && df -g /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+14:10  up  4:03, 4 users, load averages: 29.10 34.36 40.58
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 180297800    0%   /
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/talk-fluency-plan.md
+# Fluent, conversational replies: gap and plan. Talking line, 2026-09-23 18:10 UTC
+
+Ben (17:55 UTC): "I only want to talk to it when it's able to speak fluent english in a conversational tone".
+Evidence was checked in code and in the 04:18 chat-demo transcripts (artifacts/claude-chatweak-20260923, 90 turns, dev material).
+
+## Where replies come from today (base 292)
+- 292's mouth is still the stand-in template mouth. Config `mouth`: "Loop138bMouth ... replacement: real mouth
+  fable_mouth53". Answers read like "<owner> is <value>." or "Ana's city is Quito.", and relation labels are
+  used in place of verbs.
+- 241b's better mouth (a rule-based rewriter: 99%+ grammar, and a blind judge preferred it 97 times to 9) is
+  installed only on the old base 228. The 280p talking layers are on 260; they reach 292 via 292t (queued).
+- Chat demo, 90 turns:
+  - 36 are fixed clarify lines. One "I don't know that shape yet..." line appears 17 times, and "I didn't
+    understand that question..." appears 14 times.
+  - 17 are fixed small-talk or self lines.
+  - 37 are built from notebook records. Saves read "Saved: ...".
+  - 0 replies ask a follow-up or refer back to an earlier turn.
+
+## The gap, in order of size
+1. **Understanding, not wording.** 40% of demo replies are "I didn't understand". No mouth can make those
+   conversational; the ear (the understanding step) has to understand more. That is the ear and reasoning
+   lines' work. This line will measure it and hand them the counts.
+2. **Stiff fixed lines.** One wording per situation, repeated word for word, plus the "I can: a; b; c" list and
+   "Saved:". This is fixable on CPU in days.
+3. **Sentence wording.** 241b already fixes most of this; it just is not on 292.
+4. **Conversation habits.** No acknowledgements, variety, follow-ups or references back. These need a dialog
+   state and a reply planner, not just a better sentence writer.
+5. **A real generative mouth** (the own talker101, or a small pretrained model that only paraphrases a checked
+   record). This is the long-run answer to "fluent". It needs an exact read-back check first, because a yes/no
+   checker let 63 of 65 wrong readings through. It belongs to the own-model line, and a new model download needs
+   Ben's yes.
+
+## Plan (each step is one sealed experiment; marks fixed before each build)
+- **F0: measurement first.** A sealed conversation benchmark: fresh multi-turn everyday dialogs from a blind
+  writer, fictional names. Baseline taken on 292.
+  - Mechanical marks: unfaithful lines, notebook-event changes, share of the single most common reply, and the
+    share of turns that are clarify lines.
+  - Graded marks: a dialog-level blind pairwise judge, and a rubric grader (warmth, variety, acknowledgement,
+    follow-up). Every grader must first catch at least 36 of 40 planted flaws.
+- **F1: 241b's rewriter on 292t.** This also re-registers 241b's speed mark under a quiet-machine rule.
+- **F2: conversational fixed text.** Several true wordings per situation (clarify, greeting, thanks, save
+  acknowledgement, ability), chosen deterministically, under a sealed style guide. Each wording gets a truth
+  check.
+- **F3: a small reply planner.** Acknowledge the teach and never repeat the same line twice in a row, with
+  nothing new claimed.
+- **F4: generative mouth,** coordinated with the own-model line through the coordinator.
+Pass mark for "conversational" (proposed, to be fixed in F0's note):
+- the blind judge prefers the new arm on at least 70% of non-tie dialogs vs 292, with at most 10% losses;
+- 0 unfaithful lines;
+- no single reply on more than 10% of turns;
+- grammar at least 99%.
+Wrong if: 60% or fewer wins, or any unfaithful line.
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1; ls /private/tmp/claude-502/ 2>&1 | head -20; git status --short | head -20; ls artifacts/ | head -30
+ls: scratchpad/briefs/: No such file or directory
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+bash-edit-diff
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+[0m
+[0m$ [0mls scratchpad/ 2>&1; git show origin/main:scratchpad/briefs/OPUS-RULES.txt 2>&1 | head -100
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+fatal: path 'scratchpad/briefs/OPUS-RULES.txt' does not exist in 'origin/main'
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main 2>&1 | grep -i -E "opus|rules|brief" | head -20; echo ---; git log --oneline -3 2>&1 | head
+archive/opus-m01-20260918-202731/AFTER.SHA256SUMS
+archive/opus-m01-20260918-202731/changes.diff
+archive/opus-m01-20260918-202731/external-state-at-final-run.sha256
+archive/opus-m01-20260918-202731/originals/SHA256SUMS
+archive/opus-m01-20260918-202731/originals/__init__.py
+archive/opus-m01-20260918-202731/originals/batch.py
+archive/opus-m01-20260918-202731/originals/config.py
+archive/opus-m01-20260918-202731/originals/contenders.py
+archive/opus-m01-20260918-202731/originals/data.py
+archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md
+archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md
+archive/opus-m01-20260918-202731/originals/exp1.py
+archive/opus-m01-20260918-202731/originals/flops.py
+archive/opus-m01-20260918-202731/originals/lookup.py
+archive/opus-m01-20260918-202731/originals/model.py
+archive/opus-m01-20260918-202731/originals/pointer.py
+archive/opus-m01-20260918-202731/originals/root/run.py
+archive/opus-m01-20260918-202731/originals/slices.py
+archive/opus-m01-20260918-202731/originals/store.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_contenders.py
+---
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+[0m
+[0m$ [0mmkdir -p artifacts/claude-convbench-f0-20260923 && ls artifacts/claude-convbench-f0-20260923
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-convbench-f0-20260923/dialogs.jsonl
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-convbench-f0-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mcd artifacts/claude-convbench-f0-20260923 && wc -l dialogs.jsonl && for k in teach ask smalltalk correct other; do printf "%s " "$k"; grep -c "\"kind\":\"$k\"" dialogs.jsonl; done && grep -c . dialogs.jsonl
+286 dialogs.jsonl
+teach 84
+ask 84
+smalltalk 68
+correct 10
+other 40
+286
+[0m
+[0m$ [0mcommand -v jq && jq -c -e . artifacts/claude-convbench-f0-20260923/dialogs.jsonl > /dev/null && echo JSONL-OK; grep -o '"dialog_id":"conv-f0-[0-9]*"' artifacts/claude-convbench-f0-20260923/dialogs.jsonl | sort -u | wc -l
+/usr/bin/jq
+JSONL-OK
+      40
+[0m
+[0m$ [0mjq -r .dialog_id artifacts/claude-convbench-f0-20260923/dialogs.jsonl | uniq -c | awk '{print $1}' | sort | uniq -c; jq -s -e 'group_by(.dialog_id) | map(select((length < 6) or (length > 10))) | length == 0' artifacts/claude-convbench-f0-20260923/dialogs.jsonl && echo LENGTHS-OK; grep -o '"turn_index":[0-9]*' artifacts/claude-convbench-f0-20260923/dialogs.jsonl | head -3
+2 10
+  10 6
+  20 7
+   6 8
+   2 9
+true
+LENGTHS-OK
+"turn_index":0
+"turn_index":1
+"turn_index":2
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-convbench-f0-20260923/dialogs.jsonl artifacts/claude-convbench-f0-20260923/README.md > artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt && cat artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt && git status --short artifacts/claude-convbench-f0-20260923/
+14386e014aae8e229ef49cd55d8fe09b0cb1e014f799fda856e21dd15d8f9b7f  artifacts/claude-convbench-f0-20260923/dialogs.jsonl
+ad037a0a8656a88c50b9a4cc6e2762dc1e386836d9619dff5f2d4d0d4f2f4365  artifacts/claude-convbench-f0-20260923/README.md
+[0m
+[0m$ [0mgit status --short | head -20 && git branch --show-current && git rev-parse --abbrev-ref HEAD 2>&1 | head -2
+M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+claude/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+[0m
