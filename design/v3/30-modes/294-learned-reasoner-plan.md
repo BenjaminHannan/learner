@@ -169,3 +169,24 @@ beats the brain-style design.
 This is a design choice with more than one plausible answer (A vs B, and the reward weights). A
 GPT (web) prompt asking for an adversarial review of sections 2–5 can be written under
 reviews/ if Ben wants one.
+
+## 7. How new is this, honestly? (added 19:50 after Ben 19:13: "I really want this model to be unique/innovative")
+
+Published already (so not new on their own):
+- running the same layers again and again (Universal Transformer, 2018; "recurrent-depth"
+  models, 2025);
+- reading a memory store by attention (memory networks, 2014-15);
+- answering by pointing at the input instead of writing words (pointer networks, 2015);
+- practice with checkable rewards (RL with verifiable rewards, 2024-25).
+
+What is new here as far as I know (untested, not searched exhaustively):
+- the combination under hard guarantees: every answer is copied from a cited row that a code
+  check confirms before it is spoken;
+- symbols re-shuffled each episode, so the reasoner can only read and can never memorise;
+- a skill learned only from its own graded practice, with no answer ever shown (counting,
+  comparing, before/after);
+- practice scheduled as sleep over its own notebook.
+None of this is a new learning mechanism. 294 is the test bed and the yardstick, not the final
+brain design. The idea search the notebook thread launched (19:13) can swap in a new core
+mechanism later. The panel, the reward checker, the code arm and the equal-size baseline stay
+the same, so any new idea gets a fair one-change test against this one.
