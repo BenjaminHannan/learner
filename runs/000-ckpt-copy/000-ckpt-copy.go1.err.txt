@@ -1,0 +1,527 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; uptime; df -g /; git fetch -q origin main 2>&1 | head -n 20; git status --short | head -n 50; ls ~/premonition-weights/ 2>&1 | head -n 20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 6:38  up 2 days, 22:28, 4 users, load averages: 75.69 69.60 56.57
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 124911320    0%   /
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+ls: /Users/ben-hannan/premonition-weights/: No such file or directory
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/264-qa-checker.md 2>&1 | head -n 300; echo "---SEPARATOR-261---"; git show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1 | head -n 400
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+- Q-value (V hidden): "Message from the speaker: «turn». According to this message, stated as a real, current fact (not asked, pretended, planned, wished, denied, or replaced), what is <S>'s <relation words>? Answer with the exact words from the message. If several, list them separated by ' | '. If the message does not state it, answer NOT STATED. If it is unclear, answer AMBIGUOUS."
+- Q-owner (S hidden): the same frame of words, "whose <relation words> is <V>?". The speaker is answered as "the speaker".
+- Q-relation (R hidden): "How is <V> related to <S> in this message? Answer with one to three words, or NOT STATED or AMBIGUOUS."
+Save iff V (case- and space-normalised) is one of Q-value's answers, AND S is one of Q-owner's answers ("the speaker" matches "me"), AND Q-relation's answer maps to R through relation table v2 names, aliases or narrower. Otherwise hold back as UNSURE. No threshold, so nothing is tuned; dev is used only to debug prompt wording, and every wording change is logged. The span guard stays after it.
+Report wrong saves per saved fact AND per turn, plus recall, with every arm on the same scorer (Ruling 1 included).
+"our/we" owners are excluded from panel 264 (Ben ruled they must ask whose; that is a separate experiment, 265).
+Certification is separate: panels like 264 are discovery panels, and certifying uses the 600-turn fixed set (to be written).
+---SEPARATOR-261---
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+[0m
+[0m$ [0mls artifacts/claude-earcheck261b-20260923/ 2>&1; ls scripts/claude_earcheck261*.py scripts/claude_earcheck261b*.py 2>&1; cat artifacts/fable-predictions-ledger.md 2>&1 | tail -n 100
+dev_261b.jsonl
+dev261b_earpreds.json
+dev261b_manifest.json
+dev261b_pyes.json
+guarddev_261bdev.json
+guarddev_261dev.json
+panel261b_bpreds.json
+panel261b_earpreds.json
+panel261b_pyes.json
+panel261b_score.json
+panel261b_turns.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+scripts/claude_earcheck261_armb.py
+scripts/claude_earcheck261_arms.py
+scripts/claude_earcheck261_canon.py
+scripts/claude_earcheck261_checker.py
+scripts/claude_earcheck261_checks.py
+scripts/claude_earcheck261_devset.py
+scripts/claude_earcheck261_devset2.py
+scripts/claude_earcheck261_devset3.py
+scripts/claude_earcheck261_devset4.py
+scripts/claude_earcheck261_devturns.py
+scripts/claude_earcheck261_panel.py
+scripts/claude_earcheck261_pchecks.py
+scripts/claude_earcheck261_promptB.py
+scripts/claude_earcheck261_qbuild.py
+scripts/claude_earcheck261_qwen.py
+scripts/claude_earcheck261_score.py
+scripts/claude_earcheck261_score257.py
+scripts/claude_earcheck261_scoremain.py
+scripts/claude_earcheck261_theta.py
+scripts/claude_earcheck261_turns.py
+scripts/claude_earcheck261b_armb.py
+scripts/claude_earcheck261b_armb.py
+scripts/claude_earcheck261b_arms.py
+scripts/claude_earcheck261b_arms.py
+scripts/claude_earcheck261b_devset5.py
+scripts/claude_earcheck261b_devset5.py
+scripts/claude_earcheck261b_guard.py
+scripts/claude_earcheck261b_guard.py
+scripts/claude_earcheck261b_guarddev.py
+scripts/claude_earcheck261b_guarddev.py
+scripts/claude_earcheck261b_panel.py
+scripts/claude_earcheck261b_panel.py
+scripts/claude_earcheck261b_scoremain.py
+scripts/claude_earcheck261b_scoremain.py
+scripts/claude_earcheck261b_turns.py
+scripts/claude_earcheck261b_turns.py
+- P280.3 Registered verdict lean: PASS ~70%. Likeliest failure is M1b on a panel general wording outside the closed 16-form set (stays clarify, keyword count 0, claims nothing) or the director ruling on CAN280's limits sentence (M4, ungraded here). Dev/table risk is retired: dev 82 dialogs all reported (save/ask1/abstain 8/8 plain; correct No/Actually 8/8, forget direct 8/8, two-step boss-chain 10/10 with examples; mixed hops 1/6, contrast 0/4, other forget 0/4, provenance 0/8 dropped).
+- P268.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bar 1 only. M1 panel 70 items once per arm with sealed score_panel.py: 268 rows byte-identical to 138m on all 70 (per-item right sets equal); reverse_chain 10/24 (bar 22/24), reverse_nochain keeps 4/4, uncued 8/8, forward_chain 12/12, forward_1hop 9+1miss identical, abstain 3+3miss identical, wrong 0/70, question_wrote 0/70. Stage census: 0 reverse_chain items at loop138-nhop on either arm (153-reverse 8R, 190-reverse 2R, none 12M, bench73 2M) — the panel presents no forward-walkable frame, so the frame-suppressing guard is a no-op there. DEV/M2/M3/M4 all PASS exactly as predicted (21+3 dev moves by id, 0 elsewhere, latency -0.003 ms). No falsifier triggered. Post-seal driver addition only: scripts/claude_268_panelrun.py (panel runner; sealed files unchanged, seal re-verified OK). P268.1-P268.6 predictions held except P268.2's 22/24 reach goal (composition risk stated pre-seal).
+- P266b.1 (2026-09-23, builder; exp 266b multi-word chain lift on 266, CPU only, sealed 21 files SEAL.sha256.txt artifacts/claude-chain266b-20260923; blind panels never opened, chainpanel266 never read at item level) dev 49 dialogs own wording fictional names: 26 lifts MISS->RIGHT e01-e26 (two-word 2-link/3-link, three-word 2-link/3-link, last-word-also-taught; live, born, work, work-for, speak), 5 MISS->honest-ABSTAIN e31-e35 (broken multi-word chains; e32 in base's three-word wording), 4 untaught multi-word MISS on all arms e27-e30 (no lift, no guess), 14 266-vs-266b byte-identical (controls, my-chain, statements, one-word chains); 0 question writes, equal events all arms.
+- P266b.2 (same) M1 blind chainpanel266b run once per arm with sealed score_panel.py: multiword_chain >= 22/24, three_link >= 7/8, oneword_chain no 266-RIGHT item lost, broken_chain 12/12 honest abstain, 0 wrong, 0 question writes, plain_control + statement_control byte-identical (266 number beside every figure). Risk: base abstains 3-word-base broken chains as "...not someone I can look up" (dev e32; base's own words served unchanged).
+- P266b.3 (same) M2 chainpanel266 regression: 0 new wrong; only the 8 cause-(b) ids (c266-005, c266-008, c266-015, c266-031, c266-032, c266-033, c266-035, c266-036) may move to RIGHT; all other ids byte-identical.
+- P266b.4 (same) M3 frozen suites vs 266 saved rows: sessions152/bench/marks123 0 moves; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only; rt136 direct vs 266 rows []; rt143 no-gate 0 moves 0 verdict flips; 63 inherited 222 exceptions identical (seconds excluded); restart+verifier 0 reply changes, 0 ghosts, 0 dup fails, 0 write changes.
+- P266b.5 (same) M4 latency alternating processes: median(266b)-median(266) <= +5 ms/turn (pilot -0.11 ms, 624 turns each).
+- P266b.6 (same) falsifiers: a reply about the wrong person (e.g. about "Voss" for "Mara Voss's boss"), an answer with a missing link, or an untaught multi-word name lifted into a guess proves the change wrong.
+- P269.1 (2026-09-23, builder; exp 269 = 265 sealed arm A + text-level group-owner check on the raw turn before ear/brake: P1-P5 ownership patterns + quote guard, deterministic, sealed generic ask line, saves byte-identical to A265 by construction; checker prompt B theta 0.25 + guard unchanged, scorer = 265 + M6-M8, sealed 15 files SEAL.sha256.txt artifacts/claude-ear269-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-29/30; pass (0 saves and >= 27 ask) ~55 %. Dev: 0 saves, ask 46/46 (18 divert + 28 text-only).
+- P269.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 8-12/15; pass (>= 12) ~35 %. Dev 14/22 (ex265 subset 7/10 reproduces 265; new 7/12); misses are extra checker-passed frames read off the group clause (6) + neighbour direction flips (2).
+- P269.3 M3 first_person 0 hits lost vs A265; pass ~99 %. Dev 10/10 hits, 0 lost; holds by construction (saves identical, asserted per turn).
+- P269.4 M4 named 15/15 turns byte-identical to A265; pass ~99 %. Construction, dev 10/10.
+- P269.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 13, A261b wrong 39 = 26 diverted + 13). Per-fact/per-turn rates for A, A265, A261b, B reported, no bars.
+- P269.6 M6 false asks on non_owner_we + first_person + named <= 1 total: 0-1, pass ~85 % (dev 0/53: 0 fires + 0 divert asks on 33 nonowner + 10 first + 10 named; 46/46 adversarial probes as intended). M7 gold hits lost on non_owner_we vs A265 <= 1: 0, pass ~99 % (dev 0; construction). M8 0 new wrong vs A265 across all families: 0, pass ~99 % (dev 0; construction).
+- P269.7 Overall registered PASS ~20 % (needs M1+M2 together; M3-M8 near-certain).
+- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health; /completion verified 162/162, 0 fallbacks); D4 diverted frames still spend a checker query (A265/A261b exactness); D5 M5/M8 = per-turn multiset difference; D6 check changes only the ASK trigger (per-frame divert does all suppression); D7 residuals: walk/feed/carry verbs don't fire, death contexts still fire, ourselves needs ownable nearby. See artifacts/claude-ear269-20260923/PASSMARKS.md.
+- P268b.1 (2026-09-23, builder; exp 268b = 138nb + unchanged 268 guard scripts/claude_fix268_nhopdir.py, CPU only, sealed 23 files SEAL.sha256.txt artifacts/claude-nhop268b-20260923; blind panels never opened, nhoppanel268 never dev material) DEV 123 dialogs own wording fictional names (70 rerun 268 dev + 7 supp + 46 new table-reader shapes): moves exactly the 46 predicted ids with exact 268b stage+reply (8 to 190 gold+label, 3 to bench73 ask, 4 to honest decline, 13 to none-abstain, 8 to table-inverse gold+label, 10 to table-label153 true fact); 315/361 other turns byte-identical; 0 teach/triple changes; 0 new wrong values.
+- P268b.2 (same) M1 blind nhoppanel268b run once per arm with sealed score_panel.py: bug family 0 wrong on 268b, >= 14/16 right with the "(worked out backwards)" label (rest honest abstains); every other family byte-identical to 138nb; 0 question writes. By-shape dev evidence: spouse whose/has-as 8/8 to 190 gold+label, married-to 3/3 to ask, husband/wife/partner/son 4/4 to decline, what-written/had-written/whose-was 13/13 to abstain, founder/author what-found+who-has-as 8/8 to table-inverse gold+label, whose-author/founder/employer/child 10/10 to table-label153 true fact.
+- P268b.3 (same) M2 invpanel138nb regression once per arm with sealed score_panel.py: moves 268b vs 138nb rows [], 0 new wrong, every 138nb-right item stays right, 0 question writes. Push only score JSON with ids/families/stages/counts, never item text or replies.
+- P268b.4 (same) M3 frozen suites vs 138nb saved rows: sessions152/bench/marks123 0 moves GATE clean; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079/C115 reply-only, 0 new WRONG/WRONG-WRITE/junk, direct rows vs 138nb [] (145); rt143 no-gate 0 moves 0 flips (124); 7 restart/verifier probes rows equal (15+2+1+15+3+98+12 dialogs); 0 ghosts, 0 dup fails, 0 write changes.
+- P268b.5 (same) M4 latency alternating processes b,n,b,n,b,n 2 reps each on 138j p3/p3c/p3d: median(268b)-median(138nb) <= +5 ms/turn (pilot +0.068 ms, n=104 each).
+- P268b.6 (same) falsifiers: a forward-walk answer surviving on a bug item, any forward two-step answer change, or any backwards answer naming someone not in gold proves the change wrong.
+- P280.4 OUTCOME (2026-09-23, build agent, sealed exp 280) registered verdict FAIL on M1b only, as P280.3's likeliest failure. M1 panel (36 dialogs; seal OK; panel once per arm): M1a 0 forbidden on 280 (260 arm 7) PASS; M1b 9/12 general items list >= 3 abilities FAIL (misses G06, G11, G12: wording outside the closed 16-form set, clarify on both arms, 0 claims, 0 writes); M3 0 write diffs + 0 question/self writes PASS; canyou 20 0 forbidden 0 moves; control 4 0 moves. M2 PASS (sessions152 exactly the 3 predicted reply-only moves UNHELPFUL->UNHELPFUL GATE clean; rt136 0 field diffs with vs-138j labels identical to 260's; rt143 0; bench 4x200 0; 0 flips). Probes 0 changes. Dev identical 280 vs 260 with the registered ability scores. Deviations: 2 driver-only fixes after seal (regscore rt136-gate check; run+score flat-row panel_group after one void panel pass, outputs in pilot/void-attempt/); agent/config/cases/PASSMARKS 14/15 seal-OK... (14 of 15 sealed files byte-identical; only the 2 fixed drivers differ). P280.1 right (suites+probes exactly), P280.2 half-right (M1a/M3 right, M1b 9/12 not all), P280.3 wrong lean (FAIL, not PASS) with the predicted failure mode right.
+- P280.5 CORRECTION to P280.4's seal count: 12/15 sealed files byte-identical (the 3 post-seal driver fixes are run.py, score.py, regscore.py); agent, config, dev cases, PASSMARKS, predicted moves, pilot dev rows untouched. Verdict unchanged: FAIL on M1b only.
+- P281.1 (2026-09-23, builder; exp 281 called/named questions on 260, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-called281-20260923; blind panel never opened) M1 blind calledpanel281 run once per arm with sealed score_panel: stored called/named/name-of/do-you-call items >= 90% answered exactly on 281 (260 arm shown beside); 0 wrong answers on 281; not-stored items all abstain (0 new guesses); ambiguous "called <Name>" + control items 0 moves vs 260; 0 panel store diffs 281 vs 260; 0 question writes on 281. Changed replies come only from scripts/claude_fix281_called.py (rewrite + head's own plain-question answer). Truth of claims and grammar director-graded, ungraded here.
+- P281.2 (same) M2 frozen suites vs 260 saved rows: sessions152 0 moved, bench 4x200 0 moved, rt136 145 units 0 field diffs, rt143_nogate 124 rows 0 moved, GATE clean on sessions152/bench; 0 abstain-ward flips. Verifier probes vs 260 rows: exactly 1 changed row N06 Q "What is the name of Tomas's boss?" -> "Tomas's boss is Mirela.", ev 0, stored identical; supp 0 changes.
+- P281.3 (same) dev 46 dialogs own wording fictional names: 30 stored-shape moves 260->281 (d281-001..d281-030 turn 1, all to the exact stored value); ambiguous 5/5 + control 6/6 byte-identical; notstored 5/5 abstain both arms; 0 question writes either arm. 260-arm failure modes: trailing-called "I don't know X's R called.", trailing-named "I don't know X's R named.", do-you-call clarify, name-of "anyone called the name of X".
+- P281.4 (same) falsifiers: any 281 answer with a value not in the store, any question-turn write, any ambiguous/control move vs 260, or any suite/probe move outside N06 proves the change wrong. Known limits: embedded/non-"?" called-wordings, rewritten-clarifies (original stands), not-stored/ambiguous keep 260's malformed abstains (report-only).
+- P268b.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bug clauses only. M1 blind nhoppanel268b 60 items once per arm with sealed score_panel.py: bug 11/16 right with label (bar 14), 1 wrong n268b-010 (bar 0), 4 honest bench73 non-answers; other 44 items byte-identical to 138nb (stages, replies, stored), question writes 0/60 both arms; base bug 0/16 right 16/16 wrong all loop138-nhop. Diagnosis: guard R1-R4 list has no "Who <verb>" employer/work shape, so 010's (employer-valued start,[employer]) frame survived as a forward-walk reply (falsifier P268b.6 clause 1 tripped); 4 married-to shapes fall to bench73 ask (predicted class, never wrong). DEV/M2/M3/M4 all PASS per design marks (DEV 46/46 exact, 0 writes; M2 moves [] 0 new wrong keep 69/69 rights; M3 suites 0 GATE clean rt136 16 inherited direct [] rt143 0 probes 7/7 equal latency -0.005 ms). Missed extra prediction: M2 writes [] vs 4 teach_control writes identical on both arms (legitimate, right). Post-seal driver files only: scripts/claude_268b_score_fix1.py (2 sealed-scorer bug fixes, diff disclosed), scripts/claude_268b_m1run.py (question_stage row format the sealed scorer requires). Sealed files unchanged, seal re-verified 23/23 OK. P268b.1-P268b.5 held except P268b.2's 14/16 + 0-wrong bars.
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-capab280b-20260923; blind panel never opened, capabilpanel280 burned per director correction) M1 blind capabilpanel280b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text, SCHEMA-MISMATCH exit 3 = VOID): all 25 general items byte-equal to sealed CAN280 on 280b (280 arm shown); 0 unsupported-claim replies on 280b anywhere; canyou 10/10 + nearmiss 10/10 + control 5/5 byte-identical 280b vs 280; 0 panel write diffs; 0 question/self writes on 280b. Truth of claims and grammar director-graded, ungraded here.
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 280's (16 inherited), rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 280 rows: vp 98 + supp 12, 0 changes. Dev 68 own-wording fictional-name dialogs: general 28/28 exact CAN280 on 280b, all other families 0 diffs vs 280, 0 question writes.
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not byte-equal CAN280, or any question-turn write proves the change wrong. Known limits: cue-less generals ("Can you tell me about yourself?"), negations ("What can't you do?"), and "What can you not do?" keep 280's replies by construction. Pre-seal pilot fix disclosed: B17 "What do you know about me?" over-fired the unordered what+do+you cue; cue ordered (what...you...do) before seal, B17 0-diff since.
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+- P269.9 OUTCOME (2026-09-23, builder) registered run INCOMPLETE by blockage, no verdict: panel sealed before my seal (2/2 OK), my seal 15/15 OK (unchanged at close), schema 100 lines 30/15/20/15/20 OK, arm B ran ONCE on 100/100 (B 25/70 hits, 0 wrong, 25 saved; per-family in RESULTS.md); ear arms A/A265/A261b 0 runs (BensPC unreachable 02:30-04:30 local, SSH+ping 100% loss, ~120 min polled); P269.1-P269.7 unresolved; llama-server PID 26480 left running (could not stop; exact PID recorded for cleanup); resume needs no re-seal and no arm-B re-run. See artifacts/claude-ear269-20260923/RESULTS.md.
+- P282.1 (exp 282 casual greetings and closings get small talk, outermost layer on 260, builder, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-small282-20260923) M2 suites vs 260's saved rows: exactly 0 moved units (sessions152 180, bench 4x200 GATE clean, rt136 145 0 field diffs with vs-138j-base labels identical to 260's on both arms, rt143_nogate 124); 0 verdict flips, 0 write changes, 0 abstain-ward flips.
+- P282.2 Verifier probes vs 260's saved rows: exactly 1 changed row, vp E04 (Q "what's up?" with nothing stored -> the head's greeting reply, ev 0, stored []); supp 0 changes; 0 question writes anywhere.
+- P282.3 M1 blind smallpanel282: smalltalk fitting on 282 >= 90% (260 arm shown beside); 0 smalltalk writes on 282; 0 question writes on 282; mixed-hint turns 0 moves vs 260; other turns 0 moves vs 260; 0 store diffs 282 vs 260. Registered verdict: PASS.
+- P282.4 M3 smalltalkpanel234 rerun once per arm: wellbeing hits 282 >= 260's hits; every other item 282 == 260; 0 setup/store diffs; 0 writes on 282. Overall exp 282 PASS (M1-M3 all PASS).
+- P282.5 OUTCOME (2026-09-23, builder) registered verdict PASS on all sealed bars with a flagged figure. M1 (fixed driver re-run after void sealed run: sealed loader missed the writer's user_text key, fed 60/60 empty turns; fix = one key in new scripts/claude_small282_panelrun2.py, sealed files unchanged; panel executed twice per arm, once void): smalltalk 29/29 fitting (260 17/29), 0 writes, mixed 15/15 + other 31/31 exact, 0 store diffs; 12 moves (d09,d11,d19,d21,d22,d23,d26,d27,d28,d30,d32,d33 turn 0, ev 0). FLAG: by writer categories greeting+closing 35 turns, 282 fitting 31/35 = 88.6% (260 19/35), one turn short of the note's 90%; 4 abstain on both arms. M2 PASS (0 moves all suites; rt136 labels identical to 260's). Probes PASS per prediction (vp exactly E04, vs 0; sealed scorer prints FAIL on stale hardcoded vp-0 line — driver bug). M3 PASS (wellbeing 17/20 vs 260 16/20, other 36/36 same, 0 writes/diffs; 1 move s234-014). P282.1 right (0 suites moves), P282.2 right (exactly E04), P282.3 PASS on sealed bars with the 31/35 flag above, P282.4 right.
+- P291.1 (exp 291 join 138nb + 260 + 252c + glue, builder, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-join291-20260923 11 files) M1 dev/case files arms own/138p/291: 720 cases exactly the 503 predicted moves (21 + 38 + 34 + 44 + 22 + 57 + 269 + 18) with exact records, 0 unpredicted/wrong/missing, nb fidelity 720/720; 260dev 109/109 identical to own; dev252b/dev258/dev259 identical to 252c except the 1 + 8 + 9 predicted ids with exact records; junk only d258-037 + v259-008 (known).
+- P291.2 M2 suites vs 138nb rows: move sets exactly sessions152 1 (S3-teachers-correction#6), bench 0, marks123 2 (B_corrections-04/-05), rt136 labels 21 (13 inherited + C071/C072/C073/C075 + C076/C079/C115 + C122), direct moved [C071,C072,C073,C075,C122], rt143 0 moved/0 flips; 0 new WRONG/WRONG-WRITE/junk/lost-OK beyond C122 (260 exemption); 0 abstain flips.
+- P291.3 M3-M6: smoke fields differ only agent/config/label/seconds; bench byte-identical x3 (4/4); latency median(291)-median(138nb) <= +5 ms; restart probes exactly the 2 predicted 252 asks (d08:t01/t04), 0 ghosts/dup-fails/bad-writes; verifier probes exactly B15/D08/D10/E06/E10 moves, supp 0.
+- P291.4 M7 regression panels (fidelity 100% or VOID): 0 new wrong values, 0 new false claims, 0 new junk writes, 0 question writes on 291 on all of openpanel260/corrtail258/corrpanel252/invpanel138nb/tablepanel221; no item right on the registered arm wrong on 291 (open/inv/table); c252-022 works; controls byte-identical; every reply-only move classifies q2-wording or table-label with stores identical.
+- P291.5 OUTCOME (2026-09-23, builder) M8 corrpanel291 (96 items, once each on 138nb/138p/291): every item right on 138p/138nb right on 291; 0 wrong/false/junk/question-writes on 291; cause families on 291 >= 138p's counts; controls byte-identical to 138nb. Overall 291 PASS (M1-M8 all PASS).
+- P281b.1 (2026-09-23, builder; exp 281b casual called/named questions on 281, CPU only, sealed 17 files SEAL.sha256.txt artifacts/claude-called281b-20260923; blind panel never opened, calledpanel281 burned per director note) M1 blind calledpanel281b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text|user, categories teach_setup/stored_called/nostore_called/ambiguous_called/control_plain, SCHEMA-MISMATCH exit 3 = VOID): stored items answered exactly >= 90% over the denominator (stored rows whose dialog teach triple is stored on the 281 arm = the note's 260-arm denominator via the sealed teach-identity property; 281 arm shown); 0 wrong; notstored 100% abstain; ambiguous + control 0 moves vs 281; teach fails <= 2 on 281 else VOID; 0 store diffs; 0 question writes. Predicted moves: exactly the casual-wording + stored-fact items (dev: 21 stored-shape moves d281b-003/009/010/012-019/021-023/027-033 turn 1); ?-terminated lowercase/doyoucall/whats-nameof shapes 281 already answers stay identical.
+- P281b.2 (same) M2 frozen suites vs 281 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 281's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 281 rows: vp 98 + supp 12, 0 changes. Dev 56 own-wording fictional-name dialogs: stored_formal 10/10 + stored_casual 20/20 + opener_casual 4/4 answer with the stored value on 281b, all other 91 turns byte-identical 281b vs 281, notstored 8/8 abstain both arms, 0 question writes.
+- P281b.3 (same) falsifiers: any 281b answer with a value not in the store, any question-turn write, any ambiguous/control/notstored move vs 281, any suite/probe move vs 281's rows, or any teach store diff 281b vs 281 proves the change wrong. Known limits: multi-word no-apostrophe subjects unrestored; formal text 281 mishandles stays byte-identical; ?-less non-question-word-start or cue-less turns never normalise; rewrite failures keep 281's reply (incl. malformed abstains, report-only).
+- P270.1 (2026-09-23, builder; exp 270 normaliser in front of 263, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-type270-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A263+20 on arm A (263 arm beside): predicted A 33-38/40 vs A263 8-14/40. Dev proxy 51/51 vs 13/51 (+38), 42 moves panel-wide, 0 both-wrong.
+- P270.2 (same) M2 casual_q ASK >= 12/15 on arm A: predicted 13-15/15. Dev 16/16 vs 12/16 (whos/whats/wheres fixes move 4).
+- P270.3 (same) M3 lower_trap wrong saves <= 1 on arm A: predicted 0-1. Dev 24/25 (only a bare-so-head trap saves; check-tails suppressed 5/5).
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30 by construction (clean passthrough), dev 24/24.
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 newwrong on the bare-so trap; panel traps validated S1 hold 0).
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev median 0.033 ms, n=116).
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL on the M1 stored bar only, with one figure off prediction. M1 (60 turns once per arm, seals 17/17 + panel OK, schema clean, no post-seal change): stored 9/25 on 281b (bar >= 23/25; denom 25/25, 0 excluded) with 0 wrong and 16 abstains (281: 9/25, same 9 ids); notstored 10/10 abstain both; ambiguous 10/10 same-as-281; control 5/5 same (5/5 right both); teach 10/10 both (panel VALID); 0 store diffs; 0 question writes; broken abstains 0 both. M2/probes PASS exactly as P281b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical; rt143 0; vp/vs 0/0). Miss diagnosis by shape category: 5 misses formalise (known-entity restore, 281 shape match) yet resolve to no stored triple (wording beyond casual typing); 11 match no called shape at all (2 cue-less, rest embedded/non-trailing-cue wordings). No falsifier tripped (0 wrong values, 0 question writes, 0 unpredicted moves). P281b.1 wrong on the stored figure (9 vs >= 23), right on 0-wrong/notstored/ambiguous/control/teach; P281b.2 right; P281b.3 no falsifier tripped.
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FAIL, sealed loop arms A/A263 run ONCE each on blind typepanel270, seal Checks OK, schema OK, seal 12/12 re-verified) M1 A 23/40 vs A263 6/40 margin +17 FAIL (bar 30 and +20); M2 0/15 FAIL (loop emits no ASK frames; no-write 15/15 both); M3 0 wrong saves PASS (7 trap misses both arms); M4 30/30 identical PASS; M5 3 new wrong saves FAIL (keep-s stems t270-002/028/033); M6 median 0.0312 ms PASS. P270.1/.2/.5 wrong, P270.3/.4/.6 right, P270.7 resolves FAIL.
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0d2.1 (2026-09-23, own-O0d2 diagnosis follow-up, scripts/claude_own_o0d2_{model,train,test}.py + PASSMARKS.md artifacts/claude-own-o0d2-20260923; CPU only): all 8 unit tests pass; bar = 8/8 pass.
+- Pown0d2.2 same: audited ear count still exactly 32,850,051; bar = diff <= 0.005 with exact number reported per part.
+- Pown0d2.3 same: kill test identical (kill at step 30, resume to step 60, sha256 equal); bar = identical.
+- Pown0d2.4 same: fuzz 10,000 random-logit draws, 0 non-whole-word spans decoded (span + owner checks); bar = 0.
+- Pown0d2.5 same: o0d smoke (toy frames, <= 10 min) loss still falls; bar = mean(last 10%) < mean(first 10%).
+- Pown0d2 OUTCOME (2026-09-23, builder; registered verdict PASS, 5/5 marks PASS, test run once): Pown0d2.1 units 8/8; Pown0d2.2 audit exactly 32,850,051; Pown0d2.3 kill A=054dbec63839 B=054dbec63839 (match o0d hashes); Pown0d2.4 fuzz 0/10,000; Pown0d2.5 smoke 120 steps 1.3347 -> 0.3635 (falls). Deviations: D1 fuzz reference + round-trip call updated to the fixed rule/signature; D2 predictions pre-registered pre-run. See artifacts/claude-own-o0d2-20260923/RESULTS.md.
+- P282b.1 (2026-09-23, builder; exp 282b vocab small talk on 282, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-small282b-20260923; blind panel never opened, smallpanel282 burned per director note) M1 blind smallpanel282b run once per arm with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories greeting/closing/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): writer greeting+closing fitting on 282b >= 90% (bar 32/35 at spec counts, 282 shown); 0 writes on them; mixed + control 0 moves vs 282; 0 store diffs; 0 question writes. Panel moves: exactly the writer-smalltalk turns where 282 errs and the vocab test fires (dev proxy 18/40 smalltalk dev turns move, rest keep 282's already-fitting reply; blind ids not predictable).
+- P282b.2 (same) M2 frozen suites vs 282 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 282's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 282 rows: vp 98 + supp 12, 0 changes. Dev 65 own-wording fictional-name dialogs 79 turns: greet 20/20 + thanks_close 20/20 with the head's canonical reply, mixed 15/15 + control 10/10 byte-identical 282b vs 282, exactly the 18 listed moves d282b-002/007/009/010/011/013/014/015/016/017/018/021/026/036/037/038/039/040 turn 0, 0 question writes.
+- P282b.3 (same) M3 smalltalkpanel234 once per arm: wellbeing 282b >= 282, other items all identical, 0 writes, 0 setup/store diffs; predicted only all-vocabulary wellbeing turns 282 errs on move to fitting. Falsifiers: any 282b reply change on mixed/control, any question-turn write, any suite/probe move vs 282 rows, any store diff. Known limits: class-less pure tails and how-are-you shapes keep 282's route; bare emoji and foreign greetings uncovered; stored-name homographs keep 282's route; first-word class on multi-class turns.
+- Pown0e2.1 (pred, sealed pre-run 2026-09-23) own-O0e2 follow-up, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0e2-20260923 (o0e2 model = o0e model code unchanged incl. rotary fix, o0e serialize/train imported unchanged): audit prints exactly 61,783,680 (fix is forward-math only, adds no params): PASS.
+- Pown0e2.2 (pred, same) kill test at tiny width (147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS.
+- Pown0e2.3 (pred, same) 200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts: poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0: PASS.
+- Pown0e2.4 (pred, same) rotary unit test: same-offset rotation leaves q.k unchanged, per-position and cross-position (0,d) vs (m,m+d) max abs errors both <= 1e-5 (rotation is orthogonal, float32 rounding ~1e-6): PASS.
+- P282b.4 OUTCOME (2026-09-23, builder, sealed exp 282b) registered verdict FAIL on the M1 bar only. M1 (60 turns once per arm, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): writer greeting+closing 30/35 on 282b (bar 32/35; greeting 15/20, closing 15/15) vs 19/35 on 282 (greeting 10/20, closing 9/15); 0 writes; mixed+control 25/25 same-as-282; 0 store diffs; 0 question writes. 11 moves (d_greet_07/12/15/17/18, d_close_03/08/09/12/13/14 turn 0, ev 0, all toward canonical); 5 misses all greeting and byte-identical to 282 (d_greet_08/16/20 identical non-fitting fixed reply both arms, d_greet_13/14 abstain both); 0 new wrongs/abstains. M2/probes PASS exactly as P282b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical to 282's; rt143 0; vp/vs 0/0). M3 PASS (wellbeing 17/20 both, other 36/36 same, 0 writes/diffs, 0 moves). P282b.1 wrong on the M1 figure only; P282b.2 right; P282b.3 bars right (0 st234 moves observed).
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+- P291.6 OUTCOME (2026-09-23, builder) registered verdict FAIL. M1-M6 all PASS first try (M1 503/503 + devs; M2 suites/rt136/rt143 as predicted; M3 4 fields; M4 4/4 identical x3; M5 +0.671 ms; M6 2 + 5 moves). M7 4/5 PASS (openpanel 80/80, corrtail 53/54 with 6 q2-wording, invpanel clean, tablepanel clean) and corrpanel252 FAIL on c252-009 (sealed scorer new_wrong_value; evidence: removal miss shared by all arms, 291 == base 138nb reply+store verbatim, 138p abstains; same shape as disclosed v259-056). M8 corrpanel291 73/96 (138nb 34, 138p 65): union preservation perfect (0 r2w both ways), cause families all >= 138p, controls 12/12, 0 question/followup writes, 0 new wrong/junk/claim beyond both parents (17/3/1 all inherited; c291-006 == 138nb verbatim) -- FAIL on absolute-zero bars only. P291.1 right; P291.2 right; P291.3 right; P291.4 wrong (1 row); P291.5 wrong (overall). Diagnosis for the director: stale-answer-on-shared-removal-miss, verbatim-base both times; ruling options: accept as table behaviour per the M7 classification clause, or route a removal-path follow-up.
+- P293.1 (pred, sealed pre-run 2026-09-23, builder exp 293 yes/no reader on 138nb, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-yesno293-20260923) M1 blind yesnopanel293 once per arm with sealed score_panel.py: yes/no families together >= 90% right on 293 (138nb dev 11/51); 0 wrong (never Yes when not stored, never No when stored); taken_back 0 Yes; 0 question writes; is_single/wh/statement controls byte-identical to 138nb. Dev proxy 111 dialogs: exactly the 72 listed moves Q2->Yes/No/IDK, 7 Q2 left (5 chain + 1 inverted-wh + 1 lowercase), 0 writes; blind ids not predictable.
+- P293.2 (same) M2 invpanel138nb + chainpanel266b regression once per arm: 0 moves on both (pilot 0/70 + 0/70).
+- P293.3 (same) M3 frozen suites vs 138nb rows: sessions152 0 moves; bench 0; marks123 exactly 1 reply-only (rt81 D_q_vs_s-04 OK->UNCLEAR, honest IDK); rt136 0 field diffs vs 138nb rows; rt143nogate exactly 2 (M3 Q2->Yes of-form, O5 Q2->IDK); 0 new WRONG/WRONG-WRITE/junk/lost-OK.
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+- P280m.1 (2026-09-23, builder; exp 280m join of 281 + 280/280b + 282/282b on base 260, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-join280m-20260923; blind panel never opened) M1 blind joinpanel280m run once on all five arms with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories ability/called/teach/smalltalk/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): every 280m reply, write count and store byte-identical to the owner arm (ability 280b, called 281, smalltalk 282b, teach/control 260, mixed per trigger rule) = 100%; 0 writes on question and small-talk turns; 0 wrong called answers and 0 unsupported claims (director claim check over listed reply files); absolute rates per category with 260 beside. Dev proxy 85/85 turns agree (12 called / 13 ability / 14 small fires, 0 overlaps).
+- P280m.2 (same) M2 frozen suites vs 260 saved rows: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFUL, 0 writes); bench 4x200 0; rt136 145 units 0 field diffs with vs-138j labels identical to 260's and gate identical to 260's; rt143_nogate 124 rows 0; GATE as clean as 260's. Verifier probes vs 260 rows: vp exactly N06 + E04, supp 0. Dev-suite pilot matches exactly.
+- P280m.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule). M4 notebook-zero: 0 store diffs 280m vs 260 on suites and panel.
+- P280m.4 (same) falsifiers: any 280m reply differing from its owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any 2+ trigger overlap on one turn proves the join wrong.
+[0m
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md
+[0m
+[0m$ [0muptime; df -g /; echo HOME=$HOME; ls -la ~ 2>&1 | head -n 40; cat ~/.ssh/config 2>&1 | head -n 60; ssh -G benspc 2>&1 | head -n 40
+6:39  up 2 days, 22:28, 4 users, load averages: 68.75 68.47 56.47
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 124929800    0%   /
+HOME=/Users/ben-hannan
+total 600
+drwxr-xr-x+  75 ben-hannan  staff   2400 Sep 23 06:37 .
+drwxr-xr-x    5 root        admin    160 Sep 15 19:06 ..
+-rw-------    1 ben-hannan  staff    100 Sep 12 21:50 .accuweather_env
+drwxr-xr-x    4 ben-hannan  staff    128 Aug 25 22:40 .agent
+drwxr-xr-x   15 ben-hannan  staff    480 Sep 17 18:20 .atom
+drwxr-xr-x@  11 ben-hannan  staff    352 Sep 17 18:20 .cache
+drwxr-xr-x    4 ben-hannan  staff    128 Aug 29 19:55 .cai
+drwxr-xr-x@   8 ben-hannan  staff    256 Sep 17 18:22 .cargo
+-r--------    1 ben-hannan  staff      7 Jul 26 16:59 .CFUserTextEncoding
+drwxr-xr-x@  32 ben-hannan  staff   1024 Sep 23 04:57 .claude
+drwxr-xr-x   12 ben-hannan  staff    384 Sep 17 18:21 .claude-anthropic
+-rw-------    1 ben-hannan  staff  74549 Sep 23 06:37 .claude.json
+-rw-------@   1 ben-hannan  staff  82541 Sep 22 20:54 .claude.json.backup
+drwxr-xr-x@   4 ben-hannan  staff    128 Sep 17 18:21 .cocoapods
+drwx------@  53 ben-hannan  staff   1696 Sep 23 06:38 .codex
+drwx------   13 ben-hannan  staff    416 Sep 21 20:45 .codex-chatgpt-web
+drwxr-xr-x@  13 ben-hannan  staff    416 Sep 19 13:34 .config
+drwx------    3 ben-hannan  staff     96 Aug 25 11:17 .cups
+drwxr-xr-x@  14 ben-hannan  staff    448 Sep 17 18:21 .docker
+-rw-r--r--@   1 ben-hannan  staff  28676 Sep 19 14:35 .DS_Store
+drwxr-xr-x@   3 ben-hannan  staff     96 Sep 22 14:57 .dwagent
+-rw-r--r--@   1 ben-hannan  staff    126 Jul 29 15:36 .gitconfig
+drwx------@   4 ben-hannan  staff    128 Aug 30 16:22 .homebrew
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 17 18:21 .ipython
+-rw-------    1 ben-hannan  staff   1679 Aug 23 11:04 .kalshi_prod.pem
+-rw-------    1 ben-hannan  staff    116 Aug 23 11:05 .kalshi_trade_env
+drwxr-xr-x   19 ben-hannan  staff    608 Sep 17 18:21 .lmstudio
+-rw-r--r--    1 ben-hannan  staff     27 Aug 25 21:21 .lmstudio-home-pointer
+drwxr-xr-x@   8 ben-hannan  staff    256 Sep 17 18:21 .local
+drwxr-xr-x@   3 ben-hannan  staff     96 Aug  7 23:07 .matplotlib
+drwxr-xr-x@   7 ben-hannan  staff    224 Sep 17 18:21 .npm
+-rw-------    1 ben-hannan  staff     50 Sep 12 14:54 .oddspapi_env
+drwxr-xr-x    7 ben-hannan  staff    224 Sep 21 21:10 .opencode
+drwxr-xr-x   22 ben-hannan  staff    704 Sep 17 18:21 .plastic4
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 17 18:21 .prime
+-rw-r--r--    1 ben-hannan  staff     26 Aug 29 02:13 .profile
+-rw-------@   1 ben-hannan  staff   3279 Sep 17 23:49 .python_history
+drwxr-xr-x   14 ben-hannan  staff    448 Sep 17 18:21 .qwen
+drwxr-xr-x@   3 ben-hannan  staff     96 Jul 29 14:56 .rbenv
+Host benspc
+  HostName 100.75.113.114
+  User benja
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+host benspc
+user benja
+hostname 100.75.113.114
+port 22
+addressfamily any
+batchmode no
+canonicalizefallbacklocal yes
+canonicalizehostname false
+checkhostip no
+compression no
+controlmaster false
+enablesshkeysign no
+clearallforwardings no
+exitonforwardfailure no
+fingerprinthash SHA256
+forwardx11 no
+forwardx11trusted no
+gatewayports no
+gssapiauthentication no
+gssapidelegatecredentials no
+hashknownhosts no
+hostbasedauthentication no
+identitiesonly no
+kbdinteractiveauthentication yes
+nohostauthenticationforlocalhost no
+nohostauthenticationforproxycommand no
+passwordauthentication yes
+permitlocalcommand no
+proxyusefdpass no
+pubkeyauthentication true
+requesttty auto
+sessiontype default
+stdinnull no
+forkafterauthentication no
+streamlocalbindunlink no
+stricthostkeychecking ask
+tcpkeepalive yes
+tunnel false
+verifyhostkeydns false
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "powershell -NoProfile -Command Get-ChildItem C:\\Users\\benja\\smolear235\\out_v41 | Select-Object Name,Length" 2>&1 | head -n 100
+'Select-Object' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "dir C:\\Users\\benja\\smolear235\\out_v41" 2>&1 | head -n 100
+echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\smolear235\out_v41
+
+09/22/2026  06:05 PM    <DIR>          .
+09/23/2026  05:56 AM    <DIR>          ..
+09/22/2026  06:03 PM                90 CKPT.sha256.txt
+09/22/2026  06:05 PM           229,112 dev_eval.json
+09/22/2026  06:03 PM       723,673,144 smolear235.safetensors
+09/22/2026  06:03 PM             9,338 train_log.txt
+               4 File(s)    723,911,684 bytes
+               2 Dir(s)  72,036,745,216 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 -o BatchMode=yes benspc "type C:\\Users\\benja\\smolear235\\out_v41\\CKPT.sha256.txt" 2>&1 | head -n 20
+echo ---CERTUTIL-START---; ssh -o ConnectTimeout=60 -o BatchMode=yes benspc "certutil -hashfile C:\\Users\\benja\\smolear235\\out_v41\\smolear235.safetensors SHA256" 2>&1 | head -n 20
+55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2  smolear235.safetensors
+---CERTUTIL-START---
+SHA256 hash of C:\Users\benja\smolear235\out_v41\smolear235.safetensors:
+55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m$ [0mls ~ 2>&1 | head -n 30; mkdir -p ~/premonition-weights/smolear235_v41 && ls -ld ~/premonition-weights/smolear235_v41; df -g / | head -n 5; uptime
+Applications
+bm-reliability
+Claude
+ComfyUI
+crontab.backup-20260816-1424.txt
+crontab.backup.20260906
+Desktop
+desmos-data
+Documents
+Downloads
+Library
+Movies
+Music
+overnight-agent
+ox
+Pictures
+polish-consulate
+Postman
+premonition-chat
+premonition-watch
+Public
+ralph-prompt.md
+Sites
+Unity user templates
+wkspaces
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 23 06:39 /Users/ben-hannan/premonition-weights/smolear235_v41
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    52%  484014 125005240    0%   /
+ 6:39  up 2 days, 22:28, 4 users, load averages: 60.05 66.54 56.06
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/out_v41/smolear235.safetensors" ~/premonition-weights/smolear235_v41/ 2>&1; echo SCP_EXIT:$?; ls -l ~/premonition-weights/smolear235_v41/ 2>&1
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mls -l ~/premonition-weights/smolear235_v41/ 2>&1; du -g ~/premonition-weights/smolear235_v41/* 2>&1 | head
+total 788000
+-rw-------  1 ben-hannan  staff  396139520 Sep 23 06:41 smolear235.safetensors
+1	/Users/ben-hannan/premonition-weights/smolear235_v41/smolear235.safetensors
+[0m
+[0m$ [0mrm -f ~/premonition-weights/smolear235_v41/smolear235.safetensors; scp -o ConnectTimeout=20 "benspc:C:/Users/benja/smolear235/out_v41/smolear235.safetensors" ~/premonition-weights/smolear235_v41/ 2>&1; echo SCP_EXIT:$?; ls -l ~/premonition-weights/smolear235_v41/
+SCP_EXIT:0
+total 1442608
+-rw-------  1 ben-hannan  staff  723673144 Sep 23 06:46 smolear235.safetensors
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-weights/smolear235_v41/smolear235.safetensors 2>&1; echo SHA_EXIT:$?; stat -f "size=%z path=%N" ~/premonition-weights/smolear235_v41/smolear235.safetensors 2>&1; df -g / | head -n 3; uptime
+55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2  /Users/ben-hannan/premonition-weights/smolear235_v41/smolear235.safetensors
+SHA_EXIT:0
+size=723673144 path=/Users/ben-hannan/premonition-weights/smolear235_v41/smolear235.safetensors
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    54%  484014 116285240    0%   /
+ 6:46  up 2 days, 22:35, 4 users, load averages: 53.29 56.36 54.91
+[0m
+[0m$ [0mgit status --short | head -n 20; echo ---; ls -l ~/premonition-weights/smolear235_v41/; echo ---; git diff --stat 2>&1 | head -n 20
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+---
+total 1442608
+-rw-------  1 ben-hannan  staff  723673144 Sep 23 06:46 smolear235.safetensors
+---
+ artifacts/fable-predictions-ledger.md | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+[0m
