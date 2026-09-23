@@ -1,0 +1,20 @@
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.
+
+YOUR TASK: builder for exp 263, the comma write guard. Read design/v3/30-modes/263-comma-guard.md (the one change) and handoff/kit/briefs/260-openers.txt (how 260 was built, run and scored; copy its structure). In this worktree, read artifacts/claude-openers260-20260922/PASSMARKS.md and RESULTS.md, and scripts/claude_*260*.py (read-only; import, never edit).
+Base: the 260 arm (scripts/claude_loop260_agent.py + its config). One change: one outermost write-guard mixin scripts/claude_fix263_comma.py in scripts/claude_loop263_agent.py (SrcGuardMixin228 stays first). Artifacts: artifacts/claude-comma263-20260923/. Ledger lines P263.n. New files only. CPU only.
+Order: (1) reproduce the gap on 260 with your own dev dialogs; (2) write 40+ dev dialogs in your own wording (unlisted openers + comma, appositive subjects, comma values that must stay, questions, controls); (3) build and pilot on dev, the 260 suites (fable_suitediff218 --only rt136,rt143,sessions152,bench against 260's rows) and the 138m verifier probes; (4) PASSMARKS.md with numbered predictions and every predicted move by id, seal (shasum -a 256 > SEAL.sha256.txt), append the ledger lines; (5) only then wait for artifacts/claude-commapanel263-20260923/SEAL.sha256.txt (poll every 2 min, up to 90 min), check it OK from the repo root, and run the panel ONCE on both arms (260 and 263); (6) re-run openpanel260 once on 263 as a regression check.
+Marks: M1 commapanel263, 0 stored subjects containing a comma over all 60 (260 arm's count shown next to it); unlisted_opener_teach >= 16/20 exact; comma_value_ok: 0 lost vs 260; question 0 writes; control 14/14 byte-identical to 260. M2 openpanel260 on 263: every 260 figure equal or better, 0 new junk. M3 suites: moves exactly your predicted list, 0 new WRONG/WRONG-WRITE/lost OK. M4 median added time per turn <= +3 ms vs 260.
+Finish with RESULTS.md (result first, integer counts, categories only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-comma263-20260923 scripts/claude_fix263_comma.py scripts/claude_loop263_agent.py scripts/claude_comma263_*.py artifacts/fable-predictions-ledger.md
