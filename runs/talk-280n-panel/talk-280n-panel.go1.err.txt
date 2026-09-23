@@ -1,0 +1,664 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main; echo FETCH_OK; ls artifacts/ | head -n 50
+7:57  up 2 days, 23:46, 4 users, load averages: 59.99 58.89 71.55
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132556080    0%   /
+FETCH_OK
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280m-talking-join.md | wc -l; git show origin/main:design/v3/30-modes/280m-talking-join.md | grep -n "Panel spec" | head
+79
+38:## Panel spec (joinpanel280m, 90 turns, fresh)
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280m-talking-join.md | sed -n '38,79p'
+## Panel spec (joinpanel280m, 90 turns, fresh)
+- 25 general ability questions ("what can you do" in many wordings).
+- 8 plain teach turns "<Name>'s <relation> is <Value>." and 12 called/named questions in the four formal shapes,
+  each question after its teach in the same dialog.
+- 25 greetings, thanks and closings, typed casually.
+- 10 turns that mix small talk with an ability or called question.
+- 10 controls (plain teaches and plain questions).
+Columns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /
+control), gold. Mixed items are owned by 260 for M1 agreement unless the builder's PASSMARKS predicts a piece
+route for each one before the seal. Fictional names only.
+
+## Ordering with the reasoning line (added 2026-09-23 11:15 UTC, before any 280m result)
+291 is now the reasoning line's main base (73/96 on its blind panel, no losses against either parent), and 292 is
+queued on top of it. 280m stays on 260, as registered, because its bar is agreement with the 260-built piece arms.
+Order: 292 goes first on 291. Once 280m has a verdict and the main base is settled (291, or 292 if verified), the
+talking line registers a separate join that puts 280m's layers on the main base, with joinpanel280m re-run as a
+regression check. The reasoning thread was told this at 11:15 UTC. It does not wait on the talking line.
+
+## 280m result and 280n (director, 2026-09-23 11:54 UTC)
+280m is a **registered FAIL**: M1 agreement was 87/90, and the bar was 90/90. Director recount from the raw rows
+of all five arms: ability 25/25, called 8/8 dialogs, small talk 25/25, controls 5/5 dialogs and teach turns all
+agree with their owner. The misses are 3 of 10 mixed dialogs, which do not match 260 (the owner the builder
+predicted before the seal). On those 3, the reply is byte-identical to the 280b arm: 280's reply-only post-guard
+swaps 260's old ability sheet for the sealed honest text. So every one of the 90 turns equals some piece arm.
+Other findings:
+- 0 writes on non-teach turns.
+- Called questions: 10 right, 2 clarify lines, 0 wrong.
+- My claim check: the only ability text anywhere is CAN280, and there are 0 other claims.
+- smalltalkpanel234 differs from 260 on 1 row, the same row 282 moved.
+- Deviation: the builder ran the suites only as a pre-seal pilot, not as a registered run after the seal.
+
+The defect is in my ownership rule, which ignored reply-dependent post-guards, not in the join.
+280n re-tests the same sealed 280m agent, with no code change, on a fresh panel, joinpanel280n (same spec as
+joinpanel280m). Two things change:
+- The owner of each mixed turn is decided mechanically from the piece arms. The owner is the single piece arm
+  (280b, 281 or 282b) whose reply differs from 260's, or 260 if none differs. If two or more piece arms differ
+  from 260 on one turn, that turn counts as an overlap and fails.
+- The frozen suites and probes are re-run after the seal as a registered run, with the same allowed union as
+  280m (280's 3 sessions152 moves, N06 and E04).
+Bars: M1 agreement 100% under that rule, 0 overlaps, 0 writes on question and small-talk turns, 0 wrong called
+answers, and 0 unsupported claims (director). M2 as above, GATE identical to 260's. M3 smalltalkpanel234 equal to
+or better than 260.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280m-talking-join.md | sed -n '1,50p' | cut -c1-200
+# 280m: join of the talking line's three merge candidates. Director's note, 2026-09-23 10:25 UTC
+
+Label: 280m (a join, like 138m; not a new number, so no clash with the ear line's 269-289 or the reasoning line's 290+).
+
+## Base decision
+Base: **260** (scripts/claude_loop260_agent.py + artifacts/claude-openers260-20260922/loop260-config.json).
+Why 260, not 291: every piece below was built and graded on 260. 291 (138nb + 260 + 252c) is still building and
+has no verdict. Waiting would stall this line on another line's result. When 291 passes, a later join puts
+280m's layers on top of 291 as its own experiment. That join re-runs this note's panel as a regression check.
+
+## What is joined (no new behaviour)
+1. 281's called/named reader (scripts/claude_fix281_called.py, install_called281).
+2. 280's sealed ability table text plus 280b's general-question recogniser (scripts/claude_fix280_capab.py,
+   scripts/claude_fix280b_general.py), exactly as in scripts/claude_loop280b_agent.py.
+3. 282's small-talk layer plus 282b's vocabulary layer (scripts/claude_fix282_small.py,
+   scripts/claude_fix282b_vocab.py), exactly as in scripts/claude_loop282b_agent.py.
+Order, inner to outer: 260, then 281, then 280/280b, then 282/282b. All piece files are imported read-only and
+unchanged. The one new file is the join agent scripts/claude_loop280m_agent.py, plus its config. Before sealing,
+the builder shows on dev turns that the three triggers never fire on the same turn (0 overlaps). Any overlap
+must be reported. The seal cannot happen until the director rules on it.
+
+## Marks (fixed now)
+- **M1 joinpanel280m (fresh, blind), run once on five arms: 260, 280b, 281, 282b and 280m.**
+  - Agreement: every 280m reply, store and write count is byte-identical to the arm that owns its category
+    (ability items to 280b, called items to 281, small-talk items to 282b, controls to 260). Bar: 100%.
+  - 0 writes on question and small-talk items.
+  - 0 wrong answers on called items.
+  - 0 unsupported claims anywhere (the director checks this).
+  - Report only (no bar): the absolute rates per category, 260 beside 280m.
+- **M2 frozen suites** (fable_suitediff218 --only rt136,rt143,sessions152,bench) vs 260's rows. The only moves
+  allowed are the union of the pieces' registered moves: 280's 3 reply-only moves, and in the verifier probes
+  281's N06 and 282's E04. Anything else fails. GATE must be as clean as 260's.
+- **M3 smalltalkpanel234**, run once: every figure equal to or better than 260.
+- **M4** 0 notebook differences vs 260 on the suites, and on the panel except where a piece arm already differs.
+What would prove this wrong: any 280m reply that differs from its owner arm, any suite move outside the union,
+or any write on a question or small-talk turn.
+
+## Panel spec (joinpanel280m, 90 turns, fresh)
+- 25 general ability questions ("what can you do" in many wordings).
+- 8 plain teach turns "<Name>'s <relation> is <Value>." and 12 called/named questions in the four formal shapes,
+  each question after its teach in the same dialog.
+- 25 greetings, thanks and closings, typed casually.
+- 10 turns that mix small talk with an ability or called question.
+- 10 controls (plain teaches and plain questions).
+Columns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /
+control), gold. Mixed items are owned by 260 for M1 agreement unless the builder's PASSMARKS predicts a piece
+route for each one before the seal. Fictional names only.
+
+## Ordering with the reasoning line (added 2026-09-23 11:15 UTC, before any 280m result)
+291 is now the reasoning line's main base (73/96 on its blind panel, no losses against either parent), and 292 is
+[0m
+[0m$ [0mls artifacts/ | grep -i join; echo ---; ls artifacts/claude-joinpanel280n-20260923 2>&1; echo ---; git status --short | head -n 20
+claude-join280m-20260923
+claude-join291-20260923
+claude-joinpanel280m-20260923
+---
+ls: artifacts/claude-joinpanel280n-20260923: No such file or directory
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+[0m
+[0m$ [0mls artifacts/ && mkdir -p artifacts/claude-joinpanel280n-20260923 && ls artifacts/claude-joinpanel280n-20260923
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join291-20260923
+claude-joinpanel280m-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-lis310-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-merge292-20260923
+claude-mixpanel292-20260923
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-nhop268-20260923
+claude-nhop268b-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-nhoppanel268b-20260923
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0a3-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+claude-own-o0e2-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-probe255b-director-20260923
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-scoreraudit-20260923
+claude-small282-20260923
+claude-small282b-20260923
+claude-smallpanel282-20260923
+claude-smallpanel282b-20260923
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-type270-20260923
+claude-type270b-20260923
+claude-typepanel270-20260923
+claude-typepanel270b-20260923
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-verify-20260923
+claude-whats248-20260922
+claude-yesno293-20260923
+claude-yesnopanel293-20260923
+claude-yesprefix230-20260922
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-bundle
+fable-operator-reliability-bundle.tar.gz
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-predictions-ledger.md
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+[0m
+[0m← [0mWrite artifacts/claude-joinpanel280n-20260923/panel.jsonl
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-joinpanel280n-20260923/SPEC-COPY.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-joinpanel280n-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json, collections
+rows=[json.loads(l) for l in open('artifacts/claude-joinpanel280n-20260923/panel.jsonl')]
+assert len(rows)==90, len(rows)
+assert all(set(r)=={'dialog_id','turn_index','user_text','category','gold'} for r in rows)
+print(collections.Counter(r['category'] for r in rows))
+print('dialogs:', len(set(r['dialog_id'] for r in rows)))
+from collections import defaultdict
+d=defaultdict(list)
+for r in rows: d[r['dialog_id']].append(r['turn_index'])
+assert all(sorted(v)==list(range(len(v))) for v in d.values())
+print('turn_index OK')
+"
+Counter({'ability': 25, 'smalltalk': 25, 'called': 12, 'mixed': 10, 'control': 10, 'teach': 8})
+dialogs: 73
+turn_index OK
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-joinpanel280n-20260923/panel.jsonl artifacts/claude-joinpanel280n-20260923/SPEC-COPY.md > artifacts/claude-joinpanel280n-20260923/SEAL.sha256.txt && cat artifacts/claude-joinpanel280n-20260923/SEAL.sha256.txt && ls -la artifacts/claude-joinpanel280n-20260923/
+c8f0c056432b5e34b51d1901327fb9c80f687c8cf9ce46d305f8bca18fff8d66  artifacts/claude-joinpanel280n-20260923/panel.jsonl
+9f1b3e4cf669b77cccda5138d37f97e4a7394da290c1875dc661ee9a3565c61c  artifacts/claude-joinpanel280n-20260923/SPEC-COPY.md
+total 48
+drwxr-xr-x    6 ben-hannan  staff    192 Sep 23 07:59 .
+drwxr-xr-x@ 439 ben-hannan  staff  14048 Sep 23 07:58 ..
+-rw-r--r--    1 ben-hannan  staff  11304 Sep 23 07:59 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   1899 Sep 23 07:59 README.md
+-rw-r--r--    1 ben-hannan  staff    237 Sep 23 07:59 SEAL.sha256.txt
+-rw-r--r--    1 ben-hannan  staff    942 Sep 23 07:59 SPEC-COPY.md
+[0m
