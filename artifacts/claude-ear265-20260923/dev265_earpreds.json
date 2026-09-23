@@ -1,0 +1,1625 @@
+{
+ "summary": {
+  "n": 44,
+  "median_ms": 144.7660499252379,
+  "p90_ms": 240.61179999262094,
+  "max_ms": 276.44849999342114,
+  "n_beamed": 41,
+  "device": "cuda",
+  "ckpt_sha256": "55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2",
+  "torch": "2.11.0+cu128",
+  "threads": 6,
+  "tau": 9.3,
+  "k": 4,
+  "gpu": "NVIDIA GeForce RTX 5070 Ti"
+ },
+ "preds": {
+  "d265-001": {
+   "raw": "TEACH | Our | dog | Rex",
+   "greedy_lp": -8.18941132507689e-05,
+   "beams": [
+    [
+     "TEACH | Our | dog | Rex",
+     -7.390767859760672e-05
+    ],
+    [
+     "TEACH | My | dog | Rex",
+     -10.00007438659668
+    ],
+    [
+     "TEACH | We | dog | Rex",
+     -11.00007438659668
+    ],
+    [
+     "TEACH Our | dog | Rex",
+     -12.399205207824707
+    ]
+   ],
+   "ms_greedy": 52.53,
+   "ms": 114.17,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "dog",
+      "value": "Rex"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-002": {
+   "raw": "TEACH | Our | cat | Mimi",
+   "greedy_lp": -7.736540043623563e-05,
+   "beams": [
+    [
+     "TEACH | Our | cat | Mimi",
+     -8.952431380748749e-05
+    ],
+    [
+     "TEACH | My | cat | Mimi",
+     -10.000091552734375
+    ],
+    [
+     "TEACH Our | Our | cat | Mimi",
+     -11.36964225769043
+    ],
+    [
+     "TEACH | We | cat | Mimi",
+     -11.500090599060059
+    ]
+   ],
+   "ms_greedy": 55.72,
+   "ms": 126.51,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "cat",
+      "value": "Mimi"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-003": {
+   "raw": "TEACH | We | city | Dunnsmouth",
+   "greedy_lp": -0.0006216238241165684,
+   "beams": [
+    [
+     "TEACH | We | city | Dunnsmouth",
+     -0.0005999330896884203
+    ],
+    [
+     "TEACH | Our | city | Dunnsmouth",
+     -9.375980377197266
+    ],
+    [
+     "TEACH | I | city | Dunnsmouth",
+     -9.752232551574707
+    ],
+    [
+     "NONE",
+     -11.500015258789062
+    ]
+   ],
+   "ms_greedy": 59.87,
+   "ms": 131.08,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "city",
+      "value": "Dunnsmouth"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-004": {
+   "raw": "TEACH | Our | house | Mill Lane",
+   "greedy_lp": -0.09616231773610906,
+   "beams": [],
+   "ms_greedy": 55.97,
+   "ms": 56.01,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-005": {
+   "raw": "TEACH | Our | son | Theo",
+   "greedy_lp": -6.53254911071599e-05,
+   "beams": [
+    [
+     "TEACH | Our | son | Theo",
+     -5.9484482335392386e-05
+    ],
+    [
+     "TEACH | My | son | Theo",
+     -10.375062942504883
+    ],
+    [
+     "TEACH Our | Our | son | Theo",
+     -11.500911712646484
+    ],
+    [
+     "TEACH | We | son | Theo",
+     -11.750069618225098
+    ]
+   ],
+   "ms_greedy": 55.63,
+   "ms": 126.77,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "son",
+      "value": "Theo"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-006": {
+   "raw": "TEACH | Our | daughter | Wren",
+   "greedy_lp": -5.972262316333854e-05,
+   "beams": [
+    [
+     "TEACH | Our | daughter | Wren",
+     -6.0676280554616824e-05
+    ],
+    [
+     "TEACH | My | daughter | Wren",
+     -10.250059127807617
+    ],
+    [
+     "TEACH | We | daughter | Wren",
+     -11.503058433532715
+    ],
+    [
+     "TEACH | Our |daughter | Wren",
+     -12.12506103515625
+    ]
+   ],
+   "ms_greedy": 51.74,
+   "ms": 112.58,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "daughter",
+      "value": "Wren"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-007": {
+   "raw": "TEACH | Our | car | a Beetle",
+   "greedy_lp": -0.015369140455838703,
+   "beams": [
+    [
+     "TEACH | Our | car | a Beetle",
+     -0.015273137018084526
+    ],
+    [
+     "TEACH | Our | car | Beetle",
+     -4.2650909423828125
+    ],
+    [
+     "TEACH | My | car | a Beetle",
+     -8.015085220336914
+    ],
+    [
+     "TEACH | Our | car | a Beetle",
+     -9.015738487243652
+    ]
+   ],
+   "ms_greedy": 59.75,
+   "ms": 136.21,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "car",
+      "value": "a Beetle"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-008": {
+   "raw": "TEACH | Our | teacher | Ms Harlow",
+   "greedy_lp": -0.0020715139948705996,
+   "beams": [
+    [
+     "TEACH | Our | teacher | Ms Harlow",
+     -0.0022157500497996807
+    ],
+    [
+     "TEACH | Our | teacher |Ms Harlow",
+     -7.003753662109375
+    ],
+    [
+     "TEACH | Our | teacher | MsHarlow",
+     -7.3771257400512695
+    ],
+    [
+     "TEACH | Our | teacher | Ms HarLow",
+     -9.002684593200684
+    ]
+   ],
+   "ms_greedy": 59.74,
+   "ms": 131.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "teacher",
+      "value": "Ms Harlow"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-009": {
+   "raw": "TEACH | Our | cottage | the lake",
+   "greedy_lp": -0.7869084063219063,
+   "beams": [],
+   "ms_greedy": 55.72,
+   "ms": 55.75,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-010": {
+   "raw": "TEACH | We | language | Frisian",
+   "greedy_lp": -0.13828926967971,
+   "beams": [
+    [
+     "TEACH | We | language | Frisian",
+     -0.13543051481246948
+    ],
+    [
+     "TEACH | I | language | Frisian",
+     -2.387742757797241
+    ],
+    [
+     "TEACH | we | language | Frisian",
+     -4.323427677154541
+    ],
+    [
+     "TEACH | Frisian | language | English",
+     -6.046286582946777
+    ]
+   ],
+   "ms_greedy": 60.91,
+   "ms": 132.51,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "language",
+      "value": "Frisian"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-011": {
+   "raw": "TEACH | Our | boss | Mr Kettle",
+   "greedy_lp": -0.009194390564957189,
+   "beams": [
+    [
+     "TEACH | Our | boss | Mr Kettle",
+     -0.009206810966134071
+    ],
+    [
+     "TEACH | Our | boss |Mr Kettle",
+     -4.759207725524902
+    ],
+    [
+     "TEACH | Our | boss | Dr Kettle",
+     -8.018939971923828
+    ],
+    [
+     "TEACH | Our | boss | Dr. Kettle",
+     -10.894651412963867
+    ]
+   ],
+   "ms_greedy": 59.73,
+   "ms": 136.13,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "boss",
+      "value": "Mr Kettle"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-012": {
+   "raw": "TEACH | Our | school | Greywater College",
+   "greedy_lp": -0.0003778600011727917,
+   "beams": [
+    [
+     "TEACH | Our | school | Greywater College",
+     -0.00040563129005022347
+    ],
+    [
+     "TEACH | Our | school | Graywater College",
+     -8.875420570373535
+    ],
+    [
+     "TEACH | My | school | Greywater College",
+     -9.37552261352539
+    ],
+    [
+     "TEACH | Our | school | Greentown College",
+     -10.318994522094727
+    ]
+   ],
+   "ms_greedy": 60.34,
+   "ms": 169.34,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "school",
+      "value": "Greywater College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-013": {
+   "raw": "TEACH | our | dog | Biscuit",
+   "greedy_lp": -0.013047461338906885,
+   "beams": [
+    [
+     "TEACH | our | dog | Biscuit",
+     -0.013316637836396694
+    ],
+    [
+     "TEACH |our | dog | Biscuit",
+     -4.513321876525879
+    ],
+    [
+     "TEACH | my | dog | Biscuit",
+     -6.263318061828613
+    ],
+    [
+     "TEACH | Our | dog | Biscuit",
+     -9.263319969177246
+    ]
+   ],
+   "ms_greedy": 88.42,
+   "ms": 172.86,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "our",
+      "relation": "dog",
+      "value": "Biscuit"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-014": {
+   "raw": "TEACH | OUR | cat | Pebbles",
+   "greedy_lp": -0.16551209681636436,
+   "beams": [
+    [
+     "TEACH | OUR | cat | Pebbles",
+     -0.17196886241436005
+    ],
+    [
+     "TEACH | Our | cat | Pebbles",
+     -2.295454263687134
+    ],
+    [
+     "TEACH | OWr | cat | Pebbles",
+     -3.477999210357666
+    ],
+    [
+     "TEACH | OWR | cat | Pebbles",
+     -3.83894419670105
+    ]
+   ],
+   "ms_greedy": 63.67,
+   "ms": 141.03,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "OUR",
+      "relation": "cat",
+      "value": "Pebbles"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-015": {
+   "raw": "TEACH | Our | dog | Rex\nTEACH | I | city | Oatfield",
+   "greedy_lp": -0.00021755152911850928,
+   "beams": [
+    [
+     "TEACH | Our | dog | Rex\nTEACH | I | city | Oatfield",
+     -0.000209922538488172
+    ],
+    [
+     "TEACH | My | dog | Rex\nTEACH | I | city | Oatfield",
+     -10.382116317749023
+    ],
+    [
+     "TEACH | Our | dog | Rex\nTEACH | I | country_of_citizenship | Oatfield",
+     -10.434599876403809
+    ],
+    [
+     "TEACH | Our | dog | Rex\nTEACH | We | city | Oatfield",
+     -10.625186920166016
+    ]
+   ],
+   "ms_greedy": 95.41,
+   "ms": 237.53,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "dog",
+      "value": "Rex"
+     },
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Oatfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-016": {
+   "raw": "TEACH | We | city | Dunnsmouth\nTEACH | My | sister | Wren",
+   "greedy_lp": -0.33224925649323467,
+   "beams": [
+    [
+     "TEACH | We | city | Dunnsmouth\nTEACH | My | sister | Wren",
+     -0.33263424038887024
+    ],
+    [
+     "TEACH | We | city | Dunnsmouth\nTEACH | my | sister | Wren",
+     -2.3326339721679688
+    ],
+    [
+     "TEACH | My | sister | Wren",
+     -2.3994948863983154
+    ],
+    [
+     "TEACH | My | city | Dunnsmouth\nTEACH | My | sister | Wren",
+     -2.5131497383117676
+    ]
+   ],
+   "ms_greedy": 95.03,
+   "ms": 217.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Wren"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "city",
+      "value": "Dunnsmouth",
+      "why": "UNSURE",
+      "margin": 2.066860646009445
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-017": {
+   "raw": "TEACH | My | brother | Ash\nTEACH | Our | cat | Mimi",
+   "greedy_lp": -0.8870686884384753,
+   "beams": [
+    [
+     "TEACH | My | brother | Ash\nTEACH | Our | cat | Mimi",
+     -0.9893254041671753
+    ],
+    [
+     "TEACH | My | brother | Ash\nTEACH | my | cat | Mimi",
+     -1.1143710613250732
+    ],
+    [
+     "TEACH | My | brother | Ash\nTEACH | My | cat | Mimi",
+     -1.4893145561218262
+    ],
+    [
+     "TEACH | My | brother | Ash\nTEACH | our | cat | Mimi",
+     -2.6143338680267334
+    ]
+   ],
+   "ms_greedy": 121.35,
+   "ms": 265.19,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "brother",
+      "value": "Ash"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "cat",
+      "value": "Mimi",
+      "why": "UNSURE",
+      "margin": 0.12504565715789795
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-018": {
+   "raw": "TEACH | Our | car | a Beetle\nTEACH | I | employer | Hales Brokerage",
+   "greedy_lp": -0.18909386126760808,
+   "beams": [
+    [
+     "TEACH | Our | car | a Beetle\nTEACH | I | employer | Hales Brokerage",
+     -0.18862809240818024
+    ],
+    [
+     "TEACH | Our | car | Beetle\nTEACH | I | employer | Hales Brokerage",
+     -1.813162088394165
+    ],
+    [
+     "TEACH | Our | car | a Beetle\nTEACH | I | employer | Hales Broerage",
+     -6.078245162963867
+    ],
+    [
+     "TEACH | Our car | car | Beetle\nTEACH | I | employer | Hales Brokerage",
+     -6.447412967681885
+    ]
+   ],
+   "ms_greedy": 110.84,
+   "ms": 248.5,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "employer",
+      "value": "Hales Brokerage"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "car",
+      "value": "a Beetle",
+      "why": "UNSURE",
+      "margin": 6.2587848752737045
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-019": {
+   "raw": "TEACH | I | language | Frisian\nTEACH | I | dog | Rex",
+   "greedy_lp": -1.2964064003271503,
+   "beams": [
+    [
+     "TEACH | I | language | Frisian\nTEACH | my | dog | Rex",
+     -1.301429033279419
+    ],
+    [
+     "TEACH | I | language | Frisian\nTEACH | I | dog | Rex",
+     -1.4235786199569702
+    ],
+    [
+     "TEACH | I | language | Frisian\nTEACH | Our | dog | Rex",
+     -1.611718773841858
+    ],
+    [
+     "TEACH | I | language | Frisian\nTEACH | Rex | dog | Frisian",
+     -2.587956190109253
+    ]
+   ],
+   "ms_greedy": 94.96,
+   "ms": 221.73,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Frisian"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "dog",
+      "value": "Rex",
+      "why": "UNSURE",
+      "margin": 0.1881401538848877
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-020": {
+   "raw": "TEACH | We | city | Dunnsmouth\nTEACH | my | neighbour | Nadia Fenn",
+   "greedy_lp": -0.09020967373064792,
+   "beams": [
+    [
+     "TEACH | We | city | Dunnsmouth\nTEACH | my | neighbour | Nadia Fenn",
+     -0.09020201861858368
+    ],
+    [
+     "TEACH | my | neighbour | Nadia Fenn",
+     -2.589442491531372
+    ],
+    [
+     "TEACH | My | neighbour | Nadia Fenn",
+     -4.839430809020996
+    ],
+    [
+     "TEACH | I | city | Dunnsmouth\nTEACH | my | neighbour | Nadia Fenn",
+     -6.216057300567627
+    ]
+   ],
+   "ms_greedy": 107.76,
+   "ms": 276.45,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "neighbour",
+      "value": "Nadia Fenn"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "We",
+      "relation": "city",
+      "value": "Dunnsmouth",
+      "why": "UNSURE",
+      "margin": 2.4992404729127884
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-021": {
+   "raw": "TEACH | Our | son | Theo\nTEACH | my | hobby | chess",
+   "greedy_lp": -0.09021320902022723,
+   "beams": [
+    [
+     "TEACH | Our | son | Theo\nTEACH | my | hobby | chess",
+     -0.09023341536521912
+    ],
+    [
+     "TEACH | Our | son | Theo\nTEACH | My | hobby | chess",
+     -2.465233564376831
+    ],
+    [
+     "TEACH | Our | son | Theo\nTEACH | Our | hobby | chess",
+     -7.215235710144043
+    ],
+    [
+     "TEACH | My | son | Theo\nTEACH | My | hobby | chess",
+     -8.104926109313965
+    ]
+   ],
+   "ms_greedy": 91.27,
+   "ms": 203.4,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "son",
+      "value": "Theo",
+      "why": "UNSURE",
+      "margin": 8.014692693948746
+     },
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "hobby",
+      "value": "chess",
+      "why": "UNSURE",
+      "margin": 7.125002294778824
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-022": {
+   "raw": "TEACH | My | mother | Iris\nTEACH | Our | cat | Mimi",
+   "greedy_lp": -0.4379823494802011,
+   "beams": [
+    [
+     "TEACH | My | mother | Iris\nTEACH | Our | cat | Mimi",
+     -0.45284825563430786
+    ],
+    [
+     "TEACH | My | mother | Iris\nTEACH | My | cat | Mimi",
+     -1.57785165309906
+    ],
+    [
+     "TEACH | My | mother | Iris\nTEACH | my | cat | Mimi",
+     -2.0778729915618896
+    ],
+    [
+     "TEACH | My | mother | Iris\nTEACH | our | cat | Mimi",
+     -3.4528615474700928
+    ]
+   ],
+   "ms_greedy": 91.01,
+   "ms": 203.15,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "mother",
+      "value": "Iris"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "cat",
+      "value": "Mimi",
+      "why": "UNSURE",
+      "margin": 1.1250033974647522
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-023": {
+   "raw": "TEACH | my | language | Frisian\nTEACH | my | boss | Tomas Reed",
+   "greedy_lp": -0.04814970249170614,
+   "beams": [
+    [
+     "TEACH | my | language | Frisian\nTEACH | my | boss | Tomas Reed",
+     -0.04916597157716751
+    ],
+    [
+     "TEACH | my | language | Frisian\nTEACH | Tomas Reed | boss | my",
+     -3.471386432647705
+    ],
+    [
+     "TEACH | my | language | Frisian\nTEACH | my | boss | Tomas Reed",
+     -5.466981887817383
+    ],
+    [
+     "TEACH | my | language | Frisian\nTEACH | Tomas Reed | boss | My",
+     -5.867843151092529
+    ]
+   ],
+   "ms_greedy": 102.96,
+   "ms": 240.61,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "language",
+      "value": "Frisian"
+     }
+    ],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "my",
+      "relation": "boss",
+      "value": "Tomas Reed",
+      "why": "UNSURE",
+      "margin": 3.4222204610705376
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-024": {
+   "raw": "TEACH | Our | school | Greywater College\nTEACH | I | city | Oatfield",
+   "greedy_lp": -0.010798748501244404,
+   "beams": [
+    [
+     "TEACH | Our | school | Greywater College\nTEACH | I | city | Oatfield",
+     -0.010012493468821049
+    ],
+    [
+     "TEACH | My | school | Greywater College\nTEACH | I | city | Oatfield",
+     -5.17307710647583
+    ],
+    [
+     "TEACH | We | school | Greywater College\nTEACH | I | city | Oatfield",
+     -6.571990013122559
+    ],
+    [
+     "TEACH | Our school | city | Oatfield",
+     -7.225378036499023
+    ]
+   ],
+   "ms_greedy": 112.08,
+   "ms": 250.72,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Our",
+      "relation": "school",
+      "value": "Greywater College",
+      "why": "UNSURE",
+      "margin": 7.215365543030202
+     },
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Oatfield",
+      "why": "UNSURE",
+      "margin": 7.215365543030202
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-025": {
+   "raw": "TEACH | My | dog | Rex",
+   "greedy_lp": -1.204011922339987e-05,
+   "beams": [
+    [
+     "TEACH | My | dog | Rex",
+     -1.204012005473487e-05
+    ],
+    [
+     "TEACH |My | dog | Rex",
+     -12.62501335144043
+    ],
+    [
+     "TEACH My | My | dog | Rex",
+     -12.750225067138672
+    ],
+    [
+     "TEACH | My | dog | Rex<|im_start|>",
+     -13.094931602478027
+    ]
+   ],
+   "ms_greedy": 60.82,
+   "ms": 141.41,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "dog",
+      "value": "Rex"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-026": {
+   "raw": "TEACH | I | city | Oatfield",
+   "greedy_lp": -6.270363655147548e-05,
+   "beams": [
+    [
+     "TEACH | I | city | Oatfield",
+     -5.853141919942573e-05
+    ],
+    [
+     "TEACH I | I | city | Oatfield",
+     -10.875494956970215
+    ],
+    [
+     "TEACH | I | city | Oathfield",
+     -11.693659782409668
+    ],
+    [
+     "NONE",
+     -12.750008583068848
+    ]
+   ],
+   "ms_greedy": 59.72,
+   "ms": 136.07,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "city",
+      "value": "Oatfield"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-027": {
+   "raw": "TEACH | My | sister | Wren",
+   "greedy_lp": -1.0251981208853067e-05,
+   "beams": [
+    [
+     "TEACH | My | sister | Wren",
+     -1.1324858860461973e-05
+    ],
+    [
+     "TEACH |My | sister | Wren",
+     -12.125015258789062
+    ],
+    [
+     "TEACH My | My | sister | Wren",
+     -13.125049591064453
+    ],
+    [
+     "TEACH | My | sister | Wren<|im_start|>",
+     -13.760062217712402
+    ]
+   ],
+   "ms_greedy": 51.55,
+   "ms": 117.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "sister",
+      "value": "Wren"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-028": {
+   "raw": "TEACH | I | employer | Hales Brokerage",
+   "greedy_lp": -0.001092604890260418,
+   "beams": [
+    [
+     "TEACH | I | employer | Hales Brokerage",
+     -0.0009959024609997869
+    ],
+    [
+     "TEACH | I | employer | Hales Broerage",
+     -7.277393341064453
+    ],
+    [
+     "TEACH | I | employer | Hales Broderage",
+     -10.258659362792969
+    ],
+    [
+     "TEACH | I | employer | Hales Brokerate",
+     -12.761463165283203
+    ]
+   ],
+   "ms_greedy": 67.86,
+   "ms": 154.63,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "employer",
+      "value": "Hales Brokerage"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-029": {
+   "raw": "TEACH | My | hobby | chess",
+   "greedy_lp": -3.5047311897073996e-05,
+   "beams": [
+    [
+     "TEACH | My | hobby | chess",
+     -3.778908649110235e-05
+    ],
+    [
+     "TEACH | my | hobby | chess",
+     -11.00003719329834
+    ],
+    [
+     "TEACH My | hobby | chess",
+     -11.375060081481934
+    ],
+    [
+     "TEACH | My | hobby | chess<|im_start|>",
+     -12.890753746032715
+    ]
+   ],
+   "ms_greedy": 51.65,
+   "ms": 123.49,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "hobby",
+      "value": "chess"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-030": {
+   "raw": "TEACH | I | language | Frisian",
+   "greedy_lp": -0.004342173679440009,
+   "beams": [
+    [
+     "TEACH | I | language | Frisian",
+     -0.004889886826276779
+    ],
+    [
+     "TEACH | I | language_of_work_or_name | Frisian",
+     -6.006512641906738
+    ],
+    [
+     "TEACH | I | language | Frisian",
+     -6.205601215362549
+    ],
+    [
+     "TEACH | I | language | Frysian",
+     -9.182766914367676
+    ]
+   ],
+   "ms_greedy": 68.32,
+   "ms": 189.41,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "language",
+      "value": "Frisian",
+      "why": "UNSURE",
+      "margin": 6.0016227550804615
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-031": {
+   "raw": "TEACH | My | mother | Iris",
+   "greedy_lp": -8.08226597968087e-05,
+   "beams": [
+    [
+     "TEACH | My | mother | Iris",
+     -8.487567538395524e-05
+    ],
+    [
+     "TEACH | My |mother | Iris",
+     -10.125151634216309
+    ],
+    [
+     "TEACH | My | mother |iris",
+     -10.625092506408691
+    ],
+    [
+     "TEACH |My | mother | Iris",
+     -11.875235557556152
+    ]
+   ],
+   "ms_greedy": 51.58,
+   "ms": 113.66,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "mother",
+      "value": "Iris"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-032": {
+   "raw": "TEACH | My | friend | Briony Candlewick",
+   "greedy_lp": -0.004474878358777801,
+   "beams": [
+    [
+     "TEACH | My | friend | Briony Candlewick",
+     -0.004992564674466848
+    ],
+    [
+     "TEACH | My | friend | Briony Candelwick",
+     -5.38334321975708
+    ],
+    [
+     "TEACH | My | friend | Briony Candlockwick",
+     -8.380997657775879
+    ],
+    [
+     "TEACH | My | friend | Briony Candlwick",
+     -10.507364273071289
+    ]
+   ],
+   "ms_greedy": 72.06,
+   "ms": 158.74,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "friend",
+      "value": "Briony Candlewick"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-033": {
+   "raw": "TEACH | I | school | Greywater College",
+   "greedy_lp": -0.0004047629613452841,
+   "beams": [
+    [
+     "TEACH | I | school | Greywater College",
+     -0.000381408171961084
+    ],
+    [
+     "TEACH | I | school | Graywater College",
+     -8.937883377075195
+    ],
+    [
+     "TEACH | I | school | Greydwater College",
+     -10.353318214416504
+    ],
+    [
+     "TEACH | I | school | Greentown College",
+     -10.480361938476562
+    ]
+   ],
+   "ms_greedy": 60.01,
+   "ms": 136.46,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "I",
+      "relation": "school",
+      "value": "Greywater College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-034": {
+   "raw": "TEACH | My | boss | Tomas Reed",
+   "greedy_lp": -2.6822018661221136e-05,
+   "beams": [
+    [
+     "TEACH | My | boss | Tomas Reed",
+     -2.682202284631785e-05
+    ],
+    [
+     "TEACH | My | employer | Tomas Reed",
+     -12.000027656555176
+    ],
+    [
+     "TEACH My | My | boss | Tomas Reed",
+     -12.250127792358398
+    ],
+    [
+     "TEACH | My | boss | Toma Reed",
+     -12.250593185424805
+    ]
+   ],
+   "ms_greedy": 59.82,
+   "ms": 136.04,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "My",
+      "relation": "boss",
+      "value": "Tomas Reed"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-035": {
+   "raw": "TEACH | Marta Vane | city | Dunnsmouth",
+   "greedy_lp": -0.00447821786627145,
+   "beams": [
+    [
+     "TEACH | Marta Vane | city | Dunnsmouth",
+     -0.004820568487048149
+    ],
+    [
+     "TEACH |Marta Vane | city | Dunnsmouth",
+     -6.005016803741455
+    ],
+    [
+     "TEACH | Martin Vane | city | Dunnsmouth",
+     -7.526491165161133
+    ],
+    [
+     "TEACH | Mara Vane | city | Dunnsmouth",
+     -7.721436500549316
+    ]
+   ],
+   "ms_greedy": 71.38,
+   "ms": 159.7,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Marta Vane",
+      "relation": "city",
+      "value": "Dunnsmouth"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-036": {
+   "raw": "TEACH | Tomas Reed | employer | Hales Brokerage",
+   "greedy_lp": -0.0008598965567756522,
+   "beams": [
+    [
+     "TEACH | Tomas Reed | employer | Hales Brokerage",
+     -0.0008615711121819913
+    ],
+    [
+     "TEACH | Tomas Reed | employer | Hales Broerage",
+     -8.16113567352295
+    ],
+    [
+     "TEACH | Tomas Reed | employer | Hales Brokerage",
+     -9.251518249511719
+    ],
+    [
+     "TEACH | Tomas Reed | employer | Hales Brockerage",
+     -9.501426696777344
+    ]
+   ],
+   "ms_greedy": 84.4,
+   "ms": 186.44,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Tomas Reed",
+      "relation": "employer",
+      "value": "Hales Brokerage"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-037": {
+   "raw": "TEACH | Briony Candlewick | language | Frisian",
+   "greedy_lp": -0.008118569765258599,
+   "beams": [
+    [
+     "TEACH | Briony Candlewick | language | Frisian",
+     -0.00764171127229929
+    ],
+    [
+     "TEACH | Briony Candlewick | language_of_work_or_name | Frisian",
+     -5.63352632522583
+    ],
+    [
+     "TEACH | Briony Candelwick | language | Frisian",
+     -5.644430637359619
+    ],
+    [
+     "TEACH | Briony Candlewick | language |Frisian",
+     -9.257794380187988
+    ]
+   ],
+   "ms_greedy": 87.75,
+   "ms": 224.7,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Briony Candlewick",
+      "relation": "language",
+      "value": "Frisian",
+      "why": "UNSURE",
+      "margin": 5.625884613953531
+     }
+    ],
+    "guard": []
+   }
+  },
+  "d265-038": {
+   "raw": "TEACH | Nadia Fenn | school | Greywater College",
+   "greedy_lp": -0.3425789661502989,
+   "beams": [
+    [
+     "TEACH | Nadia Fenn | school | Greywater College",
+     -0.3453270494937897
+    ],
+    [
+     "TEACH | Nadya Fenn | school | Greywater College",
+     -1.3459208011627197
+    ],
+    [
+     "TEACH | Naadia Fenn | school | Greywater College",
+     -5.142428398132324
+    ],
+    [
+     "TEACH |adia fenn | school | greywater college",
+     -5.236698150634766
+    ]
+   ],
+   "ms_greedy": 71.72,
+   "ms": 158.47,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Nadia Fenn",
+      "relation": "school",
+      "value": "Greywater College"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-039": {
+   "raw": "TEACH | Wren | brother | Ash Keel",
+   "greedy_lp": -3.433208073033711e-05,
+   "beams": [
+    [
+     "TEACH | Wren | brother | Ash Keel",
+     -3.874274261761457e-05
+    ],
+    [
+     "TEACH | Wren |brother | Ash Keel",
+     -10.875123023986816
+    ],
+    [
+     "TEACH | Wren | brother | Ashley Keel",
+     -11.87763786315918
+    ],
+    [
+     "TEACH | Wren | brother |Ash Keel",
+     -12.68754768371582
+    ]
+   ],
+   "ms_greedy": 59.67,
+   "ms": 131.05,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Wren",
+      "relation": "brother",
+      "value": "Ash Keel"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-040": {
+   "raw": "TEACH | Theo | mother | Iris Bell",
+   "greedy_lp": -0.0009676664587559003,
+   "beams": [
+    [
+     "TEACH | Theo | mother | Iris Bell",
+     -0.000927513581700623
+    ],
+    [
+     "TEACH | Theo | mother | IrisBell",
+     -7.87592887878418
+    ],
+    [
+     "TEACH | Theo | mother | Iris Bell",
+     -8.563899993896484
+    ],
+    [
+     "TEACH | Theo | mother |iris bell",
+     -8.816012382507324
+    ]
+   ],
+   "ms_greedy": 59.77,
+   "ms": 136.32,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Theo",
+      "relation": "mother",
+      "value": "Iris Bell"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-041": {
+   "raw": "TEACH | Wren Hall | dog | Biscuit",
+   "greedy_lp": -0.0001112191071896973,
+   "beams": [
+    [
+     "TEACH | Wren Hall | dog | Biscuit",
+     -0.00010835845023393631
+    ],
+    [
+     "TEACH | Wrenhall | dog | Biscuit",
+     -10.125112533569336
+    ],
+    [
+     "TEACH | WrenHall | dog | Biscuit",
+     -10.50011157989502
+    ],
+    [
+     "TEACH | Wren Hall | dog | Biscot",
+     -12.749770164489746
+    ]
+   ],
+   "ms_greedy": 63.64,
+   "ms": 148.12,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Wren Hall",
+      "relation": "dog",
+      "value": "Biscuit"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-042": {
+   "raw": "TEACH | Mr Kettle | cat | Pebbles",
+   "greedy_lp": -0.012360768581231696,
+   "beams": [
+    [
+     "TEACH | Mr Kettle | cat | Pebbles",
+     -0.013125781901180744
+    ],
+    [
+     "TEACH |Mr Kettle | cat | Pebbles",
+     -4.513379096984863
+    ],
+    [
+     "TEACH | Mr Kettle | cat | Pebbles",
+     -7.2833757400512695
+    ],
+    [
+     "TEACH | Mr Kettle | cat | Pebble",
+     -7.388126373291016
+    ]
+   ],
+   "ms_greedy": 76.33,
+   "ms": 167.87,
+   "gate": {
+    "saved": [
+     {
+      "act": "TEACH",
+      "subject": "Mr Kettle",
+      "relation": "cat",
+      "value": "Pebbles"
+     }
+    ],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-043": {
+   "raw": "TEACH | Dunnsmouth | occupant | Ms Harlow",
+   "greedy_lp": -1.4250821627563255,
+   "beams": [],
+   "ms_greedy": 80.63,
+   "ms": 80.67,
+   "gate": {
+    "saved": [],
+    "unsure": [],
+    "guard": []
+   }
+  },
+  "d265-044": {
+   "raw": "TEACH | Ivo Lantern | city | Oatfield",
+   "greedy_lp": -0.0018786561954229342,
+   "beams": [
+    [
+     "TEACH | Ivo Lantern | city | Oatfield",
+     -0.0019019762985408306
+    ],
+    [
+     "TEACH | Ivo Lantern | hometown | Oatfield",
+     -6.876888275146484
+    ],
+    [
+     "TEACH | Ivo Lantern | place_of_birth | Oatfield",
+     -8.311219215393066
+    ],
+    [
+     "TEACH | Ivo Lantern | home | Oatfield",
+     -8.376992225646973
+    ]
+   ],
+   "ms_greedy": 80.58,
+   "ms": 197.99,
+   "gate": {
+    "saved": [],
+    "unsure": [
+     {
+      "act": "TEACH",
+      "subject": "Ivo Lantern",
+      "relation": "city",
+      "value": "Oatfield",
+      "why": "UNSURE",
+      "margin": 6.8749862988479435
+     }
+    ],
+    "guard": []
+   }
+  }
+ }
+}
