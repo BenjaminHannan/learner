@@ -50,3 +50,31 @@ Pass mark for "conversational" (proposed, to be fixed in F0's note):
 - no single reply on more than 10% of turns;
 - grammar at least 99%.
 Wrong if: 60% or fewer wins, or any unfaithful line.
+
+## F0 baseline on 292 (director-verified, 18:38 UTC)
+convbench-f0 (40 dialogs, 286 user turns, seal 2/2 OK). My recount from run/base292.jsonl:
+- **197/286 replies (69%) are clarify or not-understood lines.** By kind: small talk 57/68, teach 48/84,
+  ask 53/84, other 34/40, correct 5/10.
+- The single most common reply appears on 122/286 turns (43%). There are only 77 distinct replies.
+- Only 20 of 84 teach turns saved anything.
+- Ask turns: 6 right, 77 abstain, 1 wrong. The wrong one is a stale value after a correction the model did not
+  understand, not an invented fact.
+So on everyday conversation, 292 mostly does not understand. That is the ear's job, and the numbers go to the
+ear and reasoning lines through the coordinator. The talking-line steps below still matter for the turns it
+does understand, but they cannot make it conversational alone.
+
+## F1: 241b's rewriter on 292t (registered 18:38 UTC)
+The one change: install 241b's sealed reply rewriter (scripts/claude_mouth241b_*.py, used exactly as in
+scripts/claude_loop241b_agent.py) as the outermost reply layer on 292t. Piece files are imported unchanged.
+Marks (fixed now):
+- M1: grammar of every changed line is at least 99%, from two blind graders, each valid only if it catches at
+  least 36 of 40 planted errors.
+- M2: 0 unfaithful lines (each changed line parses back to the same frame, by 241b's brake). 0 notebook-event or
+  store changes vs 292t on the suites, the verifier probes, joinpanel292t (regression only) and convbench-f0.
+- M3: frozen suites (fable_suitediff218 --only rt136,rt143,sessions152,bench) vs 292t's rows: reply-only moves,
+  every one a 241b rewrite, GATE identical.
+- M4: a blind pairwise judge on the changed lines from convbench-f0, 292t vs F1, sides randomised. Pass: at
+  least 70% of non-ties won, and at most 10% lost.
+- M5: the suite wall-clock cost is at most +5%, medians of 3 alternated runs each, with load1 below 40 before
+  every run, waiting up to 6 hours. If it never gets quiet, M5 is VOID, not FAIL, and it is re-run.
+Wrong if: any unfaithful line, any store change, or 60% or fewer judge wins.
