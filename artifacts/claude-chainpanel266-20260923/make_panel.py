@@ -1,0 +1,425 @@
+#!/usr/bin/env python3
+"""Build chainpanel266: 80 blind two-step chain items (writer-original sentences).
+
+Writes artifacts/claude-chainpanel266-20260923/panel.jsonl.
+Every sentence below was written by the panel author; all names are fictional.
+Family counts: chain_verb 30, chain_verb_three 6, chain_possessive 10,
+broken_chain 12, plain_control 14, statement_control 8.
+"""
+import json
+from pathlib import Path
+
+OUT = Path(__file__).resolve().parent / "panel.jsonl"
+
+ITEMS = [
+    # ---- chain_verb: Where does X live? (5)
+    dict(id="c266-001", family="chain_verb",
+         setup=["Zara's boss is Quinn.", "Quinn lives in Lumivale."],
+         question="Where does Zara's boss live?", gold=["Lumivale"],
+         note="two-link chain, live-form"),
+    dict(id="c266-002", family="chain_verb",
+         setup=["Vera's mother is Nina.", "Nina lives in Ostport."],
+         question="Where does Vera's mother live?", gold=["Ostport"],
+         note="two-link chain, live-form"),
+    dict(id="c266-003", family="chain_verb",
+         setup=["Ysolde's father is Bram.", "Bram lives in Quillan."],
+         question="Where does Ysolde's father live?", gold=["Quillan"],
+         note="two-link chain, live-form"),
+    dict(id="c266-004", family="chain_verb",
+         setup=["My sister is Tess.", "Tess lives in Renvick."],
+         question="Where does my sister live?", gold=["Renvick"],
+         note="two-link chain, live-form, my-subject"),
+    dict(id="c266-005", family="chain_verb",
+         setup=["Ana Maria's friend is Remy.", "Remy lives in Talsbrook."],
+         question="Where does Ana Maria's friend live?", gold=["Talsbrook"],
+         note="two-link chain, live-form, two-word name"),
+    # ---- chain_verb: Where was X born? (5)
+    dict(id="c266-006", family="chain_verb",
+         setup=["Xan's brother is Jory.", "Jory was born in Oakhaven."],
+         question="Where was Xan's brother born?", gold=["Oakhaven"],
+         note="two-link chain, born-form"),
+    dict(id="c266-007", family="chain_verb",
+         setup=["Wilma's neighbour is Otto.", "Otto was born in Mirell."],
+         question="Where was Wilma's neighbour born?", gold=["Mirell"],
+         note="two-link chain, born-form"),
+    dict(id="c266-008", family="chain_verb",
+         setup=["Beth Jones's dentist is Pam.", "Pam was born in Sableton."],
+         question="Where was Beth Jones's dentist born?", gold=["Sableton"],
+         note="two-link chain, born-form, two-word name"),
+    dict(id="c266-009", family="chain_verb",
+         setup=["My brother is Jory.", "Jory was born in Corvessa."],
+         question="Where was my brother born?", gold=["Corvessa"],
+         note="two-link chain, born-form, my-subject"),
+    dict(id="c266-010", family="chain_verb",
+         setup=["Ulma's wife is Iona.", "Iona was born in Dunmar."],
+         question="Where was Ulma's wife born?", gold=["Dunmar"],
+         note="two-link chain, born-form"),
+    # ---- chain_verb: Who does X work for? (5)
+    dict(id="c266-011", family="chain_verb",
+         setup=["Tavish's husband is Hakim.", "Hakim works for Cobalt Works."],
+         question="Who does Tavish's husband work for?", gold=["Cobalt Works"],
+         note="two-link chain, work-for-form"),
+    dict(id="c266-012", family="chain_verb",
+         setup=["My boss is Quinn.", "Quinn works for Harborlight."],
+         question="Who does my boss work for?", gold=["Harborlight"],
+         note="two-link chain, work-for-form, my-subject"),
+    dict(id="c266-013", family="chain_verb",
+         setup=["Sanna's doctor is Farid.", "Farid works for Northbeam."],
+         question="Who does Sanna's doctor work for?", gold=["Northbeam"],
+         note="two-link chain, work-for-form"),
+    dict(id="c266-014", family="chain_verb",
+         setup=["My friend is Lonnie.", "Lonnie works for Brightfield."],
+         question="Who does my friend work for?", gold=["Brightfield"],
+         note="two-link chain, work-for-form, my-subject"),
+    dict(id="c266-015", family="chain_verb",
+         setup=["Cara Lynn's sister is Mira.", "Mira works for Copperline."],
+         question="Who does Cara Lynn's sister work for?", gold=["Copperline"],
+         note="two-link chain, work-for-form, two-word name"),
+    # ---- chain_verb: When is X's birthday? (5)
+    dict(id="c266-016", family="chain_verb",
+         setup=["Rurik's mother is Greta.", "Greta's birthday is March 4."],
+         question="When is Rurik's mother's birthday?", gold=["March 4"],
+         note="two-link chain, birthday-form"),
+    dict(id="c266-017", family="chain_verb",
+         setup=["My father is Dario.", "Dario's birthday is July 19."],
+         question="When is my father's birthday?", gold=["July 19"],
+         note="two-link chain, birthday-form, my-subject"),
+    dict(id="c266-018", family="chain_verb",
+         setup=["Pavel's brother is Niles.", "Niles's birthday is October 2."],
+         question="When is Pavel's brother's birthday?", gold=["October 2"],
+         note="two-link chain, birthday-form"),
+    dict(id="c266-019", family="chain_verb",
+         setup=["My dentist is Odette.", "Odette's birthday is December 12."],
+         question="When is my dentist's birthday?", gold=["December 12"],
+         note="two-link chain, birthday-form, my-subject"),
+    dict(id="c266-020", family="chain_verb",
+         setup=["Dana Cole's coach is Elke.", "Elke's birthday is January 8."],
+         question="When is Dana Cole's coach's birthday?", gold=["January 8"],
+         note="two-link chain, birthday-form, two-word name"),
+    # ---- chain_verb: What city does X live in? (5)
+    dict(id="c266-021", family="chain_verb",
+         setup=["Odette's friend is Cleo.", "Cleo lives in Ellery."],
+         question="What city does Odette's friend live in?", gold=["Ellery"],
+         note="two-link chain, what-city-form"),
+    dict(id="c266-022", family="chain_verb",
+         setup=["Niles's neighbour is Alba.", "Alba lives in Greywick."],
+         question="What city does Niles's neighbour live in?", gold=["Greywick"],
+         note="two-link chain, what-city-form"),
+    dict(id="c266-023", family="chain_verb",
+         setup=["My mother is Nina.", "Nina lives in Harlowe."],
+         question="What city does my mother live in?", gold=["Harlowe"],
+         note="two-link chain, what-city-form, my-subject"),
+    dict(id="c266-024", family="chain_verb",
+         setup=["Evan Ross's boss is Zeke.", "Zeke lives in Inksbrook."],
+         question="What city does Evan Ross's boss live in?", gold=["Inksbrook"],
+         note="two-link chain, what-city-form, two-word name"),
+    dict(id="c266-025", family="chain_verb",
+         setup=["Mira's sister is Sanna.", "Sanna lives in Jorwick."],
+         question="What city does Mira's sister live in?", gold=["Jorwick"],
+         note="two-link chain, what-city-form"),
+    # ---- chain_verb: Which city does X live in? (5)
+    dict(id="c266-026", family="chain_verb",
+         setup=["Lonnie's father is Bram.", "Bram lives in Kellside."],
+         question="Which city does Lonnie's father live in?", gold=["Kellside"],
+         note="two-link chain, which-city-form"),
+    dict(id="c266-027", family="chain_verb",
+         setup=["Kira's brother is Dario.", "Dario lives in Mossbank."],
+         question="Which city does Kira's brother live in?", gold=["Mossbank"],
+         note="two-link chain, which-city-form"),
+    dict(id="c266-028", family="chain_verb",
+         setup=["My wife is Iona.", "Iona lives in Vellano."],
+         question="Which city does my wife live in?", gold=["Vellano"],
+         note="two-link chain, which-city-form, my-subject"),
+    dict(id="c266-029", family="chain_verb",
+         setup=["Faye Hart's husband is Hakim.", "Hakim lives in Zorbania."],
+         question="Which city does Faye Hart's husband live in?", gold=["Zorbania"],
+         note="two-link chain, which-city-form, two-word name"),
+    dict(id="c266-030", family="chain_verb",
+         setup=["Joren's doctor is Farid.", "Farid lives in Quenby."],
+         question="Which city does Joren's doctor live in?", gold=["Quenby"],
+         note="two-link chain, which-city-form"),
+    # ---- chain_verb_three (6)
+    dict(id="c266-031", family="chain_verb_three",
+         setup=["Gus Nolan's boss is Quinn.", "Quinn's sister is Tess.",
+                "Tess lives in Lumivale."],
+         question="Where does Gus Nolan's boss's sister live?", gold=["Lumivale"],
+         note="three-link chain, live-form"),
+    dict(id="c266-032", family="chain_verb_three",
+         setup=["Hana Reid's mother is Nina.", "Nina's brother is Jory.",
+                "Jory was born in Ostport."],
+         question="Where was Hana Reid's mother's brother born?", gold=["Ostport"],
+         note="three-link chain, born-form"),
+    dict(id="c266-033", family="chain_verb_three",
+         setup=["Ivan Park's father is Bram.", "Bram's friend is Remy.",
+                "Remy works for Cobalt Works."],
+         question="Who does Ivan Park's father's friend work for?", gold=["Cobalt Works"],
+         note="three-link chain, work-for-form"),
+    dict(id="c266-034", family="chain_verb_three",
+         setup=["Jill Mason's sister is Mira.", "Mira's coach is Kira.",
+                "Kira lives in Quillan."],
+         question="What city does Jill Mason's sister's coach live in?", gold=["Quillan"],
+         note="three-link chain, what-city-form"),
+    dict(id="c266-035", family="chain_verb_three",
+         setup=["Karl Dean's brother is Niles.", "Niles's mother is Greta.",
+                "Greta was born in Renvick."],
+         question="Where was Karl Dean's brother's mother born?", gold=["Renvick"],
+         note="three-link chain, born-form"),
+    dict(id="c266-036", family="chain_verb_three",
+         setup=["Lena Frost's friend is Lonnie.", "Lonnie's boss is Zeke.",
+                "Zeke works for Harborlight."],
+         question="Who does Lena Frost's friend's boss work for?", gold=["Harborlight"],
+         note="three-link chain, work-for-form"),
+    # ---- chain_possessive (10)
+    dict(id="c266-037", family="chain_possessive",
+         setup=["Milo Grant's boss is Quinn.", "Quinn's city is Lumivale."],
+         question="What is Milo Grant's boss's city?", gold=["Lumivale"],
+         note="possessive chain, city"),
+    dict(id="c266-038", family="chain_possessive",
+         setup=["Nora Blake's mother is Nina.", "Nina was born in Ostport."],
+         question="What is Nora Blake's mother's place of birth?", gold=["Ostport"],
+         note="possessive chain, birthplace"),
+    dict(id="c266-039", family="chain_possessive",
+         setup=["Owen Hale's father is Bram.", "Bram works for Cobalt Works."],
+         question="What is Owen Hale's father's employer?", gold=["Cobalt Works"],
+         note="possessive chain, employer"),
+    dict(id="c266-040", family="chain_possessive",
+         setup=["Rosa Bell's sister is Mira.", "Mira's birthday is March 4."],
+         question="What is Rosa Bell's sister's birthday?", gold=["March 4"],
+         note="possessive chain, birthday"),
+    dict(id="c266-041", family="chain_possessive",
+         setup=["My boss is Quinn.", "Quinn's city is Quillan."],
+         question="What is my boss's city?", gold=["Quillan"],
+         note="possessive chain, city, my-subject"),
+    dict(id="c266-042", family="chain_possessive",
+         setup=["Sam Trout's brother is Jory.", "Jory's mother is Greta."],
+         question="Who is Sam Trout's brother's mother?", gold=["Greta"],
+         note="possessive chain, mother"),
+    dict(id="c266-043", family="chain_possessive",
+         setup=["Tina Marsh's friend is Remy.", "Remy's dog is Rex."],
+         question="Who is Tina Marsh's friend's dog?", gold=["Rex"],
+         note="possessive chain, dog"),
+    dict(id="c266-044", family="chain_possessive",
+         setup=["Umar Kent's coach is Kira.", "Kira's phone is 555-0142."],
+         question="What is Umar Kent's coach's phone?", gold=["555-0142"],
+         note="possessive chain, phone"),
+    dict(id="c266-045", family="chain_possessive",
+         setup=["My sister is Tess.", "Tess's sister is Wren."],
+         question="Who is my sister's sister?", gold=["Wren"],
+         note="possessive chain, sister, my-subject"),
+    dict(id="c266-046", family="chain_possessive",
+         setup=["Zara's dentist is Pam.", "Pam lives in Talsbrook."],
+         question="What is Zara's dentist's city?", gold=["Talsbrook"],
+         note="possessive chain, city"),
+    # ---- broken_chain: first link missing (6)
+    dict(id="c266-047", family="broken_chain",
+         setup=["Quinn's city is Lumivale."],
+         question="What is Zara's boss's city?", gold=[],
+         note="broken chain, first link missing"),
+    dict(id="c266-048", family="broken_chain",
+         setup=["Nina was born in Ostport."],
+         question="What is Vera's mother's place of birth?", gold=[],
+         note="broken chain, first link missing"),
+    dict(id="c266-049", family="broken_chain",
+         setup=["Hakim works for Cobalt Works."],
+         question="What is Tavish's husband's employer?", gold=[],
+         note="broken chain, first link missing"),
+    dict(id="c266-050", family="broken_chain",
+         setup=["Greta's birthday is March 4."],
+         question="What is Rurik's mother's birthday?", gold=[],
+         note="broken chain, first link missing"),
+    dict(id="c266-051", family="broken_chain",
+         setup=["Jory's mother is Greta."],
+         question="Who is Xan's brother's mother?", gold=[],
+         note="broken chain, first link missing"),
+    dict(id="c266-052", family="broken_chain",
+         setup=["Remy's dog is Rex."],
+         question="Who is Ysolde's friend's dog?", gold=[],
+         note="broken chain, first link missing"),
+    # ---- broken_chain: second link missing or different (6)
+    dict(id="c266-053", family="broken_chain",
+         setup=["Zara's boss is Quinn."],
+         question="What is Zara's boss's city?", gold=[],
+         note="broken chain, second link missing"),
+    dict(id="c266-054", family="broken_chain",
+         setup=["Vera's mother is Nina."],
+         question="What is Vera's mother's place of birth?", gold=[],
+         note="broken chain, second link missing"),
+    dict(id="c266-055", family="broken_chain",
+         setup=["Tavish's husband is Hakim."],
+         question="What is Tavish's husband's employer?", gold=[],
+         note="broken chain, second link missing"),
+    dict(id="c266-056", family="broken_chain",
+         setup=["Zara's boss is Quinn.", "Quinn's phone is 555-0100."],
+         question="What is Zara's boss's city?", gold=[],
+         note="broken chain, second person has a different relation"),
+    dict(id="c266-057", family="broken_chain",
+         setup=["Vera's mother is Nina.", "Nina's dog is Rex."],
+         question="Who is Vera's mother's sister?", gold=[],
+         note="broken chain, second person has a different relation"),
+    dict(id="c266-058", family="broken_chain",
+         setup=["Xan's brother is Jory.", "Jory works for Cobalt Works."],
+         question="What is Xan's brother's place of birth?", gold=[],
+         note="broken chain, second person has a different relation"),
+    # ---- plain_control (14)
+    dict(id="c266-059", family="plain_control",
+         setup=["Quinn lives in Lumivale."],
+         question="Where does Quinn live?", gold=["Lumivale"],
+         note="plain control, live-form"),
+    dict(id="c266-060", family="plain_control",
+         setup=["Nina lives in Ostport."],
+         question="Where does Nina live?", gold=["Ostport"],
+         note="plain control, live-form"),
+    dict(id="c266-061", family="plain_control",
+         setup=["Beth Jones's city is Quillan."],
+         question="Where does Beth Jones live?", gold=["Quillan"],
+         note="plain control, live-form, two-word name"),
+    dict(id="c266-062", family="plain_control",
+         setup=["Jory was born in Oakhaven."],
+         question="Where was Jory born?", gold=["Oakhaven"],
+         note="plain control, born-form"),
+    dict(id="c266-063", family="plain_control",
+         setup=["Otto was born in Mirell."],
+         question="Where was Otto born?", gold=["Mirell"],
+         note="plain control, born-form"),
+    dict(id="c266-064", family="plain_control",
+         setup=["Clara was born in Sableton."],
+         question="Where was Clara born?", gold=["Sableton"],
+         note="plain control, born-form"),
+    dict(id="c266-065", family="plain_control",
+         setup=["Hakim works for Cobalt Works."],
+         question="Who does Hakim work for?", gold=["Cobalt Works"],
+         note="plain control, work-for-form"),
+    dict(id="c266-066", family="plain_control",
+         setup=["Farid works for Northbeam."],
+         question="Who does Farid work for?", gold=["Northbeam"],
+         note="plain control, work-for-form"),
+    dict(id="c266-067", family="plain_control",
+         setup=["Greta's birthday is March 4."],
+         question="When is Greta's birthday?", gold=["March 4"],
+         note="plain control, birthday-form"),
+    dict(id="c266-068", family="plain_control",
+         setup=["Dario's birthday is July 19."],
+         question="When is Dario's birthday?", gold=["July 19"],
+         note="plain control, birthday-form"),
+    dict(id="c266-069", family="plain_control",
+         setup=["Cleo's city is Ellery."],
+         question="What city does Cleo live in?", gold=["Ellery"],
+         note="plain control, what-city-form"),
+    dict(id="c266-070", family="plain_control",
+         setup=["Alba's city is Greywick."],
+         question="What city does Alba live in?", gold=["Greywick"],
+         note="plain control, what-city-form"),
+    dict(id="c266-071", family="plain_control",
+         setup=["Bram's city is Kellside."],
+         question="Which city does Bram live in?", gold=["Kellside"],
+         note="plain control, which-city-form"),
+    dict(id="c266-072", family="plain_control",
+         setup=["Iona's city is Vellano."],
+         question="Which city does Iona live in?", gold=["Vellano"],
+         note="plain control, which-city-form"),
+    # ---- statement_control (8)
+    dict(id="c266-073", family="statement_control",
+         setup=["Zara's boss is Quinn."],
+         question="Zara's boss lives in a big house.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-074", family="statement_control",
+         setup=["My sister is Tess."],
+         question="My sister's dog is loud.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-075", family="statement_control",
+         setup=["Vera's mother is Nina."],
+         question="Vera's mother drives a red car.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-076", family="statement_control",
+         setup=["Xan's coach is Kira."],
+         question="Xan's coach runs every morning.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-077", family="statement_control",
+         setup=["My brother is Jory."],
+         question="My brother's cat sleeps all day.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-078", family="statement_control",
+         setup=["Ysolde's dentist is Pam."],
+         question="Ysolde's dentist has a big office.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-079", family="statement_control",
+         setup=["Wilma's friend is Remy."],
+         question="Wilma's friend plays loud music.", gold=[],
+         note="statement control, chain in statement"),
+    dict(id="c266-080", family="statement_control",
+         setup=["My father is Bram."],
+         question="My father's truck is very old.", gold=[],
+         note="statement control, chain in statement"),
+]
+
+TWO_WORD = ["Ana Maria", "Beth Jones", "Cara Lynn", "Dana Cole", "Evan Ross",
+            "Faye Hart", "Gus Nolan", "Hana Reid", "Ivan Park", "Jill Mason",
+            "Karl Dean", "Lena Frost", "Milo Grant", "Nora Blake", "Owen Hale",
+            "Rosa Bell", "Sam Trout", "Tina Marsh", "Umar Kent"]
+
+
+def main():
+    assert len(ITEMS) == 80, len(ITEMS)
+    ids = [it["id"] for it in ITEMS]
+    assert ids == [f"c266-{i:03d}" for i in range(1, 81)], "ids must be c266-001..080"
+    fam = {}
+    for it in ITEMS:
+        fam[it["family"]] = fam.get(it["family"], 0) + 1
+        assert 1 <= len(it["setup"]) <= 4, it["id"]
+        assert isinstance(it["gold"], list), it["id"]
+        assert isinstance(it["question"], str) and it["question"], it["id"]
+        assert set(it) == {"id", "family", "setup", "question", "gold", "note"}, it["id"]
+    assert fam == {"chain_verb": 30, "chain_verb_three": 6,
+                   "chain_possessive": 10, "broken_chain": 12,
+                   "plain_control": 14, "statement_control": 8}, fam
+    # chain_verb: 8 my-items
+    my = [it for it in ITEMS if it["family"] == "chain_verb"
+          and any(s.startswith("My ") for s in it["setup"])]
+    assert len(my) == 8, len(my)
+    # chain_verb: question forms (6 forms x 5), first-link relations (>=8)
+    forms = {}
+    rels = set()
+    for it in [x for x in ITEMS if x["family"] == "chain_verb"]:
+        q = it["question"]
+        if q.startswith("Where does ") and q.endswith(" live?"):
+            forms["live"] = forms.get("live", 0) + 1
+        elif q.startswith("Where was ") and q.endswith(" born?"):
+            forms["born"] = forms.get("born", 0) + 1
+        elif q.startswith("Who does ") and q.endswith(" work for?"):
+            forms["workfor"] = forms.get("workfor", 0) + 1
+        elif q.startswith("When is ") and q.endswith(" birthday?"):
+            forms["bday"] = forms.get("bday", 0) + 1
+        elif q.startswith("What city does ") and q.endswith(" live in?"):
+            forms["whatcity"] = forms.get("whatcity", 0) + 1
+        elif q.startswith("Which city does ") and q.endswith(" live in?"):
+            forms["whichcity"] = forms.get("whichcity", 0) + 1
+        else:
+            raise AssertionError("unknown verb form: " + q)
+        first = it["setup"][0]
+        # "X's R is B." or "My R is B."
+        core = first[3:] if first.startswith("My ") else first.split("'s ", 1)[1]
+        rels.add(core.split(" is ", 1)[0])
+    assert len(forms) >= 5, forms
+    assert all(v <= 6 for v in forms.values()), forms
+    assert len(rels) >= 8, rels
+    # broken: 6 first-missing + 6 second-missing/different
+    br = [x for x in ITEMS if x["family"] == "broken_chain"]
+    assert all(x["gold"] == [] for x in br)
+    assert sum(1 for x in br if len(x["setup"]) == 1) == 9, "single-setup broken"
+    # statement controls carry no question mark
+    st = [x for x in ITEMS if x["family"] == "statement_control"]
+    assert all("?" not in x["question"] for x in st)
+    assert all(x["gold"] == [] for x in st)
+    # two-word names in >= 20 items
+    ntw = sum(1 for it in ITEMS if any(
+        w in " ".join(it["setup"]) + " " + it["question"] for w in TWO_WORD))
+    assert ntw >= 20, ntw
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text("".join(json.dumps(it, ensure_ascii=False) + "\n" for it in ITEMS),
+                   encoding="utf-8")
+    print(f"wrote {OUT} {len(ITEMS)} items families={fam} forms={forms} "
+          f"first_link_relations={len(rels)} two_word_items={ntw}")
+
+
+if __name__ == "__main__":
+    main()
