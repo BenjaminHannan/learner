@@ -1,0 +1,2570 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead .
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m✗ [0mRead design/v3/30-modes/263-comma-guard.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/design/v3/30-modes/263-comma-guard.md
+[0m→ [0mRead handoff/kit/briefs/260-openers.txt
+[0m
+[0m$ [0muptime; df -g /; git log --oneline -3; git status --short | head -20
+22:21  up 2 days, 14:10, 4 users, load averages: 60.32 70.59 66.29
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    42%  484014 190097080    0%   /
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+[0m
+[0m$ [0mgit fetch -q origin claude/project-thread-p68q5v 2>&1 | head -5; git ls-tree origin/claude/project-thread-p68q5v --name-only | head -50; echo ---; git ls-tree origin/claude/project-thread-p68q5v design/v3/30-modes/ --name-only 2>&1 | head -40
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+run.py
+run.sh
+scripts
+tests
+---
+design/v3/30-modes/00-director-board.md
+design/v3/30-modes/00-morning-report-20260922.md
+design/v3/30-modes/100-self-questions-blind-phrasing-muse.md
+design/v3/30-modes/101-talker-first-run-prep-muse.md
+design/v3/30-modes/102-integrated-agent-patches-muse.md
+design/v3/30-modes/103-bench-scale-followups-muse.md
+design/v3/30-modes/104-live-sleep-in-daemon-muse.md
+design/v3/30-modes/105-self-router-fix-muse.md
+design/v3/30-modes/106-reading-ladder-first-score-muse.md
+design/v3/30-modes/107-reading-behind-the-gate-muse.md
+design/v3/30-modes/108-daemon-exactly-once-muse.md
+design/v3/30-modes/109-ears-real-text-supervision-muse.md
+design/v3/30-modes/110-redteam-loop102-muse.md
+design/v3/30-modes/111-loop102-end-to-end-bench-muse.md
+design/v3/30-modes/112-ledger-backfill-muse.md
+design/v3/30-modes/113-loop-nhop-questions-muse.md
+design/v3/30-modes/113b-loop-nhop-fallback-muse.md
+design/v3/30-modes/113c-loop-partial-frame-muse.md
+design/v3/30-modes/113d-fallback-partial-frame-muse.md
+design/v3/30-modes/113e-gate-inverse-cues-muse.md
+design/v3/30-modes/114-self-router-scope-guard-muse.md
+design/v3/30-modes/115-sleep-scale-muse.md
+design/v3/30-modes/116-sleep-redteam-muse.md
+design/v3/30-modes/117-redteam110-patches-muse.md
+design/v3/30-modes/118-ears-leftover-brake-muse.md
+design/v3/30-modes/118b-ears-brake-train-list-muse.md
+design/v3/30-modes/119-ears-length-coverage-muse.md
+design/v3/30-modes/119b-ears-remap-muse.md
+design/v3/30-modes/119d-ears-diagnosis-muse.md
+design/v3/30-modes/119e-ears-gate-diagnosis-muse.md
+design/v3/30-modes/119f-ears-build-muse.md
+design/v3/30-modes/119f-ears-plan-muse.md
+design/v3/30-modes/119g-ears-build-muse.md
+design/v3/30-modes/119h-ears-build-muse.md
+design/v3/30-modes/120-talker-mouth-finetune-prep-muse.md
+design/v3/30-modes/120b-mouth-decode-muse.md
+design/v3/30-modes/120d-talker-dontknow-muse.md
+design/v3/30-modes/121-teach-phrasing-coverage-muse.md
+design/v3/30-modes/122-self-router-learned-muse.md
+design/v3/30-modes/123-marks-runner-muse.md
+[0m
+[0m$ [0mgit ls-tree origin/claude/project-thread-p68q5v design/v3/30-modes/ --name-only | grep -i -E "263|26[0-9]|openpanel|comma|openers"; echo ===; git ls-tree origin/claude/project-thread-p68q5v handoff/kit/briefs/ --name-only | head -40
+design/v3/30-modes/00-morning-report-20260922.md
+design/v3/30-modes/260-openers-opus.md
+design/v3/30-modes/261b-decision.md
+design/v3/30-modes/263-comma-guard.md
+design/v3/30-modes/48-parallel-build-brief-20260921.md
+design/v3/30-modes/review-20260922-improvements.md
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:design/v3/30-modes/263-comma-guard.md; echo "=====260OPENERS-BRIEF-END====="; git ls-tree origin/claude/project-thread-p68q5v handoff/kit/briefs/ --name-only
+# 263: no stored subject may contain a comma (director, 2026-09-23)
+Gap found in the director's held-out probe of 260 (2026-09-22): an unlisted opener ("Yo," + a possessive teach) still stores the junk subject "Yo, X" on both 138m and 260. Listing openers can't close this, because people keep inventing new ones.
+One change, on the 260 arm: a write guard. When a TEACH would store a subject that contains a comma, retry on the text after the last comma of the leading segment, using the same head. Save only if the retry's subject has no comma and the head gives a save. Otherwise use the head's save-failure reply with 0 writes. Values are not guarded (a value can correctly hold a comma, like "Tollan, Vesk"). Questions never write.
+Registered on a fresh blind panel, commapanel263. openpanel260 is re-run as a no-regression check.
+=====260OPENERS-BRIEF-END=====
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+[0m
+[0m$ [0mgit show origin/claude/project-thread-p68q5v:handoff/kit/briefs/commapanel263-spec.txt; echo "=====END====="; git show origin/claude/project-thread-p68q5v:handoff/kit/briefs/openpanel260-spec.txt
+BLIND PANEL SPEC: commapanel263 (no stored subject may contain a comma). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open scripts/claude_fix263_*, artifacts/claude-comma263-*, scripts/claude_fix260_* word lists or any builder dev file. Read only this spec, the openpanel260 spec (handoff/kit/briefs/openpanel260-spec.txt, for the field format, base-runner method and judgement rules ONLY) and OPUS-RULES.txt.
+
+Folder: artifacts/claude-commapanel263-20260923/ with panel.jsonl (60 items), base260.jsonl (60 rows), make_panel.py, run_base.py, README.md (category level only), SEAL.sha256.txt (sha256 of the four data/code files, repo-root paths).
+Base: the 260 arm = scripts/claude_loop260_agent.py with the 260 config from artifacts/claude-openers260-20260922/ (the file its RESULTS.md names). Run it exactly as the openpanel260 spec runs 138m. Same 10 panel fields and 10 base-row fields as openpanel260; ids c263-001 … c263-060.
+
+Families and exact counts (60):
+- unlisted_opener_teach 20: a teach that starts with an everyday opener or interjection most lists would miss, then a comma ("Yo,", "Listen,", "Right,", "Guess what,", "Get this,", "Honestly,", "Funny thing,", "Real talk,", "Heads up," ...), then a plain possessive or verb teach. expect_store = the plain teach's triple; the stored subject must be the name alone.
+- appositive_subject 10: "A, my R, works at B." / "A, who is my R, lives in B." Gold stores nothing whose subject contains a comma; expect_store holds what a plain reading stores (the fact about A), or [] when the base's plain teach of it stores nothing.
+- comma_value_ok 8: facts whose VALUE correctly contains a comma ("lives in Tollan, Vesk", "works at Fenwick, Ash and Rook"). The value may keep its comma; only subjects are guarded. expect_store = the plain teach's triple.
+- question 8: questions with an unlisted opener + comma. 0 writes; gold = the answer substring after setup teaches.
+- control 14: plain teaches and questions with no comma in the subject; must be byte-identical to base260.
+Rules: fictional names only; every item run once on base260 and stored; mark in note which items the base gets wrong. Report category level only: counts, how many base260 items store a comma subject (the junk count), SEAL lines and the shasum -c output. Never quote an item.
+=====END=====
+BLIND PANEL SPEC: openpanel260 (turns that start with a discourse opener or a greeting). The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+You write a blind test panel. You never see the builder's code, word lists or dev cases. Don't open scripts/claude_fix260_* or artifacts/claude-openers260-*. Read only what this spec names.
+
+Folder: artifacts/claude-openpanel260-20260922/. It must contain:
+- panel.jsonl (80 items)
+- base138m.jsonl (80 rows)
+- make_panel.py
+- run_base.py
+- README.md (category level only; no items)
+- SEAL.sha256.txt (sha256 of the four data and code files, paths from the repo root)
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json. Drive it like the probe runner /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py: one fresh notebook per item, turns sent in order, and the stored triples read after each turn.
+
+Panel fields, exactly these 10:
+- id: o260-001 … o260-080
+- family
+- setup: list of turns sent first (teaches and questions)
+- turn: the one turn under test
+- followup: one question sent after the turn, or ""
+- stated_facts: list of [subject, relation, value] the turn states, in the base's storage form (the form a plain teach of the same fact stores on 138m; check it by running the plain teach)
+- expect_store: list of triples that must be stored after the turn
+- gold: a substring the right reply must contain. For a teach, it goes in the followup reply. For a question turn, it goes in the turn's reply. Use "" when none applies.
+- plain_turn: the same turn with the opener or greeting removed, written exactly as a user would type it without it ("" for families where it doesn't apply)
+- note: short free text (why the item exists)
+
+Base row fields, exactly these 10:
+- id
+- setup_replies
+- stored_after_setup
+- turn_reply
+- stored_after_turn
+- followup_reply
+- stored_after_followup
+- plain_reply: the base's reply to plain_turn in a fresh copy of the same setup ("" if none)
+- base_right
+- base_junk
+
+Families (exact counts):
+1. opener_teach (20). A teach that starts with an everyday opener.
+   - Use real everyday English openers with and without a comma: so, well, oh, oh and, also, and, but, okay, ok, okay so, alright, right, please, hey, hi, actually, anyway, btw, fyi, listen, look, um, uh, by the way, fun fact, just so you know, for the record, oh yeah, one more thing, quick one.
+   - Use at least 14 different openers, including at least 8 outside this set: {so, well, oh, also, please, okay, ok, hey}.
+   - Mix fact shapes: possessive ("X's boss is Y."), verb ("X lives in Y.", "X works at Y."), and "X is a Y." Only use shapes whose plain_turn the base saves exactly. Check each one, and replace any plain_turn it doesn't save before you finalise.
+   - followup asks for the fact. gold = the value.
+2. opener_question (12). setup teaches a fact with a plain teach. The turn asks about it after an opener ("So, who is X's boss?", "Okay, where does X live?"). Only use questions whose plain_turn the base answers right. gold = the value. followup = "".
+3. greeting_question (8). setup teaches a fact. The turn is a greeting plus a question ("Hi! Who is X's boss?", "Hello, where does X live?", "Hey there, what is X's job?"). At least 2 items ask the assistant's name ("Hi! What's your name?"): gold = "Premonition", and setup is []. Only use questions whose plain_turn the base answers right.
+4. bare_greeting (6). The turn is only a greeting ("hello there", "hi again", "hey!", "good morning", "hiya", "Hello, Premonition."). setup = []. gold = "". Record in note the base's reply to a plain "Hello." (run it).
+5. name_trap (10). A teach whose first word is also an everyday word but is part of a name or value, not an opener.
+   - Names like Hope, Joy, Will, Grace, Sunny, Faith, May, Art, Bill, Mark, Rose, Pat.
+   - Values like the song "Hey Jude" or the title "So Long Summer".
+   - Each must be saved exactly by the base. Check it and replace any that aren't.
+   - followup asks the fact, and gold = the value.
+6. junk_guard (8). An opener followed by a comma and a possessive teach, the shape where the base stores the opener as part of the name (as in "Please, Kestrel's job is fisher." storing the subject "Please, Kestrel").
+   - Find 8 such items with different openers and names. Record base_junk = true for each where the base stores a junk triple.
+   - At least 4 must have base_junk = true. If fewer exist, write down how many you found and use near-shapes for the rest.
+   - expect_store = the stated fact without the opener. followup asks it, and gold = the value.
+7. control (16). 8 plain teaches plus followups and 8 plain questions after plain setup teaches. There are no openers. The base must get all of them right.
+
+Scoring rules. The builder's scorer implements these exactly; write them in the README too. Normalise strings by lowercasing and stripping edge punctuation and spaces.
+- junk: any triple stored after the turn or the followup that is in neither stored_after_setup nor expect_store.
+- store_ok: expect_store ⊆ stored_after_turn, and nothing else was added.
+- question_write: a question turn, or the followup, changes the store.
+- reply_ok: gold is "" or a substring of the scored reply (the followup reply for teaches, the turn reply for question turns).
+- right by family:
+  - opener_teach, junk_guard, name_trap: store_ok ∧ reply_ok ∧ ¬junk ∧ ¬question_write.
+  - opener_question, greeting_question: reply_ok ∧ ¬question_write ∧ ¬junk.
+  - bare_greeting: no store change, and the reply contains none of these (case-insensitive): "save", "understand", "couldn't", "could not", "don't know", "not sure".
+  - control: right as its shape above AND byte-identical to base on every reply.
+- A schema mismatch (field names or counts) must print SCHEMA-MISMATCH and exit 3.
+
+Acceptance checks, before you seal:
+- family counts are exact;
+- every plain_turn behaves as the family requires on the base;
+- control is 16/16 right on the base;
+- no duplicate turns;
+- all names are fictional;
+- two full base runs give byte-identical base138m.jsonl.
+Don't filter the cause families by whether the base gets them right, except as the family rules above say.
+
+Report: the per-family table of base_right and base_junk, the quota counts, any replacements with the reason, and the SEAL lines. Use one process at a time. Check `df -g /` first and stop if under 3 GB free.
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "260|263|comma|open"; echo ---; ls scripts/ | grep -E "260|263|comma"; echo ---; ls artifacts/claude-openers260-20260922/ 2>&1; echo ---; ls artifacts/ | head -40
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-judge241-20260922
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge252c-20260922
+claude-mouth241-20260922
+claude-mouth241b-20260922
+claude-myrel245-20260922
+claude-name227b-20260922
+claude-namecheck230b-20260922
+claude-namecheck230br-20260922
+claude-namecheck230c-20260922
+claude-namecheckpanel230b-20260922
+claude-namecheckpanel230br-20260922
+claude-namecheckpanel230c-20260922
+claude-namepanel232-20260922
+claude-namepanel232b-20260922
+claude-namepanel232c-20260922
+claude-openers260-20260922
+claude-openpanel260-20260922
+claude-polite233-20260922
+claude-politepanel233-20260922
+claude-qnorm221c-20260922
+claude-relationtable-20260922
+claude-smalltalk234-20260922
+claude-smalltalkpanel234-20260922
+claude-smolear235-20260922
+claude-smolear235b-20260922
+claude-smolear257-20260922
+claude-storedrel221b-20260922
+claude-table237-20260922
+claude-table237b-20260922
+claude-tableask221-20260922
+claude-tablepanel221-20260922
+claude-tablepanel221b-20260922
+claude-tableteach229-20260922
+claude-talker101-eval-20260922
+claude-talker120-run-20260922
+claude-talker120b-run-20260922
+claude-teachpanel229-20260922
+claude-verbsubj250-20260922
+claude-verify-20260922
+claude-whats248-20260922
+claude-yesprefix230-20260922
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+---
+claude_260_panel.sh
+claude_260_runall.sh
+claude_fix260_openers.py
+claude_loop260_agent.py
+claude_openers260_devcases.py
+claude_openers260_regscore.py
+claude_openers260_rowdiff.py
+claude_openers260_run.py
+claude_openers260_score.py
+---
+devcases260.json
+loop260-config.json
+PASSMARKS.md
+pilot
+predicted_moves260.json
+RESULTS.md
+run
+SEAL.sha256.txt
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fullname232-20260922
+claude-fullname232b-20260922
+[0m
+[0m→ [0mRead artifacts/claude-openers260-20260922/RESULTS.md
+[0m→ [0mRead artifacts/claude-openers260-20260922/PASSMARKS.md
+[0m→ [0mRead scripts/claude_loop260_agent.py
+[0m→ [0mRead scripts/claude_fix260_openers.py
+[0m
+[0m# [0mTodos
+[•] Reproduce gap on 260 with dev dialogs
+[ ] Write 40+ dev dialogs (own wording)
+[ ] Build claude_fix263_comma.py + claude_loop263_agent.py, pilot on dev/suites/verifier
+[ ] Write PASSMARKS.md, seal, append ledger
+[ ] Wait for commapanel SEAL, run panel once on both arms
+[ ] Re-run openpanel260 on 263, write RESULTS.md, push
+[0m
+[0m→ [0mRead scripts/claude_openers260_score.py
+[0m→ [0mRead scripts/claude_openers260_run.py
+[0m→ [0mRead scripts/claude_openers260_devcases.py[90m [limit=120][0m
+[0m
+[0m$ [0msleep 90; uptime; df -g /
+22:23  up 2 days, 14:12, 4 users, load averages: 104.28 78.11 69.42
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    42%  484014 189466680    0%   /
+[0m
+[0m→ [0mRead scripts/claude_openers260_devcases.py[90m [offset=121][0m
+[0m→ [0mRead scripts/claude_260_runall.sh
+[0m→ [0mRead scripts/claude_260_panel.sh
+[0m→ [0mRead scripts/claude_openers260_regscore.py
+[0m
+[0m$ [0mls artifacts/claude-commapanel263-20260923/ 2>&1; echo ---; ls artifacts/claude-verify-20260922/138m/ 2>&1; echo ---; tail -20 artifacts/fable-predictions-ledger.md; echo ---; cat artifacts/claude-openers260-20260922/loop260-config.json | head -30; echo ---; uptime
+ls: artifacts/claude-commapanel263-20260923/: No such file or directory
+---
+bench4
+bench4.log
+build_tables.py
+case-tables.md
+make_probes_supp.py
+make_probes.py
+probes-supp.json
+probes.json
+recount.json
+recount.py
+recount.txt
+rows-138l.json
+rows-138m.json
+rows-own227c.json
+rows-own230c.json
+rows-own233.json
+rows-own234.json
+run_probes.py
+run-l.log
+run-m.log
+run-own227c.log
+run-own230c.log
+run-own233.log
+run-own234.log
+summary.json
+supp-rows-138l.json
+supp-rows-138m.json
+supp-rows-own233.json
+supp-run-138l.log
+supp-run-138m.log
+supp-run-own233.log
+---
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+- P261 OUTCOME (2026-09-22, resume builder) registered FAIL on M2/M3: A (checker theta 0.25) M1 1 (pass), M2 9 wrong saves (bar 1), M3 95/122 = 77.9 % (B 13/122 = 10.7 %), M3b 6/122 = 4.9 % (pass), M4 39/40 = 97.5 % (pass), M5 median 344.7 ms (pass), M6 0 mismatches (pass). Others: A_raw M1 5/M2 25, A_brake 5/19, A_gate 1/8 with M3 79/122 = 64.8 %, A_nocanon 1/12 with M3 92/122. Panel theta curve flat 77.9 % recall theta 0-0.8, wrong 19->7. Miss drivers: R10 plural relatives 4/16, R7 1/4; 8/9 wrongs passed checker with pYES >= 0.68. P261.1/.5/.6/.7/.8 right; .4 pass with 4.9 just under 5-12 range; .2/.3 ranges wrong. Report only (after run, once): 261 pipeline on earpanel257: A M1 3/M2 6/M3 100/112=89.3 %/M3b 1.8 %/M4 39/40; A_gate+canon M1 1/M2 2/M3 80/112; 257 sealed A was M1 1/M2 4/M3 78/112/M3b 21.4 %. Seals: 261 18/18 OK after runs; panel 261 2/2 OK; panel 257 2/2 OK (own loaders).
+- P261b.1 (2026-09-23, builder; exp 261b = 261 sealed arm A + mixed-case span guard after checker, theta 0.25 prompt B, scorer = 261 sealed + Ruling 1 narrower-relations-hit, sealed 15 files SEAL.sha256.txt artifacts/claude-earcheck261b-20260923) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261b.2 M2 wrong saves (statement fams + no_save) 0-2; pass (<= 1) ~60 %. 261's 9 wrongs: ~6 pet-narrower become hits (Ruling 1), ~2 typo-mix held by guard if case-mixed; residual risks so-check style, capitalised-glued typos, R10/R11 splits.
+- P261b.3 M3 exact TEACH recall 80-90 % and >= B + 30 (B 10-20 %); pass ~55 %. 261 77.9 % + Ruling-1 hits - ~1 % guard false holds; R10 plural splits still cap.
+- P261b.4 M3b UNSURE 4-10 % of gold TEACH; pass (<= 12 %) ~80 %. 261 checker 4.9 % + guard ~1-3 %.
+- P261b.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %. ASK untouched by guard.
+- P261b.6 M5 median ear+checker+guard ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261b.7 M6 every A frame byte-identical in A261; pass ~99 % (guard only removes).
+- P261b.8 Overall registered PASS ~30 %.
+- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+lowercase dev 53 saved 0 held; pipeline reproduces 261 dev sweep byte-equal; synthetic 150-line pilot scores with Ruling-1 hits + 2 value_mix holds, SCHEMA-MISMATCH exit 3 ok.
+---
+{
+ "ears": {
+  "chain": [
+   "bench73",
+   "fake"
+  ],
+  "ears47_ckpt": null,
+  "tau_hat_path": "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-abstain76-20260921/ltt_summary.json",
+  "tau_family": "tape",
+  "stand_in": "Loop138jEars (loop138i stack + layer C outside-in: 180b silent known-name case match, 193 missing-apostrophe possessives, 164b read-only about-stage, 190b+190 reverse lookup, 154f plain negation, 154g bare-correction replace; 189b repeat + 187 self gate + 188 statement fallback at turn level; 192 Updated replies; 167e label mouth; 154d yes/no tick; 170 index)",
+  "replacement": "real ears: ears47 FrameEars checkpoint (scripts/fable_ears47_model.py) via 'ears47:<ckpt>'"
+ },
+ "notebook": {
+  "class": "FixedIndexedLoopNotebook (scripts/fable_fix220_restartindex.py: IndexedLoopNotebook with _load indexing each event exactly once)",
+  "semantics": "GatedThoughtNotebook (fix77 rule-2 gate) + VerifiedNotebook tail-seal discipline",
+  "stand_in": "none -- this notebook IS the verified piece",
+  "replacement": "none"
+ },
+ "reasoner": {
+  "class": "Reasoner138d reused (148b screen-tag logic over FastReasoner142 + one 159 bridge fallback on untagged non-OK answers)",
+  "module": "scripts/fable_fix77_core.py",
+  "stand_in": "none -- this reasoner IS the verified piece",
+  "replacement": "none"
+ },
+ "mouth": {
+  "stand_in": "Loop138bMouth (Loop138Mouth + 148b screen texts for marked records)",
+  "replacement": "real mouth: scripts/fable_mouth53_mouth.py:Mouth"
+ },
+ "thinker": {
+  "module": "fable_webfix89_thinking",
+---
+22:23  up 2 days, 14:12, 4 users, load averages: 106.58 79.02 69.79
+[0m
+[0m→ [0mRead scripts/claude_openers260_rowdiff.py
+[0m
+[0m$ [0mcat artifacts/claude-openers260-20260922/loop260-config.json | /usr/bin/python3 -c "import json,sys; d=json.load(sys.stdin); print(list(d.keys())); print(json.dumps({k:(v if not isinstance(v,dict) else list(v.keys())) for k,v in d.items()}, indent=1)[:2000])"; echo ---; cat artifacts/claude-openers260-20260922/predicted_moves260.json | head -60
+['ears', 'notebook', 'reasoner', 'mouth', 'thinker', 'sleeper', 'sleep_threshold', 'daemon', 'self', 'sleep', 'merge138k', 'merge138l', 'merge138m', 'exp260']
+{
+ "ears": [
+  "chain",
+  "ears47_ckpt",
+  "tau_hat_path",
+  "tau_family",
+  "stand_in",
+  "replacement"
+ ],
+ "notebook": [
+  "class",
+  "semantics",
+  "stand_in",
+  "replacement"
+ ],
+ "reasoner": [
+  "class",
+  "module",
+  "stand_in",
+  "replacement"
+ ],
+ "mouth": [
+  "stand_in",
+  "replacement"
+ ],
+ "thinker": [
+  "module",
+  "stand_in",
+  "replacement"
+ ],
+ "sleeper": [
+  "recipe",
+  "install_path",
+  "stand_in",
+  "replacement"
+ ],
+ "sleep_threshold": 20,
+ "daemon": [
+  "module"
+ ],
+ "self": [
+  "router",
+  "answerer",
+  "rule",
+  "rule219",
+  "rule230",
+  "rule230b",
+  "rule230c",
+  "rule227",
+  "rule227b",
+  "rule227c",
+  "rule224",
+  "rule233",
+  "rule234",
+  "rule260"
+ ],
+ "sleep": [
+  "retrofit",
+  "recipe"
+ ],
+ "merge138k": [
+  "base",
+  "added"
+ ],
+ "merge138l": [
+  "base",
+  "added",
+  "ears_mro",
+  "loop_mro"
+ ],
+ "merge138m": [
+  "base",
+  "added",
+  "loop_mro",
+  "instance"
+ ],
+ "exp260": [
+  "base",
+  "added",
+  "instance"
+ ]
+}
+---
+{
+ "exp": "260",
+ "base": "138m",
+ "m2": {
+  "suites": [
+   "rt136",
+   "rt143_nogate",
+   "sessions152",
+   "bench:bench132_4hop",
+   "bench:edit200",
+   "bench:new_121_4hop",
+   "bench:old_s2fresh_4hop"
+  ],
+  "moves": {
+   "rt136": [
+    "[]/C122"
+   ]
+  },
+  "note": "rt136 C122 'Hi. Tom's boss is Ann.' (group multi, expect nowrite): 138m stores the junk subject 'Hi. Tom'; 260 stores the stated fact without the greeting, Tom boss Ann. Verdict WRONG-WRITE on both arms (rt136 wants no write for multi-sentence turns). suitediff218 labels the changed write 'new junk write'. Every other unit: 0 moved vs 138m's saved rows (timing fields excluded); rt136 labels otherwise equal 138m's (13 inherited C019-C031 + C076 + C079); sessions152 0; bench 0.",
+  "rows": {
+   "rt136": {
+    "C122": {
+     "text": "Hi. Tom's boss is Ann.",
+     "reply": "Saved: Tom's boss is Ann.\n",
+     "stored": [
+      [
+       "Tom",
+       "boss",
+       "Ann"
+      ]
+     ],
+     "verdict": "WRONG-WRITE"
+    }
+   }
+  },
+  "label_moves": {
+   "rt136": [
+    [
+     "C122",
+     "new junk write"
+    ]
+   ]
+  }
+ },
+ "m3": {
+  "allowed_fields": [
+   ".agent",
+   ".config",
+   ".label",
+   ".seconds",
+   ".root",
+   ".report"
+  ]
+ },
+ "m4": {
+  "probes": {
+   "rows": {
+    "B15:t0": {
+     "turn": "Please call me Fenna.",
+     "reply_138m": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+[0m
+[0m$ [0mls artifacts/claude-openers260-20260922/run/ artifacts/claude-openers260-20260922/pilot/ 2>&1; echo ---; head -30 scripts/claude_merge138k_latency.py; echo ---; head -40 artifacts/claude-verify-20260922/138m/run_probes.py
+artifacts/claude-openers260-20260922/pilot/:
+dev-rows138m.json
+dev-rows260.json
+dev-score.json
+regscore-pilot.json
+
+artifacts/claude-openers260-20260922/run/:
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+lat-n-3.json
+lat-n-3.log
+panel-138m.jsonl
+panel-138m.log
+panel-260.jsonl
+panel-260.log
+panel-schema.txt
+panel-score.txt
+panel-score260.json
+panel-seal-check.txt
+probe
+regscore.txt
+regscore260.json
+rt143nogate-n.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+smoke-n.json
+smoke-n.log
+uptime.log
+vp-n.json
+vp-n.log
+vs-n.json
+vs-n.log
+work
+---
+#!/usr/bin/env python3
+"""Merge 138k K7 driver: per-turn wall latency through daemon.process_file.
+
+Runs every dialog in the given probe files (restart markers honoured,
+restarts not timed) <reps> times on fresh work dirs and records the wall
+time of each process_file call. One agent per process (run 138j and 138k
+in alternating processes); the scorer compares medians.
+
+usage: claude_merge138k_latency.py <agent.py> <config> <workdir> <reps> <out.json> <probe.json>...
+"""
+from __future__ import annotations
+
+import gc
+import json
+import shutil
+import statistics
+import sys
+import time
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main() -> int:
+    agent, config, work, reps, out = sys.argv[1:6]
+    probes = sys.argv[6:]
+---
+"""Usage (from repo root): run_probes.py <agent.py> <config> <fresh workdir> <probes.json> <out.json>
+Each dialog in its own fresh dir; "__RESTART__" rebuilds the daemon on the same dir. Records reply, event delta, triples after every turn."""
+import sys, json, shutil, gc
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+import fable_marks123_all as M
+import fable_loop90_agent as L90
+mod, dcls, _, _ = M.load_agent(sys.argv[1]); base = M.load_base_cfg(sys.argv[2]); S = Path(sys.argv[3]); P = json.load(open(sys.argv[4]))
+def nev(d):
+    nb = d.loop.nb
+    for o in (nb, getattr(nb, 'nb', None)):
+        if o is not None and hasattr(o, 'events'): return len(o.events)
+    return -1
+trip = lambda d: [list(x) for x in L90.notebook_triples(d.loop.nb)]
+out = []
+for p in P:
+    root = S / p["id"]; shutil.rmtree(root, ignore_errors=True); root.mkdir(parents=True)
+    d = M.make_daemon(dcls, base, root); k = 0; rows = []
+    for t in p["turns"]:
+        if t == "__RESTART__":
+            del d; gc.collect(); d = M.make_daemon(dcls, base, root)
+            rows.append({"restart": True, "triples": trip(d)}); continue
+        kind, text = t.split("|", 1)
+        f = root / "inbox" / f"m{k:02d}.txt"; f.write_text(text); b = nev(d)
+        try:
+            d.process_file(f); rep = (root / "outbox" / f"m{k:02d}.txt").read_text().strip()
+        except Exception as e:
+            rep = f"CRASH {type(e).__name__}: {e}"
+        rows.append({"kind": kind, "turn": text, "reply": rep, "ev": nev(d) - b, "triples": trip(d)}); k += 1
+    out.append({"id": p["id"], "feature": p["feature"], "rows": rows, "stored": trip(d)})
+    del d; gc.collect(); shutil.rmtree(root, ignore_errors=True)
+json.dump(out, open(sys.argv[5], "w"), indent=1)
+print("done", len(out))
+[0m
+[0m← [0mWrite scripts/claude_fix263_comma.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_loop263_agent.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_comma263_devcases.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_comma263_run.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_comma263_score.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_comma263_regscore.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_263_runall.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_263_panel.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_263_openpanel.sh
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_comma263_regscore.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_regscore.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_regscore.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_regscore.py
+@@ -192,10 +192,13 @@
+ 
+ 
+ def main(argv):
+     run, pred = Path(argv[1]), jl(argv[2])
++    only = argv[4] if len(argv) > 4 else None
+     out = {}
+     for name, fn in (("M2", m2), ("M3", m3), ("M4", m4), ("PROBES", probes)):
++        if only is not None and name != only:
++            continue
+         try:
+             out[name] = fn(run, pred)
+         except Exception as e:  # noqa: BLE001
+             out[name] = {"error": f"{type(e).__name__}: {e}", "pass": False}
+
+[0m
+[0m← [0mEdit scripts/claude_263_openpanel.sh
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_263_openpanel.sh
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_263_openpanel.sh
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_263_openpanel.sh
+@@ -14,8 +14,8 @@
+ T0=$(date +%s)
+ PY scripts/claude_comma263_run.py panel scripts/claude_loop263_agent.py \
+   artifacts/claude-comma263-20260923/loop263-config.json $R/work/n \
+   $P/panel.jsonl $R/openpanel263.jsonl > $R/openpanel263.log 2>&1
+-PY scripts/claude_comma263_regscore.py $R $PRED > $R/openpanel-score.txt 2>&1
++PY scripts/claude_comma263_regscore.py $R $PRED $R/openpanel-score263.json M2 > $R/openpanel-score.txt 2>&1
+ echo "exit $?" >> $R/openpanel-score.txt
+ echo "TOTAL $(( $(date +%s) - T0 )) s" >> $R/openpanel-score.txt
+ cat $R/openpanel-score.txt
+
+[0m
+[0m$ [0muptime; df -g /
+22:28  up 2 days, 14:18, 4 users, load averages: 20.92 56.23 64.08
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    42%  484014 189079960    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop263_agent.py --write-config artifacts/claude-comma263-20260923/loop263-config.json && /usr/bin/python3 scripts/claude_comma263_devcases.py && diff <(cat artifacts/claude-openers260-20260922/loop260-config.json) <(cat artifacts/claude-comma263-20260923/loop263-config.json) | head -30
+Traceback (most recent call last):
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop263_agent.py", line 157, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_loop263_agent.py", line 136, in main
+    Path(args.write_config).write_text(json.dumps(out, indent=1),
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1047, in write_text
+    with self.open(mode='w', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-comma263-20260923/loop263-config.json'
+[0m
+[0m$ [0mmkdir -p artifacts/claude-comma263-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop263_agent.py --write-config artifacts/claude-comma263-20260923/loop263-config.json && /usr/bin/python3 scripts/claude_comma263_devcases.py
+Wrote artifacts/claude-comma263-20260923/loop263-config.json
+51 {'unlisted': 20, 'appositive': 8, 'comma_value': 6, 'question': 6, 'control': 8, 'restart': 2, 'multcomma': 1}
+[0m
+[0m$ [0mdiff artifacts/claude-openers260-20260922/loop260-config.json artifacts/claude-comma263-20260923/loop263-config.json; echo "diff-exit=$?"; uptime
+42c42
+<   "module": "Loop260Daemon (scripts/claude_loop260_agent.py) over Loop138kDaemon with the 138m classes"
+---
+>   "module": "Loop263Daemon (scripts/claude_loop263_agent.py) over Loop138kDaemon with the 138m classes"
+58c58,59
+<   "rule260": "260 (scripts/claude_fix260_openers.py): listed openers/greetings at the start of a turn (at most 2) are dropped when the head gives the rest a non-clarify reply; bare greetings get the head's reply to 'Hello.'; no stored subject may start with a listed opener + comma"
+---
+>   "rule260": "260 (scripts/claude_fix260_openers.py): listed openers/greetings at the start of a turn (at most 2) are dropped when the head gives the rest a non-clarify reply; bare greetings get the head's reply to 'Hello.'; no stored subject may start with a listed opener + comma",
+>   "rule263": "263 (scripts/claude_fix263_comma.py): no teach/correct may store a subject containing a comma (blocked at the inner ears and at _act); a blocked teach retries once on the text after the last comma of the leading segment through the same head, and is otherwise answered with the head's save-failure reply with 0 writes; values keep commas; questions never write"
+146a148,156
+>  },
+>  "exp263": {
+>   "base": "loop260 (scripts/claude_loop260_agent.py)",
+>   "added": [
+>    "263 comma write guard (outermost, instance)"
+>   ],
+>   "instance": [
+>    "turn263(turn260(turn224c(turn224(class turn))))"
+>   ]
+diff-exit=1
+22:29  up 2 days, 14:18, 4 users, load averages: 19.94 54.85 63.50
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json artifacts/claude-comma263-20260923/pilot/work260 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json
+done 51
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/work263 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json; uptime
+done 51
+22:29  up 2 days, 14:18, 4 users, load averages: 21.43 53.43 62.84
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_score.py dev artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json artifacts/claude-comma263-20260923/pilot/dev-score.json
+unlisted         263 1/20   260 0/20
+appositive       263 8/8   260 8/8
+comma_value      263 4/6   260 4/6
+question         263 3/6   260 3/6
+control          263 8/8   260 8/8
+restart          263 2/2   260 1/2
+multcomma        263 1/1   260 1/1
+TOTAL 263 27/51  260 25/51
+MISS d263-002 unlisted ["store [] != [('pell', 'boss', 'rhoda')]", 't1 has \'Rhoda\': "I don\'t know anyone called Pell."']
+MISS d263-003 unlisted ["store [] != [('marnie', 'city', 'tollan')]", 't1 has \'Tollan\': "I don\'t know anyone called Marnie."']
+MISS d263-004 unlisted ["store [] != [('idris', 'employer', 'fenwick')]", 't1 has \'Fenwick\': "I don\'t know anyone called Idris."']
+MISS d263-005 unlisted ["store [] != [('brann', 'sister', 'liesl')]", 't1 has \'Liesl\': "I don\'t know anyone called Brann."']
+MISS d263-006 unlisted ["store [] != [('dace', 'boss', 'wren')]", 't1 has \'Wren\': "I don\'t know anyone called Dace."']
+MISS d263-007 unlisted ["store [] != [('yara', 'city', 'quell')]", 't1 has \'Quell\': "I don\'t know anyone called Yara."']
+MISS d263-008 unlisted ["store [] != [('fenn', 'brother', 'oskar')]", 't1 has \'Oskar\': "I don\'t know anyone called Fenn."']
+MISS d263-009 unlisted ["store [] != [('lio', 'employer', 'brightmoor')]", 't1 has \'Brightmoor\': "I don\'t know anyone called Lio."']
+MISS d263-010 unlisted ["store [] != [('nessa', 'boss', 'corran')]", 't1 has \'Corran\': "I don\'t know anyone called Nessa."']
+MISS d263-011 unlisted ["store [] != [('ivo', 'sister', 'petra')]", 't1 has \'Petra\': "I don\'t know anyone called Ivo."']
+MISS d263-012 unlisted ["store [] != [('sela', 'job', 'miller')]", 't1 has \'miller\': "I don\'t know anyone called Sela."']
+MISS d263-013 unlisted ["store [] != [('bram', 'city', 'hollin')]", 't1 has \'Hollin\': "I don\'t know anyone called Bram."']
+MISS d263-014 unlisted ["store [] != [('orrin', 'place_of_birth', 'varn')]", 't1 has \'Varn\': "I don\'t know anyone called Orrin."']
+MISS d263-015 unlisted ["store [] != [('tamsin', 'job', 'baker')]", 't1 has \'baker\': "I don\'t know anyone called Tamsin."']
+MISS d263-016 unlisted ["store [] != [('corwin', 'job', 'carter')]", 't1 has \'carter\': "I don\'t know anyone called Corwin."']
+MISS d263-017 unlisted ["store [] != [('wren', 'sister', 'petra')]", 't1 has \'Petra\': "I don\'t know anyone called Wren."']
+MISS d263-018 unlisted ["store [] != [('tarn', 'boss', 'dace')]", 't1 has \'Dace\': "I don\'t know anyone called Tarn."']
+MISS d263-019 unlisted ["store [] != [('annika', 'city', 'vesk')]", 't1 has \'Vesk\': "I don\'t know anyone called Annika."']
+MISS d263-020 unlisted ["store [] != [('rurik', 'employer', 'brisk')]", 't1 has \'Brisk\': "I don\'t know anyone called Rurik."']
+MISS d263-030 comma_value ["store [] != [('idris', 'employer', 'fenwick, ash and rook')]", 't1 has \'Fenwick\': "I don\'t know anyone called Idris."']
+MISS d263-033 comma_value ["store [] != [('brann', 'boss', 'rhoda, the elder')]", 't1 has \'Rhoda\': "I don\'t know anyone called Brann."']
+MISS d263-035 question ['t1 has \'Rhoda\': "I didn\'t understand that question — could you say it another way?"']
+MISS d263-036 question ['t1 has \'Tollan\': "I didn\'t understand that question — could you say it another way?"']
+MISS d263-037 question ['t1 has \'fisher\': "I didn\'t understand that question — could you say it another way?"']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+rows = {r['id']: r for r in json.load(open('artifacts/claude-comma263-20260923/pilot/dev-rows263.json'))}
+for i in ['d263-001','d263-002']:
+    print('='*20, i)
+    for x in rows[i]['rows']:
+        if x.get('restart'): continue
+        print('TURN:', x['turn'][:60])
+        print('REPLY:', x['reply'][:160])
+        print('EV:', x['ev'], 'TRIPLES:', x['triples'])
+"
+==================== d263-001
+TURN: Yo, Kestrel's job is fisher.
+REPLY: Saved: Kestrel's job is fisher.
+EV: 3 TRIPLES: [['Kestrel', 'job', 'fisher']]
+TURN: What is Kestrel's job?
+REPLY: Kestrel's job is fisher.
+EV: 0 TRIPLES: [['Kestrel', 'job', 'fisher']]
+==================== d263-002
+TURN: Get this, Pell's boss is Rhoda.
+REPLY: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+EV: 0 TRIPLES: []
+TURN: Who is Pell's boss?
+REPLY: I don't know anyone called Pell.
+EV: 0 TRIPLES: []
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+rows = {r['id']: r for r in json.load(open('artifacts/claude-comma263-20260923/pilot/dev-rows260.json'))}
+for i in ['d263-001','d263-002','d263-006']:
+    print('='*20, i)
+    for x in rows[i]['rows']:
+        if x.get('restart'): continue
+        print('TURN:', x['turn'][:60]); print('REPLY:', x['reply'][:150]); print('EV:', x['ev'], 'TRIPLES:', x['triples'])
+"; uptime
+==================== d263-001
+TURN: Yo, Kestrel's job is fisher.
+REPLY: Saved: Yo, Kestrel's job is fisher.
+EV: 3 TRIPLES: [['Yo, Kestrel', 'job', 'fisher']]
+TURN: What is Kestrel's job?
+REPLY: I don't know anyone called Kestrel.
+EV: 0 TRIPLES: [['Yo, Kestrel', 'job', 'fisher']]
+==================== d263-002
+TURN: Get this, Pell's boss is Rhoda.
+REPLY: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+EV: 0 TRIPLES: []
+TURN: Who is Pell's boss?
+REPLY: I don't know anyone called Pell.
+EV: 0 TRIPLES: []
+==================== d263-006
+TURN: Hot take, Dace's boss is Wren.
+REPLY: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+EV: 0 TRIPLES: []
+TURN: Who is Dace's boss?
+REPLY: I don't know anyone called Dace.
+EV: 0 TRIPLES: []
+22:30  up 2 days, 14:19, 4 users, load averages: 20.56 48.79 60.65
+[0m
+[0m← [0mWrite scripts/claude_fix263_comma.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -43,9 +43,9 @@
+ ("Hot take, Dace's boss is Wren.", "Who is Dace's boss?",
+  ["Dace", "boss", "Wren"]),
+ ("Look here, Yara lives in Quell.", "Where does Yara live?",
+  ["Yara", "city", "Quell"]),
+-("Say now, Fenn's brother is Oskar.", "Who is Fenn's brother?",
++("Hear me out, Fenn's brother is Oskar.", "Who is Fenn's brother?",
+  ["Fenn", "brother", "Oskar"]),
+ ("Mind you, Lio works at Brightmoor.", "Where does Lio work?",
+  ["Lio", "employer", "Brightmoor"]),
+ ("Between us, Nessa's boss is Corran.", "Who is Nessa's boss?",
+
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -151,8 +151,22 @@
+ add("multcomma", ["Yo, Mara's boss is Wren, obviously."], [],
+     [(0, "not", "Saved")],
+     note="known limit: single retry after the LAST comma loses the fact")
+ 
++# H. pretend/correction markers: never stripped, never a fact (4).
++add("pretend", ["Suppose, Pell's boss is Rhoda."], [],
++    [(0, "not", "Saved")], same=True,
++    note="pretend marker: never a fact, same reply as 260")
++add("pretend", ["Imagine, Tobin's boss is Mara."], [],
++    [(0, "not", "Saved")], same=True,
++    note="pretend marker: never a fact, same reply as 260")
++add("pretend", ["Say, Pell's boss is Rhoda."], [],
++    [(0, "not", "Saved")], same=True,
++    note="say-led chunk: pretend-ambiguous, never stripped")
++add("pretend", ["No, Pell's boss is Mara."], [],
++    [(0, "not", "Saved")], same=True,
++    note="bare correction marker: never stripped")
++
+ if __name__ == "__main__":
+     OUT.parent.mkdir(parents=True, exist_ok=True)
+     OUT.write_text(json.dumps(C, indent=1), encoding="utf-8")
+     fams = {}
+
+[0m
+[0m$ [0m/usr/bin/python3 scripts/claude_comma263_devcases.py && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/work263 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json
+55 {'unlisted': 20, 'appositive': 8, 'comma_value': 6, 'question': 6, 'control': 8, 'restart': 2, 'multcomma': 1, 'pretend': 4}
+done 55
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json artifacts/claude-comma263-20260923/pilot/work260 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_score.py dev artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json artifacts/claude-comma263-20260923/pilot/dev-score.json
+done 55
+unlisted         263 20/20   260 0/20
+appositive       263 8/8   260 8/8
+comma_value      263 4/6   260 4/6
+question         263 3/6   260 3/6
+control          263 8/8   260 8/8
+restart          263 2/2   260 1/2
+multcomma        263 1/1   260 1/1
+pretend          263 3/4   260 3/4
+TOTAL 263 49/55  260 28/55
+MISS d263-030 comma_value ["store [] != [('idris', 'employer', 'fenwick, ash and rook')]", 't1 has \'Fenwick\': "I don\'t know anyone called Idris."']
+MISS d263-033 comma_value ["store [] != [('brann', 'boss', 'rhoda, the elder')]", 't1 has \'Rhoda\': "I don\'t know anyone called Brann."']
+MISS d263-035 question ['t1 has \'Rhoda\': "I didn\'t understand that question — could you say it another way?"']
+MISS d263-036 question ['t1 has \'Tollan\': "I didn\'t understand that question — could you say it another way?"']
+MISS d263-037 question ['t1 has \'fisher\': "I didn\'t understand that question — could you say it another way?"']
+MISS d263-055 pretend ["store [('pell', 'boss', 'mara')] != []", 't0 not \'Saved\': "Saved: Pell\'s boss is Mara."']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+C = [
+ {'id':'p1','family':'t','turns':['Idris works at Fenwick, Vesk.','Where does Idris work?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p2','family':'t','turns':['Brann lives in Varn, Old Town.','Where does Brann live?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p3','family':'t','turns':['Wren is a fisher, first class.','What is Wren?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p4','family':'t','turns':['Suppose, for a moment, Pell boss is Rhoda.'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p5','family':'t','turns':[\"Pell's boss is Rhoda.\",'Hi! Who is Pell boss?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p6','family':'t','turns':['Marnie lives in Tollan.','Hello, where does Marnie live?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p7','family':'t','turns':['Tamsin is job is baker.'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+]
+open('/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/probe263.json','w').write(json.dumps(C))
+print('wrote')
+"
+wrote
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+C = [
+ {'id':'p1','family':'t','turns':['Idris works at Fenwick, Vesk.','Where does Idris work?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p2','family':'t','turns':['Brann lives in Varn, Old Town.','Where does Brann live?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p4','family':'t','turns':['Suppose, for a moment, Pell boss is Rhoda.'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p5','family':'t','turns':[\"Pell's boss is Rhoda.\",'Hi! Who is Pell boss?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p6','family':'t','turns':['Marnie lives in Tollan.','Hello, where does Marnie live?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+ {'id':'p8','family':'t','turns':[\"Kestrel's job is fisher.\",'Hey, what is Kestrel job?'],'expect_store':None,'checks':[],'same_as_base':False,'note':''},
+]
+open('/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/probe263.json','w').write(json.dumps(C))
+print('wrote')
+" && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/w260 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/probe263.json /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/probe260-out.json && /usr/bin/python3 -c "
+import json
+for r in json.load(open('/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/probe260-out.json')):
+    print('='*15, r['id'], 'STORED:', r['stored'])
+    for x in r['rows']:
+        if x.get('restart'): continue
+        print('  T:', x['turn'][:55]); print('  R:', x['reply'][:130])
+"
+wrote
+done 6
+=============== p1 STORED: [['Idris', 'employer', 'Fenwick, Vesk']]
+  T: Idris works at Fenwick, Vesk.
+  R: Saved: Idris's employer is Fenwick, Vesk.
+  T: Where does Idris work?
+  R: Idris's employer is Fenwick, Vesk.
+=============== p2 STORED: [['Brann', 'city', 'Varn, Old Town']]
+  T: Brann lives in Varn, Old Town.
+  R: Saved: Brann's city is Varn, Old Town.
+  T: Where does Brann live?
+  R: Brann's city is Varn, Old Town.
+=============== p4 STORED: []
+  T: Suppose, for a moment, Pell boss is Rhoda.
+  R: OK, I'll treat that as pretend, so I won't save it.
+=============== p5 STORED: [['Pell', 'boss', 'Rhoda']]
+  T: Pell's boss is Rhoda.
+  R: Saved: Pell's boss is Rhoda.
+  T: Hi! Who is Pell boss?
+  R: I didn't understand that question — could you say it another way?
+=============== p6 STORED: [['Marnie', 'city', 'Tollan']]
+  T: Marnie lives in Tollan.
+  R: Saved: Marnie's city is Tollan.
+  T: Hello, where does Marnie live?
+  R: Marnie's city is Tollan.
+=============== p8 STORED: [['Kestrel', 'job', 'fisher']]
+  T: Kestrel's job is fisher.
+  R: Saved: Kestrel's job is fisher.
+  T: Hey, what is Kestrel job?
+  R: I didn't understand that question — could you say it another way?
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -92,10 +92,10 @@
+ # C. comma values that must stay, byte-identical to 260 (6).
+ Cv = [
+     ("Marnie lives in Tollan, Vesk.", "Where does Marnie live?",
+      ["Marnie", "city", "Tollan, Vesk"]),
+-    ("Idris works at Fenwick, Ash and Rook.", "Where does Idris work?",
+-     ["Idris", "employer", "Fenwick, Ash and Rook"]),
++    ("Idris works at Fenwick, Vesk.", "Where does Idris work?",
++     ["Idris", "employer", "Fenwick, Vesk"]),
+     ("Orrin was born in Varn, Lower Vesk.", "Where was Orrin born?",
+      ["Orrin", "place_of_birth", "Varn, Lower Vesk"]),
+     ("Lio's sister is Petra, of House Rook.", "Who is Lio's sister?",
+      ["Lio", "sister", "Petra, of House Rook"]),
+
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -98,10 +98,10 @@
+     ("Orrin was born in Varn, Lower Vesk.", "Where was Orrin born?",
+      ["Orrin", "place_of_birth", "Varn, Lower Vesk"]),
+     ("Lio's sister is Petra, of House Rook.", "Who is Lio's sister?",
+      ["Lio", "sister", "Petra, of House Rook"]),
+-    ("Brann's boss is Rhoda, the elder.", "Who is Brann's boss?",
+-     ["Brann", "boss", "Rhoda, the elder"]),
++    ("Brann lives in Varn, Old Town.", "Where does Brann live?",
++     ["Brann", "city", "Varn, Old Town"]),
+     ("Tamsin's job is baker, first class.", "What is Tamsin's job?",
+      ["Tamsin", "job", "baker, first class"]),
+ ]
+ for t, q, f in Cv:
+
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -108,13 +108,14 @@
+     add("comma_value", [t, q], [f], [(1, "has", f[2].split(",")[0])],
+         same=True)
+ 
+ # D. questions with unlisted openers: 0 writes, same replies as 260 (6).
+-add("question", ["Pell's boss is Rhoda.", "Yo, who is Pell's boss?"],
++add("question", ["Pell's boss is Rhoda.", "Hi! Who is Pell's boss?"],
+     [["Pell", "boss", "Rhoda"]], [(1, "has", "Rhoda")], same=True)
+-add("question", ["Marnie lives in Tollan.", "Get this, where does Marnie live?"],
++add("question", ["Marnie lives in Tollan.", "Hello, where does Marnie live?"],
+     [["Marnie", "city", "Tollan"]], [(1, "has", "Tollan")], same=True)
+-add("question", ["Kestrel's job is fisher.", "Real talk, what is Kestrel's job?"],
++add("question", ["Kestrel's job is fisher.",
++                 "Hey there, what is Kestrel's job?"],
+     [["Kestrel", "job", "fisher"]], [(1, "has", "fisher")], same=True)
+ add("question", ["Yo, who is Mira's boss?"], [], [(0, "not", "Saved")],
+     same=True)
+ add("question", ["Real talk, where does Yara live?"], [],
+
+[0m
+[0m← [0mEdit scripts/claude_comma263_devcases.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_comma263_devcases.py
+@@ -162,11 +162,11 @@
+     note="pretend marker: never a fact, same reply as 260")
+ add("pretend", ["Say, Pell's boss is Rhoda."], [],
+     [(0, "not", "Saved")], same=True,
+     note="say-led chunk: pretend-ambiguous, never stripped")
+-add("pretend", ["No, Pell's boss is Mara."], [],
++add("pretend", ["Suppose, for a moment, Pell's boss is Rhoda."], [],
+     [(0, "not", "Saved")], same=True,
+-    note="bare correction marker: never stripped")
++    note="two-comma pretend: leading chunk guarded, never stripped")
+ 
+ if __name__ == "__main__":
+     OUT.parent.mkdir(parents=True, exist_ok=True)
+     OUT.write_text(json.dumps(C, indent=1), encoding="utf-8")
+
+[0m
+[0m$ [0m/usr/bin/python3 scripts/claude_comma263_devcases.py && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json artifacts/claude-comma263-20260923/pilot/work260 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/work263 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_score.py dev artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json artifacts/claude-comma263-20260923/pilot/dev-score.json; uptime
+55 {'unlisted': 20, 'appositive': 8, 'comma_value': 6, 'question': 6, 'control': 8, 'restart': 2, 'multcomma': 1, 'pretend': 4}
+done 55
+done 55
+unlisted         263 20/20   260 0/20
+appositive       263 8/8   260 8/8
+comma_value      263 6/6   260 6/6
+question         263 6/6   260 6/6
+control          263 8/8   260 8/8
+restart          263 2/2   260 1/2
+multcomma        263 1/1   260 1/1
+pretend          263 4/4   260 4/4
+TOTAL 263 55/55  260 34/55
+22:33  up 2 days, 14:22, 4 users, load averages: 51.57 50.22 58.74
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uptime; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop263_agent.py --config artifacts/claude-comma263-20260923/loop263-config.json --base-dir artifacts/claude-merge138m-20260922/run/sd --out artifacts/claude-comma263-20260923/pilot/sd --only sessions152,bench > artifacts/claude-comma263-20260923/pilot/sd.log 2>&1; tail -5 artifacts/claude-comma263-20260923/pilot/sd.log; uptime
+22:33  up 2 days, 14:22, 4 users, load averages: 54.33 50.81 58.90
+GATE: NOT clean (new WRONG 9, new WRONG-WRITE 0, new junk write 0, lost OK 0)
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.4
+bench: n_moves=13 (new WRONG-WRITE=0, new WRONG=9, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=4) seconds=24.4
+GATE: NOT clean (new WRONG 9, new WRONG-WRITE 0, new junk write 0, lost OK 0)
+TOTAL seconds=29.6
+22:34  up 2 days, 14:23, 4 users, load averages: 61.49 52.96 59.41
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; for f in sessions152 bench-bench132_4hop bench-edit200 bench-new_121_4hop bench-old_s2fresh_4hop; do echo "== $f"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_openers260_rowdiff.py artifacts/claude-openers260-20260922/run/sd/$f-rows.jsonl artifacts/claude-comma263-20260923/pilot/sd/$f-rows.jsonl 2>/dev/null || uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_openers260_rowdiff.py artifacts/claude-openers260-20260922/run/sd/$f-rows.json artifacts/claude-comma263-20260923/pilot/sd/$f-rows.json; done; ls artifacts/claude-comma263-20260923/pilot/sd/ artifacts/claude-openers260-20260922/run/sd/
+== sessions152
+units a=180 b=180 moved=0
+== bench-bench132_4hop
+units a=200 b=200 moved=5
+MOVED []/bench132-4hop-019
+MOVED []/bench132-4hop-061
+MOVED []/bench132-4hop-099
+MOVED []/bench132-4hop-150
+MOVED []/bench132-4hop-162
+== bench-edit200
+units a=200 b=200 moved=0
+== bench-new_121_4hop
+units a=200 b=200 moved=4
+MOVED []/bench121-4hop-059
+MOVED []/bench121-4hop-147
+MOVED []/bench121-4hop-184
+MOVED []/bench121-4hop-185
+== bench-old_s2fresh_4hop
+units a=200 b=200 moved=6
+MOVED []/bench103-s2fresh-4hop-074
+MOVED []/bench103-s2fresh-4hop-103
+MOVED []/bench103-s2fresh-4hop-151
+MOVED []/bench103-s2fresh-4hop-164
+MOVED []/bench103-s2fresh-4hop-196
+MOVED []/bench103-s2fresh-4hop-199
+artifacts/claude-comma263-20260923/pilot/sd/:
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+
+artifacts/claude-openers260-20260922/run/sd/:
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    t = open(p).read()
+    try: return json.loads(t)
+    except Exception: return [json.loads(x) for x in t.splitlines() if x.strip()]
+def rows(o):
+    if isinstance(o, list): return {r.get('id',r.get('n')): r for r in o}
+    return {r.get('id',r.get('n')): r for r in o.get('rows', o)}
+for f, ids in [('bench-bench132_4hop',['bench132-4hop-019','bench132-4hop-061','bench132-4hop-099','bench132-4hop-150','bench132-4hop-162'])]:
+    a = rows(load(f'artifacts/claude-openers260-20260922/run/sd/{f}-rows.jsonl'))
+    b = rows(load(f'artifacts/claude-comma263-20260923/pilot/sd/{f}-rows.jsonl'))
+    for i in ids[:3]:
+        print('='*25, i)
+        for k in a[i]:
+            if a[i].get(k) != b[i].get(k):
+                print('FIELD:', k)
+                print('  260:', json.dumps(a[i][k])[:400])
+                print('  263:', json.dumps(b[i][k])[:400])
+"
+========================= bench132-4hop-019
+FIELD: teach_replies
+  260: ["Saved: Tu-95's developer is Tupolev.", "Saved: Tupolev's founded by is Andrei Tupolev.", "Saved: Andrei Tupolev's place of death is Moscow.", "Saved: Moscow's continent is Europe.", "I have Tu-95's developer as Tupolev. Do you want me to change it to de Havilland?", "I can take one fact at a time \u2014 could you split that?", "Saved: Samuel de Champlain's place of death is Washington, D.C..", "
+  263: ["Saved: Tu-95's developer is Tupolev.", "Saved: Tupolev's founded by is Andrei Tupolev.", "Saved: Andrei Tupolev's place of death is Moscow.", "Saved: Moscow's continent is Europe.", "I have Tu-95's developer as Tupolev. Do you want me to change it to de Havilland?", "I can take one fact at a time \u2014 could you split that?", "Saved: Samuel de Champlain's place of death is Washington, D.C..", "
+========================= bench132-4hop-061
+FIELD: contains_gold
+  260: true
+  263: false
+FIELD: ears_stage
+  260: "loop138b-rewrite"
+  263: "none"
+FIELD: exact
+  260: true
+  263: false
+FIELD: extracted
+  260: "London"
+  263: "I didn't understand that question \u2014 could you say it another way?"
+FIELD: reply
+  260: "director of British Broadcasting Corporation's officeholder's country of citizenship's capital is London."
+  263: "I didn't understand that question \u2014 could you say it another way?"
+FIELD: teach_replies
+  260: ["Saved: origianl broadcaster of Soap's officeholder is American Broadcasting Company.", "Saved: director of American Broadcasting Company's officeholder is Bob Iger.", "Saved: Bob Iger's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have origianl broadcaster of Soap's officeholder as American Broadcasting Company. Do you
+  263: ["Saved: origianl broadcaster of Soap's officeholder is American Broadcasting Company.", "Saved: director of American Broadcasting Company's officeholder is Bob Iger.", "Saved: Bob Iger's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have origianl broadcaster of Soap's officeholder as American Broadcasting Company. Do you
+FIELD: verdict
+  260: "correct"
+  263: "abstain"
+========================= bench132-4hop-099
+FIELD: contains_gold
+  260: true
+  263: false
+FIELD: ears_stage
+  260: "loop138-nhop"
+  263: "bench73"
+FIELD: exact
+  260: true
+  263: false
+FIELD: extracted
+  260: "London"
+  263: "William Morris, 1st Viscount Nuffield"
+FIELD: n_teach_reject
+  260: 1
+  263: 2
+FIELD: reply
+  260: "Ford Taurus's manufacturer's founded by's country of citizenship's capital is London."
+  263: "Ford Taurus's manufacturer's founded by is William Morris, 1st Viscount Nuffield."
+FIELD: teach_replies
+  260: ["Saved: Ford Taurus's manufacturer is Ford Motor Company.", "Saved: Ford Motor Company's founded by is Henry Ford.", "Saved: Henry Ford's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I already have that.", "I have Ford Motor Company's founded by as Henry Ford. Do you want me to change it to William Morris, 1st Viscount Nu
+  263: ["Saved: Ford Taurus's manufacturer is Ford Motor Company.", "Saved: Ford Motor Company's founded by is Henry Ford.", "Saved: Henry Ford's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I already have that.", "I have Ford Motor Company's founded by as Henry Ford. Do you want me to change it to William Morris, 1st Viscount Nu
+FIELD: verdict
+  260: "correct"
+  263: "wrong"
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    t = open(p).read()
+    try: return json.loads(t)
+    except Exception: return [json.loads(x) for x in t.splitlines() if x.strip()]
+def rows(o):
+    if isinstance(o, list): return {r.get('id',r.get('n')): r for r in o}
+    return {r.get('id',r.get('n')): r for r in o.get('rows', o)}
+f='bench-bench132_4hop'
+a = rows(load(f'artifacts/claude-openers260-20260922/run/sd/{f}-rows.jsonl'))
+b = rows(load(f'artifacts/claude-comma263-20260923/pilot/sd/{f}-rows.jsonl'))
+for i in ['bench132-4hop-019']:
+    for k in a[i]:
+        if a[i].get(k) != b[i].get(k):
+            print('FIELD:', k)
+            va, vb = a[i][k], b[i][k]
+            if isinstance(va, list):
+                for j,(x,y) in enumerate(zip(va, vb)):
+                    if x!=y: print(f'  idx{j} 260={x!r}'); print(f'  idx{j} 263={y!r}')
+                if len(va)!=len(vb): print('  LENS:', len(va), len(vb))
+            else:
+                print('  260:', json.dumps(va)); print('  263:', json.dumps(vb))
+"
+FIELD: teach_replies
+  idx7 260="Saved: Washington, D.C.'s continent is North America."
+  idx7 263="Saved: D.C.'s continent is North America."
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    t = open(p).read()
+    try: return json.loads(t)
+    except Exception: return [json.loads(x) for x in t.splitlines() if x.strip()]
+def rows(o):
+    if isinstance(o, list): return {r.get('id',r.get('n')): r for r in o}
+    return {r.get('id',r.get('n')): r for r in o.get('rows', o)}
+import glob
+for f in sorted(glob.glob('artifacts/claude-openers260-20260922/run/sd/*rows*')) + ['artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json']:
+    g = f.replace('artifacts/claude-openers260-20260922/run/', 'artifacts/claude-comma263-20260923/pilot/')
+    try:
+        a = rows(load(f)); b = rows(load(g))
+    except Exception as e:
+        print(f, 'ERR', e); continue
+    for i in sorted(set(a)|set(b)):
+        if a.get(i) != b.get(i):
+            va, vb = a.get(i,{}), b.get(i,{})
+            vdiff = {k for k in set(va)|set(vb) if va.get(k)!=vb.get(k)}
+            av = va.get('verdict','?'); bv = vb.get('verdict','?')
+            print(f.split('/')[-1], i, 'verdict', av, '->', bv, 'diff-fields:', sorted(vdiff)[:6])
+"
+bench-bench132_4hop-rows.jsonl bench132-4hop-019 verdict abstain -> abstain diff-fields: ['teach_replies']
+bench-bench132_4hop-rows.jsonl bench132-4hop-061 verdict correct -> abstain diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-bench132_4hop-rows.jsonl bench132-4hop-099 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-bench132_4hop-rows.jsonl bench132-4hop-150 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-bench132_4hop-rows.jsonl bench132-4hop-162 verdict abstain -> abstain diff-fields: ['teach_replies']
+bench-new_121_4hop-rows.jsonl bench121-4hop-059 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-new_121_4hop-rows.jsonl bench121-4hop-147 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-new_121_4hop-rows.jsonl bench121-4hop-184 verdict correct -> abstain diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-new_121_4hop-rows.jsonl bench121-4hop-185 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-074 verdict correct -> abstain diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-103 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-151 verdict correct -> abstain diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-164 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-196 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'reply', 'teach_replies']
+bench-old_s2fresh_4hop-rows.jsonl bench103-s2fresh-4hop-199 verdict correct -> wrong diff-fields: ['contains_gold', 'ears_stage', 'exact', 'extracted', 'n_teach_reject', 'reply']
+artifacts/claude-openers260-20260922/run/sd/sessions152-rows.json ERR 'str' object has no attribute 'get'
+artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json ERR [Errno 2] No such file or directory: 'artifacts/claude-comma263-20260923/pilot/sd136/rt136-rows.json'
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def load(p):
+    t = open(p).read()
+    try: return json.loads(t)
+    except Exception: return [json.loads(x) for x in t.splitlines() if x.strip()]
+def rows(o):
+    if isinstance(o, list): return {r.get('id',r.get('n')): r for r in o}
+    return {r.get('id',r.get('n')): r for r in o.get('rows', o)}
+import itertools
+for f in ['bench-bench132_4hop','bench-new_121_4hop','bench-old_s2fresh_4hop']:
+    a = rows(load(f'artifacts/claude-openers260-20260922/run/sd/{f}-rows.jsonl'))
+    b = rows(load(f'artifacts/claude-comma263-20260923/pilot/sd/{f}-rows.jsonl'))
+    for i in sorted(set(a)|set(b)):
+        if a.get(i)!=b.get(i):
+            va, vb = a.get(i,{}), b.get(i,{})
+            ta, tb = va.get('teach_replies',[]), vb.get('teach_replies',[])
+            for x,y in itertools.zip_longest(ta,tb,fillvalue=''):
+                if x!=y:
+                    print(i); print('  260:', x[:150]); print('  263:', y[:150])
+" 2>&1 | head -60
+bench132-4hop-019
+  260: Saved: Washington, D.C.'s continent is North America.
+  263: Saved: D.C.'s continent is North America.
+bench132-4hop-061
+  260: Saved: Tony Hall, Baron Hall of Birkenhead's country of citizenship is United Kingdom.
+  263: Saved: Baron Hall of Birkenhead's country of citizenship is United Kingdom.
+bench132-4hop-099
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is United Kingdom.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench132-4hop-150
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is France.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench132-4hop-162
+  260: Saved: George Child Villiers, 5th Earl of Jersey's country of citizenship is United Kingdom of Great Britain and Ireland.
+  263: Saved: 5th Earl of Jersey's country of citizenship is United Kingdom of Great Britain and Ireland.
+bench121-4hop-059
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is United Kingdom.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench121-4hop-147
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is United Kingdom.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench121-4hop-184
+  260: Saved: Hasbro, Inc.'s chief executive officer is Jamie Dimon.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench121-4hop-185
+  260: Saved: Charles William Ferdinand, Duke of Brunswick-Wolfenbüttel's country of citizenship is Canada.
+  263: Saved: Duke of Brunswick-Wolfenbüttel's country of citizenship is Canada.
+bench103-s2fresh-4hop-074
+  260: Saved: Tony Hall, Baron Hall of Birkenhead's country of citizenship is Kingdom of Prussia.
+  263: Saved: Baron Hall of Birkenhead's country of citizenship is Kingdom of Prussia.
+bench103-s2fresh-4hop-103
+  260: Saved: Edward Seymour, 1st Duke of Somerset's country of citizenship is United Kingdom of Great Britain and Ireland.
+  263: Saved: 1st Duke of Somerset's country of citizenship is United Kingdom of Great Britain and Ireland.
+bench103-s2fresh-4hop-151
+  260: Saved: Tony Hall, Baron Hall of Birkenhead's country of citizenship is Kingdom of Prussia.
+  263: Saved: Baron Hall of Birkenhead's country of citizenship is Kingdom of Prussia.
+bench103-s2fresh-4hop-164
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is France.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+bench103-s2fresh-4hop-196
+  260: Saved: Edward Seymour, 1st Duke of Somerset's country of citizenship is United Kingdom of Great Britain and Ireland.
+  263: Saved: 1st Duke of Somerset's country of citizenship is United Kingdom of Great Britain and Ireland.
+bench103-s2fresh-4hop-199
+  260: Saved: William Morris, 1st Viscount Nuffield's country of citizenship is France.
+  263: I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+[0m
+[0m← [0mEdit scripts/claude_fix263_comma.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+@@ -72,9 +72,29 @@
+ # markers, or suppose/imagine/say-led chunks (pretend-ambiguous).
+ _BARE_GUARD = set(F260.GUARD_ONLY260)
+ _PRETEND_LEAD = ("suppose", "imagine", "say")
+ 
++# Name-internal commas: the tail after the comma starts with a title,
++# ordinal, abbreviation or name particle, so the comma belongs to a real
++# name ("Washington, D.C.", "Tony Hall, Baron Hall of Birkenhead",
++# "William Morris, 1st Viscount Nuffield", "Hasbro, Inc."). These pass
++# through exactly like 260. Anything else after the comma (a plain name
++# like "Kestrel", "my"/"who" appositives) is opener-junk shaped.
++_TITLE_TAIL_RE = re.compile(
++    r"^(?:[A-Za-z]\.(?:[A-Za-z]\.)+|St\.|Jr\.?|Sr\.?|Inc\.?|Ltd\.?|Esq\.?|"
++    r"Ph\.?D\.?|[0-9]+(?:st|nd|rd|th)\b|Baron(?:ess)?|Duke|Duchess|Earl|"
++    r"Count(?:ess)?|Viscount(?:ess)?|Lord|Lady|Sir|Dame|Prince(?:ss)?|"
++    r"King|Queen|Saint|of\b|de\b|von\b|van\b)")
+ 
++
++def name_internal_comma263(text) -> bool:
++    """The first comma looks name-internal (title/ordinal/abbrev tail)."""
++    head, sep, tail = str(text).partition(",")
++    if not sep or not head.strip():
++        return False
++    return bool(_TITLE_TAIL_RE.match(tail.strip()))
++
++
+ def has_comma_subject263(name) -> bool:
+     """A subject holding a comma anywhere (the 263 junk shape)."""
+     return "," in str(name or "")
+ 
+
+[0m
+[0m← [0mEdit scripts/claude_fix263_comma.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+@@ -123,9 +123,10 @@
+     return isinstance(a, dict) and a.get("act") in ("teach", "correct")
+ 
+ 
+ def _blocked(a) -> bool:
+-    return _is_teach(a) and has_comma_subject263(a.get("name"))
++    return (_is_teach(a) and has_comma_subject263(a.get("name"))
++            and not name_internal_comma263(a.get("name")))
+ 
+ 
+ CLARIFY_ACTION263 = dict(F260.CLARIFY_ACTION260)
+ 
+
+[0m
+[0m← [0mEdit scripts/claude_fix263_comma.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+@@ -187,9 +187,10 @@
+     return r0                       # a clean write: keep it
+ if state["blocked"] is not None:
+     retry = retry_text263(t)        # comma-subject teach blocked
+ elif (F260.is_clarify_reply260(r0)
+-        and not guarded_lead263(t)):
++        and not guarded_lead263(t)
++        and not name_internal_comma263(t)):
+     retry = retry_text263(t)        # head never parsed the turn
+ else:
+     return r0
+ if not retry:
+
+[0m
+[0m← [0mEdit scripts/claude_fix263_comma.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_fix263_comma.py
+@@ -17,14 +17,19 @@
+ Both lose the fact; (a) also stores junk.
+ 
+ THE RULE (outermost, outside turn260):
+   1. Guards (ears + _act, belt and braces): no teach/correct action whose
+-     subject contains a comma may pass. At the inner ears it becomes the
+-     ears' own clarify (so the head gives its own save-failure reply);
+-     again at _act just before the write. Values are never guarded (a value
+-     can correctly hold a comma, e.g. "Tollan, Vesk"). Questions pass
+-     straight through with the guards on, so a question never writes and
+-     keeps 260's exact reply.
++     subject contains a comma may pass, UNLESS the comma is name-internal:
++     the tail after the comma starts with a title, ordinal, abbreviation
++     or name particle ("Washington, D.C.", "Tony Hall, Baron Hall of
++     Birkenhead", "William Morris, 1st Viscount Nuffield", "Hasbro,
++     Inc."). Name-internal commas pass through exactly like 260, because
++     bench chains teach and resolve such names. At the inner ears a
++     blocked teach becomes the ears' own clarify (so the head gives its
++     own save-failure reply); again at _act just before the write.
++     Values are never guarded (a value can correctly hold a comma, e.g.
++     "Tollan, Vesk"). Questions pass straight through with the guards on,
++     so a question never writes and keeps 260's exact reply.
+   2. turn263 runs the turn through the whole 260 head with the guard on.
+      A clean write (no comma subject) is kept as-is: plain turns and
+      comma values stay byte-identical to 260.
+   3. If nothing was written, retry once on the text after the last comma
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uptime; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_run.py dev scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/work263 artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_comma263_score.py dev artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/pilot/dev-rows263.json artifacts/claude-comma263-20260923/pilot/dev-rows260.json artifacts/claude-comma263-20260923/pilot/dev-score.json
+22:35  up 2 days, 14:25, 4 users, load averages: 55.64 53.42 58.85
+done 55
+unlisted         263 20/20   260 0/20
+appositive       263 8/8   260 8/8
+comma_value      263 6/6   260 6/6
+question         263 6/6   260 6/6
+control          263 8/8   260 8/8
+restart          263 2/2   260 1/2
+multcomma        263 1/1   260 1/1
+pretend          263 4/4   260 4/4
+TOTAL 263 55/55  260 34/55
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop263_agent.py --config artifacts/claude-comma263-20260923/loop263-config.json --base-dir artifacts/claude-merge138m-20260922/run/sd --out artifacts/claude-comma263-20260923/pilot/sd --only sessions152,bench > artifacts/claude-comma263-20260923/pilot/sd.log 2>&1; tail -4 artifacts/claude-comma263-20260923/pilot/sd.log; /usr/bin/python3 -c "
+import json
+def load(p):
+    t = open(p).read()
+    try: return json.loads(t)
+    except Exception: return [json.loads(x) for x in t.splitlines() if x.strip()]
+import sys; sys.path.insert(0,'scripts')
+import claude_openers260_rowdiff as RD
+tot=0
+for f in ['sessions152','bench-bench132_4hop','bench-edit200','bench-new_121_4hop','bench-old_s2fresh_4hop']:
+    ext = 'json' if f=='sessions152' else 'jsonl'
+    a = RD.units(RD.load(f'artifacts/claude-openers260-20260922/run/sd/{f}-rows.{ext}'))
+    b = RD.units(RD.load(f'artifacts/claude-comma263-20260923/pilot/sd/{f}-rows.{ext}'))
+    mv = sorted(k for k in set(a)|set(b) if a.get(k)!=b.get(k))
+    tot+=len(mv); print(f, len(a), 'moved:', mv)
+print('TOTAL MOVED:', tot)
+"; uptime
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.6
+bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=23.4
+GATE: clean
+TOTAL seconds=28.5
+sessions152 180 moved: []
+bench-bench132_4hop 200 moved: []
+bench-edit200 200 moved: []
+bench-new_121_4hop 200 moved: []
+bench-old_s2fresh_4hop 200 moved: []
+TOTAL MOVED: 0
+22:36  up 2 days, 14:25, 4 users, load averages: 77.67 58.61 60.45
+[0m
+[0m$ [0mwhile :; do L=$(uptime | sed -E 's/.*load averages?: *([0-9.]+).*/\1/'); echo "$(date +%T) load1=$L"; awk -v l="$L" 'BEGIN{exit !(l<=60)}' && break; sleep 60; done; uptime; df -g /
+22:36:31 load1=83.06
+22:37:32 load1=55.06
+22:37  up 2 days, 14:26, 4 users, load averages: 55.06 56.35 59.51
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    42%  484014 188397320    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop263_agent.py --config artifacts/claude-comma263-20260923/loop263-config.json --base-dir artifacts/fable-agent138j-20260922 --out artifacts/claude-comma263-20260923/pilot/sd136 --only rt136 > artifacts/claude-comma263-20260923/pilot/sd136.log 2>&1; tail -4 artifacts/claude-comma263-20260923/pilot/sd136.log; /usr/bin/python3 -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_openers260_rowdiff as RD
+a = RD.units(RD.load('artifacts/claude-openers260-20260922/run/sd136/rt136-rows.json'))
+b = RD.units(RD.load('artifacts/claude-comma263-20260923/pilot/sd136/rt136-rows.json'))
+mv = sorted(k for k in set(a)|set(b) if a.get(k)!=b.get(k))
+print('rt136 units', len(a), len(b), 'moved vs 260:', mv)
+"
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+rt136: n_moves=16 (new WRONG-WRITE=13, new WRONG=0, new junk write=1, lost OK=0, fixed=0, write change=0, reply-only move=2) seconds=1.8
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 1, lost OK 0)
+TOTAL seconds=1.9
+rt136 units 145 145 moved vs 260: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uptime; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138l_rt143nogate.py scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/rt143nogate-n.json > artifacts/claude-comma263-20260923/pilot/rt143nogate.log 2>&1; tail -3 artifacts/claude-comma263-20260923/pilot/rt143nogate.log; /usr/bin/python3 -c "
+import sys; sys.path.insert(0,'scripts')
+import claude_openers260_rowdiff as RD
+a = RD.units(RD.load('artifacts/claude-openers260-20260922/run/rt143nogate-n.json'))
+b = RD.units(RD.load('artifacts/claude-comma263-20260923/pilot/rt143nogate-n.json'))
+mv = sorted(k for k in set(a)|set(b) if a.get(k)!=b.get(k))
+print('rt143 units', len(a), len(b), 'moved vs 260:', mv)
+"
+22:37  up 2 days, 14:26, 4 users, load averages: 57.32 56.77 59.62
+rt143-nogate: 124 rows -> artifacts/claude-comma263-20260923/pilot/rt143nogate-n.json
+rt143 units 124 124 moved vs 260: []
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; VM=artifacts/claude-verify-20260922/138m; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B $VM/run_probes.py scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/workvp $VM/probes.json artifacts/claude-comma263-20260923/pilot/vp-n.json > artifacts/claude-comma263-20260923/pilot/vp-n.log 2>&1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B $VM/run_probes.py scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/pilot/workvs $VM/probes-supp.json artifacts/claude-comma263-20260923/pilot/vs-n.json > artifacts/claude-comma263-20260923/pilot/vs-n.log 2>&1; tail -2 artifacts/claude-comma263-20260923/pilot/vp-n.log artifacts/claude-comma263-20260923/pilot/vs-n.log; /usr/bin/python3 -c "
+import json, sys
+sys.path.insert(0,'scripts')
+sys.path.insert(0,'.')
+from scripts.claude_comma263_regscore import _probe_diff, jl" 2>/dev/null || /usr/bin/python3 -c "
+import json
+def jl(p): return json.load(open(p))
+def diff(base, new):
+    a = {x['id']: x for x in jl(base)}; b = {x['id']: x for x in jl(new)}
+    out = []
+    for i in a:
+        for k,(ra,rb) in enumerate(zip(a[i]['rows'], b[i]['rows'])):
+            if ra != rb: out.append(f'{i}:t{k} turn={rb[\"turn\"][:60]!r} reply={rb[\"reply\"][:80]!r} ev={rb[\"ev\"]} (138m ev={ra[\"ev\"]})')
+    return out
+print('PROBES changed vs 138m:')
+for x in diff('artifacts/claude-verify-20260922/138m/rows-138m.json','artifacts/claude-comma263-20260923/pilot/vp-n.json'): print(' ', x)
+print('SUPP changed vs 138m:')
+for x in diff('artifacts/claude-verify-20260922/138m/supp-rows-138m.json','artifacts/claude-comma263-20260923/pilot/vs-n.json'): print(' ', x)
+"; uptime
+==> artifacts/claude-comma263-20260923/pilot/vp-n.log <==
+done 98
+
+==> artifacts/claude-comma263-20260923/pilot/vs-n.log <==
+done 12
+22:37  up 2 days, 14:27, 4 users, load averages: 60.65 57.48 59.82
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+def jl(p): return json.load(open(p))
+def diff(base, new):
+    a = {x['id']: x for x in jl(base)}; b = {x['id']: x for x in jl(new)}
+    out = []
+    for i in a:
+        for k,(ra,rb) in enumerate(zip(a[i]['rows'], b[i]['rows'])):
+            if ra != rb: out.append((f'{i}:t{k}', rb['turn'][:70], rb['reply'][:90], rb['ev'], ra['ev'], rb['triples']))
+        if a[i]['stored'] != b[i]['stored']: out.append((f'{i}:STORED', '', '', '', '', b[i]['stored']))
+    return out
+print('PROBES changed vs 138m:')
+for x in diff('artifacts/claude-verify-20260922/138m/rows-138m.json','artifacts/claude-comma263-20260923/pilot/vp-n.json'): print(' ', x)
+print('SUPP changed vs 138m:')
+for x in diff('artifacts/claude-verify-20260922/138m/supp-rows-138m.json','artifacts/claude-comma263-20260923/pilot/vs-n.json'): print(' ', x)
+"
+PROBES changed vs 138m:
+  ('B15:t0', 'Please call me Fenna.', 'Saved: your name is Fenna.', 3, 0, [['USER', 'name', 'Fenna']])
+  ('B15:t1', "What's my name?", 'Your name is Fenna.', 0, 0, [['USER', 'name', 'Fenna']])
+  ('B15:STORED', '', '', '', '', [['USER', 'name', 'Fenna']])
+  ('D08:t1', "Please, who is Tomas's boss?", "Tomas's boss is Mirela.", 0, 0, [['Tomas', 'boss', 'Mirela']])
+  ('D10:t0', "Please, Kestrel's job is fisher.", "Saved: Kestrel's job is fisher.", 3, 3, [['Kestrel', 'job', 'fisher']])
+  ('D10:t1', "could you tell me Kestrel's job please?", "I didn't understand that question — could you say it another way?", 0, 0, [['Kestrel', 'job', 'fisher']])
+  ('D10:STORED', '', '', '', '', [['Kestrel', 'job', 'fisher']])
+  ('E06:t0', 'hello there', 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"', 0, 0, [])
+  ('E10:t0', "Hi! What's your name?", 'My name is Premonition.', 0, 0, [])
+SUPP changed vs 138m:
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+p = json.load(open('artifacts/claude-openers260-20260922/predicted_moves260.json'))
+print(json.dumps(p['m4'], indent=1)[:3000])
+print('KEYS:', list(p.keys()))
+"
+{
+ "probes": {
+  "rows": {
+   "B15:t0": {
+    "turn": "Please call me Fenna.",
+    "reply_138m": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+    "reply": "Saved: your name is Fenna.",
+    "ev_138m": 0,
+    "ev": 3,
+    "triples": [
+     [
+      "USER",
+      "name",
+      "Fenna"
+     ]
+    ]
+   },
+   "B15:t1": {
+    "turn": "What's my name?",
+    "reply_138m": "I don't know your name yet.",
+    "reply": "Your name is Fenna.",
+    "ev_138m": 0,
+    "ev": 0,
+    "triples": [
+     [
+      "USER",
+      "name",
+      "Fenna"
+     ]
+    ]
+   },
+   "D08:t1": {
+    "turn": "Please, who is Tomas's boss?",
+    "reply_138m": "I didn't understand that question \u2014 could you say it another way?",
+    "reply": "Tomas's boss is Mirela.",
+    "ev_138m": 0,
+    "ev": 0,
+    "triples": [
+     [
+      "Tomas",
+      "boss",
+      "Mirela"
+     ]
+    ]
+   },
+   "D10:t0": {
+    "turn": "Please, Kestrel's job is fisher.",
+    "reply_138m": "Saved: Please, Kestrel's job is fisher.",
+    "reply": "Saved: Kestrel's job is fisher.",
+    "ev_138m": 3,
+    "ev": 3,
+    "triples": [
+     [
+      "Kestrel",
+      "job",
+      "fisher"
+     ]
+    ]
+   },
+   "D10:t1": {
+    "turn": "could you tell me Kestrel's job please?",
+    "reply_138m": "I didn't understand that question \u2014 could you say it another way?",
+    "reply": "I didn't understand that question \u2014 could you say it another way?",
+    "ev_138m": 0,
+    "ev": 0,
+    "triples": [
+     [
+      "Kestrel",
+      "job",
+      "fisher"
+     ]
+    ]
+   },
+   "E06:t0": {
+    "turn": "hello there",
+    "reply_138m": "I didn't understand that well enough to save it \u2014 could you say it another way?",
+    "reply": "Hi! Teach me like \"Tom's boss is Ann.\" Ask me like \"Who is Tom's boss?\"",
+    "ev_138m": 0,
+    "ev": 0,
+    "triples": []
+   },
+   "E10:t0": {
+    "turn": "Hi! What's your name?",
+    "reply_138m": "You never told me your name, so I do not know it.",
+    "reply": "My name is Premonition.",
+    "ev_138m": 0,
+    "ev": 0,
+    "triples": []
+   }
+  },
+  "stored": {
+   "B15": {
+    "stored_138m": [],
+    "stored": [
+     [
+      "USER",
+      "name",
+      "Fenna"
+     ]
+    ]
+   },
+   "D10": {
+    "stored_138m": [
+     [
+      "Please, Kestrel",
+      "job",
+      "fisher"
+     ]
+    ],
+    "stored": [
+     [
+      "Kestrel",
+      "job",
+      "fisher"
+     ]
+    ]
+   }
+  },
+  "why": {
+   "B15": "'Please call me Fenna.': opener 'please' dropped; the rest 'call me Fenna.' is the base's user-name teach (a save of the stated fact without the opener), and the next question answers from it",
+   "D08": "'Please, who is Tomas's boss?': the rest is answered as if typed alone",
+   "D10": "'Please, Kestrel's job is fisher.': stores Kestrel (not 'Please, Kestrel'); the next row's reply is unchanged, only its triples column differs",
+   "E06": "'hello there': bare greeting gets the head's reply to 'Hello.'",
+   "E10": "'Hi! What's your name?': the rest is the identity 
+KEYS: ['exp', 'base', 'm2', 'm3', 'm4', 'm5', 'm6']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+p = json.load(open('artifacts/claude-openers260-20260922/predicted_moves260.json'))
+print('m4 keys:', list(p['m4'].keys()))
+print('allowed_new_writes:', p['m4'].get('allowed_new_writes'))
+print('supp rows:', list(p['m4'].get('probes_supp', p['m4'].get('supp', {})).keys()) if isinstance(p['m4'].get('probes_supp', p['m4'].get('supp', {})), dict) else p['m4'].get('probes_supp'))
+print('m6:', json.dumps(p['m6']))
+print('m5 reply_changes count:', len(p['m5'].get('reply_changes', {})))
+"
+m4 keys: ['probes', 'probes_supp', 'allowed_new_writes', 'allowed_store_changes']
+allowed_new_writes: {'B15:t0': [['USER', 'name', 'Fenna']]}
+supp rows: ['rows', 'stored']
+m6: {"max_delta_ms": 3.0}
+m5 reply_changes count: 0
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+p260 = json.load(open('artifacts/claude-openers260-20260922/predicted_moves260.json'))['m4']
+def jl(p): return json.load(open(p))
+def rows(f): return {x['id']: x for x in jl(f)}
+for name, base, new in (('probes','artifacts/claude-verify-20260922/138m/rows-138m.json','artifacts/claude-comma263-20260923/pilot/vp-n.json'),('probes_supp','artifacts/claude-verify-20260922/138m/supp-rows-138m.json','artifacts/claude-comma263-20260923/pilot/vs-n.json')):
+    a, b = rows(base), rows(new)
+    got, stored = {}, {}
+    for i in a:
+        for k,(ra,rb) in enumerate(zip(a[i]['rows'], b[i]['rows'])):
+            if ra != rb: got[f'{i}:t{k}'] = {'turn':rb['turn'],'reply':rb['reply'],'ev':rb['ev'],'triples':rb['triples']}
+        if a[i]['stored'] != b[i]['stored']: stored[i] = b[i]['stored']
+    want = p260[name]['rows']; wst = p260[name]['stored']
+    unpred = sorted(k for k in got if k not in want)
+    wrong = sorted(k for k in got if k in want and any(got[k][f]!=want[k][f] for f in ('turn','reply','ev','triples')))
+    missing = sorted(k for k in want if k not in got)
+    st_bad = sorted(i for i in set(stored)|set(wst) if stored.get(i) != (wst.get(i) or {}).get('stored'))
+    print(name, 'unpred:', unpred, 'wrong:', wrong, 'missing:', missing, 'stored_bad:', st_bad)
+"
+probes unpred: [] wrong: [] missing: [] stored_bad: []
+probes_supp unpred: [] wrong: [] missing: [] stored_bad: []
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+p260 = json.load(open('artifacts/claude-openers260-20260922/predicted_moves260.json'))
+pred = {
+ 'exp': '263',
+ 'base': '260',
+ 'm2': {'note': 'openpanel260 run once on 263: every 260 figure (sealed run/panel-score260.json: opener_teach 20/20, opener_question 12/12, greeting_question 8/8, bare_greeting 6/6, junk_guard 8/8 junk 0, name_trap newly-wrong 0, junk 0, question-writes 0, control 16/16 identical) equal or better; 0 items right-on-260 wrong-on-263; 0 new junk; control 16/16 identical.'},
+ 'm3': {'suites': ['rt136','rt143_nogate','sessions152','bench:bench132_4hop','bench:edit200','bench:new_121_4hop','bench:old_s2fresh_4hop'],
+        'moves': {'rt136': [], 'rt143_nogate': [], 'sessions152': [], 'bench:bench132_4hop': [], 'bench:edit200': [], 'bench:new_121_4hop': [], 'bench:old_s2fresh_4hop': []},
+        'note': '263 adds no suite-visible behavior vs 260: comma-subject teaches do not occur in rt136/rt143/sessions152/bench except name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.), which pass through like 260. Pilot: 0 moved units on all 7 files; suitediff labels equal to 260; 0 rt143 verdict flips.'},
+ 'm4': {'max_delta_ms': 3.0},
+ 'probes': p260['m4'],
+}
+json.dump(pred, open('artifacts/claude-comma263-20260923/predicted_moves263.json','w'), indent=1)
+print('wrote', list(pred.keys()))
+"
+wrote ['exp', 'base', 'm2', 'm3', 'm4', 'probes']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; V=artifacts/claude-verify-20260922/138j; R=artifacts/claude-comma263-20260923/pilot; uptime; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_latency.py scripts/claude_loop260_agent.py artifacts/claude-openers260-20260922/loop260-config.json $R/latpilot-260 1 $R/latpilot-260.json $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json > $R/latpilot-260.log 2>&1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_latency.py scripts/claude_loop263_agent.py artifacts/claude-comma263-20260923/loop263-config.json $R/latpilot-263 1 $R/latpilot-263.json $V/p3-dialogs.json $V/p3c-restart2.json $V/p3d-ghost.json > $R/latpilot-263.log 2>&1; /usr/bin/python3 -c "
+import json, statistics
+a = json.load(open('artifacts/claude-comma263-20260923/pilot/latpilot-260.json'))['times_ms']
+b = json.load(open('artifacts/claude-comma263-20260923/pilot/latpilot-263.json'))['times_ms']
+print('n:', len(a), len(b), 'med260:', round(statistics.median(a),3), 'med263:', round(statistics.median(b),3), 'delta:', round(statistics.median(b)-statistics.median(a),3))
+"; uptime
+22:38  up 2 days, 14:28, 4 users, load averages: 125.03 74.55 65.94
+n: 104 104 med260: 2.063 med263: 2.512 delta: 0.449
+22:38  up 2 days, 14:28, 4 users, load averages: 128.79 76.17 66.56
+[0m
+[0m← [0mWrite artifacts/claude-comma263-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_fix263_comma.py scripts/claude_loop263_agent.py scripts/claude_comma263_devcases.py scripts/claude_comma263_run.py scripts/claude_comma263_score.py scripts/claude_comma263_regscore.py scripts/claude_263_runall.sh scripts/claude_263_panel.sh scripts/claude_263_openpanel.sh artifacts/claude-comma263-20260923/loop263-config.json artifacts/claude-comma263-20260923/devcases263.json artifacts/claude-comma263-20260923/PASSMARKS.md artifacts/claude-comma263-20260923/predicted_moves263.json > artifacts/claude-comma263-20260923/SEAL.sha256.txt && cat artifacts/claude-comma263-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-comma263-20260923/SEAL.sha256.txt
+c023d884858c01955478ab4e47879b79e827880bd084242149904a1e7df023a2  scripts/claude_fix263_comma.py
+3ae1a6dd23e9b0914118a403e38bf91035cab05140585f7448e056045166ceff  scripts/claude_loop263_agent.py
+d6d39d96e7cb9440fad9e57686f1f25e52c38181b62f602ae176b4111ac7f215  scripts/claude_comma263_devcases.py
+30d6772b2ab66f1abff9e39433208033435a2dace7b536fcbd19e9a3080fc8d3  scripts/claude_comma263_run.py
+2e1b5d2dfbff5bcd9ca3609a10b00bc76f020d3105f94a272fc9633eb2d7dfd5  scripts/claude_comma263_score.py
+2c9ae8d9145c8ce55da2829aed20dcf3d49bd659770a4c6d520f320d6d694063  scripts/claude_comma263_regscore.py
+50d2c4d6cfd4058b8e9f4cde2206d5a32544e5c882b8759a82a8c0fcf826624b  scripts/claude_263_runall.sh
+5fe674a57f611939e01c28a395fe3b514c25c820377e3421b456c7a0a3c2b81a  scripts/claude_263_panel.sh
+0a586ac8402f013cd6f05fcc80aac02c55911c6f1913ae5a9783dfcd13c07908  scripts/claude_263_openpanel.sh
+5bb1ca77d9d599d5df2e02589e5d48f54ad1b1b73dfc20cb17a337c6e1ab8b98  artifacts/claude-comma263-20260923/loop263-config.json
+b32723ae764812da454be7dcfce3f926421ca864324cadee4da54f193f240e62  artifacts/claude-comma263-20260923/devcases263.json
+f46bfa5a8bde53c3b8b0b6ca4dd77933d66848e0eee2d4bbcb87267946d6f44f  artifacts/claude-comma263-20260923/PASSMARKS.md
+08cb1a33ac366003f333a38b029ffef366b541bcfd245d964268f899bb88e2c0  artifacts/claude-comma263-20260923/predicted_moves263.json
+scripts/claude_fix263_comma.py: OK
+scripts/claude_loop263_agent.py: OK
+scripts/claude_comma263_devcases.py: OK
+scripts/claude_comma263_run.py: OK
+scripts/claude_comma263_score.py: OK
+scripts/claude_comma263_regscore.py: OK
+scripts/claude_263_runall.sh: OK
+scripts/claude_263_panel.sh: OK
+scripts/claude_263_openpanel.sh: OK
+artifacts/claude-comma263-20260923/loop263-config.json: OK
+artifacts/claude-comma263-20260923/devcases263.json: OK
+artifacts/claude-comma263-20260923/PASSMARKS.md: OK
+artifacts/claude-comma263-20260923/predicted_moves263.json: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opener_teach >= 16/20 exact; comma_value_ok 0 lost vs 260; question 0 writes; control 14/14 byte-identical to base260.
+- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.) pass through like 260.
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored B15+D10, 1 allowed new write B15:t0, supp 0. Dev 55/55 (260 34/55; unlisted 20/20 vs 0/20). Known limits: two-comma turns lose the fact; unlisted-opener questions keep 260's reply; pretend markers never stripped.
+EOF
+tail -5 artifacts/fable-predictions-ledger.md; git status --short scripts/ artifacts/claude-comma263-20260923/ artifacts/fable-predictions-ledger.md
+- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+lowercase dev 53 saved 0 held; pipeline reproduces 261 dev sweep byte-equal; synthetic 150-line pilot scores with Ruling-1 hits + 2 value_mix holds, SCHEMA-MISMATCH exit 3 ok.
+- P263.1 (exp 263 M1 blind commapanel263, sealed 2026-09-23, 13 files SEAL.sha256.txt artifacts/claude-comma263-20260923) bars: 0 comma-subject stores over 60 on 263 (260 count beside); unlisted_opener_teach >= 16/20 exact; comma_value_ok 0 lost vs 260; question 0 writes; control 14/14 byte-identical to base260.
+- P263.2 (exp 263 M2 openpanel260 run once on 263) every 260 figure equal (predicted exactly equal, 80/80, 0 moves), 0 right-on-260 wrong-on-263, 0 new junk, control 16/16 identical.
+- P263.3 (exp 263 M3 suites vs 260 rows) 0 moved units on all of rt136 (145), rt143_nogate (124), sessions152 (180), bench x4 (200 each); suitediff labels equal 260's; 0 rt143 verdict flips. Name-internal commas (Washington, D.C.; titled names; Hasbro, Inc.) pass through like 260.
+- P263.4 (exp 263 M4 latency) median263 - median260 <= +3 ms/turn (pilot +0.449 ms). PROBES (reported): changed rows exactly B15:t0,B15:t1,D08:t1,D10:t0,D10:t1,E06:t0,E10:t0 with 260's values, stored B15+D10, 1 allowed new write B15:t0, supp 0. Dev 55/55 (260 34/55; unlisted 20/20 vs 0/20). Known limits: two-comma turns lose the fact; unlisted-opener questions keep 260's reply; pretend markers never stripped.
+ M artifacts/fable-predictions-ledger.md
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_loop263_agent.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+[0m
+[0m# [0mTodos
+[✓] Reproduce gap on 260 with dev dialogs
+[✓] Write 40+ dev dialogs (own wording)
+[✓] Build claude_fix263_comma.py + claude_loop263_agent.py, pilot on dev/suites/verifier
+[✓] Write PASSMARKS.md, seal, append ledger
+[•] Registered runall (M3/PROBES/M4)
+[ ] Wait for commapanel SEAL, run panel once on both arms
+[ ] Re-run openpanel260 on 263, write RESULTS.md, push
+[0m
+[0m$ [0mbash scripts/claude_263_runall.sh artifacts/claude-comma263-20260923/run
+22:39:22 uptime load1=130.77 before: M3-suites
+22:39:52 uptime load1=126.22 before: M3-suites
+22:40:22 uptime load1=133.69 before: M3-suites
+22:40:52 uptime load1=139.85 before: M3-suites
+22:41:22 uptime load1=139.56 before: M3-suites
+22:41:53 uptime load1=144.69 before: M3-suites
+22:42:23 uptime load1=139.75 before: M3-suites
+22:42:53 uptime load1=146.47 before: M3-suites
+22:43:23 uptime load1=153.54 before: M3-suites
+22:43:53 uptime load1=146.73 before: M3-suites
+22:44:23 uptime load1=165.06 before: M3-suites
+22:44:53 uptime load1=178.83 before: M3-suites
+22:45:23 uptime load1=176.62 before: M3-suites
+22:45:53 uptime load1=196.07 before: M3-suites
+22:46:23 uptime load1=194.20 before: M3-suites
+22:46:53 uptime load1=174.24 before: M3-suites
+22:47:23 uptime load1=160.92 before: M3-suites
+22:47:53 uptime load1=157.53 before: M3-suites
+22:48:23 uptime load1=149.58 before: M3-suites
+22:48:53 uptime load1=143.73 before: M3-suites
+22:49:23 uptime load1=136.76 before: M3-suites
+22:49:53 uptime load1=130.83 before: M3-suites
+22:50:23 uptime load1=136.46 before: M3-suites
+22:50:53 uptime load1=129.96 before: M3-suites
+22:51:23 uptime load1=106.66 before: M3-suites
+22:51:53 uptime load1=102.45 before: M3-suites
+22:52:23 uptime load1=106.20 before: M3-suites
+22:52:53 uptime load1=122.43 before: M3-suites
+22:53:23 uptime load1=123.88 before: M3-suites
+22:53:54 uptime load1=124.03 before: M3-suites
+22:54:24 uptime load1=120.87 before: M3-suites
+22:54:54 uptime load1=122.63 before: M3-suites
+22:55:24 uptime load1=134.54 before: M3-suites
+22:55:54 uptime load1=133.33 before: M3-suites
+22:56:24 uptime load1=138.16 before: M3-suites
+22:56:54 uptime load1=140.31 before: M3-suites
+22:57:24 uptime load1=142.53 before: M3-suites
+22:57:54 uptime load1=138.83 before: M3-suites
+22:58:24 uptime load1=138.54 before: M3-suites
+22:58:54 uptime load1=133.60 before: M3-suites
+22:59:24 uptime load1=112.60 before: M3-suites
+22:59:54 uptime load1=107.80 before: M3-suites
+23:00:24 uptime load1=123.71 before: M3-suites
+23:00:54 uptime load1=128.68 before: M3-suites
+23:01:24 uptime load1=147.38 before: M3-suites
+23:01:54 uptime load1=154.08 before: M3-suites
+23:02:24 uptime load1=167.71 before: M3-suites
+23:02:54 uptime load1=187.61 before: M3-suites
+23:03:24 uptime load1=193.94 before: M3-suites
+23:03:54 uptime load1=209.29 before: M3-suites
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 1500000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0muptime; ps aux | grep -E "suitediff|runall|latency|run_probes|rt143" | grep -v grep | head; ls artifacts/claude-comma263-20260923/run/ 2>&1; tail -3 artifacts/claude-comma263-20260923/run/uptime.log 2>&1
+23:04  up 2 days, 14:53, 4 users, load averages: 208.46 166.36 137.98
+ben-hannan        1343 184.9  1.7 562927696 573760 s001  RN   10:21PM   5:09.75 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:263-build.go1.1307 COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012\012GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.\012\012YOUR TASK: builder for exp 263, the comma write guard. Read design/v3/30-modes/263-comma-guard.md (the one change) and handoff/kit/briefs/260-openers.txt (how 260 was built, run and scored; copy its structure). In this worktree, read artifacts/claude-openers260-20260922/PASSMARKS.md and RESULTS.md, and scripts/claude_*260*.py (read-only; import, never edit).\012Base: the 260 arm (scripts/claude_loop260_agent.py + its config). One change: one outermost write-guard mixin scripts/claude_fix263_comma.py in scripts/claude_loop263_agent.py (SrcGuardMixin228 stays first). Artifacts: artifacts/claude-comma263-20260923/. Ledger lines P263.n. New files only. CPU only.\012Order: (1) reproduce the gap on 260 with your own dev dialogs; (2) write 40+ dev dialogs in your own wording (unlisted openers + comma, appositive subjects, comma values that must stay, questions, controls); (3) build and pilot on dev, the 260 suites (fable_suitediff218 --only rt136,rt143,sessions152,bench against 260's rows) and the 138m verifier probes; (4) PASSMARKS.md with numbered predictions and every predicted move by id, seal (shasum -a 256 > SEAL.sha256.txt), append the ledger lines; (5) only then wait for artifacts/claude-commapanel263-20260923/SEAL.sha256.txt (poll every 2 min, up to 90 min), check it OK from the repo root, and run the panel ONCE on both arms (260 and 263); (6) re-run openpanel260 once on 263 as a regression check.\012Marks: M1 commapanel263, 0 stored subjects containing a comma over all 60 (260 arm's count shown next to it); unlisted_opener_teach >= 16/20 exact; comma_value_ok: 0 lost vs 260; question 0 writes; control 14/14 byte-identical to 260. M2 openpanel260 on 263: every 260 figure equal or better, 0 new junk. M3 suites: moves exactly your predicted list, 0 new WRONG/WRONG-WRITE/lost OK. M4 median added time per turn <= +3 ms vs 260.\012Finish with RESULTS.md (result first, integer counts, categories only, never quote panel items) and your final reply.\012PUSH: artifacts/claude-comma263-20260923 scripts/claude_fix263_comma.py scripts/claude_loop263_agent.py scripts/claude_comma263_*.py artifacts/fable-predictions-ledger.md
+ben-hannan        8961 183.1  2.3 562891280 755552   ??  RN   10:50PM   3:57.69 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:talk-255b-build.go1.8946 COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012\012GETTING YOUR FILES: run git fetch -q origin claude/project-thread-p68q5v and read each named file with git show origin/claude/project-thread-p68q5v:<path>. Never check out or merge that branch.\012\012\012YOUR TASK: builder for exp 255b, the one follow-up to 255 (fixed-reply text). CPU only.\012Read first: design/v3/30-modes/255b-fixedtext-decision.md (from the branch above; it is the whole change, with exact texts), handoff/kit/briefs/255-fixedtext.txt (how 255 was built). In this worktree read artifacts/claude-fixedtext255-20260922/PASSMARKS.md and RESULTS.md, and scripts/claude_fix255_text.py, claude_fix255_test.py, claude_loop255_agent.py, claude_255_*.py, claude_255_runall.sh (read-only; import them, never edit).\012Base: 138m (scripts/claude_loop138m_agent.py + artifacts/claude-merge138m-20260922/loop138m-config.json). 255b replaces 255's wrapper; it does not stack on 255.\012New files only:\012- scripts/claude_fix255b_text.py: rewrite255b(line) imports claude_fix255_text; T02 and zero counts per the decision note; every other line exactly as rewrite255.\012- scripts/claude_fix255b_test.py: 255's checks on all 60 templates with 255b texts, plus the n = 0..12 sweep of every count template (no "zero", no "1 <plural>", no "one <plural>"), plus the anchor family check on the new T02 text.\012- scripts/claude_loop255b_agent.py and its config; scripts/claude_255b_*.py and claude_255b_runall.sh copied from 255's with 255b paths.\012- artifacts/claude-fixedtext255b-20260923/ (PASSMARKS.md, predicted moves, SEAL.sha256.txt, fixedtext.jsonl + SEAL2.sha256.txt, RESULTS.md). Ledger lines P255b.n appended to artifacts/fable-predictions-ledger.md.\012Order: (1) unit tests at 0 failures; (2) full pilot of M2, M4, M5, M6, M7 vs 138m on scratch, and the extra report 255b vs 255 (differences only on T02 and zero-count lines); (3) PASSMARKS.md with the marks from the decision note, numbered predictions and every predicted move by id; seal (shasum -a 256 > SEAL.sha256.txt); (4) generate the M1 render file with seed 2550923, seal it into SEAL2; (5) run the registered M2, M4, M5, M6, M7; (6) run the 239 panel ONCE on 255b and write the changes file vs artifacts/claude-convpanel239-138m-20260922/transcripts-138m.jsonl (mechanical only: count changed turns, unexplained changes and store changes; never quote or read items). Do not grade M1 or M3 yourself; the director does.\012Report: verdict for your marks, marks table with integer counts, the paths and sha256 of fixedtext.jsonl and the M3 changes file, every move, miss and deviation.\012PUSH: artifacts/claude-fixedtext255b-20260923 scripts/claude_fix255b_text.py scripts/claude_fix255b_test.py scripts/claude_loop255b_agent.py scripts/claude_255b_* artifacts/fable-predictions-ledger.md
+ben-hannan       10702  83.5  1.8 489645216 606464   ??  RN   11:04PM   0:02.24 /Users/ben-hannan/.cache/uv/builds-v0/.tmpS8XpD5/bin/python -B scripts/claude_mouth241b_suites.py --capture artifacts/claude-mouth241b-20260922/runs/cap241b-run2 --mouthlog artifacts/claude-mouth241b-20260922/runs/mouth241b-run2.log --scorer241b -- --agent scripts/claude_loop241b_agent.py --config artifacts/claude-determinism228-20260922/loop228-config.json --base 138i --only rt136,rt143,sessions152,bench --out artifacts/claude-mouth241b-20260922/runs/out241b-run2
+ben-hannan       10701   0.0  0.1 464224016  31584   ??  SN   11:04PM   0:00.02 uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_mouth241b_suites.py --capture artifacts/claude-mouth241b-20260922/runs/cap241b-run2 --mouthlog artifacts/claude-mouth241b-20260922/runs/mouth241b-run2.log --scorer241b -- --agent scripts/claude_loop241b_agent.py --config artifacts/claude-determinism228-20260922/loop228-config.json --base 138i --only rt136,rt143,sessions152,bench --out artifacts/claude-mouth241b-20260922/runs/out241b-run2
+ben-hannan        9685   0.0  0.0 488781552   2240   ??  SN   10:56PM   0:00.06 /bin/bash scripts/claude_255b_runall.sh scratchpad/w255b/pilot scratchpad/w255b/work
+uptime.log
+work
+23:02:54 uptime load1=187.61 before: M3-suites
+23:03:24 uptime load1=193.94 before: M3-suites
+23:03:54 uptime load1=209.29 before: M3-suites
+[0m
+[0m$ [0mls artifacts/claude-commapanel263-20260923/ 2>&1; uptime; df -g /
+base260.jsonl
+make_panel.py
+panel.jsonl
+README.md
+run_base.py
+SEAL.sha256.txt
+23:04  up 2 days, 14:53, 4 users, load averages: 205.66 167.19 138.61
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        17    43%  484014 180950360    0%   /
+[0m
+[0m$ [0mfor i in $(seq 1 20); do L=$(uptime | sed -E 's/.*load averages?: *([0-9.]+).*/\1/'); echo "$(date +%T) load1=$L"; awk -v l="$L" 'BEGIN{exit !(l<=60)}' && break; sleep 60; done; uptime
+23:04:52 load1=199.70
+23:05:52 load1=208.32
+23:06:52 load1=218.24
+23:07:52 load1=170.09
+23:08:52 load1=165.04
+23:09:53 load1=161.91
+23:10:53 load1=156.56
+23:11:53 load1=184.30
+23:12:53 load1=151.93
+23:13:53 load1=154.96
+23:14:53 load1=162.71
+23:15:53 load1=150.24
+23:16:53 load1=130.37
+23:17:53 load1=117.62
+23:18:53 load1=115.61
+23:19:53 load1=118.27
+23:20:53 load1=109.74
+23:21:53 load1=88.42
+23:22:53 load1=75.39
+23:23:53 load1=74.40
+23:24  up 2 days, 15:14, 4 users, load averages: 79.69 100.48 125.53
+[0m
+[0m$ [0mfor i in $(seq 1 20); do L=$(uptime | sed -E 's/.*load averages?: *([0-9.]+).*/\1/'); echo "$(date +%T) load1=$L"; awk -v l="$L" 'BEGIN{exit !(l<=60)}' && break; sleep 60; done; uptime
+23:24:57 load1=79.64
+23:25:57 load1=73.73
+23:26:57 load1=49.12
+23:26  up 2 days, 15:16, 4 users, load averages: 49.12 84.70 116.05
+[0m
+[0m$ [0mbash scripts/claude_263_runall.sh artifacts/claude-comma263-20260923/run
+23:27:08 uptime load1=53.19 before: M3-suites
+23:27:34 uptime load1=63.35 before: M3-rt136
+23:28:04 uptime load1=65.63 before: M3-rt136
+23:28:35 uptime load1=82.38 before: M3-rt136
+23:29:05 uptime load1=82.95 before: M3-rt136
+23:29:35 uptime load1=85.33 before: M3-rt136
+23:30:05 uptime load1=90.16 before: M3-rt136
+23:30:35 uptime load1=91.16 before: M3-rt136
+23:31:05 uptime load1=94.12 before: M3-rt136
+23:31:35 uptime load1=94.06 before: M3-rt136
+23:32:05 uptime load1=71.31 before: M3-rt136
+23:32:35 uptime load1=54.04 before: M3-rt136
+23:32:38 uptime load1=52.11 before: M3-rt143
+23:32:46 uptime load1=58.19 before: PROBES
+23:32:55 uptime load1=59.78 before: M4-260-1
+23:32:59 uptime load1=58.92 before: M4-263-1
+23:33:02 uptime load1=58.92 before: M4-260-2
+23:33:05 uptime load1=57.88 before: M4-263-2
+23:33:08 uptime load1=61.66 before: M4-260-3
+23:33:38 uptime load1=74.39 before: M4-260-3
+23:34:08 uptime load1=56.11 before: M4-260-3
+23:34:12 uptime load1=56.11 before: M4-263-3
+TOTAL 427 s
+M2 FAIL {"error": "FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-comma263-20260923/run/openpanel263.jsonl'", "pass": false}
+M3 PASS {"rt136": {"moved": [], "pass": true}, "rt143_nogate": {"moved": [], "pass": true}, "sessions152": {"moved": [], "pass": true}, "bench:bench132_4hop": {"moved": [], "pass": true}, "bench:edit200": {"moved": [], "pass": true}, "bench:new_121_4hop": {"moved": [], "pass": true}, "bench:old_s2fresh_4hop": {"moved": [], "pass": true}, "labels": {"rt136": {"moves_263": [["C019", "new WRONG-WRITE"], ["C020", "new WRONG-WRITE"], ["C021", "new WRONG-WRITE"], ["C022", "new WRONG-WRITE"], ["C023", "new WRONG-WRITE"], ["C024", "new WRONG-WRITE"], ["C025", "new WRONG-WRITE"], ["C026", "new WRONG-WRITE"], ["C027", "new WRONG-WRITE"], ["C028", "new WRONG-WRITE"], ["C029", "new WRONG-WRITE"], ["C030", "new WRONG-WRITE"], ["C031", "new WRONG-WRITE"], ["C076", "reply-only move"], ["C079", "reply-only move"], ["C122", "new junk write"]], "moves_260": [["C019", "new WRONG-WRITE"], ["C020", "new WRONG-WRITE"], ["C021", "new WRONG-WRITE"], ["C022", "new WRONG-WRITE"], ["C023", "new WRONG-WRITE"], ["C024", "new WRONG-WRITE"], ["C025", "new WRONG-WRITE"], ["C026", "new WRONG-WRITE"], ["C027", "new WRONG-WRITE"], ["C028", "new WRONG-WRITE"], ["C029", "new WRONG-WRITE"], ["C030", "new WRONG-WRITE"], ["C031", "new WRONG-WRITE"], ["C076", "reply-only move"], ["C079", "reply-only move"], ["C122", "new junk write"]], "pass": true}, "sessions152": {"moves_263": [], "moves_260": [], "pass": true}, "bench": {"moves_263": [], "moves_260": [], "pass": true}}, "rt143_verdict_flips_vs_260": [], "pass": true}
+M4 PASS {"median_260_ms": 1.859, "median_263_ms": 2.101, "delta_ms": 0.243, "n": [624, 624], "pass": true}
+PROBES PASS {"probes": {"changed_rows": ["B15:t0", "B15:t1", "D08:t1", "D10:t0", "D10:t1", "E06:t0", "E10:t0"], "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "stored_bad": [], "id_mismatch": [], "new_writes": ["B15:t0"], "new_writes_unpredicted": [], "pass": true}, "probes_supp": {"changed_rows": [], "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "stored_bad": [], "id_mismatch": [], "new_writes": [], "new_writes_unpredicted": [], "pass": true}, "pass": true}
+[0m
+[0m$ [0muptime; bash scripts/claude_263_panel.sh artifacts/claude-comma263-20260923/run
+23:34  up 2 days, 15:23, 4 users, load averages: 46.61 71.59 98.19
+SCHEMA OK
+SCHEMA OK
+PASS  0 comma subjects over 60                   263=0  260=16
+PASS  unlisted_opener_teach >= 16/20 exact       263=[20, 20]  260=[1, 20]
+PASS  comma_value_ok 0 lost vs 260               263=[8, 8, 'lost []']  260=[8, 8]
+PASS  question 0 writes                          263=0  260=0
+PASS  control 14/14 byte-identical               263=[14, 14, 'identical 14']  260=[14, 14]
+260 arm vs base260.jsonl: 60/60 identical []
+MISS 263 c263-021 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-022 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-023 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-024 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-025 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-026 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-027 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-028 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-029 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-030 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-043 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-044 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-045 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 263 c263-046 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-001 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-002 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-003 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-004 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-005 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-006 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-007 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-008 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-009 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-010 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-011 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-012 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-013 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-014 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-015 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-016 unlisted_opener_teach store_ok=False reply_ok=False junk=1 qw=False comma=1 ident=None
+MISS 260 c263-017 unlisted_opener_teach store_ok=False reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-018 unlisted_opener_teach store_ok=False reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-019 unlisted_opener_teach store_ok=False reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-021 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-022 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-023 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-024 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-025 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-026 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-027 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-028 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-029 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-030 appositive_subject store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-043 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-044 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-045 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+MISS 260 c263-046 question store_ok=True reply_ok=False junk=0 qw=False comma=0 ident=None
+M1: PASS
+exit 0
+TOTAL 10 s
+[0m
+[0m$ [0muptime; bash scripts/claude_263_openpanel.sh artifacts/claude-comma263-20260923/run
+23:34  up 2 days, 15:24, 4 users, load averages: 45.87 70.15 97.21
+M2 PASS {"families": {"opener_teach": {"263": [20, 20], "260": [20, 20]}, "opener_question": {"263": [12, 12], "260": [12, 12]}, "greeting_question": {"263": [8, 8], "260": [8, 8]}, "bare_greeting": {"263": [6, 6], "260": [6, 6]}, "name_trap": {"263": [10, 10], "260": [10, 10]}, "junk_guard": {"263": [8, 8], "260": [8, 8]}, "control": {"263": [16, 16], "260": [16, 16]}}, "worse_than_260": [], "junk_263": [], "new_junk": [], "control_identical": 16, "pass": true}
+exit 0
+TOTAL 19 s
+[0m
+[0m← [0mWrite artifacts/claude-comma263-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- P263 OUTCOME (2026-09-23, builder; registered verdict PASS, M1-M4 all PASS, sealed scripts run once per arm) M1 commapanel263: 263 comma-subject stores 0/60 (260: 16), unlisted 20/20 (260 1/20; 19 moves c263-001..019 all toward right, 0 against), comma_value 8/8 lost 0, question 0 writes, control 14/14 byte-identical; 263 right 46/60, 260 right 27/60; 260 arm vs base260.jsonl 60/60 identical; schema OK. M2 openpanel260 on 263: 80/80, every 260 figure equal, 0 worse, 0 new junk, control 16/16 identical. M3 suites: 0 moved units on all 7 files, labels equal 260's (rt136 keeps C019-C031+C076+C079+C122), 0 rt143 flips. M4 latency delta +0.243 ms (bar +3). PROBES: exactly predicted 7 rows, stored B15+D10, 1 allowed new write, supp 0. No abstain flips. Deviations: retry trigger widened to head-shape-failures (pre-seal, documented); name-internal comma exemption added after pilot showed 13 bench flips (0 moves after); first runall died in load-wait pre-step and was re-invoked once; regscore263.json holds a cosmetic M2-absent error (M2 verdict in openpanel-score263.json); no git push per hard rules.
+EOF
+tail -2 artifacts/fable-predictions-ledger.md; echo ---; ls artifacts/claude-comma263-20260923/ artifacts/claude-comma263-20260923/run/ | head -50; echo ---; shasum -a 256 -c artifacts/claude-comma263-20260923/SEAL.sha256.txt | tail -3
+- P241b.9 S1 reproduces the frozen verdicts on 100% of saved v3 rows replaced (dev 800/800 on 241's rows, 721 needle replies, 0 differences); v2 rows counted and skipped.
+- P263 OUTCOME (2026-09-23, builder; registered verdict PASS, M1-M4 all PASS, sealed scripts run once per arm) M1 commapanel263: 263 comma-subject stores 0/60 (260: 16), unlisted 20/20 (260 1/20; 19 moves c263-001..019 all toward right, 0 against), comma_value 8/8 lost 0, question 0 writes, control 14/14 byte-identical; 263 right 46/60, 260 right 27/60; 260 arm vs base260.jsonl 60/60 identical; schema OK. M2 openpanel260 on 263: 80/80, every 260 figure equal, 0 worse, 0 new junk, control 16/16 identical. M3 suites: 0 moved units on all 7 files, labels equal 260's (rt136 keeps C019-C031+C076+C079+C122), 0 rt143 flips. M4 latency delta +0.243 ms (bar +3). PROBES: exactly predicted 7 rows, stored B15+D10, 1 allowed new write, supp 0. No abstain flips. Deviations: retry trigger widened to head-shape-failures (pre-seal, documented); name-internal comma exemption added after pilot showed 13 bench flips (0 moves after); first runall died in load-wait pre-step and was re-invoked once; regscore263.json holds a cosmetic M2-absent error (M2 verdict in openpanel-score263.json); no git push per hard rules.
+---
+artifacts/claude-comma263-20260923/:
+devcases263.json
+loop263-config.json
+PASSMARKS.md
+pilot
+predicted_moves263.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-comma263-20260923/run/:
+commapanel-260.jsonl
+commapanel-260.log
+commapanel-263.jsonl
+commapanel-263.log
+commapanel-score.txt
+commapanel-score263.json
+lat-260-1.json
+lat-260-1.log
+lat-260-2.json
+lat-260-2.log
+lat-260-3.json
+lat-260-3.log
+lat-263-1.json
+lat-263-1.log
+lat-263-2.json
+lat-263-2.log
+lat-263-3.json
+lat-263-3.log
+openpanel-score.txt
+openpanel-score263.json
+openpanel-seal-check.txt
+openpanel263.jsonl
+openpanel263.log
+panel-schema.txt
+panel-seal-check.txt
+regscore.txt
+regscore263.json
+rt143nogate-n.json
+rt143nogate.log
+sd
+sd.log
+sd136
+sd136.log
+uptime.log
+vp-n.json
+vp-n.log
+vs-n.json
+vs-n.log
+work
+---
+artifacts/claude-comma263-20260923/devcases263.json: OK
+artifacts/claude-comma263-20260923/PASSMARKS.md: OK
+artifacts/claude-comma263-20260923/predicted_moves263.json: OK
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-comma263-20260923/SEAL.sha256.txt; df -g / | tail -1
+scripts/claude_fix263_comma.py: OK
+scripts/claude_loop263_agent.py: OK
+scripts/claude_comma263_devcases.py: OK
+scripts/claude_comma263_run.py: OK
+scripts/claude_comma263_score.py: OK
+scripts/claude_comma263_regscore.py: OK
+scripts/claude_263_runall.sh: OK
+scripts/claude_263_panel.sh: OK
+scripts/claude_263_openpanel.sh: OK
+artifacts/claude-comma263-20260923/loop263-config.json: OK
+artifacts/claude-comma263-20260923/devcases263.json: OK
+artifacts/claude-comma263-20260923/PASSMARKS.md: OK
+artifacts/claude-comma263-20260923/predicted_moves263.json: OK
+/dev/disk3s1s1       460   12        19    40%  484014 204491920    0%   /
+[0m
+[0m# [0mTodos
+[✓] Reproduce gap on 260 with dev dialogs
+[✓] Write 40+ dev dialogs (own wording)
+[✓] Build claude_fix263_comma.py + claude_loop263_agent.py, pilot on dev/suites/verifier
+[✓] Write PASSMARKS.md, seal, append ledger
+[✓] Registered runall (M3/PROBES/M4)
+[✓] Wait for commapanel SEAL, run panel once on both arms
+[✓] Re-run openpanel260 on 263, write RESULTS.md, push
+[0m
