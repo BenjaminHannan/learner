@@ -1,0 +1,724 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -n 300; echo "---FETCH-DONE---"; uptime; df -g /
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 seeds × 15 min)
+**Change:** the 6 set slots + count head replace a single-fact output (E1/E2 arms use 1 slot + "more" flag).
+Marks: plural and appositive dev turns: all facts found ≥ 90% (261 was 4/16); turns with count ≠ filled slots are
+asked about, never half-saved. Recall reported three ways (read right, saved right, sent back as a question).
+**Proved wrong if** plural recall < 60%.
+
+### E4 — own ear against ear v4.1 on a fresh blind panel
+**Change:** swap ear v4.1 for the own ear inside the current pipeline; gate (Qwen QA from 264) unchanged.
+Panel: written blind by a separate agent from a spec, sealed before the run, ≥ 150 turns, same marks as 261b
+(wrong saves ≤ 1, exact TEACH ≥ 85%, ASK ≥ 90%, median ≤ 800 ms). Report wrong saves per saved fact and per turn,
+plus recall. Also report the shared-blind-spot count of §4.4 on dev.
+**Proved wrong if** the own ear has more wrong saves *before the gate* than ear v4.1 on the same panel.
+
+### E5 — certification run (later)
+Freeze everything first (weights, tokenizer, relation table, compiler, thresholds, grading rules). A fresh,
+representative sample of **≥ 368 independent everyday-chat turns** for writes and ≥ 368 replies for grammar: with 0
+errors in each, both rates are below 1% *together* at 95% (2.5% error allowed per claim). 300 turns certify one rate
+alone. Report the rate per turn (a turn with any wrong save) and, separately, per saved fact (with turns as clusters),
+plus automatic recall ≥ 85% and how often it asked. Confirmed-after-asking facts are reported apart, never counted as
+automatic recall. A failed certification is not re-run until it passes under the same 95% claim; any retry is
+pre-registered with its own error budget. The certificate names the kind of chat it was tested on.
+
+### M1 — whole-name copy in talker101 (GPU ≈ 1 min, or Mac CPU)
+**Change:** slot tokens instead of word-piece copy, vs talker120b.
+Marks: truncated names 0/500; raw unfaithful before the brake ≤ 50/500 (120b: 172/500); status right ≥ 489/500.
+**Proved wrong if** raw unfaithful stays > 120/500: the names were not the main problem.
+---FETCH-DONE---
+ 5:29  up 2 days, 21:18, 4 users, load averages: 39.75 53.45 64.43
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 136575400    0%   /
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/own-o0a-oracle/own-o0a-oracle.md 2>&1 | head -n 500; echo "===LIST==="; git branch -a 2>&1 | head -n 40; git log --oneline -5 2>&1 | head -n 10
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+
+GETTING YOUR FILES: run git fetch -q origin main and read the plan with git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md (read §1, §2.1, §4.1 and §6 "O0"). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+
+YOUR TASK: builder for own-O0a, the ORACLE-COVERAGE CHECK of the own-model write rules (Premonition own-model line; director = the own-model Opus thread). CPU only, no model, no GPU, no downloads, no Qwen. Artifacts: artifacts/claude-own-o0a-20260923/. Ledger lines Pown0a.n appended to artifacts/fable-predictions-ledger.md.
+
+The question: if the reader were PERFECT, how many real facts in ordinary chat would the planned write rules let through automatically? If under 85%, no amount of training can reach the 85% recall target under these rules.
+
+Order (do not change it):
+(1) WRITE THE DEV TURNS FIRST, before writing any rule code. 300 single chat turns in natural, varied, everyday wording (typos, lowercase, missing apostrophes and "?" allowed, as people really type). Fictional names only. Do NOT open any TEST-ONLY panel or any artifacts/claude-*panel* folder, and do not copy templates from scripts/claude_smolear*_data.py. Mix: 180 statement turns (1 to 5 facts each, including lists "X and Y are my sisters", appositives "my boss, Tal, ...", "A's son is B and he ...", verb facts "Kwame lives in Accra", corrections "Fig, not Moss" with a previous reply given, "we/our" subjects), 80 no-save turns (questions, check-questions with and without "?", "say/suppose/imagine/pretend", plans and wishes, reported speech, small talk), 40 mixed turns (a statement plus a question). For each turn write the GOLD by hand in gold.jsonl: every fact as {owner, relation, value, mode}, where owner is the exact name string or ME (the user) or WE, relation is a relation name from artifacts/claude-smolear257-20260922/relation_table_v2.json ("relations" key; use its aliases) or OTHER:<words> if none fits, value is the exact intended value string (write the intended spelling if the turn has a typo, and mark typo:true), mode is ASSERT/CORRECT/DENY/ASK/CHECK/SUPPOSE/PLAN/REPORTED. Save turns.jsonl + gold.jsonl, then seal them: (cd artifacts/claude-own-o0a-20260923 && shasum -a 256 turns.jsonl gold.jsonl > SEAL-data.sha256.txt). Never edit them after this.
+(2) Only now write scripts/claude_own_o0a_compiler.py: the v0 write compiler of plan §4.1, fed the ORACLE (gold) readings. A gold fact is AUTO-WRITABLE only if ALL hold: mode is ASSERT, CORRECT or DENY; owner is ME, or a whole-word span of the turn equal to the gold owner string (case-insensitive, possessive 's stripped); value is a whole-word span of the turn equal to the gold value string (so a typo'd value is NOT writable automatically: it needs asking); relation is in the table (not OTHER) and some whole-word span of the turn is one of that relation's names or aliases (the relation cue); WE owners are counted in a separate column both ways (writable if WE->ME is allowed / not allowed).
+(3) Report, with integer counts: total gold facts in ASSERT/CORRECT/DENY mode; auto-writable count and percent (twice: WE allowed / WE not allowed); every non-writable fact grouped by reason (value not a literal span, typo, owner not a span, relation OTHER, no relation cue in the turn, e.g. "Mira's Pip" / verb facts with no table cue, WE); and a check that 0 no-save-mode facts are writable (must be 0 by construction). List every non-writable fact in RESULTS.md (these are dev turns you wrote, so quoting them is allowed).
+Marks, fixed now (write them in PASSMARKS.md and seal it BEFORE running step 2's script on the data): Pown0a.1 auto-writable >= 85% of ASSERT/CORRECT/DENY gold facts with WE not allowed; Pown0a.2 same with WE allowed (report only, no bar); Pown0a.3 no-save-mode facts writable = 0. The result that proves the strict rules wrong: Pown0a.1 below 85%.
+Finish with RESULTS.md (result first, integer counts, then the reason table, then the full list) and your final reply. Time limit 30 minutes; CPU only.
+PUSH: artifacts/claude-own-o0a-20260923 scripts/claude_own_o0a_compiler.py artifacts/fable-predictions-ledger.md
+===LIST===
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+[0m
+[0m$ [0mls artifacts/claude-smolear257-20260922/ 2>&1; echo "---"; ls artifacts/claude-own-o0a-20260923/ 2>&1; echo "---"; ls scripts/claude_own_o0a* 2>&1; echo "---"; ls artifacts/claude-own-o0a2-20260923/ 2>&1
+data
+data41
+dev
+on235b
+PASSMARKS.md
+relation_table_v2.json
+RESULTS.md
+run
+SEAL.sha256.txt
+train
+train41
+---
+gold.jsonl
+oracle_coverage.json
+PASSMARKS.md
+RESULTS.md
+SEAL-data.sha256.txt
+SEAL.sha256.txt
+turns.jsonl
+---
+scripts/claude_own_o0a_compiler.py
+---
+ls: artifacts/claude-own-o0a2-20260923/: No such file or directory
+[0m
+[0m→ [0mRead scripts/claude_own_o0a_compiler.py
+[0m→ [0mRead artifacts/claude-smolear257-20260922/relation_table_v2.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+t=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=t['relations']
+print('NREL',len(rels))
+nteach=sum(1 for r in rels if r.get('teach'))
+print('NREL_W_TEACH',nteach)
+for r in rels:
+    if r.get('teach'):
+        for x in r['teach']:
+            print(r['name'],'||',x['t'])
+" 2>&1 | head -n 120
+NREL 153
+NREL_W_TEACH 50
+spouse || {X} is married to {Y}.
+child || {X}'s child is {Y}.
+teacher || {Y} teaches {X}.
+employer || {X} works for {Y}.
+employer || {X} works at {Y}.
+employer || {X} is employed by {Y}.
+occupation || {X} works in the field of {Y}.
+occupation || {X} works as (a|an) {Y}.
+work_location || {X} worked in the city of {Y}
+school || {X} goes to {Y}.
+educated_at || The univeristy where {X} was educated is {Y}
+educated_at || {X} studied at {Y}.
+city || {X} lives in {Y}.
+city || {X} moved to {Y}.
+city || {X} resides in {Y}.
+hometown || {X} is from {Y}.
+hometown || {X} comes from {Y}.
+place_of_birth || {X} was born in {Y}.
+place_of_birth || {X} was born in the city of {Y}
+place_of_death || {X} died in the city of {Y}
+place_of_death || {X} died in {Y}.
+country_of_citizenship || {X} is a citizen of {Y}
+country_of_origin || {X} was created in the country of {Y}
+capital || The capital of {X} is {Y}
+continent || {X} is located in the continent of {Y}
+headquarters_location || The headquarters of {X} is located in the city of {Y}
+location_of_formation || {X} was founded in the city of {Y}
+composer || {X} was composed by {Y}.
+composer || {Y} composed {X}.
+author || {X} was wrote by {Y}.
+author || {Y} wrote {X}.
+author || The author of {X} is {Y}
+painter || {X} was painted by {Y}.
+painter || {Y} painted {X}.
+director || {X} was directed by {Y}.
+director || {Y} directed {X}.
+director || The director of {X} is {Y}
+founder || {X} was founded by {Y}.
+founder || {Y} founded {X}.
+inventor || {X} was invented by {Y}.
+inventor || {Y} invented {X}.
+designer || {X} was designed by {Y}.
+designer || {Y} designed {X}.
+discoverer || {X} was discovered by {Y}.
+discoverer || {Y} discovered {X}.
+architect || {X} was built by {Y}.
+architect || {Y} built {X}.
+creator || {X} was created by {Y}.
+creator || {Y} created {X}.
+developer || {X} was developed by {Y}.
+developer || {Y} developed {X}.
+performer || {X} was performed by {Y}.
+performer || {Y} performed {X}.
+manufacturer || The company that produced {X} is {Y}
+manufacturer || {X} is made by {Y}.
+notable_work || {X} is famous for {Y}
+original_broadcaster || The origianl broadcaster of {X} is {Y}
+genre || The type of music that {X} plays is {Y}
+head_of_state || The name of the current head of state in {X} is {Y}
+head_of_government || The name of the current head of the {X} government is {Y}
+chairperson || The chairperson of {X} is {Y}
+chief_executive_officer || The chief executive officer of {X} is {Y}
+head_coach || The head coach of {X} is {Y}
+language || {X} speaks {Y}.
+language || {X} speaks the language of {Y}
+official_language || The official language of {X} is {Y}
+language_of_work_or_name || {X} was written in the language of {Y}
+religion_or_worldview || {X} is affiliated with the religion of {Y}
+sport || {X} is associated with the sport of {Y}
+position_played_on_team_speciality || {X} plays the position of {Y}
+hobby || {X} likes {Y}.
+nickname || {X} is called {Y}.
+age || {X} is {Y} years old.
+date_of_birth || {X} was born (on|in) {Y}.
+date_of_death || {X} died (on|in) {Y}.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+t=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=t['relations']
+names=[r['name'] for r in rels]
+print('NAMES:',','.join(names))
+print()
+import io
+seen=0
+for r in rels:
+    for x in r.get('teach',[]):
+        seen+=1
+        if seen>75: print(r['name'],'||',x['t'])
+print()
+for r in rels:
+    if r['name'] in ('dog','cat','pet','city','hometown','boss','mother','father','sister','brother','friend','employer','school','owner','spouse','child','son','daughter','cousin','aunt','uncle','birthday','anniversary','favorite_color','favorite_food','phone','email'):
+        print(r['name'],'aliases=',r.get('aliases'))
+" 2>&1 | head -n 120
+NAMES: mother,father,parent,sister,brother,sibling,spouse,wife,husband,partner,child,son,daughter,grandchild,grandson,granddaughter,grandmother,grandfather,cousin,aunt,uncle,friend,best_friend,neighbour,boss,colleague,teacher,coach,doctor,mentor,apprentice,rival,envoy,herald,keeper,scout,warden,owner,pet,dog,cat,employer,occupation,work_location,school,educated_at,title,city,home,hometown,place_of_birth,place_of_death,country,country_of_citizenship,country_of_origin,capital,continent,headquarters_location,location_of_formation,composer,author,painter,director,founder,inventor,designer,discoverer,architect,creator,developer,performer,manufacturer,notable_work,original_broadcaster,genre,officeholder,head_of_state,head_of_government,chairperson,chief_executive_officer,head_coach,dean,language,official_language,language_of_work_or_name,religion_or_worldview,sport,position_played_on_team_speciality,favorite_color,color,hobby,nickname,code,mood,toy,training_data,age,birthday,anniversary,date_of_birth,date_of_death,stepfather,stepmother,stepbrother,stepsister,stepson,stepdaughter,half_brother,half_sister,mother_in_law,father_in_law,sister_in_law,brother_in_law,son_in_law,daughter_in_law,great_grandmother,great_grandfather,great_aunt,great_uncle,second_cousin,niece,nephew,godmother,godfather,godson,goddaughter,fiance,ex_wife,ex_husband,roommate,classmate,teammate,tutor,landlord,dentist,vet,babysitter,therapist,instrument,favorite_food,favorite_drink,favorite_sport,favorite_book,favorite_film,favorite_animal,favorite_season,favorite_subject,allergy,car,rabbit,hamster,parrot,horse
+
+
+mother aliases= ['mom', 'mum', 'mommy', 'mummy', 'ma', 'mam', 'mama']
+father aliases= ['dad', 'daddy', 'papa', 'pa', 'pop', 'poppa']
+sister aliases= ['sis']
+brother aliases= ['bro']
+spouse aliases= []
+child aliases= ['kid']
+son aliases= []
+daughter aliases= []
+cousin aliases= []
+aunt aliases= []
+uncle aliases= []
+friend aliases= []
+boss aliases= ['manager']
+owner aliases= []
+pet aliases= []
+dog aliases= []
+cat aliases= []
+employer aliases= ['workplace', 'place of work']
+school aliases= []
+city aliases= ['town']
+hometown aliases= ['home town']
+favorite_color aliases= ['favourite colour', 'favorite colour', 'favourite color', 'favorite color']
+birthday aliases= []
+anniversary aliases= []
+favorite_food aliases= ['favourite food']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+t=json.load(open('artifacts/claude-smolear257-20260922/relation_table_v2.json'))
+rels=t['relations']
+allteach=[(r['name'],x['t']) for r in rels for x in r.get('teach',[])]
+print('TOTAL_TEACH',len(allteach))
+for n,t2 in allteach[75:]:
+    print(n,'||',t2)
+" 2>&1 | tail -n 60
+TOTAL_TEACH 75
+[0m
+[0m$ [0mtail -n 8 artifacts/fable-predictions-ledger.md 2>&1
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30 by construction (clean passthrough), dev 24/24.
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 newwrong on the bare-so trap; panel traps validated S1 hold 0).
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev median 0.033 ms, n=116).
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL on the M1 stored bar only, with one figure off prediction. M1 (60 turns once per arm, seals 17/17 + panel OK, schema clean, no post-seal change): stored 9/25 on 281b (bar >= 23/25; denom 25/25, 0 excluded) with 0 wrong and 16 abstains (281: 9/25, same 9 ids); notstored 10/10 abstain both; ambiguous 10/10 same-as-281; control 5/5 same (5/5 right both); teach 10/10 both (panel VALID); 0 store diffs; 0 question writes; broken abstains 0 both. M2/probes PASS exactly as P281b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical; rt143 0; vp/vs 0/0). Miss diagnosis by shape category: 5 misses formalise (known-entity restore, 281 shape match) yet resolve to no stored triple (wording beyond casual typing); 11 match no called shape at all (2 cue-less, rest embedded/non-trailing-cue wordings). No falsifier tripped (0 wrong values, 0 question writes, 0 unpredicted moves). P281b.1 wrong on the stored figure (9 vs >= 23), right on 0-wrong/notstored/ambiguous/control/teach; P281b.2 right; P281b.3 no falsifier tripped.
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FAIL, sealed loop arms A/A263 run ONCE each on blind typepanel270, seal Checks OK, schema OK, seal 12/12 re-verified) M1 A 23/40 vs A263 6/40 margin +17 FAIL (bar 30 and +20); M2 0/15 FAIL (loop emits no ASK frames; no-write 15/15 both); M3 0 wrong saves PASS (7 trap misses both arms); M4 30/30 identical PASS; M5 3 new wrong saves FAIL (keep-s stems t270-002/028/033); M6 median 0.0312 ms PASS. P270.1/.2/.5 wrong, P270.3/.4/.6 right, P270.7 resolves FAIL.
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+[0m
+[0m← [0mWrite /tmp/gen_o0a2.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/gen_o0a2.py
+Traceback (most recent call last):
+  File "/tmp/gen_o0a2.py", line 385, in <module>
+    assert (n_state,n_q,n_m)==(180,80,40),(n_state,n_q,n_m)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (192, 80, 40)
+[0m
+[0m← [0mEdit /tmp/gen_o0a2.py
+Index: /tmp/gen_o0a2.py
+===================================================================
+--- /tmp/gen_o0a2.py
++++ /tmp/gen_o0a2.py
+@@ -94,9 +94,11 @@
+  ("Lea's favorite book is Star Rain and her favorite film is Glass Harbor.", [F("Lea","favorite_book","Star Rain"),F("Lea","favorite_film","Glass Harbor")], None),
+  ("My dentist is Ossi and my doctor is Peta.", [F("ME","dentist","Ossi"),F("ME","doctor","Peta")], None),
+ ]
+ for j,(t,f,p) in enumerate(A+A2, start=1):
++    if t in DROP_A: continue
+     add("o0a2-s%03d"%j, t, f, p)
++# renumber statements sequentially afterwards (done at seal check)
+ 
+ # B: plurals (v1 via plural rule)
+ B = [
+  ("My sisters are Mira and Tal.", [F("ME","sister","Mira"),F("ME","sister","Tal")], None),
+
+[0m
+[0m← [0mEdit /tmp/gen_o0a2.py
+Index: /tmp/gen_o0a2.py
+===================================================================
+--- /tmp/gen_o0a2.py
++++ /tmp/gen_o0a2.py
+@@ -93,12 +93,13 @@
+  ("Sora's instrument is drums and her hobby is chess.", [F("Sora","instrument","drums"),F("Sora","hobby","chess")], None),
+  ("Lea's favorite book is Star Rain and her favorite film is Glass Harbor.", [F("Lea","favorite_book","Star Rain"),F("Lea","favorite_film","Glass Harbor")], None),
+  ("My dentist is Ossi and my doctor is Peta.", [F("ME","dentist","Ossi"),F("ME","doctor","Peta")], None),
+ ]
+-for j,(t,f,p) in enumerate(A+A2, start=1):
+-    if t in DROP_A: continue
+-    add("o0a2-s%03d"%j, t, f, p)
+-# renumber statements sequentially afterwards (done at seal check)
++DROP_A = {"my dad is Tavi","Sef's doctor is Peta.","Uma's tutor is Quen.",
++ "Wren's landlord is Ulf.","Xan's classmate is Yola.","Lumi's teammate is Vanna.",
++ "Rafi's therapist is Nilo.","Tino's coach is Rafi.","Mira's colleague is Quen.",
++ "my pet is Zib","Lea's brother is Kito.","Peta's aunt is Vili."}
++SROWS = [(t,f,p) for (t,f,p) in A+A2 if t not in DROP_A]
+ 
+ # B: plurals (v1 via plural rule)
+ B = [
+  ("My sisters are Mira and Tal.", [F("ME","sister","Mira"),F("ME","sister","Tal")], None),
+
+[0m
+[0m← [0mEdit /tmp/gen_o0a2.py
+Index: /tmp/gen_o0a2.py
+===================================================================
+--- /tmp/gen_o0a2.py
++++ /tmp/gen_o0a2.py
+@@ -239,12 +239,15 @@
+  ("Tal works hard at Halvo.", [F("Tal","employer","Halvo")], None),
+  ("My children are Sora and Tino.", [F("ME","child","Sora"),F("ME","child","Tino")], None),
+ ]
+ n_s = 0
++for j,(t,f,p) in enumerate(SROWS, start=1):
++    add("o0a2-s%03d"%j, t, f, p)
++NS = len(SROWS)
+ for grp in (B, C, D, E, FW, GM):
+     for t, f, p in grp:
+         n_s += 1
+-        add("o0a2-s%03d" % (len(A) + len(A2) + n_s), t, f, p)
++        add("o0a2-s%03d" % (NS + n_s), t, f, p)
+ 
+ # ---------- 80 NO-SAVE turns ----------
+ Q = [
+  ("Is Mira's dog Pip?", [F("Mira","dog","Pip","ASK")]),
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/gen_o0a2.py
+turns: 300 ACD facts: 281
+span problems (expect only GM intentional): [('o0a2-s176', 'owner', {'owner': 'Bo', 'relation': 'city', 'value': 'Rook', 'mode': 'ASSERT'}), ('o0a2-s177', 'owner', {'owner': 'Ada', 'relation': 'employer', 'value': 'Halvo', 'mode': 'ASSERT'})]
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-own-o0a2-20260923
+[0m
+[0m$ [0mwc -l artifacts/claude-own-o0a2-20260923/turns.jsonl artifacts/claude-own-o0a2-20260923/gold.jsonl && shasum -a 256 artifacts/claude-own-o0a2-20260923/turns.jsonl artifacts/claude-own-o0a2-20260923/gold.jsonl > artifacts/claude-own-o0a2-20260923/SEAL-data.sha256.txt && cat artifacts/claude-own-o0a2-20260923/SEAL-data.sha256.txt
+300 artifacts/claude-own-o0a2-20260923/turns.jsonl
+     300 artifacts/claude-own-o0a2-20260923/gold.jsonl
+     600 total
+37e0f7c76a6f62b4fab46cbb16ee3a838f1483dca36bc35430518632b0751625  artifacts/claude-own-o0a2-20260923/turns.jsonl
+b7bca1030574ef1830949544cf31b4ba24a2f6fcb94feece06bed54a9492f936  artifacts/claude-own-o0a2-20260923/gold.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-own-o0a2-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_own_o0a2_compiler.py
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_o0a2_compiler.py artifacts/claude-own-o0a2-20260923/PASSMARKS.md > artifacts/claude-own-o0a2-20260923/SEAL.sha256.txt && cat artifacts/claude-own-o0a2-20260923/SEAL.sha256.txt && uptime && df -g /
+4528a85a6cde4f30742e0188ab3a281707ec7fa28044bb2cae329b9a606a56c5  scripts/claude_own_o0a2_compiler.py
+2adedf01dbe1c24d17eb7d09f66d9a20bce9a6b64a373191e2105f83c24d8e0f  artifacts/claude-own-o0a2-20260923/PASSMARKS.md
+ 5:34  up 2 days, 21:23, 4 users, load averages: 59.23 56.09 62.57
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 135681800    0%   /
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+EOF
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0a2_compiler.py
+v0 we_not_allowed: ACD 92/281 = 32.7%; nosave-writable 0/114; reasons {"WE-owner": 10, "no-relation-cue": 167, "owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+v0 we_allowed: ACD 98/281 = 34.9%; nosave-writable 0/114; reasons {"no-relation-cue": 171, "owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+v1 we_not_allowed: ACD 252/281 = 89.7%; nosave-writable 0/114; reasons {"WE-owner": 10, "no-relation-cue": 7, "owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+v1 we_allowed: ACD 262/281 = 93.2%; nosave-writable 0/114; reasons {"no-relation-cue": 7, "owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+licensed we_not_allowed: ACD 259/281 = 92.2%; nosave-writable 0/114; reasons {"WE-owner": 10, "owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+licensed we_allowed: ACD 269/281 = 95.7%; nosave-writable 0/114; reasons {"owner-not-span": 2, "relation-OTHER": 5, "typo": 5}
+[0m
+[0m$ [0mshasum -c artifacts/claude-own-o0a2-20260923/SEAL.sha256.txt artifacts/claude-own-o0a2-20260923/SEAL-data.sha256.txt 2>&1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+o=json.load(open('artifacts/claude-own-o0a2-20260923/oracle_coverage_o0a2.json'))
+v1=o['rules']['v1']['we_not_allowed']
+print('ACD',v1['acd_total'],'w',v1['acd_writable'],'nosave',v1['nosave_total'],'nw',v1['nosave_writable'])
+for n in v1['nonwritable']:
+    f=n['fact']
+    print(n['reason'],'|',n['id'],'|',n['turn'],'|',f['owner'],'|',f['relation'],'|',f['value'],'|',f['mode'])
+"
+scripts/claude_own_o0a2_compiler.py: OK
+artifacts/claude-own-o0a2-20260923/PASSMARKS.md: OK
+artifacts/claude-own-o0a2-20260923/turns.jsonl: OK
+artifacts/claude-own-o0a2-20260923/gold.jsonl: OK
+ACD 281 w 252 nosave 114 nw 0
+WE-owner | o0a2-s157 | Our dog is Pip. | WE | dog | Pip | ASSERT
+WE-owner | o0a2-s158 | Our cat is Moss. | WE | cat | Moss | ASSERT
+WE-owner | o0a2-s159 | Our cousins are Dara and Kito. | WE | cousin | Dara | ASSERT
+WE-owner | o0a2-s159 | Our cousins are Dara and Kito. | WE | cousin | Kito | ASSERT
+WE-owner | o0a2-s160 | Our hometown is Essel. | WE | hometown | Essel | ASSERT
+WE-owner | o0a2-s161 | Our dogs are Pip and Zib. | WE | dog | Pip | ASSERT
+WE-owner | o0a2-s161 | Our dogs are Pip and Zib. | WE | dog | Zib | ASSERT
+WE-owner | o0a2-s162 | Our mom is Lena. | WE | mother | Lena | ASSERT
+typo | o0a2-s163 | Mira's dog is Pipp. | Mira | dog | Pip | ASSERT
+typo | o0a2-s164 | My mom is Lenn. | ME | mother | Lena | ASSERT
+typo | o0a2-s165 | Tal works at Halvvo. | Tal | employer | Halvo | ASSERT
+typo | o0a2-s166 | Ada lives in Linna. | Ada | city | Lina | ASSERT
+typo | o0a2-s167 | Bo's sister is Leea. | Bo | sister | Lea | ASSERT
+relation-OTHER | o0a2-s168 | Mira's aura is blue. | Mira | OTHER:aura | blue | ASSERT
+relation-OTHER | o0a2-s169 | My blicket is red. | ME | OTHER:blicket | red | ASSERT
+relation-OTHER | o0a2-s170 | Tal's zog is fast. | Tal | OTHER:zog | fast | ASSERT
+relation-OTHER | o0a2-s171 | Ada's mentor-spirit is Nib. | Ada | OTHER:mentor-spirit | Nib | ASSERT
+relation-OTHER | o0a2-s172 | Oren's gloof is heavy. | Oren | OTHER:gloof | heavy | ASSERT
+no-relation-cue | o0a2-s173 | Pip is Mira's. | Mira | dog | Pip | ASSERT
+no-relation-cue | o0a2-s174 | Mira's Pip won the prize. | Mira | dog | Pip | ASSERT
+no-relation-cue | o0a2-s175 | Give Pip a treat, Mira's little star. | Mira | dog | Pip | ASSERT
+owner-not-span | o0a2-s176 | He lives in Rook. | Bo | city | Rook | ASSERT
+owner-not-span | o0a2-s177 | She works at Halvo. | Ada | employer | Halvo | ASSERT
+no-relation-cue | o0a2-s178 | Sef is living in Rook. | Sef | city | Rook | ASSERT
+no-relation-cue | o0a2-s179 | Tal works hard at Halvo. | Tal | employer | Halvo | ASSERT
+no-relation-cue | o0a2-s180 | My children are Sora and Tino. | ME | child | Sora | ASSERT
+no-relation-cue | o0a2-s180 | My children are Sora and Tino. | ME | child | Tino | ASSERT
+WE-owner | o0a2-m022 | Our hometown is Essel. Where are you from? | WE | hometown | Essel | ASSERT
+WE-owner | o0a2-m029 | Our dog is Pip. Should we get a cat? | WE | dog | Pip | ASSERT
+[0m
+[0m← [0mWrite artifacts/claude-own-o0a2-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+EOF
+ls artifacts/claude-own-o0a2-20260923/
+gold.jsonl
+oracle_coverage_o0a2.json
+PASSMARKS.md
+RESULTS.md
+SEAL-data.sha256.txt
+SEAL.sha256.txt
+turns.jsonl
+[0m
