@@ -7,7 +7,7 @@ HOW WE TEST NOW
 - Every change is one sealed experiment: code and pass marks are hashed before the run.
 - Test sets are "blind panels": ~150 turns written by a separate agent from a written spec (families such as plain statements, varied phrasing, corrections, turns that must save nothing, plural owners, appositives, plans and pretend turns). A panel is used once for a registered verdict and never trained or tuned on. Writing and grading a panel costs roughly half a day of agent time; gold labels come from the writer and are sometimes wrong.
 - Plain binomial maths: 0 wrong in 299 turns gives a 95% upper bound just under 1% (1 wrong -> 473, 2 -> 628, 3 -> 773 turns); 0 in 150 only bounds it at 1.98%.
-- Observed: fresh panels are harder than old ones. The same pipeline had 6 wrong saves on an older 150-turn panel and 9 on a fresher one, and a sister version had 4 and 12. Each new panel adds risk categories the old one lacked. So "the rate" depends on who writes the panel.
+- Observed: fresh panels are harder than old ones. The same pipeline had 6 wrong saves on an older 150-turn panel and 9 on a fresher one. Each new panel adds risk categories the old one lacked. So "the rate" depends on who writes the panel.
 - We run many experiments (dozens) against a sequence of panels and pick the version to ship from among them.
 - We have a strong local model that can act as an automatic grader of wrong saves, and a large supply of unlabeled synthetic chat, but the grader itself approved confident errors in the past.
 
