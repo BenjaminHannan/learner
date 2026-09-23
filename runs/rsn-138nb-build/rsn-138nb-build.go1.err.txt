@@ -1,0 +1,1841 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; pwd; git rev-parse --abbrev-ref HEAD; git status --short | head -n 50
+0:22  up 2 days, 16:12, 4 users, load averages: 56.34 54.43 59.11
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        18    41%  484014 194338480    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+?? .claude/
+?? data/models/
+?? data/open/
+?? notebook/
+?? scratchpad/
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head; git fetch -q origin builder-outbox 2>&1 | head; git branch -a | head -n 30; ls artifacts/ | head -n 50
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chainpanel231-20260922
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-diag243-20260922
+claude-direction251-20260922
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grades255-20260922
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/138nb-inverse-diagnosis.md; echo "=====138n-merge====="; git show origin/main:handoff/kit/briefs/138n-merge.txt
+# 138nb: why 138n "failed" on backwards questions, and the one follow-up
+
+Director (Opus, reasoning line), 2026-09-23 ~03:05 UTC. New file; nothing edited.
+
+## Result first
+
+138n's M7 FAIL on tablepanel221 (3 new wrong values) is **a scoring mix-up, not a model error**. The registered FAIL stays FAIL (rule), but the follow-up does not need to fix a wrong answer. It fixes the only real behaviour gap found: 4 backwards questions that 221 answered with the "(worked out backwards)" label are now answered by 138m's older reverse layer (190), which gives the right names but no label.
+
+## What I checked (no panel item text is quoted anywhere)
+
+1. **Seal.** tablepanel221 SEAL OK (2/2, from inside its folder, as 138n noted).
+2. **Reproduction.** I ran 138n on tablepanel221 in the cloud (CPU; the MiniLM self-router cannot be downloaded here, so it was stubbed to "decline"; this only touches the 5 `self` items). With the runner 138n's M7 driver used (`fable_fix221_panel.py` via `claude_138n_m7.py run221`) I get 76 right, 3 wrong, and the 3 wrong ids are exactly 138n's: p221-059#2, p221-066#2, p221-070#2.
+3. **What those 3 replies are.** With every name swapped for a placeholder: all 3 are two-subject items ("A's R is V. B's R is V." then a backwards question about V). 138n's reply names **both** A and B, with the "(worked out backwards)" label. That is the correct answer.
+4. **Why the scorer called them wrong.** The panel stores a two-answer gold as one string "A; B" (README: "Multi-answer golds are separated by '; ' (all must be given)"). The plain runner `fable_fix221_panel.py` does not split it, so it looks for the literal text "A; B" in the reply, does not find it, sees the value V in the reply, and flags "wrong value". 221's **registered** arm was scored with the field-map adapter `scripts/fable_fix221_panelmap.py` (sha 29c23973…, listed in 221's RESULTS deviations), which splits "; " and requires every part. 221's registered rows (`artifacts/claude-tableask221-20260922/p1panel/rows.jsonl`) carry the split gold (2 parts on all three items). So M7 compared 138n scored one way against 221 scored another way.
+5. **Same scorer on both arms.** I re-ran with `fable_fix221_panelmap.py` (the registered scorer), unchanged, on a fresh 221 arm and on 138n:
+   - fresh 221 arm: 66 right, 0 wrong, and it matches the registered rows on 91/91 items (driver fidelity);
+   - 138n: **79 right, 0 wrong**; new wrong vs registered: 0; right on registered → wrong on 138n: 0.
+   - All 3 "wrong" items are **right** on 138n under the registered scorer.
+6. **The right → miss items** (not a bar, but real):
+   - 4 `inverse` items (p221-060, 063, 064, 069): answered by stage `loop190-reverse` with the correct subject but **without** the "(worked out backwards)" label, which the panel rule requires. Shapes: "Whose R is V?", "Who lives in V?", "Who was born in V?".
+   - 4 `self` items (087, 089, 090, 091; 088 too in my run, from the router stub): the panel defines "right" for `self` as "equal to 138i's reply". 138m's identity sheet (227c) changed those replies on purpose, so these are misses by definition, not regressions.
+7. **Held-out check in my own wording** (340 dialogs I wrote, fictional names, 10 relations, 1 and 2 subjects, "my" subjects, distractor and chain setups): 138n gives 0 new wrong answers vs the 221 arm and 0 question writes. Every difference is the same collision: 190 answers E1/E3/E4 shapes ("Whose R is V?", "Who lives in V?", "Who was born in V?") first, correct names, no label. 7 wrong answers appear on **both** arms, only on my odd chain setups ("A's spouse is V. V's spouse is W." then "Whose spouse is V?" gives "V's spouse is W."); they are old base behaviour (stage `loop138-nhop`), not caused by the merge. Logged for later, not part of 138nb.
+
+## Cause, in one sentence
+
+221 was built on 138i, which did not have the 190 reverse layer. 190 came in with 138j, sits inside 138m's ears, and answers the E1/E3/E4 backwards shapes before 221/237's table stage sees them, with forward-style sentences and no "(worked out backwards)" label.
+
+## The one change for 138nb
+
+**138nb = 138n + one outermost reply-text rule:** when the answering stage is `loop190-reverse` and the reply names at least one subject, append " (worked out backwards)" to the reply, exactly as 221/237 do. Nothing else: no new shapes, no ownership change, no change to 190's "I don't know anyone whose R is V." or unknown-name replies, no writes.
+
+Why this option (director decision, logged; clearly better for the model):
+- Every backwards answer then says it was worked out backwards. Ben's design says inverses are computed at answer time, and an honest source label is part of that.
+- 190's wording ("Wren's mother is Talia.") stays; it is clearer than the table's "Talia is the mother of Wren."
+- It is the smallest change: only replies from one stage change, and only by an added label. Handing ownership to the table stage instead would move many more frozen-suite rows.
+
+Things the builder must predict by id (not bars in themselves): every frozen-suite row answered by `loop190-reverse` with a subject gains the label; 226's "Who told you that?" after such an answer may change its source line.
+
+## Harness fix (declared, not a model change)
+
+138nb's M7 must score tablepanel221 with the **registered** scorer `scripts/fable_fix221_panelmap.py` on both arms (checked against panelmap.sha256.txt), so both arms are scored the same way. 138n's own FAIL is not re-scored into a PASS; it stays on the record as FAIL, with this note as its diagnosis.
+
+## Blind test for 138nb
+
+tablepanel221 has now been used by 138n's M7 and by this diagnosis, so it is a regression check only. The PASS claim for 138nb rests on a **fresh blind panel, invpanel138nb** (written from a spec only, by a separate writer that never sees 138n's code or this note's item-level findings).
+=====138n-merge=====
+MERGE 138n BRIEF: the reading line. The director wrote this on 2026-09-22. OPUS-RULES.txt (same folder) applies in full.
+
+Goal: one agent that has everything 138m has, plus the reading pieces verified today, each doing on 138n what it did on its own agent, with every interaction predicted before the seal.
+
+Base: 138m = scripts/claude_loop138m_agent.py with artifacts/claude-merge138m-20260922/loop138m-config.json.
+- PASS, verifier CONFIRMED WITH CONCERNS.
+- Saved rows are in artifacts/claude-merge138m-20260922/run/.
+- Driver: scripts/claude_138m_runall.sh; scorers: scripts/claude_138m_l1.py and claude_138m_score.py.
+- Copy the pattern of 138m's PASSMARKS.md, RESULTS.md, predicted_moves138m.json and design/v3/30-modes/138m-merge-opus.md. Read them first.
+
+Pieces to add. Each piece's RESULTS.md, PASSMARKS.md and the director board (design/v3/30-modes/00-director-board.md) say what it does, its base and its verdict.
+- 221: relation-table questions (artifacts/claude-tableask221-20260922/)
+- 221b: stored-relation fallback (artifacts/claude-storedrel221b-20260922/)
+- 221c: question normalisation (artifacts/claude-qnorm221c-20260922/)
+- 229: table teaches (artifacts/claude-tableteach229-20260922/)
+- 237: aliases, the line piece only; NOT 237b, which goes into 138o (artifacts/claude-table237-20260922/)
+- 232c: multi-word names; it replaces 232b (artifacts/claude-fullname232c-20260922/)
+- 236: first-name resolution (artifacts/claude-firstname236-20260922/)
+- Not included: 231/231b (held back), 237b and 245–251 (138o), and 252/252b/255/258/259 (later).
+- scripts/claude_loop221x232c_agent.py shows one way 221 and 232c were already composed. Use it as a reference, not a base.
+
+Names
+- Agent: scripts/claude_loop138n_agent.py. Config: artifacts/claude-merge138n-20260922/loop138n-config.json.
+- Driver and scorers: scripts/claude_138n_*.
+- Artifacts: artifacts/claude-merge138n-20260922/. Ledger lines: P138n.n.
+- Design note: design/v3/30-modes/138n-merge-opus.md.
+- Never edit an existing file. Import every piece read-only.
+- SrcGuardMixin228 stays first, and install_srcguard228() runs at import.
+
+Phase 1: interaction analysis, before any build choice is final.
+- For each pair of pieces, and for each piece against 138m's layers (224c declines, 227c identity gate, 230c name line, 233/234 fixed replies, 212/216 gates, 209 write screen, 226 sources, 222 teaches), write down:
+  - which turns both could claim;
+  - which one wins, and why that order is better for the model.
+- Rules for the order:
+  - A layer that answers a question from the notebook must never override a gate that stops a write or a ghost answer.
+  - Questions never write.
+  - 224c's decline stays the fallback when no reader claims the turn.
+  - Inferred facts are never stored.
+- Put this in the design note, with the layer list.
+
+Registered marks. The verdict is PASS only if all pass.
+- M1, each piece's own sealed dev and case files (NOT blind panels).
+  - Arms: own (the piece's own agent), 138m and 138n.
+  - Driver fidelity: the own arm reproduces every sealed row the piece saved.
+  - Behaviour kept: every case where 138n differs from the own arm is predicted by id with its exact 138n record. Counts: 0 unpredicted, 0 predicted-but-wrong, 0 predicted-but-not-moved.
+- M2, frozen suites vs 138m's saved rows (fable_suitediff218; rt136 as 138m did; rt143 no-gate; sessions152; bench; marks123).
+  - The (id, class) move set equals your predicted list exactly.
+  - No new WRONG, WRONG-WRITE, junk write or lost OK, except rows you predict and justify by id as the piece's own registered behaviour.
+  - 0 unpredicted flips toward an abstain.
+- M3, sleep smoke (fable_sleepsmoke206): identical to 138m's except .agent, .config, .label, .seconds, .root and .report.
+- M4, bench byte-identical ×3.
+- M5, latency: median(138n) − median(138m) ≤ +5 ms, alternating processes as 138m's M5 did.
+- M6, restart and verifier dialogs (138m's M6 files plus artifacts/claude-verify-20260922/138m/probes.json and probes-supp.json):
+  - 0 ghost answers;
+  - 0 failed duplicate checks;
+  - 0 bad writes (events and the final notebook equal 138m's except predicted teach saves from 229/232c);
+  - every reply change predicted.
+- M7, the pieces' blind panels. They are TEST-ONLY: don't open their items; run them only after your seal, once, with each panel's own sealed scorer.
+  - Panels: tablepanel221, tablepanel221b, teachpanel229, namepanel232c, firstnamepanel236, aliaspanel237. Find their runners and scorers from each piece's PASSMARKS.
+  - Compare against the newest piece's registered rows on that panel.
+  - Bars, per panel:
+    - no item that was right on that piece's registered arm is wrong on 138n;
+    - 0 new wrong values;
+    - 0 writes from questions;
+    - 0 wrong writes.
+  - Report each panel's score next to the piece's registered score and 138m's.
+  - If a bar fails, list every item that moved, by id, with a category-level diagnosis. Put no item text in RESULTS.
+- After the registered runs, and not a mark: run the 239 conversation panel on 138n with the runner only (the same format as artifacts/claude-convpanel239-138m-20260922/: transcripts plus a changes file against 138m). Then message the director with the paths. Never grade it yourself.
+
+Order: phase 1 → build → pilots on M1–M6 → PASSMARKS with every predicted move by id → seal → ledger → registered M1–M6 → M7 → 239 runner → RESULTS.md.
+
+Limits
+- Check `uptime` and `df -g /` before each heavy step. Wait while load > 60. Stop and report if free disk is under 3 GB (it is about 5 GB now).
+- At most 4 parallel processes. Keep every registered run under 25 minutes; split the driver into steps if needed.
+
+Your final message follows OPUS-RULES: verdict, marks table with integer counts, every move, every miss, deviations, and what it means and doesn't mean, in plain English.
+[0m
+[0m$ [0mls artifacts/claude-merge138n-20260922/; ls scripts/claude_138n_* 2>&1; ls scripts/claude_loop138n* 2>&1; ls scripts/fable_fix190_reverse.py scripts/fable_fix221_tableask.py scripts/fable_fix221_panelmap.py 2>&1
+loop138n-config.json
+m7
+PASSMARKS.md
+predicted_moves138n.json
+RESULTS.md
+run
+SEAL.sha256.txt
+v138m-probes-dialogs.json
+v138m-probes-ids.json
+v138m-probes-supp-dialogs.json
+v138m-probes-supp-ids.json
+scripts/claude_138n_conv239_changes.py
+scripts/claude_138n_l1.py
+scripts/claude_138n_m7.py
+scripts/claude_138n_m7.sh
+scripts/claude_138n_predict.py
+scripts/claude_138n_runall.sh
+scripts/claude_138n_score.py
+scripts/claude_loop138n_agent.py
+scripts/fable_fix190_reverse.py
+scripts/fable_fix221_panelmap.py
+scripts/fable_fix221_tableask.py
+[0m
+[0m→ [0mRead artifacts/claude-merge138n-20260922/RESULTS.md
+[0m→ [0mRead artifacts/claude-merge138n-20260922/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-merge138n-20260922/predicted_moves138n.json
+[0m→ [0mRead scripts/claude_loop138n_agent.py
+[0m→ [0mRead scripts/fable_fix221_tableask.py
+[0m→ [0mRead scripts/fable_fix221_panelmap.py
+[0m→ [0mRead scripts/fable_fix190_reverse.py
+[0m→ [0mRead scripts/claude_138n_m7.py
+[0m→ [0mRead scripts/claude_138n_runall.sh
+[0m→ [0mRead artifacts/claude-merge138n-20260922/loop138n-config.json
+[0m→ [0mRead scripts/claude_138n_l1.py
+[0m→ [0mRead scripts/claude_138n_score.py
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/138nb-inverse-diagnosis.md | head -n 100
+ls artifacts/claude-merge138n-20260922/run/ 2>&1
+ls artifacts/claude-merge138n-20260922/m7/ 2>&1 | head -n 30
+cat artifacts/claude-tableask221-20260922/panelmap.sha256.txt 2>&1; echo ---; ls artifacts/claude-tableask221-20260922/ 2>&1 | head -n 30
+# 138nb: why 138n "failed" on backwards questions, and the one follow-up
+
+Director (Opus, reasoning line), 2026-09-23 ~03:05 UTC. New file; nothing edited.
+
+## Result first
+
+138n's M7 FAIL on tablepanel221 (3 new wrong values) is **a scoring mix-up, not a model error**. The registered FAIL stays FAIL (rule), but the follow-up does not need to fix a wrong answer. It fixes the only real behaviour gap found: 4 backwards questions that 221 answered with the "(worked out backwards)" label are now answered by 138m's older reverse layer (190), which gives the right names but no label.
+
+## What I checked (no panel item text is quoted anywhere)
+
+1. **Seal.** tablepanel221 SEAL OK (2/2, from inside its folder, as 138n noted).
+2. **Reproduction.** I ran 138n on tablepanel221 in the cloud (CPU; the MiniLM self-router cannot be downloaded here, so it was stubbed to "decline"; this only touches the 5 `self` items). With the runner 138n's M7 driver used (`fable_fix221_panel.py` via `claude_138n_m7.py run221`) I get 76 right, 3 wrong, and the 3 wrong ids are exactly 138n's: p221-059#2, p221-066#2, p221-070#2.
+3. **What those 3 replies are.** With every name swapped for a placeholder: all 3 are two-subject items ("A's R is V. B's R is V." then a backwards question about V). 138n's reply names **both** A and B, with the "(worked out backwards)" label. That is the correct answer.
+4. **Why the scorer called them wrong.** The panel stores a two-answer gold as one string "A; B" (README: "Multi-answer golds are separated by '; ' (all must be given)"). The plain runner `fable_fix221_panel.py` does not split it, so it looks for the literal text "A; B" in the reply, does not find it, sees the value V in the reply, and flags "wrong value". 221's **registered** arm was scored with the field-map adapter `scripts/fable_fix221_panelmap.py` (sha 29c23973…, listed in 221's RESULTS deviations), which splits "; " and requires every part. 221's registered rows (`artifacts/claude-tableask221-20260922/p1panel/rows.jsonl`) carry the split gold (2 parts on all three items). So M7 compared 138n scored one way against 221 scored another way.
+5. **Same scorer on both arms.** I re-ran with `fable_fix221_panelmap.py` (the registered scorer), unchanged, on a fresh 221 arm and on 138n:
+   - fresh 221 arm: 66 right, 0 wrong, and it matches the registered rows on 91/91 items (driver fidelity);
+   - 138n: **79 right, 0 wrong**; new wrong vs registered: 0; right on registered → wrong on 138n: 0.
+   - All 3 "wrong" items are **right** on 138n under the registered scorer.
+6. **The right → miss items** (not a bar, but real):
+   - 4 `inverse` items (p221-060, 063, 064, 069): answered by stage `loop190-reverse` with the correct subject but **without** the "(worked out backwards)" label, which the panel rule requires. Shapes: "Whose R is V?", "Who lives in V?", "Who was born in V?".
+   - 4 `self` items (087, 089, 090, 091; 088 too in my run, from the router stub): the panel defines "right" for `self` as "equal to 138i's reply". 138m's identity sheet (227c) changed those replies on purpose, so these are misses by definition, not regressions.
+7. **Held-out check in my own wording** (340 dialogs I wrote, fictional names, 10 relations, 1 and 2 subjects, "my" subjects, distractor and chain setups): 138n gives 0 new wrong answers vs the 221 arm and 0 question writes. Every difference is the same collision: 190 answers E1/E3/E4 shapes ("Whose R is V?", "Who lives in V?", "Who was born in V?") first, correct names, no label. 7 wrong answers appear on **both** arms, only on my odd chain setups ("A's spouse is V. V's spouse is W." then "Whose spouse is V?" gives "V's spouse is W."); they are old base behaviour (stage `loop138-nhop`), not caused by the merge. Logged for later, not part of 138nb.
+
+## Cause, in one sentence
+
+221 was built on 138i, which did not have the 190 reverse layer. 190 came in with 138j, sits inside 138m's ears, and answers the E1/E3/E4 backwards shapes before 221/237's table stage sees them, with forward-style sentences and no "(worked out backwards)" label.
+
+## The one change for 138nb
+
+**138nb = 138n + one outermost reply-text rule:** when the answering stage is `loop190-reverse` and the reply names at least one subject, append " (worked out backwards)" to the reply, exactly as 221/237 do. Nothing else: no new shapes, no ownership change, no change to 190's "I don't know anyone whose R is V." or unknown-name replies, no writes.
+
+Why this option (director decision, logged; clearly better for the model):
+- Every backwards answer then says it was worked out backwards. Ben's design says inverses are computed at answer time, and an honest source label is part of that.
+- 190's wording ("Wren's mother is Talia.") stays; it is clearer than the table's "Talia is the mother of Wren."
+- It is the smallest change: only replies from one stage change, and only by an added label. Handing ownership to the table stage instead would move many more frozen-suite rows.
+
+Things the builder must predict by id (not bars in themselves): every frozen-suite row answered by `loop190-reverse` with a subject gains the label; 226's "Who told you that?" after such an answer may change its source line.
+
+## Harness fix (declared, not a model change)
+
+138nb's M7 must score tablepanel221 with the **registered** scorer `scripts/fable_fix221_panelmap.py` on both arms (checked against panelmap.sha256.txt), so both arms are scored the same way. 138n's own FAIL is not re-scored into a PASS; it stays on the record as FAIL, with this note as its diagnosis.
+
+## Blind test for 138nb
+
+tablepanel221 has now been used by 138n's M7 and by this diagnosis, so it is a regression check only. The PASS claim for 138nb rests on a **fresh blind panel, invpanel138nb** (written from a spec only, by a separate writer that never sees 138n's code or this note's item-level findings).
+bench1
+bench1.log
+bench2
+bench2.log
+bench3
+bench3.log
+l1
+l1-judge.json
+l1-judge.txt
+l1-log-m.txt
+l1-log-n.txt
+l1-log-own.txt
+l1-sealed.json
+l1-sealed.txt
+lat-m-1.json
+lat-m-1.log
+lat-m-2.json
+lat-m-2.log
+lat-m-3.json
+lat-m-3.log
+lat-n-1.json
+lat-n-1.log
+lat-n-2.json
+lat-n-2.log
+lat-n-3.json
+lat-n-3.log
+probe
+rt143nogate-n.json
+rt143nogate.log
+score.txt
+score138n.json
+sd
+sd.log
+sd136
+sd136.log
+smoke-n.json
+smoke-n.log
+uptime.log
+work
+m7-compare.json
+m7-status.txt
+29c23973c7f4613f9decb9186534a91dc4a9e3a569d3586caa5f4ef396431937  scripts/fable_fix221_panelmap.py
+---
+dev-sealed
+dev-sealed.log
+dev221.jsonl
+g3
+g3.log
+loop221-config.json
+p1-cases.md
+p1panel
+p1panel.log
+p3check.log
+panelmap.sha256.txt
+PASSMARKS.md
+predicted_moves221.json
+predicted_moves221.txt
+RESULTS.md
+SEAL.sha256.txt
+sleepsmoke
+sleepsmoke.log
+suitediff
+suitediff-bench.log
+suitediff-rt136.log
+suitediff-rt143.log
+suitediff-sessions152.log
+[0m
+[0m$ [0mls artifacts/claude-merge138n-20260922/run/sd/ artifacts/claude-merge138n-20260922/run/sd136/ 2>&1 | head -n 30
+ls artifacts/claude-invpanel138nb-20260923/ 2>&1; ls artifacts/claude-merge138nb-20260923/ 2>&1
+git log --oneline origin/builder-outbox -5 2>&1 | head; git show origin/builder-outbox --stat 2>&1 | head -n 30
+tail -n 20 artifacts/fable-predictions-ledger.md 2>&1
+artifacts/claude-merge138n-20260922/run/sd/:
+bench-bench132_4hop-rows.jsonl
+bench-diff.json
+bench-edit200-rows.jsonl
+bench-new_121_4hop-rows.jsonl
+bench-old_s2fresh_4hop-rows.jsonl
+marks123
+marks123-diff.json
+sessions152-diff.json
+sessions152-rows.json
+SUITEDIFF218-SUMMARY.json
+
+artifacts/claude-merge138n-20260922/run/sd136/:
+rt136-diff.json
+rt136-rows.json
+SUITEDIFF218-SUMMARY.json
+ls: artifacts/claude-invpanel138nb-20260923/: No such file or directory
+ls: artifacts/claude-merge138nb-20260923/: No such file or directory
+51a3bb476 watcher status
+5eae2cdce builder results: own-o0b-generator
+4fc01ab87 builder results: papers-02
+dc3c46d51 builder results: own-o0f-bench
+0f0c1bfce builder results: own-o0e-baseline-code
+commit 51a3bb476975d103aae5997ebbe17d1ea2f8a16f
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 00:22:42 2026 -0400
+
+    watcher status
+
+ status/watcher.txt | 160 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 160 insertions(+)
+- Pown0a OUTCOME: strict v0 write rules ceiling ~68% even with a perfect reader, so no ear training can reach 85% recall under them; rules must change before any GPU run. Seal 4/4 OK after run; no deviations from task order.
+- Pown0c.1 (2026-09-23, own-O0c pipeline sample, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0c-20260923; 4000 SimpleStories + 15000 webred sample, seed 7, CPU only) shards round-trip exactly on 1000 sampled docs: 1000/1000, 0 misses.
+- Pown0c.2 same (seed 7, step 0) data order twice byte-identical (same sha256); step 1 differs.
+- Pown0c.3 total planned download 2.23 GB + 316 MB = 2.546 GB <= 7 GB (plan S5 numbers quoted; remote bytes not re-verifiable offline, nothing downloaded).
+- Pown0d.1 (2026-09-23, own-O0d ear code+trainer, sealed 4 files SEAL.sha256.txt artifacts/claude-own-o0d-20260923; CPU only): all unit tests pass; bar = every unit test passes.
+- Pown0d.2 same: audited ear count within 0.5% of 32,850,051; predicted exact 32,850,051 (0 difference), exact number reported per part.
+- Pown0d.3 same: kill -9 at step 30, resume, parameters at step 60 byte-identical to uninterrupted run; bar = identical sha256.
+- Pown0d.4 same: 0 non-whole-word spans decodable over 10,000-sample fuzz; bar = 0.
+- Pown0b.1 (own-O0b frame generator, sealed 2026-09-23, artifacts/claude-own-o0b-20260923) independent re-deriver mismatches = 0 on 10,000 sampled rows (seed 7). Pilot: 0/10,000 on seeds 3 and 43 pre-seal.
+- Pown0b.2 (own-O0b) 0 train rows carry an L2 frame id (split by frame before generating; 20% of frame ids held out).
+- Pown0b.3 (own-O0b) 0 non-whole-word spans across all 210,000 rows.
+- Pown0b.4 (own-O0b) each of the 10 families in [9%, 11%] of the 200,000 train rows (bar: >= 3% each).
+- Pown0f.1 (2026-09-23, own-O0f sealed comparison benchmark, sealed 7 files SEAL.sha256.txt artifacts/claude-own-bench-20260923; blind generator, CPU only, fictional names) 500 worlds per family x 5 families = 2500 worlds, 3000 questions (mquake 2/world); abstention 167/167/166, long 250x3-hop + 250x4-hop; max conversation 605 chars ~ 151 tokens (bar 900).
+- Pown0f.2 same: rule-based checker re-derives every gold from conversation facts, 0 mismatches over 3000 questions, 0 ungrounded facts, 0 over-budget conversations.
+- Pown0f.3 same: 0 worlds share a name set with another family's world (globally unique names by construction).
+- Pown0e.1 (2026-09-23, own-O0e baseline code, CPU only, sealed 5 files SEAL.sha256.txt artifacts/claude-own-o0e-20260923; audit once) count printed exactly 61,783,680 == expected (diff 0, bar +/- 0.2%): PASS as measured.
+- Pown0e.2 same (tiny width vocab1024/w64/2 layers, 147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS as measured.
+- Pown0e.3 same (200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts) poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0; round-trip 1800/1800; smoke loss 58.6267 -> 13.8225 in 0.2 s; CPU throughput 133120 tok/120.2 s = 1107.8 tok/s (report only): PASS as measured.
+- Pown0e OUTCOME: registered verdict FAIL by the seal rule (post-seal 2-line rotary broadcast fix in scripts/claude_own_o0e_model.py after a crash with no result observed; SEAL now model.py FAILED, other 4 OK; never re-sealed; diff in RESULTS.md). Marks themselves all PASS as measured above.
+- Pown0b OUTCOME (2026-09-23, builder; registered verdict PASS, all marks PASS, sealed scripts run once per arm) Pown0b.1 checker 0/10000 (seed 7); Pown0b.2 0 L2 frame ids in 200,000 train rows; Pown0b.3 0 bad spans in 210,000 rows; Pown0b.4 every family 20,000 train (10.0%). Deviations: D1 Fern string in train work values (never a person entity); D2 frame-id (not wording) holdout; D3 one bash-python edit pre-seal; D4 org values are single-word fragments; D5 ls of sibling o0a dir, no files opened. See artifacts/claude-own-o0b-20260923/RESULTS.md.
+[0m
+[0m$ [0mgrep -n "P138n" artifacts/fable-predictions-ledger.md | tail -n 20
+echo ---
+grep -rn "last_stage" scripts/claude_loop138m_agent.py | head
+echo ---
+grep -rn "def turn" scripts/fable_loop138i_agent.py scripts/claude_loop138m_agent.py scripts/fable_loop138j_agent.py scripts/fable_loop138k_agent.py 2>&1 | head -n 20
+2608:- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+2609:- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+2610:- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+2611:- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+2615:- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+---
+---
+grep: scripts/fable_loop138k_agent.py: No such file or directory
+scripts/claude_loop138m_agent.py:144:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+scripts/claude_loop138m_agent.py:171:    def turn(self, text: str) -> list[str]:  # type: ignore[no-untyped-def]
+scripts/claude_loop138m_agent.py:174:        def turn219(_self, t):
+scripts/fable_loop138j_agent.py:554:    def turn(self, text: str) -> list[str]:
+[0m
+[0m→ [0mRead scripts/claude_loop138m_agent.py[90m [limit=220][0m
+[0m→ [0mRead scripts/fable_loop138j_agent.py[90m [limit=120, offset=520][0m
+[0m
+[0m$ [0mgrep -n "class Source226Mixin" -A 60 scripts/fable_loop226_agent.py | head -n 80
+echo ===
+grep -n "SrcGuardMixin228\|def install_srcguard228" scripts/claude_fix228_srcguard.py | head
+259:class Source226Mixin:
+260-    """Outermost loop layer: record the last reply's facts; answer source
+261-    questions from them without touching the ears or the notebook."""
+262-
+263-    _src226_state: dict | None = None
+264-    _src226_hit: bool = False
+265-    _src226_namecheck: dict | None = None
+266-
+267-    # (2) interception, before every other tick layer (no ears, no write)
+268-    def _listening_tick(self):  # type: ignore[no-untyped-def]
+269-        text = self.inbox[0] if getattr(self, "inbox", None) else None
+270-        if text is not None and is_source_question226(text):
+271-            self.inbox.pop(0)
+272-            self.counters["turns"] += 1
+273-            self.counters["clarifications"] += 1
+274-            reply = source_reply226(self.nb, self._src226_state)
+275-            record = {"kind": "clarify", "text": reply}
+276-            self.last_records = [record]
+277-            self.experience.append(
+278-                {"tick": self.tick, "kind": "turn", "text": text,
+279-                 "statuses": ["clarify"]})
+280-            self._src226_hit = True
+281-            return self._event(A.LISTENING,
+282-                               {"turn": text, "records": [record]}, [reply])
+283-        return super()._listening_tick()  # type: ignore[misc]
+284-
+285-    def _answer_namecheck(self, action: dict) -> dict:  # type: ignore[no-untyped-def]
+286-        captured: list = []
+287-        reasoner = self.reasoner
+288-        had = "answer" in vars(reasoner)
+289-        orig = reasoner.answer
+290-
+291-        def _cap_answer(q, nb):
+292-            r = orig(q, nb)
+293-            captured.append(r)
+294-            return r
+295-
+296-        reasoner.answer = _cap_answer
+297-        try:
+298-            out = super()._answer_namecheck(action)  # type: ignore[misc]
+299-        finally:
+300-            if had:
+301-                reasoner.answer = orig
+302-            else:
+303-                del reasoner.answer
+304-        if (isinstance(out, dict) and out.get("kind") == "note"
+305-                and len(captured) == 1 and isinstance(captured[0], dict)
+306-                and captured[0].get("status") == C.OK):
+307-            self._src226_namecheck = captured[0]
+308-        return out
+309-
+310-    # (1) what the last reply stated or used
+311-    def turn(self, text: str) -> list[str]:
+312-        nb = self.nb
+313-        before = set(nb.facts)
+314-        n_log = len(getattr(self, "self_turn_log", []))
+315-        self._src226_hit = False
+316-        self._src226_namecheck = None
+317-        said = super().turn(text)  # type: ignore[misc]
+318-        if self._src226_hit:
+319-            return said
+zsh:2: == not found
+[0m
+[0m→ [0mRead scripts/fable_loop138j_agent.py[90m [offset=640, limit=120][0m
+[0m
+[0m$ [0mgrep -n "SrcGuardMixin228\|def install_srcguard228" scripts/claude_fix228_srcguard.py | head
+echo ===
+sed -n '259,360p' scripts/fable_loop226_agent.py
+48:class SrcGuardMixin228:
+56:def install_srcguard228() -> None:
+zsh:2: == not found
+[0m
+[0m→ [0mRead scripts/fable_loop226_agent.py[90m [limit=120, offset=259][0m
+[0m→ [0mRead scripts/claude_fix228_srcguard.py
+[0m→ [0mRead scripts/fable_loop226_agent.py[90m [limit=110, offset=379][0m
+[0m
+[0m# [0mTodos
+[•] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[ ] Build claude_fix138nb_label.py + loop138nb agent + config
+[ ] Pilot dev + M2-M5 pilots
+[ ] Write PASSMARKS + seal + ledger append
+[ ] Registered M2-M5 run
+[ ] Wait for invpanel, copy, run M1 blind once
+[ ] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m$ [0mls /tmp/ 2>&1 | head; ls scripts/claude_138n_predict.py 2>&1; grep -n "def \|rt143nogate\|v138m" scripts/claude_138n_predict.py | head -n 30
+__KMP_REGISTERED_LIB_10043
+__KMP_REGISTERED_LIB_10167
+__KMP_REGISTERED_LIB_10277
+__KMP_REGISTERED_LIB_10588
+__KMP_REGISTERED_LIB_10636
+__KMP_REGISTERED_LIB_1066
+__KMP_REGISTERED_LIB_10679
+__KMP_REGISTERED_LIB_10716
+__KMP_REGISTERED_LIB_10827
+__KMP_REGISTERED_LIB_10919
+scripts/claude_138n_predict.py
+87:def _abst(s: str) -> bool:
+91:def turn_cat(o: str, x: str) -> str:
+109:def classify(key: str, mv: dict) -> tuple[list, str, list]:
+125:def main(argv: list[str]) -> int:
+184:        "v138m-probes-dialogs:d59:t00": "abstain -> name-aware abstain "
+186:        "v138m-probes-dialogs:d61:t01": "question reader (221c wrapper + "
+[0m
+[0m← [0mWrite scripts/claude_138nb_devrepro.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_devrepro.py 2>&1 | tail -n 60
+d10 t1: stage=loop190-reverse reply=Your city is Oslo.
+d11 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d11 t1: stage=loop190b-reverse-nomatch reply=I don't know anyone whose mother is Zara.
+d12 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d12 t1: stage=none reply=I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+d12 t2: stage=loop190b-reverse-nomatch reply=I don't know anyone whose mother is Rin.
+d13 t0: stage=fake reply=Saved: Bex's city is Oslo.
+d13 t1: stage=none reply=I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+d13 t2: stage=loop190b-reverse-nomatch reply=I don't know anyone whose city is Rin.
+d14 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d14 t1: stage=loop190b-reverse-nomatch reply=I don't know anyone whose mother is Quix.
+d15 t0: stage=fake reply=Saved: Bex's teacher is Moss.
+d15 t1: stage=loop190-reverse reply=Bex's teacher is Moss.
+d16 t0: stage=fake reply=Saved: Bex's coach is Tobin.
+d16 t1: stage=loop190-reverse reply=Bex's coach is Tobin.
+d17 t0: stage=fake reply=Saved: Bex's spouse is Wren.
+d17 t1: stage=loop190-reverse reply=Bex's spouse is Wren.
+d18 t0: stage=fake reply=Saved: Bex's friend is Pell.
+d18 t1: stage=loop190-reverse reply=Bex's friend is Pell.
+d19 t0: stage=fake reply=Saved: Bex's school is Harlow.
+d19 t1: stage=loop190-reverse reply=Bex's school is Harlow.
+d20 t0: stage=fake reply=Saved: Bex's pet is Miso.
+d20 t1: stage=loop190-reverse reply=Bex's pet is Miso.
+d21 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d21 t1: stage=fake reply=Bex's mother is Talia.
+d22 t0: stage=fake reply=Saved: Bex's city is Oslo.
+d22 t1: stage=fake reply=Bex's city is Oslo.
+d23 t0: stage=fake reply=Saved: Bex's boss is Lee.
+d23 t1: stage=fake reply=I have Bex's boss as Lee. Do you want me to change it to Sam?
+d23 t2: stage=loop190-reverse reply=Bex's boss is Lee.
+d24 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d24 t1: stage=fake reply=I have Bex's mother as Talia. Do you want me to change it to Zara?
+d24 t2: stage=loop190-reverse reply=Bex's mother is Talia.
+d25 t0: stage=loop166-me reply=Saved: your mother is Talia.
+d25 t1: stage=loop190-reverse reply=Your mother is Talia.
+d26 t0: stage=fake reply=Saved: Bex's sister is Lark.
+d26 t1: stage=loop190-reverse reply=Bex's sister is Lark.
+d27 t0: stage=fake reply=Saved: Bex's brother is Pike.
+d27 t1: stage=fake reply=Saved: Rin's brother is Pike.
+d27 t2: stage=loop190-reverse reply=Bex's brother is Pike. Rin's brother is Pike.
+d28 t0: stage=fake reply=Saved: Bex's country is Wendland.
+d28 t1: stage=loop190-reverse reply=Bex's country is Wendland.
+d29 t0: stage=fake reply=Saved: Bex's hometown is Harlow Cross.
+d29 t1: stage=loop190-reverse reply=Bex's hometown is Harlow Cross.
+d30 t0: stage=fake reply=Saved: Bex's dog is Biscuit.
+d30 t1: stage=loop190-reverse reply=Bex's dog is Biscuit.
+d31 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d31 t1: stage=loop190b-reverse-nomatch reply=I don't know anyone whose city is Oslo.
+d32 t0: stage=fake reply=Saved: Bex's boss is Lee.
+d32 t1: stage=loop190b-reverse-nomatch reply=I don't know anyone whose birthplace is Paris.
+d33 t0: stage=loop166-me reply=Saved: your birthplace is Paris.
+d33 t1: stage=loop190-reverse reply=Your birthplace is Paris.
+d34 t0: stage=fake reply=Saved: Bex's city is Oslo.
+d34 t1: stage=fake reply=I don't know Bex's mother.
+d35 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d35 t1: stage=fake reply=Saved: Rin's mother is Talia.
+d35 t2: stage=loop190-reverse reply=Bex's mother is Talia. Rin's mother is Talia.
+d36 t0: stage=fake reply=Saved: Bex's neighbour is Cato.
+d36 t1: stage=loop190-reverse reply=Bex's neighbour is Cato.
+SUMMARY dialogs=36 final_subject_no_label=25 final_with_label=0 final_abstain=6
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_devrepro.py 2>&1 | head -n 30
+d01 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d01 t1: stage=loop190-reverse reply=Bex's mother is Talia.
+d02 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d02 t1: stage=fake reply=Saved: Rin's mother is Talia.
+d02 t2: stage=loop190-reverse reply=Bex's mother is Talia. Rin's mother is Talia.
+d03 t0: stage=fake reply=Saved: Bex's boss is Lee.
+d03 t1: stage=loop190-reverse reply=Bex's boss is Lee.
+d04 t0: stage=fake reply=Saved: Bex's boss is Lee.
+d04 t1: stage=fake reply=Saved: Rin's boss is Lee.
+d04 t2: stage=loop190-reverse reply=Bex's boss is Lee. Rin's boss is Lee.
+d05 t0: stage=fake reply=Saved: Bex's city is Oslo.
+d05 t1: stage=loop190-reverse reply=Bex's city is Oslo.
+d06 t0: stage=fake reply=Saved: Bex's city is Oslo.
+d06 t1: stage=fake reply=Saved: Rin's city is Oslo.
+d06 t2: stage=loop190-reverse reply=Bex's city is Oslo. Rin's city is Oslo.
+d07 t0: stage=fake reply=Saved: Bex's birthplace is Paris.
+d07 t1: stage=loop190-reverse reply=Bex's birthplace is Paris.
+d08 t0: stage=fake reply=Saved: Bex's birthplace is Paris.
+d08 t1: stage=fake reply=Saved: Rin's birthplace is Paris.
+d08 t2: stage=loop190-reverse reply=Bex's birthplace is Paris. Rin's birthplace is Paris.
+d09 t0: stage=loop166-me reply=Saved: your boss is Lee.
+d09 t1: stage=loop190-reverse reply=Your boss is Lee.
+d10 t0: stage=loop166-me reply=Saved: your city is Oslo.
+d10 t1: stage=loop190-reverse reply=Your city is Oslo.
+d11 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d11 t1: stage=loop190b-reverse-nomatch reply=I don't know anyone whose mother is Zara.
+d12 t0: stage=fake reply=Saved: Bex's mother is Talia.
+d12 t1: stage=none reply=I couldn't save that as a fact. I don't know that shape yet. Could you say it another way, like "Kim's boss is Lee."
+d12 t2: stage=loop190b-reverse-nomatch reply=I don't know anyone whose mother is Rin.
+d13 t0: stage=fake reply=Saved: Bex's city is Oslo.
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[•] Build claude_fix138nb_label.py + loop138nb agent + config
+[ ] Pilot dev + M2-M5 pilots
+[ ] Write PASSMARKS + seal + ledger append
+[ ] Registered M2-M5 run
+[ ] Wait for invpanel, copy, run M1 blind once
+[ ] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m← [0mWrite scripts/claude_fix138nb_label.py
+Wrote file successfully.
+[0m
+[0m$ [0mls scripts/ | grep -i "138k\|138l_agent\|138m_agent" ; echo ===; grep -n "Loop138kDaemon\|^import\|^from" scripts/claude_loop138n_agent.py | head -n 20; echo ===; grep -n "class Loop138kDaemon" scripts/claude_loop138k_agent.py | head
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_merge138k_latency.py
+claude_merge138k_marks220.py
+claude_merge138k_probe.py
+claude_merge138k_rt143nogate.py
+claude_merge138k_score.py
+zsh:1: == not found
+[0m
+[0m$ [0mgrep -n "Loop138kDaemon" scripts/claude_loop138k_agent.py | head -n 5; grep -n "L138K" scripts/claude_loop138n_agent.py | head
+65:    "Loop138kDaemon (this file): SrcGuardMixin228 > RestartIndex220Mixin "
+112:class Loop138kDaemon(G228.SrcGuardMixin228, RestartIndex220Mixin,
+119:    daemon = Loop138kDaemon(root, cfg=cfg, idle_seconds=idle_seconds)
+80:import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+301:    loop = _with_138n(L138K.build_agent138k, cfg)
+324:class Loop138nDaemon(_Guard138n, Classes138nMixin, L138K.Loop138kDaemon):
+[0m
+[0m← [0mWrite scripts/claude_loop138nb_agent.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import copy, shutil, tempfile
+from pathlib import Path
+import claude_loop138n_agent as AGN, claude_loop138nb_agent as AGB
+turns = ['Bex mother is Talia.'.replace('Bex mother','Bex\'s mother'), 'Whose mother is Talia?', 'Whose mother is Quix?', 'Who is Bex\'s mother?', 'Who told you that?']
+for name, AG, cfg0 in [('138n', AGN, AGN.DEFAULT_CONFIG138N), ('138nb', AGB, AGB.DEFAULT_CONFIG138NB)]:
+    sd = Path(tempfile.mkdtemp(prefix='nbsmk-'))
+    import copy as C
+    cfg = C.deepcopy(cfg0); cfg['state_dir']=str(sd); cfg['sleep_threshold']=100000
+    loop = (AG.build_agent138n if name=='138n' else AG.build_agent138nb)(cfg)
+    print('== '+name)
+    for t in turns:
+        print(' ', t, '->', ' '.join(loop.turn(t)))
+    shutil.rmtree(sd, ignore_errors=True)
+" 2>&1 | tail -n 20
+== 138n
+  Bex's mother is Talia. -> Saved: Bex's mother is Talia.
+  Whose mother is Talia? -> Bex's mother is Talia.
+  Whose mother is Quix? -> I don't know anyone whose mother is Quix.
+  Who is Bex's mother? -> Bex's mother is Talia.
+  Who told you that? -> You told me: Bex's mother is Talia.
+== 138nb
+  Bex's mother is Talia. -> Saved: Bex's mother is Talia.
+  Whose mother is Talia? -> Bex's mother is Talia. (worked out backwards)
+  Whose mother is Quix? -> I don't know anyone whose mother is Quix.
+  Who is Bex's mother? -> Bex's mother is Talia.
+  Who told you that? -> You told me: Bex's mother is Talia.
+[0m
+[0m$ [0mhead -n 40 scripts/claude_138l_rt143nogate.py; echo ===; head -n 50 scripts/claude_merge138k_probe.py; echo ===; head -n 40 scripts/claude_merge138k_latency.py
+#!/usr/bin/env python3
+"""Merge 138l -- rt143 without the literal 'Saved:' teach gate, any agent.
+
+Same per-case method as the 138j verifier's driver
+(artifacts/claude-verify-20260922/138j/rt143_nogate.py, read-only): all
+rt143 cases in suite order in ONE process, fresh daemon per case, every
+teach sent, stored triples recorded before the question, question always
+asked. Only change: the agent/config come from the command line (daemon
+class found with fable_marks123_all.load_agent, as every suite driver
+does) instead of a hard-coded 138i/138j switch; guard not toggled here
+(138k/138l install it themselves).
+
+usage: claude_138l_rt143nogate.py <agent.py> <config.json> <out.json>
+       claude_138l_rt143nogate.py --diff <base.json> <new.json> <out.json>
+"""
+import copy
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+
+def run(agent: str, config: str, out: Path) -> None:
+    import fable_loop90_agent as L90
+    import fable_marks123_all as M
+    import fable_redteam143_run as R143
+    _mod, D, _b, _c = M.load_agent(agent)
+    CFG = json.loads(Path(config).read_text(encoding="utf-8"))
+    scratch = Path(tempfile.mkdtemp(prefix="l138-rt143-"))
+    suite = json.loads(R143.CASES_PATH.read_text(encoding="utf-8"))
+    rows = []
+    for c in suite["cases"]:
+        wd = scratch / c["id"]
+        if wd.exists():
+            shutil.rmtree(wd)
+        wd.mkdir(parents=True)
+zsh:1: == not found
+[0m
+[0m$ [0msed -n '1,60p' scripts/claude_merge138k_probe.py; echo =====LAT; sed -n '1,60p' scripts/claude_merge138k_latency.py
+#!/usr/bin/env python3
+"""Merge 138k driver: restart-aware dialog probe with duplicate checks.
+
+Same turn path as artifacts/claude-verify-20260922/restart_probe.py
+(fable_marks123_all.make_daemon + process_file, "__RESTART__" rebuilds the
+daemon on the same root, "__TRIPLES__" snapshots). Adds, after EVERY
+restart and at the end of every dialog, a duplicate audit:
+  fast  = L90.notebook_triples(nb)       (170-cached, index-backed)
+  truth = fix170 _ORIG_TRIPLES(nb)       (full nb.facts scan, no index)
+  inner = inner._triples fact ids        (the 220-rebuilt index)
+dup_ok iff fast has no repeated triple, inner has no repeated fact id, and
+sorted(fast) == sorted(truth).
+
+usage: claude_merge138k_probe.py <agent.py> <config> <workdir> <probe.json> <out.json>
+"""
+from __future__ import annotations
+
+import gc
+import json
+import shutil
+import sys
+from collections import Counter
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_marks123_all as M  # noqa: E402 (read-only)
+
+
+def main() -> int:
+    agent, config, work, probe, out = sys.argv[1:6]
+    mod, dcls, _, _ = M.load_agent(agent)
+    import fable_fix170_compose as F170  # after the agent import
+    import fable_loop90_agent as L90
+    base = M.load_base_cfg(config)
+    S = Path(work)
+    dialogs = json.loads(Path(probe).read_text(encoding="utf-8"))
+
+    def nev(d):
+        nb = d.loop.nb
+        for o in (nb, getattr(nb, "nb", None)):
+            if o is not None and hasattr(o, "events"):
+                return len(o.events)
+        return -1
+
+    def audit(d, where):
+        nb = d.loop.nb
+        fast = [tuple(x) for x in L90.notebook_triples(nb)]
+        truth = [tuple(x) for x in F170._ORIG_TRIPLES(nb)]
+        inner = getattr(nb, "nb", nb)
+        ids = [t[0] for t in getattr(inner, "_triples", [])]
+        dup_fast = sorted(k for k, v in Counter(fast).items() if v > 1)
+        dup_ids = sorted(k for k, v in Counter(ids).items() if v > 1)
+        ok = (not dup_fast and not dup_ids
+              and sorted(fast) == sorted(truth))
+        return {"where": where, "fast": [list(t) for t in fast],
+                "truth": [list(t) for t in truth],
+                "dup_fast": [list(t) for t in dup_fast],
+zsh:1: ====LAT not found
+[0m
+[0m$ [0mmkdir -p artifacts/claude-merge138nb-20260923 && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop138nb_agent.py --write-config artifacts/claude-merge138nb-20260923/loop138nb-config.json && diff <(uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('artifacts/claude-merge138n-20260922/loop138n-config.json')); print(json.dumps({k:v for k,v in d.items() if k not in ('daemon','merge138n')}, sort_keys=True))") <(uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('artifacts/claude-merge138nb-20260923/loop138nb-config.json')); print(json.dumps({k:v for k,v in d.items() if k not in ('daemon','merge138n','merge138nb')}, sort_keys=True))") && echo CONFIG-MATCH-EXCEPT-DAEMON
+Wrote artifacts/claude-merge138nb-20260923/loop138nb-config.json
+CONFIG-MATCH-EXCEPT-DAEMON
+[0m
+[0m← [0mWrite scripts/claude_138nb_m2.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_138nb_runall.sh
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_138nb_score.py
+Wrote file successfully.
+[0m
+[0m$ [0mgrep -n "def \|^PANEL\|CASES\|items\|--" scripts/fable_fix221_panel.py | head -n 50; echo ===; wc -l scripts/fable_fix221_panel.py
+2:"""Exp 221 -- panel / dev runner for P1, P2, P4, P5, P6 (harness only).
+4:Runs a JSONL of items through BOTH arms, loop138i (sealed base) and loop221
+22:  not gold -- i.e. it asserts a different fact.
+24:FIELD MAP: items are read by load_items() below. It accepts
+32:Run: python -B scripts/fable_fix221_panel.py --items X.jsonl --out DIR
+62:# ------------------------------------------------------------- field map
+63:def _as_list(v) -> list:
+71:def _gold(d: dict) -> list[str]:
+79:def _family(d: dict, default: str = "") -> str:
+86:def load_items(path: Path) -> list[dict]:
+88:    items = []
+119:        items.append({"id": iid, "turns": turns, "scored": scored,
+121:    return items
+124:# --------------------------------------------------------------- running
+125:def facts_hash(nb) -> str:
+133:def build(arm: str):
+146:def run_item(arm: str, item: dict) -> list[dict]:
+163:def _n(s: str) -> str:
+167:def taught_values(turns: list[str]) -> list[str]:
+179:def score(item: dict, j: int, fam: str, gold: list[str], r221: dict,
+212:def main(argv=None) -> int:
+214:    ap.add_argument("--items", required=True)
+215:    ap.add_argument("--out", required=True)
+219:    items = load_items(Path(args.items))
+223:    for it in items:
+253:        "items": len(items), "scored": len(rows),
+276:    print(json.dumps({k: v for k, v in summary.items()
+zsh:1: == not found
+[0m
+[0m→ [0mRead scripts/fable_fix221_panel.py[90m [limit=160, offset=124][0m
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -i "138nb\|invpanel" ; echo ===; git log --oneline origin/main -8; echo ===; git show origin/main:design/v3/30-modes/00-director-board.md 2>&1 | grep -n -i "138nb" | head
+design/v3/30-modes/138nb-inverse-diagnosis.md
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/queue/rsn-138nb-build.md
+handoff/queue/rsn-138nb-panel.md
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/invpanel138nb-spec.txt; echo "=====QUEUE-BUILD====="; git show origin/main:handoff/queue/rsn-138nb-build.md
+BLIND PANEL SPEC: invpanel138nb (backwards questions: "who/what has this value?"). The director wrote this on 2026-09-23. OPUS-RULES.txt applies in full.
+
+You write a blind test panel. Never open design/v3/30-modes/138nb-*, design/v3/30-modes/138n-merge-opus.md, scripts/claude_fix138nb_*, scripts/claude_loop138nb_agent.py, artifacts/claude-merge138nb-*, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py, scripts/claude_loop237_agent.py, any relation-table data file, or any other panel's items. Read only this spec and OPUS-RULES.txt. Write every sentence yourself.
+
+Folder: artifacts/claude-invpanel138nb-20260923/ with panel.jsonl (70 items), base138n.jsonl (70 rows), make_panel.py, run_base.py, score_panel.py, README.md (category level only), SEAL.sha256.txt (sha256 of the five data/code files, repo-root paths, so `shasum -a 256 -c` works from the repo root).
+
+Item format (one fresh session per item): {"id": "i138nb-001", "family": ..., "setup": [1-3 teaching sentences, each sent as its own turn], "question": "...", "gold": [list of strings; EVERY string must appear in a right reply; [] for abstain/control families], "backwards": true/false, "stored_after_setup": [[subject, relation, value], ...], "note": "..."}.
+Use a JSON list for gold. Never join several answers into one string.
+
+Families and exact counts (70). V = the value asked about, A/B = the subjects. Every setup sentence is a plain "A's R is V." teach or "My R is V." (subject "you" in gold). Before using a setup, check on the base that it stores exactly the triple you expect; drop and replace any that doesn't.
+- whose_R 14: "Whose R is V?". 8 with one subject, 6 with two subjects sharing V. Relations: spread over at least 7 of boss, mother, father, dentist, doctor, coach, teacher, city, employer, birthplace, wife, husband, friend, neighbour. At most 3 items per relation.
+- lives_born 10: "Who lives in V?" (after "A's city is V.") and "Who was born in V?" (after "A's birthplace is V."), 5 each; 4 of the 10 have two subjects.
+- has_as 6: "Who has V as their R?" / "Who has V as his R?" / "Who has V as her R?"; 2 with two subjects.
+- verb_backwards 10: verb questions from value to subject: "Who does V manage?", "Who does V teach?", "Who does V coach?", "Who works at V?", "What did V compose?", "What did V write?", "What did V paint?" (setups "X's composer is V." etc.; works/songs/books may be multi-word titles). 3 with two subjects.
+- my_backwards 4: one setup is "My R is V." and one is "A's R is V."; question "Whose R is V?". gold ["you", A] is not required word-for-word for the user: gold lists A only, and the note says the reply must also refer to the user.
+- no_match 8: V is taught in a DIFFERENT relation than the one asked ("A's mother is V." then "Whose boss is V?"). gold []; the right reply abstains and names no subject.
+- unknown_value 4: V never taught ("Whose boss is Q?" after unrelated teaches). gold []; abstain, names no taught person.
+- forward_control 10: forward questions about the same kinds of setups ("Who is A's R?", "Where does A live?"). gold [V]. Not backwards.
+- teach_control 4: a setup sentence then a plain second teach as the "question" turn (no "?"); gold []; checks that nothing changes on statements.
+Two-subject items: at least 15 over the panel. Fictional names only, including multi-word names (at least 20 items use a two-word person name somewhere) and at least 4 items where a work title starts with "The".
+
+run_base.py: run every item once on the base, 138n = scripts/claude_loop138n_agent.py with artifacts/claude-merge138n-20260922/loop138n-config.json (build with build_agent138n, a fresh temp state_dir per item outside the repo, sleep_threshold 100000), one process at a time. Base row fields: id, setup_replies, question_reply, stored_after_setup_actual, stored_after_question_actual, question_wrote (true/false).
+
+score_panel.py (sealed with the panel; the builder uses it unchanged): input = the panel and a rows file in the base-row format; output JSON per item and per family:
+- right: backwards families: every gold string appears in the reply (case-insensitive) AND the reply contains "(worked out backwards)"; my_backwards also needs "your" or "you" in the reply; forward_control: gold appears; no_match/unknown_value: the reply is an abstain (contains "I don't know" or "I couldn't") and names no taught subject; teach_control: the question turn stores exactly its own triple.
+- right_names: backwards families only: every gold string appears, label or not (reported, not the main score).
+- wrong: the reply names a taught subject or taught value that is not in gold, and does not contain every gold string, and is not an abstain. (A reply that gives every gold name is never wrong.)
+- question_wrote: from the rows file.
+Report the base's counts per family (right, right_names, wrong, question writes) in README.md, category level only.
+
+Rules: fictional names only; the base runs once per item; never quote an item in README.md or in your final reply. Report: counts per family, the base's right / right_names / wrong per family, SEAL lines and the `shasum -a 256 -c` output from the repo root.
+=====QUEUE-BUILD=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read handoff/kit/briefs/OPUS-RULES.txt (git show origin/main:handoff/kit/briefs/OPUS-RULES.txt). It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: the director works from GitHub. Run: git fetch -q origin main. Read each file named below that is not in your worktree with: git show origin/main:<path>. Never check out, merge or push main.
+
+YOUR TASK: builder for exp 138nb, the one follow-up to the 138n merge FAIL. CPU only (no GPU, no BensPC).
+Read first (from origin/main): design/v3/30-modes/138nb-inverse-diagnosis.md (the diagnosis and THE ONE CHANGE) and handoff/kit/briefs/138n-merge.txt (how 138n was built). In this worktree read artifacts/claude-merge138n-20260922/PASSMARKS.md, RESULTS.md and predicted_moves138n.json, and scripts/claude_loop138n_agent.py, scripts/claude_138n_*.py/.sh, scripts/fable_fix190_reverse.py, scripts/fable_fix221_tableask.py (LABEL221), scripts/fable_fix221_panelmap.py (read-only; import, never edit).
+Base: 138n = scripts/claude_loop138n_agent.py + artifacts/claude-merge138n-20260922/loop138n-config.json, with its saved rows in artifacts/claude-merge138n-20260922/run/.
+THE ONE CHANGE: one outermost reply-text wrapper, scripts/claude_fix138nb_label.py, used by scripts/claude_loop138nb_agent.py (SrcGuardMixin228 stays first; install_srcguard228() at import). When the turn's answering stage is "loop190-reverse" and the reply names at least one subject (190's "S's R is V." sentences), append " (worked out backwards)" (the exact LABEL221 text, one space before it). No other reply changes, no new shapes, no ownership change, no writes. 190's "I don't know anyone whose R is V." and unknown-name replies stay byte-identical.
+Artifacts: artifacts/claude-merge138nb-20260923/. Ledger lines P138nb.n in artifacts/fable-predictions-ledger.md (append only).
+Order: (1) reproduce on 138n with 30+ dev dialogs in your own wording (fictional names; 1 and 2 subjects; "Whose R is V?", "Who has V as their R?", "Who lives in V?", "Who was born in V?", "my" subjects, no-match and unknown values, forward controls) that 190 answers with no label; (2) build; pilot on your dev dialogs and on M2-M5 below; (3) PASSMARKS.md with numbered predictions and every predicted move by id, then seal (shasum -a 256 > SEAL.sha256.txt, repo-root paths), append the ledger lines; (4) run M2-M5 once; (5) only then wait for artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt (git fetch origin builder-outbox every 2 min, up to 120 min; read it with git show origin/builder-outbox:<path>; copy the panel folder into your worktree unchanged), check it OK from the repo root, and run the panel ONCE on both arms (138n and 138nb) with its own sealed score_panel.py; (6) run M6 once; (7) RESULTS.md.
+Marks (the verdict is PASS only if all pass):
+- M1 invpanel138nb (blind, 70 items): 0 wrong over all 70 on 138nb; 0 question writes; whose_R >= 13/14 right; lives_born >= 9/10 right; has_as >= 5/6 right; verb_backwards: no item right on 138n is not right on 138nb; no_match 8/8 and unknown_value 4/4 abstain with no taught name; forward_control 10/10 and teach_control 4/4 byte-identical to 138n. Show 138n's number next to every figure.
+- M2 138n's M1 dev/case files (720 cases, 138n's own driver): every 138nb record equals 138n's except the rows you predict by id (label added on loop190-reverse replies with a subject). Counts: 0 unpredicted, 0 predicted-but-wrong, 0 predicted-but-not-moved.
+- M3 frozen suites vs 138n's saved rows (fable_suitediff218 --only rt136,rt143,sessions152,bench,marks123 against artifacts/claude-merge138n-20260922/run/sd and 138n's rt136/rt143 files as 138n did): moves exactly your predicted list; 0 new WRONG, WRONG-WRITE, junk write or lost OK. Also run 138n's restart/verifier M6 dialogs: 0 ghost answers, 0 failed duplicate checks, 0 write changes, every reply change predicted (226 "Who told you that?" source lines included).
+- M4 sleep smoke (fable_sleepsmoke206) identical to 138n's except .agent .config .label .seconds .root .report; bench byte-identical x3.
+- M5 latency: median(138nb) - median(138n) <= +2 ms (alternate processes as 138n's M5).
+- M6 regression, tablepanel221 (TEST-ONLY, once, after the seal): score BOTH arms with the registered scorer scripts/fable_fix221_panelmap.py (check its sha against artifacts/claude-tableask221-20260922/panelmap.sha256.txt first), building the arms the way scripts/claude_138n_m7.py run221 does. Bars: 0 wrong on 138nb; every item right on 138n is right on 138nb; every 138n row whose stage is loop190-reverse and whose reply names a subject becomes right. Report ids and counts only.
+What would prove the change wrong: any reply change outside loop190-reverse turns, any label on an abstain, or any new wrong on M1/M6.
+Finish with RESULTS.md (result first, integer counts, categories and ids only, never quote panel items) and your final reply.
+PUSH: artifacts/claude-merge138nb-20260923 scripts/claude_fix138nb_label.py scripts/claude_loop138nb_agent.py scripts/claude_138nb_*.py scripts/claude_138nb_*.sh artifacts/fable-predictions-ledger.md
+[0m
+[0m→ [0mRead scripts/claude_138n_m7.sh
+[0m
+[0m$ [0mls artifacts/claude-tablepanel221-20260922/ 2>&1; cat artifacts/claude-tableask221-20260922/panelmap.sha256.txt
+panel.jsonl
+README.md
+SEAL.sha256.txt
+29c23973c7f4613f9decb9186534a91dc4a9e3a569d3586caa5f4ef396431937  scripts/fable_fix221_panelmap.py
+[0m
+[0m← [0mWrite scripts/claude_138nb_m6.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_138nb_m1.py
+Wrote file successfully.
+[0m
+[0m← [0mEdit scripts/claude_138nb_m1.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
+@@ -54,9 +54,9 @@
+      cfg0, build = (copy.deepcopy(AG.DEFAULT_CONFIG138NB),
+                     AG.build_agent138nb)
+  workp = Path(work)
+  workp.mkdir(parents=True, exist_ok=True)
+-(rows, n_qw) = ([], 0)
++ (rows, n_qw) = ([], 0)
+  with open(items, encoding="utf-8") as f:
+      lines = [x for x in f.read().splitlines() if x.strip()]
+  print(f"items={len(lines)} arm={arm}", flush=True)
+  for line in lines:
+
+[0m
+[0m← [0mEdit scripts/claude_138nb_m1.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_m1.py
+@@ -54,9 +54,10 @@
+     cfg0, build = (copy.deepcopy(AG.DEFAULT_CONFIG138NB),
+                    AG.build_agent138nb)
+ workp = Path(work)
+ workp.mkdir(parents=True, exist_ok=True)
+-(rows, n_qw) = ([], 0)
++rows = []
++n_qw = 0
+ with open(items, encoding="utf-8") as f:
+     lines = [x for x in f.read().splitlines() if x.strip()]
+ print(f"items={len(lines)} arm={arm}", flush=True)
+ for line in lines:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m6.py check && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import ast; ast.parse(open('scripts/claude_138nb_m1.py').read()); ast.parse(open('scripts/claude_138nb_m2.py').read()); ast.parse(open('scripts/claude_138nb_score.py').read()); ast.parse(open('scripts/claude_138nb_m6.py').read()); ast.parse(open('scripts/claude_fix138nb_label.py').read()); ast.parse(open('scripts/claude_loop138nb_agent.py').read()); print('ALL PARSE OK')"
+SHA-OK
+ALL PARSE OK
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import sys; sys.path.insert(0, 'scripts')
+import copy, shutil, tempfile
+from pathlib import Path
+sys.argv=['x']
+import claude_138nb_devrepro as D
+import claude_loop138n_agent as AGN, claude_loop138nb_agent as AGB
+diffs = 0; labelled = 0; total = 0
+for did, turns in D.D:
+    recs = {}
+    for name, AG, cfg0, build in [('n', AGN, AGN.DEFAULT_CONFIG138N, AGN.build_agent138n), ('nb', AGB, AGB.DEFAULT_CONFIG138NB, AGB.build_agent138nb)]:
+        sd = Path(tempfile.mkdtemp(prefix='nbdev-'))
+        cfg = copy.deepcopy(cfg0); cfg['state_dir']=str(sd); cfg['sleep_threshold']=100000
+        loop = build(cfg)
+        out = []
+        for t in turns:
+            out.append(' '.join(loop.turn(t)))
+        recs[name] = out
+        shutil.rmtree(sd, ignore_errors=True)
+    for j,(a,b) in enumerate(zip(recs['n'], recs['nb'])):
+        total += 1
+        if a != b:
+            diffs += 1
+            if b == a + ' (worked out backwards)': labelled += 1
+            else: print('UNEXPECTED', did, j, repr(a), repr(b), flush=True)
+print(f'TURNS {total} DIFFS {diffs} LABEL-ONLY {labelled}')
+" 2>&1 | tail -n 10
+TURNS 82 DIFFS 27 LABEL-ONLY 27
+[0m
+[0m$ [0muptime; df -g / | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py run --arm nb --out-dir /tmp/nb-pilot-m2 --work /tmp/nb-pilot-work --pieces 236 221 2>&1 | tail -n 5
+0:30  up 2 days, 16:20, 4 users, load averages: 41.90 47.23 52.40
+/dev/disk3s1s1       460   12        16    43%  484014 177117680    0%   /
+236/nb: 28 cases 1.4s
+221/nb: 31 cases 0.4s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py run --arm n --out-dir /tmp/nb-pilot-m2 --work /tmp/nb-pilot-work --pieces 236 221 2>&1 | tail -n 3; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py judge --dir /tmp/nb-pilot-m2 --out /tmp/nb-pilot-judge.json --pieces 236 221 2>&1 | tail -n 5
+236/n: 28 cases 1.6s
+221/n: 31 cases 0.5s
+judge 236: 28/28 same as 138n, 0 moved
+judge 221: 30/31 same as 138n, 1 moved
+{"unpredicted": 1, "predicted_ok": 0, "predicted_wrong": 0, "predicted_not_moved": 0} FAIL
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+j = json.load(open('/tmp/nb-pilot-judge.json'))
+print(json.dumps(j['unpredicted'], indent=1)[:500])
+for p,v in j['pieces'].items():
+    for m in v['moves']:
+        print(m['id'], m['n_replies'], '->', m['nb_replies'])
+"
+[
+ "221/D11"
+]
+221/D11 ["Saved: Juno's mother is Petra.", "Juno's mother is Petra."] -> ["Saved: Juno's mother is Petra.", "Juno's mother is Petra. (worked out backwards)"]
+[0m
+[0m$ [0mecho '{"m2": {}, "m3": {"sessions152": [], "bench": [], "marks123": [], "rt136": [], "rt136_direct_vs_138n": [], "rt143_nogate": [], "rt143_verdict_flips": [], "probes": {"reply_changes": {}, "write_changes": {}}}}' > /tmp/nb-pred-stub.json; uptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py run --arm nb --out-dir /tmp/nb-pilot-full/m2 --work /tmp/nb-pilot-full/work-m2-nb 2>&1 | tail -n 10
+0:31  up 2 days, 16:20, 4 users, load averages: 43.99 47.24 52.22
+221/nb: 31 cases 1.9s
+221b/nb: 72 cases 0.6s
+221c/nb: 60 cases 2.8s
+229/nb: 77 cases 0.5s
+237/nb: 34 cases 0.3s
+232c/nb: 103 cases 1.0s
+232cp/nb: 315 cases 3.8s
+236/nb: 28 cases 0.4s
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py run --arm n --out-dir /tmp/nb-pilot-full/m2 --work /tmp/nb-pilot-full/work-m2-n 2>&1 | tail -n 10 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py judge --dir /tmp/nb-pilot-full/m2 --pred /tmp/nb-pred-stub.json --out /tmp/nb-pilot-full/m2-judge.json 2>&1 | tail -n 12
+0:31  up 2 days, 16:20, 4 users, load averages: 46.84 47.70 52.30
+221/n: 31 cases 1.5s
+221b/n: 72 cases 0.5s
+221c/n: 60 cases 2.3s
+229/n: 77 cases 0.5s
+237/n: 34 cases 0.3s
+232c/n: 103 cases 0.9s
+232cp/n: 315 cases 3.6s
+236/n: 28 cases 0.3s
+judge 221: 30/31 same as 138n, 1 moved
+judge 221b: 72/72 same as 138n, 0 moved
+judge 221c: 60/60 same as 138n, 0 moved
+judge 229: 77/77 same as 138n, 0 moved
+judge 237: 34/34 same as 138n, 0 moved
+judge 232c: 103/103 same as 138n, 0 moved
+judge 232cp: 315/315 same as 138n, 0 moved
+judge 236: 28/28 same as 138n, 0 moved
+{"unpredicted": 1, "predicted_ok": 0, "predicted_wrong": 0, "predicted_not_moved": 0} FAIL
+[0m
+[0m$ [0muptime; df -g / | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop138nb_agent.py --config artifacts/claude-merge138nb-20260923/loop138nb-config.json --base-dir artifacts/claude-merge138n-20260922/run/sd --out /tmp/nb-pilot-full/sd --only sessions152,bench,marks123 2>&1 | tail -n 15
+0:31  up 2 days, 16:21, 4 users, load averages: 48.75 48.09 52.33
+/dev/disk3s1s1       460   12        18    42%  484014 189655040    0%   /
+q1     | F5+M5 both OK                              | F5=OK M5=OK                                                | PASS   | 1.2
+bench  | scorer v2; split-A 0 wrong (200+200)       | fable_edit_200 {'correct': 25, 'abstain': 51, 'wrong': 124 | FAIL   | 8.3
+rt81   | 74/74 OK, 0 wrong writes                   | {'n': 74, 'ok': 55, 'bug': 1, 'unclear': 18}               | FAIL   | 3.4
+q4     | 0 relation-name underscore leaks           | leaks=[]                                                   | PASS   | 0.0
+TOTAL 15.3 s -> FAIL
+
+marks123: n_moves=0 (new WRONG=0, new WRONG-WRITE=0, new junk=0, reply-only=0) seconds=15.3
+marks123: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=15.3
+done marks123 in 15.3s
+GATE: clean
+sessions152: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=3.3
+bench: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=20.7
+marks123: n_moves=0 (new WRONG-WRITE=0, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=0) seconds=15.3
+GATE: clean
+TOTAL seconds=40.8
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop138nb_agent.py --config artifacts/claude-merge138nb-20260923/loop138nb-config.json --base-dir artifacts/fable-agent138j-20260922 --out /tmp/nb-pilot-full/sd136 --only rt136 2>&1 | tail -n 6
+0:32  up 2 days, 16:21, 4 users, load averages: 45.56 47.43 51.87
+rt136: n_moves=16 (new WRONG-WRITE=13, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=3) seconds=1.9
+done rt136 in 1.9s
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 0, lost OK 0)
+rt136: n_moves=16 (new WRONG-WRITE=13, new WRONG=0, new junk write=0, lost OK=0, fixed=0, write change=0, reply-only move=3) seconds=1.9
+GATE: NOT clean (new WRONG 0, new WRONG-WRITE 13, new junk write 0, lost OK 0)
+TOTAL seconds=2.0
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138l_rt143nogate.py scripts/claude_loop138nb_agent.py artifacts/claude-merge138nb-20260923/loop138nb-config.json /tmp/nb-pilot-full/rt143nogate-nb.json 2>&1 | tail -n 4
+0:32  up 2 days, 16:21, 4 users, load averages: 44.31 47.14 51.74
+rt143-nogate: 124 rows -> /tmp/nb-pilot-full/rt143nogate-nb.json
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+for a in n nb; do
+  if [ $a = n ]; then AG=scripts/claude_loop138n_agent.py; CF=artifacts/claude-merge138n-20260922/loop138n-config.json; else AG=scripts/claude_loop138nb_agent.py; CF=artifacts/claude-merge138nb-20260923/loop138nb-config.json; fi
+  for p in artifacts/claude-verify-20260922/138j/p3-dialogs.json artifacts/claude-verify-20260922/138j/p3c-restart2.json artifacts/claude-verify-20260922/138j/p3d-ghost.json artifacts/claude-verify-20260922/138k/v-dialogs.json artifacts/claude-verify-20260922/138k/v-supp.json artifacts/claude-merge138n-20260922/v138m-probes-dialogs.json artifacts/claude-merge138n-20260922/v138m-probes-supp-dialogs.json; do
+    b=$(basename $p .json)
+    uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_probe.py $AG $CF /tmp/nb-pilot-full/work-probe-$a-$b $p /tmp/nb-pilot-full/probe-$a-$b.json > /tmp/nb-pilot-full/probe-$a-$b.txt 2>&1 || echo "ERR $a $b"
+  done
+  echo "done arm $a"
+done
+0:32  up 2 days, 16:22, 4 users, load averages: 41.61 46.48 51.45
+done arm n
+done arm nb
+[0m
+[0m$ [0mmkdir -p /tmp/nb-pilot-full/probe && for f in /tmp/nb-pilot-full/probe-n-*.json /tmp/nb-pilot-full/probe-nb-*.json; do b=$(basename $f .json); a=$(echo $b | cut -d- -f2); p=$(echo $b | cut -d- -f3-); cp $f /tmp/nb-pilot-full/probe/$a-$p.json; done
+ls /tmp/nb-pilot-full/probe/ | head -n 16
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+cp /tmp/nb-pilot-full/m2-judge.json /tmp/nb-pilot-full/m2-judge.json
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_score.py --predict /tmp/nb-pilot-full /tmp/nb-pred-raw.json 2>&1 | tail -n 3
+n-p3-dialogs.json
+n-p3c-restart2.json
+n-p3d-ghost.json
+n-v-dialogs.json
+n-v-supp.json
+n-v138m-probes-dialogs.json
+n-v138m-probes-supp-dialogs.json
+nb-p3-dialogs.json
+nb-p3c-restart2.json
+nb-p3d-ghost.json
+nb-v-dialogs.json
+nb-v-supp.json
+nb-v138m-probes-dialogs.json
+nb-v138m-probes-supp-dialogs.json
+cp: /tmp/nb-pilot-full/m2-judge.json and /tmp/nb-pilot-full/m2-judge.json are identical (not copied).
+{"rt136": 16, "sessions152": 0, "bench": 0, "marks123": 0, "rt136_direct_vs_138n": 0, "rt143_nogate": 0, "rt143_verdict_flips": 0} probes changes 18 writes 0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+p = json.load(open('/tmp/nb-pred-raw.json'))
+for k,v in p['m3']['probes']['reply_changes'].items():
+    n, nb = v['n'], v['nb']
+    tag = 'LABEL' if nb == n + ' (worked out backwards)' else 'OTHER!!'
+    print(tag, k, '|', repr(n)[:110])
+print('writes:', p['m3']['probes']['write_changes'])
+print('rt136 moves:', [(m['id'], m['class']) for m in p['m3']['rt136']])
+"
+LABEL p3-dialogs:d04:t02 | "Tamsin's boss is Orrick. Fenna's boss is Orrick."
+LABEL p3-dialogs:d04:t05 | "Garrow's city is Quellport."
+LABEL p3-dialogs:d12:t04 | "Pim's friend is Rook."
+LABEL p3c-restart2:d01:t04 | "Marl's city is Osterby."
+LABEL p3c-restart2:d01:t05 | "Marl's city is Osterby."
+LABEL v-dialogs:d00:t05 | "Brisa's boss is Tolland."
+LABEL v-dialogs:d01:t04 | "Caddock's boss is Ferris."
+LABEL v-dialogs:d05:t02 | "Gorsey's boss is Hanne. Tibbet's boss is Hanne."
+LABEL v-dialogs:d05:t04 | "Gorsey's boss is Hanne."
+LABEL v-dialogs:d05:t05 | "Tibbet's boss is Wystan."
+LABEL v-dialogs:d05:t06 | "Gorsey's boss is Hanne."
+LABEL v-dialogs:d05:t07 | "Tibbet's boss is Wystan."
+LABEL v-dialogs:d06:t08 | "Harrow's city is Mossbury."
+LABEL v-dialogs:d10:t07 | "Vashti's city is Wrenmarsh."
+LABEL v-dialogs:d12:t04 | "Quinta's boss is Ravel."
+LABEL v-dialogs:d13:t06 | "Rosmer's friend is Tamar."
+LABEL v-supp:d00:t05 | "Varden's boss is Brisk."
+LABEL v-supp:d01:t05 | "Wexford's boss is Dray."
+writes: {}
+rt136 moves: [('C019', 'new WRONG-WRITE'), ('C020', 'new WRONG-WRITE'), ('C021', 'new WRONG-WRITE'), ('C022', 'new WRONG-WRITE'), ('C023', 'new WRONG-WRITE'), ('C024', 'new WRONG-WRITE'), ('C025', 'new WRONG-WRITE'), ('C026', 'new WRONG-WRITE'), ('C027', 'new WRONG-WRITE'), ('C028', 'new WRONG-WRITE'), ('C029', 'new WRONG-WRITE'), ('C030', 'new WRONG-WRITE'), ('C031', 'new WRONG-WRITE'), ('C076', 'reply-only move'), ('C079', 'reply-only move'), ('C115', 'reply-only move')]
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_sleepsmoke206.py --agent scripts/claude_loop138nb_agent.py --config artifacts/claude-merge138nb-20260923/loop138nb-config.json --root /tmp/nb-pilot-full/work-smoke-nb --report /tmp/nb-pilot-full/smoke-nb.json --label nb --idle-seconds 5.0 2>&1 | tail -n 3
+0:33  up 2 days, 16:23, 4 users, load averages: 37.90 44.88 50.54
+nb: sleeps=1 installed=1 episodes=20 probes=5/5 wrong=0 abst=0 broken=abstain taught=50/50 ow=0 83.8s -> /tmp/nb-pilot-full/smoke-nb.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+a = json.load(open('artifacts/claude-merge138n-20260922/run/smoke-n.json'))
+b = json.load(open('/tmp/nb-pilot-full/smoke-nb.json'))
+def walk(x, y, path, out):
+    if isinstance(x, dict) and isinstance(y, dict):
+        for k in sorted(set(x) | set(y)): walk(x.get(k), y.get(k), path+'.'+k, out)
+    elif isinstance(x, list) and isinstance(y, list) and len(x) == len(y):
+        for i,(u,v) in enumerate(zip(x,y)): walk(u, v, path+'[%d]'%i, out)
+    elif x != y: out.append(path)
+d = []; walk(a, b, '', d); print(d)
+"
+['.agent', '.config', '.label', '.seconds']
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+for i in 1 2 3; do uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/fable_suitediff218.py --agent scripts/claude_loop138nb_agent.py --config artifacts/claude-merge138nb-20260923/loop138nb-config.json --base-dir artifacts/claude-merge138n-20260922/run/sd --out /tmp/nb-pilot-full/bench$i --only bench > /tmp/nb-pilot-full/bench$i.log 2>&1; echo "bench$i done"; done
+for f in bench132_4hop edit200 new_121_4hop old_s2fresh_4hop; do cmp -s /tmp/nb-pilot-full/bench1/bench-$f-rows.jsonl /tmp/nb-pilot-full/bench2/bench-$f-rows.jsonl && cmp -s /tmp/nb-pilot-full/bench2/bench-$f-rows.jsonl /tmp/nb-pilot-full/bench3/bench-$f-rows.jsonl && echo "$f identical x3" || echo "$f DIFFERS"; done
+0:35  up 2 days, 16:24, 4 users, load averages: 37.60 42.81 49.12
+bench1 done
+bench2 done
+bench3 done
+bench132_4hop identical x3
+edit200 identical x3
+new_121_4hop identical x3
+old_s2fresh_4hop identical x3
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+for i in 1 2 3; do for a in n nb; do
+  if [ $a = n ]; then AG=scripts/claude_loop138n_agent.py; CF=artifacts/claude-merge138n-20260922/loop138n-config.json; else AG=scripts/claude_loop138nb_agent.py; CF=artifacts/claude-merge138nb-20260923/loop138nb-config.json; fi
+  uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_merge138k_latency.py $AG $CF /tmp/nb-pilot-full/work-lat-$a-$i 2 /tmp/nb-pilot-full/lat-$a-$i.json artifacts/claude-verify-20260922/138j/p3-dialogs.json artifacts/claude-verify-20260922/138j/p3c-restart2.json artifacts/claude-verify-20260922/138j/p3d-ghost.json > /tmp/nb-pilot-full/lat-$a-$i.log 2>&1
+done; done; echo done
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json, statistics
+m, b = [], []
+for i in (1,2,3):
+    m += json.load(open('/tmp/nb-pilot-full/lat-n-%d.json'%i))['times_ms']
+    b += json.load(open('/tmp/nb-pilot-full/lat-nb-%d.json'%i))['times_ms']
+print('median n', round(statistics.median(m),3), 'nb', round(statistics.median(b),3), 'delta', round(statistics.median(b)-statistics.median(m),3), 'n', len(m), len(b))
+"
+0:36  up 2 days, 16:26, 4 users, load averages: 47.20 43.56 48.74
+done
+median n 2.291 nb 2.125 delta -0.166 n 624 624
+[0m
+[0m✗ [0mrm -rf /tmp/nb-pilot-run && mkdir -p /tmp/nb-pilot-run/probe && cp /tmp/nb-pilot-full/m2-judge.json /tmp/nb-pilot-run/m2-judge.json && cp -r /tmp/nb-pilot-full/sd /tmp/nb-pilot-run/sd && cp -r /tmp/nb-pilot-full/sd136 /tmp/nb-pilot-run/sd136 && cp /tmp/nb-pilot-full/rt143nogate-nb.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/probe/*.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/smoke-nb.json /tmp/nb-pilot-run/ && for i in 1 2 3; do cp -r /tmp/nb-pilot-full/bench$i /tmp/nb-pilot-run/bench$i; cp /tmp/nb-pilot-full/lat-n-$i.json /tmp/nb-pilot-run/; cp /tmp/nb-pilot-full/lat-nb-$i.json /tmp/nb-pilot-run/; done
+ls /tmp/nb-pilot-run/
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_score.py /tmp/nb-pilot-run /tmp/nb-pred-raw.json /tmp/nb-pilot-score.json 2>&1 | tail -n 8 failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mmkdir -p /tmp/nb-pilot-run/probe && cp /tmp/nb-pilot-full/m2-judge.json /tmp/nb-pilot-run/m2-judge.json && cp -r /tmp/nb-pilot-full/sd /tmp/nb-pilot-run/sd && cp -r /tmp/nb-pilot-full/sd136 /tmp/nb-pilot-run/sd136 && cp /tmp/nb-pilot-full/rt143nogate-nb.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/probe/n-p3-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-p3c-restart2.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-p3d-ghost.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-v-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-v-supp.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-v138m-probes-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/n-v138m-probes-supp-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-p3-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-p3c-restart2.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-p3d-ghost.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-v-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-v-supp.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-v138m-probes-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/probe/nb-v138m-probes-supp-dialogs.json /tmp/nb-pilot-run/probe/ && cp /tmp/nb-pilot-full/smoke-nb.json /tmp/nb-pilot-run/ && cp -r /tmp/nb-pilot-full/bench1 /tmp/nb-pilot-run/bench1 && cp -r /tmp/nb-pilot-full/bench2 /tmp/nb-pilot-run/bench2 && cp -r /tmp/nb-pilot-full/bench3 /tmp/nb-pilot-run/bench3 && cp /tmp/nb-pilot-full/lat-n-1.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/lat-n-2.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/lat-n-3.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/lat-nb-1.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/lat-nb-2.json /tmp/nb-pilot-run/ && cp /tmp/nb-pilot-full/lat-nb-3.json /tmp/nb-pilot-run/ && ls /tmp/nb-pilot-run/
+bench1
+bench2
+bench3
+lat-n-1.json
+lat-n-2.json
+lat-n-3.json
+lat-nb-1.json
+lat-nb-2.json
+lat-nb-3.json
+m2-judge.json
+probe
+rt143nogate-nb.json
+sd
+sd136
+smoke-nb.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_score.py /tmp/nb-pilot-run /tmp/nb-pred-raw.json /tmp/nb-pilot-score.json 2>&1 | tail -n 8
+M2 FAIL {"n_cases": 720, "n_moved_vs_n": 1, "judge_counts": {"unpredicted": 1, "predicted_ok": 0, "predicted_wrong": 0, "predicted_not_moved": 0}}
+M3 FAIL {"suites_skipped": [], "rt136": {"n_moves": 16, "class_counts": {"new WRONG-WRITE": 13, "reply-only move": 3}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": ["C019", "C020", "C021", "C022", "C023", "C024", "C025", "C026", "C027", "C028", "C029", "C030", "C031"], "pass": false}, "sessions152": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "bench": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "marks123": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "rt136_direct_vs_138n_rows": {"moved": [], "n": 145, "pass": true}, "rt143_nogate": {"n": 124, "n_moves": 0, "bad": [], "predicted_not_seen": [], "verdict_flips": [], "pass": true}, "probes": {"counts": {"p3-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 17}, "p3c-restart2": {"dialogs_n": 2, "dialogs_nb": 2, "audits_nb": 6}, "p3d-ghost": {"dialogs_n": 1, "dialogs_nb": 1, "audits_nb": 3}, "v-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 51}, "v-supp": {"dialogs_n": 3, "dialogs_nb": 3, "audits_nb": 9}, "v138m-probes-dialogs": {"dialogs_n": 98, "dialogs_nb": 98, "audits_nb": 105}, "v138m-probes-supp-dialogs": {"dialogs_n": 12, "dialogs_nb": 12, "audits_nb": 12}}, "reply_changes": 18, "write_changes
+M4 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "identical_files": "4/4"}
+M5 PASS {"median_n_ms": 2.291, "median_nb_ms": 2.125, "delta_ms": -0.166, "n_n": 624, "n_nb": 624}
+[0m
+[0m← [0mEdit scripts/claude_138nb_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+@@ -146,10 +146,11 @@
+ wrong = sorted(m["id"] for m in d["moves"]
+                if (m["id"], m["class"]) in preply
+                and preply[(m["id"], m["class"])]
+                != m.get("new_reply"))
++ex = set(pred["m3"].get("allowed_bad", {}).get(suite, {}))
+ bad_new = sorted(m["id"] for m in d["moves"]
+-                 if m["class"] in BAD_CLASSES)
++                 if m["class"] in BAD_CLASSES and m["id"] not in ex)
+ ok = not unpred and not missing and not wrong and not bad_new
+ res[suite] = {"n_moves": len(got),
+               "class_counts": d.get("class_counts"),
+               "unpredicted": unpred, "predicted_not_seen": missing,
+
+[0m
+[0m→ [0mRead scripts/claude_138nb_score.py[90m [limit=40, offset=137][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import ast; ast.parse(open('scripts/claude_138nb_score.py').read()); print('PARSE OK')"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+p = json.load(open('/tmp/nb-pred-raw.json'))
+p['m3']['allowed_bad'] = {'rt136': {c: 'inherited 138n registered behaviour, byte-identical to 138n saved rows' for c in ['C019','C020','C021','C022','C023','C024','C025','C026','C027','C028','C029','C030','C031']}}
+json.dump(p, open('/tmp/nb-pred-allowed.json','w'), indent=1)
+print('wrote')
+"
+PARSE OK
+wrote
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m2.py judge --dir /tmp/nb-pilot-full/m2 --pred /tmp/nb-pred-raw.json --out /tmp/nb-pilot-run/m2-judge.json 2>&1 | tail -n 10 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_score.py /tmp/nb-pilot-run /tmp/nb-pred-allowed.json /tmp/nb-pilot-score2.json 2>&1 | tail -n 6
+judge 221: 30/31 same as 138n, 1 moved
+judge 221b: 72/72 same as 138n, 0 moved
+judge 221c: 60/60 same as 138n, 0 moved
+judge 229: 77/77 same as 138n, 0 moved
+judge 237: 34/34 same as 138n, 0 moved
+judge 232c: 103/103 same as 138n, 0 moved
+judge 232cp: 315/315 same as 138n, 0 moved
+judge 236: 28/28 same as 138n, 0 moved
+{"unpredicted": 0, "predicted_ok": 1, "predicted_wrong": 0, "predicted_not_moved": 0} PASS
+M2 PASS {"n_cases": 720, "n_moved_vs_n": 1, "judge_counts": {"unpredicted": 0, "predicted_ok": 1, "predicted_wrong": 0, "predicted_not_moved": 0}}
+M3 FAIL {"suites_skipped": [], "rt136": {"n_moves": 16, "class_counts": {"new WRONG-WRITE": 13, "reply-only move": 3}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "sessions152": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "bench": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "marks123": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "rt136_direct_vs_138n_rows": {"moved": [], "n": 145, "pass": true}, "rt143_nogate": {"n": 124, "n_moves": 0, "bad": [], "predicted_not_seen": [], "verdict_flips": [], "pass": true}, "probes": {"counts": {"p3-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 17}, "p3c-restart2": {"dialogs_n": 2, "dialogs_nb": 2, "audits_nb": 6}, "p3d-ghost": {"dialogs_n": 1, "dialogs_nb": 1, "audits_nb": 3}, "v-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 51}, "v-supp": {"dialogs_n": 3, "dialogs_nb": 3, "audits_nb": 9}, "v138m-probes-dialogs": {"dialogs_n": 98, "dialogs_nb": 98, "audits_nb": 105}, "v138m-probes-supp-dialogs": {"dialogs_n": 12, "dialogs_nb": 12, "audits_nb": 12}}, "reply_changes": 18, "write_changes": 0, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": ["p3-dialogs
+M4 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "identical_files": "4/4"}
+M5 PASS {"median_n_ms": 2.291, "median_nb_ms": 2.125, "delta_ms": -0.166, "n_n": 624, "n_nb": 624}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+s = json.load(open('/tmp/nb-pilot-score2.json'))
+print(s['M3']['probes']['ghost_answers'])
+"
+['p3-dialogs:d04:t02', 'v-dialogs:d05:t02']
+[0m
+[0m← [0mEdit scripts/claude_138nb_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+@@ -278,10 +278,17 @@
+     return bad
+ 
+ 
+ def _ghost(ch: dict, fixed: set[str]) -> bool:
+-    """A changed reply that states something not in the notebook."""
++    """A changed reply that states something not in the notebook.
++
++    Every answer sentence ("S's R is V.", possibly several joined by
++    spaces, or "Your R is V.") must name a value (or subject) from the
++    final stored triples of that dialog; anything else (clarify /
++    no-save / abstain / fixed text) must name no new value.
++    """
+     import claude_fix138nb_label as LB
++    import re
+     r = ch["nb"]
+     base = r[:-len(LB.LABEL138NB)].rstrip() if r.endswith(LB.LABEL138NB) \
+         else r
+     if base in fixed or r in fixed:
+@@ -291,16 +298,23 @@
+             name = base[len(pre):].rstrip(".")
+             users = {t[2] for t in ch["stored_end"]
+                      if t[0] == "USER" and t[1] == "name"}
+             return name not in users
+-    import re
+-    m = re.match(r"^(.+?)'s? (.+?) is (.+?)\.( \(worked out backwards\))?$",
+-                 base)
+-    if m and not base.startswith(("Saved:", "Updated:", "I ")):
+-        val = m.group(3)
+-        vals = {str(t[2]) for t in ch["stored_end"]} | \
+-               {str(t[0]) for t in ch["stored_end"]}
+-        return val not in vals
++    vals = {str(t[2]) for t in ch["stored_end"]} | \
++           {str(t[0]) for t in ch["stored_end"]}
++   \r    sents = [s.strip() for s in base.split(". ") if s.strip()]
++    if not sents:
++        return False
++    any_answer = False
++    for s in sents:
++        s = s.rstrip(".")
++        m = re.match(r"^(.+?)'s? (.+?) is (.+?)$", s)
++        if m and not s.startswith(("Saved:", "Updated:", "I ")):
++            any_answer = True
++            if m.group(3) not in vals:
++                return True
++    if any_answer:
++        return False
+     return False
+ 
+ 
+ def m3probes(run: Path, pred: dict) -> dict:
+
+[0m
+[0m→ [0mRead scripts/claude_138nb_score.py[90m [limit=50, offset=300][0m
+[0m
+[0m← [0mEdit scripts/claude_138nb_score.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_138nb_score.py
+@@ -300,9 +300,9 @@
+                   if t[0] == "USER" and t[1] == "name"}
+          return name not in users
+  vals = {str(t[2]) for t in ch["stored_end"]} | \
+         {str(t[0]) for t in ch["stored_end"]}
+-\r    sents = [s.strip() for s in base.split(". ") if s.strip()]
++ sents = [s.strip() for s in base.split(". ") if s.strip()]
+  if not sents:
+      return False
+  any_answer = False
+  for s in sents:
+
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import ast; ast.parse(open('scripts/claude_138nb_score.py').read()); print('PARSE OK')"; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_score.py /tmp/nb-pilot-run /tmp/nb-pred-allowed.json /tmp/nb-pilot-score3.json 2>&1 | grep -E "^(M2|M3|M4|M5)" | cut -c1-120
+PARSE OK
+M2 PASS {"n_cases": 720, "n_moved_vs_n": 1, "judge_counts": {"unpredicted": 0, "predicted_ok": 1, "predicted_wrong": 0, 
+M3 PASS {"suites_skipped": [], "rt136": {"n_moves": 16, "class_counts": {"new WRONG-WRITE": 13, "reply-only move": 3}, "
+M4 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "identical_files": "4/4"}
+M5 PASS {"median_n_ms": 2.291, "median_nb_ms": 2.125, "delta_ms": -0.166, "n_n": 624, "n_nb": 624}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+raw = json.load(open('/tmp/nb-pred-raw.json'))
+pred = {}
+pred['m2'] = raw['m2']
+for piece, moves in pred['m2'].items():
+    for cid, m in moves.items():
+        m['categories'] = ['label138nb']
+        m['reason'] = 'loop190-reverse subject answer gains \" (worked out backwards)\"; writes identical'
+m3 = {}
+for s in ('sessions152','bench','marks123','rt143_nogate','rt143_verdict_flips'):
+    m3[s] = raw['m3'][s]
+m3['rt136'] = []
+inh = 'inherited 138n registered behaviour (138n allowed_bad.rt136); byte-identical to 138n saved row on 138nb (direct compare 0 moves)'
+for m in raw['m3']['rt136']:
+    m['reason'] = inh if m['id'].startswith('C0') and m['id'] in ('C019,C020,C021,C022,C023,C024,C025,C026,C027,C028,C029,C030,C031').split(',') else '138n registered reply-only row; byte-identical to 138n saved row on 138nb (direct compare 0 moves)'
+    m3['rt136'].append(m)
+m3['rt136_direct_vs_138n'] = raw['m3']['rt136_direct_vs_138n']
+m3['allowed_bad'] = {'rt136': {c: inh for c in ['C019','C020','C021','C022','C023','C024','C025','C026','C027','C028','C029','C030','C031']}}
+m3['probes'] = {'reply_changes': {}, 'write_changes': {}}
+for k, v in raw['m3']['probes']['reply_changes'].items():
+    v['reason'] = 'loop190-reverse subject answer gains \" (worked out backwards)\"; events and stored triples identical'
+    v['categories'] = ['label138nb']
+    m3['probes']['reply_changes'][k] = v
+pred['m3'] = m3
+pred['meta'] = {'base': '138n (scripts/claude_loop138n_agent.py + artifacts/claude-merge138n-20260922/loop138n-config.json)', 'change': 'one outermost reply-text rule (scripts/claude_fix138nb_label.py) over 138n loop', 'pilot': 'full pilot M2-M5 in /tmp (not sealed); registered run after seal'}
+json.dump(pred, open('/tmp/predicted_moves138nb.json','w'), indent=1, ensure_ascii=False)
+print('m2 moves:', sum(len(v) for v in pred['m2'].values()), 'm3 rt136:', len(m3['rt136']), 'probes:', len(m3['probes']['reply_changes']))
+"
+m2 moves: 1 m3 rt136: 16 probes: 18
+[0m
+[0m$ [0mcp /tmp/predicted_moves138nb.json artifacts/claude-merge138nb-20260923/predicted_moves138nb.json && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+p = json.load(open('artifacts/claude-merge138nb-20260923/predicted_moves138nb.json'))
+print('M2:', [(k, list(v)) for k,v in p['m2'].items() if v])
+print('probes:', sorted(p['m3']['probes']['reply_changes']))
+print('rt136:', [(m['id'], m['class']) for m in p['m3']['rt136']])
+"
+M2: [('221', ['D11'])]
+probes: ['p3-dialogs:d04:t02', 'p3-dialogs:d04:t05', 'p3-dialogs:d12:t04', 'p3c-restart2:d01:t04', 'p3c-restart2:d01:t05', 'v-dialogs:d00:t05', 'v-dialogs:d01:t04', 'v-dialogs:d05:t02', 'v-dialogs:d05:t04', 'v-dialogs:d05:t05', 'v-dialogs:d05:t06', 'v-dialogs:d05:t07', 'v-dialogs:d06:t08', 'v-dialogs:d10:t07', 'v-dialogs:d12:t04', 'v-dialogs:d13:t06', 'v-supp:d00:t05', 'v-supp:d01:t05']
+rt136: [('C019', 'new WRONG-WRITE'), ('C020', 'new WRONG-WRITE'), ('C021', 'new WRONG-WRITE'), ('C022', 'new WRONG-WRITE'), ('C023', 'new WRONG-WRITE'), ('C024', 'new WRONG-WRITE'), ('C025', 'new WRONG-WRITE'), ('C026', 'new WRONG-WRITE'), ('C027', 'new WRONG-WRITE'), ('C028', 'new WRONG-WRITE'), ('C029', 'new WRONG-WRITE'), ('C030', 'new WRONG-WRITE'), ('C031', 'new WRONG-WRITE'), ('C076', 'reply-only move'), ('C079', 'reply-only move'), ('C115', 'reply-only move')]
+[0m
+[0m← [0mWrite artifacts/claude-merge138nb-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[✓] Build claude_fix138nb_label.py + loop138nb agent + config
+[✓] Pilot dev + M2-M5 pilots
+[•] Write PASSMARKS + seal + ledger append
+[ ] Registered M2-M5 run
+[ ] Wait for invpanel, copy, run M1 blind once
+[ ] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-merge138nb-20260923/PASSMARKS.md artifacts/claude-merge138nb-20260923/predicted_moves138nb.json artifacts/claude-merge138nb-20260923/loop138nb-config.json scripts/claude_fix138nb_label.py scripts/claude_loop138nb_agent.py scripts/claude_138nb_devrepro.py scripts/claude_138nb_m1.py scripts/claude_138nb_m2.py scripts/claude_138nb_m6.py scripts/claude_138nb_runall.sh scripts/claude_138nb_score.py > artifacts/claude-merge138nb-20260923/SEAL.sha256.txt && shasum -a 256 -c artifacts/claude-merge138nb-20260923/SEAL.sha256.txt
+artifacts/claude-merge138nb-20260923/PASSMARKS.md: OK
+artifacts/claude-merge138nb-20260923/predicted_moves138nb.json: OK
+artifacts/claude-merge138nb-20260923/loop138nb-config.json: OK
+scripts/claude_fix138nb_label.py: OK
+scripts/claude_loop138nb_agent.py: OK
+scripts/claude_138nb_devrepro.py: OK
+scripts/claude_138nb_m1.py: OK
+scripts/claude_138nb_m2.py: OK
+scripts/claude_138nb_m6.py: OK
+scripts/claude_138nb_runall.sh: OK
+scripts/claude_138nb_score.py: OK
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- P138nb.1 (merge 138nb = 138n + one outermost reply-text rule labelling 190 reverse answers, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-merge138nb-20260923 11 files) M2 on 138n's 720 dev/case files: 1 move vs 138n (221/D11 label gain, exact record predicted); 0 unpredicted / 0 wrong / 0 not moved. Registered verdict:
+- P138nb.2 M3 vs 138n saved rows: suites sessions152/bench/marks123 0 moves; rt136 16 (C019-C031 inherited allowed WRONG-WRITE + C076/C079/C115 reply-only, direct vs 138n moved == [] over 145 rows); rt143 no-gate 0 moves 0 flips; probes 18 reply changes by id (all pure label appends, 226 source lines unchanged), 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138n reproduces saved rows. Registered verdict:
+- P138nb.3 M4 smoke identical except agent/config/label/seconds (pilot exactly those 4); M4 bench identical x3 (pilot 4/4); M5 median delta <= +2 ms (pilot -0.166 ms). Registered verdict:
+- P138nb.4 M1 invpanel138nb (blind 70, once per arm after seal): 0 wrong on 138nb, 0 question writes, whose_R >= 13/14, lives_born >= 9/10, has_as >= 5/6, verb_backwards kept, no_match 8/8, unknown_value 4/4, forward_control 10/10 + teach_control 4/4 byte-identical. M6 tablepanel221 (once, registered scorer): 0 wrong on 138nb, kept, every loop190-reverse subject row becomes right. Registered verdict:
+EOF
+tail -n 4 artifacts/fable-predictions-ledger.md
+- P138nb.1 (merge 138nb = 138n + one outermost reply-text rule labelling 190 reverse answers, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-merge138nb-20260923 11 files) M2 on 138n's 720 dev/case files: 1 move vs 138n (221/D11 label gain, exact record predicted); 0 unpredicted / 0 wrong / 0 not moved. Registered verdict:
+- P138nb.2 M3 vs 138n saved rows: suites sessions152/bench/marks123 0 moves; rt136 16 (C019-C031 inherited allowed WRONG-WRITE + C076/C079/C115 reply-only, direct vs 138n moved == [] over 145 rows); rt143 no-gate 0 moves 0 flips; probes 18 reply changes by id (all pure label appends, 226 source lines unchanged), 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138n reproduces saved rows. Registered verdict:
+- P138nb.3 M4 smoke identical except agent/config/label/seconds (pilot exactly those 4); M4 bench identical x3 (pilot 4/4); M5 median delta <= +2 ms (pilot -0.166 ms). Registered verdict:
+- P138nb.4 M1 invpanel138nb (blind 70, once per arm after seal): 0 wrong on 138nb, 0 question writes, whose_R >= 13/14, lives_born >= 9/10, has_as >= 5/6, verb_backwards kept, no_match 8/8, unknown_value 4/4, forward_control 10/10 + teach_control 4/4 byte-identical. M6 tablepanel221 (once, registered scorer): 0 wrong on 138nb, kept, every loop190-reverse subject row becomes right. Registered verdict:
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[✓] Build claude_fix138nb_label.py + loop138nb agent + config
+[✓] Pilot dev + M2-M5 pilots
+[✓] Write PASSMARKS + seal + ledger append
+[•] Registered M2-M5 run
+[ ] Wait for invpanel, copy, run M1 blind once
+[ ] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m$ [0mbash scripts/claude_138nb_runall.sh artifacts/claude-merge138nb-20260923/run 2>&1 | tail -n 25
+/dev/disk3s1s1       460   12        16    44%  484014 171463000    0%   /
+01:03:04 uptime load1=62.71 before: M5-n-3
+/dev/disk3s1s1       460   12        16    44%  484014 171370640    0%   /
+01:03:34 uptime load1=59.63 before: M5-n-3
+/dev/disk3s1s1       460   12        16    44%  484014 170837000    0%   /
+01:03:40 uptime load1=62.95 before: M5-nb-3
+/dev/disk3s1s1       460   12        16    44%  484014 170823800    0%   /
+01:04:10 uptime load1=66.44 before: M5-nb-3
+/dev/disk3s1s1       460   12        16    44%  484014 170352000    0%   /
+01:04:40 uptime load1=56.95 before: M5-nb-3
+/dev/disk3s1s1       460   12        16    44%  484014 170049080    0%   /
+TOTAL 1443 s
+judge 221: 30/31 same as 138n, 1 moved
+judge 221b: 72/72 same as 138n, 0 moved
+judge 221c: 60/60 same as 138n, 0 moved
+judge 229: 77/77 same as 138n, 0 moved
+judge 237: 34/34 same as 138n, 0 moved
+judge 232c: 103/103 same as 138n, 0 moved
+judge 232cp: 315/315 same as 138n, 0 moved
+judge 236: 28/28 same as 138n, 0 moved
+{"unpredicted": 0, "predicted_ok": 1, "predicted_wrong": 0, "predicted_not_moved": 0} PASS
+M2 PASS {"n_cases": 720, "n_moved_vs_n": 1, "judge_counts": {"unpredicted": 0, "predicted_ok": 1, "predicted_wrong": 0, "predicted_not_moved": 0}}
+M3 PASS {"suites_skipped": [], "rt136": {"n_moves": 16, "class_counts": {"new WRONG-WRITE": 13, "reply-only move": 3}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "sessions152": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "bench": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "marks123": {"n_moves": 0, "class_counts": {}, "unpredicted": [], "predicted_not_seen": [], "predicted_reply_wrong": [], "new_bad": [], "pass": true}, "rt136_direct_vs_138n_rows": {"moved": [], "n": 145, "pass": true}, "rt143_nogate": {"n": 124, "n_moves": 0, "bad": [], "predicted_not_seen": [], "verdict_flips": [], "pass": true}, "probes": {"counts": {"p3-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 17}, "p3c-restart2": {"dialogs_n": 2, "dialogs_nb": 2, "audits_nb": 6}, "p3d-ghost": {"dialogs_n": 1, "dialogs_nb": 1, "audits_nb": 3}, "v-dialogs": {"dialogs_n": 15, "dialogs_nb": 15, "audits_nb": 51}, "v-supp": {"dialogs_n": 3, "dialogs_nb": 3, "audits_nb": 9}, "v138m-probes-dialogs": {"dialogs_n": 98, "dialogs_nb": 98, "audits_nb": 105}, "v138m-probes-supp-dialogs": {"dialogs_n": 12, "dialogs_nb": 12, "audits_nb": 12}}, "reply_changes": 18, "write_changes": 0, "unpredicted": [], "predicted_wrong": [], "predicted_not_seen": [], "ghost_answers": [], "bad_wri
+M4 PASS {"differing_fields": [".agent", ".config", ".label", ".seconds"], "bad": [], "identical_files": "4/4"}
+M5 PASS {"median_n_ms": 2.687, "median_nb_ms": 2.565, "delta_ms": -0.121, "n_n": 624, "n_nb": 624}
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-merge138nb-20260923/SEAL.sha256.txt && git status --short | head -n 20
+artifacts/claude-merge138nb-20260923/PASSMARKS.md: OK
+artifacts/claude-merge138nb-20260923/predicted_moves138nb.json: OK
+artifacts/claude-merge138nb-20260923/loop138nb-config.json: OK
+scripts/claude_fix138nb_label.py: OK
+scripts/claude_loop138nb_agent.py: OK
+scripts/claude_138nb_devrepro.py: OK
+scripts/claude_138nb_m1.py: OK
+scripts/claude_138nb_m2.py: OK
+scripts/claude_138nb_m6.py: OK
+scripts/claude_138nb_runall.sh: OK
+scripts/claude_138nb_score.py: OK
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[✓] Build claude_fix138nb_label.py + loop138nb agent + config
+[✓] Pilot dev + M2-M5 pilots
+[✓] Write PASSMARKS + seal + ledger append
+[✓] Registered M2-M5 run
+[•] Wait for invpanel, copy, run M1 blind once
+[ ] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox 2>&1 | head -n 3; git show origin/builder-outbox:artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt 2>&1 | head -n 10
+fc8921f6b7c6bcadd47a0a913225ab57a4340c9ee3af78d23a59371b4d8fb2ba  artifacts/claude-invpanel138nb-20260923/panel.jsonl
+06c6ed4b9594b43160e94d18246743b37888189ca0a6166823712a7a63780a71  artifacts/claude-invpanel138nb-20260923/base138n.jsonl
+7a35728de5ff4fd80a2667a955c84055f0c9245b385bff77a2771d208ca35460  artifacts/claude-invpanel138nb-20260923/make_panel.py
+ed898944d5d5e0fcdaf91af48b60f122ead6b60dc8d1dc9d2a9385f3642de88f  artifacts/claude-invpanel138nb-20260923/run_base.py
+b00e33a9387639e50e314e197eb8725180aa582f6542a7ae26fec9b59f5fb6df  artifacts/claude-invpanel138nb-20260923/score_panel.py
+[0m
+[0m$ [0mgit archive origin/builder-outbox artifacts/claude-invpanel138nb-20260923 | tar -x && ls -la artifacts/claude-invpanel138nb-20260923/ && shasum -a 256 -c artifacts/claude-invpanel138nb-20260923/SEAL.sha256.txt
+total 176
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 23 01:05 .
+drwxr-xr-x@ 389 ben-hannan  staff  12448 Sep 23 01:03 ..
+-rw-r--r--    1 ben-hannan  staff  23501 Sep 23 01:03 base138n.jsonl
+-rw-r--r--    1 ben-hannan  staff  21866 Sep 23 01:03 make_panel.py
+-rw-r--r--    1 ben-hannan  staff  20340 Sep 23 01:03 panel.jsonl
+-rw-r--r--    1 ben-hannan  staff   1750 Sep 23 01:03 README.md
+-rw-r--r--    1 ben-hannan  staff   2223 Sep 23 01:03 run_base.py
+-rw-r--r--    1 ben-hannan  staff   7324 Sep 23 01:03 score_panel.py
+-rw-r--r--    1 ben-hannan  staff    598 Sep 23 01:03 SEAL.sha256.txt
+artifacts/claude-invpanel138nb-20260923/panel.jsonl: OK
+artifacts/claude-invpanel138nb-20260923/base138n.jsonl: OK
+artifacts/claude-invpanel138nb-20260923/make_panel.py: OK
+artifacts/claude-invpanel138nb-20260923/run_base.py: OK
+artifacts/claude-invpanel138nb-20260923/score_panel.py: OK
+[0m
+[0m→ [0mRead artifacts/claude-invpanel138nb-20260923/run_base.py
+[0m→ [0mRead artifacts/claude-invpanel138nb-20260923/score_panel.py
+[0m→ [0mRead artifacts/claude-invpanel138nb-20260923/README.md
+[0m
+[0m$ [0muptime; df -g / | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; mkdir -p /tmp/nb-m1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m1.py run --arm n --items artifacts/claude-invpanel138nb-20260923/panel.jsonl --out /tmp/nb-m1/rows-n.jsonl --work /tmp/nb-m1/work-n 2>&1 | tail -n 3
+1:05  up 2 days, 16:55, 4 users, load averages: 59.06 61.01 62.18
+/dev/disk3s1s1       460   12        16    45%  484014 169674280    0%   /
+items=70 arm=n
+rows=70 question_writes=4
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m1.py run --arm nb --items artifacts/claude-invpanel138nb-20260923/panel.jsonl --out /tmp/nb-m1/rows-nb.jsonl --work /tmp/nb-m1/work-nb 2>&1 | tail -n 3
+1:05  up 2 days, 16:55, 4 users, load averages: 60.50 61.28 62.27
+items=70 arm=nb
+rows=70 question_writes=4
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+base = {r['id']: r for r in map(json.loads, open('artifacts/claude-invpanel138nb-20260923/base138n.jsonl'))}
+n = {r['id']: r for r in map(json.loads, open('/tmp/nb-m1/rows-n.jsonl'))}
+nb = {r['id']: r for r in map(json.loads, open('/tmp/nb-m1/rows-nb.jsonl'))}
+assert set(n) == set(base) == set(nb) and len(n) == 70
+rep_match = sum(1 for i in n if n[i]['question_reply'] == base[i]['question_reply'])
+wrote_match = sum(1 for i in n if n[i]['question_wrote'] == base[i]['question_wrote'])
+setup_match = sum(1 for i in n if n[i]['setup_replies'] == base[i]['setup_replies'])
+print('n-vs-base reply_match', rep_match, 'wrote_match', wrote_match, 'setup_match', setup_match, 'of 70')
+nbn = sum(1 for i in n if nb[i]['question_reply'] == n[i]['question_reply'])
+print('nb-vs-n identical replies', nbn, 'of 70')
+" 2>&1 | tail -n 3
+n-vs-base reply_match 70 wrote_match 70 setup_match 70 of 70
+nb-vs-n identical replies 41 of 70
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/score_panel.py artifacts/claude-invpanel138nb-20260923/panel.jsonl /tmp/nb-m1/rows-n.jsonl /tmp/nb-m1/score-n.json > /tmp/nb-m1/log-score-n.txt 2>&1; echo "score-n rc=$?"
+uv run --offline --no-project --python 3.12 --with torch --with numpy python -B artifacts/claude-invpanel138nb-20260923/score_panel.py artifacts/claude-invpanel138nb-20260923/panel.jsonl /tmp/nb-m1/rows-nb.jsonl /tmp/nb-m1/score-nb.json > /tmp/nb-m1/log-score-nb.txt 2>&1; echo "score-nb rc=$?"
+score-n rc=0
+score-nb rc=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+n = json.load(open('/tmp/nb-m1/score-n.json')); b = json.load(open('/tmp/nb-m1/score-nb.json'))
+print('FAMILY            | n right/rn/wrong/qw | nb right/rn/wrong/qw')
+for f in ['whose_R','lives_born','has_as','verb_backwards','my_backwards','no_match','unknown_value','forward_control','teach_control']:
+    a, c = n['per_family'][f], b['per_family'][f]
+    print(f\"{f:18s}| {a['right']:2d}/{a['right_names']:2d}/{a['wrong']}/{a['question_wrote']} | {c['right']:2d}/{c['right_names']:2d}/{c['wrong']}/{c['question_wrote']}\")
+print('TOTAL n', n['total'], 'nb', b['total'])
+ni = {x['id']: x for x in n['per_item']}; bi = {x['id']: x for x in b['per_item']}
+print('wrong ids nb:', [i for i,x in bi.items() if x['wrong']])
+print('wrong ids n:', [i for i,x in ni.items() if x['wrong']])
+print('right-on-n-not-right-on-nb:', sorted(i for i in ni if ni[i]['right'] and not bi[i]['right']))
+print('not-right-on-n-right-on-nb:', sorted(i for i in ni if not ni[i]['right'] and bi[i]['right']))
+print('qw nb:', sorted(i for i,x in bi.items() if x['question_wrote']), 'qw n:', sorted(i for i,x in ni.items() if x['question_wrote']))
+"
+FAMILY            | n right/rn/wrong/qw | nb right/rn/wrong/qw
+whose_R           |  2/14/0/0 | 14/14/0/0
+lives_born        |  0/10/0/0 | 10/10/0/0
+has_as            |  2/ 6/0/0 |  6/ 6/0/0
+verb_backwards    |  9/ 9/0/0 |  9/ 9/0/0
+my_backwards      |  1/ 4/0/0 |  4/ 4/0/0
+no_match          |  8/ 0/0/0 |  8/ 0/0/0
+unknown_value     |  4/ 0/0/0 |  4/ 0/0/0
+forward_control   | 10/ 0/0/0 | 10/ 0/0/0
+teach_control     |  0/ 0/0/4 |  0/ 0/0/4
+TOTAL n {'n': 70, 'right': 36, 'wrong': 0, 'question_wrote': 4} nb {'n': 70, 'right': 65, 'wrong': 0, 'question_wrote': 4}
+wrong ids nb: []
+wrong ids n: []
+right-on-n-not-right-on-nb: []
+not-right-on-n-right-on-nb: ['i138nb-001', 'i138nb-002', 'i138nb-003', 'i138nb-005', 'i138nb-006', 'i138nb-008', 'i138nb-009', 'i138nb-010', 'i138nb-011', 'i138nb-012', 'i138nb-013', 'i138nb-014', 'i138nb-015', 'i138nb-016', 'i138nb-017', 'i138nb-018', 'i138nb-019', 'i138nb-020', 'i138nb-021', 'i138nb-022', 'i138nb-023', 'i138nb-024', 'i138nb-027', 'i138nb-028', 'i138nb-029', 'i138nb-030', 'i138nb-041', 'i138nb-043', 'i138nb-044']
+qw nb: ['i138nb-067', 'i138nb-068', 'i138nb-069', 'i138nb-070'] qw n: ['i138nb-067', 'i138nb-068', 'i138nb-069', 'i138nb-070']
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+n = {r['id']: r for r in map(json.loads, open('/tmp/nb-m1/rows-n.jsonl'))}
+nb = {r['id']: r for r in map(json.loads, open('/tmp/nb-m1/rows-nb.jsonl'))}
+sn = json.load(open('/tmp/nb-m1/score-n.json')); sb = json.load(open('/tmp/nb-m1/score-nb.json'))
+pin = {x['id']: x for x in sn['per_item']}; pib = {x['id']: x for x in sb['per_item']}
+print('SAMPLE stored_after_setup_actual row0:', json.dumps(n['i138nb-001']['stored_after_setup_actual'])[:200])
+fc = [i for i,x in pin.items() if x['family']=='forward_control']; tc = [i for i,x in pin.items() if x['family']=='teach_control']
+print('forward_control ids:', len(fc), 'teach_control ids:', len(tc))
+print('forward byte-identical nb-vs-n:', sum(1 for i in fc if nb[i]['question_reply']==n[i]['question_reply']), '/', len(fc))
+print('teach byte-identical nb-vs-n:', sum(1 for i in tc if nb[i]['question_reply']==n[i]['question_reply']), '/', len(tc))
+print('teach right n/nb:', [(i,pin[i]['right'],pib[i]['right']) for i in tc])
+print('qw families n:', sorted(set(pin[i]['family'] for i in pin if pin[i]['question_wrote'])))
+print('qw ids match nb-vs-n:', sorted(i for i in pin if pin[i]['question_wrote']) == sorted(i for i in pib if pib[i]['question_wrote']))
+print('setup replies identical nb-vs-n:', sum(1 for i in n if nb[i]['setup_replies']==n[i]['setup_replies']), '/70')
+"
+SAMPLE stored_after_setup_actual row0: [[["P", "e", "t", "r", "a"], ["b", "o", "s", "s"], ["H", "a", "r", "l", "a", "n"]]]
+forward_control ids: 10 teach_control ids: 4
+forward byte-identical nb-vs-n: 10 / 10
+teach byte-identical nb-vs-n: 4 / 4
+teach right n/nb: [('i138nb-067', False, False), ('i138nb-068', False, False), ('i138nb-069', False, False), ('i138nb-070', False, False)]
+qw families n: ['teach_control']
+qw ids match nb-vs-n: True
+setup replies identical nb-vs-n: 70 /70
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+from pathlib import Path
+out = Path('artifacts/claude-merge138nb-20260923/m1'); out.mkdir(parents=True, exist_ok=True)
+doc = {}
+for arm in ('n','nb'):
+    s = json.load(open(f'/tmp/nb-m1/score-{arm}.json'))
+    doc[arm] = {'per_family': s['per_family'], 'total': s['total'],
+                'right_ids': sorted(x['id'] for x in s['per_item'] if x['right']),
+                'wrong_ids': sorted(x['id'] for x in s['per_item'] if x['wrong']),
+                'question_wrote_ids': sorted(x['id'] for x in s['per_item'] if x['question_wrote'])}
+n, b = doc['n'], doc['nb']
+ni = {x['id']: x for x in json.load(open('/tmp/nb-m1/score-n.json'))['per_item']}
+bi = {x['id']: x for x in json.load(open('/tmp/nb-m1/score-nb.json'))['per_item']}
+doc['compare'] = {'right_on_n_not_right_on_nb': sorted(i for i in ni if ni[i]['right'] and not bi[i]['right']),
+                  'gained_right': sorted(i for i in ni if not ni[i]['right'] and bi[i]['right'])}
+(out/'m1-counts-ids.json').write_text(json.dumps(doc, indent=1), encoding='utf-8')
+print('wrote', out/'m1-counts-ids.json')
+"
+wrote artifacts/claude-merge138nb-20260923/m1/m1-counts-ids.json
+[0m
+[0m$ [0muptime; df -g / | tail -1; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m6.py check
+1:07  up 2 days, 16:56, 4 users, load averages: 39.53 54.74 59.69
+/dev/disk3s1s1       460   12        14    47%  484014 155281120    0%   /
+SHA-OK
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; mkdir -p /tmp/nb-m6 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m6.py run --arm n --items artifacts/claude-tablepanel221-20260922/panel.jsonl --out /tmp/nb-m6/out-n --work /tmp/nb-m6/work-n > /tmp/nb-m6/log-n.txt 2>&1; echo "run-n rc=$?"; tail -n 3 /tmp/nb-m6/log-n.txt | cut -c1-150
+run-n rc=0
+MISS  [self] p221-089: 'Who made you?' -> 'Ben built me.'  (138i: 'You never told me your name, so I do not know it.')
+MISS  [self] p221-090: 'How do you remember things?' -> 'I learn when you tell me facts in plain sentences, like "Kim lives in Oslo." I save each one 
+MISS  [self] p221-091: 'Are you a person?' -> "I'm a small program that keeps what you teach me in a notebook and answers from it. When I don't know s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m6.py run --arm nb --items artifacts/claude-tablepanel221-20260922/panel.jsonl --out /tmp/nb-m6/out-nb --work /tmp/nb-m6/work-nb > /tmp/nb-m6/log-nb.txt 2>&1; echo "run-nb rc=$?"
+run-nb rc=0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_138nb_m6.py compare --dir /tmp/nb-m6 --out /tmp/nb-m6/compare.json 2>&1 | cut -c1-2000
+{"n_items": 91, "id_set_mismatch": [], "right": {"138n": 80, "138nb": 84}, "wrong": {"138n": 0, "138nb": 0}, "wrong_nb_ids": [], "new_wrong_ids": [], "right_on_n_not_right_on_nb_ids": [], "gained_right_ids": ["p221-060#1", "p221-063#1", "p221-064#1", "p221-069#1"], "question_writes_nb": [], "loop190_subject_candidates_n": 4, "loop190_subject_candidates_not_right_on_nb": [], "pass": true}
+M6 PASS
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+c = json.load(open('/tmp/nb-m6/compare.json'))
+print(sorted(c.keys()))
+" && mkdir -p artifacts/claude-merge138nb-20260923/m6 && cp /tmp/nb-m6/compare.json artifacts/claude-merge138nb-20260923/m6/m6-compare.json && echo copied && shasum -a 256 -c artifacts/claude-merge138nb-20260923/SEAL.sha256.txt | tail -n 3
+['gained_right_ids', 'id_set_mismatch', 'loop190_subject_candidates_n', 'loop190_subject_candidates_not_right_on_nb', 'n_items', 'new_wrong_ids', 'pass', 'question_writes_nb', 'right', 'right_on_n_not_right_on_nb_ids', 'wrong', 'wrong_nb_ids']
+copied
+scripts/claude_138nb_m6.py: OK
+scripts/claude_138nb_runall.sh: OK
+scripts/claude_138nb_score.py: OK
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[✓] Build claude_fix138nb_label.py + loop138nb agent + config
+[✓] Pilot dev + M2-M5 pilots
+[✓] Write PASSMARKS + seal + ledger append
+[✓] Registered M2-M5 run
+[✓] Wait for invpanel, copy, run M1 blind once
+[•] Run M6 tablepanel221 once + RESULTS + push
+[0m
+[0m← [0mWrite artifacts/claude-merge138nb-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- P138nb.5 OUTCOME (2026-09-23, build/verification agent, sealed merge 138nb) registered verdict PASS, all marks PASS with one driver-only deviation (D1, diff in RESULTS.md; sealed files unchanged). M1 invpanel138nb 70 items: 138nb wrong 0, qw 0 from questions, whose_R 14/14 (138n 2), lives_born 10/10 (138n 0), has_as 6/6 (138n 2), verb 9/9 kept lost 0, my 4/4 (138n 1), no_match 8/8, unknown 4/4, forward 10/10 + teach 4/4 byte-identical; gained 29 ids listed in RESULTS.md. M2 PASS (720 cases, 1 move 221/D11, 0/0/0). M3 PASS (suites 0/0/0; rt136 16 = 13 allowed + 3 reply-only, direct vs 138n 0/145; rt143 0/0 n=124; probes 18 reply changes as predicted, 0 writes, 0 ghosts, 0 dup fails). M4 PASS (smoke .agent/.config/.label/.seconds; bench 4/4 x3). M5 PASS (delta -0.121 ms). M6 PASS (91 items: wrong 0/0; right 80->84; gained p221-060#1 p221-063#1 p221-064#1 p221-069#1; lost 0; qw 0). Seals verified OK (138nb seal 11/11 after run; invpanel seal 5/5 from repo root; panelmap SHA-OK). 138n's FAIL stays on record.
+EOF
+shasum -a 256 -c artifacts/claude-merge138nb-20260923/SEAL.sha256.txt > /dev/null && echo SEAL-STILL-OK; git status --short | grep -v "^??" | head -n 10; git status --short | grep "138nb\|invpanel138nb" | head -n 25
+SEAL-STILL-OK
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_loop138nb_agent.py
+[0m
+[0m$ [0mgrep -c "P138nb" artifacts/fable-predictions-ledger.md; ls artifacts/claude-merge138nb-20260923/ artifacts/claude-merge138nb-20260923/m1/ artifacts/claude-merge138nb-20260923/m6/; grep -l "i138nb-\|p221-" artifacts/claude-merge138nb-20260923/m1/m1-counts-ids.json artifacts/claude-merge138nb-20260923/m6/m6-compare.json
+5
+artifacts/claude-merge138nb-20260923/:
+loop138nb-config.json
+m1
+m6
+PASSMARKS.md
+predicted_moves138nb.json
+RESULTS.md
+run
+SEAL.sha256.txt
+
+artifacts/claude-merge138nb-20260923/m1/:
+m1-counts-ids.json
+
+artifacts/claude-merge138nb-20260923/m6/:
+m6-compare.json
+artifacts/claude-merge138nb-20260923/m1/m1-counts-ids.json
+artifacts/claude-merge138nb-20260923/m6/m6-compare.json
+[0m
+[0m# [0mTodos
+[✓] Reproduce 190 no-label on 138n with 30+ dev dialogs
+[✓] Build claude_fix138nb_label.py + loop138nb agent + config
+[✓] Pilot dev + M2-M5 pilots
+[✓] Write PASSMARKS + seal + ledger append
+[✓] Registered M2-M5 run
+[✓] Wait for invpanel, copy, run M1 blind once
+[✓] Run M6 tablepanel221 once + RESULTS + push
+[0m
