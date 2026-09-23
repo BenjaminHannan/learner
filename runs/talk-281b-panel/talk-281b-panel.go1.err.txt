@@ -1,0 +1,175 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git fetch -q origin main; uptime; df -g /; ls artifacts/ 2>&1 | head -20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 4:32  up 2 days, 20:22, 4 users, load averages: 40.10 37.62 47.00
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 129415800    0%   /
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-calledpanel281-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/280-282-chat-fixes.md > /tmp/spec280.txt; wc -l /tmp/spec280.txt
+117 /tmp/spec280.txt
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+text=open('/tmp/spec280.txt').read().splitlines()
+for i,l in enumerate(text,1):
+    if '281' in l: print(i, repr(l))
+"
+1 "# 280, 281, 282: three chat fixes from the chat-demo probe. Director's note, 2026-09-23 04:30 UTC"
+32 '## 281: "What is Ana\'s cat called?" is read as "What is Ana\'s cat?"'
+39 'Marks: M1 calledpanel281: at least 90% of stored-answer items answered exactly (260 arm shown); 0 wrong answers;'
+44 'Panel spec (calledpanel281, 60 turns): 25 stored-answer questions in called/named/name-of wording (varied'
+95 '## 281 result and the 281b follow-up (director, 2026-09-23 08:28 UTC)'
+97 '281 is a registered FAIL (M1 stored 16/25, bar 23/25; every other bar passed: 0 wrong answers, 10/10 not-stored'
+100 "Diagnosis available without the panel: of 281's 9 misses, the builder reports 5 sit in dialogs whose teach turn is"
+103 'So calledpanel281 is burned for 281b.'
+104 "281b's one change (on top of 281) comes from dev material that predates the panel: the 04:18 chat-demo probe found"
+105 "casual typing (lowercase, no apostrophe, no question mark) fails generally. Change: 281's called/named reader also"
+109 'Marks: M1 calledpanel281b (fresh): stored items answered exactly >= 90%, counted only over items whose teach turn'
+112 "question items; ambiguous and control items identical to 281. M2 frozen suites vs 281's rows: only predicted moves,"
+114 'Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions'
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+lines=open('/tmp/spec280.txt').read().splitlines()
+for l in lines[94:117]: print(l)
+"
+## 281 result and the 281b follow-up (director, 2026-09-23 08:28 UTC)
+
+281 is a registered FAIL (M1 stored 16/25, bar 23/25; every other bar passed: 0 wrong answers, 10/10 not-stored
+abstains, 0 moves on ambiguous and control items, 0 notebook changes, 0 suite moves). Director recount from the raw
+rows: 16 replies changed, all 16 on stored items, all toward the right answer; 0 triple diffs; 0 writes on questions.
+Diagnosis available without the panel: of 281's 9 misses, the builder reports 5 sit in dialogs whose teach turn is
+not stored by 260 either (so no question wording could be answered: a panel-design flaw), and 4 are called-wordings
+outside the four sealed shapes. The builder described those 4 by shape category; the director read that summary.
+So calledpanel281 is burned for 281b.
+281b's one change (on top of 281) comes from dev material that predates the panel: the 04:18 chat-demo probe found
+casual typing (lowercase, no apostrophe, no question mark) fails generally. Change: 281's called/named reader also
+accepts the same question typed casually: any letter case, a possessive written without its apostrophe ("anas cat"
+only when "ana" is a known entity), "whats"/"what's"/"what is", and a missing question mark when the turn starts
+with a question word. Teach turns and writes untouched. Nothing else moves.
+Marks: M1 calledpanel281b (fresh): stored items answered exactly >= 90%, counted only over items whose teach turn
+the 260 arm stores (panel writers must use plain teach forms; teach-fail count reported separately, bar: at most 2
+of the teach turns fail on 260, else the panel is VOID); 0 wrong answers; not-stored items abstain 100%; 0 writes on
+question items; ambiguous and control items identical to 281. M2 frozen suites vs 281's rows: only predicted moves,
+GATE clean.
+Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+(at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
+was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
+turn_index, user_text, category, gold. Fictional names only.
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+lines=open('/tmp/spec280.txt').read().splitlines()
+for i,l in enumerate(lines[108:117], start=109): print(i, l)
+"
+109 Marks: M1 calledpanel281b (fresh): stored items answered exactly >= 90%, counted only over items whose teach turn
+110 the 260 arm stores (panel writers must use plain teach forms; teach-fail count reported separately, bar: at most 2
+111 of the teach turns fail on 260, else the panel is VOID); 0 wrong answers; not-stored items abstain 100%; 0 writes on
+112 question items; ambiguous and control items identical to 281. M2 frozen suites vs 281's rows: only predicted moves,
+113 GATE clean.
+114 Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+115 (at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
+116 was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
+117 turn_index, user_text, category, gold. Fictional names only.
+[0m
+[0m$ [0mls artifacts/claude-calledpanel281b-20260923 2>&1; sed -n '114,117p' /tmp/spec280.txt | cut -c1-80
+ls: artifacts/claude-calledpanel281b-20260923: No such file or directory
+Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored
+(at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"
+was never taught, 10 ambiguous "called belongs to the name" items, 5 plain contr
+turn_index, user_text, category, gold. Fictional names only.
+[0m
+[0m$ [0mawk 'NR>=114 && NR<=117' /tmp/spec280.txt | od -c | head -5; echo ---; awk 'NR>=114 && NR<=117' /tmp/spec280.txt
+0000000    P   a   n   e   l       s   p   e   c       (   c   a   l   l
+0000020    e   d   p   a   n   e   l   2   8   1   b   ,       6   0    
+0000040    t   u   r   n   s   )   :       1   0       t   e   a   c   h
+0000060        t   u   r   n   s       i   n       p   l   a   i   n    
+0000100    f   o   r   m   s   ,       2   5       s   t   o   r   e   d
+---
+Panel spec (calledpanel281b, 60 turns): 10 teach turns in plain forms, 25 stored-answer called/named questions
+(at least 12 typed casually: lowercase, no apostrophe, no question mark, "whats"), 10 same-shape questions whose fact
+was never taught, 10 ambiguous "called belongs to the name" items, 5 plain controls. Columns: dialog_id,
+turn_index, user_text, category, gold. Fictional names only.
+[0m
+[0m# [0mTodos
+[•] Write panel.jsonl (60 turns, 5 categories)
+[ ] Write SPEC-COPY.md and README.md
+[ ] Verify counts/schema, seal, report
+[0m
+[0m← [0mWrite artifacts/claude-calledpanel281b-20260923/panel.jsonl
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-calledpanel281b-20260923/README.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 -B -c "
+import json, re
+rows=[json.loads(l) for l in open('artifacts/claude-calledpanel281b-20260923/panel.jsonl')]
+assert len(rows)==60, len(rows)
+from collections import Counter
+print('total', len(rows))
+print(Counter(r['category'] for r in rows))
+assert all(set(r)=={'dialog_id','turn_index','user_text','category','gold'} for r in rows), 'keys'
+assert all(isinstance(r['turn_index'],int) for r in rows)
+# per-dialog index sequence
+from collections import defaultdict
+d=defaultdict(list)
+for r in rows: d[r['dialog_id']].append(r)
+for k,v in sorted(d.items()):
+    assert [r['turn_index'] for r in v]==list(range(len(v))), k
+# teach form + stored-after-teach
+teaches={r['dialog_id']:r for r in rows if r['category']=='teach_setup'}
+assert len(teaches)==10
+for r in rows:
+    if r['category']=='teach_setup':
+        assert re.fullmatch(r\"[^']+'s [a-z]+ is [A-Z][a-z]+\.\", r['user_text']), r
+        s,rel,o=r['gold'].split('|'); assert r['user_text']==f\"{s}'s {rel} is {o}.\"
+    if r['category']=='stored_called':
+        t=teaches[r['dialog_id']]; assert r['turn_index']>t['turn_index']
+        assert r['gold']==t['gold'].split('|')[2]
+casual=[r for r in rows if r['category']=='stored_called' and r['user_text']==r['user_text'].lower() and chr(39) not in r['user_text'] and not r['user_text'].endswith('?')]
+print('casual stored:', len(casual))
+assert len(casual)>=12
+txt='\n'.join(r['user_text'] for r in rows)
+for bad in ['Ana','Kim','Mira','Tomas']:
+    assert bad not in txt, bad
+print('ALL CHECKS PASS')
+"
+total 60
+Counter({'stored_called': 25, 'teach_setup': 10, 'nostore_called': 10, 'ambiguous_called': 10, 'control_plain': 5})
+casual stored: 14
+ALL CHECKS PASS
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-calledpanel281b-20260923/panel.jsonl artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md > artifacts/claude-calledpanel281b-20260923/SEAL.sha256.txt && cat artifacts/claude-calledpanel281b-20260923/SEAL.sha256.txt && git status --short artifacts/claude-calledpanel281b-20260923
+0c1c20ad913dbf6c7d232a20c82f1964fc2b690257a9a855113a5fd24f04c763  artifacts/claude-calledpanel281b-20260923/panel.jsonl
+a2569e04b089a763278122193cbf0bca3a361ea3facd96ac5400786ed8b43a3c  artifacts/claude-calledpanel281b-20260923/SPEC-COPY.md
+[0m
+[0m# [0mTodos
+[✓] Write panel.jsonl (60 turns, 5 categories)
+[✓] Write SPEC-COPY.md and README.md
+[✓] Verify counts/schema, seal, report
+[0m
