@@ -112,8 +112,8 @@ class Book:
         self.rows.append(row)
         return row
 
-    def distract(self, k: int, people: list[str]):
-        taken = {(x["subject"], x["relation"]) for x in self.rows}
+    def distract(self, k: int, people: list[str], forbid=()):
+        taken = {(x["subject"], x["relation"]) for x in self.rows} | set(forbid)
         added = 0
         while added < k:
             s = self.rng.choice(people + [self.name()])
@@ -243,7 +243,14 @@ def gen_episode(rng: random.Random, kind: str | None = None, hops: int | None = 
         fr = _frame(k, [A], [r], vals[i])
     else:
         raise ValueError(k)
-    b.distract(max(0, target_rows - len(b.rows)), [A])
+    # a missing fact must stay missing (dev smoke 20:10: distractors sometimes added it back)
+    forbid = [(A, r) for r in (fr["relations"][:1] if k == "missing" else [])]
+    if k == "missing" and len(fr["relations"]) == 2:
+        forbid += [(x["subject"], fr["relations"][1]) for x in b.rows
+                   if x["subject"] == A and x["relation"] == fr["relations"][0]]
+        forbid += [(x["value"], fr["relations"][1]) for x in b.rows
+                   if x["subject"] == A and x["relation"] == fr["relations"][0]]
+    b.distract(max(0, target_rows - len(b.rows)), [A], forbid)
     rows = b.finish()
     return {"category": k, "notebook": rows, "frame": fr,
             "gold": {"answer": ans, "support": [r["fid"] for r in sup]}}
@@ -339,7 +346,7 @@ def encode(items: list[dict], rng: random.Random) -> tuple[Enc, list[dict]]:
                 rank(years, int(y)) if y is not None else 0.0, 1.0 if y is not None else 0.0,
                 rank(whens, int(r.get("when", 0))), 1.0])
             mask[b, i] = True
-        infos.append({"rows": rows, "who": list(fr.get("who") or [])})
+        infos.append({"rows": rows, "who": list(fr.get("who") or []), "frame": fr})
     return Enc(kind, dirn, who, frels, fval, fnum, subj, rel, val, num, mask), infos
 
 
@@ -522,11 +529,47 @@ def reward(pred: str, gold: str) -> float:
     return 1.0 if p == g else -0.1
 
 
+_KIND_ACTIONS = {"value": (A_ROWV0, A_ROWS0), "before": (A_ROWV0, A_ROWS0),
+                 "after": (A_ROWV0, A_ROWS0), "who": (A_ROWS0, N_ACT), "yesno": (A_YES, A_COUNT0),
+                 "count": (A_COUNT0, A_WHO0), "compare": (A_WHO0, A_ROWV0)}
+
+
 def supported(action: int, sup_bits: list[bool], info: dict) -> bool:
-    """fact-check on the way out: a row answer must cite its own row; cited rows exist."""
+    """Fact-check on the way out (a check, not a reasoner): an answer copied from a row must
+    cite that row, and the row must be about what was asked: its relation is one the question
+    names; for a "who" question its value is the asked value; for a one-relation question its
+    subject is the asked person.  (Dev smoke 20:05: without this, 4/40 missing-fact questions
+    were answered from a near-miss row about someone else.)  For a value question the cited
+    facts must form the whole chain from the asked person to the answer row.  The kind of
+    answer must also fit the kind of question (a count for "how many", a row value for "what")."""
+    if action != A_UNK:
+        lo, hi = _KIND_ACTIONS.get((info.get("frame") or {}).get("kind"), (0, N_ACT))
+        if not lo <= action < hi:
+            return False
     if A_ROWV0 <= action < N_ACT:
         i = (action - A_ROWV0) % MAX_ROWS
-        return i < len(info["rows"]) and sup_bits[i]
+        if not (i < len(info["rows"]) and sup_bits[i]):
+            return False
+        row, fr = info["rows"][i], info.get("frame") or {}
+        rels = [_key(r) for r in fr.get("relations") or []]
+        if rels and _key(row["relation"]) not in rels:
+            return False
+        if fr.get("kind") == "who" and _key(row["value"]) != _key(fr.get("value")):
+            return False
+        who = [_key(w) for w in fr.get("who") or []]
+        if fr.get("kind") in ("before", "after") and who and _key(row["subject"]) not in who:
+            return False
+        if fr.get("kind") == "value" and who and rels:
+            # the cited facts must spell out the chain: asked person -> ... -> this row
+            cited = [r for j, r in enumerate(info["rows"]) if j < len(sup_bits) and sup_bits[j]]
+            cur = who[0]
+            for h, rel in enumerate(rels):
+                step = [r for r in cited if _key(r["subject"]) == cur and _key(r["relation"]) == rel]
+                if not step:
+                    return False
+                if h == len(rels) - 1:
+                    return any(r is row for r in step)
+                cur = _key(step[0]["value"])
     return True
 
 
