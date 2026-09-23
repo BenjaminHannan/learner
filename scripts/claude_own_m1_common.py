@@ -25,7 +25,7 @@ def slot_values(record: dict) -> dict:
     f = record.get("fields", {}) or {}
     out = {}
     name = record.get("name") or f.get("subject")
-    if name:
+    if name and not f.get("owner_phrase"):  # our/we owners are not a name slot (Ben's our-policy: ask whose)
         out["<S1>"] = name
     rels = record.get("relations") or ([f["relation"]] if f.get("relation") else [])
     if rels:
