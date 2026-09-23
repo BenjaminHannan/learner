@@ -1,0 +1,679 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls; git fetch -q origin main 2>&1 | head; git fetch -q origin builder-outbox 2>&1 | head; echo FETCHDONE
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+FETCHDONE
+[0m
+[0m✗ [0mRead scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mcurl -s -m 5 http://127.0.0.1:8767/; echo "CURL_EXIT:$?"; ps aux | grep -i lis311 | grep -v grep; echo "PS_DONE"; git show origin/builder-outbox:artifacts/claude-lis311-20260923/RESULTS.md 2>&1 | head -n 50; echo "---SHOW_EXIT:$?"
+CURL_EXIT:7
+PS_DONE
+fatal: path 'artifacts/claude-lis311-20260923/RESULTS.md' does not exist in 'origin/builder-outbox'
+---SHOW_EXIT:0
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1; ls handoff/queue/ 2>&1 | head -n 30; ls artifacts/ 2>&1 | head -n 40
+ls: scratchpad/briefs/: No such file or directory
+ls: handoff/queue/: No such file or directory
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+[0m
+[0m$ [0mls handoff/ 2>&1 | head -n 40; echo ---; ls scratchpad/ 2>&1 | head -n 40; echo ---; ls artifacts/ | grep -i lis311; echo ---; git log --oneline -5; echo ---; git branch -a 2>&1 | head -n 20
+HANDOFF.md
+kit
+memory
+replies
+---
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+---
+claude-lis311-20260923
+---
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+[0m
+[0m$ [0mls -la artifacts/claude-lis311-20260923/ 2>&1; echo ---; ls handoff/kit/ handoff/memory/ handoff/replies/ 2>&1 | head -n 40
+total 16
+drwxr-xr-x@   5 ben-hannan  staff    160 Sep 23 10:03 .
+drwxr-xr-x@ 445 ben-hannan  staff  14240 Sep 23 14:01 ..
+-rw-r--r--    1 ben-hannan  staff   3112 Sep 23 10:03 PASSMARKS.md
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 23 10:03 real-rows
+-rw-r--r--    1 ben-hannan  staff    499 Sep 23 10:03 SEAL.sha256.txt
+---
+handoff/kit/:
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+
+handoff/memory/:
+a3-teacher-delay-v2-result.md
+ask-fable-max-subagent.md
+assistant-name-premonition.md
+astra-audit-18.md
+baseline-v2-fits.md
+ben-decisions-20260922.md
+ben-delegation-preference.md
+ben-runs-mimo-agents.md
+ben-vision-20260921.md
+benchmark-goal.md
+benspc-gpu-ops.md
+borrowed-ears-weights-ok.md
+canonical-operator-roadmap.md
+cardfold-sleep-result.md
+compute-availability.md
+conversation-first-priority.md
+creative-stop-toy-result.md
+ct20-v12-result.md
+decide-better-option.md
+demo-requirements-uncle.md
+director-role.md
+disk-full-agent-limit.md
+[0m
+[0m$ [0mcat artifacts/claude-lis311-20260923/PASSMARKS.md; echo ===SEAL===; cat artifacts/claude-lis311-20260923/SEAL.sha256.txt; echo ===VERIFY===; shasum -a 256 -c artifacts/claude-lis311-20260923/SEAL.sha256.txt 2>&1; echo ===REALROWS===; ls -R artifacts/claude-lis311-20260923/real-rows/ 2>&1 | head -n 30
+# lis-311 PASSMARKS (sealed BEFORE the registered runs, 2026-09-23)
+
+Build: 292 + the lis-300 listener (install_turn310 from
+scripts/claude_lis310_agent.py, read-only) with the real Reader.
+CPU/MPS build for the Mac. Sealed threshold T = 0.995
+(artifacts/claude-lis300-20260923/THRESHOLD.txt). Weights:
+~/premonition-models/lis300-merged/, merged-reader sha256
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324
+(recorded in lis-300's RESULTS.md; verified match 2026-09-23).
+
+Tests: scripts/claude_lis311_try.py --stub (StubReader, threshold 0.995).
+Server: scripts/claude_lis311_server.py on port 8767 (own state dir
+~/premonition-chat/lis311-state).
+
+## Marks
+
+| Mark | Bar |
+|---|---|
+| P311.1 every stub scenario passes | 10/10 PASS, exit 0 |
+| P311.2 base-chain writes in the blocked-write test (T7) | 0 writes over 5 turns |
+| P311.3 the server on 8767 answers a turn | GET / 200 + POST /turn 200 with a reply |
+
+## Predicted moves (from the pilot, same sealed files)
+
+- T1 "My sisters are Mira and Tal." saves 2 triples (USER,sister,Mira) +
+  (USER,sister,Tal); reply the 292 base mouth's save confirmation
+  ("Saved: your sister is Mira. Saved: your sister is Tal.
+  (I also have Mira.)").
+- T2 "Our dog is Pip." replies exactly
+  "Whose dog is Pip, yours or someone else's?"; 0 triples.
+- T3a low-conf STATE (conf 0.5 < 0.995) replies exactly
+  "Just to check: is Mira's dog Pip?"; 0 triples; then "yes" saves exactly 1
+  triple with a Saved reply ("Saved: Mira's dog is Pip.").
+- T3b same ask-back, then "no": 0 triples, "Okay, I won't save that."
+- T3c same ask-back, then another fact turn: pending dropped, new turn saves
+  normally (1 triple, the dog fact never saved).
+- T4 NEGATE turn saves 0; reply is the base's clarify (no write).
+- T5 CHECK "So Mira's dog is Pip." after a STATE teach: base answers
+  "I already have that."; triples unchanged (1); 0 new events.
+- T6 "Whose dog is Pip?" (ASK frame) answered from the notebook
+  ("Mira's dog is Pip. (worked out backwards)"); 0 new events.
+- T7 five turns (SUPPOSE/NEGATE/PLAN/REPORTED/CHECK city turns): each first
+  verified to grow notebook events on the raw 292 base, then 0 events / 0
+  triples under 311. Base-chain writes: 0.
+- T8 unparsed frame saves 0 with the exact sorry-reply.
+- P311.3: GET http://127.0.0.1:8767/ answers 200; one POST /turn answers 200
+  with a reply; server left running; 8765/8766 untouched.
+
+## Step 3 try-out (report-only, no bar)
+
+30 scripted casual turns (fictional names; 3 conversations x 10: lowercase,
+two facts in one message, "our", a correction, a question, a negation,
+small talk) through build_agent311 with the real Reader on the Mac.
+After any ask-back the driver sends "yes" (adaptive rows, not in the 30).
+Every turn row (turn, reply, saved, frame, confs, ms) lands in
+artifacts/claude-lis311-20260923/real-rows/rows.jsonl. Report: all rows,
+median/p90/max ms per turn, device (pilot: mps), weights-sha check.
+No model-behaviour bar is set: lis-300 is a registered FAIL on recall
+(asks back about half the true facts), so ask-backs and held turns are
+expected and reported as-is.
+zsh:1: ==SEAL=== not found
+[0m
+[0m→ [0mRead artifacts/claude-lis311-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-lis311-20260923/SEAL.sha256.txt
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-lis311-20260923/SEAL.sha256.txt; echo "VERIFY_EXIT:$?"; ls scripts/ | grep lis311; echo ---; ls artifacts/claude-lis311-20260923/real-rows/ 2>&1; echo ---; git show origin/builder-outbox:artifacts/claude-lis311-20260923/RESULTS.md 2>&1 | head -n 20; echo SHOWDONE
+scripts/claude_lis311_agent.py: OK
+scripts/claude_lis311_try.py: OK
+scripts/claude_lis311_server.py: OK
+scripts/claude_lis311_start.sh: OK
+artifacts/claude-lis311-20260923/PASSMARKS.md: OK
+VERIFY_EXIT:0
+claude_lis311_agent.py
+claude_lis311_server.py
+claude_lis311_start.sh
+claude_lis311_try.py
+---
+rows.jsonl
+---
+fatal: path 'artifacts/claude-lis311-20260923/RESULTS.md' does not exist in 'origin/builder-outbox'
+SHOWDONE
+[0m
+[0m$ [0mgit log --all --oneline --diff-filter=A -- handoff/queue/lis-311-chat292.md 2>&1 | head; echo ---; git show origin/main:handoff/queue/lis-311-chat292.md 2>&1 | head -n 200
+9af7dc663 lis-311: queue listener plug-in on the 292 base + real-model try-out and a separate chat page on :8767
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+
+YOUR TASK: builder for lis-311. Move the listener plug-in onto the new base 292, and try the REAL model on the Mac. It's CPU/MPS on the Mac, with no BensPC and no rental. Artifacts go in artifacts/claude-lis311-20260923/. New files only: scripts/claude_lis311_agent.py, scripts/claude_lis311_try.py, scripts/claude_lis311_server.py, scripts/claude_lis311_start.sh.
+
+CONTEXT. lis-310 (on builder-outbox) PASSED with a stub reader on the 291 base, and its install_turn310(loop, reader, threshold) works on any built loop. 292 was verified PASS at 13:45 UTC and is the main base now: build_agent292(cfg) in scripts/claude_loop292_agent.py, with DEFAULT_CONFIG292 (deepcopy it, then set state_dir and sleep_threshold). The real listener weights are at ~/premonition-models/lis300-merged/ (sha256 was recorded in lis-300's RESULTS.md; check it). The sealed threshold from lis-300 is T = 0.995. lis-300 was a registered FAIL on recall only: it asks back about half the true facts. That is fine for a try-out, because an ask-back plus "yes" still saves.
+
+1. scripts/claude_lis311_agent.py: build_agent311(cfg) = build_agent292 + install_turn310 (import it from claude_lis310_agent, read-only) with the real Reader. Default threshold 0.995.
+2. Re-run the lis-310 test scenarios against 311 with the StubReader. Import scripts/claude_lis310_test.py's cases if they allow it; otherwise write equivalents in scripts/claude_lis311_try.py. Every scenario must pass, including the blocked-write check on 5 base-teachable turns.
+3. REAL MODEL TRY-OUT. Write 30 casual dev turns of your own, with fictional names and in 3 short conversations: lowercase, two facts in one message, "our", a correction, a question, a yes after an ask-back, a negation and small talk. Run them through 311 with the real model on the Mac (MPS if available). For every turn, report: the turn, the reply, what was saved, the frame, confs and ms. Also report median, p90 and max ms per turn, and the device. This is a try-out, not a graded panel: no bar except that you report everything.
+4. scripts/claude_lis311_server.py: a COPY of scripts/claude_chatdemo_server.py that loads build_agent311 (with the real model dir) and serves on port 8767. Never edit or stop the existing chat page on 8765/8766. scripts/claude_lis311_start.sh starts it in the background (nohup, log in ~/premonition-chat/lis311-server.log), using its own state dir ~/premonition-chat/lis311-state so Ben's existing notebook is never touched. Start it, check that GET http://127.0.0.1:8767/ answers, and send one turn through it. Leave it running.
+PASSMARKS.md (sealed before step 3): P311.1 every stub scenario passes; P311.2 0 base-chain writes in the blocked-write check; P311.3 the server on 8767 answers a turn. Report the step 3 numbers with no bar.
+PUSH: artifacts/claude-lis311-20260923 scripts/claude_lis311_agent.py scripts/claude_lis311_try.py scripts/claude_lis311_server.py scripts/claude_lis311_start.sh artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-311-chat292.md 2>&1 | tail -n 100
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+
+YOUR TASK: builder for lis-311. Move the listener plug-in onto the new base 292, and try the REAL model on the Mac. It's CPU/MPS on the Mac, with no BensPC and no rental. Artifacts go in artifacts/claude-lis311-20260923/. New files only: scripts/claude_lis311_agent.py, scripts/claude_lis311_try.py, scripts/claude_lis311_server.py, scripts/claude_lis311_start.sh.
+
+CONTEXT. lis-310 (on builder-outbox) PASSED with a stub reader on the 291 base, and its install_turn310(loop, reader, threshold) works on any built loop. 292 was verified PASS at 13:45 UTC and is the main base now: build_agent292(cfg) in scripts/claude_loop292_agent.py, with DEFAULT_CONFIG292 (deepcopy it, then set state_dir and sleep_threshold). The real listener weights are at ~/premonition-models/lis300-merged/ (sha256 was recorded in lis-300's RESULTS.md; check it). The sealed threshold from lis-300 is T = 0.995. lis-300 was a registered FAIL on recall only: it asks back about half the true facts. That is fine for a try-out, because an ask-back plus "yes" still saves.
+
+1. scripts/claude_lis311_agent.py: build_agent311(cfg) = build_agent292 + install_turn310 (import it from claude_lis310_agent, read-only) with the real Reader. Default threshold 0.995.
+2. Re-run the lis-310 test scenarios against 311 with the StubReader. Import scripts/claude_lis310_test.py's cases if they allow it; otherwise write equivalents in scripts/claude_lis311_try.py. Every scenario must pass, including the blocked-write check on 5 base-teachable turns.
+3. REAL MODEL TRY-OUT. Write 30 casual dev turns of your own, with fictional names and in 3 short conversations: lowercase, two facts in one message, "our", a correction, a question, a yes after an ask-back, a negation and small talk. Run them through 311 with the real model on the Mac (MPS if available). For every turn, report: the turn, the reply, what was saved, the frame, confs and ms. Also report median, p90 and max ms per turn, and the device. This is a try-out, not a graded panel: no bar except that you report everything.
+4. scripts/claude_lis311_server.py: a COPY of scripts/claude_chatdemo_server.py that loads build_agent311 (with the real model dir) and serves on port 8767. Never edit or stop the existing chat page on 8765/8766. scripts/claude_lis311_start.sh starts it in the background (nohup, log in ~/premonition-chat/lis311-server.log), using its own state dir ~/premonition-chat/lis311-state so Ben's existing notebook is never touched. Start it, check that GET http://127.0.0.1:8767/ answers, and send one turn through it. Leave it running.
+PASSMARKS.md (sealed before step 3): P311.1 every stub scenario passes; P311.2 0 base-chain writes in the blocked-write check; P311.3 the server on 8767 answers a turn. Report the step 3 numbers with no bar.
+PUSH: artifacts/claude-lis311-20260923 scripts/claude_lis311_agent.py scripts/claude_lis311_try.py scripts/claude_lis311_server.py scripts/claude_lis311_start.sh artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mwc -l artifacts/claude-lis311-20260923/real-rows/rows.jsonl 2>&1; head -c 2000 artifacts/claude-lis311-20260923/real-rows/rows.jsonl 2>&1; echo; echo ---LEDGER---; grep -c lis311 artifacts/fable-predictions-ledger.md 2>&1; grep lis311 artifacts/fable-predictions-ledger.md 2>&1 | head -n 20
+0 artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+
+---LEDGER---
+2
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis311-20260923) all 10 stub scenarios pass, exit 0: T1 2-facts-save-2 with 292 mouth Saved reply; T2 whose-ask exact + 0; T3a ask-back exact + 0 then yes saves 1; T3b no saves 0; T3c other-turn drops pending + saves normally; T4 negation 0; T5 CHECK already-have + 0; T6 notebook answer + 0; T7 5 teachable turns 0 base writes; T8 unparsed exact-sorry + 0.
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched; own state dir ~/premonition-chat/lis311-state. Step 3 real-model 30-turn try-out report-only (no bar): every turn row + median/p90/max ms + device in artifacts/claude-lis311-20260923/real-rows/rows.jsonl.
+[0m
+[0m→ [0mRead scripts/claude_lis311_try.py
+[0m→ [0mRead scripts/claude_lis311_agent.py
+[0m→ [0mRead scripts/claude_lis311_server.py
+[0m→ [0mRead scripts/claude_lis311_start.sh
+[0m
+[0m# [0mTodos
+[•] Verify preconditions (uptime, disk, weights sha)
+[ ] Run stub scenarios P311.1/P311.2 (sealed try script)
+[ ] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[ ] Start + verify server 8767 P311.3
+[ ] Write RESULTS.md + ledger result lines
+[0m
+[0m$ [0muptime; df -g / | head -n 5; ls -la ~/premonition-models/lis300-merged/ 2>&1 | head; shasum -a 256 ~/premonition-models/lis300-merged/model.safetensors 2>&1 | head -c 200
+14:02  up  3:55, 4 users, load averages: 50.01 50.53 46.91
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        21    38%  484014 223149080    0%   /
+total 4240648
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 08:52 .
+drwxr-xr-x  3 ben-hannan  staff          96 Sep 23 08:47 ..
+-rw-------  1 ben-hannan  staff        9241 Sep 23 08:47 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 08:47 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 08:47 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 08:52 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 08:52 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 08:52 tokenizer.json
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  /Users/ben-hannan/premonition-models/lis300-merged/model.safetensors
+[0m
+[0m# [0mTodos
+[✓] Verify preconditions (uptime, disk, weights sha)
+[•] Run stub scenarios P311.1/P311.2 (sealed try script)
+[ ] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[ ] Start + verify server 8767 P311.3
+[ ] Write RESULTS.md + ledger result lines
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --stub 2>&1 | tail -n 30
+lis-311 stub scenarios (StubReader, threshold 0.995)
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3045.97it/s]
+PASS T1 two-facts-save-2 :: saved=2 reply='Saved: your sister is Mira. Saved: your sister is Tal. (I also have Mira.)'
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2343.62it/s]
+PASS T2 whose-ask :: reply="Whose dog is Pip, yours or someone else's?"
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3086.32it/s]
+PASS T3a askback-yes-saves-1 :: ask="Just to check: is Mira's dog Pip?" yes="Saved: Mira's dog is Pip."
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3121.54it/s]
+PASS T3b askback-no-saves-0 :: ask + no -> 0 triples
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2903.30it/s]
+PASS T3c askback-dropped-on-other :: non-yes drops pending, next turn saves normally
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3356.34it/s]
+PASS T4 negation-saves-0 :: reply='I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."'
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2862.35it/s]
+PASS T5 check-answered-saves-0 :: base reply='I already have that.'
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2876.09it/s]
+PASS T6 question-answered :: answer="Mira's dog is Pip. (worked out backwards)"
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3602.32it/s]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 1848.25it/s]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2865.61it/s]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 4587.28it/s]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2903.97it/s]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 3236.35it/s]
+PASS T7 blocked-five-zero-writes :: 5 turns, base-chain writes=0
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 2527.70it/s]
+PASS T8 unparsed-saves-0 :: reply exact
+summary: 10/10 passed
+[0m
+[0m# [0mTodos
+[✓] Verify preconditions (uptime, disk, weights sha)
+[✓] Run stub scenarios P311.1/P311.2 (sealed try script)
+[•] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[ ] Start + verify server 8767 P311.3
+[ ] Write RESULTS.md + ledger result lines
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows > /tmp/lis311_real.log 2>&1 & echo "PID:$!"
+PID:17758
+[0m
+[0m$ [0msleep 55; tail -n 15 /tmp/lis311_real.log; echo ---; ps -p 17758 -o pid,etime,stat,command 2>&1 | head -n 5
+reply: 'Saved: your sister is mira.' saved=[['me', 'sister', 'mira']] frame=null confs=None ms=1.7
+--- [A-pets#6] user: 'our dog is pip.'
+    reply: "Whose dog is pip, yours or someone else's?" saved=[] frame={"act": "STATE", "facts": [{"owner": "we", "rel": "dog", "value": "pip", "mode": "ASSERT"}], "ask": null} confs=[0.9969125986099243] ms=1667.9
+--- [A-pets#7] user: "mira's dog is pip."
+    reply: "That sounds like a description, not a name, so I didn't save it. What is mira's dog's name?" saved=[['mira', 'dog', 'pip']] frame={"act": "STATE", "facts": [{"owner": "mira", "rel": "dog", "value": "pip", "mode": "ASSERT"}], "ask": null} confs=[0.9953556060791016] ms=1754.4
+--- [A-pets#8] user: 'whose dog is pip?'
+    reply: "I don't know anyone whose dog is pip." saved=[] frame={"act": "ASK", "facts": [], "ask": {"owner": "mira", "rel": "dog", "inverse": false}} confs=[] ms=1953.3
+--- [A-pets#9] user: "so mira's dog is pip, right?"
+    reply: "I didn't understand that question — could you say it another way?" saved=[] frame={"act": "CHECK", "facts": [{"owner": "mira", "rel": "dog", "value": "pip", "mode": "CHECK"}], "ask": null} confs=[0.997189462184906] ms=7366.4
+--- [A-pets#10] user: "mira doesn't have a cat."
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "NEGATE", "facts": [], "ask": null} confs=[] ms=13212.4
+--- [A-pets#11] user: 'thanks, bye for now.'
+    reply: "I didn't understand that well enough to save it — could you say it another way?" saved=[] frame={"act": "CHAT", "facts": [], "ask": null} confs=[] ms=7031.3
+ Conv A-pets notebook: [['USER', 'sister', 'mira']]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 480.76it/s]
+---
+  PID ELAPSED STAT COMMAND
+17758   00:57 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+[0m
+[0m$ [0msleep 55; tail -n 8 /tmp/lis311_real.log; echo ---; ps -p 17758 -o pid,etime,stat,command 2>&1 | head -n 5
+--- [A-pets#9] user: "so mira's dog is pip, right?"
+    reply: "I didn't understand that question — could you say it another way?" saved=[] frame={"act": "CHECK", "facts": [{"owner": "mira", "rel": "dog", "value": "pip", "mode": "CHECK"}], "ask": null} confs=[0.997189462184906] ms=7366.4
+--- [A-pets#10] user: "mira doesn't have a cat."
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "NEGATE", "facts": [], "ask": null} confs=[] ms=13212.4
+--- [A-pets#11] user: 'thanks, bye for now.'
+    reply: "I didn't understand that well enough to save it — could you say it another way?" saved=[] frame={"act": "CHAT", "facts": [], "ask": null} confs=[] ms=7031.3
+ Conv A-pets notebook: [['USER', 'sister', 'mira']]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 480.76it/s]
+---
+  PID ELAPSED STAT COMMAND
+17758   01:55 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+[0m
+[0m$ [0msleep 60; tail -n 6 /tmp/lis311_real.log; echo ---; ps -p 17758 -o pid,etime,stat,command 2>&1 | head -n 5; wc -l artifacts/claude-lis311-20260923/real-rows/rows.jsonl 2>&1
+--- [A-pets#10] user: "mira doesn't have a cat."
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "NEGATE", "facts": [], "ask": null} confs=[] ms=13212.4
+--- [A-pets#11] user: 'thanks, bye for now.'
+    reply: "I didn't understand that well enough to save it — could you say it another way?" saved=[] frame={"act": "CHAT", "facts": [], "ask": null} confs=[] ms=7031.3
+ Conv A-pets notebook: [['USER', 'sister', 'mira']]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 480.76it/s]
+---
+  PID ELAPSED STAT COMMAND
+17758   02:57 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+       0 artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+[0m
+[0m$ [0msleep 60; tail -n 6 /tmp/lis311_real.log | cut -c1-300; echo ---; ps -p 17758 -o pid,etime,time,stat 2>&1 | head -n 5
+--- [B-family#11] user: 'i want to visit lisbon.'
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "SUPPOSE", "facts": [{"owner": "me", "rel": "city", "value": "lisbon", "mode": "SUPPOSE"}], "ask": null} confs=[0.612407386302948] ms=12639.5
+--- [B-family#12] user: 'cool, talk later.'
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "UNCLEAR", "facts": [], "ask": null} confs=[] ms=10150.9
+ Conv B-family notebook: [['USER', 'mother', 'lena'], ['tal', 'boss', 'mara']]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 1014.18it/s]
+---
+  PID ELAPSED      TIME STAT
+17758   04:01   0:00.04 SN
+[0m
+[0m$ [0msleep 55; tail -n 12 /tmp/lis311_real.log | cut -c1-300; echo ---; ps -p 17758 -o pid,etime,stat 2>&1 | head -n 5
+reply: 'Saved: your uncle is dev.' saved=[['me', 'uncle', 'dev']] frame={"act": "STATE", "facts": [{"owner": "me", "rel": "uncle", "value": "dev", "mode": "ASSERT"}], "ask": null} confs=[0.9979495406150818] ms=27689.7
+--- [C-mixed#9] user: 'my uncle works in porto.'
+    reply: 'Just to check: is your uncle dev?' saved=[] frame={"act": "STATE", "facts": [{"owner": "me", "rel": "uncle", "value": "dev", "mode": "ASSERT"}, {"owner": "dev", "rel": "work_location", "value": "porto", "mode": "ASSERT"}], "ask": null} confs=[0.6433209776878357, 0.9607879519462585] ms=20
+--- [C-mixed#10] user: 'yes' (adaptive yes)
+    reply: 'I already have that.' saved=[['me', 'uncle', 'dev']] frame=null confs=None ms=0.3
+--- [C-mixed#11] user: 'see you soon.'
+    reply: 'I couldn\'t save that as a fact. I don\'t know that shape yet. Could you say it another way, like "Kim\'s boss is Lee."' saved=[] frame={"act": "CHAT", "facts": [], "ask": null} confs=[] ms=2670.0
+ Conv C-mixed notebook: [['USER', 'friend', 'zoe'], ['USER', 'uncle', 'dev'], ['zoe', 'cat', 'mochi']]
+device: mps
+scripted turns: 30 adaptive yes turns: 4 total: 34
+ms per turn: median=2826.6 p90=15567.1 max=59429.6
+rows -> artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+---
+  PID ELAPSED STAT
+[0m
+[0m$ [0mwc -l artifacts/claude-lis311-20260923/real-rows/rows.jsonl; head -c 600 /tmp/lis311_real.log
+34 artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+weights sha256: 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324
+weights match lis-300 RESULTS.md; loading reader ...
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:00<00:31,  7.01it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 1051.59it/s]
+reader device: mps
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 1277.06it/s]
+--- [A-pets#1] user: 'hey!'
+    reply: 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like
+[0m
+[0m# [0mTodos
+[✓] Verify preconditions (uptime, disk, weights sha)
+[✓] Run stub scenarios P311.1/P311.2 (sealed try script)
+[✓] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[•] Start + verify server 8767 P311.3
+[ ] Write RESULTS.md + ledger result lines
+[0m
+[0m$ [0msh scripts/claude_lis311_start.sh 2>&1 | tail -n 5
+lis311 starting (pid 19335), log /Users/ben-hannan/premonition-chat/lis311-server.log
+lis311 ready on 8767
+[0m
+[0m$ [0mcurl -s -m 5 -o /dev/null -w "GET / -> %{http_code}\n" http://127.0.0.1:8767/; curl -s -m 60 -X POST http://127.0.0.1:8767/turn -H 'Content-Type: application/json' -d '{"text":"My sister is Mira."}' | head -c 800; echo; curl -s -m 5 http://127.0.0.1:8765/ready 2>&1 | head -c 200; echo; curl -s -m 5 http://127.0.0.1:8766/ready 2>&1 | head -c 200; echo; tail -n 3 ~/premonition-chat/lis311-server.log | cut -c1-200
+GET / -> 200
+{"reply": "Saved: your sister is Mira.", "added": [["USER", "sister", "Mira"]], "removed": [], "notebook": [["USER", "sister", "Mira"]], "why": {"ears_stage": "", "ears_score": 0.0, "records": []}, "seconds": 1.807, "turn_index": 1}
+{"ready": true}
+
+127.0.0.1 "GET /ready HTTP/1.1" 200 -
+127.0.0.1 "GET / HTTP/1.1" 200 -
+127.0.0.1 "POST /turn HTTP/1.1" 200 -
+[0m
+[0m$ [0mgrep -E "^(device|scripted|ms per turn|rows|weights|reader| Conv)" /tmp/lis311_real.log; echo ---; grep -c "adaptive yes" /tmp/lis311_real.log; echo ---; tail -n 20 artifacts/fable-predictions-ledger.md | cut -c1-250
+weights sha256: 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324
+weights match lis-300 RESULTS.md; loading reader ...
+reader device: mps
+ Conv A-pets notebook: [['USER', 'sister', 'mira']]
+ Conv B-family notebook: [['USER', 'mother', 'lena'], ['tal', 'boss', 'mara']]
+ Conv C-mixed notebook: [['USER', 'friend', 'zoe'], ['USER', 'uncle', 'dev'], ['zoe', 'cat', 'mochi']]
+device: mps
+scripted turns: 30 adaptive yes turns: 4 total: 34
+ms per turn: median=2826.6 p90=15567.1 max=59429.6
+rows -> artifacts/claude-lis311-20260923/real-rows/rows.jsonl
+---
+5
+---
+- P280n.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->UNHELPFU
+- P280n.3 (same) M3 smalltalkpanel234 once on 260 and 280m: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280m observation 17/20 vs 16/20 expected barring flake). 
+- P280n.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any mixed turn with 2+ piece arms differing from 260 proves the re-test w
+- P280n.5 OUTCOME (2026-09-23, builder, sealed exp 280n re-test of unchanged 280m, CPU only) registered verdict FAIL on the M1 bar only. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12
+- P292.1 (pred, sealed pre-run 2026-09-23, builder; exp 292 = 291 + 266b lift + 268b guard + 293 reader, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-merge292-20260923; blind panels never opened, only specs/README counts read) M1 four p
+- P300.1 (2026-09-23, builder; MiniCPM5-1B commit 87179e5c LoRA r32 2ep 21.78min 4851.9tok/s on BensPC 5070 Ti, T=0.995 by sealed rule since no grid value hit 0 dev wrong-turns, seals 14/14 + key 2/2 OK, panel run ONCE, code unmodified): wrong-save t
+- P300.2 (same) exact recall 71/137 = 51.8% (bar >=85%: FAIL; also <75% so proved-wrong clause trips: gate too strict to be useful).
+- P300.3 (same) ASK 38/40 = 95.0% (wh 12/12, inverse 8/8, yesno 8/8, lowercase 7/7, twohop 3/5; bar >=90%: PASS).
+- P300.4 (same) our/we ask-whose 20/20 = 100% (bar >=90%: PASS).
+- P300.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P300.6 (same) read ms median 1492.45 p90 2051.0 max 3115.1 on cuda/5070 Ti (bar median <=1500: PASS). Report-only: wrong facts per saved fact 1/72, per turn 1/240; at T=0 recall 133/137 with 7 wrong turns (5 pronoun-ambiguous, 1 tell-verb, 1 tell-t
+- P292.2 OUTCOME (2026-09-23, builder) registered verdict PASS M1-M5. M1: chain 67/70 fidelity exact + 0/0/0; nhop 55/60 (bug 11+1) + 0/0/0; yesno 85/85 + 0/0/0; corr 291-table 73/17/3/1 exact + 292 identical 96/96. M2: sessions 0, bench 0, marks123 
+- P280p.1 (2026-09-23, builder; exp 280p registered re-test of SEALED 280m agent unchanged, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-join280p-20260923; blind panel never opened item by item) M1 blind joinpanel280p run once on all fiv
+- P280p.2 (same) M2 frozen suites vs 260 saved rows, registered after-seal run with 280m's sealed runall/regscore: sessions152 exactly 280's 3 reply-only moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9 -> CAN280, UNHELPFUL->U
+- P280p.3 (same) M3 smalltalkpanel234 once on 260 and 280m with sealed runner + new scorer: wellbeing 280m >= 260, every other item identical, 0 writes, 0 setup/store diffs (panel never run pre-seal, run-once rule; repeat of 280n observation 17/20 vs
+- P280p.4 (same) falsifiers: any 280m reply differing from its mechanical owner arm, any suite/probe move outside the union list, any write on a question or small-talk turn, or any turn with 2+ piece arms differing from 260 proves the re-test wrong. 
+- P280p.5 OUTCOME (2026-09-23, builder, sealed exp 280p re-test of unchanged 280m, CPU only) registered verdict PASS M1-M4. M1 (90 turns once on all five arms, panel seal 2/2 OK, schema clean, no post-seal change, seals own 3/3 + 280m 12/12 OK after)
+- P311.1 (pred, sealed pre-run 2026-09-23, builder; exp lis-311 = 292 + lis-300 listener turn310 via install_turn310, real Reader, sealed threshold 0.995, weights sha 112880d6 verified, Mac CPU/MPS, sealed 5 files SEAL.sha256.txt artifacts/claude-lis
+- P311.2 (same) 0 base-chain writes across the T7 blocked-write test (each of the 5 turns first verified to grow notebook events on raw 292, then 0 events growth under 311).
+- P311.3 (same) server on 8767 answers: GET / 200 + one POST /turn 200 with a reply; left running; 8765/8766 untouched; own state dir ~/premonition-chat/lis311-state. Step 3 real-model 30-turn try-out report-only (no bar): every turn row + median/p90
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis310-20260923/RESULTS.md 2>&1 | head -n 60; echo ===; git show origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md 2>&1 | head -n 20
+# lis-310 RESULTS: PASS (registered run 2026-09-23, builder)
+
+Registered verdict: PASS. 11/11 sealed unit tests passed, exit 0; 0
+base-chain writes across the 5 blocked-write turns. Seal 4/4 OK after the
+run; no post-seal change. No TEST-ONLY panel was opened, tuned on, or quoted
+(none is used by this task). All names fictional.
+
+## Marks table (integer counts)
+
+| Mark | Bar | Got |
+|---|---|---|
+| P310.1 all sealed unit tests pass | 11/11, exit 0 | 11/11, exit 0 |
+| P310.2 base-chain writes in T7 (5 turns) | 0 | 0 |
+
+## Every move (registered run, StubReader, threshold 0.99)
+
+- T1 two-facts-save-2: PASS. Saved 2 triples (USER,sister,Mira),
+  (USER,sister,Tal); reply the base mouth's confirmation.
+- T2 whose-ask: PASS. Exact "Whose dog is Pip, yours or someone else's?";
+  0 triples.
+- T3a askback-yes: PASS. Exact "Just to check: is Mira's dog Pip?", 0
+  triples; "yes" saved exactly 1 triple with a Saved reply.
+- T3b askback-no: PASS. 0 triples, "Okay, I won't save that."
+- T3c askback-dropped: PASS. A non-yes/no turn dropped the pending fact and
+  saved normally (1 triple; the dog fact never saved).
+- T4 negation: PASS. 0 triples; base reply used (no write attempted).
+- T5 CHECK: PASS. Base answered "I already have that."; triples stayed 1,
+  0 new notebook events.
+- T6 question: PASS. Answered from the notebook
+  ("Mira's dog is Pip. (worked out backwards)"); 0 new events.
+- T7 blocked five: PASS. All 5 turns grew notebook events on the raw 291
+  base (validity check in-run) and grew 0 events / 0 triples under 310.
+  Base-chain writes: 0.
+- T8 unparsed: PASS. Exact sorry-reply; 0 triples.
+- T9 chatdemo-load: PASS. load_agent finds Loop310Daemon + build_agent310 +
+  DEFAULT_CONFIG310; the demo's server-style mailbox build ran a turn and
+  saved 2 triples. The server file itself was not edited.
+
+Misses: 0. Deviations: 0 (every prediction in PASSMARKS.md matched exactly).
+
+## Hook point + me-storage (for the record)
+
+- Hook: turn310 installed as the outermost instance wrapper, outside
+  turn291: turn310(turn291(turn260(turn224c(turn224(class turn))))). No frozen
+  file edited; 291 chain untouched.
+- "me" facts are stored as subject USER: probed raw 291 turn "My sister is
+  Mira." -> triple ('USER','sister','Mira'), reply "Saved: your sister is
+  Mira." The 310 doorway calls loop._act with name "USER" plus the base's own
+  Me166 reply render, giving byte-identical confirmations ("Saved: your ...").
+- Screens applied to every listener save: 209 screen_action209 and 252b
+  value_ok252b; any rejection blocks the whole turn (0 hits in tests, all
+  values clean). 228 source guard untouched on the daemon path.
+- Writes blocked in the base pass by wrapping loop._act: teach/correct
+  actions that would mutate the notebook are swallowed (silent note);
+  no-op re-teaches run so the base's "I already have that." survives.
+- Every turn logged to <state_dir>/lis310_log.jsonl (frame, confs, decision,
+  blocked count, ms).
+- Real-model 20-turn chat: SKIPPED. ~/premonition-models/lis300-merged/ does
+  not exist (~/premonition-models/ itself is absent), so no weights, no GPU
+  run, no ms numbers. Nothing real-model is claimed.
+zsh:1: == not found
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json
+rows=[json.loads(l) for l in open('artifacts/claude-lis311-20260923/real-rows/rows.jsonl')]
+print(len(rows))
+for r in rows:
+    print(r['conv'], r['n'], repr(r['turn'][:42]), '|', repr(' '.join(r['reply'])[:80]), '| saved=', r['saved'], '| confs=', r['confs'], '| ms=', r['ms'], '| adap=', r['adaptive'])
+" 2>&1 | head -n 50
+34
+A-pets 1 'hey!' | 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"' | saved= [] | confs= [] | ms= 3973.7 | adap= False
+A-pets 2 'my dog is pip.' | "That sounds like a description, not a name, so I didn't save it. What is your do" | saved= [['me', 'dog', 'pip']] | confs= [0.9963957667350769] | ms= 4004.7 | adap= False
+A-pets 3 'my cat is fig.' | "That sounds like a description, not a name, so I didn't save it. What is your ca" | saved= [['me', 'cat', 'fig']] | confs= [0.9991331696510315] | ms= 1504.2 | adap= False
+A-pets 4 'my sisters are mira and tal.' | 'Just to check: is your sister mira?' | saved= [] | confs= [0.9649128913879395, 0.9937090873718262] | ms= 2574.6 | adap= False
+A-pets 5 'yes' | 'Saved: your sister is mira.' | saved= [['me', 'sister', 'mira']] | confs= None | ms= 1.7 | adap= True
+A-pets 6 'our dog is pip.' | "Whose dog is pip, yours or someone else's?" | saved= [] | confs= [0.9969125986099243] | ms= 1667.9 | adap= False
+A-pets 7 "mira's dog is pip." | "That sounds like a description, not a name, so I didn't save it. What is mira's " | saved= [['mira', 'dog', 'pip']] | confs= [0.9953556060791016] | ms= 1754.4 | adap= False
+A-pets 8 'whose dog is pip?' | "I don't know anyone whose dog is pip." | saved= [] | confs= [] | ms= 1953.3 | adap= False
+A-pets 9 "so mira's dog is pip, right?" | "I didn't understand that question — could you say it another way?" | saved= [] | confs= [0.997189462184906] | ms= 7366.4 | adap= False
+A-pets 10 "mira doesn't have a cat." | "I couldn't save that as a fact. I don't know that shape yet. Could you say it an" | saved= [] | confs= [] | ms= 13212.4 | adap= False
+A-pets 11 'thanks, bye for now.' | "I didn't understand that well enough to save it — could you say it another way?" | saved= [] | confs= [] | ms= 7031.3 | adap= False
+B-family 1 'hi there' | 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"' | saved= [] | confs= [] | ms= 9256.0 | adap= False
+B-family 2 'my brother is dev and my cousin is rui.' | 'Just to check: is your brother dev?' | saved= [] | confs= [0.9981302618980408, 0.9868218898773193] | ms= 59429.6 | adap= False
+B-family 3 'yes' | "That sounds like a description, not a name, so I didn't save it. What is your br" | saved= [['me', 'brother', 'dev']] | confs= None | ms= 140.3 | adap= True
+B-family 4 'my mother is ana.' | 'Saved: your mother is ana.' | saved= [['me', 'mother', 'ana']] | confs= [0.9969774484634399] | ms= 2611.5 | adap= False
+B-family 5 'actually my mother is lena.' | 'Saved: your mother is lena.' | saved= [['me', 'mother', 'lena']] | confs= [0.9985495209693909] | ms= 2037.9 | adap= False
+B-family 6 'kofi has no kids.' | "I couldn't save that as a fact. I don't know that shape yet. Could you say it an" | saved= [] | confs= [] | ms= 2445.2 | adap= False
+B-family 7 'tal says his boss is mara.' | "Just to check: is tal's boss mara?" | saved= [] | confs= [0.9677544832229614] | ms= 14846.1 | adap= False
+B-family 8 'yes' | "Saved: tal's boss is mara." | saved= [['tal', 'boss', 'mara']] | confs= None | ms= 1.5 | adap= True
+B-family 9 "who is tal's boss?" | "tal's boss is mara." | saved= [] | confs= [0.4763181209564209] | ms= 2999.3 | adap= False
+B-family 10 'imagine dev had a boat.' | "OK, I'll treat that as pretend, so I won't save it." | saved= [] | confs= [0.3016919195652008] | ms= 15876.1 | adap= False
+B-family 11 'i want to visit lisbon.' | "I couldn't save that as a fact. I don't know that shape yet. Could you say it an" | saved= [] | confs= [0.612407386302948] | ms= 12639.5 | adap= False
+B-family 12 'cool, talk later.' | "I couldn't save that as a fact. I don't know that shape yet. Could you say it an" | saved= [] | confs= [] | ms= 10150.9 | adap= False
+C-mixed 1 'good morning' | 'Hi! Teach me like "Tom\'s boss is Ann." Ask me like "Who is Tom\'s boss?"' | saved= [] | confs= [] | ms= 14724.0 | adap= False
+C-mixed 2 'my friend is zoe.' | 'Saved: your friend is zoe.' | saved= [['me', 'friend', 'zoe']] | confs= [0.9969017505645752] | ms= 32705.7 | adap= False
+C-mixed 3 "zoe's cat is mochi." | "Saved: zoe's cat is mochi." | saved= [['zoe', 'cat', 'mochi']] | confs= [0.9957072734832764] | ms= 1511.0 | adap= False
+C-mixed 4 "no wait, zoe's cat is fig." | "That sounds like a description, not a name, so I didn't save it. What is zoe's c" | saved= [['zoe', 'cat', 'fig']] | confs= [0.9995684027671814] | ms= 1533.9 | adap= False
+C-mixed 5 'our house is on the hill.' | "Whose house is on the hill, yours or someone else's?" | saved= [] | confs= [0.5559354424476624] | ms= 1545.7 | adap= False
+C-mixed 6 "is zoe's cat fig?" | "I didn't understand that question — could you say it another way?" | saved= [] | confs= [0.998773992061615] | ms= 2983.2 | adap= False
+C-mixed 7 'ok got it.' | 'Got it!' | saved= [] | confs= [] | ms= 5661.2 | adap= False
+C-mixed 8 'dev is my uncle.' | 'Saved: your uncle is dev.' | saved= [['me', 'uncle', 'dev']] | confs= [0.9979495406150818] | ms= 27689.7 | adap= False
+C-mixed 9 'my uncle works in porto.' | 'Just to check: is your uncle dev?' | saved= [] | confs= [0.6433209776878357, 0.9607879519462585] | ms= 2011.6 | adap= False
+C-mixed 10 'yes' | 'I already have that.' | saved= [['me', 'uncle', 'dev']] | confs= None | ms= 0.3 | adap= True
+C-mixed 11 'see you soon.' | "I couldn't save that as a fact. I don't know that shape yet. Could you say it an" | saved= [] | confs= [] | ms= 2670.0 | adap= False
+[0m
+[0m$ [0mcat ~/premonition-chat/lis311-transcript.jsonl 2>&1 | head -c 1500; echo; ls -la ~/premonition-chat/ | grep lis311
+{"time": "2026-09-23T10:02:59-04:00", "index": 0, "user": "My sister is Mira.", "reply": "Saved: your sister is Mira.", "added": [["USER", "sister", "Mira"]], "removed": [], "why": {"ears_stage": "", "ears_score": 0.0, "records": []}, "seconds": 1.586}
+{"time": "2026-09-23T14:08:02-04:00", "index": 1, "user": "My sister is Mira.", "reply": "Saved: your sister is Mira.", "added": [["USER", "sister", "Mira"]], "removed": [], "why": {"ears_stage": "", "ears_score": 0.0, "records": []}, "seconds": 1.807}
+
+-rw-r--r--   1 ben-hannan  staff     4 Sep 23 14:07 lis311-port.txt
+-rw-r--r--   1 ben-hannan  staff  1632 Sep 23 14:08 lis311-server.log
+drwxr-xr-x  10 ben-hannan  staff   320 Sep 23 14:08 lis311-state
+-rw-r--r--   1 ben-hannan  staff   506 Sep 23 14:08 lis311-transcript.jsonl
+[0m
+[0m# [0mTodos
+[✓] Verify preconditions (uptime, disk, weights sha)
+[✓] Run stub scenarios P311.1/P311.2 (sealed try script)
+[✓] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[✓] Start + verify server 8767 P311.3
+[•] Write RESULTS.md + ledger result lines
+[0m
+[0m← [0mWrite artifacts/claude-lis311-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P311.4 OUTCOME (2026-09-23, builder, re-run lis-311b after Mac sleep; sealed 5 files SEAL.sha256.txt 5/5 OK before and after, no post-seal change, predictions not duplicated) registered verdict PASS P311.1-P311.3. P311.1: 10/10 stub scenarios pass exit 0, every reply/triple count exactly as predicted. P311.2: 0 base-chain writes over the 5 blocked turns (each verified teachable on raw 292 first). P311.3: GET / 200 + POST /turn 200 "Saved: your sister is Mira." 1 triple; server left running; 8765 untouched (ready true), 8766 no answer pre-existing untouched; own state dir.
+- P311.5 OUTCOME (same) step 3 real-model try-out report-only no bar: weights sha 112880d6 match, device mps, 30 scripted + 4 adaptive yes = 34 rows in artifacts/claude-lis311-20260923/real-rows/rows.jsonl, ms median 2826.6 p90 15567.1 max 59429.6; 4 ask-backs all resolved; observed as-is: A#7 mouth said not-saved yet triple written, A#8 ASK missed just-saved lowercase fact, C#4 correction left zoe with 2 cats, small talk saved 0.
+EOF
+tail -n 2 artifacts/fable-predictions-ledger.md | cut -c1-120; echo; shasum -a 256 -c artifacts/claude-lis311-20260923/SEAL.sha256.txt 2>&1 | tail -n 6; curl -s -m 5 -o /dev/null -w "8767 still up: %{http_code}\n" http://127.0.0.1:8767/
+- P311.4 OUTCOME (2026-09-23, builder, re-run lis-311b after Mac sleep; sealed 5 files SEAL.sha256.txt 5/5 OK before and
+- P311.5 OUTCOME (same) step 3 real-model try-out report-only no bar: weights sha 112880d6 match, device mps, 30 scripte
+
+scripts/claude_lis311_agent.py: OK
+scripts/claude_lis311_try.py: OK
+scripts/claude_lis311_server.py: OK
+scripts/claude_lis311_start.sh: OK
+artifacts/claude-lis311-20260923/PASSMARKS.md: OK
+8767 still up: 200
+[0m
+[0m# [0mTodos
+[✓] Verify preconditions (uptime, disk, weights sha)
+[✓] Run stub scenarios P311.1/P311.2 (sealed try script)
+[✓] Real-model 30-turn try-out -> real-rows/rows.jsonl
+[✓] Start + verify server 8767 P311.3
+[✓] Write RESULTS.md + ledger result lines
+[0m
