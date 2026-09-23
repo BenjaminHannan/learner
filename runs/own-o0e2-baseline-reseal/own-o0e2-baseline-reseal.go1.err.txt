@@ -1,0 +1,555 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | head -n 300; echo ---; uptime; df -g / | head -n 5
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 seeds × 15 min)
+**Change:** the 6 set slots + count head replace a single-fact output (E1/E2 arms use 1 slot + "more" flag).
+Marks: plural and appositive dev turns: all facts found ≥ 90% (261 was 4/16); turns with count ≠ filled slots are
+asked about, never half-saved. Recall reported three ways (read right, saved right, sent back as a question).
+**Proved wrong if** plural recall < 60%.
+
+### E4 — own ear against ear v4.1 on a fresh blind panel
+**Change:** swap ear v4.1 for the own ear inside the current pipeline; gate (Qwen QA from 264) unchanged.
+Panel: written blind by a separate agent from a spec, sealed before the run, ≥ 150 turns, same marks as 261b
+(wrong saves ≤ 1, exact TEACH ≥ 85%, ASK ≥ 90%, median ≤ 800 ms). Report wrong saves per saved fact and per turn,
+plus recall. Also report the shared-blind-spot count of §4.4 on dev.
+**Proved wrong if** the own ear has more wrong saves *before the gate* than ear v4.1 on the same panel.
+
+### E5 — certification run (later)
+Freeze everything first (weights, tokenizer, relation table, compiler, thresholds, grading rules). A fresh,
+representative sample of **≥ 368 independent everyday-chat turns** for writes and ≥ 368 replies for grammar: with 0
+errors in each, both rates are below 1% *together* at 95% (2.5% error allowed per claim). 300 turns certify one rate
+alone. Report the rate per turn (a turn with any wrong save) and, separately, per saved fact (with turns as clusters),
+plus automatic recall ≥ 85% and how often it asked. Confirmed-after-asking facts are reported apart, never counted as
+automatic recall. A failed certification is not re-run until it passes under the same 95% claim; any retry is
+pre-registered with its own error budget. The certificate names the kind of chat it was tested on.
+
+### M1 — whole-name copy in talker101 (GPU ≈ 1 min, or Mac CPU)
+**Change:** slot tokens instead of word-piece copy, vs talker120b.
+Marks: truncated names 0/500; raw unfaithful before the brake ≤ 50/500 (120b: 172/500); status right ≥ 489/500.
+**Proved wrong if** raw unfaithful stays > 120/500: the names were not the main problem.
+---
+ 5:40  up 2 days, 21:29, 4 users, load averages: 31.90 44.96 55.63
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    50%  484014 133921520    0%   /
+[0m
+[0m→ [0mRead artifacts/claude-own-o0e-20260923/TESTLOG.md
+[0m→ [0mRead artifacts/claude-own-o0e-20260923/RESULTS.md
+[0m
+[0m$ [0mls artifacts/claude-own-o0e-20260923/; echo ---; ls scripts/ | grep -i own; echo ---; ls artifacts/ | grep -i own
+killA
+killB
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+smoke
+TESTLOG.md
+---
+claude_own_o0a_compiler.py
+claude_own_o0a2_compiler.py
+claude_own_o0b_check.py
+claude_own_o0b_gen.py
+claude_own_o0c_prep.py
+claude_own_o0c_tok.py
+claude_own_o0d_model.py
+claude_own_o0d_test.py
+claude_own_o0d_train.py
+claude_own_o0d2_model.py
+claude_own_o0d2_test.py
+claude_own_o0d2_train.py
+claude_own_o0e_model.py
+claude_own_o0e_serialize.py
+claude_own_o0e_tests.py
+claude_own_o0e_train.py
+claude_own_o0f_bench.py
+---
+claude-own-bench-20260923
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+[0m
+[0m→ [0mRead scripts/claude_own_o0e_model.py
+[0m→ [0mRead scripts/claude_own_o0e_tests.py
+[0m→ [0mRead artifacts/claude-own-o0e-20260923/PASSMARKS.md
+[0m
+[0m$ [0mcat artifacts/claude-own-o0e-20260923/SEAL.sha256.txt; echo ---; git log --oneline origin/main -- scripts/claude_own_o0e_model.py | head; echo ---; git show origin/main:scripts/claude_own_o0e_model.py 2>&1 | head -n 100
+0dd2ebf2e3ac54eeb86370f5d17307d555c463130862c0a66820a0244a8b5bda  scripts/claude_own_o0e_model.py
+48db8110d0333990581dbf881a8aa34f496249034edfe0874369319c7d216527  scripts/claude_own_o0e_serialize.py
+2c8f9c3812a7e922880a2edd319b51953078a8525ca32d17098878fb303ba570  scripts/claude_own_o0e_train.py
+aee6375798e3c60824d10f9e5206db30ed145a4532eda8d2ba91c952e9f07f07  scripts/claude_own_o0e_tests.py
+84c2e0a19dddba73d740df738b66fb282790190052dee718a4f343e77c83b612  artifacts/claude-own-o0e-20260923/PASSMARKS.md
+---
+---
+fatal: path 'scripts/claude_own_o0e_model.py' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mgit log --oneline -5; echo ---; git status --short | head -n 20; echo ---; shasum -a 256 scripts/claude_own_o0e_model.py scripts/claude_own_o0e_serialize.py scripts/claude_own_o0e_train.py scripts/claude_own_o0e_tests.py
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+---
+53c8c3ee1bdde98e4ce1524fa271b2be0e375007b344fdd43145e4480c4d6da9  scripts/claude_own_o0e_model.py
+48db8110d0333990581dbf881a8aa34f496249034edfe0874369319c7d216527  scripts/claude_own_o0e_serialize.py
+2c8f9c3812a7e922880a2edd319b51953078a8525ca32d17098878fb303ba570  scripts/claude_own_o0e_train.py
+aee6375798e3c60824d10f9e5206db30ed145a4532eda8d2ba91c952e9f07f07  scripts/claude_own_o0e_tests.py
+[0m
+[0m$ [0mtail -n 15 artifacts/fable-predictions-ledger.md; echo ---; head -n 10 artifacts/fable-predictions-ledger.md
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0d2.1 (2026-09-23, own-O0d2 diagnosis follow-up, scripts/claude_own_o0d2_{model,train,test}.py + PASSMARKS.md artifacts/claude-own-o0d2-20260923; CPU only): all 8 unit tests pass; bar = 8/8 pass.
+- Pown0d2.2 same: audited ear count still exactly 32,850,051; bar = diff <= 0.005 with exact number reported per part.
+- Pown0d2.3 same: kill test identical (kill at step 30, resume to step 60, sha256 equal); bar = identical.
+- Pown0d2.4 same: fuzz 10,000 random-logit draws, 0 non-whole-word spans decoded (span + owner checks); bar = 0.
+- Pown0d2.5 same: o0d smoke (toy frames, <= 10 min) loss still falls; bar = mean(last 10%) < mean(first 10%).
+- Pown0d2 OUTCOME (2026-09-23, builder; registered verdict PASS, 5/5 marks PASS, test run once): Pown0d2.1 units 8/8; Pown0d2.2 audit exactly 32,850,051; Pown0d2.3 kill A=054dbec63839 B=054dbec63839 (match o0d hashes); Pown0d2.4 fuzz 0/10,000; Pown0d2.5 smoke 120 steps 1.3347 -> 0.3635 (falls). Deviations: D1 fuzz reference + round-trip call updated to the fixed rule/signature; D2 predictions pre-registered pre-run. See artifacts/claude-own-o0d2-20260923/RESULTS.md.
+- P282b.1 (2026-09-23, builder; exp 282b vocab small talk on 282, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-small282b-20260923; blind panel never opened, smallpanel282 burned per director note) M1 blind smallpanel282b run once per arm with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories greeting/closing/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): writer greeting+closing fitting on 282b >= 90% (bar 32/35 at spec counts, 282 shown); 0 writes on them; mixed + control 0 moves vs 282; 0 store diffs; 0 question writes. Panel moves: exactly the writer-smalltalk turns where 282 errs and the vocab test fires (dev proxy 18/40 smalltalk dev turns move, rest keep 282's already-fitting reply; blind ids not predictable).
+- P282b.2 (same) M2 frozen suites vs 282 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 282's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 282 rows: vp 98 + supp 12, 0 changes. Dev 65 own-wording fictional-name dialogs 79 turns: greet 20/20 + thanks_close 20/20 with the head's canonical reply, mixed 15/15 + control 10/10 byte-identical 282b vs 282, exactly the 18 listed moves d282b-002/007/009/010/011/013/014/015/016/017/018/021/026/036/037/038/039/040 turn 0, 0 question writes.
+- P282b.3 (same) M3 smalltalkpanel234 once per arm: wellbeing 282b >= 282, other items all identical, 0 writes, 0 setup/store diffs; predicted only all-vocabulary wellbeing turns 282 errs on move to fitting. Falsifiers: any 282b reply change on mixed/control, any question-turn write, any suite/probe move vs 282 rows, any store diff. Known limits: class-less pure tails and how-are-you shapes keep 282's route; bare emoji and foreign greetings uncovered; stored-name homographs keep 282's route; first-word class on multi-class turns.
+---
+# Fable's prediction ledger (started 2026-09-20)
+
+Rule: before each registered experiment, one row per forecast with a probability, the exact evaluation setting, and the outcome that
+would falsify it. Scored afterwards (Brier score = (p − outcome)²; lower is better; always guessing 50 % scores 0.25).
+Observations, causal explanations and forecasts are kept in separate columns. Rows are append-only.
+
+## Earlier forecasts (made without probabilities; scored as hit/miss only)
+
+| date | forecast | outcome | hit? |
+|---|---|---|---|
+[0m
+[0m$ [0mgrep -n "Pown0e\." artifacts/fable-predictions-ledger.md | head -n 20
+2675:- Pown0e.1 (2026-09-23, own-O0e baseline code, CPU only, sealed 5 files SEAL.sha256.txt artifacts/claude-own-o0e-20260923; audit once) count printed exactly 61,783,680 == expected (diff 0, bar +/- 0.2%): PASS as measured.
+2676:- Pown0e.2 same (tiny width vocab1024/w64/2 layers, 147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS as measured.
+2677:- Pown0e.3 same (200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts) poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0; round-trip 1800/1800; smoke loss 58.6267 -> 13.8225 in 0.2 s; CPU throughput 133120 tok/120.2 s = 1107.8 tok/s (report only): PASS as measured.
+[0m
+[0m← [0mWrite artifacts/claude-own-o0e2-20260923/PASSMARKS.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_own_o0e2_model.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite scripts/claude_own_o0e2_tests.py
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 scripts/claude_own_o0e2_model.py scripts/claude_own_o0e2_tests.py artifacts/claude-own-o0e2-20260923/PASSMARKS.md > artifacts/claude-own-o0e2-20260923/SEAL.sha256.txt && cat artifacts/claude-own-o0e2-20260923/SEAL.sha256.txt && shasum -a 256 scripts/claude_own_o0e_serialize.py scripts/claude_own_o0e_train.py
+a2ea91d602c3e77a28679366872e717a0ac47e29f32b9a86919592034e0ca7ce  scripts/claude_own_o0e2_model.py
+22353a6d77c77fa5df746e6ecea54765165118550269ab257d8763bafc0b9bf2  scripts/claude_own_o0e2_tests.py
+1d07a89fd3818b143b530976c59a536564d40f814a28a39d31e54447e825c96b  artifacts/claude-own-o0e2-20260923/PASSMARKS.md
+48db8110d0333990581dbf881a8aa34f496249034edfe0874369319c7d216527  scripts/claude_own_o0e_serialize.py
+2c8f9c3812a7e922880a2edd319b51953078a8525ca32d17098878fb303ba570  scripts/claude_own_o0e_train.py
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0e2.1 (pred, sealed pre-run 2026-09-23) own-O0e2 follow-up, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0e2-20260923 (o0e2 model = o0e model code unchanged incl. rotary fix, o0e serialize/train imported unchanged): audit prints exactly 61,783,680 (fix is forward-math only, adds no params): PASS.
+- Pown0e2.2 (pred, same) kill test at tiny width (147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS.
+- Pown0e2.3 (pred, same) 200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts: poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0: PASS.
+- Pown0e2.4 (pred, same) rotary unit test: same-offset rotation leaves q.k unchanged, per-position and cross-position (0,d) vs (m,m+d) max abs errors both <= 1e-5 (rotation is orthogonal, float32 rounding ~1e-6): PASS.
+EOF
+uptime; df -g / | head -n 3
+5:42  up 2 days, 21:31, 4 users, load averages: 25.75 36.98 50.74
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    51%  484014 132603960    0%   /
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0e2_tests.py --out artifacts/claude-own-o0e2-20260923 2>&1 | tee /tmp/o0e2_testlog.txt | tail -n 20
+T1 audit count=61783680 expected=61783680 PASS
+toy dialogues=200 ask_turns=600
+T2 kill tiny_params=147776 identical_after_resume=True PASS
+T3 smoke steps=30 loss_first=58.6267 loss_last=13.8225 falls=True elapsed=0.2s PASS
+T3 roundtrip ok=1800/1800 PASS
+T4 poison_unchanged=1800/1800 qline_leaks=0 PASS
+T5 throughput tokens=132608 seconds=120.1 tok_per_s=1104.3 steps=518 (report only)
+T6 rotary err_same_pos=2.861e-06 err_offset=1.274e+01 FAIL
+WALL total=121.7s
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/rotcheck.py
+/Users/ben-hannan/.cache/uv/builds-v0/.tmpwodlB1/bin/python: can't open file '/tmp/rotcheck.py': [Errno 2] No such file or directory
+[0m
+[0m← [0mWrite /tmp/rotcheck.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/rotcheck.py
+err_a (same-pos, old code) = 2.86102294921875e-06
+err_b (offset, fixed code) = 0.0
+[0m
+[0m← [0mEdit scripts/claude_own_o0e2_tests.py
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0e2_tests.py
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0e2_tests.py
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_own_o0e2_tests.py
+@@ -131,15 +131,27 @@
+         dots_before = (q * k).sum(-1)
+         qr, kr = rot(q, k)
+         dots_after = (qr * kr).sum(-1)
+         err_a = (dots_before - dots_after).abs().max().item()
++        # FIX (driver-only, post-seal; see RESULTS.md D1): the first version
++        # compared position pair (0, d) against (m, m + d) built from
++        # DIFFERENT random vectors, so it could never agree. The property
++        # needs the SAME q/k vectors at both pairs: plant one vector v at
++        # positions 0 and m of the q sequence and one vector w at d and
++        # m + d of the k sequence, then compare the two cross dots.
+         T, m, d = 16, 5, 3
+-        q2 = torch.randn(1, 1, T, 64)
+-        k2 = torch.randn(1, 1, T, 64)
+-        qr2, kr2 = rot(q2, k2)
+-        ab0 = (qr2[..., 0, :] * kr2[..., d, :]).sum().item()
+-        ab1 = (qr2[..., m, :] * kr2[..., m + d, :]).sum().item()
+-        err_b = abs(ab0 - ab1)
++        v = torch.randn(1, 1, 1, 64)
++        w = torch.randn(1, 1, 1, 64)
++        qseq = torch.randn(1, 1, T, 64)
++        kseq = torch.randn(1, 1, T, 64)
++        qseq[..., 0, :] = v
++        qseq[..., m, :] = v
++        kseq[..., d, :] = w
++        kseq[..., m + d, :] = w
++        qr2, kr2 = rot(qseq, kseq)
++        ab0 = (qr2[..., 0, :] * kr2[..., d, :]).sum()
++        ab1 = (qr2[..., m, :] * kr2[..., m + d, :]).sum()
++        err_b = (ab0 - ab1).abs().item()
+     return (err_a <= 1e-5 and err_b <= 1e-5), err_a, err_b
+ 
+ 
+ def main() -> None:
+
+[0m
+[0m$ [0mrm -rf artifacts/claude-own-o0e2-20260923/killA artifacts/claude-own-o0e2-20260923/killB artifacts/claude-own-o0e2-20260923/smoke; shasum -c artifacts/claude-own-o0e2-20260923/SEAL.sha256.txt; uptime
+scripts/claude_own_o0e2_model.py: OK
+scripts/claude_own_o0e2_tests.py: FAILED
+artifacts/claude-own-o0e2-20260923/PASSMARKS.md: OK
+shasum: WARNING: 1 computed checksum did NOT match
+ 5:45  up 2 days, 21:35, 4 users, load averages: 46.06 41.44 49.96
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_own_o0e2_tests.py --out artifacts/claude-own-o0e2-20260923 2>&1 | tee /tmp/o0e2_testlog2.txt | tail -n 20
+T1 audit count=61783680 expected=61783680 PASS
+toy dialogues=200 ask_turns=600
+T2 kill tiny_params=147776 identical_after_resume=True PASS
+T3 smoke steps=30 loss_first=58.6267 loss_last=13.8225 falls=True elapsed=0.2s PASS
+T3 roundtrip ok=1800/1800 PASS
+T4 poison_unchanged=1800/1800 qline_leaks=0 PASS
+T5 throughput tokens=129536 seconds=120.0 tok_per_s=1079.3 steps=506 (report only)
+T6 rotary err_same_pos=2.861e-06 err_offset=0.000e+00 PASS
+WALL total=121.5s
+[0m
+[0m← [0mWrite artifacts/claude-own-o0e2-20260923/TESTLOG.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-own-o0e2-20260923/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+EOF
+ls artifacts/claude-own-o0e2-20260923/
+killA
+killB
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+smoke
+TESTLOG.md
+[0m
