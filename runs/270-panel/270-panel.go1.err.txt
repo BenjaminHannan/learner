@@ -1,0 +1,605 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; df -g /; git fetch -q origin main; git rev-parse --abbrev-ref HEAD; pwd; ls
+2:42  up 2 days, 18:31, 4 users, load averages: 59.96 53.59 68.93
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 143982240    0%   /
+claude/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit show origin/main:scratchpad/briefs/OPUS-RULES.txt 2>&1 | head -n 300; echo "---EXIT:$?"
+fatal: path 'scratchpad/briefs/OPUS-RULES.txt' does not exist in 'origin/main'
+---EXIT:0
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1; echo "---"; git ls-tree -r --name-only origin/main 2>&1 | grep -i -E "OPUS|264|261|earpanel|brief" | head -n 50
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+---
+archive/opus-m01-20260918-202731/AFTER.SHA256SUMS
+archive/opus-m01-20260918-202731/changes.diff
+archive/opus-m01-20260918-202731/external-state-at-final-run.sha256
+archive/opus-m01-20260918-202731/originals/SHA256SUMS
+archive/opus-m01-20260918-202731/originals/__init__.py
+archive/opus-m01-20260918-202731/originals/batch.py
+archive/opus-m01-20260918-202731/originals/config.py
+archive/opus-m01-20260918-202731/originals/contenders.py
+archive/opus-m01-20260918-202731/originals/data.py
+archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md
+archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md
+archive/opus-m01-20260918-202731/originals/exp1.py
+archive/opus-m01-20260918-202731/originals/flops.py
+archive/opus-m01-20260918-202731/originals/lookup.py
+archive/opus-m01-20260918-202731/originals/model.py
+archive/opus-m01-20260918-202731/originals/pointer.py
+archive/opus-m01-20260918-202731/originals/root/run.py
+archive/opus-m01-20260918-202731/originals/slices.py
+archive/opus-m01-20260918-202731/originals/store.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_contenders.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_data.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_model.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_slices.py
+archive/opus-m01-20260918-202731/originals/tests/test_premonition_train.py
+archive/opus-m01-20260918-202731/originals/toy.py
+archive/opus-m01-20260918-202731/originals/train.py
+archive/opus-m02-20260918-232457/FROZEN.SHA256SUMS
+archive/opus-m02-20260918-232457/external-state.sha256
+archive/opus-m02-20260918-232457/frozen/learnlab/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/ablation.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/ablation.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/leaks.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/readonly.py
+archive/opus-m02-20260918-232457/frozen/learnlab/checks/splits.py
+archive/opus-m02-20260918-232457/frozen/learnlab/ckpt.py
+archive/opus-m02-20260918-232457/frozen/learnlab/core.py
+archive/opus-m02-20260918-232457/frozen/learnlab/leaks.py
+archive/opus-m02-20260918-232457/frozen/learnlab/metrics.py
+archive/opus-m02-20260918-232457/frozen/learnlab/patterns.py
+archive/opus-m02-20260918-232457/frozen/learnlab/policy.py
+archive/opus-m02-20260918-232457/frozen/learnlab/readonly.py
+archive/opus-m02-20260918-232457/frozen/learnlab/splits.py
+archive/opus-m02-20260918-232457/frozen/learnlab/step0.py
+archive/opus-m02-20260918-232457/frozen/learnlab/step1.py
+archive/opus-m02-20260918-232457/frozen/learnlab/tokenizer.py
+archive/opus-m02-20260918-232457/frozen/learnlab/toy.py
+archive/opus-m02-20260918-232457/frozen/learnlab/train.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/__init__.py
+archive/opus-m02-20260918-232457/frozen/learnlab/village/names.py
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/264-qa-checker.md 2>&1; echo "===EXIT:$?"
+# 264: question-answering checker (director, 2026-09-23)
+Ben's pick (research thread, 02:36): replace the YES/NO entailment checker with targeted questions, each hiding the part being checked. His safeguards are adopted: allow NOT STATED and AMBIGUOUS, allow several answers, and test wrong relations. Two matching answers are NOT proof of correctness. Round-trip agreement is never permission to write.
+
+The one change (on 261b's registered arm A: canonicaliser + brake + span guard, with the checker swapped out):
+For each TEACH frame (S, R, V) the brake keeps, ask Qwen3.8-27B three separate questions at temperature 0 with thinking off. Each question sees only the message and the parts named:
+- Q-value (V hidden): "Message from the speaker: «turn». According to this message, stated as a real, current fact (not asked, pretended, planned, wished, denied, or replaced), what is <S>'s <relation words>? Answer with the exact words from the message. If several, list them separated by ' | '. If the message does not state it, answer NOT STATED. If it is unclear, answer AMBIGUOUS."
+- Q-owner (S hidden): the same frame of words, "whose <relation words> is <V>?". The speaker is answered as "the speaker".
+- Q-relation (R hidden): "How is <V> related to <S> in this message? Answer with one to three words, or NOT STATED or AMBIGUOUS."
+Save iff V (case- and space-normalised) is one of Q-value's answers, AND S is one of Q-owner's answers ("the speaker" matches "me"), AND Q-relation's answer maps to R through relation table v2 names, aliases or narrower. Otherwise hold back as UNSURE. No threshold, so nothing is tuned; dev is used only to debug prompt wording, and every wording change is logged. The span guard stays after it.
+Report wrong saves per saved fact AND per turn, plus recall, with every arm on the same scorer (Ruling 1 included).
+"our/we" owners are excluded from panel 264 (Ben ruled they must ask whose; that is a separate experiment, 265).
+Certification is separate: panels like 264 are discovery panels, and certifying uses the 600-turn fixed set (to be written).
+===EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/261-earcheck.txt 2>&1; echo "===EXIT:$?"
+EXP 261 BRIEF: the ear with a checker. A second model checks every fact the ear wants to save, and this replaces the margin gate. The director wrote this on 2026-09-22 at 20:05. OPUS-RULES.txt (same folder) applies in full.
+
+This is the one diagnosis-driven follow-up to 257's registered FAIL. 257 stays FAIL.
+
+Why: the director's review of 257 (category level; the 257 panel is TEST-ONLY for you, so never open it)
+- The v4.1 ear alone reads well. With the brake and no gate, it gets 98 of 112 facts exactly right (87.5%) and 39 of 40 questions.
+- It also makes 12 wrong saves, and every one of them is confident. The director swept the gate threshold tau from 0 to 9.3 on 257's own predictions:
+  - wrong saves only fall 12 → 8 (tau 2) → 4 (tau 9.3), while recall falls 87.5% → 69.6%;
+  - no tau reaches the bar of at most 1 wrong save.
+- The margin gate holds back frames the ear is ~99% sure of. For example, the top reading has probability 0.995 and the rival 0.003. So the gate mostly costs right facts.
+- The confident wrong saves are semantic mistakes that a reader who understands the sentence would not make:
+  - a pretend turn ("let's say …") saved as fact;
+  - a goal ("training to be …") saved as a current job;
+  - "A's husband is B and he works as …" with the job given to A;
+  - a lowercase check-question ("… right", "so …") saved;
+  - "our …" giving the subject "Our" instead of the speaker.
+- Every new kind of example we add to the training data fixes some old kinds, and a fresh panel then shows new ones. A checker that actually reads the sentence should catch all these kinds at once, instead of one data class per kind. (This is Ben's "dreamer + checker" idea: the ear proposes, a second model checks.)
+
+The one change: replace 257's margin gate with an entailment checker, plus one mechanical fix, the speaker canonicaliser.
+1. Speaker canonicaliser. For subjects of TEACH and ASK frames, map these words to "me", ignoring case, before anything else: i, me, my, myself, mine, we, us, our, ours, ourselves. Nothing else changes. (Ben's rule: there is one user, so "our dog" is the user's dog.)
+2. Checker. For every TEACH frame the brake keeps:
+   a. Render a claim sentence H with one fixed template: "<S>'s <relation words> is <V>." <relation words> is the table v2 name with underscores turned into spaces; "me" becomes "the speaker". You may add a short fixed list of nicer templates (for example "<S> lives in <V>." for city, or "<S> works as <V>." for job), written before the seal from the relation table. Never write templates from any panel.
+   b. Ask Qwen3.8-27B one fixed yes/no question at temperature 0. It is already on BensPC; see the llama-server notes below. Write the question before the seal. It must say:
+      - "Message from the speaker: «<turn>»";
+      - "Claim: <H>";
+      - "Does the message state this claim as a real, current fact that the speaker believes?";
+      - answer NO if the claim is only asked about or checked (including "…, right" and a "so …" check without "?"), pretend or hypothetical ("let's say", "imagine", "suppose", "what if"), a plan, goal or wish ("training to be", "wants to", "is going to"), denied, or about a different person than the message says;
+      - "Answer with one word: YES or NO."
+      Turn off thinking mode. Read p(YES) from the token logprobs (normalise YES against NO).
+   c. Save the frame if p(YES) ≥ theta. Otherwise hold it back as UNSURE, exactly where 257's gate put its UNSURE frames.
+   d. The checker only keeps or holds back. It never adds, edits or reorders a frame. ASK frames are not checked (questions never write).
+3. theta. Pick it on dev before the seal with 257's sealed tau rule: the most recall at ≤ 1% wrong saves on dev; otherwise the lowest wrong rate, with ties going to the smallest theta. Write the theta curve into PASSMARKS.
+   Dev is 257's dev split with the v4.1 predictions (artifacts/claude-smolear257-20260922/dev/), plus a NEW checker dev set that you write yourself, in your own wording:
+   - at least 30 turns for each of: pretend/hypothetical, plans/goals, check-questions without "?", "A's R is B and he/she …", and "our"/"we" owners;
+   - plus 60 plain true facts, so that false rejections show.
+   Qwen may write practice sentences. Never read, copy or rebuild items from any TEST-ONLY panel (earpanel235, earpanel235b, earpanel257, earpanel261); you know 257's failures only at the category level written here.
+
+Code and names
+- Import 257's modules read-only; never copy-edit them. New files: scripts/claude_earcheck261_*.py. Artifacts: artifacts/claude-earcheck261-20260922/. Ledger lines: P261.n. Never edit an existing file.
+- The ear is the v4.1 checkpoint on BensPC (C:\Users\benja\smolear235\out_v41, sha256 55284dec…; check it). Use the same inference, brake, relation table v2, loader and scorer as 257. Adapt only the paths and the id prefix, in new wrapper files.
+
+Compute: the BensPC RTX 5070 Ti. It is free, one job at a time.
+- Check nvidia-smi first. Never touch other processes (pythonw.exe 13036 is not ours). Install nothing.
+- llama-server: start it yourself by hand with the fast config from C:\llama-b10679\llama-server.exe and the model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, flags --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6.
+  - Use -c 4096 so that the ear fits next to it.
+  - Stop it by its exact PID when you finish.
+  - The scheduled task ScoutLlamaServer stays disabled; never enable or run it.
+- Watch for VRAM spill: nvidia-smi shows ~100% utilisation at under ~100 W, and steps suddenly get ~4x slower. If you see it, lower -ngl a little, and report it.
+- For SSH and PowerShell quoting, send PowerShell with -EncodedCommand (base64 UTF-16LE), and pipe Python code through stdin, not -c.
+- Keep each wave under 30 minutes.
+
+Registered test
+- A fresh blind panel, artifacts/claude-earpanel261-20260922/, is being written by a separate blind writer. It uses 257's schema and families plus new risk tags R7–R12 in notes.
+- Don't open it until your PASSMARKS, code, render templates, prompt, theta, dev files and scorer wrapper are sealed. After your seal:
+  - wait for its SEAL.sha256.txt and check it OK from the repo root;
+  - run the strict schema check (SCHEMA-MISMATCH, exit 3);
+  - run every arm ONCE.
+- If it is not sealed 60 minutes after your seal, report and stop.
+- Arms:
+  - A (registered): v4.1 + canonicaliser + brake + checker(theta)
+  - A_gate: v4.1 + canonicaliser + brake + 257's margin gate at tau 9.3
+  - A_brake: v4.1 + canonicaliser + brake
+  - A_raw: v4.1 + canonicaliser
+  - A_nocanon: v4.1 + brake + checker(theta), with no canonicaliser
+  - B: 138i + 228, through 235b's arm-B wrapper, as in 257
+
+Marks, arm A. The bars are 257's, plus M6.
+
+| Mark | Bar |
+|---|---|
+| M1 | no_save saves ≤ 1 |
+| M2 | wrong saves (4 statement families + no_save) ≤ 1 |
+| M3 | exact TEACH recall ≥ 85% and ≥ B + 30 |
+| M3b | held back (UNSURE frames on items outside no_save) ≤ 12% of gold TEACH frames |
+| M4 | exact ASK recall ≥ 90% |
+| M5 | median time per turn, ear + checker with both resident on the 5070 Ti, ≤ 800 ms; report p90 and max |
+| M6 | the checker never adds or changes a frame: every A frame is in A_brake, byte-identical |
+
+Also report, with no bars:
+- every arm's M1–M4 numbers;
+- the theta curve on the panel;
+- a per-tag table for R1–R12;
+- for each of A's held-back and wrong frames: the category, the p(YES) value, and the claim sentence H with the names replaced by placeholders;
+- after the registered run only: arm A on the known 257 panel (artifacts/claude-earpanel257-20260922/, run once, report only, never tune), next to 257's A, A_brake and gate numbers.
+
+Order of work
+1. Reproduce 257's A_brake on 257's dev set, to check that your inference matches.
+2. Build the canonicaliser, render templates and checker client.
+3. Build the checker dev set, run it, pick theta, and measure latency with both models resident.
+4. Write PASSMARKS with predictions, seal, and append the ledger lines.
+5. Wait for the panel seal, then run the registered arms once, then the report-only 257 run.
+6. Write RESULTS.md as 257's was laid out: the result first, every mark, per family and per tag, what it means and doesn't mean, categories only, never quoting panel items. Then give your final reply.
+===EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/earpanel264-spec.txt 2>&1; echo "===EXIT:$?"
+EAR PANEL 264 SPEC. The director wrote this on 2026-09-23 (copied from the earpanel261b spec; changes marked NEW264). It is shared by the blind panel writer and the exp 264 builder.
+
+Folder: artifacts/claude-earpanel264-20260923/
+- panel.jsonl (150 lines)
+- make_panel.py: holds the items by hand, writes panel.jsonl deterministically, and runs the self-checks
+- README.md (TEST-ONLY; category level only)
+- SEAL.sha256.txt, made from the repo root with:
+  shasum -a 256 artifacts/claude-earpanel264-20260923/panel.jsonl artifacts/claude-earpanel264-20260923/make_panel.py > artifacts/claude-earpanel264-20260923/SEAL.sha256.txt
+
+Schema (exactly as panel 257)
+- Each line is exactly {id, family, turn, gold, clear, notes}.
+  - id: "e264-001" … "e264-150", in family-block order.
+  - turn: one user chat turn.
+  - gold: a list of frames. [] means nothing may be saved.
+  - clear: bool. false when a second reading is also defensible.
+  - notes: a string holding the risk tags (R1 … R12, "lower", "typo", "noq").
+- TEACH frame: exactly {act: "TEACH", subject, relation, relation_aliases, value}.
+- ASK frame: exactly {act: "ASK", subject, relation, chain, relation_aliases, chain_aliases}.
+  - chain: null for one hop. For two hops it is [first relation, second relation]; relation is then the second one and subject is the start person.
+  - chain_aliases: null for one hop. For two hops it is [aliases of hop 1, aliases of hop 2]; the second list equals relation_aliases.
+- subject and value: the exact words from the turn, in the same case. "me" stands for the speaker, which includes "our"/"we"/"us" owners (Ben's rule: there is one user).
+- NEW: for a pet, relation is "pet" and relation_aliases must include the species word the turn uses (dog, cat, rabbit ...) as well as pet, animal and companion.
+- relation: a plain English snake_case name (city, employer, workplace, job, boss, sister, spouse, language, hometown, place_of_birth, pet, school, neighbour …). relation_aliases lists accepted alternatives. Keep one fixed alias list per relation in the generator.
+
+Families and exact counts (150)
+- plain_teach 25
+- varied_teach 30
+- full_names 15
+- questions 25
+- chain_questions 15
+- no_save 25
+- corrections 15
+
+Risk quotas. Tag each item in notes. All wordings are new; never copy an example from this spec word for word.
+- R1, pronoun reference across clauses: at least 8 turns across varied_teach and full_names. Gold subjects are the resolved names.
+- R2, questions shaped like statements: at least 8 turns in no_save with gold [].
+  - Include tag questions ("…, right", "…, isn't it") and "so …" checks.
+  - At least 5 have NO question mark (lowercase chat style).
+  - Plus at least 3 statements that contain a question word but state a fact (TEACH gold, in varied_teach).
+- R3, the verb decides the relation, not a noun in the value: at least 6 items. Teaching or coaching at a School, College or Club means workplace; studying at one means school.
+- R4, compound family relations (step-, half-, -in-law, grand-, great-): at least 6 items across families. Gold keeps the full relation.
+- R5, everyday relations beyond the core list (housemates, instruments, favourite foods or sports, hobbies, teachers, doctors, neighbours): at least 8 items across families.
+- R6, two-hop questions whose first hop is a relative: at least 5 of the chain_questions.
+- NEW264: NO turn may use we/us/our/ours/ourselves as an owner or subject (Ben's ruling: those turns must ask whose; they are tested in a separate experiment). R7 is dropped.
+- R8, plans, goals and wishes ("training to be", "wants to be", "is hoping to", "is going to", "plans to move to", "will start at"): at least 6 items.
+  - At least 3 are in varied_teach, where another clause of the same turn states a real current fact. Only that fact is gold.
+  - At least 3 are in no_save, where the whole turn is a plan or wish (gold []).
+- R9, pretend and hypothetical turns ("let's say", "imagine", "suppose", "pretend", "what if", "say that"): at least 5 in no_save, with gold [].
+- R10, plural relatives naming two people ("my two sisters, A and B, …", "both my cousins, A and B, …"): at least 4 items. Gold has one frame per person for the relation, plus any other stated fact for each person.
+- R11, appositive relatives ("my cousin A lives in B", "A's friend B works at C"): at least 6 items. Gold holds the relative frame AND the other fact.
+- R12, a pronoun after "A's R is B and he/she …" where the pronoun refers to B: at least 4 items. The later fact's gold subject is B, never A.
+
+The rest spreads over:
+- plain facts, pets, jobs, languages and birthplaces;
+- full names of 2–4 words;
+- corrections, which hold only the new value (a negated old value is never in gold);
+- lowercase and typo'd chat: at least 15 turns in all.
+- NEW, R13 typo next to a name: at least 8 teach items where a misspelt everyday word (not a name) sits right next to a name ("livs", "werks", "bron"). Gold holds the clean name spans only.
+- NEW264, R16 wrong-relation traps: at least 8 teach items where a naive reader would pick the wrong relation word (works WITH vs works FOR, a brother's wife vs a wife, lives NEAR vs lives in, used to work at vs works at). Gold holds only what is stated, with the right relation.
+- NEW264, R17 stale values: at least 6 corrections where the old value is named in the same turn in a different position than "not X" (e.g. "X moved from A to B", "it's B now, it used to be A"). Gold holds only the new value.
+- NEW, R15 name particles: at least 6 teach items whose names or places contain lowercase particles (van, de, von, da, of, le), e.g. a fictional "Ria van Doorn" or "Port of Sela"; gold keeps the full span.
+- NEW, R14 all-lowercase names: at least 6 teach items typed all lowercase with lowercase names; gold keeps the lowercase spans.
+questions and chain_questions include at least 5 lowercase or no-"?" questions.
+
+Writer rules
+- Blind. Read nothing but this spec, OPUS-RULES.txt, and the schema and judgement-call sections of artifacts/claude-earpanel235-20260922/README.md.
+- Never read code, relation tables, training data, design notes, results, briefs other than this spec, other panels (including earpanel257 and earpanel261, earpanel261b), or any builder's folder.
+- Fictional names only, and no name or place from any README you read.
+- make_panel.py checks:
+  - family counts;
+  - no duplicate turn;
+  - every subject and value (other than "me") appears word for word in its turn;
+  - every R1–R17 quota (R7 dropped);
+  - the lowercase/typo and no-"?" counts;
+  - schema exactness, including chain_aliases.
+- Before sealing, reread every item once as a careful reader. Is the gold what a sensible person would save from this turn, and nothing more? Mark clear:false where two readings are defensible.
+- Report at category level only: counts, quota counts and the SEAL lines. Never quote items.
+===EXIT:0
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "earcheck|typepanel|earpanel"; echo "---"; ls scripts/ | grep -i -E "earcheck|earpanel|typepanel"; echo "---"; ls handoff/kit/briefs/ 2>&1 | head -n 40
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+---
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_earcheck264_armb.py
+claude_earcheck264_arms.py
+claude_earcheck264_client.py
+claude_earcheck264_commatags.py
+claude_earcheck264_devreport.py
+claude_earcheck264_devset.py
+claude_earcheck264_panel.py
+claude_earcheck264_qa.py
+claude_earcheck264_qbuild.py
+claude_earcheck264_scoremain.py
+claude_earcheck264_turns.py
+---
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+[0m
+[0m$ [0mls artifacts/claude-earcheck264-20260923/ artifacts/claude-earpanel264-20260923/ 2>&1; echo "---LEDGER---"; ls artifacts/ | grep -i ledger; echo "---"; git log --oneline -8 2>&1; echo "---STATUS---"; git status --short 2>&1 | head -n 30
+artifacts/claude-earcheck264-20260923/:
+dev_264.jsonl
+dev257_qa.json
+dev257_qmanifest.json
+dev261b_qa.json
+dev261b_qmanifest.json
+dev264_earpreds.json
+dev264_qa.json
+dev264_qmanifest.json
+devcheck_qa.json
+devcheck_qmanifest.json
+devreport_261.json
+devreport_264.json
+panel264_bpreds.json
+panel264_earpreds.json
+panel264_pmanifest.json
+panel264_pyes.json
+panel264_qa.json
+panel264_qmanifest.json
+panel264_score.json
+panel264_turns.json
+panel264comma_tags.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+
+artifacts/claude-earpanel264-20260923/:
+make_panel.py
+panel.jsonl
+README.md
+SEAL.sha256.txt
+---LEDGER---
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-predictions-ledger.md
+---
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+f74835b33 Initial commit
+---STATUS---
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+[0m
+[0m$ [0mgrep -n "^P264\.\|^P270\.\|^P261" artifacts/fable-predictions-ledger.md 2>&1 | head -n 40; echo "---TAIL---"; tail -n 20 artifacts/fable-predictions-ledger.md 2>&1
+---TAIL---
+- P268.5 (same) M4 latency alternating processes m,n,m,n,m,n 2 reps each: median(268)-median(138m) <= +5 ms/turn (pilot -0.008 ms, n=104).
+- P268.6 (same) falsifiers: any reverse_chain item answered with V's own forward fact, any forward n-hop reply change, or any new wrong value proves the change wrong.
+- P280.1 (exp 280 honest ability list, outermost turn280 over 260, build agent, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-capab280-20260923 15/15 OK) M2 suites vs 260's saved rows: exactly 3 reply-only sessions152 moves (S2-casual-friends#1, S3-teachers-correction#0, S4-pets-identity#9; old C24 reply -> sealed CAN280, verdict UNHELPFUL->UNHELPFUL, stored identical, 0 write changes), GATE clean; rt136 145 units 0 field diffs (direct row compare); rt143_nogate 124 rows 0 moved; bench 4x200 0 moved; 0 abstain flips. Verifier probes vs 260's rows: vp 98 + supp 12, 0 changes. M3: 0 write changes/diffs.
+- P280.2 M1 blind capabilpanel280 (never read): M1a 0 replies on 280 with an old-sheet signature (260 arm >= 1 beside it); M1b every general item's 280 reply lists >= 3 abilities (all general replies are the one sealed CAN280 text); M3 0 panel write diffs 280 vs 260 and 0 question/self writes on 280; canyou/control items 0 moves vs 260. Truth of claims and grammar director-graded, ungraded here; changed-reply text lives only in scripts/claude_fix280_capab.py CAN280.
+- P280.3 Registered verdict lean: PASS ~70%. Likeliest failure is M1b on a panel general wording outside the closed 16-form set (stays clarify, keyword count 0, claims nothing) or the director ruling on CAN280's limits sentence (M4, ungraded here). Dev/table risk is retired: dev 82 dialogs all reported (save/ask1/abstain 8/8 plain; correct No/Actually 8/8, forget direct 8/8, two-step boss-chain 10/10 with examples; mixed hops 1/6, contrast 0/4, other forget 0/4, provenance 0/8 dropped).
+- P268.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bar 1 only. M1 panel 70 items once per arm with sealed score_panel.py: 268 rows byte-identical to 138m on all 70 (per-item right sets equal); reverse_chain 10/24 (bar 22/24), reverse_nochain keeps 4/4, uncued 8/8, forward_chain 12/12, forward_1hop 9+1miss identical, abstain 3+3miss identical, wrong 0/70, question_wrote 0/70. Stage census: 0 reverse_chain items at loop138-nhop on either arm (153-reverse 8R, 190-reverse 2R, none 12M, bench73 2M) — the panel presents no forward-walkable frame, so the frame-suppressing guard is a no-op there. DEV/M2/M3/M4 all PASS exactly as predicted (21+3 dev moves by id, 0 elsewhere, latency -0.003 ms). No falsifier triggered. Post-seal driver addition only: scripts/claude_268_panelrun.py (panel runner; sealed files unchanged, seal re-verified OK). P268.1-P268.6 predictions held except P268.2's 22/24 reach goal (composition risk stated pre-seal).
+- P266b.1 (2026-09-23, builder; exp 266b multi-word chain lift on 266, CPU only, sealed 21 files SEAL.sha256.txt artifacts/claude-chain266b-20260923; blind panels never opened, chainpanel266 never read at item level) dev 49 dialogs own wording fictional names: 26 lifts MISS->RIGHT e01-e26 (two-word 2-link/3-link, three-word 2-link/3-link, last-word-also-taught; live, born, work, work-for, speak), 5 MISS->honest-ABSTAIN e31-e35 (broken multi-word chains; e32 in base's three-word wording), 4 untaught multi-word MISS on all arms e27-e30 (no lift, no guess), 14 266-vs-266b byte-identical (controls, my-chain, statements, one-word chains); 0 question writes, equal events all arms.
+- P266b.2 (same) M1 blind chainpanel266b run once per arm with sealed score_panel.py: multiword_chain >= 22/24, three_link >= 7/8, oneword_chain no 266-RIGHT item lost, broken_chain 12/12 honest abstain, 0 wrong, 0 question writes, plain_control + statement_control byte-identical (266 number beside every figure). Risk: base abstains 3-word-base broken chains as "...not someone I can look up" (dev e32; base's own words served unchanged).
+- P266b.3 (same) M2 chainpanel266 regression: 0 new wrong; only the 8 cause-(b) ids (c266-005, c266-008, c266-015, c266-031, c266-032, c266-033, c266-035, c266-036) may move to RIGHT; all other ids byte-identical.
+- P266b.4 (same) M3 frozen suites vs 266 saved rows: sessions152/bench/marks123 0 moves; rt136 exactly C019-C031 (13 inherited 222 WRONG-WRITE) + C076/C079 reply-only; rt136 direct vs 266 rows []; rt143 no-gate 0 moves 0 verdict flips; 63 inherited 222 exceptions identical (seconds excluded); restart+verifier 0 reply changes, 0 ghosts, 0 dup fails, 0 write changes.
+- P266b.5 (same) M4 latency alternating processes: median(266b)-median(266) <= +5 ms/turn (pilot -0.11 ms, 624 turns each).
+- P266b.6 (same) falsifiers: a reply about the wrong person (e.g. about "Voss" for "Mara Voss's boss"), an answer with a missing link, or an untaught multi-word name lifted into a guess proves the change wrong.
+- P269.1 (2026-09-23, builder; exp 269 = 265 sealed arm A + text-level group-owner check on the raw turn before ear/brake: P1-P5 ownership patterns + quote guard, deterministic, sealed generic ask line, saves byte-identical to A265 by construction; checker prompt B theta 0.25 + guard unchanged, scorer = 265 + M6-M8, sealed 15 files SEAL.sha256.txt artifacts/claude-ear269-20260923) M1 group_owner 0 group-owned saves, ask-whose 24-29/30; pass (0 saves and >= 27 ask) ~55 %. Dev: 0 saves, ask 46/46 (18 divert + 28 text-only).
+- P269.2 M2 mixed exactly right (other fact saved, no group fact, ask present) 8-12/15; pass (>= 12) ~35 %. Dev 14/22 (ex265 subset 7/10 reproduces 265; new 7/12); misses are extra checker-passed frames read off the group clause (6) + neighbour direction flips (2).
+- P269.3 M3 first_person 0 hits lost vs A265; pass ~99 %. Dev 10/10 hits, 0 lost; holds by construction (saves identical, asserted per turn).
+- P269.4 M4 named 15/15 turns byte-identical to A265; pass ~99 %. Construction, dev 10/10.
+- P269.5 M5 0 new wrong saves vs A261b; pass ~99 %. Construction (A saves subset of A261b saves), dev 0 new (A wrong 13, A261b wrong 39 = 26 diverted + 13). Per-fact/per-turn rates for A, A265, A261b, B reported, no bars.
+- P269.6 M6 false asks on non_owner_we + first_person + named <= 1 total: 0-1, pass ~85 % (dev 0/53: 0 fires + 0 divert asks on 33 nonowner + 10 first + 10 named; 46/46 adversarial probes as intended). M7 gold hits lost on non_owner_we vs A265 <= 1: 0, pass ~99 % (dev 0; construction). M8 0 new wrong vs A265 across all families: 0, pass ~99 % (dev 0; construction).
+- P269.7 Overall registered PASS ~20 % (needs M1+M2 together; M3-M8 near-certain).
+- P269.8 Latency (no bar): ear+checker+guard+groupcheck median ~300-450 ms/turn (dev 332.61 ms, groupcheck 0.008 ms); arm B mostly abstains (dev 6/121 hits, 0 wrong). D1 counts-guard forces ALL=false on dev (read marks directly); D2 blind panel never opened pre-seal, poll SEAL up to 120 min; D3 server PID 26480 left running between waves, final stop by WMI terminate (this build answers no /health; /completion verified 162/162, 0 fallbacks); D4 diverted frames still spend a checker query (A265/A261b exactness); D5 M5/M8 = per-turn multiset difference; D6 check changes only the ASK trigger (per-frame divert does all suppression); D7 residuals: walk/feed/carry verbs don't fire, death contexts still fire, ourselves needs ownable nearby. See artifacts/claude-ear269-20260923/PASSMARKS.md.
+[0m
+[0m$ [0mgit ls-files artifacts/claude-earcheck264-20260923/ scripts/claude_earcheck264_qa.py 2>&1 | head; echo "---"; git status --short artifacts/claude-earcheck264-20260923/ scripts/claude_earcheck264_* 2>&1 | head -n 20; echo "---SEALCHECK---"; shasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | tail -n 5
+---
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+---SEALCHECK---
+artifacts/claude-earcheck264-20260923/devcheck_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/dev264_qmanifest.json: OK
+artifacts/claude-earcheck264-20260923/devreport_261.json: OK
+artifacts/claude-earcheck264-20260923/devreport_264.json: OK
+[0m
+[0m← [0mWrite artifacts/claude-typepanel270-20260923/make_panel.py
+Wrote file successfully.
+[0m
+[0m$ [0m/usr/bin/python3 artifacts/claude-typepanel270-20260923/make_panel.py && shasum -a 256 artifacts/claude-typepanel270-20260923/panel.jsonl artifacts/claude-typepanel270-20260923/make_panel.py > artifacts/claude-typepanel270-20260923/SEAL.sha256.txt && cat artifacts/claude-typepanel270-20260923/SEAL.sha256.txt && wc -l artifacts/claude-typepanel270-20260923/panel.jsonl
+self-checks OK: 100 items {'casual': 40, 'casual_q': 15, 'lower_trap': 15, 'clean': 30} casual-no-punct 32
+wrote artifacts/claude-typepanel270-20260923/panel.jsonl
+ff80e624704e90fdfee8f684d8aaa8d073a0fb297bd65e01b9b1206d74eafe8d  artifacts/claude-typepanel270-20260923/panel.jsonl
+1c0edfd9937654a8bd0f4de8fe8551f78f95a2603ebf2c527a2d47dcf9d8f862  artifacts/claude-typepanel270-20260923/make_panel.py
+     100 artifacts/claude-typepanel270-20260923/panel.jsonl
+[0m
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md
+[0m
+[0m$ [0mhead -c 600 artifacts/claude-typepanel270-20260923/panel.jsonl; echo; echo "---264 SEAL---"; shasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | sort | uniq -c | head; shasum -a 256 -c artifacts/claude-earcheck264-20260923/SEAL.sha256.txt 2>&1 | grep -v OK | head
+{"id": "t270-001", "family": "casual", "turn": "anas cat is fig", "gold": [{"act": "TEACH", "subject": "Ana", "relation": "pet", "relation_aliases": ["pet", "animal", "companion", "cat"], "value": "Fig"}], "clear": true, "notes": "casual lower no-apos noq"}
+{"id": "t270-002", "family": "casual", "turn": "benos dog is moss", "gold": [{"act": "TEACH", "subject": "Beno", "relation": "pet", "relation_aliases": ["pet", "animal", "companion", "dog"], "value": "Moss"}], "clear": true, "notes": "casual lower no-apos noq"}
+{"id": "t270-003", "family": "casual", "turn": "cara lives in kelmar", "gold": [
+---264 SEAL---
+   1 artifacts/claude-earcheck264-20260923/dev_264.jsonl: OK
+   1 artifacts/claude-earcheck264-20260923/dev257_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev257_qmanifest.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev261b_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev261b_qmanifest.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev264_earpreds.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev264_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/dev264_qmanifest.json: OK
+   1 artifacts/claude-earcheck264-20260923/devcheck_qa.json: OK
+   1 artifacts/claude-earcheck264-20260923/devcheck_qmanifest.json: OK
+[0m
+[0m→ [0mRead artifacts/claude-earcheck264-20260923/PASSMARKS.md
+[0m→ [0mRead artifacts/claude-earcheck264-20260923/RESULTS.md
+[0m
+[0m$ [0mgrep -n "P264\.\|P270\.\|P261b" artifacts/fable-predictions-ledger.md 2>&1 | head -n 20; echo "---imports---"; grep -h "^import\|^from" scripts/claude_earcheck264_qa.py scripts/claude_earcheck264_arms.py scripts/claude_earcheck264_scoremain.py 2>&1 | sort -u | head -n 20
+2625:- P261b.1 (2026-09-23, builder; exp 261b = 261 sealed arm A + mixed-case span guard after checker, theta 0.25 prompt B, scorer = 261 sealed + Ruling 1 narrower-relations-hit, sealed 15 files SEAL.sha256.txt artifacts/claude-earcheck261b-20260923) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+2626:- P261b.2 M2 wrong saves (statement fams + no_save) 0-2; pass (<= 1) ~60 %. 261's 9 wrongs: ~6 pet-narrower become hits (Ruling 1), ~2 typo-mix held by guard if case-mixed; residual risks so-check style, capitalised-glued typos, R10/R11 splits.
+2627:- P261b.3 M3 exact TEACH recall 80-90 % and >= B + 30 (B 10-20 %); pass ~55 %. 261 77.9 % + Ruling-1 hits - ~1 % guard false holds; R10 plural splits still cap.
+2628:- P261b.4 M3b UNSURE 4-10 % of gold TEACH; pass (<= 12 %) ~80 %. 261 checker 4.9 % + guard ~1-3 %.
+2629:- P261b.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %. ASK untouched by guard.
+2630:- P261b.6 M5 median ear+checker+guard ms/turn 300-600 ms; pass (<= 800) ~90 %.
+2631:- P261b.7 M6 every A frame byte-identical in A261; pass ~99 % (guard only removes).
+2632:- P261b.8 Overall registered PASS ~30 %.
+2633:- P261b.9 Guard behaviour (no bar): holds 1-8 panel frames, mostly good holds; false holds 0-3, all title-style lowercase-of subjects. Dev: 261 dev 8/1098 held all false (of-titles); own 48-turn typo+lowercase dev 53 saved 0 held; pipeline reproduces 261 dev sweep byte-equal; synthetic 150-line pilot scores with Ruling-1 hits + 2 value_mix holds, SCHEMA-MISMATCH exit 3 ok.
+2680:- P264.1 (2026-09-23, builder; exp 264 = 261b sealed arm A with YES/NO checker replaced by QA checker v5 (3 questions, decide-first + single-word relation + de-anchored owner), span guard kept, scorer = 261b sealed + Ruling 1 with per-fact/per-turn rates, sealed 23 files SEAL.sha256.txt artifacts/claude-earcheck264-20260923) M1 no_save saves 0-3; pass (<= 1) ~55 %. Dev: pretend 5/5, checkq 13/13, plan 26/28 held.
+2681:- P264.2 M2 wrong saves (statement fams + no_save) 2-6; pass (<= 1) ~25 %. Dev ~1%/turn (15/1207 on 261 dev) plus new R16/R17 traps (5/32 own dev).
+2682:- P264.3 M3 exact TEACH recall 65-78 % and >= B + 30; pass ~15 %. Dev d257 73.4 %, dc 74.9 %, b5 75.0 %; three gates multiply holds.
+2683:- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+2684:- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+2685:- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+2686:- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+2687:- P264.8 Overall registered PASS ~5 %.
+2688:- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+2713:- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+2714:- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+---imports---
+from __future__ import annotations
+from pathlib import Path
+import argparse
+import claude_earcheck261_arms as A261  # noqa: E402
+import claude_earcheck261_scoremain as M261  # noqa: E402
+import claude_earcheck261b_guard as G  # noqa: E402
+import claude_earcheck261b_scoremain as M261B  # noqa: E402
+import claude_earcheck264_arms as BA  # noqa: E402
+import claude_earcheck264_panel as P  # noqa: E402
+import claude_earcheck264_qa as QA  # noqa: E402
+import claude_smolear235_model as E  # noqa: E402
+import claude_smolear235_score as S  # noqa: E402
+import claude_smolear257_table as TB  # noqa: E402
+import json
+import re
+import statistics
+import sys
+import time
+[0m
