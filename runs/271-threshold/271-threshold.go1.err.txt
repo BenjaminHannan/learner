@@ -1,0 +1,1040 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; git status --short | head -n 50; git branch --show-current; git log --oneline -5
+6:26  up 2 days, 22:15, 4 users, load averages: 46.55 46.22 39.35
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        12    52%  484014 125959520    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-chatdemo-20260923/com.premonition.chat.plist
+A  artifacts/claude-chatdemo-20260923/selftest.md
+A  artifacts/claude-nhopdiag-20260923/DIAG.md
+A  artifacts/claude-nhopdiag-20260923/dev_dialogs.json
+A  artifacts/claude-nhopdiag-20260923/raw_replies.json
+ M artifacts/fable-predictions-ledger.md
+A  scripts/claude_chatdemo_page.html
+A  scripts/claude_chatdemo_server.py
+A  scripts/claude_chatdemo_start.sh
+A  scripts/claude_nhopdiag_20260923_pilot.py
+A  scripts/claude_nhopdiag_20260923_repro.py
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? notebook/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+claude/card-experiment-handoff-7c5b27
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+c1f879405 chat-weakspots: 12 dialogs probing exp260 base breaks (artifacts/claude-chatweak-20260923)
+e3fbf3c51 261: builder reply, sealed marks, results, scorer
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -n 20; echo "---FETCH DONE---"; git show origin/main:design/v3/30-modes/264-qa-checker.md > /tmp/264.md 2>&1; echo "264 exit $?"; git show origin/main:handoff/kit/briefs/261-earcheck.txt > /tmp/261.txt 2>&1; echo "261 exit $?"; wc -c /tmp/264.md /tmp/261.txt
+---FETCH DONE---
+264 exit 0
+261 exit 0
+    2090 /tmp/264.md
+    8428 /tmp/261.txt
+   10518 total
+[0m
+[0m→ [0mRead /tmp/264.md
+[0m→ [0mRead /tmp/261.txt
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "earcheck261|diag267|devset267|diag271|earcheck264"; echo "---"; ls scripts/ | grep -E "earcheck261|diag271|earcheck264"; echo "---"; git fetch -q origin builder-outbox 2>&1 | head; echo "FETCH-BOX $?"; git branch -a | head -n 20
+claude-devset267-20260923
+claude-diag267-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+---
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_earcheck261b_armb.py
+claude_earcheck261b_arms.py
+claude_earcheck261b_devset5.py
+claude_earcheck261b_guard.py
+claude_earcheck261b_guarddev.py
+claude_earcheck261b_panel.py
+claude_earcheck261b_scoremain.py
+claude_earcheck261b_turns.py
+claude_earcheck264_armb.py
+claude_earcheck264_arms.py
+claude_earcheck264_client.py
+claude_earcheck264_commatags.py
+claude_earcheck264_devreport.py
+claude_earcheck264_devset.py
+claude_earcheck264_panel.py
+claude_earcheck264_qa.py
+claude_earcheck264_qbuild.py
+claude_earcheck264_scoremain.py
+claude_earcheck264_turns.py
+---
+FETCH-BOX 0
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
++ claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mls -la artifacts/claude-earcheck261b-20260923/ artifacts/claude-diag267-20260923/ artifacts/claude-devset267-20260923/ artifacts/claude-earcheck264-20260923/ artifacts/claude-diag271-20260923/ 2>&1; echo "==="; ls artifacts/claude-earcheck264-20260923/ 2>&1; echo "==="; cat artifacts/fable-predictions-ledger.md | tail -n 60
+ls: artifacts/claude-diag271-20260923/: No such file or directory
+artifacts/claude-devset267-20260923/:
+total 128
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 23 01:09 .
+drwxr-xr-x@ 431 ben-hannan  staff  13792 Sep 23 06:26 ..
+-rw-r--r--    1 ben-hannan  staff  34687 Sep 23 01:09 dev.jsonl
+-rw-r--r--    1 ben-hannan  staff  22283 Sep 23 01:09 make_dev.py
+-rw-r--r--    1 ben-hannan  staff    226 Sep 23 01:09 SEAL.sha256.txt
+
+artifacts/claude-diag267-20260923/:
+total 704
+drwxr-xr-x   12 ben-hannan  staff     384 Sep 23 01:48 .
+drwxr-xr-x@ 431 ben-hannan  staff   13792 Sep 23 06:26 ..
+-rw-------    1 ben-hannan  staff   16212 Sep 23 01:48 c1.json
+-rw-------    1 ben-hannan  staff   55090 Sep 23 01:48 c2.json
+-rw-------    1 ben-hannan  staff   12984 Sep 23 01:48 c3.json
+drwxr-xr-x    5 ben-hannan  staff     160 Sep 23 01:48 checks
+-rw-------    1 ben-hannan  staff   66459 Sep 23 01:48 earpreds267.json
+-rw-r--r--    1 ben-hannan  staff    2978 Sep 23 01:35 PREDICTIONS.md
+-rw-r--r--    1 ben-hannan  staff    7108 Sep 23 01:48 REPORT.md
+-rw-r--r--    1 ben-hannan  staff  168612 Sep 23 01:48 score.json
+-rw-r--r--    1 ben-hannan  staff     210 Sep 23 01:35 SEAL-pred.sha256.txt
+-rw-r--r--    1 ben-hannan  staff    9665 Sep 23 01:48 turns267.json
+
+artifacts/claude-earcheck261b-20260923/:
+total 1136
+drwxr-xr-x   17 ben-hannan  staff     544 Sep 22 22:30 .
+drwxr-xr-x@ 431 ben-hannan  staff   13792 Sep 23 06:26 ..
+-rw-r--r--    1 ben-hannan  staff    8973 Sep 22 21:49 dev_261b.jsonl
+-rw-------    1 ben-hannan  staff   40443 Sep 22 22:07 dev261b_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   15872 Sep 22 22:07 dev261b_manifest.json
+-rw-------    1 ben-hannan  staff    6221 Sep 22 22:07 dev261b_pyes.json
+-rw-r--r--    1 ben-hannan  staff     275 Sep 22 22:07 guarddev_261bdev.json
+-rw-r--r--    1 ben-hannan  staff    2305 Sep 22 22:07 guarddev_261dev.json
+-rw-r--r--    1 ben-hannan  staff   22873 Sep 22 22:27 panel261b_bpreds.json
+-rw-------@   1 ben-hannan  staff  100829 Sep 22 22:09 panel261b_earpreds.json
+-rw-------@   1 ben-hannan  staff   28317 Sep 22 22:11 panel261b_pyes.json
+-rw-r--r--    1 ben-hannan  staff  295481 Sep 22 22:27 panel261b_score.json
+-rw-r--r--@   1 ben-hannan  staff   13029 Sep 22 22:08 panel261b_turns.json
+-rw-r--r--@   1 ben-hannan  staff    7769 Sep 22 22:08 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    8838 Sep 22 22:30 RESULTS.md
+-rw-r--r--@   1 ben-hannan  staff    1699 Sep 22 22:08 SEAL.sha256.txt
+drwxr-xr-x  112 ben-hannan  staff    3584 Sep 22 22:27 workB
+
+artifacts/claude-earcheck264-20260923/:
+total 4360
+drwxr-xr-x   27 ben-hannan  staff     864 Sep 23 00:55 .
+drwxr-xr-x@ 431 ben-hannan  staff   13792 Sep 23 06:26 ..
+-rw-r--r--    1 ben-hannan  staff    6615 Sep 22 23:23 dev_264.jsonl
+-rw-------    1 ben-hannan  staff  344558 Sep 23 00:33 dev257_qa.json
+-rw-r--r--    1 ben-hannan  staff  851444 Sep 23 00:35 dev257_qmanifest.json
+-rw-------    1 ben-hannan  staff   19844 Sep 23 00:33 dev261b_qa.json
+-rw-r--r--    1 ben-hannan  staff   46226 Sep 23 00:35 dev261b_qmanifest.json
+-rw-------    1 ben-hannan  staff   26453 Sep 22 23:25 dev264_earpreds.json
+-rw-------    1 ben-hannan  staff   13725 Sep 23 00:33 dev264_qa.json
+-rw-r--r--    1 ben-hannan  staff   34112 Sep 23 00:35 dev264_qmanifest.json
+-rw-------    1 ben-hannan  staff   70419 Sep 23 00:33 devcheck_qa.json
+-rw-r--r--    1 ben-hannan  staff  168164 Sep 23 00:35 devcheck_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff   41875 Sep 23 00:35 devreport_261.json
+-rw-r--r--    1 ben-hannan  staff    5232 Sep 23 00:33 devreport_264.json
+-rw-r--r--    1 ben-hannan  staff   22363 Sep 23 00:53 panel264_bpreds.json
+-rw-------    1 ben-hannan  staff   91241 Sep 23 00:38 panel264_earpreds.json
+-rw-r--r--    1 ben-hannan  staff   67088 Sep 23 00:41 panel264_pmanifest.json
+-rw-------    1 ben-hannan  staff   26416 Sep 23 00:41 panel264_pyes.json
+-rw-------    1 ben-hannan  staff   44077 Sep 23 00:41 panel264_qa.json
+-rw-r--r--    1 ben-hannan  staff   98690 Sep 23 00:41 panel264_qmanifest.json
+-rw-r--r--    1 ben-hannan  staff  164357 Sep 23 00:53 panel264_score.json
+-rw-r--r--    1 ben-hannan  staff   11254 Sep 23 00:37 panel264_turns.json
+-rw-r--r--    1 ben-hannan  staff    3976 Sep 23 00:54 panel264comma_tags.json
+-rw-r--r--    1 ben-hannan  staff    9932 Sep 23 00:36 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    7735 Sep 23 00:55 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff    2618 Sep 23 00:36 SEAL.sha256.txt
+drwxr-xr-x  112 ben-hannan  staff    3584 Sep 23 00:53 workB
+===
+dev_264.jsonl
+dev257_qa.json
+dev257_qmanifest.json
+dev261b_qa.json
+dev261b_qmanifest.json
+dev264_earpreds.json
+dev264_qa.json
+dev264_qmanifest.json
+devcheck_qa.json
+devcheck_qmanifest.json
+devreport_261.json
+devreport_264.json
+panel264_bpreds.json
+panel264_earpreds.json
+panel264_pmanifest.json
+panel264_pyes.json
+panel264_qa.json
+panel264_qmanifest.json
+panel264_score.json
+panel264_turns.json
+panel264comma_tags.json
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+workB
+===
+- P268b.7 OUTCOME (2026-09-23, builder) registered verdict FAIL on M1 bug clauses only. M1 blind nhoppanel268b 60 items once per arm with sealed score_panel.py: bug 11/16 right with label (bar 14), 1 wrong n268b-010 (bar 0), 4 honest bench73 non-answers; other 44 items byte-identical to 138nb (stages, replies, stored), question writes 0/60 both arms; base bug 0/16 right 16/16 wrong all loop138-nhop. Diagnosis: guard R1-R4 list has no "Who <verb>" employer/work shape, so 010's (employer-valued start,[employer]) frame survived as a forward-walk reply (falsifier P268b.6 clause 1 tripped); 4 married-to shapes fall to bench73 ask (predicted class, never wrong). DEV/M2/M3/M4 all PASS per design marks (DEV 46/46 exact, 0 writes; M2 moves [] 0 new wrong keep 69/69 rights; M3 suites 0 GATE clean rt136 16 inherited direct [] rt143 0 probes 7/7 equal latency -0.005 ms). Missed extra prediction: M2 writes [] vs 4 teach_control writes identical on both arms (legitimate, right). Post-seal driver files only: scripts/claude_268b_score_fix1.py (2 sealed-scorer bug fixes, diff disclosed), scripts/claude_268b_m1run.py (question_stage row format the sealed scorer requires). Sealed files unchanged, seal re-verified 23/23 OK. P268b.1-P268b.5 held except P268b.2's 14/16 + 0-wrong bars.
+- P280b.1 (2026-09-23, builder; exp 280b general ability-question rule on 280, CPU only, sealed 15 files SEAL.sha256.txt artifacts/claude-capab280b-20260923; blind panel never opened, capabilpanel280 burned per director correction) M1 blind capabilpanel280b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text, SCHEMA-MISMATCH exit 3 = VOID): all 25 general items byte-equal to sealed CAN280 on 280b (280 arm shown); 0 unsupported-claim replies on 280b anywhere; canyou 10/10 + nearmiss 10/10 + control 5/5 byte-identical 280b vs 280; 0 panel write diffs; 0 question/self writes on 280b. Truth of claims and grammar director-graded, ungraded here.
+- P280b.2 (same) M2 frozen suites vs 280 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 280's (16 inherited), rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 280 rows: vp 98 + supp 12, 0 changes. Dev 68 own-wording fictional-name dialogs: general 28/28 exact CAN280 on 280b, all other families 0 diffs vs 280, 0 question writes.
+- P280b.3 (same) falsifiers: any non-general move 280b vs 280 (suites, probes, panel canyou/nearmiss/control), any panel general item not byte-equal CAN280, or any question-turn write proves the change wrong. Known limits: cue-less generals ("Can you tell me about yourself?"), negations ("What can't you do?"), and "What can you not do?" keep 280's replies by construction. Pre-seal pilot fix disclosed: B17 "What do you know about me?" over-fired the unordered what+do+you cue; cue ordered (what...you...do) before seal, B17 0-diff since.
+- P280b.4 OUTCOME (2026-09-23, builder, sealed exp 280b) registered verdict VOID on M1, PASS on M2. M1: panel seal OK, then SCHEMA-MISMATCH exit 3 on all three sealed steps before either arm ran (0/50 rows run, nothing hand-scored): panel rows carry turn-text field `user`, sealed scorer requires `user_text`. Keys/counts only: 50 rows, 45 dialogs (40x1 + 5x2, turn_index from 0), categories general 25 / specific 10 / nearmiss 10 / control 5 (spec split exact); labels would have classified, field name is the sole blocker. M2 PASS exactly as P280b.2 (sessions152 0 GATE clean, bench 0, rt136 0 diffs labels identical, rt143 0, vp/vs 0/0, 0 writes, 0 flips). Seal 15/15 re-verified OK; no sealed file changed. P280b.1 undecided (no grade), P280b.2 right, P280b.3 no falsifier tripped.
+- P281.5 OUTCOME (2026-09-23, builder) registered verdict FAIL on the M1 stored bar only. Panel 60 turns once per arm with post-seal drivers (sealed 15 files unchanged, seal re-verified OK): stored 16/25 on 281 (bar >= 23) with 0 wrong and 9 abstains (260: 0/25); notstored 10/10 abstain both; ambiguous 10/10 same-as-260; control 5/5 same (4/5 right both); teach 8/10 both; 0 store diffs; 0 question writes; broken abstains 10 on 281 vs 21 on 260. M2/probes PASS exactly as predicted (0 suite moves; vp N06 only). Miss diagnosis: 5 stored misses sit in dialogs whose teach fails identically on 260 (nothing stored); 4 are called-wordings outside the four sealed shapes (kept as 260 by design). No falsifier triggered (0 wrong values, 0 question writes, 0 unpredicted moves).
+- P269.9 OUTCOME (2026-09-23, builder) registered run INCOMPLETE by blockage, no verdict: panel sealed before my seal (2/2 OK), my seal 15/15 OK (unchanged at close), schema 100 lines 30/15/20/15/20 OK, arm B ran ONCE on 100/100 (B 25/70 hits, 0 wrong, 25 saved; per-family in RESULTS.md); ear arms A/A265/A261b 0 runs (BensPC unreachable 02:30-04:30 local, SSH+ping 100% loss, ~120 min polled); P269.1-P269.7 unresolved; llama-server PID 26480 left running (could not stop; exact PID recorded for cleanup); resume needs no re-seal and no arm-B re-run. See artifacts/claude-ear269-20260923/RESULTS.md.
+- P282.1 (exp 282 casual greetings and closings get small talk, outermost layer on 260, builder, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-small282-20260923) M2 suites vs 260's saved rows: exactly 0 moved units (sessions152 180, bench 4x200 GATE clean, rt136 145 0 field diffs with vs-138j-base labels identical to 260's on both arms, rt143_nogate 124); 0 verdict flips, 0 write changes, 0 abstain-ward flips.
+- P282.2 Verifier probes vs 260's saved rows: exactly 1 changed row, vp E04 (Q "what's up?" with nothing stored -> the head's greeting reply, ev 0, stored []); supp 0 changes; 0 question writes anywhere.
+- P282.3 M1 blind smallpanel282: smalltalk fitting on 282 >= 90% (260 arm shown beside); 0 smalltalk writes on 282; 0 question writes on 282; mixed-hint turns 0 moves vs 260; other turns 0 moves vs 260; 0 store diffs 282 vs 260. Registered verdict: PASS.
+- P282.4 M3 smalltalkpanel234 rerun once per arm: wellbeing hits 282 >= 260's hits; every other item 282 == 260; 0 setup/store diffs; 0 writes on 282. Overall exp 282 PASS (M1-M3 all PASS).
+- P282.5 OUTCOME (2026-09-23, builder) registered verdict PASS on all sealed bars with a flagged figure. M1 (fixed driver re-run after void sealed run: sealed loader missed the writer's user_text key, fed 60/60 empty turns; fix = one key in new scripts/claude_small282_panelrun2.py, sealed files unchanged; panel executed twice per arm, once void): smalltalk 29/29 fitting (260 17/29), 0 writes, mixed 15/15 + other 31/31 exact, 0 store diffs; 12 moves (d09,d11,d19,d21,d22,d23,d26,d27,d28,d30,d32,d33 turn 0, ev 0). FLAG: by writer categories greeting+closing 35 turns, 282 fitting 31/35 = 88.6% (260 19/35), one turn short of the note's 90%; 4 abstain on both arms. M2 PASS (0 moves all suites; rt136 labels identical to 260's). Probes PASS per prediction (vp exactly E04, vs 0; sealed scorer prints FAIL on stale hardcoded vp-0 line — driver bug). M3 PASS (wellbeing 17/20 vs 260 16/20, other 36/36 same, 0 writes/diffs; 1 move s234-014). P282.1 right (0 suites moves), P282.2 right (exactly E04), P282.3 PASS on sealed bars with the 31/35 flag above, P282.4 right.
+- P291.1 (exp 291 join 138nb + 260 + 252c + glue, builder, sealed 2026-09-23, SEAL.sha256.txt artifacts/claude-join291-20260923 11 files) M1 dev/case files arms own/138p/291: 720 cases exactly the 503 predicted moves (21 + 38 + 34 + 44 + 22 + 57 + 269 + 18) with exact records, 0 unpredicted/wrong/missing, nb fidelity 720/720; 260dev 109/109 identical to own; dev252b/dev258/dev259 identical to 252c except the 1 + 8 + 9 predicted ids with exact records; junk only d258-037 + v259-008 (known).
+- P291.2 M2 suites vs 138nb rows: move sets exactly sessions152 1 (S3-teachers-correction#6), bench 0, marks123 2 (B_corrections-04/-05), rt136 labels 21 (13 inherited + C071/C072/C073/C075 + C076/C079/C115 + C122), direct moved [C071,C072,C073,C075,C122], rt143 0 moved/0 flips; 0 new WRONG/WRONG-WRITE/junk/lost-OK beyond C122 (260 exemption); 0 abstain flips.
+- P291.3 M3-M6: smoke fields differ only agent/config/label/seconds; bench byte-identical x3 (4/4); latency median(291)-median(138nb) <= +5 ms; restart probes exactly the 2 predicted 252 asks (d08:t01/t04), 0 ghosts/dup-fails/bad-writes; verifier probes exactly B15/D08/D10/E06/E10 moves, supp 0.
+- P291.4 M7 regression panels (fidelity 100% or VOID): 0 new wrong values, 0 new false claims, 0 new junk writes, 0 question writes on 291 on all of openpanel260/corrtail258/corrpanel252/invpanel138nb/tablepanel221; no item right on the registered arm wrong on 291 (open/inv/table); c252-022 works; controls byte-identical; every reply-only move classifies q2-wording or table-label with stores identical.
+- P291.5 OUTCOME (2026-09-23, builder) M8 corrpanel291 (96 items, once each on 138nb/138p/291): every item right on 138p/138nb right on 291; 0 wrong/false/junk/question-writes on 291; cause families on 291 >= 138p's counts; controls byte-identical to 138nb. Overall 291 PASS (M1-M8 all PASS).
+- P281b.1 (2026-09-23, builder; exp 281b casual called/named questions on 281, CPU only, sealed 17 files SEAL.sha256.txt artifacts/claude-called281b-20260923; blind panel never opened, calledpanel281 burned per director note) M1 blind calledpanel281b run once per arm with sealed run+score (schema gate dialog_id/turn_index/user_text|user, categories teach_setup/stored_called/nostore_called/ambiguous_called/control_plain, SCHEMA-MISMATCH exit 3 = VOID): stored items answered exactly >= 90% over the denominator (stored rows whose dialog teach triple is stored on the 281 arm = the note's 260-arm denominator via the sealed teach-identity property; 281 arm shown); 0 wrong; notstored 100% abstain; ambiguous + control 0 moves vs 281; teach fails <= 2 on 281 else VOID; 0 store diffs; 0 question writes. Predicted moves: exactly the casual-wording + stored-fact items (dev: 21 stored-shape moves d281b-003/009/010/012-019/021-023/027-033 turn 1); ?-terminated lowercase/doyoucall/whats-nameof shapes 281 already answers stay identical.
+- P281b.2 (same) M2 frozen suites vs 281 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 281's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 281 rows: vp 98 + supp 12, 0 changes. Dev 56 own-wording fictional-name dialogs: stored_formal 10/10 + stored_casual 20/20 + opener_casual 4/4 answer with the stored value on 281b, all other 91 turns byte-identical 281b vs 281, notstored 8/8 abstain both arms, 0 question writes.
+- P281b.3 (same) falsifiers: any 281b answer with a value not in the store, any question-turn write, any ambiguous/control/notstored move vs 281, any suite/probe move vs 281's rows, or any teach store diff 281b vs 281 proves the change wrong. Known limits: multi-word no-apostrophe subjects unrestored; formal text 281 mishandles stays byte-identical; ?-less non-question-word-start or cue-less turns never normalise; rewrite failures keep 281's reply (incl. malformed abstains, report-only).
+- P270.1 (2026-09-23, builder; exp 270 normaliser in front of 263, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-type270-20260923; blind panel never opened) M1 casual exact TEACH >= 30/40 and >= A263+20 on arm A (263 arm beside): predicted A 33-38/40 vs A263 8-14/40. Dev proxy 51/51 vs 13/51 (+38), 42 moves panel-wide, 0 both-wrong.
+- P270.2 (same) M2 casual_q ASK >= 12/15 on arm A: predicted 13-15/15. Dev 16/16 vs 12/16 (whos/whats/wheres fixes move 4).
+- P270.3 (same) M3 lower_trap wrong saves <= 1 on arm A: predicted 0-1. Dev 24/25 (only a bare-so-head trap saves; check-tails suppressed 5/5).
+- P270.4 (same) M4 clean 30/30 byte-identical replies A vs A263: predicted 30/30 by construction (clean passthrough), dev 24/24.
+- P270.5 (same) M5 0 new wrong saves arm A vs A263 overall: predicted 0 (dev 1 newwrong on the bare-so trap; panel traps validated S1 hold 0).
+- P270.6 (same) M6 median added time <= 20 ms: predicted ~0.03-0.5 ms (dev median 0.033 ms, n=116).
+- P270.7 (same) Overall registered PASS (M1-M6 all PASS): predicted ~30%.
+- P270.8 (same) Also reported: per-family both arms, every move/miss by id, per-turn normalise ms (median <= 0.5 ms, max <= 5 ms). Deviations: D1 check-tail suppression + no so-head suppression, D2 wh-contractions, D3 scorer written post-seal from observed schema (no spec provided), D4 panel unopened pre-seal. Known limits: common-word names, as/nes s-names, multi-word names, X-is-a-Y, our/we.
+- P281b.4 OUTCOME (2026-09-23, builder, sealed exp 281b) registered verdict FAIL on the M1 stored bar only, with one figure off prediction. M1 (60 turns once per arm, seals 17/17 + panel OK, schema clean, no post-seal change): stored 9/25 on 281b (bar >= 23/25; denom 25/25, 0 excluded) with 0 wrong and 16 abstains (281: 9/25, same 9 ids); notstored 10/10 abstain both; ambiguous 10/10 same-as-281; control 5/5 same (5/5 right both); teach 10/10 both (panel VALID); 0 store diffs; 0 question writes; broken abstains 0 both. M2/probes PASS exactly as P281b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical; rt143 0; vp/vs 0/0). Miss diagnosis by shape category: 5 misses formalise (known-entity restore, 281 shape match) yet resolve to no stored triple (wording beyond casual typing); 11 match no called shape at all (2 cue-less, rest embedded/non-trailing-cue wordings). No falsifier tripped (0 wrong values, 0 question writes, 0 unpredicted moves). P281b.1 wrong on the stored figure (9 vs >= 23), right on 0-wrong/notstored/ambiguous/control/teach; P281b.2 right; P281b.3 no falsifier tripped.
+- P270.9 OUTCOME (2026-09-23, builder; registered verdict FAIL, sealed loop arms A/A263 run ONCE each on blind typepanel270, seal Checks OK, schema OK, seal 12/12 re-verified) M1 A 23/40 vs A263 6/40 margin +17 FAIL (bar 30 and +20); M2 0/15 FAIL (loop emits no ASK frames; no-write 15/15 both); M3 0 wrong saves PASS (7 trap misses both arms); M4 30/30 identical PASS; M5 3 new wrong saves FAIL (keep-s stems t270-002/028/033); M6 median 0.0312 ms PASS. P270.1/.2/.5 wrong, P270.3/.4/.6 right, P270.7 resolves FAIL.
+- P270.10 DISCREPANCY (same run) brief names base 263 (loop) but panel gold/marks/compute are ear-line (smolear frames, ASK emission, BensPC): loop-line M1 ceiling ~23-26 (works-as/speaks/exotic-pet shapes unknown to the 138m ear even clean) and M2 unscoreable by construction; M1/M2 measure the mismatch. Normaliser moved every movable class (+17: 14 no-apos possessives minus 3 keep-s stems, 8 verb slots, dev wh-questions 4/4). Ear-line 270 unrunnable: BensPC unreachable (ping 100% loss, SSH timeout since before 02:30 local, re-polled through run). Post-seal drivers disclosed (panelrun, panelscore + extras-reading fix, rescored from recorded rows, no re-runs).
+- Pown0a2.1 (pred, sealed pre-run 2026-09-23) v1 rule WE-not-allowed on 300 fresh turns: predicted ~252/281 ACD writable (~90%), bar >= 85% (misses: 5 typo + 5 OTHER + 3 no-cue + 2 owner-not-span + 2 inflection + 2 children + 10 WE).
+- Pown0a2.2 (pred, sealed pre-run) no-save-mode facts writable = 0 under v0/v1/learned-licensed x WE both ways (mode gate first, by construction).
+- Pown0a2.3 (pred, report-only) v0 WE-not-allowed ~120/281 (~43%), WE-allowed ~130/281; learned-licensed WE-not-allowed ~259/281 (~92%), WE-allowed ~269/281 (~96%).
+- Pown0a2.4 OUTCOME (2026-09-23, builder, one run on 300 sealed fresh turns, seals 4/4 OK post-run, no post-seal change) Pown0a2.1 PASS: v1 WE-not-allowed 252/281 = 89.7% (bar >= 85%; predicted exactly 252). v1 WE-allowed 262/281 = 93.2%. Pown0a2.2 PASS: nosave-writable 0/114 in all 6 columns (v0/v1/licensed x WE). Pown0a2.3: v0 92/281 = 32.7% WE-not-allowed, 98/281 = 34.9% WE-allowed (predicted ~120/130: dev denser in plural/verb than O0a set, report-only); licensed 259/281 = 92.2% / 269/281 = 95.7% (as predicted). v1 non-writable 29: 10 WE + 5 typo + 5 OTHER + 7 no-cue (3 cue-less, 2 inflection, 2 children) + 2 owner-not-span. v1 fixes 160/189 v0 misses.
+- P269.10 OUTCOME (2026-09-23, resume2 cloud-GPU attempt) BLOCKED at the step-2 weights gate, no verdict: seals 15/15 + 2/2 OK (no sealed file changed); RESULTS-resume.md absent so no arm ever ran twice; required v4.1 ear ckpt sha 55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2 not on the Mac (only data/models/smolear235_v3/smolear235.safetensors, 723673144 bytes, sha 2852a5c0d60b2ef361cbf45eb14863b0047b56bd89e65fa90db4479ddf3fd8f8; no out_v41 dir anywhere searched); BensPC ssh to 100.75.113.114:22 timed out; arms A/A265/A261b/B 0 runs each this attempt (B's single earlier run untouched, not re-run); vast.ai read-only OK (users/current id 553012, credit 6.3927, balance 0; instances 0 running, 0 created); spent $0.00 (job ceiling $2.00/3h untouched; $30 cap stands). P269.1-P269.7 stay unresolved. See artifacts/claude-ear269-20260923/RESULTS-resume2.md.
+- Pown0d2.1 (2026-09-23, own-O0d2 diagnosis follow-up, scripts/claude_own_o0d2_{model,train,test}.py + PASSMARKS.md artifacts/claude-own-o0d2-20260923; CPU only): all 8 unit tests pass; bar = 8/8 pass.
+- Pown0d2.2 same: audited ear count still exactly 32,850,051; bar = diff <= 0.005 with exact number reported per part.
+- Pown0d2.3 same: kill test identical (kill at step 30, resume to step 60, sha256 equal); bar = identical.
+- Pown0d2.4 same: fuzz 10,000 random-logit draws, 0 non-whole-word spans decoded (span + owner checks); bar = 0.
+- Pown0d2.5 same: o0d smoke (toy frames, <= 10 min) loss still falls; bar = mean(last 10%) < mean(first 10%).
+- Pown0d2 OUTCOME (2026-09-23, builder; registered verdict PASS, 5/5 marks PASS, test run once): Pown0d2.1 units 8/8; Pown0d2.2 audit exactly 32,850,051; Pown0d2.3 kill A=054dbec63839 B=054dbec63839 (match o0d hashes); Pown0d2.4 fuzz 0/10,000; Pown0d2.5 smoke 120 steps 1.3347 -> 0.3635 (falls). Deviations: D1 fuzz reference + round-trip call updated to the fixed rule/signature; D2 predictions pre-registered pre-run. See artifacts/claude-own-o0d2-20260923/RESULTS.md.
+- P282b.1 (2026-09-23, builder; exp 282b vocab small talk on 282, CPU only, sealed 12 files SEAL.sha256.txt artifacts/claude-small282b-20260923; blind panel never opened, smallpanel282 burned per director note) M1 blind smallpanel282b run once per arm with sealed run+score (strict schema gate dialog_id/turn_index/user_text|user/category/gold, categories greeting/closing/mixed/control, SCHEMA-MISMATCH exit 3 = VOID; empty text refusal exit 4): writer greeting+closing fitting on 282b >= 90% (bar 32/35 at spec counts, 282 shown); 0 writes on them; mixed + control 0 moves vs 282; 0 store diffs; 0 question writes. Panel moves: exactly the writer-smalltalk turns where 282 errs and the vocab test fires (dev proxy 18/40 smalltalk dev turns move, rest keep 282's already-fitting reply; blind ids not predictable).
+- P282b.2 (same) M2 frozen suites vs 282 saved rows: sessions152 0 moves GATE clean, bench 4x200 0 moves, rt136 145 units 0 field diffs with vs-138j labels identical to 282's, rt143_nogate 124 rows 0 moved, 0 verdict flips, 0 write changes. Verifier probes vs 282 rows: vp 98 + supp 12, 0 changes. Dev 65 own-wording fictional-name dialogs 79 turns: greet 20/20 + thanks_close 20/20 with the head's canonical reply, mixed 15/15 + control 10/10 byte-identical 282b vs 282, exactly the 18 listed moves d282b-002/007/009/010/011/013/014/015/016/017/018/021/026/036/037/038/039/040 turn 0, 0 question writes.
+- P282b.3 (same) M3 smalltalkpanel234 once per arm: wellbeing 282b >= 282, other items all identical, 0 writes, 0 setup/store diffs; predicted only all-vocabulary wellbeing turns 282 errs on move to fitting. Falsifiers: any 282b reply change on mixed/control, any question-turn write, any suite/probe move vs 282 rows, any store diff. Known limits: class-less pure tails and how-are-you shapes keep 282's route; bare emoji and foreign greetings uncovered; stored-name homographs keep 282's route; first-word class on multi-class turns.
+- Pown0e2.1 (pred, sealed pre-run 2026-09-23) own-O0e2 follow-up, CPU only, sealed 3 files SEAL.sha256.txt artifacts/claude-own-o0e2-20260923 (o0e2 model = o0e model code unchanged incl. rotary fix, o0e serialize/train imported unchanged): audit prints exactly 61,783,680 (fix is forward-math only, adds no params): PASS.
+- Pown0e2.2 (pred, same) kill test at tiny width (147,776 params; 4 steps, stop, resume to 8 vs fresh 8) all tensors torch.equal True: PASS.
+- Pown0e2.3 (pred, same) 200 toy dialogues seed 7, 600 asks x 3 arms = 1800 prompts: poison-swap unchanged 1800/1800 with poison in 0, gold-after-Q leaks 0: PASS.
+- Pown0e2.4 (pred, same) rotary unit test: same-offset rotation leaves q.k unchanged, per-position and cross-position (0,d) vs (m,m+d) max abs errors both <= 1e-5 (rotation is orthogonal, float32 rounding ~1e-6): PASS.
+- P282b.4 OUTCOME (2026-09-23, builder, sealed exp 282b) registered verdict FAIL on the M1 bar only. M1 (60 turns once per arm, panel seal 2/2 OK, schema clean, no post-seal change, seal 12/12 OK after): writer greeting+closing 30/35 on 282b (bar 32/35; greeting 15/20, closing 15/15) vs 19/35 on 282 (greeting 10/20, closing 9/15); 0 writes; mixed+control 25/25 same-as-282; 0 store diffs; 0 question writes. 11 moves (d_greet_07/12/15/17/18, d_close_03/08/09/12/13/14 turn 0, ev 0, all toward canonical); 5 misses all greeting and byte-identical to 282 (d_greet_08/16/20 identical non-fitting fixed reply both arms, d_greet_13/14 abstain both); 0 new wrongs/abstains. M2/probes PASS exactly as P282b.2 (0 suite moves; GATE clean; rt136 0 diffs labels identical to 282's; rt143 0; vp/vs 0/0). M3 PASS (wellbeing 17/20 both, other 36/36 same, 0 writes/diffs, 0 moves). P282b.1 wrong on the M1 figure only; P282b.2 right; P282b.3 bars right (0 st234 moves observed).
+- Pown0e2 OUTCOME (2026-09-23, builder; registered verdict FAIL on the seal rule, 4/4 marks PASS as measured, full re-run from scratch after a driver-only fix, not re-sealed): Pown0e2.1 PASS audit exactly 61,783,680 (diff 0). Pown0e2.2 PASS kill tiny 147,776 params torch.equal True. Pown0e2.3 PASS poison 1800/1800 unchanged, 0 leaks in 1800 prompts; round-trip 1800/1800; smoke 58.6267 -> 13.8225 in 0.2 s; throughput 129536 tok/120.0 s = 1079.3 tok/s (report only). Pown0e2.4 PASS rotary err_same_pos 2.861e-06, err_offset 0.0 (bar <= 1e-5). D1: sealed T6 compared different random vectors across position pairs (driver bug, err 12.74); fixed driver, model untouched; seals model OK + PASSMARKS OK, tests FAILED. See artifacts/claude-own-o0e2-20260923/RESULTS.md.
+- P291.6 OUTCOME (2026-09-23, builder) registered verdict FAIL. M1-M6 all PASS first try (M1 503/503 + devs; M2 suites/rt136/rt143 as predicted; M3 4 fields; M4 4/4 identical x3; M5 +0.671 ms; M6 2 + 5 moves). M7 4/5 PASS (openpanel 80/80, corrtail 53/54 with 6 q2-wording, invpanel clean, tablepanel clean) and corrpanel252 FAIL on c252-009 (sealed scorer new_wrong_value; evidence: removal miss shared by all arms, 291 == base 138nb reply+store verbatim, 138p abstains; same shape as disclosed v259-056). M8 corrpanel291 73/96 (138nb 34, 138p 65): union preservation perfect (0 r2w both ways), cause families all >= 138p, controls 12/12, 0 question/followup writes, 0 new wrong/junk/claim beyond both parents (17/3/1 all inherited; c291-006 == 138nb verbatim) -- FAIL on absolute-zero bars only. P291.1 right; P291.2 right; P291.3 right; P291.4 wrong (1 row); P291.5 wrong (overall). Diagnosis for the director: stale-answer-on-shared-removal-miss, verbatim-base both times; ruling options: accept as table behaviour per the M7 classification clause, or route a removal-path follow-up.
+- P293.1 (pred, sealed pre-run 2026-09-23, builder exp 293 yes/no reader on 138nb, CPU only, sealed 10 files SEAL.sha256.txt artifacts/claude-yesno293-20260923) M1 blind yesnopanel293 once per arm with sealed score_panel.py: yes/no families together >= 90% right on 293 (138nb dev 11/51); 0 wrong (never Yes when not stored, never No when stored); taken_back 0 Yes; 0 question writes; is_single/wh/statement controls byte-identical to 138nb. Dev proxy 111 dialogs: exactly the 72 listed moves Q2->Yes/No/IDK, 7 Q2 left (5 chain + 1 inverted-wh + 1 lowercase), 0 writes; blind ids not predictable.
+- P293.2 (same) M2 invpanel138nb + chainpanel266b regression once per arm: 0 moves on both (pilot 0/70 + 0/70).
+- P293.3 (same) M3 frozen suites vs 138nb rows: sessions152 0 moves; bench 0; marks123 exactly 1 reply-only (rt81 D_q_vs_s-04 OK->UNCLEAR, honest IDK); rt136 0 field diffs vs 138nb rows; rt143nogate exactly 2 (M3 Q2->Yes of-form, O5 Q2->IDK); 0 new WRONG/WRONG-WRITE/junk/lost-OK.
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopanel293 (seal 5/5 OK, fidelity 85/85, schema clean): 293 85/85 right 0 wrong 0 writes (yes/no 62/62; taken_back 6/6 with 0 Yes on denials; controls 23/23 identical) vs 138nb 26/85 (yes/no 3/62) 0 wrong 0 writes. M2 inv+chain 0/70+0/70. M3 sessions152 0, bench 0, marks123 exactly D_q_vs_s-04, rt136 0 field diffs vs 138nb rows (16 pre-existing vs 138j), rt143 exactly M3/Q2->Yes + O5/Q2->IDK. M4 146 probe dialogs 0 moves. M5 median +<=0.4 ms (bar +5). P293.1-P293.5 all right. See artifacts/claude-yesno293-20260923/RESULTS.md.
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 checker queries 0 fallbacks median 266.8 ms; driver adapter for new top_logprobs wire shape, dev-fidelity exact on all marks). Marks: M1 0 saves ask 27/30 PASS, M2 12/15 PASS, M3 0 lost PASS, M4 15/15 PASS, M5 0 new PASS, M6 2 false asks (both non_owner_we text-only P1 our+facility-noun) FAIL (bar <=1), M7 0 lost PASS, M8 0 new PASS. Overall registered FAIL (7/8). See artifacts/claude-ear269-20260923/RESULTS-resume.md.
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2 ran 0 arms (no duplication: this resume's A/A265/A261b ran once each afterwards); registered verdict FAIL on M6 per RESULTS-resume.md.
+[0m
+[0m→ [0mRead artifacts/claude-diag267-20260923/PREDICTIONS.md
+[0m→ [0mRead artifacts/claude-diag267-20260923/REPORT.md
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/RESULTS.md
+[0m→ [0mRead artifacts/claude-earcheck261b-20260923/PASSMARKS.md
+[0m
+[0m$ [0mls -la artifacts/claude-diag267-20260923/ artifacts/claude-devset267-20260923/; echo "==="; /usr/bin/python3 -c "import json; d=json.load(open('artifacts/claude-diag267-20260923/c1.json')); print(type(d)); print(list(d.keys())[:10] if isinstance(d,dict) else len(d))" 2>&1 | head -n 20; echo "==="; head -c 2000 artifacts/claude-devset267-20260923/dev.jsonl; echo; echo "==="; /usr/bin/python3 -c "import json; rows=json.load(open('artifacts/claude-diag267-20260923/score.json')); print(type(rows), len(rows) if hasattr(rows,'__len__') else ''); import itertools; r=rows[0] if isinstance(rows,list) else list(rows.keys())[:3]; print(str(r)[:1500])" 2>&1 | head -n 30
+artifacts/claude-devset267-20260923/:
+total 128
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 23 01:09 .
+drwxr-xr-x@ 431 ben-hannan  staff  13792 Sep 23 06:26 ..
+-rw-r--r--    1 ben-hannan  staff  34687 Sep 23 01:09 dev.jsonl
+-rw-r--r--    1 ben-hannan  staff  22283 Sep 23 01:09 make_dev.py
+-rw-r--r--    1 ben-hannan  staff    226 Sep 23 01:09 SEAL.sha256.txt
+
+artifacts/claude-diag267-20260923/:
+total 704
+drwxr-xr-x   12 ben-hannan  staff     384 Sep 23 01:48 .
+drwxr-xr-x@ 431 ben-hannan  staff   13792 Sep 23 06:26 ..
+-rw-------    1 ben-hannan  staff   16212 Sep 23 01:48 c1.json
+-rw-------    1 ben-hannan  staff   55090 Sep 23 01:48 c2.json
+-rw-------    1 ben-hannan  staff   12984 Sep 23 01:48 c3.json
+drwxr-xr-x    5 ben-hannan  staff     160 Sep 23 01:48 checks
+-rw-------    1 ben-hannan  staff   66459 Sep 23 01:48 earpreds267.json
+-rw-r--r--    1 ben-hannan  staff    2978 Sep 23 01:35 PREDICTIONS.md
+-rw-r--r--    1 ben-hannan  staff    7108 Sep 23 01:48 REPORT.md
+-rw-r--r--    1 ben-hannan  staff  168612 Sep 23 01:48 score.json
+-rw-r--r--    1 ben-hannan  staff     210 Sep 23 01:35 SEAL-pred.sha256.txt
+-rw-r--r--    1 ben-hannan  staff    9665 Sep 23 01:48 turns267.json
+===
+<class 'dict'>
+['summary', 'checks']
+===
+{"id": "d267-001", "family": "plain_teach", "turn": "I live in Brindleton.", "gold": [{"act": "TEACH", "subject": "me", "relation": "city", "relation_aliases": ["city", "town", "lives in"], "value": "Brindleton"}], "clear": true, "notes": "plain"}
+{"id": "d267-002", "family": "plain_teach", "turn": "I work as a baker.", "gold": [{"act": "TEACH", "subject": "me", "relation": "job", "relation_aliases": ["job", "occupation", "works as"], "value": "baker"}], "clear": true, "notes": "plain"}
+{"id": "d267-003", "family": "plain_teach", "turn": "I work at Halden Works.", "gold": [{"act": "TEACH", "subject": "me", "relation": "workplace", "relation_aliases": ["workplace", "works at", "work location"], "value": "Halden Works"}], "clear": true, "notes": "plain"}
+{"id": "d267-004", "family": "plain_teach", "turn": "My sister Tessa Maro lives in Kellerton.", "gold": [{"act": "TEACH", "subject": "Tessa Maro", "relation": "city", "relation_aliases": ["city", "town", "lives in"], "value": "Kellerton"}], "clear": true, "notes": "plain"}
+{"id": "d267-005", "family": "plain_teach", "turn": "My brother Dain Kessler works as a carpenter.", "gold": [{"act": "TEACH", "subject": "Dain Kessler", "relation": "job", "relation_aliases": ["job", "occupation", "works as"], "value": "carpenter"}], "clear": true, "notes": "plain"}
+{"id": "d267-006", "family": "plain_teach", "turn": "My cousin Petra Lonn speaks Ilvari.", "gold": [{"act": "TEACH", "subject": "Petra Lonn", "relation": "language", "relation_aliases": ["language", "speaks"], "value": "Ilvari"}], "clear": true, "notes": "plain"}
+{"id": "d267-007", "family": "plain_teach", "turn": "I was born in Tarnwick.", "gold": [{"act": "TEACH", "subject": "me", "relation": "place_of_birth", "relation_aliases": ["place_of_birth", "born in", "birthplace"], "value": "Tarnwick"}], "clear": true, "notes": "plain"}
+{"id": "d267-008", "family": "plain_teach", "turn": "My hometown is Millow.", "gold": [{"act": "TEACH", "subject": "me", "relation": "hometow
+===
+<class 'dict'> 8
+['marks', 'by_family', 'rows']
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('artifacts/claude-diag267-20260923/c1.json'))
+print('c1 keys:', list(d.keys()))
+s=d.get('summary'); print('summary:', str(s)[:800])
+ch=d.get('checks'); print('nchecks:', len(ch))
+print('check0 keys:', list(ch[0].keys()))
+print(str(ch[0])[:1200])
+" 2>&1 | head -n 40; echo "==="; /usr/bin/python3 -c "
+import json
+d=json.load(open('artifacts/claude-diag267-20260923/score.json'))
+print('score keys:', list(d.keys()))
+print('marks:', str(d['marks'])[:600])
+print('nrows:', len(d['rows']))
+print('row0 keys:', list(d['rows'][0].keys()))
+print(str(d['rows'][0])[:1500])
+" 2>&1 | head -n 40
+Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+KeyError: 0
+c1 keys: ['summary', 'checks']
+summary: {'n': 155, 'fallbacks': 0, 'median_ms': 280.8, 'p90_ms': 291.4, 'max_ms': 434.4}
+nchecks: 155
+===
+score keys: ['marks', 'by_family', 'rows', 'details', 'gpu_summary', 'c1_summary', 'c2_summary', 'c3_summary']
+marks: {'C0': {'teach_hit': 90, 'teach_gold': 117, 'recall_pct': 76.9, 'held_true': 27, 'held_pct': 23.1, 'wrong_saves': 65, 'saved_facts': 155, 'per_fact': 0.4194, 'turns_wrong': 53, 'per_turn': 0.4818, 'ask_hit': 9, 'ask_gold': 10, 'ask_pct': 90.0, 'median_ms': 115.1, 'p90_ms': 139.8, 'max_ms': 189.0}, 'C1': {'teach_hit': 90, 'teach_gold': 117, 'recall_pct': 76.9, 'held_true': 27, 'held_pct': 23.1, 'wrong_saves': 63, 'saved_facts': 153, 'per_fact': 0.4118, 'turns_wrong': 52, 'per_turn': 0.4727, 'ask_hit': 9, 'ask_gold': 10, 'ask_pct': 90.0, 'median_ms': 413.1, 'p90_ms': 696.6, 'max_ms': 988.5}, 'C2
+nrows: 120
+row0 keys: ['id', 'family', 'tags', 'arms']
+{'id': 'd267-001', 'family': 'plain_teach', 'tags': [], 'arms': {'C0': {'teach_hit': 1, 'teach_gold': 1, 'held': 0, 'wrong': 0, 'ask_hit': 0, 'ask_gold': 0, 'ask_extra': 0, 'saved': 1, 'turns_wrong': 0, 'ms': 63.97, 'exact': True}, 'C1': {'teach_hit': 1, 'teach_gold': 1, 'held': 0, 'wrong': 0, 'ask_hit': 0, 'ask_gold': 0, 'ask_extra': 0, 'saved': 1, 'turns_wrong': 0, 'ms': 498.34, 'exact': True}, 'C2': {'teach_hit': 1, 'teach_gold': 1, 'held': 0, 'wrong': 0, 'ask_hit': 0, 'ask_gold': 0, 'ask_extra': 0, 'saved': 1, 'turns_wrong': 0, 'ms': 899.46, 'exact': True}, 'C3': {'teach_hit': 1, 'teach_gold': 1, 'held': 0, 'wrong': 0, 'ask_hit': 0, 'ask_gold': 0, 'ask_extra': 0, 'saved': 1, 'turns_wrong': 0, 'ms': 350.62, 'exact': True}}}
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('artifacts/claude-diag267-20260923/c1.json'))
+ch=d['checks']
+print('check type:', type(ch))
+import collections
+print('check sample type:', type(ch[0]) if isinstance(ch,list) else type(ch))
+k = ch[0] if isinstance(ch,list) else list(ch.values())[0]
+print(str(k)[:2000])
+" 2>&1 | head -n 30; echo "==="; /usr/bin/python3 -c "
+import json
+e=json.load(open('artifacts/claude-diag267-20260923/earpreds267.json'))
+print(type(e), len(e) if hasattr(e,'__len__') else '')
+if isinstance(e,dict):
+  ks=list(e.keys())[:8]; print(ks)
+  print(str(e[ks[0]])[:1200])
+elif isinstance(e,list):
+  print(str(e[0])[:1200])
+" 2>&1 | head -n 30
+check type: <class 'dict'>
+check sample type: <class 'dict'>
+{'p': 0.974808, 'text': 'YES', 'fallback': False, 'ms': 434.37}
+===
+<class 'dict'> 2
+['summary', 'preds']
+{'n': 120, 'median_ms': 257.97935004811734, 'p90_ms': 321.5575000504032, 'max_ms': 428.2199000008404, 'n_beamed': 94, 'device': 'cuda', 'ckpt_sha256': '55284dec92ea3e6d5d9d99c5afa99ae80a73eafaf644a0c2ca268dcb9fad0bd2', 'torch': '2.11.0+cu128', 'threads': 6, 'tau': None, 'k': 4, 'gpu': 'NVIDIA GeForce RTX 5070 Ti'}
+[0m
+[0m$ [0m/usr/bin/python3 -c "
+import json
+d=json.load(open('artifacts/claude-diag267-20260923/c1.json'))
+ch=d['checks']
+ks=list(ch.keys())[:5]; print(ks)
+for k in ks[:3]:
+  print(k, str(ch[k])[:300])
+print('total keys:', len(ch))
+" 2>&1 | head -n 20; echo "==="; /usr/bin/python3 -c "
+import json
+e=json.load(open('artifacts/claude-diag267-20260923/earpreds267.json'))
+pr=e['preds']
+print(type(pr), len(pr))
+k0=list(pr.keys())[0]
+print(k0, str(pr[k0])[:2500])
+" 2>&1 | head -n 40; echo "==="; ls artifacts/claude-diag267-20260923/checks/
+['d267-001#t0', 'd267-002#t0', 'd267-003#t0', 'd267-004#t0', 'd267-004#t1']
+d267-001#t0 {'p': 0.974808, 'text': 'YES', 'fallback': False, 'ms': 434.37}
+d267-002#t0 {'p': 0.973732, 'text': 'YES', 'fallback': False, 'ms': 272.7}
+d267-003#t0 {'p': 0.969609, 'text': 'YES', 'fallback': False, 'ms': 268.24}
+total keys: 155
+===
+<class 'dict'> 120
+d267-001 {'raw': 'TEACH | I | city | Brindleton', 'greedy_lp': -0.002208393149423671, 'beams': [['TEACH | I | city | Brindleton', -0.002100143115967512], ['TEACH | I | city | Brind England', -7.507556915283203], ['TEACH | I | city | Brindeton', -7.814599514007568], ['TEACH | I | city | BrindEngland', -8.693617820739746]], 'ms_greedy': 63.97, 'ms': 145.13}
+===
+c1
+c2
+c3
+[0m
+[0m$ [0mls artifacts/claude-diag267-20260923/checks/c1/ 2>&1 | head; echo "==="; /usr/bin/python3 -c "
+import json,glob
+fs=sorted(glob.glob('artifacts/claude-diag267-20260923/checks/c1/*'))[:5]
+print(fs)
+for f in fs[:2]:
+  d=json.load(open(f))
+  print(f, str(d)[:1500])
+" 2>&1 | head -n 30; echo "==="; /usr/bin/python3 -c "
+import json
+e=json.load(open('artifacts/claude-diag267-20260923/earpreds267.json'))
+pr=e['preds']
+# find a multi-frame turn
+for k in ['d267-004','d267-010','d267-020']:
+  if k in pr: print(k, str(pr[k])[:800])
+" 2>&1 | head -n 20; echo "==="; /usr/bin/python3 -c "
+import json
+t=json.load(open('artifacts/claude-diag267-20260923/turns267.json'))
+print(list(t.keys())[:6])
+k=list(t.keys())[0]
+print(str(t[k])[:1200])
+" 2>&1 | head -n 30
+checks.json
+manifest.json
+===
+['artifacts/claude-diag267-20260923/checks/c1/checks.json', 'artifacts/claude-diag267-20260923/checks/c1/manifest.json']
+artifacts/claude-diag267-20260923/checks/c1/checks.json [{'id': 'd267-001#t0', 'prompt': '/no_think\nMessage from the speaker: «I live in Brindleton.»\nClaim: the speaker lives in Brindleton.\nDoes the message state this claim as a real, current fact that the speaker is telling (not checking, not pretending, not planning)?\nAnswer NO if any of these holds:\n- the claim is only asked about, checked or confirmed (including a tag like "..., right", "..., isn\'t it", "..., yeah?", or a "so ..." confirmation), even without "?";\n- the claim is pretend or hypothetical ("let\'s say", "imagine", "suppose", "what if", "pretend", "say that");\n- the claim is a plan, goal or wish ("training to be", "wants to", "hoping to", "is going to", "plans to", "will start");\n- the claim is denied by the message;\n- the claim is about a different person than the message says;\n- the claim carries filler or chat words from the message into the fact itself (such as "btw", "yeah", "or nah", "sorry").\nOtherwise answer YES.\nAnswer with one word: YES or NO.\nAnswer:'}, {'id': 'd267-002#t0', 'prompt': '/no_think\nMessage from the speaker: «I work as a baker.»\nClaim: the speaker works as baker.\nDoes the message state this claim as a real, current fact that the speaker is telling (not checking, not pretending, not planning)?\nAnswer NO if any of these holds:\n- the claim is only asked about, checked or confirmed (including a tag like "..., right", "..., isn\'t it", "..., yeah?", or a "so ..." confirmation), even without "?";\n- the claim is pretend or hypot
+artifacts/claude-diag267-20260923/checks/c1/manifest.json {'d267-001#t0': {'turn': 'd267-001', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'city', 'value': 'Brindleton'}, 'claim': 'the speaker lives in Brindleton.'}, 'd267-002#t0': {'turn': 'd267-002', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'occupation', 'value': 'baker'}, 'claim': 'the speaker works as baker.'}, 'd267-003#t0': {'turn': 'd267-003', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'employer', 'value': 'Halden Works'}, 'claim': 'the speaker works for Halden Works.'}, 'd267-004#t0': {'turn': 'd267-004', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro'}, 'claim': "the speaker's sister is Tessa Maro."}, 'd267-004#t1': {'turn': 'd267-004', 'frame': {'act': 'TEACH', 'subject': 'Tessa Maro', 'relation': 'city', 'value': 'Kellerton'}, 'claim': 'Tessa Maro lives in Kellerton.'}, 'd267-005#t0': {'turn': 'd267-005', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'}, 'claim': "the speaker's brother is Dain Kessler."}, 'd267-005#t1': {'turn': 'd267-005', 'frame': {'act': 'TEACH', 'subject': 'Dain Kessler', 'relation': 'occupation', 'value': 'carpenter'}, 'claim': 'Dain Kessler works as carpenter.'}, 'd267-006#t0': {'turn': 'd267-006', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'cousin', 'value': 'Petra Lonn'}, 'claim': "the speaker's cousin is Petra Lonn."}, 'd267-006#t1': {'turn': 'd267-006', 'frame': {'act': 'TEACH', 'subject': 'Petra Lonn', 'relation': 'l
+===
+d267-004 {'raw': 'TEACH | My | sister | Tessa Maro\nTEACH | Tessa Maro | city | Kellerton', 'greedy_lp': -5.9723619450835486e-05, 'beams': [['TEACH | My | sister | Tessa Maro\nTEACH | Tessa Maro | city | Kellerton', -6.15117241977714e-05], ['TEACH |My | sister | Tessa Maro\nTEACH | Tessa Maro | city | Kellerton', -11.128677368164062], ['TEACH | My | sister | Tessa Maro\nTEACH | Tessa Maro | city | Kellerson', -12.125061988830566], ['TEACH | My | sister | Tessa Maro\nTEACH | Tessa Maro | location_of_formation | Kellerton', -13.066136360168457]], 'ms_greedy': 114.9, 'ms': 278.49}
+d267-010 {'raw': 'TEACH | I | school | Brindle College', 'greedy_lp': -0.00028477208343247185, 'beams': [['TEACH | I | school | Brindle College', -0.00030408057500608265], ['TEACH | I | educated_at | Brindle College', -8.625338554382324], ['TEACH | I | school | Brindle College', -10.350257873535156], ['TEACH | I | school | Brindel College', -10.977402687072754]], 'ms_greedy': 60.27, 'ms': 141.74}
+d267-020 {'raw': 'TEACH | I | instrument | fiddle', 'greedy_lp': -0.00034722948666399134, 'beams': [], 'ms_greedy': 64.51, 'ms': 64.54}
+===
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+AttributeError: 'list' object has no attribute 'keys'
+[0m
+[0m$ [0mgrep -c "" artifacts/fable-predictions-ledger.md; grep -n "P271\|P267\|P264" artifacts/fable-predictions-ledger.md | head -n 30; echo "==="; ls scripts/ | grep -i diag; echo "==="; ls scripts/ | grep -i "267\|271"
+2817
+2680:- P264.1 (2026-09-23, builder; exp 264 = 261b sealed arm A with YES/NO checker replaced by QA checker v5 (3 questions, decide-first + single-word relation + de-anchored owner), span guard kept, scorer = 261b sealed + Ruling 1 with per-fact/per-turn rates, sealed 23 files SEAL.sha256.txt artifacts/claude-earcheck264-20260923) M1 no_save saves 0-3; pass (<= 1) ~55 %. Dev: pretend 5/5, checkq 13/13, plan 26/28 held.
+2681:- P264.2 M2 wrong saves (statement fams + no_save) 2-6; pass (<= 1) ~25 %. Dev ~1%/turn (15/1207 on 261 dev) plus new R16/R17 traps (5/32 own dev).
+2682:- P264.3 M3 exact TEACH recall 65-78 % and >= B + 30; pass ~15 %. Dev d257 73.4 %, dc 74.9 %, b5 75.0 %; three gates multiply holds.
+2683:- P264.4 M3b held back 20-30 % of gold TEACH; pass (<= 12 %) ~10 %. Dev 323/1180 = 27.4 %.
+2684:- P264.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~85 %. ASK untouched.
+2685:- P264.6 M5 median ear+QA+guard ms/turn 850-1100 ms; pass (<= 800) ~5 %. Dev median 874.5 (3 x ~287 + ear).
+2686:- P264.7 M6 every A frame byte-identical in A_brake; pass ~99 % (holds only remove).
+2687:- P264.8 Overall registered PASS ~5 %.
+2688:- P264.9 Wrong-save rates (no bar): A per-fact ~1-3 %, per-turn ~2-5 %; A261b/A_brake/B same rates reported. Dev wording pilots v0-v5 + mapping D-rel-map (ancestors, possessive-strip, head-noun, pet-family, truncations) logged in PASSMARKS; pipeline reproduces 261 sweep byte-equal; synthetic pilot scores, SCHEMA-MISMATCH exit 3 ok.
+2713:- P264.1 (2026-09-23, build/verification agent, post-hoc record: predictions sealed in artifacts/claude-earcheck264-20260923/PASSMARKS.md before the registered run but ledger lines appended after RESULTS; ordering deviation, see RESULTS D-notes) M1 no_save saves <= 1: predicted 0-3 saves PASS ~55%. Got 2. FAIL (bar missed by 1).
+2714:- P264.2 M2 wrong saves <= 1: predicted 2-6 wrong PASS ~25%. Got 5 (2 no-save + 1 plain + 1 trap + 1 stale). FAIL.
+2715:- P264.3 M3 exact TEACH recall >= 85% and >= B + 30: predicted 65-78% PASS ~15%. Got 81/125 = 64.8% (B 2/125 = 1.6%, diff +63.2). FAIL (range missed by 0.2).
+2716:- P264.4 M3b held back <= 12% of gold TEACH: predicted 20-30% PASS ~10%. Got 38/125 = 30.4% (37 QA + 1 guard). FAIL (range missed by 0.4).
+2717:- P264.5 M4 exact ASK recall >= 90%: predicted 90-100% PASS ~85%. Got 37/40 = 92.5%. PASS.
+2718:- P264.6 M5 median per turn <= 800 ms: predicted 850-1100 ms PASS ~5%. Got median 880.1, p90 1826.8, max 2664.2. FAIL.
+2719:- P264.7 M6 every A frame byte-identical in A_brake: predicted exact PASS ~99%. Got 0 mismatches. PASS.
+2720:- P264.8 Overall registered PASS: predicted ~5%. Got FAIL (M1, M2, M3, M3b, M5 fail; M4, M6 pass).
+2721:- P264.9 Wrong-save rates (no bar): predicted A per-fact ~1-3%, per-turn ~2-5%, all arms reported. Got A 5/86 = 0.0581 per fact, 5/110 = 0.0455 per turn; A261b 6/100 = 0.0600, 5/110 = 0.0455; A_brake 30/125 = 0.2400, 21/110 = 0.1909; B 9/11 = 0.8182, 9/110 = 0.0818. A vs A261b: M2 5 vs 6, M3 81 vs 94 (QA trades 13 hits for 1 fewer wrong).
+===
+claude_diag119h_freshprobe.py
+claude_diag243_composers.py
+claude_diag243_grid.py
+claude_diag243_tally.py
+claude_diag243_trace.py
+claude_diag267_c3.py
+claude_diag267_c3client.py
+claude_diag267_qbuild.py
+claude_diag267_score.py
+claude_diag267_turns.py
+claude_diag290_bisect.py
+claude_diag290_bisect2.py
+claude_diag290_pilot.py
+claude_diag290_probe.py
+claude_diag290_probe2.py
+claude_diag290_run.py
+claude_diag290_summary.py
+claude_diag293_pilot.py
+claude_diag293_pilot2.py
+claude_diag293_run.py
+claude_diag293_summary.py
+claude_nhopdiag_20260923_pilot.py
+claude_nhopdiag_20260923_repro.py
+fable_diag95_analyze.py
+fable_diag95_brakes.py
+fable_diag95_infer.py
+fable_ears119d_diagnose.py
+fable_ears119e_diagnose.py
+fable_fix138e_diagnose.py
+fable_fix170_diag.py
+fable_perf128_diag.py
+fable_perf142_diag.py
+fable_self122_diag.py
+fable_talker120b_diagnose.py
+===
+claude_diag267_c3.py
+claude_diag267_c3client.py
+claude_diag267_qbuild.py
+claude_diag267_score.py
+claude_diag267_turns.py
+[0m
+[0m→ [0mRead scripts/claude_diag267_turns.py
+[0m→ [0mRead scripts/claude_diag267_score.py
+[0m
+[0m$ [0mgrep -n "P267\|P271" artifacts/fable-predictions-ledger.md | head -n 20; echo "==="; tail -n 5 artifacts/fable-predictions-ledger.md | cut -c1-300; echo "==="; /usr/bin/python3 -c "
+import json
+m=json.load(open('artifacts/claude-diag267-20260923/checks/c1/manifest.json'))
+print('manifest entries:', len(m))
+ks=list(m.keys())[:3]
+for k in ks: print(k, str(m[k])[:250])
+"
+===
+- P293.4 (same) M4 restart+verifier probes (146 dialogs, 7 files): 0 reply/event moves, 0 ghosts, 0 write changes.
+- P293.5 (same) M5 latency: median added <= +5 ms/turn (pilot +0.25 ms).
+- P293.6 OUTCOME (2026-09-23, builder, sealed exp 293) registered verdict PASS, 5/5 marks PASS first try, seals 10/10 OK post-run, no sealed file changed (2 disclosed post-seal driver-only fixes: runall2.sh W-before-set, rowstrip.py scorer field-exact rows; panel ran once per arm). M1 blind yesnopan
+- P269.10 OUTCOME-RESUME (2026-09-23, resume agent) registered ear wave complete after reboot block: seals 15/15 + 2/2 OK at close, no sealed file changed, arm B not re-run (25/70 hits, 0 wrong reused), arms A/A265/A261b 1 run each on 100/100 turns (ear cuda sha-ok median 187.3 ms 83 beamed; 186 che
+- P269.11 CORRECTION (2026-09-23, resume agent) ledger numbering: two lines claim P269.10 (resume2 cloud attempt BLOCKED line 2793, and this resume's OUTCOME-RESUME). Ledger is append-only so neither is renumbered; read the resume agent's OUTCOME-RESUME as P269.11. Substantive record stands: resume2
+===
+manifest entries: 155
+d267-001#t0 {'turn': 'd267-001', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'city', 'value': 'Brindleton'}, 'claim': 'the speaker lives in Brindleton.'}
+d267-002#t0 {'turn': 'd267-002', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'occupation', 'value': 'baker'}, 'claim': 'the speaker works as baker.'}
+d267-003#t0 {'turn': 'd267-003', 'frame': {'act': 'TEACH', 'subject': 'me', 'relation': 'employer', 'value': 'Halden Works'}, 'claim': 'the speaker works for Halden Works.'}
+[0m
+[0m$ [0mgrep -n "def match\|def rel_ok\|def norm\|casefold\|lower()\|strip()" scripts/claude_smolear235_score.py | head -n 20; echo "==="; grep -n "rel_ok_narrower\|_ORIG_REL_OK\|NARROWER\|narrower" scripts/claude_earcheck261b_scoremain.py | head -n 20; echo "==="; grep -n "def base_arms\|def checker_split\|kept_canon\|canon" scripts/claude_earcheck261_arms.py | head -n 30
+45:def norm(s):
+46:    s = " ".join(str(s or "").strip(" \t\"'.,;:!?()[]{}").split()).lower()
+51:def norm_subj(s):
+56:def norm_val(s):
+62:    return re.sub(r"[\s_\-]+", " ", str(s).strip().lower())
+65:def rel_ok(pred, gold, aliases):
+93:def match(preds, golds, act):
+===
+5:in the gold relation's table-v2 "narrower" list counts as a hit, not a wrong
+49:_ORIG_REL_OK = S.rel_ok
+52:def _narrower_map():
+55:        nar = [str(x) for x in r.get("narrower", [])]
+61:NARROWER = _narrower_map()
+64:def rel_ok_narrower(pred, gold, aliases):
+65:    """Sealed rel_ok plus Ruling 1: pred relation in gold's narrower list."""
+66:    if _ORIG_REL_OK(pred, gold, aliases):
+80:    return pc in NARROWER.get(gc, set())
+89:    S.rel_ok = rel_ok_narrower
+206:                   narrower_map={k: sorted(v) for k, v in NARROWER.items()})
+208:        S.rel_ok = _ORIG_REL_OK
+===
+2:"""Exp 261 -- arm assembly: ear preds -> canonicalised arms -> checker split.
+4:Pipeline (sealed): parse greedy raw -> brake -> canonicalise (TEACH+ASK
+8:257's scorer) -> canonicalise. A_raw = parse -> canonicalise (no brake).
+24:import claude_earcheck261_canon as C  # noqa: E402
+29:def base_arms(raw, turn, greedy_lp, beams):
+35:        A_raw=C.canonicalise(frames),
+36:        A_brake=C.canonicalise(kept),
+37:        A_gate=C.canonicalise(g["saved"]),
+38:        kept_canon=C.canonicalise(kept),  # checker input (TEACH filtered later)
+44:def checker_split(kept_canon, p_list, theta):
+48:    for f in kept_canon:
+62:def teach_with_p(kept_canon, turn):
+66:    for f in kept_canon:
+[0m
+[0m$ [0mmkdir -p artifacts/claude-diag271-20260923 && ls artifacts/claude-diag271-20260923/
+(no output)
+[0m
+[0m← [0mWrite artifacts/claude-diag271-20260923/PREDICTIONS.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-diag271-20260923/PREDICTIONS.md > artifacts/claude-diag271-20260923/SEAL-pred.sha256.txt && cat artifacts/claude-diag271-20260923/SEAL-pred.sha256.txt
+46f17eabde1a08d0872b035c3f9e4dac8aaedacc9fb57dc37eaedce45a8dfa89  artifacts/claude-diag271-20260923/PREDICTIONS.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P271.1 (2026-09-23, builder; exp 271 CPU-only diagnostic on 267 dev: does any YES/NO-checker cutoff separate good ear frames from wrong ones; sealed PREDICTIONS.md SEAL-pred.sha256.txt artifacts/claude-diag271-20260923 before computing; 155 kept TEACH frames, 267 gold + appositive-relative-true-stated->good + plural either-true-name->good; AUC Mann-Whitney, cutoff grid every distinct p, best = max kept-good at wrong/kept <= 1/20) relabeled totals: good 126-137, wrong 18-29 of 155.
+- P271.2 (same) best-cutoff ROC AUC 0.50-0.70 (near pass-through: only 7 frames below p=0.5).
+- P271.3 (same) NO cutoff qualifies at <= 1 wrong per 20 saved (~80%); closest t ~= 0.5 keeps ~145-150 with ~13-19 wrongs losing ~0-3 goods; any qualifier keeps at most ~100 frames.
+- P271.4 (same) wrongs concentrate in typo_filler + stale_value + relation_trap; plural_relative ~0 wrongs after fix; plain_teach ~0-2 non-relative wrongs.
+- P271.5 (same) family AUCs all 0.45-0.75 (noise, small n).
+- P271.6 (same) falsifier: any cutoff keeping >= 90% of goods at <= 1/20 proves P271.3 wrong.
+EOF
+echo "ledger lines:"; grep -c "P271" artifacts/fable-predictions-ledger.md
+ledger lines:
+6
+[0m
+[0m→ [0mRead scripts/claude_smolear235_score.py[90m [limit=130, offset=40][0m
+[0m
+[0m← [0mWrite scripts/claude_diag271_roc.py
+Wrote file successfully.
+[0m
+[0m$ [0muptime; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_diag271_roc.py
+6:32  up 2 days, 22:21, 4 users, load averages: 75.62 60.27 47.77
+{
+ "n": 155,
+ "good": 130,
+ "wrong": 25,
+ "auc": 0.9483076923076923,
+ "rel_a": 40,
+ "rel_b": 0,
+ "fidelity": {
+  "c0_hit": 90,
+  "c0_wrong": 65,
+  "c1_hit": 90,
+  "c1_wrong": 63,
+  "c1_saved": 153,
+  "manifest_mismatches": 0
+ },
+ "best": {
+  "t": 0.899939,
+  "kept": 127,
+  "kept_good": 122,
+  "kept_wrong": 5,
+  "wrong_per_20": 0.7874015748031495,
+  "lost_good": 8
+ },
+ "closest": {
+  "t": 0.959963,
+  "kept": 89,
+  "kept_good": 89,
+  "kept_wrong": 0,
+  "wrong_per_20": 0.0,
+  "lost_good": 41
+ },
+ "ref025": {
+  "t": 0.25,
+  "kept": 153,
+  "kept_good": 130,
+  "kept_wrong": 23,
+  "wrong_per_20": 3.0065359477124183,
+  "lost_good": 0
+ }
+}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'EOF'
+import json
+rep = json.load(open('artifacts/claude-diag271-20260923/roc.json'))
+fr = rep['frames']
+print("== plural_relative frames ==")
+for r in fr:
+    if r['family'] == 'plural_relative':
+        print(r['cid'], f"p={r['p']:.3f}", r['base'], r['final'], r['why'], r['frame'])
+print()
+print("== p histogram: goods ==")
+import collections
+gb = collections.Counter(); wb = collections.Counter()
+for r in fr:
+    b = f"{r['p']:.1f}"
+    (gb if r['final']=='good' else wb)[b]+=1
+print("good:", dict(sorted(gb.items())))
+print("wrong:", dict(sorted(wb.items())))
+EOF
+== plural_relative frames ==
+d267-065#t0 p=0.990 good good gold-hit {'subject': 'Elin Venn', 'relation': 'city', 'value': 'Ostarvik'}
+d267-061#t0 p=0.990 good good gold-hit {'subject': 'Fenwick Hallo', 'relation': 'city', 'value': 'Vennford'}
+d267-054#t0 p=0.988 good good gold-hit {'subject': 'Mabel Dray', 'relation': 'city', 'value': 'Kellerton'}
+d267-057#t0 p=0.986 good good gold-hit {'subject': 'Corin Dray', 'relation': 'place_of_birth', 'value': 'Tarnwick'}
+d267-065#t1 p=0.985 good good gold-hit {'subject': 'Elin Venn', 'relation': 'language', 'value': 'Drayan'}
+d267-052#t0 p=0.984 good good gold-hit {'subject': 'Dain Kade', 'relation': 'employer', 'value': 'Halden Works'}
+d267-051#t0 p=0.982 good good gold-hit {'subject': 'Lina Maro', 'relation': 'city', 'value': 'Brindleton'}
+d267-058#t0 p=0.982 good good gold-hit {'subject': 'Kess Quill', 'relation': 'city', 'value': 'Millow'}
+d267-053#t0 p=0.982 good good gold-hit {'subject': 'Milo Venn', 'relation': 'language', 'value': 'Ilvari'}
+d267-059#t0 p=0.981 good good gold-hit {'subject': 'Dara Solen', 'relation': 'employer', 'value': 'Corravale Press'}
+d267-056#t0 p=0.979 good good gold-hit {'subject': 'Wren Kade', 'relation': 'school', 'value': 'Brindle College'}
+d267-062#t0 p=0.979 good good gold-hit {'subject': 'Isolde Venn', 'relation': 'instrument', 'value': 'fiddle'}
+d267-060#t0 p=0.975 good good gold-hit {'subject': 'Liora Pell', 'relation': 'language', 'value': 'Kessic'}
+d267-064#t0 p=0.974 good good gold-hit {'subject': 'Dain Venn', 'relation': 'school', 'value': 'Venn Academy'}
+
+== p histogram: goods ==
+good: {'0.3': 1, '0.8': 3, '0.9': 25, '1.0': 101}
+wrong: {'0.0': 2, '0.4': 1, '0.5': 4, '0.6': 2, '0.7': 3, '0.8': 3, '0.9': 9, '1.0': 1}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'EOF'
+import json
+from pathlib import Path
+import sys
+sys.path.insert(0, 'scripts')
+import claude_smolear235_score as S
+rep = json.load(open('artifacts/claude-diag271-20260923/roc.json'))
+rawdev = {}
+for line in Path('artifacts/claude-devset267-20260923/dev.jsonl').read_text().splitlines():
+    if line.strip():
+        d = json.loads(line); rawdev[d['id']] = d
+print("== still-wrong frames ==")
+for r in rep['frames']:
+    if r['final'] == 'wrong':
+        d = rawdev[r['turn']]
+        print(r['cid'], f"p={r['p']:.4f}", r['family'], r['frame'], '| turn:', d['turn'][:110])
+print()
+print("== sibling-kind wrong frames anywhere ==")
+for r in rep['frames']:
+    if r['final']=='wrong' and S.rkey(r['frame'].get('relation','')) in {'sister','brother','sibling'}:
+        d = rawdev[r['turn']]
+        print(r['cid'], f"p={r['p']:.4f}", r['family'], r['frame'], '| gold:', [(g['subject'],g['relation'],g.get('value')) for g in d['gold'] if g['act']=='TEACH'], '| turn:', d['turn'][:130])
+EOF
+== still-wrong frames ==
+d267-090#t0 p=0.9598 relation_trap {'subject': 'me', 'relation': 'colleague', 'value': 'Brenna Tove'} | turn: I work with Brenna Tove for Corravale Press.
+d267-076#t1 p=0.9409 typo_filler {'subject': 'Brenna Tove livez', 'relation': 'city', 'value': 'Corravale'} | turn: My boss Brenna Tove livez in Corravale.
+d267-096#t1 p=0.9369 stale_value {'subject': 'Dain Kessler', 'relation': 'occupation', 'value': 'baking'} | turn: My brother Dain Kessler switched from carpentry to baking, he works as a baker now.
+d267-082#t1 p=0.9253 relation_trap {'subject': 'Milo Dray', 'relation': 'employer', 'value': 'Brindle Depot'} | turn: I work with Milo Dray at Brindle Depot.
+d267-087#t0 p=0.9029 relation_trap {'subject': 'me', 'relation': 'city', 'value': 'Kellerton'} | turn: I live near Kellerton, in Brindleton.
+d267-078#t1 p=0.8929 typo_filler {'subject': 'Isolde Fenna studie', 'relation': 'school', 'value': 'Corra School'} | turn: My sister Isolde Fenna studie at Corra School.
+d267-082#t0 p=0.8826 relation_trap {'subject': 'me', 'relation': 'employer', 'value': 'Milo Dray'} | turn: I work with Milo Dray at Brindle Depot.
+d267-081#t0 p=0.8796 relation_trap {'subject': 'me', 'relation': 'city', 'value': 'Tarnwick'} | turn: I live near Tarnwick, in Millow.
+d267-108#t0 p=0.8788 no_save {'subject': 'me', 'relation': 'city', 'value': 'brindleton'} | turn: so i live in brindleton
+d267-079#t1 p=0.8534 typo_filler {'subject': 'Corin Talon livve', 'relation': 'city', 'value': 'Tormere'} | turn: My brother Corin Talon livve in Tormere.
+d267-076#t0 p=0.8426 typo_filler {'subject': 'me', 'relation': 'boss', 'value': 'Brenna Tove livez'} | turn: My boss Brenna Tove livez in Corravale.
+d267-072#t1 p=0.8172 typo_filler {'subject': 'Wren Hallo wrok', 'relation': 'employer', 'value': 'Draymouth Library'} | turn: My sister Wren Hallo wrok at Draymouth Library.
+d267-085#t1 p=0.8044 relation_trap {'subject': 'me', 'relation': 'boss', 'value': 'Harlow Lind'} | turn: I work for Vennford Bakery with Harlow Lind.
+d267-066#t1 p=0.6971 typo_filler {'subject': 'Tessa Maro lievs', 'relation': 'city', 'value': 'Kellerton'} | turn: My sister Tessa Maro lievs in Kellerton.
+d267-072#t0 p=0.6886 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Wren Hallo wrok'} | turn: My sister Wren Hallo wrok at Draymouth Library.
+d267-079#t0 p=0.6637 typo_filler {'subject': 'me', 'relation': 'brother', 'value': 'Corin Talon livve'} | turn: My brother Corin Talon livve in Tormere.
+d267-074#t1 p=0.6123 typo_filler {'subject': 'Milo Venn lieve', 'relation': 'city', 'value': 'Ostarvik'} | turn: My cousin Milo Venn lieve in Ostarvik.
+d267-090#t1 p=0.6059 relation_trap {'subject': 'Corravale Press', 'relation': 'boss', 'value': 'Brenna Tove'} | turn: I work with Brenna Tove for Corravale Press.
+d267-078#t0 p=0.5349 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Isolde Fenna studie'} | turn: My sister Isolde Fenna studie at Corra School.
+d267-097#t0 p=0.4957 stale_value {'subject': 'me', 'relation': 'educated_at', 'value': 'Corra School'} | turn: I studied at Corra School, now I study at Brindle College.
+d267-066#t0 p=0.4810 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro lievs'} | turn: My sister Tessa Maro lievs in Kellerton.
+d267-070#t1 p=0.4594 typo_filler {'subject': 'Dara Quill', 'relation': 'nickname', 'value': 'Drayan'} | turn: My cousin Dara Quill spoeks Drayan.
+d267-074#t0 p=0.4263 typo_filler {'subject': 'me', 'relation': 'cousin', 'value': 'Milo Venn lieve'} | turn: My cousin Milo Venn lieve in Ostarvik.
+d267-100#t1 p=0.0401 stale_value {'subject': 'Brenna Tove', 'relation': 'nickname', 'value': 'Harlow Vessa'} | turn: My boss is now Brenna Tove, it used to be Harlow Vessa.
+d267-104#t0 p=0.0011 no_save {'subject': 'me', 'relation': 'occupation', 'value': 'teacher'} | turn: I want to be a teacher, training to be a teacher in Corravale.
+
+== sibling-kind wrong frames anywhere ==
+d267-072#t0 p=0.6886 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Wren Hallo wrok'} | gold: [('Wren Hallo', 'workplace', 'Draymouth Library')] | turn: My sister Wren Hallo wrok at Draymouth Library.
+d267-079#t0 p=0.6637 typo_filler {'subject': 'me', 'relation': 'brother', 'value': 'Corin Talon livve'} | gold: [('Corin Talon', 'city', 'Tormere')] | turn: My brother Corin Talon livve in Tormere.
+d267-078#t0 p=0.5349 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Isolde Fenna studie'} | gold: [('Isolde Fenna', 'school', 'Corra School')] | turn: My sister Isolde Fenna studie at Corra School.
+d267-066#t0 p=0.4810 typo_filler {'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro lievs'} | gold: [('Tessa Maro', 'city', 'Kellerton')] | turn: My sister Tessa Maro lievs in Kellerton.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'EOF'
+import json
+rep = json.load(open('artifacts/claude-diag271-20260923/roc.json'))
+fr = rep['frames']
+print("== 8 lost-good at best t=0.899939 (good, p<t) ==")
+for r in fr:
+    if r['final']=='good' and r['p'] < 0.899939:
+        print(f"{r['cid']} p={r['p']:.4f} {r['family']} why={r['why']}", r['frame'])
+print("== 5 kept-wrong at best t (wrong, p>=t) ==")
+for r in fr:
+    if r['final']=='wrong' and r['p'] >= 0.899939:
+        print(f"{r['cid']} p={r['p']:.4f} {r['family']}", r['frame'])
+print("== spot: 3 appositive relabels ==")
+n=0
+for r in fr:
+    if r['why']=='appositive-relative' and n<3:
+        print(r['cid'], f"p={r['p']:.4f}", r['frame']); n+=1
+print("== curve excerpt (theta, kept, kg, kw, per20) ==")
+for c in rep['curve']:
+    if c['t'] in (0.0,) or 0.85 <= c['t'] <= 0.97 or c['t']>1:
+        print(f"t={c['t']:.4f} kept={c['kept']} kg={c['kept_good']} kw={c['kept_wrong']} per20={c['wrong_per_20']} lost={c['lost_good']}")
+print("by_family:", json.dumps(rep['by_family'], indent=1))
+EOF
+== 8 lost-good at best t=0.899939 (good, p<t) ==
+d267-068#t0 p=0.8747 typo_filler why=appositive-relative {'subject': 'me', 'relation': 'cousin', 'value': 'Petra Lonn'}
+d267-068#t1 p=0.8601 typo_filler why=gold-hit {'subject': 'Petra Lonn', 'relation': 'language', 'value': 'Ilvari'}
+d267-067#t1 p=0.8581 typo_filler why=gold-hit {'subject': 'Dain Kessler', 'relation': 'occupation', 'value': 'carpenter'}
+d267-070#t0 p=0.8531 typo_filler why=appositive-relative {'subject': 'me', 'relation': 'cousin', 'value': 'Dara Quill'}
+d267-080#t0 p=0.8338 typo_filler why=appositive-relative {'subject': 'me', 'relation': 'cousin', 'value': 'Soren Hallo'}
+d267-077#t0 p=0.8144 typo_filler why=gold-hit {'subject': 'me', 'relation': 'city', 'value': 'Brindleton'}
+d267-080#t1 p=0.7944 typo_filler why=gold-hit {'subject': 'Soren Hallo', 'relation': 'language', 'value': 'Vennic'}
+d267-089#t0 p=0.2818 relation_trap why=appositive-relative {'subject': 'me', 'relation': 'cousin', 'value': 'Liora Pell'}
+== 5 kept-wrong at best t (wrong, p>=t) ==
+d267-090#t0 p=0.9598 relation_trap {'subject': 'me', 'relation': 'colleague', 'value': 'Brenna Tove'}
+d267-076#t1 p=0.9409 typo_filler {'subject': 'Brenna Tove livez', 'relation': 'city', 'value': 'Corravale'}
+d267-096#t1 p=0.9369 stale_value {'subject': 'Dain Kessler', 'relation': 'occupation', 'value': 'baking'}
+d267-082#t1 p=0.9253 relation_trap {'subject': 'Milo Dray', 'relation': 'employer', 'value': 'Brindle Depot'}
+d267-087#t0 p=0.9029 relation_trap {'subject': 'me', 'relation': 'city', 'value': 'Kellerton'}
+== spot: 3 appositive relabels ==
+d267-024#t0 p=0.9777 {'subject': 'me', 'relation': 'cousin', 'value': 'Dara Quill'}
+d267-005#t0 p=0.9777 {'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'}
+d267-017#t0 p=0.9748 {'subject': 'me', 'relation': 'brother', 'value': 'Joren Kade'}
+== curve excerpt (theta, kept, kg, kw, per20) ==
+t=0.0000 kept=155 kg=130 kw=25 per20=3.225806451612903 lost=0
+t=0.8531 kept=136 kg=126 kw=10 per20=1.4705882352941178 lost=4
+t=0.8534 kept=135 kg=125 kw=10 per20=1.4814814814814814 lost=5
+t=0.8581 kept=134 kg=125 kw=9 per20=1.3432835820895521 lost=5
+t=0.8601 kept=133 kg=124 kw=9 per20=1.3533834586466165 lost=6
+t=0.8747 kept=132 kg=123 kw=9 per20=1.3636363636363635 lost=7
+t=0.8788 kept=131 kg=122 kw=9 per20=1.3740458015267176 lost=8
+t=0.8796 kept=130 kg=122 kw=8 per20=1.2307692307692308 lost=8
+t=0.8826 kept=129 kg=122 kw=7 per20=1.0852713178294573 lost=8
+t=0.8929 kept=128 kg=122 kw=6 per20=0.9375 lost=8
+t=0.8999 kept=127 kg=122 kw=5 per20=0.7874015748031495 lost=8
+t=0.9029 kept=126 kg=121 kw=5 per20=0.7936507936507936 lost=9
+t=0.9083 kept=125 kg=121 kw=4 per20=0.64 lost=9
+t=0.9105 kept=124 kg=120 kw=4 per20=0.6451612903225806 lost=10
+t=0.9133 kept=123 kg=119 kw=4 per20=0.6504065040650407 lost=11
+t=0.9153 kept=122 kg=118 kw=4 per20=0.6557377049180328 lost=12
+t=0.9252 kept=121 kg=117 kw=4 per20=0.6611570247933884 lost=13
+t=0.9253 kept=120 kg=116 kw=4 per20=0.6666666666666666 lost=14
+t=0.9260 kept=119 kg=116 kw=3 per20=0.5042016806722689 lost=14
+t=0.9294 kept=118 kg=115 kw=3 per20=0.5084745762711864 lost=15
+t=0.9295 kept=117 kg=114 kw=3 per20=0.5128205128205128 lost=16
+t=0.9305 kept=116 kg=113 kw=3 per20=0.5172413793103449 lost=17
+t=0.9325 kept=115 kg=112 kw=3 per20=0.5217391304347826 lost=18
+t=0.9337 kept=114 kg=111 kw=3 per20=0.5263157894736842 lost=19
+t=0.9360 kept=113 kg=110 kw=3 per20=0.5309734513274336 lost=20
+t=0.9369 kept=112 kg=109 kw=3 per20=0.5357142857142857 lost=21
+t=0.9385 kept=111 kg=109 kw=2 per20=0.36036036036036034 lost=21
+t=0.9386 kept=110 kg=108 kw=2 per20=0.36363636363636365 lost=22
+t=0.9405 kept=109 kg=107 kw=2 per20=0.3669724770642202 lost=23
+t=0.9407 kept=108 kg=106 kw=2 per20=0.37037037037037035 lost=24
+t=0.9408 kept=107 kg=105 kw=2 per20=0.37383177570093457 lost=25
+t=0.9408 kept=106 kg=104 kw=2 per20=0.3773584905660377 lost=26
+t=0.9409 kept=105 kg=103 kw=2 per20=0.380952380952381 lost=27
+t=0.9455 kept=104 kg=103 kw=1 per20=0.19230769230769232 lost=27
+t=0.9484 kept=103 kg=102 kw=1 per20=0.19417475728155337 lost=28
+t=0.9514 kept=102 kg=101 kw=1 per20=0.19607843137254902 lost=29
+t=0.9517 kept=101 kg=100 kw=1 per20=0.19801980198019803 lost=30
+t=0.9519 kept=100 kg=99 kw=1 per20=0.2 lost=31
+t=0.9538 kept=99 kg=98 kw=1 per20=0.20202020202020204 lost=32
+t=0.9540 kept=98 kg=97 kw=1 per20=0.2040816326530612 lost=33
+t=0.9542 kept=97 kg=96 kw=1 per20=0.20618556701030927 lost=34
+t=0.9553 kept=96 kg=95 kw=1 per20=0.20833333333333331 lost=35
+t=0.9555 kept=95 kg=94 kw=1 per20=0.21052631578947367 lost=36
+t=0.9563 kept=94 kg=93 kw=1 per20=0.2127659574468085 lost=37
+t=0.9572 kept=93 kg=92 kw=1 per20=0.21505376344086025 lost=38
+t=0.9573 kept=92 kg=91 kw=1 per20=0.21739130434782608 lost=39
+t=0.9575 kept=91 kg=90 kw=1 per20=0.2197802197802198 lost=40
+t=0.9598 kept=90 kg=89 kw=1 per20=0.22222222222222224 lost=41
+t=0.9600 kept=89 kg=89 kw=0 per20=0.0 lost=41
+t=0.9603 kept=88 kg=88 kw=0 per20=0.0 lost=42
+t=0.9606 kept=87 kg=87 kw=0 per20=0.0 lost=43
+t=0.9609 kept=86 kg=86 kw=0 per20=0.0 lost=44
+t=0.9609 kept=85 kg=85 kw=0 per20=0.0 lost=45
+t=0.9610 kept=84 kg=84 kw=0 per20=0.0 lost=46
+t=0.9611 kept=83 kg=83 kw=0 per20=0.0 lost=47
+t=0.9614 kept=82 kg=82 kw=0 per20=0.0 lost=48
+t=0.9616 kept=81 kg=81 kw=0 per20=0.0 lost=49
+t=0.9616 kept=80 kg=80 kw=0 per20=0.0 lost=50
+t=0.9618 kept=79 kg=79 kw=0 per20=0.0 lost=51
+t=0.9619 kept=78 kg=78 kw=0 per20=0.0 lost=52
+t=0.9621 kept=77 kg=77 kw=0 per20=0.0 lost=53
+t=0.9622 kept=76 kg=76 kw=0 per20=0.0 lost=54
+t=0.9624 kept=75 kg=75 kw=0 per20=0.0 lost=55
+t=0.9627 kept=74 kg=74 kw=0 per20=0.0 lost=56
+t=0.9635 kept=73 kg=73 kw=0 per20=0.0 lost=57
+t=0.9640 kept=72 kg=72 kw=0 per20=0.0 lost=58
+t=0.9642 kept=71 kg=71 kw=0 per20=0.0 lost=59
+t=0.9645 kept=70 kg=70 kw=0 per20=0.0 lost=60
+t=0.9646 kept=69 kg=69 kw=0 per20=0.0 lost=61
+t=0.9648 kept=68 kg=68 kw=0 per20=0.0 lost=62
+t=0.9649 kept=67 kg=67 kw=0 per20=0.0 lost=63
+t=0.9652 kept=66 kg=66 kw=0 per20=0.0 lost=64
+t=0.9658 kept=65 kg=65 kw=0 per20=0.0 lost=65
+t=0.9664 kept=64 kg=64 kw=0 per20=0.0 lost=66
+t=0.9667 kept=63 kg=63 kw=0 per20=0.0 lost=67
+t=0.9682 kept=62 kg=62 kw=0 per20=0.0 lost=68
+t=0.9684 kept=61 kg=61 kw=0 per20=0.0 lost=69
+t=0.9686 kept=60 kg=60 kw=0 per20=0.0 lost=70
+t=0.9687 kept=59 kg=59 kw=0 per20=0.0 lost=71
+t=0.9690 kept=58 kg=58 kw=0 per20=0.0 lost=72
+t=0.9690 kept=57 kg=57 kw=0 per20=0.0 lost=73
+t=0.9696 kept=56 kg=56 kw=0 per20=0.0 lost=74
+t=0.9697 kept=55 kg=55 kw=0 per20=0.0 lost=75
+t=0.9698 kept=54 kg=54 kw=0 per20=0.0 lost=76
+by_family: [
+ {
+  "family": "no_save",
+  "n": 2,
+  "good": 0,
+  "wrong": 2,
+  "auc": null,
+  "best_kept_good": 0,
+  "best_kept_wrong": 0,
+  "best_lost_good": 0
+ },
+ {
+  "family": "plain_teach",
+  "n": 76,
+  "good": 76,
+  "wrong": 0,
+  "auc": null,
+  "best_kept_good": 76,
+  "best_kept_wrong": 0,
+  "best_lost_good": 0
+ },
+ {
+  "family": "plural_relative",
+  "n": 14,
+  "good": 14,
+  "wrong": 0,
+  "auc": null,
+  "best_kept_good": 14,
+  "best_kept_wrong": 0,
+  "best_lost_good": 0
+ },
+ {
+  "family": "relation_trap",
+  "n": 18,
+  "good": 11,
+  "wrong": 7,
+  "auc": 0.9090909090909091,
+  "best_kept_good": 10,
+  "best_kept_wrong": 3,
+  "best_lost_good": 1
+ },
+ {
+  "family": "stale_value",
+  "n": 16,
+  "good": 13,
+  "wrong": 3,
+  "auc": 1.0,
+  "best_kept_good": 13,
+  "best_kept_wrong": 1,
+  "best_lost_good": 0
+ },
+ {
+  "family": "typo_filler",
+  "n": 29,
+  "good": 16,
+  "wrong": 13,
+  "auc": 0.8605769230769231,
+  "best_kept_good": 9,
+  "best_kept_wrong": 1,
+  "best_lost_good": 7
+ }
+]
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'EOF'
+import json
+from pathlib import Path
+rep = json.load(open('artifacts/claude-diag271-20260923/roc.json'))
+rawdev = {}
+for line in Path('artifacts/claude-devset267-20260923/dev.jsonl').read_text().splitlines():
+    if line.strip():
+        d = json.loads(line); rawdev[d['id']] = d
+n=0
+for r in rep['frames']:
+    if r['why']=='appositive-relative':
+        d = rawdev[r['turn']]
+        gold = [(g['subject'],g['relation'],g.get('value')) for g in d['gold'] if g['act']=='TEACH']
+        print(r['cid'], f"p={r['p']:.3f}", r['frame'], '| gold:', gold)
+        n+=1
+print('total appositive:', n)
+EOF
+d267-024#t0 p=0.978 {'subject': 'me', 'relation': 'cousin', 'value': 'Dara Quill'} | gold: [('Dara Quill', 'city', 'Ostarvik')]
+d267-005#t0 p=0.978 {'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'} | gold: [('Dain Kessler', 'job', 'carpenter')]
+d267-017#t0 p=0.975 {'subject': 'me', 'relation': 'brother', 'value': 'Joren Kade'} | gold: [('Joren Kade', 'city', 'Lissarra')]
+d267-015#t0 p=0.975 {'subject': 'me', 'relation': 'spouse', 'value': 'Liora Venn'} | gold: [('Liora Venn', 'job', 'weaver')]
+d267-028#t0 p=0.974 {'subject': 'me', 'relation': 'sister', 'value': 'Isolde Fenna'} | gold: [('Isolde Fenna', 'school', 'Corra School')]
+d267-004#t0 p=0.973 {'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro'} | gold: [('Tessa Maro', 'city', 'Kellerton')]
+d267-037#t0 p=0.972 {'subject': 'me', 'relation': 'sister', 'value': 'Petra Solen'} | gold: [('Petra Solen', 'job', 'librarian')]
+d267-098#t0 p=0.972 {'subject': 'me', 'relation': 'cousin', 'value': 'Petra Lonn'} | gold: [('Petra Lonn', 'city', 'Vennford')]
+d267-094#t0 p=0.970 {'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro'} | gold: [('Tessa Maro', 'city', 'Kellerton')]
+d267-013#t0 p=0.970 {'subject': 'me', 'relation': 'doctor', 'value': 'Corin Pell'} | gold: [('Corin Pell', 'workplace', 'Tormere Clinic')]
+d267-018#t0 p=0.970 {'subject': 'me', 'relation': 'sister', 'value': 'Wren Hallo'} | gold: [('Wren Hallo', 'workplace', 'Draymouth Library')]
+d267-012#t0 p=0.969 {'subject': 'me', 'relation': 'teacher', 'value': 'Elin Solen'} | gold: [('Elin Solen', 'city', 'Vennford')]
+d267-083#t0 p=0.969 {'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'} | gold: [('Dain Kessler', 'spouse', 'Sana Rell')]
+d267-096#t0 p=0.968 {'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'} | gold: [('Dain Kessler', 'job', 'baker')]
+d267-032#t0 p=0.966 {'subject': 'me', 'relation': 'friend', 'value': 'Harlow Lind'} | gold: [('Harlow Lind', 'job', 'gardener')]
+d267-011#t0 p=0.964 {'subject': 'me', 'relation': 'neighbour', 'value': 'Kess Alda'} | gold: [('Kess Alda', 'job', 'potter')]
+d267-046#t0 p=0.962 {'subject': 'me', 'relation': 'sister', 'value': 'Mabel Lind'} | gold: [('Mabel Lind', 'workplace', 'Tormere Clinic')]
+d267-039#t0 p=0.962 {'subject': 'me', 'relation': 'cousin', 'value': 'Elin Dray'} | gold: [('Elin Dray', 'employer', 'Corravale Press')]
+d267-050#t0 p=0.962 {'subject': 'me', 'relation': 'cousin', 'value': 'Soren Hallo'} | gold: [('Soren Hallo', 'city', 'Corravale')]
+d267-047#t0 p=0.962 {'subject': 'me', 'relation': 'brother', 'value': 'Fenwick Quill'} | gold: [('Fenwick Quill', 'place_of_birth', 'Vennford')]
+d267-016#t0 p=0.961 {'subject': 'me', 'relation': 'boss', 'value': 'Brenna Tove'} | gold: [('Brenna Tove', 'city', 'Corravale')]
+d267-044#t0 p=0.961 {'subject': 'me', 'relation': 'boss', 'value': 'Harlow Vessa'} | gold: [('Harlow Vessa', 'city', 'Ostarvik')]
+d267-025#t0 p=0.961 {'subject': 'me', 'relation': 'uncle', 'value': 'Fenwick Dray'} | gold: [('Fenwick Dray', 'job', 'blacksmith')]
+d267-086#t0 p=0.961 {'subject': 'me', 'relation': 'sister', 'value': 'Tessa Maro'} | gold: [('Tessa Maro', 'spouse', 'Fenwick Dray')]
+d267-029#t0 p=0.960 {'subject': 'me', 'relation': 'brother', 'value': 'Soren Vessa'} | gold: [('Soren Vessa', 'place_of_birth', 'Pellwick')]
+d267-038#t0 p=0.960 {'subject': 'me', 'relation': 'brother', 'value': 'Corin Talon'} | gold: [('Corin Talon', 'city', 'Tormere')]
+d267-071#t0 p=0.958 {'subject': 'me', 'relation': 'brother', 'value': 'Joren Kade'} | gold: [('Joren Kade', 'city', 'Lissarra')]
+d267-034#t0 p=0.957 {'subject': 'me', 'relation': 'teacher', 'value': 'Talon Osta'} | gold: [('Talon Osta', 'workplace', 'Venn Academy')]
+d267-069#t0 p=0.955 {'subject': 'me', 'relation': 'neighbour', 'value': 'Kess Alda'} | gold: [('Kess Alda', 'job', 'potter')]
+d267-045#t0 p=0.946 {'subject': 'me', 'relation': 'spouse', 'value': 'Dain Solen'} | gold: [('Dain Solen', 'language', 'Kessic')]
+d267-026#t0 p=0.940 {'subject': 'me', 'relation': 'aunt', 'value': 'Mabel Corra'} | gold: [('Mabel Corra', 'language', 'Drayan')]
+d267-006#t0 p=0.938 {'subject': 'me', 'relation': 'cousin', 'value': 'Petra Lonn'} | gold: [('Petra Lonn', 'language', 'Ilvari')]
+d267-033#t0 p=0.932 {'subject': 'me', 'relation': 'neighbour', 'value': 'Osta Mere'} | gold: [('Osta Mere', 'language', 'Vennic')]
+d267-075#t0 p=0.930 {'subject': 'me', 'relation': 'aunt', 'value': 'Mabel Corra'} | gold: [('Mabel Corra', 'language', 'Drayan')]
+d267-073#t0 p=0.926 {'subject': 'me', 'relation': 'brother', 'value': 'Soren Vessa'} | gold: [('Soren Vessa', 'place_of_birth', 'Pellwick')]
+d267-067#t0 p=0.908 {'subject': 'me', 'relation': 'brother', 'value': 'Dain Kessler'} | gold: [('Dain Kessler', 'job', 'carpenter')]
+d267-068#t0 p=0.875 {'subject': 'me', 'relation': 'cousin', 'value': 'Petra Lonn'} | gold: [('Petra Lonn', 'language', 'Ilvari')]
+d267-070#t0 p=0.853 {'subject': 'me', 'relation': 'cousin', 'value': 'Dara Quill'} | gold: [('Dara Quill', 'language', 'Drayan')]
+d267-080#t0 p=0.834 {'subject': 'me', 'relation': 'cousin', 'value': 'Soren Hallo'} | gold: [('Soren Hallo', 'language', 'Vennic')]
+d267-089#t0 p=0.282 {'subject': 'me', 'relation': 'cousin', 'value': 'Liora Pell'} | gold: [('Liora Pell', 'job', 'teacher')]
+total appositive: 40
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B - <<'EOF'
+import json
+rep = json.load(open('artifacts/claude-diag271-20260923/roc.json'))
+for c in rep['curve']:
+    if c['t']==0.0 or abs(c['t']-0.5)<1e-9 or abs(c['t']-0.899939)<1e-6 or abs(c['t']-0.959963)<1e-6:
+        print(f"t={c['t']:.6f} kept={c['kept']} kg={c['kept_good']} kw={c['kept_wrong']} per20={c['wrong_per_20']:.3f} lost={c['lost_good']}" if c['wrong_per_20'] is not None else c)
+# how many thetas qualify at <=1/20?
+q=[c for c in rep['curve'] if c['kept']>0 and c['kept_wrong']/c['kept']<=0.05]
+print('qualifying thetas:', len(q), 't range:', f"{min(c['t'] for c in q):.4f}", '-', f"{max(c['t'] for c in q):.4f}")
+EOF
+t=0.000000 kept=155 kg=130 kw=25 per20=3.226 lost=0
+t=0.899939 kept=127 kg=122 kw=5 per20=0.787 lost=8
+t=0.959963 kept=89 kg=89 kw=0 per20=0.000 lost=41
+qualifying thetas: 128 t range: 0.8929 - 0.9901
+[0m
+[0m← [0mWrite artifacts/claude-diag271-20260923/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mshasum -c artifacts/claude-diag271-20260923/SEAL-pred.sha256.txt && ls -la artifacts/claude-diag271-20260923/ && cat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P271.7 OUTCOME (2026-09-23, builder; exp 271 CPU-only diagnostic, one analysis run, sealed method + sealed scorers imported read-only; fidelity exact: manifest 155/155, C0 90/65, C1@0.25 90/63/153) relabeled 130 good (90 gold-hit + 40 appositive, plural rule 0 fires, case absent) / 25 wrong (typo 13, trap 7, stale 3, no_save 2; plain 0, plural 0). ROC AUC 0.948. Best cutoff t=0.8999 under <= 1 wrong/20 saved: keeps 122 good + 5 wrong (0.79/20), loses 8 good; 128 cutoffs qualify (t 0.8929-0.9901); first zero-wrong t=0.96 keeps 89/0 losing 41; sealed 0.25 keeps 130 + 23 wrong (3.01/20, fails bar). Family AUC: trap 0.909, stale 1.000, typo 0.861; plain/plural/no_save single-class. 5 kept-wrong all high-p approvals (1 stale, 2 trap, 1 typo-glue, 1 near-city); 8 lost-good 7 typo-half-doubts + 1 trap true frame at p=0.28. See artifacts/claude-diag271-20260923/REPORT.md + frames.csv + roc_curve.csv.
+- P271.8 OUTCOME vs predictions: P271.1 RIGHT (130/25 in 126-137/18-29); P271.2 WRONG (0.948 vs 0.50-0.70: appositive true frames score 0.93-0.98, relabeling reveals the separation); P271.3 WRONG (128 cutoffs qualify incl. best 122/130 goods at 0.79/20; falsifier P271.6 TRIPPED: 93.8% goods kept >= 90%); P271.4 RIGHT (locations exact); P271.5 WRONG (0.861-1.000, rest single-class). Deviations: D1 plural rule 0 fires (ear never kept plural sister frames); D2 no new 264 files (264 already sealed/recorded); D3 unpushed per OPUS-RULES vs brief PUSH line (files in place: artifacts/claude-diag271-20260923 scripts/claude_diag271_roc.py).
+EOF
+grep -c "P271" artifacts/fable-predictions-ledger.md
+artifacts/claude-diag271-20260923/PREDICTIONS.md: OK
+total 216
+drwxr-xr-x    8 ben-hannan  staff    256 Sep 23 06:34 .
+drwxr-xr-x@ 432 ben-hannan  staff  13824 Sep 23 06:30 ..
+-rw-r--r--    1 ben-hannan  staff  14206 Sep 23 06:32 frames.csv
+-rw-r--r--    1 ben-hannan  staff   4392 Sep 23 06:30 PREDICTIONS.md
+-rw-r--r--    1 ben-hannan  staff   7424 Sep 23 06:34 REPORT.md
+-rw-r--r--    1 ben-hannan  staff   4410 Sep 23 06:32 roc_curve.csv
+-rw-r--r--    1 ben-hannan  staff  64068 Sep 23 06:32 roc.json
+-rw-r--r--    1 ben-hannan  staff    115 Sep 23 06:30 SEAL-pred.sha256.txt
+8
+[0m
