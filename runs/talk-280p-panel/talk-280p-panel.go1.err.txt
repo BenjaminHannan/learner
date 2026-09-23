@@ -1,0 +1,205 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0muptime; echo "---DF---"; df -g /; echo "---PWD---"; pwd; ls
+9:56  up 3 days,  1:45, 4 users, load averages: 48.59 45.58 46.48
+---DF---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         9    57%  484014 102483200    0%   /
+---PWD---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit fetch -q origin main && git show origin/main:design/v3/30-modes/280m-talking-join.md > /tmp/join280m_spec.md; wc -l /tmp/join280m_spec.md; echo "---LIST-DIR---"; ls artifacts/ | head -n 100
+105 /tmp/join280m_spec.md
+---LIST-DIR---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join291-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-lis300-20260923
+claude-lis310-20260923
+claude-looppanel254-20260922
+claude-mentionwalk246-20260922
+claude-merge138k-20260922
+claude-merge138l-20260922
+claude-merge138m-20260922
+claude-merge138n-20260922
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge252c-20260922
+claude-merge292-20260923
+claude-mixpanel292-20260923
+claude-mouth241-20260922
+[0m
+[0m$ [0mpython3 -c "import re; t=open('/tmp/join280m_spec.md').read(); import re; heads=[(m.start(),m.group(0)) for m in re.finditer(r'^#+.*',t,re.M)]; print('\n'.join(f'{i}: {h}' for i,h in enumerate(heads))); print('---LEN---',len(t))"
+0: (0, "# 280m: join of the talking line's three merge candidates. Director's note, 2026-09-23 10:25 UTC")
+1: (220, '## Base decision')
+2: (675, '## What is joined (no new behaviour)')
+3: (1570, '## Marks (fixed now)')
+4: (2770, '## Panel spec (joinpanel280m, 90 turns, fresh)')
+5: (3499, '## Ordering with the reasoning line (added 2026-09-23 11:15 UTC, before any 280m result)')
+6: (4149, '## 280m result and 280n (director, 2026-09-23 11:54 UTC)')
+7: (6064, '## 280n result and 280p, the last attempt (director, 2026-09-23 13:28 UTC)')
+---LEN--- 7849
+[0m
+[0m$ [0m/usr/bin/python3 -c "t=open('/tmp/join280m_spec.md').read(); print(t[2770:3499])"
+## Panel spec (joinpanel280m, 90 turns, fresh)
+- 25 general ability questions ("what can you do" in many wordings).
+- 8 plain teach turns "<Name>'s <relation> is <Value>." and 12 called/named questions in the four formal shapes,
+  each question after its teach in the same dialog.
+- 25 greetings, thanks and closings, typed casually.
+- 10 turns that mix small talk with an ability or called question.
+- 10 controls (plain teaches and plain questions).
+Columns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /
+control), gold. Mixed items are owned by 260 for M1 agreement unless the builder's PASSMARKS predicts a piece
+route for each one before the seal. Fictional names only.
+[0m
+[0m$ [0mls artifacts/claude-joinpanel280p-20260923 2>&1; echo "---"; ls artifacts/claude-joinpanel280m-20260923 2>&1 | head
+ls: artifacts/claude-joinpanel280p-20260923: No such file or directory
+---
+panel.jsonl
+README.md
+SEAL.sha256.txt
+SPEC-COPY.md
+[0m
+[0m$ [0mls artifacts/ > /dev/null && mkdir artifacts/claude-joinpanel280p-20260923 && ls artifacts/claude-joinpanel280p-20260923
+(no output)
+[0m
+[0m← [0mWrite /tmp/gen280p.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /tmp/gen280p.py
+Counter({'ability': 25, 'smalltalk': 25, 'called': 12, 'mixed': 10, 'control': 10, 'teach': 8})
+wrote /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-joinpanel280p-20260923/panel.jsonl 90
+[0m
+[0m$ [0m/usr/bin/python3 -c "t=open('/tmp/join280m_spec.md').read(); s=t[2770:3499]; print(repr(s))"
+'## Panel spec (joinpanel280m, 90 turns, fresh)\n- 25 general ability questions ("what can you do" in many wordings).\n- 8 plain teach turns "<Name>\'s <relation> is <Value>." and 12 called/named questions in the four formal shapes,\n  each question after its teach in the same dialog.\n- 25 greetings, thanks and closings, typed casually.\n- 10 turns that mix small talk with an ability or called question.\n- 10 controls (plain teaches and plain questions).\nColumns exactly: dialog_id, turn_index, user_text, category (ability / called / teach / smalltalk / mixed /\ncontrol), gold. Mixed items are owned by 260 for M1 agreement unless the builder\'s PASSMARKS predicts a piece\nroute for each one before the seal. Fictional names only.\n\n'
+[0m
+[0m← [0mWrite artifacts/claude-joinpanel280p-20260923/SPEC-COPY.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-joinpanel280p-20260923/README.md
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json,collections; rows=[json.loads(l) for l in open('artifacts/claude-joinpanel280p-20260923/panel.jsonl')]; print('lines',len(rows)); print(collections.Counter(r['category'] for r in rows)); print('keys-ok',all(set(r)=={'dialog_id','turn_index','user_text','category','gold'} for r in rows)); print('dialogs',len(set(r['dialog_id'] for r in rows)))"
+lines 90
+Counter({'ability': 25, 'smalltalk': 25, 'called': 12, 'mixed': 10, 'control': 10, 'teach': 8})
+keys-ok True
+dialogs 73
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-joinpanel280p-20260923/panel.jsonl artifacts/claude-joinpanel280p-20260923/SPEC-COPY.md > artifacts/claude-joinpanel280p-20260923/SEAL.sha256.txt && cat artifacts/claude-joinpanel280p-20260923/SEAL.sha256.txt && ls -l artifacts/claude-joinpanel280p-20260923/
+5f56887c19eaefdf29b81ca490b907dd45fc7e64ff390c9e60bf35e78ace8731  artifacts/claude-joinpanel280p-20260923/panel.jsonl
+978cdce3af69b80f95739dc79c53ca99cc641de6bec13f0b9e28858513f7c2af  artifacts/claude-joinpanel280p-20260923/SPEC-COPY.md
+total 48
+-rw-r--r--  1 ben-hannan  staff  11671 Sep 23 09:57 panel.jsonl
+-rw-r--r--  1 ben-hannan  staff   1686 Sep 23 09:57 README.md
+-rw-r--r--  1 ben-hannan  staff    237 Sep 23 09:58 SEAL.sha256.txt
+-rw-r--r--  1 ben-hannan  staff   1265 Sep 23 09:57 SPEC-COPY.md
+[0m
