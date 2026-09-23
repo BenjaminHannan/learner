@@ -43,6 +43,8 @@ PRONOUNS = {"he", "she", "his", "her", "hers", "him", "they", "them", "their", "
 
 def pronoun_owner(r):
     """own-O0b bug found 2026-09-23: 9,903 binding rows store the pronoun itself as the owner."""
+    if r.get("family") == "binding":
+        return True  # whole family dropped: its pronoun labels rest on a gender guess (own-model thread, 11:0x UTC)
     t = r["turn"]
     return any(isinstance(f["owner"], list) and t[f["owner"][0]:f["owner"][1]].lower() in PRONOUNS
                for f in r["facts"])

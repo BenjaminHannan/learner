@@ -9,7 +9,7 @@ The borrowed ear (v4.1 + 27B yes/no gate, 261b/264) is replaced by **one fine-tu
 ## System under test
 
 - **Reader:** `scripts/claude_lis300_train.py` is LoRA (rank 32, alpha 64, every linear layer) on MiniCPM5-1B. It runs 2 epochs at lr 2e-4, batch 16, max length 256, with seed 300, and the LoRA is merged before reading. The prompt and frame text are in `scripts/claude_lis300_common.py`, and the frame format is `design/v3/60-listener/frame-spec.md`.
-- **Data:** `scripts/claude_lis300_data.py` builds it. It uses 3,000 own-O0b rows per family, dropping the 9,903 rows where a pronoun is the owner (a bug found here). It adds the Opus-written rows (`data/opus_w{1,2,3}.jsonl`) that a blind second Opus labeller reproduced (`scripts/claude_lis300_agree.py`), each repeated 4 times, with 10% held out as dev.
+- **Data:** `scripts/claude_lis300_data.py` builds it. It uses 3,000 own-O0b rows per family, dropping the whole `binding` family, because its pronoun owners are either the pronoun itself or a guess from assumed gender (found here, confirmed by the own-model thread). It adds the Opus-written rows (`data/opus_w{1,2,3}.jsonl`) that a blind second Opus labeller reproduced (`scripts/claude_lis300_agree.py`), each repeated 4 times, with 10% held out as dev.
 - **Confidence:** `scripts/claude_lis300_read.py` scores each fact by the lowest token probability over the act and that fact's JSON.
 - **Compiler:** `scripts/claude_lis300_compiler.py` is the only writer. A fact is written only if:
   - its mode is ASSERT or CORRECT;
