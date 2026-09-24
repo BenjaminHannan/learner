@@ -15,3 +15,6 @@ Reading: the fixed feedback rules miss more than half of the ways people actuall
 turns ("my boss keeps calling me ..."-style) still triggered a save. 339 does not go into 0.1 as a learned layer;
 the "learning over time" row of the 09-30 report records this FAIL. Also found: the plain twin (old version)
 started 766 of its 768 replies with a thinking block (see artifacts/claude-chat338-20260924/VERIFY-338.md).
+
+Ben (18:43 UTC, via the coordinator): he does not expect this to work well at today's reasoning level and wants it at scale-up.
+So 339 stays a registered FAIL and becomes a scale-up goal; no more 0.1 runs go to it.
