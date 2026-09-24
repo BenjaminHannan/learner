@@ -1,0 +1,466 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; ls -la; git fetch -q origin main 2>&1 | head -20; git fetch -q origin builder-outbox 2>&1 | head -20; echo "---FETCH DONE---"
+17:54  up  7:47, 4 users, load averages: 32.83 25.76 27.48
+Filesystem     1G-blocks Used Available Capacity iused    ifree %iused  Mounted on
+/dev/disk3s1s1       460   12         6    65%  484014 72002040    1%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+total 336
+drwxr-xr-x    30 ben-hannan  staff    960 Sep 23 14:40 .
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 13:13 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  457 ben-hannan  staff  14624 Sep 23 16:00 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 03:22 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 04:38 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 22 21:20 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     4 ben-hannan  staff    128 Sep 23 15:05 runs
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 08:08 scratchpad
+drwxr-xr-x  1465 ben-hannan  staff  46880 Sep 23 15:45 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+---FETCH DONE---
+[0m
+[0m$ [0mls /private/tmp/claude-502/ 2>&1 | head -20; echo "---"; ls scratchpad/briefs/ 2>&1 | head -30; echo "---"; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -50; echo "---"; git ls-tree origin/builder-outbox --name-only 2>&1 | head -40
+-Users-ben-hannan
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+---
+ls: scratchpad/briefs/: No such file or directory
+---
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+---
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -30; echo "==="; git ls-tree origin/builder-outbox runs/ 2>&1 | head -30; echo "==="; git show origin/builder-outbox:runs/rsn-294-train3/rsn-294-train3.exit 2>&1 | head -20; echo "===EXIT-CHECK-DONE==="
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+===
+040000 tree 8000a2b2210ee4980859ee45ec14739fd6f0c6f3	runs/000-ckpt-copy
+040000 tree 98966ee5dc5d5c6682e7cf32b8a28d6efeca9311	runs/000-smoke
+040000 tree ec3b5ba1d4e0c3b2bb3525c43dead5a25e38b043	runs/000-vast-rescue
+040000 tree b58b258cc1f39f4caf7b1ee37f3e42b82de4ad01	runs/000-watcher-dedupe
+040000 tree 9f1874251078986d2fb7d44403105ebfcc166175	runs/000-watcher-upgrade
+040000 tree 646a443ca17d7cc4a9bb35b7458bcb0c3889ae2c	runs/261b-build
+040000 tree 70e2e114c1656f862a33d677d3e1b2dbd475de5c	runs/261b-panel
+040000 tree 5b2ebc451348d518aadf5ca39dc6fb4a4455794d	runs/263-build
+040000 tree 77a82e9c7b7edfe1b316bba4a766e0b164f51499	runs/263-panel
+040000 tree 46e97371e22b65e343fcd3b5bd3210c29f084da9	runs/263-probe
+040000 tree 30f923be8b6298a2e6046ec3aa970f75325db3f1	runs/264-build
+040000 tree be98af1ddf95a8cff06f839c7a7456ffaa90a01d	runs/264-panel
+040000 tree 19ffd02100362ea7c17968666a1536631bbab0ef	runs/265-build
+040000 tree 23a600d495ce1eea4dd30bd2de272fa50e46df04	runs/265-panel
+040000 tree 747537dbedc0bac536a7fdc3d7b8819d883385b6	runs/267-devset
+040000 tree 0faf02315a2e34c19ee556d34711b2cd85eb562e	runs/267-diag
+040000 tree 57c2970e0cc1016d215dea6dd2d921ae7bae60ce	runs/269-build
+040000 tree 41b443f24566192acc28a9be3843232572aaf27e	runs/269-panel
+040000 tree 0d2a4825ea0a3f46ee6111d54e551178c1fbc726	runs/269-resume
+040000 tree 13741e64e5359e1f26bbb4ef3d508ec67ea6fcb1	runs/269-resume2
+040000 tree b90d332387d34386adb5db4e7c3d9548fce561b5	runs/270-build
+040000 tree c1349285202b915af3d8e42c92a0b3fc6c970390	runs/270-panel
+040000 tree 54b5bd1d929903d337b92634417524f0592aa551	runs/270b-build
+040000 tree 2bc5aa77535e9f1d40d75b6d56af80b30a17016e	runs/270b-panel
+040000 tree 25244859fde611598e91f0e50643699d18977da5	runs/271-threshold
+040000 tree fa14cf411d0265ffeacc561e8e82d4748eb42811	runs/273-build
+040000 tree 5fb884be3fb37d2c910637ed5a86a9596c3887d8	runs/chat-demo-build
+040000 tree 4bb4efeb560a377b735542522684fb031854c58b	runs/chat-weakspots
+040000 tree 4c525359390a628c920add5ad0459c883ee3c56e	runs/lis-300-publish
+040000 tree 40ad66fa50afb27219b08a5454b9adddf1a2eee7	runs/lis-300-train
+===
+fatal: path 'runs/rsn-294-train3/rsn-294-train3.exit' does not exist in 'origin/builder-outbox'
+===EXIT-CHECK-DONE===
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/" 2>&1 | head -30; echo "==="; git ls-tree origin/builder-outbox runs/ 2>&1 | grep -i "294\|rsn" | head -20; echo "==="; git ls-tree origin/builder-outbox --name-only 2>&1 | head -20
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/: No such file or directory
+===
+040000 tree a725f455ccc1b83aece0b7bc2f2d1170dfa9df90	runs/rsn-138nb-build
+040000 tree 20f33cefbb111d8b75f2948e014e91164e611288	runs/rsn-138nb-panel
+040000 tree 1ad7313ca9534ca1180001ed8c518befc6c75631	runs/rsn-138p-build
+040000 tree 9f63e9c37b09ae8c8e32aba765f46b03ae04cc1b	runs/rsn-266-build
+040000 tree 9ddc9aca551c24ee9c5367531ad086a2d2410585	runs/rsn-266-panel
+040000 tree f176467b7555afdc6dd09219d7414d5a0a099ee0	runs/rsn-266b-build
+040000 tree 5aca441c78b143a67885b6ce5a6eae08b4199573	runs/rsn-266b-panel
+040000 tree ead2d5be4132c06cfb6a795db1bd950203cafb87	runs/rsn-268-build
+040000 tree d110dc628e522ff0fcaba5abbe9247a38d312a18	runs/rsn-268-panel
+040000 tree dd0a4366c48f4970453b293847f105895e101171	runs/rsn-268b-build
+040000 tree 52cb5a028a2f78ee5ed35db7baafdd8002bbbf91	runs/rsn-268b-panel
+040000 tree 5df8b3445404b408a25e7dee4153450504e06405	runs/rsn-290-diag
+040000 tree f8eeaa2aff1d87a9bc9b28bbd75d3dd3a22bceb6	runs/rsn-291-build
+040000 tree 79dc3194d3d2a147bc8999bf78f2c0f8ac562756	runs/rsn-291-panel
+040000 tree 8b5d52935968a7499194dbe349342452df181ec4	runs/rsn-291-publish
+040000 tree e7b077787ba3712697ad24b25a24ec0eba14ba20	runs/rsn-292-build
+040000 tree ff030c2068a6b921eff008832936a66ed448e545	runs/rsn-292-build2
+040000 tree e10c3889ec768d7d70c06394f8a31b918309bc9b	runs/rsn-292-panel
+040000 tree 1d30a188a0e86f167184f1dea01c041cc6589da1	runs/rsn-293-build
+040000 tree 0a3e25d93499e5a389b6cc0145dd0d79f82caa5e	runs/rsn-293-diag
+===
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox runs/ 2>&1 | grep "294"; echo "==="; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/" 2>&1 | head -30
+040000 tree 20f33cefbb111d8b75f2948e014e91164e611288	runs/rsn-138nb-panel
+040000 tree 974126a2b0e65dfc811bd043bd7d3f0614b5d049	runs/rsn-294-train
+040000 tree 2b6826106b97596ec982d9a25c1525012b93f700	runs/rsn-294-train2
+040000 tree fa728ef4882592209647438d4429415124a4cca0	runs/talk-241b-gradeA3
+===
+scratchpad
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/" 2>&1 | head -30; echo "==="; git ls-tree origin/builder-outbox runs/rsn-294-train --name-only 2>&1 | head; echo "==="; git ls-tree origin/builder-outbox runs/rsn-294-train2 --name-only 2>&1 | head
+===
+runs/rsn-294-train
+===
+runs/rsn-294-train2
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | head -100
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 257714,
+  "cpu_util": 12.56375,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 108.0,
+  "disk_name": "nvme",
+  "disk_space": 60.0,
+  "disk_usage": 11.0,
+  "disk_util": 11.0,
+  "dlperf": 84.67565726303683,
+  "dlperf_per_dphtotal": 157.13008564274875,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5388888888888889,
+  "driver_version": "580.159.03",
+  "duration": 1774.3904857635498,
+  "end_date": 1798592980.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 200.60476701030927,
+  "geolocation": "United States, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 657.9,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 70.999931,
+  "gpu_totalram": 32607,
+  "gpu_util": 98.999908,
+  "has_avx": 1,
+  "host_id": 410852,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52300816,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 162.4,
+  "inet_down_billed": 4372561.92,
+  "inet_down_cost": 0.015625,
+  "inet_up": 33.3,
+  "inet_up_billed": 74649.6,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.0722222222222222,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5388888888888889
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "jupyter_token": "57af9c5775195bc22701df5ac7decf9dbad833503e3deb36ad558ef889a2873b",
+  "label": "rsn-294c",
+  "local_ipaddrs": "192.168.100.196 172.17.0.1 fd3d:3873:b075::bab fd3d:3873:b075:0:9e6b:ff:fe74:4da6",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 12099,
+  "machine_id": 142018,
+  "mem_limit": 89.56936192,
+  "mem_usage": 5.204082688,
+  "min_bid": 0.3333333333333333,
+  "mobo_name": "ROME2D32GM-2T",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 26.5,
+  "public_ipaddr": "137.175.76.24",
+  "reliability2": 0.995087,
+  "rentable": true,
+  "score": 149.7664670132555,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5388888888888889,
+   "diskHour": 0.0722222222222222,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+[0m
+[0m$ [0mexport VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); print('count:',len(data)); [print({k:v for k,v in d.items() if k in ('id','label','dph_total','duration','cur_state','actual_status','created','start_date','creation_time','client_run_time')}) for d in data]"
+count: 1
+{'actual_status': 'running', 'client_run_time': 1.1, 'cur_state': 'running', 'dph_total': 0.5388888888888889, 'duration': 1777.7842836380005, 'id': 52300816, 'label': 'rsn-294c', 'start_date': 1790198680.3596303}
+[0m
+[0m$ [0mdate -u; date; echo "==="; git log --oneline -5 origin/builder-outbox 2>&1 | head; echo "==="; git show origin/builder-outbox:runs/rsn-294-train2/ 2>&1 | head -20; echo "==="; ls runs/ 2>&1 | head -30
+Wed Sep 23 21:54:26 UTC 2026
+Wed Sep 23 17:54:26 EDT 2026
+===
+cb74734b0 watcher status
+ca060f0ea watcher status
+00903690b watcher status
+20ba8b909 watcher status
+71ad343ec watcher status
+===
+tree origin/builder-outbox:runs/rsn-294-train2/
+
+rsn-294-train2.exit
+rsn-294-train2.go1.done
+rsn-294-train2.go1.err.txt
+rsn-294-train2.go1.reply.md
+rsn-294-train2.md
+===
+000-vast-rescue
+own-probe-1
+[0m
+[0m$ [0mtail -15 artifacts/fable-predictions-ledger.md 2>&1; echo "==="; wc -l artifacts/fable-predictions-ledger.md 2>&1
+- Pownm1n.2 (same) first-try pass 1000/1000 (bar >= 950): PASS.
+- Pownm1n.3 (same) fresh slot_check recount on winning raw of 1000 non-null replies: 0 fails: PASS.
+- Pownm1n.4 (same) variety: distinct slotted 59/1000 (bar >= 300), top reply 129/1000 (bar <= 30): FAIL. Top-5 cover 457/1000. Registered verdict: FAIL on Pm1n.4 only.
+- Pownm1n.5 (same) crashes 0: PASS. Fallbacks 0 every status; speak median 1221.5 ms p90 1381.7 ms cuda. See artifacts/claude-own-m1n-20260923/RESULTS.md.
+- P-vast-m1n (2026-09-23 18:43:40Z-20:02:52Z, builder own-M1n rental) contract 52279213 RTX 5090 1x label own-m1n actual_status=running at destroy: alive 79.2 min (1.32 h) x $0.5159259/hr = ~$0.68 (ceiling $4.00/3h respected; per-instance billing not readable via API, estimate used per task rule); post-destroy show instances holds only own-m1b (v1 rerun, parallel on purpose, untouched). Model 2.16 GB copied to ~/premonition-models/own-m1n-mouth/merged, sha de12daf4… matches SEAL-run.
+- Pownm1.1 OUTCOME (2026-09-23, builder own-m1b rerun; vast.ai contract 52279343 RTX 5090 $0.5156/h ~102 min ~$0.88; MiniCPM5-1B commit 87179e5c; LoRA r32 2 epochs lr 2e-4 batch 16 max-len 256, 2500/2500 steps, 19.93 min, 2501.7 tok/s, dev_loss 0.1571; M0 rebuilt 20000+1000, dev byte-identical, m1 data kept 20000+1000 dropped 0; seal code 5/5 OK; SEAL-run before measure; dev measured ONCE, 1000 rows) PASS spoke 1000/1000, fell back 0 (every status 100% spoke).
+- Pownm1.2 OUTCOME (same run) PASS first-try 1000/1000 (tries {1:1000}; "proved wrong" clause not triggered).
+- Pownm1.3 OUTCOME (same run) PASS independent slot_check recount on winning raws: 0 failures/1000.
+- Pownm1.4 OUTCOME (same run) FAIL distinct slotted 45/1000 (bar >=300), top reply 175/1000 rows 17.5% (bar <=30); M0 dev itself has 339 distinct (top 7), so collapse is the model's, not the data's; greedy over-confidence, retries never used on dev.
+- Pownm1.5 OUTCOME (same run) PASS 0 crashes.
+- Pownm1 OUTCOME (same run) registered verdict FAIL (4/5 PASS, Pm1.4 FAIL; one diagnosis-driven follow-up is the director's call). Merged sha b40cc2d6 kept at ~/premonition-models/own-m1-mouth/, weights never in git. Deviations: SSH attach needed full pubkey string; gcc installed for triton JIT then full retrain from scratch (no code patch); watchdog polls ~115 s during speak. See artifacts/claude-own-m1-20260923/RESULTS.md.
+- P-vast-ownm1b (2026-09-23 18:44-20:27 UTC) contract 52279343 RTX 5090 1x IP 154.9.228.248 reliability 0.9886 dph 0.5155556 label own-m1b: rented 18:44:29Z, destroyed 20:27Z, alive ~102 min x $0.5156/h = ~$0.88 (ceiling $4.00/3h respected); post-destroy 52279343 gone (only another agent's rsn-294 box live, untouched); credit 6.39 -> 9.67 across the run (top-up/release, not mine to explain).
+- P294.TOO-SLOW (2026-09-23, builder rsn-294 rental; NO full runs, NO panel reads, sealed code untouched) contract 52290733 RTX 5090 1x label rsn-294 offer 44614424 32 cores rel 0.9948 $0.4727/hr, alive 50.5 min x $0.4727/hr = ~$0.40 (ceiling $4/3h respected; per-instance billing not readable via API, estimate used). Seals 6/6 OK, selftest ok (loop 30771221, plain 30938261 params). NEW venv torch 2.14.0+cu130 CUDA True numpy 2.4.6. Pilot --copy-steps 100 --rl-steps 50 seed 9 (2 arms sharing 1 GPU): loop copy 100 steps 0.27 min, RL 50 steps 3.54 min; plain copy 100 steps 0.20 min, RL 50 steps 3.82 min. Solo check (plain, 1 GPU, copy 20 + RL 10): copy ~0.09 s/step, RL ~2.34 s/step. Full-run estimate per task rule (60x copy-min + 120x practice-min): loop ~441 min, plain ~470 min shared (dedicated ~245 min each); 4 runs 2-at-a-time ~= 940 min >> 150 min cap, also breaks 3 h ceiling (~16 h x $0.47 ~= $7.4). Instance destroyed, 0 instances live after. P294.1-P294.6 NOT scored (no checkpoints, no evals). Cause of slowness (unverified, from code reading only): practice phase does an 8-try Python reward loop over 128 episodes per step.
+- P294.HOST-FAIL (2026-09-23, builder rsn-294 second try; NO training, NO panel reads, sealed code untouched, $0.00 spent) two rentals failed to start: contract 52298608 (offer 43748043, RTX 5090 80 cores rel 0.9975 $0.4567/h) and contract 52299228 (offer 49298963, RTX 5090 24 cores rel 0.9907 $0.50/h), both stuck at actual_status=loading/cur_state=stopped, manual start returned "Required resources are currently unavailable, state change queued"; both destroyed, 0 instances live after, credit unchanged at $9.31. Per task rule (two failures -> HOST-FAIL), stopped without running pilot/train/eval. P294.1-P294.6 NOT scored (no checkpoints, no evals).
+- PF1 OUTCOME (2026-09-23, builder; registered verdict PASS on M2+M3+M5 mechanical; M1/M4 director-graded, not run here; seals own 41/41 OK post-run, panel seal 2/2 OK, no sealed file changed): M2 0 unfaithful + 0 store/event diffs on suites, probes, joinpanel, convbench (PF1.1 held). M3 sessions152 57/57 reply-only, bench NEW-1 648/648 reply-only GATE clean, rt136 52 reply-only 0 other, rt143 0 triples/expected diffs, vp 63 + vs 11 reply-only, all gates clean, every reply diff route A (PF1.2 held). Convbench 13 changed lines of 286, all route A (SAVED 9, ANSWER 2, ABSTAIN_MISSING 2), 0 store diffs (PF1.3 count missed: 13 vs 50-130 predicted). Joinpanel 90/90 byte-identical, 0 store, 0 probe diffs (PF1.4 bars held, 0 diffs). M5 medians 50.12 vs 50.42 s ratio 0.994 PASS, all 6 runs load1<40 (PF1.5 held). Misses: frozen bench 10 new WRONG, all missing-yes needle artifacts, 10/10 resolved under NEW-1 (PF1.2 disclosed); sev-1 fallbacks byte-identical: suites 5, joinpanel 20, conv 0, dev 1. See artifacts/claude-f1-20260923/RESULTS.md.
+===
+    2906 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mpython3 -c "import json; print('py3-ok')" 2>&1 | head -5; echo "==="; which vastai; vastai --help 2>&1 | head -10
+py3-ok
+===
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+[0m
+[0m← [0mWrite /tmp/rsn294_guard.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 /tmp/rsn294_guard.py 2>&1 | tail -60
+2026-09-23 23:20:38Z poll 84: live=['52300816'] combined=$1.0414 exit=False
+2026-09-23 23:21:39Z poll 85: live=['52300816'] combined=$1.0506 exit=False
+2026-09-23 23:22:41Z poll 86: live=['52300816'] combined=$1.0598 exit=False
+2026-09-23 23:23:43Z poll 87: live=['52300816'] combined=$1.0691 exit=False
+2026-09-23 23:24:44Z poll 88: live=['52300816'] combined=$1.0783 exit=False
+2026-09-23 23:25:46Z poll 89: live=['52300816'] combined=$1.0875 exit=False
+2026-09-23 23:26:48Z poll 90: live=['52300816'] combined=$1.0968 exit=False
+2026-09-23 23:27:50Z poll 91: live=['52300816'] combined=$1.1060 exit=False
+2026-09-23 23:28:51Z poll 92: live=['52300816'] combined=$1.1153 exit=False
+2026-09-23 23:29:54Z poll 93: live=['52300816'] combined=$1.1245 exit=False
+2026-09-23 23:30:55Z poll 94: live=['52300816'] combined=$1.1338 exit=False
+2026-09-23 23:31:57Z poll 95: live=['52300816'] combined=$1.1430 exit=False
+2026-09-23 23:32:59Z poll 96: live=['52300816'] combined=$1.1523 exit=False
+2026-09-23 23:34:01Z poll 97: live=['52300816'] combined=$1.1615 exit=False
+2026-09-23 23:35:02Z poll 98: live=['52300816'] combined=$1.1708 exit=False
+2026-09-23 23:36:05Z poll 99: live=['52300816'] combined=$1.1801 exit=False
+2026-09-23 23:37:07Z poll 100: live=['52300816'] combined=$1.1894 exit=False
+2026-09-23 23:38:09Z poll 101: live=['52300816'] combined=$1.1987 exit=False
+2026-09-23 23:39:10Z poll 102: live=['52300816'] combined=$1.2079 exit=False
+2026-09-23 23:40:12Z poll 103: live=['52300816'] combined=$1.2171 exit=False
+2026-09-23 23:41:14Z poll 104: live=['52300816'] combined=$1.2264 exit=False
+2026-09-23 23:42:16Z poll 105: live=['52300816'] combined=$1.2357 exit=False
+2026-09-23 23:43:18Z poll 106: live=['52300816'] combined=$1.2450 exit=False
+2026-09-23 23:44:20Z poll 107: live=['52300816'] combined=$1.2542 exit=False
+2026-09-23 23:45:21Z poll 108: live=['52300816'] combined=$1.2635 exit=False
+2026-09-23 23:46:24Z poll 109: live=['52300816'] combined=$1.2727 exit=False
+2026-09-23 23:47:25Z poll 110: live=['52300816'] combined=$1.2820 exit=False
+2026-09-23 23:48:27Z poll 111: live=['52300816'] combined=$1.2912 exit=False
+2026-09-23 23:49:29Z poll 112: live=['52300816'] combined=$1.3005 exit=False
+2026-09-23 23:50:31Z poll 113: live=['52300816'] combined=$1.3097 exit=False
+2026-09-23 23:51:32Z poll 114: live=['52300816'] combined=$1.3190 exit=False
+2026-09-23 23:52:35Z poll 115: live=['52300816'] combined=$1.3282 exit=False
+2026-09-23 23:53:36Z poll 116: live=['52300816'] combined=$1.3375 exit=False
+2026-09-23 23:54:38Z poll 117: live=['52300816'] combined=$1.3468 exit=False
+2026-09-23 23:55:41Z poll 118: live=['52300816'] combined=$1.3561 exit=False
+2026-09-23 23:56:43Z poll 119: live=['52300816'] combined=$1.3655 exit=False
+2026-09-23 23:57:45Z poll 120: live=['52300816'] combined=$1.3748 exit=False
+2026-09-23 23:58:48Z poll 121: live=['52300816'] combined=$1.3840 exit=False
+2026-09-23 23:59:50Z poll 122: live=['52300816'] combined=$1.3935 exit=False
+2026-09-24 00:00:53Z poll 123: live=['52300816'] combined=$1.4027 exit=False
+2026-09-24 00:01:54Z poll 124: live=['52300816'] combined=$1.4121 exit=False
+2026-09-24 00:02:56Z poll 125: live=['52300816'] combined=$1.4213 exit=False
+2026-09-24 00:03:58Z poll 126: live=['52300816'] combined=$1.4306 exit=False
+2026-09-24 00:05:00Z poll 127: live=['52300816'] combined=$1.4399 exit=False
+2026-09-24 00:06:02Z poll 128: live=['52300816'] combined=$1.4492 exit=False
+2026-09-24 00:07:04Z poll 129: live=['52300816'] combined=$1.4584 exit=False
+2026-09-24 00:08:06Z poll 130: live=['52300816'] combined=$1.4677 exit=False
+2026-09-24 00:09:08Z poll 131: live=['52300816'] combined=$1.4770 exit=False
+2026-09-24 00:10:10Z poll 132: live=['52300816'] combined=$1.4863 exit=False
+2026-09-24 00:11:12Z poll 133: live=['52300816'] combined=$1.4955 exit=False
+2026-09-24 00:12:13Z poll 134: live=['52300816'] combined=$1.5048 exit=False
+2026-09-24 00:13:14Z poll 135: GONE id=52300816 label=rsn-294c frozen_cost=1.5048
+2026-09-24 00:13:15Z poll 135: live=[] combined=$1.5048 exit=False
+2026-09-24 00:14:17Z poll 136: live=[] combined=$1.5048 exit=False
+2026-09-24 00:15:19Z poll 137: exit file PRESENT
+2026-09-24 00:15:19Z poll 137: live=[] combined=$1.5048 exit=True
+2026-09-24 00:16:20Z poll 138: live=[] combined=$1.5048 exit=True
+2026-09-24 00:17:22Z poll 139: live=[] combined=$1.5048 exit=True
+2026-09-24 00:17:22Z exit present and no rsn-294 live for >=5min, done
+RESULT {"verdict": "WATCH-DONE", "total": 1.5048}
+[0m
+[0m$ [0mhead -8 /tmp/rsn294_guard.log; echo "==="; grep -c "^202" /tmp/rsn294_guard.log; grep "NEW\|GONE\|ERROR\|GUARD-STOP\|exit file PRESENT\|RESULT" /tmp/rsn294_guard.log; echo "==="; cat /tmp/rsn294_guard_state.json; echo "==="; git status --porcelain 2>&1 | head; echo "===STATUS-DONE==="
+2026-09-23 21:54:51Z guard start polls_done=0 tracked=0
+2026-09-23 21:54:51Z poll 1: NEW id=52300816 label=rsn-294c dph=0.538889 dur=1811s start_est=21:24:39Z
+2026-09-23 21:54:52Z poll 1: live=['52300816'] combined=$0.2711 exit=False
+2026-09-23 21:55:54Z poll 2: live=['52300816'] combined=$0.2804 exit=False
+2026-09-23 21:56:56Z poll 3: live=['52300816'] combined=$0.2896 exit=False
+2026-09-23 21:57:58Z poll 4: live=['52300816'] combined=$0.2989 exit=False
+2026-09-23 21:59:00Z poll 5: live=['52300816'] combined=$0.3081 exit=False
+2026-09-23 22:00:02Z poll 6: live=['52300816'] combined=$0.3174 exit=False
+===
+144
+2026-09-23 21:54:51Z poll 1: NEW id=52300816 label=rsn-294c dph=0.538889 dur=1811s start_est=21:24:39Z
+2026-09-24 00:13:14Z poll 135: GONE id=52300816 label=rsn-294c frozen_cost=1.5048
+2026-09-24 00:15:19Z poll 137: exit file PRESENT
+===
+{"instances": {"52300816": {"dph": 0.5388888888888889, "label": "rsn-294c", "first_seen": 1790200491.0804749, "start_est": 1790198679.7550182, "last_seen": 1790208732.493362, "last_dur": 10052.706912755966, "gone": true}}, "guard_start": 1790200491.079793, "polls": 139, "exit_first_seen": 1790208917.359659, "guard_stop_done": false}===
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+===STATUS-DONE===
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git ls-tree origin/builder-outbox runs/rsn-294-train3 --name-only; echo "==="; export VAST_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instances --raw 2>&1 | python3 -c "import json,sys; data=json.load(sys.stdin); print('live count:',len(data)); [print(d.get('id'),d.get('label'),d.get('actual_status')) for d in data]"
+runs/rsn-294-train3
+===
+live count: 0
+[0m
+[0m$ [0mgrep -c "GUARD-STOP" artifacts/fable-predictions-ledger.md; tail -3 artifacts/fable-predictions-ledger.md; echo "==="; git diff --stat 2>&1 | head; echo "==="; git stash list 2>&1 | head -3
+0
+- P294.6 OUTCOME (same run) practice teaches loop final minus copy-only overall right: s1 92 - 45 = +47 PASS, s2 111 - 107 = +4 FAIL (bar >= +10).
+- P294 OUTCOME (same run) registered verdict FAIL (P294.2, P294.4, P294.5 fail both seeds; P294.6 fails seed 2). Panel items read 0, evals 16/16 once per checkpoint, sealed files edited 0, code never patched. Checkpoints (8 .pt, sha match SEAL-run.sha256.txt) kept at ~/premonition-models/rsn294/<run>/, weights never in git. Instance destroyed, 0 live after. See artifacts/claude-rsn294-20260923/RESULTS.md.
+- P-vast-rsn294c (2026-09-23 21:24:39Z-2026-09-24 00:12:37Z, builder rsn-294 third try) contract 52300816 RTX 5090 1x offer 43165154 32 cores rel 0.9951 $0.4727/h label rsn-294c: rented 21:24:39Z, running within ~1 min, destroyed 00:12:37Z, alive ~2.80 h x $0.4727/h = ~$1.32 (ceiling $4/3h respected on dollars; wall-clock over 3 h only from ~1 GB checkpoint download at ~100-400 KB/s); post-destroy 0 instances live; credit $9.31 at rental.
+===
+ artifacts/fable-predictions-ledger.md | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+===
+[0m
