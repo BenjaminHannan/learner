@@ -1,0 +1,321 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead .
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mRead scratchpad/briefs failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs
+[0m→ [0mRead scratchpad
+[0m
+[0m$ [0muptime; echo "---DF---"; df -g /; echo "---PWD---"; pwd; git rev-parse --show-toplevel 2>&1 | head -5
+15:30  up 1 day,  5:23, 4 users, load averages: 166.05 128.28 99.21
+---DF---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 122333400    0%   /
+---PWD---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -20; echo "FETCH_DONE rc=$?"; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -30; echo "---SHOW_DONE---"
+FETCH_DONE rc=0
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+---SHOW_DONE---
+[0m
+[0m$ [0mif [ -f ~/.config/openrouter/key ]; then echo EXISTS=yes; wc -c < ~/.config/openrouter/key; if head -c 6 ~/.config/openrouter/key | grep -q "sk-or-"; then echo PREFIX=yes; else echo PREFIX=no; fi; stat -f %Lp ~/.config/openrouter/key; else echo EXISTS=no; fi
+EXISTS=yes
+      73
+PREFIX=yes
+600
+[0m
+[0m$ [0mprintf 'header = "Authorization: Bearer %s"\n' "$(cat ~/.config/openrouter/key)" | curl -sS -K - -w '\nHTTP_STATUS:%{http_code}\n' https://openrouter.ai/api/v1/key > /tmp/orkey_out.txt 2>&1; echo "CURL_RC=$?"; grep -c "sk-or" /tmp/orkey_out.txt || true; cat /tmp/orkey_out.txt
+CURL_RC=0
+1
+{"data":{"label":"sk-or-v1-35a...85c","is_management_key":false,"is_provisioning_key":false,"limit":null,"limit_reset":null,"limit_remaining":null,"include_byok_in_limit":false,"usage":0,"usage_daily":0,"usage_weekly":0,"usage_monthly":0,"byok_usage":0,"byok_usage_daily":0,"byok_usage_weekly":0,"byok_usage_monthly":0,"is_free_tier":false,"expires_at":null,"creator_user_id":"user_3IEKRiHNrWfyKrJM4HELwl2SNfh","organization_id":null,"workspace_id":"c2f6b785-5481-56fb-ae3a-48e2ba283dd2","allowed_data_regions":["global"],"free_model_daily_requests":{"used":0,"limit":50,"remaining":50},"rate_limit":{"requests":-1,"interval":"10s","note":"This field is deprecated and safe to ignore."}}}
+HTTP_STATUS:200
+[0m
+[0m$ [0mrm -f /tmp/orkey_out.txt; curl -sS https://openrouter.ai/api/v1/models -o /tmp/or_models.json 2>&1; echo "CURL_RC=$?"; wc -c /tmp/or_models.json; grep -c "sk-or" /tmp/or_models.json || true
+CURL_RC=0
+  752388 /tmp/or_models.json
+0
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json; d=json.load(open('/tmp/or_models.json')); print(type(d)); print(list(d.keys())[:10]); m=d.get('data',d) if isinstance(d,dict) else d; print('nmodels=',len(m)); print(str(m[0])[:800])"
+<class 'dict'>
+['data', 'total_count', 'links']
+nmodels= 458
+{'id': 'fireworks/ember-1', 'canonical_slug': 'fireworks/ember-1-20260923', 'hugging_face_id': None, 'name': 'Fireworks: Ember-1', 'created': 1790208461, 'description': 'Ember-1 is a specialized reasoning model from Fireworks Research, built on [Kimi K3](https://openrouter.ai/moonshotai/kimi-k3). It is designed to make every token go further: it produces shorter reasoning traces, using roughly 40%...', 'context_length': 1048576, 'architecture': {'modality': 'text+image->text', 'input_modalities': ['text', 'image'], 'output_modalities': ['text'], 'tokenizer': 'Other', 'instruct_type': None}, 'pricing': {'prompt': '0.000003', 'completion': '0.000015', 'input_cache_read': '0.0000003'}, 'top_provider': {'context_length': 1048576, 'max_completion_tokens': 943718, 'is_moderated': False}, 'per_re
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('/tmp/or_models.json'))
+models=d['data']
+# (a) glm
+glm=[m for m in models if 'glm' in m['id'].lower()]
+print('GLM_COUNT=',len(glm))
+for m in sorted(glm,key=lambda x:x['id']):
+    p=m.get('pricing',{})
+    print(m['id'],'|prompt='+str(p.get('prompt')),'|compl='+str(p.get('completion')),'|ctx='+str(m.get('context_length')),'|name='+str(m.get('name')))
+"
+GLM_COUNT= 21
+z-ai/glm-4.5 |prompt=0.0000006 |compl=0.0000022 |ctx=131072 |name=Z.ai: GLM 4.5
+z-ai/glm-4.5-air |prompt=0.00000013 |compl=0.00000085 |ctx=131072 |name=Z.ai: GLM 4.5 Air
+z-ai/glm-4.5v |prompt=0.0000006 |compl=0.0000018 |ctx=65536 |name=Z.ai: GLM 4.5V
+z-ai/glm-4.6 |prompt=0.00000043 |compl=0.00000175 |ctx=204800 |name=Z.ai: GLM 4.6
+z-ai/glm-4.6v |prompt=0.0000003 |compl=0.0000009 |ctx=131072 |name=Z.ai: GLM 4.6V
+z-ai/glm-4.7 |prompt=0.0000004 |compl=0.00000175 |ctx=204800 |name=Z.ai: GLM 4.7
+z-ai/glm-4.7-flash |prompt=0.0000000605 |compl=0.0000004 |ctx=200000 |name=Z.ai: GLM 4.7 Flash
+z-ai/glm-5 |prompt=0.0000006 |compl=0.00000192 |ctx=204800 |name=Z.ai: GLM 5
+z-ai/glm-5-turbo |prompt=0.0000012 |compl=0.000004 |ctx=202752 |name=Z.ai: GLM 5 Turbo
+z-ai/glm-5.1 |prompt=0.000000966 |compl=0.000003036 |ctx=204800 |name=Z.ai: GLM 5.1
+z-ai/glm-5.2 |prompt=0.0000006496 |compl=0.0000020416 |ctx=1048576 |name=Z.ai: GLM 5.2
+z-ai/glm-5.2:free |prompt=0 |compl=0 |ctx=32768 |name=Z.ai: GLM 5.2 (free)
+z-ai/glm-5.3 |prompt=0.0000014 |compl=0.0000044 |ctx=1310720 |name=Z.ai: GLM 5.3
+z-ai/glm-5.3-flash |prompt=0.000000045 |compl=0.0000006 |ctx=1310720 |name=Z.ai: GLM 5.3 Flash
+z-ai/glm-5.3-flash:batch |prompt=0.00000006 |compl=0.0000002 |ctx=1048576 |name=Z.ai: GLM 5.3 Flash (batch)
+z-ai/glm-5.3-flashx |prompt=0.00000037 |compl=0.00000125 |ctx=1048576 |name=Z.ai: GLM 5.3 FlashX
+z-ai/glm-5.3-prime |prompt=0.0000028 |compl=0.0000088 |ctx=1000000 |name=Z.ai: GLM 5.3 Prime
+z-ai/glm-5.3:batch |prompt=0.00000045 |compl=0.000002 |ctx=1048576 |name=Z.ai: GLM 5.3 (batch)
+z-ai/glm-5v-turbo |prompt=0.0000012 |compl=0.000004 |ctx=202752 |name=Z.ai: GLM 5V Turbo
+~z-ai/glm-flash-latest |prompt=0.000000045 |compl=0.00000014 |ctx=1310720 |name=Z.ai: GLM Flash Latest
+~z-ai/glm-latest |prompt=0.0000005614 |compl=0.0000017644 |ctx=1310720 |name=Z.ai: GLM Latest
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('/tmp/or_models.json'))
+models=d['data']
+cands=[]
+for m in models:
+    try:
+        p=float(m.get('pricing',{}).get('prompt') or 0)
+        c=float(m.get('pricing',{}).get('completion') or 0)
+    except: continue
+    ctx=m.get('context_length') or 0
+    if ctx is None: continue
+    if ctx<32000: continue
+    if p+c<=0: continue
+    mod=(m.get('architecture') or {}).get('modality','')
+    cands.append((p+c,p,c,ctx,m['id'],mod,m.get('name','')))
+cands.sort()
+print('CAND_TOTAL=',len(cands))
+for tot,p,c,ctx,mid,mod,name in cands[:20]:
+    print(f'{mid}|sum={tot:.10f}|p={p}|c={c}|ctx={ctx}|mod={mod}')
+print('---TEXTONLY---')
+text=[x for x in cands if x[5]=='text->text']
+print('TEXT_TOTAL=',len(text))
+for tot,p,c,ctx,mid,mod,name in text[:15]:
+    print(f'{mid}|sum={tot:.10f}|p={p}|c={c}|ctx={ctx}')
+"
+CAND_TOTAL= 412
+mistralai/mistral-nemo|sum=0.0000000490|p=1.9e-08|c=3e-08|ctx=131072|mod=text->text
+inclusionai/ling-3.0-flash|sum=0.0000000840|p=2.1e-08|c=6.3e-08|ctx=262144|mod=text->text
+openai/gpt-oss-20b|sum=0.0000001080|p=1.8e-08|c=9e-08|ctx=131072|mod=text->text
+ibm-granite/granite-4.0-h-micro|sum=0.0000001290|p=1.7e-08|c=1.12e-07|ctx=131000|mod=text->text
+mistralai/mistral-small-24b-instruct-2501|sum=0.0000001300|p=5e-08|c=8e-08|ctx=32768|mod=text->text
+meta-llama/llama-3.1-8b-instruct|sum=0.0000001300|p=5e-08|c=8e-08|ctx=131072|mod=text->text
+openai/gpt-oss-20b:batch|sum=0.0000001360|p=2.4e-08|c=1.12e-07|ctx=131072|mod=text->text
+google/gemma-3-4b-it|sum=0.0000001500|p=5e-08|c=1e-07|ctx=131072|mod=text+image->text
+mistralai/ministral-8b-2512:batch|sum=0.0000001500|p=7.5e-08|c=7.5e-08|ctx=262144|mod=text+image->text
+qwen/qwen3.7-flash|sum=0.0000001600|p=3e-08|c=1.3e-07|ctx=1000000|mod=text+image+video->text
+openai/gpt-oss-120b:batch|sum=0.0000001656|p=2.96e-08|c=1.36e-07|ctx=131072|mod=text->text
+amazon/nova-micro-v1|sum=0.0000001750|p=3.5e-08|c=1.4e-07|ctx=128000|mod=text->text
+poolside/laguna-xs-2.1|sum=0.0000001800|p=6e-08|c=1.2e-07|ctx=262144|mod=text->text
+inference-net/schematron-v2-turbo|sum=0.0000001800|p=3e-08|c=1.5e-07|ctx=128000|mod=text->text
+~z-ai/glm-flash-latest|sum=0.0000001850|p=4.5e-08|c=1.4e-07|ctx=1310720|mod=text+image+video->text
+cohere/command-r7b-12-2024|sum=0.0000001875|p=3.75e-08|c=1.5e-07|ctx=128000|mod=text->text
+inception/mercury-2.5|sum=0.0000001900|p=4e-08|c=1.5e-07|ctx=260000|mod=text->text
+google/gemma-3-12b-it|sum=0.0000002000|p=5e-08|c=1.5e-07|ctx=131072|mod=text+image->text
+mistralai/ministral-3b-2512|sum=0.0000002000|p=1e-07|c=1e-07|ctx=131072|mod=text+image->text
+deepseek/deepseek-v4-flash|sum=0.0000002150|p=7.168e-08|c=1.4336e-07|ctx=1048576|mod=text->text
+---TEXTONLY---
+TEXT_TOTAL= 129
+mistralai/mistral-nemo|sum=0.0000000490|p=1.9e-08|c=3e-08|ctx=131072
+inclusionai/ling-3.0-flash|sum=0.0000000840|p=2.1e-08|c=6.3e-08|ctx=262144
+openai/gpt-oss-20b|sum=0.0000001080|p=1.8e-08|c=9e-08|ctx=131072
+ibm-granite/granite-4.0-h-micro|sum=0.0000001290|p=1.7e-08|c=1.12e-07|ctx=131000
+mistralai/mistral-small-24b-instruct-2501|sum=0.0000001300|p=5e-08|c=8e-08|ctx=32768
+meta-llama/llama-3.1-8b-instruct|sum=0.0000001300|p=5e-08|c=8e-08|ctx=131072
+openai/gpt-oss-20b:batch|sum=0.0000001360|p=2.4e-08|c=1.12e-07|ctx=131072
+openai/gpt-oss-120b:batch|sum=0.0000001656|p=2.96e-08|c=1.36e-07|ctx=131072
+amazon/nova-micro-v1|sum=0.0000001750|p=3.5e-08|c=1.4e-07|ctx=128000
+poolside/laguna-xs-2.1|sum=0.0000001800|p=6e-08|c=1.2e-07|ctx=262144
+inference-net/schematron-v2-turbo|sum=0.0000001800|p=3e-08|c=1.5e-07|ctx=128000
+cohere/command-r7b-12-2024|sum=0.0000001875|p=3.75e-08|c=1.5e-07|ctx=128000
+inception/mercury-2.5|sum=0.0000001900|p=4e-08|c=1.5e-07|ctx=260000
+deepseek/deepseek-v4-flash|sum=0.0000002150|p=7.168e-08|c=1.4336e-07|ctx=1048576
+meta-llama/llama-3.2-1b-instruct|sum=0.0000002280|p=2.7e-08|c=2.01e-07|ctx=60000
+[0m
+[0m$ [0mcat > /tmp/or_chat.json <<'JSON'
+{"model":"z-ai/glm-5.3-flash","max_tokens":5,"messages":[{"role":"user","content":"Reply with the single word ok."}]}
+JSON
+cat /tmp/or_chat.json; echo "---"; wc -c /tmp/or_chat.json
+{"model":"z-ai/glm-5.3-flash","max_tokens":5,"messages":[{"role":"user","content":"Reply with the single word ok."}]}
+---
+     118 /tmp/or_chat.json
+[0m
+[0m$ [0m(printf 'header = "Authorization: Bearer %s"\n' "$(cat ~/.config/openrouter/key)"; printf 'header = "Content-Type: application/json"\n'; printf 'header = "HTTP-Referer: https://localhost/keycheck"\n'; printf 'header = "X-Title: keycheck"\n') | curl -sS -K - -w '\nHTTP_STATUS:%{http_code}\n' -X POST https://openrouter.ai/api/v1/chat/completions --data @/tmp/or_chat.json -o /tmp/or_chat_out.json 2>&1; echo "CURL_RC=$?"; grep -c "sk-or" /tmp/or_chat_out.json || true; cat /tmp/or_chat_out.json; echo; echo "---STATUS---"; grep HTTP_STATUS /tmp/or_chat_out.json || true
+HTTP_STATUS:200
+CURL_RC=0
+0
+
+         
+{"id":"gen-1790278278-BBi0EKjMAgCb4lPjZFk7","object":"chat.completion","created":1790278278,"model":"z-ai/glm-5.3-flash","provider":"Relace","system_fingerprint":null,"service_tier":null,"choices":[{"index":0,"logprobs":null,"finish_reason":"length","native_finish_reason":"length","message":{"role":"assistant","content":null,"refusal":null,"reasoning":"The user wants me to","reasoning_details":[{"type":"reasoning.text","text":"The user wants me to","format":"unknown","index":0}]}}],"usage":{"prompt_tokens":19,"completion_tokens":5,"total_tokens":24,"cost":0.00000273,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0,"cache_write_tokens":0,"audio_tokens":0,"video_tokens":0},"cost_details":{"upstream_inference_cost":0.00000273,"upstream_inference_prompt_cost":0.00000133,"upstream_inference_completions_cost":0.0000014},"completion_tokens_details":{"reasoning_tokens":5,"image_tokens":0,"audio_tokens":0}}}
+---STATUS---
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+import json
+d=json.load(open('/tmp/or_models.json'))
+models=d['data']
+glm=[m for m in models if 'glm' in m['id'].lower()]
+for m in sorted(glm,key=lambda x:x['id']):
+    p=float(m['pricing']['prompt'] or 0); c=float(m['pricing']['completion'] or 0)
+    print(f\"{m['id']} | p_perM={p*1e6:.4f} | c_perM={c*1e6:.4f} | ctx={m.get('context_length')}\")
+print('===')
+cands=[]
+for m in models:
+    p=float(m.get('pricing',{}).get('prompt') or 0); c=float(m.get('pricing',{}).get('completion') or 0)
+    ctx=m.get('context_length') or 0
+    if ctx<32000 or p+c<=0: continue
+    if (m.get('architecture') or {}).get('modality')!='text->text': continue
+    cands.append((p+c,p,c,ctx,m['id']))
+cands.sort()
+for tot,p,c,ctx,mid in cands[:12]:
+    print(f'{mid} | p_perM={p*1e6:.4f} | c_perM={c*1e6:.4f} | sum_perM={(p+c)*1e6:.4f} | ctx={ctx}')
+"
+z-ai/glm-4.5 | p_perM=0.6000 | c_perM=2.2000 | ctx=131072
+z-ai/glm-4.5-air | p_perM=0.1300 | c_perM=0.8500 | ctx=131072
+z-ai/glm-4.5v | p_perM=0.6000 | c_perM=1.8000 | ctx=65536
+z-ai/glm-4.6 | p_perM=0.4300 | c_perM=1.7500 | ctx=204800
+z-ai/glm-4.6v | p_perM=0.3000 | c_perM=0.9000 | ctx=131072
+z-ai/glm-4.7 | p_perM=0.4000 | c_perM=1.7500 | ctx=204800
+z-ai/glm-4.7-flash | p_perM=0.0605 | c_perM=0.4000 | ctx=200000
+z-ai/glm-5 | p_perM=0.6000 | c_perM=1.9200 | ctx=204800
+z-ai/glm-5-turbo | p_perM=1.2000 | c_perM=4.0000 | ctx=202752
+z-ai/glm-5.1 | p_perM=0.9660 | c_perM=3.0360 | ctx=204800
+z-ai/glm-5.2 | p_perM=0.6496 | c_perM=2.0416 | ctx=1048576
+z-ai/glm-5.2:free | p_perM=0.0000 | c_perM=0.0000 | ctx=32768
+z-ai/glm-5.3 | p_perM=1.4000 | c_perM=4.4000 | ctx=1310720
+z-ai/glm-5.3-flash | p_perM=0.0450 | c_perM=0.6000 | ctx=1310720
+z-ai/glm-5.3-flash:batch | p_perM=0.0600 | c_perM=0.2000 | ctx=1048576
+z-ai/glm-5.3-flashx | p_perM=0.3700 | c_perM=1.2500 | ctx=1048576
+z-ai/glm-5.3-prime | p_perM=2.8000 | c_perM=8.8000 | ctx=1000000
+z-ai/glm-5.3:batch | p_perM=0.4500 | c_perM=2.0000 | ctx=1048576
+z-ai/glm-5v-turbo | p_perM=1.2000 | c_perM=4.0000 | ctx=202752
+~z-ai/glm-flash-latest | p_perM=0.0450 | c_perM=0.1400 | ctx=1310720
+~z-ai/glm-latest | p_perM=0.5614 | c_perM=1.7644 | ctx=1310720
+===
+mistralai/mistral-nemo | p_perM=0.0190 | c_perM=0.0300 | sum_perM=0.0490 | ctx=131072
+inclusionai/ling-3.0-flash | p_perM=0.0210 | c_perM=0.0630 | sum_perM=0.0840 | ctx=262144
+openai/gpt-oss-20b | p_perM=0.0180 | c_perM=0.0900 | sum_perM=0.1080 | ctx=131072
+ibm-granite/granite-4.0-h-micro | p_perM=0.0170 | c_perM=0.1120 | sum_perM=0.1290 | ctx=131000
+mistralai/mistral-small-24b-instruct-2501 | p_perM=0.0500 | c_perM=0.0800 | sum_perM=0.1300 | ctx=32768
+meta-llama/llama-3.1-8b-instruct | p_perM=0.0500 | c_perM=0.0800 | sum_perM=0.1300 | ctx=131072
+openai/gpt-oss-20b:batch | p_perM=0.0240 | c_perM=0.1120 | sum_perM=0.1360 | ctx=131072
+openai/gpt-oss-120b:batch | p_perM=0.0296 | c_perM=0.1360 | sum_perM=0.1656 | ctx=131072
+amazon/nova-micro-v1 | p_perM=0.0350 | c_perM=0.1400 | sum_perM=0.1750 | ctx=128000
+poolside/laguna-xs-2.1 | p_perM=0.0600 | c_perM=0.1200 | sum_perM=0.1800 | ctx=262144
+inference-net/schematron-v2-turbo | p_perM=0.0300 | c_perM=0.1500 | sum_perM=0.1800 | ctx=128000
+cohere/command-r7b-12-2024 | p_perM=0.0375 | c_perM=0.1500 | sum_perM=0.1875 | ctx=128000
+[0m
+[0m$ [0mls artifacts 2>&1 | head -20; echo "---"; df -g / | tail -2; rm -f /tmp/or_chat.json /tmp/or_chat_out.json /tmp/or_models.json; echo CLEANED
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        11    53%  484014 122298960    0%   /
+CLEANED
+[0m
+[0m$ [0mmkdir "artifacts/or-keycheck-20260924" && ls "artifacts/or-keycheck-20260924"
+(no output)
+[0m
+[0m← [0mWrite artifacts/or-keycheck-20260924/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mgrep -c "sk-or" "artifacts/or-keycheck-20260924/REPORT.md" || echo "GREP_CLEAN rc=$?"; echo "---"; git status --short 2>&1 | head -20; echo "---"; wc -c "artifacts/or-keycheck-20260924/REPORT.md"
+0
+GREP_CLEAN rc=1
+---
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+---
+    4417 artifacts/or-keycheck-20260924/REPORT.md
+[0m
+[0m$ [0mgit status --short -- "artifacts/or-keycheck-20260924/" 2>&1; echo "---"; git diff --stat 2>&1 | head -10
+---
+ artifacts/fable-predictions-ledger.md | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+[0m
+[0m$ [0mls -la "artifacts/or-keycheck-20260924/"; git check-ignore -v "artifacts/or-keycheck-20260924/REPORT.md" 2>&1; echo "rc=$?"
+total 16
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 24 15:31 .
+drwxr-xr-x@ 485 ben-hannan  staff  15520 Sep 24 15:31 ..
+-rw-r--r--    1 ben-hannan  staff   4417 Sep 24 15:31 REPORT.md
+.gitignore:5:artifacts/	artifacts/or-keycheck-20260924/REPORT.md
+rc=0
+[0m
