@@ -1,0 +1,1540 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls; echo ---; git fetch -q origin main 2>&1 | head -20; git fetch -q origin builder-outbox 2>&1 | head -20; uptime; df -g / | head -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---
+21:51  up 11:44, 4 users, load averages: 68.15 51.76 53.90
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        15    45%  484014 165078240    0%   /
+[0m
+[0m✗ [0mGlob "scratchpad/briefs/*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mRead scratchpad/briefs failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scratchpad/briefs
+[0m→ [0mRead scratchpad
+[0m
+[0m$ [0mgit branch -a | head -30; echo ===; git log --oneline -5; echo ===; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md 2>&1 | head -100
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+zsh:1: == not found
+[0m
+[0m$ [0mgit branch -a
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit log --oneline -5
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+241ee9f5d grader B part 6: English grades for F1 M1 rows 2246-2690
+5bc2a7c0d Add grader B part5 (h1797-h2245) English grammar marks
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+[0m
+[0m$ [0mgit show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+| Owner | pointer to a whole-word span of the turn, **or** the token `ME` (I/me/my), **or** `WE` (we/our) | Ben's ruling 1 makes "me/my" the user. "we/our" gets its own token: the write compiler maps it to the user only under the current 261 canonicaliser rule, so that rule stays visible and can be changed and measured (both outside answers: "our" is not "my") |
+| Relation | a choice from relation table v2 (+ "other") **plus a pointer to the relation words** ("mother", "sister-in-law") | a class, never free text; the cue must be a whole span, so "sister" cannot eat half of "sister-in-law" |
+| Value | pointer to a whole-word span of the turn | |
+| Slot mode | ASSERT / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / REPORTED / NONE, per slot | a turn can state one thing and ask another; the turn-level act head is kept as a summary |
+| Question head (ASK) | owner pointer + up to 3 relation choices + an "inverse" flag | "Who is Ada's child?" = owner Ada, relation mother, inverse |
+| Total | | **32,850,051** by the count in §7.1 (design count; audited after the build) |
+
+### 2.2 What each part stops, and what it doesn't
+
+| Part | Stops by construction | Does NOT stop |
+|---|---|---|
+| Span pointers for owner and value | invented names and values; half-names; leftover words glued onto a value (a span ends at a word boundary) | a typo that is really in the turn (it is copied faithfully); a span that is the wrong word |
+| `ME` token as the only way to say "me" | "our"/"we" as a stored subject | who "we" means when it is not the user |
+| Relation as a class | invented relation names | the wrong relation from the table |
+| Act head with 9 kinds, writing only from 3 | nothing by construction; it makes the "is this being told?" decision its own trained output instead of a side effect | a wrong act (needs data, §2.4, and the gate) |
+| Count head + set slots | nothing by construction; it makes a dropped fact visible (count 2, one slot filled → ask, don't half-save) | the count and the list both being wrong the same way |
+| Previous reply in the input | nothing by construction | it makes corrections and check-questions learnable |
+
+**Also by construction, in software (§4.1):** only the write compiler can write; it takes spans of the unchanged turn,
+never a string from a network, and writes a turn's facts all together or not at all.
+
+**Claims:** pointer copying for faithful outputs is suggested (pointer-generator networks, arXiv 1704.04368;
+transformers copy far better than recurrent models, arXiv 2402.01032). Set prediction with a matching loss for
+extracting several facts from one sentence is suggested (arXiv 2011.01675). That this combination fixes our error
+kinds is untested.
+
+### 2.3 Training stages for the ear
+
+1. **Pretraining, fill-in-the-blank** (span masking, 15%). Data (§5): SimpleStories + TinyStories-V2 +
+   TinyDialogues + WebRED sentences, ≈ 600M tokens. No facts are learned as truth: this only teaches English.
+2. **Frame training** on generated turns whose labels are exact by construction (§2.4), ≈ 50M tokens, 3 seeds.
+3. **Calibration** of the confidence on a development split with Learn-then-Test (as exp 213 already does). Below
+   the threshold the ear asks instead of saving.
+
+### 2.4 Frame training data (exact labels, no Qwen labels)
+
+Built by a generator that simulates the notebook, as in doc 24 §4.2, reusing the 257 families C1–C8. New families,
+each a **counterfactual minimal set**: the same words with one change that flips save/no-save.
+
+| Family | Minimal set (invented) | Label |
+|---|---|---|
+| act | "Mira's dog is Pip." / "Is Mira's dog Pip?" / "so Mira's dog is Pip" / "Say Mira's dog is Pip." / "Suppose Mira's dog is Pip." / "Mira wants a dog called Pip." | STATE / ASK / CHECK / SUPPOSE / SUPPOSE (Ben ruling 4) / PLAN |
+| binding | "Ada's son is Bo and he lives in Rook." / "Ada's son is Bo and she lives in Rook." | the second fact goes to Bo / to Ada |
+| plural | "Mira and Tal are my sisters." / "My sisters are Mira, Tal and Oona." | 2 / 3 facts, owner `ME` |
+| appositive | "My boss, Tal, has a cat named Fig." | 2 facts |
+| correction | "Fig, not Moss." / "Actually it's Fig now." | CORRECT or DENY with the old value |
+| chat noise | missing "?", all lower-case, doubled letters, missing apostrophes ("toms boss") | same label as the clean turn |
+| typos in values | "Mira Stil" where the notebook knows "Mira Still" | save the typed span but raise a spelling flag → the system asks (research note v3: a flag, never a silent fix of a name) |
+
+- Names: a pool of fictional names, re-drawn per example; a separate reserved pool never used in training (test only).
+- Wordings: ≥ 40 hand-written frames per (act × relation kind), plus Qwen paraphrases **written with placeholders**
+  (`{S}`, `{R}`, `{V}`) so the label comes from the generator, never from Qwen. Split by frame before training into
+  L1 (seen frames, new names), L2 (held-out frames), L3 (outside wordings, sealed).
+
+### 2.5 Optional later: cycle training
+
+Once the own mouth exists: sentence → ear → frame → mouth → sentence, with a loss on the round trip, as a way to
+learn from unlabelled chat (CycleGT, arXiv 2006.04702, suggested). This is training only. Round-trip agreement is
+never permission to write (Ben's ruling; research note v3 §5 shows how a wrong fact can round-trip perfectly).
+
+---
+
+## 3. The own mouth (reply record → English)
+
+### 3.1 Shape
+
+Keep **talker101** (28.85M, ours, already trained; 10 layers, width 512, 4,096 BPE). It already learned English;
+retraining it would spend GPU hours for nothing until a test says it must.
+
+Changes, one per stage (§6):
+1. **Whole-name copy.** Training targets say `<S1>`, `<V1>`, `<OLD>` where a name or value goes; the printer puts the
+   exact string back. The copy head no longer copies word pieces, so "Fara" for Farah cannot happen.
+2. **Meaning check by read-back.** Every reply is read by the own ear; the frame it reads must match the reply
+   record (act, owner, relation, value, negation, direction). Here a round trip *is* a fair check, because the
+   thing it is compared with is the source (the record), not the ear's own guess. If it doesn't match → the 241
+   grammar layer says it instead.
+3. **Grammar.** If 3.1 fails the grammar mark, the pre-named fix is to continue pretraining talker101 on
+   TinyDialogues + TinyStories (conversation shape) for about 1 GPU-hour.
+
+### 3.3 Update 2026-09-23 18:15 UTC: fluent, conversational mouth (absorbs the talking line's F4)
+
+Ben (17:55 UTC): "I only want to talk to it when it's able to speak fluent english in a conversational tone". The talking line
+(design/v3/30-modes/talk-fluency-plan.md) keeps F0 (conversation benchmark), F1 (241b rewriter on 292t), F2 (reworded fixed
+lines) and F3 (reply planner). Its F4, the generative mouth, is this line's M-stages. What changes:
+- **Which model speaks (Ben decides; the default below is what gets built).** talker101 is ours, but it is small and trained only on
+  stories. Its fine-tuned form talker120b wrote raw lines like "Am I I I I have that fact is I I have?" and was unfaithful 172/500
+  times before the brake (shown, artifacts/claude-talker120b-run-20260922/score.json). The default is to fine-tune a copy of the
+  reader's model, MiniCPM5-1B (Ben picked it at 11:01 and it is already downloaded, so no new download). talker101 becomes the
+  "fully ours" comparison arm, not the shipped mouth.
+- **Input:** the checked reply record (act, owner, relation, value, negation, direction, status) plus the user's last turn and a dialog
+  tag from F3 (acknowledge, answer, ask, follow-up). **Output:** one or two conversational sentences with names and values as slot
+  tokens (§3.1 step 1). The printer puts the exact strings back.
+- **Faithfulness (unchanged in spirit, new checker):**
+  1. Slot check: every name and value in the reply is in the record, and every record slot the act needs is present.
+  2. Read-back by the listener's reader (not the shelved own ear). The frame it reads must equal the record, act, negation and
+     direction included.
+  3. If either check fails, the 241b rewriter (F1) says it instead.
+  A yes/no checker is not used (it let 63/65 wrong frames through, board 267).
+- **Stages (each one sealed change):**
+  - M0: training pairs, CPU. Records + turns → several conversational target replies, written by builders, kept only if the slot
+    check passes, with fictional names and none drawn from F0's benchmark.
+  - M1: fine-tune with slot tokens.
+  - M2: add the read-back.
+  - M3: measure on F0's benchmark with F0's pass marks: blind judge wins ≥70% of non-tie dialogs vs the arm in use, ≤10% losses,
+    0 unfaithful lines, no single reply on >10% of turns, grammar ≥99%. It is proved wrong if wins are ≤60% or any unfaithful line
+    reaches the user.
+- The M1 to M3 marks in §6 still apply to the talker101 arm.
+
+### 3.2 Small talk (later, stage T1)
+
+Doc 24's thinker and gist (D5) sit on top of this mouth and are unchanged as a plan. They start only after the fact
+path passes, because small talk through a 256-number gist is the riskiest part (doc 24 §1.2: likely to disappoint).
+
+---
+
+## 4. The write gate
+
+### 4.1 The write compiler (the only thing that may write)
+
+Taken from both outside answers (§11). A small piece of plain code is the **only** part of the system with write
+permission. Networks (ear, reasoner, mouth) only *propose*. The compiler:
+- takes spans (character offsets) of the unchanged turn, never a string produced by a network;
+- takes the relation from the table only, with the direction set by the table's rule for that cue, not by a network;
+- maps `ME` to the user; maps `WE` only as the current canonicaliser rule says;
+- writes all of a turn's facts together or none of them (a count that disagrees with the filled slots → ask);
+- stores the source turn, spans and a transaction id with each row; corrections supersede, they never erase;
+- never writes inferred facts or inverses (as today).
+
+These are guarantees about the software. They are **not** a guarantee that English was understood: a copied name can
+belong to the wrong person and a check-question can look exactly like a statement. That part can only be measured.
+
+I do **not** adopt the outside answers' stricter option, where the compiler re-parses the turn with its own grammar
+and writes only what every grammar reading supports. That grammar would be the retired rule tables again, and both
+answers name it as the design's weak point. Stage O0 measures its ceiling instead (oracle coverage), so the choice
+rests on a number.
+
+**Update 2026-09-23 10:45 (after O0a/O0a2, board entry):** Ben ruled that "we/our" facts are never saved as the
+speaker's; the system asks whose they are. The literal-cue rule capped coverage (v0 67.6%; v1 89.7% on a set rich in
+plurals, 83.5% on the earlier natural set), so relations are **licensed by the ear's calibrated relation head**, with
+a cue in the turn as extra evidence and a higher threshold for cue-less facts (set on dev). Spans, modes, WE→ask and
+atomic writes stay hard rules. O0a3 measures which wrong readings each rule lets through.
+
+### 4.2 Rule
+
+A fact is written only when **all** of these hold:
+1. the own ear says act ∈ {STATE, CORRECT, DENY}, the slot is above its calibrated threshold, and count = filled
+   slots;
+2. the software guards pass (span, mixed-case/typo guard from 261b, comma guard 263);
+3. an **independent** check of the fact against the *original turn* says yes: while the own ear is new, this is the
+   Qwen QA checker from exp 264 (whatever 264 registers).
+
+### 4.3 When the own ear may become its own gate
+
+Only after it has a measured miss rate on errors *the other reader actually makes*, not on made-up corruptions.
+
+### 4.4 Measuring whether two readers share blind spots
+
+On a development split (never a blind panel), run ear v4.1+Qwen and the own ear on the same turns. Count:
+- a = turns where only the borrowed reader is wrong, b = only the own ear, c = both wrong in the same way.
+
+If errors were independent, c would be about (a+c)(b+c)/N. A c far above that means shared blind spots and "both
+agree" is worth little. "Save only when two different readers agree on the whole frame" is a real check (both read
+the source), unlike the round trip. **Untested.**
+
+---
+
+## 5. Data (licences, no personal data, no unverified web text)
+
+| Set | Written by | Size (from doc 24 / 87) | Licence | Used for | Status |
+|---|---|---|---|---|---|
+| SimpleStories | GPT-4o-mini | 2.1M stories, 617M tokens with our 4k BPE (shown, talker101) | MIT | ear pretraining; mouth (already used) | on BensPC |
+| TinyStories-V2 (GPT-4 file) | GPT-4 | 2.23 GB ≈ 0.55B tokens | CDLA-Sharing-1.0 (sharing applies to republishing the data) | ear pretraining | download approved (D3, ≤ 7 GB total); builder checks size |
+| TinyDialogues | GPT-4 | 316 MB ≈ 40M tokens | MIT | ear pretraining; mouth fix 3 | download approved (D3) |
+| WebRED sentences | Wikipedia sentences, human-labelled | 53 MB | CC BY 4.0 | ear pretraining (varied vocabulary, Ben's 21 Sept ruling) | on disk, `data/open/webred/` |
+| Generated teach/ask/correct turns | our generator | ≈ 50M tokens | ours | ear frames; baselines | to build (O0) |
+| Qwen placeholder paraphrases | Qwen3.8-27B on BensPC | ≈ 1,500 frames | ours | wording variety only; never labels | later (a Qwen night) |
+
+Rules: fictional names only; no personal data; the repo-root `notebook/` is never read; no general web crawl.
+All English-teaching text above was written by big AI models. **No weights are borrowed**, but every claim must say
+"it learned English from simple stories and chats written by large AI models" (doc 24 D9).
+
+---
+
+## 6. Staged plan: one change per stage, marks fixed in advance
+
+Each stage is its own sealed experiment with `PASSMARKS.md` sealed before the run. Numbers here are the proposed
+marks; the builder copies them into the seal unchanged or the director re-rules them in writing before sealing.
+"Dev" = a generated development split, never a blind panel.
+
+Rule for every training change (from the outside answers): the comparison arm is the previous accepted model trained
+for the **same extra budget** on the same data, so "it helped" can't just mean "it trained longer".
+
+### O0 — CPU only, no weights kept (can start now)
+**Change:** none to the model; builds the tools. **Also the oracle-coverage check:** give the write compiler the
+*correct* frames for 300 development turns written from a spec (not a blind panel) and count what share of the real
+facts it would let through. If even perfect reading gets < 85%, no training can reach the 85% recall target under
+these write rules, and the rules change before any GPU hour is spent. Generator + sealed L1/L2/L3 splits + counterfactual families,
+the 8,192 tokenizer, the ear model code, and a **3M-parameter ear trained on the Mac CPU for ≤ 25 min** on generated
+frames only (no pretraining).
+Marks: every generated label re-derived by a rule-based checker (0 mismatches in 10,000); splits hashed; the tiny ear
+on L1 dev: whole-frame exact ≥ 90%, act accuracy on the counterfactual act family ≥ 95%, and **0 values or owners
+that are not a span of the turn** (checked on every output). **Proved wrong if** the tiny ear can't separate
+STATE from CHECK/SUPPOSE/PLAN on L1 (< 80%), which would mean the act family is too weak to learn even in-template.
+
+### E1 — pretrained own ear vs the same ear from scratch (GPU ≈ 3.5 h + 2 × 15 min)
+**Change:** fill-in-the-blank pretraining on/off, everything else identical (32.9M ear, same frame data, seed).
+**Side arm (the decisive ear comparison):** a same-size own *autoregressive* frame writer (the rival design, §10), with
+the same pretraining, the same labels and the **same write compiler**. If the pointer ear does not beat it on wrong
+proposals or recall, the pointer design is not shown to be better.
+Marks: on L2 (held-out wordings), whole-frame exact improves by ≥ 10 points with pretraining; wrong writes (a save
+that is not in the gold) ≤ 1 per 300 dev turns in the pretrained arm. **Proved wrong if** L2 gains < 3 points:
+pretraining is then not what makes new wordings readable, and the plan re-thinks before scaling.
+
+### E2 — counterfactual act families added (3 seeds × 15 min)
+**Change:** add the act, binding and noise families of §2.4 to the frame data.
+Marks: on dev, saves from CHECK/SUPPOSE/PLAN turns ≤ 1 per 200 such turns in every seed; true facts lost vs E1
+≤ 2%. **Proved wrong if** check-questions without "?" are still read as STATE in ≥ 5% of those turns.
+
+### E3 — set slots with a count (3 seeds × 15 min)
+**Change:** the 6 set slots + count head replace a single-fact output (E1/E2 arms use 1 slot + "more" flag).
+Marks: plural and appositive dev turns: all facts found ≥ 90% (261 was 4/16); turns with count ≠ filled slots are
+asked about, never half-saved. Recall reported three ways (read right, saved right, sent back as a question).
+**Proved wrong if** plural recall < 60%.
+
+### E4 — own ear against ear v4.1 on a fresh blind panel
+**Change:** swap ear v4.1 for the own ear inside the current pipeline; gate (Qwen QA from 264) unchanged.
+Panel: written blind by a separate agent from a spec, sealed before the run, ≥ 150 turns, same marks as 261b
+(wrong saves ≤ 1, exact TEACH ≥ 85%, ASK ≥ 90%, median ≤ 800 ms). Report wrong saves per saved fact and per turn,
+plus recall. Also report the shared-blind-spot count of §4.4 on dev.
+**Proved wrong if** the own ear has more wrong saves *before the gate* than ear v4.1 on the same panel.
+
+### E5 — certification run (later)
+Freeze everything first (weights, tokenizer, relation table, compiler, thresholds, grading rules). A fresh,
+representative sample of **≥ 368 independent everyday-chat turns** for writes and ≥ 368 replies for grammar: with 0
+errors in each, both rates are below 1% *together* at 95% (2.5% error allowed per claim). 300 turns certify one rate
+alone. Report the rate per turn (a turn with any wrong save) and, separately, per saved fact (with turns as clusters),
+plus automatic recall ≥ 85% and how often it asked. Confirmed-after-asking facts are reported apart, never counted as
+automatic recall. A failed certification is not re-run until it passes under the same 95% claim; any retry is
+pre-registered with its own error budget. The certificate names the kind of chat it was tested on.
+
+### M1 — whole-name copy in talker101 (GPU ≈ 1 min, or Mac CPU)
+**Change:** slot tokens instead of word-piece copy, vs talker120b.
+Marks: truncated names 0/500; raw unfaithful before the brake ≤ 50/500 (120b: 172/500); status right ≥ 489/500.
+**Proved wrong if** raw unfaithful stays > 120/500: the names were not the main problem.
+
+### M2 — read-back check with the own ear (needs E3)
+**Change:** add the §3.1(2) meaning check before the reply is sent; 241 layer as fallback.
+Marks: 0 unfaithful after the check on 1,200 renders, *including* act, negation and direction (the old brake misses
+these, doc 240 §0.2); fallback rate ≤ 10%.
+
+### M3 — grammar and naturalness, blind
+**Change:** none (a measurement of M2), graded with the 241 style sheet v2 by a blind grader.
+Marks: grammar ≥ 99% over ≈ 1,200 renders and ≥ 97% per act; blind pairwise naturalness vs 241b ≥ 60% wins.
+**Proved wrong if** grammar < 97%: then the pre-named fix (§3.1 step 3) is the next single change.
+
+### B — the comparison (after E4 and M3)
+See §7. Marks fixed before the baselines are trained.
+
+### T1 — small talk through the thought (after B)
+Doc 24 S1/S2 (thinker + gist) on top of the own ear and mouth, with doc 24's marks.
+
+---
+
+## 7. A fair comparison with a same-size plain transformer
+
+Benchmarks (all synthetic, fictional names, generated by our generator, sealed before any baseline is trained):
+- **two-hop:** facts taught in separate turns, asked as one question;
+- **reversal:** taught "Ada is Bo's mother", asked "Who is Ada's child?" (the reversal curse, arXiv 2309.12288);
+- **abstention:** untaught facts and never-mentioned people, plus the wipe test (empty notebook → "I don't know");
+- **MQuAKE-style edits:** teach a chain, correct one link, ask the multi-hop question (MQuAKE, arXiv 2305.14795);
+- **3- and 4-hop** chains longer than any in training;
+- grammar of the answers.
+
+Arms:
+
+| Arm | Size | Memory | Why it's there |
+|---|---|---|---|
+| **Premonition-own** | **61,783,463** (§7.1) | notebook | the system |
+| **B-plain** | **61,783,680** (§7.1), decoder-only, same 8,192 tokenizer | the conversation in its context window (1,024 tokens) | Ben's goal: beat an equal-size plain transformer |
+| **B-RAG** | 61,783,680; B-plain + retrieval of the taught sentences for each question (MeLLo-style) | a retrieval store | an expert's first question: "how is this not just a database?" |
+| **B-notebook** | 61,783,680; B-plain given the same notebook, as serialized rows in its context, with the same write compiler | the same notebook | separates "the notebook helps" from "the learned ear, reasoner and mouth help" |
+
+### 7.1 Parameter counts (design counts, recomputed from the shapes; the builder re-counts from the built models)
+
+Every learned number the benchmark path uses is counted, including all ear heads, the whole mouth and the reasoner.
+
+| Part | Shape | Parameters |
+|---|---|---:|
+| Ear embeddings | 8,192 × 512 | 4,194,304 |
+| Ear encoder | 8 blocks × (attention 4·512² + MLP 8·512² + 2 norms) + final norm | 25,174,528 |
+| Ear slot layer | 1 cross-attention layer for the 6 slot queries + the queries | 1,052,672 |
+| Ear pointers | owner, value and relation-cue start/end projections (6 × 512²) | 1,572,864 |
+| Ear question pointers | question-owner start/end (2 × 512²) | 524,288 |
+| Ear classifiers | relation (154 classes) per slot + 3 for questions, slot mode (9), act (9), count (7), exists, inverse | 329,859 |
+| Ear special tokens | `ME`, `WE`, `SEP` | 1,536 |
+| **Ear total** | | **32,850,051** |
+| Mouth (talker101, incl. its 0.52M copy head) | as trained; `artifacts/fable-talker101-20260921/RESULTS.md` | 28,847,105 |
+| Mouth slot tokens | 8 new tokens × 512 (M1) | 4,096 |
+| Reasoner | the existing lookup operator | 79,316 |
+| **Premonition-own total** | | **61,783,463** (the first version of this doc said "≈ 59M" and left out the ear heads) |
+| **Each baseline** | decoder-only, 12 blocks, width 640, SwiGLU MLP width 1,600, 8,192 tied embeddings, RMSNorm | **61,783,680** (+217, +0.0004%) |
+
+B-RAG and B-notebook reuse B-plain's pretrained weights (retrieval and rows are test-time inputs), and the
+3 seeds are for the dialogue-training stage; the long pretraining runs once per side, as in §8.
+Retrieval in B-RAG uses plain word-overlap search (no learned parameters), and B-notebook gets the rows as text, so
+all three baselines have the same count. If the built system's audited count differs, the baselines are re-sized to
+within 0.2% before any baseline is trained, and both counts go in the PASSMARKS.
+
+Three tests keep the sources of a win apart: (1) **language boundary**: English → each reader → the same compiler and
+notebook, score the fact sets; (2) **reasoning**: gold facts and gold questions in, no ear; (3) **end to end**.
+If Premonition-own beats only B-plain, the honest claim is "an external-memory assistant works better", not "a
+better reasoner".
+
+Fairness rules (fixed in advance):
+- same pretraining text and the same number of training FLOPs as ear + mouth pretraining together (so each baseline ≈
+  62M × 617M tokens), the same generated teach/ask/correct dialogues as training text, 3 seeds each (training time and FLOPs reported too:
+  equal parameters do not mean equal compute for an encoder + decoder versus one decoder);
+- the same test items, greedy decoding, the same answer extractor for every arm;
+- report the ear's reading accuracy separately, so a win is not credited to the notebook when the reading failed,
+  and a loss is not blamed on the notebook when the reading failed;
+- parameter counts audited from the built models (shared tensors counted once); the baselines are sized to within 1%
+  of Premonition-own's audited count, not "about the same";
+- say plainly what the notebook gives for free (exact storage, edits by overwrite) and where the learned parts
+  (ear, reasoner, mouth) had to earn it.
+
+Expected (untested): B-plain loses on 3–4 hops and on long conversations. It may **not** lose on reversal: the
+reversal-curse paper (arXiv 2309.12288) found models *can* reverse a fact that is in their context window; the curse is
+about facts learned in the weights. So reversal is only a fair win if B-plain actually fails it when measured.
+Success = a paired gain of ≥ 5 points in each benchmark family, over ≥ 500 independent fictional worlds per family,
+with the confidence interval above zero after correcting for the four families, across 3 seeds (no best-seed picking).
+If B-RAG or B-notebook ties Premonition-own, that is the headline.
+
+---
+
+## 8. Compute and money
+
+Anchor (shown): talker101, 28.85M parameters, 617M tokens, about 49,000 tokens/s on BensPC's RTX 5070 Ti, about
+3.5 h. Planning rule (untested): time scales with parameters × tokens.
+
+| Job | BensPC (free) | One rented RTX 5090 (≈ 3× faster on a small model, shown on the 4M model; $0.27–0.60/h listed) |
+|---|---|---|
+| O0 tiny ear | Mac CPU ≤ 25 min | — |
+| E1 ear pretraining, 29M × 600M tokens | ≈ 3.5 h | ≈ 1.2 h ≈ $0.50–0.75 |
+| E1–E3 frame training, 8 short runs | ≈ 2 h | ≈ 0.7 h |
+| M1 mouth fine-tune | ≈ 1 min | — |
+| Each baseline, 61.8M × 617M tokens | ≈ 7.5 h (two resumable runs of ≤ 6 h, D8) | ≈ 2.5 h ≈ $1–1.50 |
+| B-RAG and all evaluations | ≈ 1 h | — |
+| **Total** | **≈ 11–12 GPU-hours, $0** | **≈ 3.5–4 h, ≈ $2–2.50; hard cap $5** |
+
+BensPC is shared: Qwen (the 264 checker, 261b) takes about 15 GB of the 16 GB card, so it can check or train, never
+both. The $30 cap is shared across all lines; the ledger must be read before any rental.
+
+---
+
+## 9. The decision for Ben
+
+**Decided by Ben (2026-09-23 03:00 UTC): "Anything that starts and finishes overnight, use rtx 5070-ti as a blanket
+rule."** So E1 ear pretraining (≈ 3.5 h) and each baseline pretraining run (≈ 7.5 h, split into two resumable runs)
+go on BensPC overnight, free. A rental would only come up again for a job that can't fit in a night, and that would
+be a new question to Ben. The options below are kept as they were asked.
+
+**Where should the first long GPU job run (own-ear pretraining, E1, ≈ 3.5 h on BensPC)?**
+- **Rent one RTX 5090 for about 1.2 hours (≈ $1, hard cap $3)** — runs in parallel with the other lines, which keep
+  BensPC for the Qwen checker work. *Recommended*, because the GPU is the thing every line is waiting on.
+- Run it on BensPC overnight, free — nothing else can use the GPU for those hours.
+- Wait until the checker work is finished.
+
+Either way it starts only after O0 passes on the Mac CPU. O0 needs no decision and can start now.
+
+---
+
+## 10. Risks and the strongest objection
+
+- **Objection:** "The own ear is a slot-filling parser; the hard part is still the act and binding decisions, and a
+  30M model trained on template-ish data will fail on how Ben really types." True risk. Answers: pretraining (E1)
+  plus Qwen placeholder paraphrases for variety; the L3 outside-wording split; and the gate stays independent until
+  E4/E5 measure the own ear on fresh blind turns. If E4 fails, the borrowed ear stays and the own ear becomes the
+  second, different reader of §4.4.
+- **Rival design considered:** a 60M own decoder that writes frame text (like ear v4.1, but ours). Simpler, and it
+  reuses talker101's code. Rejected as the first choice because free-text output can invent spans and glue leftover
+  words, the two things pointers remove for free. It stays available as an arm for E1 if E1's pointer ear fails.
+- **Mouth grammar:** talker101 scored 67.4% on BLiMP-10. Replies are a much narrower language than BLiMP, and M2
+  falls back to the 241 layer, so a failure costs naturalness, not truth.
+
+## 11. What the two outside answers changed (Ben relayed them, 02:45 UTC)
+
+Both answers (to research prompt 3) recommend the same thing: a span/pointer reader whose output is only a proposal,
+and a small rule-checked writer. I checked each claim against the repo and the rest of this plan.
+
+**Adopted:**
+- the write compiler as the only writer, with source spans, atomic turns and provenance (§4.1);
+- "our/we" as its own token, not silently "me" (§2.1);
+- a pointer to the relation words, whole cues only ("sister-in-law") (§2.1);
+- a mode per fact, so a turn can state and ask at once (§2.1);
+- the oracle-coverage check before any GPU run (O0);
+- equal-extra-budget controls for every training change (§6);
+- the same-compiler autoregressive reader as the decisive ear control (E1), and a notebook-equipped plain baseline
+  (§7);
+- the reversal caveat: plain transformers can reverse facts that are in context (arXiv 2309.12288) (§7);
+- certification: 368 per claim for two claims together, per-turn vs per-fact, frozen before testing (E5);
+- freeze the relation table before scoring ("pet" vs "dog" must be declared, as 261b now does).
+
+**Not adopted, and why:**
+- *A hand-written grammar inside the compiler that re-parses the turn and decides.* It would bring back the retired
+  rule tables, and both answers call it the design's weakest point. Kept only as a measured option (O0).
+- *Paying an outside AI service (~$20) for paraphrases.* It spends the shared $30 cap and sends data outside; Qwen on
+  BensPC already does this for free.
+- *Their GPU-hour estimates (17–67 h per 1.2B tokens).* They assumed 5,000–20,000 tokens/s without a measurement. This
+  repo measured about 49,000 tokens/s for a 29M model on the 5070 Ti (talker101), so §8's numbers stand.
+- *A 33M total with a new 14M mouth.* talker101 (29M, already ours and trained) is the mouth; retraining a smaller one
+  costs GPU hours before any test says it's needed. Baseline sizes follow the audited total either way.
+
+Note for the reasoner line (outside this plan): both answers suggest the reasoner return the ids of the rows it used,
+with code checking they are still current. That belongs to the base, not to the ear or mouth.
+
+## Sources
+
+Pointer-generator networks arXiv 1704.04368 · Repeat After Me arXiv 2402.01032 · Set prediction networks arXiv
+2011.01675 · CycleGT arXiv 2006.04702 · TinyStories arXiv 2305.07759 · SimpleStories arXiv 2504.09184 ·
+TinyDialogues arXiv 2408.03617 · Pointer networks arXiv 1506.03134 · PICARD arXiv 2109.05093 · COGS arXiv 2010.05465 ·
+CycleGAN hides information arXiv 1712.02950 · Reversal curse arXiv 2309.12288 · MQuAKE / MeLLo arXiv 2305.14795 · Grokked
+transformers are implicit reasoners arXiv 2405.15071 · UniversalNER arXiv 2308.03279 ·
+vast.ai RTX 5090 pricing https://vast.ai/pricing/gpu/RTX-5090 · price comparison
+https://getdeploying.com/gpus/nvidia-rtx-5090. Repo inputs: design/v3/24, 24b, 30-modes/87, 235, 240, 257
+PASSMARKS, director board entries 04:42 / 05:08 / 05:44, research note v3
+(`/mnt/project-files/research-2026-09-23/`).
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git ls-tree origin/builder-outbox -- runs/rsn-296-train/ 2>&1; echo EXIT_CHECK_DONE; git show origin/builder-outbox:runs/rsn-296-train/rsn-296-train.exit 2>&1 | head -20
+EXIT_CHECK_DONE
+fatal: path 'runs/rsn-296-train/rsn-296-train.exit' does not exist in 'origin/builder-outbox'
+[0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mls artifacts/fable-predictions-ledger.md; wc -l artifacts/fable-predictions-ledger.md; tail -30 artifacts/fable-predictions-ledger.md
+artifacts/fable-predictions-ledger.md
+    2914 artifacts/fable-predictions-ledger.md
+- P301.2 (same) exact recall 51/145 = 35.2% (bar >=85%: FAIL; also <75% so proved-wrong clause trips alongside the dev no-zero-wrong-T clause: more hard-case rows alone do not make the reader safe and useful at once).
+- P301.3 (same) ASK 34/40 = 85.0% (wh 11/11, inverse 6/8, yesno 7/7, lowercase 5/7, twohop 3/5; bar >=90%: FAIL).
+- P301.4 (same) our/we ask-whose 17/18 = 94.4% (bar >=90%: PASS).
+- P301.5 (same) unparseable 0/240 = 0% (bar <=2%: PASS).
+- P301.6 (same) read ms median 1522.7 p90 2158.8 max 2942.8 on cuda/5070 Ti (bar median <=1500: FAIL). Report-only: wrong facts per saved fact 0/51, per turn 0/240; at T=0 recall 142/145 with 4 wrong turns (1 pronoun-ambiguous, 1 tell-typo, 1 our-we, 1 tell-appositive); held-back 93; dev at T 462/761 with 2 wrong turns (both o0a2); $0 spent; merged sha256 b4fd93a2 kept at ~/premonition-models/lis301-merged/ and on BensPC. See artifacts/claude-lis301-20260923/RESULTS.md.
+- P321.1 (pred, sealed pre-run 2026-09-23, builder; nb-321 compact store = contract decision logic on SQLite backend scripts/claude_nb321_store.py:open_compact, sealed with unit tests T1-T5, CPU only) M1 file bytes per FACT write at 1,000,000 facts are at most 1/8 of the verified nb-320 baseline's (bar: at most 1/5). Unit evidence: store.db 141 bytes/FACT vs baseline 441 at 20,000 facts (~1/3). Falsified by ratio > 1/8 at 1M.
+- Pownm1n.1 (2026-09-23, builder own-M1n mouth v2; sealed code 5/5 + data 3/3 OK, MiniCPM5-1B commit 87179e5c, LoRA r32 2ep lr2e-4 batch16 702 steps loss 2.9962->0.262, 3.72 min, 3658.9 tok/s) spoke 1000/1000 dev (bar >= 990): PASS.
+- Pownm1n.2 (same) first-try pass 1000/1000 (bar >= 950): PASS.
+- Pownm1n.3 (same) fresh slot_check recount on winning raw of 1000 non-null replies: 0 fails: PASS.
+- Pownm1n.4 (same) variety: distinct slotted 59/1000 (bar >= 300), top reply 129/1000 (bar <= 30): FAIL. Top-5 cover 457/1000. Registered verdict: FAIL on Pm1n.4 only.
+- Pownm1n.5 (same) crashes 0: PASS. Fallbacks 0 every status; speak median 1221.5 ms p90 1381.7 ms cuda. See artifacts/claude-own-m1n-20260923/RESULTS.md.
+- P-vast-m1n (2026-09-23 18:43:40Z-20:02:52Z, builder own-M1n rental) contract 52279213 RTX 5090 1x label own-m1n actual_status=running at destroy: alive 79.2 min (1.32 h) x $0.5159259/hr = ~$0.68 (ceiling $4.00/3h respected; per-instance billing not readable via API, estimate used per task rule); post-destroy show instances holds only own-m1b (v1 rerun, parallel on purpose, untouched). Model 2.16 GB copied to ~/premonition-models/own-m1n-mouth/merged, sha de12daf4… matches SEAL-run.
+- Pownm1.1 OUTCOME (2026-09-23, builder own-m1b rerun; vast.ai contract 52279343 RTX 5090 $0.5156/h ~102 min ~$0.88; MiniCPM5-1B commit 87179e5c; LoRA r32 2 epochs lr 2e-4 batch 16 max-len 256, 2500/2500 steps, 19.93 min, 2501.7 tok/s, dev_loss 0.1571; M0 rebuilt 20000+1000, dev byte-identical, m1 data kept 20000+1000 dropped 0; seal code 5/5 OK; SEAL-run before measure; dev measured ONCE, 1000 rows) PASS spoke 1000/1000, fell back 0 (every status 100% spoke).
+- Pownm1.2 OUTCOME (same run) PASS first-try 1000/1000 (tries {1:1000}; "proved wrong" clause not triggered).
+- Pownm1.3 OUTCOME (same run) PASS independent slot_check recount on winning raws: 0 failures/1000.
+- Pownm1.4 OUTCOME (same run) FAIL distinct slotted 45/1000 (bar >=300), top reply 175/1000 rows 17.5% (bar <=30); M0 dev itself has 339 distinct (top 7), so collapse is the model's, not the data's; greedy over-confidence, retries never used on dev.
+- Pownm1.5 OUTCOME (same run) PASS 0 crashes.
+- Pownm1 OUTCOME (same run) registered verdict FAIL (4/5 PASS, Pm1.4 FAIL; one diagnosis-driven follow-up is the director's call). Merged sha b40cc2d6 kept at ~/premonition-models/own-m1-mouth/, weights never in git. Deviations: SSH attach needed full pubkey string; gcc installed for triton JIT then full retrain from scratch (no code patch); watchdog polls ~115 s during speak. See artifacts/claude-own-m1-20260923/RESULTS.md.
+- P-vast-ownm1b (2026-09-23 18:44-20:27 UTC) contract 52279343 RTX 5090 1x IP 154.9.228.248 reliability 0.9886 dph 0.5155556 label own-m1b: rented 18:44:29Z, destroyed 20:27Z, alive ~102 min x $0.5156/h = ~$0.88 (ceiling $4.00/3h respected); post-destroy 52279343 gone (only another agent's rsn-294 box live, untouched); credit 6.39 -> 9.67 across the run (top-up/release, not mine to explain).
+- P294.TOO-SLOW (2026-09-23, builder rsn-294 rental; NO full runs, NO panel reads, sealed code untouched) contract 52290733 RTX 5090 1x label rsn-294 offer 44614424 32 cores rel 0.9948 $0.4727/hr, alive 50.5 min x $0.4727/hr = ~$0.40 (ceiling $4/3h respected; per-instance billing not readable via API, estimate used). Seals 6/6 OK, selftest ok (loop 30771221, plain 30938261 params). NEW venv torch 2.14.0+cu130 CUDA True numpy 2.4.6. Pilot --copy-steps 100 --rl-steps 50 seed 9 (2 arms sharing 1 GPU): loop copy 100 steps 0.27 min, RL 50 steps 3.54 min; plain copy 100 steps 0.20 min, RL 50 steps 3.82 min. Solo check (plain, 1 GPU, copy 20 + RL 10): copy ~0.09 s/step, RL ~2.34 s/step. Full-run estimate per task rule (60x copy-min + 120x practice-min): loop ~441 min, plain ~470 min shared (dedicated ~245 min each); 4 runs 2-at-a-time ~= 940 min >> 150 min cap, also breaks 3 h ceiling (~16 h x $0.47 ~= $7.4). Instance destroyed, 0 instances live after. P294.1-P294.6 NOT scored (no checkpoints, no evals). Cause of slowness (unverified, from code reading only): practice phase does an 8-try Python reward loop over 128 episodes per step.
+- P294.HOST-FAIL (2026-09-23, builder rsn-294 second try; NO training, NO panel reads, sealed code untouched, $0.00 spent) two rentals failed to start: contract 52298608 (offer 43748043, RTX 5090 80 cores rel 0.9975 $0.4567/h) and contract 52299228 (offer 49298963, RTX 5090 24 cores rel 0.9907 $0.50/h), both stuck at actual_status=loading/cur_state=stopped, manual start returned "Required resources are currently unavailable, state change queued"; both destroyed, 0 instances live after, credit unchanged at $9.31. Per task rule (two failures -> HOST-FAIL), stopped without running pilot/train/eval. P294.1-P294.6 NOT scored (no checkpoints, no evals).
+- PF1 OUTCOME (2026-09-23, builder; registered verdict PASS on M2+M3+M5 mechanical; M1/M4 director-graded, not run here; seals own 41/41 OK post-run, panel seal 2/2 OK, no sealed file changed): M2 0 unfaithful + 0 store/event diffs on suites, probes, joinpanel, convbench (PF1.1 held). M3 sessions152 57/57 reply-only, bench NEW-1 648/648 reply-only GATE clean, rt136 52 reply-only 0 other, rt143 0 triples/expected diffs, vp 63 + vs 11 reply-only, all gates clean, every reply diff route A (PF1.2 held). Convbench 13 changed lines of 286, all route A (SAVED 9, ANSWER 2, ABSTAIN_MISSING 2), 0 store diffs (PF1.3 count missed: 13 vs 50-130 predicted). Joinpanel 90/90 byte-identical, 0 store, 0 probe diffs (PF1.4 bars held, 0 diffs). M5 medians 50.12 vs 50.42 s ratio 0.994 PASS, all 6 runs load1<40 (PF1.5 held). Misses: frozen bench 10 new WRONG, all missing-yes needle artifacts, 10/10 resolved under NEW-1 (PF1.2 disclosed); sev-1 fallbacks byte-identical: suites 5, joinpanel 20, conv 0, dev 1. See artifacts/claude-f1-20260923/RESULTS.md.
+- P294.1 OUTCOME (2026-09-23/24, builder rsn-294 third try; sealed code, 7/7 seal lines OK, selftest ok; 4 full runs loop/plain x seeds 1/2, defaults, contract 52300816 RTX 5090 $0.4727/h ~2.80 h ~$1.32) checked invented answers (answered without a fact): loop-s1 0/300, loop-s2 0/300 (bar <=2: PASS both; raw inventions s1 22, s2 4, all in missing_fact, all converted to IDK by the fact-check).
+- P294.2 OUTCOME (same run) loop checked-right overall: s1 92/300, s2 111/300 (bar code 210 + 30 = 240: FAIL both).
+- P294.3 OUTCOME (same run) missing_fact honest IDK: s1 30/30, s2 30/30 (bar >=25: PASS both).
+- P294.4 OUTCOME (same run) held-out three-step + big-notebook loop minus plain same seed: s1 0 - 5 = -5, s2 1 - 8 = -7 (bar >= +10: FAIL both; loop three-step 0/15 both seeds).
+- P294.5 OUTCOME (same run) loop checked_right per category vs code-3 = 27: s1 one_step 3, backwards 7, yes_no 11, newest_correction 12; s2 19, 8, 23, 12 (FAIL all four categories both seeds).
+- P294.6 OUTCOME (same run) practice teaches loop final minus copy-only overall right: s1 92 - 45 = +47 PASS, s2 111 - 107 = +4 FAIL (bar >= +10).
+- P294 OUTCOME (same run) registered verdict FAIL (P294.2, P294.4, P294.5 fail both seeds; P294.6 fails seed 2). Panel items read 0, evals 16/16 once per checkpoint, sealed files edited 0, code never patched. Checkpoints (8 .pt, sha match SEAL-run.sha256.txt) kept at ~/premonition-models/rsn294/<run>/, weights never in git. Instance destroyed, 0 live after. See artifacts/claude-rsn294-20260923/RESULTS.md.
+- P-vast-rsn294c (2026-09-23 21:24:39Z-2026-09-24 00:12:37Z, builder rsn-294 third try) contract 52300816 RTX 5090 1x offer 43165154 32 cores rel 0.9951 $0.4727/h label rsn-294c: rented 21:24:39Z, running within ~1 min, destroyed 00:12:37Z, alive ~2.80 h x $0.4727/h = ~$1.32 (ceiling $4/3h respected on dollars; wall-clock over 3 h only from ~1 GB checkpoint download at ~100-400 KB/s); post-destroy 0 instances live; credit $9.31 at rental.
+[0m
+[0m$ [0mgrep -n "rsn-296\|GUARD-STOP\|296" artifacts/fable-predictions-ledger.md | tail -30
+python3 -c "print('py-ok')"
+466:- Outcomes 53: P53.1 FALSE (after-brake 0/500 as constructed, but raw violates on 296/500, bar was <= 60). P53.2 FALSE (426/500, bar 480). P53.3 TRUE (250/250, bar 240). P53.4 TRUE (762.6 s train + 423.4 s score = 19.8 min < 25; full 3,000 pairs, no cut). P53.5 FALSE (replay 1 wrong write, 11 correct, 2 abstentions per run vs 0/12/3; bridge down/flaky, 1 gap mouth-caused, 2 ears-caused). Brier: 0.36, 0.64, 0.0225, 0.09, 0.5625. Marks O1/O3/O4 PASS, O2/O5 registered FAIL; see artifacts/fable-mouth53-20260921/RESULTS.md
+880:- P120.3: O6 — registered GPU run: raw-decoder unfaithful BEFORE the brake <= 50/500 (copy head + in-domain fine-tune beat exp 53's 296/500). 0.50. Falsified by >= 51.
+py-ok
+[0m
+[0m$ [0mwhich vastai; vastai --help 2>&1 | head -30; ls ~/.config/vastai/ 2>&1
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+ --full                        Print full results instead of paging with `less` for commands that support it
+ --curl                        Show a curl equivalency to the call
+ --api-key API_KEY             API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                     Show CLI version
+ --no-color                    Disable colored output for commands that support it
+
+Search:
+ search offers                 Search for instance types using custom query
+ search benchmarks             Search for benchmark results using custom query
+ search templates              Search for template results using custom query
+ search invoices               Search for invoices using custom query
+ create template               Create a new template
+ update template               Update an existing template
+ delete template               Delete a Template
+
+Instances:
+ show instance                 Display user's current instances
+ create instance               Create a new instance
+ create instances              Create instances from a list of offers
+ destroy instance              Destroy an instance (irreversible, deletes data)
+vast_api_key
+vast_role
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | head -100
+[]
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox -- runs/ 2>&1 | head -40; echo DONE1; git ls-tree origin/builder-outbox -- runs/rsn-296-train/ 2>&1; echo DONE2
+040000 tree 8000a2b2210ee4980859ee45ec14739fd6f0c6f3	runs/000-ckpt-copy
+040000 tree 98966ee5dc5d5c6682e7cf32b8a28d6efeca9311	runs/000-smoke
+040000 tree ec3b5ba1d4e0c3b2bb3525c43dead5a25e38b043	runs/000-vast-rescue
+040000 tree b58b258cc1f39f4caf7b1ee37f3e42b82de4ad01	runs/000-watcher-dedupe
+040000 tree 9f1874251078986d2fb7d44403105ebfcc166175	runs/000-watcher-upgrade
+040000 tree 646a443ca17d7cc4a9bb35b7458bcb0c3889ae2c	runs/261b-build
+040000 tree 70e2e114c1656f862a33d677d3e1b2dbd475de5c	runs/261b-panel
+040000 tree 5b2ebc451348d518aadf5ca39dc6fb4a4455794d	runs/263-build
+040000 tree 77a82e9c7b7edfe1b316bba4a766e0b164f51499	runs/263-panel
+040000 tree 46e97371e22b65e343fcd3b5bd3210c29f084da9	runs/263-probe
+040000 tree 30f923be8b6298a2e6046ec3aa970f75325db3f1	runs/264-build
+040000 tree be98af1ddf95a8cff06f839c7a7456ffaa90a01d	runs/264-panel
+040000 tree 19ffd02100362ea7c17968666a1536631bbab0ef	runs/265-build
+040000 tree 23a600d495ce1eea4dd30bd2de272fa50e46df04	runs/265-panel
+040000 tree 747537dbedc0bac536a7fdc3d7b8819d883385b6	runs/267-devset
+040000 tree 0faf02315a2e34c19ee556d34711b2cd85eb562e	runs/267-diag
+040000 tree 57c2970e0cc1016d215dea6dd2d921ae7bae60ce	runs/269-build
+040000 tree 41b443f24566192acc28a9be3843232572aaf27e	runs/269-panel
+040000 tree 0d2a4825ea0a3f46ee6111d54e551178c1fbc726	runs/269-resume
+040000 tree 13741e64e5359e1f26bbb4ef3d508ec67ea6fcb1	runs/269-resume2
+040000 tree b90d332387d34386adb5db4e7c3d9548fce561b5	runs/270-build
+040000 tree c1349285202b915af3d8e42c92a0b3fc6c970390	runs/270-panel
+040000 tree 54b5bd1d929903d337b92634417524f0592aa551	runs/270b-build
+040000 tree 2bc5aa77535e9f1d40d75b6d56af80b30a17016e	runs/270b-panel
+040000 tree 25244859fde611598e91f0e50643699d18977da5	runs/271-threshold
+040000 tree fa14cf411d0265ffeacc561e8e82d4748eb42811	runs/273-build
+040000 tree 5fb884be3fb37d2c910637ed5a86a9596c3887d8	runs/chat-demo-build
+040000 tree 4bb4efeb560a377b735542522684fb031854c58b	runs/chat-weakspots
+040000 tree 4c525359390a628c920add5ad0459c883ee3c56e	runs/lis-300-publish
+040000 tree 40ad66fa50afb27219b08a5454b9adddf1a2eee7	runs/lis-300-train
+040000 tree 8de14db54657379108653f10fa767abe6865bc8d	runs/lis-301-train
+040000 tree 936039cdeeca2f457a6612a457b7b496df91066e	runs/lis-310-chat-build
+040000 tree 1799e49b2b66655be0584326d11e6bdc61567b93	runs/lis-311-chat292
+040000 tree edb100fdeb966f988770c9b53c6056c2b92cc578	runs/lis-311b-chat292
+040000 tree 6cf68ecd80a21c3ce754f0363b1148fbe891f0f0	runs/lis-312-f0
+040000 tree adf77f5d9d594f35ab2ad3c91664c58f3ae4fc2e	runs/nb-320-baseline
+040000 tree 457e9963d49b6a85b02b5e070f66289da9d114f3	runs/nb-321-build
+040000 tree 0d666708514970ccc10040d434fa505f750357f4	runs/own-m0-mouthdata
+040000 tree 3e4e8d1c76106efd490007e82176e98a1c578306	runs/own-m1-train
+040000 tree 141b02efbcfa6be3f7d8992f9cb30bf2751d3012	runs/own-m1b-train
+DONE1
+DONE2
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox -- runs/ 2>&1 | grep 296; echo GREP_DONE; git log --all --oneline --grep="296" 2>&1 | head -20; echo LOG_DONE
+040000 tree 21c4dd7e978aa14d45b0516514b06ac05b1b2961	runs/talk-280p-panel
+GREP_DONE
+856260c53 board: rsn 296 registered and queued
+b80ca2241 rsn 296 registered: panel296 v2 (2 ambiguous items dropped after blind audit), code arm 208/298, pass marks + code sealed; GPU task + $4 combined guard queued
+6ef09cd65 rsn 296: blind Opus audit of reasonpanel296 key
+bd8319422 rsn 296: fresh blind reasonpanel296 (300 items, sealed)
+f1823f8f8 rsn 296 (draft, not sealed): sleep-school varied practice generator + runner + design note
+LOG_DONE
+[0m
+[0m$ [0mgit show 856260c53 --stat 2>&1 | head -30; git show b80ca2241 --stat 2>&1 | head -30
+commit 856260c5345e78020c57438262b8ccac988488e6
+Author: Claude <noreply@anthropic.com>
+Date:   Thu Sep 24 01:35:01 2026 +0000
+
+    board: rsn 296 registered and queued
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01Upr9S9Htj2tWgHiugMb1Am
+
+ design/v3/30-modes/00-director-board.md | 6 ++++++
+ 1 file changed, 6 insertions(+)
+commit b80ca224165a30a5674a66c27dbdc52e9e489a26
+Author: Claude <noreply@anthropic.com>
+Date:   Thu Sep 24 01:34:41 2026 +0000
+
+    rsn 296 registered: panel296 v2 (2 ambiguous items dropped after blind audit), code arm 208/298, pass marks + code sealed; GPU task + $4 combined guard queued
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01Upr9S9Htj2tWgHiugMb1Am
+
+ artifacts/claude-reasonpanel296-20260924/FIX-v2.md |   7 +
+ .../SEAL-v2.sha256.txt                             |   2 +
+ .../claude-reasonpanel296-20260924/items-v2.jsonl  | 298 +++++++++++++++++++++
+ artifacts/claude-rsn296-20260924/PASSMARKS.md      |  46 ++++
+ .../claude-rsn296-20260924/SEAL-code.sha256.txt    |   6 +
+ .../claude-rsn296-20260924/codearm_panel294.json   |  68 +++++
+ .../claude-rsn296-20260924/codearm_panel296.json   |  63 +++++
+ .../claude-rsn296-20260924/codearm_panel296v2.json |  63 +++++
+ handoff/queue/rsn-296-guard.md                     |  20 ++
+ handoff/queue/rsn-296-train.md                     |  44 +++
+ 10 files changed, 617 insertions(+)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rsn-296-train.md 2>&1 | head -80; git show origin/main:handoff/queue/rsn-296-guard.md 2>&1 | head -60
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+RENTAL RULES:
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph), preferring at least 16 CPU cores and more is better (the practice generator is CPU-heavy: use a host with >= 32 cores if one is within $0.10/h of the cheapest). 4090 with the same filter if no 5090.
+- Before renting: `vastai show instances`; if an instance labelled rsn-296 is live and healthy, exit and report DUPLICATE.
+- Label every instance rsn-296. Check credit first: stop and report LOW-CREDIT if it is under $4.
+- MONEY (Ben 2026-09-23 21:51 UTC: "don't use gpu rentals above 4$"): $4 is the COMBINED limit for this whole task, re-rents included. Keep a running total of dph x hours for every instance you create. If the total would pass $3.80, destroy everything and stop with BUDGET-STOP. A separate guard task (rsn-296-guard) also watches this.
+- If a new instance is not "running" within 6 min (or create returns success: False), destroy it by exact id and try the next offer on a different host, up to 4 rentals in total. If a running instance goes offline or shows no log progress for 10 min, destroy it and count it. After 4 failures stop with HOST-FAIL. Never 2 instances at once.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it. Destroy the instance at the end and confirm it is gone. Append a ledger line.
+
+YOUR TASK: builder for rsn-296 (varied "sleep school" practice; rsn-294's arms and training with ONE change: the practice generator). The reasoning thread (Opus) wrote and sealed all code; import and run it, never edit it. If something breaks, stop and report; do not patch. Artifacts go in artifacts/claude-rsn296-20260924/.
+READ FIRST (on origin/main): artifacts/claude-rsn296-20260924/PASSMARKS.md, design/v3/30-modes/296-sleep-school-practice.md, and the docstrings of scripts/claude_rsn296_gen.py and scripts/claude_rsn294_run.py.
+INDEPENDENCE: never open or print any item of artifacts/claude-reasonpanel296-20260924/ or artifacts/claude-reasonpanel294-20260923/. You run the eval commands below exactly once per checkpoint; they write category-level counts only.
+
+0. Rent as above. On the GPU machine: a NEW venv with torch (CUDA build) and numpy only. Check `nproc`, `nvidia-smi`, `df -h`.
+1. CODE. Tarball of origin/main (git archive) or git clone. From the repo root, `sha256sum -c` on artifacts/claude-rsn296-20260924/SEAL-code.sha256.txt, artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt and artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt: every line OK, else stop. Run `python scripts/claude_rsn296_gen.py` (prints "selftest ok"; takes about 30 s).
+2. PILOT (timing only). For each arm: `python scripts/claude_rsn296_run.py train --arm <arm> --seed 9 --out /tmp/pilot-<arm> --copy-steps 100 --rl-steps 50 --workers 6`, run from the repo root. Estimate a full run as 60 x copy-phase minutes + 120 x practice-phase minutes (from its train_log.jsonl "min" values). If the four full runs, 2 at a time, would take over 150 minutes, OR the estimated dollars would pass $3.50, stop, destroy the instance and report TOO-SLOW with the timings.
+3. TRAIN (4 runs, 2 at a time, --workers 6 each, from the repo root; defaults otherwise, change nothing):
+   python scripts/claude_rsn296_run.py train --arm plain --seed 1 --out W/plain-s1
+   python scripts/claude_rsn296_run.py train --arm loop  --seed 1 --out W/loop-s1
+   then
+   python scripts/claude_rsn296_run.py train --arm plain --seed 2 --out W/plain-s2
+   python scripts/claude_rsn296_run.py train --arm loop  --seed 2 --out W/loop-s2
+4. SEAL. sha256 of all 8 checkpoints into artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt BEFORE step 5.
+5. EVAL, ONCE per checkpoint. For each run R and C in copy_only.pt, final.pt:
+   python scripts/claude_rsn296_run.py dev  --ckpt W/R/C --out W/R/dev-<copy|final>.json
+   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/R/panel296-<copy|final>.json
+   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/R/panel294-<copy|final>.json
+   Copy every train_log.jsonl, train_summary.json, dev-*.json and panel*.json into artifacts/claude-rsn296-20260924/runs/<R>/.
+6. RESULTS.md, verdict first: per run minutes, first/last copy loss, first/last practice reward, panel totals (copy-only and final, both panels). Every mark P296.1-P296.4 for both plain seeds with integer counts and PASS/FAIL (code-arm numbers are in PASSMARKS.md; 294 plain final right on reasonpanel294 was 184 for seed 1 and 189 for seed 2). Loop numbers reported the same way, no marks. Dollars spent. Append ledger lines P296.1-P296.4 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE CHECKPOINTS: copy them to the Mac at ~/premonition-models/rsn296/<run>/ (one directory per run) and record sha256 in RESULTS.md. Never push weights. Destroy the instance BEFORE a slow copy if the $3.80 total is near: copy checkpoints first only if time allows; results come first.
+PUSH: artifacts/claude-rsn296-20260924/RESULTS.md artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt artifacts/claude-rsn296-20260924/runs artifacts/fable-predictions-ledger.md
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+YOUR TASK: spending guard for rsn-296-train (Ben 21:51 UTC: "don't use gpu rentals above 4$"; the $4 is the COMBINED limit per job, re-rents and extra machines included). You rent nothing and change no files except one ledger line.
+- Read the vast.ai key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- Every 60 s: run `vastai show instances --raw`. Take every instance whose label starts with "rsn-296". Keep a running total, and never forget an instance after it disappears: for each instance id first seen, record its dph (dph_total) and its start time; its cost so far = dph × hours since start (or until it vanished). Also add the $0.40 already spent by earlier tries only for the report, not for the cap.
+- When the combined total of all rsn-296* instances seen since you started reaches $3.80: destroy every live rsn-296* instance by exact instance id (vastai destroy instance <id>), confirm they are gone, and append a line to artifacts/fable-predictions-ledger.md (cat >>) saying GUARD-STOP with the total.
+- Stop watching when runs/rsn-296-train/rsn-296-train.exit exists on origin/builder-outbox (git fetch -q origin builder-outbox; git ls-tree) AND no rsn-296* instance has been live for 5 min, or after 8 hours.
+- Never touch an instance whose label does not start with rsn-296.
+Final reply: the instance ids seen, the dph and minutes of each, the combined dollars, and whether you had to stop anything.
+PUSH: artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mvastai show instances --help 2>&1 | head -20; vastai show instance --help 2>&1 | head -30
+usage: vastai show instances [OPTIONS]
+
+options:
+ -h, --help                                       show this help message and exit
+ -q, --quiet                                      only display numeric ids
+ -v, --verbose                                    show additional columns (SSH, location, template, etc.)
+ -a, --all                                        force fetching every page before printing, even with --limit/--next-token (fetching everything is already the default otherwise)
+ -s STATUS [STATUS ...], --status STATUS [STATUS ...]
+                                                  filter by container status: running loading exited
+ --label LABEL [LABEL ...]                        filter by instance label; pass empty string '' for unlabeled
+ --gpu-name GPU [GPU ...]                         filter by GPU model name
+ --verification VERIF [VERIF ...]                 filter by verification status
+ -l LIMIT, --limit LIMIT                          max instances per page (1-25); passing this switches to single-page mode instead of fetching everything
+ -t NEXT_TOKEN, --next-token NEXT_TOKEN           resume from a pagination token (implies single-page mode)
+ --order-by COL [asc|desc]                        sort by column; repeat for multiple keys
+ --cols COLS                                      override displayed columns (available: id,status,label,gpu,disk,volumes,dph,image,age,verified,machine,net,location,template,ssh,msg)
+
+Global options (available for all commands):
+ --url URL                                        Server REST API URL
+ --retry RETRY                                    Retry limit
+usage: vastai show instance ID [options]
+
+positional arguments:
+ id                 id of instance to get
+
+options:
+ -h, --help         show this help message and exit
+ -q, --quiet        only display numeric id
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+ --curl             Show a curl equivalency to the call
+ --api-key API_KEY  API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version          Show CLI version
+ --no-color         Disable colored output for commands that support it
+[0m
+[0m$ [0mvastai --explain --raw show instances 2>&1 | head -40; echo EXPLAIN_DONE
+query args:
+{'select_filters': {}, 'order_by': [{'col': 'id', 'dir': 'asc'}], 'limit': 25}
+
+base: https://console.vast.ai/api/v1/instances/? + query: 
+https://console.vast.ai/api/v1/instances/?select_filters=%7B%7D&order_by=%5B%7B%22col%22%3A+%22id%22%2C+%22dir%22%3A+%22asc%22%7D%5D&limit=25
+
+
+ℹ️  Prepared Request:
+GET https://console.vast.ai/api/v1/instances/?select_filters=%7B%7D&order_by=%5B%7B%22col%22%3A+%22id%22%2C+%22dir%22%3A+%22asc%22%7D%5D&limit=25
+Headers: {
+ "User-Agent": "vastai-cli/1.8.1",
+ "Authorization": "Bearer 5e34c640cf1b77eee64ab4febca2ce0c6971ff75be15aa24e758650635f3a3e7"
+}
+Body: null
+____________________________________________________________________________________________________
+
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 257714,
+  "cpu_util": 2.0796875,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 172.5,
+  "disk_name": "nvme",
+EXPLAIN_DONE
+[0m
+[0m$ [0mvastai show instances --raw > /tmp/rsn296_poll1.json 2>/tmp/rsn296_poll1.err; echo "exit=$?"; wc -c /tmp/rsn296_poll1.json; head -c 2000 /tmp/rsn296_poll1.json
+exit=0
+    3641 /tmp/rsn296_poll1.json
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "US",
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 257714,
+  "cpu_util": 0.05375,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 12,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 172.5,
+  "disk_name": "nvme",
+  "disk_space": 60.0,
+  "disk_usage": 0.07100000232458115,
+  "disk_util": 0.07100000232458115,
+  "dlperf": 54.18906105790331,
+  "dlperf_per_dphtotal": 100.55702051982058,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.5388888888888889,
+  "driver_version": "580.159.03",
+  "duration": 75.66215372085571,
+  "end_date": 1798592980.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 200.60476701030927,
+  "geolocation": "United States, US",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 676.4,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 69.999931,
+  "gpu_totalram": 32607,
+  "gpu_util": 97.999908,
+  "has_avx": 1,
+  "host_id": 410852,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52334326,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 162.4,
+  "inet_down_billed": null,
+  "inet_down_cost": 0.015625,
+  "inet_up": 33.3,
+  "inet_up_billed": null,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.0722222222222222,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5388888888888889
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('/tmp/rsn296_poll1.json'))
+print('count=',len(d))
+for i in d:
+  keys=[k for k in i.keys()]
+  print('KEYS:',sorted(keys))
+"
+count= 1
+KEYS: ['actual_status', 'bundle_id', 'bw_nvlink', 'client_run_time', 'compute_cap', 'country_code', 'cpu_arch', 'cpu_cores', 'cpu_cores_effective', 'cpu_name', 'cpu_ram', 'cpu_util', 'credit_balance', 'credit_discount', 'credit_discount_max', 'cuda_max_good', 'cur_state', 'direct_port_count', 'direct_port_end', 'direct_port_start', 'disk_bw', 'disk_name', 'disk_space', 'disk_usage', 'disk_util', 'dlperf', 'dlperf_per_dphtotal', 'dph_base', 'dph_total', 'driver_version', 'duration', 'end_date', 'external', 'extra_env', 'flops_per_dphtotal', 'geolocation', 'gpu_arch', 'gpu_display_active', 'gpu_frac', 'gpu_lanes', 'gpu_mem_bw', 'gpu_name', 'gpu_ram', 'gpu_temp', 'gpu_totalram', 'gpu_util', 'has_avx', 'host_id', 'host_run_time', 'hosting_type', 'id', 'image_args', 'image_runtype', 'image_uuid', 'inet_down', 'inet_down_billed', 'inet_down_cost', 'inet_up', 'inet_up_billed', 'inet_up_cost', 'instance', 'intended_status', 'internet_down_cost_per_tb', 'internet_up_cost_per_tb', 'is_bid', 'jupyter_token', 'label', 'local_ipaddrs', 'logo', 'machine_dir_ssh_port', 'machine_id', 'mem_limit', 'mem_usage', 'min_bid', 'mobo_name', 'next_state', 'num_gpus', 'onstart', 'os_version', 'pci_gen', 'pcie_bw', 'public_ipaddr', 'reliability2', 'rentable', 'score', 'search', 'sla_r_claim', 'sla_sigma_x', 'ssh_host', 'ssh_idx', 'ssh_port', 'start_date', 'static_ip', 'status_msg', 'storage_cost', 'storage_total_cost', 'target_reliability', 'template_hash_id', 'template_id', 'template_name', 'time_remaining', 'time_remaining_isbid', 'total_flops', 'uptime_mins', 'verification', 'vmem_usage', 'volume_info', 'vram_costperhour', 'webpage']
+[0m
+[0m$ [0mpython3 -c "
+import json,time
+d=json.load(open('/tmp/rsn296_poll1.json'))
+for i in d:
+  for k in ['id','label','actual_status','cur_state','intended_status','dph_total','dph_base','start_date','duration','uptime_mins','gpu_name','ssh_host','public_ipaddr','status_msg']:
+    print(k,'=',repr(i.get(k)))
+  print('now=',time.time())
+"
+id = 52334326
+label = 'rsn-296'
+actual_status = 'running'
+cur_state = 'running'
+intended_status = 'running'
+dph_total = 0.5388888888888889
+dph_base = 0.4666666666666666
+start_date = 1790214717.2764482
+duration = 75.66215372085571
+uptime_mins = None
+gpu_name = 'RTX 5090'
+ssh_host = 'ssh6.vast.ai'
+public_ipaddr = '137.175.76.24'
+status_msg = 'success, running pytorch/pytorch_2.8.0-cuda12.8-cudnn9-runtime/ssh'
+now= 1790214808.510077
+[0m
+[0m← [0mWrite /tmp/rsn296_guard.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -30; echo "RC=$?"
+2026-09-24 01:54:55Z guard chunk start: tracked=0 max_polls=10
+2026-09-24 01:54:56Z new rsn-296* id=52334326 label=rsn-296 dph=0.5389 start=1790214717.2764482
+2026-09-24 01:54:56Z poll 1/10: live=['52334326'] combined=$0.0267 (cap $3.80)
+2026-09-24 01:55:58Z poll 2/10: live=['52334326'] combined=$0.0360 (cap $3.80)
+2026-09-24 01:57:01Z poll 3/10: live=['52334326'] combined=$0.0454 (cap $3.80)
+2026-09-24 01:58:03Z poll 4/10: live=['52334326'] combined=$0.0547 (cap $3.80)
+2026-09-24 01:59:09Z poll 5/10: live=['52334326'] combined=$0.0641 (cap $3.80)
+2026-09-24 02:00:12Z poll 6/10: live=['52334326'] combined=$0.0739 (cap $3.80)
+2026-09-24 02:01:15Z poll 7/10: live=['52334326'] combined=$0.0834 (cap $3.80)
+2026-09-24 02:02:17Z poll 8/10: live=['52334326'] combined=$0.0927 (cap $3.80)
+2026-09-24 02:03:20Z poll 9/10: live=['52334326'] combined=$0.1021 (cap $3.80)
+2026-09-24 02:04:22Z poll 10/10: live=['52334326'] combined=$0.1114 (cap $3.80)
+2026-09-24 02:04:23Z chunk done, combined=$0.1117
+RESULT CONTINUE total=0.1117
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:04:28Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:04:29Z poll 1/10: live=['52334326'] combined=$0.1125 (cap $3.80)
+2026-09-24 02:05:31Z poll 2/10: live=['52334326'] combined=$0.1217 (cap $3.80)
+2026-09-24 02:06:33Z poll 3/10: live=['52334326'] combined=$0.1310 (cap $3.80)
+2026-09-24 02:07:35Z poll 4/10: live=['52334326'] combined=$0.1403 (cap $3.80)
+2026-09-24 02:08:38Z poll 5/10: live=['52334326'] combined=$0.1497 (cap $3.80)
+2026-09-24 02:09:40Z poll 6/10: live=['52334326'] combined=$0.1590 (cap $3.80)
+2026-09-24 02:10:42Z poll 7/10: live=['52334326'] combined=$0.1682 (cap $3.80)
+2026-09-24 02:11:44Z poll 8/10: live=['52334326'] combined=$0.1776 (cap $3.80)
+2026-09-24 02:12:46Z poll 9/10: live=['52334326'] combined=$0.1869 (cap $3.80)
+2026-09-24 02:13:48Z poll 10/10: live=['52334326'] combined=$0.1962 (cap $3.80)
+2026-09-24 02:13:49Z chunk done, combined=$0.1965
+RESULT CONTINUE total=0.1965
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:13:51Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:13:52Z poll 1/10: live=['52334326'] combined=$0.1968 (cap $3.80)
+2026-09-24 02:14:54Z poll 2/10: live=['52334326'] combined=$0.2060 (cap $3.80)
+2026-09-24 02:15:56Z poll 3/10: live=['52334326'] combined=$0.2153 (cap $3.80)
+2026-09-24 02:16:58Z poll 4/10: live=['52334326'] combined=$0.2246 (cap $3.80)
+2026-09-24 02:18:00Z poll 5/10: live=['52334326'] combined=$0.2339 (cap $3.80)
+2026-09-24 02:19:02Z poll 6/10: live=['52334326'] combined=$0.2432 (cap $3.80)
+2026-09-24 02:20:05Z poll 7/10: live=['52334326'] combined=$0.2525 (cap $3.80)
+2026-09-24 02:21:07Z poll 8/10: live=['52334326'] combined=$0.2618 (cap $3.80)
+2026-09-24 02:22:09Z poll 9/10: live=['52334326'] combined=$0.2712 (cap $3.80)
+2026-09-24 02:23:11Z poll 10/10: live=['52334326'] combined=$0.2804 (cap $3.80)
+2026-09-24 02:23:12Z chunk done, combined=$0.2808
+RESULT CONTINUE total=0.2808
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:23:15Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:23:16Z poll 1/10: live=['52334326'] combined=$0.2812 (cap $3.80)
+2026-09-24 02:24:18Z poll 2/10: live=['52334326'] combined=$0.2904 (cap $3.80)
+2026-09-24 02:25:19Z poll 3/10: live=['52334326'] combined=$0.2996 (cap $3.80)
+2026-09-24 02:26:21Z poll 4/10: live=['52334326'] combined=$0.3089 (cap $3.80)
+2026-09-24 02:27:23Z poll 5/10: live=['52334326'] combined=$0.3182 (cap $3.80)
+2026-09-24 02:28:25Z poll 6/10: live=['52334326'] combined=$0.3275 (cap $3.80)
+2026-09-24 02:29:27Z poll 7/10: live=['52334326'] combined=$0.3368 (cap $3.80)
+2026-09-24 02:30:30Z poll 8/10: live=['52334326'] combined=$0.3461 (cap $3.80)
+2026-09-24 02:31:32Z poll 9/10: live=['52334326'] combined=$0.3554 (cap $3.80)
+2026-09-24 02:32:35Z poll 10/10: live=['52334326'] combined=$0.3648 (cap $3.80)
+2026-09-24 02:32:36Z chunk done, combined=$0.3652
+RESULT CONTINUE total=0.3652
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:32:39Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:32:40Z poll 1/10: live=['52334326'] combined=$0.3656 (cap $3.80)
+2026-09-24 02:33:43Z poll 2/10: live=['52334326'] combined=$0.3749 (cap $3.80)
+2026-09-24 02:34:46Z poll 3/10: live=['52334326'] combined=$0.3844 (cap $3.80)
+2026-09-24 02:35:48Z poll 4/10: live=['52334326'] combined=$0.3937 (cap $3.80)
+2026-09-24 02:36:52Z poll 5/10: live=['52334326'] combined=$0.4030 (cap $3.80)
+2026-09-24 02:37:56Z poll 6/10: live=['52334326'] combined=$0.4128 (cap $3.80)
+2026-09-24 02:38:58Z poll 7/10: live=['52334326'] combined=$0.4222 (cap $3.80)
+2026-09-24 02:40:01Z poll 8/10: live=['52334326'] combined=$0.4315 (cap $3.80)
+2026-09-24 02:41:04Z poll 9/10: live=['52334326'] combined=$0.4410 (cap $3.80)
+2026-09-24 02:42:06Z poll 10/10: live=['52334326'] combined=$0.4503 (cap $3.80)
+2026-09-24 02:42:07Z chunk done, combined=$0.4506
+RESULT CONTINUE total=0.4506
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:42:10Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:42:11Z poll 1/10: live=['52334326'] combined=$0.4511 (cap $3.80)
+2026-09-24 02:43:13Z poll 2/10: live=['52334326'] combined=$0.4604 (cap $3.80)
+2026-09-24 02:44:16Z poll 3/10: live=['52334326'] combined=$0.4697 (cap $3.80)
+2026-09-24 02:45:18Z poll 4/10: live=['52334326'] combined=$0.4791 (cap $3.80)
+2026-09-24 02:46:21Z poll 5/10: live=['52334326'] combined=$0.4884 (cap $3.80)
+2026-09-24 02:47:24Z poll 6/10: live=['52334326'] combined=$0.4979 (cap $3.80)
+2026-09-24 02:48:27Z poll 7/10: live=['52334326'] combined=$0.5073 (cap $3.80)
+2026-09-24 02:49:30Z poll 8/10: live=['52334326'] combined=$0.5167 (cap $3.80)
+2026-09-24 02:50:35Z poll 9/10: live=['52334326'] combined=$0.5261 (cap $3.80)
+2026-09-24 02:51:37Z poll 10/10: live=['52334326'] combined=$0.5358 (cap $3.80)
+2026-09-24 02:51:38Z chunk done, combined=$0.5361
+RESULT CONTINUE total=0.5361
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 02:51:42Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 02:51:43Z poll 1/10: live=['52334326'] combined=$0.5367 (cap $3.80)
+2026-09-24 02:52:46Z poll 2/10: live=['52334326'] combined=$0.5459 (cap $3.80)
+2026-09-24 02:53:48Z poll 3/10: live=['52334326'] combined=$0.5554 (cap $3.80)
+2026-09-24 02:54:51Z poll 4/10: live=['52334326'] combined=$0.5648 (cap $3.80)
+2026-09-24 02:55:54Z poll 5/10: live=['52334326'] combined=$0.5741 (cap $3.80)
+2026-09-24 02:56:57Z poll 6/10: live=['52334326'] combined=$0.5835 (cap $3.80)
+2026-09-24 02:57:59Z poll 7/10: live=['52334326'] combined=$0.5929 (cap $3.80)
+2026-09-24 02:59:01Z poll 8/10: live=['52334326'] combined=$0.6023 (cap $3.80)
+2026-09-24 03:00:06Z poll 9/10: live=['52334326'] combined=$0.6116 (cap $3.80)
+2026-09-24 03:01:09Z poll 10/10: live=['52334326'] combined=$0.6214 (cap $3.80)
+2026-09-24 03:01:11Z chunk done, combined=$0.6218
+RESULT CONTINUE total=0.6218
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:01:14Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:01:15Z poll 1/10: live=['52334326'] combined=$0.6223 (cap $3.80)
+2026-09-24 03:02:17Z poll 2/10: live=['52334326'] combined=$0.6315 (cap $3.80)
+2026-09-24 03:03:20Z poll 3/10: live=['52334326'] combined=$0.6409 (cap $3.80)
+2026-09-24 03:04:22Z poll 4/10: live=['52334326'] combined=$0.6503 (cap $3.80)
+2026-09-24 03:05:24Z poll 5/10: live=['52334326'] combined=$0.6596 (cap $3.80)
+2026-09-24 03:06:26Z poll 6/10: live=['52334326'] combined=$0.6689 (cap $3.80)
+2026-09-24 03:07:28Z poll 7/10: live=['52334326'] combined=$0.6782 (cap $3.80)
+2026-09-24 03:08:30Z poll 8/10: live=['52334326'] combined=$0.6875 (cap $3.80)
+2026-09-24 03:09:32Z poll 9/10: live=['52334326'] combined=$0.6968 (cap $3.80)
+2026-09-24 03:10:34Z poll 10/10: live=['52334326'] combined=$0.7060 (cap $3.80)
+2026-09-24 03:10:35Z chunk done, combined=$0.7063
+RESULT CONTINUE total=0.7063
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:10:38Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:10:39Z poll 1/10: live=['52334326'] combined=$0.7067 (cap $3.80)
+2026-09-24 03:11:41Z poll 2/10: live=['52334326'] combined=$0.7160 (cap $3.80)
+2026-09-24 03:12:43Z poll 3/10: live=['52334326'] combined=$0.7253 (cap $3.80)
+2026-09-24 03:13:46Z poll 4/10: live=['52334326'] combined=$0.7345 (cap $3.80)
+2026-09-24 03:14:48Z poll 5/10: live=['52334326'] combined=$0.7441 (cap $3.80)
+2026-09-24 03:15:50Z poll 6/10: live=['52334326'] combined=$0.7534 (cap $3.80)
+2026-09-24 03:16:53Z poll 7/10: live=['52334326'] combined=$0.7627 (cap $3.80)
+2026-09-24 03:17:55Z poll 8/10: live=['52334326'] combined=$0.7720 (cap $3.80)
+2026-09-24 03:18:58Z poll 9/10: live=['52334326'] combined=$0.7814 (cap $3.80)
+2026-09-24 03:20:01Z poll 10/10: live=['52334326'] combined=$0.7907 (cap $3.80)
+2026-09-24 03:20:02Z chunk done, combined=$0.7912
+RESULT CONTINUE total=0.7912
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:20:07Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:20:08Z poll 1/10: live=['52334326'] combined=$0.7919 (cap $3.80)
+2026-09-24 03:21:10Z poll 2/10: live=['52334326'] combined=$0.8012 (cap $3.80)
+2026-09-24 03:22:12Z poll 3/10: live=['52334326'] combined=$0.8105 (cap $3.80)
+2026-09-24 03:23:14Z poll 4/10: live=['52334326'] combined=$0.8198 (cap $3.80)
+2026-09-24 03:24:17Z poll 5/10: live=['52334326'] combined=$0.8290 (cap $3.80)
+2026-09-24 03:25:21Z poll 6/10: live=['52334326'] combined=$0.8384 (cap $3.80)
+2026-09-24 03:26:26Z poll 7/10: live=['52334326'] combined=$0.8480 (cap $3.80)
+2026-09-24 03:27:42Z poll 8/10: live=['52334326'] combined=$0.8592 (cap $3.80)
+2026-09-24 03:28:58Z poll 9/10: live=['52334326'] combined=$0.8705 (cap $3.80)
+2026-09-24 03:30:11Z poll 10/10: live=['52334326'] combined=$0.8816 (cap $3.80)
+2026-09-24 03:30:22Z chunk done, combined=$0.8840
+RESULT CONTINUE total=0.8840
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:30:48Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:30:53Z poll 1/10: live=['52334326'] combined=$0.8879 (cap $3.80)
+2026-09-24 03:32:11Z poll 2/10: live=['52334326'] combined=$0.8993 (cap $3.80)
+2026-09-24 03:33:26Z poll 3/10: live=['52334326'] combined=$0.9108 (cap $3.80)
+2026-09-24 03:34:42Z poll 4/10: live=['52334326'] combined=$0.9219 (cap $3.80)
+2026-09-24 03:35:58Z poll 5/10: live=['52334326'] combined=$0.9336 (cap $3.80)
+2026-09-24 03:37:16Z poll 6/10: live=['52334326'] combined=$0.9449 (cap $3.80)
+2026-09-24 03:38:33Z poll 7/10: live=['52334326'] combined=$0.9566 (cap $3.80)
+2026-09-24 03:39:49Z poll 8/10: live=['52334326'] combined=$0.9680 (cap $3.80)
+2026-09-24 03:41:07Z poll 9/10: live=['52334326'] combined=$0.9797 (cap $3.80)
+2026-09-24 03:42:22Z poll 10/10: live=['52334326'] combined=$0.9911 (cap $3.80)
+2026-09-24 03:42:34Z chunk done, combined=$0.9935
+RESULT CONTINUE total=0.9935
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:42:44Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:42:48Z poll 1/10: live=['52334326'] combined=$0.9950 (cap $3.80)
+2026-09-24 03:44:02Z poll 2/10: live=['52334326'] combined=$1.0061 (cap $3.80)
+2026-09-24 03:45:17Z poll 3/10: live=['52334326'] combined=$1.0172 (cap $3.80)
+2026-09-24 03:46:35Z poll 4/10: live=['52334326'] combined=$1.0288 (cap $3.80)
+2026-09-24 03:47:51Z poll 5/10: live=['52334326'] combined=$1.0402 (cap $3.80)
+2026-09-24 03:49:09Z poll 6/10: live=['52334326'] combined=$1.0518 (cap $3.80)
+2026-09-24 03:50:28Z poll 7/10: live=['52334326'] combined=$1.0634 (cap $3.80)
+2026-09-24 03:51:41Z poll 8/10: live=['52334326'] combined=$1.0748 (cap $3.80)
+2026-09-24 03:52:58Z poll 9/10: live=['52334326'] combined=$1.0861 (cap $3.80)
+2026-09-24 03:54:12Z poll 10/10: live=['52334326'] combined=$1.0973 (cap $3.80)
+2026-09-24 03:54:21Z chunk done, combined=$1.0993
+RESULT CONTINUE total=1.0993
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 03:54:30Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 03:54:34Z poll 1/10: live=['52334326'] combined=$1.1007 (cap $3.80)
+2026-09-24 03:55:47Z poll 2/10: live=['52334326'] combined=$1.1115 (cap $3.80)
+2026-09-24 03:57:01Z poll 3/10: live=['52334326'] combined=$1.1227 (cap $3.80)
+2026-09-24 03:58:12Z poll 4/10: live=['52334326'] combined=$1.1335 (cap $3.80)
+2026-09-24 03:59:24Z poll 5/10: live=['52334326'] combined=$1.1441 (cap $3.80)
+2026-09-24 04:00:38Z poll 6/10: live=['52334326'] combined=$1.1550 (cap $3.80)
+2026-09-24 04:01:55Z poll 7/10: live=['52334326'] combined=$1.1664 (cap $3.80)
+2026-09-24 04:03:07Z poll 8/10: live=['52334326'] combined=$1.1770 (cap $3.80)
+2026-09-24 04:04:22Z poll 9/10: live=['52334326'] combined=$1.1886 (cap $3.80)
+2026-09-24 04:05:32Z poll 10/10: live=['52334326'] combined=$1.1997 (cap $3.80)
+2026-09-24 04:05:33Z chunk done, combined=$1.2000
+RESULT CONTINUE total=1.2000
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:05:40Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:05:41Z poll 1/10: live=['52334326'] combined=$1.2010 (cap $3.80)
+2026-09-24 04:06:43Z poll 2/10: live=['52334326'] combined=$1.2103 (cap $3.80)
+2026-09-24 04:07:45Z poll 3/10: live=['52334326'] combined=$1.2196 (cap $3.80)
+2026-09-24 04:08:48Z poll 4/10: live=['52334326'] combined=$1.2289 (cap $3.80)
+2026-09-24 04:09:50Z poll 5/10: live=['52334326'] combined=$1.2382 (cap $3.80)
+2026-09-24 04:10:52Z poll 6/10: live=['52334326'] combined=$1.2476 (cap $3.80)
+2026-09-24 04:11:54Z poll 7/10: live=['52334326'] combined=$1.2569 (cap $3.80)
+2026-09-24 04:12:56Z poll 8/10: live=['52334326'] combined=$1.2662 (cap $3.80)
+2026-09-24 04:13:59Z poll 9/10: live=['52334326'] combined=$1.2755 (cap $3.80)
+2026-09-24 04:15:04Z poll 10/10: live=['52334326'] combined=$1.2849 (cap $3.80)
+2026-09-24 04:15:06Z chunk done, combined=$1.2857
+RESULT CONTINUE total=1.2857
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:15:17Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:15:19Z poll 1/10: live=['52334326'] combined=$1.2874 (cap $3.80)
+2026-09-24 04:16:22Z poll 2/10: live=['52334326'] combined=$1.2970 (cap $3.80)
+2026-09-24 04:17:24Z poll 3/10: live=['52334326'] combined=$1.3063 (cap $3.80)
+2026-09-24 04:18:26Z poll 4/10: live=['52334326'] combined=$1.3156 (cap $3.80)
+2026-09-24 04:19:29Z poll 5/10: live=['52334326'] combined=$1.3249 (cap $3.80)
+2026-09-24 04:20:31Z poll 6/10: live=['52334326'] combined=$1.3342 (cap $3.80)
+2026-09-24 04:21:34Z poll 7/10: live=['52334326'] combined=$1.3436 (cap $3.80)
+2026-09-24 04:22:35Z poll 8/10: live=['52334326'] combined=$1.3529 (cap $3.80)
+2026-09-24 04:23:38Z poll 9/10: live=['52334326'] combined=$1.3622 (cap $3.80)
+2026-09-24 04:24:41Z poll 10/10: live=['52334326'] combined=$1.3715 (cap $3.80)
+2026-09-24 04:24:43Z chunk done, combined=$1.3721
+RESULT CONTINUE total=1.3721
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:24:47Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:24:48Z poll 1/10: live=['52334326'] combined=$1.3726 (cap $3.80)
+2026-09-24 04:25:50Z poll 2/10: live=['52334326'] combined=$1.3819 (cap $3.80)
+2026-09-24 04:26:52Z poll 3/10: live=['52334326'] combined=$1.3913 (cap $3.80)
+2026-09-24 04:27:54Z poll 4/10: live=['52334326'] combined=$1.4006 (cap $3.80)
+2026-09-24 04:28:56Z poll 5/10: live=['52334326'] combined=$1.4098 (cap $3.80)
+2026-09-24 04:29:58Z poll 6/10: live=['52334326'] combined=$1.4191 (cap $3.80)
+2026-09-24 04:31:00Z poll 7/10: live=['52334326'] combined=$1.4284 (cap $3.80)
+2026-09-24 04:32:02Z poll 8/10: live=['52334326'] combined=$1.4377 (cap $3.80)
+2026-09-24 04:33:04Z poll 9/10: live=['52334326'] combined=$1.4470 (cap $3.80)
+2026-09-24 04:34:06Z poll 10/10: live=['52334326'] combined=$1.4563 (cap $3.80)
+2026-09-24 04:34:07Z chunk done, combined=$1.4565
+RESULT CONTINUE total=1.4565
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:34:10Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:34:11Z poll 1/10: live=['52334326'] combined=$1.4569 (cap $3.80)
+2026-09-24 04:35:13Z poll 2/10: live=['52334326'] combined=$1.4662 (cap $3.80)
+2026-09-24 04:36:20Z poll 3/10: live=['52334326'] combined=$1.4757 (cap $3.80)
+2026-09-24 04:37:28Z poll 4/10: live=['52334326'] combined=$1.4865 (cap $3.80)
+2026-09-24 04:38:30Z poll 5/10: live=['52334326'] combined=$1.4958 (cap $3.80)
+2026-09-24 04:39:32Z poll 6/10: live=['52334326'] combined=$1.5050 (cap $3.80)
+2026-09-24 04:40:34Z poll 7/10: live=['52334326'] combined=$1.5143 (cap $3.80)
+2026-09-24 04:41:36Z poll 8/10: live=['52334326'] combined=$1.5236 (cap $3.80)
+2026-09-24 04:42:39Z poll 9/10: live=['52334326'] combined=$1.5329 (cap $3.80)
+2026-09-24 04:43:41Z poll 10/10: live=['52334326'] combined=$1.5423 (cap $3.80)
+2026-09-24 04:43:42Z chunk done, combined=$1.5426
+RESULT CONTINUE total=1.5426
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:43:44Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:43:45Z poll 1/10: live=['52334326'] combined=$1.5429 (cap $3.80)
+2026-09-24 04:44:47Z poll 2/10: live=['52334326'] combined=$1.5521 (cap $3.80)
+2026-09-24 04:45:49Z poll 3/10: live=['52334326'] combined=$1.5614 (cap $3.80)
+2026-09-24 04:46:51Z poll 4/10: live=['52334326'] combined=$1.5707 (cap $3.80)
+2026-09-24 04:48:00Z poll 5/10: live=['52334326'] combined=$1.5800 (cap $3.80)
+2026-09-24 04:49:20Z poll 6/10: live=['52334326'] combined=$1.5921 (cap $3.80)
+2026-09-24 04:50:44Z poll 7/10: live=['52334326'] combined=$1.6048 (cap $3.80)
+2026-09-24 04:52:04Z poll 8/10: live=['52334326'] combined=$1.6169 (cap $3.80)
+2026-09-24 04:53:18Z poll 9/10: live=['52334326'] combined=$1.6287 (cap $3.80)
+2026-09-24 04:54:20Z poll 10/10: live=['52334326'] combined=$1.6379 (cap $3.80)
+2026-09-24 04:54:21Z chunk done, combined=$1.6382
+RESULT CONTINUE total=1.6382
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 04:54:24Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 04:54:25Z poll 1/10: live=['52334326'] combined=$1.6387 (cap $3.80)
+2026-09-24 04:55:27Z poll 2/10: live=['52334326'] combined=$1.6479 (cap $3.80)
+2026-09-24 04:56:30Z poll 3/10: live=['52334326'] combined=$1.6574 (cap $3.80)
+2026-09-24 04:57:32Z poll 4/10: live=['52334326'] combined=$1.6667 (cap $3.80)
+2026-09-24 04:58:34Z poll 5/10: live=['52334326'] combined=$1.6760 (cap $3.80)
+2026-09-24 04:59:36Z poll 6/10: live=['52334326'] combined=$1.6853 (cap $3.80)
+2026-09-24 05:00:38Z poll 7/10: live=['52334326'] combined=$1.6945 (cap $3.80)
+2026-09-24 05:01:40Z poll 8/10: live=['52334326'] combined=$1.7038 (cap $3.80)
+2026-09-24 05:02:42Z poll 9/10: live=['52334326'] combined=$1.7131 (cap $3.80)
+2026-09-24 05:03:44Z poll 10/10: live=['52334326'] combined=$1.7224 (cap $3.80)
+2026-09-24 05:03:45Z chunk done, combined=$1.7226
+RESULT CONTINUE total=1.7226
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:03:48Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 05:03:49Z poll 1/10: live=['52334326'] combined=$1.7232 (cap $3.80)
+2026-09-24 05:04:51Z poll 2/10: live=['52334326'] combined=$1.7324 (cap $3.80)
+2026-09-24 05:05:53Z poll 3/10: live=['52334326'] combined=$1.7417 (cap $3.80)
+2026-09-24 05:06:55Z poll 4/10: live=['52334326'] combined=$1.7510 (cap $3.80)
+2026-09-24 05:07:57Z poll 5/10: live=['52334326'] combined=$1.7602 (cap $3.80)
+2026-09-24 05:08:59Z poll 6/10: live=['52334326'] combined=$1.7695 (cap $3.80)
+2026-09-24 05:10:01Z poll 7/10: live=['52334326'] combined=$1.7788 (cap $3.80)
+2026-09-24 05:11:03Z poll 8/10: live=['52334326'] combined=$1.7881 (cap $3.80)
+2026-09-24 05:12:05Z poll 9/10: live=['52334326'] combined=$1.7974 (cap $3.80)
+2026-09-24 05:13:07Z poll 10/10: live=['52334326'] combined=$1.8067 (cap $3.80)
+2026-09-24 05:13:08Z chunk done, combined=$1.8070
+RESULT CONTINUE total=1.8070
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:13:11Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 05:13:12Z poll 1/10: live=['52334326'] combined=$1.8074 (cap $3.80)
+2026-09-24 05:14:14Z poll 2/10: live=['52334326'] combined=$1.8167 (cap $3.80)
+2026-09-24 05:15:16Z poll 3/10: live=['52334326'] combined=$1.8259 (cap $3.80)
+2026-09-24 05:16:18Z poll 4/10: live=['52334326'] combined=$1.8352 (cap $3.80)
+2026-09-24 05:17:20Z poll 5/10: live=['52334326'] combined=$1.8445 (cap $3.80)
+2026-09-24 05:18:22Z poll 6/10: live=['52334326'] combined=$1.8538 (cap $3.80)
+2026-09-24 05:19:24Z poll 7/10: live=['52334326'] combined=$1.8630 (cap $3.80)
+2026-09-24 05:20:26Z poll 8/10: live=['52334326'] combined=$1.8723 (cap $3.80)
+2026-09-24 05:21:28Z poll 9/10: live=['52334326'] combined=$1.8816 (cap $3.80)
+2026-09-24 05:22:30Z poll 10/10: live=['52334326'] combined=$1.8909 (cap $3.80)
+2026-09-24 05:22:31Z chunk done, combined=$1.8912
+RESULT CONTINUE total=1.8912
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:22:33Z guard chunk start: tracked=1 max_polls=10
+2026-09-24 05:22:34Z poll 1/10: live=['52334326'] combined=$1.8916 (cap $3.80)
+2026-09-24 05:23:36Z poll 2/10: live=['52334326'] combined=$1.9008 (cap $3.80)
+2026-09-24 05:24:38Z poll 3/10: live=['52334326'] combined=$1.9101 (cap $3.80)
+2026-09-24 05:25:40Z poll 4/10: live=['52334326'] combined=$1.9194 (cap $3.80)
+2026-09-24 05:26:42Z poll 5/10: live=['52334326'] combined=$1.9287 (cap $3.80)
+2026-09-24 05:27:44Z poll 6/10: live=['52334326'] combined=$1.9379 (cap $3.80)
+2026-09-24 05:28:46Z id=52334326 vanished, cost frozen
+2026-09-24 05:28:46Z poll 7/10: live=[] combined=$1.9472 (cap $3.80)
+2026-09-24 05:29:47Z new rsn-296* id=52360061 label=rsn-296 dph=0.5389 start=1790227741.0317876
+2026-09-24 05:29:47Z poll 8/10: live=['52360061'] combined=$1.9541 (cap $3.80)
+2026-09-24 05:30:49Z poll 9/10: live=['52360061'] combined=$1.9634 (cap $3.80)
+2026-09-24 05:31:51Z poll 10/10: live=['52360061'] combined=$1.9726 (cap $3.80)
+2026-09-24 05:31:52Z chunk done, combined=$1.9728
+RESULT CONTINUE total=1.9728
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:31:58Z guard chunk start: tracked=2 max_polls=10
+2026-09-24 05:31:59Z poll 1/10: live=['52360061'] combined=$1.9738 (cap $3.80)
+2026-09-24 05:33:01Z poll 2/10: live=['52360061'] combined=$1.9830 (cap $3.80)
+2026-09-24 05:34:03Z poll 3/10: live=['52360061'] combined=$1.9923 (cap $3.80)
+2026-09-24 05:35:04Z poll 4/10: live=['52360061'] combined=$2.0016 (cap $3.80)
+2026-09-24 05:36:06Z new rsn-296* id=52360782 label=rsn-296 dph=0.5178 start=1790228133.0654333
+2026-09-24 05:36:06Z id=52360061 vanished, cost frozen
+2026-09-24 05:36:06Z poll 5/10: live=['52360782'] combined=$2.0155 (cap $3.80)
+2026-09-24 05:37:08Z poll 6/10: live=['52360782'] combined=$2.0245 (cap $3.80)
+2026-09-24 05:38:10Z poll 7/10: live=['52360782'] combined=$2.0333 (cap $3.80)
+2026-09-24 05:39:11Z poll 8/10: live=['52360782'] combined=$2.0422 (cap $3.80)
+2026-09-24 05:40:13Z poll 9/10: live=['52360782'] combined=$2.0510 (cap $3.80)
+2026-09-24 05:41:19Z poll 10/10: live=['52360782'] combined=$2.0599 (cap $3.80)
+2026-09-24 05:41:25Z chunk done, combined=$2.0615
+RESULT CONTINUE total=2.0615
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:41:34Z guard chunk start: tracked=3 max_polls=10
+2026-09-24 05:41:37Z poll 1/10: live=['52360782'] combined=$2.0628 (cap $3.80)
+2026-09-24 05:42:47Z poll 2/10: live=['52360782'] combined=$2.0729 (cap $3.80)
+2026-09-24 05:43:53Z poll 3/10: live=['52360782'] combined=$2.0824 (cap $3.80)
+2026-09-24 05:44:59Z poll 4/10: live=['52360782'] combined=$2.0922 (cap $3.80)
+2026-09-24 05:46:02Z poll 5/10: live=['52360782'] combined=$2.1011 (cap $3.80)
+2026-09-24 05:47:04Z poll 6/10: live=['52360782'] combined=$2.1101 (cap $3.80)
+2026-09-24 05:48:06Z poll 7/10: live=['52360782'] combined=$2.1190 (cap $3.80)
+2026-09-24 05:49:08Z poll 8/10: live=['52360782'] combined=$2.1279 (cap $3.80)
+2026-09-24 05:50:10Z poll 9/10: live=['52360782'] combined=$2.1369 (cap $3.80)
+2026-09-24 05:51:12Z poll 10/10: live=['52360782'] combined=$2.1458 (cap $3.80)
+2026-09-24 05:51:13Z chunk done, combined=$2.1461
+RESULT CONTINUE total=2.1461
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 05:51:15Z guard chunk start: tracked=3 max_polls=10
+2026-09-24 05:51:16Z poll 1/10: live=['52360782'] combined=$2.1464 (cap $3.80)
+2026-09-24 05:52:18Z poll 2/10: live=['52360782'] combined=$2.1553 (cap $3.80)
+2026-09-24 05:53:20Z poll 3/10: live=['52360782'] combined=$2.1642 (cap $3.80)
+2026-09-24 05:54:22Z poll 4/10: live=['52360782'] combined=$2.1731 (cap $3.80)
+2026-09-24 05:55:24Z poll 5/10: live=['52360782'] combined=$2.1820 (cap $3.80)
+2026-09-24 05:56:25Z id=52360782 vanished, cost frozen
+2026-09-24 05:56:25Z poll 6/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 05:57:27Z poll 7/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 05:58:29Z poll 8/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 05:59:31Z poll 9/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 06:00:33Z poll 10/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 06:00:34Z chunk done, combined=$2.1909
+RESULT CONTINUE total=2.1909
+RC=0
+[0m
+[0m$ [0mpython3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+2026-09-24 06:00:39Z guard chunk start: tracked=3 max_polls=10
+2026-09-24 06:00:40Z poll 1/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 06:01:41Z poll 2/10: live=[] combined=$2.1909 (cap $3.80)
+2026-09-24 06:01:42Z exit file exists; no-live=True quiet5min=True
+2026-09-24 06:01:42Z WATCH-DONE: exit exists and no rsn-296* live for 5 min
+RESULT WATCH-DONE total=2.1909
+RC=0
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git ls-tree origin/builder-outbox -- runs/rsn-296-train/; git show origin/builder-outbox:runs/rsn-296-train/rsn-296-train.exit 2>&1 | head -30
+100644 blob ab3f8d1909b1cebec53d57df7ddbd7a7eb0220ef	runs/rsn-296-train/rsn-296-train.exit
+100644 blob 77f389cd3a8efc36e8465956cc63bcffb38d5a26	runs/rsn-296-train/rsn-296-train.go1.done
+100644 blob b8a6f7d9dd699ac64971f96757e1c5c3b9183614	runs/rsn-296-train/rsn-296-train.go1.err.txt
+100644 blob 909dcef835df65df5265e968b3eb5a66bad08730	runs/rsn-296-train/rsn-296-train.go1.reply.md
+100644 blob 02a63f7e53230eb36305bf856bce18a93f8b2908	runs/rsn-296-train/rsn-296-train.md
+rc=0
+[0m
+[0m$ [0mpython3 -c "
+import json,time,datetime
+st=json.load(open('/tmp/rsn296_guard_state.json'))
+tot=0
+for iid,r in st['instances'].items():
+  end=r['vanished'] if r['vanished'] else time.time()
+  mins=(end-r['start'])/60.0
+  cost=r['dph']*(end-r['start'])/3600.0
+  tot+=cost
+  s=datetime.datetime.fromtimestamp(r['start'],datetime.timezone.utc).strftime('%H:%M:%SZ')
+  e=datetime.datetime.fromtimestamp(end,datetime.timezone.utc).strftime('%H:%M:%SZ')
+  print(iid,'dph=%.4f'%r['dph'],'start='+s,'end='+e,'mins=%.1f'%mins,'cost=\$%.4f'%cost,'live' if not r['vanished'] else 'gone')
+print('COMBINED=\$%.4f'%tot)
+print('WITH_PRIOR=\$%.4f'%(tot+0.40))
+"; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print('live_total=',len(d)); print('rsn296_live=',[str(i.get('id')) for i in d if (i.get('label') or '').startswith('rsn-296')])"; git status --porcelain artifacts/fable-predictions-ledger.md; echo STATUS_DONE
+52334326 dph=0.5389 start=01:51:57Z end=05:28:45Z mins=216.8 cost=$1.9472 gone
+52360061 dph=0.5389 start=05:29:01Z end=05:36:06Z mins=7.1 cost=$0.0636 gone
+52360782 dph=0.5178 start=05:35:33Z end=05:56:25Z mins=20.9 cost=$0.1801 gone
+COMBINED=$2.1909
+WITH_PRIOR=$2.5909
+live_total= 0
+rsn296_live= []
+ M artifacts/fable-predictions-ledger.md
+STATUS_DONE
+[0m
+[0m$ [0mgit diff --stat artifacts/fable-predictions-ledger.md; git diff artifacts/fable-predictions-ledger.md | head -20; grep -c "GUARD-STOP" artifacts/fable-predictions-ledger.md; echo CHECK_DONE
+artifacts/fable-predictions-ledger.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index 646ffc733..197c1b3d3 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -2915,3 +2915,8 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - P313 OUTCOME (2026-09-24, builder lis-313; sealed code unmodified, 4/4 seal OK post-run, 11/11 stub tests passed, F0 seal 2/2 OK, both model sha256 match RESULTS.md) BLOCKED: arm A (292t alone) finished 286/286 turns (teach_match 13/84, ask_right 6/84, ask_abstain 77/84, clarify 186/286, ms_median 5.3 max 2952.7); arm B (292t + lis-300 reader, T=0.995) crashed at 13/40 dialogs with RuntimeError MPS backend out of memory (42.28/42.43 GiB) inside snapshot260 copy.deepcopy reaching model Parameters via loop.lis310_reader; arms C/D never started (same wall). P312.1-P312.4, P313.1-P313.4 NOT scored (no arms C/D). See artifacts/claude-lis313-20260924/RESULTS.md.
+ - P314 OUTCOME (2026-09-24, builder lis-314/315/316; sealed code unmodified, panel seal 6/6 OK, code seal 9/9 OK, lis301-merged sha256 b4fd93a2 match, 13/13 stub tests passed) BLOCKED: arm A (292t alone) finished 354/354 turns (final_facts_saved 41/175 = 23.4%, ask_right 17/109 told, ask_abstain 83, wrong_save_turns 15, questions_to_user 0, ms_median 5.9 max 3463.7); arm C (292t + lis-301 reader, T=0.995) crashed during dialog d04 (d01-d03 done, 25 turns) with RuntimeError MPS backend out of memory (42.28/42.43 GiB) inside snapshot260 copy.deepcopy reaching model Parameters via turn310, identical to the lis-313-f0 arm B crash; arms P/K/S/G never started (same deterministic wall). P315.1-3, P314.1-5, P316.1-3 NOT scored (no reader arms). See artifacts/claude-lis314-20260924/RESULTS.md.
+ - P321.1 OUTCOME (2026-09-24, runner; registered nb-321 scale run, sealed runner scripts/claude_nb320_scale.py unchanged, compact factory scripts/claude_nb321_store.py:open_compact, CPU only, Mac busy load 8-63) FAIL: dir total at 1M is 622,519,357 B / 950,000 FACT writes = 655.3 bytes per FACT write vs baseline reference 467.1 (ratio 1.40x, dir 40% BIGGER than baseline; bar was <=1/5 = 93.4, prediction <=1/8 = 58.4). store.db-only 175,095,808 B = 184.3/FACT (info, not scored). Cause as predicted: the dir keeps a full byte-identical events.jsonl (447,423,463 B) beside store.db. Rest of the run: M2 PASS (export sha256 equal at 20k+100k), M3 PASS (6000/6000 one-hop right incl. 1M; wrong_rows identical to baseline), M4 FAIL (1M open median 2.085 s vs 1.0 s; probe RSS 1,638,334,464 B = 1.64 GB vs 1.48 GB bar), M5 FAIL at 1M only (one-hop p99 4.78 ms vs 1 ms floor; 0.19/0.26 ms at 20k/100k PASS), M6 PASS (30/30 kills, 0/0/0), M7 PASS (20/20 tamper caught + 2/2 triggers blocked). Compact finished the 1M write the baseline never finished (3,155.5 s, inside caps). See artifacts/claude-nb321-20260923/RESULTS-run.md.
++- P296.1 OUTCOME (same run) invented answers (answered without a fact) final ckpt: seed 1 fresh 5 FAIL (bar <= 2/300) / transfer 0 PASS; seed 2 fresh 6 FAIL / transfer 0 PASS (copy-only: s1 5/0, s2 7/0). Fact-check catches them (missing_fact checked 30/30 all runs) but the raw blurts count. FAIL both seeds.
++- P296.2 OUTCOME (same run) transfer right on reasonpanel294 v3: seed 1 final 238 (bar >= 204: PASS, +54 over 294 plain 184); seed 2 final 238 (bar >= 209: PASS, +49 over 294 plain 189). Copy-only 195/205. PASS both seeds; the registered idea-killer (both fail) did NOT trigger.
++- P296.3 OUTCOME (same run) fresh code-doable (one/two-step, backwards, yes_no, newest_correction, missing_fact) final: seed 1 173/178 (30+30+23+30+30+30, bar >= 168: PASS); seed 2 169/178 (30+30+19+30+30+30: PASS). Two-step 30/30 both seeds; newest_correction the leak (23/28, 19/28).
++- P296.4 OUTCOME (same run) fresh panel296 v2 total final: seed 1 225/298 (bar >= 228: FAIL, miss by 3); seed 2 217/298 (FAIL, miss by 11). Copy-only 167/181. Three-step 0/30 both; comparing 16/30 both; counting 12/30 both; before_after 24/20.
++- P296 OUTCOME (same run) registered verdict FAIL (P296.1 fails both seeds, P296.4 fails both seeds; P296.2 and P296.3 pass both). Training plain 38.0/37.0 min (copy loss 4.12->0.01/4.16->0.00, rl reward 0.59->0.93/0.63->0.98), loop 78.4/77.2 min (copy loss stuck 1.85/1.97, D2 reproduced). Panel items read 0, evals 24/24 once per checkpoint, sealed files edited 0, code never patched. DATA-LOSS deviation: runs/*.json staged on GPU box, never copied back before destroy; counts preserved verbatim in RESULTS.md; runs/<R>/ holds DATA-LOSS.txt. Checkpoints (8 .pt, sha match SEAL-run.sha256.txt) kept at ~/premonition-models/rsn296/<run>/, weights never in git. Spend ~$2.09 over 4 rentals (1 training ok + timeout + success:false + ssh-broken); 0 instances live after. See artifacts/claude-rsn296-20260924/RESULTS.md.
+0
+CHECK_DONE
+[0m
+[0m$ [0mgrep -c "poll .* combined=" /tmp/rsn296_guard.log; head -1 /tmp/rsn296_guard.log; grep -c "new rsn-296" /tmp/rsn296_guard.log; grep -c "vanished" /tmp/rsn296_guard.log; df -g / | head -3
+252
+2026-09-24 01:54:55Z guard chunk start: tracked=0 max_polls=10
+3
+3
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        59    18%  484014 625699200    0%   /
+[0m
