@@ -43,3 +43,20 @@ thin non-answers and refusals. 333's pick rule keeps the most grounded candidate
 so when no candidate uses a taught fact the shortest wins, which is usually a refusal or a one-line non-answer.
 The 1B is weak at this task either way (twin b: 9/40 useful). Next: 333d generates the creative reply the way 338
 does (chat prompt, 4 samples, first that passes 338's guards), keeping 333c's routing; registered separately.
+
+## 333d verified (2026-09-24 ~19:10 UTC): registered FAIL, proved wrong
+Run: rent-333d-creative (RESULTS-333d.md; run-d; 0 think text; 2 fallbacks). One blind Opus judge, same instructions,
+on run-d/judge_creative.jsonl (P vs twin b, seed 333); key applied afterwards by this thread's script.
+
+| Mark | Bar | 333d |
+|---|---|---|
+| P333.1 notebook events on creative turns | 0 | 0 PASS |
+| P333.2 controls equal to B | ≥ 29/30 | 26/30 FAIL |
+| P333.3 creative items useful (P) | ≥ 32/40 | 8/40 FAIL (8 of the 25 routed items) |
+| P333.4 invented person-facts (P) | ≤ 2/40 | 0 PASS |
+| P333.5 P preferred or tied vs twin b | ≥ 20/40 | 23/40 PASS (P 11, tie 12, T 17) |
+
+Twin b (report only): useful 10/40, invented 3/40. Proved wrong on both clauses: P's useful count (8) is not above
+twin b's (10), and it is above 333c's (2) by 6, not 10. Generating like 338 roughly quadrupled useful replies but
+did not beat the plain 1B; the 1B itself is the limit on this task (twin b 10/40). 333d stays in the sealed 330c
+(it is the best of the four versions and never invented a fact); the creative row of the 09-30 report is FAIL.
