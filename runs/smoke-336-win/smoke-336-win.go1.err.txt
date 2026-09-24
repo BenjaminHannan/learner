@@ -1,0 +1,1799 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Fetch origin and read common rules + design spec
+[ ] Build combined tree per 330-rent-kit.md section A
+[ ] Copy tree to BensPC and run smoke-336-win
+[ ] Write RESULTS.md and push artifacts
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main --short; git rev-parse origin/builder-outbox --short; date -u; TZ=America/New_York date
+FETCH_EXIT:0
+fatal: Needed a single revision
+faa7ee2140caa0983066747bdc80224f6f3ff308
+fatal: Needed a single revision
+abd81310150fd47ceff98bf1fde817d269aa6968
+Thu Sep 24 13:15:44 UTC 2026
+Thu Sep 24 09:15:44 EDT 2026
+[0m
+[0m$ [0mgit branch -r | head -n 50; echo ---; git rev-parse origin/main; echo ---; git log --oneline -5 origin/main 2>&1 | head
+origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+---
+faa7ee2140caa0983066747bdc80224f6f3ff308
+---
+faa7ee214 rsn-299b: fresh blind panel (audit 0/60), vote runner and agent layer, sealed pass marks, queue BensPC run
+9aea18a63 rsn-299: registered FAIL on P299.1 (+4 vs +12); verified with the sealed scorer
+189c1580c Hold the four stopped BensPC month-end tasks (rent versions replace them); queue smoke-336-win (BensPC, one DEV life through the Windows stand-in, 20 min) to decide where 336 runs
+a6a05a635 Month-end runs move to rented Linux GPUs (Ben: 'remember you can also use cloud gpus'): rent kit + rent-330-dev, rent-333-creative, rent-338-chat, rent-339-style; Windows stand-in for the Unix-only resource module so BensPC can run the agent later
+fe907baca rsn-299 registered: design note, pass marks, code seal; queue the panel run (BensPC, daytime window)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "===LINES==="; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13 | cat -A | head -n 13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+===LINES===
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md | head -n 200
+echo "=====LIST QUEUE====="
+git ls-tree -r --name-only origin/main handoff/queue/ | head -n 100
+echo "=====LIST DESIGN 30-modes====="
+git ls-tree -r --name-only origin/main design/v3/30-modes/ | head -n 100
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it first. If it is below your task's BUDGET, stop with LOW-CREDIT (the director tells Ben).
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+=====LIST QUEUE=====
+handoff/queue/000-cache-pin.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+handoff/queue/270-build.md
+handoff/queue/270-panel.md
+handoff/queue/270b-build.md
+handoff/queue/270b-panel.md
+handoff/queue/271-threshold.md
+handoff/queue/273-build.md
+handoff/queue/274-build.md
+handoff/queue/chat-demo-build.md
+handoff/queue/chat-weakspots.md
+handoff/queue/lis-300-publish.md
+handoff/queue/lis-300-train.md
+handoff/queue/lis-301-train.md
+handoff/queue/lis-302-gpu.md
+handoff/queue/lis-310-chat-build.md
+handoff/queue/lis-311-chat292.md
+handoff/queue/lis-311b-chat292.md
+handoff/queue/lis-312-f0.md
+handoff/queue/lis-313-f0.md
+handoff/queue/lis-313b-f0.md
+handoff/queue/lis-314-panel.md
+handoff/queue/lis-314b-panel.md
+handoff/queue/lis-e2e-dev.md
+handoff/queue/mut0-build.md
+handoff/queue/mut1-build.md
+handoff/queue/nb-320-baseline.md
+handoff/queue/nb-321-build.md
+handoff/queue/nb-321-run.md
+handoff/queue/nb-323-build.md
+handoff/queue/own-m0-mouthdata.md
+handoff/queue/own-m1-train.md
+handoff/queue/own-m1b-train.md
+handoff/queue/own-m1n-train.md
+handoff/queue/own-m1v-run.md
+handoff/queue/own-o0a-oracle.md
+handoff/queue/own-o0a2-oracle.md
+handoff/queue/own-o0a3-permission.md
+handoff/queue/own-o0b-generator.md
+handoff/queue/own-o0c-pretrain-data.md
+handoff/queue/own-o0d-ear-code.md
+handoff/queue/own-o0d2-ear-fix.md
+handoff/queue/own-o0e-baseline-code.md
+handoff/queue/own-o0e2-baseline-reseal.md
+handoff/queue/own-o0f-bench.md
+handoff/queue/own-probe-1.md
+handoff/queue/papers-01.md
+handoff/queue/papers-02.md
+handoff/queue/rent-330-dev.md
+handoff/queue/rent-333-creative.md
+handoff/queue/rent-338-chat.md
+handoff/queue/rent-339-style.md
+handoff/queue/rentcheck.md
+handoff/queue/rsn-138nb-build.md
+handoff/queue/rsn-138nb-panel.md
+handoff/queue/rsn-138p-build.md
+handoff/queue/rsn-266-build.md
+handoff/queue/rsn-266-panel.md
+handoff/queue/rsn-266b-build.md
+handoff/queue/rsn-266b-panel.md
+handoff/queue/rsn-268-build.md
+handoff/queue/rsn-268-panel.md
+handoff/queue/rsn-268b-build.md
+handoff/queue/rsn-268b-panel.md
+handoff/queue/rsn-290-diag.md
+handoff/queue/rsn-291-build.md
+handoff/queue/rsn-291-panel.md
+handoff/queue/rsn-291-publish.md
+handoff/queue/rsn-292-build.md
+handoff/queue/rsn-292-build2.md
+handoff/queue/rsn-292-panel.md
+handoff/queue/rsn-293-build.md
+handoff/queue/rsn-293-diag.md
+handoff/queue/rsn-293-panel.md
+handoff/queue/rsn-294-guard.md
+handoff/queue/rsn-294-train.md
+handoff/queue/rsn-294-train2.md
+handoff/queue/rsn-294-train3.md
+handoff/queue/rsn-296-diag.md
+handoff/queue/rsn-296-guard.md
+handoff/queue/rsn-296-reeval.md
+=====LIST DESIGN 30-modes=====
+design/v3/30-modes/00-director-board.md
+design/v3/30-modes/00-morning-report-20260922.md
+design/v3/30-modes/100-self-questions-blind-phrasing-muse.md
+design/v3/30-modes/101-talker-first-run-prep-muse.md
+design/v3/30-modes/102-integrated-agent-patches-muse.md
+design/v3/30-modes/103-bench-scale-followups-muse.md
+design/v3/30-modes/104-live-sleep-in-daemon-muse.md
+design/v3/30-modes/105-self-router-fix-muse.md
+design/v3/30-modes/106-reading-ladder-first-score-muse.md
+design/v3/30-modes/107-reading-behind-the-gate-muse.md
+design/v3/30-modes/108-daemon-exactly-once-muse.md
+design/v3/30-modes/109-ears-real-text-supervision-muse.md
+design/v3/30-modes/110-redteam-loop102-muse.md
+design/v3/30-modes/111-loop102-end-to-end-bench-muse.md
+design/v3/30-modes/112-ledger-backfill-muse.md
+design/v3/30-modes/113-loop-nhop-questions-muse.md
+design/v3/30-modes/113b-loop-nhop-fallback-muse.md
+design/v3/30-modes/113c-loop-partial-frame-muse.md
+design/v3/30-modes/113d-fallback-partial-frame-muse.md
+design/v3/30-modes/113e-gate-inverse-cues-muse.md
+design/v3/30-modes/114-self-router-scope-guard-muse.md
+design/v3/30-modes/115-sleep-scale-muse.md
+design/v3/30-modes/116-sleep-redteam-muse.md
+design/v3/30-modes/117-redteam110-patches-muse.md
+design/v3/30-modes/118-ears-leftover-brake-muse.md
+design/v3/30-modes/118b-ears-brake-train-list-muse.md
+design/v3/30-modes/119-ears-length-coverage-muse.md
+design/v3/30-modes/119b-ears-remap-muse.md
+design/v3/30-modes/119d-ears-diagnosis-muse.md
+design/v3/30-modes/119e-ears-gate-diagnosis-muse.md
+design/v3/30-modes/119f-ears-build-muse.md
+design/v3/30-modes/119f-ears-plan-muse.md
+design/v3/30-modes/119g-ears-build-muse.md
+design/v3/30-modes/119h-ears-build-muse.md
+design/v3/30-modes/120-talker-mouth-finetune-prep-muse.md
+design/v3/30-modes/120b-mouth-decode-muse.md
+design/v3/30-modes/120d-talker-dontknow-muse.md
+design/v3/30-modes/121-teach-phrasing-coverage-muse.md
+design/v3/30-modes/122-self-router-learned-muse.md
+design/v3/30-modes/123-marks-runner-muse.md
+design/v3/30-modes/124-redteam-composer-muse.md
+design/v3/30-modes/125-bench-smollm-4hop-muse.md
+design/v3/30-modes/126-demo-harness-muse.md
+design/v3/30-modes/127-self-router-novelty-muse.md
+design/v3/30-modes/128-agent-per-turn-cost-muse.md
+design/v3/30-modes/129-teach-punctuation-muse.md
+design/v3/30-modes/130-sleep-grow-slot-muse.md
+design/v3/30-modes/131-taught-beats-sleep-muse.md
+design/v3/30-modes/132-question-rewriter-muse.md
+design/v3/30-modes/134-port-117-fixes-muse.md
+design/v3/30-modes/135-officeholder-guard-muse.md
+design/v3/30-modes/136-teach-redteam-muse.md
+design/v3/30-modes/137-multiword-possessive-muse.md
+design/v3/30-modes/137b-discourse-muse.md
+design/v3/30-modes/137c-hypo-muse.md
+design/v3/30-modes/137d-frame-muse.md
+design/v3/30-modes/137e-one-hearsay-reply-muse.md
+design/v3/30-modes/138-integration-muse.md
+design/v3/30-modes/138b-stack-muse.md
+design/v3/30-modes/138c-self-serving-muse.md
+design/v3/30-modes/138d-stack-muse.md
+design/v3/30-modes/138e-officechain-muse.md
+design/v3/30-modes/138f-stack-clean-muse.md
+design/v3/30-modes/138g-merge-layer-a-muse.md
+design/v3/30-modes/138h-merge-layer-b1-muse.md
+design/v3/30-modes/138h-portplan-layer-b-muse.md
+design/v3/30-modes/138i-merge-layer-b2-muse.md
+design/v3/30-modes/138j-merge-layer-c-muse.md
+design/v3/30-modes/138k-merge-opus.md
+design/v3/30-modes/138l-merge-opus.md
+design/v3/30-modes/138m-merge-opus.md
+design/v3/30-modes/138n-merge-opus.md
+design/v3/30-modes/138nb-inverse-diagnosis.md
+design/v3/30-modes/139-value-guard-muse.md
+design/v3/30-modes/139b-and-names-muse.md
+design/v3/30-modes/139c-tailwords-muse.md
+design/v3/30-modes/139d-tail-muse.md
+design/v3/30-modes/139e-tail-muse.md
+design/v3/30-modes/140-value-tail-muse.md
+design/v3/30-modes/141-mailbox-settle-muse.md
+design/v3/30-modes/142-perf-port-muse.md
+design/v3/30-modes/143-question-redteam-muse.md
+design/v3/30-modes/144-multi-of-names-muse.md
+design/v3/30-modes/145-sleep-merge-muse.md
+design/v3/30-modes/146-refused-correction-doubt-muse.md
+design/v3/30-modes/146b-doubt-hearsay-exempt-muse.md
+design/v3/30-modes/147-mention-walk-alignment-muse.md
+design/v3/30-modes/148-question-screen-muse.md
+design/v3/30-modes/148b-screen-status-muse.md
+design/v3/30-modes/149-whole-word-entities-muse.md
+design/v3/30-modes/150-subject-guard-muse.md
+design/v3/30-modes/150b-subject150b-muse.md
+design/v3/30-modes/150c-closed-class-subject-muse.md
+design/v3/30-modes/150d-hedgecase-muse.md
+design/v3/30-modes/151-no-question-mark-muse.md
+design/v3/30-modes/152-user-session-redteam-muse.md
+design/v3/30-modes/153-reverse153-muse.md
+design/v3/30-modes/154-yesno154-muse.md
+design/v3/30-modes/154b-multival-muse.md
+design/v3/30-modes/154c-multival-allowlist-muse.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main handoff/queue/ | grep -i -E "336|338|33|smoke|rent"; echo "---builder-outbox top---"; git ls-tree --name-only origin/builder-outbox | head -n 100
+echo "---330 full---"; git show origin/main:design/v3/30-modes/330-rent-kit.md
+handoff/queue/000-smoke.md
+handoff/queue/rent-330-dev.md
+handoff/queue/rent-333-creative.md
+handoff/queue/rent-338-chat.md
+handoff/queue/rent-339-style.md
+handoff/queue/rentcheck.md
+handoff/queue/smoke-336-win.md
+---builder-outbox top---
+.DS_Store
+artifacts
+design
+runs
+scripts
+status
+---330 full---
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it first. If it is below your task's BUDGET, stop with LOW-CREDIT (the director tells Ben).
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/smoke-336-win.md
+echo "=====RENT-338 for context====="
+git show origin/main:handoff/queue/rent-338-chat.md | head -n 120
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time).
+TIME CAP: 20 minutes in total, and it must end by 20:00 ET.
+
+YOUR TASK: smoke-336-win, REPORT ONLY. Can BensPC (Windows) run the joined month-end agent now that scripts/winshim/resource.py stands in for the Unix-only `resource` module? The answer decides whether Sunday's registered run 336 stays on BensPC. Never edit any code; if something breaks, report the exact error and traceback.
+
+CODE AND MODELS: build the combined tree exactly as design/v3/30-modes/330-rent-kit.md section A says (builder-outbox, then main on top, self122_head.pt copied in), and copy it to BensPC. READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = the cached openbmb/MiniCPM5-1B snapshot (snapshot_download(..., local_files_only=True)). Use the lis-301 venv (C:/Users/benja/lis300/venv). Set PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1.
+
+1. From the tree root: `python -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-smoke336win-20260924/run --arm claude_chat338_run:build_P --name smoke --model READER --gen-model BASE --lives e2e-dev-01` (one DEV life, 3 days, 2 sleeps, 2 restarts; the DEV bank is dev data).
+2. RESULTS.md: PASS if it wrote arm_smoke.jsonl with one row per turn of that life and exited 0, else FAIL with the exact error and traceback. Also: rows written, median and slowest ms per turn, GPU name, wall time.
+PUSH: artifacts/claude-smoke336win-20260924
+=====RENT-338 for context=====
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence).
+GPU: rent
+BUDGET: $3.00 for this whole task. Label: rent-338-chat. Needs READER.
+
+YOUR TASK: rent-338-chat, the REGISTERED run of exp 338 (open conversation). Marks: artifacts/claude-chat338-20260924/PASSMARKS.md (read it first). The panel artifacts/claude-chatpanel338-20260924 is TEST-ONLY. Run once. If artifacts/claude-chat338-20260924/run already exists on origin/builder-outbox, stop with DUPLICATE.
+1. On the rental: sha256sum -c SEAL.sha256.txt from inside the panel folder: all OK. BEFORE running write artifacts/claude-chat338-20260924/SEAL-code-rent.sha256.txt = sha256sum of scripts/claude_chat338_agent.py scripts/claude_chat338_run.py scripts/claude_cre333_agent.py scripts/claude_e2e330_arms.py scripts/claude_lis_stackb.py scripts/claude_lis_e2e_armsb.py scripts/claude_e2e336_run.py scripts/claude_e2e336_twin.py scripts/claude_e2e336_score.py scripts/claude_age334_agent.py.
+2. Each its own process (P = --panel artifacts/claude-chatpanel338-20260924, O = --out artifacts/claude-chat338-20260924/run; write them in full):
+   python -B scripts/claude_chat338_run.py P --arm B --model READER --gen-model BASE O
+   python -B scripts/claude_chat338_run.py P --arm P --model READER --gen-model BASE O
+   python -B scripts/claude_chat338_run.py P --arm T --gen-model BASE O
+   python -B scripts/claude_chat338_run.py --panel artifacts/claude-chatpanel338-20260924 --score artifacts/claude-chat338-20260924/run
+3. Safety check on the readable DEV bank, report only:
+   python -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-chat338-20260924/dev --arm claude_chat338_run:build_P --name P338 --model READER --gen-model BASE
+   python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-dev-20260924 --runs artifacts/claude-chat338-20260924/dev/arm_P338.jsonl --out artifacts/claude-chat338-20260924/dev/score
+4. Copy run/ and dev/ back to the Mac, check, destroy, ledger line.
+5. RESULTS-rent.md: the step 2 summary with P338.2 and P338.6 PASS/FAIL against their bars (the rest are judged later by the thread), the step 3 score line, GPU, hours, dollars, model commit hash, wall time per arm. Do NOT open judge_*.jsonl or grammar_P.jsonl or quote any panel reply.
+PUSH: artifacts/claude-chat338-20260924/RESULTS-rent.md artifacts/claude-chat338-20260924/SEAL-code-rent.sha256.txt artifacts/claude-chat338-20260924/run artifacts/claude-chat338-20260924/dev artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main handoff/ | head -n 100
+echo "---scripts relevant---"
+git ls-tree -r --name-only origin/main scripts/ | grep -E "336|338|331|winshim|resource" | head -n 50
+echo "---builder-outbox scripts---"
+git ls-tree -r --name-only origin/builder-outbox scripts/ | grep -E "336|338|331|winshim|resource" | head -n 50
+handoff/HANDOFF.md
+handoff/held/e2e-330-dev.md
+handoff/held/e2e-333-creative.md
+handoff/held/e2e-338-chat.md
+handoff/held/e2e-339-style.md
+handoff/held/own-e1-pretrain.md
+handoff/held/own-m1-bpc.md
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/mixpanel292-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+handoff/kit/briefs/yesnopanel293-spec.txt
+handoff/kit/dialog.py
+handoff/kit/diskscan.py
+handoff/kit/mimo/RESTART-WATCHER.md
+handoff/kit/mimo/after15.sh
+handoff/kit/mimo/common-muse.txt
+handoff/kit/mimo/diskguard.sh
+handoff/kit/mimo/ocdb.sh
+handoff/kit/mimo/resume.sh
+handoff/kit/mimo/run1.sh
+handoff/kit/mimo/rungo.sh
+handoff/kit/mimo/rungo2.sh
+handoff/kit/mimo/rungo4.sh
+handoff/kit/mimo/runq.sh
+handoff/kit/mimo/t138nf.txt
+handoff/kit/mimo/t252cf.txt
+handoff/kit/mimo/t255f.txt
+handoff/kit/mimo/t260f.txt
+handoff/kit/mimo/t261build.txt
+handoff/kit/mimo/t261panel.txt
+handoff/kit/mimo/verify.py
+handoff/kit/mimo/wait_all.sh
+handoff/kit/mimo/wait_any.sh
+handoff/kit/mimo/watch.sh
+handoff/kit/mimo/watcher.sh
+handoff/kit/rebuild_kit.py
+handoff/kit/recount235.py
+handoff/kit/recount235b.py
+handoff/kit/recount243.py
+handoff/kit/recount252.py
+handoff/kit/recount252b.py
+handoff/kit/recount254.py
+handoff/kit/recount257.py
+handoff/kit/recount260.py
+handoff/kit/recount_ct258.py
+handoff/kit/secretscan.py
+handoff/memory/MEMORY.md
+handoff/memory/a3-teacher-delay-v2-result.md
+handoff/memory/ask-fable-max-subagent.md
+---scripts relevant---
+scripts/claude_chat338_agent.py
+scripts/claude_chat338_run.py
+scripts/claude_chat338_test.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+scripts/winshim/resource.py
+---builder-outbox scripts---
+[0m
+[0m$ [0mgit show origin/main:scripts/winshim/resource.py | head -n 100
+echo "=====e2e336_run head====="
+git show origin/main:scripts/claude_e2e336_run.py | head -n 150
+"""Windows stand-in for the Unix-only `resource` module (month-end line, 2026-09-24).
+
+fable_reasoner50 imports `resource` only to log peak memory (getrusage(...).ru_maxrss). On Windows
+the month-end runners put this folder first on sys.path, so that import works and the logged
+peak memory reads 0. Nothing else is imitated. Linux and macOS never load this file.
+"""
+from types import SimpleNamespace
+
+RUSAGE_SELF = 0
+RUSAGE_CHILDREN = -1
+
+
+def getrusage(who=RUSAGE_SELF):
+    return SimpleNamespace(ru_maxrss=0, ru_utime=0.0, ru_stime=0.0)
+=====e2e336_run head=====
+#!/usr/bin/env python3
+"""336 end-to-end runner: 3-day lives with sleeps, restarts and a simulated user
+for "is that right?" questions (month-end line; spec design/v3/30-modes/331-e2e-bank-spec.md,
+plan design/v3/30-modes/330-month-end-plan.md section 4).
+
+New file only. It never edits agent code. For every life:
+  day 1 turns -> end of day (one forced sleep) -> kill + restart from the same state dir
+  day 2 turns -> end of day -> kill + restart
+  day 3 turns -> end of day
+After each reply, if the reply asks the user to confirm something (CONFIRM_MARKERS),
+the harness sends ONE mechanical "yes" or "no" taken from the life's truth sheet
+(truth.jsonl, facts valid at that turn) and records it as its own row
+(kind "confirm_answer"). That count is Ben's attention cost.
+
+Arms are named by --arm "module:function". The function is called as
+function(state_dir, args) and must return an object with .turn(text) -> list[str].
+Optional hooks on that object:
+  .e2e_end_day()      run the end-of-day sleep (default for AgentLoop-like objects:
+                      sleep_threshold 0 for one step(), then restored)
+  .nb                 a notebook; stored triples are then logged via fable_loop90_agent
+Built-in arms: "292t" (292t alone), "twin" (claude_e2e336_twin:build).
+
+Output: <out>/arm_<name>.jsonl, one row per user turn or confirm answer:
+  life_id, day, turn_index, kind ("user" | "confirm_answer"), reply, ms,
+  notebook_events (new events this row), stored_triples (after the row),
+  confirm_asked (bool), confirm_answer ("yes" | "no" | null)
+User text is never printed or copied into the output (the bank may be TEST-ONLY).
+
+Usage (Mac or BensPC, builder-outbox scripts on the path):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \
+    python -B scripts/claude_e2e336_run.py --bank DIR --arm 292t --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import gc
+import importlib
+import json
+import os
+import re
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "winshim"))
+
+# Lowercase substrings. A reply that contains one of these AND a "?" asks the user
+# to confirm something. Fixed before any run; taken from agent wording
+# (lis-310 "Just to check: ...?", lis-314 "I think you told me ..., is that right?").
+CONFIRM_MARKERS = [
+    "is that right?",
+    "just to check",
+    "did i get that right",
+    "is that correct?",
+    "am i right that",
+]
+
+BUILTIN_ARMS = {
+    "292t": "claude_e2e336_run:build_292t",
+    "twin": "claude_e2e336_twin:build",
+}
+
+
+def load(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def build_292t(state_dir: str, args) -> object:
+    import claude_loop292t_agent as T292
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000     # no mid-day sleep; the harness sleeps once per day
+    return T292.build_agent292t(cfg)
+
+
+def resolve_arm(name: str):
+    spec = BUILTIN_ARMS.get(name, name)
+    mod, _, fn = spec.partition(":")
+    if not fn:
+        raise SystemExit(f"336: arm {name!r} must be 'module:function'")
+    return getattr(importlib.import_module(mod), fn)
+
+
+def end_day(agent) -> None:
+    hook = getattr(agent, "e2e_end_day", None)
+    if callable(hook):
+        hook()
+        return
+    if hasattr(agent, "sleep_threshold") and hasattr(agent, "step"):
+        old = agent.sleep_threshold
+        agent.sleep_threshold = 0
+        try:
+            agent.step()               # sleep_due() is now true: one sleep tick
+        finally:
+            agent.sleep_threshold = old
+            if hasattr(agent, "_save"):
+                agent._save()
+
+
+def is_confirm(reply: str) -> bool:
+    low = reply.lower()
+    return "?" in low and any(m in low for m in CONFIRM_MARKERS)
+
+
+def _mentions(text_low: str, phrase: str) -> bool:
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])", text_low) is not None
+
+
+def confirm_answer(reply: str, truth: list[dict], turn_index: int) -> str:
+    """'yes' iff some fact valid at turn_index has its value named in the reply and its
+    owner named too (first name is enough; USER facts count when the reply says you/your/me/my)."""
+    low = reply.lower()
+    for f in truth:
+        if f["taught_turn"] > turn_index:
+            continue
+        if f.get("valid_until_turn") is not None and f["valid_until_turn"] <= turn_index:
+            continue
+        if not _mentions(low, str(f["value"])):
+            continue
+        owner = str(f["owner"])
+        if owner == "USER":
+            if any(_mentions(low, w) for w in ("you", "your", "you're", "me", "my")):
+                return "yes"
+            continue
+        if _mentions(low, owner) or _mentions(low, owner.split()[0]):
+            return "yes"
+    return "no"
+
+
+def triples(agent) -> list | None:
+    nb = getattr(agent, "nb", None)
+    if nb is None:
+        return None
+    import fable_loop90_agent as L90
+    return sorted([s, r, v] for (s, r, v) in L90.notebook_triples(nb))
+
+
+def events_len(agent) -> int:
+[0m
+[0m$ [0mgit grep -i "benspc" origin/main -- | head -n 100
+echo "---ssh---"
+git grep -i "ssh.*ben\|ben.*ssh\|tailscale\|BensPC.*scp\|scp.*BensPC" origin/main -- | head -n 100
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0d38f3173001est4HRnKXZP84S
+
+origin/main:artifacts/claude-identity227c-20260922/suitediff-227b/marks123/bench-rows-s2fresh_4hop.jsonl:{"contains_gold": false, "ears_stage": "loop138b-rewrite", "exact": false, "expected": "answer", "extracted": "Washington, D.C", "golds": ["Mao", "Santa Cruz de Mao"], "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "question": "What city serves as the capital of the country where the director of the developer of The Orange Box holds citizenship?", "reply": "director of Valve Corporation's officeholder's country of citizenship's capital is Washington, D.C..", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "wrong"}
+origin/main:artifacts/claude-mentionwalk246-20260922/runs/M3-suites/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff."]}
+origin/main:artifacts/claude-mentionwalk246-20260922/runs/M3-suites/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Saved: The Orange Box's developer is Grasshopper Manufacture."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench1/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench1/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench2/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench2/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench3/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/bench3/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/sd/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138k-20260922/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl:{"contains_gold": false, "ears_stage": "loop138b-rewrite", "exact": false, "expected": "answer", "extracted": "Washington, D.C", "golds": ["Mao", "Santa Cruz de Mao"], "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "question": "What city serves as the capital of the country where the director of the developer of The Orange Box holds citizenship?", "reply": "director of Valve Corporation's officeholder's country of citizenship's capital is Washington, D.C..", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "wrong"}
+origin/main:artifacts/claude-merge138l-20260922/run/bench1/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/bench1/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/bench2/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/bench2/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/bench3/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/bench3/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/sd/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138l-20260922/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl:{"contains_gold": false, "ears_stage": "loop138b-rewrite", "exact": false, "expected": "answer", "extracted": "Washington, D.C", "golds": ["Mao", "Santa Cruz de Mao"], "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "question": "What city serves as the capital of the country where the director of the developer of The Orange Box holds citizenship?", "reply": "director of Valve Corporation's officeholder's country of citizenship's capital is Washington, D.C..", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "wrong"}
+origin/main:artifacts/claude-merge138m-20260922/run/bench1/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/bench1/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/bench2/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/bench2/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/bench3/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/bench3/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/sd/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138m-20260922/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl:{"contains_gold": false, "ears_stage": "loop138b-rewrite", "exact": false, "expected": "answer", "extracted": "Washington, D.C", "golds": ["Mao", "Santa Cruz de Mao"], "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "question": "What city serves as the capital of the country where the director of the developer of The Orange Box holds citizenship?", "reply": "director of Valve Corporation's officeholder's country of citizenship's capital is Washington, D.C..", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "wrong"}
+origin/main:artifacts/claude-merge138n-20260922/run/bench1/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/bench1/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/bench2/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/bench2/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/bench3/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/bench3/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/sd/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/sd/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-merge138n-20260922/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl:{"contains_gold": false, "ears_stage": "loop138b-rewrite", "exact": false, "expected": "answer", "extracted": "Washington, D.C", "golds": ["Mao", "Santa Cruz de Mao"], "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "question": "What city serves as the capital of the country where the director of the developer of The Orange Box holds citizenship?", "reply": "director of Valve Corporation's officeholder's country of citizenship's capital is Washington, D.C..", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "wrong"}
+origin/main:artifacts/claude-merge252c-20260922/run/sd-252c/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Updated: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff (it was Goichi Suda)."]}
+origin/main:artifacts/claude-merge252c-20260922/run/sd-252c/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Updated: The Orange Box's developer is Grasshopper Manufacture (it was Valve Corporation)."]}
+origin/main:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "The continent of director of Grasshopper Manufacture's officeholder's country of citizenship is Europe.", "teach_replies": ["Saved: Grasshopper Manufacture developed No More Heroes.", "Saved: Director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda is a citizen of Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "My notes say director of Grasshopper Manufacture's officeholder is Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff is a citizen of Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Saved: Director of Grasshopper Manufacture's officeholder is Oliver Bierhoff."]}
+origin/main:artifacts/claude-mouth241-20260922/runs/suitediff-241-run1/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "The capital of director of Grasshopper Manufacture's officeholder's country of citizenship is Mao.", "teach_replies": ["Saved: Valve Corporation developed The Orange Box.", "Saved: Director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell is a citizen of the United States of America.", "Saved: The capital of the United States of America is Washington, D.C.", "My notes say Valve Corporation developed The Orange Box. Do you want me to change it to Grasshopper Manufacture?", "Saved: Director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff is a citizen of Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Saved: Grasshopper Manufacture developed The Orange Box."]}
+origin/main:artifacts/claude-myrel245-20260922/m3-suites/bench-bench132_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Europe", "id": "bench132-4hop-177", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's continent is Europe.", "teach_replies": ["Saved: No More Heroes's developer is Grasshopper Manufacture.", "Saved: director of Grasshopper Manufacture's officeholder is Goichi Suda.", "Saved: Goichi Suda's country of citizenship is Japan.", "Saved: Japan's continent is Asia.", "I already have that.", "I have director of Grasshopper Manufacture's officeholder as Goichi Suda. Do you want me to change it to Oliver Bierhoff?", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's continent is Europe."], "type": "mquake-132-4hop", "verdict": "correct", "yes_replies": ["Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff."]}
+origin/main:artifacts/claude-myrel245-20260922/m3-suites/bench-old_s2fresh_4hop-rows.jsonl:{"confirms": 1, "contains_gold": true, "ears_stage": "loop138b-rewrite", "exact": true, "expected": "answer", "extracted": "Mao", "id": "bench103-s2fresh-4hop-048", "n_teach": 8, "n_teach_reject": 1, "reply": "director of Grasshopper Manufacture's officeholder's country of citizenship's capital is Mao.", "teach_replies": ["Saved: The Orange Box's developer is Valve Corporation.", "Saved: director of Valve Corporation's officeholder is Gabe Newell.", "Saved: Gabe Newell's country of citizenship is United States of America.", "Saved: United States of America's capital is Washington, D.C..", "I have The Orange Box's developer as Valve Corporation. Do you want me to change it to Grasshopper Manufacture?", "Saved: director of Grasshopper Manufacture's officeholder is Oliver Bierhoff.", "Saved: Oliver Bierhoff's country of citizenship is Germany.", "Saved: Germany's capital is Mao."], "type": "mquake-s2fresh-4hop", "verdict": "correct", "yes_replies": ["Saved: The Orange Box's developer is Grasshopper Manufacture."]}
+[0m
+[0m$ [0mpwd; uptime; df -g / 2>&1 | head; ls ~/.ssh/ 2>&1 | head -n 30; cat ~/.ssh/config 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ 9:16  up 23:09, 4 users, load averages: 48.65 38.73 54.54
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        40    24%  484014 424087920    0%   /
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+Host benspc
+  HostName 100.75.113.114
+  User benja
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -o BatchMode=yes benspc "echo OK; hostname; nvidia-smi --query-gpu=name --format=csv,noheader; ls C:/Users/benja/lis301/work/run/merged 2>&1 || ls C:\\Users\\benja\\lis301\\work\\run\\merged 2>&1; pwd" 2>&1 | head -n 50
+OK; hostname; nvidia-smi --query-gpu=name --format=csv,noheader; ls C:/Users/benja/lis301/work/run/merged
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc hostname 2>&1; echo EXIT:$?
+ssh -o ConnectTimeout=15 benspc "ver" 2>&1 | head
+BensPC
+EXIT:0
+
+Microsoft Windows [Version 10.0.26200.9550]
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox artifacts/ | grep -E "e2e331-dev|smoke336|self122" | head -n 30
+echo "---main artifacts self122---"
+git ls-tree -r --name-only origin/main artifacts/ | grep -E "self122" | head -n 20
+echo "---main bank?---"
+git ls-tree -r --name-only origin/main artifacts/ | grep -E "e2e331" | head -n 20
+echo "---builder bank?---"
+git ls-tree -r --name-only origin/builder-outbox artifacts/ | grep -E "e2e331" | head -n 20
+---main artifacts self122---
+artifacts/fable-self122-20260922/PASSMARKS.md
+artifacts/fable-self122-20260922/RESULTS.md
+artifacts/fable-self122-20260922/SEAL.sha256.txt
+artifacts/fable-self122-20260922/WRONGS.md
+artifacts/fable-self122-20260922/heldout122.jsonl
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.fix77.seal.json
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.jsonl
+artifacts/fable-self122-20260922/self122-notebook/state.json
+artifacts/fable-self122-20260922/self122-results.json
+artifacts/fable-self122-20260922/train122.jsonl
+artifacts/fable-self122-20260922/train122_report.json
+artifacts/fable-self122panel-20260922/PANEL.md
+artifacts/fable-self122panel-20260922/SEAL.sha256.txt
+artifacts/fable-self122panel-20260922/panel.json
+---main bank?---
+artifacts/claude-e2e331-20260924/README.md
+artifacts/claude-e2e331-20260924/SEAL-A.sha256.txt
+artifacts/claude-e2e331-20260924/SEAL-B.sha256.txt
+artifacts/claude-e2e331-dev-20260924/README.md
+artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt
+artifacts/claude-e2e331-dev-20260924/truth.jsonl
+artifacts/claude-e2e331-dev-20260924/turns.jsonl
+---builder bank?---
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox artifacts/ | head -n 100
+echo "---main artifacts top---"
+git ls-tree --name-only origin/main artifacts/ | grep -E "e2e33|smoke336|chat338" | head -n 30
+artifacts/.DS_Store
+artifacts/claude-called281-20260923
+artifacts/claude-called281b-20260923
+artifacts/claude-calledpanel281-20260923
+artifacts/claude-calledpanel281b-20260923
+artifacts/claude-capab280-20260923
+artifacts/claude-capab280b-20260923
+artifacts/claude-capabilpanel280-20260923
+artifacts/claude-capabilpanel280b-20260923
+artifacts/claude-chain266-20260923
+artifacts/claude-chain266b-20260923
+artifacts/claude-chainpanel266-20260923
+artifacts/claude-chainpanel266b-20260923
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comma263-20260923
+artifacts/claude-commapanel263-20260923
+artifacts/claude-convbench-f0-20260923
+artifacts/claude-convf0-20260923
+artifacts/claude-corrpanel291-20260923
+artifacts/claude-cre333-20260924
+artifacts/claude-devset267-20260923
+artifacts/claude-diag267-20260923
+artifacts/claude-diag271-20260923
+artifacts/claude-diag290-20260923
+artifacts/claude-diag293-20260923
+artifacts/claude-e2e330-dev-20260924
+artifacts/claude-ear265-20260923
+artifacts/claude-ear269-20260923
+artifacts/claude-earcheck261b-20260923
+artifacts/claude-earcheck264-20260923
+artifacts/claude-earpanel261b-20260923
+artifacts/claude-earpanel264-20260923
+artifacts/claude-f1-20260923
+artifacts/claude-fixedtext255b-20260923
+artifacts/claude-grade241b-A-20260923
+artifacts/claude-grade241b-B-20260923
+artifacts/claude-grade241b-C-set2-20260923
+artifacts/claude-grade241b-D-set2-20260923
+artifacts/claude-grade255b-B-20260923
+artifacts/claude-gradef1-A-20260923
+artifacts/claude-gradef1-B-20260923
+artifacts/claude-invpanel138nb-20260923
+artifacts/claude-join280m-20260923
+artifacts/claude-join280n-20260923
+artifacts/claude-join280p-20260923
+artifacts/claude-join291-20260923
+artifacts/claude-join292t-20260923
+artifacts/claude-joinpanel280m-20260923
+artifacts/claude-joinpanel280n-20260923
+artifacts/claude-joinpanel280p-20260923
+artifacts/claude-joinpanel292t-20260923
+artifacts/claude-judge241b-20260923
+artifacts/claude-judgef1-20260923
+artifacts/claude-lis-e2edev-20260924
+artifacts/claude-lis300-20260923
+artifacts/claude-lis301-20260923
+artifacts/claude-lis302-20260924
+artifacts/claude-lis310-20260923
+artifacts/claude-lis311-20260923
+artifacts/claude-lis313-20260924
+artifacts/claude-lis313b-20260924
+artifacts/claude-lis314-20260924
+artifacts/claude-lis314b-20260924
+artifacts/claude-loop273-20260923
+artifacts/claude-loop274-20260924
+artifacts/claude-merge138nb-20260923
+artifacts/claude-merge138p-20260923
+artifacts/claude-merge292-20260923
+artifacts/claude-mixpanel292-20260923
+artifacts/claude-mouth241b-20260922
+artifacts/claude-mut0-20260924
+artifacts/claude-mut1-20260924
+artifacts/claude-nb320-20260923
+artifacts/claude-nb321-20260923
+artifacts/claude-nb323-20260924
+artifacts/claude-nhop268-20260923
+artifacts/claude-nhop268b-20260923
+artifacts/claude-nhopdiag-20260923
+artifacts/claude-nhoppanel268-20260923
+artifacts/claude-nhoppanel268b-20260923
+artifacts/claude-ourpanel265-20260923
+artifacts/claude-ourpanel269-20260923
+artifacts/claude-own-bench-20260923
+artifacts/claude-own-m0-20260923
+artifacts/claude-own-m1-20260923
+artifacts/claude-own-m1n-20260923
+artifacts/claude-own-m1v-20260924
+artifacts/claude-own-o0a-20260923
+artifacts/claude-own-o0a2-20260923
+artifacts/claude-own-o0a3-20260923
+artifacts/claude-own-o0b-20260923
+artifacts/claude-own-o0c-20260923
+artifacts/claude-own-o0d-20260923
+artifacts/claude-own-o0d2-20260923
+artifacts/claude-own-o0e-20260923
+artifacts/claude-own-o0e2-20260923
+artifacts/claude-papers-20260923
+artifacts/claude-papers2-20260923
+artifacts/claude-probe255b-director-20260923
+---main artifacts top---
+artifacts/claude-chat338-20260924
+artifacts/claude-e2e331-20260924
+artifacts/claude-e2e331-dev-20260924
+artifacts/claude-e2e336-20260924
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox scripts/ | head -n 100
+echo "---main scripts---"
+git ls-tree -r --name-only origin/main scripts/ | grep -E "336|338|333|330|331|lis_stack|e2e|winshim" | head -n 50
+scripts/claude_138nb_devrepro.py
+scripts/claude_138nb_m1.py
+scripts/claude_138nb_m2.py
+scripts/claude_138nb_m6.py
+scripts/claude_138nb_runall.sh
+scripts/claude_138nb_score.py
+scripts/claude_138p_l1.py
+scripts/claude_138p_panel.sh
+scripts/claude_138p_runall.sh
+scripts/claude_138p_score.py
+scripts/claude_255b_m1gen.py
+scripts/claude_255b_m2check.py
+scripts/claude_255b_m3changes.py
+scripts/claude_255b_m3format.py
+scripts/claude_255b_runall.sh
+scripts/claude_255b_score.py
+scripts/claude_255b_v255check.py
+scripts/claude_263_openpanel.sh
+scripts/claude_263_panel.sh
+scripts/claude_263_runall.sh
+scripts/claude_266_devscore.py
+scripts/claude_266_panelrun.py
+scripts/claude_266_runall.sh
+scripts/claude_266_score.py
+scripts/claude_266b_devscore.py
+scripts/claude_266b_panelrun.py
+scripts/claude_266b_runall.sh
+scripts/claude_266b_score.py
+scripts/claude_268_devrepro.py
+scripts/claude_268_panelrun.py
+scripts/claude_268_runall.sh
+scripts/claude_268_score.py
+scripts/claude_268_supp.py
+scripts/claude_268b_devrepro.py
+scripts/claude_268b_m1run.py
+scripts/claude_268b_newdev.py
+scripts/claude_268b_panelrun.py
+scripts/claude_268b_runall.sh
+scripts/claude_268b_score.py
+scripts/claude_268b_score_fix1.py
+scripts/claude_273_runall_mut0.sh
+scripts/claude_280b_panel.sh
+scripts/claude_280b_runall.sh
+scripts/claude_280m_panel.sh
+scripts/claude_280m_runall.sh
+scripts/claude_280n_panel.sh
+scripts/claude_280p_panel.sh
+scripts/claude_281b_panel.sh
+scripts/claude_281b_runall.sh
+scripts/claude_282_panelrun.sh
+scripts/claude_282_runall.sh
+scripts/claude_282b_panelrun.sh
+scripts/claude_282b_runall.sh
+scripts/claude_291_m1.py
+scripts/claude_291_m7run.py
+scripts/claude_291_m8.sh
+scripts/claude_291_panel.sh
+scripts/claude_291_runall.sh
+scripts/claude_291_score.py
+scripts/claude_292_corrarm_run.py
+scripts/claude_292_m5.sh
+scripts/claude_292_m5run.py
+scripts/claude_292_panelrun.py
+scripts/claude_292_runall.sh
+scripts/claude_292_score.py
+scripts/claude_292t_280b_agent.py
+scripts/claude_292t_281_agent.py
+scripts/claude_292t_282b_agent.py
+scripts/claude_292t_panel.sh
+scripts/claude_292t_regscore.py
+scripts/claude_292t_runall.sh
+scripts/claude_292t_runall_mut0.sh
+scripts/claude_293_devdialogs.py
+scripts/claude_293_panelscore.py
+scripts/claude_293_reg.py
+scripts/claude_293_repro.py
+scripts/claude_293_rowstrip.py
+scripts/claude_293_runall.sh
+scripts/claude_293_runall2.sh
+scripts/claude_called281_devcases.py
+scripts/claude_called281_panelrun.py
+scripts/claude_called281_panelscore.py
+scripts/claude_called281_regscore.py
+scripts/claude_called281_run.py
+scripts/claude_called281_score.py
+scripts/claude_called281b_devcases.py
+scripts/claude_called281b_panelrun.py
+scripts/claude_called281b_panelscore.py
+scripts/claude_called281b_regscore.py
+scripts/claude_called281b_run.py
+scripts/claude_called281b_score.py
+scripts/claude_capab280_devcases.py
+scripts/claude_capab280_regscore.py
+scripts/claude_capab280_run.py
+scripts/claude_capab280_score.py
+scripts/claude_capab280b_devcases.py
+scripts/claude_capab280b_paneladapt.py
+scripts/claude_capab280b_regscore.py
+scripts/claude_capab280b_run.py
+scripts/claude_capab280b_score.py
+---main scripts---
+scripts/claude_chat338_agent.py
+scripts/claude_chat338_run.py
+scripts/claude_chat338_test.py
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+scripts/claude_e2e330_arms.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+scripts/claude_lis_e2e_arms.py
+scripts/claude_lis_e2e_armsb.py
+scripts/claude_lis_stack.py
+scripts/claude_lis_stackb.py
+scripts/fable_wire57_e2e.py
+scripts/winshim/resource.py
+[0m
+[0m$ [0mgit cat-file -s origin/main:artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head
+echo "---builder has self122_head?---"
+git ls-tree -r --name-only origin/builder-outbox artifacts/fable-self122-20260922/ 2>&1 | head -n 20
+echo "---main ls size---"
+git ls-tree -l -r origin/main artifacts/fable-self122-20260922/ | head -n 20
+fatal: path 'artifacts/fable-self122-20260922/self122_head.pt' exists on disk, but not in 'origin/main'
+---builder has self122_head?---
+---main ls size---
+100644 blob 203ecffd1b6c228d6bee9e47a8c231179661bea3    4233	artifacts/fable-self122-20260922/PASSMARKS.md
+100644 blob ce5e2cfddbe3af9b5d0fb4e986054a3d64e34494    4152	artifacts/fable-self122-20260922/RESULTS.md
+100644 blob 378a0d8250ed39d338e36e095023abc458dbc060      79	artifacts/fable-self122-20260922/SEAL.sha256.txt
+100644 blob 76a9597fa6cd1568a1ca68e076178970add5a8b6    2025	artifacts/fable-self122-20260922/WRONGS.md
+100644 blob 2f7bd5b4c9012028f3086b4cf564ae5051776bb7   69852	artifacts/fable-self122-20260922/heldout122.jsonl
+100644 blob a1ba5bb8a4d3b2b9fd7f4292b2084d6c7764791a     106	artifacts/fable-self122-20260922/self122-notebook/notebook/events.fix77.seal.json
+100644 blob 30aa7c04aa7823825bc09ea4a99c3ccd459a1224   11440	artifacts/fable-self122-20260922/self122-notebook/notebook/events.jsonl
+100644 blob 4075423b50efcfda56560e70b12cd1dadd0f8068    2568	artifacts/fable-self122-20260922/self122-notebook/state.json
+100644 blob c2ac8971e1c0969360f2a45220f9a547e061531a  129674	artifacts/fable-self122-20260922/self122-results.json
+100644 blob d78cbf2737aaa53998619c48f3c07b48db702c00  232825	artifacts/fable-self122-20260922/train122.jsonl
+100644 blob 9260ea0c38293ebc2402824565273f208e5e3112    8952	artifacts/fable-self122-20260922/train122_report.json
+[0m
+[0m$ [0mls -lh /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head
+ls -lh artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head
+find /Users/ben-hannan/Desktop/projects/beautiful-model -maxdepth 4 -name "self122_head.pt" 2>/dev/null | head
+sha256sum /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head || shasum -a 256 /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-self122-20260922/self122_head.pt: No such file or directory
+-rw-r--r--  1 ben-hannan  staff    64K Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+sha256sum: /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/fable-self122-20260922/self122_head.pt: No such file or directory
+[0m
+[0m$ [0mshasum -a 256 artifacts/fable-self122-20260922/self122_head.pt
+ls -lh /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+total 3672288
+drwxr-xr-x   4 ben-hannan  staff   128B Sep 24 00:33 e2e330tree
+-rw-r--r--   1 ben-hannan  staff   1.4K Sep 23 19:07 gen_part6.py
+-rw-r--r--   1 ben-hannan  staff   3.0K Sep 23 19:01 grade_b_part1_writer.py
+drwxr-xr-x   6 ben-hannan  staff   192B Sep 24 06:09 guard-296b
+-rw-r--r--   1 ben-hannan  staff   1.2K Sep 24 07:10 lis313b-armA.log
+-rw-r--r--   1 ben-hannan  staff   1.6K Sep 24 07:19 lis313b-armC.log
+-rw-r--r--   1 ben-hannan  staff   1.6K Sep 24 07:26 lis313b-armD.log
+-rw-r--r--   1 ben-hannan  staff   4.4K Sep 24 07:28 lis313b-report.txt
+drwxr-xr-x  27 ben-hannan  staff   864B Sep 24 07:09 lis313b-tree
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules + design spec
+[•] Build combined tree per 330-rent-kit.md section A
+[ ] Copy tree to BensPC and run smoke-336-win
+[ ] Write RESULTS.md and push artifacts
+[0m
+[0m$ [0mT=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win/tree; rm -rf "$T"; mkdir -p "$T"
+git archive origin/builder-outbox | tar -x -C "$T"
+git archive origin/main | tar -x -C "$T"
+mkdir -p "$T/artifacts/fable-self122-20260922"
+cp artifacts/fable-self122-20260922/self122_head.pt "$T/artifacts/fable-self122-20260922/"
+shasum -a 256 "$T/artifacts/fable-self122-20260922/self122_head.pt"
+ls "$T/scripts/" | grep -E "e2e336|chat338|winshim" | head -n 20
+ls "$T/artifacts/" | grep -E "e2e331-dev" | head
+ls "$T/artifacts/claude-e2e331-dev-20260924/" | head -n 20
+tar czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win-tree.tgz -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win tree
+ls -lh /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win-tree.tgz
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win/tree/artifacts/fable-self122-20260922/self122_head.pt
+claude_chat338_agent.py
+claude_chat338_run.py
+claude_chat338_test.py
+claude_e2e336_run.py
+claude_e2e336_score.py
+claude_e2e336_twin.py
+winshim
+claude-e2e331-dev-20260924
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+-rw-r--r--  1 ben-hannan  staff   155M Sep 24 09:18 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win-tree.tgz
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py | grep -n "add_argument\|def main\|--bank\|--out\|--arm\|--name\|--model\|--gen-model\|--lives" | head -n 40
+echo "---DEV bank counts via git show---"
+git show origin/main:artifacts/claude-e2e331-dev-20260924/turns.jsonl | wc -l
+git show origin/main:artifacts/claude-e2e331-dev-20260924/truth.jsonl | wc -l
+git show origin/main:artifacts/claude-e2e331-dev-20260924/README.md | head -n 60
+15:Arms are named by --arm "module:function". The function is called as
+32:    python -B scripts/claude_e2e336_run.py --bank DIR --arm 292t --out DIR
+198:def main() -> int:
+200:    ap.add_argument("--bank", required=True, help="dir with turns.jsonl and truth.jsonl")
+201:    ap.add_argument("--arm", required=True)
+202:    ap.add_argument("--name", default=None, help="output arm name (default: --arm)")
+203:    ap.add_argument("--out", required=True)
+204:    ap.add_argument("--lives", default="", help="comma-separated life ids (default all)")
+205:    ap.add_argument("--model", default="", help="model dir for arms that need one (reader / twin)")
+206:    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir for creative (333)")
+207:    ap.add_argument("--mouth-model", default="", help="mouth model dir (own line)")
+208:    ap.add_argument("--skip-preflight", action="store_true",
+---DEV bank counts via git show---
+     194
+     131
+# Bank DEV (spec 331)
+
+Ordinary dev data; builders may read it. 10 lives, ids `e2e-dev-01`..`e2e-dev-10`, 3 days each,
+194 user turns, 131 facts on the truth sheet (10 of them closed by a correction).
+
+Files: `turns.jsonl` (one object per user turn), `truth.jsonl` (one object per fact).
+
+## Names
+
+Every person's and pet's first name starts with a letter from **S to Z**. Invented towns, companies,
+clinics and the like also start with S to Z, and so do the real big cities used as places. No person
+or pet name repeats across lives.
+
+## Counts per kind
+
+| kind | count | DEV minimum (bank / 4, rounded up) |
+|---|---:|---:|
+| teach | 59 | 35 |
+| correct | 10 | 7 |
+| nosave | 15 | 7 |
+| ask | 71 | 53 (sum of ask minimums) |
+| smalltalk | 29 | 13 |
+| creative | 10 | 8 |
+| other | 0 | - |
+
+Teach breakdown: 19 single-fact turns (min 18), 40 turns with 2 or more facts (min 10); at least 10 of
+the teach turns give a fact in passing or inside an aside (min 8).
+
+## Counts per ask_type
+
+| ask_type | count | DEV minimum |
+|---|---:|---:|
+| one_hop | 16 | 15 |
+| two_hop | 11 | 9 |
+| reversal | 10 | 7 |
+| edit | 10 (7 of them two-hop through the corrected fact) | 7 (3 two-hop) |
+| yesno | 9 | 4 |
+| never_told | 10 | 8 |
+| partial | 5 | 3 |
+
+Asks on day 3 whose facts were all taught on day 1: 19 (minimum 15).
+
+## Counts per day
+
+| day | turns | teach | correct | nosave | ask | smalltalk | creative |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 63 | 41 | 0 | 10 | 0 | 12 | 0 |
+| 2 | 61 | 18 | 10 | 5 | 19 | 7 | 2 |
+| 3 | 70 | 0 | 0 | 0 | 52 | 10 | 8 |
+
+Asks by day: day 2 has one_hop 12, two_hop 5, reversal 2; day 3 has edit 10, reversal 8, two_hop 6,
+yesno 9, never_told 10, one_hop 4, partial 5. Each life has 19 or 20 turns, with 5 to 7 turns per day.
+
+## Conventions
+
+- Fact ids are `devNN-fMM`; `MM` is a label local to the life and is not in teaching order.
+- `gold.values` is empty for `yesno` and `never_told`; for `yesno` the `uses_facts` are the facts that
+  decide the answer from the notebook as it stands.
+- For `reversal` asks the gold value is the fact's owner (the thing asked for), not its value.
+- For `partial` asks the gold value is the known first-hop value; the second hop was never taught.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-e2e331-dev-20260924/turns.jsonl | python3 -c "import json,sys,collections; rows=[json.loads(l) for l in sys.stdin]; c=collections.Counter(r['life_id'] for r in rows); print(c); print('e2e-dev-01 days:', collections.Counter(r['day'] for r in rows if r['life_id']=='e2e-dev-01')); print('e2e-dev-01 total:', sum(1 for r in rows if r['life_id']=='e2e-dev-01'))"
+Counter({'e2e-dev-01': 20, 'e2e-dev-02': 20, 'e2e-dev-03': 20, 'e2e-dev-10': 20, 'e2e-dev-04': 19, 'e2e-dev-05': 19, 'e2e-dev-06': 19, 'e2e-dev-07': 19, 'e2e-dev-08': 19, 'e2e-dev-09': 19})
+e2e-dev-01 days: Counter({2: 7, 3: 7, 1: 6})
+e2e-dev-01 total: 20
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-PSDrive C | Select-Object Used,Free; nvidia-smi --query-gpu=name --format=csv,noheader; Get-ChildItem C:/Users/benja/lis301/work/run/merged | Select-Object Name,Length; C:/Users/benja/lis300/venv/Scripts/python.exe --version\" " 2>&1 | head -n 60
+NVIDIA GeForce RTX 5070 Ti
+Python 3.10.9
+        Used        Free
+        ----        ----
+978344448000 44799385600
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/lis301/work/run/merged; Test-Path C:/Users/benja/lis301/work/run/merged/model.safetensors; Test-Path C:/Users/benja/lis300/venv/Scripts/python.exe; Get-ChildItem C:/Users/benja/lis301/work -Directory | Select-Object Name\"" 2>&1 | head -n 40
+True
+True
+True
+
+Name  
+----  
+data  
+persrc
+run
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"(Get-FileHash C:/Users/benja/lis301/work/run/merged/model.safetensors -Algorithm SHA256).Hash.ToLower().Substring(0,16); nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv; Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,CPU | Format-Table -AutoSize | Out-String -Width 200\"" 2>&1 | head -n 60
+b4fd93a2b29fc9e2
+name, memory.used [MiB], memory.total [MiB]
+NVIDIA GeForce RTX 5070 Ti, 599 MiB, 16303 MiB
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"(Get-FileHash C:/Users/benja/lis301/work/run/merged/model.safetensors -Algorithm SHA256).Hash.ToLower()\"" 2>&1 | head
+ssh benspc "powershell -NoProfile -Command \"C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', local_files_only=True))\\\"\"" 2>&1 | head -n 20
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890
+C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_chat338_run.py | grep -n "def build_P\|def build_\|add_argument\|--model\|--gen-model\|--panel\|--out\|--arm" | head -n 40
+16:  python -B scripts/claude_chat338_run.py --panel DIR --arm B --model <lis-301 dir> --gen-model <MiniCPM5-1B dir> --out DIR
+17:  python -B scripts/claude_chat338_run.py --panel DIR --arm P --model <lis-301 dir> --gen-model <same> --out DIR
+18:  python -B scripts/claude_chat338_run.py --panel DIR --arm T --gen-model <same> --out DIR
+19:  python -B scripts/claude_chat338_run.py --panel DIR --score DIR
+44:def build_B(state_dir, args):
+52:def build_P(state_dir, args):
+162:    ap.add_argument("--panel", required=True)
+163:    ap.add_argument("--arm", choices=["P", "B", "T"])
+164:    ap.add_argument("--model", default="", help="lis-301 reader dir (arms P and B)")
+165:    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir")
+166:    ap.add_argument("--mouth-model", default="")
+167:    ap.add_argument("--out", default="")
+168:    ap.add_argument("--score", default="")
+175:        raise SystemExit("338: --gen-model (all arms) and --model (arms P, B) are required")
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules + design spec
+[✓] Build combined tree per 330-rent-kit.md section A
+[•] Copy tree to BensPC and run smoke-336-win
+[ ] Write RESULTS.md and push artifacts
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/lis301/work/smoke336win; Get-Date -Format o\"" 2>&1 | head
+scp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win-tree.tgz benspc:lis301/work/smoke336win-tree.tgz 2>&1 | tail -n 5; echo SCP_EXIT:$?
+False
+2026-09-24T09:19:42.3527674-04:00
+SCP_EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force C:/Users/benja/lis301/work/smoke336win/tree | Out-Null; tar xzf C:/Users/benja/lis301/work/smoke336win-tree.tgz -C C:/Users/benja/lis301/work/smoke336win; Get-ChildItem C:/Users/benja/lis301/work/smoke336win/tree | Select-Object Name; Get-ChildItem C:/Users/benja/lis301/work/smoke336win/tree/scripts/claude_e2e336_run.py; Get-ChildItem C:/Users/benja/lis301/work/smoke336win/tree/artifacts/claude-e2e331-dev-20260924/\"" 2>&1 | head -n 30
+Name                        
+----                        
+.claude                     
+archive                     
+artifacts                   
+data                        
+design                      
+handoff                     
+learnlab                    
+memorylab                   
+premonition                 
+reviews                     
+runs                        
+scripts                     
+status                      
+tests                       
+.DS_Store                   
+.gitignore                  
+ADVERSARIAL_REVIEW.md       
+ARCHITECTURE_DECISION.md    
+CLAUDE.md                   
+README.md                   
+REMOTE_RUN.md               
+RESEARCH_REVIEW.md          
+run.py                      
+run.sh                      
+TEACHING_TO_TEST_CONTRACT.md
+claude_e2e336_run.py        
+README.md
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/lis301/work/smoke336win/tree/scripts/winshim/resource.py; Test-Path C:/Users/benja/lis301/work/smoke336win/tree/scripts/claude_e2e336_run.py; Test-Path C:/Users/benja/lis301/work/smoke336win/tree/artifacts/claude-e2e331-dev-20260924/turns.jsonl; (Get-FileHash C:/Users/benja/lis301/work/smoke336win/tree/artifacts/fable-self122-20260922/self122_head.pt -Algorithm SHA256).Hash.ToLower()\"" 2>&1 | head -n 20
+True
+True
+True
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25
+[0m
+[0m$ [0mTZ=America/New_York date; echo START_SMOKE
+Thu Sep 24 09:22:11 EDT 2026
+START_SMOKE
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; cd C:/Users/benja/lis301/work/smoke336win/tree; \\\$t0=Get-Date; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-smoke336win-20260924/run --arm claude_chat338_run:build_P --name smoke --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --lives e2e-dev-01; echo EXITCODE:\$LASTEXITCODE; \\\$t1=Get-Date; echo WALLSEC:(\$t1-\\\$t0).TotalSeconds\"" 2>&1 | tail -n 60; echo SSH_EXIT:$?
+At line:1 char:611
++ ... cho EXITCODE:$LASTEXITCODE; \$t1=Get-Date; echo WALLSEC:($t1-\$t0).To ...
++                                                                  ~
+You must provide a value expression following the '-' operator.
+At line:1 char:611
++ ... EXITCODE:$LASTEXITCODE; \$t1=Get-Date; echo WALLSEC:($t1-\$t0).TotalS ...
++                                                              ~~~~
+Unexpected token '\$t0' in expression or statement.
+At line:1 char:611
++ ... cho EXITCODE:$LASTEXITCODE; \$t1=Get-Date; echo WALLSEC:($t1-\$t0).To ...
++                                                                  ~
+Missing closing ')' in expression.
+At line:1 char:615
++ ... XITCODE:$LASTEXITCODE; \$t1=Get-Date; echo WALLSEC:($t1-\$t0).TotalSe ...
++                                                                 ~
+Unexpected token ')' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : ExpectedValueExpression
+ 
+SSH_EXIT:0
+[0m
+[0m$ [0mcat > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336_run.ps1 <<'EOF'
+$env:PYTHONUTF8='1'
+$env:OMP_NUM_THREADS='1'
+$env:MKL_NUM_THREADS='1'
+cd C:/Users/benja/lis301/work/smoke336win/tree
+$t0 = Get-Date
+C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-smoke336win-20260924/run --arm claude_chat338_run:build_P --name smoke --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --lives e2e-dev-01
+$code = $LASTEXITCODE
+$t1 = Get-Date
+$wall = ($t1 - $t0).TotalSeconds
+echo "EXITCODE:$code"
+echo "WALLSEC:$wall"
+nvidia-smi --query-gpu=name --format=csv,noheader
+EOF
+scp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336_run.ps1 benspc:lis301/work/smoke336win_run.ps1 2>&1 | tail -n 3; echo SCP_EXIT:$?
+SCP_EXIT:0
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -File C:/Users/benja/lis301/work/smoke336win_run.ps1" 2>&1 | tail -n 80; echo SSH_EXIT:$?
+MISSING-CACHE: the self122 MiniLM router did not load (FileNotFoundError(2, 'The system cannot find the path specified')); restore the Hugging Face snapshot, then rerun. Nothing was run.
+EXITCODE:1
+WALLSEC:1.6843509
+NVIDIA GeForce RTX 5070 Ti
+SSH_EXIT:0
+[0m
+[0m$ [0mcat > /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336_run2.ps1 <<'EOF'
+$env:PYTHONUTF8='1'
+$env:OMP_NUM_THREADS='1'
+$env:MKL_NUM_THREADS='1'
+cd C:/Users/benja/lis301/work/smoke336win/tree
+C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-smoke336win-20260924/run --arm claude_chat338_run:build_P --name smoke --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --lives e2e-dev-01 > C:/Users/benja/lis301/work/smoke336win_run.log 2>&1
+$code = $LASTEXITCODE
+echo "EXITCODE:$code"
+EOF
+scp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336_run2.ps1 benspc:lis301/work/smoke336win_run2.ps1 2>&1 | tail -n 2
+ssh benspc "powershell -NoProfile -File C:/Users/benja/lis301/work/smoke336win_run2.ps1" 2>&1 | tail -n 5
+ssh benspc "powershell -NoProfile -Command \"Get-Content C:/Users/benja/lis301/work/smoke336win_run.log\"" 2>&1 | head -n 120
+EXITCODE:1
+C:/Users/benja/lis300/venv/Scripts/python.exe : MISSING-CACHE: the self122 MiniLM router did not load 
+(FileNotFoundError(2, 'The system cannot find the path specified')); restore the Hugging Face snapshot, then rerun. 
+Nothing was run.
+At C:\Users\benja\lis301\work\smoke336win_run2.ps1:5 char:1
++ C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_e2e33 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (MISSING-CACHE: ...othing was run.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_chat338_run.py | grep -n "MISSING-CACHE\|MiniLM\|snapshot_download\|local_files_only\|self122" | head -n 40
+echo "=====agent====="
+git show origin/main:scripts/claude_chat338_agent.py | grep -n "MISSING-CACHE\|MiniLM\|snapshot_download\|local_files_only\|self122\|resource" | head -n 40
+177:        try:                                           # 292t's self-question router needs MiniLM on disk
+178:            import fable_self122 as S122
+181:            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}). Nothing was run.")
+=====agent=====
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_chat338_run.py | sed -n '150,220p'
+(d / "judge_turns_P.jsonl").write_text("".join(
+            json.dumps({"item_id": iid, "conversation": convo("P", iid)}, ensure_ascii=False) + "\n"
+            for iid in sorted(items)), encoding="utf-8")
+        (d / "grammar_P.jsonl").write_text("".join(
+            json.dumps({"reply": x}, ensure_ascii=False) + "\n"
+            for x in sorted({r["reply"] for r in arms["P"] if r["reply"]})), encoding="utf-8")
+    (d / "summary.json").write_text(json.dumps(summ, indent=1, sort_keys=True), encoding="utf-8")
+    print(json.dumps(summ, sort_keys=True))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--panel", required=True)
+    ap.add_argument("--arm", choices=["P", "B", "T"])
+    ap.add_argument("--model", default="", help="lis-301 reader dir (arms P and B)")
+    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir")
+    ap.add_argument("--mouth-model", default="")
+    ap.add_argument("--out", default="")
+    ap.add_argument("--score", default="")
+    a = ap.parse_args()
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if a.score:
+        score(a)
+        return
+    if not a.gen_model or (a.arm in ("P", "B") and not a.model):
+        raise SystemExit("338: --gen-model (all arms) and --model (arms P, B) are required")
+    if a.arm in ("P", "B"):
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}). Nothing was run.")
+    run(a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py | grep -n "MISSING-CACHE\|MiniLM\|snapshot_download\|preflight\|skip-preflight\|route122\|fable_self122" | head -n 30
+git show origin/main:scripts/claude_e2e336_run.py | sed -n '195,280p'
+208:    ap.add_argument("--skip-preflight", action="store_true",
+209:                    help="skip the MiniLM router check (cloud smoke tests with a stubbed router only)")
+212:    if not args.skip_preflight and args.arm != "twin":
+213:        try:                                           # 292t's self-question router needs MiniLM on disk
+214:            import fable_self122 as S122
+215:            S122.route122("what is your name?")
+217:            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); "
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bank", required=True, help="dir with turns.jsonl and truth.jsonl")
+    ap.add_argument("--arm", required=True)
+    ap.add_argument("--name", default=None, help="output arm name (default: --arm)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--lives", default="", help="comma-separated life ids (default all)")
+    ap.add_argument("--model", default="", help="model dir for arms that need one (reader / twin)")
+    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir for creative (333)")
+    ap.add_argument("--mouth-model", default="", help="mouth model dir (own line)")
+    ap.add_argument("--skip-preflight", action="store_true",
+                    help="skip the MiniLM router check (cloud smoke tests with a stubbed router only)")
+    args = ap.parse_args()
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if not args.skip_preflight and args.arm != "twin":
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); "
+                             "restore the Hugging Face snapshot, then rerun. Nothing was run.")
+
+    bank = Path(args.bank)
+    turns = load(bank / "turns.jsonl")
+    truth = load(bank / "truth.jsonl")
+    want = {x for x in args.lives.split(",") if x}
+    order: list[str] = []
+    by: dict[str, list[dict]] = {}
+    for t in turns:
+        lid = t["life_id"]
+        if want and lid not in want:
+            continue
+        if lid not in by:
+            by[lid] = []
+            order.append(lid)
+        by[lid].append(t)
+    for lid in order:
+        by[lid].sort(key=lambda x: x["turn_index"])
+    truth_by: dict[str, list[dict]] = {}
+    for f in truth:
+        truth_by.setdefault(f["life_id"], []).append(f)
+
+    builder = resolve_arm(args.arm)
+    name = args.name or args.arm.replace(":", "_").replace("/", "_")
+    rows: list[dict] = []
+    for lid in order:
+        run_life(builder, args, lid, by[lid], truth_by.get(lid, []), rows)
+        print(f"[336/{name}] {lid} turns={len(by[lid])}", flush=True)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{name}.jsonl").write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    print(f"wrote arm_{name}.jsonl rows={len(rows)} lives={len(order)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main scripts/ | grep -i "fable_self122\|self122" | head
+git show origin/main:scripts/fable_self122.py 2>&1 | grep -n "snapshot_download\|MiniLM\|local_files_only\|HF_HUB_OFFLINE\|route122\|def " | head -n 40
+scripts/fable_self122.py
+scripts/fable_self122_data.py
+scripts/fable_self122_diag.py
+scripts/fable_self122_runner.py
+scripts/fable_self122_train.py
+10:(frozen borrowed MiniLM-L6-v2 encoder via our plain-PyTorch loader +
+58:    def __init__(self, repo: Path):
+78:    def route(self, question: str) -> tuple[str, dict]:
+111:def get_router() -> LearnedRouter:
+119:def route122(question: str) -> tuple[str, dict]:
+126:    def answer_self(self, question: str) -> str:
+127:        intent, _ = route122(question)
+133:def devcheck() -> int:
+192:def main(argv=None) -> int:
+199:        intent, info = route122(args.route)
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_self122.py | sed -n '50,125p'
+CANONICAL = S105.CANONICAL
+
+_classifier = None
+
+
+class LearnedRouter:
+    """Frozen encoder + frozen head. No training here, ever."""
+
+    def __init__(self, repo: Path):
+        import fable_self122_train as T  # noqa: E402 (frozen pipeline reuse)
+        torch.set_num_threads(1)
+        self._T = T
+        snapshot = T.resolve_snapshot(None)
+        enc, tok, info = T.load_encoder(snapshot)
+        self.enc, self.tok = enc, tok
+        art = repo / "artifacts" / "fable-self122-20260922"
+        bundle = torch.load(art / "self122_head.pt", weights_only=True)
+        head = torch.nn.Linear(384, len(bundle["labels"]))
+        head.load_state_dict(bundle["state_dict"])
+        head.eval()
+        self.head = head
+        self.labels: list[str] = list(bundle["labels"])
+        self.tau: float = float(bundle["tau"])
+        self.mu: float = float(bundle["mu"])
+        self.seed = bundle["seed"]
+        self.snapshot = snapshot
+
+    @torch.no_grad()
+    def route(self, question: str) -> tuple[str, dict]:
+        T = self._T
+        X = T.embed([question], self.enc, self.tok)
+        pi, conf, margin, logits = T.predict(self.head, X)
+        p, c, m = int(pi[0]), float(conf[0]), float(margin[0])
+        lg = logits[0].tolist()
+        top3 = [(self.labels[i], round(v, 2))
+                for v, i in sorted(zip(lg, range(len(lg))),
+                                   reverse=True)[:3]]
+        info = {"top1": self.labels[p], "conf": round(c, 4),
+                "margin": round(m, 4), "top3": top3,
+                "tau": self.tau, "mu": self.mu}
+        decline, reason = S114.scope_guard(question)
+        if decline:
+            info["guard"] = reason
+            return "DECLINE", info
+        info["guard"] = "pass"
+        lab = self.labels[p]
+        if lab == "OOS":
+            info["decline"] = "predicted-OOS"
+            return "DECLINE", info
+        if c < self.tau or m < self.mu:
+            info["decline"] = f"low-confidence(c={c:.2f}<{self.tau} or " \
+                              f"m={m:.2f}<{self.mu})"
+            return "DECLINE", info
+        _, toks = S105.normalise(question)
+        allow = S105.guard(question, toks)
+        if allow is not None and lab not in allow:
+            info["decline"] = "type-guard"
+            return "DECLINE", info
+        return lab, info
+
+
+def get_router() -> LearnedRouter:
+    global _classifier
+    if _classifier is None:
+        repo = Path(__file__).resolve().parent.parent
+        _classifier = LearnedRouter(repo)
+    return _classifier
+
+
+def route122(question: str) -> tuple[str, dict]:
+    return get_router().route(question)
+
+
+class Self122Agent(S114.Self114Agent):
+    """Exp-114 agent with the learned scorer. Answer bodies inherited intact."""
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_self122_train.py | grep -n "resolve_snapshot\|snapshot_download\|all-MiniLM\|local_files_only\|HF_HUB" | head -n 20
+git show origin/main:scripts/fable_self122_train.py | grep -n -A 15 "def resolve_snapshot" | head -n 40
+10:(sentence-transformers/all-MiniLM-L6-v2, cached on the Mac) is used instead of
+63:def resolve_snapshot(arg: str | None) -> str:
+68:        "models--sentence-transformers--all-MiniLM-L6-v2/snapshots"))
+162:    snapshot = resolve_snapshot(args.snapshot)
+63:def resolve_snapshot(arg: str | None) -> str:
+64-    if arg:
+65-        return arg
+66-    base = Path(os.path.expanduser(
+67-        "~/.cache/huggingface/hub/"
+68-        "models--sentence-transformers--all-MiniLM-L6-v2/snapshots"))
+69-    snaps = sorted(p for p in base.iterdir() if p.is_dir())
+70-    assert snaps, "no cached MiniLM snapshot"
+71-    return str(snaps[0])
+72-
+73-
+74-def load_encoder(snapshot: str):
+75-    """MiniLM via our plain-PyTorch loader (D1: lowercase=True, uncased vocab)."""
+76-    with open(os.path.join(snapshot, "config.json")) as fh:
+77-        cfg = json.load(fh)
+78-    model = L.Bert(cfg)
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_self122.py | head -n 50 | grep -n "import\|resource"
+echo "---train imports---"
+git show origin/main:scripts/fable_self122_train.py | head -n 60 | grep -n "import\|resource"
+echo "---reasoner50 resource---"
+git grep "import resource" origin/main -- scripts/ | head -n 20
+33:from __future__ import annotations
+35:import argparse
+36:import sys
+37:from pathlib import Path
+43:import torch  # noqa: E402
+45:import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+46:import fable_self114 as S114  # noqa: E402 (read-only; wrapped, never edited)
+47:import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+---train imports---
+31:from __future__ import annotations
+33:import argparse
+34:import hashlib
+35:import json
+36:import os
+37:import sys
+38:import time
+39:from pathlib import Path
+45:import torch  # noqa: E402
+46:import torch.nn.functional as F  # noqa: E402
+48:import fable_bert_loader as L  # noqa: E402 (ours, read-only reuse)
+---reasoner50 resource---
+origin/main:scripts/astra_canonical_operator_run.py:import resource
+origin/main:scripts/claude_own_shared_base.py:        import resource
+origin/main:scripts/fable_concepttoy20_models.py:import resource
+origin/main:scripts/fable_ears85_train.py:    import resource
+origin/main:scripts/fable_link_isolation.py:import resource
+origin/main:scripts/fable_link_isolation_v2.py:import resource
+origin/main:scripts/fable_modernbert61_check.py:import resource
+origin/main:scripts/fable_newnames21.py:import resource                                                            # noqa: E402
+origin/main:scripts/fable_newnames27.py:import resource                                                            # noqa: E402
+origin/main:scripts/fable_novelty19_train.py:import resource
+origin/main:scripts/fable_operator_reliability.py:import resource
+origin/main:scripts/fable_operator_reliability_gpu.py:    * ``astra_canonical_operator_run`` and the CPU wrapper both ``import resource`` at
+origin/main:scripts/fable_operator_reliability_gpu.py:        import resource
+origin/main:scripts/fable_reasoner50.py:import resource
+origin/main:scripts/fable_startup_factorial.py:import resource
+origin/main:scripts/fable_startup_factorial_v2.py:import resource
+origin/main:scripts/fable_story_size_stress.py:import resource
+origin/main:scripts/premonition_handoff_diag.py:import resource
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2; Get-ChildItem C:/Users/benja/.cache/huggingface/hub/ -Directory | Select-Object Name\"" 2>&1 | head -n 20
+False
+
+Name                                     
+----                                     
+.locks                                   
+blobs                                    
+models--allenai--scibert_scivocab_uncased
+models--openbmb--MiniCPM5-1B
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:/Users/benja/lis301/work/smoke336win/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import sys; sys.path.insert(0,'scripts/winshim'); import resource; print('shim-ok', resource.getrusage()); import os; print('os', os.name)\\\"\"" 2>&1 | head -n 20
+shim-ok namespace(ru_maxrss=0, ru_utime=0.0, ru_stime=0.0)
+os nt
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"cd C:/Users/benja/lis301/work/smoke336win/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import sys; sys.path.insert(0,'scripts'); sys.path.insert(0,'scripts/winshim'); import fable_reasoner50; print('reasoner50-ok')\\\"\"" 2>&1 | head -n 30
+reasoner50-ok
+[0m
+[0m$ [0mscp benspc:lis301/work/smoke336win_run.log /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win_run.log 2>&1 | tail -n 2; echo ---; cat /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/smoke336win_run.log
+echo "===OUT DIR==="
+ssh benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/lis301/work/smoke336win/tree/artifacts/claude-smoke336win-20260924/run; Get-ChildItem C:/Users/benja/lis301/work/smoke336win/tree/artifacts/claude-smoke336win-20260924/ -Recurse -ErrorAction SilentlyContinue | Select-Object FullName,Length\"" 2>&1 | head -n 20
+TZ=America/New_York date
+---
+��C : / U s e r s / b e n j a / l i s 3 0 0 / v e n v / S c r i p t s / p y t h o n . e x e   :   M I S S I N G - C A C H E :   t h e   s e l f 1 2 2   M i n i L M   r o u t e r   d i d   n o t   l o a d    
+ ( F i l e N o t F o u n d E r r o r ( 2 ,   ' T h e   s y s t e m   c a n n o t   f i n d   t h e   p a t h   s p e c i f i e d ' ) ) ;   r e s t o r e   t h e   H u g g i n g   F a c e   s n a p s h o t ,   t h e n   r e r u n .    
+ N o t h i n g   w a s   r u n .  
+ A t   C : \ U s e r s \ b e n j a \ l i s 3 0 1 \ w o r k \ s m o k e 3 3 6 w i n _ r u n 2 . p s 1 : 5   c h a r : 1  
+ +   C : / U s e r s / b e n j a / l i s 3 0 0 / v e n v / S c r i p t s / p y t h o n . e x e   - B   s c r i p t s / c l a u d e _ e 2 e 3 3   . . .  
+ +   ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~  
+         +   C a t e g o r y I n f o                     :   N o t S p e c i f i e d :   ( M I S S I N G - C A C H E :   . . . o t h i n g   w a s   r u n . : S t r i n g )   [ ] ,   R e m o t e E x c e p t i o n  
+         +   F u l l y Q u a l i f i e d E r r o r I d   :   N a t i v e C o m m a n d E r r o r  
+    
+ ===OUT DIR===
+False
+Thu Sep 24 09:23:25 EDT 2026
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules + design spec
+[✓] Build combined tree per 330-rent-kit.md section A
+[✓] Copy tree to BensPC and run smoke-336-win
+[•] Write RESULTS.md and push artifacts
+[0m
+[0m$ [0mmkdir -p artifacts/claude-smoke336win-20260924/run && ls artifacts/ | grep smoke336
+claude-smoke336win-20260924
+[0m
+[0m← [0mWrite artifacts/claude-smoke336win-20260924/RESULTS.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite artifacts/claude-smoke336win-20260924/run/smoke336win_console.txt
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short | head -n 20; echo ---; ls -R artifacts/claude-smoke336win-20260924/; TZ=America/New_York date
+M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+---
+RESULTS.md
+run
+
+artifacts/claude-smoke336win-20260924//run:
+smoke336win_console.txt
+Thu Sep 24 09:24:13 EDT 2026
+[0m
+[0m$ [0mgit status --short | grep -E "smoke336"; echo ---; git diff --stat | tail -n 5
+---
+ artifacts/fable-predictions-ledger.md | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+[0m
+[0m$ [0mgit status --short artifacts/claude-smoke336win-20260924/; echo STATUS_EXIT:$?; git check-ignore -v artifacts/claude-smoke336win-20260924/RESULTS.md; echo IGNORE_EXIT:$?; git status --short | wc -l; git status --short | grep -c "^??"
+STATUS_EXIT:0
+.gitignore:5:artifacts/	artifacts/claude-smoke336win-20260924/RESULTS.md
+IGNORE_EXIT:0
+     255
+254
+[0m
+[0m$ [0mcat .gitignore | head -n 30; echo ---; git check-ignore -v artifacts/claude-e2e331-dev-20260924/README.md; echo EXIT:$?
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+---
+.gitignore:5:artifacts/	artifacts/claude-e2e331-dev-20260924/README.md
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules + design spec
+[✓] Build combined tree per 330-rent-kit.md section A
+[✓] Copy tree to BensPC and run smoke-336-win
+[✓] Write RESULTS.md and push artifacts
+[0m
