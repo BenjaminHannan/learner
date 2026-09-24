@@ -50,6 +50,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "winshim"))
 
 # Lowercase substrings. A reply that contains one of these AND a "?" asks the user
 # to confirm something. Fixed before any run; taken from agent wording

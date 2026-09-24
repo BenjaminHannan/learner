@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import shutil
 import sys
@@ -26,6 +27,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "winshim"))
 
 
 def load(p):
