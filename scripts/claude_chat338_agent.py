@@ -18,7 +18,7 @@ The chat phase:
         found neither in the facts, the history nor the turn;
      G3 personal questions (the turn says my/I and asks something): every capitalised word after
         the first word and every number in the reply must be found in the facts, history or turn;
-     G4 length: 1 to 90 words after trimming to the last full sentence.
+     G4 length: 1 to 90 words after trimming to the last full sentence, and no <think> text.
   3. If no sample passes, the wrapped turn's reply stays (fail closed).
 Nothing produced here is saved to the notebook. Counters in loop.chat338_stats.
 
@@ -35,12 +35,12 @@ N338 = 4
 HISTORY338 = 12                       # messages (6 exchanges)
 MAX_WORDS338 = 90
 STATE_NAME338 = "chat338.json"
-SYSTEM338 = ("You are a friendly personal assistant having a relaxed, natural conversation. Reply in plain, "
-             "fluent English, 1 to 4 sentences, like a thoughtful friend. Give real help when asked for advice "
-             "or an explanation. What you know about the user's life is listed below and in the chat; never "
-             "make up anything else about the user or their people. If the user asks about their own life and "
-             "the answer is not there, say you don't know. You cannot save notes in this reply, so never say "
-             "you will remember something.")
+SYSTEM338 = ("You are a friendly assistant chatting with the user. Reply in natural, fluent English in 1 to 4 "
+             "sentences, like a thoughtful friend: answer questions directly, give real help with advice or "
+             "explanations, and be warm when they share feelings. Don't talk about being an AI or about notes. "
+             "Never make up facts about the user or people they know; if they ask about their own life and the "
+             "answer is not in the chat or the facts below, say you don't know. Never say you will remember "
+             "something.")
 MEMORY_CLAIMS = [r"\bi'?ll remember\b", r"\bi will remember\b", r"\bnoted\b", r"\bi'?ve saved\b", r"\bsaved\b",
                  r"\bi'?ll keep (that|it|this) in mind\b", r"\bi'?ll make a note\b", r"\bmade a note\b",
                  r"\bi'?ve written\b", r"\bgot it,? i'?ll\b", r"\bi'?ll note\b", r"\bin my notes\b"]
@@ -87,7 +87,7 @@ def guard(c: str, text: str, known: set[str]) -> str | None:
     """None if c passes, else the name of the first guard it fails."""
     low = c.lower()
     n = len(c.split())
-    if n == 0 or n > MAX_WORDS338:
+    if n == 0 or n > MAX_WORDS338 or "<think" in low or "</think" in low:
         return "G4"
     if any(re.search(p, low) for p in MEMORY_CLAIMS):
         return "G1"
@@ -133,10 +133,11 @@ def install_chat338(loop, gen, n: int = N338) -> None:
                 and getattr(loop, "lis314_confirming", None) is None):
             loop.chat338_stats["gave_up"] += 1
             ctx = C.context_facts(loop, text)
-            facts = " ".join(C._sentence(f) for f in ctx) or "Nothing yet."
+            facts = " ".join(C._sentence(f) for f in ctx)
             hist = state["history"][-HISTORY338:]
             known = _words([text, facts] + [h["content"] for h in hist])
-            msgs = [{"role": "system", "content": SYSTEM338 + " What you know: " + facts}] + hist + \
+            system = SYSTEM338 + (" Facts the user has told you: " + facts if facts else "")
+            msgs = [{"role": "system", "content": system}] + hist + \
                    [{"role": "user", "content": text}]
             pick = None
             for c in gen.sample_chat(msgs, n):
@@ -166,7 +167,7 @@ def install_chat338(loop, gen, n: int = N338) -> None:
 class Gen338:
     """Chat sampling on the base MiniCPM5-1B. Pass share=<Gen333> to reuse its loaded model."""
 
-    def __init__(self, model_dir: str = "", share=None, max_new: int = 160, temperature: float = 0.7,
+    def __init__(self, model_dir: str = "", share=None, max_new: int = 200, temperature: float = 0.7,
                  top_p: float = 0.9):
         if share is None:
             import claude_cre333_agent as C
@@ -176,12 +177,13 @@ class Gen338:
 
     def _render(self, msgs: list[dict]) -> str:
         tok = self.g.tok
+        kw = {"tokenize": False, "add_generation_prompt": True, "enable_thinking": False}   # no <think> block
         try:
-            return tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+            return tok.apply_chat_template(msgs, **kw)
         except Exception:  # noqa: BLE001  (a template without a system role)
             first = dict(msgs[1]) if len(msgs) > 1 else {"role": "user", "content": ""}
             first["content"] = msgs[0]["content"] + "\n\n" + first["content"]
-            return tok.apply_chat_template([first] + msgs[2:], tokenize=False, add_generation_prompt=True)
+            return tok.apply_chat_template([first] + msgs[2:], **kw)
 
     def sample_chat(self, msgs: list[dict], n: int) -> list[str]:
         g = self.g
