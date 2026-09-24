@@ -10,6 +10,7 @@ Layer order, inner to outer (every piece imported read-only, none edited):
                 joined for safety (it says "I'm not sure" instead of guessing; it routes 0/194 DEV turns)
   -> 338b       open conversation from the base 1B when the agent gives up, with the person-question
                 guard (338 = registered FAIL on grammar and helpfulness, 0 invented facts; 338b = its fix)
+  -> vary330c   wording variety for two fixed lines (338b's honest "not sure" and lis-314's "Okay."), same meaning
   -> nb-323     durable hash-chained turn log, installed LAST so it records the final reply (replies unchanged)
 Not joined: 339 style preferences (registered FAIL, 2/20 false saves) and the own-line mouth (own-M1v has
 no verdict yet; if it passes, a 330d adds it and 336b uses it).
@@ -41,6 +42,7 @@ def build_330c(state_dir, args):
     import claude_e2e330_arms as A
     import claude_nb323_turnlog as NB
     import claude_think299b_agent as T299B
+    import claude_vary330c as VARY
     if args.gen_model not in A._GEN:
         A._GEN[args.gen_model] = C333B.Gen333b(args.gen_model)
     one_b = A._GEN[args.gen_model]
@@ -51,6 +53,7 @@ def build_330c(state_dir, args):
     if args.gen_model not in _G338B:
         _G338B[args.gen_model] = C38.Gen338(share=one_b)
     C38B.install_chat338b(loop, _G338B[args.gen_model])
+    VARY.install_vary330c(loop)
     NB.install_turnlog323(loop, str(Path(state_dir) / TURNLOG330C))
-    loop.layers330c = ["330a_334", "cre333b+c", "think299b", "chat338b", "turnlog323"]
+    loop.layers330c = ["330a_334", "cre333b+c", "think299b", "chat338b", "vary330c", "turnlog323"]
     return loop
