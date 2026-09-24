@@ -1,0 +1,149 @@
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+[lis313/B] conv-f0-04 turns=6
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+[lis313/B] conv-f0-07 turns=6
+[lis313/B] conv-f0-08 turns=6
+[lis313/B] conv-f0-09 turns=6
+[lis313/B] conv-f0-10 turns=6
+[lis313/B] conv-f0-11 turns=7
+[lis313/B] conv-f0-12 turns=7
+[lis313/B] conv-f0-13 turns=7
+Traceback (most recent call last):
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 212, in <module>
+    main()
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 208, in main
+    run(a)
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 104, in run
+    parts = loop.turn(text)
+            ^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_lis310_agent.py", line 394, in turn310
+    reply, blocked, _d = _base_pass_blocked310(loop, t)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_lis310_agent.py", line 273, in _base_pass_blocked310
+    reply = loop.turn310_inner(text)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix282b_vocab.py", line 204, in turn282b
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix282_small.py", line 208, in turn282
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix280b_general.py", line 278, in turn280b
+    return list(inner_turn(t))
+                ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix280_capab.py", line 181, in turn280
+    r = list(inner_turn(t))
+             ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix281_called.py", line 141, in turn281
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix291_glue.py", line 184, in turn291
+    r0 = inner_turn(t)
+         ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix260_openers.py", line 401, in turn260
+    s0 = snapshot260(loop)
+         ^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix260_openers.py", line 291, in snapshot260
+    attrs[k] = (v, copy.deepcopy(v))
+                   ^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 143, in deepcopy
+    y = copier(memo)
+        ^^^^^^^^^^^^
+  File "/Users/ben-hannan/.cache/uv/archive-v0/t-lLc9qjltUR4RtA/lib/python3.12/site-packages/torch/nn/parameter.py", line 79, in __deepcopy__
+    self.data.clone(memory_format=torch.preserve_format), self.requires_grad
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: MPS backend out of memory (MPS allocated: 42.28 GiB, other allocations: 720.00 KiB, max allowed: 42.43 GiB). Tried to allocate 384.00 MiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure).

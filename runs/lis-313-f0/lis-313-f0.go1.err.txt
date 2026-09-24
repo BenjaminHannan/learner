@@ -1,0 +1,2530 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-311-chat292.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-311-chat292.md
+[0m✗ [0mGlob "artifacts/claude-lis313*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "**/lis-311*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mpwd; ls; git branch -a | head -n 50; git status --short | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_273_runall_mut0.sh
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+[0m
+[0m→ [0mRead handoff
+[0m
+[0m$ [0mls handoff/queue/ 2>&1 | head -n 100; echo ---; ls artifacts/ | head -n 100; echo ---; ls scripts/claude_lis31* 2>&1; echo ---; ls artifacts/claude-lis313-20260924/ 2>&1; echo ---; ls artifacts/claude-lis312-20260923/ 2>&1
+ls: handoff/queue/: No such file or directory
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-judgef1-20260923
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis302-20260924
+claude-lis310-20260923
+---
+scripts/claude_lis310_agent.py
+scripts/claude_lis310_demo.py
+scripts/claude_lis310_test.py
+scripts/claude_lis311_agent.py
+scripts/claude_lis311_server.py
+scripts/claude_lis311_start.sh
+scripts/claude_lis311_try.py
+---
+ls: artifacts/claude-lis313-20260924/: No such file or directory
+---
+ls: artifacts/claude-lis312-20260923/: No such file or directory
+[0m
+[0m$ [0mgit log --oneline -5 origin/builder-outbox; echo ===; git log --oneline -5 origin/main; echo ===; git ls-tree --name-only origin/builder-outbox | head -n 100; echo ===MAIN===; git ls-tree --name-only origin/main | head -n 100
+3cdee53c4 watcher status
+e2221b8c8 builder results: 274-build
+842e54bf3 watcher status
+0eb17896a builder results: lis-302-gpu
+c14714c87 watcher status
+zsh:1: == not found
+[0m
+[0m$ [0mgit log --oneline -5 origin/builder-outbox; git log --oneline -5 origin/main
+3cdee53c4 watcher status
+e2221b8c8 builder results: 274-build
+842e54bf3 watcher status
+0eb17896a builder results: lis-302-gpu
+c14714c87 watcher status
+38ae8f6f6 talk: F1 registered FAIL on M1 grammar (96.26%/95.74%); M4 judge 13/13
+6ed979742 lis-313: answer questions from the reader's ASK frame (arm D), pass marks, Mac F0 task (arms A-D, replaces lis-312)
+5f06d63df lis-302: report-only CPU rescore (arms A/B/C, info-parity), checker queries, dev audit, GPU task
+0aece8e96 queue mut-0 (SLEEP mark fails closed, smoke back in run-alls) and 274 (never deaf step A + deaf meter)
+856260c53 board: rsn 296 registered and queued
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox | head -n 100
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main | head -n 100
+.claude
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+run.py
+run.sh
+scripts
+tests
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox:scripts | head -n 100; echo ----; git ls-tree --name-only origin/main:scripts | tr ' ' '\n' | head -n 200
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+claude_266_panelrun.py
+claude_266_runall.sh
+claude_266_score.py
+claude_266b_devscore.py
+claude_266b_panelrun.py
+claude_266b_runall.sh
+claude_266b_score.py
+claude_268_devrepro.py
+claude_268_panelrun.py
+claude_268_runall.sh
+claude_268_score.py
+claude_268_supp.py
+claude_268b_devrepro.py
+claude_268b_m1run.py
+claude_268b_newdev.py
+claude_268b_panelrun.py
+claude_268b_runall.sh
+claude_268b_score.py
+claude_268b_score_fix1.py
+claude_280b_panel.sh
+claude_280b_runall.sh
+claude_280m_panel.sh
+claude_280m_runall.sh
+claude_280n_panel.sh
+claude_280p_panel.sh
+claude_281b_panel.sh
+claude_281b_runall.sh
+claude_282_panelrun.sh
+claude_282_runall.sh
+claude_282b_panelrun.sh
+claude_282b_runall.sh
+claude_291_m1.py
+claude_291_m7run.py
+claude_291_m8.sh
+claude_291_panel.sh
+claude_291_runall.sh
+claude_291_score.py
+claude_292_corrarm_run.py
+claude_292_m5.sh
+claude_292_m5run.py
+claude_292_panelrun.py
+claude_292_runall.sh
+claude_292_score.py
+claude_292t_280b_agent.py
+claude_292t_281_agent.py
+claude_292t_282b_agent.py
+claude_292t_panel.sh
+claude_292t_regscore.py
+claude_292t_runall.sh
+claude_293_devdialogs.py
+claude_293_panelscore.py
+claude_293_reg.py
+claude_293_repro.py
+claude_293_rowstrip.py
+claude_293_runall.sh
+claude_293_runall2.sh
+claude_called281_devcases.py
+claude_called281_panelrun.py
+claude_called281_panelscore.py
+claude_called281_regscore.py
+claude_called281_run.py
+claude_called281_score.py
+claude_called281b_devcases.py
+claude_called281b_panelrun.py
+claude_called281b_panelscore.py
+claude_called281b_regscore.py
+claude_called281b_run.py
+claude_called281b_score.py
+claude_capab280_devcases.py
+claude_capab280_regscore.py
+claude_capab280_run.py
+claude_capab280_score.py
+claude_capab280b_devcases.py
+claude_capab280b_paneladapt.py
+claude_capab280b_regscore.py
+claude_capab280b_run.py
+claude_capab280b_score.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+----
+address_probe.py
+astra_canonical_operator.py
+astra_canonical_operator_panels.py
+astra_canonical_operator_report.py
+astra_canonical_operator_run.py
+astra_transfer_diagnostic.py
+astra_transfer_report.py
+astra_transfer_twins.py
+benspc-runtime.json
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_apos247_devcases.py
+claude_apos247_run.py
+claude_apos247_score.py
+claude_bound259_devcases.py
+claude_bound259_runall.sh
+claude_bound259_score.py
+claude_chain231_predict.py
+claude_chain231_run.py
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+claude_comment258_devcases.py
+claude_comment258_m1.sh
+claude_comment258_runall.sh
+claude_comment258_score.py
+claude_confirm241b.py
+claude_convpanel239_run.py
+claude_corr252_devcases.py
+claude_corr252_m6check.py
+claude_corr252_run.py
+claude_corr252_score.py
+claude_corr252b_devcases.py
+claude_corr252b_score.py
+claude_demo_dryrun.py
+claude_demo_reload_probe.py
+claude_demo_restart_probe.py
+claude_demo_transcript.py
+claude_demo_values_probe.py
+claude_demo_variant_probe.py
+claude_determinism228_detect138i.py
+claude_determinism228_forced.py
+claude_diag119h_freshprobe.py
+claude_diag243_composers.py
+claude_diag243_grid.py
+claude_diag243_tally.py
+claude_diag243_trace.py
+claude_direction251_run.py
+claude_direction251_score.py
+claude_ear256_devcases.py
+claude_ear256_deveval.py
+claude_ear256_devrun.py
+claude_ear256_ear.py
+claude_ear256_roundtrip.py
+claude_ear256_route.py
+claude_ear256_score.py
+claude_earcheck261_armb.py
+claude_earcheck261_arms.py
+claude_earcheck261_canon.py
+claude_earcheck261_checker.py
+claude_earcheck261_checks.py
+claude_earcheck261_devset.py
+claude_earcheck261_devset2.py
+claude_earcheck261_devset3.py
+claude_earcheck261_devset4.py
+claude_earcheck261_devturns.py
+claude_earcheck261_panel.py
+claude_earcheck261_pchecks.py
+claude_earcheck261_promptB.py
+claude_earcheck261_qbuild.py
+claude_earcheck261_qwen.py
+claude_earcheck261_score.py
+claude_earcheck261_score257.py
+claude_earcheck261_scoremain.py
+claude_earcheck261_theta.py
+claude_earcheck261_turns.py
+claude_firstname236_score.py
+claude_firstperson249_run.py
+claude_firstperson249_score.py
+claude_fix172b241b_benchv3.py
+claude_fix228_srcguard.py
+claude_fix245_myrel.py
+claude_fix246_mentionwalk.py
+claude_fix247_apos.py
+claude_fix248_whats.py
+claude_fix249_firstperson.py
+claude_fix250_verbsubj.py
+claude_fix251_direction.py
+claude_fix252_correct.py
+claude_fix252b_screen.py
+claude_fix252c_merge.py
+claude_fix255_test.py
+claude_fix255_text.py
+claude_fix258_comment.py
+claude_fix259_boundary.py
+claude_fix260_openers.py
+claude_fullname232_devcases.py
+claude_fullname232_parity.py
+claude_fullname232_run.py
+claude_fullname232_score.py
+claude_fullname232b_score.py
+claude_fullname232c_devcases.py
+claude_fullname232c_parity.py
+claude_fullname232c_score.py
+claude_grammar238_coderender.py
+claude_grammar238_codescan.py
+claude_grammar238_grade.py
+claude_grammar238_harvest.py
+claude_identity227c.py
+claude_identity227c_marks.py
+claude_lis300_agree.py
+claude_lis300_common.py
+claude_lis300_compiler.py
+claude_lis300_data.py
+claude_lis300_read.py
+claude_lis300_score.py
+claude_lis300_train.py
+claude_lis301_data.py
+claude_lis302_checks.py
+claude_lis302_rescore.py
+claude_lis302_tokprobs.py
+claude_lis312_f0.py
+claude_lis313_agent.py
+claude_lis313_f0.py
+claude_lis313_test.py
+claude_loop138k_agent.py
+claude_loop138l_agent.py
+claude_loop138m_agent.py
+claude_loop138n_agent.py
+claude_loop221b_agent.py
+claude_loop221c_agent.py
+claude_loop221x232c_agent.py
+claude_loop224c_agent.py
+claude_loop227b_agent.py
+claude_loop227c_agent.py
+claude_loop228_agent.py
+claude_loop229_agent.py
+claude_loop230_agent.py
+claude_loop230b_agent.py
+claude_loop230c_agent.py
+claude_loop231_agent.py
+claude_loop231b_agent.py
+claude_loop232_agent.py
+claude_loop232c_agent.py
+claude_loop233_agent.py
+claude_loop234_agent.py
+claude_loop236_agent.py
+claude_loop237_agent.py
+claude_loop237b_agent.py
+claude_loop241_agent.py
+claude_loop241b_agent.py
+claude_loop245_agent.py
+claude_loop246_agent.py
+claude_loop247_agent.py
+claude_loop248_agent.py
+claude_loop249_agent.py
+claude_loop250_agent.py
+claude_loop251_agent.py
+claude_loop252_agent.py
+claude_loop252b_agent.py
+claude_loop252c_agent.py
+claude_loop255_agent.py
+claude_loop256_agent.py
+claude_loop258_agent.py
+claude_loop259_agent.py
+claude_loop260_agent.py
+claude_mentionwalk246_score.py
+claude_merge138k_latency.py
+claude_merge138k_marks220.py
+claude_merge138k_probe.py
+claude_merge138k_rt143nogate.py
+claude_merge138k_score.py
+claude_merge252c_runall.sh
+claude_merge252c_score.py
+claude_mouth241_brake.py
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox:scripts | grep -i -E "lis31|lis30|convf0|loop292|f0_score"; echo ----; git ls-tree --name-only origin/builder-outbox:artifacts | grep -i -E "lis313|lis312|convbench|fable-self122"; echo ----; git ls-tree --name-only origin/main:artifacts | grep -i -E "lis313|lis312|convbench|fable-self122"
+claude_convf0_run.py
+claude_convf0_score.py
+claude_lis310_agent.py
+claude_lis310_demo.py
+claude_lis310_test.py
+claude_lis311_agent.py
+claude_lis311_server.py
+claude_lis311_start.sh
+claude_lis311_try.py
+claude_loop292_agent.py
+claude_loop292t_agent.py
+----
+claude-convbench-f0-20260923
+----
+claude-lis312-20260923
+claude-lis313-20260924
+fable-self122-20260922
+fable-self122panel-20260922
+[0m
+[0m$ [0mgit ls-tree --name-only origin/main:artifacts | grep -i lis31; echo ----; git log --oneline --all --grep="lis-311" | head -n 20; echo ----; git log --oneline --all --grep="lis-312" | head -n 20
+claude-lis312-20260923
+claude-lis313-20260924
+----
+b18ba5ce7 builder results: lis-311b-chat292
+3b5dc9d61 builder results: lis-311-chat292
+88cadad45 lis-311b: time-capped re-run of the listener chat page (Mac slept during lis-311)
+9af7dc663 lis-311: queue listener plug-in on the 292 base + real-model try-out and a separate chat page on :8767
+----
+6ed979742 lis-313: answer questions from the reader's ASK frame (arm D), pass marks, Mac F0 task (arms A-D, replaces lis-312)
+9625480ff builder results: lis-312-f0
+197cfc0da lis-312: queue reader-on-292t scoring on sealed conversation benchmark F0 (arms: 292t, +lis-300, +lis-301)
+[0m
+[0m$ [0mgit show --stat HEAD --oneline | head -n 100; echo ----; git show origin/main:artifacts/claude-lis313-20260924/PASSMARKS.md | head -n 200
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+ artifacts/claude-loop274-20260924/PASSMARKS.md    |  77 ++++
+ artifacts/claude-loop274-20260924/RESULTS.md      | 119 ++++++
+ artifacts/claude-loop274-20260924/SEAL.sha256.txt |   3 +
+ artifacts/claude-loop274-20260924/results.json    | 460 ++++++++++++++++++++++
+ scripts/claude_loop274_agent.py                   | 288 ++++++++++++++
+ scripts/claude_loop274_test.py                    | 343 ++++++++++++++++
+ 6 files changed, 1290 insertions(+)
+----
+# lis-313: answer questions from the reader's own question reading (arm D of lis-312)
+
+Written by the listener thread (Opus) on 2026-09-24, before any F0 run. No training.
+
+## Why
+lis-301's reader reads questions right 77 of 81 times on dev. The lis-310 wrapper throws that reading away and hands every question to the old rule chain. On F0 the rule chain misread 12 of the 84 asks (for example "what's X's dog called"). This was checked in code: ASK/CHECK frames go to `_base_pass_blocked310`.
+
+## The one change
+`scripts/claude_lis313_agent.py` adds one wrapper (turn313) outside turn310.
+- When the reader's frame is an ASK, turn313 looks that question up in the notebook, read-only.
+- It replaces the reply only when the rule chain gave no answer (abstain or clarify) and the lookup found a stored value.
+- Otherwise the rule chain's reply stays. That covers the cases where the two agree, disagree, the lookup misses, the question is inverse, or the turn is a CHECK.
+- The wrapper never writes. The notebook event count is asserted unchanged.
+
+Everything else is identical to arm C: base 292t, the lis-301 reader, T = 0.995, and turn310. The reader is still called once per turn.
+
+## Run
+`scripts/claude_lis313_f0.py` is a copy of `claude_lis312_f0.py`: arms A/B/C are unchanged, and arm D is added. It runs all four arms on the sealed F0 benchmark (40 dialogs, 286 turns, 84 asks) with a fresh agent per dialog. P312.1 to P312.4 (artifacts/claude-lis312-20260923/PASSMARKS.md) are scored from the same run.
+
+## Marks (arm D vs arm C, same reader and T)
+| Mark | Bar |
+|---|---|
+| P313.1 ask turns where the wrapper's own answer is wrong (`lis313_reader_answered_wrong`) | 0 |
+| P313.2 asks right when the gold value is already stored (`ask_gold_stored_right / ask_gold_stored`) | ≥ 90% |
+| P313.3 unexpected-save turns | D ≤ C |
+| P313.4 asks answered right | D ≥ C + 3 |
+
+Report only: every lis313_* counter, D's asks right/wrong/abstain, and ms.
+
+**Proved wrong if** P313.1 ≥ 1 (the reader's question reading gives a wrong answer that the rule chain would not have given), or D asks right ≤ C asks right (the reading adds nothing on real dialogs).
+
+The live confirm-at-use wording ("I think you told me X, is that right?") is NOT part of this test. It needs Ben's ruling first.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis312-20260923/PASSMARKS.md | head -n 200; echo ====; git ls-tree --name-only origin/main:artifacts/claude-lis313-20260924/; echo ====; git ls-tree --name-only origin/main:artifacts/claude-lis312-20260923/
+# lis-312: our 1B reader plugged into 292t, scored on the sealed conversation benchmark F0
+
+Written by the listener thread (Opus) on 2026-09-23, before any lis-312 run and before lis-301's result.
+
+## The one change
+
+The reader wrapper (`install_turn310`, from lis-310/311, read-only) is installed outermost on **292t**, the verified talking-layer join on 292 and the candidate main base. Nothing else changes. `scripts/claude_lis312_f0.py` runs the arms. It uses a fresh agent per dialog, runs each dialog once, and scores with `claude_convf0_score.py`'s own mechanical rules (imported).
+
+| Arm | System |
+|---|---|
+| A | 292t alone (in-run baseline) |
+| B | 292t + lis-300 reader, T = 0.995 (sealed lis-300 threshold) |
+| C | 292t + lis-301 reader at lis-301's sealed THRESHOLD.txt (registered arm) |
+
+Benchmark: `artifacts/claude-convbench-f0-20260923` (sealed; 40 dialogs, 286 turns: teach 84, ask 84, smalltalk 68, other 40, correct 10). It was written for the talking line and never used for training or tuning here. Its user turns are never printed.
+
+## Marks (arm C vs arm A, same run)
+
+| Mark | Bar |
+|---|---|
+| P312.1 unexpected-save turns (new triples on smalltalk / ask / other turns) | C ≤ A + 1 |
+| P312.2 teach turns whose gold triple is stored | C ≥ A + 15 (of 84) |
+| P312.3 clarify / not-understood replies (F0 markers) | C ≤ A − 15 (of 286) |
+| P312.4 ask turns answered right | C ≥ A |
+
+- **Report only:**
+  - every count for arms A, B and C;
+  - new triples on teach turns that are not the gold, listed as triples, so the listener thread can audit them as possible wrong saves;
+  - smalltalk clarify counts;
+  - ms median and max.
+- **Proved wrong if** arm C's teach matches ≤ arm A's. That would mean the reader does not raise what Premonition understands in real conversation, whatever the panels say.
+- **Expected limit (stated now):** the reader labels small talk CHAT and passes it down, so small-talk replies still come from 292t. A small-talk gap that stays open is the mouth's job, not a reader failure.
+
+A CPU cloud smoke run of arm A, and of arm C with a fake always-CHAT reader, completed without errors on 2026-09-23. The router was stubbed, so its numbers are not results.
+zsh:1: === not found
+[0m
+[0m$ [0mgit show --stat b18ba5ce7 | head -n 50; git show --stat 3b5dc9d61 | head -n 50
+commit b18ba5ce7fe751e1074428fdd572ecbca8f3008f
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 14:10:25 2026 -0400
+
+    builder results: lis-311b-chat292
+
+ artifacts/claude-lis311-20260923/RESULTS.md        | 119 ++++
+ .../claude-lis311-20260923/real-rows/rows.jsonl    |  34 ++
+ artifacts/fable-predictions-ledger.md              |   2 +
+ runs/lis-311b-chat292/lis-311b-chat292.exit        |   1 +
+ runs/lis-311b-chat292/lis-311b-chat292.go1.err.txt |   3 +
+ .../lis-311b-chat292/lis-311b-chat292.go1.reply.md |   0
+ runs/lis-311b-chat292/lis-311b-chat292.go2.done    |   1 +
+ runs/lis-311b-chat292/lis-311b-chat292.go2.err.txt | 679 +++++++++++++++++++++
+ .../lis-311b-chat292/lis-311b-chat292.go2.reply.md |  42 ++
+ runs/lis-311b-chat292/lis-311b-chat292.md          |  22 +
+ 10 files changed, 903 insertions(+)
+commit 3b5dc9d61b1bfa533273768d46de86ee8fd9f475
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 13:59:30 2026 -0400
+
+    builder results: lis-311-chat292
+
+ artifacts/claude-lis311-20260923/PASSMARKS.md      |  60 ++
+ artifacts/claude-lis311-20260923/SEAL.sha256.txt   |   5 +
+ .../claude-lis311-20260923/real-rows/rows.jsonl    |   0
+ artifacts/fable-predictions-ledger.md              |   3 +
+ runs/lis-311-chat292/lis-311-chat292.exit          |   1 +
+ runs/lis-311-chat292/lis-311-chat292.go1.err.txt   | 974 +++++++++++++++++++++
+ runs/lis-311-chat292/lis-311-chat292.go1.reply.md  |  14 +
+ runs/lis-311-chat292/lis-311-chat292.md            |  24 +
+ scripts/claude_lis311_agent.py                     | 182 ++++
+ scripts/claude_lis311_server.py                    | 359 ++++++++
+ scripts/claude_lis311_start.sh                     |  28 +
+ scripts/claude_lis311_try.py                       | 471 ++++++++++
+ status/watcher.txt                                 |   2 +-
+ 13 files changed, 2122 insertions(+), 1 deletion(-)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis313-20260924/PASSMARKS.md | head -n 100
+echo "---LIS312FILES---"
+git ls-tree --name-only origin/main:artifacts/claude-lis312-20260923/
+echo "---LIS313FILES---"
+git ls-tree --name-only origin/main:artifacts/claude-lis313-20260924/
+# lis-313: answer questions from the reader's own question reading (arm D of lis-312)
+
+Written by the listener thread (Opus) on 2026-09-24, before any F0 run. No training.
+
+## Why
+lis-301's reader reads questions right 77 of 81 times on dev. The lis-310 wrapper throws that reading away and hands every question to the old rule chain. On F0 the rule chain misread 12 of the 84 asks (for example "what's X's dog called"). This was checked in code: ASK/CHECK frames go to `_base_pass_blocked310`.
+
+## The one change
+`scripts/claude_lis313_agent.py` adds one wrapper (turn313) outside turn310.
+- When the reader's frame is an ASK, turn313 looks that question up in the notebook, read-only.
+- It replaces the reply only when the rule chain gave no answer (abstain or clarify) and the lookup found a stored value.
+- Otherwise the rule chain's reply stays. That covers the cases where the two agree, disagree, the lookup misses, the question is inverse, or the turn is a CHECK.
+- The wrapper never writes. The notebook event count is asserted unchanged.
+
+Everything else is identical to arm C: base 292t, the lis-301 reader, T = 0.995, and turn310. The reader is still called once per turn.
+
+## Run
+`scripts/claude_lis313_f0.py` is a copy of `claude_lis312_f0.py`: arms A/B/C are unchanged, and arm D is added. It runs all four arms on the sealed F0 benchmark (40 dialogs, 286 turns, 84 asks) with a fresh agent per dialog. P312.1 to P312.4 (artifacts/claude-lis312-20260923/PASSMARKS.md) are scored from the same run.
+
+## Marks (arm D vs arm C, same reader and T)
+| Mark | Bar |
+|---|---|
+| P313.1 ask turns where the wrapper's own answer is wrong (`lis313_reader_answered_wrong`) | 0 |
+| P313.2 asks right when the gold value is already stored (`ask_gold_stored_right / ask_gold_stored`) | ≥ 90% |
+| P313.3 unexpected-save turns | D ≤ C |
+| P313.4 asks answered right | D ≥ C + 3 |
+
+Report only: every lis313_* counter, D's asks right/wrong/abstain, and ms.
+
+**Proved wrong if** P313.1 ≥ 1 (the reader's question reading gives a wrong answer that the rule chain would not have given), or D asks right ≤ C asks right (the reading adds nothing on real dialogs).
+
+The live confirm-at-use wording ("I think you told me X, is that right?") is NOT part of this test. It needs Ben's ruling first.
+---LIS312FILES---
+PASSMARKS.md
+---LIS313FILES---
+PASSMARKS.md
+[0m
+[0m$ [0mgit log --oneline --all --grep="lis-310" | head -n 20; git show 88cadad45 --stat | head -n 60
+38e598061 builder results: lis-310-chat-build
+c653f0f57 lis-310: queue chat-agent plug-in build for the 1B listener (CPU, stub reader tests)
+commit 88cadad459a06e865ac0c089f19456378d5ad665
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Sep 23 16:26:08 2026 +0000
+
+    lis-311b: time-capped re-run of the listener chat page (Mac slept during lis-311)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01CdcxHrqjVbQHp21qoQNpkG
+
+ handoff/queue/lis-311b-chat292.md | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+[0m
+[0m$ [0mgit show 88cadad45 | head -n 120; echo "---"; git show 9af7dc663 | head -n 200
+commit 88cadad459a06e865ac0c089f19456378d5ad665
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Sep 23 16:26:08 2026 +0000
+
+    lis-311b: time-capped re-run of the listener chat page (Mac slept during lis-311)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01CdcxHrqjVbQHp21qoQNpkG
+
+diff --git a/handoff/queue/lis-311b-chat292.md b/handoff/queue/lis-311b-chat292.md
+new file mode 100644
+index 000000000..b0f30e23c
+--- /dev/null
++++ b/handoff/queue/lis-311b-chat292.md
+@@ -0,0 +1,22 @@
++COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
++First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
++- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
++- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
++- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
++- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
++- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
++- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
++- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
++Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
++
++GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
++INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
++
++TIME CAP: the whole task must finish within 45 minutes of starting. macOS has no `timeout` command, so wrap every long command yourself (for example, run it in the background and kill its exact PID after N seconds). If any single real-model load or read takes more than 5 minutes, stop it by exact PID and report the step and the exact error or hang.
++
++YOUR TASK: lis-311b, a time-capped re-run of lis-311 (handoff/queue/lis-311-chat292.md). The first run launched at 13:56 UTC, and the Mac went to sleep during it.
++FIRST, check whether lis-311 already finished:
++- does `curl -s -m 5 http://127.0.0.1:8767/` answer?
++- does origin/builder-outbox have artifacts/claude-lis311-20260923/RESULTS.md?
++If both are true, do nothing else and report that. If a lis-311 process is still running (`ps aux | grep -i lis311`), report its PID and state; stop it by exact PID only if it has made no progress in 10 minutes. Then do the lis-311 task exactly as written in handoff/queue/lis-311-chat292.md, under the time cap above, writing into the same folder artifacts/claude-lis311-20260923/. If PASSMARKS.md already exists there, keep it and never overwrite it. Also write RESULTS.md there.
++PUSH: artifacts/claude-lis311-20260923 scripts/claude_lis311_agent.py scripts/claude_lis311_try.py scripts/claude_lis311_server.py scripts/claude_lis311_start.sh artifacts/fable-predictions-ledger.md
+---
+commit 9af7dc66349656d4543e6e0a3ee9ec16c182ef54
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Sep 23 13:36:46 2026 +0000
+
+    lis-311: queue listener plug-in on the 292 base + real-model try-out and a separate chat page on :8767
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01CdcxHrqjVbQHp21qoQNpkG
+
+diff --git a/handoff/queue/lis-311-chat292.md b/handoff/queue/lis-311-chat292.md
+new file mode 100644
+index 000000000..6eae5f2ac
+--- /dev/null
++++ b/handoff/queue/lis-311-chat292.md
+@@ -0,0 +1,24 @@
++COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
++First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
++- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
++- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
++- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
++- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
++- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
++- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
++- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
++Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
++
++GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
++INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
++
++YOUR TASK: builder for lis-311. Move the listener plug-in onto the new base 292, and try the REAL model on the Mac. It's CPU/MPS on the Mac, with no BensPC and no rental. Artifacts go in artifacts/claude-lis311-20260923/. New files only: scripts/claude_lis311_agent.py, scripts/claude_lis311_try.py, scripts/claude_lis311_server.py, scripts/claude_lis311_start.sh.
++
++CONTEXT. lis-310 (on builder-outbox) PASSED with a stub reader on the 291 base, and its install_turn310(loop, reader, threshold) works on any built loop. 292 was verified PASS at 13:45 UTC and is the main base now: build_agent292(cfg) in scripts/claude_loop292_agent.py, with DEFAULT_CONFIG292 (deepcopy it, then set state_dir and sleep_threshold). The real listener weights are at ~/premonition-models/lis300-merged/ (sha256 was recorded in lis-300's RESULTS.md; check it). The sealed threshold from lis-300 is T = 0.995. lis-300 was a registered FAIL on recall only: it asks back about half the true facts. That is fine for a try-out, because an ask-back plus "yes" still saves.
++
++1. scripts/claude_lis311_agent.py: build_agent311(cfg) = build_agent292 + install_turn310 (import it from claude_lis310_agent, read-only) with the real Reader. Default threshold 0.995.
++2. Re-run the lis-310 test scenarios against 311 with the StubReader. Import scripts/claude_lis310_test.py's cases if they allow it; otherwise write equivalents in scripts/claude_lis311_try.py. Every scenario must pass, including the blocked-write check on 5 base-teachable turns.
++3. REAL MODEL TRY-OUT. Write 30 casual dev turns of your own, with fictional names and in 3 short conversations: lowercase, two facts in one message, "our", a correction, a question, a yes after an ask-back, a negation and small talk. Run them through 311 with the real model on the Mac (MPS if available). For every turn, report: the turn, the reply, what was saved, the frame, confs and ms. Also report median, p90 and max ms per turn, and the device. This is a try-out, not a graded panel: no bar except that you report everything.
++4. scripts/claude_lis311_server.py: a COPY of scripts/claude_chatdemo_server.py that loads build_agent311 (with the real model dir) and serves on port 8767. Never edit or stop the existing chat page on 8765/8766. scripts/claude_lis311_start.sh starts it in the background (nohup, log in ~/premonition-chat/lis311-server.log), using its own state dir ~/premonition-chat/lis311-state so Ben's existing notebook is never touched. Start it, check that GET http://127.0.0.1:8767/ answers, and send one turn through it. Leave it running.
++PASSMARKS.md (sealed before step 3): P311.1 every stub scenario passes; P311.2 0 base-chain writes in the blocked-write check; P311.3 the server on 8767 answers a turn. Report the step 3 numbers with no bar.
++PUSH: artifacts/claude-lis311-20260923 scripts/claude_lis311_agent.py scripts/claude_lis311_try.py scripts/claude_lis311_server.py scripts/claude_lis311_start.sh artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mls artifacts/fable-self122-20260922/ 2>&1 | head -n 20; echo "---HOME-MODELS---"; ls ~/premonition-models/ 2>&1 | head -n 40; echo "---BRIEFS---"; ls /private/tmp/claude-502/ 2>&1 | head; echo "---SEAL---"; ls artifacts/claude-convbench-f0-20260923/ 2>&1 | head -n 20
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122_head.pt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+---HOME-MODELS---
+lis300-merged
+lis301-merged
+own-m1-mouth
+own-m1n-mouth
+rsn294
+---BRIEFS---
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+---SEAL---
+dialogs.jsonl
+README.md
+SEAL.sha256.txt
+[0m
+[0m$ [0mgit ls-tree --name-only origin/builder-outbox:artifacts/ | head -n 100; echo "---main fable---"; git ls-tree --name-only origin/main:artifacts/fable-self122-20260922/ | head -n 20
+.DS_Store
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-corrpanel291-20260923
+claude-devset267-20260923
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-f1-20260923
+claude-fixedtext255b-20260923
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241b-20260923
+claude-judgef1-20260923
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis302-20260924
+claude-lis310-20260923
+claude-lis311-20260923
+claude-loop273-20260923
+claude-loop274-20260924
+claude-merge138nb-20260923
+claude-merge138p-20260923
+claude-merge292-20260923
+claude-mixpanel292-20260923
+claude-mouth241b-20260922
+claude-nb320-20260923
+claude-nb321-20260923
+claude-nhop268-20260923
+claude-nhop268b-20260923
+claude-nhopdiag-20260923
+claude-nhoppanel268-20260923
+claude-nhoppanel268b-20260923
+claude-ourpanel265-20260923
+claude-ourpanel269-20260923
+claude-own-bench-20260923
+claude-own-m0-20260923
+claude-own-m1-20260923
+claude-own-m1n-20260923
+claude-own-o0a-20260923
+claude-own-o0a2-20260923
+claude-own-o0a3-20260923
+claude-own-o0b-20260923
+claude-own-o0c-20260923
+claude-own-o0d-20260923
+claude-own-o0d2-20260923
+claude-own-o0e-20260923
+claude-own-o0e2-20260923
+claude-papers-20260923
+claude-papers2-20260923
+claude-probe255b-director-20260923
+claude-probe280p-20260923
+claude-rsn294-20260923
+claude-scoreraudit-20260923
+claude-small282-20260923
+claude-small282b-20260923
+claude-smallpanel282-20260923
+claude-smallpanel282b-20260923
+claude-type270-20260923
+claude-type270b-20260923
+claude-typepanel270-20260923
+claude-typepanel270b-20260923
+---main fable---
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+WRONGS.md
+heldout122.jsonl
+self122-notebook
+self122-results.json
+train122.jsonl
+train122_report.json
+[0m
+[0m$ [0mgit show 9625480ff --stat | head -n 40; git show 197cfc0da | head -n 200
+commit 9625480ff57fd0b641db31b131b2ff384b384f14
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 14:48:31 2026 -0400
+
+    builder results: lis-312-f0
+
+ runs/lis-312-f0/lis-312-f0.exit         |   1 +
+ runs/lis-312-f0/lis-312-f0.go1.done     |   1 +
+ runs/lis-312-f0/lis-312-f0.go1.err.txt  | 258 ++++++++++++++++++++++++++++++++
+ runs/lis-312-f0/lis-312-f0.go1.reply.md |  13 ++
+ runs/lis-312-f0/lis-312-f0.md           |  25 ++++
+ 5 files changed, 298 insertions(+)
+commit 197cfc0dae0a545748cc963d4f48ec203b8ad9d6
+Author: Claude <noreply@anthropic.com>
+Date:   Wed Sep 23 18:44:10 2026 +0000
+
+    lis-312: queue reader-on-292t scoring on sealed conversation benchmark F0 (arms: 292t, +lis-300, +lis-301)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01CdcxHrqjVbQHp21qoQNpkG
+
+diff --git a/artifacts/claude-lis312-20260923/PASSMARKS.md b/artifacts/claude-lis312-20260923/PASSMARKS.md
+new file mode 100644
+index 000000000..05b532c67
+--- /dev/null
++++ b/artifacts/claude-lis312-20260923/PASSMARKS.md
+@@ -0,0 +1,34 @@
++# lis-312: our 1B reader plugged into 292t, scored on the sealed conversation benchmark F0
++
++Written by the listener thread (Opus) on 2026-09-23, before any lis-312 run and before lis-301's result.
++
++## The one change
++
++The reader wrapper (`install_turn310`, from lis-310/311, read-only) is installed outermost on **292t**, the verified talking-layer join on 292 and the candidate main base. Nothing else changes. `scripts/claude_lis312_f0.py` runs the arms. It uses a fresh agent per dialog, runs each dialog once, and scores with `claude_convf0_score.py`'s own mechanical rules (imported).
++
++| Arm | System |
++|---|---|
++| A | 292t alone (in-run baseline) |
++| B | 292t + lis-300 reader, T = 0.995 (sealed lis-300 threshold) |
++| C | 292t + lis-301 reader at lis-301's sealed THRESHOLD.txt (registered arm) |
++
++Benchmark: `artifacts/claude-convbench-f0-20260923` (sealed; 40 dialogs, 286 turns: teach 84, ask 84, smalltalk 68, other 40, correct 10). It was written for the talking line and never used for training or tuning here. Its user turns are never printed.
++
++## Marks (arm C vs arm A, same run)
++
++| Mark | Bar |
++|---|---|
++| P312.1 unexpected-save turns (new triples on smalltalk / ask / other turns) | C ≤ A + 1 |
++| P312.2 teach turns whose gold triple is stored | C ≥ A + 15 (of 84) |
++| P312.3 clarify / not-understood replies (F0 markers) | C ≤ A − 15 (of 286) |
++| P312.4 ask turns answered right | C ≥ A |
++
++- **Report only:**
++  - every count for arms A, B and C;
++  - new triples on teach turns that are not the gold, listed as triples, so the listener thread can audit them as possible wrong saves;
++  - smalltalk clarify counts;
++  - ms median and max.
++- **Proved wrong if** arm C's teach matches ≤ arm A's. That would mean the reader does not raise what Premonition understands in real conversation, whatever the panels say.
++- **Expected limit (stated now):** the reader labels small talk CHAT and passes it down, so small-talk replies still come from 292t. A small-talk gap that stays open is the mouth's job, not a reader failure.
++
++A CPU cloud smoke run of arm A, and of arm C with a fake always-CHAT reader, completed without errors on 2026-09-23. The router was stubbed, so its numbers are not results.
+diff --git a/handoff/queue/lis-312-f0.md b/handoff/queue/lis-312-f0.md
+new file mode 100644
+index 000000000..4a1fc9c4d
+--- /dev/null
++++ b/handoff/queue/lis-312-f0.md
+@@ -0,0 +1,25 @@
++COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
++GPU: no (Mac CPU/MPS, like lis-311; the reader runs on MPS).
++TIME CAP: 120 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
++
++YOUR TASK: builder for lis-312. Score our 1B reader, plugged into base 292t, on the sealed conversation benchmark F0. Artifacts go in artifacts/claude-lis312-20260923/. The listener thread wrote the code (scripts/claude_lis312_f0.py). Run it and never edit it. If it breaks, stop and report the exact error.
++
++READ FIRST: artifacts/claude-lis312-20260923/PASSMARKS.md, scripts/claude_lis312_f0.py, and artifacts/claude-convbench-f0-20260923/README.md. Never print or quote benchmark user turns.
++
++0. WAIT FOR lis-301. Run this task only after origin/builder-outbox has artifacts/claude-lis301-20260923/RESULTS.md and THRESHOLD.txt, and ~/premonition-models/lis301-merged/ exists on the Mac. If they are missing, stop and report "waiting on lis-301" without running anything.
++1. Checks, from the repo root of a fresh `git archive` of origin/builder-outbox with origin/main overlaid, the same layout lis-311 used:
++   - `shasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt` must be all OK;
++   - the lis300-merged and lis301-merged safetensors sha256 must match lis-300's and lis-301's RESULTS.md;
++   - `uptime` and disk.
++   Seal artifacts/claude-lis312-20260923/PASSMARKS.md and scripts/claude_lis312_f0.py into SEAL.sha256.txt BEFORE running.
++2. Run the three arms (output dir artifacts/claude-lis312-20260923/run):
++   python -B scripts/claude_lis312_f0.py --arm A --out artifacts/claude-lis312-20260923/run
++   python -B scripts/claude_lis312_f0.py --arm B --model ~/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis312-20260923/run
++   python -B scripts/claude_lis312_f0.py --arm C --model ~/premonition-models/lis301-merged --threshold <T from lis-301 THRESHOLD.txt> --out artifacts/claude-lis312-20260923/run
++   python -B scripts/claude_lis312_f0.py --score artifacts/claude-lis312-20260923/run
++3. RESULTS.md, verdict first:
++   - P312.1 to P312.4 with integer counts, PASS/FAIL, and every count of summary.json for arms A, B and C;
++   - device and ms;
++   - for arm C, every new triple stored on a teach turn that is not the gold, as "gold triple -> stored triple" (triples only, never the user turn), so the listener thread can audit wrong saves.
++   Append ledger lines P312.1 to P312.4 (cat >> artifacts/fable-predictions-ledger.md).
++PUSH: artifacts/claude-lis312-20260923 artifacts/fable-predictions-ledger.md
+diff --git a/scripts/claude_lis312_f0.py b/scripts/claude_lis312_f0.py
+new file mode 100644
+index 000000000..50342a75b
+--- /dev/null
++++ b/scripts/claude_lis312_f0.py
+@@ -0,0 +1,170 @@
++#!/usr/bin/env python3
++"""lis-312: score "292t + our 1B reader" on the sealed conversation benchmark F0.
++
++Arms (one run each, fresh agent per dialog, same as scripts/claude_convf0_run.py):
++  A  292t alone            build_agent292t(DEFAULT_CONFIG292T)
++  B  292t + lis-300 reader  install_turn310(loop, Reader(lis300-merged), T=0.995)
++  C  292t + lis-301 reader  install_turn310(loop, Reader(lis301-merged), T=lis-301 THRESHOLD.txt)
++The reader wrapper is installed outermost, exactly as in lis-311 (read-only imports).
++
++Scoring = claude_convf0_score.py's mechanical rules (imported, not copied), plus
++"unexpected saves": new stored triples on a turn whose kind is smalltalk, ask or other.
++Benchmark user turns are never printed.
++
++python -B scripts/claude_lis312_f0.py --arm A --out DIR
++python -B scripts/claude_lis312_f0.py --arm C --model DIR --threshold 0.93 --out DIR
++python -B scripts/claude_lis312_f0.py --score DIR   (writes DIR/summary.json from DIR/arm_*.jsonl)
++"""
++from __future__ import annotations
++
++import argparse
++import copy
++import json
++import shutil
++import sys
++import tempfile
++import time
++from collections import Counter
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++SCRIPTS = ROOT / "scripts"
++sys.path.insert(0, str(SCRIPTS))
++BENCH = ROOT / "artifacts/claude-convbench-f0-20260923/dialogs.jsonl"
++
++
++def load(p):
++    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
++
++
++def build(arm, reader, threshold, state_dir):
++    import claude_loop292t_agent as T292
++    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
++    cfg["state_dir"] = state_dir
++    cfg["sleep_threshold"] = 100000
++    loop = T292.build_agent292t(cfg)
++    if arm != "A":
++        import claude_lis310_agent as L310
++        L310.install_turn310(loop, reader, threshold=threshold,
++                             log_path=Path(state_dir) / "lis312-turns.jsonl")
++        if getattr(vars(loop).get("turn"), "__name__", "") != "turn310":
++            raise RuntimeError("312: turn310 not outermost")
++    return loop
++
++
++def run(a):
++    import fable_loop90_agent as L90
++    reader = None
++    if a.arm != "A":
++        import claude_lis300_read as READ
++        reader = READ.Reader(a.model)
++    items = load(BENCH)
++    order, by = [], {}
++    for it in items:
++        d = it["dialog_id"]
++        if d not in by:
++            by[d] = []
++            order.append(d)
++        by[d].append(it)
++    rows = []
++    for d in order:
++        tmp = tempfile.mkdtemp(prefix=f"lis312-{a.arm}-")
++        loop = build(a.arm, reader, a.threshold, tmp)
++        try:
++            for it in by[d]:
++                text = it.get("user_text") or it.get("user")
++                if not isinstance(text, str) or not text.strip():
++                    raise SystemExit(f"empty text at {d} {it.get('turn_index')}")
++                ev0 = len(loop.nb.events)
++                t0 = time.time()
++                parts = loop.turn(text)
++                ms = (time.time() - t0) * 1000
++                rows.append({"dialog_id": d, "turn_index": it["turn_index"],
++                             "reply": " ".join(parts) if parts else "",
++                             "notebook_events": [dict(e) for e in list(loop.nb.events)[ev0:]],
++                             "stored_triples": sorted([s, r, v] for (s, r, v) in L90.notebook_triples(loop.nb)),
++                             "ms": round(ms, 1)})
++        finally:
++            shutil.rmtree(tmp, ignore_errors=True)
++        print(f"[lis312/{a.arm}] {d} turns={len(by[d])}", flush=True)
++    out = Path(a.out)
++    out.mkdir(parents=True, exist_ok=True)
++    (out / f"arm_{a.arm}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
++                                            encoding="utf-8")
++    print(f"wrote arm_{a.arm}.jsonl rows={len(rows)}")
++
++
++def score_arm(bench, runs):
++    import claude_convf0_score as S
++    gold = {(b["dialog_id"], b["turn_index"]): b for b in bench}
++    C = Counter()
++    prev = {}
++    ms = []
++    for r in runs:
++        b = gold[(r["dialog_id"], r["turn_index"])]
++        kind, g, rp = b["kind"], b["gold"], str(r.get("reply", ""))
++        C["turns"] += 1
++        C["clarify"] += int(S.is_clarify(rp))
++        before = prev.get(r["dialog_id"], [])
++        new = [t for t in r["stored_triples"] if t not in before]
++        prev[r["dialog_id"]] = r["stored_triples"]
++        if "ms" in r:
++            ms.append(r["ms"])
++        if kind == "ask":
++            C["ask"] += 1
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-convbench-f0-20260923/README.md | head -n 100
+echo "---THRESHOLD---"
+git ls-tree --name-only origin/builder-outbox:artifacts/claude-lis301-20260923/ | head -n 20
+echo "---RESULTS-HEAD---"
+git show origin/builder-outbox:artifacts/claude-lis301-20260923/RESULTS.md | head -n 80
+fatal: path 'artifacts/claude-convbench-f0-20260923/README.md' exists on disk, but not in 'origin/main'
+---THRESHOLD---
+RESULTS.md
+SEAL-run.sha256.txt
+THRESHOLD.txt
+dev
+dev_sweep.txt
+panel_score.json
+panel_score_T0.json
+train_log.jsonl
+train_summary.json
+---RESULTS-HEAD---
+# lis-301 registered result: FAIL (P301.2 recall 51/145 = 35.2%, bar 85%)
+
+Builder run 2026-09-23 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel 301 run once. Category counts only; no panel turn is quoted.
+
+## Marks table (arm A = reader + compiler at T = 0.995)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| P301.1 wrong-save turns | ≤ 1 of 240 | 0 of 240 | PASS |
+| P301.2 exact recall of gold writes | ≥ 85% | 51 of 145 = 35.2% | FAIL |
+| P301.3 ASK turns read correctly | ≥ 90% | 34 of 40 = 85.0% | FAIL |
+| P301.4 our/we turns that ask whose | ≥ 90% | 17 of 18 = 94.4% | PASS |
+| P301.5 unparseable outputs | ≤ 2% of turns | 0 of 240 = 0% | PASS |
+| P301.6 median read time on GPU | ≤ 1,500 ms | 1522.7 ms | FAIL |
+
+Overall verdict: FAIL. P301.2 also lands under 75%, and dev still has no
+zero-wrong T below 0.995 (minimum 2 wrong turns at t=0.980/0.990/0.995), so two
+of the three PASSMARKS "proved wrong" clauses trip: more hard-case data alone
+does not make the reader safe and useful at once, and the next step is a
+different mechanism, not more rows.
+
+## What the threshold buys (report only)
+
+- At T = 0.995: 51 pred writes, 51 hits, 0 wrong facts, 0 wrong turns, 93 held-back facts.
+- At T = 0: 147 pred writes, 142 hits, 5 wrong facts, 4 wrong turns, 0 held-back facts.
+- Wrong facts per saved fact: 0/51 at T, 5/147 at T = 0.
+- Wrong facts per turn: 0/240 at T, 4/240 at T = 0.
+- Recall: 51/145 (35.2%) at T, 142/145 (97.9%) at T = 0.
+- The reader itself still reads well (97.9% with no gate); the 0.995 gate holds
+  back 93 of 145 gold facts to reach 0 wrong saves.
+
+## Recall by family at T (hits / gold writes, category level only)
+
+- tell-single 6/14; tell-multi 2/24; tell-plural 9/18; tell-appositive 0/21;
+  tell-verb 6/12; tell-typo 5/8; tell-self 5/7.
+- correct (uses prev_reply) 9/19. short-answer (uses prev_reply) 3/7.
+- pronoun-clear 5/13. pronoun-ambiguous 0 gold writes, 0 wrong turns.
+- our-we: 0 gold writes, 0 wrong turns (17 of 18 asked whose).
+- negation/check/suppose/plan/reported/chat: 0 gold writes each, 0 wrong turns each
+  (12/12/10/10/8/8 turns).
+- questions: wh ask 11/11 (1 gold write held back); inverse 6/8; yesno 7/7
+  (+1 write hit); lowercase 5/7; twohop 3/5. ASK misses: 6 total
+  (2 inverse, 2 lowercase, 2 twohop).
+- The 0 wrong-save turns at T: no family wrote a wrong fact.
+- At T = 0 the 4 wrong turns are: 1 pronoun-ambiguous, 1 tell-typo, 1 our-we,
+  1 tell-appositive (2 of the 4 on no-save turns).
+
+## Timing, training, money
+
+- Read device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode.
+- Panel read ms (240 turns): median 1522.7, p90 2158.8, max 2942.8.
+- Dev read ms (959 turns): median 1482.1, p90 2213.7, max 3684.1.
+- Training: 4622/4622 steps, 2 epochs, 26.05 minutes, 4727.7 tok/s,
+  dev loss 0.0545, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: same openbmb/MiniCPM5-1B snapshot as lis-300 (reused download),
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (verified
+  on BensPC before training; commit 87179e5c as in lis-300 RESULTS.md).
+- Merged reader: sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890,
+  kept at ~/premonition-models/lis301-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis301/work/run/merged/. Never in git.
+- Dollars spent: $0. BensPC used (free). No vast.ai rental. No other instance running.
+
+## Data built (recorded counts)
+
+- SEAL.sha256.txt checks from the BensPC repo copy before building:
+  lis-300 seal 14/14 OK, lis-301 seal 13/13 OK.
+- Built set: train 36,972 (o0b 27,000 + opus 5,012 + opus301 4,960 = 1,240
+  agreed non-dev rows x4), dev 959 (o0b_l2 428 + opus_dev 131 + o0a2 263 +
+  opus301_dev 137), opus301 agreed 1,377, dev dropped by relabel 45
+  (opus_dev 8 + o0a2 37). Matches DATA-AUDIT.md exactly.
+- Threshold: no sweep grid value reached 0 wrong-save dev turns (minimum 2 at
+  t=0.980, t=0.990 and t=0.995), so T = 0.995 by the sealed rule. At T, dev:
+  462/761 hits (60.7%), 2 wrong turns (both o0a2 family rows), ask 77/81,
+  we 13/13. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+- Panel key seal: 2/2 OK (panel.jsonl + key_v2.jsonl). Reader ran on the 240-turn
+  panel exactly once; scored at T and at T = 0.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis301-20260923/THRESHOLD.txt; echo "---"; git show origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md | grep -i -A2 -B2 sha256 | head -n 30; echo "---MODELS---"; ls -l ~/premonition-models/lis300-merged/ | head -n 20; ls -l ~/premonition-models/lis301-merged/ | head -n 20
+T=0.995
+
+Threshold rule (PASSMARKS.md): T is the smallest grid value with 0 wrong-save
+turns on the whole dev set (959 turns: 428 o0b_l2 + 131 opus_dev + 263 o0a2
++ 137 opus301_dev), else 0.995. No grid value reached 0 wrong-save turns
+(minimum 2 at t=0.980, t=0.990 and t=0.995), so T = 0.995.
+
+Dev sweep (whole dev set, sealed scorer claude_lis300_score.py --sweep):
+t=0.000 wrong_turns=11 recall=732/761 ask=77/81 we=13/13
+t=0.300 wrong_turns=10 recall=732/761 ask=77/81 we=13/13
+t=0.500 wrong_turns=9 recall=726/761 ask=77/81 we=13/13
+t=0.600 wrong_turns=8 recall=722/761 ask=77/81 we=13/13
+t=0.700 wrong_turns=7 recall=715/761 ask=77/81 we=13/13
+t=0.800 wrong_turns=6 recall=705/761 ask=77/81 we=13/13
+t=0.850 wrong_turns=6 recall=699/761 ask=77/81 we=13/13
+t=0.900 wrong_turns=5 recall=684/761 ask=77/81 we=13/13
+t=0.930 wrong_turns=4 recall=668/761 ask=77/81 we=13/13
+t=0.950 wrong_turns=4 recall=646/761 ask=77/81 we=13/13
+t=0.970 wrong_turns=3 recall=607/761 ask=77/81 we=13/13
+t=0.980 wrong_turns=2 recall=592/761 ask=77/81 we=13/13
+t=0.990 wrong_turns=2 recall=542/761 ask=77/81 we=13/13
+t=0.995 wrong_turns=2 recall=462/761 ask=77/81 we=13/13
+
+Dev numbers at T=0.995, per src (sealed scorer, --threshold 0.995):
+- o0b_l2 (428 turns): gold_writes=352 hits=239 recall=67.9% wrong_turns=0 ask=59/59 we=n/a
+- opus_dev (131 turns): gold_writes=74 hits=32 recall=43.2% wrong_turns=0 ask=14/17 we=4/4
+- o0a2 (263 turns): gold_writes=238 hits=141 recall=59.2% wrong_turns=2 ask=n/a we=8/8
+- opus301_dev (137 turns): gold_writes=97 hits=50 recall=51.5% wrong_turns=0 ask=4/5 we=1/1
+- whole dev (959 turns): gold_writes=761 hits=462 recall=60.7% wrong_turns=2
+  (both in o0a2 family rows; 1 of the 2 on a no-save turn) wrong_facts=2
+  ask=77/81 we=13/13 turn_exact=347/562 held_back_facts=294
+  ms_median=1482.1ms p90=2213.7ms max=3684.1ms
+---
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc,
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (2,161,290,912 bytes).
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+  kept at ~/premonition-models/lis300-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis300/work/run/merged/. Never in git.
+--
+## Data built (recorded counts)
+
+- SEAL.sha256.txt check from repo root on BensPC: 14/14 OK before building.
+- Built set: train 32,012 (o0b 27,000 + opus 5,012 = 1,253 agreed x4),
+  dev 867 (o0b_l2 428 + opus_dev 139 + o0a2 300),
+  opus agreed 1,392, o0b pronoun-owner dropped 20,000. Matches DATA-AUDIT.md.
+- Threshold: no sweep grid value reached 0 wrong-save dev turns (min 6 at 0.995),
+  so T = 0.995 by the sealed rule. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+- Panel key seal: 2/2 OK (panel.jsonl + key_v2.jsonl). Reader ran on the 240-turn
+  panel exactly once; scored at T and at T = 0.
+---MODELS---
+total 4240648
+-rw-------  1 ben-hannan  staff        9241 Sep 23 08:47 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 08:47 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 08:47 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 08:52 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 08:52 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 08:52 tokenizer.json
+total 4240648
+-rw-------  1 ben-hannan  staff        9241 Sep 23 15:02 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 23 15:02 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 23 15:02 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:02 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 23 15:02 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 23 15:02 tokenizer.json
+[0m
+[0m→ [0mRead artifacts/claude-convbench-f0-20260923/README.md
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis313_f0.py | wc -l; git show origin/main:scripts/claude_lis313_agent.py | wc -l; git show origin/main:scripts/claude_lis313_test.py | wc -l; git ls-tree --name-only origin/main:scripts/ | grep lis313
+212
+     291
+     283
+claude_lis313_agent.py
+claude_lis313_f0.py
+claude_lis313_test.py
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis313_f0.py > /tmp/lis313_f0_view.py; wc -l /tmp/lis313_f0_view.py; git show origin/main:scripts/claude_lis313_test.py | head -n 100
+212 /tmp/lis313_f0_view.py
+#!/usr/bin/env python3
+"""lis-313 CPU tests (StubReader; no weights, no GPU).
+
+Base: 292t (build_agent292t) + install_turn313. The learned self-router's
+weights are not needed: this TEST file stubs fable_self122.route122 to
+("DECLINE", ...) exactly like the cloud smoke runs do. The agent file never
+stubs anything.
+
+Dialogs are invented for these tests (fictional people and pets).
+
+  S1 teach, then ask in words the rule chain can't parse -> reader answers
+  S2 plain question the rule chain answers -> agree, rule reply kept
+  S3 two-hop "via" question the rule chain can't parse -> reader answers
+  S4 yes/no, asked value matches -> "Yes, ..."
+  S5 yes/no, asked value differs -> "No, ..." (with the stored value)
+  S6 lookup miss (nothing taught) -> rule reply kept, reader_miss
+  S7 inverse question -> rule reply kept, inverse_skipped
+  S8 reader reads a different relation than the rule chain answered
+     -> rule reply kept, disagree
+  S9 no question turn writes: every ASK/CHECK turn leaves the event count
+     unchanged, including an ASK-labelled turn the rule chain would teach
+  S10 the reader is called exactly once per turn (none on an ask-back yes)
+     and the 313 log sits next to turn310's log
+  S11 owner typed in lower case finds the capitalised entity
+
+Run (cloud box):
+  /tmp/claude-0/venv311/bin/python -B scripts/claude_lis313_test.py
+Exit 0 iff every test passes.
+"""
+
+from __future__ import annotations
+
+import copy
+import json
+import sys
+import tempfile
+import traceback
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+import fable_self122 as SELF122  # noqa: E402
+
+# Test-only stub for the learned self-router (weights not on this box).
+SELF122.route122 = lambda q: ("DECLINE", {"reason": "lis313-test-stub"})
+
+import claude_loop292t_agent as T292  # noqa: E402
+import claude_lis313_agent as A313  # noqa: E402
+
+HI = 0.999
+CHAT = ({"act": "CHAT", "facts": [], "ask": None}, [], "stub-default", 0.5)
+
+
+class StubReader:
+    """Fixed frames per turn text (no weights). Unmapped turns -> CHAT."""
+
+    def __init__(self, table: dict):
+        self.table = dict(table)
+        self.calls: list = []
+
+    def read(self, turn, prev_reply=""):
+        self.calls.append((turn, prev_reply))
+        return self.table.get(str(turn), CHAT)
+
+
+def st(owner, rel, value, conf=HI):
+    return ({"act": "STATE", "facts": [{"owner": owner, "rel": rel,
+                                        "value": value, "mode": "ASSERT"}],
+             "ask": None}, [conf], "stub", 0.4)
+
+
+def ask(**kw):
+    kw.setdefault("inverse", False)
+    return ({"act": "ASK", "facts": [], "ask": kw}, [], "stub", 0.4)
+
+
+def fresh(table: dict):
+    d = tempfile.mkdtemp(prefix="lis313t_")
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = d
+    cfg["sleep_threshold"] = 100000
+    loop = T292.build_agent292t(cfg)
+    reader = StubReader(table)
+    A313.install_turn313(loop, reader, threshold=0.995)
+    return loop, reader, d
+
+
+def ev(loop):
+    return len(loop.nb.events)
+
+
+def log313(loop):
+    p = Path(loop.lis313_log_path)
+    if not p.exists():
+        return []
+    return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines()
+            if l.strip()]
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis313_agent.py | head -n 120; echo "---F0HEAD---"; git show origin/main:scripts/claude_lis313_f0.py | head -n 150
+#!/usr/bin/env python3
+"""lis-313 -- answer-agreement for questions, on top of the lis-310 listener.
+
+313 = install_turn310 (scripts/claude_lis310_agent.py, read-only import)
+      + ONE outermost wrapper, turn313.
+
+Why: turn310 throws away the reader's reading of a question (act ASK) and
+hands the turn to the old rule chain. When the rule chain cannot parse the
+question it abstains ("I don't know ..."), even when the notebook holds the
+answer the reader pointed at. turn313 looks the reader's question up in the
+notebook itself and uses that answer ONLY when the rule chain gave no answer.
+
+Per user turn:
+  1. The reader is called once. turn313 calls reader.read(turn, prev) itself
+     (prev = loop.lis310_prev, exactly what turn310 uses), caches the result
+     and turn310 is installed with a proxy whose .read returns that cached
+     result. (When turn310 has a pending ask-back and the turn is a plain
+     yes/no, turn310 never reads; turn313 then does not read either.)
+  2. act ASK, ask is a dict, inverse false: lookup
+       subject   = "USER" if owner == "me" else owner as typed
+                   (then the capitalised form if the exact one misses)
+       relations = [via, rel] if via else [rel]
+     through fable_reasoner50.contract_answer (Notebook.ask; read-only).
+     The inner turn310 runs as usual and gives the rule reply R. Then:
+       lookup found V, R contains V          -> keep R            (agree)
+       lookup found V, R is abstain/clarify  -> plain sentence    (reader_answered)
+            "Your sister is Mira." / "Mira's dog is Pip."
+            yes/no ask: "Yes, <sentence>" if V == asked value
+            (case-insensitive), else "No, <sentence>"
+       lookup found V, R names something else -> keep R           (disagree)
+       lookup found nothing                   -> keep R           (reader_miss)
+     The wrapper's own logic never writes: the notebook event count is
+     asserted unchanged across the lookup and the reply choice.
+  3. Inverse asks ("Whose dog is Pip?") and CHECK turns keep R (counters only).
+
+Counters: loop.lis313_stats {asks, agree, reader_answered, disagree,
+reader_miss, inverse_skipped, check_seen, inner_wrote}. Each ASK/CHECK
+decision is appended to lis313_log.jsonl in the same folder as turn310's log.
+
+New file only; no existing file is edited.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_lis310_agent as L310  # noqa: E402 (read-only)
+import fable_notebook_contract as C  # noqa: E402 (statuses, read-only)
+import fable_reasoner50 as R50  # noqa: E402 (contract_answer, read-only)
+
+LOG_NAME313 = "lis313_log.jsonl"
+USER_SUBJECT313 = L310.USER_SUBJECT310  # "USER"
+
+# Copied from scripts/claude_convf0_score.py (builder-outbox): CLARIFY_MARKERS
+# and ABSTAIN_EXTRA, lowercase substrings. A rule reply containing any of
+# them counts as an abstain/clarify line.
+CLARIFY_MARKERS313 = (
+    "didn't understand",
+    "don't know that shape",
+    "well enough to save",
+    "don't know that yet",
+    "do not know that from what you taught me",
+    "couldn't save that as a fact",
+    "couldn't read that message",
+    "please say it like",
+    "do not understand that question",
+)
+ABSTAIN_EXTRA313 = (
+    "don't know",
+    "do not know",
+    "haven't told me",
+    "no record",
+    "will not guess",
+    "won't guess",
+)
+# turn310's own no-answer lines (claude_lis310_agent.py). They name no value,
+# so on an ASK turn they are treated like an abstain as well.
+NO_ANSWER_LINES313 = (L310.NOT_PLAIN310, L310.UNPARSED310)
+
+
+def is_abstain313(reply: str) -> bool:
+    text = str(reply or "").strip()
+    if not text:
+        return True
+    low = text.lower()
+    if any(m in low for m in CLARIFY_MARKERS313):
+        return True
+    if any(m in low for m in ABSTAIN_EXTRA313):
+        return True
+    return text in NO_ANSWER_LINES313
+
+
+class CachedReaderProxy313:
+    """What turn310 sees as its reader: .read returns turn313's cached read.
+
+    If nothing is cached (should not happen) it falls through to the real
+    reader so turn310 still works; that call is counted in fallback_reads.
+    """
+
+    def __init__(self, reader):
+        self.reader = reader
+        self.cached = None
+        self.fallback_reads = 0
+
+    def read(self, turn, prev_reply=""):
+        if self.cached is not None:
+            out, self.cached = self.cached, None
+            return out
+        self.fallback_reads += 1
+        return self.reader.read(turn, prev_reply)
+
+
+def _rel_words(rel: str) -> str:
+    return str(rel or "").replace("_", " ").strip()
+---F0HEAD---
+#!/usr/bin/env python3
+"""lis-313: copy of scripts/claude_lis312_f0.py with arm D added (A/B/C unchanged).
+
+Arm D = 292t + install_turn313 (scripts/claude_lis313_agent.py: turn310 with a
+caching reader proxy + the answer-agreement wrapper outermost) with the reader
+given by --model/--threshold. Arm D rows also carry "lis313": the per-turn
+change in loop.lis313_stats, and its score adds those counters plus how the
+reader-answered turns scored (right/wrong/abstain).
+
+Original lis-312 docstring follows.
+
+lis-312: score "292t + our 1B reader" on the sealed conversation benchmark F0.
+
+Arms (one run each, fresh agent per dialog, same as scripts/claude_convf0_run.py):
+  A  292t alone            build_agent292t(DEFAULT_CONFIG292T)
+  B  292t + lis-300 reader  install_turn310(loop, Reader(lis300-merged), T=0.995)
+  C  292t + lis-301 reader  install_turn310(loop, Reader(lis301-merged), T=lis-301 THRESHOLD.txt)
+  D  292t + reader + 313    install_turn313(loop, Reader(--model), T=--threshold)
+The reader wrapper is installed outermost, exactly as in lis-311 (read-only imports).
+
+Scoring = claude_convf0_score.py's mechanical rules (imported, not copied), plus
+"unexpected saves": new stored triples on a turn whose kind is smalltalk, ask or other.
+Benchmark user turns are never printed.
+
+python -B scripts/claude_lis312_f0.py --arm A --out DIR
+python -B scripts/claude_lis312_f0.py --arm C --model DIR --threshold 0.93 --out DIR
+python -B scripts/claude_lis312_f0.py --score DIR   (writes DIR/summary.json from DIR/arm_*.jsonl)
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import shutil
+import sys
+import tempfile
+import time
+from collections import Counter
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+BENCH = ROOT / "artifacts/claude-convbench-f0-20260923/dialogs.jsonl"
+
+
+LIS313_KEYS = ("asks", "agree", "reader_answered", "disagree", "reader_miss",
+               "inverse_skipped", "check_seen", "inner_wrote", "reads")
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def build(arm, reader, threshold, state_dir):
+    import claude_loop292t_agent as T292
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000
+    loop = T292.build_agent292t(cfg)
+    if arm == "D":
+        import claude_lis313_agent as L313
+        L313.install_turn313(loop, reader, threshold=threshold,
+                             log_path=Path(state_dir) / "lis313-asks.jsonl",
+                             log_path310=Path(state_dir) / "lis312-turns.jsonl")
+        if getattr(vars(loop).get("turn"), "__name__", "") != "turn313":
+            raise RuntimeError("313: turn313 not outermost")
+        return loop
+    if arm != "A":
+        import claude_lis310_agent as L310
+        L310.install_turn310(loop, reader, threshold=threshold,
+                             log_path=Path(state_dir) / "lis312-turns.jsonl")
+        if getattr(vars(loop).get("turn"), "__name__", "") != "turn310":
+            raise RuntimeError("312: turn310 not outermost")
+    return loop
+
+
+def run(a):
+    import fable_loop90_agent as L90
+    reader = None
+    if a.arm != "A":
+        import claude_lis300_read as READ
+        reader = READ.Reader(a.model)
+    items = load(BENCH)
+    order, by = [], {}
+    for it in items:
+        d = it["dialog_id"]
+        if d not in by:
+            by[d] = []
+            order.append(d)
+        by[d].append(it)
+    rows = []
+    for d in order:
+        tmp = tempfile.mkdtemp(prefix=f"lis313-{a.arm}-")
+        loop = build(a.arm, reader, a.threshold, tmp)
+        try:
+            for it in by[d]:
+                text = it.get("user_text") or it.get("user")
+                if not isinstance(text, str) or not text.strip():
+                    raise SystemExit(f"empty text at {d} {it.get('turn_index')}")
+                ev0 = len(loop.nb.events)
+                st0 = dict(getattr(loop, "lis313_stats", {}) or {})
+                t0 = time.time()
+                parts = loop.turn(text)
+                ms = (time.time() - t0) * 1000
+                extra = {}
+                if a.arm == "D":
+                    st1 = dict(loop.lis313_stats)
+                    extra["lis313"] = {k: st1[k] - st0.get(k, 0) for k in LIS313_KEYS
+                                       if st1.get(k, 0) - st0.get(k, 0)}
+                rows.append({**extra, "dialog_id": d, "turn_index": it["turn_index"],
+                             "reply": " ".join(parts) if parts else "",
+                             "notebook_events": [dict(e) for e in list(loop.nb.events)[ev0:]],
+                             "stored_triples": sorted([s, r, v] for (s, r, v) in L90.notebook_triples(loop.nb)),
+                             "ms": round(ms, 1)})
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        print(f"[lis313/{a.arm}] {d} turns={len(by[d])}", flush=True)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{a.arm}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                                            encoding="utf-8")
+    print(f"wrote arm_{a.arm}.jsonl rows={len(rows)}")
+
+
+def score_arm(bench, runs):
+    import claude_convf0_score as S
+    gold = {(b["dialog_id"], b["turn_index"]): b for b in bench}
+    C = Counter()
+    prev = {}
+    ms = []
+    for r in runs:
+        b = gold[(r["dialog_id"], r["turn_index"])]
+        kind, g, rp = b["kind"], b["gold"], str(r.get("reply", ""))
+        C["turns"] += 1
+        C["clarify"] += int(S.is_clarify(rp))
+        before = prev.get(r["dialog_id"], [])
+        new = [t for t in r["stored_triples"] if t not in before]
+        prev[r["dialog_id"]] = r["stored_triples"]
+        if "ms" in r:
+            ms.append(r["ms"])
+        l313 = r.get("lis313") or {}
+        for k, v in l313.items():
+            C["lis313_" + k] += v
+        if kind == "ask":
+            C["ask"] += 1
+            if S.is_abstain_ask(rp):
+                C["ask_abstain"] += 1
+                res = "abstain"
+            elif g and g in rp:
+[0m
+[0m# [0mTodos
+[ ] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[ ] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[ ] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[ ] Run four F0 arms A/B/C/D + score
+[ ] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m# [0mTodos
+[•] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[ ] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[ ] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[ ] Run four F0 arms A/B/C/D + score
+[ ] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m$ [0muptime; df -g / 2>&1 | head -n 5; ls /tmp/ | head -n 20
+22:26  up 12:19, 4 users, load averages: 79.92 75.35 81.30
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        73    15%  484014 766847800    0%   /
+__KMP_REGISTERED_LIB_19337
+241b.txt
+280m_doc.md
+build_part3.py
+cc-socks
+claude-502
+claude-mcp-browser-bridge-ben-hannan
+clr-debug-pipe-634-1790180002-in
+clr-debug-pipe-634-1790180002-out
+codearm.py
+codex-browser-use
+com.openai.sky.CUAService
+CommCenter.KeepAlive.Enabled
+core.py
+det292_1.err
+det292_1.txt
+det292_2.err
+det292_2.txt
+dev_pred301.jsonl
+dev_rows301.jsonl
+[0m
+[0m✗ [0mrm -rf /tmp/lis313-build && mkdir -p /tmp/lis313-build && git archive origin/builder-outbox | tar -x -C /tmp/lis313-build && echo "builder-outbox extracted"; ls /tmp/lis313-build/; ls /tmp/lis313-build/scripts/ | grep -E "convf0_score|lis310_agent|loop292t" ; ls /tmp/lis313-build/artifacts/ | grep convbench failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mls /tmp/lis313-build 2>&1 | head; mkdir -p /tmp/lis313-build && echo ok
+ls: /tmp/lis313-build: No such file or directory
+ok
+[0m
+[0m$ [0mgit archive origin/builder-outbox | tar -x -C /tmp/lis313-build && echo "builder-outbox extracted"
+builder-outbox extracted
+[0m
+[0m$ [0mls; ls scripts/ | grep -E "convf0_score|lis310_agent|loop292t"; ls artifacts/ | grep convbench
+artifacts
+design
+runs
+scripts
+status
+claude_convf0_score.py
+claude_lis310_agent.py
+claude_loop292t_agent.py
+claude-convbench-f0-20260923
+[0m
+[0m$ [0mgit archive origin/main | tar -x -C /tmp/lis313-build && echo "main overlay done"
+main overlay done
+[0m
+[0m$ [0mls scripts/ | grep -E "lis313|lis312_f0|lis300_|reasoner50"; ls artifacts/ | grep -E "lis313|lis312"; ls artifacts/fable-self122-20260922/ 2>&1 | head -n 20
+claude_lis300_agree.py
+claude_lis300_common.py
+claude_lis300_compiler.py
+claude_lis300_data.py
+claude_lis300_read.py
+claude_lis300_score.py
+claude_lis300_train.py
+claude_lis312_f0.py
+claude_lis313_agent.py
+claude_lis313_f0.py
+claude_lis313_test.py
+fable_reasoner50.py
+claude-lis312-20260923
+claude-lis313-20260924
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+[0m
+[0m$ [0mls -l artifacts/fable-self122-20260922/self122_head.pt; cp artifacts/fable-self122-20260922/self122_head.pt /tmp/lis313-build/artifacts/fable-self122-20260922/self122_head.pt && ls -l /tmp/lis313-build/artifacts/fable-self122-20260922/self122_head.pt
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+-rw-r--r--  1 ben-hannan  wheel  65741 Sep 23 22:27 /tmp/lis313-build/artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[•] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[ ] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[ ] Run four F0 arms A/B/C/D + score
+[ ] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m→ [0mRead /tmp/lis313-build/artifacts/claude-lis312-20260923/PASSMARKS.md
+[0m→ [0mRead /tmp/lis313-build/artifacts/claude-lis313-20260924/PASSMARKS.md
+[0m→ [0mRead /tmp/lis313-build/artifacts/claude-convbench-f0-20260923/README.md
+[0m→ [0mRead /tmp/lis313-build/scripts/claude_lis313_f0.py
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt; echo "---"; uptime; df -g / | head -n 5; ls artifacts/claude-lis313-20260924/
+artifacts/claude-convbench-f0-20260923/dialogs.jsonl: OK
+artifacts/claude-convbench-f0-20260923/README.md: OK
+---
+22:27  up 12:20, 4 users, load averages: 127.95 92.01 87.14
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        71    16%  484014 745566840    0%   /
+PASSMARKS.md
+[0m
+[0m$ [0mgrep -h "sha256" artifacts/claude-lis300-20260923/RESULTS.md artifacts/claude-lis301-20260923/RESULTS.md 2>&1 | head -n 10; echo "---"; ls -l ~/premonition-models/lis300-merged/model.safetensors ~/premonition-models/lis301-merged/model.safetensors
+model-00000-of-00001.safetensors sha256
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+- SEAL.sha256.txt check from repo root on BensPC: 14/14 OK before building.
+  so T = 0.995 by the sealed rule. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+  model-00000-of-00001.safetensors sha256
+- Merged reader: sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890,
+- SEAL.sha256.txt checks from the BensPC repo copy before building:
+  we 13/13. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+   and the downloaded base-model snapshot (safetensors sha256 re-verified) instead
+---
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 08:52 /Users/ben-hannan/premonition-models/lis300-merged/model.safetensors
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:02 /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+[0m
+[0m$ [0mgrep -A1 "Merged reader" artifacts/claude-lis300-20260923/RESULTS.md | head -n 10; grep -A1 "Merged reader" artifacts/claude-lis301-20260923/RESULTS.md | head -n 10
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+  kept at ~/premonition-models/lis300-merged/ (Mac, hash verified) and on BensPC
+- Merged reader: sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890,
+  kept at ~/premonition-models/lis301-merged/ (Mac, hash verified) and on BensPC
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/lis300-merged/model.safetensors > /tmp/lis300.sha & echo $!; shasum -a 256 ~/premonition-models/lis301-merged/model.safetensors > /tmp/lis301.sha & echo $!
+57641
+57642
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis313_test.py 2>&1 | tail -n 30
+PASS s1
+PASS s2
+PASS s3
+PASS s4
+PASS s5
+PASS s6
+PASS s7
+PASS s8
+PASS s9
+PASS s10
+PASS s11
+lis313 tests: 11/11 passed
+[0m
+[0m$ [0mps -p 57641 -p 57642 2>&1; cat /tmp/lis300.sha 2>&1; cat /tmp/lis301.sha 2>&1
+PID TTY           TIME CMD
+112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324  /Users/ben-hannan/premonition-models/lis300-merged/model.safetensors
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+[0m
+[0m$ [0mcat artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt; echo "---"; cat artifacts/fable-self122-20260922/SEAL.sha256.txt 2>&1 | head -n 20
+14386e014aae8e229ef49cd55d8fe09b0cb1e014f799fda856e21dd15d8f9b7f  artifacts/claude-convbench-f0-20260923/dialogs.jsonl
+ad037a0a8656a88c50b9a4cc6e2762dc1e386836d9619dff5f2d4d0d4f2f4365  artifacts/claude-convbench-f0-20260923/README.md
+---
+2d6a142edf6763c9610d17d52d7fc90e9f15ac96c99a3b71df55a471124ffa2e  PASSMARKS.md
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[✓] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[•] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[ ] Run four F0 arms A/B/C/D + score
+[ ] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-lis313-20260924/PASSMARKS.md artifacts/claude-lis312-20260923/PASSMARKS.md scripts/claude_lis313_f0.py scripts/claude_lis313_agent.py | tee artifacts/claude-lis313-20260924/SEAL.sha256.txt; echo "---"; cat artifacts/claude-lis313-20260924/SEAL.sha256.txt
+2b4c86770b0d5ec61e11dda1cbdb6ef26e1537d6f403f33aa77660a26d66ef9e  artifacts/claude-lis313-20260924/PASSMARKS.md
+bf6a80ef571cb2bb96dbff1d64c98d5804496a9141d25774027e3d820ead9342  artifacts/claude-lis312-20260923/PASSMARKS.md
+f95ac28cec6f1a0f05f1c97c16286104544f4144365e6d27e9817fcc193cad80  scripts/claude_lis313_f0.py
+5b9d43aff5dc9c131d5ae20ab3adecc65669f1996faca35774411c9504927f24  scripts/claude_lis313_agent.py
+---
+2b4c86770b0d5ec61e11dda1cbdb6ef26e1537d6f403f33aa77660a26d66ef9e  artifacts/claude-lis313-20260924/PASSMARKS.md
+bf6a80ef571cb2bb96dbff1d64c98d5804496a9141d25774027e3d820ead9342  artifacts/claude-lis312-20260923/PASSMARKS.md
+f95ac28cec6f1a0f05f1c97c16286104544f4144365e6d27e9817fcc193cad80  scripts/claude_lis313_f0.py
+5b9d43aff5dc9c131d5ae20ab3adecc65669f1996faca35774411c9504927f24  scripts/claude_lis313_agent.py
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[✓] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[✓] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[•] Run four F0 arms A/B/C/D + score
+[ ] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis313-20260924/run && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis313_f0.py --arm A --out artifacts/claude-lis313-20260924/run > /tmp/lis313-armA.log 2>&1 & echo $!
+57754
+[0m
+[0m$ [0msleep 20; ps -p 57754 2>&1; tail -n 20 /tmp/lis313-armA.log; ls -l artifacts/claude-lis313-20260924/run/ 2>&1
+PID TTY           TIME CMD
+[lis313/A] conv-f0-22 turns=7
+[lis313/A] conv-f0-23 turns=7
+[lis313/A] conv-f0-24 turns=7
+[lis313/A] conv-f0-25 turns=7
+[lis313/A] conv-f0-26 turns=7
+[lis313/A] conv-f0-27 turns=7
+[lis313/A] conv-f0-28 turns=7
+[lis313/A] conv-f0-29 turns=7
+[lis313/A] conv-f0-30 turns=7
+[lis313/A] conv-f0-31 turns=8
+[lis313/A] conv-f0-32 turns=8
+[lis313/A] conv-f0-33 turns=8
+[lis313/A] conv-f0-34 turns=8
+[lis313/A] conv-f0-35 turns=8
+[lis313/A] conv-f0-36 turns=8
+[lis313/A] conv-f0-37 turns=9
+[lis313/A] conv-f0-38 turns=9
+[lis313/A] conv-f0-39 turns=10
+[lis313/A] conv-f0-40 turns=10
+wrote arm_A.jsonl rows=286
+total 152
+-rw-r--r--  1 ben-hannan  wheel  75689 Sep 23 22:28 arm_A.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run > /tmp/lis313-armB.log 2>&1 & echo $!
+57798
+[0m
+[0m$ [0msleep 60; ps -p 57798 2>&1 | head; tail -n 15 /tmp/lis313-armB.log; ls -l artifacts/claude-lis313-20260924/run/
+PID TTY           TIME CMD
+Traceback (most recent call last):
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 212, in <module>
+    main()
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 208, in main
+    run(a)
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 82, in run
+    import claude_lis300_read as READ
+  File "/private/tmp/lis313-build/scripts/claude_lis300_read.py", line 21, in <module>
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+ModuleNotFoundError: No module named 'transformers'
+total 152
+-rw-r--r--  1 ben-hannan  wheel  75689 Sep 23 22:28 arm_A.jsonl
+[0m
+[0m→ [0mRead /tmp/lis313-build/scripts/claude_lis300_read.py[90m [limit=60][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B -c "import transformers; print(transformers.__version__)" 2>&1 | tail -n 20
+5.17.0
+[0m
+[0m→ [0mRead /tmp/lis313-build/scripts/claude_lis300_read.py[90m [offset=61][0m
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run > /tmp/lis313-armB.log 2>&1 & echo $!
+58282
+[0m
+[0m$ [0msleep 90; ps -p 58282 2>&1 | head; tail -n 15 /tmp/lis313-armB.log
+PID TTY           TIME CMD
+58282 ??         0:00.04 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[0m
+[0m$ [0msleep 120; ps -p 58282 2>&1 | head -n 5; tail -n 8 /tmp/lis313-armB.log; date; uptime
+PID TTY           TIME CMD
+58282 ??         0:00.04 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+Wed Sep 23 22:33:48 EDT 2026
+22:33  up 12:26, 4 users, load averages: 42.87 76.36 82.72
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mtail -n 8 /tmp/lis313-armB.log; ps -p 58282 2>&1 | head -n 5
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+  PID TTY           TIME CMD
+58282 ??         0:00.04 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+[0m
+[0m$ [0msleep 90; tail -n 8 /tmp/lis313-armB.log; ps -p 58282 2>&1 | head -n 5
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+  PID TTY           TIME CMD
+58282 ??         0:00.04 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+[0m
+[0m$ [0mps aux | grep -i lis313 | grep -v grep | head -n 10
+ben-hannan       58283  10.9  0.1 532757888  27808   ??  UN   10:30PM   1:21.71 /Users/ben-hannan/.cache/uv/builds-v0/.tmpbkUCRu/bin/python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+ben-hannan       56564  10.0  0.6 562806384 195776   ??  SN   10:24PM   0:29.32 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis-313-f0.go1.56532 COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).\012GPU: no (Mac CPU/MPS, like lis-311; the reader runs on MPS).\012TIME CAP: 240 minutes in total (four arms). macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.\012\012YOUR TASK: builder for lis-313 (this replaces lis-312, which exited without running). Score base 292t with and without our 1B reader on the sealed conversation benchmark F0, in four arms. Artifacts go in artifacts/claude-lis313-20260924/. The listener thread wrote the code. Run it and never edit it. If it breaks, stop and report the exact error.\012\012GETTING THE CODE (lis-312 failed here): build the tree as lis-311 did. Start from a fresh `git archive origin/builder-outbox` (it has the F0 benchmark, claude_convf0_score.py, claude_lis310_agent.py and claude_loop292t_agent.py), then overlay a fresh `git archive origin/main` on top (it has claude_lis313_*.py, claude_lis312_f0.py, claude_lis300_*.py, fable_reasoner50.py and the PASSMARKS). Run everything from the root of that combined tree. It also needs artifacts/fable-self122-20260922/self122_head.pt from the Mac repo, copied in, exactly as for lis-311b.\012\012READ FIRST: artifacts/claude-lis313-20260924/PASSMARKS.md, artifacts/claude-lis312-20260923/PASSMARKS.md, scripts/claude_lis313_f0.py, and artifacts/claude-convbench-f0-20260923/README.md. Never print or quote benchmark user turns.\012\0121. Checks:\012   - `shasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt` must be all OK;\012   - the lis300-merged and lis301-merged safetensors sha256 in ~/premonition-models/ must match lis-300's and lis-301's RESULTS.md;\012   - `python -B scripts/claude_lis313_test.py` must print 11/11 passed;\012   - `uptime` and disk.\012   Seal both PASSMARKS.md files, scripts/claude_lis313_f0.py and scripts/claude_lis313_agent.py into artifacts/claude-lis313-20260924/SEAL.sha256.txt BEFORE running.\0122. Run the four arms (output dir artifacts/claude-lis313-20260924/run):\012   python -B scripts/claude_lis313_f0.py --arm A --out artifacts/claude-lis313-20260924/run\012   python -B scripts/claude_lis313_f0.py --arm B --model ~/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run\012   python -B scripts/claude_lis313_f0.py --arm C --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run\012   python -B scripts/claude_lis313_f0.py --arm D --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run\012   python -B scripts/claude_lis313_f0.py --score artifacts/claude-lis313-20260924/run\0123. RESULTS.md, verdict first:\012   - P312.1 to P312.4 (arms A vs C) and P313.1 to P313.4 (arms C vs D), with integer counts and PASS/FAIL, plus every count of summary.json for all four arms;\012   - device and ms;\012   - for arms C and D, every new triple stored on a teach turn that is not the gold, as "gold triple -> stored triple" (triples only, never the user turn);\012   - for arm D, every ask turn the wrapper answered, as "gold value -> reply" (replies are agent text, so quoting them is fine; never the user turn).\012   Append ledger lines P312.1 to P312.4 and P313.1 to P313.4 (cat >> artifacts/fable-predictions-ledger.md).\012PUSH: artifacts/claude-lis313-20260924 artifacts/fable-predictions-ledger.md
+ben-hannan       58282   0.0  0.0 463755008   5184   ??  SN   10:30PM   0:00.04 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+[0m
+[0m$ [0msleep 85; tail -n 6 /tmp/lis313-armB.log; ps -p 58283 -o pid,time,%cpu,command 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:02<07:31,  2.07s/it]Loading weights:  63%|██████▎   | 139/219 [00:02<00:00, 87.65it/s]Loading weights:  91%|█████████▏| 200/219 [00:03<00:00, 79.01it/s]Loading weights: 100%|██████████| 219/219 [00:03<00:00, 65.23it/s]
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+[lis313/B] conv-f0-04 turns=6
+  PID      TIME  %CPU COMMAND
+58283   1:43.83  13.6 /Users/ben-hannan/.cache/uv/builds-v0/.tmpbkUCRu/bin/python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+[0m
+[0m$ [0msleep 85; tail -n 4 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+[lis313/B] conv-f0-04 turns=6
+Wed Sep 23 22:38:41 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 4 /tmp/lis313-armB.log; date; uptime
+[lis313/B] conv-f0-01 turns=6
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+[lis313/B] conv-f0-04 turns=6
+Wed Sep 23 22:40:09 EDT 2026
+22:40  up 12:33, 4 users, load averages: 118.20 101.08 90.48
+[0m
+[0m$ [0mps -p 58283 -o pid,time,%cpu,command 2>&1 | head; tail -n 4 /tmp/lis313-armB.log
+PID      TIME  %CPU COMMAND
+58283   2:19.14  18.0 /Users/ben-hannan/.cache/uv/builds-v0/.tmpbkUCRu/bin/python -B scripts/claude_lis313_f0.py --arm B --model /Users/ben-hannan/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+[lis313/B] conv-f0-02 turns=6
+[lis313/B] conv-f0-03 turns=6
+[lis313/B] conv-f0-04 turns=6
+[lis313/B] conv-f0-05 turns=6
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-04 turns=6
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+Wed Sep 23 22:41:46 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-04 turns=6
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+Wed Sep 23 22:43:18 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date; ps -p 58283 -o pid,time,%cpu 2>&1 | head
+[lis313/B] conv-f0-04 turns=6
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+Wed Sep 23 22:44:45 EDT 2026
+  PID      TIME  %CPU
+58283   3:05.01   9.7
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+[lis313/B] conv-f0-07 turns=6
+Wed Sep 23 22:46:22 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-05 turns=6
+[lis313/B] conv-f0-06 turns=6
+[lis313/B] conv-f0-07 turns=6
+Wed Sep 23 22:47:49 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 3 /tmp/lis313-armB.log; date; uptime
+[lis313/B] conv-f0-06 turns=6
+[lis313/B] conv-f0-07 turns=6
+[lis313/B] conv-f0-08 turns=6
+Wed Sep 23 22:49:20 EDT 2026
+22:49  up 12:42, 4 users, load averages: 124.32 119.50 104.58
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-07 turns=6
+[lis313/B] conv-f0-08 turns=6
+Wed Sep 23 22:50:54 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-08 turns=6
+[lis313/B] conv-f0-09 turns=6
+Wed Sep 23 22:52:22 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-08 turns=6
+[lis313/B] conv-f0-09 turns=6
+Wed Sep 23 22:53:51 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-09 turns=6
+[lis313/B] conv-f0-10 turns=6
+Wed Sep 23 22:55:18 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-09 turns=6
+[lis313/B] conv-f0-10 turns=6
+Wed Sep 23 22:56:46 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-09 turns=6
+[lis313/B] conv-f0-10 turns=6
+Wed Sep 23 22:58:13 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date; ps -p 58283 -o pid,time,%cpu 2>&1 | head
+[lis313/B] conv-f0-09 turns=6
+[lis313/B] conv-f0-10 turns=6
+Wed Sep 23 22:59:41 EDT 2026
+  PID      TIME  %CPU
+58283   5:54.48   8.5
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-10 turns=6
+[lis313/B] conv-f0-11 turns=7
+Wed Sep 23 23:01:09 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-11 turns=7
+[lis313/B] conv-f0-12 turns=7
+Wed Sep 23 23:02:37 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-11 turns=7
+[lis313/B] conv-f0-12 turns=7
+Wed Sep 23 23:04:05 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+[lis313/B] conv-f0-12 turns=7
+[lis313/B] conv-f0-13 turns=7
+Wed Sep 23 23:05:32 EDT 2026
+[0m
+[0m$ [0msleep 85; tail -n 2 /tmp/lis313-armB.log; date
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: MPS backend out of memory (MPS allocated: 42.28 GiB, other allocations: 720.00 KiB, max allowed: 42.43 GiB). Tried to allocate 384.00 MiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure).
+Wed Sep 23 23:07:01 EDT 2026
+[0m
+[0m$ [0mps -p 58282 -p 58283 2>&1 | head; echo "---"; grep -n "Traceback\|Error\|error" /tmp/lis313-armB.log | head; echo "---"; tail -n 40 /tmp/lis313-armB.log
+PID TTY           TIME CMD
+---
+15:Traceback (most recent call last):
+149:RuntimeError: MPS backend out of memory (MPS allocated: 42.28 GiB, other allocations: 720.00 KiB, max allowed: 42.43 GiB). Tried to allocate 384.00 MiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure).
+---
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 259, in _reconstruct
+    state = deepcopy(state, memo)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 143, in deepcopy
+    y = copier(memo)
+        ^^^^^^^^^^^^
+  File "/Users/ben-hannan/.cache/uv/archive-v0/t-lLc9qjltUR4RtA/lib/python3.12/site-packages/torch/nn/parameter.py", line 79, in __deepcopy__
+    self.data.clone(memory_format=torch.preserve_format), self.requires_grad
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: MPS backend out of memory (MPS allocated: 42.28 GiB, other allocations: 720.00 KiB, max allowed: 42.43 GiB). Tried to allocate 384.00 MiB on shared pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure).
+[0m
+[0m$ [0msed -n '15,60p' /tmp/lis313-armB.log
+Traceback (most recent call last):
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 212, in <module>
+    main()
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 208, in main
+    run(a)
+  File "/private/tmp/lis313-build/scripts/claude_lis313_f0.py", line 104, in run
+    parts = loop.turn(text)
+            ^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_lis310_agent.py", line 394, in turn310
+    reply, blocked, _d = _base_pass_blocked310(loop, t)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_lis310_agent.py", line 273, in _base_pass_blocked310
+    reply = loop.turn310_inner(text)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix282b_vocab.py", line 204, in turn282b
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix282_small.py", line 208, in turn282
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix280b_general.py", line 278, in turn280b
+    return list(inner_turn(t))
+                ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix280_capab.py", line 181, in turn280
+    r = list(inner_turn(t))
+             ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix281_called.py", line 141, in turn281
+    return inner_turn(t)
+           ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix291_glue.py", line 184, in turn291
+    r0 = inner_turn(t)
+         ^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix260_openers.py", line 401, in turn260
+    s0 = snapshot260(loop)
+         ^^^^^^^^^^^^^^^^^
+  File "/private/tmp/lis313-build/scripts/claude_fix260_openers.py", line 291, in snapshot260
+    attrs[k] = (v, copy.deepcopy(v))
+                   ^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 136, in deepcopy
+    y = copier(x, memo)
+        ^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 221, in _deepcopy_dict
+    y[deepcopy(key, memo)] = deepcopy(value, memo)
+                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/copy.py", line 162, in deepcopy
+    y = _reconstruct(x, memo, *rv)
+[0m
+[0m$ [0mgrep -n "lis310_reader\|loop\.reader\|setattr.*reader\|reader" scripts/claude_lis310_agent.py | head -n 20; echo "---"; grep -n "def snapshot260" -A 15 scripts/claude_fix260_openers.py | head -n 25
+46:  7. Unparsed reader output: save nothing, reply
+53:Every turn is appended to <state_dir>/lis310_log.jsonl with the reader frame,
+60:lis310.reader); Loop310Daemon reads both from its cfg.
+287:def install_turn310(loop, reader, threshold: float = DEFAULT_THRESHOLD310,
+292:    loop.lis310_reader = reader
+340:        # -- reader + compiler
+341:        frame, confs, _raw, ms = reader.read(t, prev)
+408:        notes.append("lis310: 291 + listener turn310 (reader + compiler; "
+414:def _reader_from_cfg310(cfg: dict):
+416:    if liscfg.get("reader") is not None:
+417:        return liscfg["reader"], float(liscfg.get("threshold",
+425:    raise RuntimeError("lis-310 needs a reader: set cfg['lis310']['reader'] "
+430:    """291 base + the listener turn wrapper. cfg['lis310'] keys: reader (a
+435:    reader, threshold = _reader_from_cfg310(cfg)
+437:    install_turn310(loop, reader,
+455:        reader, threshold = _reader_from_cfg310(dict(cfg or {}))
+457:        install_turn310(self.loop, reader,
+470:    "with the lis-300 listener turn wrapper (reader + write compiler)")
+473:    "reader": None,
+485:    "added": ["lis-300 reader (MiniCPM5-1B, lis300_read.py) + write "
+---
+285:def snapshot260(loop):
+286-    snap = []
+287-    for obj in _helpers(loop):
+288-        attrs = {}
+289-        for k, v in list(vars(obj).items()):
+290-            if isinstance(v, _PLAIN):
+291-                attrs[k] = (v, copy.deepcopy(v))
+292-        snap.append((obj, attrs))
+293-    return snap
+294-
+295-
+296-def restore260(snap) -> None:
+297-    for obj, attrs in snap:
+298-        d = vars(obj)
+299-        for k in [k for k, v in d.items()
+300-                  if isinstance(v, _PLAIN) and k not in attrs]:
+[0m
+[0m$ [0mgrep -n "_PLAIN\s*=\|def _helpers" -A 12 scripts/claude_fix260_openers.py | head -n 40
+253:_PLAIN = (type(None), bool, int, float, str, bytes, list, dict, tuple, set,
+254-          frozenset)
+255-_SKIP_TYPES = ("Notebook", "Path")
+256-
+257-
+258:def _helpers(loop):
+259-    """The loop and its helper objects (not the notebook), depth <= 3."""
+260-    seen, out, todo = set(), [], [(loop, 0)]
+261-    while todo:
+262-        obj, depth = todo.pop()
+263-        if id(obj) in seen:
+264-            continue
+265-        seen.add(id(obj))
+266-        out.append(obj)
+267-        if depth >= 3:
+268-            continue
+269-        for v in list(vars(obj).values()):
+270-            if isinstance(v, _PLAIN) or callable(v) and not hasattr(
+[0m
+[0m$ [0msed -n '270,285p' scripts/claude_fix260_openers.py
+if isinstance(v, _PLAIN) or callable(v) and not hasattr(
+                    v, "__dict__"):
+                continue
+            tn = type(v).__name__
+            if any(s in tn for s in _SKIP_TYPES):
+                continue
+            mod = getattr(type(v), "__module__", "") or ""
+            if not (mod.startswith("fable_") or mod.startswith("claude_")
+                    or mod.startswith("sleep") or "agent" in mod):
+                continue
+            if hasattr(v, "__dict__"):
+                todo.append((v, depth + 1))
+    return out
+
+
+def snapshot260(loop):
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[✓] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[✓] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[✓] Run four F0 arms A/B/C/D + score
+[•] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
+[0m$ [0mtail -n 15 artifacts/fable-predictions-ledger.md; echo "---"; ls artifacts/ | grep lis313; df -g / | head -n 3; uptime
+- Pownm1.4 OUTCOME (same run) FAIL distinct slotted 45/1000 (bar >=300), top reply 175/1000 rows 17.5% (bar <=30); M0 dev itself has 339 distinct (top 7), so collapse is the model's, not the data's; greedy over-confidence, retries never used on dev.
+- Pownm1.5 OUTCOME (same run) PASS 0 crashes.
+- Pownm1 OUTCOME (same run) registered verdict FAIL (4/5 PASS, Pm1.4 FAIL; one diagnosis-driven follow-up is the director's call). Merged sha b40cc2d6 kept at ~/premonition-models/own-m1-mouth/, weights never in git. Deviations: SSH attach needed full pubkey string; gcc installed for triton JIT then full retrain from scratch (no code patch); watchdog polls ~115 s during speak. See artifacts/claude-own-m1-20260923/RESULTS.md.
+- P-vast-ownm1b (2026-09-23 18:44-20:27 UTC) contract 52279343 RTX 5090 1x IP 154.9.228.248 reliability 0.9886 dph 0.5155556 label own-m1b: rented 18:44:29Z, destroyed 20:27Z, alive ~102 min x $0.5156/h = ~$0.88 (ceiling $4.00/3h respected); post-destroy 52279343 gone (only another agent's rsn-294 box live, untouched); credit 6.39 -> 9.67 across the run (top-up/release, not mine to explain).
+- P294.TOO-SLOW (2026-09-23, builder rsn-294 rental; NO full runs, NO panel reads, sealed code untouched) contract 52290733 RTX 5090 1x label rsn-294 offer 44614424 32 cores rel 0.9948 $0.4727/hr, alive 50.5 min x $0.4727/hr = ~$0.40 (ceiling $4/3h respected; per-instance billing not readable via API, estimate used). Seals 6/6 OK, selftest ok (loop 30771221, plain 30938261 params). NEW venv torch 2.14.0+cu130 CUDA True numpy 2.4.6. Pilot --copy-steps 100 --rl-steps 50 seed 9 (2 arms sharing 1 GPU): loop copy 100 steps 0.27 min, RL 50 steps 3.54 min; plain copy 100 steps 0.20 min, RL 50 steps 3.82 min. Solo check (plain, 1 GPU, copy 20 + RL 10): copy ~0.09 s/step, RL ~2.34 s/step. Full-run estimate per task rule (60x copy-min + 120x practice-min): loop ~441 min, plain ~470 min shared (dedicated ~245 min each); 4 runs 2-at-a-time ~= 940 min >> 150 min cap, also breaks 3 h ceiling (~16 h x $0.47 ~= $7.4). Instance destroyed, 0 instances live after. P294.1-P294.6 NOT scored (no checkpoints, no evals). Cause of slowness (unverified, from code reading only): practice phase does an 8-try Python reward loop over 128 episodes per step.
+- P294.HOST-FAIL (2026-09-23, builder rsn-294 second try; NO training, NO panel reads, sealed code untouched, $0.00 spent) two rentals failed to start: contract 52298608 (offer 43748043, RTX 5090 80 cores rel 0.9975 $0.4567/h) and contract 52299228 (offer 49298963, RTX 5090 24 cores rel 0.9907 $0.50/h), both stuck at actual_status=loading/cur_state=stopped, manual start returned "Required resources are currently unavailable, state change queued"; both destroyed, 0 instances live after, credit unchanged at $9.31. Per task rule (two failures -> HOST-FAIL), stopped without running pilot/train/eval. P294.1-P294.6 NOT scored (no checkpoints, no evals).
+- PF1 OUTCOME (2026-09-23, builder; registered verdict PASS on M2+M3+M5 mechanical; M1/M4 director-graded, not run here; seals own 41/41 OK post-run, panel seal 2/2 OK, no sealed file changed): M2 0 unfaithful + 0 store/event diffs on suites, probes, joinpanel, convbench (PF1.1 held). M3 sessions152 57/57 reply-only, bench NEW-1 648/648 reply-only GATE clean, rt136 52 reply-only 0 other, rt143 0 triples/expected diffs, vp 63 + vs 11 reply-only, all gates clean, every reply diff route A (PF1.2 held). Convbench 13 changed lines of 286, all route A (SAVED 9, ANSWER 2, ABSTAIN_MISSING 2), 0 store diffs (PF1.3 count missed: 13 vs 50-130 predicted). Joinpanel 90/90 byte-identical, 0 store, 0 probe diffs (PF1.4 bars held, 0 diffs). M5 medians 50.12 vs 50.42 s ratio 0.994 PASS, all 6 runs load1<40 (PF1.5 held). Misses: frozen bench 10 new WRONG, all missing-yes needle artifacts, 10/10 resolved under NEW-1 (PF1.2 disclosed); sev-1 fallbacks byte-identical: suites 5, joinpanel 20, conv 0, dev 1. See artifacts/claude-f1-20260923/RESULTS.md.
+- P294.1 OUTCOME (2026-09-23/24, builder rsn-294 third try; sealed code, 7/7 seal lines OK, selftest ok; 4 full runs loop/plain x seeds 1/2, defaults, contract 52300816 RTX 5090 $0.4727/h ~2.80 h ~$1.32) checked invented answers (answered without a fact): loop-s1 0/300, loop-s2 0/300 (bar <=2: PASS both; raw inventions s1 22, s2 4, all in missing_fact, all converted to IDK by the fact-check).
+- P294.2 OUTCOME (same run) loop checked-right overall: s1 92/300, s2 111/300 (bar code 210 + 30 = 240: FAIL both).
+- P294.3 OUTCOME (same run) missing_fact honest IDK: s1 30/30, s2 30/30 (bar >=25: PASS both).
+- P294.4 OUTCOME (same run) held-out three-step + big-notebook loop minus plain same seed: s1 0 - 5 = -5, s2 1 - 8 = -7 (bar >= +10: FAIL both; loop three-step 0/15 both seeds).
+- P294.5 OUTCOME (same run) loop checked_right per category vs code-3 = 27: s1 one_step 3, backwards 7, yes_no 11, newest_correction 12; s2 19, 8, 23, 12 (FAIL all four categories both seeds).
+- P294.6 OUTCOME (same run) practice teaches loop final minus copy-only overall right: s1 92 - 45 = +47 PASS, s2 111 - 107 = +4 FAIL (bar >= +10).
+- P294 OUTCOME (same run) registered verdict FAIL (P294.2, P294.4, P294.5 fail both seeds; P294.6 fails seed 2). Panel items read 0, evals 16/16 once per checkpoint, sealed files edited 0, code never patched. Checkpoints (8 .pt, sha match SEAL-run.sha256.txt) kept at ~/premonition-models/rsn294/<run>/, weights never in git. Instance destroyed, 0 live after. See artifacts/claude-rsn294-20260923/RESULTS.md.
+- P-vast-rsn294c (2026-09-23 21:24:39Z-2026-09-24 00:12:37Z, builder rsn-294 third try) contract 52300816 RTX 5090 1x offer 43165154 32 cores rel 0.9951 $0.4727/h label rsn-294c: rented 21:24:39Z, running within ~1 min, destroyed 00:12:37Z, alive ~2.80 h x $0.4727/h = ~$1.32 (ceiling $4/3h respected on dollars; wall-clock over 3 h only from ~1 GB checkpoint download at ~100-400 KB/s); post-destroy 0 instances live; credit $9.31 at rental.
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        63    17%  484014 665653960    0%   /
+23:08  up 13:01, 4 users, load averages: 11.80 16.49 40.94
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_lis313_f0.py --score artifacts/claude-lis313-20260924/run 2>&1 | tail -n 40; ls -l artifacts/claude-lis313-20260924/run/; ls -l /tmp/lis313-arm*.log
+{
+ "A": {
+  "turns": 286,
+  "clarify": 186,
+  "smalltalk": 68,
+  "smalltalk_clarify": 55,
+  "teach": 84,
+  "teach_other_new_triples": 7,
+  "teach_match": 13,
+  "ask": 84,
+  "ask_abstain": 77,
+  "ask_gold_stored": 17,
+  "ask_gold_stored_abstain": 11,
+  "other": 40,
+  "other_clarify": 25,
+  "ask_right": 6,
+  "ask_gold_stored_right": 6,
+  "correct": 10,
+  "ask_wrong": 1,
+  "ms_median": 5.3,
+  "ms_max": 2952.7
+ }
+}
+total 160
+-rw-r--r--  1 ben-hannan  wheel  75689 Sep 23 22:28 arm_A.jsonl
+-rw-r--r--  1 ben-hannan  wheel    414 Sep 23 23:09 summary.json
+-rw-r--r--  1 ben-hannan  wheel  1229 Sep 23 22:28 /tmp/lis313-armA.log
+-rw-r--r--  1 ben-hannan  wheel  9581 Sep 23 23:05 /tmp/lis313-armB.log
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-lis313-20260924/SEAL.sha256.txt && mkdir -p artifacts/claude-lis313-20260924/run && cp artifacts/claude-lis313-20260924/PASSMARKS.md artifacts/claude-lis313-20260924/SEAL.sha256.txt artifacts/claude-lis313-20260924/run/arm_A.jsonl artifacts/claude-lis313-20260924/run/summary.json "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/" 2>&1; echo "---copy-run---"; cp artifacts/claude-lis313-20260924/run/arm_A.jsonl artifacts/claude-lis313-20260924/run/summary.json "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/run/" && cp /tmp/lis313-armA.log /tmp/lis313-armB.log "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/" && ls -l "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/" "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/run/"
+artifacts/claude-lis313-20260924/PASSMARKS.md: OK
+artifacts/claude-lis312-20260923/PASSMARKS.md: OK
+scripts/claude_lis313_f0.py: OK
+scripts/claude_lis313_agent.py: OK
+cp: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924: Not a directory
+---copy-run---
+cp: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis313-20260924/run: Not a directory
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis313-20260924/run && ls artifacts/ | grep lis313
+claude-lis313-20260924
+[0m
+[0m$ [0mcp /tmp/lis313-build/artifacts/claude-lis313-20260924/PASSMARKS.md /tmp/lis313-build/artifacts/claude-lis313-20260924/SEAL.sha256.txt artifacts/claude-lis313-20260924/ && cp /tmp/lis313-build/artifacts/claude-lis313-20260924/run/arm_A.jsonl /tmp/lis313-build/artifacts/claude-lis313-20260924/run/summary.json artifacts/claude-lis313-20260924/run/ && cp /tmp/lis313-armA.log /tmp/lis313-armB.log artifacts/claude-lis313-20260924/ && ls -l artifacts/claude-lis313-20260924/ artifacts/claude-lis313-20260924/run/ && shasum -a 256 artifacts/claude-lis313-20260924/PASSMARKS.md
+artifacts/claude-lis313-20260924/:
+total 48
+-rw-r--r--  1 ben-hannan  staff  1229 Sep 23 23:10 lis313-armA.log
+-rw-r--r--  1 ben-hannan  staff  9581 Sep 23 23:10 lis313-armB.log
+-rw-r--r--  1 ben-hannan  staff  2296 Sep 23 23:10 PASSMARKS.md
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 23 23:10 run
+-rw-r--r--  1 ben-hannan  staff   415 Sep 23 23:10 SEAL.sha256.txt
+
+artifacts/claude-lis313-20260924/run/:
+total 160
+-rw-r--r--  1 ben-hannan  staff  75689 Sep 23 23:10 arm_A.jsonl
+-rw-r--r--  1 ben-hannan  staff    414 Sep 23 23:10 summary.json
+2b4c86770b0d5ec61e11dda1cbdb6ef26e1537d6f403f33aa77660a26d66ef9e  artifacts/claude-lis313-20260924/PASSMARKS.md
+[0m
+[0m← [0mWrite artifacts/claude-lis313-20260924/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P313 OUTCOME (2026-09-24, builder lis-313; sealed code unmodified, 4/4 seal OK post-run, 11/11 stub tests passed, F0 seal 2/2 OK, both model sha256 match RESULTS.md) BLOCKED: arm A (292t alone) finished 286/286 turns (teach_match 13/84, ask_right 6/84, ask_abstain 77/84, clarify 186/286, ms_median 5.3 max 2952.7); arm B (292t + lis-300 reader, T=0.995) crashed at 13/40 dialogs with RuntimeError MPS backend out of memory (42.28/42.43 GiB) inside snapshot260 copy.deepcopy reaching model Parameters via loop.lis310_reader; arms C/D never started (same wall). P312.1-P312.4, P313.1-P313.4 NOT scored (no arms C/D). See artifacts/claude-lis313-20260924/RESULTS.md.
+EOF
+tail -n 2 artifacts/fable-predictions-ledger.md | cut -c1-200
+- P-vast-rsn294c (2026-09-23 21:24:39Z-2026-09-24 00:12:37Z, builder rsn-294 third try) contract 52300816 RTX 5090 1x offer 43165154 32 cores rel 0.9951 $0.4727/h label rsn-294c: rented 21:24:39Z, run
+- P313 OUTCOME (2026-09-24, builder lis-313; sealed code unmodified, 4/4 seal OK post-run, 11/11 stub tests passed, F0 seal 2/2 OK, both model sha256 match RESULTS.md) BLOCKED: arm A (292t alone) fini
+[0m
+[0m$ [0mls -l artifacts/claude-lis313-20260924/ artifacts/claude-lis313-20260924/run/; echo "---"; grep -c "conv-f0" lis313-armB.log artifacts/claude-lis313-20260924/lis313-armB.log 2>&1; echo "---"; git status --short | head -n 20
+artifacts/claude-lis313-20260924/:
+total 64
+-rw-r--r--  1 ben-hannan  staff  1229 Sep 23 23:10 lis313-armA.log
+-rw-r--r--  1 ben-hannan  staff  9581 Sep 23 23:10 lis313-armB.log
+-rw-r--r--  1 ben-hannan  staff  2296 Sep 23 23:10 PASSMARKS.md
+-rw-r--r--  1 ben-hannan  staff  7330 Sep 23 23:10 RESULTS.md
+drwxr-xr-x  4 ben-hannan  staff   128 Sep 23 23:10 run
+-rw-r--r--  1 ben-hannan  staff   415 Sep 23 23:10 SEAL.sha256.txt
+
+artifacts/claude-lis313-20260924/run/:
+total 160
+-rw-r--r--  1 ben-hannan  staff  75689 Sep 23 23:10 arm_A.jsonl
+-rw-r--r--  1 ben-hannan  staff    414 Sep 23 23:10 summary.json
+---
+grep: lis313-armB.log: No such file or directory
+artifacts/claude-lis313-20260924/lis313-armB.log:13
+---
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m$ [0mgit status --short | grep -E "lis313|ledger"; echo "---"; git diff --stat artifacts/fable-predictions-ledger.md | tail -n 3
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis313-20260924/RESULTS.md 2>&1; git status --short --untracked-files=all 2>&1 | grep -E "lis313" | head; git ls-files artifacts/ | head -n 5
+.gitignore:5:artifacts/	artifacts/claude-lis313-20260924/RESULTS.md
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+artifacts/claude-aliaspanel237-20260922/panel.jsonl
+artifacts/claude-aliaspanel237b-20260922/README.md
+[0m
+[0m$ [0mgit diff artifacts/fable-predictions-ledger.md | tail -n 5 | cut -c1-250
++- P294.5 OUTCOME (same run) loop checked_right per category vs code-3 = 27: s1 one_step 3, backwards 7, yes_no 11, newest_correction 12; s2 19, 8, 23, 12 (FAIL all four categories both seeds).
++- P294.6 OUTCOME (same run) practice teaches loop final minus copy-only overall right: s1 92 - 45 = +47 PASS, s2 111 - 107 = +4 FAIL (bar >= +10).
++- P294 OUTCOME (same run) registered verdict FAIL (P294.2, P294.4, P294.5 fail both seeds; P294.6 fails seed 2). Panel items read 0, evals 16/16 once per checkpoint, sealed files edited 0, code never patched. Checkpoints (8 .pt, sha match SEAL-run.s
++- P-vast-rsn294c (2026-09-23 21:24:39Z-2026-09-24 00:12:37Z, builder rsn-294 third try) contract 52300816 RTX 5090 1x offer 43165154 32 cores rel 0.9951 $0.4727/h label rsn-294c: rented 21:24:39Z, running within ~1 min, destroyed 00:12:37Z, alive ~2
++- P313 OUTCOME (2026-09-24, builder lis-313; sealed code unmodified, 4/4 seal OK post-run, 11/11 stub tests passed, F0 seal 2/2 OK, both model sha256 match RESULTS.md) BLOCKED: arm A (292t alone) finished 286/286 turns (teach_match 13/84, ask_right
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122_head.pt)
+[✓] READ FIRST files + run checks (SEAL, model sha, 11/11 test, uptime/disk)
+[✓] Seal PASSMARKS + scripts into SEAL.sha256.txt before running
+[✓] Run four F0 arms A/B/C/D + score
+[✓] Write RESULTS.md + append ledger, copy artifacts to worktree
+[0m
