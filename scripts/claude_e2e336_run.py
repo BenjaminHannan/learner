@@ -38,6 +38,7 @@ import copy
 import gc
 import importlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -202,7 +203,17 @@ def main() -> int:
     ap.add_argument("--model", default="", help="model dir for arms that need one (reader / twin)")
     ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir for creative (333)")
     ap.add_argument("--mouth-model", default="", help="mouth model dir (own line)")
+    ap.add_argument("--skip-preflight", action="store_true",
+                    help="skip the MiniLM router check (cloud smoke tests with a stubbed router only)")
     args = ap.parse_args()
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if not args.skip_preflight and args.arm != "twin":
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); "
+                             "restore the Hugging Face snapshot, then rerun. Nothing was run.")
 
     bank = Path(args.bank)
     turns = load(bank / "turns.jsonl")

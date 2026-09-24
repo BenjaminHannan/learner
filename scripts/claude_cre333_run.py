@@ -113,6 +113,14 @@ def main():
     ap.add_argument("--out", default="")
     ap.add_argument("--score", default="")
     a = ap.parse_args()
+    import os
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if not a.score and a.arm in ("P", "B"):
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}). Nothing was run.")
     if a.score:
         score(a)
     else:
