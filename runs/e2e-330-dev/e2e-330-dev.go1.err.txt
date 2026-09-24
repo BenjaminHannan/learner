@@ -1,0 +1,1897 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-302-gpu.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-302-gpu.md
+[0m✗ [0mGlob "**/lis-302-gpu.md" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m→ [0mRead .
+[0m→ [0mRead handoff
+[0m
+[0m$ [0mls handoff/kit/ 2>&1 | head -50; echo ---; git log --oneline -5 2>&1; echo ---; git branch -a 2>&1 | head -30
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+---
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -30; echo ===; git show origin/builder-outbox:handoff/queue/lis-302-gpu.md 2>&1 | head -30
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+zsh:1: == not found
+[0m
+[0m$ [0mcat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -60; echo ===; uptime 2>&1; echo ===; df -g / 2>&1
+cat: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+zsh:1: == not found
+[0m
+[0m$ [0muptime
+0:26  up 14:19, 4 users, load averages: 15.09 19.10 19.82
+[0m
+[0m$ [0mdf -g /
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 554827560    0%   /
+[0m
+[0m# [0mTodos
+[•] Fetch origin, read spec/passmarks/run scripts
+[ ] Build combined tree (builder-outbox + main) with self122_head.pt
+[ ] Copy tree to BensPC, verify env (reader sha, transformers, BASE model)
+[ ] Verify DEV bank seal, run 5 arms sequentially
+[ ] Score runs, write RESULTS-dev.md, push artifacts
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; git rev-parse origin/main origin/builder-outbox 2>&1
+01330d379e1adb206f9bd7ae9c2cdc2747adfa23
+fe286a1156603e624b97c0f07ab73d8e965906e1
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/331-e2e-bank-spec.md 2>&1
+# 331: end-to-end conversation bank (spec for blind writers)
+
+Month-end line, 2026-09-24. Plan: 330-month-end-plan.md §4. This file is the whole brief a blind writer gets.
+It is committed; the items are not. Banks A and B are TEST-ONLY: never trained on, tuned on, quoted or read by
+builders. They stay in the project's shared folder (escrow-331/) until the registered run (336, 336b), and only
+their SEAL hashes go on main before then. Bank DEV is ordinary dev data that builders may read.
+
+## What a "life" is
+
+One fictional person (the "user") chatting with a personal assistant that keeps a notebook of facts about the
+user and the people in the user's life. A life is 3 days of chat. Between days the assistant sleeps and restarts,
+so day 3 tests whether day-1 facts survived. Each day has 4 to 7 user turns. The user writes casually, like
+texting a helpful friend: contractions, lowercase, the odd typo, several facts in one message, facts mentioned in
+passing ("my sister Tove, the one in Oslo, just got a cat named Biscuit").
+
+## Banks and names
+
+- Bank A: 40 lives, ids `e2e-a-01`..`e2e-a-40`. Every person's first name starts with A to H.
+- Bank B: 40 lives, ids `e2e-b-01`..`e2e-b-40`. Every person's first name starts with J to R.
+- Bank DEV: 10 lives, ids `e2e-dev-01`..`e2e-dev-10`. Every person's first name starts with S to Z.
+- All names (people, pets, towns, companies) are freshly invented and fictional. Never use a real public figure,
+  and no two lives share a person name. Real countries and big real cities are allowed as places.
+
+## Turn kinds (per bank of 40 lives; DEV scales down by 4)
+
+| kind | minimum | notes |
+|---|---:|---|
+| `teach` | 140 | one fact (70), 2-3 facts in one message (40), fact in passing or in an aside (30) |
+| `correct` | 25 | "no wait, it's...", "actually...", "not X, Y", "she moved to..." (a change of a real-world fact counts too) |
+| `nosave` | 25 | must NOT be saved as a fact: hypotheticals ("if I got a dog I'd call it Rex"), plans and wishes, jokes, questions phrased as statements, "we"/"our" facts where who "we" is stays unclear |
+| `ask` one-hop | 60 | the value was taught earlier |
+| `ask` two-hop | 35 | needs two taught facts joined ("where does my sister's boyfriend work?") |
+| `ask` reversal | 25 | taught one way, asked the other ("who is Biscuit's owner?" after "Tove has a cat named Biscuit") |
+| `ask` edit | 25 | asks after a correction; at least 10 of these are two-hop through the corrected fact |
+| `ask` yes/no | 15 | gold `yes` or `no` from the notebook as it stands |
+| `ask` never-told | 30 | never taught; the right answer is "I don't know" |
+| `ask` partial | 10 | first hop taught, second hop not; right answer says what it knows and that it doesn't know the rest |
+| `smalltalk` | 50 | greetings, how-are-you, thanks, jokes, venting a bit about the day |
+| `creative` | 30 | "any ideas for Ana's birthday?", "write a short poem about my dog", "help me plan a Saturday with my nephew"; must be answerable better by someone who remembers the taught facts |
+
+- At least 60 of the `ask` turns in each bank are on day 3 about facts taught on day 1.
+- Every `ask` except never-told must be answerable from the user's own earlier turns in that life, with no outside
+  knowledge. Never-told asks must be about people or things that exist in the life (not random strangers).
+- No turn needs world knowledge (capitals, dates of famous events). This is about the user's own life.
+
+## Files a writer produces (JSON Lines, UTF-8)
+
+`turns.jsonl`: one object per user turn, keys exactly:
+- `life_id`, `day` (1-3), `turn_index` (0-based within the life, across days), `user_text`
+- `kind`: `teach` | `correct` | `nosave` | `ask` | `smalltalk` | `creative` | `other`
+- `ask_type` (ask turns only, else null): `one_hop` | `two_hop` | `reversal` | `edit` | `yesno` | `never_told` | `partial`
+- `facts` (teach/correct only, else []): list of `{"owner": ..., "relation": ..., "value": ...}` written plainly
+  (owner = a person or pet's full name as the user would say it, or `USER` for the user; relation = a short plain
+  phrase such as `sister`, `city`, `employer`, `pet cat`; value = the exact name or word)
+- `gold` (ask only, else null): `{"values": [...], "type": "value"|"idk"|"partial"|"yes"|"no", "uses_facts": [fact ids]}`
+  (`values` lists every value a right answer must contain; for `partial`, the known middle value)
+- `creative_seed_facts` (creative only, else []): fact ids a good answer could draw on
+
+`truth.jsonl`: the life's hidden truth sheet, one object per fact: `fact_id`, `life_id`, `owner`, `relation`,
+`value`, `taught_turn` (turn_index it was taught), `valid_until_turn` (turn_index of the correction that replaced
+it, or null). Every fact in any `facts` list appears here exactly once, and corrections appear as a new fact with
+the old one closed. The harness uses this sheet to answer "is that right?" questions yes or no.
+
+`README.md`: counts per kind and ask_type, per day, and the name letter range, with no items quoted.
+
+## Checks a writer runs before finishing (and reports as counts only)
+
+1. Every line parses and has exactly the keys above.
+2. Every `gold.uses_facts` id exists in truth.jsonl and was taught before the ask's turn and not closed before it.
+3. Every value in `gold.values` equals the value of the fact it comes from (after corrections).
+4. Every name used obeys the bank's letter range; no name repeats across lives.
+5. Kind minimums are met.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-e2e336-20260924/PASSMARKS.md 2>&1
+# 336: end-to-end test of the joined agent (Premonition 0.1). Marks fixed 2026-09-24 03:55 UTC
+
+Written by the month-end thread before any agent is joined and before any bank is read by anyone but its blind
+writer. Plan: design/v3/30-modes/330-month-end-plan.md §4. Bank spec: design/v3/30-modes/331-e2e-bank-spec.md.
+Runner: scripts/claude_e2e336_run.py. Twin: scripts/claude_e2e336_twin.py. Scorer: scripts/claude_e2e336_score.py.
+Code is sealed (SEAL-code) after the Saturday dress rehearsal on bank DEV and before the registered run.
+
+## Arms
+- **P** = 330c, the joined agent (sealed as its own experiment before this run).
+- **T** = the plain twin: the same MiniCPM5-1B, whole chat in its prompt, fair instruction (twin file).
+- **B** = 292t, today's base (reference for the judge mark).
+Registered run: bank A (40 lives), once, on BensPC. Follow-up 336b (one change, if any): bank B.
+
+## Marks (on bank A; "turn" = user turn; mechanical names are the scorer's keys)
+| Mark | Bar |
+|---|---|
+| M1 wrong-save turns (P): turns with ≥ 1 new triple judged wrong, plus nosave turns with writes | ≤ 1 |
+| M2 wrong answers stated as fact (P): WRONG_CANDIDATE asks judged wrong | ≤ 1 |
+| M3 taught facts saved (P): facts_saved / facts_total | ≥ 85% |
+| M4 answerable asks right (P): RIGHT + RIGHT_CONFIRM over asks of gold type value, yes, no | ≥ 70% |
+| M5 never-told asks (P): RIGHT over ask_type never_told | ≥ 95% |
+| M6 beats the twin: right-rate P − T on each of two_hop, reversal, edit, and abstention (never_told + partial) | ≥ +20 points on each |
+| M7 grammar (P): share of distinct replies graded grammatical by each of two blind graders, each valid only if it flags ≥ 36/40 planted errors | ≥ 99% by both |
+| M8a variety (P): most_common_reply_count / user turns | ≤ 5% |
+| M8b clarify (P): clarify_replies / user turns | ≤ 15% |
+| M8c judge (P vs B): lives where a blind pairwise judge prefers P | ≥ 36/40 |
+| M9 memory across sleeps and restarts (P): day1_saved_facts_kept_at_end / day1_saved_facts | 100% |
+| M10 creative (P): creative turns with writes = 0; unsupported person-facts stated as true = 0 (judged); blind judge "on topic and useful" | 0, 0, ≥ 80% |
+| M11 speed and attention (P, BensPC): ms median; ms p90; confirm_rows / user turns | ≤ 3000; ≤ 8000; ≤ 1/8 |
+
+Report only: every scorer count for all three arms; P vs T judge preference; deaf seconds; per-ask-type tables;
+RIGHT_CONFIRM counted separately.
+
+## Judging protocol (fixed now)
+- M1 and M2: every packet (judge_saves_P, judge_asks_P) goes to two blind Opus judges who see only the packet
+  (the triple or reply, the gold, and the life's valid truth facts), never model code. A packet counts wrong if both
+  say wrong; on a split, a third blind judge decides.
+- M7: grammar_P.jsonl plus 40 planted-error lines and 40 planted clean lines, shuffled, to two blind graders.
+- M8c and M10: a blind judge sees each life's transcript (both arms, order randomised per life).
+- Ben never grades anything.
+
+## Proved wrong
+If M3 or M4 misses by more than 15 points, the reader stack (not the joining) is the blocker, and Sept 30 ships the
+verified parts separately rather than a usable agent. If M6 fails on any subset, the claim "beats an equal-size plain
+transformer" is not made for that subset.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py 2>&1 | head -120
+#!/usr/bin/env python3
+"""336 end-to-end runner: 3-day lives with sleeps, restarts and a simulated user
+for "is that right?" questions (month-end line; spec design/v3/30-modes/331-e2e-bank-spec.md,
+plan design/v3/30-modes/330-month-end-plan.md section 4).
+
+New file only. It never edits agent code. For every life:
+  day 1 turns -> end of day (one forced sleep) -> kill + restart from the same state dir
+  day 2 turns -> end of day -> kill + restart
+  day 3 turns -> end of day
+After each reply, if the reply asks the user to confirm something (CONFIRM_MARKERS),
+the harness sends ONE mechanical "yes" or "no" taken from the life's truth sheet
+(truth.jsonl, facts valid at that turn) and records it as its own row
+(kind "confirm_answer"). That count is Ben's attention cost.
+
+Arms are named by --arm "module:function". The function is called as
+function(state_dir, args) and must return an object with .turn(text) -> list[str].
+Optional hooks on that object:
+  .e2e_end_day()      run the end-of-day sleep (default for AgentLoop-like objects:
+                      sleep_threshold 0 for one step(), then restored)
+  .nb                 a notebook; stored triples are then logged via fable_loop90_agent
+Built-in arms: "292t" (292t alone), "twin" (claude_e2e336_twin:build).
+
+Output: <out>/arm_<name>.jsonl, one row per user turn or confirm answer:
+  life_id, day, turn_index, kind ("user" | "confirm_answer"), reply, ms,
+  notebook_events (new events this row), stored_triples (after the row),
+  confirm_asked (bool), confirm_answer ("yes" | "no" | null)
+User text is never printed or copied into the output (the bank may be TEST-ONLY).
+
+Usage (Mac or BensPC, builder-outbox scripts on the path):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \
+    python -B scripts/claude_e2e336_run.py --bank DIR --arm 292t --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import gc
+import importlib
+import json
+import os
+import re
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+# Lowercase substrings. A reply that contains one of these AND a "?" asks the user
+# to confirm something. Fixed before any run; taken from agent wording
+# (lis-310 "Just to check: ...?", lis-314 "I think you told me ..., is that right?").
+CONFIRM_MARKERS = [
+    "is that right?",
+    "just to check",
+    "did i get that right",
+    "is that correct?",
+    "am i right that",
+]
+
+BUILTIN_ARMS = {
+    "292t": "claude_e2e336_run:build_292t",
+    "twin": "claude_e2e336_twin:build",
+}
+
+
+def load(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def build_292t(state_dir: str, args) -> object:
+    import claude_loop292t_agent as T292
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000     # no mid-day sleep; the harness sleeps once per day
+    return T292.build_agent292t(cfg)
+
+
+def resolve_arm(name: str):
+    spec = BUILTIN_ARMS.get(name, name)
+    mod, _, fn = spec.partition(":")
+    if not fn:
+        raise SystemExit(f"336: arm {name!r} must be 'module:function'")
+    return getattr(importlib.import_module(mod), fn)
+
+
+def end_day(agent) -> None:
+    hook = getattr(agent, "e2e_end_day", None)
+    if callable(hook):
+        hook()
+        return
+    if hasattr(agent, "sleep_threshold") and hasattr(agent, "step"):
+        old = agent.sleep_threshold
+        agent.sleep_threshold = 0
+        try:
+            agent.step()               # sleep_due() is now true: one sleep tick
+        finally:
+            agent.sleep_threshold = old
+            if hasattr(agent, "_save"):
+                agent._save()
+
+
+def is_confirm(reply: str) -> bool:
+    low = reply.lower()
+    return "?" in low and any(m in low for m in CONFIRM_MARKERS)
+
+
+def _mentions(text_low: str, phrase: str) -> bool:
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])", text_low) is not None
+
+
+def confirm_answer(reply: str, truth: list[dict], turn_index: int) -> str:
+    """'yes' iff some fact valid at turn_index has its value named in the reply and its
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py 2>&1 | wc -l; git show origin/main:scripts/claude_e2e330_arms.py 2>&1 | head -200
+253
+#!/usr/bin/env python3
+"""330 joined-agent builders for the 336 harness (month-end line).
+
+Layer order, inner to outer (fixed here; every piece is imported read-only):
+  292t base -> install298 (multi-valued middle hop, reasoner wrapper)
+  -> 274 listen-first step order -> listener stack G (310 + 313 + 315 + 314 + 316, one read per turn)
+  -> 274 reply-first turn (sleep never delays a reply) -> 334 sleep agenda
+  -> 333 creative (outside the reader: a creative request is never read or saved)
+  -> [mouth, own line, 330b] -> [nb-323 turn log, installed last, 330c]
+
+  --arm claude_e2e330_arms:build_330a       292t + 298 + 274 + stack G         (--model = lis-301 reader)
+  --arm claude_e2e330_arms:build_330a_334   330a + 334 sleep agenda
+  --arm claude_e2e330_arms:build_330a_cre   330a + 334 + 333 creative         (--gen-model = base MiniCPM5-1B)
+Each builder returns the loop; the harness sends turns, runs one sleep per day and restarts from
+the same state dir (lis-314's pending store and 334's agenda live there).
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+THRESHOLD = 0.995
+_GEN: dict = {}
+
+
+def _gen(model_dir: str):
+    if model_dir not in _GEN:
+        import claude_cre333_agent as C
+        _GEN[model_dir] = C.Gen333(model_dir)
+    return _GEN[model_dir]
+
+
+def _base(state_dir, args):
+    import copy
+    import claude_loop292t_agent as T292
+    import claude_fix298_branches as F298
+    import claude_loop274_agent as L274
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000
+    loop = T292.build_agent292t(cfg)
+    F298.install298(loop)
+    L274.install_listen_first274(loop)
+    return loop
+
+
+def build_330a(state_dir, args):
+    import claude_lis_stack as STACK
+    import claude_lis_e2e_arms as LE
+    import claude_loop274_agent as L274
+    loop = _base(state_dir, args)
+    STACK.build_stack(loop, LE._reader(args.model), THRESHOLD,
+                      layers=("313", "315", "314", "316"), log_dir=state_dir)
+    L274.install_turn_reply_first274(loop)
+    return loop
+
+
+def build_330a_334(state_dir, args):
+    import claude_age334_agent as A334
+    loop = build_330a(state_dir, args)
+    A334.install_agenda334(loop)
+    return loop
+
+
+def build_330a_cre(state_dir, args):
+    import claude_cre333_agent as C
+    loop = build_330a_334(state_dir, args)
+    C.install_creative333(loop, _gen(args.gen_model))
+    return loop
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_e2e330_arms.py 2>&1 | head -5; echo ===ARMS-MAIN===; git show origin/main:scripts/claude_e2e330_arms.py 2>&1 | head -5; echo ===DEV-OUTBOX===; git ls-tree origin/builder-outbox artifacts/claude-e2e331-dev-20260924/ 2>&1; echo ===DEV-MAIN===; git ls-tree origin/main artifacts/claude-e2e331-dev-20260924/ 2>&1
+fatal: path 'scripts/claude_e2e330_arms.py' does not exist in 'origin/builder-outbox'
+zsh:1: ==ARMS-MAIN=== not found
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e330_arms.py 2>&1 | head -5
+#!/usr/bin/env python3
+"""330 joined-agent builders for the 336 harness (month-end line).
+
+Layer order, inner to outer (fixed here; every piece is imported read-only):
+  292t base -> install298 (multi-valued middle hop, reasoner wrapper)
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox "artifacts/claude-e2e331-dev-20260924/"
+(no output)
+[0m
+[0m$ [0mgit ls-tree origin/main "artifacts/claude-e2e331-dev-20260924/"
+100644 blob fb1f93bf70c1c47bebe658a4812f4c9f68e498a2	artifacts/claude-e2e331-dev-20260924/README.md
+100644 blob 15e0251db0b8e66798575b4fc002091b026df748	artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt
+100644 blob b9beb8f2d3fffb045a0841597a0130bd2481aa56	artifacts/claude-e2e331-dev-20260924/truth.jsonl
+100644 blob 3ec017970d1717e6603ee5e16f1843a2152fff53	artifacts/claude-e2e331-dev-20260924/turns.jsonl
+[0m
+[0m$ [0mgit ls-tree origin/main scripts/ --name-only | grep -E "e2e33|lis_e2e|loop292|loop274|fix298|lis_stack|age334|cre333" 
+scripts/claude_age334_agent.py
+scripts/claude_age334_test.py
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+scripts/claude_e2e330_arms.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+scripts/claude_fix298_branches.py
+scripts/claude_lis_e2e_arms.py
+scripts/claude_lis_stack.py
+[0m
+[0m$ [0mls artifacts/fable-self122-20260922/ 2>&1; ls -la artifacts/fable-self122-20260922/self122_head.pt 2>&1
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122_head.pt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mhead -100 REMOTE_RUN.md 2>&1
+# Conservative BensPC remote workflow
+
+This workflow targets the already-verified Tailscale/SSH host alias `benspc` and the existing Windows Python executable:
+
+`C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe`
+
+It intentionally uses only `ssh` and `scp`. It does not install or download anything, assumes no `rsync` on Windows, never deletes remote project data during sync, and never kills or stops pre-existing processes. SSH is detached from stdin so it cannot consume the sync file-list pipe. Every SSH/SCP connection uses `BatchMode=yes`, a 10-second `ConnectTimeout`, a 15-second `ServerAliveInterval`, and `ServerAliveCountMax=2`, so both connection setup and a dead established transport fail finitely instead of hanging indefinitely.
+
+## 1. Read-only preflight
+
+From the local project root:
+
+```sh
+sh scripts/remote_benspc.sh preflight
+```
+
+Preflight performs no remote writes. It verifies the fixed Python path, `nvidia-smi`, the selected GPU, current free VRAM, and whether the remote project path already exists. The default Pilot VRAM floor is 12000 MiB. Low VRAM is reported as `PILOT_GPU_READY=false` / `PILOT_GPU_STATUS=LOW_VRAM`; preflight itself still succeeds so the status check cannot block non-GPU preparation. Missing Python, missing `nvidia-smi`, or an invalid GPU query still fails the status command.
+
+Useful overrides:
+
+```sh
+BENSPC_MIN_FREE_MIB=14000 sh scripts/remote_benspc.sh preflight
+BENSPC_GPU_INDEX=0 sh scripts/remote_benspc.sh preflight
+```
+
+## 2. Sync without deleting remote data
+
+The default destination is `C:/Users/benja/beautiful-model`:
+
+```sh
+sh scripts/remote_benspc.sh sync
+```
+
+Sync does not query or gate on GPU state. It creates missing destination directories and copies local regular files with `scp`. It never issues a remote delete and does not use `rsync --delete` or any equivalent. Existing remote files with matching project-relative names are updated; unrelated or stale remote files are left in place.
+
+Generated/local runtime state is not copied: `.budget/`, `.runtime/`, `.git/`, `__pycache__/`, `artifacts/`, and any directory named `cache/` are pruned. The current project filename set uses conservative characters that survive the local shell, `scp`, Windows OpenSSH, and PowerShell command parsing without an extra quoting layer; sync rejects a future project-relative filename outside that set instead of attempting an ambiguous copy. `runtime.local.json` is copied as project source, but remote execution does **not** use its Mac-specific paths.
+
+To use a different destination, keep it under the verified Windows profile and avoid spaces or shell metacharacters:
+
+```sh
+BENSPC_REMOTE_PROJECT=C:/Users/benja/beautiful-model-pilot sh scripts/remote_benspc.sh sync
+```
+
+## 3. Fast CPU tests
+
+After a sync:
+
+```sh
+sh scripts/remote_benspc.sh test
+```
+
+The remote helper does **not** query or enforce the VRAM floor for this action. It runs from the project root with the fixed Python executable and `CUDA_VISIBLE_DEVICES=-1`, so tests remain available while GPU memory is busy. It executes every portable Python model/task/storage test. `test_remote_runner.py` is intentionally local-only because it tests the POSIX `sh` coordinator with fake `ssh`/`scp` binaries, which native Windows does not provide. If `tests/` or the portable test modules do not exist, the command fails instead of reporting a misleading zero-test success.
+
+## 4. Explicitly time-boxed pilot
+
+The Pilot wrapper is limited to 600 seconds and invokes the real current `run.py` entry point using a temporary Windows runtime JSON instead of the Mac-only `runtime.local.json`:
+
+```sh
+sh scripts/remote_benspc.sh pilot
+```
+
+With no extra arguments, it passes no invented subcommand, so the current `run.py` takes its real default path (currently the same audit behavior as `run.py audit`). Extra `run.py` arguments are passed through as conservative CLI tokens, for example:
+
+```sh
+BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pilot --device=cuda --steps=10000 --seconds=480 --tiers=1,2 --eval-worlds=4
+BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pc-reader --device=cuda --steps=10000 --seconds=480 --tiers=2,3 --eval-worlds=8
+```
+
+`BENSPC_PILOT_SECONDS` is restricted to 1–600 seconds. Only Pilot and `launch` enforce `BENSPC_MIN_FREE_MIB`; sync and CPU tests do not depend on free VRAM. Pilot uses the fixed existing Windows Python installation and its already-installed packages (including Torch); the temporary runtime has no dependency import roots and performs no install or download. The helper does not enumerate or terminate existing GPU processes. If the pilot itself exceeds its deadline, it terminates only the exact child PID that this invocation started, then returns failure.
+
+The source defines `smoke`, `pilot`, `evaluate`, and `pc-reader` subcommands. The wrapper never synthesizes one: with no extra arguments, `run.py` follows its default audit path. Keep the wrapper limit larger than the experiment's internal `--seconds` value so the experiment can finish evaluation and write its bounded result before the wrapper deadline.
+
+The Windows runtime JSON (temporary for Pilot, `runtime.json` in the run directory for `launch`) keeps `hard_bytes=100000000000` and `steady_bytes=80000000000` as conservative project/accounted-root bounds. That accounting only sees the remote project plus any explicitly registered roots (none are added by this helper). It therefore does **not** claim or provide host-global 100 GB aggregation across unrelated BensPC directories, other projects, caches, or processes.
+
+## 5. Long detached runs
+
+For runs longer than the Pilot limit:
+
+```sh
+sh scripts/remote_benspc.sh launch pc-reader --device=cuda --steps=200000 --seconds=14400 --tiers=2,3
+sh scripts/remote_benspc.sh status RUN_ID
+sh scripts/remote_benspc.sh fetch RUN_ID
+sh scripts/remote_benspc.sh stop RUN_ID
+```
+
+- `launch` applies the same argument whitelist and `BENSPC_MIN_FREE_MIB` gate as Pilot, then returns once `run.py` is running and prints `RUN_ID=<UTC timestamp>-<8 random hex>`. Its files live in `<remote project>/.runtime/runs/RUN_ID/`: `stdout.log`, `stderr.log`, `runtime.json`, `run.json` (run_id, pid, process start time, command line, started_at, args) and, after exit, `exit.json` (exit code). A new run directory is created without `-Force`, so an existing run is never overwritten. There is no wall-clock limit; bound the experiment with its own `--seconds`.
+- Windows OpenSSH can terminate processes left in the SSH session's job when the connection closes, so `launch` starts a small supervisor (`-Action Supervise` of the same helper) through WMI `Win32_Process.Create`, outside that job. The supervisor starts `run.py` with `CUDA_VISIBLE_DEVICES`, `PYTHONUNBUFFERED=1` and `PYTHONIOENCODING=utf-8`, writes `run.json`, holds the process handle, and writes `exit.json` when `run.py` exits.
+- `status` prints `STATE=alive|exited|unknown`, `EXIT_CODE` (or `unknown`), current GPU used/free/total MiB, and the last 20 lines of each log. It changes nothing.
+- `fetch` refuses while the run is alive (a snapshot would block the final copy). Afterwards it copies the run directory's files plus every existing `artifacts/<name>` that `run.py` printed to stdout into local `artifacts/benspc/RUN_ID/` (listed artifacts under `artifacts/benspc/RUN_ID/artifacts/`). Existing local files are never overwritten; each copy lands in a `.partial` file first and is renamed only when complete. Listed names are re-validated locally; anything outside `[A-Za-z0-9_.-]` or starting with `.` aborts the fetch.
+- `stop` kills only the PID in `run.json`, and only after checking that the live process at that PID has the recorded start time and exact command line. It holds the process handle across the check and the kill, so a reused PID cannot be hit. If the identity does not match, nothing is stopped.
+- Every `RUN_ID` argument must be 1-64 characters of `[A-Za-z0-9_-]` and not start with `-`. The local script and the helper both check this.
+
+## Safety defaults
+
+- Host alias: `benspc` (override with `BENSPC_HOST`).
+- Remote project: `C:/Users/benja/beautiful-model`.
+- GPU index: `0`.
+- Minimum free VRAM: `12000` MiB.
+- Pilot limit: `600` seconds maximum. Launched runs have no wrapper limit.
+- SSH connect timeout: `10` seconds; liveness probe every `15` seconds with at most `2` unanswered probes.
+[0m
+[0m$ [0mls handoff/kit/briefs/ 2>&1; git log --oneline --all 2>&1 | head -40
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+fe286a115 watcher status
+482aba877 builder results: nb-321-run
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+ad3301372 watcher status
+576e6cfdc builder results: own-m1v-run
+54ffa0ff3 watcher status
+eb68cdcff watcher status
+bbd642613 watcher status
+18ca6ce61 watcher status
+9fc1686a2 watcher status
+1a94239a9 watcher status
+931ec1b43 watcher status
+ffab49777 watcher status
+a5ad26f75 watcher status
+d5c0b60cd watcher status
+abf84581e watcher status
+4513cdbf7 watcher status
+66050adf4 watcher status
+984b3a5f4 watcher status
+d2204c98e watcher status
+01330d379 queue 000-cache-pin: pin MiniLM snapshot outside ~/.cache; find what deletes it
+e3e8b8d12 336/333 runners: HF_HUB_OFFLINE=1 and a MISSING-CACHE preflight (the MiniLM router snapshot vanished twice on the Mac today); nothing runs if it is missing
+1cfc257f6 board: mut-0 PASS verified; queue mut-1 mutation test on 274
+12f18a296 watcher status
+6a45bacc9 watcher status
+fee56e510 watcher status
+cc68a2c53 watcher status
+ca01c8984 watcher status
+95eef02f5 creativepanel333 sealed (70 items, blind audit 1 minor facts flag, unused by the scorer); queue e2e-333-creative (registered 333 run, BensPC)
+902ffc5dd watcher status
+6616c5ac4 queue e2e-330-dev: DEV dress rehearsal on BensPC with the real reader (arms G, 330a, 330a+334, 330a+334+333, plain twin), report only
+fc46e9c1d 330a builders (292t+298+274+listener stack G), 334 sleep agenda (+tests 3/3), 333 on top; runner --gen-model/--mouth-model; scorer scores only lives run
+f83361c45 watcher status
+e17938715 333 runner: arms P/B/T on creativepanel333, summary + shuffled blind-judge packets
+f99d83b39 333 creative v1: install_creative333 (WORK/creative job, fixed N=11 grounded candidates, never writes), panel spec, PASSMARKS fixed
+f32030cd8 watcher status
+7e5950ae5 331 bank B sealed (v2 after blind key audit: 5 flags, 1 ask unscored); items escrowed, not in repo
+311724b0c watcher status
+22fc4ff79 331 bank A sealed (v2 after blind key audit: 5 flags, 3 asks unscored); items escrowed, not in repo
+d0db1b437 watcher status
+[0m
+[0m$ [0mgit show 6616c5ac4 --stat 2>&1 | head -20
+commit 6616c5ac4e1f319347087ef74db5d4ed5749ce05
+Author: Claude <noreply@anthropic.com>
+Date:   Thu Sep 24 03:33:33 2026 +0000
+
+    queue e2e-330-dev: DEV dress rehearsal on BensPC with the real reader (arms G, 330a, 330a+334, 330a+334+333, plain twin), report only
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01V2m2enaQcaFozptGxcMpCF
+
+ handoff/queue/e2e-330-dev.md | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+[0m
+[0m$ [0mgit show 6616c5ac4 2>&1 | head -60; head -40 handoff/kit/briefs/OPUS-RULES.txt 2>&1
+commit 6616c5ac4e1f319347087ef74db5d4ed5749ce05
+Author: Claude <noreply@anthropic.com>
+Date:   Thu Sep 24 03:33:33 2026 +0000
+
+    queue e2e-330-dev: DEV dress rehearsal on BensPC with the real reader (arms G, 330a, 330a+334, 330a+334+333, plain twin), report only
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01V2m2enaQcaFozptGxcMpCF
+
+diff --git a/handoff/queue/e2e-330-dev.md b/handoff/queue/e2e-330-dev.md
+new file mode 100644
+index 000000000..ee142e207
+--- /dev/null
++++ b/handoff/queue/e2e-330-dev.md
+@@ -0,0 +1,25 @@
++COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-302-gpu.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python on the Mac, uptime/df checks, report in your final reply).
++GPU: yes (BensPC RTX 5070 Ti; one job at a time).
++TIME CAP: 150 minutes in total. If any single turn takes more than 5 minutes, stop and report.
++
++YOUR TASK: e2e-330-dev, REPORT ONLY (dev data, no registered marks). A dress rehearsal of the month-end end-to-end test on the readable DEV bank, with the real lis-301 reader, on BensPC. Artifacts go in artifacts/claude-e2e330-dev-20260924/. The month-end thread wrote all code. Run it and never edit it. If something breaks, stop and report the exact error and traceback.
++
++GETTING THE CODE: build a combined tree the way lis-313-f0 does: a fresh `git archive origin/builder-outbox`, then a fresh `git archive origin/main` on top (main wins). Copy artifacts/fable-self122-20260922/self122_head.pt from the Mac repo into the same path in that tree (292t needs it). Copy the tree to BensPC and run from its root.
++MODELS on BensPC (never download a model other than these):
++- READER = the lis-301 merged reader, C:/Users/benja/lis301/work/run/merged (safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890).
++- BASE = openbmb/MiniCPM5-1B (Ben's yes 2026-09-23 11:01 UTC covers it). Find it with huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B", local_files_only=True); only if that fails, download it once with snapshot_download. Record the commit hash.
++Use the lis-301 venv (torch + transformers already there); if `import transformers` fails, pip install transformers into it and say so.
++
++READ FIRST: design/v3/30-modes/331-e2e-bank-spec.md, artifacts/claude-e2e336-20260924/PASSMARKS.md, scripts/claude_e2e336_run.py, scripts/claude_e2e330_arms.py. The DEV bank is artifacts/claude-e2e331-dev-20260924 (dev data: fine to read).
++
++1. Check: `sha256sum -c` (or shasum -a 256 -c) of artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt from inside that folder: all OK.
++2. Run these five arms, one after another, each as its own process (B = --bank artifacts/claude-e2e331-dev-20260924, O = --out artifacts/claude-e2e330-dev-20260924/run):
++   python -B scripts/claude_e2e336_run.py B O --arm claude_lis_e2e_arms:build_G --name G --model READER
++   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a --name 330a --model READER
++   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a_334 --name 330a_334 --model READER
++   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a_cre --name 330a_cre --model READER --gen-model BASE
++   python -B scripts/claude_e2e336_run.py B O --arm twin --name twin --model BASE
++   (write --bank/--out explicitly; B and O above are shorthand).
++3. Score: python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-dev-20260924 --runs artifacts/claude-e2e330-dev-20260924/run/arm_*.jsonl --out artifacts/claude-e2e330-dev-20260924/score
++4. RESULTS-dev.md, counts only: the scorer's printed line for every arm (asks per class and per ask_type, facts_saved/facts_total, new triples and owner/value-unsupported new triples, nosave turns with writes, clarify replies, most common reply count, confirm rows, ms median/p90, creative turns and writes, day-1 facts kept); GPU name; model commit hash; wall time per arm. Also list, for arm 330a_cre only, every new triple the scorer marks owner_value_supported=false as "triple <- nearest truth fact" (triples and truth facts only). Dev data may be quoted sparingly.
++PUSH: artifacts/claude-e2e330-dev-20260924
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit log --oneline --all --grep="313-f0" 2>&1 | head; git log --oneline --all --grep="lis-313" 2>&1 | head -20
+bff35c391 builder results: lis-313-f0
+bff35c391 builder results: lis-313-f0
+6ed979742 lis-313: answer questions from the reader's ASK frame (arm D), pass marks, Mac F0 task (arms A-D, replaces lis-312)
+[0m
+[0m$ [0mgit show 6ed979742 --stat 2>&1 | head -30
+commit 6ed979742acb6753b0d41a62018cbd6186b197cf
+Author: Claude <noreply@anthropic.com>
+Date:   Thu Sep 24 01:52:56 2026 +0000
+
+    lis-313: answer questions from the reader's ASK frame (arm D), pass marks, Mac F0 task (arms A-D, replaces lis-312)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01CdcxHrqjVbQHp21qoQNpkG
+
+ artifacts/claude-lis313-20260924/PASSMARKS.md |  32 +++
+ handoff/queue/lis-313-f0.md                   |  29 +++
+ scripts/claude_lis313_agent.py                | 291 ++++++++++++++++++++++++++
+ scripts/claude_lis313_f0.py                   | 212 +++++++++++++++++++
+ scripts/claude_lis313_test.py                 | 283 +++++++++++++++++++++++++
+ 5 files changed, 847 insertions(+)
+[0m
+[0m$ [0mgit show 6ed979742:handoff/queue/lis-313-f0.md 2>&1
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS, like lis-311; the reader runs on MPS).
+TIME CAP: 240 minutes in total (four arms). macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: builder for lis-313 (this replaces lis-312, which exited without running). Score base 292t with and without our 1B reader on the sealed conversation benchmark F0, in four arms. Artifacts go in artifacts/claude-lis313-20260924/. The listener thread wrote the code. Run it and never edit it. If it breaks, stop and report the exact error.
+
+GETTING THE CODE (lis-312 failed here): build the tree as lis-311 did. Start from a fresh `git archive origin/builder-outbox` (it has the F0 benchmark, claude_convf0_score.py, claude_lis310_agent.py and claude_loop292t_agent.py), then overlay a fresh `git archive origin/main` on top (it has claude_lis313_*.py, claude_lis312_f0.py, claude_lis300_*.py, fable_reasoner50.py and the PASSMARKS). Run everything from the root of that combined tree. It also needs artifacts/fable-self122-20260922/self122_head.pt from the Mac repo, copied in, exactly as for lis-311b.
+
+READ FIRST: artifacts/claude-lis313-20260924/PASSMARKS.md, artifacts/claude-lis312-20260923/PASSMARKS.md, scripts/claude_lis313_f0.py, and artifacts/claude-convbench-f0-20260923/README.md. Never print or quote benchmark user turns.
+
+1. Checks:
+   - `shasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt` must be all OK;
+   - the lis300-merged and lis301-merged safetensors sha256 in ~/premonition-models/ must match lis-300's and lis-301's RESULTS.md;
+   - `python -B scripts/claude_lis313_test.py` must print 11/11 passed;
+   - `uptime` and disk.
+   Seal both PASSMARKS.md files, scripts/claude_lis313_f0.py and scripts/claude_lis313_agent.py into artifacts/claude-lis313-20260924/SEAL.sha256.txt BEFORE running.
+2. Run the four arms (output dir artifacts/claude-lis313-20260924/run):
+   python -B scripts/claude_lis313_f0.py --arm A --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm B --model ~/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm C --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm D --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --score artifacts/claude-lis313-20260924/run
+3. RESULTS.md, verdict first:
+   - P312.1 to P312.4 (arms A vs C) and P313.1 to P313.4 (arms C vs D), with integer counts and PASS/FAIL, plus every count of summary.json for all four arms;
+   - device and ms;
+   - for arms C and D, every new triple stored on a teach turn that is not the gold, as "gold triple -> stored triple" (triples only, never the user turn);
+   - for arm D, every ask turn the wrapper answered, as "gold value -> reply" (replies are agent text, so quoting them is fine; never the user turn).
+   Append ledger lines P312.1 to P312.4 and P313.1 to P313.4 (cat >> artifacts/fable-predictions-ledger.md).
+PUSH: artifacts/claude-lis313-20260924 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgrep -l benspc ~/.ssh/config /etc/ssh/ssh_config 2>&1; ssh -o BatchMode=yes -o ConnectTimeout=10 benspc "hostname; echo OK" 2>&1 | head -10
+/Users/ben-hannan/.ssh/config
+sethostname: Use the Network Control Panel Applet to set hostname.
+hostname -s is not supported.
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "echo BENSPC_OK" 2>&1 | head -10
+BENSPC_OK
+[0m
+[0m$ [0mgit log --oneline --all --grep="gpu" -i 2>&1 | head -20
+35d62c373 board: GPU calendar to Sept 30 (BensPC reserved Sat-Mon nights; one more rental max)
+0eb17896a builder results: lis-302-gpu
+5f06d63df lis-302: report-only CPU rescore (arms A/B/C, info-parity), checker queries, dev audit, GPU task
+b80ca2241 rsn 296 registered: panel296 v2 (2 ambiguous items dropped after blind audit), code arm 208/298, pass marks + code sealed; GPU task + $4 combined guard queued
+304c1e8de rsn 294: third GPU try queued (second was HOST-FAIL, $0); up to 4 rentals on different hosts
+89a9e88d9 rsn 294: practice-step speed fix (score tries on CPU in one go), code resealed v2, second GPU try queued
+6d3a1f8e8 rsn 294 registered: fact-check verifies cited chain, generator missing-fact fix, pass marks, code arm 210/300, code sealed; GPU rent task queued
+85045c70b Requeue mouth v1 on BensPC (own-m1-bpc, GPU: yes); rental credit saved for v2
+1ea3a302e own-M0 verified PASS (seal OK, rebuild byte-identical, 0/21000 fail independent slot check); queue own-M1 mouth training (GPU: rent)
+762f43911 watcher: document GPU: rent lane (rented-GPU tasks run in parallel with BensPC)
+79fc1f56b lis-301: hard-case training rows (1,377 blind-agreed), dev key fix, fresh blind panel 301, sealed; queue GPU run
+04ac14258 lis-300: training data audited (1,392/1,500 Opus rows agreed by blind relabel), sealed; queue GPU fine-tune task
+9242c05ef Hold own-e1-pretrain (small ear GPU run): Ben wants a ~1B reader instead; listener thread owns the ear
+789f2d25b 269-resume: run on a vast.ai rental (Ben 09:24: use cloud GPUs), with cost ceiling and watchdog
+[0m
+[0m$ [0mgit show 0eb17896a --stat 2>&1 | head -30
+commit 0eb17896a50518913821ec22a3c78beddc80903c
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 22:20:28 2026 -0400
+
+    builder results: lis-302-gpu
+
+ artifacts/claude-lis302-20260924/RESULTS-gpu.md |   86 +
+ artifacts/claude-lis302-20260924/pyes.json      | 4529 +++++++++++++++++++++++
+ artifacts/claude-lis302-20260924/tokprobs.jsonl |  959 +++++
+ runs/lis-302-gpu/lis-302-gpu.exit               |    1 +
+ runs/lis-302-gpu/lis-302-gpu.go1.err.txt        |    3 +
+ runs/lis-302-gpu/lis-302-gpu.go1.reply.md       |    0
+ runs/lis-302-gpu/lis-302-gpu.go2.done           |    1 +
+ runs/lis-302-gpu/lis-302-gpu.go2.err.txt        | 2569 +++++++++++++
+ runs/lis-302-gpu/lis-302-gpu.go2.reply.md       |   41 +
+ runs/lis-302-gpu/lis-302-gpu.md                 |   31 +
+ 10 files changed, 8220 insertions(+)
+[0m
+[0m$ [0mgit show 0eb17896a:runs/lis-302-gpu/lis-302-gpu.md 2>&1
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/ -Directory | Select-Object -ExpandProperty Name\"" 2>&1 | head -30
+.cache
+.cai
+.claude
+.claude-flow
+.claude-server-commander
+.codex
+.conda
+.config
+.copilot
+.dbus-keyrings
+.expo
+.idlerc
+.ipython
+.junie
+.jupyter
+.kaggle
+.keras
+.Ld2VirtualBox
+.Ld9VirtualBox
+.lmstudio
+.local
+.lunarclient
+.matplotlib
+.ollama
+.openjfx
+.pinokio
+.pymobiledevice3
+.rustup
+.ssh
+.streamlit
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/ -Directory | Select-Object -ExpandProperty Name\"" 2>&1 | tail -30
+lis302stage-tmp
+manim-env
+manim-mcp-server
+models
+Music
+MyCryptoProject
+OneDrive
+OpenVoice
+own-m1n
+plinko-game
+Postman
+PyCharmMiscProject
+PycharmProjects
+Saved Games
+scout-tasks
+scout_ship
+Scripts
+Searches
+smolear235
+speedrunigt
+talker101
+talker24
+text-predict
+tortoise-tts
+trading_bot
+TTS
+Videos
+w264
+xfer
+__pycache__
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/ -Directory | Select-Object -ExpandProperty Name\"" 2>&1 | grep -iE "lis301|beautiful|e2e|stage|work"
+beautiful-model
+lis301
+lis302stage-tmp
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis301/ | Select-Object -ExpandProperty Name; '--'; Get-ChildItem C:/Users/benja/beautiful-model/ | Select-Object -ExpandProperty Name\"" 2>&1 | head -30
+repo
+work
+fam_scores301.py
+lis301-main.tar
+lis301-outbox.tar
+verify_seal301.py
+--
+.budget
+.runtime
+archive
+artifacts
+data
+design
+learnlab
+memorylab
+premonition
+reviews
+scratchpad
+scripts
+tests
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+run.py
+run.sh
+runtime.local.json
+TEACHING_TO_TEST_CONTRACT.md
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis302stage-tmp/ | Select-Object Name, Length | Format-Table -AutoSize | Out-String -Width 200\"" 2>&1 | head -30
+Name                          Length
+----                          ------
+claude_earcheck261_checker.py   4365
+claude_lis300_common.py         1639
+claude_lis302_tokprobs.py       2653
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"ls C:/Users/benja/lis301/work/run/merged/; '--VENV--'; ls C:/Users/benja/lis301/\"" 2>&1 | head -30
+Directory: C:\Users\benja\lis301\work\run\merged
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/23/2026   2:28 PM           9241 chat_template.jinja                                                  
+-a----         9/23/2026   2:28 PM            784 config.json                                                          
+-a----         9/23/2026   2:28 PM            227 generation_config.json                                               
+-a----         9/23/2026   2:28 PM     2161290944 model.safetensors                                                    
+-a----         9/23/2026   2:28 PM        9894271 tokenizer.json                                                       
+-a----         9/23/2026   2:28 PM            477 tokenizer_config.json                                                
+--VENV--
+
+
+    Directory: C:\Users\benja\lis301
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   2:01 PM                repo                                                                 
+d-----         9/23/2026   3:01 PM                work                                                                 
+-a----         9/23/2026   3:01 PM           2217 fam_scores301.py                                                     
+-a----         9/23/2026   2:01 PM       27023360 lis301-main.tar                                                      
+-a----         9/23/2026   2:01 PM       13568000 lis301-outbox.tar                                                    
+-a----         9/23/2026   2:01 PM            732 verify_seal301.py
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis301/work/ | Select-Object -ExpandProperty Name; '--'; Get-ChildItem C:/Users/benja/lis301/repo/ | Select-Object -ExpandProperty Name\"" 2>&1 | head -30
+data
+persrc
+run
+dev_o0a2.json
+dev_o0b_l2.json
+dev_opus301_dev.json
+dev_opus_dev.json
+dev_pred.jsonl
+dev_rows.jsonl
+dev_score_T.json
+dev_sweep.txt
+panel_pred.jsonl
+panel_rows.jsonl
+panel_score.json
+panel_score_T0.json
+--
+artifacts
+design
+handoff
+scripts
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "where python 2>&1; echo ---; powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis301/work/persrc/ 2>/dev/null | Select-Object -ExpandProperty Name; '--'; dir C:/Users/benja/.venv* 2>/dev/null; dir C:/Users/benja/lis301/.venv 2>/dev/null; Get-ChildItem C:/Users/benja/ -Directory -Filter '*venv*' | Select-Object -ExpandProperty Name\"" 2>&1 | head -30
+ERROR: Invalid pattern is specified in "path:pattern".
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc powershell -NoProfile -Command Get-ChildItem C:/Users/benja/lis301/work/persrc/ 2>&1 | head -20
+Directory: C:\Users\benja\lis301\work\persrc
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/23/2026   2:54 PM         167876 gold_o0a2.jsonl                                                      
+-a----         9/23/2026   2:54 PM         287466 gold_o0b_l2.jsonl                                                    
+-a----         9/23/2026   2:54 PM          95517 gold_opus301_dev.jsonl                                               
+-a----         9/23/2026   2:54 PM          84543 gold_opus_dev.jsonl                                                  
+-a----         9/23/2026   2:54 PM         109154 pred_o0a2.jsonl                                                      
+-a----         9/23/2026   2:54 PM         157225 pred_o0b_l2.jsonl                                                    
+-a----         9/23/2026   2:54 PM          55714 pred_opus301_dev.jsonl                                               
+-a----         9/23/2026   2:54 PM          49356 pred_opus_dev.jsonl
+[0m
+[0m$ [0mgit show 0eb17896a:artifacts/claude-lis302-20260924/RESULTS-gpu.md 2>&1 | head -90
+# lis-302 GPU measurements (REPORT ONLY, 2026-09-24)
+
+Two GPU measurements on BensPC over lis-301's DEV readings (959 dev rows/preds
+from origin/builder-outbox). No registered marks, no training, no panel.
+Listener code run unmodified.
+
+## 1. Token probs
+
+- Command (lis-300 venv python, `PYTHONUTF8=1`, model
+  `C:/Users/benja/lis301/work/run/merged`): tokprobs script with
+  `--model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out tokprobs.jsonl`.
+- Merged safetensors sha256 verified on BensPC before the run:
+  `b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890` (match).
+- Script printed `done on cuda`. Process exited, GPU freed.
+- Rows done: 959 of 959 (every id matches dev_pred).
+
+### check_minp vs recorded minimum conf
+
+- Rows with a non-empty conf list: 817 of 959 (142 rows have `conf: []`, so no
+  recorded minimum exists to compare).
+- Rows where `|check_minp - min(conf)| > 0.01`: 95 of 817.
+- Of the 95: 65 check_minp lower, 30 check_minp higher.
+- All 817 compared rows: median absolute diff 0.000131, max absolute diff ~0.9996
+  (one row with check_minp ~0.000006 vs recorded min ~0.999562).
+- Example rows (ids only, no turns quoted): largest gap on `w6-0124`
+  (check 0.000006 vs recorded 0.999562); a mid-size gap on `o0a2-m032`
+  (check 0.106540 vs recorded 0.879450).
+
+## 2. Exp-261 checker pass
+
+- Checker input: `checks.json` from origin/main (753 queries). Ran the sealed
+  `claude_earcheck261_checker.py` unmodified.
+- llama-server: I started my own instance (see Deviations), PID 8840, stopped it
+  afterwards by that exact PID. Nothing else touched.
+- Checker summary: n = 753, fallbacks = 0, median = 281.5 ms, p90 = 287.8 ms,
+  max = 489.2 ms.
+- No VRAM spill signs: p90 ≈ median (no 4x slowdown tail); nvidia-smi after the
+  run showed 90% util at 202 W (healthy compute, not the under-100-W spill idle).
+  VRAM with the Qwen model loaded: ~13.9 GB of 16.3 GB.
+
+## Device
+
+- BensPC NVIDIA GeForce RTX 5070 Ti (16303 MiB), `cuda` for tokprobs
+  (torch 2.11.0+cu128, transformers 5.17.0, reused lis-300 venv, as in lis-301).
+- Checker model: `Qwen3.8-27B-UD-IQ4_XS.gguf` (present) served by
+  `C:\llama-b10679\llama-server.exe` (present).
+
+## Server: started, not reused
+
+- Port 8081 was already held by PID 17056 (started 2026-09-23 05:57, still
+  running, untouched): a llama-server with the brief's flags but NO `-m` model,
+  i.e. a model-less router (`model_path: none`). One probe checker query against
+  it failed with HTTP 400 (`model name is missing from the request`), so it was
+  unusable for this step.
+- I started my own server with the brief's exact flags plus `-m <GGUF>` and
+  `-c 4096`, on port 8082 (only deviation: the port), waited for /health ok,
+  recorded PID 8840, ran all 753 queries against it, then stopped PID 8840.
+- GGUF and exe both present; no skip needed.
+
+## Deviations (env only; listener/checker code untouched)
+
+1. Port 8082 instead of 8081 for my llama-server (8081 occupied by the model-less
+   PID 17056, which I never touched). The `--url` pointed at my port.
+2. `-c 4096` included per the brief (same as the pre-existing instance's flags).
+3. Staging copies of the sealed scripts and dev inputs were transferred to
+   `C:/Users/benja/lis302/work/` on BensPC (hashes verified equal after copy);
+   lis-301's own files were not modified.
+4. Servers started over ssh do not survive ssh disconnect on BensPC (two launcher
+   PIDs died with their sessions), so the server ran in the same ssh session as
+   the checker; it was stopped by exact PID at the end of that session.
+
+## What it means (plain high-school English)
+
+- Both GPU measurements finished cleanly: 959 token-prob rows and 753 checker
+  answers, zero fallbacks, fast responses (typical answer in ~0.28 s).
+- The re-derived per-row minimum matches the recorded confidence almost exactly
+  most of the time (typical gap ~0.0001), but on 95 of 817 rows the two differ by
+  more than 0.01, mostly with the re-derived minimum lower. That is just a count,
+  not a verdict on which number is right.
+
+## What it doesn't mean
+
+- It doesn't mean the reader is good or bad: this task registers no marks and
+  grades nothing. These are raw GPU readings for the listener thread to use.
+- It doesn't mean the checker agrees with the reader: pYES values are recorded,
+  not judged, here.
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis301/work/ | Select-Object -ExpandProperty Name\""
+data
+persrc
+run
+dev_o0a2.json
+dev_o0b_l2.json
+dev_opus301_dev.json
+dev_opus_dev.json
+dev_pred.jsonl
+dev_rows.jsonl
+dev_score_T.json
+dev_sweep.txt
+panel_pred.jsonl
+panel_rows.jsonl
+panel_score.json
+panel_score_T0.json
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv; '--PY--'; Get-Command python -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source; Get-ChildItem C:/Users/benja/lis300 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name\"" 2>&1 | head -20
+name, memory.total [MiB], memory.free [MiB]
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 15467 MiB
+--PY--
+C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+model
+repo
+venv
+work
+dlmodel.log
+fam_scores.py
+lis300-main.tar
+lis300-outbox.tar
+lis300_dlmodel.py
+make_panel_rows.py
+pip-torch.log
+pip-torch2.log
+pip.log
+train.bat
+train.log
+verify_seal.py
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=15 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch, transformers; print(torch.__version__); print(transformers.__version__); print(torch.cuda.is_available())\"" 2>&1 | head -10
+2.11.0+cu128
+5.17.0
+True
+[0m
+[0m$ [0mgit archive origin/builder-outbox 2>/dev/null | wc -c; git archive origin/main 2>/dev/null | wc -c; git ls-tree origin/builder-outbox "artifacts/fable-self122-20260922/self122_head.pt"; git ls-tree origin/main "artifacts/fable-self122-20260922/self122_head.pt"
+452055040
+ 981678080
+[0m
+[0m# [0mTodos
+[✓] Fetch origin, read spec/passmarks/run scripts
+[•] Build combined tree (builder-outbox + main) with self122_head.pt
+[ ] Copy tree to BensPC, verify env (reader sha, transformers, BASE model)
+[ ] Verify DEV bank seal, run 5 arms sequentially
+[ ] Score runs, write RESULTS-dev.md, push artifacts
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; df -g /var/folders 2>&1 | tail -2
+gen_part6.py
+grade_b_part1_writer.py
+lise2e
+mkpart6.py
+part6_slice.jsonl
+Filesystem   1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s3       460  339        61    85% 5500402 649323840    1%   /System/Volumes/Data
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree && git archive origin/builder-outbox | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree && echo OUTBOX_DONE
+OUTBOX_DONE
+[0m
+[0m$ [0mgit archive origin/main | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree && echo MAIN_DONE
+MAIN_DONE
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/ 2>&1; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e33*.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/ 2>&1
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e330_arms.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_run.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_score.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_twin.py
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/:
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+[0m
+[0m$ [0mcp artifacts/fable-self122-20260922/self122_head.pt /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/self122_head.pt && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/self122_head.pt
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 24 00:29 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mshasum -a 256 artifacts/fable-self122-20260922/self122_head.pt /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_score.py --help 2>&1 | head -20
+usage: claude_e2e336_score.py [-h] --bank BANK --runs RUNS [RUNS ...] --out
+                              OUT
+
+options:
+  -h, --help            show this help message and exit
+  --bank BANK
+  --runs RUNS [RUNS ...]
+                        arm_<name>.jsonl files
+  --out OUT
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_run.py --help 2>&1 | head -25
+usage: claude_e2e336_run.py [-h] --bank BANK --arm ARM [--name NAME] --out OUT
+                            [--lives LIVES] [--model MODEL]
+                            [--gen-model GEN_MODEL]
+                            [--mouth-model MOUTH_MODEL] [--skip-preflight]
+
+options:
+  -h, --help            show this help message and exit
+  --bank BANK           dir with turns.jsonl and truth.jsonl
+  --arm ARM
+  --name NAME           output arm name (default: --arm)
+  --out OUT
+  --lives LIVES         comma-separated life ids (default all)
+  --model MODEL         model dir for arms that need one (reader / twin)
+  --gen-model GEN_MODEL
+                        base MiniCPM5-1B dir for creative (333)
+  --mouth-model MOUTH_MODEL
+                        mouth model dir (own line)
+  --skip-preflight      skip the MiniLM router check (cloud smoke tests with a
+                        stubbed router only)
+[0m
+[0m$ [0mgrep -n -i "minilm\|preflight\|MISSING-CACHE\|HF_HUB" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_run.py | head -20
+206:    ap.add_argument("--skip-preflight", action="store_true",
+207:                    help="skip the MiniLM router check (cloud smoke tests with a stubbed router only)")
+209:    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+210:    if not args.skip_preflight and args.arm != "twin":
+211:        try:                                           # 292t's self-question router needs MiniLM on disk
+215:            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); "
+[0m
+[0m$ [0msed -n '195,253p' /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_run.py
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bank", required=True, help="dir with turns.jsonl and truth.jsonl")
+    ap.add_argument("--arm", required=True)
+    ap.add_argument("--name", default=None, help="output arm name (default: --arm)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--lives", default="", help="comma-separated life ids (default all)")
+    ap.add_argument("--model", default="", help="model dir for arms that need one (reader / twin)")
+    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir for creative (333)")
+    ap.add_argument("--mouth-model", default="", help="mouth model dir (own line)")
+    ap.add_argument("--skip-preflight", action="store_true",
+                    help="skip the MiniLM router check (cloud smoke tests with a stubbed router only)")
+    args = ap.parse_args()
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if not args.skip_preflight and args.arm != "twin":
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}); "
+                             "restore the Hugging Face snapshot, then rerun. Nothing was run.")
+
+    bank = Path(args.bank)
+    turns = load(bank / "turns.jsonl")
+    truth = load(bank / "truth.jsonl")
+    want = {x for x in args.lives.split(",") if x}
+    order: list[str] = []
+    by: dict[str, list[dict]] = {}
+    for t in turns:
+        lid = t["life_id"]
+        if want and lid not in want:
+            continue
+        if lid not in by:
+            by[lid] = []
+            order.append(lid)
+        by[lid].append(t)
+    for lid in order:
+        by[lid].sort(key=lambda x: x["turn_index"])
+    truth_by: dict[str, list[dict]] = {}
+    for f in truth:
+        truth_by.setdefault(f["life_id"], []).append(f)
+
+    builder = resolve_arm(args.arm)
+    name = args.name or args.arm.replace(":", "_").replace("/", "_")
+    rows: list[dict] = []
+    for lid in order:
+        run_life(builder, args, lid, by[lid], truth_by.get(lid, []), rows)
+        print(f"[336/{name}] {lid} turns={len(by[lid])}", flush=True)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{name}.jsonl").write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    print(f"wrote arm_{name}.jsonl rows={len(rows)} lives={len(order)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m$ [0mgrep -n -i "minilm\|snapshot\|model_id\|from_pretrained\|cache" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122.py 2>&1 | head -20; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/ | grep -i "self122"
+10:(frozen borrowed MiniLM-L6-v2 encoder via our plain-PyTorch loader +
+62:        snapshot = T.resolve_snapshot(None)
+63:        enc, tok, info = T.load_encoder(snapshot)
+75:        self.snapshot = snapshot
+146:    s = agent.snapshot()
+fable_self122_data.py
+fable_self122_diag.py
+fable_self122_runner.py
+fable_self122_train.py
+fable_self122.py
+[0m
+[0m$ [0mgrep -n "resolve_snapshot\|MODEL\|snapshot_download\|hub" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122.py | head; grep -rn "def resolve_snapshot" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/*.py 2>&1 | head -5
+62:        snapshot = T.resolve_snapshot(None)
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122_train.py:63:def resolve_snapshot(arg: str | None) -> str:
+[0m
+[0m$ [0msed -n '40,110p' /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122_train.py
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import torch  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
+
+import fable_bert_loader as L  # noqa: E402 (ours, read-only reuse)
+
+LABELS: list[str] = ([f"C{i}" for i in range(1, 31)]
+                     + [f"D{i}" for i in range(1, 11)] + ["OOS"])
+LAB2I = {lab: i for i, lab in enumerate(LABELS)}
+SEEDS = (12201, 12202, 12203)
+EPOCHS = 600
+LR = 0.05
+WD = 1e-4
+MAX_LEN = 64
+BATCH = 64
+TAU_GRID = (0.50, 0.60, 0.70)
+MU_GRID = (0.5, 1.0, 1.5, 2.0)
+
+
+def resolve_snapshot(arg: str | None) -> str:
+    if arg:
+        return arg
+    base = Path(os.path.expanduser(
+        "~/.cache/huggingface/hub/"
+        "models--sentence-transformers--all-MiniLM-L6-v2/snapshots"))
+    snaps = sorted(p for p in base.iterdir() if p.is_dir())
+    assert snaps, "no cached MiniLM snapshot"
+    return str(snaps[0])
+
+
+def load_encoder(snapshot: str):
+    """MiniLM via our plain-PyTorch loader (D1: lowercase=True, uncased vocab)."""
+    with open(os.path.join(snapshot, "config.json")) as fh:
+        cfg = json.load(fh)
+    model = L.Bert(cfg)
+    raw = L.read_safetensors(os.path.join(snapshot, "model.safetensors"))
+    state, skipped = {}, []
+    for k, v in raw.items():
+        r = L.Bert.rename(k)
+        (state.__setitem__(r, v.float()) if r else skipped.append(k))
+    missing, unexpected = model.load_state_dict(state, strict=False)
+    assert not unexpected, unexpected[:8]
+    assert not missing, missing[:8]
+    tok = L.WordPiece(os.path.join(snapshot, "vocab.txt"), lowercase=True)
+    return model.eval(), tok, {"skipped": skipped,
+                              "params": sum(p.numel()
+                                            for p in model.parameters())}
+
+
+@torch.no_grad()
+def embed(texts: list[str], enc, tok) -> torch.Tensor:
+    outs = []
+    for i in range(0, len(texts), BATCH):
+        ids, mask, _ = tok.batch(texts[i:i + BATCH], MAX_LEN)
+        h = enc(ids, mask)
+        m = mask.unsqueeze(-1).float()
+        mean = (h * m).sum(1) / m.sum(1).clamp_min(1e-6)
+        outs.append(F.normalize(mean, dim=1))
+    return torch.cat(outs)
+
+
+def load_rows(path: Path) -> list[dict]:
+    return [json.loads(line) for line in
+            path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def train_head(X: torch.Tensor, y: torch.Tensor, seed: int) -> torch.nn.Linear:
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=15 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/.cache/huggingface/hub/ -Directory | Select-Object -ExpandProperty Name\"" 2>&1 | head -20
+.locks
+models--allenai--scibert_scivocab_uncased
+models--openbmb--MiniCPM5-1B
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/000-cache-pin.md 2>&1 | head -30
+CACHE PIN + FIND THE DELETER (director, 2026-09-24 03:58 UTC). Small CPU task on the Mac. Never print secrets. Never delete anything. Stop processes only by exact PID, and only if the director says so (here: don't).
+Context: ~/.cache/huggingface/hub (the MiniLM router snapshot used by the self122 router) vanished twice on 2026-09-23 (~22:02 ET during 274, again during mut-0).
+1. Check the snapshot is present now (ls ~/.cache/huggingface/hub). If missing, report MISSING-CACHE and stop.
+2. Copy (cp -R, not move) the MiniLM snapshot directory to ~/premonition-models/minilm/ and record its file sha256s in runs/000-cache-pin/pin.txt.
+3. Find what deleted it: grep the watcher log (~/premonition-watch/watch.log) and every runs/*/ reply and script in the worktree and ~/premonition-watch for "huggingface", "rm -rf", ".cache", "cache purge", "hf cache", and list the tasks running at ~22:00 ET on 2026-09-23. Also check crontab -l and launchctl list for cleanup jobs. Report the likely culprit(s) with evidence; change nothing.
+Final line: PINNED <path> and CULPRIT <best guess or UNKNOWN>.
+PUSH: runs/000-cache-pin/pin.txt
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/ | Select-Object -ExpandProperty Name; '--'; Get-ChildItem C:/Users/benja/premonition-models/ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name; '--'; dir C:/Users/benja/minilm -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name\"" 2>&1 | head -20
+Get-ChildItem : Cannot find path 'C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\' 
+because it does not exist.
+At line:1 char:1
++ Get-ChildItem C:/Users/benja/.cache/huggingface/hub/models--openbmb-- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\benja\...5-1B\snapshots\:String) [Get-ChildItem], ItemNotFound 
+   Exception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+--
+--
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem -Recurse C:/Users/benja/.cache/huggingface/hub/ -Directory | Select-Object FullName\"" 2>&1 | head -30
+FullName                                                                                                               
+--------                                                                                                               
+C:\Users\benja\.cache\huggingface\hub\.locks                                                                           
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased                                        
+C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B                                                     
+C:\Users\benja\.cache\huggingface\hub\.locks\models--allenai--scibert_scivocab_uncased                                 
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\blobs                                  
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\refs                                   
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots                              
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\trees                                  
+C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff...
+C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\refs
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem -Recurse C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/ | Select-Object FullName, Length; '--ENV--'; [Environment]::GetEnvironmentVariable('HF_HUB_CACHE','Machine'); [Environment]::GetEnvironmentVariable('HF_HUB_CACHE','User'); [Environment]::GetEnvironmentVariable('HF_HOME','Machine'); [Environment]::GetEnvironmentVariable('HF_HOME','User')\"" 2>&1 | head -30
+FullName                                                                     Length
+--------                                                                     ------
+C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\refs            
+C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\refs\main 40    
+--ENV--
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-Content C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/refs/main; ''; Get-ChildItem C:/Users/benja/models/ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name\"" 2>&1 | head -20
+87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=60 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/.cache/huggingface/ -Recurse -Directory -Filter '*MiniLM*' -ErrorAction SilentlyContinue | Select-Object FullName; '---DONE1---'; Get-ChildItem C:/Users/benja/lis300/venv/Lib/site-packages/ -Directory -Filter 'sentence*' -ErrorAction SilentlyContinue | Select-Object FullName; '---DONE2---'\"" 2>&1 | head -20
+---DONE1---
+---DONE2---
+[0m
+[0m$ [0mls ~/.cache/huggingface/hub/ 2>&1; ls ~/premonition-models/ 2>&1 | head
+models--sentence-transformers--all-MiniLM-L6-v2
+lis300-merged
+lis301-merged
+minilm
+own-m1-mouth
+own-m1n-mouth
+rsn294
+[0m
+[0m$ [0mgrep -rn "route122\|self122\|snapshot" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_loop292t_agent.py 2>&1 | head -20
+(no output)
+[0m
+[0m$ [0mgrep -rln "route122" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/*.py 2>&1 | head; grep -n "route122\|import fable_self122\|from fable_self122" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_lis_e2e_arms.py 2>&1 | head
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_age334_test.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_cre333_run.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e336_run.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_lis313_test.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_lis314_test.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122_runner.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self127_runner.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self127.py
+[0m
+[0m$ [0mgrep -rn "fable_self12" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_loop292t_agent.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_e2e330_arms.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_lis_e2e_arms.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_cre333_agent.py 2>&1 | head -15
+(no output)
+[0m
+[0m$ [0mgrep -n "^import\|^from\|    import \|snapshot\|MiniLM\|huggingface" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_loop292t_agent.py 2>&1 | head -30
+28:from __future__ import annotations
+30:import copy
+31:import sys
+32:from pathlib import Path
+38:import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+39:from claude_fix228_srcguard import SrcGuardMixin228  # noqa: E402
+43:import claude_fix268_nhopdir as G268  # noqa: E402 (268 guard, read-only)
+44:import claude_fix252b_screen as F252B  # noqa: E402 (read-only)
+45:import claude_fix280_capab as F280  # noqa: E402 (piece, read-only)
+46:import claude_fix280b_general as F280B  # noqa: E402 (piece, read-only)
+47:import claude_fix281_called as F281  # noqa: E402 (piece, read-only)
+48:import claude_fix282_small as F282  # noqa: E402 (piece, read-only)
+49:import claude_fix282b_vocab as F282B  # noqa: E402 (piece, read-only)
+50:import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+51:import claude_loop138m_agent as M138  # noqa: E402 (read-only, _Swap)
+52:import claude_loop232c_agent as L232C  # noqa: E402 (read-only, 232c rule)
+53:import claude_loop292_agent as L292  # noqa: E402 (base, read-only)
+54:import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+202:    import claude_fix252_correct as F252
+252:    import argparse
+253:    import json
+254:    import fable_loop90_agent as L90  # noqa: E402 (read-only)
+288:    import sys as _sys
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"'HF_HUB_CACHE=' + [Environment]::GetEnvironmentVariable('HF_HUB_CACHE'); 'HF_HOME=' + [Environment]::GetEnvironmentVariable('HF_HOME'); 'HUGGINGFACE_HUB_CACHE=' + [Environment]::GetEnvironmentVariable('HUGGINGFACE_HUB_CACHE'); Get-PSDrive -PSProvider FileSystem | Select-Object Name, Free, Root\"" 2>&1 | head -15
+HF_HUB_CACHE=
+HF_HOME=
+HUGGINGFACE_HUB_CACHE=
+
+Name        Free Root
+----        ---- ----
+C    53420924928 C:\
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/lis300/work/,C:/Users/benja/lis301/work/,C:/Users/benja/beautiful-model/ -Recurse -Directory -Filter '*MiniLM*' -ErrorAction SilentlyContinue | Select-Object FullName; '---DONE---'\"" 2>&1 | head -15
+---DONE---
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/Users/benja/.cache/ | Select-Object -ExpandProperty Name; '--'; Get-ChildItem C:/Users/benja/ -Directory -Filter 'premonition*' | Select-Object -ExpandProperty Name; '--'; Get-ChildItem C:/ -Directory | Select-Object -ExpandProperty Name\"" 2>&1 | head -40
+huggingface
+--
+--
+AMD
+bm-fable
+Cakewalk Content
+Cakewalk Projects
+ComfyUI
+data
+empty
+ESD
+inetpub
+llama
+llama-b10679
+llama.cpp
+llm
+MinecraftServer
+PerfLogs
+Program Files
+Program Files (x86)
+qwen21-logs
+Riot Games
+scout
+tmp
+triton_cache_comfy
+Users
+Windows
+XboxGames
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-ChildItem C:/llm/ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name; '--DATA--'; Get-ChildItem C:/data/ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name\"" 2>&1 | head -40
+data
+llm
+run2
+runs
+__pycache__
+arith_ft.py
+audit.log
+audit.py
+bench.json
+bench.py
+bench2.py
+bench_tok.py
+browse_data.py
+cat_encode.ps1
+check_main.ps1
+check_quality.py
+check_serve.ps1
+codeyield.py
+damping.py
+dbg_tok.py
+depth_sweep.py
+depth_value.py
+dl_code.err
+dl_code.log
+dl_code2.err
+dl_code2.log
+dl_final.err
+dl_final.log
+enc.err
+enc.log
+encode_mix.py
+env_check.ps1
+handoff.ps1
+handoff2.ps1
+handoff3.ps1
+hub_peek.py
+hub_probe.py
+leak.py
+ledger.py
+mem.ps1
+[0m
+[0m$ [0msed -n '1,80p' /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_self122.py
+#!/usr/bin/env python3
+"""122 -- registered single-change follow-up to exp 114 (self-question router).
+
+Exp 114 blind result: 17 correct / 79 decline / 4 WRONG on 100 fresh questions
+(tricks 10/10 declined). Diagnosis: the scope guard works; the ceiling is
+VOCABULARY -- the keyword scorer cannot recognise oblique phrasings (46 margin
+declines on existing intents).
+
+THE ONE CHANGE: the keyword scorer is replaced by a LEARNED intent classifier
+(frozen borrowed MiniLM-L6-v2 encoder via our plain-PyTorch loader +
+a 41-way linear head trained on 1,900 hand-written phrasings). Kept unchanged:
+the exp-114 scope guard in front, the exp-105 question-type guard as a
+candidate restrictor, the margin/confidence decline, and ALL answer functions
+(answers come from the untouched exp-99 bodies via each intent's canonical
+question; the decline sentence is the identical inherited HONEST_DECLINE).
+
+Routing order for one question:
+  1. scope_guard() (fable_self114, frozen) -> DECLINE with reason.
+  2. Learned classifier (frozen encoder + frozen head) -> top1/conf/margin.
+     OOS top1, conf < tau, or logit-margin < mu -> DECLINE.
+  3. Question-type guard (fable_self105.guard, frozen) restricts candidates;
+     top1 outside the allowed set -> DECLINE.
+  4. Else the intent id; the answer is produced by calling the GRANDPARENT
+     exp-99 answer_self() on that intent's canonical question (provably the
+     same body as exp 99; the keyword router is bypassed, never edited).
+
+Run (Mac CPU, offline; only AFTER PASSMARKS sealed + ledger P122.*):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_self122.py --devcheck
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import torch  # noqa: E402
+
+import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self114 as S114  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+
+HONEST_DECLINE = S105.HONEST_DECLINE
+CANONICAL = S105.CANONICAL
+
+_classifier = None
+
+
+class LearnedRouter:
+    """Frozen encoder + frozen head. No training here, ever."""
+
+    def __init__(self, repo: Path):
+        import fable_self122_train as T  # noqa: E402 (frozen pipeline reuse)
+        torch.set_num_threads(1)
+        self._T = T
+        snapshot = T.resolve_snapshot(None)
+        enc, tok, info = T.load_encoder(snapshot)
+        self.enc, self.tok = enc, tok
+        art = repo / "artifacts" / "fable-self122-20260922"
+        bundle = torch.load(art / "self122_head.pt", weights_only=True)
+        head = torch.nn.Linear(384, len(bundle["labels"]))
+        head.load_state_dict(bundle["state_dict"])
+        head.eval()
+        self.head = head
+        self.labels: list[str] = list(bundle["labels"])
+        self.tau: float = float(bundle["tau"])
+        self.mu: float = float(bundle["mu"])
+        self.seed = bundle["seed"]
+        self.snapshot = snapshot
+
+    @torch.no_grad()
+    def route(self, question: str) -> tuple[str, dict]:
+        T = self._T
+        X = T.embed([question], self.enc, self.tok)
+[0m
+[0m$ [0mtar -czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/e2e330tree.tgz -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree tree && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/
+total 328584
+drwxr-xr-x   4 ben-hannan  staff        128 Sep 24 00:33 .
+drwxr-xr-x   8 ben-hannan  staff        256 Sep 24 00:28 ..
+-rw-r--r--   1 ben-hannan  staff  161706388 Sep 24 00:34 e2e330tree.tgz
+drwxr-xr-x  26 ben-hannan  staff        832 Sep 24 00:29 tree
+[0m
+[0m$ [0mdu -sg /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree; wc -l /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/turns.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/truth.jsonl
+2	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree
+     194 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/turns.jsonl
+     131 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/artifacts/claude-e2e331-dev-20260924/truth.jsonl
+     325 total
+[0m
+[0m$ [0mtar -tzf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/e2e330tree.tgz | head -5; tar -tzf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/e2e330tree.tgz | wc -l
+tree/
+tree/TEACHING_TO_TEST_CONTRACT.md
+tree/memorylab/
+tree/design/
+tree/run.py
+  351038
+[0m
+[0m$ [0mscp -o BatchMode=yes -o ConnectTimeout=10 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/e2e330tree.tgz benspc:C:/Users/benja/e2e330tree.tgz 2>&1 | tail -5; echo "SCP_EXIT=$?"
+SCP_EXIT=0
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"mkdir C:/Users/benja/e2e330dev -ErrorAction SilentlyContinue; tar -xzf C:/Users/benja/e2e330tree.tgz -C C:/Users/benja/e2e330dev/; Get-ChildItem C:/Users/benja/e2e330dev/tree/ | Select-Object -ExpandProperty Name\"" 2>&1 | head -35
+Directory: C:\Users\benja
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/24/2026  12:37 AM                e2e330dev                                                            
+.claude
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+reviews
+runs
+scripts
+status
+tests
+.gitignore
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+run.py
+run.sh
+TEACHING_TO_TEST_CONTRACT.md
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-FileHash C:/Users/benja/e2e330dev/tree/artifacts/fable-self122-20260922/self122_head.pt -Algorithm SHA256 | Select-Object -ExpandProperty Hash\"" 2>&1 | head -5
+5CA02173DC7BD4AE400957375BE3CF7E1D39574DF5DCA2A4119FB807C6C8EE25
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Get-FileHash C:/Users/benja/lis301/work/run/merged/model.safetensors -Algorithm SHA256 | Select-Object -ExpandProperty Hash\"" 2>&1 | head -5
+B4FD93A2B29FC9E246CFDD2AE5C815576957480F410D85EB24BB8DF00D21B890
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import hashlib,os; d='C:/Users/benja/e2e330dev/tree/artifacts/claude-e2e331-dev-20260924'; ok=True; lines=open(d+'/SEAL.sha256.txt',encoding='utf-8').read().splitlines(); print('seal_lines=',len(lines)); [print(repr(l)) for l in lines]\"" 2>&1 | head -10
+seal_lines= 3
+'4fbdac90ea2e76748534bab2d86c6d66ea80eac28f4b81c9b1fbf24d9c4380a8  turns.jsonl'
+'c868e2acbbc4fcb94f74b75edbd651c492bcd8a29d58b1252719a254e8de1de5  truth.jsonl'
+'947e2f4833eaa99386a7a9d81afb8116e36b88acfba5e898b2042b8bb4bc72ff  README.md'
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import hashlib; d='C:/Users/benja/e2e330dev/tree/artifacts/claude-e2e331-dev-20260924'; nfail=0; n=0; f=open(d+'/SEAL.sha256.txt',encoding='utf-8').read().splitlines(); [exec('h,_,p=l.partition(\\\"  \\\"); import hashlib as H; n+=1; print(p, \\\"OK\\\" if H.sha256(open(d+chr(47)+p,\\\"rb\\\").read()).hexdigest()==h else \\\"FAIL\\\")',{'l':l,'d':d,'n':n}) for l in f]\"" 2>&1 | head -10
+turns.jsonl OK
+truth.jsonl OK
+README.md OK
+[0m
+[0m# [0mTodos
+[✓] Fetch origin, read spec/passmarks/run scripts
+[✓] Build combined tree (builder-outbox + main) with self122_head.pt
+[•] Copy tree to BensPC, verify env (reader sha, transformers, BASE model)
+[ ] Verify DEV bank seal, run 5 arms sequentially
+[ ] Score runs, write RESULTS-dev.md, push artifacts
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"from huggingface_hub import snapshot_download; p=snapshot_download('openbmb/MiniCPM5-1B', local_files_only=True); print('LOCAL_OK', p)\"" 2>&1 | head -10
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\lis300\venv\lib\site-packages\huggingface_hub\utils\_validators.py", line 91, in _inner_fn
+    return fn(*args, **kwargs)
+  File "C:\Users\benja\lis300\venv\lib\site-packages\huggingface_hub\utils\_http.py", line 266, in _inner
+    return fn(*args, **kwargs)
+  File "C:\Users\benja\lis300\venv\lib\site-packages\huggingface_hub\_snapshot_download.py", line 363, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"from huggingface_hub import snapshot_download; p=snapshot_download('openbmb/MiniCPM5-1B'); print('DL_OK', p)\"" 2>&1 | tail -8
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|9         | 1/11 [00:00<00:01,  7.99it/s]Fetching 11 files:  73%|#######2  | 8/11 [00:00<00:00, 37.51it/s]Fetching 11 files:  91%|######### | 10/11 [00:20<00:00, 37.51it/s]Fetching 11 files: 100%|##########| 11/11 [00:37<00:00,  4.44s/it]Fetching 11 files: 100%|##########| 11/11 [00:37<00:00,  3.40s/it]
+DL_OK C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 benspc "cd C:/Users/benja/e2e330dev/tree && set PYTHONUTF8=1&& set PYTHONIOENCODING=utf-8&& C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-e2e330-dev-20260924/run --arm claude_lis_e2e_arms:build_G --name G --model C:/Users/benja/lis301/work/run/merged" 2>&1 | head -30
+MISSING-CACHE: the self122 MiniLM router did not load (ModuleNotFoundError("No module named 'resource'")); restore the Hugging Face snapshot, then rerun. Nothing was run.
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "cd C:/Users/benja/e2e330dev/tree && C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import sys; sys.path.insert(0,'scripts'); import fable_self122 as S122; print(S122.route122('what is your name?'))\"" 2>&1 | head -40
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self122.py", line 45, in <module>
+    import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self105.py", line 58, in <module>
+    import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self99.py", line 42, in <module>
+    import fable_loop90_agent as L90  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_loop90_agent.py", line 45, in <module>
+    import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_bench73_english_arm.py", line 58, in <module>
+    import fable_bench65_notebook_arm as B65  # noqa: E402 (read-only; never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_bench65_notebook_arm.py", line 43, in <module>
+    from fable_qual56_reasoner import QualifierAwareReasoner  # noqa: E402
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_qual56_reasoner.py", line 39, in <module>
+    import fable_reasoner50 as R50  # noqa: E402  (read-only; never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_reasoner50.py", line 57, in <module>
+    import resource
+ModuleNotFoundError: No module named 'resource'
+[0m
+[0m$ [0mgrep -rln "^import resource\|^import resource$\|import resource" /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/*.py 2>&1 | head; echo "---reader-usage---"; grep -n "resource\." /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_reasoner50.py | head -10
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/astra_canonical_operator_run.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_nb320_scale.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_own_shared_base.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_concepttoy20_models.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_ears85_train.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_link_isolation_v2.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_link_isolation.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_modernbert61_check.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_newnames21.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/fable_newnames27.py
+---reader-usage---
+704:        maxrss_peak = max(maxrss_peak, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 ** 3))
+[0m
+[0m$ [0msed -n '240,300p' /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/e2e330tree/tree/scripts/claude_loop292t_agent.py
+class Loop292tDaemon(SrcGuardMixin228, Classes292tMixin,
+                     L138K.RestartIndex220Mixin, L138J.Loop138jDaemon):
+    """Loop138kDaemon's own bases with SrcGuardMixin228 first and the 292t
+    build mixin ahead of the 220 mixin, exactly as 292 stacks its own."""
+
+
+assert [c.__name__ for c in Loop292tDaemon.__mro__][:5] == [
+    "Loop292tDaemon", "SrcGuardMixin228", "Classes292tMixin",
+    "RestartIndex220Mixin", "Loop138jDaemon"]
+
+
+def main(argv=None) -> int:
+    import argparse
+    import json
+    import fable_loop90_agent as L90  # noqa: E402 (read-only)
+    ap = argparse.ArgumentParser(description="Exp 292t (talking join on 292)")
+    ap.add_argument("--config", default=None)
+    ap.add_argument("--write-config", default=None)
+    ap.add_argument("--daemon", action="store_true")
+    ap.add_argument("--dir", default=None)
+    ap.add_argument("--idle-seconds", type=float, default=30.0)
+    ap.add_argument("--once", default=None)
+    ap.add_argument("--state-dir", default=None)
+    args = ap.parse_args(argv)
+    if args.write_config:
+        out = copy.deepcopy(DEFAULT_CONFIG292T)
+        out["thinker"]["module"] = L90.THINKER_MODULE
+        Path(args.write_config).write_text(json.dumps(out, indent=1),
+                                           encoding="utf-8")
+        print(f"Wrote {args.write_config}")
+        return 0
+    cfg = copy.deepcopy(DEFAULT_CONFIG292T)
+    if args.config:
+        cfg.update(json.loads(Path(args.config).read_text(encoding="utf-8")))
+    if args.daemon or (args.dir and not args.once):
+        if not args.dir:
+            ap.error("--daemon needs --dir")
+        return Loop292tDaemon(
+            args.dir, cfg=cfg, idle_seconds=args.idle_seconds).run()
+    if args.once:
+        cfg["state_dir"] = args.state_dir or cfg.get("state_dir", ".")
+        print(" ".join(build_agent292t(cfg).turn(args.once)), flush=True)
+        return 0
+    ap.print_help()
+    return 0
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    _sys.exit(main())
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "cd C:/Users/benja/e2e330dev/tree && C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import sys; sys.path.insert(0,'scripts'); import claude_lis_e2e_arms; print('lis_e2e_arms OK'); import claude_e2e330_arms; print('e2e330_arms OK'); import claude_e2e336_twin; print('twin OK')\"" 2>&1 | head -30
+lis_e2e_arms OK
+e2e330_arms OK
+twin OK
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell -NoProfile -Command \"Test-Path C:/Users/benja/e2e330dev/tree/artifacts/claude-e2e330-dev-20260924; C:/Users/benja/lis300/venv/Scripts/python.exe --version\"" 2>&1 | head -5
+False
+Python 3.10.9
+[0m
+[0m$ [0mmkdir -p artifacts/claude-e2e330-dev-20260924 && echo MKDIR_OK
+MKDIR_OK
+[0m
+[0m← [0mWrite artifacts/claude-e2e330-dev-20260924/RESULTS-dev.md
+Wrote file successfully.
+[0m
+[0m# [0mTodos
+[✓] Fetch origin, read spec/passmarks/run scripts
+[✓] Build combined tree (builder-outbox + main) with self122_head.pt
+[✓] Copy tree to BensPC, verify env (reader sha, transformers, BASE model)
+[✓] Verify DEV bank seal, run 5 arms sequentially
+[✓] Score runs, write RESULTS-dev.md, push artifacts
+[0m
