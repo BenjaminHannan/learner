@@ -1,0 +1,12 @@
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence).
+GPU: rent
+BUDGET: $1.00 for this whole task. Label: rent-330c-dev2. Needs READER. Re-run the offer search before every create (a `success: false` usually means the offer was just taken).
+
+YOUR TASK: rent-330c-dev2, REPORT ONLY (dev data, no registered marks): the dress rehearsal of 330c, the joined Premonition 0.1 agent (scripts/claude_e2e330c.py), with 333b+c joined (scripts/claude_e2e330c.py as of this task; rent-330c-dev ran the earlier version). Arm P330c only. Artifacts in artifacts/claude-e2e330c-dev2-20260924/ (new folder). The DEV bank artifacts/claude-e2e331-dev-20260924 is dev data: fine to read. If artifacts/claude-e2e330c-dev2-20260924/run already exists on origin/builder-outbox, stop with DUPLICATE.
+1. On the rental, from the tree root: `sha256sum -c SEAL.sha256.txt` run from inside artifacts/claude-e2e331-dev-20260924: all OK. `python -B scripts/claude_chat338b_test.py` must print "338b tests: 3/3 OK" and `python -B scripts/claude_cre333b_test.py` must print "333b/c tests: 2/2 OK ...".
+2. One arm (write --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-e2e330c-dev2-20260924/run on each). The first printed line must be "twinb: the plain twin is Twin336b (enable_thinking=False)".
+   python -B scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm claude_e2e330c:build_330c --name P330c --model READER --gen-model BASE
+3. python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-dev-20260924 --runs artifacts/claude-e2e330c-dev2-20260924/run/arm_*.jsonl --out artifacts/claude-e2e330c-dev2-20260924/score
+4. Copy run/ and score/ back to the Mac, check, destroy, ledger line.
+5. RESULTS-rent.md, counts only: the scorer's printed line; GPU, hours, dollars; model commit hash; wall time per arm; any traceback in full. Dev data may be quoted sparingly.
+PUSH: artifacts/claude-e2e330c-dev2-20260924/RESULTS-rent.md artifacts/claude-e2e330c-dev2-20260924/run artifacts/claude-e2e330c-dev2-20260924/score artifacts/fable-predictions-ledger.md

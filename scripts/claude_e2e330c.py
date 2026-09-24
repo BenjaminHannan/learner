@@ -2,8 +2,10 @@
 """330c: the joined Premonition 0.1 agent for the registered run 336 (month-end line, 2026-09-24).
 
 Layer order, inner to outer (every piece imported read-only, none edited):
-  330a_cre = 292t -> 298 -> 274 listen-first -> listener stack G b (313b/315/314b/316)
-             -> 274 reply-first -> 334 sleep agenda -> 333 creative          (claude_e2e330_arms)
+  330a_334 = 292t -> 298 -> 274 listen-first -> listener stack G b (313b/315/314b/316)
+             -> 274 reply-first -> 334 sleep agenda                          (claude_e2e330_arms)
+  -> 333 creative with 333b's generator (thinking off) and 333c's request detector (333 = registered FAIL:
+                every routed turn got the fallback line because of thinking mode; scripts/claude_cre333b_agent.py)
   -> think299b  think-then-answer with an exact calculator and a 3-of-5 vote; registered FAIL on its bar,
                 joined for safety (it says "I'm not sure" instead of guessing; it routes 0/194 DEV turns)
   -> 338b       open conversation from the base 1B when the agent gives up, with the person-question
@@ -12,7 +14,7 @@ Layer order, inner to outer (every piece imported read-only, none edited):
 Not joined: 339 style preferences (registered FAIL, 2/20 false saves) and the own-line mouth (own-M1v has
 no verdict yet; if it passes, a 330d adds it and 336b uses it).
 
-One 1B is loaded once and shared by 333, think299b and 338b (claude_e2e330_arms._gen). The lis-301 reader
+One 1B (a Gen333b) is loaded once and shared by 333, think299b and 338b. The lis-301 reader
 is the only other model.
 
   python -B scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank BANK \
@@ -34,15 +36,21 @@ _G338B: dict = {}
 def build_330c(state_dir, args):
     import claude_chat338_agent as C38
     import claude_chat338b_agent as C38B
+    import claude_cre333_agent as C333
+    import claude_cre333b_agent as C333B
     import claude_e2e330_arms as A
     import claude_nb323_turnlog as NB
     import claude_think299b_agent as T299B
-    loop = A.build_330a_cre(state_dir, args)
-    one_b = A._gen(args.gen_model)
+    if args.gen_model not in A._GEN:
+        A._GEN[args.gen_model] = C333B.Gen333b(args.gen_model)
+    one_b = A._GEN[args.gen_model]
+    C333.is_creative = C333B.is_creative333c           # 333c routing (333's turn looks this name up per turn)
+    loop = A.build_330a_334(state_dir, args)
+    C333.install_creative333(loop, one_b)
     T299B.install_think299b(loop, one_b)
     if args.gen_model not in _G338B:
         _G338B[args.gen_model] = C38.Gen338(share=one_b)
     C38B.install_chat338b(loop, _G338B[args.gen_model])
     NB.install_turnlog323(loop, str(Path(state_dir) / TURNLOG330C))
-    loop.layers330c = ["330a_cre", "think299b", "chat338b", "turnlog323"]
+    loop.layers330c = ["330a_334", "cre333b+c", "think299b", "chat338b", "turnlog323"]
     return loop
