@@ -1,0 +1,927 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?
+FETCH_EXIT:0
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo ---SEPARATOR---; git show origin/main:design/v3/30-modes/330-rent-kit.md; echo ---SEPARATOR2---; git show origin/main:artifacts/claude-cre333-20260924/PASSMARKS.md 2>&1 || git show origin/builder-outbox:artifacts/claude-cre333-20260924/PASSMARKS.md 2>&1; echo ---SEPARATOR3---; git show origin/builder-outbox:artifacts/claude-cre333-20260924/RESULTS-rent.md 2>&1 | head -n 50
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+---SEPARATOR---
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it first. If it is below your task's BUDGET, stop with LOW-CREDIT (the director tells Ben).
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+---SEPARATOR2---
+# 333: creative v1 on 292t. Marks fixed 2026-09-24 05:20 UTC, before the panel exists
+
+Written by the month-end thread. Code: scripts/claude_cre333_agent.py (install_creative333, Gen333).
+Plan: design/v3/30-modes/330-month-end-plan.md §5. One change on 292t: a turn that asks for ideas or a short piece
+of writing becomes a WORK job with a creative phase (fixed N = 11 candidates from the base MiniCPM5-1B, grounded in
+read-only notebook facts, candidates naming unknown people dropped, most-grounded kept). It never reaches listening.
+
+Dev evidence before sealing (DEV bank, artifacts/claude-e2e331-dev-20260924): cue detector 10/10 creative turns,
+0/184 false triggers (one cue tightened on dev: "recommend" -> "recommend (me|us) a/an/some/something").
+Cloud smoke with a stub generator: grounded pick chosen, invented name dropped, 0 notebook events on the creative
+turn, the next ordinary question answered as before.
+
+## Panel
+creativepanel333 (TEST-ONLY, written blind from design/v3/30-modes/333-creative-panel-spec.md, key audited blind):
+40 creative items (a short teaching chat, then a request) and 30 control items (ordinary teach/ask turns that use
+words like plan, gift, idea, write, recommend but do not ask for ideas).
+
+## Arms
+- P = 292t + install_creative333 (base MiniCPM5-1B generator).
+- B = 292t alone (controls only).
+- T = the plain twin (scripts/claude_e2e336_twin.py) given the same chat, then the request.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| P333.1 notebook events on creative turns (P) | 0 |
+| P333.2 controls where P's reply and stored triples equal B's | ≥ 29/30 |
+| P333.3 creative items a blind judge rates "on topic and useful" (P) | ≥ 32/40 |
+| P333.4 P replies stating a fact about a named person that the chat never gave (blind judge) | ≤ 2/40 |
+| P333.5 blind pairwise judge: P preferred or tied vs T | ≥ 20/40 |
+
+Report only: T's useful count and invented-fact count, fallbacks, ms per creative turn, context facts used.
+**Proved wrong if** P's useful count is below T's, or P333.4 is worse than T's count (grounding made it worse).
+Judges are blind Opus agents that see only the chat, the request and the replies (arm order randomised per item).
+---SEPARATOR3---
+# rent-333-creative: REGISTERED run of exp 333 (creative v1) — HOST-FAIL, nothing ran
+
+No arm ran. Four rentals were attempted (the kit maximum); none yielded a working
+Linux GPU with shell access, so the panel seal check, SEAL-code-rent, arms B/P/T
+and the score step were never started. Month-end code untouched (no edits
+anywhere). Panel items never opened, printed, or quoted; judge_creative.jsonl was
+never produced and never opened; no reply is quoted anywhere in this file.
+
+## Preconditions checked on the Mac (integer counts)
+
+- `git fetch -q origin main builder-outbox`: ok.
+- DUPLICATE check: `git ls-tree -r origin/builder-outbox --name-only` lists
+  `artifacts/claude-cre333-20260924/PASSMARKS.md`,
+  `RESULTS-run.md`, `SEAL-code.sha256.txt` and no `run/` dir: NOT a duplicate,
+  proceed was correct.
+- Credit at start: $9.97 (task BUDGET $1.50). No instance labelled
+  `rent-333-creative` was live at start (1 unrelated instance live:
+  `rent-338-chat`).
+- Code tree built per the rent kit: `git archive origin/builder-outbox` + `git
+  archive origin/main` (main on top) + `self122_head.pt` copied in, sha256
+  `5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25` (match).
+  Packed `/tmp/cre333_tree.tgz` (155 MB). Never uploaded (no shell anywhere).
+- Panel: `artifacts/claude-creativepanel333-20260924/` present in the tree
+  (filenames only: `README.md`, `SEAL.sha256.txt`, `audit.jsonl`,
+  `items.jsonl`); items never opened.
+
+## Rentals: 4 of 4 allowed, 0 usable
+
+| # | Offer (RTX 5090) | dph ($/h) | Contract | Outcome |
+|---|---|---|---|---|
+| 1 | 45669552 (KR, 16 cores, 505 GB, 296/364 Mbps, rel 0.9976) | 0.4690 | 52415556 | `success: false` on create; destroyed, $0 |
+| 2 | 50236329 (CN, 24 cores, 150 GB, 998/877 Mbps, rel 0.9935) | 0.5347 | 52415599 | `success: true`, reached `running`, but the ssh proxy tunnel never came up (`vastai logs`: `Error: remote port forwarding failed for listen port 15598`, repeating; proxy `Permission denied (publickey)` x10 over ~6 min; reboot did not fix; `vastai copy` via rsync daemon worked, proving the host was up but container shell unreachable); destroyed, ~0.17 h x $0.5347 ≈ $0.09 |
+| 3 | 43165153 (US, 32 cores, 282 GB, 242/38 Mbps, rel 0.9953) | 0.4727 | 52417098 | `success: false` on create; destroyed, $0 |
+| 4 | 49837280 (US-CA, 24 cores, 684 GB, 460/147 Mbps, rel 0.9848) | 0.4994 | 52417106 | `success: false` on create; destroyed, $0 |
+
+All creates used image `pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime`, `--disk
+80`, `--label rent-333-creative`, `--ssh`. Post-destroy `vastai show instances`
+confirms 0 `rent-333-creative` instances live (3 unrelated instances running).
+
+## Spend
+
+- Total ≈ $0.09 over 4 rentals (cap $1.50; trip wire never reached).
+- Credit was $9.97 at rental; nothing else billed by this task.
+
+## Arms run: 0 of 3. Scorer summary: none (no `arm_*.jsonl` exists anywhere)
+
+- Wall time per arm: B/P/T not started; score step not started.
+- GPU: none (the single `running` instance never ran `nvidia-smi`; name unknown).
+- BASE model commit hash: never resolved (snapshot_download never ran; the
+  kit's expected value `87179e5c1f455ef22e6223592d2d61351b525bfc` is unverified).
+[0m
+[0m# [0mTodos
+[•] Fetch + read specs (PASSMARKS, checks)
+[ ] DUPLICATE + credit + instance check
+[ ] Build code tree per rent-kit
+[ ] Rental loop (max 4) + run arms B/P/T + score
+[ ] Copy back, check, destroy, ledger, RESULTS-rent-b.md, push list
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-cre333-20260924/PASSMARKS.md; echo ===; git ls-tree -r origin/builder-outbox --name-only | grep -E "cre333|creativepanel333"; echo ===; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+# 333: creative v1 on 292t. Marks fixed 2026-09-24 05:20 UTC, before the panel exists
+
+Written by the month-end thread. Code: scripts/claude_cre333_agent.py (install_creative333, Gen333).
+Plan: design/v3/30-modes/330-month-end-plan.md §5. One change on 292t: a turn that asks for ideas or a short piece
+of writing becomes a WORK job with a creative phase (fixed N = 11 candidates from the base MiniCPM5-1B, grounded in
+read-only notebook facts, candidates naming unknown people dropped, most-grounded kept). It never reaches listening.
+
+Dev evidence before sealing (DEV bank, artifacts/claude-e2e331-dev-20260924): cue detector 10/10 creative turns,
+0/184 false triggers (one cue tightened on dev: "recommend" -> "recommend (me|us) a/an/some/something").
+Cloud smoke with a stub generator: grounded pick chosen, invented name dropped, 0 notebook events on the creative
+turn, the next ordinary question answered as before.
+
+## Panel
+creativepanel333 (TEST-ONLY, written blind from design/v3/30-modes/333-creative-panel-spec.md, key audited blind):
+40 creative items (a short teaching chat, then a request) and 30 control items (ordinary teach/ask turns that use
+words like plan, gift, idea, write, recommend but do not ask for ideas).
+
+## Arms
+- P = 292t + install_creative333 (base MiniCPM5-1B generator).
+- B = 292t alone (controls only).
+- T = the plain twin (scripts/claude_e2e336_twin.py) given the same chat, then the request.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| P333.1 notebook events on creative turns (P) | 0 |
+| P333.2 controls where P's reply and stored triples equal B's | ≥ 29/30 |
+| P333.3 creative items a blind judge rates "on topic and useful" (P) | ≥ 32/40 |
+| P333.4 P replies stating a fact about a named person that the chat never gave (blind judge) | ≤ 2/40 |
+| P333.5 blind pairwise judge: P preferred or tied vs T | ≥ 20/40 |
+
+Report only: T's useful count and invented-fact count, fallbacks, ms per creative turn, context facts used.
+**Proved wrong if** P's useful count is below T's, or P333.4 is worse than T's count (grounding made it worse).
+Judges are blind Opus agents that see only the chat, the request and the replies (arm order randomised per item).
+zsh:1: == not found
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox --name-only | grep -E "cre333|creativepanel333"
+artifacts/claude-cre333-20260924/PASSMARKS.md
+artifacts/claude-cre333-20260924/RESULTS-rent.md
+artifacts/claude-cre333-20260924/RESULTS-run.md
+artifacts/claude-cre333-20260924/SEAL-code.sha256.txt
+[0m
+[0m$ [0mgit ls-tree -r origin/builder-outbox --name-only | grep creativepanel333; echo "---main---"; git ls-tree -r origin/main --name-only | grep -E "creativepanel333|cre333" | head -20
+---main---
+artifacts/claude-cre333-20260924/PASSMARKS.md
+artifacts/claude-creativepanel333-20260924/README.md
+artifacts/claude-creativepanel333-20260924/SEAL.sha256.txt
+artifacts/claude-creativepanel333-20260924/audit.jsonl
+artifacts/claude-creativepanel333-20260924/items.jsonl
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13; echo "END13"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+END13
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep -E "e2e336|cre333"; echo "---outbox---"; git ls-tree -r origin/builder-outbox --name-only | grep -E "e2e336|fable-self122|ledger"
+artifacts/claude-cre333-20260924/PASSMARKS.md
+artifacts/claude-e2e336-20260924/PASSMARKS.md
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+---outbox---
+artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit ls-tree -r origin/main --name-only | grep self122 | head; echo "---worktree---"; ls artifacts/ | head -30; echo "---vastai check---"; which vastai; vastai show credit 2>&1 | head -5
+artifacts/fable-self122-20260922/PASSMARKS.md
+artifacts/fable-self122-20260922/RESULTS.md
+artifacts/fable-self122-20260922/SEAL.sha256.txt
+artifacts/fable-self122-20260922/WRONGS.md
+artifacts/fable-self122-20260922/heldout122.jsonl
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.fix77.seal.json
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.jsonl
+artifacts/fable-self122-20260922/self122-notebook/state.json
+artifacts/fable-self122-20260922/self122-results.json
+artifacts/fable-self122-20260922/train122.jsonl
+---worktree---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+---vastai check---
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'show credit' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[0m
+[0m$ [0mvastai show user 2>&1 | head -10; echo "---instances---"; vastai show instances 2>&1 | head -40
+[40m[97m  #  Balance  Bal. Thld  Bal. Thld Enabled  City  Country  Addr Line 1[0m
+[48;5;240m[97m  1  0        -0.01      True               -     -        -          [0m
+
+[40m[97m  #  Addr line 2  Zip  Billed Expected  Billed Vfy  Billing Creditonly  Can Pay[0m
+[48;5;240m[97m  1  -            -    0.0              0.0         1                   True   [0m
+
+[40m[97m  #  Credit  Email                        Email Vfy  Full Name[0m
+[48;5;240m[97m  1  6.56    benjamin.a.hannan@gmail.com  True       -        [0m
+
+[40m[97m  #  Got Signup Credit  Has Billing  Has Payout  Id      Last4  Paid Expected[0m
+---instances---
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m──────────────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m                               [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[91;48;2;0;0;0mdeverified[0m[97;48;2;0;0;0m  ·  [0m[38;5;220;48;2;0;0;0munverified[0m[97;48;2;0;0;0m  ·  [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4090[0m[48;2;0;0;0m                              [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰────────────────────────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m───────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m───────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m3 instances[0m[48;2;0;0;0m                                             [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mcairn-full-0: 1  ·  cairn-full-1: 1  ·  cairn-full-2: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰─────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═════════╤═══════════════╤═════════╤════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m Label [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Image      [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼─────────┼───────────────┼─────────┼────────────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m524…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mcairn-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.3591[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:2.4.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m524…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mcairn-…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 4090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.3365[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:2.4.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m524…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mcairn-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 4090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4330[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:2.4.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═════════╧═══════════════╧═════════╧════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m# [0mTodos
+[✓] Fetch + read specs (PASSMARKS, checks)
+[✓] DUPLICATE + credit + instance check
+[•] Build code tree per rent-kit
+[ ] Rental loop (max 4) + run arms B/P/T + score
+[ ] Copy back, check, destroy, ledger, RESULTS-rent-b.md, push list
+[0m
+[0m$ [0mls -la artifacts/fable-self122-20260922/self122_head.pt 2>&1; sha256sum artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head -2; uptime; df -g / | head -5
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+12:45  up 1 day,  2:38, 4 users, load averages: 147.06 112.02 73.92
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        32    29%  484014 339937800    0%   /
+[0m
+[0m$ [0mT=$(mktemp -d)/tree && mkdir -p $T && echo "$T" > /tmp/cre333b_Tpath.txt && git archive origin/builder-outbox | tar -x -C $T && git archive origin/main | tar -x -C $T && mkdir -p $T/artifacts/fable-self122-20260922 && cp artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/ && sha256sum $T/artifacts/fable-self122-20260922/self122_head.pt && ls $T/artifacts/ | grep -E "cre333|creativepanel" ; ls $T/scripts/ | grep -E "cre333|e2e336"
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.IAHpHerfCW/tree/artifacts/fable-self122-20260922/self122_head.pt
+claude-cre333-20260924
+claude-creativepanel333-20260924
+claude_cre333_agent.py
+claude_cre333_run.py
+claude_e2e336_run.py
+claude_e2e336_score.py
+claude_e2e336_twin.py
+[0m
+[0m$ [0mT=$(cat /tmp/cre333b_Tpath.txt) && ls "$T/artifacts/claude-cre333-20260924/" && ls "$T/artifacts/claude-creativepanel333-20260924/" && tar czf /tmp/cre333b_tree.tgz -C $(dirname $T) tree && ls -la /tmp/cre333b_tree.tgz
+PASSMARKS.md
+RESULTS-rent.md
+RESULTS-run.md
+SEAL-code.sha256.txt
+audit.jsonl
+items.jsonl
+README.md
+SEAL.sha256.txt
+-rw-r--r--  1 ben-hannan  wheel  163772658 Sep 24 12:46 /tmp/cre333b_tree.tgz
+[0m
+[0m# [0mTodos
+[✓] Fetch + read specs (PASSMARKS, checks)
+[✓] DUPLICATE + credit + instance check
+[✓] Build code tree per rent-kit
+[•] Rental loop (max 4) + run arms B/P/T + score
+[ ] Copy back, check, destroy, ledger, RESULTS-rent-b.md, push list
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  45669445  13.0  1x  RTX_5090  46.9  5.1      16.0     31.2  32.6  404 [0m
+[40m[97m  2  48916527  13.0  1x  RTX_5090  48.1  5.1      16.0     31.2  32.6  356 [0m
+[48;5;240m[97m  3  48989872  13.0  1x  RTX_5090  51.2  5.1      8.0      31.2  32.6  564 [0m
+[40m[97m  4  45669098  13.0  1x  RTX_5090  51.7  5.1      8.0      31.2  32.6  586 [0m
+[48;5;240m[97m  5  51858403  13.0  1x  RTX_5090  26.5  2.6      24.0     64.5  32.6  299 [0m
+[40m[97m  6  50992862  13.0  1x  RTX_5090  26.4  2.6      24.0     64.5  32.6  309 [0m
+[48;5;240m[97m  7  50236336  12.8  1x  RTX_5090  26.5  2.6      24.0     64.5  32.6  147 [0m
+[40m[97m  8  44367537  13.2  1x  RTX_5090  27.0  4.7      24.0     64.2  32.6  1459[0m
+[48;5;240m[97m  9  50615745  13.2  1x  RTX_5090  27.0  3.4      16.0     56.3  32.6  169 [0m
+[40m[97m 10  37232173  13.2  1x  RTX_5090  26.0  3.7      64.0     64.4  32.6  1378[0m
+[48;5;240m[97m 11  49622923  13.0  1x  RTX_5090  18.2  4.4      12.0     64.1  32.6  1449[0m
+[40m[97m 12  50849755  12.9  1x  RTX_5090  27.0  3.2      64.0     64.4  32.6  634 [0m
+[48;5;240m[97m 13  49649884  13.2  1x  RTX_5090  53.8  4.9      8.0      42.8  32.6  469 [0m
+[40m[97m 14  51738156  13.0  1x  RTX_5090  27.1  2.7      48.0    108.6  32.6  1614[0m
+[48;5;240m[97m 15  51191438  13.2  1x  RTX_5090  24.0  3.5      32.0    256.5  32.6  1199[0m
+[40m[97m 16  51711013  13.0  1x  RTX_5090  26.8  2.6      24.0     64.4  32.6  599 [0m
+[48;5;240m[97m 17  52077399  13.2  1x  RTX_5090  33.5  5.5      12.0     61.9  32.6  1551[0m
+[40m[97m 18  40871605  13.0  1x  RTX_5090  45.6  5.2      14.0     63.9  32.6  907 [0m
+[48;5;240m[97m 19  46289581  13.0  1x  RTX_5090  52.4  8.7      24.0     93.9  32.6  3261[0m
+[40m[97m 20  51299706  13.3  1x  RTX_5090  26.3  5.8      32.0     96.3  32.6  1343[0m
+[48;5;240m[97m 21  39079871  13.0  1x  RTX_5090  50.9  5.3      32.0     62.0  32.6  1424[0m
+[40m[97m 22  51800440  13.2  1x  RTX_5090  22.7  3.7      32.0    129.0  32.6  1397[0m
+[48;5;240m[97m 23  48425037  13.0  1x  RTX_5090  26.5  2.2      64.0    258.0  32.6  1456[0m
+[40m[97m 24  52070431  13.2  1x  RTX_5090  26.5  2.2      32.0    129.0  32.6  1492[0m
+[48;5;240m[97m 25  51102916  13.3  1x  RTX_5090  26.5  3.5      32.0    129.0  32.6  752 [0m
+[40m[97m 26  43092247  13.2  1x  RTX_5090  46.4  5.8      32.0     61.9  32.6  446 [0m
+[48;5;240m[97m 27  50856201  13.1  1x  RTX_5090  13.1  2.3      24.0    129.0  32.6  191 [0m
+[40m[97m 28  27039370  13.1  1x  RTX_5090  26.5  2.3      24.0    129.0  32.6  257 [0m
+[48;5;240m[97m 29  49122873  13.2  1x  RTX_5090  26.9  5.1      32.0     64.2  32.6  1440[0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import sys,json
+raw=sys.stdin.read()
+try:
+  data=json.loads(raw)
+  print(type(data), len(data) if hasattr(data,'__len__') else '')
+  for o in data[:8]:
+    print(o.get('id'), o.get('dph_total'), o.get('cpu_cores_effective'), o.get('cpu_cores'), o.get('disk_space'), o.get('inet_down'), o.get('inet_up'), o.get('reliability'), o.get('geolocation'))
+except Exception as e:
+  print('ERR', e); print(raw[:2000])
+"
+<class 'list'> 64
+52190830 0.46898148148148144 16.0 16 588.0 439.9 436.1 0.998489 South Korea, KR
+43982842 0.46898148148148144 16.0 16 429.0 449.7 514.3 0.9979412 South Korea, KR
+45669540 0.46898148148148144 8.0 8 435.0 600.4 549.7 0.9983521 South Korea, KR
+45669111 0.46898148148148144 8.0 8 511.0 567.0 471.9 0.9975788 South Korea, KR
+49298967 0.4694444444444444 24.0 96 284.5 951.3 894.2 0.9910217 United States, US
+52224285 0.4993518518518518 32.0 128 686.25 380.2 333.2 0.9889258 United States, US
+50992862 0.5126851851851851 24.0 192 308.625 75.6 53.5 0.9947143 California, US
+52235188 0.5213888888888889 21.333333333333332 64 792.6666666666666 771.5 456.9 0.9811879 Romania, RO
+[0m
+[0m$ [0mvastai create instance 52190830 --image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime --disk 80 --label rent-333b-creative --ssh 2>&1 | tail -5
+Started. {'success': True, 'new_contract': 52451674, 'instance_api_key': 'c25737bc9b5f3a1c1156a5c367fed53564d2f41f4ccec873d00b39636095d1c4'}
+[0m
+[0m$ [0mfor i in $(seq 1 12); do sleep 30; S=$(vastai show instance 52451674 2>&1 | grep -iE "running|status|actual_status|cur_state" | head -5); echo "try$i: $S"; vastai show instance 52451674 2>&1 | grep -iE "actual_status|status_msg" | head -3; done
+try1: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+try2: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+try3: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+try4: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+try5: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try6: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try7: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try8: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try9: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try10: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try11: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+try12: [40m[97m  #  ID        Machine  Status   Num  Model     Util. %  vCPUs   RAM  Storage[0m
+[48;5;240m[97m  1  52451674  142478   running   1x  RTX_5090  0.0      16.0   31.2  80     [0m
+[0m
+[0m$ [0mvastai ssh-url 52451674 2>&1 | tail -3; echo "---logs---"; vastai logs 52451674 2>&1 | tail -15
+ssh://root@ssh5.vast.ai:11674
+---logs---
+tmux is already the newest version (3.2a-4ubuntu0.2).
+wget is already the newest version (1.21.2-2ubuntu1.5).
+0 upgraded, 0 newly installed, 0 to remove and 51 not upgraded.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+git is already the newest version (1:2.34.1-1ubuntu1.17).
+rsync is already the newest version (3.2.7-0ubuntu0.22.04.7).
+0 upgraded, 0 newly installed, 0 to remove and 51 not upgraded.
+rm: cannot remove '/etc/forward_port2': No such file or directory
+Server listening on 0.0.0.0 port 22.
+Server listening on :: port 22.
+Thu Sep 24 16:49:33 UTC 2026
+Warning: Permanently added 'ssh5.vast.ai' (ED25519) to the list of known hosts.
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "nvidia-smi --query-gpu=name --format=csv,noheader; python3 -c 'import torch;print(torch.__version__, torch.cuda.is_available())'" 2>&1 | tail -8
+Warning: Permanently added '[ssh5.vast.ai]:11674' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+NVIDIA GeForce RTX 5090
+2.8.0+cu128 True
+[0m
+[0m$ [0mdate -u; scp -o StrictHostKeyChecking=no -P 11674 /tmp/cre333b_tree.tgz root@ssh5.vast.ai:/root/tree.tgz 2>&1 | tail -3; ssh -o StrictHostKeyChecking=no -p 11674 root@ssh5.vast.ai "ls -la /root/tree.tgz && tar xzf /root/tree.tgz -C /root && ls /root/tree | head && ls /root/tree/artifacts | grep -E 'cre333|creativepanel'" 2>&1 | tail -8
+Thu Sep 24 16:53:52 UTC 2026
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+claude-cre333-20260924
+claude-creativepanel333-20260924
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 11674 root@ssh5.vast.ai "cd /root/tree && pip install -q 'transformers>=5' safetensors huggingface_hub accelerate numpy 2>&1 | tail -2; HF_HUB_OFFLINE=0 python3 -c \"from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))\" 2>&1 | tail -4" 2>&1 | tail -6
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.44it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 20.63it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 21.34it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 21.34it/s]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  3.96s/it]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  2.51s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 30 files:   0%|          | 0/30 [00:00<?, ?it/s]Fetching 30 files:   3%|▎         | 1/30 [00:00<00:05,  4.91it/s]Fetching 30 files:  27%|██▋       | 8/30 [00:06<00:18,  1.18it/s]Fetching 30 files:  43%|████▎     | 13/30 [00:06<00:07,  2.16it/s]Fetching 30 files:  50%|█████     | 15/30 [00:07<00:06,  2.33it/s]Fetching 30 files:  53%|█████▎    | 16/30 [00:07<00:05,  2.54it/s]Fetching 30 files:  57%|█████▋    | 17/30 [00:07<00:04,  2.75it/s]Fetching 30 files:  60%|██████    | 18/30 [00:08<00:04,  3.00it/s]Fetching 30 files:  63%|██████▎   | 19/30 [00:08<00:03,  2.98it/s]Fetching 30 files:  67%|██████▋   | 20/30 [00:08<00:03,  3.17it/s]Fetching 30 files:  70%|███████   | 21/30 [00:08<00:02,  3.46it/s]Fetching 30 files:  73%|███████▎  | 22/30 [00:09<00:02,  3.74it/s]Fetching 30 files:  77%|███████▋  | 23/30 [00:09<00:01,  3.89it/s]Fetching 30 files:  83%|████████▎ | 25/30 [00:11<00:02,  1.76it/s]Fetching 30 files:  90%|█████████ | 27/30 [00:11<00:01,  2.50it/s]Fetching 30 files:  93%|█████████▎| 28/30 [00:13<00:01,  1.43it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  2.07it/s]Fetching 30 files: 100%|██████████| 30/30 [00:13<00:00,  2.22it/s]
+/root/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 11674 root@ssh5.vast.ai "cd /root/tree && python3 -c \"import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))\" 2>&1 | tail -3" 2>&1 | tail -4
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+('D8', {'top1': 'D8', 'conf': 0.9732, 'margin': 3.595, 'top3': [('D8', 14.24), ('OOS', 10.65), ('C2', 3.32)], 'tau': 0.6, 'mu': 1.5, 'guard': 'pass'})
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_cre333_run.py | head -80
+#!/usr/bin/env python3
+"""333 runner: creativepanel333 on arms P (292t + creative333), B (292t), T (plain twin).
+Marks: artifacts/claude-cre333-20260924/PASSMARKS.md. New file only; never prints panel text.
+
+Each item gets a fresh agent: every turn in `turns` is sent, then `last` is sent and scored.
+Output: <out>/arm_<A>.jsonl rows {item_id, kind, reply, last_events, stored_triples, ms,
+cre333 (P only: stats delta)} and, with --score, summary.json plus the blind-judge packets
+judge_creative.jsonl (arms P and T shuffled per item with a fixed seed; the key is in judge_key.json).
+
+Usage (combined main + builder-outbox tree, like lis-313):
+  python -B scripts/claude_cre333_run.py --panel DIR --arm P --gen-model <base MiniCPM5-1B dir> --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --arm B --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --arm T --gen-model <same dir> --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --score DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import random
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "winshim"))
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def run(a):
+    import claude_e2e336_run as R
+    items = load(Path(a.panel) / "items.jsonl")
+    gen = None
+    if a.arm == "P":
+        import claude_cre333_agent as C
+        gen = C.Gen333(a.gen_model)
+    rows = []
+    for it in items:
+        tmp = tempfile.mkdtemp(prefix=f"cre333-{a.arm}-")
+        try:
+            if a.arm == "T":
+                import claude_e2e336_twin as TW
+                agent = TW.Twin336(tmp, a.gen_model)
+            else:
+                agent = R.build_292t(tmp, a)
+                if a.arm == "P":
+                    C.install_creative333(agent, gen)
+            for t in it["turns"]:
+                agent.turn(t)
+            s0 = dict(getattr(agent, "cre333_stats", {}) or {})
+            reply, ms, new = R.one(agent, it["last"])
+            row = {"item_id": it["item_id"], "kind": it["kind"], "reply": reply, "ms": round(ms, 1),
+                   "last_events": len(new), "stored_triples": R.triples(agent)}
+            if a.arm == "P":
+                s1 = agent.cre333_stats
+                row["cre333"] = {k: s1[k] - s0.get(k, 0) for k in s1 if s1[k] - s0.get(k, 0)}
+            rows.append(row)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        print(f"[333/{a.arm}] {it['item_id']}", flush=True)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{a.arm}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                                            encoding="utf-8")
+
+
+def score(a):
+    items = {it["item_id"]: it for it in load(Path(a.panel) / "items.jsonl")}
+    d = Path(a.score)
+    P = {r["item_id"]: r for r in load(d / "arm_P.jsonl")}
+    B = {r["item_id"]: r for r in load(d / "arm_B.jsonl")}
+    T = {r["item_id"]: r for r in load(d / "arm_T.jsonl")}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 11674 root@ssh5.vast.ai "cat > /root/run_cre333b.sh <<'EOF'
+#!/bin/bash
+cd /root/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+echo \"BASE=\$BASE\"
+echo \"=== SEAL check ===\"; date -u
+(cd artifacts/claude-creativepanel333-20260924 && sha256sum -c SEAL.sha256.txt)
+echo \"SEAL_EXIT=\$?\"
+echo \"=== SEAL-code-rent ===\"; date -u
+sha256sum scripts/claude_cre333_agent.py scripts/claude_cre333_run.py scripts/claude_e2e336_run.py scripts/claude_e2e336_twin.py | tee artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt
+echo \"=== ARM B ===\"; date -u; S0=\$(date +%s)
+python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm B --out artifacts/claude-cre333-20260924/run
+echo \"ARM_B_EXIT=\$? WALL_B=\$((\$(date +%s)-S0))s\"; date -u
+echo \"=== ARM P ===\"; date -u; S0=\$(date +%s)
+python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm P --gen-model \$BASE --out artifacts/claude-cre333-20260924/run
+echo \"ARM_P_EXIT=\$? WALL_P=\$((\$(date +%s)-S0))s\"; date -u
+echo \"=== ARM T ===\"; date -u; S0=\$(date +%s)
+python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm T --gen-model \$BASE --out artifacts/claude-cre333-20260924/run
+echo \"ARM_T_EXIT=\$? WALL_T=\$((\$(date +%s)-S0))s\"; date -u
+echo \"=== SCORE ===\"; date -u
+python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --score artifacts/claude-cre333-20260924/run
+echo \"SCORE_EXIT=\$?\"; date -u
+ls -la artifacts/claude-cre333-20260924/run/
+echo ALLDONE
+EOF
+chmod +x /root/run_cre333b.sh && setsid nohup /root/run_cre333b.sh > /root/cre333b.log 2>&1 < /dev/null & echo LAUNCHED; sleep 20; tail -15 /root/cre333b.log" 2>&1 | tail -20
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "tail -25 /root/cre333b.log; echo ---; ps aux | grep -E 'cre333|run_cre333' | grep -v grep | head -3"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[333/P] ctl-22
+[333/P] ctl-23
+[333/P] ctl-24
+[333/P] ctl-25
+[333/P] ctl-26
+[333/P] ctl-27
+[333/P] ctl-28
+[333/P] ctl-29
+[333/P] ctl-30
+ARM_P_EXIT=0 WALL_P=60s
+Thu Sep 24 16:57:08 UTC 2026
+=== ARM T ===
+Thu Sep 24 16:57:09 UTC 2026
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 19326.56it/s]
+[333/T] cre-01
+[333/T] cre-02
+[333/T] cre-03
+[333/T] cre-04
+[333/T] cre-05
+[333/T] cre-06
+[333/T] cre-07
+[333/T] cre-08
+[333/T] cre-09
+[333/T] cre-10
+---
+root         664  0.0  0.0   4364  1440 ?        S    16:56   0:00 bash -c cat > /root/run_cre333b.sh <<'EOF' #!/bin/bash cd /root/tree export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc echo "BASE=$BASE" echo "=== SEAL check ==="; date -u (cd artifacts/claude-creativepanel333-20260924 && sha256sum -c SEAL.sha256.txt) echo "SEAL_EXIT=$?" echo "=== SEAL-code-rent ==="; date -u sha256sum scripts/claude_cre333_agent.py scripts/claude_cre333_run.py scripts/claude_e2e336_run.py scripts/claude_e2e336_twin.py | tee artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt echo "=== ARM B ==="; date -u; S0=$(date +%s) python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm B --out artifacts/claude-cre333-20260924/run echo "ARM_B_EXIT=$? WALL_B=$(($(date +%s)-S0))s"; date -u echo "=== ARM P ==="; date -u; S0=$(date +%s) python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm P --gen-model $BASE --out artifacts/claude-cre333-20260924/run echo "ARM_P_EXIT=$? WALL_P=$(($(date +%s)-S0))s"; date -u echo "=== ARM T ==="; date -u; S0=$(date +%s) python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm T --gen-model $BASE --out artifacts/claude-cre333-20260924/run echo "ARM_T_EXIT=$? WALL_T=$(($(date +%s)-S0))s"; date -u echo "=== SCORE ==="; date -u python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --score artifacts/claude-cre333-20260924/run echo "SCORE_EXIT=$?"; date -u ls -la artifacts/claude-cre333-20260924/run/ echo ALLDONE EOF chmod +x /root/run_cre333b.sh && setsid nohup /root/run_cre333b.sh > /root/cre333b.log 2>&1 < /dev/null & echo LAUNCHED; sleep 20; tail -15 /root/cre333b.log
+root         667  0.0  0.0   4364  3228 ?        Ss   16:56   0:00 /bin/bash /root/run_cre333b.sh
+root         709  100  5.5 23523752 1761472 ?    Rl   16:57   0:59 python3 -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --arm T --gen-model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-cre333-20260924/run
+[0m
+[0m$ [0msleep 90; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "tail -6 /root/cre333b.log; echo ---; ps aux | grep claude_cre333_run | grep -v grep | wc -l"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[333/T] cre-24
+[333/T] cre-25
+[333/T] cre-26
+[333/T] cre-27
+[333/T] cre-28
+[333/T] cre-29
+---
+2
+[0m
+[0m$ [0msleep 120; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "tail -30 /root/cre333b.log; echo ---; ps aux | grep claude_cre333_run | grep -v grep | wc -l"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[333/T] cre-37
+[333/T] cre-38
+[333/T] cre-39
+[333/T] cre-40
+[333/T] ctl-01
+[333/T] ctl-02
+[333/T] ctl-03
+[333/T] ctl-04
+[333/T] ctl-05
+[333/T] ctl-06
+[333/T] ctl-07
+[333/T] ctl-08
+[333/T] ctl-09
+[333/T] ctl-10
+[333/T] ctl-11
+[333/T] ctl-12
+[333/T] ctl-13
+[333/T] ctl-14
+[333/T] ctl-15
+[333/T] ctl-16
+[333/T] ctl-17
+[333/T] ctl-18
+[333/T] ctl-19
+[333/T] ctl-20
+[333/T] ctl-21
+[333/T] ctl-22
+[333/T] ctl-23
+[333/T] ctl-24
+[333/T] ctl-25
+[333/T] ctl-26
+---
+2
+[0m
+[0m$ [0msleep 60; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "tail -25 /root/cre333b.log; echo ---; ps aux | grep claude_cre333_run | grep -v grep | wc -l"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+[333/T] ctl-23
+[333/T] ctl-24
+[333/T] ctl-25
+[333/T] ctl-26
+[333/T] ctl-27
+[333/T] ctl-28
+[333/T] ctl-29
+[333/T] ctl-30
+ARM_T_EXIT=0 WALL_T=311s
+Thu Sep 24 17:02:20 UTC 2026
+=== SCORE ===
+Thu Sep 24 17:02:20 UTC 2026
+{"P333.1_creative_events_P": 0, "P333.2_controls_equal_B": 17, "P_controls_routed": 13, "P_creative_routed": 25, "P_fallbacks": 25, "P_ms_creative_median": 1172.3, "control_items": 30, "creative_items": 40}
+SCORE_EXIT=0
+Thu Sep 24 17:02:20 UTC 2026
+total 152
+drwxr-xr-x 2 root root    133 Sep 24 17:02 .
+drwxr-xr-x 3  502 staff   143 Sep 24 16:56 ..
+-rw-r--r-- 1 root root  13954 Sep 24 16:56 arm_B.jsonl
+-rw-r--r-- 1 root root  16398 Sep 24 16:57 arm_P.jsonl
+-rw-r--r-- 1 root root  58023 Sep 24 17:02 arm_T.jsonl
+-rw-r--r-- 1 root root  48296 Sep 24 17:02 judge_creative.jsonl
+-rw-r--r-- 1 root root   1202 Sep 24 17:02 judge_key.json
+-rw-r--r-- 1 root root    216 Sep 24 17:02 summary.json
+ALLDONE
+---
+0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "head -20 /root/cre333b.log; echo ...; grep -E 'SEAL_EXIT|ARM_B_EXIT|WALL|ARM_P_EXIT|SCORE_EXIT' /root/cre333b.log; echo ---; cat /root/tree/artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt; echo ---; cat /root/tree/artifacts/claude-cre333-20260924/run/summary.json"
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+=== SEAL check ===
+Thu Sep 24 16:56:03 UTC 2026
+items.jsonl: OK
+README.md: OK
+audit.jsonl: OK
+SEAL_EXIT=0
+=== SEAL-code-rent ===
+Thu Sep 24 16:56:03 UTC 2026
+933315752d4e91f9beed06cdafa0ff95d0df5896ec34b477d795548f2f0c9999  scripts/claude_cre333_agent.py
+60e6612b70cf8b7888d1174ba2a5abf34b4aeeb5d9cc5201080a4949ae539f1e  scripts/claude_cre333_run.py
+fe32149826bbd86651e4609bbf561af4215fe8b3100477f12ca4d28d5c9bdcb9  scripts/claude_e2e336_run.py
+9a9e1cb61b663aa85595e24bb59fd8fb95e91810f67f2f45a1f138421eecd1d6  scripts/claude_e2e336_twin.py
+=== ARM B ===
+Thu Sep 24 16:56:03 UTC 2026
+[333/B] cre-01
+[333/B] cre-02
+[333/B] cre-03
+[333/B] cre-04
+[333/B] cre-05
+...
+SEAL_EXIT=0
+ARM_B_EXIT=0 WALL_B=5s
+ARM_P_EXIT=0 WALL_P=60s
+ARM_T_EXIT=0 WALL_T=311s
+SCORE_EXIT=0
+---
+933315752d4e91f9beed06cdafa0ff95d0df5896ec34b477d795548f2f0c9999  scripts/claude_cre333_agent.py
+60e6612b70cf8b7888d1174ba2a5abf34b4aeeb5d9cc5201080a4949ae539f1e  scripts/claude_cre333_run.py
+fe32149826bbd86651e4609bbf561af4215fe8b3100477f12ca4d28d5c9bdcb9  scripts/claude_e2e336_run.py
+9a9e1cb61b663aa85595e24bb59fd8fb95e91810f67f2f45a1f138421eecd1d6  scripts/claude_e2e336_twin.py
+---
+{
+ "P333.1_creative_events_P": 0,
+ "P333.2_controls_equal_B": 17,
+ "P_controls_routed": 13,
+ "P_creative_routed": 25,
+ "P_fallbacks": 25,
+ "P_ms_creative_median": 1172.3,
+ "control_items": 30,
+ "creative_items": 40
+}
+[0m
+[0m$ [0mls artifacts/claude-cre333-20260924/ 2>&1; echo "---ledger tail---"; tail -3 artifacts/fable-predictions-ledger.md 2>&1
+PASSMARKS.md
+RESULTS-rent.md
+RESULTS-run.md
+SEAL-code.sha256.txt
+---ledger tail---
+- P338-rent OUTCOME (2026-09-24, rent-338-chat REGISTERED exp-338 open-conversation run on rented Linux GPU) contracts 52415268 (offer 45669552, success False, loading/stopped, destroyed $0.00) + 52415371 RTX 5090 1x offer 44072609 16 vCPU label rent-338-chat image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: rented ~12:37Z, running 12:40:44Z-13:16:51Z ≈0.60 h x $0.55407407/h ≈$0.33 (budget $3.00, credit $9.97 at start); post-destroy 0 rent-338-chat live. Panel SEAL all OK, SEAL-code-rent 10/10 written pre-run, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, READER b4fd93a2 match, self122 5ca02173 match. Step2 (60 convs, 400 turns/arm, wall B 210 s/P 361 s/T 369 s/score 0 s): P P338.2 3/400=0.75% PASS (bar ≤10%), P338.6 events_on_non_teach 3 FAIL (bar 0); B gave_up 303, T 0; ask_known P3/B3/T2 of 15; ask_unknown P8/B0/T8 of 10; distinct P337/B46/T398; ms med/p90 B441.2/614.6 P850.5/1217.8 T967.6/1024.5. Step3 DEV P338 rows 248 lives 10 wall 155 s, score ALL ABSTAIN39/CONFIRM_OTHER9/RIGHT11/RIGHT_CONFIRM5/WRONG7, new_triples 53 unsupported 3, ms 726.5/877.8. Code unedited, panel never opened, judge/grammar never opened, no reply quoted. See artifacts/claude-chat338-20260924/RESULTS-rent.md.
+- P-vast-330dev (2026-09-24 12:38:26Z-2026-09-24 13:37:18Z, rent-330-dev DEV dress rehearsal on rented Linux GPU) contract 52415640 RTX 5090 1x offer 49337314 rel 0.9969 $0.4944/h label rent-330-dev: rented 12:38:26Z, running ~12:42Z, destroyed 13:37:18Z, alive ~0.98 h x $0.4944/h = ~$0.49 (ceiling $2.00 respected; per-instance billing not readable via API, estimate used per task rule); post-destroy 0 rent-330-dev instances live (siblings rent-339-style/cairn-smoke untouched). Setup deviations: image torch 2.4.0 + transformers>=5 broke torch import, upgraded torch 2.4.0->2.14.0+cu130 then torchvision->0.29.0+cu130 + torchaudio to match (env only, month-end code untouched); first two launches failed fast (0 rows) before the fix. Outcome: seal 3/3 OK, 5/5 arms + scorer OK, run/ + score/ copied back and byte-checked before destroy. See artifacts/claude-e2e330-dev-20260924/RESULTS-rent.md.
+- P339-rent OUTCOME (2026-09-24, rent-339-style REGISTERED exp-339 run on rented Linux GPU) contract 52415511 RTX 5090 1x offer 44173867 16 vCPU label rent-339-style image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: rented ~12:38Z, running ~12:42Z-14:05Z ~1.47 h x $0.4991/h = ~$0.73 (budget $3.50, credit $9.97 at start); post-destroy 0 rent-339-style live. Panel SEAL 4/4 OK, SEAL-code-rent 11/11 written pre-run, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, READER b4fd93a2 match, self122 5ca02173 match. Step2 (60 lives; wall B ~15 min/P 881 s/T 1068 s/score <10 s): B 854 rows, P 852 rows, T 768 rows; P339.1 17/40 FAIL (bar >=32/40), P339.2 2/20 FAIL (bar 0/20, proved-wrong >1); P339.3 judged later, judge files unopened. Step3 DEV P339 248 rows/10 lives wall 192 s, ACK339-start rows 0, P339.4 0 PASS (bar 0). Code unedited, panel never opened/quoted, no reply quoted. See artifacts/claude-style339-20260924/RESULTS-rent.md.
+[0m
+[0m$ [0mmkdir -p artifacts/claude-cre333-20260924/run && scp -o StrictHostKeyChecking=no -P 11674 "root@ssh5.vast.ai:/root/tree/artifacts/claude-cre333-20260924/run/*" artifacts/claude-cre333-20260924/run/ 2>&1 | tail -2; scp -o StrictHostKeyChecking=no -P 11674 root@ssh5.vast.ai:/root/tree/artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt 2>&1 | tail -1; ls -la artifacts/claude-cre333-20260924/run/ artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Have fun!
+-rw-r--r--  1 ben-hannan  staff  383 Sep 24 13:03 artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt
+
+artifacts/claude-cre333-20260924/run/:
+total 304
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 24 13:03 .
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 24 13:03 ..
+-rw-r--r--  1 ben-hannan  staff  13954 Sep 24 13:03 arm_B.jsonl
+-rw-r--r--  1 ben-hannan  staff  16398 Sep 24 13:03 arm_P.jsonl
+-rw-r--r--  1 ben-hannan  staff  58023 Sep 24 13:03 arm_T.jsonl
+-rw-r--r--  1 ben-hannan  staff  48296 Sep 24 13:03 judge_creative.jsonl
+-rw-r--r--  1 ben-hannan  staff   1202 Sep 24 13:03 judge_key.json
+-rw-r--r--  1 ben-hannan  staff    216 Sep 24 13:03 summary.json
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+from pathlib import Path
+d = Path('artifacts/claude-cre333-20260924/run')
+for f in ['arm_B.jsonl','arm_P.jsonl','arm_T.jsonl']:
+    rows=[json.loads(x) for x in (d/f).read_text().splitlines() if x.strip()]
+    kinds={}
+    for r in rows: kinds[r['kind']]=kinds.get(r['kind'],0)+1
+    print(f, len(rows), kinds)
+print(open(d/'summary.json').read())
+" 2>&1 | tail -6; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 11674 root@ssh5.vast.ai "cd /root/tree/artifacts/claude-cre333-20260924 && sha256sum run/* SEAL-code-rent.sha256.txt" 2>&1 | tail -8; sha256sum artifacts/claude-cre333-20260924/run/* artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt
+"P_creative_routed": 25,
+ "P_fallbacks": 25,
+ "P_ms_creative_median": 1172.3,
+ "control_items": 30,
+ "creative_items": 40
+}
+Have fun!
+ddc490cfba193c6e784fc2cebf629638be13494e6d4b703a4cb34bd61d19a161  run/arm_B.jsonl
+257a2056385a30e9fe008dedba6a9ef80fcde28525db6d5ccbbb9acede069c20  run/arm_P.jsonl
+22942446b8253b9ca3c7c495a5b39a36eae8fa66639c18b6578b22367a922274  run/arm_T.jsonl
+1c54a0d13b84b86bafd611f8eae57167cc70966e845b6f04f7d7437537ed081b  run/judge_creative.jsonl
+715dc801ffb94365b0698835604bd76e0feac4eead56254930584830acb59165  run/judge_key.json
+4b05adf82e5a2573cd0a4e8ecbb6ca303fc76cfe7fda29abb2e4ba86f7b59435  run/summary.json
+634c63aa7b3f8360021fcb38ea557c9fe7b3f2d1ebeae21c4a8f755118b300de  SEAL-code-rent.sha256.txt
+ddc490cfba193c6e784fc2cebf629638be13494e6d4b703a4cb34bd61d19a161  artifacts/claude-cre333-20260924/run/arm_B.jsonl
+257a2056385a30e9fe008dedba6a9ef80fcde28525db6d5ccbbb9acede069c20  artifacts/claude-cre333-20260924/run/arm_P.jsonl
+22942446b8253b9ca3c7c495a5b39a36eae8fa66639c18b6578b22367a922274  artifacts/claude-cre333-20260924/run/arm_T.jsonl
+1c54a0d13b84b86bafd611f8eae57167cc70966e845b6f04f7d7437537ed081b  artifacts/claude-cre333-20260924/run/judge_creative.jsonl
+715dc801ffb94365b0698835604bd76e0feac4eead56254930584830acb59165  artifacts/claude-cre333-20260924/run/judge_key.json
+4b05adf82e5a2573cd0a4e8ecbb6ca303fc76cfe7fda29abb2e4ba86f7b59435  artifacts/claude-cre333-20260924/run/summary.json
+634c63aa7b3f8360021fcb38ea557c9fe7b3f2d1ebeae21c4a8f755118b300de  artifacts/claude-cre333-20260924/SEAL-code-rent.sha256.txt
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with numpy python -B -c "
+import json
+from pathlib import Path
+d = Path('artifacts/claude-cre333-20260924/run')
+for f in ['arm_B.jsonl','arm_P.jsonl','arm_T.jsonl']:
+    rows=[json.loads(x) for x in (d/f).read_text().splitlines() if x.strip()]
+    kinds={}
+    for r in rows: kinds[r['kind']]=kinds.get(r['kind'],0)+1
+    print(f, len(rows), kinds)
+"
+arm_B.jsonl 70 {'creative': 40, 'control_teach': 15, 'control_ask': 15}
+arm_P.jsonl 70 {'creative': 40, 'control_teach': 15, 'control_ask': 15}
+arm_T.jsonl 70 {'creative': 40, 'control_teach': 15, 'control_ask': 15}
+[0m
+[0m$ [0mdate -u; vastai destroy instance 52451674 2>&1 | tail -3; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import sys,json; data=json.load(sys.stdin); print([ (i.get('id'),i.get('label')) for i in data])" 2>&1 | tail -2
+Thu Sep 24 17:03:59 UTC 2026
+Are you sure you want to destroy instance 52451674? This is irreversible and will delete all data. [y/N] 
+Aborted.
+[(52445364, 'cairn-full-0'), (52445369, 'cairn-full-1'), (52446207, 'cairn-full-2'), (52451674, 'rent-333b-creative'), (52452309, 'rent-twinb'), (52453726, 'rent-330c-dev')]
+[0m
+[0m$ [0mecho y | vastai destroy instance 52451674 2>&1 | tail -3; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import sys,json; data=json.load(sys.stdin); print(sorted([(i.get('id'),i.get('label')) for i in data]))" 2>&1 | tail -2
+Are you sure you want to destroy instance 52451674? This is irreversible and will delete all data. [y/N] destroying instance 52451674.
+[(52445364, 'cairn-full-0'), (52445369, 'cairn-full-1'), (52446207, 'cairn-full-2'), (52452309, 'rent-twinb'), (52453726, 'rent-330c-dev')]
+[0m
+[0m# [0mTodos
+[✓] Fetch + read specs (PASSMARKS, checks)
+[✓] DUPLICATE + credit + instance check
+[✓] Build code tree per rent-kit
+[✓] Rental loop (max 4) + run arms B/P/T + score
+[•] Copy back, check, destroy, ledger, RESULTS-rent-b.md, push list
+[0m
+[0m← [0mWrite artifacts/claude-cre333-20260924/RESULTS-rent-b.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- P333b-rent OUTCOME (2026-09-24, rent-333b-creative REGISTERED exp-333 creative-v1 run on rented Linux GPU; re-queue of rent-333-creative HOST-FAIL, count fresh) contract 52451674 RTX 5090 1x offer 52190830 KR 16 cores rel 0.9985 label rent-333b-creative image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: rented ~16:44Z, running ~16:47Z, destroyed ~17:04Z ≈0.34 h x $0.4690/h ≈$0.16 (budget $1.50, credit $6.56 at start); post-destroy 0 rent-333b-creative live. Panel SEAL 3/3 OK, SEAL-code-rent 4/4 written pre-run, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, self122 5ca02173 match. Arms (wall B 5 s/P 60 s/T 311 s/score ok): arm_B/P/T 70 rows each (40 creative + 30 control); scorer P333.1 0 PASS (bar 0), P333.2 17/30 FAIL (bar ≥29/30); P routed 13 controls/25 creative, fallbacks 25, P creative ms median 1172.3; P333.3-5 judged later. run/ (7 files) copied back and sha-checked before destroy. Code unedited, panel never opened/quoted, judge_creative.jsonl never opened, no reply quoted. See artifacts/claude-cre333-20260924/RESULTS-rent-b.md.
+EOF
+tail -1 artifacts/fable-predictions-ledger.md | head -c 300; echo; git status --short | head -15
+- P333b-rent OUTCOME (2026-09-24, rent-333b-creative REGISTERED exp-333 creative-v1 run on rented Linux GPU; re-queue of rent-333-creative HOST-FAIL, count fresh) contract 52451674 RTX 5090 1x offer 52190830 KR 16 cores rel 0.9985 label rent-333b-creative image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+[0m
+[0m$ [0mgit status --short artifacts/claude-cre333-20260924/ artifacts/fable-predictions-ledger.md
+M artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-cre333-20260924/RESULTS-rent-b.md artifacts/claude-cre333-20260924/run/arm_B.jsonl 2>&1; git status --short --untracked-files=all artifacts/claude-cre333-20260924/ 2>&1 | head; ls artifacts/claude-cre333-20260924/
+.gitignore:5:artifacts/	artifacts/claude-cre333-20260924/RESULTS-rent-b.md
+.gitignore:5:artifacts/	artifacts/claude-cre333-20260924/run/arm_B.jsonl
+PASSMARKS.md
+RESULTS-rent-b.md
+RESULTS-rent.md
+RESULTS-run.md
+run
+SEAL-code-rent.sha256.txt
+SEAL-code.sha256.txt
+[0m
+[0m# [0mTodos
+[✓] Fetch + read specs (PASSMARKS, checks)
+[✓] DUPLICATE + credit + instance check
+[✓] Build code tree per rent-kit
+[✓] Rental loop (max 4) + run arms B/P/T + score
+[✓] Copy back, check, destroy, ledger, RESULTS-rent-b.md, push list
+[0m
