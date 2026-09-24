@@ -1,0 +1,8 @@
+DATA LOSS note (builder rsn-296, 2026-09-24): this directory should hold train_log.jsonl,
+train_summary.json, dev-copy.json, dev-final.json, panel296-copy/final.json and panel294-copy/final.json
+for this run. Those files were staged on the training GPU box but never copied back before the box was
+destroyed, and the recovery rental could not be entered (ssh key rejected; rental cap of 4 reached, box
+destroyed, 0 instances live). The category-level counts that those files contained are preserved verbatim
+in artifacts/claude-rsn296-20260924/RESULTS.md (marks table + panel totals + training endpoints). Checkpoints
+for this run are kept at ~/premonition-models/rsn296/<run>/ with sha256 matching SEAL-run.sha256.txt.
+Panels were never read item by item; evals ran once per checkpoint (24/24, no failures).
