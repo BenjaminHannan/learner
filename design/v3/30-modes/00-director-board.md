@@ -19,6 +19,8 @@ Rule: Claude directs, Muse Spark agents build/research (MiMo fallback). Every re
 
 ## Verified today (2026-09-21)
 
+- **GPU CALENDAR update (director, 11:00 UTC 2026-09-24; rebalance: design/v3/30-modes/330r-rebalance-2026-09-24.md):** BensPC daytime slots added: Fri 09-25 = 338 open conversation (after own-M1v's verdict); Sat 09-26 daytime = 339 learned style preferences, then rsn-299 think-then-answer. Nights Sat 26 / Sun 27 / Mon 28 (ET) stay reserved for the dress rehearsal, 336 and 336b; a daytime job still running at 20:00 ET must yield (its task file needs a time cap that ends by then). Rentals: none needed ($0).
+
 - **296b = registered FAIL (reasoning line, 2026-09-24; artifacts/claude-rsn296b-20260924/VERIFY-director.md):** "told the answer after a miss". It taught COUNTING: generated counts 1–7 went from fixed picks to 200/200, fresh counting 12 to 29/30, transfer 261 and 255. Comparing stays at chance: 93 and 88 of 200 vs a bar of 160, so the idea-killer P296b.2 trips. Seed 1's fresh total is 226 vs 228. Before/after got worse (unexplained). 0 made-up answers after the fact-check. $0.60, files copied back before the destroy. The 296 follow-up is used up; comparing needs a readout change under a new number.
 
 - **296 recount from files (reasoning line, 2026-09-24; artifacts/claude-rsn296-20260924/VERIFY-recount.md):** a CPU re-eval of all 8 checkpoints (seal-matched) restored the JSONs. P296.1 = PASS: 0 checked inventions on both seeds and both panels; the builder's 5 and 6 were raw counts, before the fact-check. The finals match RESULTS.md exactly. 296 = registered FAIL on P296.4 only.
