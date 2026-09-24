@@ -19,6 +19,8 @@ Rule: Claude directs, Muse Spark agents build/research (MiMo fallback). Every re
 
 ## Verified today (2026-09-21)
 
+- **rsn-299 = registered FAIL on P299.1 (reasoning line, 2026-09-24; artifacts/claude-rsn299-20260924/VERIFY-director.md):** think, then answer, with an exact calculator filling every "=". Blind thinkpanel299: plain MiniCPM5-1B 28/60, calculator 32/60 (+4 vs a bar of +12). 0 arithmetic errors; 27 wrong vs 29. The gains are clock and weekday sums (TIME 1 to 6). The 24 shared misses are setup errors, and neither arm ever says "not sure". Not in 0.1 under the 330r rule.
+
 - **GPU CALENDAR update (director, 11:00 UTC 2026-09-24; rebalance: design/v3/30-modes/330r-rebalance-2026-09-24.md):** BensPC daytime slots added: Fri 09-25 = 338 open conversation (after own-M1v's verdict); Sat 09-26 daytime = 339 learned style preferences, then rsn-299 think-then-answer. Nights Sat 26 / Sun 27 / Mon 28 (ET) stay reserved for the dress rehearsal, 336 and 336b; a daytime job still running at 20:00 ET must yield (its task file needs a time cap that ends by then). Rentals: none needed ($0).
 
 - **296b = registered FAIL (reasoning line, 2026-09-24; artifacts/claude-rsn296b-20260924/VERIFY-director.md):** "told the answer after a miss". It taught COUNTING: generated counts 1–7 went from fixed picks to 200/200, fresh counting 12 to 29/30, transfer 261 and 255. Comparing stays at chance: 93 and 88 of 200 vs a bar of 160, so the idea-killer P296b.2 trips. Seed 1's fresh total is 226 vs 228. Before/after got worse (unexplained). 0 made-up answers after the fact-check. $0.60, files copied back before the destroy. The 296 follow-up is used up; comparing needs a readout change under a new number.
