@@ -8,8 +8,9 @@ answered "Yes, I'm sure about that." 338's guards check names and numbers, not y
 What: install_chat338b(loop, gen) installs 338 with a generator stand-in. When 338's chat phase would ask the
 1B about a turn that is a question about the user or their people (people_question below), the stand-in
 returns HONEST338B instead of samples, so the reply is an honest "not sure" and the 1B never answers
-about the user's own people. Every other turn goes to the 1B exactly as in 338. Counter:
-loop.chat338b_stats["diverted"].
+about the user's own people. Every other turn goes to the 1B as in 338, except that samples with a
+sentence-initial "Your <relation> <unknown Name>" are dropped first (338's G2 only matched a lowercase "your").
+Counters: loop.chat338b_stats["diverted"], ["g2_capital"].
 
 people_question(text, names): the text is a question ("?" anywhere, or a sentence that opens like a question)
 AND either it asks to recall ("again", "remind me", "did I", "I told you", ...) or ends a statement with a check
@@ -92,9 +93,20 @@ class PeopleGuard338b:
         if people_question(text, notebook_names(self.loop)):
             self.loop.chat338b_stats["diverted"] += 1
             return [HONEST338B]
-        return self.gen.sample_chat(msgs, n)
+        out = self.gen.sample_chat(msgs, n)
+        known = C38._words([m["content"] for m in msgs])
+        keep = [c for c in out if not _g2_capital(C38.trim(c), known)]
+        self.loop.chat338b_stats["g2_capital"] += len(out) - len(keep)
+        return keep
+
+
+def _g2_capital(c: str, known: set[str]) -> bool:
+    """338's G2 pattern only matches a lowercase "your"; check sentence-initial "Your <relation> <Name>" too."""
+    if "Your " not in c:
+        return False
+    return C38.guard(re.sub(r"\bYour\b", "your", c), "", known) == "G2"
 
 
 def install_chat338b(loop, gen, n: int = C38.N338) -> None:
-    loop.chat338b_stats = {"diverted": 0}
+    loop.chat338b_stats = {"diverted": 0, "g2_capital": 0}
     C38.install_chat338(loop, PeopleGuard338b(gen, loop), n)

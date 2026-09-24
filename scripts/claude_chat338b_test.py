@@ -82,6 +82,9 @@ def test_install():
     assert g.calls == 0 and loop.chat338b_stats["diverted"] == 1
     assert loop.turn("how do volcanoes work?") == ["Yes, I'm sure about that."]
     assert g.calls == 1
+    g.sample_chat = lambda msgs, n: ["Your sister Tilda would know!", "Volcanoes vent magma from below."]
+    assert loop.turn("how do geysers work?") == ["Volcanoes vent magma from below."]
+    assert loop.chat338b_stats["g2_capital"] == 1
 
 
 if __name__ == "__main__":
