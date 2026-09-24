@@ -114,9 +114,11 @@ def score_ask(t: dict, row: dict, conf: dict | None) -> str:
 
 def score_arm(name: str, turns: list[dict], truth: list[dict], rows: list[dict], out: Path) -> dict:
     tkey = {(t["life_id"], t["turn_index"]): t for t in turns}
+    lives_run = {r["life_id"] for r in rows}
     truth_by = defaultdict(list)
     for f in truth:
-        truth_by[f["life_id"]].append(f)
+        if f["life_id"] in lives_run:          # score only the lives this arm ran
+            truth_by[f["life_id"]].append(f)
     user_rows = [r for r in rows if r["kind"] == "user"]
     conf_rows = {(r["life_id"], r["turn_index"]): r for r in rows if r["kind"] == "confirm_answer"}
     res: dict = {"arm": name, "user_rows": len(user_rows), "confirm_rows": len(conf_rows)}

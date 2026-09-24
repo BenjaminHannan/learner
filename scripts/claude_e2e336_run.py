@@ -199,7 +199,9 @@ def main() -> int:
     ap.add_argument("--name", default=None, help="output arm name (default: --arm)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--lives", default="", help="comma-separated life ids (default all)")
-    ap.add_argument("--model", default="", help="model dir for arms that need one")
+    ap.add_argument("--model", default="", help="model dir for arms that need one (reader / twin)")
+    ap.add_argument("--gen-model", default="", help="base MiniCPM5-1B dir for creative (333)")
+    ap.add_argument("--mouth-model", default="", help="mouth model dir (own line)")
     args = ap.parse_args()
 
     bank = Path(args.bank)
