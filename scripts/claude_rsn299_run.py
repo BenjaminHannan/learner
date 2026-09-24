@@ -30,7 +30,8 @@ MAX_NEW = 420          # total new tokens per question, tool results not counted
 MAX_CALLS = 16
 
 HEAD_T = ("Solve each question step by step. Write every calculation inside << >> and a calculator "
-          "fills in the exact result after it. The calculator knows + - * / ( ), round(x, 2), ceil(x), "
+          "fills in the exact result after it. A clock time like 19:40 or a weekday like Monday can be used "
+          "directly: <<19:40+75>>, <<17:10-9:30>>, <<Monday+9>>. The calculator knows + - * / ( ), round(x, 2), ceil(x), "
           "floor(x), min(...), max(...), t(\"9:47\") for a clock time in minutes, hhmm(minutes) to turn "
           "minutes back into a clock time, day(\"Tuesday\") and dayname(n) for weekdays, count(\"a, b, c\") "
           "to count items, letters(\"word\") to count letters, and biggest(\"A\", 3, \"B\", 4) or "
@@ -39,45 +40,48 @@ HEAD_T = ("Solve each question step by step. Write every calculation inside << >
 HEAD_P = ("Solve each question step by step. Show each calculation. End with one line \"Answer: ...\". "
           "If a needed fact is missing, write \"Answer: I'm not sure\" and say what is missing.\n\n")
 
-# the same six worked examples for both arms; T writes <<expr>>=result, P writes the arithmetic out
+# the same worked examples for both arms: each step is (tool-arm text, plain-arm text)
 EXAMPLES = [
     ("A café sells muffins for 2.40 each and coffee for 3.10. Tom buys 3 muffins and 2 coffees and pays "
      "with a 20 note. How much change does he get?",
-     [("Muffins cost ", "3*2.40", "7.2", "."), ("Coffees cost ", "2*3.10", "6.2", "."),
-      ("Total is ", "7.2+6.2", "13.4", "."), ("Change is ", "20-13.4", "6.6", ".")], "6.6"),
+     [("Muffins cost <<3*2.40>>=7.2.", "Muffins cost 3*2.40 = 7.2."),
+      ("Coffees cost <<2*3.10>>=6.2.", "Coffees cost 2*3.10 = 6.2."),
+      ("Total is <<7.2+6.2>>=13.4.", "Total is 7.2+6.2 = 13.4."),
+      ("Change is <<20-13.4>>=6.6.", "Change is 20-13.4 = 6.6.")], "6.6"),
     ("A bus leaves at 8:52 and the trip takes 1 h 25 min. What time does it arrive?",
-     [("The trip is ", "60+25", "85", " minutes."), ("Arrival is ", "hhmm(t(\"8:52\")+85)", "10:17", ".")],
-     "10:17"),
+     [("The trip is <<60+25>>=85 minutes.", "The trip is 60+25 = 85 minutes."),
+      ("Arrival is <<8:52+85>>=10:17.", "Arrival is 8:52 plus 85 minutes, which is 10:17.")], "10:17"),
+    ("The shop is open from 9:30 to 17:10. How many minutes is it open?",
+     [("Open time is <<17:10-9:30>>=460 minutes.", "From 9:30 to 17:10 is 7 hours 40 minutes, which is 7*60+40 = 460 minutes.")],
+     "460"),
+    ("Today is Monday. What day will it be 9 days from now?",
+     [("9 days after Monday is <<Monday+9>>=Wednesday.", "9 days is 1 week and 2 days, and 2 days after Monday is Wednesday.")],
+     "Wednesday"),
     ("My shopping list: milk, rice, apples, bread, pears, cheese, plums. How many of these are fruits?",
-     [("The fruits are apples, pears, plums. Counting them: ", "count(\"apples, pears, plums\")", "3", ".")],
-     "3"),
+     [("The fruits are apples, pears, plums. Counting them: <<count(\"apples, pears, plums\")>>=3.",
+       "The fruits are apples, pears, plums. Counting them gives 3.")], "3"),
     ("Brand Kello costs 3.60 for 450 g and brand Moss costs 2.90 for 350 g. Which is cheaper per gram?",
-     [("Kello per gram is ", "3.60/450", "0.008", "."), ("Moss per gram is ", "2.90/350", "0.0083", "."),
-      ("The cheaper one is ", "smallest(\"Kello\", 3.60/450, \"Moss\", 2.90/350)", "Kello", ".")], "Kello"),
+     [("Kello per gram is <<3.60/450>>=0.008.", "Kello per gram is 3.60/450 = 0.008."),
+      ("Moss per gram is <<2.90/350>>=0.0083.", "Moss per gram is 2.90/350 = 0.0083."),
+      ("The cheaper one is <<smallest(\"Kello\", 0.008, \"Moss\", 0.0083)>>=Kello.",
+       "0.008 is less than 0.0083, so the cheaper one is Kello.")], "Kello"),
     ("47 guests are coming and each table seats 6. How many tables do we need?",
-     [("Tables needed is ", "ceil(47/6)", "8", ".")], "8"),
+     [("Tables needed is <<ceil(47/6)>>=8.", "47/6 = 7.83, rounded up that is 8 tables.")], "8"),
     ("A lamp costs 24 and a rug costs more than the lamp. How much do both cost together?",
-     [("The rug's price is never given, so the total can't be worked out.", None, None, "")],
+     [("The rug's price is never given, so the total can't be worked out.",
+       "The rug's price is never given, so the total can't be worked out.")],
      "I'm not sure (the rug's price is missing)"),
+    ("Parking is 3 an hour for cars. We come with one car and one van for 2 hours. What do we pay?",
+     [("The price for a van is never given, so the total can't be worked out.",
+       "The price for a van is never given, so the total can't be worked out.")],
+     "I'm not sure (the van price is missing)"),
 ]
 
 
 def _ex_text(arm):
     out = []
     for q, steps, ans in EXAMPLES:
-        lines = [f"Question: {q}", "Steps:"]
-        for pre, expr, res, post in steps:
-            if expr is None:
-                lines.append(pre)
-            elif arm == "T":
-                lines.append(f"{pre}<<{expr}>>={res}{post}")
-            else:
-                shown = expr
-                shown = re.sub(r'hhmm\(t\("(\d+:\d+)"\)\+(\d+)\)', r"\1 plus \2 minutes", shown)
-                shown = re.sub(r'count\("([^"]*)"\)', r"\1", shown)
-                shown = re.sub(r'smallest\("(\w+)", ([^,]+), "(\w+)", ([^)]+)\)', r"the lower of \1 and \3", shown)
-                shown = re.sub(r"ceil\((\d+)/(\d+)\)", r"\1/\2 rounded up", shown)
-                lines.append(f"{pre}{shown} = {res}{post}")
+        lines = [f"Question: {q}", "Steps:"] + [(st_t if arm == "T" else st_p) for st_t, st_p in steps]
         lines.append(f"Answer: {ans}")
         out.append("\n".join(lines))
     return "\n\n".join(out) + "\n\n"
@@ -206,7 +210,7 @@ def judge(gold: dict, ans: str) -> str:
     return "wrong"
 
 
-EQ = re.compile(r"(-?\d+(?:\.\d+)?)\s*([+\-x×*/÷])\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)")
+EQ = re.compile(r"(?<![\d:.*/+×÷x\-])(?<![*/+×÷x\-] )(-?\d+(?:\.\d+)?)\s*([+\-x×*/÷])\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)(?![\d:])")
 
 
 def arith_errors(steps: str) -> int:

@@ -11,11 +11,14 @@ functions below are allowed (checked on the parsed tree; nothing is exec'd).
   weekdays     day("Tuesday") -> 0..6 (Monday = 0);  dayname(n) -> weekday name (wraps)
   counting     count("a, b, c") -> number of comma-separated items;  letters("word") -> letters
   comparing    biggest("A", 3, "B", 4) -> "B";  smallest("A", 3, "B", 4) -> "A"
+  shortcuts    a bare clock time or weekday works too: 19:40+75 -> 20:55, 15:45-7:15 -> 510,
+               Thursday+12 -> Tuesday
 """
 from __future__ import annotations
 
 import ast
 import math
+import re
 import operator as op
 
 DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -110,11 +113,33 @@ def fmt(v) -> str:
     return str(v)
 
 
+_CLOCK = re.compile(r'(?<!["\'\w])(\d{1,2}:\d{2})(?!["\'\w])')
+_WDAY = re.compile(r'(?<!["\'\w])(' + "|".join(DAYS) + r')(?!["\'\w])', re.I)
+
+
+def _plain(expr: str) -> tuple[str, int, int]:
+    """bare clock times and weekday names are turned into t("..") / day(".."), counted."""
+    k_clock = len(_CLOCK.findall(expr))
+    k_day = len(_WDAY.findall(expr))
+    expr = _CLOCK.sub(lambda m: f't("{m.group(1)}")', expr)
+    expr = _WDAY.sub(lambda m: f'day("{m.group(1)}")', expr)
+    return expr, k_clock, k_day
+
+
 def calc(expr: str) -> str:
-    """exact result as text, or 'error' (the model then sees =error and can rewrite)."""
+    """exact result as text, or 'error' (the model then sees =error and can rewrite).
+    A bare clock time plus or minus minutes gives a clock time ("19:40+75" -> "20:55"); two clock
+    times subtracted give minutes ("15:45-7:15" -> "510"); a bare weekday plus or minus days gives a
+    weekday ("Thursday+12" -> "Tuesday")."""
     try:
-        tree = ast.parse(expr.strip().replace("×", "*").replace("÷", "/"), mode="eval")
-        return fmt(_ev(tree))
+        e, k_clock, k_day = _plain(expr.strip().replace("×", "*").replace("÷", "/"))
+        v = _ev(ast.parse(e, mode="eval"))
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            if k_clock == 1 and "hhmm(" not in e:
+                return _hhmm(v)
+            if k_day == 1 and k_clock == 0 and "dayname(" not in e and "day(" in e:
+                return _dayname(v)
+        return fmt(v)
     except Exception:
         return "error"
 
@@ -123,6 +148,8 @@ if __name__ == "__main__":
     tests = {"3*12+2": "38", "(19.99*3)*0.85": "50.9745", "hhmm(t('9:47')+98)": "11:25",
              "dayname(day('Tuesday')+10)": "Friday", "count('apple, pear, fig')": "3",
              "letters('banana')": "6", "biggest('Oslo', 3, 'Rome', 4.5)": "Rome",
-             "ceil(47/12)": "4", "__import__('os')": "error", "round(10/3, 2)": "3.33"}
+             "ceil(47/12)": "4", "__import__('os')": "error", "round(10/3, 2)": "3.33",
+             "19:40+75": "20:55", "15:45-7:15": "510", "Thursday+12": "Tuesday", "23:30+45": "00:15",
+             "day('Friday')": "4"}
     bad = {k: (calc(k), v) for k, v in tests.items() if calc(k) != v}
     print("selftest ok" if not bad else f"selftest FAIL {bad}")
