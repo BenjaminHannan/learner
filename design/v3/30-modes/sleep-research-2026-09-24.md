@@ -235,8 +235,11 @@ the scored 339 and 296 panels may be used once as a secondary transfer check, ne
 
 ## 5. Open questions (candidates for an outside opinion)
 
-1. Train sleep into the ~30M loop reasoner (Ben's brain-style design, cheap, four FAILs) or a LoRA on the
-   1B (knows English, plans badly per 299)? What single result would settle it?
+1. DECIDED by Ben (19:17 UTC 2026-09-24): sleep trains the small loop reasoner, not the 1B, and the
+   reasoner "should become much bigger". Plan: grow it in steps. C1's registered arm stays at ~30.8M
+   (one change); a report-only arm runs the same ladder generator at ~3x size (~100M, under the $4/job
+   cap) to show whether size is the limit. A ~10x model (~$10-20/run) needs Ben's okay on money.
+   Open part: how big, and when, given the failures so far came from coverage and readout, not size.
 2. Can a 1B read *what* a preference is from the next turn, or is that too hard at this size?
 3. Lures built by the same code that checks them may be too easy. How do we make lures that are hard for
    the model but still exactly checkable?
