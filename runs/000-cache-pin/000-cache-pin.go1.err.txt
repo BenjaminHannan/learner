@@ -1,0 +1,2083 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mls -R ~/.cache/huggingface/hub 2>&1 | head -n 200; echo "---EXIT:$?---"; ls -ld ~/.cache/huggingface/hub 2>&1; date -u; pwd; git rev-parse --show-toplevel 2>&1
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+---EXIT:0---
+drwxr-xr-x  3 ben-hannan  staff  96 Sep 23 22:17 /Users/ben-hannan/.cache/huggingface/hub
+Thu Sep 24 04:23:50 UTC 2026
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mls -R ~/premonition-models/ 2>&1 | head -n 100; echo "---"; ls runs/ 2>&1 | head -n 100; echo "---"; ls ~/premonition-watch/ 2>&1 | head -n 100
+lis300-merged
+lis301-merged
+own-m1-mouth
+own-m1n-mouth
+rsn294
+
+/Users/ben-hannan/premonition-models//lis300-merged:
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+
+/Users/ben-hannan/premonition-models//lis301-merged:
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+
+/Users/ben-hannan/premonition-models//own-m1-mouth:
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+
+/Users/ben-hannan/premonition-models//own-m1n-mouth:
+merged
+
+/Users/ben-hannan/premonition-models//own-m1n-mouth/merged:
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+
+/Users/ben-hannan/premonition-models//rsn294:
+loop-s1
+loop-s2
+plain-s1
+plain-s2
+
+/Users/ben-hannan/premonition-models//rsn294/loop-s1:
+copy_only.pt
+final.pt
+
+/Users/ben-hannan/premonition-models//rsn294/loop-s2:
+copy_only.pt
+final.pt
+
+/Users/ben-hannan/premonition-models//rsn294/plain-s1:
+copy_only.pt
+final.pt
+
+/Users/ben-hannan/premonition-models//rsn294/plain-s2:
+copy_only.pt
+final.pt
+---
+000-vast-rescue
+own-probe-1
+---
+outbox
+queue
+status.txt
+watch.log
+watcher.new
+watcher.sh
+[0m
+[0m$ [0mls -la ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/; du -sh ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/; ls -la runs/; cat ~/premonition-watch/status.txt 2>&1 | head -n 50
+total 177944
+drwxr-xr-x  5 ben-hannan  staff       160 Sep 23 22:17 .
+drwxr-xr-x  3 ben-hannan  staff        96 Sep 23 22:17 ..
+-rw-r--r--  1 ben-hannan  staff       612 Sep 23 22:17 config.json
+-rw-r--r--  1 ben-hannan  staff  90868376 Sep 23 22:17 model.safetensors
+-rw-r--r--  1 ben-hannan  staff    231508 Sep 23 22:17 vocab.txt
+ 87M	/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/
+total 0
+drwxr-xr-x   4 ben-hannan  staff  128 Sep 23 15:05 .
+drwxr-xr-x  30 ben-hannan  staff  960 Sep 23 14:40 ..
+drwxr-xr-x   3 ben-hannan  staff   96 Sep 23 14:41 000-vast-rescue
+drwxr-xr-x   5 ben-hannan  staff  160 Sep 23 15:07 own-probe-1
+2026-09-24 00:23:43
+running:
+000-cache-pin.running
+lis-e2e-dev.running
+nb-321-run.running
+rsn-296-guard.running
+rsn-296-train.running
+launched (no exit yet) / finished:
+     303
+
+2026-09-23 08:22:24 load 72, holding new launches (       2 running)
+2026-09-23 08:24:28 load 98, holding new launches (       2 running)
+2026-09-23 08:26:33 load 90, holding new launches (       2 running)
+2026-09-23 08:28:37 load 87, holding new launches (       2 running)
+2026-09-23 08:30:42 load 87, holding new launches (       2 running)
+2026-09-23 08:32:46 load 94, holding new launches (       2 running)
+2026-09-23 08:34:51 load 103, holding new launches (       2 running)
+2026-09-23 08:36:55 load 96, holding new launches (       2 running)
+2026-09-23 08:39:00 load 68, holding new launches (       2 running)
+2026-09-23 08:47:18 load 73, holding new launches (       2 running)
+2026-09-23 08:49:25 load 69, holding new launches (       2 running)
+2026-09-23 08:53:54 pushed lis-300-train
+2026-09-23 08:57:34 pushed rsn-292-build2
+2026-09-23 09:20:26 launch talk-241b-wall
+2026-09-23 09:56:29 pushed talk-241b-wall
+2026-09-23 09:56:30 launch lis-300-publish
+2026-09-23 09:56:30 launch lis-311-chat292
+2026-09-23 09:56:30 launch talk-280p-panel
+2026-09-23 09:56:30 launch talk-280p-run
+2026-09-23 09:58:45 pushed talk-280p-panel
+2026-09-23 10:01:27 pushed lis-300-publish
+2026-09-23 10:01:39 pushed talk-280p-run
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+2026-09-23 13:59:25 watcher started (pid 16015)
+2026-09-23 13:59:26 orphan finished lis-311-chat292
+2026-09-23 13:59:32 pushed lis-311-chat292
+2026-09-23 13:59:32 launch lis-301-train
+2026-09-23 13:59:32 launch lis-311b-chat292
+2026-09-23 13:59:32 launch talk-280p-probe
+2026-09-23 13:59:33 launch talk-292t-build
+2026-09-23 13:59:33 launch talk-292t-panel
+2026-09-23 14:03:52 pushed talk-292t-panel
+2026-09-23 14:03:53 launch talk-f0-base
+2026-09-23 14:06:08 pushed talk-280p-probe
+2026-09-23 14:06:09 launch own-m0-mouthdata
+2026-09-23 14:10:27 pushed lis-311b-chat292
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/minilm runs/000-cache-pin && cp -R ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 ~/premonition-models/minilm/ && ls -R ~/premonition-models/minilm/ && echo "COPY-OK"
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+COPY-OK
+[0m
+[0m$ [0mpython3 -c "import hashlib, pathlib, os; src=pathlib.Path('/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2'); dst=pathlib.Path('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2'); print('src exists:', src.exists()); print('dst exists:', dst.exists()); print(list(dst.rglob('*')))" 
+shasum -a 256 ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/*; echo "---"; shasum -a 256 ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/*
+src exists: True
+dst exists: True
+[PosixPath('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'), PosixPath('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41'), PosixPath('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors'), PosixPath('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json'), PosixPath('/Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt')]
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+---
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+[0m
+[0m$ [0mcat > runs/000-cache-pin/pin.txt <<'EOF'
+# CACHE PIN - MiniLM router snapshot - 2026-09-24 04:23 UTC (director task)
+# source: ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+# pinned copy: ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2
+# method: cp -R (copy, not move); sha256 verified source==dest
+EOF
+date -u >> runs/000-cache-pin/pin.txt
+echo "" >> runs/000-cache-pin/pin.txt
+echo "## source sha256:" >> runs/000-cache-pin/pin.txt
+shasum -a 256 ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* >> runs/000-cache-pin/pin.txt
+echo "" >> runs/000-cache-pin/pin.txt
+echo "## pinned copy sha256:" >> runs/000-cache-pin/pin.txt
+shasum -a 256 ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* >> runs/000-cache-pin/pin.txt
+echo "" >> runs/000-cache-pin/pin.txt
+echo "## ls source:" >> runs/000-cache-pin/pin.txt
+ls -R ~/.cache/huggingface/hub >> runs/000-cache-pin/pin.txt
+echo "" >> runs/000-cache-pin/pin.txt
+echo "## ls pinned:" >> runs/000-cache-pin/pin.txt
+ls -R ~/premonition-models/minilm/ >> runs/000-cache-pin/pin.txt
+cat runs/000-cache-pin/pin.txt
+# CACHE PIN - MiniLM router snapshot - 2026-09-24 04:23 UTC (director task)
+# source: ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+# pinned copy: ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2
+# method: cp -R (copy, not move); sha256 verified source==dest
+Thu Sep 24 04:24:06 UTC 2026
+
+## source sha256:
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+
+## pinned copy sha256:
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+
+## ls source:
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+
+## ls pinned:
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+[0m
+[0m→ [0mRead runs/own-probe-1
+[0m
+[0m$ [0mls -R runs/ 2>&1 | head -n 100; echo "==="; ls ~/premonition-watch/queue/ ~/premonition-watch/outbox/ 2>&1 | head -n 100; echo "==="; cat ~/premonition-watch/watcher.sh 2>&1 | head -n 200
+000-cache-pin
+000-vast-rescue
+own-probe-1
+
+runs//000-cache-pin:
+pin.txt
+
+runs//000-vast-rescue:
+instances.txt
+
+runs//own-probe-1:
+instances.txt
+progress.txt
+replies-tail.txt
+===
+/Users/ben-hannan/premonition-watch/outbox/:
+artifacts
+design
+runs
+scripts
+status
+
+/Users/ben-hannan/premonition-watch/queue/:
+000-cache-pin.go1.err.txt
+000-cache-pin.go1.reply.md
+000-cache-pin.md
+000-cache-pin.running
+000-ckpt-copy.exit
+000-ckpt-copy.go1.done
+000-ckpt-copy.go1.err.txt
+000-ckpt-copy.go1.reply.md
+000-ckpt-copy.md
+000-ckpt-copy.pushed
+000-smoke.exit
+000-smoke.go1.done
+000-smoke.go1.err.txt
+000-smoke.go1.reply.md
+000-smoke.md
+000-smoke.pushed
+000-vast-rescue.exit
+000-vast-rescue.go1.done
+000-vast-rescue.go1.err.txt
+000-vast-rescue.go1.reply.md
+000-vast-rescue.md
+000-vast-rescue.pushed
+000-watcher-dedupe.exit
+000-watcher-dedupe.go1.done
+000-watcher-dedupe.go1.err.txt
+000-watcher-dedupe.go1.reply.md
+000-watcher-dedupe.md
+000-watcher-dedupe.pushed
+000-watcher-upgrade.exit
+000-watcher-upgrade.go1.done
+000-watcher-upgrade.go1.err.txt
+000-watcher-upgrade.go1.reply.md
+000-watcher-upgrade.md
+000-watcher-upgrade.pushed
+261b-build.exit
+261b-build.go1.done
+261b-build.go1.err.txt
+261b-build.go1.reply.md
+261b-build.md
+261b-build.pushed
+261b-panel.exit
+261b-panel.go1.done
+261b-panel.go1.err.txt
+261b-panel.go1.reply.md
+261b-panel.md
+261b-panel.pushed
+263-build.exit
+263-build.go1.done
+263-build.go1.err.txt
+263-build.go1.reply.md
+263-build.md
+263-build.pushed
+263-panel.exit
+263-panel.go1.done
+263-panel.go1.err.txt
+263-panel.go1.reply.md
+263-panel.md
+263-panel.pushed
+263-probe.exit
+263-probe.go1.done
+263-probe.go1.err.txt
+263-probe.go1.reply.md
+263-probe.md
+263-probe.pushed
+264-build.exit
+264-build.go1.done
+264-build.go1.err.txt
+264-build.go1.reply.md
+264-build.md
+264-build.pushed
+264-panel.exit
+264-panel.go1.done
+264-panel.go1.err.txt
+264-panel.go1.reply.md
+264-panel.md
+264-panel.pushed
+265-build.exit
+265-build.go1.done
+265-build.go1.err.txt
+265-build.go1.reply.md
+265-build.md
+265-build.pushed
+265-panel.exit
+265-panel.go1.done
+265-panel.go1.err.txt
+265-panel.go1.reply.md
+265-panel.md
+265-panel.pushed
+267-devset.exit
+267-devset.go1.done
+267-devset.go1.err.txt
+267-devset.go1.reply.md
+===
+#!/bin/bash
+# watcher.sh: runs Muse builder tasks that the cloud director pushes to GitHub, and pushes the results back.
+# The director (a cloud Claude session) cannot reach opencode.ai or BensPC, so this runs on Ben's Mac.
+# Every 120 s it:
+#   1. fetches the director's branch and looks for new task files in handoff/queue/*.md;
+#   2. copies each new one to $Q and launches rungo4.sh on it (at most $MAX at once; a task whose
+#      file contains the line "GPU: yes" waits until no other GPU task is running; "GPU: rent" tasks
+#      rent their own cloud GPU and are not gated);
+#   3. when a task finishes (.done, or rungo4 exits), copies its reply/err files plus the paths listed
+#      on its "PUSH:" lines (files under 5 MB only; never notebook/, never weights) into the outbox
+#      clone and pushes them to the branch $OUT.
+# Stop it with: touch ~/premonition-watch/STOP
+set -u
+export OPENCODE_CONFIG_CONTENT='{"snapshot": false}'
+W=/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+H=$HOME/premonition-watch; Q=$H/queue; O=$H/outbox
+IN=main; OUT=builder-outbox; MAX=${MAX:-5}
+RUN="$W/handoff/kit/mimo/rungo4.sh"
+mkdir -p "$Q"; LOG=$H/watch.log
+log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
+if [ ! -d "$O/.git" ]; then   # small separate repo that holds only builder results (no copy of the project)
+  mkdir -p "$O" && git -C "$O" init -q && git -C "$O" remote add origin "$(git -C "$W" remote get-url origin)"
+  git -C "$O" config user.name "$(git -C "$W" config user.name || echo Ben)"; git -C "$O" config user.email "$(git -C "$W" config user.email || echo ben@localhost)"
+  git -C "$O" checkout -q -b "$OUT"
+  if git -C "$O" fetch -q origin "$OUT" 2>/dev/null; then git -C "$O" reset -q --hard FETCH_HEAD; fi
+fi
+publish() {  # $1 = task name; marks $Q/$n.pushed on success
+  local n="$1" d="$O/runs/$n"; mkdir -p "$d"
+  cp "$Q/$n".md "$Q/$n".go* "$Q/$n".exit "$d/" 2>/dev/null
+  grep -h '^PUSH:' "$Q/$n.md" | sed 's/^PUSH://' | tr ' ' '\n' | grep -v '^$' | while read -r p; do
+    case "$p" in notebook*|/*|*..*) log "refused push path $p"; continue;; esac
+    (cd "$W" && find $p -type f -size -5M ! -name '*.pt' ! -name '*.safetensors' ! -name '*.gguf' ! -name '*.bin' 2>/dev/null) | while read -r f; do
+      mkdir -p "$O/$(dirname "$f")"; cp "$W/$f" "$O/$f"; done
+  done
+  (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add -A && git commit -qm "builder results: $n"; git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 \
+    && touch "$Q/$n.pushed" && log "pushed $n" || log "push failed $n (retry next round)"
+}
+log "watcher started (pid $$)"
+while [ ! -e "$H/STOP" ]; do
+  git -C "$W" fetch -q origin "$IN" 2>>"$LOG"
+  # self-update: when the watcher on $IN changes, restart into the new version (running tasks keep going)
+  if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
+    bash -n "$H/watcher.new" && { mv "$H/watcher.new" "$0"; log "self-update, restarting"; exec bash "$0"; }
+  fi
+  # orphan repair: a task whose watcher subshell died (e.g. an old loop was stopped) still gets published
+  for r in "$Q"/*.running; do [ -e "$r" ] || continue; n=$(basename "$r" .running)
+    pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
+  for e in "$Q"/*.exit; do [ -e "$e" ] || continue; n=$(basename "$e" .exit); [ -e "$Q/$n.pushed" ] || [ -e "$Q/$n.running" ] || publish "$n"; done
+  for f in $(git -C "$W" ls-tree --name-only "origin/$IN" handoff/queue/ 2>/dev/null | grep '\.md$'); do
+    n=$(basename "$f" .md)
+    [ -e "$Q/$n.md" ] && continue
+    running=$(ls "$Q"/*.running 2>/dev/null | wc -l)
+    [ "$running" -ge "$MAX" ] && break
+    load=$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}'); [ -z "$load" ] && load=0
+    if [ "$running" -ge 2 ] && [ "$load" -gt 60 ]; then log "load $load, holding new launches ($running running)"; break; fi
+    freegb=$(df -g / | tail -1 | awk '{print $4}'); if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"; break; fi
+    git -C "$W" show "origin/$IN:$f" > "$Q/$n.md.tmp"
+    if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
+    if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
+    if grep -q '^GPU: yes' "$Q/$n.md.tmp" && grep -l '^GPU: yes' $(ls "$Q"/*.running 2>/dev/null | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then
+      rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
+    fi
+    mv "$Q/$n.md.tmp" "$Q/$n.md"; touch "$Q/$n.running"; log "launch $n"
+    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
+  done
+  # status: every round, publish which tasks are running and the log tail, so the director can see launches
+  { date '+%F %T'; echo "running:"; ls "$Q"/*.running 2>/dev/null | xargs -n1 basename 2>/dev/null; echo "launched (no exit yet) / finished:"; ls "$Q"/*.md 2>/dev/null | wc -l; echo; tail -150 "$LOG"; } > "$H/status.txt"
+  mkdir -p "$O/status"; if ! cmp -s "$H/status.txt" "$O/status/watcher.txt"; then cp "$H/status.txt" "$O/status/watcher.txt"
+    (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --soft FETCH_HEAD; git add status && git commit -qm "watcher status" && git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 || true; fi
+  sleep 120
+done
+log "watcher stopped"
+[0m
+[0m$ [0mecho "=== watch.log size ==="; ls -lh ~/premonition-watch/watch.log; echo "=== grep huggingface in watch.log ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|router" ~/premonition-watch/watch.log 2>&1 | head -n 100; echo "=== grep rm/cache patterns in watch.log ==="; grep -in "rm -rf\|\.cache\|cache purge\|hf cache\|cache.*clean\|clean.*cache\|purge" ~/premonition-watch/watch.log 2>&1 | head -n 200
+=== watch.log size ===
+-rw-r--r--  1 ben-hannan  staff    25K Sep 24 00:23 /Users/ben-hannan/premonition-watch/watch.log
+=== grep huggingface in watch.log ===
+=== grep rm/cache patterns in watch.log ===
+[0m
+[0m$ [0mecho "=== watch.log tail around 22ET Sep23 = 02UTC Sep24? Also local time? ==="; cat ~/premonition-watch/watch.log 2>&1 | tail -n 300
+echo "===SYS-DATE==="; date; date -u; echo "=== queue list ==="; ls -lt ~/premonition-watch/queue/ | head -n 100
+=== watch.log tail around 22ET Sep23 = 02UTC Sep24? Also local time? ===
+2026-09-23 02:49:26 load 90, holding new launches (       3 running)
+2026-09-23 02:51:30 load 64, holding new launches (       3 running)
+2026-09-23 02:53:33 load 105, holding new launches (       3 running)
+2026-09-23 02:55:38 load 117, holding new launches (       3 running)
+2026-09-23 02:57:42 load 115, holding new launches (       3 running)
+2026-09-23 02:59:46 load 120, holding new launches (       3 running)
+2026-09-23 03:01:51 load 131, holding new launches (       3 running)
+2026-09-23 03:03:55 load 118, holding new launches (       3 running)
+2026-09-23 03:05:59 load 101, holding new launches (       3 running)
+2026-09-23 03:08:03 launch rsn-268b-panel
+2026-09-23 03:08:03 launch talk-280-panel
+2026-09-23 03:12:16 pushed talk-280-panel
+2026-09-23 03:12:16 launch talk-281-build
+2026-09-23 03:18:32 pushed talk-280-build
+2026-09-23 03:18:33 launch rsn-291-build
+2026-09-23 03:24:49 pushed rsn-268b-panel
+2026-09-23 03:24:50 launch rsn-291-panel
+2026-09-23 03:35:31 pushed rsn-268b-build
+2026-09-23 03:35:31 launch talk-280b-build
+2026-09-23 03:39:45 pushed rsn-291-panel
+2026-09-23 03:39:45 load 61, holding new launches (       4 running)
+2026-09-23 03:41:49 launch talk-280b-panel
+2026-09-23 03:48:10 pushed talk-280b-panel
+2026-09-23 03:48:11 load 69, holding new launches (       4 running)
+2026-09-23 03:50:15 load 79, holding new launches (       4 running)
+2026-09-23 03:52:21 load 76, holding new launches (       4 running)
+2026-09-23 03:54:26 load 76, holding new launches (       4 running)
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+2026-09-23 03:56:34 load 88, holding new launches (       4 running)
+2026-09-23 03:58:47 load 63, holding new launches (       4 running)
+2026-09-23 04:00:52 load 80, holding new launches (       4 running)
+2026-09-23 04:02:58 load 67, holding new launches (       4 running)
+2026-09-23 04:05:03 load 99, holding new launches (       4 running)
+2026-09-23 04:07:09 load 97, holding new launches (       4 running)
+2026-09-23 04:09:14 launch talk-281-panel
+2026-09-23 04:15:35 pushed talk-281-panel
+2026-09-23 04:15:36 launch talk-282-build
+2026-09-23 04:19:50 pushed talk-280b-build
+2026-09-23 04:19:54 pushed talk-281-build
+2026-09-23 04:19:55 launch talk-282-panel
+2026-09-23 04:22:03 pushed talk-282-panel
+2026-09-23 04:30:21 launch talk-280b-rerun
+2026-09-23 04:30:21 launch talk-281b-build
+2026-09-23 04:32:38 pushed 269-build
+2026-09-23 04:32:39 launch 270-build
+2026-09-23 04:32:39 launch talk-281b-panel
+2026-09-23 04:34:53 pushed talk-280b-rerun
+2026-09-23 04:39:09 pushed talk-281b-panel
+2026-09-23 04:39:09 load 100, holding new launches (       4 running)
+2026-09-23 04:41:15 load 125, holding new launches (       4 running)
+2026-09-23 04:43:26 pushed talk-282-build
+2026-09-23 04:43:26 load 142, holding new launches (       3 running)
+2026-09-23 04:45:32 load 146, holding new launches (       3 running)
+2026-09-23 04:47:36 load 138, holding new launches (       3 running)
+2026-09-23 04:49:41 launch rsn-293-diag
+2026-09-23 04:56:00 pushed rsn-293-diag
+2026-09-23 04:58:04 load 65, holding new launches (       3 running)
+2026-09-23 05:00:08 load 90, holding new launches (       3 running)
+2026-09-23 05:02:18 pushed talk-281b-build
+2026-09-23 05:02:18 load 95, holding new launches (       2 running)
+2026-09-23 05:04:22 load 92, holding new launches (       2 running)
+2026-09-23 05:06:26 load 84, holding new launches (       2 running)
+2026-09-23 05:08:30 load 97, holding new launches (       2 running)
+2026-09-23 05:10:34 load 89, holding new launches (       2 running)
+2026-09-23 05:12:38 load 109, holding new launches (       2 running)
+2026-09-23 05:14:42 load 111, holding new launches (       2 running)
+2026-09-23 05:16:46 load 89, holding new launches (       2 running)
+2026-09-23 05:18:56 pushed 270-build
+2026-09-23 05:18:56 launch 269-resume
+2026-09-23 05:18:56 launch talk-282b-build
+2026-09-23 05:18:56 launch talk-282b-panel
+2026-09-23 05:21:06 pushed talk-282b-panel
+2026-09-23 05:25:15 load 75, holding new launches (       3 running)
+2026-09-23 05:27:20 load 77, holding new launches (       3 running)
+2026-09-23 05:29:25 launch 269-resume2
+2026-09-23 05:29:25 launch own-o0a2-oracle
+2026-09-23 05:35:46 pushed own-o0a2-oracle
+2026-09-23 05:35:47 launch own-o0d2-ear-fix
+2026-09-23 05:40:08 pushed 269-resume2
+2026-09-23 05:40:12 pushed own-o0d2-ear-fix
+2026-09-23 05:40:12 launch own-o0e2-baseline-reseal
+2026-09-23 05:40:12 launch rsn-293-build
+2026-09-23 05:46:32 pushed talk-282b-build
+2026-09-23 05:46:32 load 70, holding new launches (       4 running)
+2026-09-23 05:48:39 pushed own-o0e2-baseline-reseal
+2026-09-23 05:48:40 load 64, holding new launches (       3 running)
+2026-09-23 05:50:44 launch rsn-293-panel
+2026-09-23 05:55:05 pushed rsn-291-build
+2026-09-23 05:57:15 pushed rsn-293-panel
+2026-09-23 06:15:21 pushed rsn-293-build
+2026-09-23 06:21:37 launch talk-280m-build
+2026-09-23 06:21:37 launch talk-280m-panel
+2026-09-23 06:23:57 pushed 269-resume
+2026-09-23 06:26:06 pushed talk-280m-panel
+2026-09-23 06:26:06 launch 271-threshold
+2026-09-23 06:26:07 launch rsn-291-publish
+2026-09-23 06:32:23 load 72, holding new launches (       3 running)
+2026-09-23 06:34:28 load 64, holding new launches (       3 running)
+2026-09-23 06:36:39 pushed 271-threshold
+2026-09-23 06:36:39 load 82, holding new launches (       2 running)
+2026-09-23 06:38:49 pushed rsn-291-publish
+2026-09-23 06:38:49 launch 000-ckpt-copy
+2026-09-23 06:38:49 load 72, holding new launches (       2 running)
+2026-09-23 06:41:02 launch 270b-panel
+2026-09-23 06:41:02 launch own-o0a3-permission
+2026-09-23 06:48:18 pushed 000-ckpt-copy
+2026-09-23 06:48:22 pushed 270b-panel
+2026-09-23 06:48:26 pushed talk-280m-build
+2026-09-23 06:48:27 launch 270b-build
+2026-09-23 06:54:45 pushed own-o0a3-permission
+2026-09-23 07:11:22 launch rsn-292-build
+2026-09-23 07:11:22 launch rsn-292-panel
+2026-09-23 07:13:27 load 66, holding new launches (       3 running)
+2026-09-23 07:17:37 launch lis-310-chat-build
+2026-09-23 07:19:42 load 150, holding new launches (       4 running)
+2026-09-23 07:21:47 load 162, holding new launches (       4 running)
+2026-09-23 07:23:51 load 135, holding new launches (       4 running)
+2026-09-23 07:25:59 pushed rsn-292-build
+2026-09-23 07:25:59 load 85, holding new launches (       3 running)
+2026-09-23 07:28:03 load 73, holding new launches (       3 running)
+2026-09-23 07:30:07 load 86, holding new launches (       3 running)
+2026-09-23 07:32:16 pushed 270b-build
+2026-09-23 07:32:20 pushed lis-310-chat-build
+2026-09-23 07:32:20 launch lis-300-train
+2026-09-23 07:32:20 load 98, holding new launches (       2 running)
+2026-09-23 07:34:25 load 65, holding new launches (       2 running)
+2026-09-23 07:36:30 load 81, holding new launches (       2 running)
+2026-09-23 07:38:34 load 107, holding new launches (       2 running)
+2026-09-23 07:40:38 load 118, holding new launches (       2 running)
+2026-09-23 07:42:44 load 125, holding new launches (       2 running)
+2026-09-23 07:44:50 load 108, holding new launches (       2 running)
+2026-09-23 07:46:54 load 77, holding new launches (       2 running)
+2026-09-23 07:55:12 load 65, holding new launches (       2 running)
+2026-09-23 07:57:17 launch talk-280n-panel
+2026-09-23 07:57:17 launch talk-280n-run
+2026-09-23 08:01:30 pushed talk-280n-panel
+2026-09-23 08:03:39 pushed rsn-292-panel
+2026-09-23 08:03:39 load 84, holding new launches (       2 running)
+2026-09-23 08:05:44 load 70, holding new launches (       2 running)
+2026-09-23 08:07:48 load 67, holding new launches (       2 running)
+2026-09-23 08:14:06 pushed talk-280n-run
+2026-09-23 08:14:06 launch rsn-292-build2
+2026-09-23 08:14:06 load 89, holding new launches (       2 running)
+2026-09-23 08:16:11 load 92, holding new launches (       2 running)
+2026-09-23 08:18:15 load 83, holding new launches (       2 running)
+2026-09-23 08:20:20 load 94, holding new launches (       2 running)
+2026-09-23 08:22:24 load 72, holding new launches (       2 running)
+2026-09-23 08:24:28 load 98, holding new launches (       2 running)
+2026-09-23 08:26:33 load 90, holding new launches (       2 running)
+2026-09-23 08:28:37 load 87, holding new launches (       2 running)
+2026-09-23 08:30:42 load 87, holding new launches (       2 running)
+2026-09-23 08:32:46 load 94, holding new launches (       2 running)
+2026-09-23 08:34:51 load 103, holding new launches (       2 running)
+2026-09-23 08:36:55 load 96, holding new launches (       2 running)
+2026-09-23 08:39:00 load 68, holding new launches (       2 running)
+2026-09-23 08:47:18 load 73, holding new launches (       2 running)
+2026-09-23 08:49:25 load 69, holding new launches (       2 running)
+2026-09-23 08:53:54 pushed lis-300-train
+2026-09-23 08:57:34 pushed rsn-292-build2
+2026-09-23 09:20:26 launch talk-241b-wall
+2026-09-23 09:56:29 pushed talk-241b-wall
+2026-09-23 09:56:30 launch lis-300-publish
+2026-09-23 09:56:30 launch lis-311-chat292
+2026-09-23 09:56:30 launch talk-280p-panel
+2026-09-23 09:56:30 launch talk-280p-run
+2026-09-23 09:58:45 pushed talk-280p-panel
+2026-09-23 10:01:27 pushed lis-300-publish
+2026-09-23 10:01:39 pushed talk-280p-run
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+2026-09-23 13:59:25 watcher started (pid 16015)
+2026-09-23 13:59:26 orphan finished lis-311-chat292
+2026-09-23 13:59:32 pushed lis-311-chat292
+2026-09-23 13:59:32 launch lis-301-train
+2026-09-23 13:59:32 launch lis-311b-chat292
+2026-09-23 13:59:32 launch talk-280p-probe
+2026-09-23 13:59:33 launch talk-292t-build
+2026-09-23 13:59:33 launch talk-292t-panel
+2026-09-23 14:03:52 pushed talk-292t-panel
+2026-09-23 14:03:53 launch talk-f0-base
+2026-09-23 14:06:08 pushed talk-280p-probe
+2026-09-23 14:06:09 launch own-m0-mouthdata
+2026-09-23 14:10:27 pushed lis-311b-chat292
+2026-09-23 14:10:28 launch talk-f0-bench
+2026-09-23 14:14:45 pushed talk-f0-bench
+2026-09-23 14:16:55 pushed own-m0-mouthdata
+2026-09-23 14:17:02 pushed talk-292t-build
+2026-09-23 14:17:07 pushed talk-f0-base
+2026-09-23 14:19:11 self-update, restarting
+2026-09-23 14:19:11 watcher started (pid 16015)
+2026-09-23 14:23:21 launch own-m1-train
+2026-09-23 14:39:58 launch 000-vast-rescue
+2026-09-23 14:39:58 launch talk-f1-build
+2026-09-23 14:42:08 pushed own-m1-train
+2026-09-23 14:42:09 launch own-m1b-train
+2026-09-23 14:42:09 launch own-m1n-train
+2026-09-23 14:44:19 pushed 000-vast-rescue
+2026-09-23 14:46:24 launch lis-312-f0
+2026-09-23 14:48:33 pushed lis-312-f0
+2026-09-23 14:54:48 load 149, holding new launches (       4 running)
+2026-09-23 14:56:52 load 110, holding new launches (       4 running)
+2026-09-23 14:58:56 load 99, holding new launches (       4 running)
+2026-09-23 15:01:00 load 81, holding new launches (       4 running)
+2026-09-23 15:03:04 load 95, holding new launches (       4 running)
+2026-09-23 15:05:13 pushed lis-301-train
+2026-09-23 15:05:14 launch 273-build
+2026-09-23 15:05:14 launch own-probe-1
+2026-09-23 15:09:29 pushed own-probe-1
+2026-09-23 15:09:29 launch nb-320-baseline
+2026-09-23 15:17:53 pushed 273-build
+2026-09-23 15:17:54 load 118, holding new launches (       4 running)
+2026-09-23 15:19:58 load 73, holding new launches (       4 running)
+2026-09-23 15:22:02 load 68, holding new launches (       4 running)
+2026-09-23 15:24:07 load 92, holding new launches (       4 running)
+2026-09-23 15:26:11 load 96, holding new launches (       4 running)
+2026-09-23 15:28:16 load 123, holding new launches (       4 running)
+2026-09-23 15:30:21 load 107, holding new launches (       4 running)
+2026-09-23 15:32:26 launch nb-321-build
+2026-09-23 15:51:17 pushed nb-321-build
+2026-09-23 15:51:17 load 93, holding new launches (       4 running)
+2026-09-23 15:53:21 load 92, holding new launches (       4 running)
+2026-09-23 15:55:26 load 81, holding new launches (       4 running)
+2026-09-23 15:57:31 load 136, holding new launches (       4 running)
+2026-09-23 15:59:36 load 105, holding new launches (       4 running)
+2026-09-23 16:01:41 load 92, holding new launches (       4 running)
+2026-09-23 16:03:46 load 91, holding new launches (       4 running)
+2026-09-23 16:05:57 pushed own-m1n-train
+2026-09-23 16:05:57 load 65, holding new launches (       3 running)
+2026-09-23 16:08:02 launch rsn-294-train
+2026-09-23 16:31:03 pushed own-m1b-train
+2026-09-23 17:02:24 pushed rsn-294-train
+2026-09-23 17:06:38 pushed nb-320-baseline
+2026-09-23 17:06:38 launch rsn-294-train2
+2026-09-23 17:19:14 pushed rsn-294-train2
+2026-09-23 17:23:24 launch rsn-294-train3
+2026-09-23 17:30:44 pushed talk-f1-build
+2026-09-23 17:53:56 launch rsn-294-guard
+2026-09-23 18:50:19 launch talk-f1-gradeA1
+2026-09-23 18:50:19 launch talk-f1-gradeA2
+2026-09-23 18:50:20 launch talk-f1-gradeA3
+2026-09-23 18:52:29 launch talk-f1-gradeA4
+2026-09-23 18:54:41 pushed talk-f1-gradeA1
+2026-09-23 18:54:45 pushed talk-f1-gradeA2
+2026-09-23 18:54:49 pushed talk-f1-gradeA3
+2026-09-23 18:54:50 launch talk-f1-gradeA5
+2026-09-23 18:54:51 launch talk-f1-gradeA6
+2026-09-23 18:59:07 pushed talk-f1-gradeA4
+2026-09-23 18:59:12 pushed talk-f1-gradeA5
+2026-09-23 18:59:16 pushed talk-f1-gradeA6
+2026-09-23 18:59:16 launch talk-f1-gradeB1
+2026-09-23 18:59:16 launch talk-f1-gradeB2
+2026-09-23 18:59:17 launch talk-f1-gradeB3
+2026-09-23 19:03:32 pushed talk-f1-gradeB1
+2026-09-23 19:03:36 pushed talk-f1-gradeB2
+2026-09-23 19:03:40 pushed talk-f1-gradeB3
+2026-09-23 19:03:40 launch talk-f1-gradeB4
+2026-09-23 19:03:41 launch talk-f1-gradeB5
+2026-09-23 19:03:41 launch talk-f1-gradeB6
+2026-09-23 19:07:57 pushed talk-f1-gradeB4
+2026-09-23 19:08:00 pushed talk-f1-gradeB5
+2026-09-23 19:08:05 pushed talk-f1-gradeB6
+2026-09-23 19:08:05 launch talk-f1-judge
+2026-09-23 19:10:15 pushed talk-f1-judge
+2026-09-23 20:14:53 pushed rsn-294-train3
+2026-09-23 20:19:08 pushed rsn-294-guard
+2026-09-23 21:36:25 disk 2 GB free, holding new launches
+2026-09-23 21:38:30 disk 2 GB free, holding new launches
+2026-09-23 21:40:36 disk 2 GB free, holding new launches
+2026-09-23 21:42:42 disk 2 GB free, holding new launches
+2026-09-23 21:44:48 disk 2 GB free, holding new launches
+2026-09-23 21:46:53 disk 2 GB free, holding new launches
+2026-09-23 21:49:00 disk 2 GB free, holding new launches
+2026-09-23 21:51:06 launch 274-build
+2026-09-23 21:51:06 launch lis-302-gpu
+2026-09-23 21:51:06 launch mut0-build
+2026-09-23 21:51:06 launch rsn-296-guard
+2026-09-23 21:51:07 launch rsn-296-train
+2026-09-23 22:20:29 pushed lis-302-gpu
+2026-09-23 22:20:30 load 100, holding new launches (       4 running)
+2026-09-23 22:22:39 pushed 274-build
+2026-09-23 22:22:40 load 71, holding new launches (       3 running)
+2026-09-23 22:24:45 launch lis-313-f0
+2026-09-23 22:56:33 pushed mut0-build
+2026-09-23 23:04:57 launch nb-321-run
+2026-09-23 23:04:57 launch nb-323-build
+2026-09-23 23:13:25 pushed lis-313-f0
+2026-09-23 23:13:25 launch lis-314-panel
+2026-09-23 23:22:01 pushed nb-323-build
+2026-09-23 23:22:02 launch lis-e2e-dev
+2026-09-23 23:24:13 pushed lis-314-panel
+2026-09-23 23:24:13 launch own-m1v-run
+2026-09-24 00:23:42 pushed own-m1v-run
+2026-09-24 00:23:43 launch 000-cache-pin
+===SYS-DATE===
+Thu Sep 24 00:24:21 EDT 2026
+Thu Sep 24 04:24:21 UTC 2026
+=== queue list ===
+total 33160
+-rw-r--r--  1 ben-hannan  staff   21918 Sep 24 00:24 000-cache-pin.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff  176962 Sep 24 00:24 nb-321-run.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff     139 Sep 24 00:24 000-cache-pin.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  160476 Sep 24 00:23 lis-e2e-dev.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff   20733 Sep 24 00:23 log.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 24 00:23 000-cache-pin.running
+-rw-r--r--  1 ben-hannan  staff    1126 Sep 24 00:23 000-cache-pin.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 24 00:23 own-m1v-run.pushed
+-rw-r--r--  1 ben-hannan  staff    2591 Sep 24 00:22 nb-321-run.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff       5 Sep 24 00:22 own-m1v-run.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 24 00:22 own-m1v-run.go1.done
+-rw-r--r--  1 ben-hannan  staff    4279 Sep 24 00:22 own-m1v-run.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  103351 Sep 24 00:22 own-m1v-run.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff   95051 Sep 24 00:15 rsn-296-guard.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff     949 Sep 24 00:09 lis-e2e-dev.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   71364 Sep 24 00:04 rsn-296-train.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    1366 Sep 23 23:39 rsn-296-train.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff     656 Sep 23 23:30 rsn-296-guard.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff    5000 Sep 23 23:24 own-m1v-run.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 23:24 lis-314-panel.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 23:22 lis-314-panel.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 23:22 lis-314-panel.go1.done
+-rw-r--r--  1 ben-hannan  staff    4366 Sep 23 23:22 lis-314-panel.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  114792 Sep 23 23:22 lis-314-panel.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 23:22 lis-e2e-dev.running
+-rw-r--r--  1 ben-hannan  staff    2004 Sep 23 23:22 lis-e2e-dev.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 23:22 nb-323-build.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 23:21 nb-323-build.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 23:21 nb-323-build.go1.done
+-rw-r--r--  1 ben-hannan  staff    4855 Sep 23 23:21 nb-323-build.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  207226 Sep 23 23:21 nb-323-build.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    2785 Sep 23 23:13 lis-314-panel.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 23:13 lis-313-f0.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 23:11 lis-313-f0.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 23:11 lis-313-f0.go1.done
+-rw-r--r--  1 ben-hannan  staff    5261 Sep 23 23:11 lis-313-f0.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  130993 Sep 23 23:11 lis-313-f0.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    5152 Sep 23 23:04 nb-323-build.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 23:04 nb-321-run.running
+-rw-r--r--  1 ben-hannan  staff    4002 Sep 23 23:04 nb-321-run.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 22:56 mut0-build.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 22:55 mut0-build.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 22:55 mut0-build.go1.done
+-rw-r--r--  1 ben-hannan  staff    5461 Sep 23 22:55 mut0-build.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   85721 Sep 23 22:55 mut0-build.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    3595 Sep 23 22:24 lis-313-f0.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 22:22 274-build.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 22:22 274-build.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 22:22 274-build.go1.done
+-rw-r--r--  1 ben-hannan  staff    6653 Sep 23 22:22 274-build.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  140315 Sep 23 22:21 274-build.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 22:20 lis-302-gpu.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 22:18 lis-302-gpu.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 22:18 lis-302-gpu.go2.done
+-rw-r--r--  1 ben-hannan  staff    4239 Sep 23 22:18 lis-302-gpu.go2.reply.md
+-rw-r--r--  1 ben-hannan  staff  153787 Sep 23 22:18 lis-302-gpu.go2.err.txt
+-rw-r--r--  1 ben-hannan  staff      57 Sep 23 21:51 lis-302-gpu.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 21:51 rsn-296-train.running
+-rw-r--r--  1 ben-hannan  staff    7423 Sep 23 21:51 rsn-296-train.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 21:51 rsn-296-guard.running
+-rw-r--r--  1 ben-hannan  staff    3600 Sep 23 21:51 rsn-296-guard.md
+-rw-r--r--  1 ben-hannan  staff    3935 Sep 23 21:51 mut0-build.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 21:51 lis-302-gpu.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff    4841 Sep 23 21:51 lis-302-gpu.md
+-rw-r--r--  1 ben-hannan  staff    3715 Sep 23 21:51 274-build.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 20:19 rsn-294-guard.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 20:17 rsn-294-guard.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 20:17 rsn-294-guard.go1.done
+-rw-r--r--  1 ben-hannan  staff    3347 Sep 23 20:17 rsn-294-guard.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   32340 Sep 23 20:17 rsn-294-guard.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 20:14 rsn-294-train3.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 20:13 rsn-294-train3.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 20:13 rsn-294-train3.go1.done
+-rw-r--r--  1 ben-hannan  staff    6293 Sep 23 20:13 rsn-294-train3.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff  152340 Sep 23 20:13 rsn-294-train3.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 19:10 talk-f1-judge.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 19:09 talk-f1-judge.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 19:09 talk-f1-judge.go1.done
+-rw-r--r--  1 ben-hannan  staff    2576 Sep 23 19:09 talk-f1-judge.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   19114 Sep 23 19:09 talk-f1-judge.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    3065 Sep 23 19:08 talk-f1-judge.md
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 19:08 talk-f1-gradeB6.pushed
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 19:08 talk-f1-gradeB5.pushed
+-rw-r--r--  1 ben-hannan  staff       0 Sep 23 19:07 talk-f1-gradeB4.pushed
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 19:07 talk-f1-gradeB6.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 19:07 talk-f1-gradeB6.go1.done
+-rw-r--r--  1 ben-hannan  staff    4377 Sep 23 19:07 talk-f1-gradeB6.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   61102 Sep 23 19:07 talk-f1-gradeB6.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 19:06 talk-f1-gradeB4.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 19:06 talk-f1-gradeB4.go1.done
+-rw-r--r--  1 ben-hannan  staff    4879 Sep 23 19:06 talk-f1-gradeB4.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff       5 Sep 23 19:05 talk-f1-gradeB5.exit
+-rw-r--r--  1 ben-hannan  staff      39 Sep 23 19:05 talk-f1-gradeB5.go1.done
+-rw-r--r--  1 ben-hannan  staff    3792 Sep 23 19:05 talk-f1-gradeB5.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   17368 Sep 23 19:05 talk-f1-gradeB4.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff   63385 Sep 23 19:05 talk-f1-gradeB5.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    3275 Sep 23 19:03 talk-f1-gradeB6.md
+-rw-r--r--  1 ben-hannan  staff    3275 Sep 23 19:03 talk-f1-gradeB5.md
+-rw-r--r--  1 ben-hannan  staff    3275 Sep 23 19:03 talk-f1-gradeB4.md
+[0m
+[0m$ [0mecho "=== crontab ==="; crontab -l 2>&1; echo "=== launchctl list (cleanup?) ==="; launchctl list 2>&1 | head -n 100
+=== crontab ===
+# Proposed crontab, 2026-09-05 (audit A11 / A7).  OWNER-INSTALLABLE, NOT INSTALLED.
+#
+# Install is a KEYBOARD action (crontab writes are blocked from sessions):
+#   1. read this file end to end;
+#   2. crontab -l > ~/crontab.backup.$(date +%Y%m%d)
+#   3. crontab /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_proposed_20260905.txt
+# Verify (read-only, compares job names and slots to lib/ops/health.py JOBS):
+#   crontab -l | /Users/ben-hannan/Desktop/projects/polymarket/scout/.venv/bin/python /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/health.py --check-crontab
+# expected: every JOBS row OK; the only "unlisted" line is ops_health (the
+# monitor itself); "cron_py.sh-wrapped" lists the 11 collector jobs below.
+#
+# What changed vs the crontab read on 2026-09-05 (same style as lib/trade/cron_full730.txt):
+#   * The 12 direct-python lines now go through lib/ops/cron_py.sh <job> ...
+#     cron_py.sh cds to the repo root (so relative paths work and the
+#     `cd ... &&` prefix drops out), bounds the run (CRON_PY_TIMEOUT_S,
+#     default 1800 s -- under every 2 h slot gap, so a wedged pass cannot pile
+#     onto the next slot), and writes data/collect/heartbeat/<job>.ok|.fail.
+#     health.py reads those heartbeats: a job that RAN AND FAILED becomes a
+#     FAIL row instead of looking like a quiet slot.  Job names equal
+#     health.py JOBS names on purpose.  cron_py.sh sources no trading env
+#     (lib/ops/cron_py.sh:35-38); every line below that goes through it is a
+#     read-only collector or the min40 DRY decision series.
+#   * Slots are UNCHANGED (times are host-local; Darwin cron ignores CRON_TZ
+#     and does not queue missed slots).
+#   * The bash-wrapped lines (s1_live_runner, cron_live, cron_kalshi,
+#     fill_watch, ops_health, ingest_daily) are byte-identical to the
+#     installed ones; they keep their own logs, locks and credential rules.
+#   * Two PLACEMENT-PATH candidates are included COMMENTED at the end
+#     (catchup_live, cron_lows).  Uncommenting either is a separate owner
+#     decision; see the notes there.
+# Runtime cap sizing: weather_depth passes measured ~176 s; the 9-city band
+# pass and intl_forecast are unmeasured under the cap.  If a .fail ever says
+# KILLED, raise CRON_PY_TIMEOUT_S on that line from its cron.log elapsed
+# figures rather than lowering the cap elsewhere.
+
+# --- collectors (read-only; cron_py.sh heartbeat + runtime cap) ---------------
+0 2 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh weather_depth lib/collect/weather_depth.py --band 0.05 0.65 --venue both --us-cities nyc mdw lax mia sfo >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/weather_depth/cron.log 2>&1
+0 8 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh weather_depth lib/collect/weather_depth.py --band 0.05 0.65 --venue both --us-cities nyc mdw lax mia sfo >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/weather_depth/cron.log 2>&1
+0 9,11,13,15,17,19,21 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh weather_depth lib/collect/weather_depth.py --band 0.05 0.65 --venue both --us-cities nyc mdw lax mia sfo >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/weather_depth/cron.log 2>&1
+0 4 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh nbe_pull lib/nbe_pull.py KNYC KMDW KLAX KATL KDAL KMIA >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/nbe_cron.log 2>&1
+30 8 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh nbe_pull lib/nbe_pull.py KNYC KMDW KLAX KATL KDAL KMIA >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/nbe_cron.log 2>&1
+0 2 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh intl_forecast lib/collect/intl_forecast.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/intl_forecast/cron.log 2>&1
+30 4 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh poly_rewards lib/collect/poly_rewards.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/poly_rewards/cron.log 2>&1
+0 7,9,11,13,15,17,19,21,23 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh kalshi_queue lib/collect/kalshi_queue.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/kalshi_queue/cron.log 2>&1
+20 7,9,11,13,15,17,19,21,23 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh gas_band lib/collect/gas_band.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/gas_band/cron.log 2>&1
+15 6 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh rules_watch lib/collect/rules_watch.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/rules_watch/cron.log 2>&1
+20 6 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh daily_tripwires lib/collect/daily_tripwires.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/tripwires/cron.log 2>&1
+25 6 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh desc_watch lib/collect/desc_watch.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/desc_watch/cron.log 2>&1
+
+# --- x3 DRY decision series (min40; places nothing; no creds sourced) ---------
+0 10 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh x3_dry_daily -m lib.trade.run --once --profile min40 >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/trade/x3_dry_daily.log 2>&1
+
+# --- bash-wrapped arms and watchers (UNCHANGED from the installed crontab) ----
+58 10 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/s1_live_runner.sh --once >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/s1_runner.log 2>&1
+0 10 * * * DISCOVER_CAPTURE=/Users/ben-hannan/Desktop/projects/polymarket/scout/data/trade/capture_20260825.jsonl SCOUT_PROFILE="us630 intl100_730" SCOUT_MAX_ORDERS=0 bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/trade/cron_live.sh
+7 12-20 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/kalshi/cron_kalshi.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/kalshi/cron_tick.log 2>&1
+17 * * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/trade/fill_watch.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/trade/fill_watch_cron.log 2>&1
+
+# --- ops hardening 2026-09-01 (research/ops-hardening-20260901.md) -----------
+# ops_health exits 1 on any WARN/FAIL, so cron_py.sh records a WARN day as
+# ops_health.fail -- deliberate: a WARN day should be visible in the heartbeat.
+30 6,12 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh ops_health lib/ops/health.py --write >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/collect/ops_health.log 2>&1
+45 22 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/ingest_daily.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/tape/ingest_cron.log 2>&1
+
+# --- COMMENTED CANDIDATES: placement paths, each a separate owner decision ---
+# catchup_live (ops-hardening 3d, TE-1/MR-1): hourly probe that re-fires
+# cron_live.sh on a day the 10:00 line demonstrably never reached a terminal
+# state.  Bounded 2026-09-05: config-shaped ABORTs are terminal, at most
+# SCOUT_CATCHUP_MAX_FIRES (2) re-fires per UTC day, >= SCOUT_CATCHUP_MIN_GAP_S
+# (7200 s) apart, env read from the installed cron_live.sh line above.  It can
+# cause live orders on a day the 10:00 line missed -- that is its purpose.
+# Dry probe first:  bash lib/ops/catchup_live.sh --check
+#5 11-19 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/catchup_live.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/trade/catchup_live.log 2>&1
+#
+# cron_lows (LOWS-PD1-v2): CLAUDE.md lists this arm as live, but no crontab
+# line exists and lib/lows/cron_lows.sh:9 documents `5 10 * * *`.  Arming is
+# ARMED + data/lows/LOWS-ARMED (owner files); the wrapper runs DRY without
+# them.  OWNER QUESTION: is the arm meant to be scheduled?  If yes, uncomment
+# and add a `cron_lows` row to lib/ops/health.py JOBS (slot 10:05, log
+# data/lows/cron.log) so the monitor watches it.
+#5 10 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/lows/cron_lows.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/lows/cron.log 2>&1
+4 10 * * * bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/trade/redeem_cron.sh >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/trade/redeem_cron.log 2>&1
+
+# --- live football latency signals (read-only; no credentials/orders) ---
+25 11 * * 6 bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_football_signal.sh college-football >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/lat3b_live/weekly_cfb.log 2>&1
+25 12 * * 0 bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_football_signal.sh nfl >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/lat3b_live/weekly_nfl.log 2>&1
+23 * * * * CRON_PY_TIMEOUT_S=300 bash /Users/ben-hannan/Desktop/projects/polymarket/scout/lib/ops/cron_py.sh status_feed lib/ops/status_feed.py >> /Users/ben-hannan/Desktop/projects/polymarket/scout/data/status_feed.log 2>&1
+=== launchctl list (cleanup?) ===
+PID	Status	Label
+-	0	com.apple.SafariHistoryServiceAgent
+-	-9	com.apple.progressd
+-	0	com.apple.enhancedloggingd
+1531	0	net.dwservice.agsystray
+92719	-9	com.apple.cloudphotod
+-	-9	com.apple.MENotificationService
+828	0	com.apple.Finder
+-	-9	com.apple.homed
+-	-9	com.apple.dataaccess.dataaccessd
+-	0	com.apple.quicklook
+-	0	com.apple.parentalcontrols.check
+-	0	us.zoom.updater
+936	0	com.apple.mediaremoteagent
+791	0	com.apple.FontWorker
+845	0	com.apple.bird
+-	0	com.apple.amp.mediasharingd
+-	-9	com.apple.knowledgeconstructiond
+-	-9	com.apple.inputanalyticsd
+-	0	com.apple.familycontrols.useragent
+-	0	com.apple.AssetCache.agent
+-	0	com.apple.tcc.AuthorizationPromptService
+92878	-9	com.apple.GameController.gamecontrolleragentd
+-	0	com.apple.universalaccessAuthWarn
+-	0	com.apple.UserPictureSyncAgent
+757	0	com.apple.nsurlsessiond
+-	-9	com.apple.devicecheckd
+-	0	com.apple.syncservices.uihandler
+-	-9	com.apple.iconservices.iconservicesagent
+-	-9	com.apple.diagnosticextensionsd
+-	-9	com.apple.intelligenceplatformd
+-	-9	com.apple.SafariBookmarksSyncAgent
+-	0	com.apple.cmio.LaunchCMIOUserExtensionsAgent
+-	-9	com.apple.LinkedNotesUIService
+-	-9	com.apple.ndoagent
+759	0	com.apple.wallpaper.agent
+-	0	com.apple.bookassetd
+-	0	com.apple.ManagedClientAgent.agent
+-	-9	com.apple.localizationswitcherd
+-	0	com.apple.screensharing.agent
+92920	-9	com.apple.commerce
+-	0	com.apple.AddressBook.SourceSync
+-	-9	com.apple.messagesescrowd
+-	0	com.apple.installerauthagent
+799	0	application.com.openai.codex.22614657.22615372
+-	0	com.apple.appleaccounttransparencyd
+-	0	com.apple.languageassetd
+-	0	com.apple.familynotificationd
+92684	-9	com.apple.ManagedSettingsAgent
+92682	-9	com.apple.photolibraryd
+-	0	com.docker.helper
+-	0	com.apple.xpc.otherbsd
+-	0	com.apple.sysdiagnose_agent
+-	-9	com.apple.ThreadCommissionerService
+-	-9	com.apple.tipsd
+855	0	com.apple.campo
+-	-9	com.apple.stickersd
+92939	-9	com.apple.bluetoothuserd
+-	0	com.apple.timezoneupdates.tznotify
+1554	0	com.apple.TextInputMenuAgent
+-	0	com.apple.bluetoothUIServer
+-	0	com.apple.accessibility.LiveTranscriptionAgent
+-	0	com.apple.assistant_service
+1556	0	com.windscribe.launcher.macos
+-	0	com.apple.MRTa
+-	0	com.apple.MediaRemoteUI
+766	0	com.apple.CommCenter
+762	0	com.apple.trustd.agent
+-	0	com.apple.MailServiceAgent
+-	0	com.apple.mdworker.mail
+-	0	com.apple.appkit.xpc.ColorSampler
+-	-9	com.apple.filederivatived
+707	0	com.apple.cfprefsd.xpc.agent
+-	0	com.apple.coreimportd
+-	0	com.apple.CoreDevice.remotepairingd
+-	-9	com.apple.TrustedPeersHelper
+-	0	com.apple.cvmsCompAgent3600_arm64_1
+-	0	com.apple.DataDetectorsLocalSources
+-	0	com.apple.unmountassistant.useragent
+-	-9	com.apple.facetimemessagestored
+-	0	com.apple.AutoFillPanel
+1038	0	com.apple.peopled
+-	0	com.apple.remotecompositorclientd
+810	0	application.dev.codexwebgpt.launcher.21124878.21124886
+-	0	com.apple.PosterBoard
+-	-9	com.apple.replicatord
+-	-9	com.apple.keyboardservicesd
+92837	-9	com.apple.accessibility.axassetsd
+61430	-9	com.apple.quicklook.ThumbnailsAgent
+8853	0	com.apple.Safari.PasswordBreachAgent
+-	0	com.apple.csuseragent
+-	0	com.apple.asktod
+746	0	com.apple.WindowManager.agent
+84955	-9	com.apple.ContextStoreAgent
+-	0	com.apple.AOSPushRelay
+-	0	com.apple.accessibility.AXVisualSupportAgent
+1537	0	net.dwservice.aglac
+-	0	com.apple.xpc.loginitemregisterd
+-	-9	com.apple.webprivacyd
+8010	0	com.apple.applespell
+[0m
+[0m$ [0mlaunchctl list 2>&1 | grep -iv "com.apple\|com.docker\|com.openai\|zoom\|windscribe\|dwservice" | head -n 100; echo "===crontab is proposed-not-installed notice, so need actual? already printed crontab -l output which IS proposed file? Wait output looks like crontab content itself. Check: crontab file says Proposed, NOT INSTALLED but crontab -l printed it, so it IS installed? Anyway no cleanup jobs there. ==="; echo "=== check /Library/LaunchDaemons, ~/Library/LaunchAgents for cleaners ==="; ls ~/Library/LaunchAgents/ 2>&1 | head -n 100; ls /Library/LaunchAgents/ 2>&1 | head -n 100; ls /Library/LaunchDaemons/ 2>&1 | head -n 100
+PID	Status	Label
+810	0	application.dev.codexwebgpt.launcher.21124878.21124886
+-	0	com.codicesoftware.unityvcstray
+15699	0	com.openssh.ssh-agent
+1535	0	com.premonition.chat
+-	0	com.valvesoftware.steamclean
+818	0	application.com.google.Chrome.1562736.48465974
+778	0	application.com.anthropic.claudefordesktop.52808458.52808464
+1542	0	org.chromium.chromoting
+-	78	com.google.GoogleUpdater.wake
+1538	0	com.lwouis.alt-tab-macos
+===crontab is proposed-not-installed notice, so need actual? already printed crontab -l output which IS proposed file? Wait output looks like crontab content itself. Check: crontab file says Proposed, NOT INSTALLED but crontab -l printed it, so it IS installed? Anyway no cleanup jobs there. ===
+=== check /Library/LaunchDaemons, ~/Library/LaunchAgents for cleaners ===
+com.codicesoftware.unityvcstray.plist
+com.google.GoogleUpdater.wake.plist
+com.lwouis.alt-tab-macos.plist
+com.premonition.chat.plist
+com.user.windscribe.connect.plist.bak
+com.user.windscribe.disconnect.plist.bak
+com.valvesoftware.steamclean.plist
+com.adobe.ccxprocess.plist
+com.adobe.GC.AGM.plist
+com.adobe.GC.Invoker-1.0.plist
+com.google.keystone.agent.plist
+com.google.keystone.xpcservice.plist
+com.microsoft.update.agent.plist
+net.dwservice.aglac.plist
+net.dwservice.agsystray.plist
+org.chromium.chromoting.plist
+us.zoom.updater.login.check.plist
+us.zoom.updater.plist
+com.adobe.agsservice.plist
+com.aimode.helper.plist
+com.chaos_group.swrm.plist
+com.chaos_group.vrol.plist
+com.cleverfiles.cfbackd.plist
+com.codicesoftware.plasticscm.server.plist
+com.docker.socket.plist
+com.docker.vmnetd.plist
+com.google.GoogleUpdater.wake.system.plist
+com.google.keystone.daemon.plist
+com.microsoft.autoupdate.helper.plist
+com.microsoft.office.licensingV2.helper.plist
+com.microsoft.OneDriveUpdaterDaemon.plist
+com.microsoft.teams.TeamsUpdaterDaemon.plist
+com.muse.authservice.plist
+com.tailscale.tailscaled.plist
+com.windscribe.helper.macos.plist
+fr.madrau.switchresx.helper.plist
+net.dwservice.agsvc.plist
+org.chromium.chromoting.broker.plist
+us.zoom.ZoomDaemon.plist
+[0m
+[0m$ [0mecho "=== queue .md for 274, mut0, lis-302 ==="; ls -1 ~/premonition-watch/queue/274-build.* ~/premonition-watch/queue/mut0-build.* ~/premonition-watch/queue/lis-302-gpu.* 2>&1
+echo "=== worktree handoff queue? ==="; ls handoff/queue/ 2>&1 | head -n 30; echo "==="; ls ~/premonition-watch/outbox/runs/ 2>&1 | head -n 50
+=== queue .md for 274, mut0, lis-302 ===
+/Users/ben-hannan/premonition-watch/queue/274-build.exit
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.done
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/274-build.md
+/Users/ben-hannan/premonition-watch/queue/274-build.pushed
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.exit
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go2.done
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go2.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go2.reply.md
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.md
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.pushed
+/Users/ben-hannan/premonition-watch/queue/mut0-build.exit
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.done
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/mut0-build.md
+/Users/ben-hannan/premonition-watch/queue/mut0-build.pushed
+=== worktree handoff queue? ===
+ls: handoff/queue/: No such file or directory
+===
+000-ckpt-copy
+000-smoke
+000-vast-rescue
+000-watcher-dedupe
+000-watcher-upgrade
+261b-build
+261b-panel
+263-build
+263-panel
+263-probe
+264-build
+264-panel
+265-build
+265-panel
+267-devset
+267-diag
+269-build
+269-panel
+269-resume
+269-resume2
+270-build
+270-panel
+270b-build
+270b-panel
+271-threshold
+273-build
+274-build
+chat-demo-build
+chat-weakspots
+lis-300-publish
+lis-300-train
+lis-301-train
+lis-302-gpu
+lis-310-chat-build
+lis-311-chat292
+lis-311b-chat292
+lis-312-f0
+lis-313-f0
+lis-314-panel
+mut0-build
+nb-320-baseline
+nb-321-build
+nb-323-build
+own-m0-mouthdata
+own-m1-train
+own-m1b-train
+own-m1n-train
+own-m1v-run
+own-o0a-oracle
+own-o0a2-oracle
+[0m
+[0m$ [0mecho "=== TASK FILES 274/mut0/lis302/rsn296 ==="; for n in 274-build mut0-build lis-302-gpu rsn-296-train rsn-296-guard lis-313-f0; do echo "----- $n.md -----"; cat ~/premonition-watch/queue/$n.md 2>&1 | head -n 120; done
+=== TASK FILES 274/mut0/lis302/rsn296 ===
+----- 274-build.md -----
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+EXP 274: never deaf, step A (director, 2026-09-24 01:55 UTC). CPU only. ONE change, on the 273 base (scripts/claude_loop273_agent.py on origin/builder-outbox, verified PASS).
+Problem (director checked): scripts/fable_agent_loop.py:313-319 turn() = submit() + run_until_idle(), and busy() includes sleep_due() (line ~290), so when sleep is due the reply to a turn is only returned after the whole sleep runs. 273 fixed tick order but not this.
+The change: a NEW file scripts/claude_loop274_agent.py (build_agent274, Loop274Daemon) built exactly like 273, where turn() runs ticks only while the inbox is non-empty (the listening ticks), returns/writes the reply, and leaves any due sleep for the next idle tick (the daemon's idle loop / next run_until_idle). Never edit frozen files. Do not change WORK vs SLEEP order (pending ruling for Ben). Plus a deaf-seconds meter: for every turn, seconds between the message arriving and its reply being written; logged per turn and summarised (median, max).
+Seal first: artifacts/claude-loop274-20260924/PASSMARKS.md + SEAL.sha256.txt. Marks:
+ M1 20 seeded cases with sleep due and one message waiting: the reply is returned before any sleep tick runs, 20/20 (273: report its number; expect 0/20).
+ M2 sleep still happens: in the same 20 cases the due sleep runs within the next 3 idle ticks, 20/20.
+ M3 no behaviour change: the 292t/273 panel (same scorer and gold 273 used) gives identical scores (90/90, 0 overlaps, 0 wrong); any change = FAIL.
+ M4 deaf meter on the 20 cases: 274 max deaf seconds < 273 max deaf seconds and 274 median ≤ 2 s. Report both arms.
+Proved wrong by: any M3 score change, or sleep never running.
+PUSH: scripts/claude_loop274_agent.py scripts/claude_loop274_test.py artifacts/claude-loop274-20260924/PASSMARKS.md artifacts/claude-loop274-20260924/SEAL.sha256.txt artifacts/claude-loop274-20260924/RESULTS.md artifacts/claude-loop274-20260924/results.json
+----- mut0-build.md -----
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+EXP mut-0: the SLEEP mark must fail closed (director, 2026-09-24 01:55 UTC). CPU only. ONE change.
+Problem (director checked): scripts/fable_marks123_all.py:696-716 suite_sleep() returns "pass": True in BOTH branches while always skipping; make_daemon sets sleep_threshold=100000 (line 102), so no suite ever sleeps. scripts/fable_sleepsmoke206.py was dropped from scripts/claude_292_runall.sh, claude_292t_runall.sh and claude_f1_runall.sh (both on origin/builder-outbox).
+The change (additive, new files only): scripts/claude_marks_mut0.py wraps fable_marks123_all (import, read-only) so that suite_sleep returns pass=False, status "NOT-RUN", whenever it skips, and every run-all verdict that includes SLEEP shows NOT-RUN instead of PASS. Plus new scripts/claude_292t_runall_mut0.sh, claude_273_runall_mut0.sh, claude_f1_runall_mut0.sh = copies of the originals that call the mut0 runner AND run fable_sleepsmoke206.py (the 273 one uses the 273 agent, scripts/claude_loop273_agent.py on builder-outbox).
+Seal before running: artifacts/claude-mut0-20260924/PASSMARKS.md + SEAL.sha256.txt. Marks:
+ M1 unit: suite_sleep via mut0 on the 292t agent returns pass False, status NOT-RUN (and the original returns pass True: report both).
+ M2 the three new run-all scripts each run sleepsmoke206 to completion; report its per-world seconds and verdict (PASS or FAIL are both reportable, the mark is that it RAN and was recorded honestly).
+ M3 every non-SLEEP suite verdict identical to the last recorded 292t/273/F1 run-all results.
+Also measure and report (not a mark): sleep wall seconds per sleep on 273 (the smoke's timing).
+Final report: then a short PLAN for mut-1 (semantic mutants of 273: e.g. swap tick order back, drop inbox check, make sleep never due), each mutant listed with the suite that should catch it. Don't run mut-1.
+PUSH: scripts/claude_marks_mut0.py scripts/claude_292t_runall_mut0.sh scripts/claude_273_runall_mut0.sh scripts/claude_f1_runall_mut0.sh artifacts/claude-mut0-20260924/PASSMARKS.md artifacts/claude-mut0-20260924/SEAL.sha256.txt artifacts/claude-mut0-20260924/RESULTS.md artifacts/claude-mut0-20260924/results.json
+----- lis-302-gpu.md -----
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+----- rsn-296-train.md -----
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+RENTAL RULES:
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph), preferring at least 16 CPU cores and more is better (the practice generator is CPU-heavy: use a host with >= 32 cores if one is within $0.10/h of the cheapest). 4090 with the same filter if no 5090.
+- Before renting: `vastai show instances`; if an instance labelled rsn-296 is live and healthy, exit and report DUPLICATE.
+- Label every instance rsn-296. Check credit first: stop and report LOW-CREDIT if it is under $4.
+- MONEY (Ben 2026-09-23 21:51 UTC: "don't use gpu rentals above 4$"): $4 is the COMBINED limit for this whole task, re-rents included. Keep a running total of dph x hours for every instance you create. If the total would pass $3.80, destroy everything and stop with BUDGET-STOP. A separate guard task (rsn-296-guard) also watches this.
+- If a new instance is not "running" within 6 min (or create returns success: False), destroy it by exact id and try the next offer on a different host, up to 4 rentals in total. If a running instance goes offline or shows no log progress for 10 min, destroy it and count it. After 4 failures stop with HOST-FAIL. Never 2 instances at once.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it. Destroy the instance at the end and confirm it is gone. Append a ledger line.
+
+YOUR TASK: builder for rsn-296 (varied "sleep school" practice; rsn-294's arms and training with ONE change: the practice generator). The reasoning thread (Opus) wrote and sealed all code; import and run it, never edit it. If something breaks, stop and report; do not patch. Artifacts go in artifacts/claude-rsn296-20260924/.
+READ FIRST (on origin/main): artifacts/claude-rsn296-20260924/PASSMARKS.md, design/v3/30-modes/296-sleep-school-practice.md, and the docstrings of scripts/claude_rsn296_gen.py and scripts/claude_rsn294_run.py.
+INDEPENDENCE: never open or print any item of artifacts/claude-reasonpanel296-20260924/ or artifacts/claude-reasonpanel294-20260923/. You run the eval commands below exactly once per checkpoint; they write category-level counts only.
+
+0. Rent as above. On the GPU machine: a NEW venv with torch (CUDA build) and numpy only. Check `nproc`, `nvidia-smi`, `df -h`.
+1. CODE. Tarball of origin/main (git archive) or git clone. From the repo root, `sha256sum -c` on artifacts/claude-rsn296-20260924/SEAL-code.sha256.txt, artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt and artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt: every line OK, else stop. Run `python scripts/claude_rsn296_gen.py` (prints "selftest ok"; takes about 30 s).
+2. PILOT (timing only). For each arm: `python scripts/claude_rsn296_run.py train --arm <arm> --seed 9 --out /tmp/pilot-<arm> --copy-steps 100 --rl-steps 50 --workers 6`, run from the repo root. Estimate a full run as 60 x copy-phase minutes + 120 x practice-phase minutes (from its train_log.jsonl "min" values). If the four full runs, 2 at a time, would take over 150 minutes, OR the estimated dollars would pass $3.50, stop, destroy the instance and report TOO-SLOW with the timings.
+3. TRAIN (4 runs, 2 at a time, --workers 6 each, from the repo root; defaults otherwise, change nothing):
+   python scripts/claude_rsn296_run.py train --arm plain --seed 1 --out W/plain-s1
+   python scripts/claude_rsn296_run.py train --arm loop  --seed 1 --out W/loop-s1
+   then
+   python scripts/claude_rsn296_run.py train --arm plain --seed 2 --out W/plain-s2
+   python scripts/claude_rsn296_run.py train --arm loop  --seed 2 --out W/loop-s2
+4. SEAL. sha256 of all 8 checkpoints into artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt BEFORE step 5.
+5. EVAL, ONCE per checkpoint. For each run R and C in copy_only.pt, final.pt:
+   python scripts/claude_rsn296_run.py dev  --ckpt W/R/C --out W/R/dev-<copy|final>.json
+   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/R/panel296-<copy|final>.json
+   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/R/panel294-<copy|final>.json
+   Copy every train_log.jsonl, train_summary.json, dev-*.json and panel*.json into artifacts/claude-rsn296-20260924/runs/<R>/.
+6. RESULTS.md, verdict first: per run minutes, first/last copy loss, first/last practice reward, panel totals (copy-only and final, both panels). Every mark P296.1-P296.4 for both plain seeds with integer counts and PASS/FAIL (code-arm numbers are in PASSMARKS.md; 294 plain final right on reasonpanel294 was 184 for seed 1 and 189 for seed 2). Loop numbers reported the same way, no marks. Dollars spent. Append ledger lines P296.1-P296.4 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE CHECKPOINTS: copy them to the Mac at ~/premonition-models/rsn296/<run>/ (one directory per run) and record sha256 in RESULTS.md. Never push weights. Destroy the instance BEFORE a slow copy if the $3.80 total is near: copy checkpoints first only if time allows; results come first.
+PUSH: artifacts/claude-rsn296-20260924/RESULTS.md artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt artifacts/claude-rsn296-20260924/runs artifacts/fable-predictions-ledger.md
+----- rsn-296-guard.md -----
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+YOUR TASK: spending guard for rsn-296-train (Ben 21:51 UTC: "don't use gpu rentals above 4$"; the $4 is the COMBINED limit per job, re-rents and extra machines included). You rent nothing and change no files except one ledger line.
+- Read the vast.ai key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- Every 60 s: run `vastai show instances --raw`. Take every instance whose label starts with "rsn-296". Keep a running total, and never forget an instance after it disappears: for each instance id first seen, record its dph (dph_total) and its start time; its cost so far = dph × hours since start (or until it vanished). Also add the $0.40 already spent by earlier tries only for the report, not for the cap.
+- When the combined total of all rsn-296* instances seen since you started reaches $3.80: destroy every live rsn-296* instance by exact instance id (vastai destroy instance <id>), confirm they are gone, and append a line to artifacts/fable-predictions-ledger.md (cat >>) saying GUARD-STOP with the total.
+- Stop watching when runs/rsn-296-train/rsn-296-train.exit exists on origin/builder-outbox (git fetch -q origin builder-outbox; git ls-tree) AND no rsn-296* instance has been live for 5 min, or after 8 hours.
+- Never touch an instance whose label does not start with rsn-296.
+Final reply: the instance ids seen, the dph and minutes of each, the combined dollars, and whether you had to stop anything.
+PUSH: artifacts/fable-predictions-ledger.md
+----- lis-313-f0.md -----
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS, like lis-311; the reader runs on MPS).
+TIME CAP: 240 minutes in total (four arms). macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: builder for lis-313 (this replaces lis-312, which exited without running). Score base 292t with and without our 1B reader on the sealed conversation benchmark F0, in four arms. Artifacts go in artifacts/claude-lis313-20260924/. The listener thread wrote the code. Run it and never edit it. If it breaks, stop and report the exact error.
+
+GETTING THE CODE (lis-312 failed here): build the tree as lis-311 did. Start from a fresh `git archive origin/builder-outbox` (it has the F0 benchmark, claude_convf0_score.py, claude_lis310_agent.py and claude_loop292t_agent.py), then overlay a fresh `git archive origin/main` on top (it has claude_lis313_*.py, claude_lis312_f0.py, claude_lis300_*.py, fable_reasoner50.py and the PASSMARKS). Run everything from the root of that combined tree. It also needs artifacts/fable-self122-20260922/self122_head.pt from the Mac repo, copied in, exactly as for lis-311b.
+
+READ FIRST: artifacts/claude-lis313-20260924/PASSMARKS.md, artifacts/claude-lis312-20260923/PASSMARKS.md, scripts/claude_lis313_f0.py, and artifacts/claude-convbench-f0-20260923/README.md. Never print or quote benchmark user turns.
+
+1. Checks:
+   - `shasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt` must be all OK;
+   - the lis300-merged and lis301-merged safetensors sha256 in ~/premonition-models/ must match lis-300's and lis-301's RESULTS.md;
+   - `python -B scripts/claude_lis313_test.py` must print 11/11 passed;
+   - `uptime` and disk.
+   Seal both PASSMARKS.md files, scripts/claude_lis313_f0.py and scripts/claude_lis313_agent.py into artifacts/claude-lis313-20260924/SEAL.sha256.txt BEFORE running.
+2. Run the four arms (output dir artifacts/claude-lis313-20260924/run):
+   python -B scripts/claude_lis313_f0.py --arm A --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm B --model ~/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm C --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm D --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --score artifacts/claude-lis313-20260924/run
+3. RESULTS.md, verdict first:
+   - P312.1 to P312.4 (arms A vs C) and P313.1 to P313.4 (arms C vs D), with integer counts and PASS/FAIL, plus every count of summary.json for all four arms;
+   - device and ms;
+   - for arms C and D, every new triple stored on a teach turn that is not the gold, as "gold triple -> stored triple" (triples only, never the user turn);
+   - for arm D, every ask turn the wrapper answered, as "gold value -> reply" (replies are agent text, so quoting them is fine; never the user turn).
+   Append ledger lines P312.1 to P312.4 and P313.1 to P313.4 (cat >> artifacts/fable-predictions-ledger.md).
+PUSH: artifacts/claude-lis313-20260924 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mecho "=== grep replies for patterns (names only + counts) ==="; grep -ril "huggingface\|MiniLM\|self122.*router\|sentence-transformers" ~/premonition-watch/queue/ 2>&1 | head -n 50; echo "---"; grep -ril "rm -rf\|\.cache\|cache purge\|hf cache\|huggingface-cli.*delete\|cache.*clear" ~/premonition-watch/queue/ 2>&1 | head -n 100
+=== grep replies for patterns (names only + counts) ===
+/Users/ben-hannan/premonition-watch/queue/own-m1b-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1n-train.md
+/Users/ben-hannan/premonition-watch/queue/lis-300-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-300-train.md
+/Users/ben-hannan/premonition-watch/queue/own-m1b-train.md
+/Users/ben-hannan/premonition-watch/queue/talk-280-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/265-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-301-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/269-resume2.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rentcheck.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.md
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/rsn-291-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1-train.md
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-o0c-pretrain-data.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-vast-rescue.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-138nb-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/lis-300-publish.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/nb-323-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-scoreraudit.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1n-train.go1.err.txt
+---
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go2.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-282b-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/263-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-294-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-266-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/nb-320-baseline.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1v-run.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-o0e2-baseline-reseal.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-f1-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/chat-demo-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-292t-panel.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m0-mouthdata.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-138p-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go2.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-313-f0.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-296-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-280m-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/265-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-301-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-o0e-baseline-code.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-268b-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-ckpt-copy.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/chat-weakspots.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-291-panel.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-o0b-generator.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/269-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.md
+/Users/ben-hannan/premonition-watch/queue/rsn-268b-panel.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/261b-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeB6.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/nb-321-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-291-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-o0c-pretrain-data.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-f1-judge.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-138nb-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/nb-323-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-293-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-292t-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-280b-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-f0-base.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/lis-314-panel.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeB5.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-255b-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/own-m1n-train.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/273-build.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/nb-321-run.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-266-panel.go1.err.txt
+[0m
+[0m$ [0mecho "=== 274 reply grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache\|disk\|space\|free\|No space\|OSError\|Errno 28" ~/premonition-watch/queue/274-build.go1.reply.md 2>&1 | head -n 100
+echo "=== 274 err grep (filtered) ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache" ~/premonition-watch/queue/274-build.go1.err.txt 2>&1 | head -n 200
+=== 274 reply grep ===
+20:A MiniLM cache dir appeared under `hub/` — inspecting immediately.
+58:  3. Load 63–142 all evening; disk 14–73 GB free (over 3 GB bar). All panel arms strictly sequential, `OMP=MKL=1`, CPU only, ≤4 parallel rule kept.
+59:  4. **External cache flap (the big one):** a second actor on this box deleted `~/.cache/huggingface/hub` at ~22:02 (dir mtime) and restored the full MiniLM snapshot at ~22:17 (files hashed). Run-1 panel (my deviating driver: shared workdir, 292t-config for the 292 arm) scored 76/90 on real replies; run-2 (compliant driver) is **VOID** — 14–29 `CRASH`-marker replies per arm where the router's MiniLM snapshot load raised `FileNotFoundError` (harness exceptions, not agent replies; proven by traceback + cache mtimes + reappearance). Run-3 (compliant driver, model present, **0 CRASH in 450 turns**) is the scored M3 run. No agent file changed between runs; comparison-arm processes never load 274's code. Slot ran 3×, comparison arms 3× total; only run-3 scored; nothing was tuned on any panel output. `run274/` kept as local evidence, not pushed.
+=== 274 err grep (filtered) ===
+1117:fable_self122_data.py
+1118:fable_self122_diag.py
+1119:fable_self122_runner.py
+1120:fable_self122_train.py
+1121:fable_self122.py
+2069:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_join292t_run.py panel scripts/claude_loop292_agent.py artifacts/claude-merge292-20260923/loop292-config.json artifacts/claude-loop274-20260924/run274/work/p292 artifacts/claude-joinpanel292t-20260923/panel.jsonl artifacts/claude-loop274-20260924/run274/panel-292.json artifacts/claude-loop274-20260924/run274/probes-292.json > artifacts/claude-loop274-20260924/run274/panel-292.log 2>&1; tail -2 artifacts/claude-loop274-20260924/run274/panel-292.log
+2235:[0m$ [0mfor f in scripts/fable_loop90_agent.py scripts/fable_loop138i_agent.py scripts/fable_loop138j_agent.py scripts/claude_loop138k_agent.py scripts/claude_loop138m_agent.py scripts/claude_loop292_agent.py scripts/claude_loop292t_agent.py scripts/claude_fix280_capab.py scripts/claude_fix281_called.py scripts/claude_fix266b_detector.py; do echo "== $f"; grep -n "^import torch\|^import numpy\|import torch\|from torch\|set_num_threads\|torch\." $f 2>/dev/null | head -5; done; echo ===; ls ~/.cache/uv 2>/dev/null || echo no-uv-cache-there; ls /Users/ben-hannan/Library/Caches/uv 2>/dev/null | head
+2331:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+2334:[0m$ [0mhead -40 /tmp/styleprobe.err; echo ===; ls /Users/ben-hannan/.cache/huggingface/hub/ 2>&1 | head; echo ===; ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/ 2>&1
+2377:[0m$ [0mgrep -n "FileNotFoundError\|snapshots\|sentence\|MiniLM\|huggingface\|encode(" /tmp/styleprobe.err | head; echo ---; sed -n '/fable_loop224_agent.py.*line 116/,/iterdir/p' /tmp/styleprobe.err | head -40
+2378:113:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+2440:  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self122.py", line 120, in route122
+2443:  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self122.py", line 115, in get_router
+2446:  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self122.py", line 62, in __init__
+2449:  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self122_train.py", line 69, in resolve_snapshot
+2453:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/ 2>&1; echo ---; ls -la /Users/ben-hannan/.cache/huggingface/hub/ 2>&1; echo ---; find /Users/ben-hannan/.cache/huggingface -maxdepth 4 2>&1 | head -20; echo ---; date; uptime
+2464:ls: /Users/ben-hannan/.cache/huggingface/hub/: No such file or directory
+2466:/Users/ben-hannan/.cache/huggingface
+2467:/Users/ben-hannan/.cache/huggingface/.check_for_skill_update_done
+2468:/Users/ben-hannan/.cache/huggingface/xet
+2469:/Users/ben-hannan/.cache/huggingface/xet/logs
+2470:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260921T204857356-0400_42489.log
+2471:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260907T230650032-0400_51511.log
+2472:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260907T221152803-0400_44878.log
+2473:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260921T220807023-0400_69990.log
+2474:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260921T214914302-0400_58863.log
+2475:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260907T223438835-0400_47337.log
+2476:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260921T220919379-0400_71526.log
+2477:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260909T164933513-0400_77001.log
+2478:/Users/ben-hannan/.cache/huggingface/xet/logs/xet_20260909T165020884-0400_77077.log
+2479:/Users/ben-hannan/.cache/huggingface/xet/https___cas_serv-tGqkUaZf_CBPHQ6h
+2480:/Users/ben-hannan/.cache/huggingface/xet/https___cas_serv-tGqkUaZf_CBPHQ6h/staging
+2481:/Users/ben-hannan/.cache/huggingface/.check_for_update_done
+2482:/Users/ben-hannan/.cache/huggingface/.DS_Store
+2483:/Users/ben-hannan/.cache/huggingface/datasets
+2484:/Users/ben-hannan/.cache/huggingface/datasets/_Users_ben-hannan_.cache_huggingface_datasets_HuggingFaceTB___smoltalk_everyday-conversations_0.0.0_5feaf2fd3ffca7c237fc38d1861bc30365d48ffa.lock
+2485:/Users/ben-hannan/.cache/huggingface/datasets/_Users_ben-hannan_.cache_huggingface_datasets_HuggingFaceFW___fineweb-edu_sample-10BT_0.0.0_87f09149ef4734204d70ed1d046ddc9ca3f2b8f9.lock
+2508:[0m$ [0msed -n '40,110p' scripts/fable_self122_train.py; echo ===; sed -n '40,125p' scripts/fable_self122.py
+2535:        "~/.cache/huggingface/hub/"
+2536:        "models--sentence-transformers--all-MiniLM-L6-v2/snapshots"))
+2538:    assert snaps, "no cached MiniLM snapshot"
+2543:    """MiniLM via our plain-PyTorch loader (D1: lowercase=True, uncased vocab)."""
+2589:"; echo ===; find /Users/ben-hannan/.cache /private/tmp /tmp -maxdepth 6 -name "*.safetensors" 2>/dev/null | head; echo ===; find / -maxdepth 7 -type d -name "models--sentence-transformers*" 2>/dev/null | head
+2596:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+2604:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/hub/ 2>&1; echo "---"; find /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 -maxdepth 3 2>&1 | head -20; date
+2608:drwxr-xr-x  3 ben-hannan  staff   96 Sep 23 22:17 models--sentence-transformers--all-MiniLM-L6-v2
+2610:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+2611:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots
+2612:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+2613:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+2614:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+2615:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+2618:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/; shasum -a 256 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* | head -5
+2625:953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+2626:53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+2627:07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+2629:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json artifacts/claude-loop274-20260924/run274/panel-*.log artifacts/claude-loop274-20260924/run274/panel-score274.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1; df -g / | head -2
+2642:"; ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1
+2668:"; ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1
+2767:    'External actor deleted ~/.cache/huggingface/hub at ~22:02 (dir mtime) and restored the MiniLM snapshot at ~22:17 (full files, hashed): run-1 panel scored 76/90 on real replies; run-2 panel VOID with 14-29 CRASH markers per arm (FileNotFoundError in route122 MiniLM snapshot load); run-3 clean. No agent file edited between runs; comparison-arm processes never load 274 code.',
+2838:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mecho "=== mut0 reply grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache\|disk\|space\|CRASH\|FileNotFound\|VOID\|external\|deleter\|deleted\|22:" ~/premonition-watch/queue/mut0-build.go1.reply.md 2>&1 | head -n 200
+echo "=== mut0 err grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122.*snap\|snapshots\|rm -rf.*cache\|\.cache/huggingface\|cache purge\|hf cache\|FileNotFoundError.*huggingface\|No such file.*MiniLM" ~/premonition-watch/queue/mut0-build.go1.err.txt 2>&1 | head -n 200
+=== mut0 reply grep ===
+12:The environment is missing the MiniLM snapshot the agent stack needs. Searching more broadly before concluding it's truly gone.
+43:- Deviations (3, environmental, all reported): D1 OPUS-RULES.txt absent at stated path (F1-D8 class; followed task-message rules). D2 first 292t run failed — machine lacked the MiniLM snapshot (route122 FileNotFoundError; smoke daemon died t071; evidence in local `run292t-envfail/`); restored the frozen encoder from HF main rev 1110a24 (2026-06-01, predates builder runs; 3 files to ~/.cache only, repo untouched), verified, reran once cleanly — reported, not silent. D3 load-gated waits (F1 VP waited load1 113→47); totals 479/582/1130 s; disk ≥14 GB. Seal re-verified 5/5 OK after all runs; 0 existing files edited (the one tracked mod, `fable-predictions-ledger.md`, predates this task).
+=== mut0 err grep ===
+1583:  File "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/fable_self122_train.py", line 69, in resolve_snapshot
+1592:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+1594:[0m$ [0mls data/models/ 2>&1; ls ~/.cache/huggingface/hub/ 2>&1 | head -n 20; echo HF_HOME=$HF_HOME HUGGINGFACE_HUB_CACHE=$HUGGINGFACE_HUB_CACHE TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE
+1596:ls: /Users/ben-hannan/.cache/huggingface/hub/: No such file or directory
+1597:HF_HOME= HUGGINGFACE_HUB_CACHE= TRANSFORMERS_CACHE=
+1606:huggingface
+1613:[0m$ [0mls /Users/ben-hannan/.cache/huggingface/ && ls /Users/ben-hannan/.cache/huggingface/hub/ 2>&1 | head -n 20
+1616:ls: /Users/ben-hannan/.cache/huggingface/hub/: No such file or directory
+1618:[0m$ [0mls data/models/smolear235_v3/ 2>&1 | head; ls data/open/ 2>&1 | head; find / -maxdepth 6 -name "*MiniLM*" 2>/dev/null | head
+1631:[0m$ [0mfind /Users/ben-hannan/.cache /private/tmp /var/folders -maxdepth 8 -iname "*minilm*" 2>/dev/null | head -n 10; find / -maxdepth 4 -name "hub" -path "*huggingface*" 2>/dev/null | head
+1692:   "reply": "CRASH FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'",
+1701:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+1752:    print(socket.create_connection(('huggingface.co',443)).getpeername())
+1760:req = urllib.request.Request('https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/revision/main', headers={'User-Agent':'mut0/1.0'})
+1763:{"_id":"621ffdc136468d709f180294","id":"sentence-transformers/all-MiniLM-L6-v2","private":false,"pipeline_tag":"sentence-similarity","library_name":"sentence-transformers","tags":["sentence-transformers","pytorch","tf","rust","onnx","safetensors","openvino","bert","feature-extraction","sentence-similarity","transformers","en","dataset:s2orc","dataset:flax-sentence-embeddings/stackexchange_xml","da
+1767:req = urllib.request.Request('https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2', headers={'User-Agent':'mut0/1.0'})
+1787:base = os.path.expanduser('~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/' + rev)
+1790:    url = 'https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/' + rev + '/' + fn
+1797:" && ls -la ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/
+1821:snapshot: /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+[0m
+[0m$ [0mfor n in lis-302-gpu rsn-296-train rsn-296-guard 274-build mut0-build lis-313-f0; do echo "===== $n ====="; grep -in "No space\|Errno 28\|disk full\|rm -rf.*cache\|cache.*clean\|clean.*cache\|uv cache\|hf.*cache\|huggingface.*cache\|rm.*huggingface\|rm.*\.cache\|du -sh\|df -g\|free disk\|2 GB\|14 GB" ~/premonition-watch/queue/$n.go*.err.txt 2>&1 | head -n 60; done
+===== lis-302-gpu =====
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go2.err.txt:7:[0m$ [0mpwd; git rev-parse --abbrev-ref HEAD; git status --short | head -n 100; echo ---; ls -R artifacts/claude-lis302-20260924 2>&1 | head -n 100; echo ---; ls scripts/claude_lis302_tokprobs.py scripts/claude_earcheck261_checker.py 2>&1; echo ---; uptime; df -g / | head
+===== rsn-296-train =====
+7:[0m$ [0mpwd; ls; git fetch -q origin main 2>&1 | head; git branch -a | head -30; uptime; df -g / 2>&1 | head
+===== rsn-296-guard =====
+7:[0m$ [0mpwd; ls; echo ---; git fetch -q origin main 2>&1 | head -20; git fetch -q origin builder-outbox 2>&1 | head -20; uptime; df -g / | head -5
+808:- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+852:- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+===== 274-build =====
+7:[0m$ [0mpwd; uptime; df -g /; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 status --short | head -50; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 branch --show-current; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 log --oneline -5
+1728:[0m$ [0mshasum -a 256 -c artifacts/claude-loop274-20260924/SEAL.sha256.txt && uptime && df -g / | head -3
+1925:CPU only. At most 4 parallel processes; `uptime` / `df -g /` checked before heavy steps.
+2334:[0m$ [0mhead -40 /tmp/styleprobe.err; echo ===; ls /Users/ben-hannan/.cache/huggingface/hub/ 2>&1 | head; echo ===; ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/ 2>&1
+2453:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/ 2>&1; echo ---; ls -la /Users/ben-hannan/.cache/huggingface/hub/ 2>&1; echo ---; find /Users/ben-hannan/.cache/huggingface -maxdepth 4 2>&1 | head -20; echo ---; date; uptime
+2484:/Users/ben-hannan/.cache/huggingface/datasets/_Users_ben-hannan_.cache_huggingface_datasets_HuggingFaceTB___smoltalk_everyday-conversations_0.0.0_5feaf2fd3ffca7c237fc38d1861bc30365d48ffa.lock
+2485:/Users/ben-hannan/.cache/huggingface/datasets/_Users_ben-hannan_.cache_huggingface_datasets_HuggingFaceFW___fineweb-edu_sample-10BT_0.0.0_87f09149ef4734204d70ed1d046ddc9ca3f2b8f9.lock
+2604:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/hub/ 2>&1; echo "---"; find /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 -maxdepth 3 2>&1 | head -20; date
+2618:[0m$ [0mls -la /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/; shasum -a 256 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* | head -5
+2629:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json artifacts/claude-loop274-20260924/run274/panel-*.log artifacts/claude-loop274-20260924/run274/panel-score274.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1; df -g / | head -2
+2766:    'Machine load 63-142 all evening; free disk 14-73 GB (over the 3 GB stop bar); panel arms run strictly sequentially with OMP_NUM_THREADS=1 MKL_NUM_THREADS=1.',
+2767:    'External actor deleted ~/.cache/huggingface/hub at ~22:02 (dir mtime) and restored the MiniLM snapshot at ~22:17 (full files, hashed): run-1 panel scored 76/90 on real replies; run-2 panel VOID with 14-29 CRASH markers per arm (FileNotFoundError in route122 MiniLM snapshot load); run-3 clean. No agent file edited between runs; comparison-arm processes never load 274 code.',
+===== mut0-build =====
+10:[0m$ [0mls scratchpad/briefs/; echo ---; ls scripts/ | head -n 100; echo ---; uptime; df -g /
+765:  F=$(df -g / | tail -1 | awk '{print $4}')
+766:  if [ "$F" -lt 3 ]; then echo "free disk ${F} GB < 3: STOP"; exit 5; fi
+878:  F=$(df -g / | tail -1 | awk '{print $4}')
+879:  if [ "$F" -lt 3 ]; then echo "free disk ${F} GB < 3: STOP"; exit 5; fi
+932:  F=$(df -g / | tail -1 | awk '{print $4}')
+933:  if [ "$F" -lt 3 ]; then echo "free disk ${F} GB < 3: STOP"; exit 5; fi
+1472:[0m$ [0msha256sum -c artifacts/claude-mut0-20260924/SEAL.sha256.txt && uptime && df -g / | tail -1
+1594:[0m$ [0mls data/models/ 2>&1; ls ~/.cache/huggingface/hub/ 2>&1 | head -n 20; echo HF_HOME=$HF_HOME HUGGINGFACE_HUB_CACHE=$HUGGINGFACE_HUB_CACHE TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE
+1597:HF_HOME= HUGGINGFACE_HUB_CACHE= TRANSFORMERS_CACHE=
+1613:[0m$ [0mls /Users/ben-hannan/.cache/huggingface/ && ls /Users/ben-hannan/.cache/huggingface/hub/ 2>&1 | head -n 20
+===== lis-313-f0 =====
+813:+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+851:+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+1793:[0m$ [0muptime; df -g / 2>&1 | head -n 5; ls /tmp/ | head -n 20
+1883:[0m$ [0mshasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt; echo "---"; uptime; df -g / | head -n 5; ls artifacts/claude-lis313-20260924/
+2376:[0m$ [0mtail -n 15 artifacts/fable-predictions-ledger.md; echo "---"; ls artifacts/ | grep lis313; df -g / | head -n 3; uptime
+[0m
+[0m$ [0mecho "=== all queue err: rm -rf with cache/home ==="; grep -rin "rm -rf.*cache\|rm -rf.*huggingface\|rm -rf.*~/\|rm -rf.*\$HOME\|rm -rf /Users" ~/premonition-watch/queue/*.err.txt 2>&1 | head -n 100
+echo "=== worktree scripts grep ==="; grep -rn "huggingface\|hf cache\|cache purge\|\.cache\|shutil.rmtree.*cache\|rmtree.*hub" scripts/ 2>&1 | head -n 100
+=== all queue err: rm -rf with cache/home ===
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:445:[0m$ [0mecho "=== watch.log size ==="; ls -lh ~/premonition-watch/watch.log; echo "=== grep huggingface in watch.log ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|router" ~/premonition-watch/watch.log 2>&1 | head -n 100; echo "=== grep rm/cache patterns in watch.log ==="; grep -in "rm -rf\|\.cache\|cache purge\|hf cache\|cache.*clean\|clean.*cache\|purge" ~/premonition-watch/watch.log 2>&1 | head -n 200
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1356:[0m$ [0mecho "=== grep replies for patterns (names only + counts) ==="; grep -ril "huggingface\|MiniLM\|self122.*router\|sentence-transformers" ~/premonition-watch/queue/ 2>&1 | head -n 50; echo "---"; grep -ril "rm -rf\|\.cache\|cache purge\|hf cache\|huggingface-cli.*delete\|cache.*clear" ~/premonition-watch/queue/ 2>&1 | head -n 100
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1439:[0m$ [0mecho "=== 274 reply grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache\|disk\|space\|free\|No space\|OSError\|Errno 28" ~/premonition-watch/queue/274-build.go1.reply.md 2>&1 | head -n 100
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1440:echo "=== 274 err grep (filtered) ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache" ~/premonition-watch/queue/274-build.go1.err.txt 2>&1 | head -n 200
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1502:2629:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json artifacts/claude-loop274-20260924/run274/panel-*.log artifacts/claude-loop274-20260924/run274/panel-score274.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1; df -g / | head -2
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1506:2838:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1508:[0m$ [0mecho "=== mut0 reply grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122\|\.cache\|rm -rf\|cache purge\|hf cache\|disk\|space\|CRASH\|FileNotFound\|VOID\|external\|deleter\|deleted\|22:" ~/premonition-watch/queue/mut0-build.go1.reply.md 2>&1 | head -n 200
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1509:echo "=== mut0 err grep ==="; grep -in "huggingface\|minilm\|MiniLM\|self122.*snap\|snapshots\|rm -rf.*cache\|\.cache/huggingface\|cache purge\|hf cache\|FileNotFoundError.*huggingface\|No such file.*MiniLM" ~/premonition-watch/queue/mut0-build.go1.err.txt 2>&1 | head -n 200
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1535:[0m$ [0mfor n in lis-302-gpu rsn-296-train rsn-296-guard 274-build mut0-build lis-313-f0; do echo "===== $n ====="; grep -in "No space\|Errno 28\|disk full\|rm -rf.*cache\|cache.*clean\|clean.*cache\|uv cache\|hf.*cache\|huggingface.*cache\|rm.*huggingface\|rm.*\.cache\|du -sh\|df -g\|free disk\|2 GB\|14 GB" ~/premonition-watch/queue/$n.go*.err.txt 2>&1 | head -n 60; done
+/Users/ben-hannan/premonition-watch/queue/000-cache-pin.go1.err.txt:1554:2629:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json artifacts/claude-loop274-20260924/run274/panel-*.log artifacts/claude-loop274-20260924/run274/panel-score274.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1; df -g / | head -2
+/Users/ben-hannan/premonition-watch/queue/269-build.go1.err.txt:1708:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/273-build.go1.err.txt:4702:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.err.txt:2629:[0m$ [0mrm -rf artifacts/claude-loop274-20260924/run274/work artifacts/claude-loop274-20260924/run274/panel-*.json artifacts/claude-loop274-20260924/run274/probes-*.json artifacts/claude-loop274-20260924/run274/panel-*.log artifacts/claude-loop274-20260924/run274/panel-score274.json && mkdir -p artifacts/claude-loop274-20260924/run274/work && ls /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1; df -g / | head -2
+/Users/ben-hannan/premonition-watch/queue/274-build.go1.err.txt:2838:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/chat-demo-build.go1.err.txt:999:[0m✗ [0mmkdir -p ~/premonition-chat/runtime && cp scripts/*.py ~/premonition-chat/runtime-tmp-check 2>/dev/null || true; rm -rf ~/premonition-chat/runtime-tmp-check; cp scripts/*.py ~/premonition-chat/runtime/ 2>&1 | head -n 3; ls ~/premonition-chat/runtime | wc -l; mkdir -p ~/premonition-chat/runtime/artifacts && cp -R artifacts/claude-openers260-20260922 artifacts/fable-abstain76-20260921 artifacts/claude-relationtable-20260922 ~/premonition-chat/runtime/artifacts/ && du -sh ~/premonition-chat/runtime failed
+/Users/ben-hannan/premonition-watch/queue/chat-demo-build.go1.err.txt:1000:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/chat-weakspots.go1.err.txt:695:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/lis-313-f0.go1.err.txt:1819:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/mut0-build.go1.err.txt:2037:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/nb-320-baseline.go1.err.txt:1028:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/nb-321-build.go1.err.txt:3213:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/nb-321-run.go1.err.txt:1259:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/nb-323-build.go1.err.txt:4085:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/own-m0-mouthdata.go1.err.txt:2546:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/own-o0b-generator.go1.err.txt:2787:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-138nb-build.go1.err.txt:1286:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-266-build.go1.err.txt:3151:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-268b-build.go1.err.txt:3813:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-268b-panel.go1.err.txt:1101:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-291-build.go1.err.txt:9895:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go1.err.txt:763:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go2.err.txt:952:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/rsn-293-build.go1.err.txt:3626:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-255b-build.go1.err.txt:732:[0m$ [0mrm -rf scripts/__pycache__ && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "
+/Users/ben-hannan/premonition-watch/queue/talk-255b-build.go1.err.txt:737:"; rm -rf scripts/__pycache__; uptime
+/Users/ben-hannan/premonition-watch/queue/talk-255b-build.go1.err.txt:770:[0m✗ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; rm -rf /tmp/smoke255b && mkdir -p /tmp/smoke255b && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255b_agent.py --config artifacts/claude-fixedtext255b-20260923/loop255b-config.json --once "Who is Tomas's boss?" --state-dir /tmp/smoke255b && uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_loop255_agent.py --config artifacts/claude-fixedtext255-20260922/loop255-config.json --once "Who is Tomas's boss?" --state-dir /tmp/smoke255b-255 2>&1 | tail -3; rm -rf /tmp/smoke255b /tmp/smoke255b-255 scripts/__pycache__ failed
+/Users/ben-hannan/premonition-watch/queue/talk-255b-build.go1.err.txt:771:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-280m-build.go1.err.txt:1771:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-282b-build.go1.err.txt:899:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-292t-build.go1.err.txt:1618:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-292t-panel.go1.err.txt:460:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-f0-base.go1.err.txt:1133:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-f1-build.go1.err.txt:3709:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeB5.go1.err.txt:647:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeB6.go1.err.txt:680:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+/Users/ben-hannan/premonition-watch/queue/talk-f1-judge.go1.err.txt:379:[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+=== worktree scripts grep ===
+scripts/fable_talker101_data.py:11:SRC_BASE = "https://huggingface.co/datasets/SimpleStories/SimpleStories"
+scripts/fable_diag95_infer.py:31:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/fable_ears213_wave.bat:16:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_audit83_dryrun.py:23:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/fable_brake118b_score.py:48:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/fable_brake118_score.py:44:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/claude_diag119h_freshprobe.py:19:SNAP = r"C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1"
+scripts/fable_ears119f_wave.bat:13:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_ears119g_wave.bat:13:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_ears47_encoder.py:4:    python fable_ears47_encoder.py --ensure            # download snapshot (huggingface_hub)
+scripts/fable_ears47_encoder.py:31:    from huggingface_hub import snapshot_download
+scripts/claude_smolear235_model.py:5:install fails its huggingface-hub version check and we install nothing).
+scripts/claude_smolear235_model.py:175:        "~/.cache/huggingface/hub/models--HuggingFaceTB--SmolLM2-360M-Instruct/snapshots/*"))
+scripts/fable_brake118b_tune.py:40:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/fable_self122_train.py:67:        "~/.cache/huggingface/hub/"
+scripts/fable_ears85_train.py:61:    from huggingface_hub import snapshot_download
+scripts/fable_ears119e_wave.bat:15:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_brake118_tune.py:35:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/premonition_m01_probe.py:156:    report["cache_paths"] = {"legacy_v1": pdata.cache_relative(args.data, args.split, tokenizer, detector),
+scripts/premonition_m01_probe.py:157:                             "label_free_v2": pdata.cache_relative(args.data, args.split, tokenizer, detector,
+scripts/fable_ears47_data.py:67:    from huggingface_hub import snapshot_download
+scripts/fable_ears119b_wave.bat:13:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_modernbert61_check.py:23:    $HOME/.cache/huggingface/hub/models--answerdotai--ModernBERT-base/snapshots/8949b909ec900327062f0ebf497f51aef5e6f0c8
+scripts/fable_brake118b_trainlist.py:45:SNAP = ("/Users/ben-hannan/.cache/huggingface/hub/models--allenai--"
+scripts/fable_ears119h_wave.bat:15:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+scripts/fable_ears119_wave.bat:7:set SNAP=C:\Users\benja\.cache\huggingface\hub\models--allenai--scibert_scivocab_uncased\snapshots\24f92d32b1bfb0bcaf9ab193ff3ad01e87732fc1
+[0m
+[0m$ [0mls ~/premonition-watch/*.sh ~/premonition-watch/*.py 2>&1; echo "==="; grep -in "rm\|cache\|purge\|clean\|huggingface\|\.cache" ~/premonition-watch/watcher.sh ~/premonition-watch/watcher.new 2>&1 | head -n 50
+echo "=== find rungo ==="; find ~/premonition-watch/ -maxdepth 2 -type f 2>&1 | head -n 30; find . -maxdepth 3 -name "rungo*.sh" 2>&1 | head
+zsh:1: no matches found: /Users/ben-hannan/premonition-watch/*.py
+===
+/Users/ben-hannan/premonition-watch/watcher.sh:47:    pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
+/Users/ben-hannan/premonition-watch/watcher.sh:58:    if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
+/Users/ben-hannan/premonition-watch/watcher.sh:59:    if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
+/Users/ben-hannan/premonition-watch/watcher.sh:61:      rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
+/Users/ben-hannan/premonition-watch/watcher.sh:64:    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
+/Users/ben-hannan/premonition-watch/watcher.new:47:    pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
+/Users/ben-hannan/premonition-watch/watcher.new:58:    if grep -q '^QUIET: yes' "$Q/$n.md.tmp" && { [ "$running" -gt 0 ] || [ "$load" -gt 20 ]; }; then rm -f "$Q/$n.md.tmp"; continue; fi   # timing jobs wait for an idle Mac
+/Users/ben-hannan/premonition-watch/watcher.new:59:    if ls "$Q"/*.running >/dev/null 2>&1 && grep -l '^QUIET: yes' $(ls "$Q"/*.running | sed 's/\.running$/.md/') 2>/dev/null | grep -q .; then rm -f "$Q/$n.md.tmp"; break; fi   # nothing starts beside a quiet job
+/Users/ben-hannan/premonition-watch/watcher.new:61:      rm -f "$Q/$n.md.tmp"; continue   # another GPU task is running; try next round
+/Users/ben-hannan/premonition-watch/watcher.new:64:    ( bash "$RUN" "$Q/$n.md"; echo "rc=$?" > "$Q/$n.exit"; rm -f "$Q/$n.running" ) &
+=== find rungo ===
+/Users/ben-hannan/premonition-watch/watcher.sh
+/Users/ben-hannan/premonition-watch/queue/rentcheck.pushed
+/Users/ben-hannan/premonition-watch/queue/rentcheck.md
+/Users/ben-hannan/premonition-watch/queue/rsn-266b-build.pushed
+/Users/ben-hannan/premonition-watch/queue/269-resume2.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/rsn-293-build.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/talk-241b-gradeD1.exit
+/Users/ben-hannan/premonition-watch/queue/chat-demo-build.md
+/Users/ben-hannan/premonition-watch/queue/rentcheck.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeA3.md
+/Users/ben-hannan/premonition-watch/queue/263-build.md
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go2.err.txt
+/Users/ben-hannan/premonition-watch/queue/000-watcher-dedupe.go1.done
+/Users/ben-hannan/premonition-watch/queue/000-watcher-dedupe.exit
+/Users/ben-hannan/premonition-watch/queue/rsn-268-build.exit
+/Users/ben-hannan/premonition-watch/queue/own-probe-1.md
+/Users/ben-hannan/premonition-watch/queue/own-o0a-oracle.pushed
+/Users/ben-hannan/premonition-watch/queue/talk-280m-panel.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/talk-282b-build.go1.done
+/Users/ben-hannan/premonition-watch/queue/talk-280p-run.md
+/Users/ben-hannan/premonition-watch/queue/lis-302-gpu.go1.err.txt
+/Users/ben-hannan/premonition-watch/queue/rsn-293-panel.go1.done
+/Users/ben-hannan/premonition-watch/queue/lis-311b-chat292.go2.err.txt
+/Users/ben-hannan/premonition-watch/queue/talk-241b-gradeA1.pushed
+/Users/ben-hannan/premonition-watch/queue/talk-f1-gradeA1.pushed
+/Users/ben-hannan/premonition-watch/queue/rsn-291-publish.go2.reply.md
+/Users/ben-hannan/premonition-watch/queue/own-o0c-pretrain-data.go1.done
+/Users/ben-hannan/premonition-watch/queue/talk-241b-gradeD3.go1.reply.md
+/Users/ben-hannan/premonition-watch/queue/263-build.pushed
+/Users/ben-hannan/premonition-watch/queue/rsn-138p-build.go1.done
+[0m
+[0m$ [0mecho "=== locate rungo4 ==="; grep -n "RUN=" ~/premonition-watch/watcher.sh; ls handoff/kit/mimo/ 2>&1 | head -n 30; grep -in "rm\|cache\|purge\|clean\|huggingface" handoff/kit/mimo/rungo4.sh 2>&1 | head -n 80
+=== locate rungo4 ===
+18:RUN="$W/handoff/kit/mimo/rungo4.sh"
+after15.sh
+common-muse.txt
+diskguard.sh
+ocdb.sh
+resume.sh
+run1.sh
+rungo.sh
+rungo2.sh
+rungo4.sh
+runq.sh
+t138nf.txt
+t252cf.txt
+t255f.txt
+t260f.txt
+t261build.txt
+t261panel.txt
+verify.py
+wait_all.sh
+wait_any.sh
+watch.sh
+[0m
+[0m→ [0mRead handoff/kit/mimo/rungo4.sh
+[0m→ [0mRead handoff/kit/mimo/diskguard.sh
+[0m→ [0mRead scripts/fable_self122_train.py
+[0m
+[0m$ [0mcat ~/Library/LaunchAgents/com.valvesoftware.steamclean.plist 2>&1; echo "==="; ls -la ~/.cache/huggingface/ 2>&1; stat -f "%m %Sm %N" ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* 2>&1; echo "==="; df -g / 2>&1 | head -n 5; uptime 2>&1 | head
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.valvesoftware.steamclean</string>
+	<key>Program</key>
+	<string>/Users/ben-hannan/Library/Application Support/Steam/SteamApps/steamclean</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/ben-hannan/Library/Application Support/Steam/SteamApps/steamclean</string>
+		<string>Public</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>SteamContentPaths</key>
+	<array>
+		<string>/Users/ben-hannan/Library/Application Support/Steam/SteamApps</string>
+	</array>
+	<key>ThrottleInterval</key>
+	<integer>60</integer>
+	<key>WatchPaths</key>
+	<array>
+		<string>/Users/ben-hannan/Library/Application Support/Steam/Steam.AppBundle/Steam</string>
+	</array>
+</dict>
+</plist>
+===
+total 32
+drwxr-xr-x@  9 ben-hannan  staff   288 Sep 23 22:17 .
+drwxr-xr-x@ 12 ben-hannan  staff   384 Sep 23 22:12 ..
+-rw-r--r--@  1 ben-hannan  staff  6007 Sep 23 10:01 .agent_harnesses.json
+-rw-r--r--@  1 ben-hannan  staff     0 Sep  9 14:28 .check_for_skill_update_done
+-rw-r--r--@  1 ben-hannan  staff     0 Sep  9 14:28 .check_for_update_done
+-rw-r--r--@  1 ben-hannan  staff  6148 Sep 17 18:21 .DS_Store
+drwxr-xr-x  25 ben-hannan  staff   800 Sep  9 17:45 datasets
+drwxr-xr-x   3 ben-hannan  staff    96 Sep 23 22:17 hub
+drwxr-xr-x@  4 ben-hannan  staff   128 Aug 17 16:33 xet
+1790216238 Sep 23 22:17:18 2026 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+1790216240 Sep 23 22:17:20 2026 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+1790216238 Sep 23 22:17:18 2026 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+===
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 565494760    0%   /
+ 0:25  up 14:18, 4 users, load averages: 10.65 18.61 19.67
+[0m
+[0m$ [0mgrep -rn "delete-cache\|hf cache\|huggingface-cli\|snapshot_download.*delete\|cache.*delete" scripts/ handoff/ ~/premonition-watch/*.sh 2>&1 | head -n 50
+echo "=== mut0 err: lines around restore + after ==="; grep -n "ls -la ~/.cache\|hub.*No such\|snapshot:\|restored\|HF_HOME\|FileNotFound" ~/premonition-watch/queue/mut0-build.go1.err.txt 2>&1 | head -n 40
+echo "=== 274 err disk free values ==="; grep -o "Available[^$]*\| *[0-9]* *[0-9]* *GB.*\|df.*" ~/premonition-watch/queue/274-build.go1.err.txt 2>&1 | head -n 20; grep -in "Filesystem\|Available\|/dev/disk" ~/premonition-watch/queue/274-build.go1.err.txt 2>&1 | head -n 20
+=== mut0 err: lines around restore + after ===
+1533:FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-mut0-20260924/run292t/sd/SUITEDIFF218-SUMMARY.json'
+1550:FileNotFoundError: [Errno 2] No such file or directory: 'artifacts/claude-mut0-20260924/run292t/regscore292t.json'
+1592:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+1594:[0m$ [0mls data/models/ 2>&1; ls ~/.cache/huggingface/hub/ 2>&1 | head -n 20; echo HF_HOME=$HF_HOME HUGGINGFACE_HUB_CACHE=$HUGGINGFACE_HUB_CACHE TRANSFORMERS_CACHE=$TRANSFORMERS_CACHE
+1596:ls: /Users/ben-hannan/.cache/huggingface/hub/: No such file or directory
+1597:HF_HOME= HUGGINGFACE_HUB_CACHE= TRANSFORMERS_CACHE=
+1616:ls: /Users/ben-hannan/.cache/huggingface/hub/: No such file or directory
+1692:   "reply": "CRASH FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'",
+1701:FileNotFoundError: [Errno 2] No such file or directory: '/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots'
+1797:" && ls -la ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/
+1815:print('snapshot:', s)
+1821:snapshot: /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+=== 274 err disk free values ===
+df -g /; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 status --short | head -50; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 branch --show-current; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 log --oneline -5
+Available Capacity iused     ifree %iused  Mounted on
+dfold_sleep.py
+dfadd82b248585da9ae45a139  scripts/claude_loop274_test.py
+df4c5  artifacts/claude-loop274-20260924/PASSMARKS.md
+df -g / | head -3
+Available Capacity iused     ifree %iused  Mounted on
+df -g /` checked before heavy steps.
+df4706b3f48f1d95db1a4f5529b4d41
+df4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+df4706b3f48f1d95db1a4f5529b4d41/config.json
+df4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+df4706b3f48f1d95db1a4f5529b4d41/; shasum -a 256 /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* | head -5
+df4706b3f48f1d95db1a4f5529b4d41/config.json
+df4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+df4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+df -g / | head -2
+df4706b3f48f1d95db1a4f5529b4d41
+Available Capacity iused     ifree %iused  Mounted on
+df4706b3f48f1d95db1a4f5529b4d41
+10:Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+11:/dev/disk3s1s1       460   12        15    45%  484014 165064520    0%   /
+1733:Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+1734:/dev/disk3s1s1       460   12        28    31%  484014 303629160    0%   /
+2631:Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+2632:/dev/disk3s1s1       460   12        73    15%  484014 767078080    0%   /
+[0m
+[0m$ [0mcat ~/premonition-watch/queue/log.txt 2>&1 | grep -in "2026-09-23 2[12]:\|waiting-disk\|nospace\|PAUSE\|diskguard\|pruned" | head -n 100
+echo "==="; ls -lt ~/premonition-watch/queue/*.log* 2>&1 | head; echo "==="; grep -in "diskguard\|PAUSE\|free.*MB\|pruned" ~/premonition-watch/queue/log.txt 2>&1 | tail -n 100
+===
+zsh:2: no matches found: /Users/ben-hannan/premonition-watch/queue/*.log*
+===
+[0m
+[0m$ [0mls -la ~/premonition-watch/queue/ | grep -i "log" 2>&1 | head -n 20; cat ~/premonition-watch/queue/log.txt 2>&1 | head -n 20; echo "LINES:"; wc -l ~/premonition-watch/queue/log.txt 2>&1; tail -n 200 ~/premonition-watch/queue/log.txt 2>&1 | head -n 200
+-rw-r--r--    1 ben-hannan  staff   20865 Sep 24 00:25 log.txt
+21:39:38 go1 000-smoke opencode-go/muse-spark-1.3-contributor
+21:39:38 go1 261b-build opencode-go/muse-spark-1.3-contributor
+21:39:38 go1 261b-panel opencode-go/muse-spark-1.3-contributor
+21:39:57 done-go1 000-smoke opencode-go/muse-spark-1.3-contributor
+21:46:14 done-go1 261b-panel opencode-go/muse-spark-1.3-contributor
+22:13:10 go1 rentcheck opencode-go/muse-spark-1.3-contributor
+22:15:36 done-go1 rentcheck opencode-go/muse-spark-1.3-contributor
+22:21:17 go1 263-build opencode-go/muse-spark-1.3-contributor
+22:21:17 go1 263-panel opencode-go/muse-spark-1.3-contributor
+22:27:44 done-go1 263-panel opencode-go/muse-spark-1.3-contributor
+22:30:30 done-go1 261b-build opencode-go/muse-spark-1.3-contributor
+22:46:05 go1 000-watcher-upgrade opencode-go/muse-spark-1.3-contributor
+22:46:05 go1 talk-241b-restart opencode-go/muse-spark-1.3-contributor
+22:49:38 done-go1 000-watcher-upgrade opencode-go/muse-spark-1.3-contributor
+22:50:16 go1 talk-255b-build opencode-go/muse-spark-1.3-contributor
+23:13:07 done-go1 talk-241b-restart opencode-go/muse-spark-1.3-contributor
+23:15:54 go1 000-watcher-dedupe opencode-go/muse-spark-1.3-contributor
+23:16:51 done-go1 000-watcher-dedupe opencode-go/muse-spark-1.3-contributor
+23:17:58 go1 264-build opencode-go/muse-spark-1.3-contributor
+23:34:11 go1 264-panel opencode-go/muse-spark-1.3-contributor
+LINES:
+     301 /Users/ben-hannan/premonition-watch/queue/log.txt
+02:06:28 go1 rsn-266b-panel opencode-go/muse-spark-1.3-contributor
+02:06:28 go1 rsn-290-diag opencode-go/muse-spark-1.3-contributor
+02:12:09 done-go1 rsn-290-diag opencode-go/muse-spark-1.3-contributor
+02:12:44 go1 talk-241b-gradeD1 opencode-go/muse-spark-1.3-contributor
+02:17:17 done-go1 talk-241b-gradeD1 opencode-go/muse-spark-1.3-contributor
+02:18:38 done-go1 rsn-266b-panel opencode-go/muse-spark-1.3-contributor
+02:35:36 go1 talk-241b-gradeD2 opencode-go/muse-spark-1.3-contributor
+02:35:36 go1 talk-241b-gradeD3 opencode-go/muse-spark-1.3-contributor
+02:41:15 done-go1 talk-241b-gradeD2 opencode-go/muse-spark-1.3-contributor
+02:41:23 done-go1 talk-241b-gradeD3 opencode-go/muse-spark-1.3-contributor
+02:41:55 go1 270-panel opencode-go/muse-spark-1.3-contributor
+02:41:55 go1 rsn-268b-build opencode-go/muse-spark-1.3-contributor
+02:45:40 done-go1 rsn-266b-build opencode-go/muse-spark-1.3-contributor
+02:46:09 done-go1 270-panel opencode-go/muse-spark-1.3-contributor
+03:08:03 go1 rsn-268b-panel opencode-go/muse-spark-1.3-contributor
+03:08:04 go1 talk-280-panel opencode-go/muse-spark-1.3-contributor
+03:10:12 done-go1 talk-280-panel opencode-go/muse-spark-1.3-contributor
+03:12:16 go1 talk-281-build opencode-go/muse-spark-1.3-contributor
+03:17:10 done-go1 talk-280-build opencode-go/muse-spark-1.3-contributor
+03:18:33 go1 rsn-291-build opencode-go/muse-spark-1.3-contributor
+03:22:50 done-go1 rsn-268b-panel opencode-go/muse-spark-1.3-contributor
+03:24:50 go1 rsn-291-panel opencode-go/muse-spark-1.3-contributor
+03:32:46 done-go1 rsn-268b-build opencode-go/muse-spark-1.3-contributor
+03:35:31 go1 talk-280b-build opencode-go/muse-spark-1.3-contributor
+03:38:21 done-go1 rsn-291-panel opencode-go/muse-spark-1.3-contributor
+03:41:49 go1 talk-280b-panel opencode-go/muse-spark-1.3-contributor
+03:47:58 done-go1 talk-280b-panel opencode-go/muse-spark-1.3-contributor
+04:09:14 go1 talk-281-panel opencode-go/muse-spark-1.3-contributor
+04:13:54 done-go1 talk-281-panel opencode-go/muse-spark-1.3-contributor
+04:15:36 go1 talk-282-build opencode-go/muse-spark-1.3-contributor
+04:18:11 done-go1 talk-280b-build opencode-go/muse-spark-1.3-contributor
+04:19:37 done-go1 talk-281-build opencode-go/muse-spark-1.3-contributor
+04:19:55 go1 talk-282-panel opencode-go/muse-spark-1.3-contributor
+04:21:39 done-go1 talk-282-panel opencode-go/muse-spark-1.3-contributor
+04:30:21 go1 talk-280b-rerun opencode-go/muse-spark-1.3-contributor
+04:30:21 go1 talk-281b-build opencode-go/muse-spark-1.3-contributor
+04:32:08 done-go1 269-build opencode-go/muse-spark-1.3-contributor
+04:32:25 done-go1 talk-280b-rerun opencode-go/muse-spark-1.3-contributor
+04:32:39 go1 270-build opencode-go/muse-spark-1.3-contributor
+04:32:39 go1 talk-281b-panel opencode-go/muse-spark-1.3-contributor
+04:37:48 done-go1 talk-281b-panel opencode-go/muse-spark-1.3-contributor
+04:41:19 done-go1 talk-282-build opencode-go/muse-spark-1.3-contributor
+04:49:41 go1 rsn-293-diag opencode-go/muse-spark-1.3-contributor
+04:55:52 done-go1 rsn-293-diag opencode-go/muse-spark-1.3-contributor
+05:00:57 done-go1 talk-281b-build opencode-go/muse-spark-1.3-contributor
+05:17:43 done-go1 270-build opencode-go/muse-spark-1.3-contributor
+05:18:56 go1 269-resume opencode-go/muse-spark-1.3-contributor
+05:18:56 go1 talk-282b-build opencode-go/muse-spark-1.3-contributor
+05:18:56 go1 talk-282b-panel opencode-go/muse-spark-1.3-contributor
+05:20:52 done-go1 talk-282b-panel opencode-go/muse-spark-1.3-contributor
+05:29:25 go1 269-resume2 opencode-go/muse-spark-1.3-contributor
+05:29:25 go1 own-o0a2-oracle opencode-go/muse-spark-1.3-contributor
+05:35:20 done-go1 own-o0a2-oracle opencode-go/muse-spark-1.3-contributor
+05:35:47 go1 own-o0d2-ear-fix opencode-go/muse-spark-1.3-contributor
+05:37:52 done-go1 269-resume2 opencode-go/muse-spark-1.3-contributor
+05:39:06 done-go1 own-o0d2-ear-fix opencode-go/muse-spark-1.3-contributor
+05:40:12 go1 own-o0e2-baseline-reseal opencode-go/muse-spark-1.3-contributor
+05:40:12 go1 rsn-293-build opencode-go/muse-spark-1.3-contributor
+05:45:36 done-go1 talk-282b-build opencode-go/muse-spark-1.3-contributor
+05:48:31 done-go1 own-o0e2-baseline-reseal opencode-go/muse-spark-1.3-contributor
+05:50:44 go1 rsn-293-panel opencode-go/muse-spark-1.3-contributor
+05:54:39 done-go1 rsn-291-build opencode-go/muse-spark-1.3-contributor
+05:55:46 done-go1 rsn-293-panel opencode-go/muse-spark-1.3-contributor
+06:13:54 done-go1 rsn-293-build opencode-go/muse-spark-1.3-contributor
+06:21:37 go1 talk-280m-build opencode-go/muse-spark-1.3-contributor
+06:21:37 go1 talk-280m-panel opencode-go/muse-spark-1.3-contributor
+06:22:25 done-go1 269-resume opencode-go/muse-spark-1.3-contributor
+06:23:58 done-go1 talk-280m-panel opencode-go/muse-spark-1.3-contributor
+06:26:07 go1 271-threshold opencode-go/muse-spark-1.3-contributor
+06:26:07 go1 rsn-291-publish opencode-go/muse-spark-1.3-contributor
+06:30:28 failed-go1 rsn-291-publish opencode-go/muse-spark-1.3-contributor rc=0
+06:30:28 go2 rsn-291-publish opencode-go/muse-spark-1.3-contributor
+06:34:55 done-go1 271-threshold opencode-go/muse-spark-1.3-contributor
+06:38:30 done-go2 rsn-291-publish opencode-go/muse-spark-1.3-contributor
+06:38:49 go1 000-ckpt-copy opencode-go/muse-spark-1.3-contributor
+06:41:02 go1 270b-panel opencode-go/muse-spark-1.3-contributor
+06:41:02 go1 own-o0a3-permission opencode-go/muse-spark-1.3-contributor
+06:46:18 done-go1 270b-panel opencode-go/muse-spark-1.3-contributor
+06:46:39 done-go1 000-ckpt-copy opencode-go/muse-spark-1.3-contributor
+06:46:54 done-go1 talk-280m-build opencode-go/muse-spark-1.3-contributor
+06:48:27 go1 270b-build opencode-go/muse-spark-1.3-contributor
+06:53:06 done-go1 own-o0a3-permission opencode-go/muse-spark-1.3-contributor
+07:11:22 go1 rsn-292-build opencode-go/muse-spark-1.3-contributor
+07:11:22 go1 rsn-292-panel opencode-go/muse-spark-1.3-contributor
+07:17:37 go1 lis-310-chat-build opencode-go/muse-spark-1.3-contributor
+07:24:39 done-go1 rsn-292-build opencode-go/muse-spark-1.3-contributor
+07:31:27 done-go1 270b-build opencode-go/muse-spark-1.3-contributor
+07:31:39 done-go1 lis-310-chat-build opencode-go/muse-spark-1.3-contributor
+07:32:20 go1 lis-300-train opencode-go/muse-spark-1.3-contributor
+07:57:17 go1 talk-280n-panel opencode-go/muse-spark-1.3-contributor
+07:57:17 go1 talk-280n-run opencode-go/muse-spark-1.3-contributor
+07:59:27 done-go1 talk-280n-panel opencode-go/muse-spark-1.3-contributor
+08:03:23 done-go1 rsn-292-panel opencode-go/muse-spark-1.3-contributor
+08:13:06 done-go1 talk-280n-run opencode-go/muse-spark-1.3-contributor
+08:14:06 go1 rsn-292-build2 opencode-go/muse-spark-1.3-contributor
+08:53:22 done-go1 lis-300-train opencode-go/muse-spark-1.3-contributor
+08:54:55 done-go1 rsn-292-build2 opencode-go/muse-spark-1.3-contributor
+09:20:26 go1 talk-241b-wall opencode-go/muse-spark-1.3-contributor
+09:55:40 done-go1 talk-241b-wall opencode-go/muse-spark-1.3-contributor
+09:56:30 go1 lis-300-publish opencode-go/muse-spark-1.3-contributor
+09:56:30 go1 lis-311-chat292 opencode-go/muse-spark-1.3-contributor
+09:56:30 go1 talk-280p-panel opencode-go/muse-spark-1.3-contributor
+09:56:30 go1 talk-280p-run opencode-go/muse-spark-1.3-contributor
+09:58:14 done-go1 talk-280p-panel opencode-go/muse-spark-1.3-contributor
+09:59:07 done-go1 lis-300-publish opencode-go/muse-spark-1.3-contributor
+10:00:52 done-go1 talk-280p-run opencode-go/muse-spark-1.3-contributor
+13:59:32 go1 lis-301-train opencode-go/muse-spark-1.3-contributor
+13:59:32 go1 lis-311b-chat292 opencode-go/muse-spark-1.3-contributor
+13:59:32 go1 talk-280p-probe opencode-go/muse-spark-1.3-contributor
+13:59:33 go1 talk-292t-build opencode-go/muse-spark-1.3-contributor
+13:59:33 go1 talk-292t-panel opencode-go/muse-spark-1.3-contributor
+13:59:33 neterr-failed-go1 lis-311b-chat292 opencode-go/muse-spark-1.3-contributor (resume 1/6 in 120 s)
+14:01:33 go2 lis-311b-chat292 opencode-go/muse-spark-1.3-contributor
+14:03:25 done-go1 talk-292t-panel opencode-go/muse-spark-1.3-contributor
+14:03:53 go1 talk-f0-base opencode-go/muse-spark-1.3-contributor
+14:05:36 done-go1 talk-280p-probe opencode-go/muse-spark-1.3-contributor
+14:06:09 go1 own-m0-mouthdata opencode-go/muse-spark-1.3-contributor
+14:08:45 done-go2 lis-311b-chat292 opencode-go/muse-spark-1.3-contributor
+14:10:28 go1 talk-f0-bench opencode-go/muse-spark-1.3-contributor
+14:14:04 done-go1 talk-f0-bench opencode-go/muse-spark-1.3-contributor
+14:16:34 done-go1 talk-292t-build opencode-go/muse-spark-1.3-contributor
+14:16:37 done-go1 own-m0-mouthdata opencode-go/muse-spark-1.3-contributor
+14:16:48 done-go1 talk-f0-base opencode-go/muse-spark-1.3-contributor
+14:23:21 go1 own-m1-train opencode-go/muse-spark-1.3-contributor
+14:39:58 go1 000-vast-rescue opencode-go/muse-spark-1.3-contributor
+14:39:58 go1 talk-f1-build opencode-go/muse-spark-1.3-contributor
+14:42:09 go1 own-m1b-train opencode-go/muse-spark-1.3-contributor
+14:42:09 go1 own-m1n-train opencode-go/muse-spark-1.3-contributor
+14:42:22 done-go1 000-vast-rescue opencode-go/muse-spark-1.3-contributor
+14:46:24 go1 lis-312-f0 opencode-go/muse-spark-1.3-contributor
+14:47:02 done-go1 lis-312-f0 opencode-go/muse-spark-1.3-contributor
+15:04:05 done-go1 lis-301-train opencode-go/muse-spark-1.3-contributor
+15:05:14 go1 273-build opencode-go/muse-spark-1.3-contributor
+15:05:14 go1 own-probe-1 opencode-go/muse-spark-1.3-contributor
+15:07:27 done-go1 own-probe-1 opencode-go/muse-spark-1.3-contributor
+15:09:29 go1 nb-320-baseline opencode-go/muse-spark-1.3-contributor
+15:17:28 done-go1 273-build opencode-go/muse-spark-1.3-contributor
+15:32:26 go1 nb-321-build opencode-go/muse-spark-1.3-contributor
+15:50:22 done-go1 nb-321-build opencode-go/muse-spark-1.3-contributor
+16:03:48 done-go1 own-m1n-train opencode-go/muse-spark-1.3-contributor
+16:08:02 go1 rsn-294-train opencode-go/muse-spark-1.3-contributor
+16:29:19 done-go1 own-m1b-train opencode-go/muse-spark-1.3-contributor
+17:00:41 done-go1 rsn-294-train opencode-go/muse-spark-1.3-contributor
+17:04:31 done-go1 nb-320-baseline opencode-go/muse-spark-1.3-contributor
+17:06:39 go1 rsn-294-train2 opencode-go/muse-spark-1.3-contributor
+17:18:17 done-go1 rsn-294-train2 opencode-go/muse-spark-1.3-contributor
+17:23:24 go1 rsn-294-train3 opencode-go/muse-spark-1.3-contributor
+17:28:45 done-go1 talk-f1-build opencode-go/muse-spark-1.3-contributor
+17:53:56 go1 rsn-294-guard opencode-go/muse-spark-1.3-contributor
+18:50:19 go1 talk-f1-gradeA1 opencode-go/muse-spark-1.3-contributor
+18:50:19 go1 talk-f1-gradeA2 opencode-go/muse-spark-1.3-contributor
+18:50:20 go1 talk-f1-gradeA3 opencode-go/muse-spark-1.3-contributor
+18:52:27 done-go1 talk-f1-gradeA2 opencode-go/muse-spark-1.3-contributor
+18:52:30 go1 talk-f1-gradeA4 opencode-go/muse-spark-1.3-contributor
+18:52:30 done-go1 talk-f1-gradeA3 opencode-go/muse-spark-1.3-contributor
+18:53:02 done-go1 talk-f1-gradeA1 opencode-go/muse-spark-1.3-contributor
+18:54:50 go1 talk-f1-gradeA5 opencode-go/muse-spark-1.3-contributor
+18:54:51 go1 talk-f1-gradeA6 opencode-go/muse-spark-1.3-contributor
+18:57:33 done-go1 talk-f1-gradeA6 opencode-go/muse-spark-1.3-contributor
+18:57:36 done-go1 talk-f1-gradeA4 opencode-go/muse-spark-1.3-contributor
+18:57:59 done-go1 talk-f1-gradeA5 opencode-go/muse-spark-1.3-contributor
+18:59:16 go1 talk-f1-gradeB1 opencode-go/muse-spark-1.3-contributor
+18:59:17 go1 talk-f1-gradeB2 opencode-go/muse-spark-1.3-contributor
+18:59:17 go1 talk-f1-gradeB3 opencode-go/muse-spark-1.3-contributor
+19:01:37 done-go1 talk-f1-gradeB2 opencode-go/muse-spark-1.3-contributor
+19:01:56 done-go1 talk-f1-gradeB1 opencode-go/muse-spark-1.3-contributor
+19:02:04 done-go1 talk-f1-gradeB3 opencode-go/muse-spark-1.3-contributor
+19:03:41 go1 talk-f1-gradeB4 opencode-go/muse-spark-1.3-contributor
+19:03:41 go1 talk-f1-gradeB5 opencode-go/muse-spark-1.3-contributor
+19:03:41 go1 talk-f1-gradeB6 opencode-go/muse-spark-1.3-contributor
+19:05:53 done-go1 talk-f1-gradeB5 opencode-go/muse-spark-1.3-contributor
+19:06:01 done-go1 talk-f1-gradeB4 opencode-go/muse-spark-1.3-contributor
+19:07:47 done-go1 talk-f1-gradeB6 opencode-go/muse-spark-1.3-contributor
+19:08:05 go1 talk-f1-judge opencode-go/muse-spark-1.3-contributor
+19:09:44 done-go1 talk-f1-judge opencode-go/muse-spark-1.3-contributor
+20:13:39 done-go1 rsn-294-train3 opencode-go/muse-spark-1.3-contributor
+20:17:55 done-go1 rsn-294-guard opencode-go/muse-spark-1.3-contributor
+21:51:06 go1 274-build opencode-go/muse-spark-1.3-contributor
+21:51:06 go1 lis-302-gpu opencode-go/muse-spark-1.3-contributor
+21:51:06 go1 mut0-build opencode-go/muse-spark-1.3-contributor
+21:51:07 go1 rsn-296-guard opencode-go/muse-spark-1.3-contributor
+21:51:07 go1 rsn-296-train opencode-go/muse-spark-1.3-contributor
+21:51:07 neterr-failed-go1 lis-302-gpu opencode-go/muse-spark-1.3-contributor (resume 1/6 in 120 s)
+21:53:07 go2 lis-302-gpu opencode-go/muse-spark-1.3-contributor
+22:18:23 done-go2 lis-302-gpu opencode-go/muse-spark-1.3-contributor
+22:22:06 done-go1 274-build opencode-go/muse-spark-1.3-contributor
+22:24:45 go1 lis-313-f0 opencode-go/muse-spark-1.3-contributor
+22:55:45 done-go1 mut0-build opencode-go/muse-spark-1.3-contributor
+23:04:57 go1 nb-321-run opencode-go/muse-spark-1.3-contributor
+23:04:57 go1 nb-323-build opencode-go/muse-spark-1.3-contributor
+23:11:34 done-go1 lis-313-f0 opencode-go/muse-spark-1.3-contributor
+23:13:25 go1 lis-314-panel opencode-go/muse-spark-1.3-contributor
+23:21:26 done-go1 nb-323-build opencode-go/muse-spark-1.3-contributor
+23:22:02 go1 lis-e2e-dev opencode-go/muse-spark-1.3-contributor
+23:22:21 done-go1 lis-314-panel opencode-go/muse-spark-1.3-contributor
+23:24:13 go1 own-m1v-run opencode-go/muse-spark-1.3-contributor
+00:22:22 done-go1 own-m1v-run opencode-go/muse-spark-1.3-contributor
+00:23:43 go1 000-cache-pin opencode-go/muse-spark-1.3-contributor
+00:25:39 done-go1 nb-321-run opencode-go/muse-spark-1.3-contributor
+00:25:55 go1 e2e-330-dev opencode-go/muse-spark-1.3-contributor
+[0m
+[0m$ [0mecho "=== worktree runs grep ==="; grep -rin "huggingface\|rm -rf\|\.cache\|cache purge\|hf cache" runs/ 2>&1 | head -n 50
+echo "=== scratchpad mimo log (diskguard) ==="; ls /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue/ 2>&1 | head -n 20; grep -in "diskguard\|PAUSE\|pruned\|free" /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue/log.txt 2>&1 | tail -n 50
+echo "=== current disk ==="; df -g / | head -n 3
+=== worktree runs grep ===
+runs/000-cache-pin/pin.txt:2:# source: ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+runs/000-cache-pin/pin.txt:8:953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+runs/000-cache-pin/pin.txt:9:53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+runs/000-cache-pin/pin.txt:10:07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+runs/000-cache-pin/pin.txt:20:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2:
+runs/000-cache-pin/pin.txt:23:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+runs/000-cache-pin/pin.txt:26:/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+=== scratchpad mimo log (diskguard) ===
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue/: No such file or directory
+grep: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue/log.txt: No such file or directory
+=== current disk ===
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        52    20%  484014 555103240    0%   /
+[0m
+[0m$ [0mls -lh runs/000-cache-pin/pin.txt; wc -c runs/000-cache-pin/pin.txt; ls -R ~/premonition-models/minilm/; diff <(shasum -a 256 ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* | awk '{print $1}') <(shasum -a 256 ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/* | awk '{print $1}') && echo "SHA-MATCH"
+-rw-r--r--  1 ben-hannan  staff   2.6K Sep 24 00:24 runs/000-cache-pin/pin.txt
+    2698 runs/000-cache-pin/pin.txt
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+SHA-MATCH
+[0m
