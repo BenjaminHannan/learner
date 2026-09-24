@@ -1,0 +1,1383 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Read OPUS-RULES and PASSMARKS + plan files
+[ ] SEAL check sha256 against origin/main
+[ ] Weights copy + check on BensPC
+[ ] Code archive to BensPC
+[ ] Single GPU run on BensPC
+[ ] Copy back + fresh recount Pm1v.2 + RESULTS-run.md
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; ls -la; echo ---; ls /private/tmp/claude-502/ 2>&1 | head -n 100; echo ---; uptime; df -g / 2>&1 | head -n 20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+total 336
+drwxr-xr-x    30 ben-hannan  staff    960 Sep 23 14:40 .
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 13:13 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  467 ben-hannan  staff  14944 Sep 23 23:22 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 03:22 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 04:38 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 22 21:20 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     4 ben-hannan  staff    128 Sep 23 15:05 runs
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 08:08 scratchpad
+drwxr-xr-x  1473 ben-hannan  staff  47136 Sep 23 23:15 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+---
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+cache-break-state-b39bf427-6d2a-4795-977e-814d5804900d.json
+cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+---
+23:24  up 13:17, 4 users, load averages: 26.23 23.77 28.67
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        64    17%  484014 673781520    0%   /
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head -n 50; echo ===; ls scratchpad/briefs/ 2>&1 | head -n 50; echo ===; ls artifacts/claude-own-m1v-20260924/ 2>&1 | head -n 50
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+zsh:1: == not found
+[0m
+[0m$ [0mls scratchpad/briefs/
+ls: scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mls scratchpad/
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/"
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/: No such file or directory
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/"
+(no output)
+[0m
+[0m$ [0mls -la "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/"
+total 0
+drwx------  3 ben-hannan  wheel   96 Sep 23 15:24 .
+drwx------  4 ben-hannan  wheel  128 Sep 23 15:24 ..
+drwx------  2 ben-hannan  wheel   64 Sep 23 15:24 scratchpad
+[0m
+[0m$ [0mls -la "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/"
+total 0
+drwx------  2 ben-hannan  wheel  64 Sep 23 15:24 .
+drwx------  3 ben-hannan  wheel  96 Sep 23 15:24 ..
+[0m
+[0m$ [0mls -la /private/tmp/claude-502/; git fetch -q origin main; git log --oneline -5 origin/main; ls artifacts/claude-own-m1v-20260924/
+total 64
+drwx------    3 ben-hannan  wheel    96 Sep 23 20:33 -private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+drwx------   75 ben-hannan  wheel  2400 Sep 23 22:56 -Users-ben-hannan
+drwx------   17 ben-hannan  wheel   544 Sep 23 22:56 -Users-ben-hannan-Desktop
+drwx------   12 ben-hannan  wheel   384 Sep 23 21:36 -Users-ben-hannan-Desktop-projects-beautiful-model
+drwx------    4 ben-hannan  wheel   128 Sep 23 15:24 -Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+drwx------    3 ben-hannan  wheel    96 Sep 23 13:58 -Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+drwx------    3 ben-hannan  wheel    96 Sep 23 13:58 -Users-ben-hannan-Desktop-projects-school-access
+drwx------   12 ben-hannan  wheel   384 Sep 23 20:33 -Users-ben-hannan-novel-model
+drwx------   15 ben-hannan  wheel   480 Sep 23 23:24 .
+drwxrwxrwt  192 root        wheel  6144 Sep 23 23:24 ..
+drwx------    3 ben-hannan  wheel    96 Sep 23 13:59 bash-edit-diff
+-rw-r--r--    1 ben-hannan  wheel  4804 Sep 23 15:59 cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+-rw-r--r--    1 ben-hannan  wheel  4898 Sep 23 13:59 cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+-rw-r--r--    1 ben-hannan  wheel  5127 Sep 23 22:02 cache-break-state-b39bf427-6d2a-4795-977e-814d5804900d.json
+-rw-r--r--    1 ben-hannan  wheel  5109 Sep 23 23:24 cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+ef33e3b74 board: 298 registered FAIL (39/60), merge candidate
+20a5eefa6 rsn-298: registered FAIL on P298.1 (39/60 vs 48; +25 vs +30); P298.2-5 PASS; diagnosis: misses are role relations stored one-value
+cd1dbb320 listener stack arms for the month-end e2e harness; Mac task to score them on the e2e DEV bank
+eec1e1465 branchpanel298: blind 90-item panel, sealed; blind Opus key audit 0/90 mismatches
+46648340d 331 DEV bank (10 lives, 194 turns, 131 facts; blind-written, readable dev data, names S-Z)
+ls: artifacts/claude-own-m1v-20260924/: No such file or directory
+[0m
+[0m$ [0mgit branch -a | head -n 50; git log --oneline -3; git show origin/main:design/v3/50-own-model/01-own-ear-mouth-plan.md | head -n 100
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+# Own ear and own mouth: the plan (Opus 5.5, own-model line, 2026-09-23)
+
+Design only. Nothing was trained, downloaded, built or run for this file. No TEST-ONLY panel was opened.
+This is only about the chat assistant (ear → notebook → reasoner → mouth). It says nothing about the small card
+experiments or the village model.
+
+Evidence labels: **shown** = measured in this repo (file named) or published (arXiv id); **suggested** = published
+in a different setting; **untested** = my reasoning or arithmetic.
+
+> **Update 2026-09-23 11:00 UTC: the small ear (§2, stages E1 to E5) is shelved.** Ben (10:55): "I want our own big reader. I don't care
+> about our own small reader. You should find the strongest 1B transformer model you can and use it." The listener thread
+> (cmsg_01FuvegZXjMmeUzStiEFVnEWAqu8KBs8RUqYCP4Ni32DFW, numbers 300 to 319) owns the reader from now on. own-e1-pretrain was moved to
+> handoff/held/ before it launched ($0 spent). The listener thread was given the O0b generator, the write compiler, the O0a3 audit, the O0c
+> pipeline and the TEST-ONLY ownbench. O0a3 (shown, artifacts/claude-own-o0a3-20260923) found that the compiler blocks a wrong reading only
+> when a relation cue is missing, the owner is WE, or the frame is structurally no-save. On savable truths, learned-licensed lets through
+> 5063/5236 = 96.7% of one-change wrong readings, so the reader and a checker, not the gate, carry the safety. The mouth (§3) and the
+> baseline (B) continue; the baseline's size may change to match the reader.
+
+---
+
+## 0. One-page summary
+
+**Goal.** Swap the two borrowed parts for Ben's own weights and architecture:
+- the ear (today: SmolLM2-360M fine-tuned to write `TEACH | s | r | v` lines, "ear v4.1");
+- the mouth (today: the 241 hand-made grammar layer, with talker120b and borrowed SmolLM2 as earlier tries).
+
+The own parts must do at least as well as the borrowed ones on the same sealed marks, and the whole system must
+beat a same-size plain transformer on two-hop, reversal, abstention and MQuAKE-style edits.
+
+**The main choice: drop-in first, "thought vector" second.** Doc 24 (approved by Ben as D1–D9 on 20 Sept) planned a
+416-number typed thought with a free "gist" for small talk. Since then the pipeline has settled on frames
+(`TEACH/ASK/NONE` from the ear, reply records into the mouth), and every sealed mark is written against frames. So v1
+of the own ear writes **the same frames**, and v1 of the own mouth reads **the same reply records**. Each own part
+is then a one-change swap that the existing marks can judge. The typed slots of doc 24 (act, who, relation path,
+value) are exactly a frame, so nothing is thrown away. The gist and the "thinker" for small talk come after the
+fact path works (stage T1 below).
+
+**What already exists and is ours** (shown):
+- talker101: our own 28.85M decoder, trained from random numbers on SimpleStories (617M tokens, about 3.5 h on
+  BensPC, about 49,000 tokens/s). Validation loss PASS; grammar test BLiMP-10 67.4% (bar 70%) = registered FAIL.
+  Board 04:42, `artifacts/claude-talker101-eval-20260922/`.
+- talker120b: talker101 fine-tuned to speak from records. Before the brake 172/500 unfaithful; after the brake 0/500.
+  Names got cut up ("Fara" for Farah) because the copy head copied word pieces, not whole names. Board 05:44.
+- A plain-torch Llama re-implementation with exact parity (235 design note), and the frame generator families C1–C8
+  (`artifacts/claude-smolear257-20260922/PASSMARKS.md`).
+
+**The plan in one line each:**
+1. **Ear:** a 32.9M bidirectional reader (29.4M encoder + 3.5M heads) of our own, pretrained by fill-in-the-blank, with heads that *point at words in
+   the turn* instead of writing words, plus a separate "what is the speaker doing?" head.
+2. **Mouth:** keep talker101 (already ours); change it to copy *whole names* through slot tokens; check every reply
+   by reading it back with the own ear against the reply record; fall back to the 241 grammar layer.
+3. **Gate:** a small plain-code write compiler is the only thing that can write (§4.1). The Qwen QA checker (exp 264) stays the permission to write until the own ear has its own measured miss
+   rate. A round trip trains the ear and mouth; it is never permission to write (Ben's ruling).
+4. **Baselines:** a plain transformer of the same audited size with the same data and compute, the same model with retrieval
+   (MeLLo-style), and the same model given the same notebook, so "it's just a database" is answered by a number.
+5. **Compute:** about 11–12 GPU-hours on BensPC for everything (free), or about 3.5 hours on one rented RTX 5090
+   (about $2, cap $5). Stage O0 is CPU-only and can start now.
+
+**The one decision for Ben** is at the end (§9).
+
+---
+
+## 1. Why the ear is the hard part (what the errors were)
+
+The notebook plus reasoner answers two-hop, reversal, abstention and single-edit multi-hop questions exactly when
+given clean frames (200/200 on Fable-Edit-200, shown, board exp 111). The weak point is reading English.
+
+Real wrong saves seen so far (shown; board and 261b-decision.md; category level only):
+
+| Error kind | Seen in | Example shape (invented, not a panel item) |
+|---|---|---|
+| typo stored inside a fact | 261 (2) | "my sisters name is Mira Stil" → value "Mira Stil" |
+| saved from a check-question with no "?" | 261 (1), 257, 235 | "so Mira's dog is Pip" |
+| pretend / plan saved as fact | 257 | "let's say Oren's boss is Tal" · "Mira wants a cat named Fig" |
+| pronoun bound to the wrong person | 257, 235 | "Ada's son is Bo and he lives in Rook" → Ada lives in Rook |
+| "our/we" as a subject | 257 | "our dog is Pip" → owner "our" |
+| dropped facts from list sentences (recall) | 261 | "Mira and Tal are my sisters" → 1 fact, not 2 (4/16 found) |
+
+Two lessons decide the design:
+- Most of these are **act errors** (is the speaker telling, checking, supposing, planning?) and **binding errors**
+  (which person does a word belong to). A pointer design stops *invented* words, but not these. They need their own
+  outputs and their own training data.
+- The 27B checker approved every real error it saw in 261 (shown). A reader and a gate trained on the same kind of
+  data share blind spots (research note v3). An own ear that is small, pointer-based and trained on different data
+  is a chance to get a *second reader whose mistakes are different*, which can be measured (§4.4).
+
+---
+
+## 2. The own ear (English → frames)
+
+### 2.1 Shape
+
+| Part | Size | Notes |
+|---|---|---|
+| Tokenizer | 8,192 byte-level BPE, **case kept** | trained by us on the pretraining mix plus generated chat; case matters for names and the typo guard |
+| Encoder | 8 layers, width 512, 8 heads, RMSNorm, rotary positions, looks both ways | ≈ 25.2M + 4.2M embeddings ≈ **29M** (same size class as talker101) |
+| Input | previous assistant reply + `<SEP>` + this turn, ≤ 128 tokens | the previous reply is needed for "No, Milan." corrections and "so …?" checks |
+| Act head | from a pooled vector | **STATE / CORRECT / DENY / ASK / CHECK / SUPPOSE / PLAN / CHAT / UNCLEAR**. Only STATE, CORRECT and DENY can ever write. |
+| Fact-count head | 0–6 | how many facts the turn states |
+| Fact slots | 6 learned queries (set prediction, matched to the gold facts during training) | each slot: exists? · owner · relation · value · a confidence |
+[0m
+[0m$ [0mgit show origin/main --name-only --pretty=format: | grep -i "own-m1v" | head -n 50; git show origin/builder-outbox --name-only --pretty=format: 2>&1 | head -n 100; git ls-remote origin 2>&1 | head -n 30
+artifacts/claude-lis314-20260924/PASSMARKS.md
+artifacts/claude-lis314-20260924/RESULTS.md
+artifacts/claude-lis314-20260924/SEAL.sha256.txt
+artifacts/claude-lis314-20260924/lis314-armA.log
+artifacts/claude-lis314-20260924/lis314-armC.log
+artifacts/claude-lis314-20260924/run/arm_A.jsonl
+artifacts/claude-lis314-20260924/run/summary.json
+artifacts/fable-predictions-ledger.md
+runs/lis-314-panel/lis-314-panel.exit
+runs/lis-314-panel/lis-314-panel.go1.done
+runs/lis-314-panel/lis-314-panel.go1.err.txt
+runs/lis-314-panel/lis-314-panel.go1.reply.md
+runs/lis-314-panel/lis-314-panel.md
+22fc4ff79b7426fb0cd9154e016359bd6ad91b5a	HEAD
+d0db1b437850c9e21d8cbdb2d24a4fd308b75122	refs/heads/builder-outbox
+9cacb3d2828a51a1738a771539c8d2f2f82303e0	refs/heads/chat-flags
+e3fbf3c51de5c73734803d19738e90fa049be4eb	refs/heads/claude/card-experiment-handoff-7c5b27
+4ea0021dce250cb859f712601cec960ab3f147a3	refs/heads/claude/model-architecture-review-0161ce
+86be159f4b6e50e5400788b0d9f080e6c4831b16	refs/heads/claude/project-thread-0181x3
+4006142d1a79bddba0e25f1bc3eeeb7640cae27a	refs/heads/claude/project-thread-h8jbxv
+21e34fa08df03ae956c2fef8c6278205fede60a7	refs/heads/claude/project-thread-p68q5v
+8199e8adf17711923234fa19b9e552360c622fea	refs/heads/codex/testing-experiment-44
+22fc4ff79b7426fb0cd9154e016359bd6ad91b5a	refs/heads/main
+73c975c9e25acf72417779ed1f6cddb35b714146	refs/heads/worktree-research
+ecad4f8b0b73b9f3d66b3d33293258faae717928	refs/pull/1/head
+76215944919f1173bc3a5b43cd302e40a02ad843	refs/pull/2/head
+4006142d1a79bddba0e25f1bc3eeeb7640cae27a	refs/pull/3/head
+[0m
+[0m$ [0mgit fetch -q origin builder-outbox; git ls-tree -r --name-only origin/builder-outbox | grep -i "own-m1" | head -n 100
+artifacts/claude-own-m1-20260923/RESULTS.md
+artifacts/claude-own-m1-20260923/SEAL-run.sha256.txt
+artifacts/claude-own-m1-20260923/dev_out_sample.jsonl
+artifacts/claude-own-m1-20260923/dev_summary.json
+artifacts/claude-own-m1-20260923/train_log.jsonl
+artifacts/claude-own-m1-20260923/train_summary.json
+artifacts/claude-own-m1n-20260923/RESULTS.md
+artifacts/claude-own-m1n-20260923/SEAL-run.sha256.txt
+artifacts/claude-own-m1n-20260923/dev_out_sample.jsonl
+artifacts/claude-own-m1n-20260923/dev_summary.json
+artifacts/claude-own-m1n-20260923/train_log.jsonl
+artifacts/claude-own-m1n-20260923/train_summary.json
+runs/own-m1-train/own-m1-train.exit
+runs/own-m1-train/own-m1-train.go1.err.txt
+runs/own-m1-train/own-m1-train.go1.reply.md
+runs/own-m1-train/own-m1-train.md
+runs/own-m1b-train/own-m1b-train.exit
+runs/own-m1b-train/own-m1b-train.go1.done
+runs/own-m1b-train/own-m1b-train.go1.err.txt
+runs/own-m1b-train/own-m1b-train.go1.reply.md
+runs/own-m1b-train/own-m1b-train.md
+runs/own-m1n-train/own-m1n-train.exit
+runs/own-m1n-train/own-m1n-train.go1.done
+runs/own-m1n-train/own-m1n-train.go1.err.txt
+runs/own-m1n-train/own-m1n-train.go1.reply.md
+runs/own-m1n-train/own-m1n-train.md
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i "own-m1" | head -n 100; git ls-tree -r --name-only origin/main | grep -i "own-m0b" | head -n 20
+artifacts/claude-own-m1-20260923/PASSMARKS.md
+artifacts/claude-own-m1-20260923/SEAL-code.sha256.txt
+artifacts/claude-own-m1n-20260923/PASSMARKS.md
+artifacts/claude-own-m1n-20260923/SEAL-data.sha256.txt
+artifacts/claude-own-m1v-20260924/PASSMARKS.md
+artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt
+design/v3/50-own-model/task-own-m1-train.md
+design/v3/50-own-model/task-own-m1n-train.md
+design/v3/50-own-model/task-own-m1v-run.md
+handoff/held/own-m1-bpc.md
+handoff/queue/own-m1-train.md
+handoff/queue/own-m1b-train.md
+handoff/queue/own-m1n-train.md
+handoff/queue/own-m1v-run.md
+artifacts/claude-own-m0b-20260923/README.md
+artifacts/claude-own-m0b-20260923/dev.jsonl
+artifacts/claude-own-m0b-20260923/train.jsonl
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-own-m1v-20260924/PASSMARKS.md; git show origin/main:artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt; git show origin/main:design/v3/50-own-model/task-own-m1v-run.md
+# own-M1v: sample-first decoding on the own-M1n mouth. Pass marks fixed 2026-09-24 03:40 UTC, before the run
+
+ONE change vs own-M1n (registered FAIL on variety only: 59 distinct replies per 1,000, top reply 129): the mouth tries up to
+4 sampled replies first (temperature 0.8, top-p 0.95), keeps the first that passes the sealed slot_check, and uses the
+greedy reply last (scripts/claude_own_m1v_speak.py). Same weights (merged sha256 de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a),
+same sealed gate and prompt, same dev set (artifacts/claude-own-m0b-20260923/dev.jsonl = own-M0 dev, 1,000 rows), seed 1. Runs on BensPC.
+
+Grammar is graded on the text a user would see: the winning raw reply filled by the mouth layer's printer
+(scripts/claude_own_mouth_layer.py fill_natural). The printer uses plain relation nouns from the 241b say-forms table
+("favorite food", not "favorite_food"). This is a printer fix, not a model change. 175/1000 dev rows have such relations,
+and own-M1/M1n's fill printed the raw names.
+
+| Mark | Bar |
+|---|---|
+| Pm1v.1 spoke (a reply passed the gate within 5 tries) | >= 990/1000 |
+| Pm1v.2 fresh slot_check recount failures on winning raws | 0 |
+| Pm1v.3 variety | distinct slotted replies >= 300/1000; the single most common reply <= 50/1000 (5%) |
+| Pm1v.4 grammar | kit = 300 random spoken replies + 40 planted-error canaries (scripts/claude_own_m1v_grade_kit.py, seed 331). Two blind Opus graders, each must catch >= 36/40 canaries (else that grader is replaced once; if the replacement also misses, the mark is FAIL). A real reply counts as an error if both graders flag it; if exactly one flags it, a third blind grader decides. Errors <= 3/300 (>= 99%). |
+| Pm1v.5 crashes | 0 |
+Reported, no bar: try histogram (how often greedy was needed), replies with a literal record string outside a slot (the layer's
+leak gate would send these to fallback), median / p90 ms on the 5070 Ti.
+Proved wrong if: distinct < 150 (sampling does not fix the collapse), or grammar errors > 9/300 (sampling breaks grammar).
+One change only; a FAIL gets exactly one diagnosis-driven follow-up.
+1da4653182fa9b4ef804f4ae4b93f0074571689783aaab008d5e1812e1d7ff87  scripts/claude_own_m1v_speak.py
+f14fd45f56d282c8e04bc9aca30a1ebaa03f77fbc86c700fe94be154b36de4fd  scripts/claude_own_m1v_grade_kit.py
+acff0dff4d4b44ee75c26d87e7002f042e4665b2e6cd44f2dbae6424510decbe  scripts/claude_own_mouth_layer.py
+f00f3bbae16c3681b1c404745f6f2b0efbfd8d284e8b35724354e74101475772  scripts/claude_own_m1_common.py
+a5b0176544d8354176bc118090c9ca5b35b94abd14079a8392ee13385970f251  scripts/claude_own_m1_speak.py
+a2c4f625dd2c5bf6f0f16b93b609ed5d76393b4803459096c641525534046624  artifacts/claude-own-m0b-20260923/dev.jsonl
+4de724242e0ee33656656279a430965d879ac6aeadff9a69590e1d299f42bead  artifacts/claude-mouth241b-20260922/say_forms.json
+a4865a4430b7b84e5c92d14cdf49c9123b1ea2979a1dbf00ce1697dbfbf75711  artifacts/claude-own-m1v-20260924/PASSMARKS.md
+COMMON RULES (the director, Claude, wrote this task on 2026-09-24). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel, any artifacts/claude-*panel* folder, artifacts/claude-own-bench-20260923, or any convbench-f0 file. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main`.
+GPU: yes
+
+YOUR TASK: builder for own-M1v, the mouth's sample-first decoding run, on BensPC (RTX 5070 Ti). No training. Artifacts go in artifacts/claude-own-m1v-20260924/. The own-model / mouth thread (Opus) wrote and sealed all the code. Run it and never edit it. If something breaks, stop and report the exact error.
+READ FIRST: artifacts/claude-own-m1v-20260924/PASSMARKS.md.
+1. SEAL. On the Mac worktree, after git fetch, run `shasum -a 256 -c artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt` against origin/main's files (use `git archive origin/main` into a temp dir if the worktree is behind). Every line must be OK, otherwise stop.
+2. WEIGHTS on BensPC. The own-M1n mouth is on the Mac at ~/premonition-models/own-m1n-mouth/merged/. Copy that folder to BensPC (e.g. C:/Users/benja/own-m1n/merged) with scp via `ssh benspc`, unless it is already there. Check that model.safetensors has sha256 de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a on BensPC. Use the lis-301 venv on BensPC (it has torch + transformers), or make a new venv with torch, transformers >= 5.6 and safetensors.
+3. CODE on BensPC. `git archive origin/main scripts/claude_own_m1v_speak.py scripts/claude_own_m1_speak.py scripts/claude_own_m1_common.py artifacts/claude-own-m0b-20260923/dev.jsonl` → copy to BensPC and extract, keeping the paths.
+4. RUN ONCE on BensPC's GPU. From the extracted root, run:
+   python scripts/claude_own_m1v_speak.py --model <merged dir> --data artifacts/claude-own-m0b-20260923/dev.jsonl --out dev_out.jsonl --samples 4 --seed 1
+   Save the printed JSON summary as dev_summary.json. One run only: no re-runs and no other seeds. Then free the GPU (the process exits).
+5. Copy dev_out.jsonl and dev_summary.json back to artifacts/claude-own-m1v-20260924/ on the Mac. On the Mac, run the fresh recount for Pm1v.2: for every row with a non-null reply, run the sealed slot_check (scripts/claude_own_m1_common.py) on raw[tries-1]; the number of failures must be 0. Report it.
+6. RESULTS-run.md: counts only.
+   - Pm1v.1 spoke / 1000;
+   - Pm1v.2 recount failures;
+   - Pm1v.3 distinct slotted replies and the top reply count, with the top 5 quoted;
+   - Pm1v.5 crashes;
+   - the try histogram;
+   - median / p90 ms;
+   - device.
+   Do NOT grade grammar (Pm1v.4): the mouth thread runs the blind graders on dev_out.jsonl after you push it. Quote 10 random filled replies (dev material, fictional names).
+PUSH: artifacts/claude-own-m1v-20260924/dev_out.jsonl artifacts/claude-own-m1v-20260924/dev_summary.json artifacts/claude-own-m1v-20260924/RESULTS-run.md
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; mkdir -p /tmp/own-m1v-seal && git archive origin/main | tar -x -C /tmp/own-m1v-seal && shasum -a 256 -c artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt
+shasum: artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt: No such file or directory
+[0m
+[0m$ [0mls /tmp/own-m1v-seal/artifacts/claude-own-m1v-20260924/; shasum -a 256 -c artifacts/claude-own-m1v-20260924/SEAL-code.sha256.txt
+PASSMARKS.md
+SEAL-code.sha256.txt
+scripts/claude_own_m1v_speak.py: OK
+scripts/claude_own_m1v_grade_kit.py: OK
+scripts/claude_own_mouth_layer.py: OK
+scripts/claude_own_m1_common.py: OK
+scripts/claude_own_m1_speak.py: OK
+artifacts/claude-own-m0b-20260923/dev.jsonl: OK
+artifacts/claude-mouth241b-20260922/say_forms.json: OK
+artifacts/claude-own-m1v-20260924/PASSMARKS.md: OK
+[0m
+[0m# [0mTodos
+[✓] Read OPUS-RULES and PASSMARKS + plan files
+[✓] SEAL check sha256 against origin/main
+[•] Weights copy + check on BensPC
+[ ] Code archive to BensPC
+[ ] Single GPU run on BensPC
+[ ] Copy back + fresh recount Pm1v.2 + RESULTS-run.md
+[0m
+[0m$ [0mls -la ~/premonition-models/own-m1n-mouth/merged/; shasum -a 256 ~/premonition-models/own-m1n-mouth/merged/model.safetensors
+total 4240648
+drwxr-xr-x  8 ben-hannan  staff         256 Sep 23 15:06 .
+drwxr-xr-x  4 ben-hannan  staff         128 Sep 23 15:56 ..
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 23 15:06 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 23 15:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 23 15:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 23 15:06 model.safetensors
+-rw-r--r--  1 ben-hannan  staff         460 Sep 23 15:06 tokenizer_config.json
+-rw-r--r--  1 ben-hannan  staff     9894271 Sep 23 15:06 tokenizer.json
+de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a  /Users/ben-hannan/premonition-models/own-m1n-mouth/merged/model.safetensors
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-ComputerInfo -Property WindowsProductName; nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv; if (Test-Path C:/Users/benja/own-m1n/merged/model.safetensors) { CertUtil -hashfile C:/Users/benja/own-m1n/merged/model.safetensors SHA256 } else { echo MISSING }; ls C:/Users/benja/own-m1n/merged 2>&1 | head -n 20\""
+name, driver_version, memory.total [MiB]
+NVIDIA GeForce RTX 5070 Ti, 591.86, 16303 MiB
+WindowsProductName
+------------------
+Windows 10 Home   
+MISSING
+head : The term 'head' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:322
++ ...  { echo MISSING }; ls C:/Users/benja/own-m1n/merged 2>&1 | head -n 20
++                                                                ~~~~
+    + CategoryInfo          : ObjectNotFound: (head:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"ls C:/Users/benja/ 2>&1; echo ---VENV---; ls C:/Users/benja/lis-301 2>&1 | Select-Object -First 10; C:/Users/benja/lis-301/Scripts/python.exe -c 'import torch, transformers, safetensors; print(torch.__version__, transformers.__version__); print(torch.cuda.is_available())' 2>&1\""
+Directory: C:\Users\benja
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          9/9/2026   5:50 PM                .cache                                                               
+d-----         8/29/2026   8:43 PM                .cai                                                                 
+d-----          9/7/2026   8:50 PM                .claude                                                              
+d-----         5/24/2026   5:20 PM                .claude-flow                                                         
+d-----         3/26/2026   6:23 PM                .claude-server-commander                                             
+d-----         8/29/2026  10:21 AM                .codex                                                               
+d-----         2/20/2026  10:57 PM                .conda                                                               
+d-----         8/29/2026  12:14 AM                .config                                                              
+d-----          5/9/2026   6:58 PM                .copilot                                                             
+d-----         1/17/2025   2:39 PM                .dbus-keyrings                                                       
+d-----         4/29/2026   9:42 PM                .expo                                                                
+d-----        12/20/2024   8:12 PM                .idlerc                                                              
+d-----         7/17/2025   9:42 AM                .ipython                                                             
+d-----        12/17/2025   5:13 PM                .junie                                                               
+d-----         7/18/2025  11:22 AM                .jupyter                                                             
+d-----          7/9/2026   2:55 PM                .kaggle                                                              
+d-----         7/16/2025  11:57 AM                .keras                                                               
+d-----         7/17/2025  12:35 PM                .Ld2VirtualBox                                                       
+d-----         7/17/2025  12:59 PM                .Ld9VirtualBox                                                       
+d-----         9/13/2026   2:24 PM                .lmstudio                                                            
+d-----         4/24/2026  10:31 PM                .local                                                               
+d-----         7/18/2026  10:51 AM                .lunarclient                                                         
+d-----          4/2/2025   3:57 PM                .matplotlib                                                          
+d-----         5/15/2026   6:23 PM                .ollama                                                              
+d-----         7/30/2025   9:36 PM                .openjfx                                                             
+d-----         2/20/2026  10:55 PM                .pinokio                                                             
+d-----         6/13/2025   8:39 AM                .pymobiledevice3                                                     
+d-----          4/2/2025   4:20 PM                .rustup                                                              
+d-----         8/17/2026   4:44 PM                .ssh                                                                 
+d-----         8/31/2025   7:36 PM                .streamlit                                                           
+d-----          1/3/2026   3:55 PM                .triton                                                              
+d-----         8/28/2026   7:16 AM                .unsloth                                                             
+d-----         8/15/2026   6:52 PM                .vachi                                                               
+d-----        11/12/2024   9:27 PM                .vscode                                                              
+d-----          5/9/2026   6:36 PM                .vscode-shared                                                       
+d-----         6/10/2026   8:25 PM                ansel                                                                
+d-----          1/3/2026   1:35 PM                Apple                                                                
+d-----         9/21/2026   9:38 PM                beautiful-model                                                      
+d-----         4/24/2026  11:49 AM                bin                                                                  
+da----          7/9/2026   8:06 PM                brainrot-bot                                                         
+d-----         8/23/2026   4:28 PM                catboost_info                                                        
+d-----         9/12/2026   6:30 PM                cbgpu                                                                
+d-r---         8/20/2026   2:51 AM                Contacts                                                             
+d-----         9/10/2026   8:42 AM                desmos-llm                                                           
+d-----         9/23/2026   1:44 AM                diag267                                                              
+d-----         9/13/2026   3:11 PM                diff1-observer                                                       
+d-----         8/28/2026   7:30 PM                Documents                                                            
+d-r---          9/9/2026   6:08 PM                Downloads                                                            
+d-----         9/22/2026   4:41 AM                ears119                                                              
+d-----         9/22/2026   8:21 AM                ears119b                                                             
+d-----         9/22/2026   8:56 AM                ears119e                                                             
+d-----         9/22/2026  10:25 AM                ears119f                                                             
+d-----         9/22/2026  12:02 PM                ears119g                                                             
+d-----         9/22/2026   1:26 PM                ears119h                                                             
+da----         9/22/2026   2:39 PM                ears213                                                              
+d-----         8/23/2026   5:46 PM                enc56                                                                
+d-----         9/21/2026  11:18 PM                fable47                                                              
+d-r---         8/20/2026   2:48 AM                Favorites                                                            
+d-----         8/22/2026   8:12 PM                featlut                                                              
+d-----         11/2/2025   7:24 PM                Games                                                                
+d-----         7/18/2026  10:34 AM                Heaven                                                               
+d-----          1/5/2025   9:40 AM                IdeaProjects                                                         
+d-----         8/15/2026   4:38 PM                ideaverse                                                            
+d-----         7/18/2025  11:23 AM                jupyter-guide-to-linear-algebra                                      
+d-----         7/24/2025   7:12 PM                KanyeLeaks                                                           
+d-r---         8/20/2026   2:51 AM                Links                                                                
+d-----         9/23/2026   8:47 AM                lis300                                                               
+d-----         9/23/2026   3:01 PM                lis301                                                               
+d-----         9/23/2026   9:56 PM                lis302                                                               
+d-----         9/23/2026   9:56 PM                lis302stage-tmp                                                      
+d-----          6/5/2026  11:29 AM                manim-env                                                            
+d-----         5/30/2026   7:26 PM                manim-mcp-server                                                     
+d-----         8/28/2026   1:01 PM                models                                                               
+d-r---         8/20/2026   2:51 AM                Music                                                                
+d-----        11/13/2024   9:25 PM                MyCryptoProject                                                      
+dar--l         8/27/2026   3:39 PM                OneDrive                                                             
+d-----          4/2/2025   2:24 PM                OpenVoice                                                            
+d-----          2/6/2025   9:25 PM                plinko-game                                                          
+d-----         4/16/2026   8:41 PM                Postman                                                              
+d-----        12/17/2025   5:08 PM                PyCharmMiscProject                                                   
+d-----          2/2/2026   2:43 PM                PycharmProjects                                                      
+d-r---         8/20/2026   2:51 AM                Saved Games                                                          
+d-----          8/9/2026   5:24 PM                scout-tasks                                                          
+d-----         8/21/2026   6:20 PM                scout_ship                                                           
+d-----         9/14/2026   6:49 PM                Scripts                                                              
+d-r---         8/20/2026   2:51 AM                Searches                                                             
+d-----         9/23/2026   7:04 AM                smolear235                                                           
+d-----          1/8/2026   7:41 PM                speedrunigt                                                          
+d-----         9/22/2026   5:39 AM                talker101                                                            
+d-----         9/20/2026   8:58 PM                talker24                                                             
+d-----         8/17/2026   5:22 PM                text-predict                                                         
+d-----          4/2/2025   4:22 PM                tortoise-tts                                                         
+d-----         7/26/2025  10:12 AM                trading_bot                                                          
+d-----          4/2/2025   4:04 PM                TTS                                                                  
+d-r---         8/20/2026   2:51 AM                Videos                                                               
+d-----         9/23/2026  12:41 AM                w264                                                                 
+d-----          8/9/2026   8:19 AM                xfer                                                                 
+d-----         8/22/2026   8:14 PM                __pycache__                                                          
+-a----         9/23/2026   9:55 PM              0 $null                                                                
+-a----          9/8/2026   2:21 PM          83309 .claude.json                                                         
+-a----         8/29/2026   8:39 PM          82003 .claude.json.backup                                                  
+-a----         8/29/2026   8:39 PM          82273 .claude.json.tmp.21956.0e0c6b62d42c                                  
+-a----         7/17/2026  10:20 AM            363 .gitconfig                                                           
+-a----         4/18/2026   1:21 PM             24 .lmstudio-home-pointer                                               
+-a----          8/8/2026  11:48 PM             24 .wslconfig                                                           
+-a----         4/20/2026  12:35 PM             81 .zshrc                                                               
+-a----          9/6/2026   9:08 PM              0 7}s                                                                  
+-a----         8/23/2026   5:30 PM          39522 api200.csv                                                           
+-a----         8/23/2026   5:35 PM              0 cb56.err                                                             
+-a----         8/23/2026   5:35 PM             41 cb56.log                                                             
+-a----         8/23/2026   5:48 PM             71 cb56b.err                                                            
+-a----         8/23/2026   5:48 PM            131 cb56b.log                                                            
+-a----         8/23/2026   5:57 PM             71 cb56c.err                                                            
+-a----         8/23/2026   5:58 PM            289 cb56c.log                                                            
+-a----         8/23/2026   5:57 PM           2484 cb56_int.py                                                          
+-a----         8/23/2026   5:47 PM           2094 cb56_npy.py                                                          
+-a----         8/17/2026  10:14 AM            767 cohort_counts.py                                                     
+-a----         8/31/2026   4:51 PM           6903 diag.ps1                                                             
+-a----          8/9/2026   7:34 PM           3568 diag_collateral.py                                                   
+-a----         8/23/2026   5:39 PM          12935 enc.err                                                              
+-a----         8/23/2026   5:39 PM              7 enc.log                                                              
+-a----         8/23/2026   5:46 PM              0 encn.err                                                             
+-a----         8/23/2026   5:46 PM           3136 encn.log                                                             
+-a----         8/23/2026   5:39 PM           1998 encode_cache.py                                                      
+-a----         8/23/2026   5:46 PM           1995 enc_npy.py                                                           
+-a----         8/22/2026   8:14 PM           4135 featurize.py                                                         
+-a----          8/9/2026   5:15 PM           2227 final.sh                                                             
+-a----         8/23/2026   3:54 PM          39497 final200_api.csv                                                     
+-a----         8/23/2026   3:54 PM          39611 final200_photo.csv                                                   
+-a----         8/23/2026   3:54 PM          39563 final200_strict.csv                                                  
+-a----          9/6/2026   6:00 PM           1202 gen_cheap.py                                                         
+-a----         8/22/2026   7:34 PM              2 hits.json                                                            
+-a----         8/17/2026  10:13 AM            244 inspect_schema.py                                                    
+-a----         8/17/2026  10:28 AM           1355 inspect_serving.py                                                   
+-a----          8/9/2026   4:21 PM           3128 introspect_clob.py                                                   
+-a----         8/23/2026   4:06 PM        8631178 lgbm_scan56.txt                                                      
+-a----         8/23/2026   4:27 PM       95564726 lgbm_scan56_full.txt                                                 
+-a----          9/1/2026   8:24 AM         734981 linkmon.csv                                                          
+-a----         8/31/2026   5:00 PM            689 linkmon.ps1                                                          
+-a----         9/23/2026  12:41 AM       11004347 llama264.log                                                         
+-a----         5/10/2026   6:32 PM             23 miktex-console.lock                                                  
+-a----          9/6/2026   5:29 PM          23807 model.tgz                                                            
+-a----         8/31/2026   4:51 PM         186520 netdiag.txt                                                          
+-a----         8/23/2026   3:28 PM          27459 nyc_ticket_hearing_outcomes_SCORED.xlsx                              
+-a----          8/8/2026  11:30 PM           1873 pc_boot.sh                                                           
+-a----          8/9/2026   9:55 PM           2057 pc_boot_new.sh                                                       
+-a----          8/9/2026   5:24 PM           2814 pc_register.sh                                                       
+-a----          8/9/2026   5:20 PM           1558 pc_verify.sh                                                         
+-a----         8/23/2026   3:51 PM        4240660 plate_modals_rebuilt.parquet                                         
+-a----         9/22/2026   7:14 AM            494 qwen_start.ps1                                                       
+-a----         8/23/2026   4:46 PM              0 retrain.err                                                          
+-a----         8/23/2026   4:46 PM              0 retrain.log                                                          
+-a----         8/23/2026   4:46 PM           3901 retrain_full.py                                                      
+-a----         8/23/2026   3:51 PM      100424035 same_day_code.parquet                                                
+-a----         8/23/2026   3:51 PM       94812952 same_day_plate.parquet                                               
+-a----         8/23/2026   5:27 PM           6666 scan200.csv                                                          
+-a----         8/23/2026   4:19 PM            979 scan_feats.json                                                      
+-a----         8/23/2026   5:23 PM         240128 scan_lgbm56_valid.npy                                                
+-a----         8/23/2026   4:19 PM       90710126 scan_train_full_X.parquet                                            
+-a----         8/23/2026   4:19 PM        6243981 scan_train_full_y.npy                                                
+-a----         8/23/2026   4:04 PM       20214760 scan_train_X.parquet                                                 
+-a----         8/23/2026   4:04 PM        1200128 scan_train_y.npy                                                     
+-a----         8/23/2026   5:46 PM            244 scat56.json                                                          
+-a----         8/23/2026   3:28 PM          15034 scored200.csv                                                        
+-a----         8/23/2026   3:39 PM          39522 scored200_photo .csv                                                 
+-a----         8/23/2026   3:40 PM          39589 scored200_photo.csv                                                  
+-a----         8/23/2026   3:38 PM          39522 scored200_stack.csv                                                  
+-a----         8/23/2026   3:40 PM          39522 scored200_strict .csv                                                
+-a----         8/23/2026   3:40 PM          39569 scored200_strict.csv                                                 
+-a----          8/8/2026  11:27 PM        1749347 scout.bundle                                                         
+-a----          8/8/2026  11:52 PM             80 scoutpull.bat                                                        
+-a----          8/8/2026  11:28 PM         828909 scout_data.tgz                                                       
+-a----          8/9/2026   4:17 PM         191435 scout_trade.tgz                                                      
+-a----         8/17/2026   4:49 PM           1317 setup_pc.ps1                                                         
+-a----         8/23/2026   3:28 PM          27277 src.xlsx                                                             
+-a----         8/22/2026   7:34 PM           2815 summons.json                                                         
+-a----         8/23/2026   3:38 PM          13808 tickets_model_above_50.xlsx                                          
+-a----         8/23/2026   3:41 PM          13922 tickets_model_above_50_realtime.xlsx                                 
+-a----         8/23/2026   3:21 PM         211674 tickets_raw.json                                                     
+-a----         8/23/2026   5:31 PM          20452 tickets_two_paths.xlsx                                               
+-a----         8/23/2026   5:35 PM           3109 train_cb56.py                                                        
+-a----         8/23/2026   3:46 PM         983901 vX.parquet                                                           
+-a----         8/23/2026   3:52 PM        1022540 vX2.parquet                                                          
+-a----         8/23/2026   3:46 PM          30128 vy.npy                                                               
+---VENV---
+ls : Cannot find path 'C:\Users\benja\lis-301' because it does not exist.
+At line:1 char:43
++ ... /benja/ 2>&1; echo ---VENV---; ls C:/Users/benja/lis-301 2>&1 | Selec ...
++                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\benja\lis-301:String) [Get-ChildItem], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+
+
+C:/Users/benja/lis-301/Scripts/python.exe : The term 'C:/Users/benja/lis-301/Scripts/python.exe' is not recognized as 
+the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:101
++ ... t-Object -First 10; C:/Users/benja/lis-301/Scripts/python.exe -c 'imp ...
++                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:/Users/benja/...ipts/python.exe:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"ls C:/Users/benja/lis301/Scripts/ | Select-Object -First 20; C:/Users/benja/lis301/Scripts/python.exe -c 'import torch, transformers; print(torch.__version__, transformers.__version__); print(torch.cuda.is_available())'\""
+ls : Cannot find path 'C:\Users\benja\lis301\Scripts\' because it does not exist.
+At line:1 char:1
++ ls C:/Users/benja/lis301/Scripts/ | Select-Object -First 20; C:/Users ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\benja\lis301\Scripts\:String) [Get-ChildItem], ItemNotFoundExc 
+   eption
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+C:/Users/benja/lis301/Scripts/python.exe : The term 'C:/Users/benja/lis301/Scripts/python.exe' is not recognized as 
+the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:62
++ ... ct-Object -First 20; C:/Users/benja/lis301/Scripts/python.exe -c 'imp ...
++                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:/Users/benja/lis301/Scripts/python.exe:String) [], CommandNotFoundExc 
+   eption
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"dir C:/Users/benja/lis301; dir C:/Users/benja/lis300 | Select-Object -First 30\""
+Directory: C:\Users\benja\lis301
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   2:01 PM                repo                                                                 
+d-----         9/23/2026   3:01 PM                work                                                                 
+-a----         9/23/2026   3:01 PM           2217 fam_scores301.py                                                     
+-a----         9/23/2026   2:01 PM       27023360 lis301-main.tar                                                      
+-a----         9/23/2026   2:01 PM       13568000 lis301-outbox.tar                                                    
+-a----         9/23/2026   2:01 PM            732 verify_seal301.py                                                    
+
+
+    Directory: C:\Users\benja\lis300
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   7:43 AM                model                                                                
+d-----         9/23/2026   7:41 AM                repo                                                                 
+d-----         9/23/2026   7:34 AM                venv                                                                 
+d-----         9/23/2026   8:47 AM                work                                                                 
+-a----         9/23/2026   7:43 AM            846 dlmodel.log                                                          
+-a----         9/23/2026   8:47 AM           1868 fam_scores.py                                                        
+-a----         9/23/2026   7:41 AM       19701760 lis300-main.tar                                                      
+-a----         9/23/2026   7:41 AM       13568000 lis300-outbox.tar                                                    
+-a----         9/23/2026   7:42 AM            961 lis300_dlmodel.py                                                    
+-a----         9/23/2026   8:40 AM            693 make_panel_rows.py                                                   
+-a----         9/23/2026   7:36 AM           1103 pip-torch.log                                                        
+-a----         9/23/2026   7:39 AM            540 pip-torch2.log                                                       
+-a----         9/23/2026   7:36 AM           9056 pip.log                                                              
+-a----         9/23/2026   7:45 AM            535 train.bat                                                            
+-a----         9/23/2026   8:12 AM          23632 train.log                                                            
+-a----         9/23/2026   7:41 AM            996 verify_seal.py
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"dir C:/Users/benja/lis300/venv/Scripts/python.exe; C:/Users/benja/lis300/venv/Scripts/python.exe -c 'import torch, transformers, safetensors; print(torch.__version__); print(transformers.__version__); print(torch.cuda.is_available())'; dir C:/Users/benja/lis302; nvidia-smi\""
+Directory: C:\Users\benja\lis300\venv\Scripts
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/23/2026   7:33 AM         266624 python.exe                                                           
+2.11.0+cu128
+5.17.0
+True
+
+
+    Directory: C:\Users\benja\lis302
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026  10:15 PM                work                                                                 
+Wed Sep 23 23:25:53 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   34C    P8              8W /  250W |     529MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19328    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"dir C:/Users/benja/models; dir C:/Users/benja/beautiful-model 2>&1 | Select-Object -First 20; dir C:/Users/benja/lis302/work; dir C:/Users/benja/lis301/work; dir C:/Users/benja/lis301/repo 2>&1 | Select-Object -First 20\""
+Directory: C:\Users\benja\beautiful-model
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/19/2026   5:43 PM                .budget                                                              
+d-----         9/18/2026   2:53 PM                .runtime                                                             
+d-----         9/19/2026   4:48 AM                archive                                                              
+d-----         9/21/2026   9:38 PM                artifacts                                                            
+d-----         9/21/2026   9:44 PM                data                                                                 
+d-----         9/19/2026   4:47 AM                design                                                               
+d-----         9/19/2026   4:49 AM                learnlab                                                             
+d-----         9/18/2026  10:52 AM                memorylab                                                            
+d-----         9/19/2026   4:49 AM                premonition                                                          
+d-----         9/19/2026   4:50 AM                reviews                                                              
+d-----         9/23/2026   2:18 AM                scratchpad                                                           
+d-----         9/21/2026   9:38 PM                scripts                                                              
+d-----         9/19/2026   5:05 PM                tests                                                                
+-a----         9/17/2026   8:02 PM             57 .gitignore                                                           
+-a----         9/17/2026   9:23 PM          25924 ADVERSARIAL_REVIEW.md                                                
+-a----         9/18/2026   9:51 AM           8771 ARCHITECTURE_DECISION.md                                             
+-a----         9/18/2026  12:15 AM           3610 README.md                                                            
+-a----         9/18/2026   2:54 PM           8676 REMOTE_RUN.md                                                        
+-a----         9/17/2026   8:52 PM          18053 RESEARCH_REVIEW.md                                                   
+-a----         9/18/2026   6:25 PM          10605 run.py                                                               
+
+
+    Directory: C:\Users\benja\lis302\work
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   9:56 PM                __pycache__                                                          
+-a----         9/23/2026   9:56 PM         815147 checks.json                                                          
+-a----         9/23/2026   9:56 PM           4365 claude_earcheck261_checker.py                                        
+-a----         9/23/2026   9:56 PM           1639 claude_lis300_common.py                                              
+-a----         9/23/2026   9:56 PM           2653 claude_lis302_tokprobs.py                                            
+-a----         9/23/2026   9:56 PM         371449 dev_pred.jsonl                                                       
+-a----         9/23/2026   9:56 PM          95313 dev_rows.jsonl                                                       
+-a----         9/23/2026  10:15 PM         680044 llama8082.err.log                                                    
+-a----         9/23/2026  10:12 PM              0 llama8082.out.log                                                    
+-a----         9/23/2026  10:15 PM          80956 pyes.json                                                            
+-a----         9/23/2026   9:57 PM         934648 tokprobs.jsonl                                                       
+
+
+    Directory: C:\Users\benja\lis301\work
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   2:01 PM                data                                                                 
+d-----         9/23/2026   2:54 PM                persrc                                                               
+d-----         9/23/2026   2:28 PM                run                                                                  
+-a----         9/23/2026   2:54 PM            470 dev_o0a2.json                                                        
+-a----         9/23/2026   2:54 PM            401 dev_o0b_l2.json                                                      
+-a----         9/23/2026   2:54 PM            427 dev_opus301_dev.json                                                 
+-a----         9/23/2026   2:54 PM            445 dev_opus_dev.json                                                    
+-a----         9/23/2026   2:54 PM         371449 dev_pred.jsonl                                                       
+-a----         9/23/2026   2:28 PM          95313 dev_rows.jsonl                                                       
+-a----         9/23/2026   2:54 PM            523 dev_score_T.json                                                     
+-a----         9/23/2026   2:54 PM            800 dev_sweep.txt                                                        
+-a----         9/23/2026   3:01 PM          91838 panel_pred.jsonl                                                     
+-a----         9/23/2026   2:54 PM          26977 panel_rows.jsonl                                                     
+-a----         9/23/2026   3:01 PM            450 panel_score.json                                                     
+-a----         9/23/2026   3:01 PM            594 panel_score_T0.json                                                  
+
+
+    Directory: C:\Users\benja\lis301\repo
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026   2:01 PM                artifacts                                                            
+d-----         9/23/2026  12:42 PM                design                                                               
+d-----         9/23/2026  12:42 PM                handoff                                                              
+d-----         9/23/2026   2:01 PM                scripts
+[0m
+[0m$ [0mcat ~/.ssh/config 2>&1 | head -n 40; ssh -G benspc 2>&1 | grep -i -E "hostname|user|port" | head -n 10
+Host benspc
+  HostName 100.75.113.114
+  User benja
+user benja
+hostname 100.75.113.114
+port 22
+canonicalizehostname false
+gatewayports no
+userknownhostsfile /Users/ben-hannan/.ssh/known_hosts /Users/ben-hannan/.ssh/known_hosts2
+syslogfacility USER
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_own_m1v_speak.py | head -n 120
+#!/usr/bin/env python3
+"""own-M1v mouth: sample-first decoding on the own-M1n weights (one change vs own-M1n).
+
+own-M1n tried the greedy reply first; greedy always picks the single most likely wording, so 1,000 dev rows
+got only 59 distinct replies. Here the mouth draws up to `samples` sampled replies first (temperature 0.8,
+top-p 0.95) and keeps the first one that passes slot_check; greedy is the last try. The gate, prompt, fill
+and fallback rule are the sealed own-M1 code, unchanged.
+
+CLI: python claude_own_m1v_speak.py --model DIR --data DEV.jsonl --out OUT.jsonl [--samples 4] [--seed 1]
+prints the same summary as claude_own_m1_speak.py, plus the try histogram.
+"""
+import argparse, collections, json, statistics, sys, time
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_own_m1_common import build_prompt, fill, slot_check, slot_values  # noqa: E402
+from claude_own_m1_speak import Mouth  # noqa: E402
+
+
+class SampleFirstMouth(Mouth):
+    def say(self, record, user_turn, tag):
+        t0 = time.perf_counter()
+        p = self.tok(build_prompt(record, user_turn, tag), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        raws, probs = [], []
+        order = [True] * self.samples + [False]  # sampled tries first, greedy last
+        for i, sample in enumerate(order):
+            raw = self._gen(ids, sample=sample)
+            pr = slot_check(raw, record) if raw else ["empty"]
+            raws.append(raw)
+            probs.append(pr)
+            if not pr:
+                return fill(raw, slot_values(record)), {"tries": i + 1, "greedy": not sample, "raw": raws,
+                                                        "problems": probs, "ms": (time.perf_counter() - t0) * 1000}
+        return None, {"tries": len(raws), "greedy": None, "raw": raws, "problems": probs,
+                      "ms": (time.perf_counter() - t0) * 1000}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--data", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--samples", type=int, default=4)
+    ap.add_argument("--seed", type=int, default=1)
+    a = ap.parse_args()
+    m = SampleFirstMouth(a.model, samples=a.samples, seed=a.seed)
+    rows = [json.loads(l) for l in Path(a.data).read_text(encoding="utf-8").splitlines() if l.strip()]
+    rows = rows[: a.limit] if a.limit else rows
+    spoke, fell, texts, ms, tries = 0, 0, collections.Counter(), [], collections.Counter()
+    per = collections.defaultdict(lambda: [0, 0])
+    with open(a.out, "w", encoding="utf-8") as fh:
+        for r in rows:
+            text, info = m.say(r["record"], r.get("user_turn", ""), r["tag"])
+            st = r["record"].get("status", "")
+            per[st][0] += 1
+            if text is None:
+                fell += 1
+            else:
+                spoke += 1
+                per[st][1] += 1
+                tries[info["tries"]] += 1
+                texts[info["raw"][info["tries"] - 1]] += 1
+            ms.append(info["ms"])
+            fh.write(json.dumps({"record": r["record"], "user_turn": r.get("user_turn", ""), "tag": r["tag"],
+                                 "reply": text, **info}, ensure_ascii=False) + "\n")
+    top = texts.most_common(1)[0][1] if texts else 0
+    ms.sort()
+    print(json.dumps({"rows": len(rows), "spoke": spoke, "fell_back": fell, "tries_hist": dict(sorted(tries.items())),
+                      "distinct_slotted_replies": len(texts), "top_reply_count": top,
+                      "top5": texts.most_common(5), "per_status_rows_spoke": dict(per), "device": m.dev,
+                      "median_ms": round(statistics.median(ms), 1) if ms else None,
+                      "p90_ms": round(ms[int(0.9 * (len(ms) - 1))], 1) if ms else None}, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"mkdir C:/Users/benja/own-m1n/merged -Force; dir C:/Users/benja/own-m1n/merged\""
+Directory: C:\Users\benja\own-m1n
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026  11:26 PM                merged
+[0m
+[0m$ [0mscp ~/premonition-models/own-m1n-mouth/merged/config.json ~/premonition-models/own-m1n-mouth/merged/generation_config.json ~/premonition-models/own-m1n-mouth/merged/tokenizer_config.json ~/premonition-models/own-m1n-mouth/merged/tokenizer.json ~/premonition-models/own-m1n-mouth/merged/chat_template.jinja benspc:C:/Users/benja/own-m1n/merged/ && echo SMALL_FILES_OK
+SMALL_FILES_OK
+[0m
+[0m$ [0mscp ~/premonition-models/own-m1n-mouth/merged/model.safetensors benspc:C:/Users/benja/own-m1n/merged/model.safetensors && echo BIG_FILE_OK
+BIG_FILE_OK
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"CertUtil -hashfile C:/Users/benja/own-m1n/merged/model.safetensors SHA256\""
+SHA256 hash of C:/Users/benja/own-m1n/merged/model.safetensors:
+de12daf488e462814caa6c9de23603aae22326b26060525b2b534f08c4b1564a
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_own_m1_speak.py | head -n 60; git show origin/main:scripts/claude_own_m1_common.py | head -n 40
+#!/usr/bin/env python3
+"""own-M1 mouth: the fine-tuned MiniCPM5-1B speaker with the slot gate.
+
+Library:  m = Mouth(model_dir); text, info = m.say(record, user_turn, tag)
+  Tries the greedy reply, then up to --samples sampled replies; the first one that passes
+  slot_check is filled and returned. If none passes, returns (None, info) and the caller
+  must fall back to the 241b rewriter. info = {"tries", "raw", "problems", "ms"}.
+CLI (dev evaluation):
+  python claude_own_m1_speak.py --model DIR --data DIR/dev.jsonl --out OUT.jsonl [--limit N]
+  prints: rows, spoke, fell back, distinct replies, top reply share, per-status counts, median/p90 ms.
+"""
+import argparse, collections, json, statistics, sys, time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_own_m1_common import build_prompt, fill, slot_check, slot_values  # noqa: E402
+
+
+class Mouth:
+    def __init__(self, model_dir, device=None, samples=4, max_new_tokens=60, seed=1):
+        self.dev = device or ("cuda" if torch.cuda.is_available() else
+                              "mps" if torch.backends.mps.is_available() else "cpu")
+        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+        self.tok = AutoTokenizer.from_pretrained(model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.dev).eval()
+        self.samples, self.max_new = samples, max_new_tokens
+        torch.manual_seed(seed)
+
+    @torch.no_grad()
+    def _gen(self, ids, sample):
+        kw = dict(do_sample=True, temperature=0.8, top_p=0.95) if sample else dict(do_sample=False)
+        out = self.model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=self.max_new,
+                                  eos_token_id=self.tok.eos_token_id, pad_token_id=self.tok.eos_token_id,
+                                  stop_strings=["<END>"], tokenizer=self.tok, **kw)
+        text = self.tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
+        return text.split("<END>")[0].strip()
+
+    def say(self, record, user_turn, tag):
+        t0 = time.perf_counter()
+        p = self.tok(build_prompt(record, user_turn, tag), add_special_tokens=False)["input_ids"]
+        if self.tok.bos_token_id is not None:
+            p = [self.tok.bos_token_id] + p
+        ids = torch.tensor([p], device=self.dev)
+        raws, probs = [], []
+        for i in range(1 + self.samples):
+            raw = self._gen(ids, sample=i > 0)
+            pr = slot_check(raw, record) if raw else ["empty"]
+            raws.append(raw)
+            probs.append(pr)
+            if not pr:
+                ms = (time.perf_counter() - t0) * 1000
+                return fill(raw, slot_values(record)), {"tries": i + 1, "raw": raws, "problems": probs, "ms": ms}
+        return None, {"tries": len(raws), "raw": raws, "problems": probs,
+                      "ms": (time.perf_counter() - t0) * 1000}
+
+
+def main():
+#!/usr/bin/env python3
+"""own-M1 mouth: shared bits (prompt, slot filling, slot check).
+
+The mouth sees a checked reply record with names and values replaced by slot tokens,
+the user's last turn (same slots), and a dialog tag. It writes a conversational reply
+that uses the slot tokens; the printer puts the exact strings back afterwards, so the
+model can never misspell or invent a name that reaches the user through a slot.
+
+Slots: <S1> owner name, <V1> value / answer, <R1> relation phrase ("sibling's child").
+"""
+from __future__ import annotations
+
+import re
+
+SLOTS = ("<S1>", "<V1>", "<R1>")
+SLOT_RE = re.compile(r"<[A-Z]+\d+>")
+
+# statuses whose reply must state the value, and statuses that must never state one
+NEEDS_VALUE = {"OK", "SAVED"}
+NO_VALUE = {"UNKNOWN", "FORGOT", "ABSTAIN", "CLARIFY"}
+
+
+def slot_values(record: dict) -> dict:
+    """Map slot token -> exact string, from a talker120-style record."""
+    f = record.get("fields", {}) or {}
+    out = {}
+    name = record.get("name") or f.get("subject")
+    if name and not f.get("owner_phrase"):  # our/we owners are not a name slot (Ben's our-policy: ask whose)
+        out["<S1>"] = name
+    rels = record.get("relations") or ([f["relation"]] if f.get("relation") else [])
+    if rels:
+        out["<R1>"] = "'s ".join(rels)
+    val = f.get("answer") or f.get("value")
+    if val:
+        out["<V1>"] = val
+    return out
+
+
+def slotify(text: str, values: dict) -> str:
+    """Replace literal names/values in text with their slot tokens (longest first, whole words)."""
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_own_m1_common.py | wc -l; git show origin/main:scripts/claude_own_m1_common.py | tail -n 120
+110
+#!/usr/bin/env python3
+"""own-M1 mouth: shared bits (prompt, slot filling, slot check).
+
+The mouth sees a checked reply record with names and values replaced by slot tokens,
+the user's last turn (same slots), and a dialog tag. It writes a conversational reply
+that uses the slot tokens; the printer puts the exact strings back afterwards, so the
+model can never misspell or invent a name that reaches the user through a slot.
+
+Slots: <S1> owner name, <V1> value / answer, <R1> relation phrase ("sibling's child").
+"""
+from __future__ import annotations
+
+import re
+
+SLOTS = ("<S1>", "<V1>", "<R1>")
+SLOT_RE = re.compile(r"<[A-Z]+\d+>")
+
+# statuses whose reply must state the value, and statuses that must never state one
+NEEDS_VALUE = {"OK", "SAVED"}
+NO_VALUE = {"UNKNOWN", "FORGOT", "ABSTAIN", "CLARIFY"}
+
+
+def slot_values(record: dict) -> dict:
+    """Map slot token -> exact string, from a talker120-style record."""
+    f = record.get("fields", {}) or {}
+    out = {}
+    name = record.get("name") or f.get("subject")
+    if name and not f.get("owner_phrase"):  # our/we owners are not a name slot (Ben's our-policy: ask whose)
+        out["<S1>"] = name
+    rels = record.get("relations") or ([f["relation"]] if f.get("relation") else [])
+    if rels:
+        out["<R1>"] = "'s ".join(rels)
+    val = f.get("answer") or f.get("value")
+    if val:
+        out["<V1>"] = val
+    return out
+
+
+def slotify(text: str, values: dict) -> str:
+    """Replace literal names/values in text with their slot tokens (longest first, whole words)."""
+    for tok, s in sorted(values.items(), key=lambda kv: -len(kv[1])):
+        if tok == "<R1>":
+            continue  # relation words are ordinary English in the user's turn
+        text = re.sub(r"(?<![\w])" + re.escape(s) + r"(?![\w])", tok, text, flags=re.IGNORECASE)
+    return text
+
+
+def record_text(record: dict, values: dict) -> str:
+    f = record.get("fields", {}) or {}
+    lines = [f"status: {record.get('status', '')}"]
+    for tok in SLOTS:
+        if tok in values:
+            lines.append({"<S1>": "name", "<V1>": "value", "<R1>": "relation"}[tok] + f": {tok}")
+    if f.get("source"):
+        lines.append(f"source: {f['source']}")
+    if f.get("hop"):
+        lines.append(f"hops: {f['hop']}")
+    return "\n".join(lines)
+
+
+def build_prompt(record: dict, user_turn: str, tag: str) -> str:
+    values = slot_values(record)
+    return ("### Record\n" + record_text(record, values) +
+            "\n### User\n" + slotify(user_turn or "", values) +
+            "\n### Tag\n" + tag + "\n### Reply\n")
+
+
+def fill(reply: str, values: dict) -> str:
+    for tok, s in values.items():
+        reply = reply.replace(tok, s)
+    return reply
+
+
+def slot_check(reply: str, record: dict) -> list[str]:
+    """Problems with a slotted reply against its record; [] means it passes.
+
+    Code-only faithfulness gate (independent of the M0 builder's checker):
+    - no slot the record lacks, no unknown slot token;
+    - OK/SAVED replies state <S1> and <V1>; UNKNOWN/FORGOT/ABSTAIN/CLARIFY never state <V1>;
+    - replies about a named fact mention <S1>;
+    - no capitalised word outside slots except sentence starts, "I" and contractions of I;
+    - no digits (records carry no numbers the mouth may say).
+    """
+    values = slot_values(record)
+    status = record.get("status", "")
+    probs = []
+    used = set(SLOT_RE.findall(reply))
+    for t in used:
+        if t not in SLOTS:
+            probs.append(f"unknown slot {t}")
+        elif t not in values:
+            probs.append(f"slot {t} not in record")
+    if status in NEEDS_VALUE and "<V1>" in values and "<V1>" not in used:
+        probs.append("value missing")
+    if status in NO_VALUE and "<V1>" in used:
+        probs.append("value stated for a no-value status")
+    if "<S1>" in values and status in NEEDS_VALUE | {"UNKNOWN", "FORGOT"} and "<S1>" not in used:
+        probs.append("owner missing")
+    bare = SLOT_RE.sub(" x ", reply)
+    for m in re.finditer(r"[A-Za-z][A-Za-z']*", bare):
+        word = m.group(0)
+        if not word[0].isupper() or word in ("I", "I'm", "I've", "I'll", "I'd"):
+            continue
+        before = bare[:m.start()].rstrip(" \t\"'(")
+        if before == "" or before[-1] in ".!?\n:":
+            continue  # sentence start
+        probs.append(f"capitalised word outside slots: {word}")
+    if re.search(r"\d", bare):
+        probs.append("digit in reply")
+    return probs
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_own_m1v_speak.py scripts/claude_own_m1_speak.py scripts/claude_own_m1_common.py artifacts/claude-own-m0b-20260923/dev.jsonl > /tmp/own-m1v-code.tar && ls -la /tmp/own-m1v-code.tar && scp /tmp/own-m1v-code.tar benspc:C:/Users/benja/own-m1n/own-m1v-code.tar && echo COPIED
+-rw-r--r--  1 ben-hannan  wheel  317440 Sep 24 00:05 /tmp/own-m1v-code.tar
+COPIED
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"mkdir C:/Users/benja/own-m1n/m1v-run -Force; tar -xf C:/Users/benja/own-m1n/own-m1v-code.tar -C C:/Users/benja/own-m1n/m1v-run; dir C:/Users/benja/own-m1n/m1v-run; dir C:/Users/benja/own-m1n/m1v-run/scripts; dir C:/Users/benja/own-m1n/m1v-run/artifacts/claude-own-m0b-20260923\""
+Directory: C:\Users\benja\own-m1n
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/24/2026  12:05 AM                m1v-run                                                              
+
+
+    Directory: C:\Users\benja\own-m1n\m1v-run
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026  11:49 PM                artifacts                                                            
+d-----         9/23/2026  11:49 PM                scripts                                                              
+
+
+    Directory: C:\Users\benja\own-m1n\m1v-run\scripts
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/23/2026  11:49 PM           4071 claude_own_m1v_speak.py                                              
+-a----         9/23/2026  11:49 PM           4419 claude_own_m1_common.py                                              
+-a----         9/23/2026  11:49 PM           4944 claude_own_m1_speak.py                                               
+
+
+    Directory: C:\Users\benja\own-m1n\m1v-run\artifacts\claude-own-m0b-20260923
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----         9/23/2026  11:49 PM         296831 dev.jsonl
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"Get-PSDrive C | Select-Object Used,Free; C:/Users/benja/lis300/venv/Scripts/python.exe -c 'import transformers; print(transformers.__version__)'\""
+5.17.0
+        Used        Free
+        ----        ----
+969721663488 53422170112
+[0m
+[0m# [0mTodos
+[✓] Read OPUS-RULES and PASSMARKS + plan files
+[✓] SEAL check sha256 against origin/main
+[✓] Weights copy + check on BensPC
+[✓] Code archive to BensPC
+[•] Single GPU run on BensPC
+[ ] Copy back + fresh recount Pm1v.2 + RESULTS-run.md
+[0m
+[0m$ [0mssh benspc "cd C:/Users/benja/own-m1n/m1v-run && C:/Users/benja/lis300/venv/Scripts/python.exe scripts/claude_own_m1v_speak.py --model C:/Users/benja/own-m1n/merged --data artifacts/claude-own-m0b-20260923/dev.jsonl --out dev_out.jsonl --samples 4 --seed 1 > dev_summary_stdout.txt 2> dev_run.stderr.txt; echo EXIT:$LastExitCode; Get-Content dev_summary_stdout.txt"
+(no output)
+[0m
+[0m$ [0mssh benspc "powershell -NoProfile -Command \"dir C:/Users/benja/own-m1n/m1v-run; Get-Content C:/Users/benja/own-m1n/m1v-run/dev_summary_stdout.txt 2>&1 | Select-Object -First 20; Get-Content C:/Users/benja/own-m1n/m1v-run/dev_run.stderr.txt 2>&1 | Select-Object -First 30\""
+Directory: C:\Users\benja\own-m1n\m1v-run
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026  11:49 PM                artifacts                                                            
+d-----         9/24/2026  12:05 AM                scripts                                                              
+-a----         9/24/2026  12:05 AM            293 dev_run.stderr.txt                                                   
+-a----         9/24/2026  12:05 AM              0 dev_summary_stdout.txt                                               
+usage: claude_own_m1v_speak.py [-h] --model MODEL --data DATA --out OUT
+                               [--limit LIMIT] [--samples SAMPLES]
+                               [--seed SEED]
+claude_own_m1v_speak.py: error: unrecognized arguments: ; echo EXIT:; Get-Content dev_summary_stdout.txt
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -Command "cd C:/Users/benja/own-m1n/m1v-run; & C:/Users/benja/lis300/venv/Scripts/python.exe scripts/claude_own_m1v_speak.py --model C:/Users/benja/own-m1n/merged --data artifacts/claude-own-m0b-20260923/dev.jsonl --out dev_out.jsonl --samples 4 --seed 1 > dev_summary_stdout.txt 2> dev_run.stderr.txt; echo DONE_EXIT_$LASTEXITCODE"'
+DONE_EXIT_0
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -Command "dir C:/Users/benja/own-m1n/m1v-run; echo STDOUT; Get-Content C:/Users/benja/own-m1n/m1v-run/dev_summary_stdout.txt; echo STDERR; Get-Content C:/Users/benja/own-m1n/m1v-run/dev_run.stderr.txt | Select-Object -First 30"'
+Directory: C:\Users\benja\own-m1n\m1v-run
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----         9/23/2026  11:49 PM                artifacts                                                            
+d-----         9/24/2026  12:05 AM                scripts                                                              
+-a----         9/24/2026  12:20 AM         421627 dev_out.jsonl                                                        
+-a----         9/24/2026  12:06 AM           1446 dev_run.stderr.txt                                                   
+-a----         9/24/2026  12:20 AM           1154 dev_summary_stdout.txt                                               
+STDOUT
+{"rows": 1000, "spoke": 1000, "fell_back": 0, "tries_hist": {"1": 1000}, "distinct_slotted_replies": 461, "top_reply_count": 42, "top5": [["<S1>'s <R1> is <V1>.", 42], ["You told me <S1>'s <R1> is <V1>.", 29], ["Got it, <S1>'s <R1> is <V1>.", 18], ["I don't know who <S1>'s <R1> is.", 15], ["From what you told me, I worked out that <S1>'s <R1> is <V1>.", 14]], "per_status_rows_spoke": {"OK": [350, 350], "SAVED": [150, 150], "UNKNOWN": [150, 150], "ABSTAIN": [100, 100], "CLARIFY": [150, 150], "FORGOT": [100, 100]}, "device": "cuda", "median_ms": 866.1, "p90_ms": 1032.8}
+STDERR
+python.exe : 
+At line:1 char:36
++ ... 1n/m1v-run; & C:/Users/benja/lis300/venv/Scripts/python.exe scripts/c ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights:  25%|##5       | 55/219 [00:00<00:00, 522.28it/s]
+Loading weights:  49%|####9     | 108/219 [00:00<00:00, 333.32it/s]
+Loading weights:  67%|######6   | 146/219 [00:00<00:00, 345.51it/s]
+Loading weights:  84%|########3 | 183/219 [00:00<00:00, 288.39it/s]
+Loading weights: 100%|##########| 219/219 [00:00<00:00, 358.37it/s]
+[0m
+[0m$ [0mssh benspc 'powershell -NoProfile -Command "(Get-Content C:/Users/benja/own-m1n/m1v-run/dev_out.jsonl | Measure-Object -Line).Lines"'
+1000
+[0m
+[0m$ [0mscp benspc:C:/Users/benja/own-m1n/m1v-run/dev_out.jsonl /tmp/own-m1v-dev_out.jsonl && scp benspc:C:/Users/benja/own-m1n/m1v-run/dev_summary_stdout.txt /tmp/own-m1v-dev_summary.json && wc -l /tmp/own-m1v-dev_out.jsonl && cat /tmp/own-m1v-dev_summary.json
+1000 /tmp/own-m1v-dev_out.jsonl
+��{ " r o w s " :   1 0 0 0 ,   " s p o k e " :   1 0 0 0 ,   " f e l l _ b a c k " :   0 ,   " t r i e s _ h i s t " :   { " 1 " :   1 0 0 0 } ,   " d i s t i n c t _ s l o t t e d _ r e p l i e s " :   4 6 1 ,   " t o p _ r e p l y _ c o u n t " :   4 2 ,   " t o p 5 " :   [ [ " < S 1 > ' s   < R 1 >   i s   < V 1 > . " ,   4 2 ] ,   [ " Y o u   t o l d   m e   < S 1 > ' s   < R 1 >   i s   < V 1 > . " ,   2 9 ] ,   [ " G o t   i t ,   < S 1 > ' s   < R 1 >   i s   < V 1 > . " ,   1 8 ] ,   [ " I   d o n ' t   k n o w   w h o   < S 1 > ' s   < R 1 >   i s . " ,   1 5 ] ,   [ " F r o m   w h a t   y o u   t o l d   m e ,   I   w o r k e d   o u t   t h a t   < S 1 > ' s   < R 1 >   i s   < V 1 > . " ,   1 4 ] ] ,   " p e r _ s t a t u s _ r o w s _ s p o k e " :   { " O K " :   [ 3 5 0 ,   3 5 0 ] ,   " S A V E D " :   [ 1 5 0 ,   1 5 0 ] ,   " U N K N O W N " :   [ 1 5 0 ,   1 5 0 ] ,   " A B S T A I N " :   [ 1 0 0 ,   1 0 0 ] ,   " C L A R I F Y " :   [ 1 5 0 ,   1 5 0 ] ,   " F O R G O T " :   [ 1 0 0 ,   1 0 0 ] } ,   " d e v i c e " :   " c u d a " ,   " m e d i a n _ m s " :   8 6 6 . 1 ,   " p 9 0 _ m s " :   1 0 3 2 . 8 }  
+ 
+[0m
+[0m$ [0mfile /tmp/own-m1v-dev_out.jsonl && head -c 300 /tmp/own-m1v-dev_out.jsonl
+/tmp/own-m1v-dev_out.jsonl: JSON data
+{"record": {"kind": "answer", "status": "OK", "name": "Jrella", "relations": ["hobby"], "fields": {"answer": "pottery", "trail": ["M000001"], "source": "inferred"}}, "user_turn": "what is Jrella's hobby?", "tag": "ANSWER", "reply": "Jrella's hobby is pottery. I worked that out from what you've said.
+[0m
+[0m$ [0miconv -f UTF-16 -t UTF-8 /tmp/own-m1v-dev_summary.json > /tmp/own-m1v-dev_summary_utf8.json && cat /tmp/own-m1v-dev_summary_utf8.json
+{"rows": 1000, "spoke": 1000, "fell_back": 0, "tries_hist": {"1": 1000}, "distinct_slotted_replies": 461, "top_reply_count": 42, "top5": [["<S1>'s <R1> is <V1>.", 42], ["You told me <S1>'s <R1> is <V1>.", 29], ["Got it, <S1>'s <R1> is <V1>.", 18], ["I don't know who <S1>'s <R1> is.", 15], ["From what you told me, I worked out that <S1>'s <R1> is <V1>.", 14]], "per_status_rows_spoke": {"OK": [350, 350], "SAVED": [150, 150], "UNKNOWN": [150, 150], "ABSTAIN": [100, 100], "CLARIFY": [150, 150], "FORGOT": [100, 100]}, "device": "cuda", "median_ms": 866.1, "p90_ms": 1032.8}
+[0m
+[0m$ [0mmkdir -p artifacts/claude-own-m1v-20260924 && cp /tmp/own-m1v-dev_out.jsonl artifacts/claude-own-m1v-20260924/dev_out.jsonl && cp /tmp/own-m1v-dev_summary_utf8.json artifacts/claude-own-m1v-20260924/dev_summary.json && ls -la artifacts/claude-own-m1v-20260924/ && which uv
+total 832
+drwxr-xr-x    4 ben-hannan  staff     128 Sep 24 00:21 .
+drwxr-xr-x@ 469 ben-hannan  staff   15008 Sep 24 00:21 ..
+-rw-------    1 ben-hannan  staff  421627 Sep 24 00:21 dev_out.jsonl
+-rw-r--r--    1 ben-hannan  staff     576 Sep 24 00:21 dev_summary.json
+/Users/ben-hannan/.local/bin/uv
+[0m
+[0m← [0mWrite /tmp/own-m1v-recount.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B /tmp/own-m1v-recount.py
+{"rows": 1000, "spoken": 1000, "null": 0, "recount_failures": 0, "bad": []}
+[0m
+[0m← [0mWrite /tmp/own-m1v-quotes.py
+Wrote file successfully.
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B /tmp/own-m1v-quotes.py
+{"tag": "ANSWER", "status": "OK", "reply": "It's Yvallo. That's Hrallo's friend."}
+{"tag": "FORGOT_ACK", "status": "FORGOT", "reply": "Okay, Trallo's sport is cleared."}
+{"tag": "ANSWER", "status": "OK", "reply": "I figured out Frella's hometown is Ploverst, going by what you've said."}
+{"tag": "ACK_SAVE", "status": "SAVED", "reply": "Alright, Frella's doctor is Ivallo. Got it."}
+{"tag": "ABSTAIN", "status": "ABSTAIN", "reply": "You haven't told me Lrella's sister yet."}
+{"tag": "ANSWER", "status": "OK", "reply": "Frella's favorite_food is cheese."}
+{"tag": "ANSWER", "status": "OK", "reply": "I figured out Vrallo's sport is skating, going by what you told me."}
+{"tag": "CLARIFY", "status": "CLARIFY", "reply": "I've got more than one Lrella. Which one?"}
+{"tag": "ABSTAIN", "status": "UNKNOWN", "reply": "Sorry, Jrallo's work_location isn't in my notes."}
+{"tag": "ANSWER", "status": "OK", "reply": "Oh, Xrallo's father's brother? That's Lvallo."}
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "import json; rows=[json.loads(l) for l in open('artifacts/claude-own-m1v-20260924/dev_out.jsonl',encoding='utf-8') if l.strip()]; u=[r for r in rows if r.get('reply') and '_' in r['reply']]; print(len(u)); print(u[0]['reply'] if u else '')"
+165
+I worked it out from your notes: Frilla's work_location is Glenhaven.
+[0m
+[0m← [0mWrite artifacts/claude-own-m1v-20260924/RESULTS-run.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la artifacts/claude-own-m1v-20260924/; git status --short | head -n 20
+total 840
+drwxr-xr-x    5 ben-hannan  staff     160 Sep 24 00:21 .
+drwxr-xr-x@ 469 ben-hannan  staff   15008 Sep 24 00:21 ..
+-rw-------    1 ben-hannan  staff  421627 Sep 24 00:21 dev_out.jsonl
+-rw-r--r--    1 ben-hannan  staff     576 Sep 24 00:21 dev_summary.json
+-rw-r--r--    1 ben-hannan  staff    3607 Sep 24 00:21 RESULTS-run.md
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m$ [0mgit status --short | grep own-m1v; wc -l artifacts/claude-own-m1v-20260924/dev_out.jsonl
+1000 artifacts/claude-own-m1v-20260924/dev_out.jsonl
+[0m
+[0m$ [0mgit status --short artifacts/claude-own-m1v-20260924/; git check-ignore -v artifacts/claude-own-m1v-20260924/dev_out.jsonl artifacts/claude-own-m1v-20260924/RESULTS-run.md; cat .gitignore
+.gitignore:5:artifacts/	artifacts/claude-own-m1v-20260924/dev_out.jsonl
+.gitignore:5:artifacts/	artifacts/claude-own-m1v-20260924/RESULTS-run.md
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+[0m
+[0m# [0mTodos
+[✓] Read OPUS-RULES and PASSMARKS + plan files
+[✓] SEAL check sha256 against origin/main
+[✓] Weights copy + check on BensPC
+[✓] Code archive to BensPC
+[✓] Single GPU run on BensPC
+[✓] Copy back + fresh recount Pm1v.2 + RESULTS-run.md
+[0m
