@@ -1,0 +1,2390 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-311-chat292.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-311-chat292.md
+[0m✗ [0mGlob "**/lis-311*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m→ [0mRead .
+[0m
+[0m$ [0mls handoff/queue/ | head -n 100; echo ---; ls artifacts/ | head -n 100
+ls: handoff/queue/: No such file or directory
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-judgef1-20260923
+claude-lis300-20260923
+claude-lis301-20260923
+claude-lis302-20260924
+claude-lis310-20260923
+[0m
+[0m$ [0mls handoff/ | head -n 100; echo ---; ls artifacts/ | grep -i -e e2e331 -e lis-e2e -e lis-31 -e fable; echo ---; git branch -a | head -n 50; git status --short | head -n 50
+HANDOFF.md
+kit
+memory
+replies
+---
+fable-about164-20260922
+fable-about164b-20260922
+fable-abstain64-20260921
+fable-abstain76-20260921
+fable-abstain78-20260921
+fable-agent138-20260922
+fable-agent138b-20260922
+fable-agent138d-20260922
+fable-agent138f-20260922
+fable-agent138g-20260922
+fable-agent138h-20260922
+fable-agent138i-20260922
+fable-agent138j-20260922
+fable-align147-20260922
+fable-apos193-20260922
+fable-atomic207-20260922
+fable-audit75-20260921
+fable-audit83-20260921
+fable-autosleep42-20260921
+fable-baseline-length-eval-20260920
+fable-baseline-transformer-20260920
+fable-baseline-transformer-v2-20260920
+fable-bench103-20260921
+fable-bench111-20260921
+fable-bench113-20260922
+fable-bench113b-20260922
+fable-bench113c-20260922
+fable-bench113d-20260922
+fable-bench113e-20260922
+fable-bench121-20260922
+fable-bench125-20260922
+fable-bench132-20260922
+fable-bench65-20260921
+fable-bench66-20260921
+fable-bench73-20260921
+fable-bench92-20260921
+fable-brake118-20260922
+fable-brake118b-20260922
+fable-cantdo223-20260922
+fable-cardfold-sleep-20260922
+fable-case180b-20260922
+fable-chainof174-20260922
+fable-concept-toy20-20260920
+fable-confirmation-panels-20260920
+fable-copula172-20260922
+fable-copula172b-20260922
+fable-correct160-20260922
+fable-correct160b-20260922
+fable-correctreply192-20260922
+fable-counter59-20260921
+fable-counter60-20260921
+fable-creative-stop-toy-20260921
+fable-daemon141-20260922
+fable-daemon74-20260921
+fable-decline224-20260922
+fable-declinecue216-20260922
+fable-demo126-20260922
+fable-demo55-20260921
+fable-demo55b-20260921
+fable-demo88-20260921
+fable-diag95-20260921
+fable-discourse137b-20260922
+fable-dispatcher-pilot-20260920
+fable-dispatcher-probes26-20260921
+fable-dispatcher-v3-20260920
+fable-dispatcher-v4-20260920
+fable-doubt146-20260922
+fable-doubt146b-20260922
+fable-ears109-20260921
+fable-ears119-20260922
+fable-ears119b-20260922
+fable-ears119d-20260922
+fable-ears119e-20260922
+fable-ears119f-20260922
+fable-ears119g-20260922
+fable-ears119h-20260922
+fable-ears213-20260922
+fable-ears45-20260921
+fable-ears47-20260921
+fable-ears85-20260921
+fable-earsguard91-20260921
+fable-english-listening-20260921
+fable-fairsmol211-20260922
+fable-filler157-20260922
+fable-filler157b-20260922
+fable-fix129-20260922
+fable-fix135-20260922
+fable-fix137-20260922
+fable-fix139-20260922
+fable-fix139b-20260922
+fable-fix140-20260922
+fable-fix144-20260922
+fable-fix150-20260922
+fable-fix77-20260921
+fable-frame137d-20260922
+fable-frame137e-20260922
+fable-hardgate46-20260921
+fable-hardgate80-20260921
+fable-hedgecase150d-20260922
+fable-hop159-20260922
+fable-hypo137c-20260922
+fable-identity227-20260922
+fable-inverted155-20260922
+fable-label167c-20260922
+fable-label167e-20260922
+fable-lang154e-20260922
+fable-learnedaddr43i-20260921
+fable-learnedparity43j-20260921
+fable-ledger112-20260922
+fable-ledger82-20260921
+fable-lengthgate43-20260921
+fable-link-isolation-20260920
+fable-link-isolation-v2-20260920
+fable-livesleep52-20260921
+fable-lm87-20260921
+fable-loop102-20260921
+fable-loop117-20260922
+fable-loop134-20260922
+fable-loop90-20260921
+fable-loop96-20260921
+fable-lowercase163-20260922
+fable-lowercase180-20260922
+fable-lowrank43f-20260921
+fable-marks123-20260922
+fable-me166-20260922
+fable-me166b-20260922
+fable-me166c-20260922
+fable-modernbert58-20260921
+fable-modernbert61-20260921
+fable-modes54-20260921
+fable-mouth53-20260921
+fable-multival154b-20260922
+fable-multival154c-20260922
+fable-nameval171-20260922
+fable-nameval171b-20260922
+fable-naturalpanel208-20260922
+fable-negate154f-20260922
+fable-newnames21-20260920
+fable-newnames27-20260921
+fable-newnames29-20260921
+fable-nocorrect154g-20260922
+fable-noisyteacher45-20260921
+fable-notebook-m0-20260920
+fable-novelty-research-20260920
+fable-novelty19-replay-20260920
+fable-novelty19b-u8-20260920
+fable-officechain138e-20260922
+fable-ofteach215-20260922
+fable-ofteachb222-20260922
+fable-operator-balance-20260920
+fable-operator-e0-20260920
+fable-operator-grow-20260920
+fable-operator-grow-blind-20260920
+fable-operator-hintwarm-20260920
+fable-operator-marg-20260920
+fable-operator-marg-full-20260920
+fable-operator-marg-staged-20260920
+fable-operator-marg-staged-dense-20260920
+fable-operator-reliability-bundle
+fable-operator-reliability-bundle.tar.gz
+fable-operator-reliability-grow-blind-20260920
+fable-operator-swap-20260920
+fable-perf128-20260922
+fable-perf142-20260922
+fable-plural162b-20260922
+fable-predictions-ledger.md
+fable-qform158-20260922
+fable-qmark151-20260922
+fable-qual56-20260921
+fable-read106-20260921
+fable-read107-20260921
+fable-reading94-20260921
+fable-reading94b-20260922
+fable-reasoner44-20260921
+fable-reasoner50-20260921
+fable-redteam110-20260921
+fable-redteam124-20260922
+fable-redteam136-20260922
+fable-redteam143-20260922
+fable-redteam67-20260921
+fable-redteam79-20260921
+fable-redteam81-20260921
+fable-redteam98-20260921
+fable-relcanon63-20260921
+fable-relcanon97-20260921
+fable-restartindex220-20260922
+fable-reversal210-20260922
+fable-reverse153-20260922
+fable-reverse190-20260922
+fable-reverse190b-20260922
+fable-sayagain189-20260922
+fable-sayagain189b-20260922
+fable-screen148-20260922
+fable-screen148b-20260922
+fable-self100-20260921
+fable-self105-20260921
+fable-self105panel-20260921
+fable-self114-20260922
+fable-self114panel-20260922
+fable-self122-20260922
+fable-self122panel-20260922
+fable-self127-20260922
+fable-self127panel-20260922
+fable-self138c-20260922
+fable-self99-20260921
+fable-selfcard161-20260922
+fable-selfgate212-20260922
+fable-selfground168-20260922
+fable-selfname219-20260922
+fable-selfq187-20260922
+fable-selfq187b-20260922
+fable-session152-20260922
+fable-sharedsleep43b-20260921
+fable-simplewiki86-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+fable-sleepsmoke206-20260922
+fable-smalltalk156-20260922
+fable-smalltalk156b-20260922
+fable-smalltalk156c-20260922
+fable-soak108-20260921
+fable-soak93-20260921
+fable-source226-20260922
+fable-speed170-20260922
+fable-startup-factorial-20260920
+fable-startup-factorial-v2-20260920
+fable-statefall188-20260922
+fable-story-size-stress-20260920
+fable-subject150b-20260922
+fable-subject150c-20260922
+fable-suitediff214-20260922
+fable-suitediff218-20260922
+fable-tail139d-20260922
+fable-tail139e-20260922
+fable-tailwords139c-20260922
+fable-talker101-20260921
+fable-talker120-20260922
+fable-talker120b-20260922
+fable-talker120c-20260922
+fable-talker120d-20260922
+fable-talker24-20260920
+fable-thename162-20260922
+fable-thought49-20260921
+fable-thought62-20260921
+fable-title157c-20260922
+fable-transport43g-20260921
+fable-turns84-20260921
+fable-twohop160c-20260922
+fable-typo165-20260922
+fable-username173-20260922
+fable-username173b-20260922
+fable-verb167-20260922
+fable-verb167b-20260922
+fable-verb167d-20260922
+fable-webfix89-20260921
+fable-whcity158c-20260922
+fable-whrel158b-20260922
+fable-widelengths43k-20260921
+fable-wire51-20260921
+fable-wire57-20260921
+fable-wordmatch149-20260922
+fable-writescreen209-20260922
+fable-yesno154-20260922
+fable-yesno154d-20260922
+---
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+[0m
+[0m$ [0mls handoff/ handoff/kit/ handoff/memory/ handoff/replies/ 2>&1 | head -n 100
+echo ===
+git log --oneline -15
+echo ===
+git log origin/builder-outbox --oneline -10
+echo ===
+git log origin/main --oneline -10
+handoff/:
+HANDOFF.md
+kit
+memory
+replies
+
+handoff/kit/:
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+
+handoff/memory/:
+a3-teacher-delay-v2-result.md
+ask-fable-max-subagent.md
+assistant-name-premonition.md
+astra-audit-18.md
+baseline-v2-fits.md
+ben-decisions-20260922.md
+ben-delegation-preference.md
+ben-runs-mimo-agents.md
+ben-vision-20260921.md
+benchmark-goal.md
+benspc-gpu-ops.md
+borrowed-ears-weights-ok.md
+canonical-operator-roadmap.md
+cardfold-sleep-result.md
+compute-availability.md
+conversation-first-priority.md
+creative-stop-toy-result.md
+ct20-v12-result.md
+decide-better-option.md
+demo-requirements-uncle.md
+director-role.md
+disk-full-agent-limit.md
+dreamer-checker-idea.md
+ear235b-gate-result.md
+ears-decisions-20260921.md
+ears-vocab-and-transformer-ruling.md
+english-listening-qwen-result.md
+exp19-replay-result.md
+exp19b-u8-result.md
+exp21-newnames-result.md
+exp26-probes-result.md
+exp27-newnames-result.md
+exp29-newnames-result.md
+exp42-automatic-sleep-result.md
+exp43-length-gate-and-shared-sleep.md
+exp43e-rank4-sleep-confirmed.md
+exp43g-transport-router-control.md
+exp43i-learned-addressing.md
+exp43j-learned-parity.md
+exp44-reasoner-skills-router.md
+exp45-noisy-teacher.md
+exp46-harden-before-gate.md
+explain-each-step.md
+focused-priorities-and-claims.md
+gpt-bridge-serial-only.md
+gpt-scouts-20260921.md
+gpu-budget-cap.md
+gpu-only-5070ti.md
+handoff-copy-box-format.md
+human-learning-redesign.md
+learned-reader-decision.md
+MEMORY.md
+milestone1-notebook-listening.md
+milestone2-thinking-websearch.md
+mimo-skill.md
+minimize-usage.md
+opus55-agents-allowed.md
+outside-review-28-adjudication.md
+outside-review-option.md
+overnight-loop-directive.md
+parallel-opus-build-20260921.md
+parallelize-when-possible.md
+placeholder-english-ok.md
+pretraining-english-only.md
+proactive-literature-scouting.md
+rental-create-blocked-by-classifier.md
+rented-cpu-slow-for-this-workload.md
+rented-cpu-standing-ok.md
+router-sleep-approved.md
+sleep-automatic-mathematical.md
+sleep-derived-priority-ruling.md
+subagents-gpt-xhigh.md
+talker-must-be-our-architecture.md
+talker-route-b.md
+teachable-assistant-goal.md
+teachable-roadmap-fable-review.md
+zsh:2: == not found
+[0m
+[0m$ [0mgit log --oneline -15; echo ---; git log origin/builder-outbox --oneline -10; echo ---; git log origin/main --oneline -10
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+241ee9f5d grader B part 6: English grades for F1 M1 rows 2246-2690
+5bc2a7c0d Add grader B part5 (h1797-h2245) English grammar marks
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+e2386323a convbench-f0 baseline on base 292 (F0): runner, scorer, run + results
+7493e5e14 292t: talking layers on main base 292 (registered PASS M1-M3)
+96f7f690a Add blind join panel 292t plus already-staged chatdemo and nhopdiag artifacts
+c97092367 builder results: yesno293 reader on 138nb (registered PASS M1-M5)
+0df95a40b builder results: nhop268b guard-on-138nb (registered FAIL on M1 bug clauses)
+f4df2e447 nhoppanel268b: blind panel for exp 268b (reasoning line), base 138nb run (artifacts/claude-nhoppanel268b-20260923)
+---
+d225b02cc watcher status
+c4bf34a9f builder results: nb-323-build
+e16385274 watcher status
+30a9d7323 watcher status
+b5229e887 watcher status
+4c5654535 watcher status
+bff35c391 builder results: lis-313-f0
+df15be55f watcher status
+5bf6ff8bd watcher status
+985cb32cd watcher status
+---
+ef33e3b74 board: 298 registered FAIL (39/60), merge candidate
+20a5eefa6 rsn-298: registered FAIL on P298.1 (39/60 vs 48; +25 vs +30); P298.2-5 PASS; diagnosis: misses are role relations stored one-value
+cd1dbb320 listener stack arms for the month-end e2e harness; Mac task to score them on the e2e DEV bank
+eec1e1465 branchpanel298: blind 90-item panel, sealed; blind Opus key audit 0/90 mismatches
+46648340d 331 DEV bank (10 lives, 194 turns, 131 facts; blind-written, readable dev data, names S-Z)
+e392c1ff3 lis-314/315/316: confirm-at-use, per-fact release and code guards as separate wrappers; sealed blind confirm panel; pass marks; Mac task
+3f952d36f rsn-298: P298.5 regression 0/466 changed replies
+e0c5faf42 rsn-298: design note, pass marks, scorer (sealed before the blind panel run)
+dd8e4a8c0 rsn-298: follow every branch when a middle hop has several values (wrapper on the 292 reasoner)
+3be0765f8 336: end-to-end runner (3 days, sleeps, restarts, simulated confirm answers), plain 1B twin arm, mechanical scorer, PASSMARKS fixed
+[0m
+[0m$ [0mgit show bff35c391 --stat | head -n 80; echo ===; git show bff35c391 --format=%B -s | head -n 200
+commit bff35c391290b8be11092be0f44a1d8e10e6ae7d
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Wed Sep 23 23:13:23 2026 -0400
+
+    builder results: lis-313-f0
+
+ artifacts/claude-lis313-20260924/PASSMARKS.md     |   32 +
+ artifacts/claude-lis313-20260924/RESULTS.md       |  145 ++
+ artifacts/claude-lis313-20260924/SEAL.sha256.txt  |    4 +
+ artifacts/claude-lis313-20260924/lis313-armA.log  |   41 +
+ artifacts/claude-lis313-20260924/lis313-armB.log  |  149 ++
+ artifacts/claude-lis313-20260924/run/arm_A.jsonl  |  286 +++
+ artifacts/claude-lis313-20260924/run/summary.json |   23 +
+ artifacts/fable-predictions-ledger.md             |    1 +
+ runs/lis-313-f0/lis-313-f0.exit                   |    1 +
+ runs/lis-313-f0/lis-313-f0.go1.done               |    1 +
+ runs/lis-313-f0/lis-313-f0.go1.err.txt            | 2530 +++++++++++++++++++++
+ runs/lis-313-f0/lis-313-f0.go1.reply.md           |   37 +
+ runs/lis-313-f0/lis-313-f0.md                     |   29 +
+ 13 files changed, 3279 insertions(+)
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-313-f0/lis-313-f0.md | head -n 200
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS, like lis-311; the reader runs on MPS).
+TIME CAP: 240 minutes in total (four arms). macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: builder for lis-313 (this replaces lis-312, which exited without running). Score base 292t with and without our 1B reader on the sealed conversation benchmark F0, in four arms. Artifacts go in artifacts/claude-lis313-20260924/. The listener thread wrote the code. Run it and never edit it. If it breaks, stop and report the exact error.
+
+GETTING THE CODE (lis-312 failed here): build the tree as lis-311 did. Start from a fresh `git archive origin/builder-outbox` (it has the F0 benchmark, claude_convf0_score.py, claude_lis310_agent.py and claude_loop292t_agent.py), then overlay a fresh `git archive origin/main` on top (it has claude_lis313_*.py, claude_lis312_f0.py, claude_lis300_*.py, fable_reasoner50.py and the PASSMARKS). Run everything from the root of that combined tree. It also needs artifacts/fable-self122-20260922/self122_head.pt from the Mac repo, copied in, exactly as for lis-311b.
+
+READ FIRST: artifacts/claude-lis313-20260924/PASSMARKS.md, artifacts/claude-lis312-20260923/PASSMARKS.md, scripts/claude_lis313_f0.py, and artifacts/claude-convbench-f0-20260923/README.md. Never print or quote benchmark user turns.
+
+1. Checks:
+   - `shasum -a 256 -c artifacts/claude-convbench-f0-20260923/SEAL.sha256.txt` must be all OK;
+   - the lis300-merged and lis301-merged safetensors sha256 in ~/premonition-models/ must match lis-300's and lis-301's RESULTS.md;
+   - `python -B scripts/claude_lis313_test.py` must print 11/11 passed;
+   - `uptime` and disk.
+   Seal both PASSMARKS.md files, scripts/claude_lis313_f0.py and scripts/claude_lis313_agent.py into artifacts/claude-lis313-20260924/SEAL.sha256.txt BEFORE running.
+2. Run the four arms (output dir artifacts/claude-lis313-20260924/run):
+   python -B scripts/claude_lis313_f0.py --arm A --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm B --model ~/premonition-models/lis300-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm C --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --arm D --model ~/premonition-models/lis301-merged --threshold 0.995 --out artifacts/claude-lis313-20260924/run
+   python -B scripts/claude_lis313_f0.py --score artifacts/claude-lis313-20260924/run
+3. RESULTS.md, verdict first:
+   - P312.1 to P312.4 (arms A vs C) and P313.1 to P313.4 (arms C vs D), with integer counts and PASS/FAIL, plus every count of summary.json for all four arms;
+   - device and ms;
+   - for arms C and D, every new triple stored on a teach turn that is not the gold, as "gold triple -> stored triple" (triples only, never the user turn);
+   - for arm D, every ask turn the wrapper answered, as "gold value -> reply" (replies are agent text, so quoting them is fine; never the user turn).
+   Append ledger lines P312.1 to P312.4 and P313.1 to P313.4 (cat >> artifacts/fable-predictions-ledger.md).
+PUSH: artifacts/claude-lis313-20260924 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit show origin/builder-outbox:handoff/queue/lis-311-chat292.md 2>&1 | head -n 40; echo __EXIT:$?
+fatal: path 'handoff/queue/lis-311-chat292.md' does not exist in 'origin/builder-outbox'
+__EXIT:0
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i lis-31 | head -n 50; echo ---; git ls-tree -r --name-only origin/main | grep -i lis-31 | head -n 50
+runs/lis-310-chat-build/lis-310-chat-build.exit
+runs/lis-310-chat-build/lis-310-chat-build.go1.done
+runs/lis-310-chat-build/lis-310-chat-build.go1.err.txt
+runs/lis-310-chat-build/lis-310-chat-build.go1.reply.md
+runs/lis-310-chat-build/lis-310-chat-build.md
+runs/lis-311-chat292/lis-311-chat292.exit
+runs/lis-311-chat292/lis-311-chat292.go1.err.txt
+runs/lis-311-chat292/lis-311-chat292.go1.reply.md
+runs/lis-311-chat292/lis-311-chat292.md
+runs/lis-311b-chat292/lis-311b-chat292.exit
+runs/lis-311b-chat292/lis-311b-chat292.go1.err.txt
+runs/lis-311b-chat292/lis-311b-chat292.go1.reply.md
+runs/lis-311b-chat292/lis-311b-chat292.go2.done
+runs/lis-311b-chat292/lis-311b-chat292.go2.err.txt
+runs/lis-311b-chat292/lis-311b-chat292.go2.reply.md
+runs/lis-311b-chat292/lis-311b-chat292.md
+runs/lis-312-f0/lis-312-f0.exit
+runs/lis-312-f0/lis-312-f0.go1.done
+runs/lis-312-f0/lis-312-f0.go1.err.txt
+runs/lis-312-f0/lis-312-f0.go1.reply.md
+runs/lis-312-f0/lis-312-f0.md
+runs/lis-313-f0/lis-313-f0.exit
+runs/lis-313-f0/lis-313-f0.go1.done
+runs/lis-313-f0/lis-313-f0.go1.err.txt
+runs/lis-313-f0/lis-313-f0.go1.reply.md
+runs/lis-313-f0/lis-313-f0.md
+---
+handoff/queue/lis-310-chat-build.md
+handoff/queue/lis-311-chat292.md
+handoff/queue/lis-311b-chat292.md
+handoff/queue/lis-312-f0.md
+handoff/queue/lis-313-f0.md
+handoff/queue/lis-314-panel.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-311-chat292.md | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+
+YOUR TASK: builder for lis-311. Move the listener plug-in onto the new base 292, and try the REAL model on the Mac. It's CPU/MPS on the Mac, with no BensPC and no rental. Artifacts go in artifacts/claude-lis311-20260923/. New files only: scripts/claude_lis311_agent.py, scripts/claude_lis311_try.py, scripts/claude_lis311_server.py, scripts/claude_lis311_start.sh.
+
+CONTEXT. lis-310 (on builder-outbox) PASSED with a stub reader on the 291 base, and its install_turn310(loop, reader, threshold) works on any built loop. 292 was verified PASS at 13:45 UTC and is the main base now: build_agent292(cfg) in scripts/claude_loop292_agent.py, with DEFAULT_CONFIG292 (deepcopy it, then set state_dir and sleep_threshold). The real listener weights are at ~/premonition-models/lis300-merged/ (sha256 was recorded in lis-300's RESULTS.md; check it). The sealed threshold from lis-300 is T = 0.995. lis-300 was a registered FAIL on recall only: it asks back about half the true facts. That is fine for a try-out, because an ask-back plus "yes" still saves.
+
+1. scripts/claude_lis311_agent.py: build_agent311(cfg) = build_agent292 + install_turn310 (import it from claude_lis310_agent, read-only) with the real Reader. Default threshold 0.995.
+2. Re-run the lis-310 test scenarios against 311 with the StubReader. Import scripts/claude_lis310_test.py's cases if they allow it; otherwise write equivalents in scripts/claude_lis311_try.py. Every scenario must pass, including the blocked-write check on 5 base-teachable turns.
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1 | head -n 30; echo ---; git show origin/main:handoff/queue/lis-314-panel.md | head -n 60
+ls: scratchpad/briefs/: No such file or directory
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS, like lis-311 and lis-313; the reader runs on MPS). Run only after lis-313-f0 has finished (one reader job on the Mac at a time).
+TIME CAP: 240 minutes in total (six arms). macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: builder for lis-314, lis-315 and lis-316. Score the listener wrapper stack on the sealed confirm panel. Artifacts go in artifacts/claude-lis314-20260924/. The listener thread wrote the code. Run it and never edit it. If it breaks, stop and report the exact error.
+
+GETTING THE CODE: build the tree exactly as for lis-313-f0. Start from a fresh `git archive origin/builder-outbox`, overlay a fresh `git archive origin/main` on top, and copy in artifacts/fable-self122-20260922/self122_head.pt from the Mac repo. Run everything from the root of that combined tree.
+
+READ FIRST: artifacts/claude-lis314-20260924/PASSMARKS.md and scripts/claude_lis314_run.py. The panel artifacts/claude-lispanel314-20260924/ is TEST-ONLY: never open, print or quote its panel.jsonl, key.jsonl, label_B.jsonl or key_v2.jsonl. The runner reads them itself.
+
+1. Checks:
+   - `shasum -a 256 -c artifacts/claude-lispanel314-20260924/SEAL.sha256.txt` must be all OK;
+   - `shasum -a 256 -c artifacts/claude-lis314-20260924/SEAL.sha256.txt` must be all OK (pass marks and code, sealed by the listener thread);
+   - ~/premonition-models/lis301-merged safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890;
+   - `python -B scripts/claude_lis314_test.py` must print 13/13 passed;
+   - `uptime` and disk.
+2. Run the six arms (output dir artifacts/claude-lis314-20260924/run):
+   python -B scripts/claude_lis314_run.py --arm A --out artifacts/claude-lis314-20260924/run
+   then the same with --arm C, P, K, S and G, each adding --model ~/premonition-models/lis301-merged
+   python -B scripts/claude_lis314_run.py --score artifacts/claude-lis314-20260924/run
+3. RESULTS.md, verdict first:
+   - P315.1–3, P314.1–5 and P316.1–3, with integer counts and PASS/FAIL, plus every count of summary.json for all six arms;
+   - device and ms;
+   - for arms K, S and G, every wrong saved fact as "stored triple (turn kind)", triples only, never the user turn.
+   Append ledger lines P314.1–5, P315.1–3 and P316.1–3 (cat >> artifacts/fable-predictions-ledger.md).
+PUSH: artifacts/claude-lis314-20260924 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head; echo FETCH_DONE
+git show origin/main:handoff/queue/lis-311-chat292.md | head -n 14
+echo ===
+git ls-tree -r --name-only origin/main | grep -i -e OPUS-RULES -e e2e336 -e e2e331 | head -n 50
+echo ===
+git ls-tree -r --name-only origin/builder-outbox | grep -i -e e2e336 -e e2e331 | head -n 50
+FETCH_DONE
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+
+zsh:3: == not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep OPUS | head
+handoff/kit/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt | head -n 60
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep e2e | head -n 30
+artifacts/claude-e2e331-dev-20260924/README.md
+artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt
+artifacts/claude-e2e331-dev-20260924/truth.jsonl
+artifacts/claude-e2e331-dev-20260924/turns.jsonl
+artifacts/claude-e2e336-20260924/PASSMARKS.md
+design/v3/30-modes/331-e2e-bank-spec.md
+handoff/queue/lis-e2e-dev.md
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+scripts/claude_lis_e2e_arms.py
+scripts/fable_wire57_e2e.py
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-e2e-dev.md | head -n 100
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS; the reader runs on MPS). Run only after lis-314-panel has finished (one reader job on the Mac at a time).
+TIME CAP: 150 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: REPORT ONLY (no marks). Score the listener stack on the month-end DEV bank (artifacts/claude-e2e331-dev-20260924, dev data, fine to read). Artifacts go in artifacts/claude-lis-e2edev-20260924/. The listener and month-end threads wrote the code. Run it and never edit it.
+
+GETTING THE CODE: build the tree exactly as for lis-313-f0. Start from a fresh `git archive origin/builder-outbox`, overlay a fresh `git archive origin/main` on top, and copy in artifacts/fable-self122-20260922/self122_head.pt from the Mac repo.
+
+1. Check `shasum -a 256 -c artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt`, the lis301-merged sha256 (b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890), `uptime` and disk.
+2. Run three arms, each with --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run:
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC ...
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_S --name lisS ...
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_G --name lisG ...
+   Then run scripts/claude_e2e336_score.py over the three outputs, as its docstring says.
+3. RESULTS.md: every mechanical count from the scorer for the three arms, plus device and ms (median, p90, max).
+PUSH: artifacts/claude-lis-e2edev-20260924
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py | head -n 120; echo ====SCORE====; git show origin/main:scripts/claude_e2e336_score.py | head -n 150
+#!/usr/bin/env python3
+"""336 end-to-end runner: 3-day lives with sleeps, restarts and a simulated user
+for "is that right?" questions (month-end line; spec design/v3/30-modes/331-e2e-bank-spec.md,
+plan design/v3/30-modes/330-month-end-plan.md section 4).
+
+New file only. It never edits agent code. For every life:
+  day 1 turns -> end of day (one forced sleep) -> kill + restart from the same state dir
+  day 2 turns -> end of day -> kill + restart
+  day 3 turns -> end of day
+After each reply, if the reply asks the user to confirm something (CONFIRM_MARKERS),
+the harness sends ONE mechanical "yes" or "no" taken from the life's truth sheet
+(truth.jsonl, facts valid at that turn) and records it as its own row
+(kind "confirm_answer"). That count is Ben's attention cost.
+
+Arms are named by --arm "module:function". The function is called as
+function(state_dir, args) and must return an object with .turn(text) -> list[str].
+Optional hooks on that object:
+  .e2e_end_day()      run the end-of-day sleep (default for AgentLoop-like objects:
+                      sleep_threshold 0 for one step(), then restored)
+  .nb                 a notebook; stored triples are then logged via fable_loop90_agent
+Built-in arms: "292t" (292t alone), "twin" (claude_e2e336_twin:build).
+
+Output: <out>/arm_<name>.jsonl, one row per user turn or confirm answer:
+  life_id, day, turn_index, kind ("user" | "confirm_answer"), reply, ms,
+  notebook_events (new events this row), stored_triples (after the row),
+  confirm_asked (bool), confirm_answer ("yes" | "no" | null)
+User text is never printed or copied into the output (the bank may be TEST-ONLY).
+
+Usage (Mac or BensPC, builder-outbox scripts on the path):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \
+    python -B scripts/claude_e2e336_run.py --bank DIR --arm 292t --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import gc
+import importlib
+import json
+import re
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+# Lowercase substrings. A reply that contains one of these AND a "?" asks the user
+# to confirm something. Fixed before any run; taken from agent wording
+# (lis-310 "Just to check: ...?", lis-314 "I think you told me ..., is that right?").
+CONFIRM_MARKERS = [
+    "is that right?",
+    "just to check",
+    "did i get that right",
+    "is that correct?",
+    "am i right that",
+]
+
+BUILTIN_ARMS = {
+    "292t": "claude_e2e336_run:build_292t",
+    "twin": "claude_e2e336_twin:build",
+}
+
+
+def load(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def build_292t(state_dir: str, args) -> object:
+    import claude_loop292t_agent as T292
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000     # no mid-day sleep; the harness sleeps once per day
+    return T292.build_agent292t(cfg)
+
+
+def resolve_arm(name: str):
+    spec = BUILTIN_ARMS.get(name, name)
+    mod, _, fn = spec.partition(":")
+    if not fn:
+        raise SystemExit(f"336: arm {name!r} must be 'module:function'")
+    return getattr(importlib.import_module(mod), fn)
+
+
+def end_day(agent) -> None:
+    hook = getattr(agent, "e2e_end_day", None)
+    if callable(hook):
+        hook()
+        return
+    if hasattr(agent, "sleep_threshold") and hasattr(agent, "step"):
+        old = agent.sleep_threshold
+        agent.sleep_threshold = 0
+        try:
+            agent.step()               # sleep_due() is now true: one sleep tick
+        finally:
+            agent.sleep_threshold = old
+            if hasattr(agent, "_save"):
+                agent._save()
+
+
+def is_confirm(reply: str) -> bool:
+    low = reply.lower()
+    return "?" in low and any(m in low for m in CONFIRM_MARKERS)
+
+
+def _mentions(text_low: str, phrase: str) -> bool:
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])", text_low) is not None
+
+
+def confirm_answer(reply: str, truth: list[dict], turn_index: int) -> str:
+    """'yes' iff some fact valid at turn_index has its value named in the reply and its
+    owner named too (first name is enough; USER facts count when the reply says you/your/me/my)."""
+zsh:1: ===SCORE==== not found
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_score.py | head -n 150
+#!/usr/bin/env python3
+"""336 mechanical scorer (month-end line). Marks: artifacts/claude-e2e336-20260924/PASSMARKS.md.
+
+New file only. Reads the bank (turns.jsonl, truth.jsonl) and one or more runner outputs
+(arm_<name>.jsonl from scripts/claude_e2e336_run.py). Prints and writes counts only; never
+prints user text. It also writes the packets the blind graders need:
+  judge_saves_<arm>.jsonl    every NEW stored triple, with the turn's truth facts, for the
+                             blind wrong-save judges (M1)
+  judge_asks_<arm>.jsonl     every ask the mechanical rules call wrong, for the blind
+                             wrong-answer judges (M2)
+  grammar_<arm>.jsonl        every distinct reply, for the two grammar graders (M7)
+Mechanical rules (fixed before any run):
+  - A reply ABSTAINS if it contains any ABSTAIN_MARKERS entry (lowercase substring).
+  - A reply CLARIFIES if it contains any CLARIFY_MARKERS entry.
+  - A reply CONFIRMS if the runner flagged confirm_asked.
+  - Value match = case-insensitive, word-boundary match of the gold value.
+  - ask type value/two_hop/reversal/edit/one_hop: RIGHT if every gold value matches and the
+    reply does not abstain; RIGHT_CONFIRM if the reply is a confirm question naming every gold
+    value and the harness answered yes; ABSTAIN if it abstains or clarifies; CONFIRM_OTHER if a
+    confirm question that is not RIGHT_CONFIRM; else WRONG_CANDIDATE.
+  - ask type idk (never_told): RIGHT if it abstains; else WRONG_CANDIDATE.
+  - ask type partial: RIGHT if it abstains and names the known middle value; ABSTAIN if it only
+    abstains; else WRONG_CANDIDATE.
+  - ask type yes/no: RIGHT if the reply's first yes/no word equals the gold; ABSTAIN if it
+    abstains; else WRONG_CANDIDATE.
+  - A taught fact is SAVED if, at some row at or after its turn and before its correction,
+    a stored triple has the same owner (USER <-> USER/me/i; else case-insensitive full name or
+    first name) and value (case-insensitive). Relation is left to the blind judges.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import statistics
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+ABSTAIN_MARKERS = [
+    "don't know", "do not know", "dont know", "not sure", "haven't told me", "have not told me",
+    "haven't mentioned", "didn't tell me", "did not tell me", "never told me", "no record",
+    "not told", "i don't have", "i do not have", "can't find", "cannot find", "won't guess",
+    "will not guess", "no idea", "not in my notes", "not in my notebook", "don't remember",
+    "do not remember", "i'm not aware", "unknown",
+]
+CLARIFY_MARKERS = [
+    "didn't understand", "don't know that shape", "well enough to save", "don't know that yet",
+    "do not know that from what you taught me", "couldn't save that as a fact",
+    "couldn't read that message", "please say it like", "do not understand that question",
+    "did not understand", "not sure what you mean", "could you rephrase", "can you rephrase",
+]
+USER_OWNERS = {"user", "me", "i", "you", "ben"}
+
+
+def load(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def has(low: str, markers: list[str]) -> bool:
+    return any(m in low for m in markers)
+
+
+def vmatch(text: str, value: str) -> bool:
+    v = str(value).strip().lower()
+    if not v:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(v) + r"(?![a-z0-9])", text.lower()) is not None
+
+
+def owner_match(stored: str, truth_owner: str) -> bool:
+    s = str(stored).strip().lower()
+    t = str(truth_owner).strip().lower()
+    if t == "user":
+        return s in USER_OWNERS
+    return s == t or s == t.split()[0]
+
+
+def first_yesno(text: str) -> str | None:
+    m = re.search(r"(?<![a-z])(yes|yeah|yep|no|nope)(?![a-z])", text.lower())
+    if not m:
+        return None
+    return "yes" if m.group(1) in ("yes", "yeah", "yep") else "no"
+
+
+def score_ask(t: dict, row: dict, conf: dict | None) -> str:
+    reply = row["reply"]
+    low = reply.lower()
+    g = t["gold"] or {}
+    typ = g.get("type", "value")
+    vals = [str(v) for v in g.get("values", [])]
+    ab = has(low, ABSTAIN_MARKERS) or has(low, CLARIFY_MARKERS)
+    if row.get("confirm_asked"):
+        if typ in ("value",) and vals and all(vmatch(reply, v) for v in vals) \
+                and conf is not None and conf.get("confirm_answer") == "yes":
+            return "RIGHT_CONFIRM"
+        return "CONFIRM_OTHER"
+    if typ == "idk":
+        return "RIGHT" if ab else "WRONG_CANDIDATE"
+    if typ == "partial":
+        if ab and vals and all(vmatch(reply, v) for v in vals):
+            return "RIGHT"
+        return "ABSTAIN" if ab else "WRONG_CANDIDATE"
+    if typ in ("yes", "no"):
+        if ab:
+            return "ABSTAIN"
+        return "RIGHT" if first_yesno(reply) == typ else "WRONG_CANDIDATE"
+    if ab:
+        return "ABSTAIN"
+    if vals and all(vmatch(reply, v) for v in vals):
+        return "RIGHT"
+    return "WRONG_CANDIDATE"
+
+
+def score_arm(name: str, turns: list[dict], truth: list[dict], rows: list[dict], out: Path) -> dict:
+    tkey = {(t["life_id"], t["turn_index"]): t for t in turns}
+    truth_by = defaultdict(list)
+    for f in truth:
+        truth_by[f["life_id"]].append(f)
+    user_rows = [r for r in rows if r["kind"] == "user"]
+    conf_rows = {(r["life_id"], r["turn_index"]): r for r in rows if r["kind"] == "confirm_answer"}
+    res: dict = {"arm": name, "user_rows": len(user_rows), "confirm_rows": len(conf_rows)}
+
+    # asks
+    by_type = defaultdict(Counter)
+    wrong_packets = []
+    for r in user_rows:
+        t = tkey.get((r["life_id"], r["turn_index"]))
+        if t is None:
+            res["join_miss"] = res.get("join_miss", 0) + 1
+            continue
+        if t["kind"] != "ask":
+            continue
+        c = score_ask(t, r, conf_rows.get((r["life_id"], r["turn_index"])))
+        by_type[t.get("ask_type") or "?"][c] += 1
+        by_type["ALL"][c] += 1
+        if c == "WRONG_CANDIDATE":
+            wrong_packets.append({"life_id": r["life_id"], "turn_index": r["turn_index"],
+                                  "ask_type": t.get("ask_type"), "gold": t["gold"], "reply": r["reply"]})
+    res["asks"] = {k: dict(v) for k, v in by_type.items()}
+
+    # saves: new triples per row, and recall per taught fact
+    save_packets = []
+    prev: dict[str, set] = defaultdict(set)
+    stored_seen: dict[str, list] = defaultdict(list)   # life -> [(turn_index, set_of_triples)]
+    nosave_rows_with_writes = 0
+    for r in rows:
+        st = r.get("stored_triples")
+        if st is None:
+            continue
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_score.py | wc -l; git show origin/main:scripts/claude_e2e336_score.py | tail -n 150
+237
+    low = reply.lower()
+    g = t["gold"] or {}
+    typ = g.get("type", "value")
+    vals = [str(v) for v in g.get("values", [])]
+    ab = has(low, ABSTAIN_MARKERS) or has(low, CLARIFY_MARKERS)
+    if row.get("confirm_asked"):
+        if typ in ("value",) and vals and all(vmatch(reply, v) for v in vals) \
+                and conf is not None and conf.get("confirm_answer") == "yes":
+            return "RIGHT_CONFIRM"
+        return "CONFIRM_OTHER"
+    if typ == "idk":
+        return "RIGHT" if ab else "WRONG_CANDIDATE"
+    if typ == "partial":
+        if ab and vals and all(vmatch(reply, v) for v in vals):
+            return "RIGHT"
+        return "ABSTAIN" if ab else "WRONG_CANDIDATE"
+    if typ in ("yes", "no"):
+        if ab:
+            return "ABSTAIN"
+        return "RIGHT" if first_yesno(reply) == typ else "WRONG_CANDIDATE"
+    if ab:
+        return "ABSTAIN"
+    if vals and all(vmatch(reply, v) for v in vals):
+        return "RIGHT"
+    return "WRONG_CANDIDATE"
+
+
+def score_arm(name: str, turns: list[dict], truth: list[dict], rows: list[dict], out: Path) -> dict:
+    tkey = {(t["life_id"], t["turn_index"]): t for t in turns}
+    truth_by = defaultdict(list)
+    for f in truth:
+        truth_by[f["life_id"]].append(f)
+    user_rows = [r for r in rows if r["kind"] == "user"]
+    conf_rows = {(r["life_id"], r["turn_index"]): r for r in rows if r["kind"] == "confirm_answer"}
+    res: dict = {"arm": name, "user_rows": len(user_rows), "confirm_rows": len(conf_rows)}
+
+    # asks
+    by_type = defaultdict(Counter)
+    wrong_packets = []
+    for r in user_rows:
+        t = tkey.get((r["life_id"], r["turn_index"]))
+        if t is None:
+            res["join_miss"] = res.get("join_miss", 0) + 1
+            continue
+        if t["kind"] != "ask":
+            continue
+        c = score_ask(t, r, conf_rows.get((r["life_id"], r["turn_index"])))
+        by_type[t.get("ask_type") or "?"][c] += 1
+        by_type["ALL"][c] += 1
+        if c == "WRONG_CANDIDATE":
+            wrong_packets.append({"life_id": r["life_id"], "turn_index": r["turn_index"],
+                                  "ask_type": t.get("ask_type"), "gold": t["gold"], "reply": r["reply"]})
+    res["asks"] = {k: dict(v) for k, v in by_type.items()}
+
+    # saves: new triples per row, and recall per taught fact
+    save_packets = []
+    prev: dict[str, set] = defaultdict(set)
+    stored_seen: dict[str, list] = defaultdict(list)   # life -> [(turn_index, set_of_triples)]
+    nosave_rows_with_writes = 0
+    for r in rows:
+        st = r.get("stored_triples")
+        if st is None:
+            continue
+        cur = {tuple(x) for x in st}
+        new = cur - prev[r["life_id"]]
+        prev[r["life_id"]] = cur
+        stored_seen[r["life_id"]].append((r["turn_index"], cur))
+        t = tkey.get((r["life_id"], r["turn_index"]))
+        if new and t is not None and t["kind"] == "nosave" and r["kind"] == "user":
+            nosave_rows_with_writes += 1
+        for tr in sorted(new):
+            valid = [f for f in truth_by[r["life_id"]] if f["taught_turn"] <= r["turn_index"]
+                     and (f.get("valid_until_turn") is None or f["valid_until_turn"] > r["turn_index"])]
+            auto = any(owner_match(tr[0], f["owner"]) and str(tr[2]).lower() == str(f["value"]).lower()
+                       for f in valid)
+            save_packets.append({"life_id": r["life_id"], "turn_index": r["turn_index"],
+                                 "row_kind": r["kind"], "turn_kind": t["kind"] if t else None,
+                                 "triple": list(tr), "owner_value_supported": auto,
+                                 "truth_valid_now": [{k: f[k] for k in ("owner", "relation", "value")}
+                                                     for f in valid]})
+    res["new_triples"] = len(save_packets)
+    res["new_triples_owner_value_unsupported"] = sum(1 for p in save_packets if not p["owner_value_supported"])
+    res["nosave_turns_with_writes"] = nosave_rows_with_writes
+
+    saved = total = 0
+    day1_kept = day1_total = 0
+    tday = {(t["life_id"], t["turn_index"]): t["day"] for t in turns}
+    for life, facts in truth_by.items():
+        seen = stored_seen.get(life, [])
+        for f in facts:
+            total += 1
+            end = f.get("valid_until_turn")
+            hit = any(ti >= f["taught_turn"] and (end is None or ti < end)
+                      and any(owner_match(a, f["owner"]) and str(v).lower() == str(f["value"]).lower()
+                              for (a, _r, v) in s)
+                      for ti, s in seen)
+            saved += hit
+            if hit and end is None and tday.get((life, f["taught_turn"])) == 1 and seen:
+                day1_total += 1
+                last = seen[-1][1]
+                day1_kept += any(owner_match(a, f["owner"]) and str(v).lower() == str(f["value"]).lower()
+                                 for (a, _r, v) in last)
+    res["facts_total"] = total
+    res["facts_saved"] = saved
+    res["day1_saved_facts"] = day1_total
+    res["day1_saved_facts_kept_at_end"] = day1_kept
+
+    replies = [r["reply"] for r in user_rows]
+    cnt = Counter(replies)
+    res["most_common_reply_count"] = cnt.most_common(1)[0][1] if cnt else 0
+    res["distinct_replies"] = len(cnt)
+    res["clarify_replies"] = sum(1 for x in replies if has(x.lower(), CLARIFY_MARKERS))
+    ms = [r["ms"] for r in user_rows]
+    res["ms_median"] = round(statistics.median(ms), 1) if ms else None
+    res["ms_p90"] = round(sorted(ms)[int(0.9 * (len(ms) - 1))], 1) if ms else None
+    creative = [r for r in user_rows if tkey.get((r["life_id"], r["turn_index"]), {}).get("kind") == "creative"]
+    res["creative_turns"] = len(creative)
+    res["creative_turns_with_writes"] = sum(1 for r in creative if r["notebook_events"])
+
+    out.mkdir(parents=True, exist_ok=True)
+    for fn, data in ((f"judge_saves_{name}.jsonl", save_packets),
+                     (f"judge_asks_{name}.jsonl", wrong_packets),
+                     (f"grammar_{name}.jsonl", [{"reply": x} for x in sorted(set(
+                         [r["reply"] for r in rows if r["reply"]]))])):
+        (out / fn).write_text("".join(json.dumps(d, ensure_ascii=False) + "\n" for d in data),
+                              encoding="utf-8")
+    return res
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bank", required=True)
+    ap.add_argument("--runs", required=True, nargs="+", help="arm_<name>.jsonl files")
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+    turns = load(Path(a.bank) / "turns.jsonl")
+    truth = load(Path(a.bank) / "truth.jsonl")
+    out = Path(a.out)
+    results = []
+    for p in a.runs:
+        name = Path(p).stem.removeprefix("arm_")
+        results.append(score_arm(name, turns, truth, load(Path(p)), out))
+    (out / "mechanical.json").write_text(json.dumps(results, indent=1, sort_keys=True), encoding="utf-8")
+    for r in results:
+        print(json.dumps(r, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis_e2e_arms.py | head -n 120
+echo "---README---"
+git show origin/main:artifacts/claude-e2e331-dev-20260924/README.md | head -n 80
+#!/usr/bin/env python3
+"""Listener-stack arms for the month-end end-to-end harness (scripts/claude_e2e336_run.py).
+
+  --arm claude_lis_e2e_arms:build_C   292t + lis-310 (all-or-nothing, ask-back)
+  --arm claude_lis_e2e_arms:build_S   292t + 310 + 313 + 315 + 314
+  --arm claude_lis_e2e_arms:build_G   292t + 310 + 313 + 315 + 314 + 316 (the full stack)
+Reader = --model (lis-301 merged), T = 0.995. The reader is loaded once per process and reused
+across lives and restarts. lis-314's pending store lives in the state dir, so it survives the
+harness's kill + restart between days.
+"""
+from __future__ import annotations
+
+import copy
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+THRESHOLD = 0.995
+_READER = {}
+
+
+def _reader(model):
+    if model not in _READER:
+        import claude_lis300_read as READ
+        _READER[model] = READ.Reader(model)
+    return _READER[model]
+
+
+def _build(state_dir, args, layers):
+    import claude_loop292t_agent as T292
+    import claude_lis_stack as STACK
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000
+    loop = T292.build_agent292t(cfg)
+    STACK.build_stack(loop, _reader(args.model), THRESHOLD, layers=layers, log_dir=state_dir)
+    return loop
+
+
+def build_C(state_dir, args):
+    return _build(state_dir, args, ())
+
+
+def build_S(state_dir, args):
+    return _build(state_dir, args, ("313", "315", "314"))
+
+
+def build_G(state_dir, args):
+    return _build(state_dir, args, ("313", "315", "314", "316"))
+---README---
+# Bank DEV (spec 331)
+
+Ordinary dev data; builders may read it. 10 lives, ids `e2e-dev-01`..`e2e-dev-10`, 3 days each,
+194 user turns, 131 facts on the truth sheet (10 of them closed by a correction).
+
+Files: `turns.jsonl` (one object per user turn), `truth.jsonl` (one object per fact).
+
+## Names
+
+Every person's and pet's first name starts with a letter from **S to Z**. Invented towns, companies,
+clinics and the like also start with S to Z, and so do the real big cities used as places. No person
+or pet name repeats across lives.
+
+## Counts per kind
+
+| kind | count | DEV minimum (bank / 4, rounded up) |
+|---|---:|---:|
+| teach | 59 | 35 |
+| correct | 10 | 7 |
+| nosave | 15 | 7 |
+| ask | 71 | 53 (sum of ask minimums) |
+| smalltalk | 29 | 13 |
+| creative | 10 | 8 |
+| other | 0 | - |
+
+Teach breakdown: 19 single-fact turns (min 18), 40 turns with 2 or more facts (min 10); at least 10 of
+the teach turns give a fact in passing or inside an aside (min 8).
+
+## Counts per ask_type
+
+| ask_type | count | DEV minimum |
+|---|---:|---:|
+| one_hop | 16 | 15 |
+| two_hop | 11 | 9 |
+| reversal | 10 | 7 |
+| edit | 10 (7 of them two-hop through the corrected fact) | 7 (3 two-hop) |
+| yesno | 9 | 4 |
+| never_told | 10 | 8 |
+| partial | 5 | 3 |
+
+Asks on day 3 whose facts were all taught on day 1: 19 (minimum 15).
+
+## Counts per day
+
+| day | turns | teach | correct | nosave | ask | smalltalk | creative |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 63 | 41 | 0 | 10 | 0 | 12 | 0 |
+| 2 | 61 | 18 | 10 | 5 | 19 | 7 | 2 |
+| 3 | 70 | 0 | 0 | 0 | 52 | 10 | 8 |
+
+Asks by day: day 2 has one_hop 12, two_hop 5, reversal 2; day 3 has edit 10, reversal 8, two_hop 6,
+yesno 9, never_told 10, one_hop 4, partial 5. Each life has 19 or 20 turns, with 5 to 7 turns per day.
+
+## Conventions
+
+- Fact ids are `devNN-fMM`; `MM` is a label local to the life and is not in teaching order.
+- `gold.values` is empty for `yesno` and `never_told`; for `yesno` the `uses_facts` are the facts that
+  decide the answer from the notebook as it stands.
+- For `reversal` asks the gold value is the fact's owner (the thing asked for), not its value.
+- For `partial` asks the gold value is the known first-hop value; the second hop was never taught.
+- For `two_hop` and two-hop `edit` asks, `values` holds only the final answer; `uses_facts` holds both hops.
+- A correction may change the relation as well as the value;
+  the old fact is closed at the correcting turn either way.
+
+## Checks run (spec 331, five checks)
+
+1. Every line parses and has exactly the spec keys: pass.
+2. Every `uses_facts` id exists, was taught before the ask and was not closed before it: pass.
+3. Every gold value equals the value (or, for reversal, the owner) of a fact it cites, after corrections: pass.
+4. Every name obeys S to Z and no name repeats across lives: pass.
+5. Kind and ask_type minimums (bank / 4, rounded up) are met: pass.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py | tail -n 100
+if nb is None:
+        return None
+    import fable_loop90_agent as L90
+    return sorted([s, r, v] for (s, r, v) in L90.notebook_triples(nb))
+
+
+def events_len(agent) -> int:
+    nb = getattr(agent, "nb", None)
+    return len(nb.events) if nb is not None else 0
+
+
+def one(agent, text: str) -> tuple[str, float, list]:
+    ev0 = events_len(agent)
+    t0 = time.time()
+    parts = agent.turn(text)
+    ms = (time.time() - t0) * 1000
+    reply = " ".join(p for p in (parts or []) if p)
+    nb = getattr(agent, "nb", None)
+    new = [dict(e) for e in list(nb.events)[ev0:]] if nb is not None else []
+    return reply, ms, new
+
+
+def run_life(builder, args, life: str, turns: list[dict], truth: list[dict], rows: list) -> None:
+    tmp = tempfile.mkdtemp(prefix=f"e2e336-{life}-")
+    agent = builder(tmp, args)
+    try:
+        days = sorted({t["day"] for t in turns})
+        for di, day in enumerate(days):
+            for t in [x for x in turns if x["day"] == day]:
+                text = t.get("user_text")
+                if not isinstance(text, str) or not text.strip():
+                    raise SystemExit(f"336: empty text at {life} {t.get('turn_index')}")
+                reply, ms, new = one(agent, text)
+                asked = is_confirm(reply)
+                rows.append({"life_id": life, "day": day, "turn_index": t["turn_index"],
+                             "kind": "user", "reply": reply, "ms": round(ms, 1),
+                             "notebook_events": new, "stored_triples": triples(agent),
+                             "confirm_asked": asked, "confirm_answer": None})
+                if asked:
+                    ans = confirm_answer(reply, truth, t["turn_index"])
+                    reply2, ms2, new2 = one(agent, ans)
+                    rows.append({"life_id": life, "day": day, "turn_index": t["turn_index"],
+                                 "kind": "confirm_answer", "reply": reply2, "ms": round(ms2, 1),
+                                 "notebook_events": new2, "stored_triples": triples(agent),
+                                 "confirm_asked": is_confirm(reply2), "confirm_answer": ans})
+            end_day(agent)
+            if di < len(days) - 1:          # kill + restart from the same state dir
+                del agent
+                gc.collect()
+                agent = builder(tmp, args)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--bank", required=True, help="dir with turns.jsonl and truth.jsonl")
+    ap.add_argument("--arm", required=True)
+    ap.add_argument("--name", default=None, help="output arm name (default: --arm)")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--lives", default="", help="comma-separated life ids (default all)")
+    ap.add_argument("--model", default="", help="model dir for arms that need one")
+    args = ap.parse_args()
+
+    bank = Path(args.bank)
+    turns = load(bank / "turns.jsonl")
+    truth = load(bank / "truth.jsonl")
+    want = {x for x in args.lives.split(",") if x}
+    order: list[str] = []
+    by: dict[str, list[dict]] = {}
+    for t in turns:
+        lid = t["life_id"]
+        if want and lid not in want:
+            continue
+        if lid not in by:
+            by[lid] = []
+            order.append(lid)
+        by[lid].append(t)
+    for lid in order:
+        by[lid].sort(key=lambda x: x["turn_index"])
+    truth_by: dict[str, list[dict]] = {}
+    for f in truth:
+        truth_by.setdefault(f["life_id"], []).append(f)
+
+    builder = resolve_arm(args.arm)
+    name = args.name or args.arm.replace(":", "_").replace("/", "_")
+    rows: list[dict] = []
+    for lid in order:
+        run_life(builder, args, lid, by[lid], truth_by.get(lid, []), rows)
+        print(f"[336/{name}] {lid} turns={len(by[lid])}", flush=True)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{name}.jsonl").write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    print(f"wrote arm_{name}.jsonl rows={len(rows)} lives={len(order)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+[0m
+[0m$ [0mpwd; uptime; df -g / | head; echo "---model---"; ls ~/premonition-models/ 2>&1 | head -n 20; echo "---self122---"; ls artifacts/fable-self122-20260922/ 2>&1 | head; echo "---e2e331---"; ls artifacts/claude-e2e331-dev-20260924/ 2>&1 | head; echo "---lise2edev---"; ls artifacts/claude-lis-e2edev-20260924/ 2>&1 | head; echo "---lis314---"; ls artifacts/claude-lis314-20260924/ 2>&1 | head -n 20; ls runs/ | grep lis-314 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+23:23  up 13:16, 4 users, load averages: 15.67 22.53 28.76
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        64    17%  484014 672695720    0%   /
+---model---
+lis300-merged
+lis301-merged
+own-m1-mouth
+own-m1n-mouth
+rsn294
+---self122---
+heldout122.jsonl
+PASSMARKS.md
+RESULTS.md
+SEAL.sha256.txt
+self122_head.pt
+self122-notebook
+self122-results.json
+train122_report.json
+train122.jsonl
+WRONGS.md
+---e2e331---
+ls: artifacts/claude-e2e331-dev-20260924/: No such file or directory
+---lise2edev---
+ls: artifacts/claude-lis-e2edev-20260924/: No such file or directory
+---lis314---
+lis314-armA.log
+lis314-armC.log
+PASSMARKS.md
+RESULTS.md
+run
+SEAL.sha256.txt
+[0m
+[0m$ [0mls runs/ | tail -n 30; echo "---"; ps aux | grep -i -e python -e claude | grep -v grep | head -n 20; echo "---"; cat artifacts/claude-lis314-20260924/RESULTS.md 2>&1 | head -n 30
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0d1705043001mIw0ZbeTvivsOY
+
+ben-hannan       38124   3.4  1.5 495496496 514368   ??  S     3:20PM  24:15.20 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort high --model claude-opus-5-5 --permission-prompt-tool stdio --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode auto --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}]}
+ben-hannan       68102   2.5  1.5 562881488 491792   ??  SN   11:04PM   0:43.20 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:nb-321-run.go1.68066 COMMON RULES (the notebook thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/talk-f0-base.md: read its first 14 lines and follow them in full (additive only, fictional names, never the repo-root notebook/, uv run python, report format, getting files with git show origin/main:<path> and git show origin/builder-outbox:<path>).\012GPU: no (Mac CPU only).\012TIME CAP: 180 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun.\012DISK: check `df -g /` first and stop if free disk is under 8 GB. Every notebook and workload lives under /tmp/nb321run/ (never inside the repo). Delete /tmp/nb321run/ at the end. Never push a notebook, a workload or anything over 5 MB.\012\012YOUR TASK: the registered nb-321 scale run, plus cold-open timing for the month-end restart test. No code changes. Run only sealed files.\012- Before anything else, check both seals from the worktree root with `shasum -a 256 -c`:\012  - artifacts/claude-nb320-20260923/SEAL.sha256.txt\012  - artifacts/claude-nb321-20260923/SEAL.sha256.txt\012  - Take the files from origin/builder-outbox.\012  - If either seal fails, stop and report.\012- Read:\012  - artifacts/claude-nb321-20260923/PASSMARKS.md (the marks: M1-M7);\012  - artifacts/claude-nb321-20260923/RESULTS-build.md;\012  - artifacts/claude-nb320-20260923/RESULTS.md and results.json. Use exactly the workload commands, seeds and probe seeds that nb-320 recorded.\012\012RUN (the sealed nb-320 runner scripts/claude_nb320_scale.py, unchanged).\012- Compact arm: add `--factory claude_nb321_store:open_compact`. The runner takes module:attr with scripts/ on the path.\012- Baseline arm: no --factory.\012- A. Registered sizes, each through write, then open x3 (in fresh processes), then probe, for BOTH arms in the same session so machine load is comparable:\012  - 20,000 and 100,000, both arms.\012  - 1,000,000: compact arm only. The baseline did not finish in nb-320.\012  - Same caps as nb-320: stop a size after 90 minutes of writing or 8 GB of memory, and report it as DID NOT FINISH.\012- B. Crash (30 kills) and tamper (20 copies) at 20,000 with the compact factory.\012- C. M2 lossless check: at 20,000 and 100,000, call export_events on the compact notebook. Compare its sha256 with the baseline arm's events.jsonl from the same workload.\012- D. REPORT-ONLY cold-open ladder for the month-end 3-day restart test:\012  - Both arms, sizes 500 / 2,000 / 5,000 ops. Build the workloads with scripts/claude_nb320_workload.py at those --n values, seed 3200.\012  - Cold open x5 each in fresh processes: report the median and max seconds.\012  - Also report open time right after a SIGKILL during a write, 5 times, 5,000 ops, both arms.\012- Log `uptime` before every timing step. The Mac is busy, so every timing is noisy; say so.\012\012DIRECTOR RULINGS, fixed before the run:\012- M1 counts every file in the notebook dir, as the runner measures. The build keeps a full events.jsonl copy beside store.db (RESULTS-build.md T5: 582 bytes per FACT write for the dir, against 441 for the baseline). So M1 is expected to FAIL. Report the dir total AND the store.db-only bytes per FACT write, but only the dir total scores M1.\012- The baseline's 1M reference for M1 is its 100k value (467.1 bytes per FACT write). Its bytes per fact were flat from 20k to 100k.\012- M4 memory reference: the baseline's 100k peak RSS scaled linearly to 1M (5.93 GB). Report the scaling as an assumption.\012- Every other mark exactly as PASSMARKS.md.\012\012OUTPUT: artifacts/claude-nb321-20260923/RESULTS-run.md and results-run.json:\012- verdict first;\012- a marks table M1-M7 with integer counts and PASS/FAIL each;\012- a table per size for both arms;\012- the section D ladder;\012- every wrong or different probe listed;\012- deviations;\012- what this means / doesn't mean in plain words.\012Append the P321.1 outcome to artifacts/fable-predictions-ledger.md (cat >>).\012\012PUSH: artifacts/claude-nb321-20260923/RESULTS-run.md artifacts/claude-nb321-20260923/results-run.json artifacts/fable-predictions-ledger.md
+ben-hannan       75005   1.1  2.7 562840448 895264   ??  RN   11:22PM   0:15.38 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:lis-e2e-dev.go1.74947 COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).\012GPU: no (Mac CPU/MPS; the reader runs on MPS). Run only after lis-314-panel has finished (one reader job on the Mac at a time).\012TIME CAP: 150 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.\012\012YOUR TASK: REPORT ONLY (no marks). Score the listener stack on the month-end DEV bank (artifacts/claude-e2e331-dev-20260924, dev data, fine to read). Artifacts go in artifacts/claude-lis-e2edev-20260924/. The listener and month-end threads wrote the code. Run it and never edit it.\012\012GETTING THE CODE: build the tree exactly as for lis-313-f0. Start from a fresh `git archive origin/builder-outbox`, overlay a fresh `git archive origin/main` on top, and copy in artifacts/fable-self122-20260922/self122_head.pt from the Mac repo.\012\0121. Check `shasum -a 256 -c artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt`, the lis301-merged sha256 (b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890), `uptime` and disk.\0122. Run three arms, each with --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run:\012   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC ...\012   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_S --name lisS ...\012   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_G --name lisG ...\012   Then run scripts/claude_e2e336_score.py over the three outputs, as its docstring says.\0123. RESULTS.md: every mechanical count from the scorer for the three arms, plus device and ms (median, p90, max).\012PUSH: artifacts/claude-lis-e2edev-20260924
+ben-hannan       73723   0.7  0.1 488828080  27424   ??  S    11:20PM   0:01.89 /Users/ben-hannan/Desktop/projects/polymarket/scout/.venv/bin/python lib/collect/gas_band.py
+ben-hannan       43037   0.4  0.4 562848336 117632   ??  SN    9:51PM   1:32.46 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rsn-296-guard.go1.43005 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.\012YOUR TASK: spending guard for rsn-296-train (Ben 21:51 UTC: "don't use gpu rentals above 4$"; the $4 is the COMBINED limit per job, re-rents and extra machines included). You rent nothing and change no files except one ledger line.\012- Read the vast.ai key only as $(cat ~/.config/vastai/vast_api_key); never print it.\012- Every 60 s: run `vastai show instances --raw`. Take every instance whose label starts with "rsn-296". Keep a running total, and never forget an instance after it disappears: for each instance id first seen, record its dph (dph_total) and its start time; its cost so far = dph × hours since start (or until it vanished). Also add the $0.40 already spent by earlier tries only for the report, not for the cap.\012- When the combined total of all rsn-296* instances seen since you started reaches $3.80: destroy every live rsn-296* instance by exact instance id (vastai destroy instance <id>), confirm they are gone, and append a line to artifacts/fable-predictions-ledger.md (cat >>) saying GUARD-STOP with the total.\012- Stop watching when runs/rsn-296-train/rsn-296-train.exit exists on origin/builder-outbox (git fetch -q origin builder-outbox; git ls-tree) AND no rsn-296* instance has been live for 5 min, or after 8 hours.\012- Never touch an instance whose label does not start with rsn-296.\012Final reply: the instance ids seen, the dph and minutes of each, the combined dollars, and whether you had to stop anything.\012PUSH: artifacts/fable-predictions-ledger.md
+ben-hannan       73774   0.4  0.0 488747200   8704   ??  SN   11:20PM   0:00.07 /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python /tmp/rsn296_guard.py 10
+ben-hannan        1126   0.3  2.4 2017248608 821424   ??  S    12:13PM  75:40.09 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ben-hannan/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app --secure-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,sentry-ipc --bypasscsp-schemes=claude-media,claude-simulator,sentry-ipc --cors-schemes=claude-simulator,sentry-ipc --fetch-schemes=cowork-artifact,cowork-file,claude-simulator,app,sentry-ipc --service-worker-schemes=app --streaming-schemes=cowork-file,claude-media,claude-simulator --app-path=/Applications/Claude.app/Contents/Resources/app.asar --enable-sandbox --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=142957334 --shared-files --field-trial-handle=1718379636,r,16632272945407258408,1738371708597043889,262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports,IsolatesPriorityUseProcessPriority,PdfUseShowSaveFilePicker,ScreenCaptureKitPickerScreen,ScreenCaptureKitStreamPickerSonoma --disable-features=DropInputEventsWhilePaintHolding,LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TimeoutHangingVideoCaptureStarts,TraceSiteInstanceGetProcessCreation --variations-seed-version --pseudonymization-salt-handle=1935764596,r,1089090646859110459,18031784650339962313,4 --trace-process-track-uuid=3190708993808206286 --desktop-features={"launch":{"status":"supported"},"coworkBrowser":{"status":"unsupported","reason":"cowork_browser_disabled","unsupportedCode":"unknown"},"artifactsPane":{"status":"unavailable"},"nativeQuickEntry":{"status":"supported"},"quickEntryDictation":{"status":"supported"},"quickEntryGlobalShortcut":{"status":"supported"},"customQuickEntryDictationShortcut":{"status":"supported"},"ultrareviewErrorCategories":{"status":"supported"},"spawnTaskPendingPop":{"status":"supported"},"spawnTaskInFlightIds":{"status":"supported"},"telescopeBridge":{"status":"unavailable"},"plushRaccoon":{"status":"unavailable"},"quietPenguin":{"status":"unavailable"},"rubberDuck":{"status":"unavailable"},"chillingSlothFeat":{"status":"supported"},"chillingSlothSshShell":{"status":"supported"},"chillingSlothSshWorktreeLocation":{"status":"supported"},"chillingSlothSshPuttyKeyConversion":{"status":"unavailable"},"chillingSlothEnterprise":{"status":"supported"},"chillingSlothLocal":{"status":"supported"},"yukonSilver":{"status":"supported"},"yukonSilverGems":{"status":"supported"},"yukonSilverGemsCache":{"status":"supported"},"wakeScheduler":{"status":"unavailable"},"keepAwake":{"status":"supported"},"codeSessionKeepAwake":{"status":"supported"},"ccdLandingTools":{"status":"supported"},"ccdMcpVerbsMidTurn":{"status":"supported"},"openWithConsentAnyLanding":{"status":"supported"},"desktopTopBar":{"status":"supported"},"ccdPlugins":{"status":"supported"},"ccdPluginSourceRouting":{"status":"supported"},"computerUse":{"status":"supported"},"computerUseComplianceGate":{"status":"supported"},"computerUseAppScoped":{"status":"unsupported","reason":"Background app-scoped mode is not enabled","unsupportedCode":"unknown"},"coworkWatchRecord":{"status":"unavailable"},"coworkCopperHeron":{"status":"unavailable"},"coworkWatchers":{"status":"unavailable"},"coworkKappa":{"status":"unavailable"},"coworkArtifacts":{"status":"unavailable"},"coworkAutoModeAlwaysAllowOverride":{"status":"unavailable"},"framebufferPreview":{"status":"unavailable"},"iosSimulator":{"status":"unsupported","reason":"iOS Simulator is disabled by its rollout flag","unsupportedCode":"unknown"},"androidEmulator":{"status":"unsupported","reason":"Android emulator is disabled by its rollout flag","unsupportedCode":"unknown"},"iosSimulatorH264":{"status":"unsupported","reason":"iOS Simulator is disabled by its rollout flag","unsupportedCode":"unknown"},"iosSimulatorAccessibilityReader":{"status":"unsupported","reason":"iOS Simulator is disabled by its rollout flag","unsupportedCode":"unknown"},"grandPrix":{"status":"unavailable"},"ccdGitEngine":{"status":"unavailable"},"sessionPrOwnership":{"status":"unavailable"},"sessionFolderFileAccess":{"status":"supported"},"conversationFolderGrants":{"status":"supported"},"localSessionsWithoutGit":{"status":"supported"},"tearOffHalo":{"status":"supported"},"coworkArtifactPopout":{"status":"supported"},"sidePanePopoutNativeViews":{"status":"supported"},"popoutZoom":{"status":"supported"},"popoutTitleBarOverlay":{"status":"unsupported","reason":"Pop-out title bar overlay requires Windows or Linux","unsupportedCode":"unsupported_platform"},"filePreviewNativeViewRouting":{"status":"supported"},"claudeDesignWindow":{"status":"supported"},"coworkRemoteSessionSpaces":{"status":"supported"},"spaceMemoryBridge":{"status":"unavailable"},"multiAccount":{"status":"unavailable"},"grandPrixRequest":{"status":"unavailable"},"bootPlaceholder":{"status":"supported"},"coworkBranchSession":{"status":"supported"},"coworkScheduledTaskProjects":{"status":"supported"},"coworkLocalSessionProjects":{"status":"supported"},"coworkScheduledTaskRepoint":{"status":"supported"},"sshAttachmentTransport":{"status":"supported"},"coworkSeededSummon":{"status":"supported"},"seededKind":{"status":"supported"},"sendNowEscalation":{"status":"supported"},"sessionMentions":{"status":"supported"},"inlinePastes":{"status":"supported"},"turnDiscardedEvent":{"status":"supported"},"wslForkSession":{"status":"unavailable"},"violinBow":{"status":"unavailable"},"violinBowHomeSettings":{"status":"unavailable"},"coworkThinkingInSend":{"status":"supported"},"bootstrapConfig":{"status":"supported"},"chatIn3p":{"status":"supported"},"surfaceTogglesPreview":{"status":"unavailable"},"chatTab":{"status":"unavailable"},"selfHostedSessions":{"status":"unavailable"},"selfHostedCowork":{"status":"unavailable"},"desktopHome":{"status":"unavailable"},"chatCodeExecution":{"status":"unavailable"},"mcpPersistentAlwaysAllow":{"status":"supported"},"mcpScheduledTaskAlwaysAllow":{"status":"supported"},"mcpScheduledTaskApprovalLifetime":{"status":"unavailable"},"epitaxyMcpApps":{"status":"supported"},"sideSessionProposalPicks":{"status":"supported"},"sideSessionOfferCloudStart":{"status":"supported"},"sideSessions":{"status":"unavailable"},"ccdConnectorTools":{"status":"unavailable"}} --desktop-managed-config={"forceLoginOrgUUIDs":null,"loginSsoOrgDomain":null,"disableEssentialTelemetry":false,"disableNonessentialTelemetry":false,"disableMobileSimulatorTools":false,"banner":null,"deploymentDisplayName":null,"deploymentDisplaySubtitle":null,"dictationAvailable":false,"userPluginMarketplacesEnabled":true,"userPluginUploadsEnabled":true,"configDeprecations":[],"configDeprecationNoticesSuppressed":false,"configOrgDelivered":false,"deploymentMode":"1p","appVersion":"2.7032.0","cookielessOrigin":false,"deviceClass":"gt16","preferredSystemLanguages":["en-US"],"extensionsEnabled":true,"localExtensionInstallAllowed":true} --seatbelt-client=19
+ben-hannan       43076   0.3  0.4 562868336 117664   ??  SN    9:51PM   1:38.81 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:rsn-296-train.go1.43044 COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).\012First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:\012- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).\012- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.\012- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.\012- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.\012- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.\012- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.\012- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.\012Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.\012\012GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.\012GPU: rent\012\012RENTAL RULES:\012- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph), preferring at least 16 CPU cores and more is better (the practice generator is CPU-heavy: use a host with >= 32 cores if one is within $0.10/h of the cheapest). 4090 with the same filter if no 5090.\012- Before renting: `vastai show instances`; if an instance labelled rsn-296 is live and healthy, exit and report DUPLICATE.\012- Label every instance rsn-296. Check credit first: stop and report LOW-CREDIT if it is under $4.\012- MONEY (Ben 2026-09-23 21:51 UTC: "don't use gpu rentals above 4$"): $4 is the COMBINED limit for this whole task, re-rents included. Keep a running total of dph x hours for every instance you create. If the total would pass $3.80, destroy everything and stop with BUDGET-STOP. A separate guard task (rsn-296-guard) also watches this.\012- If a new instance is not "running" within 6 min (or create returns success: False), destroy it by exact id and try the next offer on a different host, up to 4 rentals in total. If a running instance goes offline or shows no log progress for 10 min, destroy it and count it. After 4 failures stop with HOST-FAIL. Never 2 instances at once.\012- Read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it. Destroy the instance at the end and confirm it is gone. Append a ledger line.\012\012YOUR TASK: builder for rsn-296 (varied "sleep school" practice; rsn-294's arms and training with ONE change: the practice generator). The reasoning thread (Opus) wrote and sealed all code; import and run it, never edit it. If something breaks, stop and report; do not patch. Artifacts go in artifacts/claude-rsn296-20260924/.\012READ FIRST (on origin/main): artifacts/claude-rsn296-20260924/PASSMARKS.md, design/v3/30-modes/296-sleep-school-practice.md, and the docstrings of scripts/claude_rsn296_gen.py and scripts/claude_rsn294_run.py.\012INDEPENDENCE: never open or print any item of artifacts/claude-reasonpanel296-20260924/ or artifacts/claude-reasonpanel294-20260923/. You run the eval commands below exactly once per checkpoint; they write category-level counts only.\012\0120. Rent as above. On the GPU machine: a NEW venv with torch (CUDA build) and numpy only. Check `nproc`, `nvidia-smi`, `df -h`.\0121. CODE. Tarball of origin/main (git archive) or git clone. From the repo root, `sha256sum -c` on artifacts/claude-rsn296-20260924/SEAL-code.sha256.txt, artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt and artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt: every line OK, else stop. Run `python scripts/claude_rsn296_gen.py` (prints "selftest ok"; takes about 30 s).\0122. PILOT (timing only). For each arm: `python scripts/claude_rsn296_run.py train --arm <arm> --seed 9 --out /tmp/pilot-<arm> --copy-steps 100 --rl-steps 50 --workers 6`, run from the repo root. Estimate a full run as 60 x copy-phase minutes + 120 x practice-phase minutes (from its train_log.jsonl "min" values). If the four full runs, 2 at a time, would take over 150 minutes, OR the estimated dollars would pass $3.50, stop, destroy the instance and report TOO-SLOW with the timings.\0123. TRAIN (4 runs, 2 at a time, --workers 6 each, from the repo root; defaults otherwise, change nothing):\012   python scripts/claude_rsn296_run.py train --arm plain --seed 1 --out W/plain-s1\012   python scripts/claude_rsn296_run.py train --arm loop  --seed 1 --out W/loop-s1\012   then\012   python scripts/claude_rsn296_run.py train --arm plain --seed 2 --out W/plain-s2\012   python scripts/claude_rsn296_run.py train --arm loop  --seed 2 --out W/loop-s2\0124. SEAL. sha256 of all 8 checkpoints into artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt BEFORE step 5.\0125. EVAL, ONCE per checkpoint. For each run R and C in copy_only.pt, final.pt:\012   python scripts/claude_rsn296_run.py dev  --ckpt W/R/C --out W/R/dev-<copy|final>.json\012   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/R/panel296-<copy|final>.json\012   python scripts/claude_rsn296_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/R/panel294-<copy|final>.json\012   Copy every train_log.jsonl, train_summary.json, dev-*.json and panel*.json into artifacts/claude-rsn296-20260924/runs/<R>/.\0126. RESULTS.md, verdict first: per run minutes, first/last copy loss, first/last practice reward, panel totals (copy-only and final, both panels). Every mark P296.1-P296.4 for both plain seeds with integer counts and PASS/FAIL (code-arm numbers are in PASSMARKS.md; 294 plain final right on reasonpanel294 was 184 for seed 1 and 189 for seed 2). Loop numbers reported the same way, no marks. Dollars spent. Append ledger lines P296.1-P296.4 (cat >> artifacts/fable-predictions-ledger.md).\0127. KEEP THE CHECKPOINTS: copy them to the Mac at ~/premonition-models/rsn296/<run>/ (one directory per run) and record sha256 in RESULTS.md. Never push weights. Destroy the instance BEFORE a slow copy if the $3.80 total is near: copy checkpoints first only if time allows; results come first.\012PUSH: artifacts/claude-rsn296-20260924/RESULTS.md artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt artifacts/claude-rsn296-20260924/runs artifacts/fable-predictions-ledger.md
+ben-hannan       39226   0.2  0.3 494458240 103568   ??  S     3:24PM   3:12.55 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort high --model claude-opus-5-5 --permission-prompt-tool stdio --resume=76c622f5-1395-42cc-b432-71b65f256cf4 --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_host__get_storage_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode bypassPermissions --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"ultracode":false,"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}],"permissions":{"allow":["Read(//Users/ben-hannan/Desktop/projects/beautiful-model/**)"]}}
+ben-hannan       15757   0.2  0.3 494446704 100736   ??  S     1:58PM   4:10.01 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort high --model claude-opus-5-5 --permission-prompt-tool stdio --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode auto --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}]}
+ben-hannan       53325   0.1  0.3 494367280 114992 s002  S+    3:55PM   5:17.75 claude
+ben-hannan       37208   0.1  0.3 494450368 106384   ??  S     9:36PM   0:55.43 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permission-prompt-tool stdio --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode auto --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}]}
+ben-hannan       54052   0.1  0.3 494450128  96112   ??  S     3:57PM   3:15.06 /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permission-prompt-tool stdio --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode auto --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}]}
+ben-hannan       73773   0.0  0.0 488785936   1296   ??  SNs  11:20PM   0:00.00 /bin/zsh -c python3 /tmp/rsn296_guard.py 10 2>&1 | tail -15; echo "RC=$?"
+ben-hannan       68066   0.0  0.0 488781520    592   ??  SN   11:04PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/nb-321-run.md
+ben-hannan       43044   0.0  0.0 488781536    592   ??  SN    9:51PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rsn-296-train.md
+ben-hannan       43005   0.0  0.0 488781776    592   ??  SN    9:51PM   0:00.01 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rsn-296-guard.md
+ben-hannan       37207   0.0  0.0 488781344    608   ??  S     9:36PM   0:00.00 /Applications/Claude.app/Contents/Helpers/disclaimer --pgroup -- /Users/ben-hannan/Library/Application Support/Claude/claude-code/2.1.280/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort medium --model claude-opus-5-5 --permission-prompt-tool stdio --allowedTools mcp__computer-use,mcp__ccd_session__spawn_task,mcp__ccd_session__dismiss_task,mcp__ccd_session__mark_chapter,mcp__ccd_session_mgmt__list_sessions,mcp__ccd_session_mgmt__get_session,mcp__ccd_session_mgmt__get_usage,mcp__ccd_session_mgmt__set_session_title,mcp__ccd_session_mgmt__send_message,mcp__ccd_session_mgmt__detach_session,mcp__ccd_sidebar__list_groups,mcp__ccd_sidebar__create_group,mcp__ccd_sidebar__set_view,mcp__ccd_session_mgmt__search_session_transcripts,mcp__ccd_session_mgmt__list_events,mcp__ccd_session_mgmt__export_transcript,mcp__scheduled-tasks__list_task_runs,mcp__ccd_session__read_widget_context,mcp__ccd_session__list_start_targets,mcp__ccd_view__show_pane,mcp__ccd_view__close_pane,mcp__ccd_view__get_layout,mcp__ccd_view__set_transcript_view,mcp__ccd_settings__get_settings,mcp__mcp-registry__search_mcp_registry,mcp__mcp-registry__suggest_connectors,mcp__mcp-registry__list_connectors,mcp__ccd_connectors__session_connectors_status,mcp__ccd_connectors__reconnect_session_connector,mcp__ccd_pr__get_status,mcp__ccd_window__open_session_in,mcp__ccd_window__close_split,mcp__ccd_window__set_sidebar_collapsed,mcp__ccd_window__get_window_layout,mcp__claude-in-chrome__request_credentials,mcp__claude-in-chrome__list_granted_credentials,mcp__claude-in-chrome__autofill_credential,mcp__claude-in-chrome__release_credentials,mcp__claude-in-chrome__enter_verification_code --disallowedTools SubscribePR --setting-sources=user,project,local --permission-mode auto --allow-dangerously-skip-permissions --include-partial-messages --await-initialize --thinking-display omitted --replay-user-messages --settings {"deniedMcpServers":[{"serverName":"Claude Browser"},{"serverName":"Claude Code Android Emulator"},{"serverName":"Claude Code iOS Simulator"},{"serverName":"Claude Preview"},{"serverName":"Claude_Browser"},{"serverName":"Claude_Code_Android_Emulator"},{"serverName":"Claude_Code_iOS_Simulator"},{"serverName":"Claude_Preview"},{"serverName":"Claude_for_Chrome"},{"serverName":"Framebuffer"},{"serverName":"Window Halo"},{"serverName":"Window_Halo"},{"serverName":"ccd_connectors"},{"serverName":"ccd_directory"},{"serverName":"ccd_host"},{"serverName":"ccd_pr"},{"serverName":"ccd_session"},{"serverName":"ccd_session_mgmt"},{"serverName":"ccd_settings"},{"serverName":"ccd_sidebar"},{"serverName":"ccd_turn"},{"serverName":"ccd_view"},{"serverName":"ccd_window"},{"serverName":"claude-in-chrome"},{"serverName":"claude_browser"},{"serverName":"claude_code_android_emulator"},{"serverName":"claude_code_ios_simulator"},{"serverName":"claude_for_chrome"},{"serverName":"claude_in_chrome"},{"serverName":"claude_preview"},{"serverName":"computer-use"},{"serverName":"computer_use"},{"serverName":"cowork"},{"serverName":"cowork-onboarding"},{"serverName":"cowork_onboarding"},{"serverName":"dev-debug"},{"serverName":"dev_debug"},{"serverName":"dispatch"},{"serverName":"framebuffer"},{"serverName":"mcp-registry"},{"serverName":"mcp_registry"},{"serverName":"plugins"},{"serverName":"remote-devices"},{"serverName":"remote_devices"},{"serverName":"scheduled-tasks"},{"serverName":"scheduled_tasks"},{"serverName":"session_info"},{"serverName":"skills"},{"serverName":"window_halo"}]}
+---
+# lis-314 / lis-315 / lis-316 — builder RESULTS (Mac, sealed confirm panel)
+
+VERDICT: BLOCKED. No mark is scored. Arm A (292t alone) completed all 354 panel turns and was scored. Arm C crashed 3 dialogs in with the exact MPS out-of-memory error that blocked lis-313-f0. Arms P, K, S and G never ran. P315.1-3, P314.1-5 and P316.1-3 are NOT scored. The sealed code was never edited.
+
+## Marks table (honest version — nothing to PASS/FAIL without the reader arms)
+
+| Mark | Bar | Got | Verdict |
+|---|---|---|---|
+| P315.1 wrong-save turns (P vs C) | P <= C + 1 | no arms P/C | NOT SCORED |
+| P315.2 taught facts saved (P vs C) | P >= C + 5 points | no arms P/C | NOT SCORED |
+| P315.3 questions to the user (P vs C) | P <= C | no arms P/C | NOT SCORED |
+| P314.1 wrong-save turns (K vs C) | K <= C + 1 and K <= 2 | no arms K/C | NOT SCORED |
+| P314.2 taught facts saved or correctly pending (K) | K >= 85% | no arm K | NOT SCORED |
+| P314.3 turns per question (K) | K >= 8 | no arm K | NOT SCORED |
+| P314.4 asks answered right (K vs C) | K >= C + 5 asks | no arms K/C | NOT SCORED |
+| P314.5 never-told asks answered with a value (K vs C) | K <= C | no arms K/C | NOT SCORED |
+| P316.1 wrong-save turns (G vs S) | G <= S | no arms G/S | NOT SCORED |
+| P316.2 taught facts saved or correctly pending (G vs S) | G >= S - 2 points | no arms G/S | NOT SCORED |
+| P316.3 questions to the user (G vs S) | G <= S + 3 | no arms G/S | NOT SCORED |
+
+## summary.json counts (only arm A exists; arms C, P, K, S, G have no files)
+
+Arm A (292t alone, 354 turns): turns 354, kind_teach 135, kind_ask 129, kind_smalltalk 72, kind_correct 10, kind_other 8, questions_to_user 0, ask 129, ask_right 17, ask_wrong 9, ask_abstain 83, ask_untold 20, ask_untold_abstain 20, asks_told 109, wrong_save_turns 15, wrong_saved_facts 15, final_facts 175, final_facts_saved 41, final_facts_saved_or_pending 41, final_pending 0, facts_saved_pct 23.4, facts_saved_or_pending_pct 23.4, turns_per_question 354.0.
+
+Device and ms (arm A, CPU only, no reader): ms_median 5.9, ms_p90 15.9, ms_max 3463.7. No reader device timing exists (arm C died before writing its file).
+
+## Wrong saved facts for arms K, S, G
+
+None to report: arms K, S and G never ran, so no stored triples exist. (Arm A is the bare base, not a wrapper arm, so its 15 wrong-save turns are reference-only and out of scope for this section.)
+[0m
+[0m$ [0mls runs/ | grep -e 314 -e e2e -e lis | head -n 30
+echo "---watcher---"
+git log origin/builder-outbox --oneline -15 | head -n 15
+---watcher---
+d225b02cc watcher status
+c4bf34a9f builder results: nb-323-build
+e16385274 watcher status
+30a9d7323 watcher status
+b5229e887 watcher status
+4c5654535 watcher status
+bff35c391 builder results: lis-313-f0
+df15be55f watcher status
+5bf6ff8bd watcher status
+985cb32cd watcher status
+108ce907b watcher status
+9d50c2c6a watcher status
+546fb9433 watcher status
+867b13c00 watcher status
+5a17f7f1a watcher status
+[0m
+[0m$ [0mls runs/ | head -n 50; echo "---queue---"; ls /Users/ben-hannan/premonition-watch/queue/ 2>&1 | head -n 30
+000-vast-rescue
+own-probe-1
+---queue---
+000-ckpt-copy.exit
+000-ckpt-copy.go1.done
+000-ckpt-copy.go1.err.txt
+000-ckpt-copy.go1.reply.md
+000-ckpt-copy.md
+000-ckpt-copy.pushed
+000-smoke.exit
+000-smoke.go1.done
+000-smoke.go1.err.txt
+000-smoke.go1.reply.md
+000-smoke.md
+000-smoke.pushed
+000-vast-rescue.exit
+000-vast-rescue.go1.done
+000-vast-rescue.go1.err.txt
+000-vast-rescue.go1.reply.md
+000-vast-rescue.md
+000-vast-rescue.pushed
+000-watcher-dedupe.exit
+000-watcher-dedupe.go1.done
+000-watcher-dedupe.go1.err.txt
+000-watcher-dedupe.go1.reply.md
+000-watcher-dedupe.md
+000-watcher-dedupe.pushed
+000-watcher-upgrade.exit
+000-watcher-upgrade.go1.done
+000-watcher-upgrade.go1.err.txt
+000-watcher-upgrade.go1.reply.md
+000-watcher-upgrade.md
+000-watcher-upgrade.pushed
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ | grep -e lis -e e2e | head -n 30; echo "---"; git ls-tree -r --name-only origin/builder-outbox | grep runs | grep -e 314 -e e2e | head -n 20
+lis-300-publish.exit
+lis-300-publish.go1.done
+lis-300-publish.go1.err.txt
+lis-300-publish.go1.reply.md
+lis-300-publish.md
+lis-300-publish.pushed
+lis-300-train.exit
+lis-300-train.go1.done
+lis-300-train.go1.err.txt
+lis-300-train.go1.reply.md
+lis-300-train.md
+lis-300-train.pushed
+lis-301-train.exit
+lis-301-train.go1.done
+lis-301-train.go1.err.txt
+lis-301-train.go1.reply.md
+lis-301-train.md
+lis-301-train.pushed
+lis-302-gpu.exit
+lis-302-gpu.go1.err.txt
+lis-302-gpu.go1.reply.md
+lis-302-gpu.go2.done
+lis-302-gpu.go2.err.txt
+lis-302-gpu.go2.reply.md
+lis-302-gpu.md
+lis-302-gpu.pushed
+lis-310-chat-build.exit
+lis-310-chat-build.go1.done
+lis-310-chat-build.go1.err.txt
+lis-310-chat-build.go1.reply.md
+---
+[0m
+[0m$ [0mls /Users/ben-hannan/premonition-watch/queue/ | grep -e 314 -e 315 -e 316 -e e2e-dev | head -n 20; echo "---builder runs---"; git ls-tree -r --name-only origin/builder-outbox | grep "runs/lis-31" | head -n 20
+lis-314-panel.exit
+lis-314-panel.go1.done
+lis-314-panel.go1.err.txt
+lis-314-panel.go1.reply.md
+lis-314-panel.md
+lis-e2e-dev.go1.err.txt
+lis-e2e-dev.go1.reply.md
+lis-e2e-dev.md
+lis-e2e-dev.running
+---builder runs---
+runs/lis-310-chat-build/lis-310-chat-build.exit
+runs/lis-310-chat-build/lis-310-chat-build.go1.done
+runs/lis-310-chat-build/lis-310-chat-build.go1.err.txt
+runs/lis-310-chat-build/lis-310-chat-build.go1.reply.md
+runs/lis-310-chat-build/lis-310-chat-build.md
+runs/lis-311-chat292/lis-311-chat292.exit
+runs/lis-311-chat292/lis-311-chat292.go1.err.txt
+runs/lis-311-chat292/lis-311-chat292.go1.reply.md
+runs/lis-311-chat292/lis-311-chat292.md
+runs/lis-311b-chat292/lis-311b-chat292.exit
+runs/lis-311b-chat292/lis-311b-chat292.go1.err.txt
+runs/lis-311b-chat292/lis-311b-chat292.go1.reply.md
+runs/lis-311b-chat292/lis-311b-chat292.go2.done
+runs/lis-311b-chat292/lis-311b-chat292.go2.err.txt
+runs/lis-311b-chat292/lis-311b-chat292.go2.reply.md
+runs/lis-311b-chat292/lis-311b-chat292.md
+runs/lis-312-f0/lis-312-f0.exit
+runs/lis-312-f0/lis-312-f0.go1.done
+runs/lis-312-f0/lis-312-f0.go1.err.txt
+runs/lis-312-f0/lis-312-f0.go1.reply.md
+[0m
+[0m$ [0mcat /Users/ben-hannan/premonition-watch/queue/lis-e2e-dev.md | head -n 30; echo "---running?---"; cat /Users/ben-hannan/premonition-watch/queue/lis-e2e-dev.go1.reply.md 2>&1 | head -n 20; echo "---panel done?---"; cat /Users/ben-hannan/premonition-watch/queue/lis-314-panel.exit 2>&1 | head
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+GPU: no (Mac CPU/MPS; the reader runs on MPS). Run only after lis-314-panel has finished (one reader job on the Mac at a time).
+TIME CAP: 150 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: REPORT ONLY (no marks). Score the listener stack on the month-end DEV bank (artifacts/claude-e2e331-dev-20260924, dev data, fine to read). Artifacts go in artifacts/claude-lis-e2edev-20260924/. The listener and month-end threads wrote the code. Run it and never edit it.
+
+GETTING THE CODE: build the tree exactly as for lis-313-f0. Start from a fresh `git archive origin/builder-outbox`, overlay a fresh `git archive origin/main` on top, and copy in artifacts/fable-self122-20260922/self122_head.pt from the Mac repo.
+
+1. Check `shasum -a 256 -c artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt`, the lis301-merged sha256 (b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890), `uptime` and disk.
+2. Run three arms, each with --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run:
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC ...
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_S --name lisS ...
+   python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_G --name lisG ...
+   Then run scripts/claude_e2e336_score.py over the three outputs, as its docstring says.
+3. RESULTS.md: every mechanical count from the scorer for the three arms, plus device and ms (median, p90, max).
+PUSH: artifacts/claude-lis-e2edev-20260924
+---running?---
+Scoring the listener stack on the month-end bank — assembling your report-only run.
+Found the lis-313 pattern — now tracking down the common rules to get the setup right.
+I've got the ground rules — now mapping the e2e harness and bank.
+Runner and scorer mapped — now checking the arms and pre-flight requirements.
+Pre-checks show the earlier reader run hit memory limits — verifying the lane is clear before I start.
+---panel done?---
+rc=0
+[0m
+[0m# [0mTodos
+[•] Build combined tree (builder-outbox + main overlay + self122 weights)
+[ ] Checks: SEAL, lis301 sha, uptime, disk
+[ ] Run three arms (lisC, lisS, lisG) on DEV bank
+[ ] Score runs and write RESULTS.md
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/ 2>&1 | head; df -g / | head -n 5; uptime
+gen_part6.py
+grade_b_part1_writer.py
+mkpart6.py
+part6_slice.jsonl
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        64    17%  484014 672475400    0%   /
+23:23  up 13:16, 4 users, load averages: 18.07 22.27 28.41
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e 2>&1 | head; mkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e && git archive origin/builder-outbox | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e && echo BUILDER_OK && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e | head
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e: No such file or directory
+BUILDER_OK
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mgit archive origin/main | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e && echo MAIN_OK; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/ | grep -e e2e336 -e lis_e2e | head; ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/ | grep e2e | head
+MAIN_OK
+claude_e2e336_run.py
+claude_e2e336_score.py
+claude_e2e336_twin.py
+claude_lis_e2e_arms.py
+claude-e2e331-dev-20260924
+claude-e2e336-20260924
+[0m
+[0m$ [0mls -la artifacts/fable-self122-20260922/self122_head.pt; ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/fable-self122-20260922/ 2>&1 | head
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+total 928
+drwxr-xr-x   11 ben-hannan  staff     352 Sep 23 23:15 .
+drwxr-xr-x  484 ben-hannan  staff   15488 Sep 23 23:24 ..
+-rw-r--r--    1 ben-hannan  staff   69852 Sep 23 23:15 heldout122.jsonl
+-rw-r--r--    1 ben-hannan  staff    4233 Sep 23 23:15 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff    4152 Sep 23 23:15 RESULTS.md
+-rw-r--r--    1 ben-hannan  staff      79 Sep 23 23:15 SEAL.sha256.txt
+drwxr-xr-x    4 ben-hannan  staff     128 Sep 23 23:15 self122-notebook
+-rw-r--r--    1 ben-hannan  staff  129674 Sep 23 23:15 self122-results.json
+-rw-r--r--    1 ben-hannan  staff    8952 Sep 23 23:15 train122_report.json
+[0m
+[0m$ [0mcp artifacts/fable-self122-20260922/self122_head.pt /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/fable-self122-20260922/self122_head.pt && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/fable-self122-20260922/self122_head.pt && echo COPY_OK
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 23 23:24 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/fable-self122-20260922/self122_head.pt
+COPY_OK
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122 weights)
+[•] Checks: SEAL, lis301 sha, uptime, disk
+[ ] Run three arms (lisC, lisS, lisG) on DEV bank
+[ ] Score runs and write RESULTS.md
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt; echo "SEAL_RC=$?"; uptime; df -g / | head -n 3; ls ~/premonition-models/lis301-merged/ | head
+shasum: turns.jsonl: No such file or directory
+turns.jsonl: FAILED open or read
+truth.jsonl: FAILED open or read
+shasum: truth.jsonl: No such file or directory
+shasum: WARNING: 2 listed files could not be read
+shasum: WARNING: 1 computed checksum did NOT match
+README.md: FAILED
+SEAL_RC=1
+23:25  up 13:18, 4 users, load averages: 25.64 23.89 28.51
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        62    17%  484014 658640360    0%   /
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer_config.json
+tokenizer.json
+[0m
+[0m$ [0mcat artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt; echo "---"; ls artifacts/claude-e2e331-dev-20260924/
+4fbdac90ea2e76748534bab2d86c6d66ea80eac28f4b81c9b1fbf24d9c4380a8  turns.jsonl
+c868e2acbbc4fcb94f74b75edbd651c492bcd8a29d58b1252719a254e8de1de5  truth.jsonl
+947e2f4833eaa99386a7a9d81afb8116e36b88acfba5e898b2042b8bb4bc72ff  README.md
+---
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+[0m
+[0m$ [0mshasum -a 256 -c SEAL.sha256.txt; echo "SEAL_RC=$?"
+turns.jsonl: OK
+truth.jsonl: OK
+README.md: OK
+SEAL_RC=0
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/lis301-merged/model.safetensors; echo "RC=$?"
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+RC=0
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis-e2edev-20260924/run && echo MKDIR_OK; ls scripts/ | grep -e lis300_read -e lis_stack | head
+MKDIR_OK
+claude_lis_stack.py
+claude_lis300_read.py
+[0m
+[0m$ [0mgrep -n -e device -e mps -e cpu -e cuda scripts/claude_lis300_read.py | head -n 20; echo "---worktree mkdir---"; mkdir -p /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run && echo WORKTREE_MKDIR_OK
+grep: scripts/claude_lis300_read.py: No such file or directory
+---worktree mkdir---
+WORKTREE_MKDIR_OK
+[0m
+[0m$ [0mgrep -n -e device -e mps -e cpu scripts/claude_lis300_read.py | head -n 20
+65:    def __init__(self, model_dir, device=None, max_new_tokens=200):
+66:        self.dev = device or ("cuda" if torch.cuda.is_available() else
+67:                              "mps" if torch.backends.mps.is_available() else "cpu")
+68:        dtype = torch.float32 if self.dev == "cpu" else torch.bfloat16 if self.dev == "cuda" else torch.float16
+79:        ids = torch.tensor([p], device=self.dev)
+117:            fh.write(json.dumps({"id": row["id"], "frame": fr, "conf": cf, "raw": raw,
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122 weights)
+[✓] Checks: SEAL, lis301 sha, uptime, disk
+[•] Run three arms (lisC, lisS, lisG) on DEV bank
+[ ] Score runs and write RESULTS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run > /tmp/lisC.log 2>&1 & echo "PID=$!"
+PID=77436
+[0m
+[0m$ [0msleep 60; tail -n 20 /tmp/lisC.log; echo "---"; ps -p 77436 -o pid,etime,command 2>&1 | head
+Traceback (most recent call last):
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_e2e336_run.py", line 240, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_e2e336_run.py", line 229, in main
+    run_life(builder, args, lid, by[lid], truth_by.get(lid, []), rows)
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_e2e336_run.py", line 165, in run_life
+    agent = builder(tmp, args)
+            ^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_lis_e2e_arms.py", line 44, in build_C
+    return _build(state_dir, args, ())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_lis_e2e_arms.py", line 39, in _build
+    STACK.build_stack(loop, _reader(args.model), THRESHOLD, layers=layers, log_dir=state_dir)
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_lis_e2e_arms.py", line 27, in _reader
+    import claude_lis300_read as READ
+  File "/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/scripts/claude_lis300_read.py", line 21, in <module>
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+ModuleNotFoundError: No module named 'transformers'
+---
+  PID ELAPSED COMMAND
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-313-f0/lis-313-f0.go1.err.txt | head -n 60
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-311-chat292.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-311-chat292.md
+[0m✗ [0mGlob "artifacts/claude-lis313*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "**/lis-311*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mpwd; ls; git branch -a | head -n 50; git status --short | head -n 50
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-313-f0/lis-313-f0.go1.err.txt | grep -n -e "uv run" -e "transformers" -e "lis313" | head -n 30
+6:[0m✗ [0mGlob "artifacts/claude-lis313*" failed
+112:[0m$ [0mls handoff/queue/ 2>&1 | head -n 100; echo ---; ls artifacts/ | head -n 100; echo ---; ls scripts/claude_lis31* 2>&1; echo ---; ls artifacts/claude-lis313-20260924/ 2>&1; echo ---; ls artifacts/claude-lis312-20260923/ 2>&1
+224:ls: artifacts/claude-lis313-20260924/: No such file or directory
+528:claude_lis313_agent.py
+529:claude_lis313_f0.py
+530:claude_lis313_test.py
+582:[0m$ [0mgit ls-tree --name-only origin/builder-outbox:scripts | grep -i -E "lis31|lis30|convf0|loop292|f0_score"; echo ----; git ls-tree --name-only origin/builder-outbox:artifacts | grep -i -E "lis313|lis312|convbench|fable-self122"; echo ----; git ls-tree --name-only origin/main:artifacts | grep -i -E "lis313|lis312|convbench|fable-self122"
+598:claude-lis313-20260924
+604:claude-lis313-20260924
+615:[0m$ [0mgit show --stat HEAD --oneline | head -n 100; echo ----; git show origin/main:artifacts/claude-lis313-20260924/PASSMARKS.md | head -n 200
+633:`scripts/claude_lis313_agent.py` adds one wrapper (turn313) outside turn310.
+642:`scripts/claude_lis313_f0.py` is a copy of `claude_lis312_f0.py`: arms A/B/C are unchanged, and arm D is added. It runs all four arms on the sealed F0 benchmark (40 dialogs, 286 turns, 84 asks) with a fresh agent per dialog. P312.1 to P312.4 (artifacts/claude-lis312-20260923/PASSMARKS.md) are scored from the same run.
+647:| P313.1 ask turns where the wrapper's own answer is wrong (`lis313_reader_answered_wrong`) | 0 |
+652:Report only: every lis313_* counter, D's asks right/wrong/abstain, and ms.
+658:[0m$ [0mgit show origin/main:artifacts/claude-lis312-20260923/PASSMARKS.md | head -n 200; echo ====; git ls-tree --name-only origin/main:artifacts/claude-lis313-20260924/; echo ====; git ls-tree --name-only origin/main:artifacts/claude-lis312-20260923/
+734:[0m$ [0mgit show origin/main:artifacts/claude-lis313-20260924/PASSMARKS.md | head -n 100
+738:git ls-tree --name-only origin/main:artifacts/claude-lis313-20260924/
+747:`scripts/claude_lis313_agent.py` adds one wrapper (turn313) outside turn310.
+756:`scripts/claude_lis313_f0.py` is a copy of `claude_lis312_f0.py`: arms A/B/C are unchanged, and arm D is added. It runs all four arms on the sealed F0 benchmark (40 dialogs, 286 turns, 84 asks) with a fresh agent per dialog. P312.1 to P312.4 (artifacts/claude-lis312-20260923/PASSMARKS.md) are scored from the same run.
+761:| P313.1 ask turns where the wrapper's own answer is wrong (`lis313_reader_answered_wrong`) | 0 |
+766:Report only: every lis313_* counter, D's asks right/wrong/abstain, and ms.
+811:+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+849:+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+1083:+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). Same COMMON RULES block as handoff/queue/lis-311-chat292.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python, etc.).
+1396:[0m$ [0mgit show origin/main:scripts/claude_lis313_f0.py | wc -l; git show origin/main:scripts/claude_lis313_agent.py | wc -l; git show origin/main:scripts/claude_lis313_test.py | wc -l; git ls-tree --name-only origin/main:scripts/ | grep lis313
+1400:claude_lis313_agent.py
+1401:claude_lis313_f0.py
+1402:claude_lis313_test.py
+1404:[0m$ [0mgit show origin/main:scripts/claude_lis313_f0.py > /tmp/lis313_f0_view.py; wc -l /tmp/lis313_f0_view.py; git show origin/main:scripts/claude_lis313_test.py | head -n 100
+1405:212 /tmp/lis313_f0_view.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/lis-311b-chat292/lis-311b-chat292.go2.err.txt | grep -n -e "uv run" | head -n 20
+268:- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+294:- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+357:[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --stub 2>&1 | tail -n 30
+393:[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows > /tmp/lis311_real.log 2>&1 & echo "PID:$!"
+414:17758   00:57 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+427:17758   01:55 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+438:17758   02:57 SN   uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis311_try.py --real --out artifacts/claude-lis311-20260923/real-rows
+596:[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run > /tmp/lisC.log 2>&1 & echo "PID=$!"
+PID=78106
+[0m
+[0m$ [0msleep 90; tail -n 25 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime,command 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+---
+  PID ELAPSED COMMAND
+78106   01:42 uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_C --name lisC --model /Users/ben-hannan/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run
+[0m
+[0m$ [0msleep 120; tail -n 10 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+---
+  PID ELAPSED
+78106   04:02
+total 0
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 23 23:25 .
+drwxr-xr-x  3 ben-hannan  staff  96 Sep 23 23:25 ..
+[0m
+[0m$ [0msleep 180; tail -n 10 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+---
+  PID ELAPSED
+78106   07:11
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+[336/lisC] e2e-dev-03 turns=20
+---
+  PID ELAPSED
+78106   11:18
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+[336/lisC] e2e-dev-03 turns=20
+[336/lisC] e2e-dev-04 turns=19
+[336/lisC] e2e-dev-05 turns=19
+[336/lisC] e2e-dev-06 turns=19
+[336/lisC] e2e-dev-07 turns=19
+---
+  PID ELAPSED
+78106   15:25
+[0m
+[0m$ [0msleep 180; tail -n 14 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+[336/lisC] e2e-dev-03 turns=20
+[336/lisC] e2e-dev-04 turns=19
+[336/lisC] e2e-dev-05 turns=19
+[336/lisC] e2e-dev-06 turns=19
+[336/lisC] e2e-dev-07 turns=19
+[336/lisC] e2e-dev-08 turns=19
+---
+  PID ELAPSED
+78106   18:31
+total 0
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 23 23:25 .
+drwxr-xr-x  3 ben-hannan  staff  96 Sep 23 23:25 ..
+[0m
+[0m$ [0msleep 150; tail -n 14 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+[336/lisC] e2e-dev-03 turns=20
+[336/lisC] e2e-dev-04 turns=19
+[336/lisC] e2e-dev-05 turns=19
+[336/lisC] e2e-dev-06 turns=19
+[336/lisC] e2e-dev-07 turns=19
+[336/lisC] e2e-dev-08 turns=19
+[336/lisC] e2e-dev-09 turns=19
+---
+  PID ELAPSED
+78106   21:07
+total 0
+drwxr-xr-x  2 ben-hannan  staff  64 Sep 23 23:25 .
+drwxr-xr-x  3 ben-hannan  staff  96 Sep 23 23:25 ..
+[0m
+[0m$ [0msleep 150; tail -n 15 /tmp/lisC.log; echo "---"; ps -p 78106 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:33,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 137.75it/s]Loading weights:  93%|█████████▎| 203/219 [00:01<00:00, 154.38it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 123.69it/s]
+[336/lisC] e2e-dev-01 turns=20
+[336/lisC] e2e-dev-02 turns=20
+[336/lisC] e2e-dev-03 turns=20
+[336/lisC] e2e-dev-04 turns=19
+[336/lisC] e2e-dev-05 turns=19
+[336/lisC] e2e-dev-06 turns=19
+[336/lisC] e2e-dev-07 turns=19
+[336/lisC] e2e-dev-08 turns=19
+[336/lisC] e2e-dev-09 turns=19
+[336/lisC] e2e-dev-10 turns=20
+wrote arm_lisC.jsonl rows=269 lives=10
+---
+  PID ELAPSED
+total 264
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:50 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_S --name lisS --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run > /tmp/lisS.log 2>&1 & echo "PID=$!"
+PID=84865
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+---
+  PID ELAPSED
+84865   04:07
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+[336/lisS] e2e-dev-04 turns=19
+[336/lisS] e2e-dev-05 turns=19
+---
+  PID ELAPSED
+84865   08:12
+[0m
+[0m$ [0msleep 240; tail -n 14 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+[336/lisS] e2e-dev-04 turns=19
+[336/lisS] e2e-dev-05 turns=19
+[336/lisS] e2e-dev-06 turns=19
+[336/lisS] e2e-dev-07 turns=19
+---
+  PID ELAPSED
+84865   12:16
+[0m
+[0m$ [0msleep 200; tail -n 15 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+[336/lisS] e2e-dev-04 turns=19
+[336/lisS] e2e-dev-05 turns=19
+[336/lisS] e2e-dev-06 turns=19
+[336/lisS] e2e-dev-07 turns=19
+[336/lisS] e2e-dev-08 turns=19
+[336/lisS] e2e-dev-09 turns=19
+---
+  PID ELAPSED
+84865   15:44
+total 264
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:50 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+[0m
+[0m$ [0msleep 150; tail -n 15 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+[336/lisS] e2e-dev-04 turns=19
+[336/lisS] e2e-dev-05 turns=19
+[336/lisS] e2e-dev-06 turns=19
+[336/lisS] e2e-dev-07 turns=19
+[336/lisS] e2e-dev-08 turns=19
+[336/lisS] e2e-dev-09 turns=19
+---
+  PID ELAPSED
+84865   18:17
+total 264
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:50 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+[0m
+[0m$ [0msleep 150; tail -n 15 /tmp/lisS.log; echo "---"; ps -p 84865 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<06:15,  1.72s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 103.96it/s]Loading weights:  93%|█████████▎| 203/219 [00:02<00:00, 126.24it/s]Loading weights: 100%|██████████| 219/219 [00:02<00:00, 97.64it/s] 
+[336/lisS] e2e-dev-01 turns=20
+[336/lisS] e2e-dev-02 turns=20
+[336/lisS] e2e-dev-03 turns=20
+[336/lisS] e2e-dev-04 turns=19
+[336/lisS] e2e-dev-05 turns=19
+[336/lisS] e2e-dev-06 turns=19
+[336/lisS] e2e-dev-07 turns=19
+[336/lisS] e2e-dev-08 turns=19
+[336/lisS] e2e-dev-09 turns=19
+[336/lisS] e2e-dev-10 turns=20
+wrote arm_lisS.jsonl rows=227 lives=10
+---
+  PID ELAPSED
+total 456
+drwxr-xr-x  4 ben-hannan  staff     128 Sep 24 00:09 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+-rw-r--r--  1 ben-hannan  staff   97101 Sep 24 00:09 arm_lisS.jsonl
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; nohup uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_e2e336_run.py --arm claude_lis_e2e_arms:build_G --name lisG --model ~/premonition-models/lis301-merged --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-lis-e2edev-20260924/run > /tmp/lisG.log 2>&1 & echo "PID=$!"
+PID=90586
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisG.log; echo "---"; ps -p 90586 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:35,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 139.23it/s]Loading weights:  97%|█████████▋| 212/219 [00:01<00:00, 159.00it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.28it/s]
+[336/lisG] e2e-dev-01 turns=20
+[336/lisG] e2e-dev-02 turns=20
+---
+  PID ELAPSED
+90586   04:02
+[0m
+[0m$ [0msleep 240; tail -n 12 /tmp/lisG.log; echo "---"; ps -p 90586 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:35,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 139.23it/s]Loading weights:  97%|█████████▋| 212/219 [00:01<00:00, 159.00it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.28it/s]
+[336/lisG] e2e-dev-01 turns=20
+[336/lisG] e2e-dev-02 turns=20
+[336/lisG] e2e-dev-03 turns=20
+[336/lisG] e2e-dev-04 turns=19
+[336/lisG] e2e-dev-05 turns=19
+---
+  PID ELAPSED
+90586   08:09
+[0m
+[0m$ [0msleep 240; tail -n 14 /tmp/lisG.log; echo "---"; ps -p 90586 -o pid,etime 2>&1 | head -n 3
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:35,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 139.23it/s]Loading weights:  97%|█████████▋| 212/219 [00:01<00:00, 159.00it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.28it/s]
+[336/lisG] e2e-dev-01 turns=20
+[336/lisG] e2e-dev-02 turns=20
+[336/lisG] e2e-dev-03 turns=20
+[336/lisG] e2e-dev-04 turns=19
+[336/lisG] e2e-dev-05 turns=19
+[336/lisG] e2e-dev-06 turns=19
+[336/lisG] e2e-dev-07 turns=19
+[336/lisG] e2e-dev-08 turns=19
+---
+  PID ELAPSED
+90586   12:12
+[0m
+[0m$ [0msleep 200; tail -n 15 /tmp/lisG.log; echo "---"; ps -p 90586 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:35,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 139.23it/s]Loading weights:  97%|█████████▋| 212/219 [00:01<00:00, 159.00it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.28it/s]
+[336/lisG] e2e-dev-01 turns=20
+[336/lisG] e2e-dev-02 turns=20
+[336/lisG] e2e-dev-03 turns=20
+[336/lisG] e2e-dev-04 turns=19
+[336/lisG] e2e-dev-05 turns=19
+[336/lisG] e2e-dev-06 turns=19
+[336/lisG] e2e-dev-07 turns=19
+[336/lisG] e2e-dev-08 turns=19
+[336/lisG] e2e-dev-09 turns=19
+---
+  PID ELAPSED
+90586   15:34
+total 456
+drwxr-xr-x  4 ben-hannan  staff     128 Sep 24 00:09 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+-rw-r--r--  1 ben-hannan  staff   97101 Sep 24 00:09 arm_lisS.jsonl
+[0m
+[0m$ [0msleep 150; tail -n 15 /tmp/lisG.log; echo "---"; ps -p 90586 -o pid,etime 2>&1 | head -n 3; ls -la artifacts/claude-lis-e2edev-20260924/run/ 2>&1 | head
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:01<04:35,  1.26s/it]Loading weights:  63%|██████▎   | 139/219 [00:01<00:00, 139.23it/s]Loading weights:  97%|█████████▋| 212/219 [00:01<00:00, 159.00it/s]Loading weights: 100%|██████████| 219/219 [00:01<00:00, 125.28it/s]
+[336/lisG] e2e-dev-01 turns=20
+[336/lisG] e2e-dev-02 turns=20
+[336/lisG] e2e-dev-03 turns=20
+[336/lisG] e2e-dev-04 turns=19
+[336/lisG] e2e-dev-05 turns=19
+[336/lisG] e2e-dev-06 turns=19
+[336/lisG] e2e-dev-07 turns=19
+[336/lisG] e2e-dev-08 turns=19
+[336/lisG] e2e-dev-09 turns=19
+[336/lisG] e2e-dev-10 turns=20
+wrote arm_lisG.jsonl rows=227 lives=10
+---
+  PID ELAPSED
+total 648
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 24 00:28 .
+drwxr-xr-x  3 ben-hannan  staff      96 Sep 23 23:25 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 23 23:50 arm_lisC.jsonl
+-rw-r--r--  1 ben-hannan  staff   97096 Sep 24 00:28 arm_lisG.jsonl
+-rw-r--r--  1 ben-hannan  staff   97101 Sep 24 00:09 arm_lisS.jsonl
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122 weights)
+[✓] Checks: SEAL, lis301 sha, uptime, disk
+[✓] Run three arms (lisC, lisS, lisG) on DEV bank
+[•] Score runs and write RESULTS.md
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-dev-20260924 --runs artifacts/claude-lis-e2edev-20260924/run/arm_lisC.jsonl artifacts/claude-lis-e2edev-20260924/run/arm_lisS.jsonl artifacts/claude-lis-e2edev-20260924/run/arm_lisG.jsonl --out artifacts/claude-lis-e2edev-20260924/scored 2>&1 | tail -n 20; echo "SCORE_RC=$?"
+{"arm": "lisC", "asks": {"ALL": {"ABSTAIN": 51, "CONFIRM_OTHER": 8, "RIGHT": 10, "WRONG_CANDIDATE": 2}, "edit": {"ABSTAIN": 7, "CONFIRM_OTHER": 2, "WRONG_CANDIDATE": 1}, "never_told": {"RIGHT": 10}, "one_hop": {"ABSTAIN": 14, "CONFIRM_OTHER": 1, "WRONG_CANDIDATE": 1}, "partial": {"ABSTAIN": 4, "CONFIRM_OTHER": 1}, "reversal": {"ABSTAIN": 8, "CONFIRM_OTHER": 2}, "two_hop": {"ABSTAIN": 9, "CONFIRM_OTHER": 2}, "yesno": {"ABSTAIN": 9}}, "clarify_replies": 103, "confirm_rows": 75, "creative_turns": 10, "creative_turns_with_writes": 0, "day1_saved_facts": 27, "day1_saved_facts_kept_at_end": 27, "distinct_replies": 93, "facts_saved": 49, "facts_total": 131, "most_common_reply_count": 55, "ms_median": 2337.1, "ms_p90": 18121.8, "new_triples": 50, "new_triples_owner_value_unsupported": 1, "nosave_turns_with_writes": 0, "user_rows": 194}
+{"arm": "lisS", "asks": {"ALL": {"ABSTAIN": 42, "CONFIRM_OTHER": 7, "RIGHT": 12, "RIGHT_CONFIRM": 3, "WRONG_CANDIDATE": 7}, "edit": {"ABSTAIN": 3, "CONFIRM_OTHER": 4, "RIGHT": 1, "RIGHT_CONFIRM": 1, "WRONG_CANDIDATE": 1}, "never_told": {"RIGHT": 10}, "one_hop": {"ABSTAIN": 12, "RIGHT": 1, "RIGHT_CONFIRM": 2, "WRONG_CANDIDATE": 1}, "partial": {"ABSTAIN": 3, "CONFIRM_OTHER": 1, "WRONG_CANDIDATE": 1}, "reversal": {"ABSTAIN": 9, "CONFIRM_OTHER": 1}, "two_hop": {"ABSTAIN": 6, "CONFIRM_OTHER": 1, "WRONG_CANDIDATE": 4}, "yesno": {"ABSTAIN": 9}}, "clarify_replies": 95, "confirm_rows": 33, "creative_turns": 10, "creative_turns_with_writes": 0, "day1_saved_facts": 19, "day1_saved_facts_kept_at_end": 19, "distinct_replies": 70, "facts_saved": 34, "facts_total": 131, "most_common_reply_count": 47, "ms_median": 2455.8, "ms_p90": 15024.8, "new_triples": 35, "new_triples_owner_value_unsupported": 0, "nosave_turns_with_writes": 0, "user_rows": 194}
+{"arm": "lisG", "asks": {"ALL": {"ABSTAIN": 42, "CONFIRM_OTHER": 7, "RIGHT": 12, "RIGHT_CONFIRM": 3, "WRONG_CANDIDATE": 7}, "edit": {"ABSTAIN": 3, "CONFIRM_OTHER": 4, "RIGHT": 1, "RIGHT_CONFIRM": 1, "WRONG_CANDIDATE": 1}, "never_told": {"RIGHT": 10}, "one_hop": {"ABSTAIN": 12, "RIGHT": 1, "RIGHT_CONFIRM": 2, "WRONG_CANDIDATE": 1}, "partial": {"ABSTAIN": 3, "CONFIRM_OTHER": 1, "WRONG_CANDIDATE": 1}, "reversal": {"ABSTAIN": 9, "CONFIRM_OTHER": 1}, "two_hop": {"ABSTAIN": 6, "CONFIRM_OTHER": 1, "WRONG_CANDIDATE": 4}, "yesno": {"ABSTAIN": 9}}, "clarify_replies": 95, "confirm_rows": 33, "creative_turns": 10, "creative_turns_with_writes": 0, "day1_saved_facts": 19, "day1_saved_facts_kept_at_end": 19, "distinct_replies": 70, "facts_saved": 34, "facts_total": 131, "most_common_reply_count": 47, "ms_median": 2295.0, "ms_p90": 11787.2, "new_triples": 35, "new_triples_owner_value_unsupported": 0, "nosave_turns_with_writes": 0, "user_rows": 194}
+SCORE_RC=0
+[0m
+[0m$ [0mls artifacts/claude-lis-e2edev-20260924/scored/; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 python -B -c "
+import json,statistics
+for n in ['lisC','lisS','lisG']:
+    rows=[json.loads(x) for x in open(f'artifacts/claude-lis-e2edev-20260924/run/arm_{n}.jsonl')]
+    u=[r['ms'] for r in rows if r['kind']=='user']
+    s=sorted(u); print(n,'n=',len(u),'median=',round(statistics.median(u),1),'p90=',round(s[int(0.9*(len(s)-1))],1),'max=',round(max(u),1))
+"
+grammar_lisC.jsonl
+grammar_lisG.jsonl
+grammar_lisS.jsonl
+judge_asks_lisC.jsonl
+judge_asks_lisG.jsonl
+judge_asks_lisS.jsonl
+judge_saves_lisC.jsonl
+judge_saves_lisG.jsonl
+judge_saves_lisS.jsonl
+mechanical.json
+lisC n= 194 median= 2337.1 p90= 18121.8 max= 76212.7
+lisS n= 194 median= 2455.8 p90= 15024.8 max= 64918.3
+lisG n= 194 median= 2295.0 p90= 11787.2 max= 48063.6
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch python -B -c "import torch,platform; print('cuda=',torch.cuda.is_available(),'mps=',torch.backends.mps.is_available(),'platform=',platform.platform())"; cat artifacts/claude-lis-e2edev-20260924/scored/mechanical.json | head -n 5; uptime; df -g / | head -n 2
+/Users/ben-hannan/.cache/uv/archive-v0/KMJLwdOK5ZmuYtAH/lib/python3.12/site-packages/torch/_subclasses/functional_tensor.py:368: UserWarning: Failed to initialize NumPy: No module named 'numpy' (Triggered internally at /Users/runner/work/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+  cpu = _conversion_method_template(device=torch.device("cpu"))
+cuda= False mps= True platform= macOS-27.0-arm64-arm-64bit
+[
+ {
+  "arm": "lisC",
+  "asks": {
+   "ALL": {
+ 0:30  up 14:23, 4 users, load averages: 13.26 16.10 18.33
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        59    18%  484014 628305720    0%   /
+[0m
+[0m$ [0mcp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisC.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisS.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisG.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/ && mkdir -p /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/scored && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/grammar_lisC.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/grammar_lisS.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/grammar_lisG.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_asks_lisC.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_asks_lisS.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_asks_lisG.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_saves_lisC.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_saves_lisS.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/judge_saves_lisG.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/scored/mechanical.json /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/scored/ && ls -la /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/scored/
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/:
+total 648
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 24 00:30 .
+drwxr-xr-x  4 ben-hannan  staff     128 Sep 24 00:30 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 24 00:30 arm_lisC.jsonl
+-rw-r--r--  1 ben-hannan  staff   97096 Sep 24 00:30 arm_lisG.jsonl
+-rw-r--r--  1 ben-hannan  staff   97101 Sep 24 00:30 arm_lisS.jsonl
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/scored/:
+total 264
+drwxr-xr-x  12 ben-hannan  staff    384 Sep 24 00:30 .
+drwxr-xr-x   4 ben-hannan  staff    128 Sep 24 00:30 ..
+-rw-r--r--   1 ben-hannan  staff   7620 Sep 24 00:30 grammar_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff   4791 Sep 24 00:30 grammar_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff   4791 Sep 24 00:30 grammar_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff    423 Sep 24 00:30 judge_asks_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff   1278 Sep 24 00:30 judge_asks_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff   1278 Sep 24 00:30 judge_asks_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff  35843 Sep 24 00:30 judge_saves_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff  26532 Sep 24 00:30 judge_saves_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff  26532 Sep 24 00:30 judge_saves_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff   3327 Sep 24 00:30 mechanical.json
+[0m
+[0m$ [0mshasum -a 256 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/*.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/*.jsonl
+93620881f0c74c18f8082ff1fafe7bf0dfc4020140979f9fada490c011f778ba  /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/arm_lisC.jsonl
+eb1ab90f4c9f408d31f3926a7855285c5a6b9f1d8da74b4e27049d3462af6091  /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/arm_lisG.jsonl
+7fd531f922c71e76d9bc9ce6c1217237898ded7ca55872b9ad07b744461664fb  /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis-e2edev-20260924/run/arm_lisS.jsonl
+93620881f0c74c18f8082ff1fafe7bf0dfc4020140979f9fada490c011f778ba  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisC.jsonl
+eb1ab90f4c9f408d31f3926a7855285c5a6b9f1d8da74b4e27049d3462af6091  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisG.jsonl
+7fd531f922c71e76d9bc9ce6c1217237898ded7ca55872b9ad07b744461664fb  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lise2e/artifacts/claude-lis-e2edev-20260924/run/arm_lisS.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-lis-e2edev-20260924/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la artifacts/claude-lis-e2edev-20260924/ artifacts/claude-lis-e2edev-20260924/run/ artifacts/claude-lis-e2edev-20260924/scored/; git status --short | grep -e lis-e2edev | head -n 20
+artifacts/claude-lis-e2edev-20260924/:
+total 16
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 24 00:30 .
+drwxr-xr-x@ 469 ben-hannan  staff  15008 Sep 24 00:21 ..
+-rw-r--r--    1 ben-hannan  staff   6354 Sep 24 00:30 RESULTS.md
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 24 00:30 run
+drwxr-xr-x   12 ben-hannan  staff    384 Sep 24 00:30 scored
+
+artifacts/claude-lis-e2edev-20260924/run/:
+total 648
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 24 00:30 .
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 24 00:30 ..
+-rw-r--r--  1 ben-hannan  staff  131933 Sep 24 00:30 arm_lisC.jsonl
+-rw-r--r--  1 ben-hannan  staff   97096 Sep 24 00:30 arm_lisG.jsonl
+-rw-r--r--  1 ben-hannan  staff   97101 Sep 24 00:30 arm_lisS.jsonl
+
+artifacts/claude-lis-e2edev-20260924/scored/:
+total 264
+drwxr-xr-x  12 ben-hannan  staff    384 Sep 24 00:30 .
+drwxr-xr-x   5 ben-hannan  staff    160 Sep 24 00:30 ..
+-rw-r--r--   1 ben-hannan  staff   7620 Sep 24 00:30 grammar_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff   4791 Sep 24 00:30 grammar_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff   4791 Sep 24 00:30 grammar_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff    423 Sep 24 00:30 judge_asks_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff   1278 Sep 24 00:30 judge_asks_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff   1278 Sep 24 00:30 judge_asks_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff  35843 Sep 24 00:30 judge_saves_lisC.jsonl
+-rw-r--r--   1 ben-hannan  staff  26532 Sep 24 00:30 judge_saves_lisG.jsonl
+-rw-r--r--   1 ben-hannan  staff  26532 Sep 24 00:30 judge_saves_lisS.jsonl
+-rw-r--r--   1 ben-hannan  staff   3327 Sep 24 00:30 mechanical.json
+[0m
+[0m$ [0mgit status --short artifacts/claude-lis-e2edev-20260924 | head -n 20
+(no output)
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis-e2edev-20260924/RESULTS.md; echo "RC=$?"; head -n 20 .gitignore
+.gitignore:5:artifacts/	artifacts/claude-lis-e2edev-20260924/RESULTS.md
+RC=0
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+[0m
+[0m# [0mTodos
+[✓] Build combined tree (builder-outbox + main overlay + self122 weights)
+[✓] Checks: SEAL, lis301 sha, uptime, disk
+[✓] Run three arms (lisC, lisS, lisG) on DEV bank
+[✓] Score runs and write RESULTS.md
+[0m
