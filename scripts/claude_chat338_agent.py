@@ -4,7 +4,8 @@
 One change on a 292-lineage loop: install_chat338(loop, gen) wraps loop.turn. Every turn goes to
 the wrapped turn first, so saving, confirming and answering from the notebook are unchanged. Only
 when the wrapped turn gave up (its reply contains a CLARIFY marker, the fixed list the 336 scorer
-uses, or is one of the two canned instruction lines in CANNED338) AND changed nothing (no
+uses, or is one of the two canned instruction lines in CANNED338, or is 292's "I don't know anyone
+called <lowercase topic>." on a turn that is not about the user's own life) AND changed nothing (no
 notebook event, same lis-314 pending store, no confirm question open) does 338 replace that
 reply with ordinary conversation from the shared MiniCPM5-1B.
 
@@ -16,8 +17,8 @@ The chat phase:
      G1 no memory claims ("I'll remember", "noted", ...): nothing was saved this turn;
      G2 no invented people: "your <relation> <Name>" or "<Name>, your <relation>" with a Name
         found neither in the facts, the history nor the turn;
-     G3 personal questions (the turn says my/I and asks something): every capitalised word after
-        the first word and every number in the reply must be found in the facts, history or turn;
+     G3 personal questions (the turn says my/I and asks something) and topic misses: every capitalised
+        word after the first word and every number in the reply must be found in the facts, history or turn;
      G4 length: 1 to 90 words after trimming to the last full sentence, and no <think> text.
   3. If no sample passes, the wrapped turn's reply stays (fail closed).
 Nothing produced here is saved to the notebook. Counters in loop.chat338_stats.
@@ -63,7 +64,7 @@ def gave_up(reply: str) -> bool:
 
 def personal_question(text: str) -> bool:
     low = text.lower()
-    return bool(re.search(r"\b(my|mine|me|i|i'm|i've|i'd)\b", low)) and (
+    return bool(re.search(r"\b(my|mine|i|i'm|i've|i'd)\b", low)) and (
         "?" in low or re.match(r"\s*(what|who|where|when|which|how|do|did|does|is|was|are|remind|tell)\b", low)
         is not None)
 
@@ -83,7 +84,23 @@ def trim(c: str) -> str:
     return c.strip()
 
 
-def guard(c: str, text: str, known: set[str]) -> str | None:
+ANYONE338 = re.compile(r"^I don't know anyone called ([a-z][a-z' ]*)\.$")   # 292's lookup miss on a lowercase topic
+
+
+def topic_miss(reply: str, text: str) -> bool:
+    """292 read a general topic ("tell me about clouds") as a person lookup and missed. Never on a
+    question about the user's own life, never when the missed word is capitalised (a name)."""
+    m = ANYONE338.match(reply.strip())
+    if m is None or personal_question(text):
+        return False
+    low, x = text.lower(), re.escape(m.group(1).strip())
+    if re.match(r"\s*(who|where|when|whose|how old)\b", low) or \
+            re.search(r"\b(does|did|is|was|has|have)\s+" + x + r"\b", low) or re.search(x + r"'s\b", low):
+        return False                                   # reads like a question about a person: keep "I don't know"
+    return True
+
+
+def guard(c: str, text: str, known: set[str], strict: bool = False) -> str | None:
     """None if c passes, else the name of the first guard it fails."""
     low = c.lower()
     n = len(c.split())
@@ -97,7 +114,7 @@ def guard(c: str, text: str, known: set[str]) -> str | None:
     for m in re.finditer(r"\b([A-Z][a-z]+),? (?:is )?your (?:" + RELATIONS + r")\b", c):
         if m.group(1).lower() not in known:
             return "G2"
-    if personal_question(text):
+    if strict or personal_question(text):
         toks = re.findall(r"(?<![.!?]\s)(?<!^)\b([A-Z][a-z]+|\d+)\b", c)
         import claude_cre333_agent as C
         if any(t.lower() not in known and t not in C.ALLOW for t in toks):
@@ -129,7 +146,8 @@ def install_chat338(loop, gen, n: int = N338) -> None:
         parts = inner(text)
         reply = " ".join(p for p in (parts or []) if p)
         out = parts
-        if (gave_up(reply) and len(loop.nb.events) == ev0 and pending() == p0
+        miss = topic_miss(reply, text)
+        if ((gave_up(reply) or miss) and len(loop.nb.events) == ev0 and pending() == p0
                 and getattr(loop, "lis314_confirming", None) is None):
             loop.chat338_stats["gave_up"] += 1
             ctx = C.context_facts(loop, text)
@@ -142,7 +160,7 @@ def install_chat338(loop, gen, n: int = N338) -> None:
             pick = None
             for c in gen.sample_chat(msgs, n):
                 c = trim(c)
-                g = guard(c, text, known)
+                g = guard(c, text, known, strict=miss)
                 if g is None:
                     pick = c
                     break

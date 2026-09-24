@@ -3,7 +3,8 @@
 
 Layer order, inner to outer (fixed here; every piece is imported read-only):
   292t base -> install298 (multi-valued middle hop, reasoner wrapper)
-  -> 274 listen-first step order -> listener stack G (310 + 313 + 315 + 314 + 316, one read per turn)
+  -> 274 listen-first step order -> listener stack G, version b (310 + 313b + 315 + 314b + 316, one read
+     per turn; claude_lis_stackb keeps the reader in a closure so 292t's snapshot never copies the 1B)
   -> 274 reply-first turn (sleep never delays a reply) -> 334 sleep agenda
   -> 333 creative (outside the reader: a creative request is never read or saved)
   -> [mouth, own line, 330b] -> [nb-323 turn log, installed last, 330c]
@@ -49,8 +50,8 @@ def _base(state_dir, args):
 
 
 def build_330a(state_dir, args):
-    import claude_lis_stack as STACK
-    import claude_lis_e2e_arms as LE
+    import claude_lis_stackb as STACK          # b: reader kept in a closure (no per-turn weight copy)
+    import claude_lis_e2e_armsb as LE
     import claude_loop274_agent as L274
     loop = _base(state_dir, args)
     STACK.build_stack(loop, LE._reader(args.model), THRESHOLD,
