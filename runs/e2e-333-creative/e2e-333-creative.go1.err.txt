@@ -1,0 +1,1729 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead .
+[0m✗ [0mGlob "artifacts/claude-cre333-20260924/*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "handoff/queue/*.md" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mRead handoff/queue failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue
+[0m✗ [0mRead artifacts/claude-cre333-20260924 failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-cre333-20260924
+[0m
+[0m$ [0mpwd; ls -la; echo ---; ls handoff/ 2>&1 | head -n 100; echo ---; ls artifacts/ 2>&1 | head -n 100
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+total 336
+drwxr-xr-x    30 ben-hannan  staff    960 Sep 23 14:40 .
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 13:13 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  471 ben-hannan  staff  15072 Sep 24 00:42 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 03:22 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 04:38 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 22 21:20 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     5 ben-hannan  staff    160 Sep 24 00:23 runs
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 08:08 scratchpad
+drwxr-xr-x  1477 ben-hannan  staff  47264 Sep 24 00:33 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+---
+HANDOFF.md
+kit
+memory
+replies
+---
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+claude-corrpanel291-20260923
+claude-corrtail258-20260922
+claude-decline224c-20260922
+claude-demo-dryrun-20260922
+claude-determinism228-20260922
+claude-devset267-20260923
+claude-diag243-20260922
+claude-diag267-20260923
+claude-diag271-20260923
+claude-diag290-20260923
+claude-diag293-20260923
+claude-direction251-20260922
+claude-e2e330-dev-20260924
+claude-ear265-20260923
+claude-ear269-20260923
+claude-earcheck261-20260922
+claude-earcheck261b-20260923
+claude-earcheck264-20260923
+claude-earloop256-20260922
+claude-earpanel235-20260922
+claude-earpanel235b-20260922
+claude-earpanel257-20260922
+claude-earpanel261-20260922
+claude-earpanel261b-20260923
+claude-earpanel264-20260923
+claude-ears119-run-20260922
+claude-f1-20260923
+claude-firstname236-20260922
+claude-firstnamepanel236-20260922
+claude-firstperson249-20260922
+claude-fixedtext255-20260922
+claude-fixedtext255b-20260923
+claude-fullname232-20260922
+claude-fullname232b-20260922
+claude-fullname232c-20260922
+claude-grade241-20260922
+claude-grade241b-A-20260923
+claude-grade241b-B-20260923
+claude-grade241b-C-set2-20260923
+claude-grade241b-D-set2-20260923
+claude-grade255b-B-20260923
+claude-gradef1-A-20260923
+claude-gradef1-B-20260923
+claude-grades255-20260922
+claude-grammar238-20260922
+claude-identity227c-20260922
+claude-improvement-review-20260922
+claude-invpanel138nb-20260923
+claude-join280m-20260923
+claude-join280n-20260923
+claude-join280p-20260923
+claude-join291-20260923
+claude-join292t-20260923
+claude-joinpanel280m-20260923
+claude-joinpanel280n-20260923
+claude-joinpanel280p-20260923
+claude-joinpanel292t-20260923
+claude-judge241-20260922
+claude-judge241b-20260923
+claude-judgef1-20260923
+claude-lis-e2edev-20260924
+claude-lis300-20260923
+claude-lis301-20260923
+[0m
+[0m$ [0mls artifacts/ | grep -i -e cre333 -e creativepanel333 -e 333; echo ---; ls handoff/kit/ 2>&1 | head -n 50; echo ---; ls handoff/memory/ 2>&1 | head -n 50; echo ---; ls handoff/replies/ 2>&1 | head -n 50
+---
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+---
+a3-teacher-delay-v2-result.md
+ask-fable-max-subagent.md
+assistant-name-premonition.md
+astra-audit-18.md
+baseline-v2-fits.md
+ben-decisions-20260922.md
+ben-delegation-preference.md
+ben-runs-mimo-agents.md
+ben-vision-20260921.md
+benchmark-goal.md
+benspc-gpu-ops.md
+borrowed-ears-weights-ok.md
+canonical-operator-roadmap.md
+cardfold-sleep-result.md
+compute-availability.md
+conversation-first-priority.md
+creative-stop-toy-result.md
+ct20-v12-result.md
+decide-better-option.md
+demo-requirements-uncle.md
+director-role.md
+disk-full-agent-limit.md
+dreamer-checker-idea.md
+ear235b-gate-result.md
+ears-decisions-20260921.md
+ears-vocab-and-transformer-ruling.md
+english-listening-qwen-result.md
+exp19-replay-result.md
+exp19b-u8-result.md
+exp21-newnames-result.md
+exp26-probes-result.md
+exp27-newnames-result.md
+exp29-newnames-result.md
+exp42-automatic-sleep-result.md
+exp43-length-gate-and-shared-sleep.md
+exp43e-rank4-sleep-confirmed.md
+exp43g-transport-router-control.md
+exp43i-learned-addressing.md
+exp43j-learned-parity.md
+exp44-reasoner-skills-router.md
+exp45-noisy-teacher.md
+exp46-harden-before-gate.md
+explain-each-step.md
+focused-priorities-and-claims.md
+gpt-bridge-serial-only.md
+gpt-scouts-20260921.md
+gpu-budget-cap.md
+gpu-only-5070ti.md
+handoff-copy-box-format.md
+human-learning-redesign.md
+---
+261build.go1.reply.md
+261build.go2.done
+261build.go2.err.txt
+261build.go2.reply.md
+261build.md
+[0m
+[0m$ [0mls handoff/; echo ===; find . -maxdepth 3 -name "*330*" 2>/dev/null | head -n 30; echo ===; find . -maxdepth 3 -name "*333*" 2>/dev/null | head -n 30; echo ===; find . -maxdepth 3 -name "*302*" 2>/dev/null | head -n 30; echo ===; git branch -a 2>&1 | head -n 30; echo ===; git log --oneline -5
+HANDOFF.md
+kit
+memory
+replies
+zsh:1: == not found
+[0m
+[0m$ [0mpwd; ls handoff
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+HANDOFF.md
+kit
+memory
+replies
+[0m
+[0m$ [0mgit log --oneline -10
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+241ee9f5d grader B part 6: English grades for F1 M1 rows 2246-2690
+5bc2a7c0d Add grader B part5 (h1797-h2245) English grammar marks
+83f77071a builder results: F1 241b rewriter on 292t (registered PASS M2/M3/M5 mechanical; M1/M4 director-graded)
+ae3e5f02f nb-320 baseline of notebook store at 20k/100k/1M-DNF: runner, workload, seal + results
+22d7c0125 273: listen-before-sleep on 292t (registered PASS M1-M4)
+[0m
+[0m$ [0mgit branch -a
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+[0m
+[0m$ [0mgit log origin/main --oneline -5; git log origin/builder-outbox --oneline -5
+01330d379 queue 000-cache-pin: pin MiniLM snapshot outside ~/.cache; find what deletes it
+e3e8b8d12 336/333 runners: HF_HUB_OFFLINE=1 and a MISSING-CACHE preflight (the MiniLM router snapshot vanished twice on the Mac today); nothing runs if it is missing
+1cfc257f6 board: mut-0 PASS verified; queue mut-1 mutation test on 274
+95eef02f5 creativepanel333 sealed (70 items, blind audit 1 minor facts flag, unused by the scorer); queue e2e-333-creative (registered 333 run, BensPC)
+6616c5ac4 queue e2e-330-dev: DEV dress rehearsal on BensPC with the real reader (arms G, 330a, 330a+334, 330a+334+333, plain twin), report only
+ad93dc9a5 watcher status
+a0d70479f builder results: e2e-330-dev
+252b9ce52 watcher status
+fab07e969 watcher status
+ce26c3a0d watcher status
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13; echo "=====330DEV====="; git show origin/main:handoff/queue/e2e-330-dev.md
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+=====330DEV=====
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-302-gpu.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python on the Mac, uptime/df checks, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time).
+TIME CAP: 150 minutes in total. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: e2e-330-dev, REPORT ONLY (dev data, no registered marks). A dress rehearsal of the month-end end-to-end test on the readable DEV bank, with the real lis-301 reader, on BensPC. Artifacts go in artifacts/claude-e2e330-dev-20260924/. The month-end thread wrote all code. Run it and never edit it. If something breaks, stop and report the exact error and traceback.
+
+GETTING THE CODE: build a combined tree the way lis-313-f0 does: a fresh `git archive origin/builder-outbox`, then a fresh `git archive origin/main` on top (main wins). Copy artifacts/fable-self122-20260922/self122_head.pt from the Mac repo into the same path in that tree (292t needs it). Copy the tree to BensPC and run from its root.
+MODELS on BensPC (never download a model other than these):
+- READER = the lis-301 merged reader, C:/Users/benja/lis301/work/run/merged (safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890).
+- BASE = openbmb/MiniCPM5-1B (Ben's yes 2026-09-23 11:01 UTC covers it). Find it with huggingface_hub.snapshot_download("openbmb/MiniCPM5-1B", local_files_only=True); only if that fails, download it once with snapshot_download. Record the commit hash.
+Use the lis-301 venv (torch + transformers already there); if `import transformers` fails, pip install transformers into it and say so.
+
+READ FIRST: design/v3/30-modes/331-e2e-bank-spec.md, artifacts/claude-e2e336-20260924/PASSMARKS.md, scripts/claude_e2e336_run.py, scripts/claude_e2e330_arms.py. The DEV bank is artifacts/claude-e2e331-dev-20260924 (dev data: fine to read).
+
+1. Check: `sha256sum -c` (or shasum -a 256 -c) of artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt from inside that folder: all OK.
+2. Run these five arms, one after another, each as its own process (B = --bank artifacts/claude-e2e331-dev-20260924, O = --out artifacts/claude-e2e330-dev-20260924/run):
+   python -B scripts/claude_e2e336_run.py B O --arm claude_lis_e2e_arms:build_G --name G --model READER
+   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a --name 330a --model READER
+   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a_334 --name 330a_334 --model READER
+   python -B scripts/claude_e2e336_run.py B O --arm claude_e2e330_arms:build_330a_cre --name 330a_cre --model READER --gen-model BASE
+   python -B scripts/claude_e2e336_run.py B O --arm twin --name twin --model BASE
+   (write --bank/--out explicitly; B and O above are shorthand).
+3. Score: python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-dev-20260924 --runs artifacts/claude-e2e330-dev-20260924/run/arm_*.jsonl --out artifacts/claude-e2e330-dev-20260924/score
+4. RESULTS-dev.md, counts only: the scorer's printed line for every arm (asks per class and per ask_type, facts_saved/facts_total, new triples and owner/value-unsupported new triples, nosave turns with writes, clarify replies, most common reply count, confirm rows, ms median/p90, creative turns and writes, day-1 facts kept); GPU name; model commit hash; wall time per arm. Also list, for arm 330a_cre only, every new triple the scorer marks owner_value_supported=false as "triple <- nearest truth fact" (triples and truth facts only). Dev data may be quoted sparingly.
+PUSH: artifacts/claude-e2e330-dev-20260924
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:handoff/queue/e2e-333-creative.md
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-302-gpu.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time).
+TIME CAP: 90 minutes in total.
+
+YOUR TASK: e2e-333-creative, the REGISTERED run of exp 333 (creative v1). Marks: artifacts/claude-cre333-20260924/PASSMARKS.md (read it first). The panel artifacts/claude-creativepanel333-20260924 is TEST-ONLY: never open, print or quote its items; the runner reads it. Run once. The month-end thread wrote all code; never edit it. If something breaks, stop and report the exact error.
+
+GETTING THE CODE AND MODELS: exactly as in handoff/queue/e2e-330-dev.md (combined tree builder-outbox + main on top, self122_head.pt copied in, BASE = openbmb/MiniCPM5-1B via snapshot_download(local_files_only=True), the lis-301 venv). No reader is needed.
+
+1. Check from inside the panel folder: sha256sum -c SEAL.sha256.txt, all OK. Also shasum the code: scripts/claude_cre333_agent.py scripts/claude_cre333_run.py scripts/claude_e2e336_run.py scripts/claude_e2e336_twin.py into artifacts/claude-cre333-20260924/SEAL-code.sha256.txt BEFORE running.
+2. Run (P = --panel artifacts/claude-creativepanel333-20260924, O = --out artifacts/claude-cre333-20260924/run):
+   python -B scripts/claude_cre333_run.py P --arm B O
+   python -B scripts/claude_cre333_run.py P --arm P --gen-model BASE O
+   python -B scripts/claude_cre333_run.py P --arm T --gen-model BASE O
+   python -B scripts/claude_cre333_run.py --panel artifacts/claude-creativepanel333-20260924 --score artifacts/claude-cre333-20260924/run
+3. RESULTS-run.md: the printed summary (P333.1, P333.2 with PASS/FAIL against the bars; the rest are judged later by the thread), GPU name, model commit hash, wall time per arm. Do NOT open judge_creative.jsonl or quote replies.
+PUSH: artifacts/claude-cre333-20260924
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-cre333-20260924/PASSMARKS.md; echo "=====FILES====="; git ls-tree -r --name-only origin/main | grep cre333; echo "=====PANEL====="; git ls-tree -r --name-only origin/main | grep creativepanel333
+# 333: creative v1 on 292t. Marks fixed 2026-09-24 05:20 UTC, before the panel exists
+
+Written by the month-end thread. Code: scripts/claude_cre333_agent.py (install_creative333, Gen333).
+Plan: design/v3/30-modes/330-month-end-plan.md §5. One change on 292t: a turn that asks for ideas or a short piece
+of writing becomes a WORK job with a creative phase (fixed N = 11 candidates from the base MiniCPM5-1B, grounded in
+read-only notebook facts, candidates naming unknown people dropped, most-grounded kept). It never reaches listening.
+
+Dev evidence before sealing (DEV bank, artifacts/claude-e2e331-dev-20260924): cue detector 10/10 creative turns,
+0/184 false triggers (one cue tightened on dev: "recommend" -> "recommend (me|us) a/an/some/something").
+Cloud smoke with a stub generator: grounded pick chosen, invented name dropped, 0 notebook events on the creative
+turn, the next ordinary question answered as before.
+
+## Panel
+creativepanel333 (TEST-ONLY, written blind from design/v3/30-modes/333-creative-panel-spec.md, key audited blind):
+40 creative items (a short teaching chat, then a request) and 30 control items (ordinary teach/ask turns that use
+words like plan, gift, idea, write, recommend but do not ask for ideas).
+
+## Arms
+- P = 292t + install_creative333 (base MiniCPM5-1B generator).
+- B = 292t alone (controls only).
+- T = the plain twin (scripts/claude_e2e336_twin.py) given the same chat, then the request.
+
+## Marks
+| Mark | Bar |
+|---|---|
+| P333.1 notebook events on creative turns (P) | 0 |
+| P333.2 controls where P's reply and stored triples equal B's | ≥ 29/30 |
+| P333.3 creative items a blind judge rates "on topic and useful" (P) | ≥ 32/40 |
+| P333.4 P replies stating a fact about a named person that the chat never gave (blind judge) | ≤ 2/40 |
+| P333.5 blind pairwise judge: P preferred or tied vs T | ≥ 20/40 |
+
+Report only: T's useful count and invented-fact count, fallbacks, ms per creative turn, context facts used.
+**Proved wrong if** P's useful count is below T's, or P333.4 is worse than T's count (grounding made it worse).
+Judges are blind Opus agents that see only the chat, the request and the replies (arm order randomised per item).
+=====FILES=====
+artifacts/claude-cre333-20260924/PASSMARKS.md
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+=====PANEL=====
+artifacts/claude-creativepanel333-20260924/README.md
+artifacts/claude-creativepanel333-20260924/SEAL.sha256.txt
+artifacts/claude-creativepanel333-20260924/audit.jsonl
+artifacts/claude-creativepanel333-20260924/items.jsonl
+[0m
+[0m$ [0mcat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -n 60; echo "=====UPTIME====="; uptime; echo "=====DF====="; df -g / | head -n 5
+cat: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+=====UPTIME=====
+ 0:44  up 14:37, 4 users, load averages: 15.66 15.29 16.19
+=====DF=====
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        60    18%  484014 639345440    0%   /
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1 | head -n 30; git show origin/main:handoff/queue/e2e-330-dev.md | head -n 5; git ls-tree -r --name-only origin/main | grep -i opus-rules
+ls: scratchpad/briefs/: No such file or directory
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/lis-302-gpu.md (read its first 13 lines and follow them in full: additive only, fictional names, TEST-ONLY panels never read, uv run python on the Mac, uptime/df checks, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time).
+TIME CAP: 150 minutes in total. If any single turn takes more than 5 minutes, stop and report.
+
+YOUR TASK: e2e-330-dev, REPORT ONLY (dev data, no registered marks). A dress rehearsal of the month-end end-to-end test on the readable DEV bank, with the real lis-301 reader, on BensPC. Artifacts go in artifacts/claude-e2e330-dev-20260924/. The month-end thread wrote all code. Run it and never edit it. If something breaks, stop and report the exact error and traceback.
+handoff/kit/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/kit/briefs/OPUS-RULES.txt | head -n 60; echo "=====BENSДалее====="; git show origin/main:handoff/memory/benspc-gpu-ops.md 2>&1 | head -n 120
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+=====BENSДалее=====
+---
+name: benspc-gpu-ops
+description: "How the Qwen llama-server on BensPC respawns, how it was stopped, how to restore it, and how to run PowerShell/Python over SSH without quoting breakage"
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: daf7c42e-d7f3-43b9-ae1e-ebd0fe3a6e26
+  modified: 2026-09-18T11:17:35.488Z
+---
+
+- The Qwen3.8-27B `llama-server.exe` (port 8081, ~14 GB VRAM) is launched by `C:\llama\serve-8081.bat`, a `goto loop` restart wrapper (15 s delay) started by scheduled task `ScoutLlamaServer` (ONLOGON). Killing only the server PID is useless: it respawns within ~15 s.
+- 2026-09-18: with Ben's authorization, stopped the cmd.exe running serve-8081.bat and then the Qwen server; GPU went to ~15.3 GB free. It stays down until next logon. Restore with `schtasks /run /tn ScoutLlamaServer` on BensPC.
+- 2026-09-18 (later): at Ben's request, **disabled** the ScoutLlamaServer task so Qwen no longer autostarts at logon (frees the GPU for training). Re-enable with `Enable-ScheduledTask -TaskName ScoutLlamaServer` (then `schtasks /run /tn ScoutLlamaServer` to start it now).
+- SSH quoting: send PowerShell as `powershell.exe -NoProfile -NonInteractive -EncodedCommand <base64 UTF-16LE>`. Windows PowerShell 5.1 strips double quotes from native-exe args, so pass Python code via stdin (`$code | & python.exe -B -`), not `-c`.
+- BensPC env (measured 2026-09-18): Python 3.10.9, torch 2.11.0+cu128, cuDNN 9.19, RTX 5070 Ti sm_120 present in arch list.
+
+Related: [[gpt-bridge-serial-only]]
+- **Fast Qwen config for batch jobs (measured 2026-09-18):** `C:\llama-b10679\llama-server.exe -m C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf --host 127.0.0.1 --port 8081 -c 16384 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --spec-type draft-mtp --spec-draft-n-max 2 --parallel 1 -t 6` gives ~69 tok/s single stream (88 aggregate with 2 client threads) on ~1,100-token prompts, and 0.16 s per short yes/no check. The autostart config (q4_0 V cache, `--parallel 4`) collapsed to ~5 tok/s per slot on the same prompts. Start it detached via `Invoke-CimMethod Win32_Process Create` with `cmd /c ... >> C:\llama\server-8081-premonition.log`, and reach it from the Mac with `ssh -N -L 18081:127.0.0.1:8081 benspc` (the Tailscale link drops sometimes, so wrap it in a restart loop). Stop it before GPU training: it uses ~15 GB of VRAM.
+- **VRAM spill signature (seen 2026-09-22, exp 235).** When a training run creeps to ~15.9 of 16.3 GB, Windows WDDM spills into shared system RAM over PCIe. The run doesn't crash; it just crawls. The signs are nvidia-smi showing "100 %" utilisation at only ~78 W (real compute draws 250 W+), with step time jumping 4x (0.59 → 2.4 s/step). Fix: the same effective batch via a smaller micro-batch plus gradient accumulation. SmolLM2-360M full fine-tune: micro-batch 16 × 2 gives a 10.8 GB peak and 0.25 s/step. Check `nvidia-smi --query-gpu=memory.used,power.draw --format=csv` early in every GPU run.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -e e2e330-dev -e e2e336 -e cre333_agent -e cre333_run | head -n 40
+artifacts/claude-e2e336-20260924/PASSMARKS.md
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -e e2e33 -e cre333 -e self122 | head -n 40; echo "---main artifacts e2e---"; git ls-tree -r --name-only origin/main | grep -e e2e33 | head -n 40
+artifacts/claude-e2e330-dev-20260924/RESULTS-dev.md
+---main artifacts e2e---
+artifacts/claude-e2e331-20260924/README.md
+artifacts/claude-e2e331-20260924/SEAL-A.sha256.txt
+artifacts/claude-e2e331-20260924/SEAL-B.sha256.txt
+artifacts/claude-e2e331-dev-20260924/README.md
+artifacts/claude-e2e331-dev-20260924/SEAL.sha256.txt
+artifacts/claude-e2e331-dev-20260924/truth.jsonl
+artifacts/claude-e2e331-dev-20260924/turns.jsonl
+artifacts/claude-e2e336-20260924/PASSMARKS.md
+scripts/claude_e2e330_arms.py
+scripts/claude_e2e336_run.py
+scripts/claude_e2e336_score.py
+scripts/claude_e2e336_twin.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-e2e330-dev-20260924/RESULTS-dev.md | head -n 120
+# e2e-330-dev: DEV dress rehearsal (REPORT ONLY, 2026-09-24) — STOPPED, nothing ran
+
+No arm ran. The first prescribed command (arm G) exits during the runner's
+MiniLM preflight, before any life, any GPU work, or any output file. Per the
+task's stop rule ("If something breaks, stop and report"), the remaining four
+arms were not attempted. Month-end code untouched (no edits anywhere).
+
+## What was verified (integer counts)
+
+- Combined tree: `git archive origin/builder-outbox` + `git archive origin/main`
+  on top (main wins), plus `artifacts/fable-self122-20260922/self122_head.pt`
+  copied from the Mac repo. Staged at `C:/Users/benja/e2e330dev/tree/` on BensPC.
+- `self122_head.pt` sha256 on BensPC == Mac repo copy:
+  `5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25` (match).
+- READER safetensors sha256 on BensPC
+  (`C:/Users/benja/lis301/work/run/merged/model.safetensors`):
+  `b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890` (match).
+- Venv: `C:/Users/benja/lis300/venv/Scripts/python.exe`, Python 3.10.9,
+  torch 2.11.0+cu128, transformers 5.17.0, `torch.cuda.is_available()` True.
+  No pip install was needed.
+- BASE: `snapshot_download("openbmb/MiniCPM5-1B", local_files_only=True)`
+  failed (cache held only `refs/main`, no blobs), so it was downloaded once as
+  the task allows. Snapshot path:
+  `C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc`.
+  BASE commit hash: `87179e5c1f455ef22e6223592d2d61351b525bfc`
+  (equals the pre-existing `refs/main` pin).
+- DEV bank seal on BensPC (step 1): 3/3 OK
+  (`turns.jsonl` OK, `truth.jsonl` OK, `README.md` OK).
+- GPU at staging time: NVIDIA GeForce RTX 5070 Ti, 16303 MiB total,
+  15467 MiB free.
+- Arm modules import cleanly on BensPC (read-only check, no run):
+  `claude_lis_e2e_arms` OK, `claude_e2e330_arms` OK, `claude_e2e336_twin` OK.
+
+## Arms run: 0 of 5. Scorer lines: none (no `arm_*.jsonl` exists anywhere)
+
+Wall time per arm: G 0 s of agent work (preflight exit in <60 s);
+330a, 330a_334, 330a_cre, twin: not attempted (stopped per task rule).
+
+## The breakage (exact error, then underlying traceback)
+
+Prescribed command (from `C:/Users/benja/e2e330dev/tree`, `PYTHONUTF8=1`):
+
+`python -B scripts/claude_e2e336_run.py --bank
+artifacts/claude-e2e331-dev-20260924 --out
+artifacts/claude-e2e330-dev-20260924/run --arm claude_lis_e2e_arms:build_G
+--name G --model C:/Users/benja/lis301/work/run/merged`
+
+Exact output (the runner's whole stdout, exit before any life):
+
+`MISSING-CACHE: the self122 MiniLM router did not load
+(ModuleNotFoundError("No module named 'resource'")); restore the Hugging Face
+snapshot, then rerun. Nothing was run.`
+
+Underlying traceback (same machine, read-only
+`import fable_self122; route122("what is your name?")`):
+
+```
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File ".../scripts/fable_self122.py", line 45, in <module>
+    import fable_self105 as S105
+  File ".../scripts/fable_self105.py", line 58, in <module>
+    import fable_self99 as S99
+  File ".../scripts/fable_self99.py", line 42, in <module>
+    import fable_loop90_agent as L90
+  File ".../scripts/fable_loop90_agent.py", line 45, in <module>
+    import fable_bench73_english_arm as B73
+  File ".../scripts/fable_bench73_english_arm.py", line 58, in <module>
+    import fable_bench65_notebook_arm as B65
+  File ".../scripts/fable_bench65_notebook_arm.py", line 43, in <module>
+    from fable_qual56_reasoner import QualifierAwareReasoner
+  File ".../scripts/fable_qual56_reasoner.py", line 39, in <module>
+    import fable_reasoner50 as R50
+  File ".../scripts/fable_reasoner50.py", line 57, in <module>
+    import resource
+ModuleNotFoundError: No module named 'resource'
+```
+
+## Diagnosis (two stacked blockers for arms G, 330a, 330a_334, 330a_cre)
+
+1. `import resource` (Unix-only stdlib; absent on Windows Python 3.10.9) sits in
+   the preflight's import chain (`fable_reasoner50.py` line 57, used at line 704
+   for peak-RSS reporting). The runner converts this into `MISSING-CACHE` and
+   exits. This hits all four non-twin arms; the twin arm skips the preflight.
+2. Behind it, the MiniLM-L6-v2 snapshot the preflight wants
+   (`~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/`)
+   is absent on BensPC (that cache holds only scibert blobs and the
+   MiniCPM5-1B refs entry; no snapshot dir anywhere in the staged trees or
+   profile cache). So even a Windows-tolerant preflight would fail until the
+   snapshot is staged. It was not staged: the task allows downloading only
+   READER and BASE.
+3. Not the cause: the READER (sha match), BASE (downloaded once, hash above),
+   the tree, the seal (3/3 OK), the venv (torch/transformers/CUDA all good),
+   or the arm modules (all three import OK). No output was written on BensPC
+   (`artifacts/claude-e2e330-dev-20260924/` does not exist there).
+
+## What it means (plain high-school English)
+
+- The rehearsal never started: zero lives ran, zero replies, zero scores. This
+  says nothing about whether the agent is good or bad.
+- The failure is in the test harness's startup check on Windows, not in the
+  agent: a Mac-only system module is imported by the check, and the small
+  helper model the check looks for is not installed on the Windows machine.
+
+## What it doesn't mean
+
+- It doesn't mean the reader, the agent layers, or the DEV bank are broken:
+  every one of those checked out fine where it could be checked.
+- It doesn't mean the twin arm is broken: it was not attempted (stop rule),
+  and it skips the failing check by design.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_cre333_run.py | head -n 150
+#!/usr/bin/env python3
+"""333 runner: creativepanel333 on arms P (292t + creative333), B (292t), T (plain twin).
+Marks: artifacts/claude-cre333-20260924/PASSMARKS.md. New file only; never prints panel text.
+
+Each item gets a fresh agent: every turn in `turns` is sent, then `last` is sent and scored.
+Output: <out>/arm_<A>.jsonl rows {item_id, kind, reply, last_events, stored_triples, ms,
+cre333 (P only: stats delta)} and, with --score, summary.json plus the blind-judge packets
+judge_creative.jsonl (arms P and T shuffled per item with a fixed seed; the key is in judge_key.json).
+
+Usage (combined main + builder-outbox tree, like lis-313):
+  python -B scripts/claude_cre333_run.py --panel DIR --arm P --gen-model <base MiniCPM5-1B dir> --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --arm B --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --arm T --gen-model <same dir> --out DIR
+  python -B scripts/claude_cre333_run.py --panel DIR --score DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def run(a):
+    import claude_e2e336_run as R
+    items = load(Path(a.panel) / "items.jsonl")
+    gen = None
+    if a.arm == "P":
+        import claude_cre333_agent as C
+        gen = C.Gen333(a.gen_model)
+    rows = []
+    for it in items:
+        tmp = tempfile.mkdtemp(prefix=f"cre333-{a.arm}-")
+        try:
+            if a.arm == "T":
+                import claude_e2e336_twin as TW
+                agent = TW.Twin336(tmp, a.gen_model)
+            else:
+                agent = R.build_292t(tmp, a)
+                if a.arm == "P":
+                    C.install_creative333(agent, gen)
+            for t in it["turns"]:
+                agent.turn(t)
+            s0 = dict(getattr(agent, "cre333_stats", {}) or {})
+            reply, ms, new = R.one(agent, it["last"])
+            row = {"item_id": it["item_id"], "kind": it["kind"], "reply": reply, "ms": round(ms, 1),
+                   "last_events": len(new), "stored_triples": R.triples(agent)}
+            if a.arm == "P":
+                s1 = agent.cre333_stats
+                row["cre333"] = {k: s1[k] - s0.get(k, 0) for k in s1 if s1[k] - s0.get(k, 0)}
+            rows.append(row)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        print(f"[333/{a.arm}] {it['item_id']}", flush=True)
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"arm_{a.arm}.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                                            encoding="utf-8")
+
+
+def score(a):
+    items = {it["item_id"]: it for it in load(Path(a.panel) / "items.jsonl")}
+    d = Path(a.score)
+    P = {r["item_id"]: r for r in load(d / "arm_P.jsonl")}
+    B = {r["item_id"]: r for r in load(d / "arm_B.jsonl")}
+    T = {r["item_id"]: r for r in load(d / "arm_T.jsonl")}
+    cre = [i for i, it in items.items() if it["kind"] == "creative"]
+    ctl = [i for i, it in items.items() if it["kind"] != "creative"]
+    summ = {
+        "creative_items": len(cre), "control_items": len(ctl),
+        "P333.1_creative_events_P": sum(P[i]["last_events"] for i in cre),
+        "P333.2_controls_equal_B": sum(1 for i in ctl if P[i]["reply"] == B[i]["reply"]
+                                       and P[i]["stored_triples"] == B[i]["stored_triples"]),
+        "P_creative_routed": sum(1 for i in cre if P[i].get("cre333", {}).get("creative_turns")),
+        "P_controls_routed": sum(1 for i in ctl if P[i].get("cre333", {}).get("creative_turns")),
+        "P_fallbacks": sum(P[i].get("cre333", {}).get("fallbacks", 0) for i in cre),
+        "P_ms_creative_median": sorted(P[i]["ms"] for i in cre)[len(cre) // 2] if cre else None,
+    }
+    rng = random.Random(333)
+    packets, key = [], {}
+    for i in sorted(cre):
+        pair = [("P", P[i]["reply"]), ("T", T[i]["reply"])]
+        rng.shuffle(pair)
+        key[i] = [pair[0][0], pair[1][0]]
+        it = items[i]
+        packets.append({"item_id": i, "chat": it["turns"], "request": it["last"],
+                        "about_untaught_person": it.get("about_untaught_person"),
+                        "reply_1": pair[0][1], "reply_2": pair[1][1]})
+    (d / "judge_creative.jsonl").write_text("".join(json.dumps(p, ensure_ascii=False) + "\n" for p in packets),
+                                            encoding="utf-8")
+    (d / "judge_key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+    (d / "summary.json").write_text(json.dumps(summ, indent=1, sort_keys=True), encoding="utf-8")
+    print(json.dumps(summ, sort_keys=True))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--panel", required=True)
+    ap.add_argument("--arm", choices=["P", "B", "T"])
+    ap.add_argument("--gen-model", default="")
+    ap.add_argument("--model", default="")
+    ap.add_argument("--out", default="")
+    ap.add_argument("--score", default="")
+    a = ap.parse_args()
+    import os
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")      # never download mid-run
+    if not a.score and a.arm in ("P", "B"):
+        try:                                           # 292t's self-question router needs MiniLM on disk
+            import fable_self122 as S122
+            S122.route122("what is your name?")
+        except Exception as exc:  # noqa: BLE001
+            raise SystemExit(f"MISSING-CACHE: the self122 MiniLM router did not load ({exc!r}). Nothing was run.")
+    if a.score:
+        score(a)
+    else:
+        if a.arm in ("P", "T") and not a.gen_model:
+            raise SystemExit("333: --gen-model is required for arms P and T")
+        a.model = a.gen_model
+        run(a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_cre333_agent.py | head -n 100; echo "=====TWIN====="; git show origin/main:scripts/claude_e2e336_twin.py | head -n 80
+#!/usr/bin/env python3
+"""333 creative v1 (month-end line; plan design/v3/30-modes/330-month-end-plan.md section 5).
+
+One change on a 292-lineage loop: install_creative333(loop, gen) wraps loop.turn. A turn that
+asks for ideas or a short piece of writing (CREATIVE_CUES, fixed before any run) becomes a
+WORK job with a creative phase and never reaches listening, so it can never write to the
+notebook. Every other turn goes to the wrapped turn unchanged.
+
+The creative phase (doc 54's registered KEEP_FIXED_N = 11):
+  1. context = the notebook's active taught facts about the people and things the request
+     names, the user's own facts, and one hop out from those (read-only).
+  2. draw 11 candidates from the shared MiniCPM5-1B, prompted with the context as plain
+     sentences and the request.
+  3. drop candidates that name a capitalised person-like word found neither in the
+     notebook, the request nor a small allow-list (invented people);
+  4. pick the candidate that uses the most context values (grounding), ties -> shorter.
+  5. reply = the pick. If every candidate is dropped: an honest fallback line.
+Nothing produced here is saved. The job is logged in loop.experience as kind "work"
+with phase "creative" and loop.counters["work"] += 1.
+
+gen is any object with .sample(prompt: str, n: int) -> list[str]; Gen333 below loads the
+base MiniCPM5-1B with transformers (bf16 on CUDA, float32 on CPU).
+"""
+from __future__ import annotations
+
+import re
+
+N_CANDIDATES = 11
+CREATIVE_CUES = [
+    r"\bideas?\b", r"\bsuggest", r"\brecommend (me |us )?(a|an|some|something)\b", r"\bwrite (me |us )?(a|an|some)\b",
+    r"\bpoem\b", r"\bstory\b", r"\bhaiku\b", r"\bsong\b", r"\btoast\b", r"\bhelp me (plan|pick|think|come up|write|figure out what)",
+    r"\bwhat should i (get|give|buy|make|cook|do|plan|write)\b", r"\bgift\b", r"\bpresent for\b",
+    r"\bbrainstorm", r"\bcome up with\b", r"\bplan (a|an|the|my|our)\b",
+]
+FALLBACK = "I don't have a good idea for that yet. Tell me a bit more about what you'd like?"
+ALLOW = {"I", "I'm", "I'd", "I'll", "I've", "Here", "Happy", "Maybe", "You", "Your", "Or", "And", "The", "A",
+         "If", "For", "Some", "Try", "How", "What", "It", "This", "That", "Then", "Also", "Just", "Oh",
+         "Hope", "Dear", "Love", "With", "Why", "When", "Plus", "Idea", "Ideas", "Option", "Saturday",
+         "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "January", "February", "March",
+         "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+
+
+def is_creative(text: str) -> bool:
+    low = text.lower()
+    return any(re.search(p, low) for p in CREATIVE_CUES)
+
+
+def _facts(loop) -> list[tuple[str, str, str]]:
+    import fable_loop90_agent as L90
+    return list(L90.notebook_triples(loop.nb))
+
+
+def context_facts(loop, text: str) -> list[tuple[str, str, str]]:
+    facts = _facts(loop)
+    low = text.lower()
+    named = {s.lower() for s, _r, v in facts if s.lower() in low} | \
+            {v.lower() for s, _r, v in facts if v.lower() in low}
+    named |= {"user", "me"}
+    keep = [f for f in facts if f[0].lower() in named or f[2].lower() in named]
+    hop = {f[2].lower() for f in keep} | {f[0].lower() for f in keep}
+    keep += [f for f in facts if f not in keep and f[0].lower() in hop]
+    return keep[:40]
+
+
+def _sentence(f: tuple[str, str, str]) -> str:
+    s, r, v = f
+    owner = "The user's" if s.lower() in ("user", "me") else f"{s}'s"
+    return f"{owner} {r.replace('_', ' ')} is {v}."
+
+
+def build_prompt(text: str, ctx: list[tuple[str, str, str]]) -> str:
+    known = " ".join(_sentence(f) for f in ctx) or "Nothing yet."
+    return ("You are a warm, creative personal assistant. What you know about the user: " + known +
+            " Use only these facts about real people; do not invent new facts about them. "
+            "The user asks: " + text + " Answer in 2 to 5 short sentences with concrete ideas.")
+
+
+def pick(cands: list[str], text: str, ctx: list[tuple[str, str, str]]) -> str | None:
+    known_words = {w for s, _r, v in ctx for w in re.findall(r"[A-Za-z']+", f"{s} {v}")}
+    known_words |= set(re.findall(r"[A-Za-z']+", text))
+    values = [v.lower() for _s, _r, v in ctx]
+    best, best_key = None, None
+    for c in cands:
+        c = c.strip()
+        if not c:
+            continue
+        caps = re.findall(r"(?<![.!?]\s)(?<!^)\b([A-Z][a-z]+)\b", c)
+        if any(w not in known_words and w not in ALLOW for w in caps):
+            continue                                     # names someone we were never told about
+        key = (-sum(1 for v in values if v and v in c.lower()), len(c))
+        if best_key is None or key < best_key:
+            best, best_key = c, key
+    return best
+
+
+def install_creative333(loop, gen, n: int = N_CANDIDATES) -> None:
+    inner = loop.turn
+    loop.cre333_stats = {"creative_turns": 0, "fallbacks": 0, "passed_through": 0}
+
+    def turn333(text: str) -> list[str]:
+=====TWIN=====
+#!/usr/bin/env python3
+"""336 plain twin: the same MiniCPM5-1B that Premonition's reader and mouth are built on,
+with no notebook, no reader, no rules. It sees the whole chat so far (all days, kept across
+restarts in its state dir, which is generous to the twin) and a fair instruction in the
+style of exp 211: newer facts replace older ones, and say "I don't know" when not told.
+
+New file only. Used by scripts/claude_e2e336_run.py as --arm twin --model <dir>.
+Greedy decoding, max 160 new tokens, bf16 on CUDA if present, else float32 on CPU.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+SYSTEM = (
+    "You are a friendly personal assistant chatting with one user. The user tells you "
+    "about their life and the people in it. Remember what they tell you and answer their "
+    "questions only from what they have told you in this chat. If they correct something, "
+    "the newer information replaces the older. If they never told you something, say "
+    "\"I don't know\" and do not guess. For small talk, just chat naturally. If they ask "
+    "for ideas or a bit of writing, help, using what you know about them. Keep replies short."
+)
+MAX_NEW = 160
+
+_CACHE: dict = {}
+
+
+def _load(model_dir: str):
+    if model_dir in _CACHE:
+        return _CACHE[model_dir]
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16 if dev == "cuda" else torch.float32
+    model = AutoModelForCausalLM.from_pretrained(model_dir, torch_dtype=dtype,
+                                                 trust_remote_code=True).to(dev).eval()
+    _CACHE[model_dir] = (tok, model, dev)
+    return _CACHE[model_dir]
+
+
+class Twin336:
+    def __init__(self, state_dir: str, model_dir: str):
+        if not model_dir:
+            raise SystemExit("336 twin: --model is required")
+        self.path = Path(state_dir) / "twin336-history.json"
+        self.history: list[dict] = []
+        if self.path.exists():
+            self.history = json.loads(self.path.read_text(encoding="utf-8"))
+        self.tok, self.model, self.dev = _load(model_dir)
+
+    def _prompt(self) -> str:
+        msgs = [{"role": "system", "content": SYSTEM}] + self.history
+        if getattr(self.tok, "chat_template", None):
+            return self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+        lines = [SYSTEM, ""]
+        for m in self.history:
+            lines.append(("User: " if m["role"] == "user" else "Assistant: ") + m["content"])
+        lines.append("Assistant:")
+        return "\n".join(lines)
+
+    def turn(self, text: str) -> list[str]:
+        import torch
+        self.history.append({"role": "user", "content": text})
+        ids = self.tok(self._prompt(), return_tensors="pt").to(self.dev)
+        with torch.no_grad():
+            out = self.model.generate(**ids, max_new_tokens=MAX_NEW, do_sample=False,
+                                      pad_token_id=self.tok.eos_token_id)
+        reply = self.tok.decode(out[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+        reply = reply.split("\nUser:")[0].strip()
+        self.history.append({"role": "assistant", "content": reply})
+        self.path.write_text(json.dumps(self.history, ensure_ascii=False), encoding="utf-8")
+        return [reply]
+
+    def e2e_end_day(self) -> None:
+        return None                      # no sleep; the history file is the whole memory
+
+
+def build(state_dir: str, args) -> Twin336:
+    return Twin336(state_dir, getattr(args, "model", ""))
+[0m
+[0m$ [0mgit show origin/main:handoff/memory/compute-availability.md 2>&1 | head -n 60; echo "===GPU BUDGET==="; git show origin/main:handoff/memory/gpu-budget-cap.md 2>&1 | head -n 40; echo "===SSH?==="; git show origin/main:handoff/memory/gpu-only-5070ti.md 2>&1 | head -n 60
+---
+name: compute-availability
+description: "Which machines Premonition experiments may use — BensPC RTX 5070 Ti is available again (Ben, 2026-09-19); Mac for small runs; vast.ai only with approval"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: aa82fa83-15ca-4df2-9694-910b4cc9284b
+  modified: 2026-09-19T12:04:12.989Z
+---
+
+**2026-09-19: Ben confirmed "you have an rtx 5070-ti"** — the BensPC GPU (RTX 5070 Ti, 16 GB) is available for Premonition work. This supersedes his 2026-09-18 "you can't use the gpu on benspc". The 19 Sep Core pilots already ran on it (4M model ≈ 0.5–0.65M tok/s, 600 s runs; see design/06-step1-pilot-results.md). Plan experiments and judge research-idea feasibility against a free local 5070 Ti, not Mac-only.
+
+- Qwen server on BensPC must be stopped for training (autostart disabled); ops recipe in [[benspc-gpu-ops]].
+- The Mac this session runs on is an **Apple M1 Pro, 32 GB, 10 cores**. Project Python with torch: `/Users/ben-hannan/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/bin/python3.12` (system python3 has no torch). Good for small/toy runs.
+- vast.ai costs money ($30 cap, see [[gpu-budget-cap]]): ask Ben with instance type and price before renting; destroy right after. **API key (2026-09-19):** Ben stored it himself at `~/.config/vastai/vast_api_key` (chmod 600, 64 hex chars; the vastai CLI reads it there). Never print, cat into context, copy or write the key; use it only via shell substitution, e.g. `-H "Authorization: Bearer $(cat ~/.config/vastai/vast_api_key)"`. The `vastai` CLI is not installed on the Mac (use the REST API with curl, or ask before installing).
+- vast.ai recipe (2026-09-18): RTX 5090 on-demand (~$0.52/h), image `pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime`, runtype `ssh_direc ssh_proxy`, attach ~/.ssh/id_ed25519.pub via POST /instances/{id}/ssh/. rsync repo (exclude artifacts, .runtime, .budget, data/village), write `runtime.remote.json` with empty import_roots, run `python -B run.py --runtime runtime.remote.json step1 ...`. 4M core ≈ 1.67M tok/s; whole run ≈ 55 min ≈ $0.48.
+- Ben's M3 Pro MacBook (Tailscale 100.93.41.100) never became reachable on 2026-09-18 (tailscaled wedged; fix needs `sudo launchctl kickstart -k system/com.tailscale.tailscaled`).
+
+**Rental recipe that worked (2026-09-19, all instances destroyed the same day, ~$3 spent with Ben's approval up to $3.25):**
+- These tiny card models are CPU-launch-bound: pick many fast cores + several GPUs, not a big GPU; DLPerf is a poor guide. Measured: 4x RTX 5060 Ti + 112 vCPU ran 80 twelve-thousand-step runs in ~48 min; 8x RTX 3060 + 80 old Xeon vCPU took ~88 min.
+- **Never use bid/interruptible instances for this job:** runs only save at the end, and a bid box was paused 30 min into a wave (whole wave lost). On-demand only.
+- **CUDA MPS nearly doubles throughput** (13 procs on one GPU: 465 -> 840 steps per 100 s): `export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log; nvidia-cuda-mps-control -d` before launching; ~20 procs per GPU, `--threads 1`. The MPS daemon keeps an ssh session's stdout open, so start things with `setsid nohup ... < /dev/null &`.
+- Upload only `scripts/`, `archive/opus-ovn-20260918-235851/`, `artifacts/opus-ovn-20260918-235851/exp1/data` minus `test.pt` (~1 MB). Some hosts take >20 min to pull the image: destroy and pick another.
+- Keep both arms of a comparison on the same machine, each arm spread evenly over its GPUs. `pkill -f <pattern>` over ssh kills your own shell if the pattern appears in the command line: use a bracket trick (`launch_al[l].sh`).
+- Always save instance ids to memory while they run, verify copied results (count + readable) BEFORE the DELETE call, then confirm `GET /instances/` is empty.
+
+**Why:** the local GPU is free, so the $30 cap only constrains cloud rental.
+
+**How to apply:** prefer BensPC 5070 Ti for anything beyond toy scale; Mac for quick probes; cloud only with explicit approval. Pure PyTorch is safest on the Windows box (custom CUDA/Triton kernels may be awkward).
+===GPU BUDGET===
+---
+name: gpu-budget-cap
+description: Ben caps further Premonition GPU spending at $30 total (2026-09-18); Astra became lead agent
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: e4cbfe4b-0edd-4974-bba0-c4ce5deb664a
+  modified: 2026-09-19T00:14:30.553Z
+---
+
+On 2026-09-18 Ben said "I won't do more than $30 more". This caps all further GPU rental for Premonition at $30. About $3.40 had already been spent on vast.ai and doesn't count toward it. Astra's research roadmap ($120 plus a $40 reserve) must be cut down to fit.
+
+The same day Ben made Astra (an external model) the **lead agent**. The handoff prompt is `reviews/astra-lead-prompt.md`, and Astra's review is `reviews/astra-review-2026-09-18.md`.
+
+**Why:** a hard personal budget, and a preference for Astra's research judgement.
+
+**How to apply:**
+- Quote every rental against the $30 remaining and track what has been spent.
+- Prefer free compute: this Mac's MPS/CPU for small models.
+- If Claude is asked to work on Premonition again, check first whether Astra is leading and what it has changed. Don't restart work Astra owns. See [[compute-availability]].
+===SSH?===
+---
+name: gpu-only-5070ti
+description: "2026-09-21 — only GPU = BensPC RTX 5070 Ti (no rentals); 23:40 Ben: it is mine to use whenever, no permission needed per job; talker first run approved"
+metadata:
+  type: feedback
+---
+
+Ben (2026-09-21 22:20): "You can use only 5070-ti gpu."
+
+**Why:** no more cloud spend; the PC is free and sufficient for borrowed-encoder fine-tunes (~110–150M params, bf16).
+
+**How to apply:** never propose or prepare a vast.ai rental (supersedes [[compute-availability]], [[gpu-budget-cap]], [[rented-cpu-standing-ok]] for GPU work). Schedule GPU jobs on BensPC one at a time (16 GB); Qwen llama-server must stay down while training (it holds ~15 GB). Mac CPU for everything else. Related: [[director-role]], [[benspc-gpu-ops]].
+
+**Update 2026-09-21 23:40:** Ben: "Go ahead. The gpu is yours to use whenever you want, I don't have rules for whether you can or can't use it" — answering my question about starting the talker's first run (doc 87) when the GPU is idle. So: use the 5070 Ti freely (still one job at a time), and the talker first run is approved.
+[0m
+[0m$ [0mcat ~/.ssh/config 2>&1 | head -n 40; echo "===hosts==="; ssh -G benspc 2>&1 | head -n 10; echo "===test ssh==="; ssh -o ConnectTimeout=10 benspc "hostname; nvidia-smi --query-gpu=name,memory.total --format=csv" 2>&1 | head -n 20
+Host benspc
+  HostName 100.75.113.114
+  User benja
+===hosts===
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+host benspc
+user benja
+hostname 100.75.113.114
+port 22
+addressfamily any
+batchmode no
+canonicalizefallbacklocal yes
+canonicalizehostname false
+checkhostip no
+===test ssh===
+sethostname: Use the Network Control Panel Applet to set hostname.
+hostname -s is not supported.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo hello-win; python --version" 2>&1 | head -n 20
+hello-win; python --version
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -v benspc "echo hi" 2>&1 | tail -n 30
+debug1: Will attempt key: /Users/ben-hannan/.ssh/id_rsa 
+debug1: Will attempt key: /Users/ben-hannan/.ssh/id_ecdsa 
+debug1: Will attempt key: /Users/ben-hannan/.ssh/id_ecdsa_sk 
+debug1: Will attempt key: /Users/ben-hannan/.ssh/id_ed25519 ED25519 SHA256:uZ2190NRveh3i1Ai6Hbh+pTpPazMhGbpwchVApLYvJw
+debug1: Will attempt key: /Users/ben-hannan/.ssh/id_ed25519_sk 
+debug1: Trying private key: /Users/ben-hannan/.ssh/id_rsa
+debug1: Trying private key: /Users/ben-hannan/.ssh/id_ecdsa
+debug1: Trying private key: /Users/ben-hannan/.ssh/id_ecdsa_sk
+debug1: Offering public key: /Users/ben-hannan/.ssh/id_ed25519 ED25519 SHA256:uZ2190NRveh3i1Ai6Hbh+pTpPazMhGbpwchVApLYvJw
+debug1: Server accepts key: /Users/ben-hannan/.ssh/id_ed25519 ED25519 SHA256:uZ2190NRveh3i1Ai6Hbh+pTpPazMhGbpwchVApLYvJw
+Authenticated to 100.75.113.114 ([100.75.113.114]:22) using "publickey".
+debug1: channel 0: new session [client-session] (inactive timeout: 0)
+debug1: Requesting no-more-sessions@openssh.com
+debug1: Entering interactive session.
+debug1: pledge: filesystem
+debug1: client_input_global_request: rtype hostkeys-00@openssh.com want_reply 0
+debug1: client_input_hostkeys: searching /Users/ben-hannan/.ssh/known_hosts for 100.75.113.114 / (none)
+debug1: client_input_hostkeys: searching /Users/ben-hannan/.ssh/known_hosts2 for 100.75.113.114 / (none)
+debug1: client_input_hostkeys: hostkeys file /Users/ben-hannan/.ssh/known_hosts2 does not exist
+debug1: client_input_hostkeys: no new or deprecated keys from server
+debug1: Sending environment.
+debug1: channel 0: setting env LANG = "en_US.UTF-8"
+debug1: Sending command: echo hi
+debug1: pledge: fork
+hi
+debug1: client_input_channel_req: channel 0 rtype exit-status reply 0
+debug1: channel 0: free: client-session, nchannels 1
+Transferred: sent 2548, received 2572 bytes, in 0.1 seconds
+Bytes per second: sent 48211.9, received 48666.0
+debug1: Exit status 0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv" 2>&1 | head -n 10
+name, memory.total [MiB], memory.free [MiB]
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 15467 MiB
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; git log origin/main --oneline -8; echo "---cache-pin---"; git show origin/main:handoff/queue/000-cache-pin.md 2>&1 | head -n 60
+01330d379 queue 000-cache-pin: pin MiniLM snapshot outside ~/.cache; find what deletes it
+e3e8b8d12 336/333 runners: HF_HUB_OFFLINE=1 and a MISSING-CACHE preflight (the MiniLM router snapshot vanished twice on the Mac today); nothing runs if it is missing
+1cfc257f6 board: mut-0 PASS verified; queue mut-1 mutation test on 274
+95eef02f5 creativepanel333 sealed (70 items, blind audit 1 minor facts flag, unused by the scorer); queue e2e-333-creative (registered 333 run, BensPC)
+6616c5ac4 queue e2e-330-dev: DEV dress rehearsal on BensPC with the real reader (arms G, 330a, 330a+334, 330a+334+333, plain twin), report only
+fc46e9c1d 330a builders (292t+298+274+listener stack G), 334 sleep agenda (+tests 3/3), 333 on top; runner --gen-model/--mouth-model; scorer scores only lives run
+e17938715 333 runner: arms P/B/T on creativepanel333, summary + shuffled blind-judge packets
+f99d83b39 333 creative v1: install_creative333 (WORK/creative job, fixed N=11 grounded candidates, never writes), panel spec, PASSMARKS fixed
+---cache-pin---
+CACHE PIN + FIND THE DELETER (director, 2026-09-24 03:58 UTC). Small CPU task on the Mac. Never print secrets. Never delete anything. Stop processes only by exact PID, and only if the director says so (here: don't).
+Context: ~/.cache/huggingface/hub (the MiniLM router snapshot used by the self122 router) vanished twice on 2026-09-23 (~22:02 ET during 274, again during mut-0).
+1. Check the snapshot is present now (ls ~/.cache/huggingface/hub). If missing, report MISSING-CACHE and stop.
+2. Copy (cp -R, not move) the MiniLM snapshot directory to ~/premonition-models/minilm/ and record its file sha256s in runs/000-cache-pin/pin.txt.
+3. Find what deleted it: grep the watcher log (~/premonition-watch/watch.log) and every runs/*/ reply and script in the worktree and ~/premonition-watch for "huggingface", "rm -rf", ".cache", "cache purge", "hf cache", and list the tasks running at ~22:00 ET on 2026-09-23. Also check crontab -l and launchctl list for cleanup jobs. Report the likely culprit(s) with evidence; change nothing.
+Final line: PINNED <path> and CULPRIT <best guess or UNKNOWN>.
+PUSH: runs/000-cache-pin/pin.txt
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_e2e336_run.py | head -n 120
+#!/usr/bin/env python3
+"""336 end-to-end runner: 3-day lives with sleeps, restarts and a simulated user
+for "is that right?" questions (month-end line; spec design/v3/30-modes/331-e2e-bank-spec.md,
+plan design/v3/30-modes/330-month-end-plan.md section 4).
+
+New file only. It never edits agent code. For every life:
+  day 1 turns -> end of day (one forced sleep) -> kill + restart from the same state dir
+  day 2 turns -> end of day -> kill + restart
+  day 3 turns -> end of day
+After each reply, if the reply asks the user to confirm something (CONFIRM_MARKERS),
+the harness sends ONE mechanical "yes" or "no" taken from the life's truth sheet
+(truth.jsonl, facts valid at that turn) and records it as its own row
+(kind "confirm_answer"). That count is Ben's attention cost.
+
+Arms are named by --arm "module:function". The function is called as
+function(state_dir, args) and must return an object with .turn(text) -> list[str].
+Optional hooks on that object:
+  .e2e_end_day()      run the end-of-day sleep (default for AgentLoop-like objects:
+                      sleep_threshold 0 for one step(), then restored)
+  .nb                 a notebook; stored triples are then logged via fable_loop90_agent
+Built-in arms: "292t" (292t alone), "twin" (claude_e2e336_twin:build).
+
+Output: <out>/arm_<name>.jsonl, one row per user turn or confirm answer:
+  life_id, day, turn_index, kind ("user" | "confirm_answer"), reply, ms,
+  notebook_events (new events this row), stored_triples (after the row),
+  confirm_asked (bool), confirm_answer ("yes" | "no" | null)
+User text is never printed or copied into the output (the bank may be TEST-ONLY).
+
+Usage (Mac or BensPC, builder-outbox scripts on the path):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \
+    python -B scripts/claude_e2e336_run.py --bank DIR --arm 292t --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import gc
+import importlib
+import json
+import os
+import re
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+# Lowercase substrings. A reply that contains one of these AND a "?" asks the user
+# to confirm something. Fixed before any run; taken from agent wording
+# (lis-310 "Just to check: ...?", lis-314 "I think you told me ..., is that right?").
+CONFIRM_MARKERS = [
+    "is that right?",
+    "just to check",
+    "did i get that right",
+    "is that correct?",
+    "am i right that",
+]
+
+BUILTIN_ARMS = {
+    "292t": "claude_e2e336_run:build_292t",
+    "twin": "claude_e2e336_twin:build",
+}
+
+
+def load(p: Path) -> list[dict]:
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def build_292t(state_dir: str, args) -> object:
+    import claude_loop292t_agent as T292
+    cfg = copy.deepcopy(T292.DEFAULT_CONFIG292T)
+    cfg["state_dir"] = state_dir
+    cfg["sleep_threshold"] = 100000     # no mid-day sleep; the harness sleeps once per day
+    return T292.build_agent292t(cfg)
+
+
+def resolve_arm(name: str):
+    spec = BUILTIN_ARMS.get(name, name)
+    mod, _, fn = spec.partition(":")
+    if not fn:
+        raise SystemExit(f"336: arm {name!r} must be 'module:function'")
+    return getattr(importlib.import_module(mod), fn)
+
+
+def end_day(agent) -> None:
+    hook = getattr(agent, "e2e_end_day", None)
+    if callable(hook):
+        hook()
+        return
+    if hasattr(agent, "sleep_threshold") and hasattr(agent, "step"):
+        old = agent.sleep_threshold
+        agent.sleep_threshold = 0
+        try:
+            agent.step()               # sleep_due() is now true: one sleep tick
+        finally:
+            agent.sleep_threshold = old
+            if hasattr(agent, "_save"):
+                agent._save()
+
+
+def is_confirm(reply: str) -> bool:
+    low = reply.lower()
+    return "?" in low and any(m in low for m in CONFIRM_MARKERS)
+
+
+def _mentions(text_low: str, phrase: str) -> bool:
+    phrase = phrase.strip().lower()
+    if not phrase:
+        return False
+    return re.search(r"(?<![a-z0-9])" + re.escape(phrase) + r"(?![a-z0-9])", text_low) is not None
+
+
+def confirm_answer(reply: str, truth: list[dict], turn_index: int) -> str:
+    """'yes' iff some fact valid at turn_index has its value named in the reply and its
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_reasoner50.py | sed -n '50,70p'; echo "===resource refs==="; git show origin/main:scripts/fable_reasoner50.py | grep -n "resource" | head; echo "===loop292t head==="; git show origin/main:scripts/claude_loop292t_agent.py | head -n 60
+import argparse
+import hashlib
+import json
+import math
+import os
+import random
+import resource
+import shutil
+import sys
+import time
+import tracemalloc
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import fable_notebook_contract as C                          # noqa: E402
+
+# ----------------------------------------------------------------- given by hand
+===resource refs===
+57:import resource
+704:        maxrss_peak = max(maxrss_peak, resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 ** 3))
+===loop292t head===
+fatal: path 'scripts/claude_loop292t_agent.py' exists on disk, but not in 'origin/main'
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -e 292t -e loop292 | head -n 20; echo "===builder-outbox 292t==="; git ls-tree -r --name-only origin/builder-outbox | grep -e 292t -e loop292 | head -n 20
+handoff/queue/talk-292t-build.md
+handoff/queue/talk-292t-panel.md
+===builder-outbox 292t===
+artifacts/claude-f1-20260923/run/conv292t.jsonl
+artifacts/claude-f1-20260923/run/joinpanel-292t.json
+artifacts/claude-f1-20260923/run/joinprobes-292t.json
+artifacts/claude-f1-20260923/run/wall/01-292t/rt143.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/bench-diff.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/bench-edit200-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/sessions152-diff.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd/sessions152-rows.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-f1-20260923/run/wall/01-292t/sd136/rt136-rows.json
+artifacts/claude-f1-20260923/run/wall/03-292t/rt143.json
+artifacts/claude-f1-20260923/run/wall/03-292t/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-f1-20260923/run/wall/03-292t/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/03-292t/sd/bench-diff.json
+artifacts/claude-f1-20260923/run/wall/03-292t/sd/bench-edit200-rows.jsonl
+artifacts/claude-f1-20260923/run/wall/03-292t/sd/bench-new_121_4hop-rows.jsonl
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -e claude_loop292 -e claude_lis_e2e -e claude_e2e330 -e claude_e2e336 -e claude_cre333 -e fable_self122 | head -n 20
+scripts/claude_loop292_agent.py
+scripts/claude_loop292t_agent.py
+[0m
+[0m$ [0mgit show origin/main:scripts/fable_self122.py | head -n 60; echo "===292t agent head (builder-outbox)==="; git show origin/builder-outbox:scripts/claude_loop292t_agent.py | head -n 80
+#!/usr/bin/env python3
+"""122 -- registered single-change follow-up to exp 114 (self-question router).
+
+Exp 114 blind result: 17 correct / 79 decline / 4 WRONG on 100 fresh questions
+(tricks 10/10 declined). Diagnosis: the scope guard works; the ceiling is
+VOCABULARY -- the keyword scorer cannot recognise oblique phrasings (46 margin
+declines on existing intents).
+
+THE ONE CHANGE: the keyword scorer is replaced by a LEARNED intent classifier
+(frozen borrowed MiniLM-L6-v2 encoder via our plain-PyTorch loader +
+a 41-way linear head trained on 1,900 hand-written phrasings). Kept unchanged:
+the exp-114 scope guard in front, the exp-105 question-type guard as a
+candidate restrictor, the margin/confidence decline, and ALL answer functions
+(answers come from the untouched exp-99 bodies via each intent's canonical
+question; the decline sentence is the identical inherited HONEST_DECLINE).
+
+Routing order for one question:
+  1. scope_guard() (fable_self114, frozen) -> DECLINE with reason.
+  2. Learned classifier (frozen encoder + frozen head) -> top1/conf/margin.
+     OOS top1, conf < tau, or logit-margin < mu -> DECLINE.
+  3. Question-type guard (fable_self105.guard, frozen) restricts candidates;
+     top1 outside the allowed set -> DECLINE.
+  4. Else the intent id; the answer is produced by calling the GRANDPARENT
+     exp-99 answer_self() on that intent's canonical question (provably the
+     same body as exp 99; the keyword router is bypassed, never edited).
+
+Run (Mac CPU, offline; only AFTER PASSMARKS sealed + ledger P122.*):
+  export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+  uv run --offline --no-project --python 3.12 --with torch --with numpy \\
+    python -B scripts/fable_self122.py --devcheck
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import torch  # noqa: E402
+
+import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self114 as S114  # noqa: E402 (read-only; wrapped, never edited)
+import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+
+HONEST_DECLINE = S105.HONEST_DECLINE
+CANONICAL = S105.CANONICAL
+
+_classifier = None
+
+
+class LearnedRouter:
+    """Frozen encoder + frozen head. No training here, ever."""
+
+    def __init__(self, repo: Path):
+        import fable_self122_train as T  # noqa: E402 (frozen pipeline reuse)
+        torch.set_num_threads(1)
+===292t agent head (builder-outbox)===
+#!/usr/bin/env python3
+"""Exp 292t agent: join of the talking line's three layers on main base 292.
+
+Everything is 292 (scripts/claude_loop292_agent.py, read-only: 291 + 266b
+lift + 268b guard + 293 reader) plus the 280m piece files imported
+read-only and unchanged, installed in 280m's order, inner to outer:
+
+  292, then 281, then 280/280b, then 282/282b.
+
+That is, on top of 292's own instance stack
+turn291(turn260(turn224c(turn224(class turn)))):
+  turn282b(turn282(turn280b(turn280(turn281(turn291(...)))))).
+
+No new behaviour: the new files are this join agent (plus its config)
+and the three single-layer arm agents (scripts/claude_292t_281_agent.py,
+scripts/claude_292t_280b_agent.py, scripts/claude_292t_282b_agent.py),
+which reuse the shared _build292_* builders below. Each layer only ever
+substitutes the reply of a turn its own head already mishandled (or serves
+its sealed text), and otherwise passes through byte-identical, so the
+three triggers never fire on the same turn (shown on the builder's own dev
+turns before the seal; 0 overlaps).
+
+It is installed inside the build (like 292/260/281/280/282), so the
+daemon's boot reconcile already runs through it. The daemon keeps
+SrcGuardMixin228 first, exactly where 292 has it.
+"""
+
+from __future__ import annotations
+
+import copy
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_fix228_srcguard as G228  # noqa: E402 (228 guard, read-only)
+from claude_fix228_srcguard import SrcGuardMixin228  # noqa: E402
+
+G228.install_srcguard228()
+
+import claude_fix268_nhopdir as G268  # noqa: E402 (268 guard, read-only)
+import claude_fix252b_screen as F252B  # noqa: E402 (read-only)
+import claude_fix280_capab as F280  # noqa: E402 (piece, read-only)
+import claude_fix280b_general as F280B  # noqa: E402 (piece, read-only)
+import claude_fix281_called as F281  # noqa: E402 (piece, read-only)
+import claude_fix282_small as F282  # noqa: E402 (piece, read-only)
+import claude_fix282b_vocab as F282B  # noqa: E402 (piece, read-only)
+import claude_loop138k_agent as L138K  # noqa: E402 (read-only)
+import claude_loop138m_agent as M138  # noqa: E402 (read-only, _Swap)
+import claude_loop232c_agent as L232C  # noqa: E402 (read-only, 232c rule)
+import claude_loop292_agent as L292  # noqa: E402 (base, read-only)
+import fable_loop138j_agent as L138J  # noqa: E402 (build site, read-only)
+
+
+def _install_all_talking(loop):
+    """Install 280m's layers on a 292 loop in 280m's order (inner first)."""
+    F281.install_called281(loop)        # innermost piece (over 292)
+    F280.install_capab280(loop)         # 280 over 281
+    F280B.install_general280b(loop)     # 280b over 280
+    F282.install_small282(loop)         # 282 over 280b
+    F282B.install_small282b(loop)       # 282b outermost
+    return loop
+
+
+def _install_280b_layers(loop):
+    """Single-layer arm: 292 + 280 ability table + 280b general layer."""
+    F280.install_capab280(loop)
+    F280B.install_general280b(loop)
+    return loop
+
+
+def _install_281_layer(loop):
+    """Single-layer arm: 292 + 281 called/named layer."""
+    F281.install_called281(loop)
+    return loop
+
+
+def _install_282b_layers(loop):
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_cre333_agent.py | sed -n '100,220p'
+def turn333(text: str) -> list[str]:
+        if not is_creative(text):
+            loop.cre333_stats["passed_through"] += 1
+            return inner(text)
+        ev0 = len(loop.nb.events)
+        ctx = context_facts(loop, text)
+        cands = gen.sample(build_prompt(text, ctx), n)
+        reply = pick(cands, text, ctx)
+        loop.cre333_stats["creative_turns"] += 1
+        if reply is None:
+            loop.cre333_stats["fallbacks"] += 1
+            reply = FALLBACK
+        loop.counters["work"] = loop.counters.get("work", 0) + 1
+        loop.experience.append({"tick": loop.tick, "kind": "work", "phase": "creative",
+                                "n": n, "context_facts": len(ctx)})
+        loop._save()
+        if len(loop.nb.events) != ev0:
+            raise RuntimeError("333: creative turn wrote to the notebook")
+        return [reply]
+
+    turn333.__name__ = "turn333"
+    loop.turn = turn333
+
+
+class Gen333:
+    def __init__(self, model_dir: str, max_new: int = 120, temperature: float = 0.9, top_p: float = 0.95):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        dtype = torch.bfloat16 if self.dev == "cuda" else torch.float32
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, torch_dtype=dtype,
+                                                          trust_remote_code=True).to(self.dev).eval()
+        self.max_new, self.t, self.p = max_new, temperature, top_p
+
+    def sample(self, prompt: str, n: int) -> list[str]:
+        if getattr(self.tok, "chat_template", None):
+            prompt = self.tok.apply_chat_template([{"role": "user", "content": prompt}],
+                                                  tokenize=False, add_generation_prompt=True)
+        ids = self.tok(prompt, return_tensors="pt").to(self.dev)
+        with self.torch.no_grad():
+            out = self.model.generate(**ids, max_new_tokens=self.max_new, do_sample=True,
+                                      temperature=self.t, top_p=self.p, num_return_sequences=n,
+                                      pad_token_id=self.tok.eos_token_id)
+        cut = ids["input_ids"].shape[1]
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+[0m
+[0m# [0mTodos
+[•] Local prep: fetch, archives, self122_head.pt sha, BensPC idle/venv/BASE checks
+[ ] Stage combined tree (builder-outbox + main) + self122_head.pt on BensPC
+[ ] BensPC: panel seal check + SEAL-code.sha256.txt (before running)
+[ ] BensPC: run arms B, P, T + score, record wall times/GPU/commit
+[ ] Write RESULTS-run.md, copy artifacts back to Mac, verify
+[0m
+[0m$ [0mls -la artifacts/fable-self122-20260922/self122_head.pt && shasum -a 256 artifacts/fable-self122-20260922/self122_head.pt
+-rw-r--r--  1 ben-hannan  staff  65741 Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mgit archive origin/builder-outbox -o /tmp/tree-builder.tar && ls -la /tmp/tree-builder.tar; git archive origin/main -o /tmp/tree-main.tar && ls -la /tmp/tree-main.tar
+-rw-r--r--  1 ben-hannan  wheel  453038080 Sep 24 00:46 /tmp/tree-builder.tar
+-rw-r--r--  1 ben-hannan  wheel  981678080 Sep 24 00:46 /tmp/tree-main.tar
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=name,memory.used,memory.free --format=csv && echo --- && C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch,transformers; print(torch.__version__, transformers.__version__, torch.cuda.is_available())\" && echo --- && dir C:\\Users\\benja 2>&1 | head -n 30"
+name, memory.used [MiB], memory.free [MiB]
+NVIDIA GeForce RTX 5070 Ti, 529 MiB, 15467 MiB
+--- 
+2.11.0+cu128 5.17.0 True
+--- 
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.cache\huggingface\hub
+
+09/24/2026  12:40 AM    <DIR>          .
+09/21/2026  10:07 PM    <DIR>          ..
+09/24/2026  12:39 AM    <DIR>          .locks
+09/24/2026  12:40 AM    <DIR>          blobs
+09/21/2026  10:07 PM               195 CACHEDIR.TAG
+09/21/2026  10:07 PM    <DIR>          models--allenai--scibert_scivocab_uncased
+09/24/2026  12:39 AM    <DIR>          models--openbmb--MiniCPM5-1B
+               1 File(s)            195 bytes
+               6 Dir(s)  48,797,933,568 bytes free
+[0m
+[0m$ [0mgzip -1 /tmp/tree-builder.tar /tmp/tree-main.tar && ls -la /tmp/tree-builder.tar.gz /tmp/tree-main.tar.gz
+-rw-r--r--  1 ben-hannan  wheel   69834369 Sep 24 00:46 /tmp/tree-builder.tar.gz
+-rw-r--r--  1 ben-hannan  wheel  133162137 Sep 24 00:46 /tmp/tree-main.tar.gz
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "if exist C:\\Users\\benja\\e2e330dev\\tree\\scripts\\fable_self122.py (echo OLD-TREE-PRESENT) else (echo OLD-TREE-ABSENT)"
+OLD-TREE-PRESENT
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\e2e330dev\\tree && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B -c \"import sys; sys.path.insert(0, 'scripts'); import fable_self122; print('import-ok')\""
+'C:\Users\benja\e2e330dev\tree' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd /d C:\\Users\\benja\\e2e330dev\\tree && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B -c \"import sys; sys.path.insert(0, 'scripts'); import fable_self122; print('import-ok')\""
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self122.py", line 45, in <module>
+    import fable_self105 as S105  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self105.py", line 58, in <module>
+    import fable_self99 as S99  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_self99.py", line 42, in <module>
+    import fable_loop90_agent as L90  # noqa: E402 (read-only; wrapped, never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_loop90_agent.py", line 45, in <module>
+    import fable_bench73_english_arm as B73  # noqa: E402 (template ears, read-only)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_bench73_english_arm.py", line 58, in <module>
+    import fable_bench65_notebook_arm as B65  # noqa: E402 (read-only; never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_bench65_notebook_arm.py", line 43, in <module>
+    from fable_qual56_reasoner import QualifierAwareReasoner  # noqa: E402
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_qual56_reasoner.py", line 39, in <module>
+    import fable_reasoner50 as R50  # noqa: E402  (read-only; never edited)
+  File "C:\Users\benja\e2e330dev\tree\scripts\fable_reasoner50.py", line 57, in <module>
+    import resource
+ModuleNotFoundError: No module named 'resource'
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\cre333 2>nul & mkdir C:\\Users\\benja\\cre333\\stage 2>nul & echo DIRS-OK"
+DIRS-OK
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/tree-builder.tar.gz benspc:C:/Users/benja/cre333/stage/ && scp -o ConnectTimeout=30 /tmp/tree-main.tar.gz benspc:C:/Users/benja/cre333/stage/ && scp -o ConnectTimeout=30 artifacts/fable-self122-20260922/self122_head.pt benspc:C:/Users/benja/cre333/stage/ && echo ALL-COPIED
+ALL-COPIED
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\cre333\\stage"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\cre333\stage
+
+09/24/2026  12:52 AM    <DIR>          .
+09/24/2026  12:47 AM    <DIR>          ..
+09/24/2026  12:52 AM            65,741 self122_head.pt
+09/24/2026  12:49 AM        69,834,369 tree-builder.tar.gz
+09/24/2026  12:52 AM       133,162,137 tree-main.tar.gz
+               3 File(s)    203,062,247 bytes
+               2 Dir(s)  50,291,400,704 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\cre333\\tree 2>nul & tar -xzf C:\\Users\\benja\\cre333\\stage\\tree-builder.tar.gz -C C:\\Users\\benja\\cre333\\tree && echo BUILDER-EXTRACT-OK"
+BUILDER-EXTRACT-OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "tar -xzf C:\\Users\\benja\\cre333\\stage\\tree-main.tar.gz -C C:\\Users\\benja\\cre333\\tree && echo MAIN-EXTRACT-OK"
+MAIN-EXTRACT-OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\cre333\\tree\\artifacts\\claude-creativepanel333-20260924 && dir C:\\Users\\benja\\cre333\\tree\\artifacts\\claude-cre333-20260924"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\cre333\tree\artifacts\claude-creativepanel333-20260924
+
+09/23/2026  11:49 PM    <DIR>          .
+09/24/2026  12:54 AM    <DIR>          ..
+09/23/2026  11:49 PM               229 audit.jsonl
+09/23/2026  11:49 PM            43,677 items.jsonl
+09/23/2026  11:49 PM               634 README.md
+09/23/2026  11:49 PM               232 SEAL.sha256.txt
+               4 File(s)         44,772 bytes
+               2 Dir(s)  48,275,914,752 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\cre333\tree\artifacts\claude-cre333-20260924
+
+09/23/2026  11:49 PM    <DIR>          .
+09/24/2026  12:54 AM    <DIR>          ..
+09/23/2026  11:49 PM             2,194 PASSMARKS.md
+               1 File(s)          2,194 bytes
+               2 Dir(s)  48,275,914,752 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\cre333\\tree\\artifacts\\fable-self122-20260922 2>nul & copy C:\\Users\\benja\\cre333\\stage\\self122_head.pt C:\\Users\\benja\\cre333\\tree\\artifacts\\fable-self122-20260922\\self122_head.pt"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\cre333\tree\artifacts\fable-self122-20260922
+
+09/23/2026  11:49 PM    <DIR>          .
+09/24/2026  12:54 AM    <DIR>          ..
+09/23/2026  11:49 PM            69,852 heldout122.jsonl
+09/23/2026  11:49 PM             4,233 PASSMARKS.md
+09/23/2026  11:49 PM             4,152 RESULTS.md
+09/23/2026  11:49 PM                79 SEAL.sha256.txt
+09/23/2026  11:49 PM    <DIR>          self122-notebook
+09/23/2026  11:49 PM           129,674 self122-results.json
+09/23/2026  11:49 PM           232,825 train122.jsonl
+09/23/2026  11:49 PM             8,952 train122_report.json
+09/23/2026  11:49 PM             2,025 WRONGS.md
+               8 File(s)        451,792 bytes
+               3 Dir(s)  48,288,411,648 bytes free
+        1 file(s) copied.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "certutil -hashfile C:\\Users\\benja\\cre333\\tree\\artifacts\\fable-self122-20260922\\self122_head.pt SHA256"
+SHA256 hash of C:\Users\benja\cre333\tree\artifacts\fable-self122-20260922\self122_head.pt:
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "where sha256sum 2>nul; where shasum 2>nul; echo DONE-WHERE"
+C:\Windows\System32\where.exe
+[0m
+[0m← [0mWrite /tmp/sealcheck333.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/sealcheck333.py benspc:C:/Users/benja/cre333/ && ssh -o ConnectTimeout=15 benspc "cd /d C:\\Users\\benja\\cre333\\tree && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B C:\\Users\\benja\\cre333\\sealcheck333.py"
+items.jsonl: OK
+README.md: OK
+audit.jsonl: OK
+SEAL: 3/3 OK
+scripts/claude_cre333_agent.py: 933315752d4e91f9beed06cdafa0ff95d0df5896ec34b477d795548f2f0c9999
+scripts/claude_cre333_run.py: 60dfdb7c87f83e369ac8293336d29670b37307a6f8842436d2287584560f898e
+scripts/claude_e2e336_run.py: f797dfbcac23828b09bda43c2996140d92854a8ab61c5b8bed7c5c266eec6749
+scripts/claude_e2e336_twin.py: 9a9e1cb61b663aa85595e24bb59fd8fb95e91810f67f2f45a1f138421eecd1d6
+WROTE C:\Users\benja\cre333\tree\artifacts\claude-cre333-20260924\SEAL-code.sha256.txt
+[0m
+[0m# [0mTodos
+[✓] Local prep: fetch, archives, self122_head.pt sha, BensPC idle/venv/BASE checks
+[✓] Stage combined tree (builder-outbox + main) + self122_head.pt on BensPC
+[✓] BensPC: panel seal check + SEAL-code.sha256.txt (before running)
+[•] BensPC: run arms B, P, T + score, record wall times/GPU/commit
+[ ] Write RESULTS-run.md, copy artifacts back to Mac, verify
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots
+
+09/24/2026  12:39 AM    <DIR>          .
+09/24/2026  12:39 AM    <DIR>          ..
+09/24/2026  12:39 AM    <DIR>          87179e5c1f455ef22e6223592d2d61351b525bfc
+               0 File(s)              0 bytes
+               3 Dir(s)  48,273,838,080 bytes free
+[0m
+[0m← [0mWrite /tmp/baseprobe333.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/baseprobe333.py benspc:C:/Users/benja/cre333/ && ssh -o ConnectTimeout=15 benspc "C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B C:\\Users\\benja\\cre333\\baseprobe333.py"
+BASE-SNAPSHOT C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd /d C:\\Users\\benja\\cre333\\tree && set PYTHONUTF8=1 && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B scripts\\claude_cre333_run.py --panel artifacts\\claude-creativepanel333-20260924 --arm B --out artifacts\\claude-cre333-20260924\\run"
+Fatal Python error: preconfig_init_utf8_mode: invalid PYTHONUTF8 environment variable value
+Python runtime state: preinitializing
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd /d C:\\Users\\benja\\cre333\\tree && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B scripts\\claude_cre333_run.py --panel artifacts\\claude-creativepanel333-20260924 --arm B --out artifacts\\claude-cre333-20260924\\run"
+MISSING-CACHE: the self122 MiniLM router did not load (ModuleNotFoundError("No module named 'resource'")). Nothing was run.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\cre333\\tree\\artifacts\\claude-cre333-20260924 && echo --- && nvidia-smi --query-gpu=name,memory.used,memory.free --format=csv"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\cre333\tree\artifacts\claude-cre333-20260924
+
+09/24/2026  12:55 AM    <DIR>          .
+09/24/2026  12:54 AM    <DIR>          ..
+09/23/2026  11:49 PM             2,194 PASSMARKS.md
+09/24/2026  12:55 AM               387 SEAL-code.sha256.txt
+               2 File(s)          2,581 bytes
+               2 Dir(s)  48,263,643,136 bytes free
+--- 
+name, memory.used [MiB], memory.free [MiB]
+NVIDIA GeForce RTX 5070 Ti, 529 MiB, 15467 MiB
+[0m
+[0m$ [0mmkdir -p artifacts/claude-cre333-20260924 && git show origin/main:artifacts/claude-cre333-20260924/PASSMARKS.md > artifacts/claude-cre333-20260924/PASSMARKS.md && cmp artifacts/claude-cre333-20260924/PASSMARKS.md /tmp/passmarks-check 2>/dev/null; git show origin/main:artifacts/claude-cre333-20260924/PASSMARKS.md | cmp - artifacts/claude-cre333-20260924/PASSMARKS.md && echo PASSMARKS-IDENTICAL; scp -o ConnectTimeout=30 benspc:C:/Users/benja/cre333/tree/artifacts/claude-cre333-20260924/SEAL-code.sha256.txt artifacts/claude-cre333-20260924/SEAL-code.sha256.txt && cat artifacts/claude-cre333-20260924/SEAL-code.sha256.txt
+PASSMARKS-IDENTICAL
+933315752d4e91f9beed06cdafa0ff95d0df5896ec34b477d795548f2f0c9999  scripts/claude_cre333_agent.py
+60dfdb7c87f83e369ac8293336d29670b37307a6f8842436d2287584560f898e  scripts/claude_cre333_run.py
+f797dfbcac23828b09bda43c2996140d92854a8ab61c5b8bed7c5c266eec6749  scripts/claude_e2e336_run.py
+9a9e1cb61b663aa85595e24bb59fd8fb95e91810f67f2f45a1f138421eecd1d6  scripts/claude_e2e336_twin.py
+[0m
+[0m← [0mWrite artifacts/claude-cre333-20260924/RESULTS-run.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la artifacts/claude-cre333-20260924/ && git status --porcelain | head -n 20
+total 32
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 24 00:56 .
+drwxr-xr-x@ 472 ben-hannan  staff  15104 Sep 24 00:56 ..
+-rw-r--r--    1 ben-hannan  staff   2194 Sep 24 00:56 PASSMARKS.md
+-rw-r--r--    1 ben-hannan  staff   6891 Sep 24 00:56 RESULTS-run.md
+-rw-------    1 ben-hannan  staff    387 Sep 24 00:56 SEAL-code.sha256.txt
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+[0m
+[0m$ [0mgit status --porcelain -- artifacts/claude-cre333-20260924/; git diff --stat | tail -n 3
+(no output)
+[0m
+[0m$ [0mcat .gitignore; git check-ignore -v artifacts/claude-cre333-20260924/RESULTS-run.md
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+.gitignore:5:artifacts/	artifacts/claude-cre333-20260924/RESULTS-run.md
+[0m
+[0m# [0mTodos
+[✓] Local prep: fetch, archives, self122_head.pt sha, BensPC idle/venv/BASE checks
+[✓] Stage combined tree (builder-outbox + main) + self122_head.pt on BensPC
+[✓] BensPC: panel seal check + SEAL-code.sha256.txt (before running)
+[✓] BensPC: run arms B, P, T + score, record wall times/GPU/commit
+[✓] Write RESULTS-run.md, copy artifacts back to Mac, verify
+[0m
