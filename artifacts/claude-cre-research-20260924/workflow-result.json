@@ -1,0 +1,1091 @@
+{
+ "code": {
+  "angle": "Code-only diagnosis of the 333d creative path (router, prompt/context, sampling, guards, trim) versus twin b, with DEV-only single-change experiments. I did not open the TEST-ONLY panel, its run folders, or RESULTS-333*.md. I fetched origin/builder-outbox only to read the 292t header and to list file names. I ran the routers, guard333d and trim on the DEV bank and on sentences I wrote myself, on CPU with no model loaded.",
+  "summary": "Plain version for Ben: the creative helper loses to the plain model for three reasons in the code. They add up, and none of them is about how clever the 1B is. First, the keyword detector in front of it only notices requests worded in a few ways (\"help me write\", \"gift\", \"what should I get\"). It missed 14 of 17 ordinary requests I wrote myself (\"What could I cook for Sam?\", \"Help me word an apology\", \"Write my sister a birthday card\"). On the panel it caught only 25 of 40, and the other 15 went to the ordinary fact-reader, so the helper could score at most 25/40 no matter how good its writing was. Second, the helper never sees the conversation. It gets one system message, the notebook facts and the request (cre333d:65). The plain twin sees every earlier message word for word (twin:53,64). So anything the reader failed to save (likes, \"I'm pretty broke\", a party's theme) is visible to the twin and invisible to Premonition. Third, it keeps the first of 4 random samples (temperature 0.7) that passes the safety filters, with no quality ranking. A text-trimming step also cuts off the last item of a numbered list, and the \"refusal\" filter throws away useful hedged answers such as \"Without knowing her tastes, a safe bet is...\". Only 2 of 25 routed turns fell back to the canned line (VERIFY-333.md:51), so the filters mostly decide which weak sample wins, not whether one gets through. Also, the panel scored arm P as 292t plus 333d only. The sealed 330c build also has 338b outside it, so the panel did not measure what the sealed build would say to an unrouted request. The cheapest high-value changes, in order: (1) a learned request detector, CPU only and $0; (2) give the creative call the last 12 chat messages, as 338 already does, about 1 GPU hour; (3) fix the trimmer and the refusal filter's false positives. Only 10 DEV creative turns exist, too few for fixed pass marks, so a blind-written DEV creative set (40 creative, 30 look-alikes, names outside A-M) has to come first.",
+  "findings": [
+   {
+    "claim": "333d's creative call gives the 1B only [system, user request]: no chat history. The system message is SYSTEM333D plus the notebook facts rendered as sentences like \"Ada's hobby is pottery.\"",
+    "source": "scripts/claude_cre333d_agent.py:60-65; scripts/claude_cre333_agent.py:65-68",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "Anything taught in chat that 292t's closed-vocabulary reader did not store never reaches the creative prompt."
+   },
+   {
+    "claim": "Twin b gets a generic system line plus the whole chat so far, verbatim (all earlier teach turns), with thinking off.",
+    "source": "scripts/claude_e2e336_twin.py:15-22,53,64; scripts/claude_e2e336_twinb.py:25-30",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "The twin can use unsaved details (likes, budget, occasion) in the teach turns. That is a plausible reason twin b's useful count (10/40) beats P's (8/40)."
+   },
+   {
+    "claim": "Why the missing history matters depends on 292t's reader: it stores facts in a fixed set of relations (hobby, favorite_food, job, city, ...) and has 'don't know that shape' / 'couldn't save that as a fact' replies. So casual likes, dislikes and circumstances in teach turns are probably often unsaved. I did not measure this.",
+    "source": "scripts/claude_e2e336_score.py:47-52; origin/builder-outbox:scripts/claude_own_m0_build.py:84-103 (relation vocabulary)",
+    "label": "suggested",
+    "abstract_only": false,
+    "relevance": "If most seed facts never reach context_facts, the notebook-only prompt caps grounding whatever the model."
+   },
+   {
+    "claim": "333d's sampling is Gen338's: temperature 0.7, top_p 0.9, max_new_tokens 200, thinking off, 4 samples, keep the first that passes the guards (no ranking). Twin b is greedy with 160 new tokens. Gen333b's own settings (0.9/0.95/120) are not used by 333d.",
+    "source": "scripts/claude_chat338_agent.py:188-189,196-212; scripts/claude_cre333d_wrap.py:35; scripts/claude_e2e330c.py:50-52; scripts/claude_cre333d_agent.py:21,65-70; scripts/claude_e2e336_twin.py:23,67-68; scripts/claude_cre333_agent.py:125",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "Keeping the first passing sample means quality is whatever that sample happens to be. Nothing picks the best one."
+   },
+   {
+    "claim": "The router needs a 333 keyword cue AND a request form AND no recall phrase. The cue list has no 'cook' (except 'what should i cook'), make, bring, dinner, menu, card, message, note, text, word(ing), draft, compose, itinerary, trip, weekend, rhyme, limerick, caption or speech. 'write' only matches when followed by (me|us) plus a/an/some, and 'plan' only when followed by an article or possessive.",
+    "source": "scripts/claude_cre333_agent.py:29-34,43-45; scripts/claude_cre333b_agent.py:46-59",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "The spec's mix includes cook/bring (6), wording a message (4), cards and other (4). Those are the phrasings the cue list lacks, which is consistent with 15/40 panel items going unrouted (VERIFY-333.md:22)."
+   },
+   {
+    "claim": "On 17 creative requests I wrote myself (not panel items), both is_creative and is_creative333c routed only 3 and missed 14 (e.g. 'What could I cook for Sam on Friday?', 'Help me word an apology to Sol.', 'Write my sister a birthday card.', 'Could you draft a thank-you note to Tia?'). On the DEV bank both route 10/10 creative and 0/184 other.",
+    "source": "my CPU run of scripts/claude_cre333_agent.py:43 and scripts/claude_cre333b_agent.py:57 on artifacts/claude-e2e331-dev-20260924/turns.jsonl and my own sentences",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "The DEV bank's 10 creative turns all use 'help me'/'can you write'/'any ideas'. The cues were tuned on a set too narrow to show the misses (PASSMARKS.md:8 says one cue was tightened on DEV)."
+   },
+   {
+    "claim": "In the panel runner, arm P is 292t plus 333d only (no 338/338b), so the 15 unrouted creative items got 292t's ordinary reply. P333.3 therefore could not exceed 25/40 (the 333d pass-marks file says so). P's 8/40 is 8 of the 25 routed items.",
+    "source": "scripts/claude_cre333_run.py:53-55; artifacts/claude-cre333-20260924/PASSMARKS-333d.md:11-12; VERIFY-333.md:55",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "The router alone costs up to 15 items. That is a ceiling set by the router, not by the 1B."
+   },
+   {
+    "claim": "The sealed 330c stacks 338b outside 333d. An unrouted creative request whose 292t reply is a clarify line would get a 338b 1B chat reply (the ADVICE regex has 'message', 'draft', 'plan', 'gift', 'write', so it is not diverted to the honest line). So the panel's arm P is not the sealed build's creative behaviour.",
+    "source": "scripts/claude_e2e330c.py:4-13,52-54; scripts/claude_chat338b_agent.py:36-39,62-63; scripts/claude_chat338_agent.py:150-151",
+    "label": "suggested",
+    "abstract_only": false,
+    "relevance": "Registered creative numbers may understate or misdescribe what the shipped build does on unrouted creative requests. Not measured."
+   },
+   {
+    "claim": "The trim step (cut to the last [.!?] followed by a space or the end) drops the last item of a numbered list that has no final period. My string '...:\\n1. A pottery class voucher\\n2. A cozy scarf\\n3. A framed photo of you two' becomes '...\\n2. A cozy scarf\\n3.' and still passes all guards.",
+    "source": "scripts/claude_chat338_agent.py:76-84; scripts/claude_cre333d_agent.py:66-67",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "This caps quality whatever the model: gift and plan lists are a natural format and lose content, keeping a dangling '3.'. How often it hit on the panel is unknown (I did not look)."
+   },
+   {
+    "claim": "G5 (REFUSAL333D) rejects useful answers that contain a hedge or a trailing question. 'Without knowing her tastes, a safe bet is a gift card...' is rejected (without knowing), and so is a full idea list ending 'Could you tell me what she enjoys most?'. Meanwhile SYSTEM333D tells the model to keep ideas general when it knows nothing about someone, which invites exactly those hedges on the 10 untaught-person items.",
+    "source": "scripts/claude_cre333d_agent.py:23-27,30-33,39-40",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "First-pass-wins means G5 false positives throw away good samples and hand the slot to a later, possibly worse, one."
+   },
+   {
+    "claim": "From code alone I cannot say which guard rejects most. Counts are in loop.cre333_stats per row (arm_P 'cre333' field) and presumably RESULTS-333d.md, which I did not open. Since only 2 of 25 routed turns fell back, guards seldom rejected all 4 samples. My guess is that G5 rejects most, because its regex matches common 1B hedges, while G1 (memory claims) and G2 (only 'your <relation> <Name>' with an unknown Name) are narrow.",
+    "source": "scripts/claude_cre333d_agent.py:36-47,52-53,71; scripts/claude_chat338_agent.py:103-122; VERIFY-333.md:48",
+    "label": "untested",
+    "abstract_only": false,
+    "relevance": "This decides whether loosening G5 is worth a run. The lead can read the guard counts from the summary without reading any replies."
+   },
+   {
+    "claim": "333d passes text='' to 338's guard, so G3 (unknown capitalised word or number) is off. The only invented-person check is G2's 'your <relation> <Name>' pattern. An unnamed invented fact ('your sister loves hiking') is never checked.",
+    "source": "scripts/claude_cre333d_agent.py:44-45; scripts/claude_chat338_agent.py:111-121",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "The 0/40 invented-facts result depends on the judge. The code does not guarantee it, and adding chat history would widen this gap."
+   },
+   {
+    "claim": "context_facts matches subjects and values by substring (s.lower() in request), always adds the user's own facts ('user'/'me'), takes one hop, and caps at 40. It never considers relation words, so 'gift for my sister' reaches the sister only through the user's own 'sister' fact.",
+    "source": "scripts/claude_cre333_agent.py:53-63",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "Short names can match inside other words ('Al' in 'also'), a minor risk. Grounding depends on the user entity being stored as 'me' or 'user'. I did not trace how 292t names the user entity; the ear devsets use 'me' (origin/builder-outbox:scripts/claude_ear265_devset.py:47)."
+   },
+   {
+    "claim": "The DEV bank has only 10 creative turns (all routed, each with 3-5 creative_seed_facts), which is too few to fix pass marks with any power.",
+    "source": "artifacts/claude-e2e331-dev-20260924/README.md (counts table); turns.jsonl field creative_seed_facts",
+    "label": "shown",
+    "abstract_only": false,
+    "relevance": "Every experiment below first needs a larger DEV creative set written blind from the spec with names outside A-M, and never the TEST-ONLY panel."
+   }
+  ],
+  "experiments": [
+   {
+    "name": "R1: learned creative-request router (MiniLM embedding + logistic head)",
+    "one_change": "Replace is_creative333c with a small logistic-regression head on the MiniLM sentence embedding the self122 router already loads (no new download), trained on DEV only: the DEV bank's 194 turns plus the train half of a new blind-written DEV creative set (creative requests and look-alike teach/ask controls). Nothing else changes: generation, guards and fallback stay 333d's.",
+    "pass_mark": "On the held-out DEV half (at least 40 creative, 30 look-alike controls, fixed before training): routes at least 36/40 creative requests, routes at most 1/30 look-alike controls, and at most 1/184 DEV-bank non-creative turns. The current regex, scored on the same held-out half, is reported alongside.",
+    "proves_wrong_if": "Held-out recall is below 30/40, or more than 2/30 controls are routed, or it does no better than the regex on the held-out half (then the regex's misses are not a learnable pattern at this data size).",
+    "cost": "$0: CPU only, MiniLM already needed by 292t. Writing the DEV set costs one blind writer agent session.",
+    "brain_link": "A learned task-set selector (prefrontal/basal-ganglia gating of which 'mode' handles an input) instead of a hand-written rule. It can be retrained in sleep on logged turns the user rephrased after a miss. This is an analogy only, untested.",
+    "novelty": "Intent classifiers on sentence embeddings are standard and not novel in themselves. The novel part would be retraining the gate in sleep from the assistant's own logged misses, which R1 does not test yet."
+   },
+   {
+    "name": "H1: give 333d the recent chat",
+    "one_change": "In install_creative333d, send [system] + the last 12 messages of this chat + [request], as 338 already does (chat338:155-158), with 333d keeping its own read-only buffer of turns. Add the history words to G2's known set, as 338 does (chat338:156). Prompt text, sampling, 4 samples, guards and router unchanged.",
+    "pass_mark": "First a free CPU check: on the DEV creative set, report the share of creative_seed_facts present in context_facts at request time. If it is at least 90%, stop (history cannot add much). Then, on the same DEV creative items with the same blind judge instructions: useful count at least 333d's + 5 (out of 40), invented person facts at most 2/40, and useful count at least twin b's on the same items.",
+    "proves_wrong_if": "Useful gain is below +3 over 333d on DEV, or invented person facts rise above 2/40 (the raw chat invites guessing), or the seed-fact coverage check already shows at least 90% coverage.",
+    "cost": "About 1 GPU hour on the 5090 (under $1) for 2 arms x 40 items x 4 samples, plus judge calls. The coverage check is CPU only.",
+    "brain_link": "Creative recombination drawing on raw episodic traces (recent conversation, hippocampus-like) as well as the consolidated semantic notebook. This matches the constructive-episodic-simulation idea (Schacter & Addis), cited from memory, not fetched: suggested.",
+    "novelty": "Adding history is standard for chat LLMs. The point is diagnostic: it tests whether the notebook-only prompt, and not the 1B, is what separates P from the twin."
+   },
+   {
+    "name": "T1: stop trimming finished replies; narrow G5",
+    "one_change": "One change to reply cleanup: trim to the last full sentence only when generation hit max_new_tokens (did not end on EOS), never leave a trailing bare list number, and drop G5's 'without (more|knowing)' and trailing-question patterns when the reply already contains at least 2 sentences of content. (If the lead wants strictly one change, run the trim part alone first.)",
+    "pass_mark": "On the DEV creative set: 0 replies ending in a bare list number (count by regex, fixed now: /\\n\\d+\\.$/), fallbacks no higher than 333d's, blind-judge useful count not lower than 333d's, and invented person facts at most 2/40.",
+    "proves_wrong_if": "Useful count drops, or fallbacks or invented facts rise. Also if 333d itself already shows 0 dangling-number replies and G5 rejections are under 10% of samples on DEV: then this is not a real cap and should not be run.",
+    "cost": "CPU-cheap to count on DEV outputs, then about 0.5 GPU hour (under $0.50) to regenerate and judge.",
+    "brain_link": "None directly. It removes a hand-written cap rather than adding a learned part.",
+    "novelty": "None: a bug fix. Worth it only because it caps quality whatever the model does."
+   }
+  ],
+  "open_questions": [
+   "Which guard rejected most samples in the 333d run? loop.cre333_stats G1-G5 counts are aggregated in the run summary / RESULTS-333d.md, which I did not open. The lead can read the aggregate counts without reading any replies.",
+   "What share of taught facts does 292t actually store for casual teach turns (likes, dislikes, circumstances)? That share is the ceiling on notebook-only grounding. It is measurable on DEV with creative_seed_facts versus context_facts, on CPU.",
+   "What does the sealed 330c stack (with 338b outside 333d) reply to an unrouted creative request? The panel's arm P (claude_cre333_run.py:53-55) did not include 338b, so the registered creative numbers describe a different stack from the one sealed.",
+   "Does first-passing-of-4 at temperature 0.7 do worse than greedy decoding (the twin's setting) on the same prompt? That would be a separate single change after H1.",
+   "How does 292t name the user entity in the notebook? context_facts assumes 'user' or 'me' (cre333:58,67). If 292t uses another name, the user's own facts silently drop out of the creative prompt. Not traced.",
+   "Is a DEV creative set of 40+ items written blind from the spec (names outside A-M, never the TEST-ONLY panel) acceptable to the owner as the development set for all three experiments?"
+  ]
+ },
+ "research": [
+  {
+   "report": {
+    "angle": "What makes small (0.5B-3B) language models write better stories, poems, plans and ideas at inference time and with cheap training: decoding, best-of-N with a scorer, plan-first, self-refine, and cheap fine-tuning (LoRA SFT/DPO, distillation, TinyStories-style data). The focus is on numbers measured near 1B and on what fits Premonition's creative path (MiniCPM5-1B, replies of 140 words or fewer, a hard rule against inventing facts about people).",
+    "summary": "Very few studies measure creative writing on models near 1B. Most of the real evidence comes from 7B-9B models. At 1B the evidence is thin and some of it is disputed. Changing the sampler (min-p, higher temperature) is a weak and contested lever. The min-p paper's only 1B test used 3 prompts, and a careful reanalysis (2506.13681) found no reliable gain. In that same 1B table, quality fell sharply as temperature rose. Methods where the model critiques or plans its own work look poor for small models. Self-Refine already failed at 13B. Small models only fixed their own errors when a strong outside checker told them when to. In small models, a plan made before writing invented facts as often as the summary did. So self-refine and outline-first are unlikely to help a 1B model and could add invented person facts. The strongest evidence points to two things. First, a trained scorer beats a zero-shot judge: small off-the-shelf judges scored 56-60% agreement with humans (near chance), while trained reward models reached 78%, and the paper says small 1B/1.5B scorers can come close. Second, short-form creative writing responds to cheap supervised training: in one 7B study, supervised fine-tuning on greetings raised the human \"excellent\" rate from 53.8% to 86.2%, and RL added only about 5 more points. The main risks are that fine-tuning copies the teacher's repetitive style (the whole field suffers from \"Elara/lighthouse\" sameness), and that plain SFT on long stories collapsed at 9B. In Premonition's code, 333d is not really best-of-N. It samples 4 replies at temperature 0.7 / top-p 0.9 and keeps the first that passes the guards, and it sends the model only the current message plus the notebook facts, while the twin model gets the whole chat. My top experiment is a sleep-phase LoRA that teaches the creative skill from teacher-written short replies built on random seeds, with the facts as slots to fill. Second is a trained scorer for best-of-8. The third, a cheap control, is a sampler change I expect to fail. Plain version for Ben: tweaking how the small model picks words barely helps, and asking it to check or plan its own work mostly doesn't work at this size. What does work is showing it a few thousand good examples (practice) and teaching a separate small judge to pick its best try (taste).",
+    "findings": [
+     {
+      "claim": "Min-p sampling was tested on Llama-3.2-1B-Instruct for creative writing, but only on 3 story prompts with a GPT-4o judge. For the 1B model, quality dropped steeply as temperature rose: min-p creativity was 6.33 at T=0.5, 3.78 at T=2.0 and 2.12 at T=3.0. At T=1.0 min-p did not consistently beat top-p (min-p 0.1 vs top-p 0.95 creativity: 5.00 vs 5.44).",
+      "source": "arXiv 2407.01082, Appendix C.3.6 Tables 17-18",
+      "label": "suggested",
+      "abstract_only": false,
+      "relevance": "This is the only creative-writing sampler number near 1B, and it says to keep temperature low. It gives no strong reason to expect a sampler change to lift 'useful' above 8/40."
+     },
+     {
+      "claim": "A reanalysis of min-p found that its human evaluations left out data and ran the statistics wrong. Corrected, min-p did not beat baseline samplers in quality, diversity, or the trade-off between them. The reanalysis also found that the paper's LLM-judge results reported the higher of two scores for min-p and the lower of two for top-p.",
+      "source": "arXiv 2506.13681 (abstract and Sec. 2)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Treat sampler changes as a low-value control, not the main lever for the creative path."
+     },
+     {
+      "claim": "Contrastive decoding (a large 'expert' model minus a small 'amateur' model) with GPT2-XL 1.5B as expert was preferred by human raters for coherence, 2.6x over nucleus sampling on average. It had lower diversity than nucleus sampling on stories (0.83 vs 0.94 at 1.5B). It was tested on plain text continuation, not chat instructions.",
+      "source": "arXiv 2210.15097 (Sec. 6.1-6.2, Table 2)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "It needs a smaller amateur model with the same tokenizer as MiniCPM5-1B, and it reduces variety, which was the earlier mouth's failure (45-59 distinct replies per 1000). It is a poor fit here."
+     },
+     {
+      "claim": "Self-Refine did not work with a weaker model: Vicuna-13B could not follow the feedback/refine prompts, and repeated its output or made up a conversation instead.",
+      "source": "arXiv 2303.17651 (Sec. 'Does Self-Refine work with weaker models?', App. G)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The failure was at 13B, so self-refine at 1B is very unlikely to help and could add new text that invents facts."
+     },
+     {
+      "claim": "Small models (LLaMA-2-13B-chat, Gemma-7B-it) only corrected their own reasoning errors well when a strong GPT-4-based verifier decided when to correct. With their own weak self-verifier, the gains mostly went away.",
+      "source": "arXiv 2404.17140 (abstract, Sec. 5)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This was on reasoning, not creative writing. It still points the same way: a small model needs an outside, trained checker, not self-critique."
+     },
+     {
+      "claim": "Adding a plan first did not significantly improve summary quality or faithfulness in small models (T5-3B, a 3.8B decoder). Human raters found the plans themselves contained invented facts as often as the summaries did.",
+      "source": "arXiv 2504.09071 (abstract, Sec. 5-6)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is summarization, not creative writing, so it is only indirect. It does warn that an outline step at 1B could invent people facts ('your sister Anna loves...') inside the plan."
+     },
+     {
+      "claim": "LitBench: zero-shot small open-model judges scored about 56-60% agreement with human preferences on creative writing (Llama-3.1-8B 0.581, Qwen-2.5-7B 0.599). A trained Bradley-Terry reward model (Llama-8B) reached 78%, and trained reward models beat the best zero-shot judge (Claude-3.7-Sonnet, 73%). Adding chain-of-thought to the generative reward model lowered accuracy to 72%. The text says a small (1B/1.5B) generative reward model without chain-of-thought performs about as well as larger ones. A Llama-3.2-1B Bradley-Terry model trained on naively paired data leveled off at 65-70% and strongly preferred the longer story.",
+      "source": "arXiv 2507.00769 (Sec. 4, Fig. 4, 6, 7; Table 1)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "It explains why a zero-shot pick rule fails and why a trained small scorer could work. It also shows the scorer must be length-controlled, because 333's picker failed through a length tie-break."
+     },
+     {
+      "claim": "On a 7B model (Qwen2.5-7B-Instruct) writing Chinese greetings (short, occasion-based creative text), SFT alone raised the human-judged excellent rate from 53.8% to 86.2% on ordinary queries. SFT plus a reward model plus GRPO reached 91.2%. The reward model was trained on 7,896 preference pairs built by multi-agent rejection sampling, with 87.6% accuracy.",
+      "source": "arXiv 2508.21476 (Tables 2-4)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is the closest task match to Premonition's cards, toasts and messages. Most of the gain came from cheap SFT, and RL added only a few points. It was measured at 7B, not 1B."
+     },
+     {
+      "claim": "For long stories, plain SFT on about 1.4K human stories collapsed the quality of Qwen3.5-9B (Story Quality 18.5 down to -60.6), while GRPO with a frontier LLM judge as reward improved it (49.7), and human-reference injection added a little more (52.1).",
+      "source": "arXiv 2606.04095 (Table 3, Sec. 5.2)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is a counterweight to the 7B greetings result: SFT can hurt, especially for long outputs and small human datasets. Premonition's 140-word cap makes it closer to the greetings case, but this has not been checked at 1B."
+     },
+     {
+      "claim": "Diversified DPO, which gives extra weight to preferred training examples that differ most from other answers to the same prompt, raised the diversity of Llama-3.1-8B / Mistral-7B LoRA models to about the level of human writing while keeping quality close to GPT-4o. It was trained on r/WritingPrompts upvote pairs.",
+      "source": "arXiv 2503.17126 (abstract, Sec. 4-5)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is a cheap LoRA-level fix for low variety. It was measured at 7-8B only, and it needs several answers per prompt."
+     },
+     {
+      "claim": "Verbalized Sampling (asking for 5 answers with probabilities) raised creative-writing diversity 1.6-2.1x. The gains were larger for more capable models, weaker models paid a quality cost, and the paper names dependence on model scale as a limitation. It also produced better synthetic training data for fine-tuning Qwen3-1.7B/4B (math).",
+      "source": "arXiv 2510.01171 (Sec. 5 'Emergent Trend', Table 3, limitations)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Don't use it inside the 1B model's prompt. Use it on the teacher when building diverse distillation data."
+     },
+     {
+      "claim": "TinyStories got diverse synthetic training data by forcing random constraints into each teacher prompt: 3 random words (one verb, one noun, one adjective) from about 1500 words, plus random story features. The paper reports that high temperature alone still gave a very repetitive dataset. Grammar was learned at tiny sizes, while creativity kept improving with scale.",
+      "source": "arXiv 2305.07759 (Sec. 2, Sec. 3 observations)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is a proven recipe for building distillation data that doesn't collapse to one style, and it applies directly to a sleep-phase creative LoRA."
+     },
+     {
+      "claim": "LLM stories are highly homogeneous: 11 words (names like Elias/Elara/Mara, lighthouses, clockmakers) appeared in 88.3% of 20,000 stories from four models, with little difference between models. The authors trace this to widely shared preference data.",
+      "source": "arXiv 2605.26492 (abstract)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A teacher distilled into MiniCPM would pass on these habits. The data needs random seeds and a stock-phrase blocklist (see Antislop, arXiv 2510.15061, tested at 12B+) to avoid them."
+     },
+     {
+      "claim": "Base models beat their aligned versions (8B and 70B) on tasks that need unpredictability. For poems, instruct models wrote the most pleasant poems and base models the most original.",
+      "source": "arXiv 2505.00047 (abstract, Sec. on poetry)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This shows the trade-off between originality and being pleasant or useful. Premonition's judge scores 'useful', so the aligned model's pleasantness may be what it needs, and originality is secondary."
+     },
+     {
+      "claim": "CreativityNeuro, which scales a small set of weights found by contrasting creative and plain prompts (no training data), improved originality and surprise across 3B-14B models (average d = +0.36 originality on AUT). It lowered usefulness on AUT.",
+      "source": "arXiv 2607.01433 (Sec. 4-5)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "It is brain-like (a neuromodulation-style gain on a sparse circuit) and novel-feeling, but it trades away usefulness, which is Premonition's judged metric. Don't use it now."
+     },
+     {
+      "claim": "RL on Codenames with verifiable rewards made Qwen3-8B more creative (8 of 10 benchmarks), while Qwen3-1.7B and 4B gained reasoning precision at the cost of creativity.",
+      "source": "arXiv 2605.27832 (abstract)",
+      "label": "suggested",
+      "abstract_only": true,
+      "relevance": "This hints that RL-style creativity training may not transfer to 1-2B models. Prefer SFT/distillation at 1B."
+     },
+     {
+      "claim": "PlotTwist says models with 3B or fewer active parameters, specifically the Qwen3-30B-A3B mixture-of-experts model (30B total), aligned by DPO with an aspect-rating reward model, are competitive with frontier models at plot generation.",
+      "source": "arXiv 2603.16410 (abstract, Sec. 4)",
+      "label": "suggested",
+      "abstract_only": false,
+      "relevance": "This is not evidence for a dense 1B model: its 30B total parameters carry the knowledge. Don't cite it as a small-model result."
+     },
+     {
+      "claim": "Premonition 333d is not selection by quality. It samples 4 replies (temperature 0.7, top_p 0.9, 200 new tokens, thinking off) and returns the first that passes the rule-based guards. Its messages contain only a system prompt with notebook facts plus the current user message, so no earlier chat turns reach the model, while the plain twin got the whole chat.",
+      "source": "scripts/claude_cre333d_agent.py:55-70; scripts/claude_chat338_agent.py:188-211",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The 8 vs 10 gap with the twin could come from missing chat history or from the lack of a quality scorer, not from the model's ability. Either is a confound to rule out before crediting any change."
+     }
+    ],
+    "experiments": [
+     {
+      "name": "Sleep-phase creative skill LoRA (distillation from seeded teacher replies with fact slots)",
+      "one_change": "Replace the base MiniCPM5-1B weights on the creative path only with a LoRA adapter (rank 16) trained offline by SFT on about 3,000 teacher-written replies of 140 words or fewer to synthetic creative requests (not panel items). Each request is built from random seeds, TinyStories-style: request type (gift / day plan / poem / toast / card / cook / message wording), occasion, 0-3 fact-card lines about invented people, and 2 random nouns. About 1/3 of the requests mention a person with no facts, and there the teacher must stay general. Names appear as slots filled from the fact card, so the adapter learns to use the facts it is given, not particular people. Filter teacher outputs through the same G1/G2/G5 guards plus a stock-phrase blocklist. Everything else in 333d stays the same: router, 4 samples, first-passing, system prompt, facts.",
+      "pass_mark": "Fixed in advance, on a single registered run of the sealed 40-request panel (test only) with the same blind judge. (a) Useful 15/40 or more (333d got 8, the twin 10). (b) Paired against the twin, items where the arm is useful and the twin is not must be at least 2x the items where the twin is useful and the arm is not. (c) Invented person facts 1 or fewer. (d) On a separate non-panel variety probe (the same probe as the earlier mouth), at least 200 distinct replies per 1000. (e) Non-creative turns unchanged, because the adapter is off outside the creative path.",
+      "proves_wrong_if": "Useful stays at 11/40 or fewer, or invented person facts reach 2 or more. Either would mean short-form SFT does not transfer to 1B the way it did at 7B (arXiv 2508.21476), or that slot-templated data teaches the model to fill slots with made-up facts. If variety falls below 100 per 1000, distillation copied the teacher's single style (the 2605.26492 failure).",
+      "cost": "One 5090 job of about 1 hour, about $1-3. Teacher data comes from a larger open model run in the same job (a new download; about 10-20 min to generate 3,000 short replies) or from an API model (API cost outside the GPU budget). LoRA SFT of a 1B model on 3,000 \u00d7 250 tokens takes minutes.",
+      "brain_link": "Complementary learning systems: the notebook plays the hippocampus (exact facts, learned in one shot), and the LoRA plays the slowly trained cortex, learning only a procedural skill during sleep from replayed examples. The skill never absorbs person facts because names are placeholders filled from the notebook.",
+      "novelty": "Distillation and LoRA SFT are standard (2508.21476, 2305.07759). The new parts are untested: fact-slot templating, so the creative skill can't memorize or invent person facts, and a sleep-phase schedule that consolidates only skill, never facts. I found no paper doing this for a personal-memory assistant."
+     },
+     {
+      "name": "Trained length-controlled scorer for best-of-8 (critic replaces first-passing)",
+      "one_change": "Keep the current base generator. Draw 8 samples instead of 4 and return the guard-passing sample with the highest score from a small Bradley-Terry scorer: a scalar head plus LoRA on MiniCPM5-1B itself. Train the scorer on about 4,000 teacher-labelled pairs of MiniCPM's own replies to synthetic, non-panel creative requests, with pairs matched in length to within 20% (LitBench's length-bias warning). That is the one change: the pick rule.",
+      "pass_mark": "Fixed in advance. (a) Scorer agreement with held-out teacher labels of 70% or more, while a 'longer wins' baseline on the same pairs scores 60% or less. (b) On the sealed panel, useful 14/40 or more with the paired win/loss against the twin at 2:1 or better. (c) Invented person facts 1 or fewer. (d) The median word count of selected replies stays within 25% of 333d's.",
+      "proves_wrong_if": "The scorer passes (a) but panel useful stays at 11/40 or fewer, meaning selection among 1B samples cannot raise usefulness when all 8 samples are mediocre. Or the scorer fails (a), meaning a 1B scorer can't learn creative taste, against the LitBench claim for small generative scorers. Or selected replies are more than 25% longer, meaning the scorer learned length.",
+      "cost": "One 5090 job of about 40-60 min, about $1-2: generate 8 samples for about 2,000 requests, train the head, and run the panel. Teacher labelling of the pairs costs extra (API or a local larger model).",
+      "brain_link": "A basal-ganglia-style critic that selects among cortical proposals (action selection by a learned value). The scorer can be retrained each sleep on the day's replayed requests.",
+      "novelty": "Best-of-N with a reward model is well established (2507.00769, 2508.21476). Here only the use of the generator's own 1B backbone as a length-matched critic under hard guards against invented facts is specific to this project. It is not scientifically novel."
+     },
+     {
+      "name": "Low-temperature min-p control (no training)",
+      "one_change": "In gen.sample_chat for the creative path only, replace temperature 0.7 / top_p 0.9 with temperature 0.7 / min_p 0.1 (top_p off). Everything else in 333d is unchanged.",
+      "pass_mark": "Fixed in advance. Useful 12/40 or more and invented person facts 1 or fewer on the panel, and at least a 1.5x rise in distinct replies per 1000 on the non-panel variety probe. I expect this to fail. It is a cheap control that shows whether sampling is a lever at all.",
+      "proves_wrong_if": "Useful 10/40 or fewer (within noise of 333d/twin) with no variety gain would confirm the reanalysis in 2506.13681 that min-p is not a real lever, and the sampler should drop off the creative agenda.",
+      "cost": "Under 20 min on a 5090, well under $1. No training and no new downloads.",
+      "brain_link": "Weak: roughly a confidence-scaled gate on how much the cortex explores, similar to neuromodulatory gain. It is not a learned part.",
+      "novelty": "None: min-p is published (2407.01082) and disputed (2506.13681). It is included only as a cheap control that rules sampling in or out."
+     }
+    ],
+    "open_questions": [
+     "Is 333d's 8/40 vs the twin's 10/40 caused by 333d sending only the current message plus extracted notebook facts, while the twin sees the whole chat (scripts/claude_cre333d_agent.py:63-65)? A cheap diagnosis that doesn't touch the panel: on non-panel dev requests that depend on facts from earlier turns, count how often context_facts misses a fact the request needs.",
+     "The router sent only 25 of the 40 creative requests to the creative path. Any generation change can affect at most those 25, so is the router a bigger limit than generation quality? The per-item split of useful replies by routed vs not routed would answer this, but it lives in the panel outputs I was told not to open. Only someone allowed to read them should check.",
+     "The sealed 40-item panel has now been used for 333, 333b, 333c and 333d. Repeatedly choosing arms by their score on one test panel slowly overfits it. Should the next registered test use a fresh panel?",
+     "Is a 1B model even able to use a LoRA-learned creative skill without starting to invent facts about people? Nobody has measured this at 1B. The 7B greetings result (2508.21476) and the 9B SFT collapse (2606.04095) point in opposite directions.",
+     "Which teacher is allowed and affordable for distillation and labelling: an API model (cost outside the GPU budget) or a local larger open model (needs a download on the rented box)?",
+     "Does MiniCPM5-1B show the 'Elara/lighthouse' sameness (2605.26492) in its own creative replies, and does the earlier mouth's low variety (45-59 distinct per 1000) come from the model or from the prompt/guards? A non-panel sample of 1,000 replies at current settings would tell."
+    ]
+   },
+   "verdict": {
+    "angle": "Skeptical check of the small-model creative-writing report. I read the cited arXiv PDFs myself (curl + pypdf; no WebFetch) for the 6 claims the experiments rest on, and checked the 333d code claim against scripts/claude_cre333d_agent.py and scripts/claude_chat338_agent.py. I also checked the pass marks against how the repo defines its variety metric, and searched for prior work on the two ideas the report calls novel. I did not open the 333 panel or any of its outputs.",
+    "checks": [
+     {
+      "claim": "2508.21476 (Chinese greetings, Qwen2.5-7B): SFT alone raised the human-judged excellent rate from 53.8% to 86.2% on ordinary queries. SFT+RM+GRPO reached 91.2%. The RM used 7,896 pairs and had 87.6% accuracy. The report concludes that most of the gain came from cheap SFT.",
+      "verdict": "overstated",
+      "note": "SHOWN: every number matches Table 3 (Human column: 53.8 / 86.2 / 91.2), Sec. 4.2 (7,896 pairs, 80/20 split) and Table 1 (87.60% accuracy). Four problems with the framing. (1) 'Excellent' is really a binary 'acceptable' label: a weighted 1-3 rubric score of 2 or more. (2) The paper never gives the SFT data's size or source. No SFT dataset is described at all, so 'cheap SFT' is not supported by this source. (3) LLM-as-a-Judge + RL with NO SFT reached 92.4% human, beating SFT alone (86.2%). So 'RL added only ~5 points' hides the fact that an RL-only arm did better than SFT. (4) The abstract itself says 'SFT struggle[s] with novelty'. Also note that GPT-4o scored only 50% on this rubric, which suggests the rubric is culturally narrow and may not transfer to English cards and toasts. Measured at 7B on 4xA100."
+     },
+     {
+      "claim": "LitBench 2507.00769: zero-shot open judges scored 56-60% (Llama-3.1-8B 0.581, Qwen-2.5-7B 0.599). A trained BT RM (Llama-8B) reached 78%, above Claude-3.7 at 73%. CoT GenRM dropped to 72%. The paper says 1B/1.5B GenRMs can come close. A Llama-3.2-1B BT model on naive pairs leveled off at 65-70% and preferred longer stories.",
+      "verdict": "confirmed",
+      "note": "SHOWN: all the numbers are in Sec. 4 and the zero-shot table. Two small corrections. First, the 65% ceiling came from the variant without timestamp pairing (395k pairs). The length-biased model was a different variant: the one without length filtering, which leveled off at 70% (1.03M pairs). Second, the claim that '1B/1.5B can come close' is stated only for GenRM WITHOUT CoT. For Bradley-Terry models the paper reports a 'notable performance difference' by backbone at 1B/1.5B/3B. Experiment 2 uses a BT scalar head, so the paper's small-scorer claim does not directly back it. The trained RMs also used 43,827 pairs of human-upvoted, human-written stories averaging about 550 words. That is far from 4,000 teacher-labelled pairs of 1B replies under 140 words (UNTESTED)."
+     },
+     {
+      "claim": "POLARIS 2606.04095: plain SFT on about 1.4K human stories collapsed Qwen3.5-9B Story Quality from 18.5 to -60.6. GRPO reached 49.7 and POLARIS (HRI) 52.1.",
+      "verdict": "confirmed",
+      "note": "SHOWN: Table 3 and Sec. 5.2 ('SFT collapses'). The report leaves out details that make the case even less like Premonition's. The SFT baseline was thinking-enabled, trained on stories up to 4k words, and evaluated with an 8192-token output budget. It 'badly overshoots requested length', and the best checkpoint came at about 1 epoch (App. G.2). So the collapse is largely about length and long form. That supports the report's own caveat that a 140-word cap is closer to the greetings case, but it says nothing measured about 1B."
+     },
+     {
+      "claim": "TinyStories 2305.07759: diversity came from 3 random words (verb/noun/adjective) out of about 1500 plus random story features. High temperature alone was very repetitive. Grammar is learned small, while creativity keeps scaling. The report calls this 'a proven recipe for distillation data' for a sleep-phase LoRA.",
+      "verdict": "confirmed",
+      "note": "SHOWN: Sec. 2 says this almost word for word, and Sec. 3 observations back the scaling point. The relevance line goes too far. The recipe was used to PRETRAIN 1M-33M models from scratch on child-vocabulary stories, not to SFT an aligned 1B chat model. The paper also argues that the seeds 'greatly increase diversity' without an ablation that measures it. For LoRA distillation into MiniCPM5-1B the recipe is SUGGESTED, not proven."
+     },
+     {
+      "claim": "The min-p reanalysis 2506.13681 found omitted data and wrong statistics in the human evals, found no gain in quality, diversity or the trade-off, and found that the LLM-judge results reported the higher of two scores for min-p and the lower for top-p. The report's summary uses this to say 'the min-p paper's only 1B test ... a careful reanalysis found no reliable gain'.",
+      "verdict": "overstated",
+      "note": "The finding as worded is SHOWN: it matches the abstract and Sec. 2 and 4.3. The summary sentence overstates it. The reanalysis never examines the 1B creative appendix (C.3), which it does not mention. Its sweeps are GSM8K CoT on Qwen2.5 0.5B-7B, Gemma 2B/9B, Llama 3B/8B and Mistral 7B, and its LLM-judge section covers the AlpacaEval Table 3(b). What it supports is that min-p is not a general lever. It did not re-test the 1B creative-writing test."
+     },
+     {
+      "claim": "Min-p 2407.01082 App. C.3.6: Llama-3.2-1B, 3 prompts, GPT-4o judge. Min-p creativity was 6.33 at T=0.5, 3.78 at T=2.0 and 2.12 at T=3.0. At T=1.0, min-p 0.1 vs top-p 0.95 was 5.00 vs 5.44.",
+      "verdict": "confirmed",
+      "note": "SHOWN: the numbers match Tables 17-18, and there were exactly 3 prompts. Details the report left out: the judge is named both 'GPT-4o' and 'GPT-4' in the same appendix; outputs were JSON-schema-constrained (Pydantic plus lmformatenforcer); and at T=0.5 on 1B, min-p beat top-p by a wide margin (creativity 6.33 vs 4.93, originality 5.70 vs 4.48). At T=1.0, min-p 0.05 and 0.2 did beat top-p 0.9 and 0.99. So 'not consistent' is fair, but the evidence is too thin, and too far from Premonition's setup, to point either way for a 140-word chat reply."
+     },
+     {
+      "claim": "333d samples 4 replies (T 0.7, top_p 0.9, 200 new tokens, thinking off) and returns the first that passes the guards. Its messages hold only the system prompt with notebook facts plus the current user message. The twin got the whole chat.",
+      "verdict": "confirmed",
+      "note": "SHOWN from the code. In scripts/claude_cre333d_agent.py, turn333d calls gen.sample_chat([system, user], n) with N333D=4 and breaks on the first sample with guard333d None. In scripts/claude_chat338_agent.py, Gen338 defaults are max_new=200, temperature=0.7, top_p=0.9, enable_thinking=False. context_facts (claude_cre333_agent.py:53) keeps all user facts plus facts whose subject or value string appears in the message, plus one hop, capped at 40. It does not pass earlier turns. I did not check the twin's inputs, which live in the panel harness I may not open."
+     }
+    ],
+    "experiment_critique": "STRONGEST: Exp 3 (min-p control). It is truly one change, costs under $1, and fails cleanly. Its falsifier still overreaches. A 40-item result of 10/40 or fewer cannot 'confirm 2506.13681'. It can only show that sampling is not a lever for this model on this panel. It also needs the variety probe fixed (see below).\n\nEXP 1 (creative LoRA):\n(a) As one change it is acceptable: the only deployed change is the adapter weights on the creative path. But the 15/40 pass mark ignores a ceiling the report itself names. Only 25 of the 40 creative requests reach the creative path, so reaching 15/40 needs about 15 useful replies out of 25 routed, unless the unrouted 15 already score useful through the ordinary reply, which nobody outside the panel knows. The falsifier (11/40 or fewer means 'SFT does not transfer to 1B') therefore mixes up router misses, missing chat history and generation skill. A fail would not tell them apart. Pass marks should be per routed item, or the router should be fixed first.\n(b) There is a gray zone between 12/40 and 14/40 that is neither pass nor fail. It should be declared in advance.\n(c) The paired 2:1 ratio rests on tiny counts: 4 vs 2 passes, 3 vs 2 fails. It needs a stated minimum number of discordant items or an exact McNemar p-value.\n(d) Pass mark (d) is a category error. The repo's variety probe (design/v3/30-modes/330-month-end-plan.md, artifacts/claude-own-m1v-20260924/PASSMARKS.md) measured the ORDINARY mouth: 59 distinct per 1000, with a project bar of 300, not 200. Mark (e) switches the adapter off outside the creative path, so that probe cannot move. A new creative-path variety probe on non-panel prompts has to be defined in advance, and the bar should match the project's 300 or be justified.\n(e) The design has a hallucination risk the report misses. Gekhman et al. 2405.05904 found that once models learn fine-tuning examples containing facts the model did not already know, they hallucinate more, roughly in proportion. Any teacher reply that adds a detail about a person that is not on the fact card (a hobby, a job) teaches the 1B model to make things up. The G2 guard only catches 'your <relation> <Name>' patterns. The data filter needs a check that every person-attribute in the reply comes from the card.\n(f) The 'novel' claim is weak. Fact-slot templating is delexicalization, standard in data-to-text and dialogue NLG since at least Wen et al. 2015 (SC-LSTM). Sleep-phase consolidation into weights also has recent prior work (e.g. 'Language Models Need Sleep' 2606.03979; CLS-style LoRA consolidation papers such as 2606.29916; abstract-only). Applying it to a personal-memory assistant's creative skill may be new, but the parts are not.\n\nEXP 2 (scorer):\n(a) It is NOT one change. N goes from 4 to 8 AND the pick rule changes from first-passing to scorer argmax, so a gain could come from more samples clearing the guards. Add an arm with 8 samples and first-passing, or keep N=4.\n(b) Pass mark (a) is weak by design. Training pairs are length-matched within 20%, so a 'longer wins' baseline on those same pairs will sit near 50% automatically. The length test should run on pairs that are NOT length-matched.\n(c) '70% agreement with teacher labels' measures agreement with the teacher, not with people or the panel judge. If the teacher shares a model family with the blind judge, the arm is being tuned toward the judge. Name the teacher and judge and keep them different.\n(d) The falsifier 'scorer fails (a) goes against LitBench's small-scorer claim' misreads the paper. LitBench's 1B/1.5B claim is about GenRM without CoT, not BT. Its BT models trained on about 44k human pairs of about 550-word stories.\n(e) The same router ceiling applies to 14/40.\n\nALL THREE: every arm would be scored on the same 40-item sealed panel, which has already been used 4 times. With 3 new arms, a pick-the-best step overfits it. Register a fresh panel, or limit the panel to one confirmatory arm.",
+    "missed": "1) The cheapest and most diagnostic experiment is missing: give 333d the same recent chat history the twin gets (one change, no training, about $0.5). The report names this confound in its open questions but does not rank it above training. Until it is ruled out, any LoRA or scorer result against the twin is confounded (SUGGESTED).\n2) The router is plausibly the biggest ceiling (25/40 routed, 4/30 false routes). No experiment targets it, and each generation pass mark is set without taking it into account.\n3) Near-1B evidence the report missed: arXiv 2409.11547 (abstract-only). A fine-tuned BART-large (~400M) beat average human writers on short stories in a 68-person study (2.11 vs 1.85), with more surprising associations than GPT-4o. This weakens 'very few studies near 1B' and is relevant, if loosely, to short-form SFT at small scale.\n4) arXiv 2505.16245 'Diverse, not Short' (abstract-only). Common diversity metrics AND reward models push models toward shorter outputs. Its length-controlled selection worked with only 3,000 preference pairs. This bears directly on 333's short-tie-break failure, on the scorer's length check, and on how to define a fair variety metric.\n5) arXiv 2405.05904 (abstract-only): fine-tuning on new facts raises hallucination. This is the key risk for fact-slot distillation under the no-invented-facts rule.\n6) Prior art for 'novelty': delexicalized NLG training (Wen et al. 2015, and dialogue NLG generally) and 2026 sleep/consolidation-into-weights papers (2606.03979; 2606.29916 abstract-only).\n7) Practical gaps. The report does not name a teacher model or check its licence for distillation. It does not ask whether the proposed LoRA could run in the sealed build before 2026-09-30. It does not plan how to separate LoRA effects from chat-template or thinking-mode changes on MiniCPM5-1B.\n8) The summary line 'Self-Refine already failed at 13B' and the plan-first finding (2504.09071) were not re-checked here (untested by me)."
+   }
+  },
+  {
+   "report": {
+    "angle": "How the human brain produces creative ideas (a loop of generating then judging, a switch between the two, recombining memories to imagine new scenes, sleep and incubation, and measures of associative distance), which parts already have published ML versions, and which of those could become learned parts of a 1B assistant that has an exact notebook and a sleep phase.",
+    "summary": "The brain science points to one clear loop. A loose generator (the default mode network together with hippocampal recombination of memories) proposes ideas, a controller (the executive control network) checks them, and a switch (the salience network) decides which one is in charge. In the largest study (N=2433), creative people switch between the two modes more often, and the best balance sits in the middle of an inverted U. That result is a correlation, not proof of cause. Nearly every piece of this loop already has an ML version. ReMIND (2601.07121) runs wake, dream, judge and rewake stages. QDAIF (2310.13032) uses an LM both to generate and to evaluate. DishCOVER (2504.20643) recombines structured recipes. DivPO (2501.18101) and deviation-weighted DPO (2503.17126) train models toward diverse answers. 'Language Models Need Sleep' (2606.03979) and 'Discovery by Dreaming' (2607.16256) are sleep and dream phases for LLMs. So Premonition's novelty can only come from how the parts are combined, not from any single part. Two cautions from the sources matter for a 1B model. First, methods that ask for more work at inference time (Verbalized Sampling, and ReMIND, which was tested only on 27B\u2013120B models) help large models more and can lower quality in small ones. Second, 'dream' consolidation training was null under matched conditions on three base models and positive only at one LoRA rank. The most useful brain idea for Premonition is from memory models. Spens & Burgess 2024 and GENESIS (2510.15828) show that when a generative 'cortex' fills in details, recall drifts toward the typical case ('schema distortion'); in Premonition that drift shows up as invented facts. The remedy those models point to is the design Premonition already uses: exact specifics live in the hippocampus-like notebook, and the generator adds only generic structure. On that reading, creative gains should come from changing what gets recombined and when the creative mode is switched on, not from loosening the generator. I propose three single-change experiments, all judged on a fresh dev panel and never on the 333 test panel. (1) A learned 'salience' router to replace the keyword router. It is cheap and not novel, but it targets the measured leak of 15 of 40 creative requests never reaching the creative path. (2) Episodic-recombination cues: each of the 4 candidates is conditioned on a different near-plus-remote pair of notebook facts. This is modestly novel. (3) A sleep-phase 'dream' training step that uses rarity-weighted preference pairs. It is expensive and should be deferred until after 2026-09-30. Plain-language version for Ben: your brain is creative when a loose idea machine and a strict checker take turns, and when it mixes old memories into new scenes, which sleep seems to help. Most of this has already been copied in AI research. The cheapest win for Premonition is to notice creative requests more reliably. The most brain-like new trick is to feed each draft a different mix of true facts from the notebook, so the drafts differ without making anything up.",
+    "findings": [
+     {
+      "claim": "Divergent-thinking ability, but not general intelligence, is predicted by how often resting-state fMRI switches between DMN-ECN segregated and integrated states (10 samples, N=2433). Creativity has an inverted-U relation with switching balance. A task-fMRI study (N=31) shows more switching during idea generation than in a control condition. All of this is correlational.",
+      "source": "Chen et al. 2025, Communications Biology, doi:10.1038/s42003-025-07470-9 (https://www.nature.com/articles/s42003-025-07470-9)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Supports a two-mode design (a loose generator plus a strict checker) with a switch between them. It does not show that more generate-and-evaluate rounds cause better output, so no round count should be copied from it."
+     },
+     {
+      "claim": "The same paper's introduction cites prior work in which connectivity features of the default mode, executive control and salience networks together predict creative performance across independent samples. This supports the salience network's role as the switch.",
+      "source": "Chen et al. 2025 Comm Biol (introduction, citing Beaty et al. 2018)",
+      "label": "suggested",
+      "abstract_only": false,
+      "relevance": "The brain analog of Premonition's router is the salience network, the part that decides when to enter creative mode. The router is currently hand-written keywords (25 of 40 creative requests routed, 4 of 30 look-alikes wrongly routed)."
+     },
+     {
+      "claim": "ReMIND runs 4 stages: wake (low-temperature baseline), dream (high temperature), judge (extracts a novel idea or skips) and rewake (restates the chosen idea). LLM-rated novelty rose from wake to rewake in some model setups but not all. Gemma gave no gains, and one of 3 tasks showed no clear rise. The models were 27B\u2013120B, only novelty was scored by a single external LLM, and usefulness was not measured.",
+      "source": "arXiv:2601.07121",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is the closest published version of a generate-evaluate-consolidate creative loop, so a wake/dream/judge loop in Premonition would not be novel. It is untested at 1B, where high-temperature 'dreams' may lose coherence."
+     },
+     {
+      "claim": "Verbalized Sampling (asking for several answers with their probabilities) raises creative-writing diversity 1.6\u20132.1x over direct prompting. The gains grow with model capability, and the authors report that less capable models sometimes lose output quality.",
+      "source": "arXiv:2510.01171 (Sec. on emergent trend; Limitations)",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A poor fit for a 1B model. It asks the model to produce and rank a list of candidates, which the paper says strains weaker models."
+     },
+     {
+      "claim": "On NoveltyBench, larger models within a family are often less diverse than smaller ones. Paraphrasing and a 'be unique' system prompt helped only marginally. In-context regeneration (asking for an answer different from the earlier ones) was the most effective prompting strategy.",
+      "source": "arXiv:2504.05228",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Suggests that system-prompt changes like 333d's friendly prompt will not fix variety, and that conditioning on earlier drafts or different cues is the lever to try."
+     },
+     {
+      "claim": "The Divergent Association Task (DAT) measures novelty alone, and two non-creative baselines beat LLMs on it. The Conditional DAT scores novelty only when the answer is appropriate. Under it, smaller model families often look the most creative, while advanced families favor appropriateness at lower novelty.",
+      "source": "arXiv:2601.20546",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A variety metric alone, such as distinct replies per 1000, can be gamed by noise. Premonition's diversity should be measured only among replies that pass the guards and are on-task."
+     },
+     {
+      "claim": "LLMs can exceed the average human DAT score (100k humans) but fall short of highly creative humans. GPT-4's DAT score rises with temperature, and instructed strategies (etymology, meaning opposition, thesaurus) shift scores.",
+      "source": "arXiv:2405.13012",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Associative distance can be steered by sampling and by cue choice, which supports trying cue-based recombination before heavier training."
+     },
+     {
+      "claim": "Weighting DPO/ORPO pairs by how much the winning response deviates from other responses to the same prompt raises semantic and style diversity with little quality loss. The Llama-3.1-8B DDPO-both model matched the semantic diversity of a human-written dataset.",
+      "source": "arXiv:2503.17126",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A published training recipe a sleep phase could use to fix the 1B mouth's low variety (45\u201359 distinct replies per 1000). It was shown at 7\u20138B, not 1B."
+     },
+     {
+      "claim": "DivPO chooses as 'chosen' a response that is rare but high quality and as 'rejected' one that is common and low quality. It reports +45.6% persona-attribute diversity and +74.6% story diversity at similar win rates.",
+      "source": "arXiv:2501.18101",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "An alternative pairing rule for a sleep-phase preference step."
+     },
+     {
+      "claim": "QDAIF uses an LM both to mutate candidates (LM crossover) and to score their quality and diversity inside a MAP-Elites archive. It covers more of the target space with high-quality creative texts than non-QD controls, AI and human ratings agree reasonably, and reward hacking is a noted risk.",
+      "source": "arXiv:2310.13032",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is the published novelty-search and quality-diversity form of generate-then-evaluate. It is too expensive per request at inference but could generate sleep-phase training data offline."
+     },
+     {
+      "claim": "DishCOVER translates recipes into structured trees, recombines them with minimal edits, and ranks by novelty after a value filter. Domain experts rated its recipes as mostly coherent and feasible, and significantly more novel and diverse than GPT-4o's.",
+      "source": "arXiv:2504.20643",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Recombining structured items is published and works. Premonition's notebook facts are already structured, so recombination can operate on exact facts instead of free text."
+     },
+     {
+      "claim": "In a computational model, hippocampal replay trains a generative network (VAE). Imagination comes from decoding or recombining latent variables. Recall becomes more generative and schema-distorted as consolidation proceeds, and the hippocampus keeps only the unpredictable, unique details.",
+      "source": "Spens & Burgess 2024, Nature Human Behaviour 8:526\u2013543, doi:10.1038/s41562-023-01799-z",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This maps directly onto the notebook as hippocampus (exact unique details) and the 1B LM as neocortex (schemas). It predicts that letting the LM supply person-specific details produces typical-but-false details, which is the invented 'your <relation> <Name>' failure. This is shown only in simulation."
+     },
+     {
+      "claim": "GENESIS models memory as a cortical VAE plus a hippocampal VAE inside a retrieval-augmented architecture. It reproduces gist-based distortions and constructive episodic simulation, including replay that recombines past experiences.",
+      "source": "arXiv:2510.15828",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "A second model framing memory as retrieval-augmented generation with recombination. The notebook-plus-LM design already has this shape (shown in simulation only)."
+     },
+     {
+      "claim": "The constructive episodic simulation hypothesis says imagining future events draws on the same system as episodic memory, by retrieving and recombining details (people, places, objects) into new scenes. Anterior hippocampal activity tracks how much detail a future event contains.",
+      "source": "Schacter & Addis 2007; Addis & Schacter 2008 (PubMed 18157862)",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "The brain rationale for Experiment 2: build each creative draft from a different recombination of true notebook facts."
+     },
+     {
+      "claim": "In a nap study, REM sleep, compared with quiet rest and NREM, improved Remote Associates Test performance on items primed before the nap. This is read as REM helping integrate unassociated information.",
+      "source": "Cai et al. 2009, PNAS 106:10130, doi:10.1073/pnas.0900271106",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "The evidence behind a REM-like sleep step that links distant memories. It is a small human study, and the effect size was not checked here."
+     },
+     {
+      "claim": "The authors propose that NREM replay abstracts rules and schemas, REM replay forms novel associations, and alternating the two across a night builds and then restructures knowledge frameworks.",
+      "source": "Lewis, Knoblich & Poe 2018, Trends in Cognitive Sciences 22(6):491\u2013503",
+      "label": "suggested",
+      "abstract_only": true,
+      "relevance": "Suggests two sleep sub-steps: consolidate facts (NREM-like), then recombine them (REM-like). It is a hypothesis paper."
+     },
+     {
+      "claim": "A meta-analysis of 117 studies found a positive incubation effect (mean d\u22480.29 for delayed incubation), larger for divergent-thinking tasks and larger with low-demand activity during the break.",
+      "source": "Sio & Ormerod 2009, Psychological Bulletin 135:94\u2013120",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Offline time helps divergent thinking modestly in humans. There is no direct ML analog at inference; the analog is offline sleep-phase generation."
+     },
+     {
+      "claim": "A three-state wake/NREM/REM cortical model, built like a GAN, found that REM 'adversarial dreaming' (making new virtual inputs) was needed to learn semantic representations, while NREM perturbed replay improved robustness.",
+      "source": "arXiv:2109.04261 (Deperrois et al., eLife 2022)",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Shows the REM-recombination and NREM-replay split working in a small vision model, not in language."
+     },
+     {
+      "claim": "The 'overfitted brain' hypothesis proposes that dreams act as noise injection that stops overfitting to the day's learning.",
+      "source": "arXiv:2007.09560",
+      "label": "untested",
+      "abstract_only": true,
+      "relevance": "A theory that sleep-phase generation should use perturbed or recombined data, not only faithful replay."
+     },
+     {
+      "claim": "Cross-domain recombinatory replay by LoRA fine-tuning was null under matched conditions (rank 128) on Llama-3.1-8B, Qwen-2.5-72B and Llama-3.3-70B. It was positive only at rank 256 on Llama-8B (+5.64pp, 5/5 seeds), and inconclusive at rank 256 on the larger models.",
+      "source": "arXiv:2607.16256",
+      "label": "suggested",
+      "abstract_only": false,
+      "relevance": "Training a dream-recombination step into the weights is published, and the evidence is weak and fragile. Do not expect a 1B LoRA version to work by default."
+     },
+     {
+      "claim": "'Sleep' for LLMs combines consolidation (distilling a smaller self into a larger network) with 'dreaming' (RL-learned generation of synthetic curriculum data), and it helped on continual-learning and knowledge-incorporation tasks.",
+      "source": "arXiv:2606.03979",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "'Dreaming as self-generated training data' is published, so a creative sleep phase is novel only in what it recombines (the user's notebook) and in the guard used as judge."
+     },
+     {
+      "claim": "Brain-LLM alignment in the default mode network during the Alternate Uses Task grows with model size (270M\u201372B). A reasoning-trained Llama-3.1-8B variant showed negative alignment to high-creativity neural responses, while a creativity-optimized variant kept it.",
+      "source": "arXiv:2604.03480",
+      "label": "suggested",
+      "abstract_only": false,
+      "relevance": "A weak, correlational hint that reasoning ('thinking') training is not aligned with creative generation. It fits, but does not explain, 333's failure with thinking left on. At about 1B, DMN alignment is expected to be low."
+     },
+     {
+      "claim": "In Wake-Sleep Consolidated Learning, a REM stage that exposes the model to unseen realistic inputs ('dreaming') improved forward transfer in continual visual classification.",
+      "source": "arXiv:2401.08623",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Another published wake/NREM/REM training schedule, for vision only."
+     }
+    ],
+    "experiments": [
+     {
+      "name": "E1 Learned salience switch (router)",
+      "one_change": "Replace the keyword creative-request router with a logistic-regression probe on MiniCPM5-1B's own mean-pooled hidden states. Train it on a synthetic set of creative requests and look-alike non-requests written before the test and never drawn from the 333 panel. Nothing else in the creative path changes.",
+      "pass_mark": "On a fresh held-out dev set (60 creative, 60 look-alike, written by a different model or person than the training set, frozen before training), recall must be at least 54/60 and false routing at most 3/60. Both must beat the keyword router on the same set, with recall at least +10 points. Second pass mark on the same 60 creative items: end-to-end useful count (same blind-judge rubric) at least keyword-router arm +3, with invented person facts at 0.",
+      "proves_wrong_if": "The probe does not beat keyword recall by 10 points at equal or lower false routing. Or routing improves but end-to-end usefulness does not, which would mean the creative path adds nothing on newly caught requests and the bottleneck is the generator, not the switch.",
+      "cost": "Probe training runs in minutes on CPU or on the 5090 (under $0.50). The end-to-end check is about 120 generations plus judge calls, under $1 of GPU. No new downloads.",
+      "brain_link": "The salience network (anterior insula and dACC) detects when a situation calls for spontaneous generation and switches between the DMN and ECN. Creative people show more of this switching (Chen et al. 2025, correlational).",
+      "novelty": "Not novel. Learned intent routing is standard, and the brain framing adds nothing new. It is ranked first because it is cheap, it replaces a hand-written rule with a learned part, and it targets a measured leak (15/40 creative requests never reached the creative path). Its end-to-end value is untested."
+     },
+     {
+      "name": "E2 Episodic-recombination cues (constructive simulation)",
+      "one_change": "Only change how the 4 candidates are conditioned. Today all 4 samples see the same notebook facts. In the test arm, each candidate gets a different cue: one notebook fact near the request plus one remote fact about the same person or place, chosen by embedding distance. Draft 4 keeps today's conditioning as an anchor. The guards (no memory claims, no invented person relations, at most 140 words, not a refusal) and the first-that-passes rule stay exactly as in 333d.",
+      "pass_mark": "Run on a fresh 40-item dev panel written and frozen before the run, never the 333 panel, scored by the same blind-judge rubric against 333d on the same items. Pass requires all of: (1) useful at least 333d +4/40; (2) invented person facts 0; (3) guard-pass rate within 5 points of 333d; (4) median pairwise embedding distance among guard-passing candidates at least 1.3x 333d's, counted only for on-task replies, in the style of CDAT.",
+      "proves_wrong_if": "Useful gain is below +2/40. Or invented person facts rise above 0, which would mean remote cues push the 1B model into schema-filling, the distortion Spens & Burgess predict. Or diversity rises while usefulness falls, which would mean recombination adds noise rather than good new combinations.",
+      "cost": "Inference only: about 40 items x 4 candidates x 2 arms on the 5090, under 1 GPU-hour (about $1), plus judge calls as in 333d. No new downloads; it uses the existing model's hidden states for embeddings.",
+      "brain_link": "Constructive episodic simulation: the hippocampus retrieves exact episodic details and recombines them into new scenes, while the neocortex supplies the schema. In Premonition, the notebook is the exact store and the LM is the schema generator; recombination comes from which true facts are paired, not from loosening the generator.",
+      "novelty": "Partly published. Recombination for creativity exists: DishCOVER arXiv:2504.20643, facet recombination in Scideator arXiv:2409.14634 (abstract-only), and LM crossover in QDAIF arXiv:2310.13032. I found no published version that recombines a user's exact personal-fact notebook with a hard no-invention guard in a roughly 1B assistant, but my search was not exhaustive, so its novelty is suggested, not shown."
+     },
+     {
+      "name": "E3 REM-style sleep step with rarity-weighted preference (post-deadline)",
+      "one_change": "Add one LoRA preference-training step to the sleep phase. The 'dream' part: make synthetic creative requests from recombined notebook facts and sample 8 candidates from the 1B model for each. Build DivPO/DDPO-style pairs: chosen = guard-passing, judge-acceptable and most deviant from the other 7; rejected = guard-failing, or the most typical among low-rated ones. Train once, and change nothing at inference.",
+      "pass_mark": "On the fresh dev panel plus a repeated-prompt variety probe, fixed before training. Pass requires: distinct on-task replies per 1000 at least 150 (the earlier mouth scored 45\u201359); useful count at least that of the pre-sleep model on the same dev panel; invented person facts 0; and no regression on the existing notebook fact-recall and 'I don't know' suites (within 1 item).",
+      "proves_wrong_if": "Variety rises but usefulness falls by 2 or more out of 40. Or invented person facts or the fact-recall suite get worse, meaning the training consolidated distortions into the weights. Or the gains appear only on the kinds of item the judge rewards and not in a small human check of about 10 items.",
+      "cost": "About 300 synthetic requests x 8 samples of generation plus 1B LoRA DPO on the 5090, about 1.5\u20132.5 GPU-hours ($1.5\u20133), plus judge calls for quality labels. It fits one job at or under $4 but would use most of the remaining $22 once repeated. Target it after 2026-09-30.",
+      "brain_link": "The NREM/REM division of labor (Lewis, Knoblich & Poe 2018): replay consolidates, and REM-like recombination forms new associations. Offline incubation helps divergent thinking modestly (Sio & Ormerod 2009, d\u22480.29).",
+      "novelty": "Mostly published. Rarity-weighted preference training is in arXiv:2501.18101 and arXiv:2503.17126. Dream-phase synthetic curricula are in arXiv:2606.03979, and recombinatory LoRA consolidation is in arXiv:2607.16256, whose evidence is weak (null under matched conditions). New, untested parts: recombining a personal exact notebook, using no-invention guards as part of the judge, and testing at 1B."
+     }
+    ],
+    "open_questions": [
+     "Of the 8 useful replies in 333d, how many came from the 25 routed requests versus the 15 that got the ordinary reply? This decides whether E1's end-to-end gain is plausible. It must be answered from summary counts, without opening the test-only panel files.",
+     "Does the blind judge count a grounded but plain reply as useful? If not, recombination cues may need to raise specificity, not just diversity.",
+     "With first-that-passes, is diversity across the 4 candidates relevant? Only the first passing draft is shown, so E2's effect may come from better first drafts rather than more varied ones. Log which candidate index wins.",
+     "Does MiniCPM5-1B with thinking off stay coherent at the higher temperature a 'dream' stage needs? ReMIND's evidence is 27B\u2013120B only.",
+     "What quality signal can the sleep step use without overfitting to the same LLM judge that grades the panel? Options: a different judge model, guard-only labels, or a small human-labelled set.",
+     "Does remote-fact pairing raise schema-filling (invented relations) in a 1B model, as the Spens & Burgess distortion account predicts? E2 is designed to detect this.",
+     "Could Verbalized Sampling or in-context regeneration work at 1B despite the reported scale dependence? It is a cheap probe but was not recommended here because the evidence points against it."
+    ]
+   },
+   "verdict": {
+    "angle": "Skeptical check of the brain-creativity report. I checked 8 cited sources against their full text: 7 arXiv PDFs downloaded with curl and extracted with pypdf into my scratch dir, plus the Chen 2025 Comm Biol HTML fetched with curl. I also read the 333d creative-path code on main (scripts/claude_cre333d_agent.py, claude_cre333_agent.py, claude_chat338_agent.py). I did not open the 333 panel or its run outputs. Labels: shown = I read it in the source or the code; suggested = my inference; untested = nobody has measured it.",
+    "checks": [
+     {
+      "claim": "ReMIND (2601.07121): wake/dream/judge/rewake; novelty rose in some setups but not all; Gemma gave no gains; 1 of 3 tasks had no clear rise; 27B-120B models; only novelty was scored by a single external LLM; usefulness was not measured.",
+      "verdict": "overstated",
+      "note": "SHOWN: the models were gpt-oss-120b, qwen3.5-27b, gemma4-31b and nemo3-30b (27-120B). 'Gemma did not show a significant effect in any of the three roles.' Aperiodic Craft showed no clear rise, which the authors put down to a ceiling effect (high wake-stage novelty). WRONG part: the external judge (gpt-5.2) scored alignment and coherence as well as novelty. Coherence barely declined in the top configurations. Alignment fell for Gemma-wake configurations and for qoq (delta -0.197). So 'only novelty was scored' is false. Practical usefulness was not scored, but alignment is the nearest thing to it. The paper does say novelty was rated by a single LLM (Limitations). The dream stage ran at temperatures up to 10. Whether that stays coherent at 1B is untested."
+     },
+     {
+      "claim": "Verbalized Sampling (2510.01171): 1.6-2.1x creative-writing diversity; gains grow with model capability; less capable models sometimes lose quality.",
+      "verdict": "confirmed",
+      "note": "SHOWN: the Sec. 1 and Sec. 5 text and Appendix B Limitations say this almost word for word ('less capable models ... occasionally exhibit a degradation in output quality'). Caveat: the 'smaller' models in that comparison were GPT-4.1-mini and Gemini-2.5-Flash, far above 1B. VS-CoT and VS-Multi avoided the quality drop on the larger models. So 'a poor fit at 1B' is SUGGESTED by extrapolation, not measured. The paper also fine-tuned Qwen3-1.7B on VS-generated synthetic data (Table 3, positive). That matters for a sleep phase, where a bigger teacher could generate the data, and the report did not mention it."
+     },
+     {
+      "claim": "NoveltyBench (2504.05228): larger models in a family are often less diverse; paraphrasing and a 'be unique' system prompt are only marginally effective; in-context regeneration is the most effective strategy.",
+      "verdict": "confirmed",
+      "note": "SHOWN in the full text (Sec. 5, Fig. 5). Caveat: the prompting-strategy test used only Claude-3 Opus, GPT-4o and Gemini 2.0 Pro on 100 curated prompts, so nothing about 1B. The report left out a relevant finding: 'smaller models such as Gemma 2-2B and Llama 3.2-1B demonstrate the highest diversity.' That SUGGESTS the old mouth's 45-59 distinct replies per 1000 came from the pipeline (picker, guards, canned lines, sampling settings) rather than from 1B-scale mode collapse. That should be checked before paying for diversity training (E3)."
+     },
+     {
+      "claim": "DDPO (2503.17126): deviation-weighted DPO/ORPO raises semantic and style diversity with little quality loss; Llama-3.1-8B DDPO-both matched the semantic diversity of a human-written dataset; shown at 7-8B.",
+      "verdict": "overstated",
+      "note": "SHOWN: the method and the 7-8B models (Llama-3.1-8B, Mistral-7B, LoRA r128, 6 H100s) are right. The paper says 'close to Gold' and 'almost on-par', not 'matched'. The report left out that the training data were human-written r/WritingPrompts responses: 421k prompt-response pairs, many human stories per prompt, with upvotes as the quality signal. The authors say the diversity 'might be due to the diversity of responses for each prompt in our training dataset'. Quality dropped with only 4 responses per prompt. E3 would build pairs from 8 self-samples of a low-variety 1B model, which removes the very diversity source DDPO relied on (SUGGESTED)."
+     },
+     {
+      "claim": "DivPO (2501.18101): chosen = rare but high quality, rejected = common and low quality; +45.6% persona-attribute diversity and +74.6% story diversity at similar win rates.",
+      "verdict": "confirmed",
+      "note": "SHOWN in the abstract and full text. The report marked this abstract-only, but the full text is available. Llama-3.1-8B-Instruct, pools of N=16 self-generated responses, quality from the ArmoRM reward model plus rule-based validity, trained both offline and online. DivPO's on-policy pools make it the closer template for E3 than DDPO. But it depends on a separate quality reward model, and Premonition's only candidate for that is the panel judge (a risk of training toward the grader)."
+     },
+     {
+      "claim": "Discovery by Dreaming (2607.16256): recombinatory LoRA replay was null at matched conditions (r=128) on Llama-3.1-8B, Qwen-2.5-72B and Llama-3.3-70B; positive only at r=256 on Llama-8B (+5.64pp, 5/5 seeds); inconclusive at r=256 on the larger models.",
+      "verdict": "confirmed",
+      "note": "SHOWN: Table 1 matches (8B r128 +1.17\u00b13.06 null; r256 +5.64\u00b12.31, p=0.0055, 5/5 seeds; 72B and 70B r256 inconclusive; Mistral and Mixtral r128 also null). The report left out three things. (1) The abstract itself says the +5.64pp 'reflects a difference in task mix rather than mechanism'. (2) The robust positive result came from the SYMBOLIC arm, which replays structured knowledge objects. That is closer to Premonition's triple notebook than the LoRA arm. (3) Putting the same cross-domain material in the context of a ~671B model reduced accuracy by about 10pp (0/5 seeds positive). That is a direct caution for E2, which adds remote facts in context (SUGGESTED transfer)."
+     },
+     {
+      "claim": "Chen et al. 2025 Comm Biol: DMN-ECN switching predicts divergent thinking but not intelligence (10 samples, N=2433); inverted-U with switching balance; task fMRI (N=31) shows more switching during idea generation; correlational.",
+      "verdict": "confirmed",
+      "note": "SHOWN in the abstract and results. The effects are small, which the report did not say: pooled g=0.174 [0.08, 0.27], and the quadratic (inverted-U) term g=-0.07 [-0.14, -0.01]. In the task study, switching frequency did not predict originality (p=0.971); only the balance term did. Chen measured DMN-ECN switching, not the salience network. So E1's brain link ('the salience network switches ... creative people show more of this switching (Chen et al.)') attributes a role to the salience network that this paper did not test (overstated)."
+     },
+     {
+      "claim": "CDAT (2601.20546): DAT scores novelty only; two non-creative baselines beat LLMs; CDAT conditions novelty on appropriateness; smaller families look most creative under it.",
+      "verdict": "confirmed",
+      "note": "SHOWN in the abstract. The report's lesson (count diversity only among on-task, guard-passing replies) is a fair adaptation, not a result from the paper."
+     }
+    ],
+    "experiment_critique": "E1 (learned router) has the best-built pass marks: a frozen fresh set, a different author for the dev set, and thresholds fixed in advance. It is one change and replaces a rule with a learned part. Its weak point is its premise. More routing only helps if the creative path beats the ordinary path on the requests it newly catches. In 333d the creative path overall scored 8/40 against the twin's 10/40, and the routed and unrouted split is unknown (the report's own open question 1). A cheaper and more decisive first step is an oracle-routing check on the fresh dev panel: force all creative items down the creative path and compare with the ordinary path. If the creative path does not win there, E1 cannot pay off. There is also a safety gap. The code (claude_cre333d_agent.py) shows a creative turn 'never reaches the reader' and is sent only the system prompt plus the current message. So a recall question wrongly routed to the creative path gets a generated answer instead of a notebook lookup or 'I don't know'. The look-alike set should include recall questions about taught people, with a separate pass mark of 0 routed. The end-to-end mark (+3 useful on 60) has no judge-repeat or seed control, and one judge pass could produce it by chance. The report also does not say what gets mean-pooled: the request alone or the chat.\n\nE2 (recombination cues) is the most interesting and the least well specified. (a) It is not clearly one change. It is unclear whether the cue replaces today's fact list or is added to it. Replacing it removes facts from drafts 1-3, which is a second change. It also adds an embedding-distance selector on 1B hidden states. (b) context_facts already returns only facts about named or user entities plus one hop, as (subject, relation, value) triples. Many people will have too few triples for a meaningful 'near' and 'remote' pair. The pass mark should be pre-registered on items with at least 2 facts per person, or the cue rule should say what happens with fewer. (c) Pass mark (4) measures diversity among the 4 candidates, but first-that-passes shows the user only one. That diversity is not user-visible and can rise while nothing the user sees changes. The report notes this in open questions yet still makes it a pass criterion. (d) The +4/40 pass mark and the below-+2 falsifier leave +2 and +3 undefined, and from an 8/40 baseline on 40 items with one LLM judge, +4 is within noise without repeats. (e) Only routed items are affected, so under the keyword router about a third of the dev panel is diluted by E1's leak. Either force routing for E2 or run it after E1. The falsifier for invented person facts is sound, but it only sees what the G2 regex misses. Novelty is thinner than stated. DIVERGE (2602.00238, abstract-only) already conditions each generation on a different retrieved viewpoint with diversity-aware MMR, and reports that simply diversifying retrieval does not make generations diverse. Memory-assisted personalised recommenders (e.g. MAP 2505.03824, abstract-only) retrieve personal-memory facts to condition generation. What stays new is a hard no-invention guard at 1B on an exact triple store, which counts as novel only in the suggested sense.\n\nE3 (sleep DivPO/DDPO) is the weakest. The DDPO evidence depends on human-written, many-per-prompt data. Self-samples from a low-variety 1B give little deviation to weight. The quality label has to come from an LLM judge, which risks training toward the grader (the report notes this but builds nothing to stop it). The 150-per-1000 target is arbitrary, and its baseline (45-59) was measured on the old generative mouth, not the 333d path, so the comparison is not like for like. The weights are shared by every path, so 'within 1 item' on two suites is too narrow a regression check. The whole e2e suite should be re-run. A 10-item human check cannot falsify anything. Before E3, the NoveltyBench 1B result suggests checking whether the pipeline, not the weights, causes the low variety.\n\nAcross all three, the pass marks are fixed in advance and each names a falsifier, which is good. None controls for LLM-judge variance: two judge passes or a second judge model would fix that.",
+    "missed": "1. SHOWN from code: the 333d creative path sends the model only [system prompt + notebook facts, current user message]. No chat history reaches it, while the plain twin that scored 10/40 saw the whole chat. Anything taught in chat prose but not stored as a triple, plus the request's conversational context, is lost on the creative path. The cleanest single-change experiment the report missed is to give the creative path the recent chat turns (or the twin's context) with the guards unchanged. It is a brain-like episodic-context change and cheaper than E2. 2. SHOWN: the report never asks whether the creative path beats the ordinary reply at all. An oracle-routing comparison should come before E1. 3. Personalisation-induced hallucination: 'When Personalization Misleads' (2601.11000, FPPS/PFQABench). It is the direct ML counterpart of the schema-distortion story, with an inference-time steering fix. The report's author downloaded it into the shared scratch dir but did not cite it. 4. Diversity-with-quality training that the report missed: DARLING (2509.02534, abstract-only: a learned semantic-equivalence classifier combined with quality in online RL) and Creative Preference Optimization (2505.14442, not opened). Both are closer to a sleep-phase recipe than DDPO. 5. DIVERGE (2602.00238, abstract-only) as prior art for per-sample cue retrieval, and its warning that diverse retrieval does not by itself give diverse outputs. 6. From the cited Dreaming paper: the symbolic structured-replay arm was the robust positive, and in-context remote material hurt. 7. NoveltyBench's finding that 1B models are among the most diverse, which points the variety failure at the pipeline. 8. Small effect sizes in Chen 2025, and that its task study found no link between switching frequency and originality. Plain-language note for Ben: the report cites its sources mostly correctly, but some are better news for big models than for yours. The simplest thing it missed is that your creative path currently can't see the conversation, only the saved facts. Try giving it the chat before trying anything fancier."
+   }
+  },
+  {
+   "report": {
+    "angle": "How to choose the best of several candidate replies, and how to measure creativity: small learned reward models, LLM judges and their length and flattery biases, creative-writing benchmarks and diversity metrics, and how to reward the correct use of taught facts without rewarding invented ones.",
+    "summary": "I read 17 primary sources: 16 arXiv papers, most from 2023-2026, plus Li et al. 2016 on dialogue. Six results bear most directly on Premonition. (1) Small learned reward models trained on preference data beat zero-shot judges on creative writing. LitBench (2507.00769) reports 78% agreement with humans for trained models, 73% for the best frontier judge and 56-60% for small open judges. Asking the reward model to reason first made it worse (72%). (2) Length bias is the main trap. It lives mostly in the reward model (2310.03716), and a Llama-3.2-1B reward model trained on data that was not length-filtered \"strongly preferred the longer story\" (2507.00769). A small regression that controls for length fixes much of it in judges (2404.04475). (3) Skywork-Reward-V2 ships ready-made 0.6B and Llama-3.2-1B reward models (2507.01352). On an independent personalization benchmark the 1B one scores within a few points of frontier judges (2604.07343), but it is weak on 'ties' and factuality at 0.6B. (4) Pickers based on plain likelihood choose generic, safe non-answers. That was known in 2016 (1510.03055), which proposed a mutual-information reranker. Context-aware decoding (2305.14739) uses the same with-context versus without-context contrast to reduce hallucination. Together these suggest a picker that rewards replies which depend on the notebook, not replies that merely match it. (5) Measuring creativity: LLM judges did not correlate with expert creativity ratings on the TTCW tests (2309.14556). Query-specific rubrics raise agreement with humans to 79-87% versus 40-69% for fixed rubrics (2503.05244). Diversity should be reported as compression ratio + Self-BLEU + long-n-gram repetition, because type/token-ratio scores mostly track length (2403.00553). NoveltyBench's distinct_k/utility_k counts useful and distinct outputs together, and Llama-3.2-1B was very diverse but low in utility (2504.05228). (6) From the code (scripts/claude_cre333d_agent.py): 333d has no real picker. It returns the first of 4 samples that passes the guards, and the creative path sends only the system prompt, the notebook facts and the current message, never the earlier chat. The twin got the whole chat. That is a confound in the 8/40 vs 10/40 comparison, and I did not test it. Plain version for Ben: the old picker chose the safest, shortest answer, the way a nervous student writes one careful sentence. The research says to train a small judge on examples of human preferences, keep it from rewarding length, and separately reward replies that actually use what you taught the assistant. Note that 40 requests is a small panel: 8 vs 10 useful is within noise, so the pass marks below require bigger gaps.",
+    "findings": [
+     {
+      "claim": "Bradley-Terry and generative reward models fine-tuned on 43.8k human creative-writing preference pairs reach 78% agreement with humans on a debiased test set. The best zero-shot judge (Claude-3.7-Sonnet) reaches 73%, and smaller open-source zero-shot judges reach 56-60%.",
+      "source": "arXiv 2507.00769 (LitBench), Sec. 5 and Fig. 4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A small trained preference model is a more reliable creative picker than asking a small LLM to judge. It also supports the owner's preference for learned parts over rules."
+     },
+     {
+      "claim": "Adding chain-of-thought to generative reward models lowered creative-writing verdict accuracy from about 78% to 72%. Without chain-of-thought, generative reward models did not improve significantly from 1B/1.5B up to larger backbones.",
+      "source": "arXiv 2507.00769, Sec. 5 and Fig. 6",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Any MiniCPM5-1B self-judge should run with enable_thinking=False. That fits the 333 finding that leaving thinking on broke the creative path."
+     },
+     {
+      "claim": "A Llama-3.2-1B Bradley-Terry reward model trained on creative pairs that were not length-filtered was length-biased and 'strongly preferred the longer of the two stories in most cases'. Balancing the length differences in the training pairs removed this.",
+      "source": "arXiv 2507.00769, Sec. 3 and Fig. 7",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "If Premonition trains its own picker during sleep, the replayed preference pairs must be length-balanced, or the picker becomes a length detector."
+     },
+     {
+      "claim": "In RLHF, most of the reward gain comes from longer responses, and a reward based purely on length reproduces most of the downstream RLHF improvements. The main source of the bias is the reward model.",
+      "source": "arXiv 2310.03716 (Singhal et al., COLM 2024), abstract and Fig. 1",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Picking with any off-the-shelf reward model should be checked by asking whether it just picks the longest candidate."
+     },
+     {
+      "claim": "Regressing judge preferences on length difference and predicting at zero difference (length-controlled AlpacaEval) cut verbosity-prompt gameability: the baseline's win rate range shrank from 22.9-64.3% to 41.9-51.6%. Spearman correlation with Chatbot Arena rose from 0.94 to 0.98.",
+      "source": "arXiv 2404.04475, Sec. 4.1-4.2",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The blind 40-item creative judge can report a length-controlled preference at almost no cost. The 23/40 'preferred or tied' may partly reflect length."
+     },
+     {
+      "claim": "Across 12 injected judge biases, position bias gets worse as more candidates are shown at once: with 3-4 options, robustness falls below 0.5 for most judges. Biases are larger on alignment/open-ended data than on fact data, because quality gaps there are smaller. Sentiment robustness was only 0.65-0.80.",
+      "source": "arXiv 2410.02736 (CALM), Sec. 4 and Table 4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Creative requests are exactly the small-gap setting where judges are most biased. Judge in pairs with the order swapped, never 4-way. A warm or flattering tone may be rewarded regardless of usefulness."
+     },
+     {
+      "claim": "Both humans and preference models prefer convincingly written sycophantic responses over correct ones a non-negligible fraction of the time, and optimizing against preference models sometimes trades truthfulness for sycophancy.",
+      "source": "arXiv 2310.13548 (Sharma et al.), abstract",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A reward-model picker may favor warm replies that confirm the user's premises, including invented details about their people. The invented-person guard must stay a hard filter, not a score term."
+     },
+     {
+      "claim": "Skywork-Reward-V2 includes 0.6B (Qwen3) and 1B (Llama-3.2) reward models. On RM-Bench style-bias splits the 0.6B scores 90.3/78.0/54.8 (easy/normal/hard) and the 1B 91.3/79.9/57.8. On RewardBench v2 the 0.6B is weak on Factuality (58.2) and Ties (34.0).",
+      "source": "arXiv 2507.01352, Tables 4 and 5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A ready-made reward model that fits on the 5090 next to MiniCPM5-1B. Its weak factuality means it cannot be trusted to catch invented facts, so the notebook guard must remain."
+     },
+     {
+      "claim": "On Personalized RewardBench (pairs that differ only in whether they follow a user-specific rubric), Skywork-Reward-V2-Llama-3.2-1B scores 62.1/70.8/67.9% across three domains. Claude-Sonnet-4-6 scores 67.3/70.7/73.6% and the best model (Gemini-3-Flash) at most 75.9%.",
+      "source": "arXiv 2604.07343 (COLM 2026), Table 2",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "On this benchmark, a 1B scalar reward model is about as good as frontier judges at telling which reply fits a particular user. It is a plausible picker for replies that use taught facts."
+     },
+     {
+      "claim": "LLMs used as personalized judges (judging preferences from a persona) show low and inconsistent agreement with humans. Letting the judge state its uncertainty and keeping only high-certainty verdicts gives more than 80% agreement on binary tasks.",
+      "source": "arXiv 2406.11657 (Findings EMNLP 2024), abstract and Sec. 5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Judging 'did this reply use my facts well' is itself unreliable. Report abstentions or low-confidence items separately in the creative judge."
+     },
+     {
+      "claim": "Personalization can cause 'personalization-induced hallucination': the model answers in line with the user's history instead of the truth.",
+      "source": "arXiv 2601.11000, abstract",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Rewarding fact use too strongly may push the 1B model to bend the request toward notebook facts, or to confabulate around them."
+     },
+     {
+      "claim": "Ranking by likelihood of the response given the message selects generic safe replies such as 'I don't know'. Reranking the N-best list with the mutual-information term log p(S|T), with a tuned length weight, gave more specific replies that human judges preferred (alpha = 0.05).",
+      "source": "arXiv 1510.03055 (Li et al., NAACL 2016), Sec. 4-6",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is the 333 failure (the picker preferred short grounded non-answers), and it has a known fix: score how much the reply depends on the input, not how safe it is."
+     },
+     {
+      "claim": "Context-aware decoding, which contrasts output probabilities with and without the context, improved faithfulness to the context without training (for example +14.3% on factuality metrics for LLaMA in summarization). It helps most when the context conflicts with the model's prior knowledge.",
+      "source": "arXiv 2305.14739, abstract",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The same with-notebook versus without-notebook contrast, computed by MiniCPM5-1B itself, could score whether a candidate actually depends on taught facts. Using it as a picker score, rather than for decoding, is my untested extension."
+     },
+     {
+      "claim": "LLM assessors administering the 14 TTCW tests did not correlate positively with 10 expert creative writers: average correlations were close to zero, and GPT-4 exceeded 0.2 on only 2 of the 14 tests.",
+      "source": "arXiv 2309.14556 (Chakrabarty et al., CHI 2024), Sec. 6 and Table 9",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Torrance-style originality scores from an LLM judge are not trustworthy. Premonition's 'useful' judgement is a more tractable target than 'creative'."
+     },
+     {
+      "claim": "Query-specific rubrics (5 criteria generated per request) reached 79% (GPT-4o) and 87% (Claude-3.7) human consistency, versus 40-69% for fixed global or domain rubrics. A Qwen-2.5-7B critic fine-tuned on 155k scored examples reached 84%.",
+      "source": "arXiv 2503.05244 (WritingBench), Table 4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The 40-item creative judge would likely be more reliable if each request carried its own 'what would make this useful' criteria, fixed before any replies are generated."
+     },
+     {
+      "claim": "Type/token-ratio diversity scores are highly correlated with text length. Self-BLEU has low length correlation. The authors recommend reporting compression ratio, POS compression, Self-BLEU and self-repetition of long n-grams.",
+      "source": "arXiv 2403.00553 (Shaib et al.), Sec. 5 and abstract",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The variety metric (45-59 distinct replies per 1000) and any distinct-n measure should be length-matched or replaced by compression ratio + Self-BLEU."
+     },
+     {
+      "claim": "NoveltyBench measures distinct_k (functional-equivalence classes among k samples, from a DeBERTa classifier with 79% accuracy against humans) and utility_k, a reward-model quality score that counts only novel generations and is discounted by user patience p=0.8. Llama-3.2-1B had high distinctness (6.74/10) but low utility (2.81). Asking for 'unique' outputs in the system prompt helped only marginally, while in-context regeneration helped more.",
+      "source": "arXiv 2504.05228 (COLM 2025), Sec. 3-5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A ready-made way to score variety and usefulness together. It suggests a 1B model has plenty of diversity to draw on, and what it lacks is a picker that keeps the useful variants."
+     },
+     {
+      "claim": "Weighting DPO/ORPO pairs by the winner's deviation from other samples for the same prompt raised output diversity with a minimal quality loss. An 8B model matched the diversity of a human-written dataset at quality similar to GPT-4o and DeepSeek-R1.",
+      "source": "arXiv 2503.17126 (Chung et al.), abstract and Sec. 3",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A candidate recipe for the sleep phase: replay chosen/rejected creative pairs weighted by rarity. It would fit the brain analogy, but it needs training, which is beyond this month."
+     },
+     {
+      "claim": "CrPO injects novelty, diversity, surprise and quality signals into preference optimization and reports gains over GPT-4o on automated and human evaluations. The paper also notes a trade-off in which some creativity injections lower quality.",
+      "source": "arXiv 2505.14442, abstract and Sec. 5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A multi-signal creative reward is feasible, but mixing signals trades off quality. Prefer changing one signal at a time."
+     },
+     {
+      "claim": "Self-certainty (KL divergence of the token distribution from uniform) works as a best-of-N selector without a reward model and stays largely invariant to response length. Its 'open-ended' results cover math and code, not creative text.",
+      "source": "arXiv 2502.18581, Sec. 3-5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "This is a cheap picker, but it rewards confident, typical text. Applied to creative replies it would probably reproduce the generic-safe-reply failure, which is why I rank it below the reward-model and mutual-information pickers."
+     },
+     {
+      "claim": "A generative storytelling reward model trained with reasoning distilled from teacher models reached 68% alignment with human creativity judgments.",
+      "source": "arXiv 2601.07149, abstract",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Another data point that creative reward models land around 65-78% agreement with humans, so no picker will be near-perfect."
+     },
+     {
+      "claim": "The EQ-Bench Creative Writing v3 benchmark says it controls length and position bias in its judge (truncation for Elo) and reports a judge-free 'slop' score from a list of over-used LLM phrases.",
+      "source": "https://eqbench.com/about.html and https://github.com/EQ-bench/creative-writing-bench (search snippet only, no paper)",
+      "label": "untested",
+      "abstract_only": true,
+      "relevance": "A slop-phrase count is a cheap, judge-free signal for the variety problem. I did not verify how it is implemented."
+     },
+     {
+      "claim": "333d does no selection. It returns the first of N333D=4 samples that passes guards G1/G2/G4/G5 (with at most 140 words), and the creative model sees only [system prompt + notebook facts, current user message], not the earlier chat.",
+      "source": "/home/user/learner/scripts/claude_cre333d_agent.py:50-75",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A learned picker would have real headroom, and the twin (whole chat) versus 333d (current message only) comparison mixes two differences. How often more than one candidate passes is unknown to me."
+     }
+    ],
+    "experiments": [
+     {
+      "name": "E1: small learned reward model picks among the 333d candidates that pass the guards",
+      "one_change": "In install_creative333d, stop returning the first candidate that passes. Score all 4 candidates that pass the guards with Skywork-Reward-V2-Llama-3.2-1B, given the same system+facts+request messages, and return the highest-scoring one. Generation, guards, n=4, routing and the fallback line stay unchanged.",
+      "pass_mark": "Fixed before running, on a new 40-request dev creative panel written without looking at the 333 panel, judged by the same blind judge. Validity precheck: at least 2 candidates pass the guards on at least 20 of the 40 requests; if not, report 'not testable' and stop. PASS only if all three hold: (a) useful >= 14/40 (333d baseline rerun on the same dev panel must also be reported; the gain must be >= +5); (b) invented person facts = 0; (c) the picked reply is the longest passing candidate on <= 60% of items with 2 or more passing candidates (chance is about 25-50%).",
+      "proves_wrong_if": "Useful gains fewer than 3 over the 333d rerun on the same panel, or the reward model picks the longest candidate on more than 75% of multi-candidate items (it is a length picker, as in 2507.00769 Fig. 7 and 2310.03716), or invented person facts rise above 0.",
+      "cost": "About $1 of rented 5090 time (40 x 4 generations with the 1B model plus 160 reward-model forward passes, minutes of GPU). New download: Skywork-Reward-V2-Llama-3.2-1B, about 2.5 GB, on the rented box only. Judge calls as in 333d.",
+      "brain_link": "Dopaminergic valuation in the basal ganglia: several motor or verbal plans are prepared in parallel and a learned value signal gates which one is released, instead of releasing the first plan that clears inhibition. Later, the sleep phase could fine-tune this value model on replayed thumbs-up/down pairs (length-balanced).",
+      "novelty": "Best-of-N with a reward model is standard (2507.01352, 2504.05228). Using a 1B reward model as the output gate of a notebook-grounded 1B assistant, behind hard no-invention guards, is not something I found published, but it is an engineering combination, not a new method."
+     },
+     {
+      "name": "E2: notebook-dependence picker (mutual information with the taught facts) instead of a groundedness count",
+      "one_change": "Among the 333d candidates that pass the guards, pick the one with the largest summed PMI to the notebook facts: sum over reply tokens of [log p_MiniCPM(token | system+facts+request) - log p_MiniCPM(token | system+request)], computed by MiniCPM5-1B itself with thinking off. Everything else stays as in 333d. Requests with no context facts keep 'first that passes'.",
+      "pass_mark": "Fixed before running, on the same kind of new dev panel, restricted to requests that have at least one taught fact available (target >= 20 such items). PASS only if all hold: (a) useful on those items beats the 333d rerun by >= 4; (b) invented person facts = 0; (c) 'fact echo' (the picked reply is <= 25 words and mostly restates a notebook fact without an idea, poem or plan, as marked by the blind judge's separate yes/no question) on <= 2 items; (d) the judge's blind yes/no question 'does the reply use something the user said earlier?' is yes on >= 60% of these items, versus the 333d rerun's own rate on the same items.",
+      "proves_wrong_if": "Useful does not improve by at least 2, or the fact-echo count rises above 3 (the picker re-creates 333's 'grounded non-answer' failure), or fact use does not rise versus 333d.",
+      "cost": "Under $1: 2 extra forward passes per candidate with the model already loaded (160 x 2 short passes). No downloads.",
+      "brain_link": "Hippocampal contribution and source monitoring: a response counts as memory-based when the memory trace changes it, measured as the difference between recall with and without the cue, not by how much it looks like the memory. It directly rewards using taught facts. Because the notebook contains no invented facts, those facts get no PMI credit, and G2 stays as a hard veto.",
+      "novelty": "The ingredients are published: MMI reranking (1510.03055) and the with/without-context contrast (2305.14739). Using that contrast against a personal exact-fact notebook as a picker score for creative replies is not something I found in my search. I would call it a plausible new combination (suggested), not a proven new method."
+     },
+     {
+      "name": "E3: audit the creative judge for length and position bias before trusting any picker result",
+      "one_change": "Only the measurement changes, not Premonition. On the dev panel, add a length-controlled preference (logistic regression of the judge's A-vs-B verdict on the word-count difference, reported at zero difference, as in 2404.04475), run each pair in both orders, and add a gameability probe: for 20 dev replies, a padded copy with about 40% more generic words and no new content.",
+      "pass_mark": "Fixed in advance: the judge is considered usable if it prefers the padded copy on <= 12/20 probes and the verdict flips with order on <= 6/40 pairs. The length-controlled preference must be reported next to the raw one for every future creative comparison.",
+      "proves_wrong_if": "If the padded copy wins on >= 14/20 probes, or order flips on >= 10/40 pairs, the past comparisons (including 23/40 'preferred or tied') cannot be read at face value, and the judge prompt must change before E1 or E2 means anything.",
+      "cost": "About $0.2 of judge calls plus no GPU. No downloads.",
+      "brain_link": "Weak. This is instrument calibration, the equivalent of checking a thermometer, not a brain-like part.",
+      "novelty": "Not novel. It applies 2404.04475 and 2410.02736 directly. It is ranked third because it doesn't change the assistant, but E1 needs it to be interpretable."
+     }
+    ],
+    "open_questions": [
+     "How often do 2 or more of the 4 candidates in 333d pass the guards? If usually only one passes, no picker can help, and the bottleneck is generation or the guards (for example, G5's refusal regex may reject useful replies that contain 'without knowing').",
+     "Is the twin's 10/40 vs 333d's 8/40 due to the twin seeing the whole chat? The code shows the creative path sends only the current message plus retrieved facts. That confound should get its own single-change test, and with 40 items a difference of 2 is within noise.",
+     "The keyword router sent only 25 of the 40 creative requests to the creative path. A better picker only affects those 25, so a router change might be worth more than any picker. That is outside this angle.",
+     "Would a Skywork reward model trained mostly on general chat preferences value short gifts/toasts/plans the way the blind judge does? LitBench and Personalized RewardBench suggest 60-78% agreement at best; there is no evidence for this exact task.",
+     "Can the sleep phase collect honest preference pairs (the user's thumbs-up/down, or the user rephrasing after a bad reply) with enough volume and length balance to fine-tune a picker, without learning length or flattery?",
+     "How should variety be measured going forward: 'distinct replies per 1000' (surface-level) or NoveltyBench's functional-equivalence distinct_k? Surface counts may reward paraphrase noise."
+    ]
+   },
+   "verdict": {
+    "angle": "Skeptical check of the picking-and-judging report. I read the full PDFs, not just abstracts, for 2507.00769 (LitBench), 2507.01352 (Skywork-Reward-V2), 2604.07343 (Personalized RewardBench), 1510.03055 (Li et al. 2016), 2305.14739 (CAD), 2404.04475 (LC AlpacaEval) and 2410.02736 (CALM). I read scripts/claude_cre333d_agent.py, the sample_chat/_render code in claude_chat338_agent.py and context_facts in claude_cre333_agent.py. I searched for prior work on E2. I did not open any 333 panel or run outputs. Headline (shown): most numbers are right, but the report misreads one load-bearing source. In Personalized RewardBench, Skywork-1B was scored WITHOUT the user profile, and the paper shows that putting raw profile text into a reward model's input makes it worse. The report's case that E1 will reward correct use of taught facts therefore has no support. E2's novelty claim is also wrong: Nandwani et al. (EMNLP 2023) already proposed conditional PMI between a response and its grounding document, conditioned on the dialogue, as both a metric and a decoding method.",
+    "checks": [
+     {
+      "claim": "LitBench: reward models trained on 43.8k creative preference pairs reach 78% agreement vs 73% for Claude-3.7-Sonnet and 56-60% for small open judges; the report frames this as 'small learned reward models beat zero-shot judges'.",
+      "verdict": "overstated",
+      "note": "Shown: the numbers match Sec. 5 and Table A.1 (43,827 pairs; 78%; Claude-3.7 0.731). But the 78% model is a Llama-8B Bradley-Terry model, not a small one. The '56-60%' judges are llama-3.1-8b (0.581) and qwen-2.5-7b (0.599), so 7-8B models, not 1B-class. Two things the report left out. First, the paper's own human study on freshly generated stories found annotators picked the RM-preferred story only 57% vs 41% of the time, and Claude-3.7 was 'at chance'. That matters directly for how far to trust Premonition's blind LLM judge. Second, the stories average about 550 words from Reddit WritingPrompts, far from 140-word gift or toast replies. The CoT figure (72%) is right, but it concerns GenRMs fine-tuned on distilled CoT. Using it to back 'run MiniCPM with enable_thinking=False' is untested extrapolation, and 333's thinking failure was in generation, not judging."
+     },
+     {
+      "claim": "A Llama-3.2-1B BT reward model trained on creative pairs that were not length-filtered strongly preferred the longer story; length-balancing removed this.",
+      "verdict": "confirmed",
+      "note": "Shown (Sec. 5 'Validating Data Filtration', Fig. 7): the unfiltered 1.03M-pair set gave a 1B model that saturated at 70% and was 'length-biased, strongly preferring the longer of the two stories in most cases'. The second half is only suggested: the paper shows the length-balanced LitBench set trains a better model, but it reports no separate length-preference measurement for that model."
+     },
+     {
+      "claim": "Skywork-Reward-V2 0.6B and Llama-3.2-1B: RM-Bench easy/normal/hard 90.3/78.0/54.8 and 91.3/79.9/57.8; the 0.6B is weak on RewardBench v2 Factuality (58.2) and Ties (34.0).",
+      "verdict": "confirmed",
+      "note": "Shown: Tables 4 and 5 match exactly. Omission: the 1B model that E1 actually proposes is also weak there (Factuality 60.9, Ties 43.1, Precise IF 45.6). The RM-Bench 'hard' split, where style favours the wrong answer, is only 57.8. So the 1B's resistance to style and length bias is modest. The 140-word cap, not the RM, is the main length control."
+     },
+     {
+      "claim": "On Personalized RewardBench, Skywork-Reward-V2-Llama-3.2-1B scores 62.1/70.8/67.9, close to Claude-Sonnet-4-6 (67.3/70.7/73.6), so a 1B RM is about as good as frontier judges at telling which reply fits a particular user and is a plausible picker for replies that use taught facts.",
+      "verdict": "overstated",
+      "note": "The numbers are shown (Table 2), but the interpretation is wrong. Sec. 4.1 says: 'Unless otherwise noted, we exclude the user profile u from the reward model input.' So these scores measure general-quality heuristics that happen to overlap with the rubric (App. B.2 says so explicitly), not reading the user. Sec. 4.3 and Fig. 2 show that 'naively injecting user profiles (w/ profile) degrades reward model performance'. Only a trained planner that turns the profile into rubric aspects recovers it. E1 does the naive injection: it puts system text plus notebook facts in the RM input. The paper predicts that is neutral-to-harmful, so E1's fact-use rationale is untested at best."
+     },
+     {
+      "claim": "Li et al. 2016: likelihood ranking picks generic replies; MMI reranking with a tuned length weight gave more specific replies that humans preferred (alpha = 0.05).",
+      "verdict": "confirmed",
+      "note": "Shown overall (Tables 1-2 and 6; footnote 9: 'I don't know' and similar make up 32% of outputs). Small error: alpha = 0.05 is the significance level of the human test, not a model parameter. The weights are lambda and gamma, tuned by MERT. Caveats relevant to E2 (shown): human judges were told to prefer more specific outputs, which favours MMI by construction. The authors also warn that MMI-bidi reranking 'hinges on the initial generation of a highly diverse, informative N-best list', and 333d has only 4 samples. The MMI term there is p(message|reply) from a separately trained backward model, not a contrast against a notebook."
+     },
+     {
+      "claim": "CAD (contrast with vs without context) improves faithfulness without training, e.g. +14.3% factuality for LLaMA in summarization, and helps most under knowledge conflict.",
+      "verdict": "confirmed",
+      "note": "Shown: +14.3% factKB is for LLaMA-30B on CNN-DM. Models tested were 2.7B-30B, and OPT 125M-1.3B in a size study that also benefited. It is a decoding-time logit adjustment on long source documents. Using it as a post-hoc score for short creative candidates is, as the report says, untested."
+     },
+     {
+      "claim": "LC AlpacaEval: verbosity-prompt range for gpt4_1106_preview shrank from 22.9-64.3% to 41.9-51.6%; Arena Spearman correlation rose from 0.94 to 0.98.",
+      "verdict": "confirmed",
+      "note": "Shown (Sec. 4.1-4.2). Caveat: the length-controlled GLM is fit on 805 instructions across many models. A logistic regression on 40 A/B verdicts in E3 will have very wide intervals and must be reported with a CI. It is a sanity check, not a correction."
+     },
+     {
+      "claim": "CALM: position bias gets worse with 3-4 options (robustness below 0.5 for most judges); sentiment robustness 0.65-0.80.",
+      "verdict": "confirmed",
+      "note": "Shown (Sec. 4, Fig. 6). Nuance: sentiment bias was tested by making the better answer on a fact dataset sound emotional (cheerful, sad, angry, fearful). The step to 'warm or flattering creative replies get rewarded' is suggested, not shown."
+     },
+     {
+      "claim": "333d does no selection: first of 4 samples passing G1/G2/G4/G5 (max 140 words); the creative model sees only system+facts plus the current message.",
+      "verdict": "confirmed",
+      "note": "Shown in scripts/claude_cre333d_agent.py:50-75. Also shown: sample_chat renders with enable_thinking=False (claude_chat338_agent.py:198). All 4 samples are generated in one call, so E1/E2 add no generation cost. Since samples are i.i.d., 'first that passes' is equivalent to a random pick among passing candidates, which makes the baseline a fair random-picker control. context_facts (claude_cre333_agent.py:53-62) always includes the user's own facts (up to 40). So E2's 'requests with no context facts keep first-that-passes' fallback will almost never fire, and PMI will be diluted by facts irrelevant to the request."
+     }
+    ],
+    "experiment_critique": "Strongest: E3, and it should run first because both E1 and E2 are graded by a judge whose reliability is unknown. LitBench's own human study found Claude-3.7 at chance on fresh generated stories. Weakest: E2 on novelty and mechanism, and E1 on its stated rationale.\n\nE1 (Skywork-1B picker). It is one change and the precheck (at least 2 passing candidates on at least 20/40 items) is a good design. Problems:\n(1) The fact-use rationale rests on a misread of 2604.07343 (see checks). Feeding the notebook facts into the RM is the 'w/ profile' condition that paper found degrading.\n(2) The length check is weak. With 2 passing candidates chance is 50%, so '<= 60% longest' is within noise on about 20 items. Add a 'pick-the-longest' control scored on the same items to test whether the RM adds anything beyond length. That is extra measurement of the same generations, not a second change.\n(3) There is a gray zone: pass needs +5, fail is below +3. Say in advance that +3 or +4 is 'inconclusive'.\n(4) Paired 40-item power is low. +5 with, for example, 7 wins against 2 losses gives a sign test p of about 0.18. Pre-register a paired test, and measure judge test-retest noise by judging the baseline twice.\n(5) 'Invented person facts = 0' depends on the judge. G2 only catches 'your <relation> <Name>', so a sycophancy-leaning RM could pick candidates that invent attributes of named people ('since Sarah loves hiking'). This needs a notebook-diff check, not only the judge.\n\nE2 (PMI picker).\n(1) The novelty claim is false. Nandwani et al. 2023 (arXiv 2305.12191, EMNLP; abstract-only) define conditional PMI between the response and the grounding document, conditioned on the dialogue, as a faithfulness metric and a decoding method. van der Poel et al. 2022 (2210.13210; abstract-only) use PMI decoding against hallucination. What remains new is only the application: a personal fact notebook and creative replies.\n(2) Summed token PMI grows with length and with verbatim copying of fact tokens, so it is built to reward fact echo. The report expected this (pass mark c), but should use a length-normalized score or a length-matched check.\n(3) The brain_link claim that 'invented facts get no PMI credit' is wrong (suggested failure). Tokens that invent attributes about a person named only in the facts are exactly the ones whose probability rises when the facts are present, so confabulation next to a taught name earns PMI credit.\n(4) The without-facts prompt must be byte-identical minus the facts clause. The SYSTEM333D wording 'Facts the user has told you:' needs care.\n(5) Pass mark (d) is not fixed: it is unclear whether it means at least 60% absolute, beating the baseline, or both. The falsifier 'fact use does not rise' has no margin. The gray zone between +2 and +4 is again undeclared.\n(6) The subset of at least 20 fact-bearing items makes +4 noise-level.\n\nE3. It changes only the measurement, which is fine. The padded-copy threshold (<= 12/20) is lenient. An unbiased judge should prefer the unpadded reply because padding adds nothing, so the expected rate is below 10/20 and 11-12 already hints at bias. Add a judge test-retest run and a small human check by Ben (for example, 20 items), because the pass marks for all three experiments depend on this judge.",
+    "missed": "(1) Direct prior work for E2: Nandwani et al. 2023 conditional-PMI faithfulness for document-grounded dialog (2305.12191) and van der Poel et al. 2022 PMI decoding (2210.13210). Both are abstract-only for me.\n(2) Persona-dialogue candidate selection, the closest literature to 'pick the reply that uses the user's facts without contradicting them'. Dialogue NLI (Welleck et al., 1811.00671) and NLI-based persona consistency (1911.05889) use an NLI model to veto or rerank responses that contradict the persona. That is a learned alternative or backup to the regex G2 and fits the owner's preference for learned parts. SimOAP (2305.11130) oversamples and then post-evaluates for coherence and consistency. Post Persona Alignment (2506.11857) generates first and then grounds on retrieved persona facts. All are search-snippet only. They also weaken E1's novelty.\n(3) BoN reward hacking and its fix: Regularized Best-of-N (2404.01054, snippet only).\n(4) The headline implication of 2604.07343 Sec. 4.3: reward models need the profile turned into per-request rubric aspects by a planner. That lines up with WritingBench's query-specific rubrics and suggests a better E1 variant: have MiniCPM (thinking off) or the judge write 3-5 per-request criteria from the notebook facts, then score against them.\n(5) Statistics: no noise floor or paired test for a 40-item panel, and no judge test-retest run. 8 vs 10 and similar gaps cannot be read without them.\n(6) Bigger levers the report names but does not rank against the picker. The router sends only 25/40 creative requests to the creative path, and the creative path sees only the current message while the twin sees the whole chat. Each deserves its own single-change test, and either could matter more than any picker, because a picker only touches routed items with at least 2 passing candidates.\n(7) Candidate-pool size: with N=4 and guards, Li et al.'s warning that reranking needs a diverse N-best list applies. The report never estimates how often 2 or more candidates pass. E1's precheck handles this, but it should be run first as a zero-cost count on a dev panel."
+   }
+  },
+  {
+   "report": {
+    "angle": "Personalised creative help grounded in taught facts: (a) recognising a creative request in chat (learned intent classifier vs keywords), (b) choosing which stored facts to give the 1B model, (c) catching invented facts about real people (verification, constrained decoding, hidden-state probes), with brain-like learned parts that a sleep phase could train.",
+    "summary": "Plain version for Ben: the research points to three places to fix, and they matter in this order. First, the front door. The keyword router is three pattern tests joined by AND (a cue word AND a request pattern AND NOT a recall pattern; scripts/claude_cre333b_agent.py:57-59), so any one miss drops the request. That is shown in the code and fits the 25/40 catch rate. Industry intent-detection work (2410.01627) shows that small trained classifiers and read-outs of an LLM's own internal state beat hand rules on real queries, though every system there still found out-of-scope rejection hard. Second, what the model reads. Memory benchmarks (LoCoMo 2402.17753, LaMP 2304.11406, LongMemEval 2410.10813) all find that a few relevant facts help more than a lot of loosely related ones. Our context_facts can pass up to 40 facts (every user fact plus one hop; scripts/claude_cre333_agent.py:53-62), which is a lot for a 1B model. Third, the fact-checker. Chain-of-Verification (2309.11495) and hallucinated-entity probes (2509.03531) show that checking claims one at a time, or reading a hallucination signal from the hidden states, cuts invented facts. Premonition has something those papers lacked: an exact notebook that says which facts about a person are true, so labels for training such a checker come free. PrefEval (2502.09597) also warns that telling a model to 'use the user's preferences' makes it invent preferences or refuse, which matches both the twin's 3 invented facts and the refusals in 333b/c. None of this is tested on MiniCPM5-1B. Every paper here used 7B+ models or benchmarks other than ours, so everything about Premonition itself is suggested or untested. My ranked plan: (1) swap the keyword router for a small classifier that reads MiniCPM's own hidden state (cheap, not novel, directly aimed at the 15 missed requests); (2) give the generator only the top 5 relevant facts; (3) later, a sleep-trained 'is this person-fact invented?' probe labelled by the notebook. I found no published version of (3).",
+    "findings": [
+     {
+      "claim": "The 333c/333d creative router is a conjunction of three regex tests (creative cue AND request pattern AND NOT recall pattern), so a request that misses any single pattern falls through to the ordinary reply.",
+      "source": "/home/user/learner/scripts/claude_cre333b_agent.py:57-59 (is_creative333c); cues at /home/user/learner/scripts/claude_cre333_agent.py:29",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Explains mechanically why recall is low (25/40). Any fix that ORs in a learned signal, or replaces the conjunction, targets the largest single loss in 333d."
+     },
+     {
+      "claim": "333d's context_facts passes every user fact, every fact whose subject or value is named in the request, and one hop out from those, capped at 40. There is no relevance ranking beyond literal string match.",
+      "source": "/home/user/learner/scripts/claude_cre333_agent.py:53-62",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The 1B model may get many irrelevant facts. Whether it actually does on typical chats is untested; I did not look at panel chats."
+     },
+     {
+      "claim": "On real deployed intent datasets, a contrastively fine-tuned small sentence encoder (SetFit + negative augmentation) averaged F1 0.658 vs 0.736 for the best LLM (Claude v3 Haiku), at about 1/56 of the latency. A hybrid that sends only uncertain queries (MC-dropout variance) to the LLM came within about 2% of the LLM at about 50% less latency. All models had poor out-of-scope recall.",
+      "source": "arXiv:2410.01627 (Arora, Jain, Merugu 2024), Tables 1,3,4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Premonition's router is a two-class intent problem with a large out-of-scope side (look-alike non-requests). A tiny trained classifier is cheap and learned, but look-alike rejection is exactly where these systems are weakest."
+     },
+     {
+      "claim": "Using an LLM's last-prompt-token hidden state from a decoder layer, compared by cosine similarity to stored training examples of the predicted intent, raised out-of-scope recall a lot for Mistral-7B (e.g. 0.205 to 0.950 on PowerPlay11; 0.376 to 0.782 on Curekart), at some cost to in-scope accuracy.",
+      "source": "arXiv:2410.01627, Section 4.2, Table 5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Suggests MiniCPM5-1B's own hidden states could drive the creative router with no new model download. Shown only for 7B; untested at 1B."
+     },
+     {
+      "claim": "SetFit (contrastive fine-tuning of a sentence transformer, then a classification head) is competitive with full fine-tuning using as few as 8 labelled examples per class on some datasets, without prompts.",
+      "source": "arXiv:2209.11055 (Tunstall et al. 2022), Section 1/Fig 1",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "An alternative router that needs a small (~100MB) encoder download. The owner could hand-label a few dozen examples. It is older than 2023 but is the standard baseline."
+     },
+     {
+      "claim": "In LaMP, adding retrieved user-profile items improved all seven personalisation tasks. Even random profile items helped in most cases, but choosing relevant or recent items mattered, and no retriever won everywhere. Gains on the generation tasks were small (e.g. ROUGE-1 0.479 to 0.547 on email subjects, 0.159 to 0.177 on headlines).",
+      "source": "arXiv:2304.11406 (Salemi et al. 2023), Tables 2-3, Section 4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Supports selecting facts over dumping them. Also warns that personal context alone gives modest gains on open-ended generation, so the 1B model's base quality may cap usefulness."
+     },
+     {
+      "claim": "Training the profile retriever with feedback from the downstream LLM (RL on a generation metric, or distilling which items helped the LLM) plus a per-input retriever selector gave statistically significant gains on 6 of 7 LaMP tasks.",
+      "source": "arXiv:2404.05970 (Salemi, Kallumadi, Zamani, SIGIR 2024), Table 3",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A brain-like option for the sleep phase: replay creative turns and teach the fact-selector which notebook facts made the reply better. Untested with a 1B generator and an exact triple store."
+     },
+     {
+      "claim": "In very long conversations, RAG over short 'observations' (assertions about each speaker) beat raw logs by about 5% for gpt-3.5-turbo with the top 5 observations, and the gain faded as more observations were retrieved. Long-context models were easily misled into hallucinating (adversarial accuracy 2.1% for gpt-3.5-turbo-16k).",
+      "source": "arXiv:2402.17753 (LoCoMo, Maharana et al. 2024), Section 6.1",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Premonition's notebook triples are already observation-like. The finding that fewer, relevant items beat more supports a top-k cap on context_facts."
+     },
+     {
+      "claim": "LongMemEval: expanding memory keys with extracted user facts raised recall@k by 9.4% and QA accuracy by 5.4%. Even with perfect recall, reading retrieved items well was hard, and Chain-of-Note plus a structured (JSON) format gave up to 10 points.",
+      "source": "arXiv:2410.10813 (Wu et al., ICLR 2025), Section 1 bullet list, Sections 5.3/5.5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "The notebook is the fact-keyed index already. The reading finding suggests that how facts are formatted for the 1B model (plain sentences today) is another lever, but that is a separate change."
+     },
+     {
+      "claim": "PrefEval: zero-shot preference following fell below 10% at 10 turns for most models. RAG and a simple 'Reminder' prompt were the best methods. Prompting methods made models hallucinate preferences, Claude 3 Sonnet gave many unhelpful refusals, and SFT on preference data beat RAG.",
+      "source": "arXiv:2502.09597 (Zhao et al., ICLR 2025), Sections 3.2-3.7, error analysis",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Mirrors Premonition's two failure modes: invented person facts (twin 3/40) and refusal-style non-answers (333b/c). It suggests the 'use the facts' instruction itself can push a model to invent facts."
+     },
+     {
+      "claim": "PersonaMem: frontier models reached only about 50% accuracy at picking a response that fits a user's current, evolving profile from long histories.",
+      "source": "arXiv:2504.14225 (Jiang et al., COLM 2025), abstract and Section 1",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Personalised recommendation from chat history is hard even for large models, so a 1B model should be judged against realistic pass marks."
+     },
+     {
+      "claim": "Chain-of-Verification (draft, plan verification questions, answer them independently, then revise) raised FActScore on long-form biographies from 55.9 to 71.4 (factor+revise) for Llama 65B, with few facts lost (16.6 to 12.3 per answer). Answering verification questions independently of the draft beat joint verification.",
+      "source": "arXiv:2309.11495 (Dhuliawala et al. 2023), Tables 3-4, Section 5",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "For Premonition the verifier can be the exact notebook, not the LLM: extract each 'Person has attribute' claim from a draft and check it against stored triples. That is more general than the current regex G2 ('your <relation> <Name>'). Untested."
+     },
+     {
+      "claim": "Linear probes on hidden states detected hallucinated entities token by token in long-form generation (AUC 0.90 vs 0.71 for semantic entropy on Llama-3.3-70B). They transferred across model families and enabled selective answering (abstain when risk is high). Models tested were 7B-70B, with labels from web-search annotation.",
+      "source": "arXiv:2509.03531 (Obeso, Arditi et al. 2025/2026), Fig 1, Sections 5.2, 5.4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "A learned, brain-like 'this detail is made up' detector that could replace hand-written guards. Not shown at 1B. Premonition's notebook would supply the labels for person facts without web search."
+     },
+     {
+      "claim": "Sparse-autoencoder directions in Gemma 2 (2B and 9B) encode whether the model recognises an entity, and steering them causally switches between refusing and hallucinating attributes.",
+      "source": "arXiv:2411.14257 (Ferrando et al., ICLR 2025), abstract",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Suggests even small models carry an internal 'do I know this person' signal that a probe could read. That signal concerns pretraining knowledge, not facts taught in chat, so transfer to notebook people is untested."
+     },
+     {
+      "claim": "KCTS guides a frozen LM at decoding time with a knowledge-groundedness classifier (token-level via RIPA) plus tree search. It improved groundedness on knowledge-grounded dialogue and summarisation, with human raters scoring it more grounded while copying less knowledge verbatim than FUDGE.",
+      "source": "arXiv:2310.09044 (Choi et al., EMNLP 2023), Section 6, Table 4",
+      "label": "shown",
+      "abstract_only": false,
+      "relevance": "Constrained or guided decoding is an option for grounding, but MCTS per reply is too costly for a laptop-class assistant. Reranking a few samples with the same kind of classifier is a cheaper analogue (suggested)."
+     },
+     {
+      "claim": "HippoRAG models retrieval on hippocampal indexing theory: an entity graph with Personalized PageRank from the query's entities, with the LLM acting as neocortex.",
+      "source": "arXiv:2405.14831 (Gutierrez et al. 2024)",
+      "label": "shown",
+      "abstract_only": true,
+      "relevance": "Brain-inspired precedent for selecting facts by spreading activation from the people named in a request. Premonition's one-hop expansion is a crude version of this."
+     },
+     {
+      "claim": "Routing the 15 missed creative requests to the creative path would raise 333d's useful count.",
+      "source": "inference from 333d numbers in the task brief (8/40 useful; 25/40 routed)",
+      "label": "untested",
+      "abstract_only": false,
+      "relevance": "The creative path's per-request useful rate on routed items is not known to me (I did not open panel outputs), so the size of the gain from a better router is unknown. The twin's 10/40 suggests a ceiling near 10-12 for this 1B model."
+     }
+    ],
+    "experiments": [
+     {
+      "name": "Learned creative-intent router (hidden-state probe)",
+      "one_change": "Replace is_creative333c with a logistic-regression probe on MiniCPM5-1B's mean-pooled final-layer hidden state (thinking off, the user turn only). Train it on a new, independently written set of about 150 creative requests and 150 look-alikes (recall questions like 'any idea what Maya likes?', teaching statements, factual questions, chit-chat), written without seeing the sealed 333 panel. Everything else in 333d stays the same.",
+      "pass_mark": "Fixed now. Dev hold-out (20% of the new set): creative recall >= 0.90 and look-alike false positives <= 0.05. Sealed panel (run once): >= 34/40 creative requests routed AND <= 2/30 look-alikes routed AND end-to-end useful >= 11/40 with invented person facts = 0.",
+      "proves_wrong_if": "On the sealed panel, routing <= 25/40 or false positives >= 4/30 (no better than keywords) means the 1B hidden state does not separate creative intent any better than rules. If routing reaches >= 34/40 but useful stays <= 8/40, routing was not the bottleneck and generation quality is.",
+      "cost": "No new downloads (reuses MiniCPM5-1B). About 400 forward passes plus the 70-item panel and the 40-item end-to-end rerun; under 1 GPU-hour, about $1 on the 5090. Writing the labelled set takes a few hours of human or Claude time.",
+      "brain_link": "A learned task-set selector (prefrontal context recognition) replaces hand-written rules. The sleep phase could retrain the probe on replayed turns labelled by whether the creative path helped.",
+      "novelty": "Not novel as a method: hidden-state intent and out-of-scope detection is published for Mistral-7B (2410.01627), and SetFit is standard. Only applying it at 1B inside a sleep-retrained assistant is new here."
+     },
+     {
+      "name": "Top-5 relevant facts instead of up to 40",
+      "one_change": "In 333d, change context_facts to return at most 5 facts. Facts about a person or thing named in the request come first; the rest are ranked by word overlap with the request (BM25 over the fact sentences). Ties go to the most recently taught fact. Router, prompt, guards and samples stay as in 333d.",
+      "pass_mark": "Fixed now. Sealed panel: useful >= 11/40 AND invented person facts = 0 AND judge preferred-or-tied vs twin >= 23/40 (not worse than 333d). Also, on a dev set, the median number of facts passed must drop by at least half, or the change is void (nothing changed).",
+      "proves_wrong_if": "Useful <= 8/40, or invented person facts > 0, means fact overload was not what limited the 1B model (or cutting context removed facts it needed).",
+      "cost": "No new downloads. One 40-item end-to-end rerun plus a dev run; under 1 GPU-hour, about $1.",
+      "brain_link": "Cue-driven hippocampal recall of a few relevant memories (pattern completion from the people and things named) instead of flooding working memory. Later, the ranking could be trained during sleep with LLM feedback, as in 2404.05970.",
+      "novelty": "Not novel: top-k relevant retrieval is standard, and LoCoMo and LaMP show that selection matters. The test is whether it matters for a 1B model with an exact triple store."
+     },
+     {
+      "name": "Notebook-labelled invented-person-fact probe (research, after 09-30)",
+      "one_change": "During sleep, generate creative drafts for dev prompts about people in the notebook. Label each draft's person-attribute spans automatically as supported or unsupported by the notebook triples. Train a linear probe on MiniCPM5-1B hidden states to flag unsupported spans. At wake, use it only to choose among 333d's 4 samples: take the passing sample with the lowest maximum probe risk instead of the first passing one.",
+      "pass_mark": "Fixed now. Dev hold-out: span-level AUC >= 0.85 for unsupported person facts, and better than the regex G2 on the same drafts (probe recall at the same false-positive rate). Sealed panel: invented person facts = 0 AND useful >= 333d's 8/40 AND fallback count not higher than 333d's.",
+      "proves_wrong_if": "Dev AUC < 0.75 (a 1B model's hidden states do not carry an 'I made this up about Maya' signal), or the probe catches no case that G2 misses on dev drafts.",
+      "cost": "About 2-3 GPU-hours to generate and cache hidden states for about 2,000 drafts, about $2-3. Span extraction may need an offline judge pass (API dollars) or patterns. Fits one <= $4 job but not the remaining September budget alongside the other two.",
+      "brain_link": "Reality monitoring and source memory: the prefrontal cortex checks whether a detail came from memory or imagination. Sleep replay supplies the training signal from the hippocampus-like exact notebook.",
+      "novelty": "Hallucinated-entity probes exist (2509.03531) but use web-search labels on 7B-70B models. My search found no work that uses a personal exact memory as free labels to train such a probe in a sleep phase at 1B (novelty untested beyond that search)."
+     }
+    ],
+    "open_questions": [
+     "Of the 15 creative requests the router missed, how many would the 333d creative path have answered usefully? This decides how much experiment 1 can gain, and only a dev set built without the sealed panel should be used to estimate it.",
+     "How many facts does context_facts actually pass on typical dev chats? If it is usually under 5, experiment 2 is void.",
+     "Is the 1B generator itself the ceiling (twin 10/40 given the whole chat)? If so, routing and fact selection can recover only a few points, and a stronger or fine-tuned generator (PrefEval shows SFT beats RAG) is the real lever.",
+     "Does the SYSTEM333D instruction to 'use the facts below when they fit' push the model toward stretching facts (PrefEval's hallucinated-preference effect), and would a Chain-of-Note-style 'list the relevant facts first' help or hurt at 1B with thinking off?",
+     "Can a 1B model's hidden states separate creative requests from recall look-alikes ('any idea what Maya likes?')? Published results are for 7B+.",
+     "For the variety problem (45-59 distinct replies per 1000), does grounding on fewer facts make replies more alike? None of the papers read measured diversity together with personalisation."
+    ]
+   },
+   "verdict": {
+    "angle": "Skeptical check of the grounded-personal-creativity report. I read the cited code (scripts/claude_cre333_agent.py, claude_cre333b_agent.py, claude_cre333d_agent.py, claude_chat338_agent.py, fable_loop90_agent.py) and the full text of 8 cited arXiv PDFs (curl plus pypdf; no WebFetch). I also ran web searches for prior work, and I read three more arXiv abstracts; claims from those are marked abstract-only. I did not open the 333 panel or any run outputs.",
+    "checks": [
+     {
+      "claim": "The 333c/333d router is cue AND request AND NOT recall, so missing any one pattern drops the request (claude_cre333b_agent.py:57-59).",
+      "verdict": "confirmed",
+      "note": "Shown. is_creative333c returns _CUE333(low) and REQUEST333C.search(low) and not RECALL333C.search(low). claude_cre333d_agent.py:56 uses it unchanged. The report also says this 'fits the 25/40 catch rate'. That is suggested only: I did not check which pattern each missed item failed, because doing so would mean opening the panel."
+     },
+     {
+      "claim": "context_facts passes every user fact, every fact whose subject or value is named in the request, and one hop out, capped at 40, with no ranking beyond string match (claude_cre333_agent.py:53-62).",
+      "verdict": "confirmed",
+      "note": "Shown. named |= {'user','me'}, then one hop over keep, then keep[:40]. The cut at 40 follows notebook order, not relevance. notebook_triples returns (subject, relation, value) with no timestamp, so experiment 2's 'most recently taught' tie-break needs extra code. The report missed one thing here: 333d already writes len(ctx) into loop.experience (claude_cre333d_agent.py:77-78). Open question 2 can therefore be answered from DEV rehearsal logs without GPU time and without touching the panel."
+     },
+     {
+      "claim": "2410.01627: SetFit+NegAug averaged F1 0.658 vs 0.736 for Claude v3 Haiku, at about 1/56 of the latency. The uncertainty-routed hybrid came within about 2% at about 50% less latency. Out-of-scope recall was poor for all models.",
+      "verdict": "confirmed",
+      "note": "Shown in the PDF. Table 1 has SNA avg 0.658 and Haiku 0.736, with latency 0.030 vs 1.697. The text says '56 times faster'. It also says the hybrid came within about 2% on in-distribution datasets (about 4% including OADP) at about 50% less latency. The SetFit encoder is MPNet (~110M). It is a multi-class intent setup with real customer queries, not a two-class creative-vs-look-alike task."
+     },
+     {
+      "claim": "2410.01627 Sec 4.2/Table 5: a last-prompt-token hidden state compared by cosine to training examples raised Mistral-7B out-of-scope recall (PowerPlay11 0.205 to 0.950; Curekart 0.376 to 0.782), 'at some cost to in-scope accuracy'.",
+      "verdict": "overstated",
+      "note": "The numbers are right. 'Some cost' understates it: in-scope accuracy fell from 0.689 to 0.411 on PowerPlay11, 0.863 to 0.736 on Curekart and 0.842 to 0.767 on SOF Mattress. The method is also not a trained probe. Mistral-7B first predicts an in-scope label by prompting, then an out-of-scope check uses mean cosine similarity to the training sentences of that label. The method increases rejections, which trades away in-scope recall. Experiment 1 mainly needs the reverse (catch 15 more creative requests), so this paper supports the look-alike side of experiment 1, not the recall side. Experiment 1 also uses a different design: mean-pooled final layer plus logistic regression, at 1B. So the transfer is untested."
+     },
+     {
+      "claim": "LaMP (2304.11406): profile items improved all seven tasks, random items often helped, choosing relevant or recent items mattered, and generation gains were small (0.479 to 0.547 email subjects; 0.159 to 0.177 headlines). The summary cites it as showing that 'a few relevant facts help more than a lot of loosely related ones'.",
+      "verdict": "overstated",
+      "note": "The finding's numbers are right: Table 3, time-based split, LaMP-6T 0.479 to 0.547 and LaMP-4T 0.159 to 0.177. But they come from a fine-tuned FlanT5-base (250M) with k=1, which the report never mentions. The paper's Figure 2 says 'increasing the number of retrieved items leads to improved performance' for most datasets. That contradicts the summary's use of LaMP to back a top-5 cap. LaMP backs 'select relevant items', not 'fewer items'. In the zero-shot table (Table 4), LaMP-7 did not improve."
+     },
+     {
+      "claim": "LoCoMo (2402.17753): RAG over observations beat raw logs by about 5% for gpt-3.5-turbo at top-5, the gain faded as more observations were retrieved, and long-context models hallucinated (2.1% adversarial accuracy for gpt-3.5-turbo-16k).",
+      "verdict": "confirmed",
+      "note": "Shown in Sec 6.1 and Table 3. Caveats the report leaves out: the task is question answering, not creative generation. The fade is small: overall F1 went from 41.4 at k=5 to 37.8 at k=50 for observations. For raw dialog retrieval, more items helped (31.7 at k=5 to 35.8 at k=25). The 2.1% is for full long context, not RAG. This is weak support for a hard cap of 5 on a 1B generator. The summary's 'all find' is overstated."
+     },
+     {
+      "claim": "PrefEval (2502.09597): zero-shot preference following fell below 10% at 10 turns for most models. Reminder and RAG were best. Prompting methods led to hallucinated preferences, Claude 3 Sonnet gave unhelpful refusals, and SFT beat RAG.",
+      "verdict": "confirmed",
+      "note": "Shown in Sec 3.2-3.7, Fig 7 and Fig 10. SFT was on Mistral-7B and generalised to unseen topics. The report's mapping to 333d goes further than the paper. The hallucinated preferences came from prompting methods (Reminder, CoT, Self-Critic) when the model failed to recall a preference stated turns earlier. The paper says RAG reduced hallucination (for Mistral 8x7b). 333d puts retrieved facts in the system prompt, which is RAG-like. So 'the use-the-facts instruction pushes invention' is at best suggested for 333d. It fits the twin, which reads the whole chat, better."
+     },
+     {
+      "claim": "2509.03531: linear probes on hidden states detected hallucinated entities (AUC 0.90 vs 0.71 for semantic entropy on Llama-3.3-70B). They transfer across model families and enable selective answering. Models were 7B-70B, labelled by web search.",
+      "verdict": "overstated",
+      "note": "0.90 is the LoRA probe (0.9048). The linear probe got 0.8667 on LongFact for the 70B model and 0.8535 for Llama-3.1-8B, against semantic entropy at 0.714 and 0.719 (Table 1). The model range (Qwen2.5-7B to Llama-3.3-70B), the web-search labels, cross-model transfer (Fig 5) and selective answering (Sec 5.4) are confirmed. The report left out the stated limits: best LoRA probe about 70% recall at 10% false positives on long-form text; cutting hallucinations meaningfully in selective answering cost about 50% of correct answers; labelling pipeline 80.6% recall with 15.8% false positives. Training used about 8,000 long-form prompts per primary model, about 4 times experiment 3's 2,000 drafts. The linear probes here scored 0.85-0.87 at 8B-70B, so experiment 3's AUC \u2265 0.85 pass mark sits at that level, for a 1B model with less data."
+     },
+     {
+      "claim": "CoVe (2309.11495): FActScore on biographies rose from 55.9 to 71.4 (factor+revise) for Llama 65B, with facts per answer from 16.6 to 12.3; factored verification beat joint.",
+      "verdict": "confirmed",
+      "note": "Shown in the Table 4 rows and the text ('28% (55.9 to 71.4)'). The base was a few-shot Llama 65B, not instruction-tuned."
+     },
+     {
+      "claim": "2411.14257: SAE directions in Gemma 2 2B and 9B encode entity recognition, and steering them switches between refusing and hallucinating.",
+      "verdict": "confirmed",
+      "note": "Shown in the abstract and the body (Gemma 2 2B and 9B, Figs 1 and 3). The report's caveat is correct: this is about knowledge from pretraining, not facts taught in chat."
+     }
+    ],
+    "experiment_critique": "Strongest: experiment 1 (learned router). It is one real change (the routing function), its dev hold-out pass mark is fixed in advance, and it cheaply targets a loss the code shows (a 3-way AND). Its flaws:\n(a) The falsifier goes too far. A sealed-panel routing of \u226425/40 would show that a probe trained on Claude-written data does not generalise to the panel's wording. It would not show that 1B hidden states cannot separate creative intent. The dev hold-out answers the separability question, so say so.\n(b) The cited evidence (2410.01627, Table 5) improves out-of-scope rejection at a large cost to in-scope recall (e.g. 0.689 to 0.411). That is the opposite of what the 15 missed requests need. Fix a threshold rule on dev (for example, the threshold that gives false positives \u2264 0.05) before the sealed run, and say so.\n(c) Mean-pooled final-layer features are the least probe-friendly choice. Middle layers or the last token are usually better. Pick the layer on dev before sealing.\n(d) Useful \u2265 11/40 is not a fair pass mark with 40 items. If the true rate stayed 8/40, sampling alone gives P(\u226511/40) \u2248 0.16, before judge noise, and the twin already moved 9 to 10 between runs. Either raise the bar or use a paired comparison on the same items with a larger panel.\n(e) The report's 'ceiling near 10-12' is untested: 333d could beat the twin, and the ordinary reply may already have made some of the 15 missed items useful. The ordinary-reply rate on missed creative requests can be measured on dev.\n\nWeakest: experiment 2 (top-5 facts). It is not one change in effect. claude_cre333d_agent.py:61-62 builds the G2 'known' word set from the same fact sentences. Cutting to 5 facts shrinks 'known', so true names that fall outside the top 5 would trip G2 and cause more fallbacks. The prompt text changes too. The evidence base is also weak: LaMP's Figure 2 says more items help, and LoCoMo's fade is small and comes from QA. Its void clause (median facts must halve) is good. But the median can be checked now, for free, from the context_facts counts in DEV rehearsal logs. Do that before spending a run. If the median is under about 10, drop the experiment. The same 40-item noise problem applies to 11/40.\n\nExperiment 3 (notebook-labelled probe) has a circularity problem. Labelling 'person-attribute spans' as supported or unsupported needs a claim extractor plus a notebook lookup. If that extractor works, it already is the verifier, run directly at wake (a CoVe-style check against the notebook), and needs no probe. The probe adds value only on claims the extractor misses, and the extractor's labels cannot teach it those. There are also problems with label truth. A fact missing from the notebook is not false, because the notebook is incomplete. And creative suggestions ('Maya might enjoy pottery') are not assertions. The 'better than G2' comparison is unequal: G2 only catches an invented Name after 'your <relation>', not invented attributes. The novelty claim is overstated (see missed work). Using an exact personal memory as free labels, trained during sleep, is a modest twist on known automatic-label pipelines, not a new method. The AUC \u2265 0.85 pass mark equals what linear probes reached at 8B-70B with about 4 times more data.\n\nAcross all three: every sealed run reuses the same 40+30 panel that 333, 333b, 333c and 333d already used, so repeated selection on it will overfit. Fix a fresh test panel, or limit the number of sealed runs allowed this month.",
+    "missed": "1) The biggest gap, shown in code: the 333d creative path gives MiniCPM only the system prompt, the notebook facts and the current turn. It never gives the chat history (claude_cre333d_agent.py:60-66; 338's chat path does include history, claude_chat338_agent.py:13-15). The twin it is compared with (10/40) read the whole chat. Anything said earlier that the reader did not store as a triple, plus pronouns and 'she'/'that trip' references, is invisible to 333d. So 'give the creative path the last N messages' (as 338 does) is a candidate single change that directly tests the 8-vs-10 gap. It is suggested and untested, and it may raise the risk of invented facts. The report attributes the gap to routing and fact overload without considering this.\n2) Open question 2 already has data: loop.experience records context_facts per creative turn, so the DEV rehearsal logs can answer it for free.\n3) Prior work missed for experiment 3, abstract-only: Lookback Lens (arXiv:2407.07071, EMNLP 2024). It detects contextual hallucination (unsupported by the given context, which is Premonition's case) with a linear classifier on attention ratios. It matched a hidden-state detector, transferred from a 7B to a 13B model, and was used for classifier-guided choice among sampled candidates. That is almost exactly experiment 3's wake-time use. Also HalluRAG (arXiv:2412.17056), which uses internal-state classifiers for closed-domain RAG hallucinations and reached up to 75% accuracy with limited generalisation. And Dialogue NLI (arXiv:1811.00671), which trains an NLI model on persona facts and reranks dialogue candidates for consistency with a persona: an old, cheap version of 'check the reply against stored person facts'. KCTS/RIPA (already cited) showed synthetic knowledge-shuffle labels. Web search also turned up 1B-3B grounding detectors (HaluCheck, snippet only). Together these make experiment 3's novelty claim suggested at best.\n4) Missing statistics: nothing on how noisy a 40-item panel with an LLM judge is (about \u00b12-3 items). Nothing on panel reuse across 333 to 333d.\n5) Experiment 1 lacks cheaper baselines to beat first: MiniCPM5-1B asked zero-shot 'is this a request for ideas or writing? yes/no' with thinking off (a learned model, one forward pass), and SetFit. Without them, a probe win cannot be credited to hidden states.\n6) Nothing links the variety failure (45-59 distinct replies per 1000) to the proposed changes beyond one open question."
+   }
+  }
+ ]
+}
