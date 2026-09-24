@@ -1,0 +1,200 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-302-gpu.md failed[90m [limit=30][0m
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-302-gpu.md
+[0m✗ [0mRead handoff/queue/e2e-330-dev.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/e2e-330-dev.md
+[0m✗ [0mRead artifacts/claude-chat338-20260924/PASSMARKS.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-chat338-20260924/PASSMARKS.md
+[0m→ [0mRead .
+[0m✗ [0mGlob "artifacts/claude-chat*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m✗ [0mGlob "handoff/**/*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m→ [0mRead handoff
+[0m→ [0mRead artifacts
+[0m
+[0m$ [0mpwd; ls -la; echo ---; ls /Users/ben-hannan/Desktop/projects/beautiful-model/ | head -n 100; echo ---; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/ 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+total 336
+drwxr-xr-x    30 ben-hannan  staff    960 Sep 23 14:40 .
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 16:45 ..
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 12:29 .claude
+-rw-r--r--     1 ben-hannan  staff    105 Sep 19 18:35 .git
+-rw-r--r--     1 ben-hannan  staff     97 Sep 19 18:35 .gitignore
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 21 23:28 .pytest_cache
+-rw-r--r--     1 ben-hannan  staff  25924 Sep 19 18:35 ADVERSARIAL_REVIEW.md
+-rw-r--r--     1 ben-hannan  staff   8771 Sep 19 18:35 ARCHITECTURE_DECISION.md
+drwxr-xr-x     6 ben-hannan  staff    192 Sep 19 22:01 archive
+drwxr-xr-x@  476 ben-hannan  staff  15232 Sep 24 07:40 artifacts
+drwxr-xr-x     7 ben-hannan  staff    224 Sep 23 03:22 data
+drwxr-xr-x    14 ben-hannan  staff    448 Sep 23 04:38 design
+drwxr-xr-x@    6 ben-hannan  staff    192 Sep 22 21:20 handoff
+drwxr-xr-x    19 ben-hannan  staff    608 Sep 19 22:01 learnlab
+drwxr-xr-x    12 ben-hannan  staff    384 Sep 19 22:01 memorylab
+drwxr-xr-x@    4 ben-hannan  staff    128 Sep 22 04:38 notebook
+drwxr-xr-x    25 ben-hannan  staff    800 Sep 19 22:01 premonition
+drwxr-xr-x@    3 ben-hannan  staff     96 Sep 22 00:52 private
+-rw-r--r--     1 ben-hannan  staff   3610 Sep 19 18:35 README.md
+-rw-r--r--     1 ben-hannan  staff   8676 Sep 19 18:35 REMOTE_RUN.md
+-rw-r--r--     1 ben-hannan  staff  18053 Sep 19 18:35 RESEARCH_REVIEW.md
+drwxr-xr-x    21 ben-hannan  staff    672 Sep 19 22:01 reviews
+-rw-r--r--     1 ben-hannan  staff  10605 Sep 19 18:35 run.py
+-rwxr-xr-x     1 ben-hannan  staff    293 Sep 19 18:35 run.sh
+drwxr-xr-x     5 ben-hannan  staff    160 Sep 24 00:23 runs
+drwxr-xr-x     8 ben-hannan  staff    256 Sep 23 08:08 scratchpad
+drwxr-xr-x  1477 ben-hannan  staff  47264 Sep 24 00:33 scripts
+-rw-r--r--     1 ben-hannan  staff    799 Sep 23 14:03 state.json
+-rw-r--r--     1 ben-hannan  staff  63886 Sep 19 18:35 TEACHING_TO_TEST_CONTRACT.md
+drwxr-xr-x    78 ben-hannan  staff   2496 Sep 22 02:21 tests
+---
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+learnlab
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runtime.local.json
+scripts
+TEACHING_TO_TEST_CONTRACT.md
+tests
+---
+card-experiment-handoff-7c5b27
+model-architecture-review-0161ce
+model-issues-audit-abcf60
+premonition-design-review-792236
+research
+[0m
+[0m$ [0mls handoff/; echo ---; ls handoff/kit/ 2>&1 | head -n 50; echo ---; ls artifacts/ | grep -i -E "chat338|chatpanel338|e2e331|e2e330" ; echo ---; ls scripts/ | grep -E "chat338|cre333|e2e330|lis_stackb|e2e_armsb|e2e336|age334" | head -n 30
+HANDOFF.md
+kit
+memory
+replies
+---
+briefs
+dialog.py
+diskscan.py
+mimo
+rebuild_kit.py
+recount_ct258.py
+recount235.py
+recount235b.py
+recount243.py
+recount252.py
+recount252b.py
+recount254.py
+recount257.py
+recount260.py
+secretscan.py
+---
+claude-e2e330-dev-20260924
+---
+[0m
+[0m→ [0mRead state.json
+[0m→ [0mRead handoff/HANDOFF.md
+[0m
+[0m$ [0mls handoff/kit/briefs/ 2>&1 | head -n 100; echo ===; ls handoff/replies/ 2>&1 | head -n 100; echo ===; ls artifacts/claude-e2e330-dev-20260924/ 2>&1 | head -n 50; echo ===; ls scripts/ | head -n 100
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+zsh:1: == not found
+[0m
+[0m$ [0mls /Users/ben-hannan/Desktop/projects/beautiful-model/artifacts/ | grep -E "chat338|chatpanel338|e2e331|lis-302|e2e-330"; echo "---scripts---"; ls /Users/ben-hannan/Desktop/projects/beautiful-model/scripts/ | grep -E "chat338|cre333|e2e330|e2e336|age334|lis_stack|lis_e2e"; echo "---handoff?---"; ls /Users/ben-hannan/Desktop/projects/beautiful-model/handoff 2>&1 | head; echo "---queue?---"; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/briefs/ | grep -i -E "302|330|338"; echo "---date---"; date; TZ=America/New_York date
+---scripts---
+---handoff?---
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/handoff: No such file or directory
+---queue?---
+---date---
+Thu Sep 24 07:45:10 EDT 2026
+Thu Sep 24 07:45:10 EDT 2026
+[0m
+[0m$ [0mls artifacts/ | grep -i chat; echo "---panel---"; ls artifacts/ | grep -i panel338; echo "---all 338---"; ls artifacts/ | grep 338; echo "---scripts chat---"; ls scripts/ | grep -i chat; echo "---runs---"; ls runs/ 2>&1 | head -n 20; echo "---pwd git log---"; git log --oneline -5 2>&1 | head; git status --short 2>&1 | head -n 20
+claude-chatdemo-20260923
+claude-chatweak-20260923
+---panel---
+---all 338---
+---scripts chat---
+claude_chatdemo_page.html
+claude_chatdemo_server.py
+claude_chatdemo_start.sh
+---runs---
+000-cache-pin
+000-vast-rescue
+own-probe-1
+---pwd git log---
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
