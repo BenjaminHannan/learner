@@ -1,0 +1,1581 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0muptime; df -g /; pwd; git rev-parse --show-toplevel; git status --short | head -20
+5:00  up 18:54, 4 users, load averages: 31.05 30.95 27.21
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        58    18%  484014 613886240    0%   /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m✗ [0mGlob "**/OPUS-RULES*" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1 | head -5; git show origin/main:artifacts/claude-rsn296b-20260924/PASSMARKS.md 2>&1 | head -100; echo ===; git show origin/main:design/v3/30-modes/296b-told-after-miss.md 2>&1 | head -100
+# rsn-296b pass marks (fixed before any run; 2026-09-24)
+
+Arm: plain, seeds 1 and 2 (the loop arm is not run). The code is 296's plus scripts/claude_rsn296b_run.py. Checked answers only, i.e. after the fact-check.
+Panels are the same as 296: reasonpanel296 items-v2 (fresh, 298) and reasonpanel294 items-v3 (transfer, 300). Both are TEST-ONLY and reported at category level. The diagnosis uses scripts/claude_rsn296_diag.py (--n 200, generated episodes only).
+
+| mark | what (each seed) | pass |
+|---|---|---|
+| P296b.1 | invented answers, each panel | ≤ 2 |
+| P296b.2 | diagnosis: counts 1–7 right, and comparing right | each ≥ 160/200 |
+| P296b.3 | fresh panel counting + comparing | ≥ 296 same seed + 12, i.e. ≥ 40/60 for both seeds (296: 28 and 28) |
+| P296b.4 | fresh panel total | ≥ 228/298 |
+| P296b.5 | fresh code-doable, and transfer total | ≥ 168/178, and ≥ 228/300 (296 got 238) |
+
+PASS = all five marks on both seeds.
+**What proves the idea wrong:** P296b.2 fails on both seeds. Being told the answer then does not teach this 30M net to count or compare, and the next question is architecture, not practice.
+Predictions:
+- P296b.1 pass.
+- P296b.2 uncertain (the tiny CPU check says it may fail).
+- P296b.3 and P296b.4 follow P296b.2.
+- P296b.5 likely pass.
+zsh:1: == not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/296b-told-after-miss.md; echo "=====DOCSTRINGS====="; git show origin/main:scripts/claude_rsn296b_run.py | head -120
+# 296b: told the answer after a miss (296's one follow-up)
+
+Reasoning line, 2026-09-24. 296 = registered FAIL on P296.4 only (fresh total 225 and 217 vs 228). It made 0 made-up answers after the fact-check, and it transferred well (238 and 238).
+
+## Diagnosis this answers
+artifacts/claude-rsn296-20260924/DIAG-director.md used generated practice-style episodes only. It showed that the models don't count or compare; each one settled on a few fixed answers.
+- Counting: seed 1 is right only on counts 1, 2 and 7. Seed 2 is 0/59 on counts 1–2.
+- Comparing: one fixed pick, 88/200.
+- Before/after: fails once there are more than 2 dated facts.
+
+The practice reward goes only to the exact answer. Once all 8 tries agree, there is no signal left (294's D3).
+
+## The one change
+scripts/claude_rsn296b_run.py: in practice, when none of an episode's 8 tries is right, the teacher shows the right answer for that episode. This is the copy phase's own loss, on that episode only. Everything else is 296: the generator, the plain arm, sizes, steps, reward, fact-check, seeds 1 and 2, and eval. It is brain-like in the plain sense: practise, and when you keep missing, someone tells you the answer.
+
+Only the plain arm runs. The loop arm's copy failure (294 D2, reproduced in 296) is unfixed, so running it again would only spend money.
+
+## Untested risk (from scratch CPU checks, tiny model, not registered)
+A tiny model shown every counting and comparing answer for 3,000 steps still didn't learn them. A "tally" readout didn't help at that size either. So 296b may show that the 30M model can't count even when told the answer. P296b.2 is the mark that would prove that.
+
+## Cost
+Two plain runs in parallel on one 5090, about 40 minutes, about $0.5–1. The $4 combined cap and the guard stay as in 296.
+=====DOCSTRINGS=====
+#!/usr/bin/env python3
+"""rsn-296b runner: rsn-296 exactly (varied practice generator, same arms, sizes, steps, reward,
+fact-check, eval), with ONE change in the practice phase:
+
+  TOLD THE ANSWER AFTER A MISS.  When none of an episode's 8 practice tries is right, the
+  teacher shows the right answer for that episode (the same copy loss the copy phase uses:
+  cross-entropy on the right action + 0.5 x the cited-facts loss), on that episode only.
+
+Why (rsn-296 diagnosis, artifacts/claude-rsn296-20260924/diag-cpu, generated episodes only):
+the practice-only kinds were never learned.  Counting: seed 1 answers right only when the count
+is 1, 2 or 7 (0/117 on counts 3-6), seed 2 only on 3-5 and partly 6-7 (0/59 on counts 1-2): each
+seed settled on a few fixed numbers.  Comparing: 88/200 on both seeds, bucket for bucket identical
+(one fixed pick).  Before/after: all right with 2 dated facts, about half with 3-4.  With a
+13-way or 2-way choice and a reward only for the exact answer, once the 8 tries agree there is
+no signal left (294's D3).  A person who practises and keeps missing gets told the answer; that
+is the one change.
+
+  python claude_rsn296b_run.py train|dev|eval ...   (same arguments as claude_rsn294_run.py)
+"""
+import argparse
+import sys
+from pathlib import Path
+
+import torch
+import torch.nn.functional as F
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import claude_rsn296_gen  # noqa: E402,F401  (replaces claude_rsn294_core.gen_episode)
+import claude_rsn294_core as C  # noqa: E402
+import claude_rsn294_run as R  # noqa: E402
+
+_rl_loss_294 = R.rl_loss
+
+
+def rl_loss_296b(model, arm, batch, dev, rng, G=8):
+    enc, ga, sup, golds, infos = batch
+    enc_d, ga_d, sup_d = enc.to(dev), ga.to(dev), sup.to(dev)
+    logits, sl = model(enc_d, R.steps_for(arm, rng)) if arm == "loop" else model(enc_d)
+    dist = torch.distributions.Categorical(logits=logits)
+    acts = dist.sample((G,))                                   # [G, B]
+    m = sl > -1e8
+    sprob = torch.sigmoid(sl).clamp(1e-4, 1 - 1e-4)
+    sbits = torch.bernoulli(sprob.detach().expand(G, *sprob.shape)) * m
+    acts_c = acts.cpu().tolist()
+    match = ((sbits == sup_d.unsqueeze(0)) | ~m.unsqueeze(0)).all(-1).cpu().tolist()
+    Rw = torch.zeros(G, len(golds))
+    hit = [False] * len(golds)
+    for g in range(G):
+        for b in range(len(golds)):
+            r = C.reward(C.decode(acts_c[g][b], infos[b]), golds[b])
+            if r == 1.0:
+                hit[b] = True
+                if match[g][b]:
+                    r += 0.2
+            Rw[g, b] = r
+    Rw = Rw.to(dev)
+    adv = (Rw - Rw.mean(0, keepdim=True)) / (Rw.std(0, keepdim=True) + 1e-4)
+    lp = dist.log_prob(acts)
+    slp = ((sbits * torch.log(sprob) + (1 - sbits) * torch.log(1 - sprob)) * m).sum(-1)
+    loss = -(adv.detach() * (lp + slp)).mean() - 0.01 * dist.entropy().mean()
+    # the one change: told the answer after a miss (only where no try was right and a right action exists)
+    miss = torch.tensor([not h for h in hit], device=dev) & (ga_d >= 0)
+    if miss.any():
+        la = F.cross_entropy(logits[miss], ga_d[miss])
+        mm = m[miss]
+        ls = F.binary_cross_entropy_with_logits(sl[miss][mm], sup_d[miss][mm]) if mm.any() else la * 0
+        loss = loss + la + 0.5 * ls
+    return loss, Rw.mean().item()
+
+
+R.rl_loss = rl_loss_296b
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    sp = p.add_subparsers(dest="cmd", required=True)
+    t = sp.add_parser("train")
+    t.add_argument("--arm", choices=["loop", "plain"], required=True)
+    t.add_argument("--seed", type=int, default=1)
+    t.add_argument("--out", required=True)
+    t.add_argument("--size", default="30m")
+    t.add_argument("--copy-steps", type=int, default=6000)
+    t.add_argument("--rl-steps", type=int, default=6000)
+    t.add_argument("--batch", type=int, default=256)
+    t.add_argument("--rl-batch", type=int, default=128)
+    t.add_argument("--lr", type=float, default=3e-4)
+    t.add_argument("--init", default=None, help="start from this checkpoint (dev only)")
+    t.add_argument("--workers", type=int, default=6)
+    t.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    d = sp.add_parser("dev")
+    d.add_argument("--ckpt", required=True)
+    d.add_argument("--out", required=True)
+    d.add_argument("--n", type=int, default=100)
+    d.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    e = sp.add_parser("eval")
+    e.add_argument("--ckpt", required=True)
+    e.add_argument("--panel", required=True)
+    e.add_argument("--out", required=True)
+    e.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    a = p.parse_args()
+    {"train": R.train, "dev": R.dev, "eval": R.evaluate}[a.cmd](a)
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn296_diag.py | head -60; echo "=====SEALS====="; git show origin/main:artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt; echo ---; git show origin/builder-outbox:artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt 2>&1 | head -20
+#!/usr/bin/env python3
+"""rsn-296 diagnosis (report-only, no training): where do counting, comparing and before/after
+fail?  Uses GENERATED episodes only (the varied 296 generator), never a panel item.
+
+  python claude_rsn296_diag.py --ckpt W/plain-s1/final.pt --out diag.json [--n 200] [--device cpu]
+
+Buckets (checked answers, i.e. after the fact-check, exactly as the registered eval):
+  count      by gold count 1..7 (the practice range) and 8..12 (never practised: extra rows of the
+             same person+relation are added to a generated count episode)
+  compare    by how many numeric rows the notebook has (2, 3-5, 6-10, 11+) and whether the two
+             compared values are neighbours in the notebook's number order
+  before/after  by how many dated rows the asked person has
+Writes category-level counts only.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn296_gen as G  # noqa: E402  (installs the varied generator)
+import claude_rsn294_core as C  # noqa: E402
+import claude_rsn294_run as R  # noqa: E402
+
+
+def _refid(rows):
+    for i, r in enumerate(rows):
+        r["fid"] = f"f{i + 1}"
+
+
+def big_count(rng, n):
+    """a generated count episode pushed to gold n by adding rows for the same person+relation"""
+    for _ in range(200):
+        ep = G.gen_episode296(rng, "count")
+        fr = ep["frame"]
+        a, r = fr["who"][0], fr["relations"][0]
+        have = [x for x in ep["notebook"] if C._key(x["subject"]) == C._key(a) and C._key(x["relation"]) == C._key(r)]
+        extra = n - len(have)
+        if extra < 0 or len(ep["notebook"]) + extra > C.MAX_ROWS:
+            continue
+        used = {C._key(x["value"]) for x in ep["notebook"]} | {C._key(x["subject"]) for x in ep["notebook"]}
+        top = max(int(x["when"]) for x in ep["notebook"])
+        rows = list(ep["notebook"])
+        for i in range(extra):
+            while True:
+                v = C.fake_name(rng)
+                if C._key(v) not in used:
+                    used.add(C._key(v)); break
+            rows.append({"fid": "", "subject": a, "relation": r, "value": v, "when": top + i + 1})
+        rng.shuffle(rows)
+        _refid(rows)
+        ep = {"category": "count", "notebook": rows, "frame": fr,
+              "gold": {"answer": str(n), "support": []}}
+        if G.solve(ep) == str(n):
+            return ep
+    raise RuntimeError("no big count episode")
+=====SEALS=====
+3d878d553777f3c31b7e583ae57ff4ec6364c0149ab8dce48b1e6af5fa543285  scripts/claude_rsn296b_run.py
+792db8dff9495b2dc23d47b80d6df6bb04abc597be7bc98d91e87a07e4ab1592  scripts/claude_rsn296_diag.py
+21b62955602b84753491801a7b15db88d2e631197bcbff68eabdc007edea63a8  scripts/claude_rsn296_gen.py
+18b401bc7f9518043222acb3bdc243e7e5f0be38a5334235e3c72a69586b6bfd  scripts/claude_rsn294_core.py
+d921fdd3b26be107e6fb8fcdfd2d6e45135c0b7bce696d1125506a355d5a7438  scripts/claude_rsn294_run.py
+79cba5444a2a815cf2b39a8e55aaf67bd8fbf71f570573bafdf2f944f4a3e447  design/v3/30-modes/296b-told-after-miss.md
+d852b9686708aaa067a372476d82e93c4751e681bd285ca7fcabd2c680cc341a  artifacts/claude-rsn296b-20260924/PASSMARKS.md
+---
+fatal: path 'artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt' does not exist in 'origin/builder-outbox'
+[0m
+[0m$ [0mgit branch -a | head -20; git log origin/builder-outbox --oneline -5 2>&1 | head; git ls-tree -r --name-only origin/builder-outbox 2>&1 | head -30; echo ===MAINSEALFILES===; git ls-tree -r --name-only origin/main 2>&1 | grep -i -E "296b|reasonpanel296|reasonpanel294" | head -20
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
++ worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+750827595 watcher status
+a2d12ca00 watcher status
+e6043c27e watcher status
+d36c14dd4 watcher status
+8c8d1113d watcher status
+artifacts/.DS_Store
+artifacts/claude-called281-20260923/PASSMARKS.md
+artifacts/claude-called281-20260923/RESULTS.md
+artifacts/claude-called281-20260923/SEAL.sha256.txt
+artifacts/claude-called281-20260923/devcases281.json
+artifacts/claude-called281-20260923/loop281-config.json
+artifacts/claude-called281-20260923/pilot/dev-score.json
+artifacts/claude-called281-20260923/pilot/dev260.json
+artifacts/claude-called281-20260923/pilot/dev281.json
+artifacts/claude-called281-20260923/pilot/reg/regscore.txt
+artifacts/claude-called281-20260923/pilot/reg/regscore281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate-281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate.log
+artifacts/claude-called281-20260923/pilot/reg/sd.log
+artifacts/claude-called281-20260923/pilot/reg/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-rows.json
+artifacts/claude-called281-20260923/pilot/reg/sd136.log
+artifacts/claude-called281-20260923/pilot/reg/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-rows.json
+artifacts/claude-called281-20260923/pilot/reg/uptime.log
+artifacts/claude-called281-20260923/pilot/reg/vp-281.json
+artifacts/claude-called281-20260923/pilot/reg/vp-281.log
+artifacts/claude-called281-20260923/pilot/reg/vs-281.json
+zsh:1: ==MAINSEALFILES=== not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "296b|reasonpanel296|reasonpanel294"
+artifacts/claude-reasonpanel294-20260923/AUDIT-opus.md
+artifacts/claude-reasonpanel294-20260923/FIX-v2.md
+artifacts/claude-reasonpanel294-20260923/FIX-v3.md
+artifacts/claude-reasonpanel294-20260923/README.md
+artifacts/claude-reasonpanel294-20260923/SEAL-v2.sha256.txt
+artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt
+artifacts/claude-reasonpanel294-20260923/SEAL.sha256.txt
+artifacts/claude-reasonpanel294-20260923/items-v2.jsonl
+artifacts/claude-reasonpanel294-20260923/items-v3.jsonl
+artifacts/claude-reasonpanel294-20260923/items.jsonl
+artifacts/claude-reasonpanel296-20260924/AUDIT-opus.md
+artifacts/claude-reasonpanel296-20260924/FIX-v2.md
+artifacts/claude-reasonpanel296-20260924/README.md
+artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt
+artifacts/claude-reasonpanel296-20260924/SEAL.sha256.txt
+artifacts/claude-reasonpanel296-20260924/items-v2.jsonl
+artifacts/claude-reasonpanel296-20260924/items.jsonl
+artifacts/claude-rsn296b-20260924/PASSMARKS.md
+artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt
+design/v3/30-modes/296b-told-after-miss.md
+handoff/queue/rsn-296b-guard.md
+handoff/queue/rsn-296b-train.md
+scripts/claude_reasonpanel294_check.py
+scripts/claude_reasonpanel296_check.py
+scripts/claude_rsn296b_run.py
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -E "claude_rsn29[46]"; echo "---SEALFILES---"; git show origin/main:artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt; echo "---V2---"; git show origin/main:artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt; echo "---V3---"; git show origin/main:artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt
+scripts/claude_rsn294_codearm.py
+scripts/claude_rsn294_core.py
+scripts/claude_rsn294_run.py
+scripts/claude_rsn296_diag.py
+scripts/claude_rsn296_gen.py
+scripts/claude_rsn296_run.py
+scripts/claude_rsn296b_run.py
+---SEALFILES---
+3d878d553777f3c31b7e583ae57ff4ec6364c0149ab8dce48b1e6af5fa543285  scripts/claude_rsn296b_run.py
+792db8dff9495b2dc23d47b80d6df6bb04abc597be7bc98d91e87a07e4ab1592  scripts/claude_rsn296_diag.py
+21b62955602b84753491801a7b15db88d2e631197bcbff68eabdc007edea63a8  scripts/claude_rsn296_gen.py
+18b401bc7f9518043222acb3bdc243e7e5f0be38a5334235e3c72a69586b6bfd  scripts/claude_rsn294_core.py
+d921fdd3b26be107e6fb8fcdfd2d6e45135c0b7bce696d1125506a355d5a7438  scripts/claude_rsn294_run.py
+79cba5444a2a815cf2b39a8e55aaf67bd8fbf71f570573bafdf2f944f4a3e447  design/v3/30-modes/296b-told-after-miss.md
+d852b9686708aaa067a372476d82e93c4751e681bd285ca7fcabd2c680cc341a  artifacts/claude-rsn296b-20260924/PASSMARKS.md
+---V2---
+3791919ae5c8b9da94ff5ecc721636433eefb88edef130a5350258616dbace26  artifacts/claude-reasonpanel296-20260924/items-v2.jsonl
+229f1b2110e5818900ee5a5455832e31cd9a5f85550bd3bb496c2e7b7b323c5d  artifacts/claude-reasonpanel296-20260924/FIX-v2.md
+---V3---
+bce1997aa9f4ae9dcf6b26fc16d5c74c28bb5c957cc1b826dfd6e4964c7d3ea2  artifacts/claude-reasonpanel294-20260923/items-v3.jsonl
+c44892cb71dcc128793b2076813194a324a1b44f3e0fc683d2334eb1a927199e  artifacts/claude-reasonpanel294-20260923/FIX-v3.md
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show credit 2>&1 | head -5; vastai show instances 2>&1 | head -20
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+vastai: error: argument command: invalid choice: 'show credit' (choose from help, show instance, create instance, create instances, destroy instance, destroy instances, start instance, start instances, stop instance, stop instances, reboot instance, recycle instance, update instance, label instance, prepay instance, change bid, launch instance, show instances, show instances-v1, search offers, search instances, search benchmarks, search templates, search invoices, create template, update template, delete template, show machine, show machines, show maints, show network-disks, list machine, list machines, unlist machine, delete machine, cleanup machine, defrag machines, set min-bid, set defjob, remove defjob, schedule maint, cancel maint, add network-disk, dump-logs, self-test machine, create team, destroy team, create team-role, show team-role, show team-roles, update team-role, remove team-role, invite member, show members, remove member, create api-key, show api-key, show api-keys, delete api-key, reset api-key, create ssh-key, show ssh-keys, delete ssh-key, update ssh-key, attach ssh, detach ssh, create endpoint, show endpoints, update endpoint, delete endpoint, get endpt-logs, get endpt-workers, create workergroup, show workergroups, update workergroup, update workers, delete workergroup, get wrkgrp-logs, show invoices, show invoices-v1, show earnings, show deposit, show user, set user, show subaccounts, create subaccount, show ipaddrs, transfer credit, show scheduled-jobs, delete scheduled-job, copy, cancel copy, cancel sync, cloud copy, show connections, search volumes, search network-volumes, create volume, create network-volume, delete volume, clone volume, show volumes, show instance-backups, show instance-backup-files, list volume, list volumes, list network-volume, unlist volume, unlist network-volume, set api-key, set role, show audit-logs, show env-vars, create env-var, update env-var, delete env-var, tfa activate, tfa delete, tfa login, tfa resend-sms, tfa regen-codes, tfa send-sms, tfa send-email, tfa auth-new, tfa status, tfa totp-setup, tfa update, execute, logs, reports, ssh-url, scp-url, take snapshot, show deployments, show deployment, show deployment-versions, stop deployment, start deployment, delete deployment, metrics gpu, metrics gpu-trends, metrics gpu-locations, run benchmarks, show pending-price-increases, accept price-increase, reject price-increase, repl, update, uninstall)
+[K[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m─[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m0 instances[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰────────────────────╯[0m
+[97mNo instances found.[0m
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show user 2>&1 | head -20
+[40m[97m  #  Balance  Bal. Thld  Bal. Thld Enabled  City  Country  Addr Line 1[0m
+[48;5;240m[97m  1  0        -0.01      True               -     -        -          [0m
+
+[40m[97m  #  Addr line 2  Zip  Billed Expected  Billed Vfy  Billing Creditonly  Can Pay[0m
+[48;5;240m[97m  1  -            -    0.0              0.0         1                   True   [0m
+
+[40m[97m  #  Credit  Email                        Email Vfy  Full Name[0m
+[48;5;240m[97m  1  5.63    benjamin.a.hannan@gmail.com  True       -        [0m
+
+[40m[97m  #  Got Signup Credit  Has Billing  Has Payout  Id      Last4  Paid Expected[0m
+[48;5;240m[97m  1  0                  True         False       553012  -      0.0          [0m
+
+[40m[97m  #  Paid Vfy  Pwd Resettable  Paypal Email[0m
+[48;5;240m[97m  1  0.0       -               -           [0m
+
+[40m[97m  #  Ssh Key                                                                                                                                                                                            [0m
+[48;5;240m[97m  1  ssh-ed25519_AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4_vast-training
+ssh-ed25519_AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517_ben@paynycfines.com[0m
+
+[40m[97m  #  User  Username                   [0m
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -30
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  46753295  13.0  1x  RTX_5090  22.6  2.2      32.0    32.2  32.6  127 [0m
+[40m[97m  2  43165153  13.0  1x  RTX_5090  23.2  2.2      32.0    32.2  32.6  283 [0m
+[48;5;240m[97m  3  51390581  13.0  1x  RTX_5090  3.7   2.8      24.0    48.3  32.6  612 [0m
+[40m[97m  4  52274876  13.0  1x  RTX_5090  11.0  3.5      12.0    64.3  32.6  1220[0m
+[48;5;240m[97m  5  52093612  13.2  1x  RTX_5090  49.6  7.2      24.0    63.8  32.6  614 [0m
+[40m[97m  6  48211673  12.8  1x  RTX_5090  50.1  3.7      12.0    63.9  32.6  1117[0m
+[48;5;240m[97m  7  51191439  13.2  1x  RTX_5090  25.8  3.5      32.0   256.5  32.6  1217[0m
+[40m[97m  8  51954044  13.0  1x  RTX_5090  27.5  8.8      16.0    63.2  32.6  1672[0m
+[48;5;240m[97m  9  50715637  13.0  1x  RTX_5090  24.6  3.5      42.7    86.0  32.6  1931[0m
+[40m[97m 10  52077399  13.2  1x  RTX_5090  36.7  5.5      12.0    61.9  32.6  1567[0m
+[48;5;240m[97m 11  45397698  13.2  1x  RTX_5090  55.1  5.6      16.0    63.9  32.6  1346[0m
+[40m[97m 12  45620124  13.0  1x  RTX_5090  54.1  3.8      16.0    64.4  32.6  751 [0m
+[48;5;240m[97m 13  48006835  13.0  1x  RTX_5090  23.2  3.7      4.0     44.2  32.6  456 [0m
+[40m[97m 14  50851279  13.0  1x  RTX_5090  27.1  2.6      48.0   110.6  32.6  1571[0m
+[48;5;240m[97m 15  39434229  12.8  1x  RTX_5090  23.1  2.8      32.0    64.2  32.6  444 [0m
+[40m[97m 16  48072857  13.0  1x  RTX_5090  23.6  2.2      256.0  257.7  32.6  1397[0m
+[48;5;240m[97m 17  43177478  13.2  1x  RTX_5090  24.0  3.7      48.0   209.6  32.6  1456[0m
+[40m[97m 18  51794763  13.2  1x  RTX_5090  47.2  4.3      32.0    64.3  32.6  637 [0m
+[48;5;240m[97m 19  46953692  13.0  1x  RTX_5090  51.8  2.4      48.0    96.7  32.6  604 [0m
+[40m[97m 20  51755010  13.0  1x  RTX_5090  54.1  5.4      32.0   128.6  32.6  3271[0m
+[48;5;240m[97m 21  30949250  13.3  1x  RTX_5090  26.6  2.6      24.0   129.0  32.6  238 [0m
+[40m[97m 22  44070351  13.0  1x  RTX_5090  24.3  3.5      28.4    57.3  32.6  962 [0m
+[48;5;240m[97m 23  48425196  13.0  1x  RTX_5090  54.4  4.1      18.3    73.6  32.6  413 [0m
+[40m[97m 24  49059641  13.0  1x  RTX_5090  53.8  3.0      56.0    40.2  32.6  618 [0m
+[48;5;240m[97m 25  50716299  13.1  1x  RTX_5090  54.9  3.7      48.0    96.7  32.6  2805[0m
+[40m[97m 26  49760567  13.2  1x  RTX_5090  54.1  3.9      16.0    96.7  32.6  277 [0m
+[48;5;240m[97m 27  45028403  12.9  1x  RTX_5090  26.4  3.5      32.0    64.5  32.6  241 [0m
+[40m[97m 28  45508886  13.2  1x  RTX_5090  26.6  3.5      32.0    64.5  32.6  482 [0m
+[48;5;240m[97m 29  51611886  13.0  1x  RTX_5090  46.8  5.5      32.0    94.2  32.6  2662[0m
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+  off=d.get('offers',d if isinstance(d,list) else [])
+  if isinstance(d,dict) and 'offers' not in d:
+    off=[d]
+  rows=[]
+  for o in off[:40]:
+    rows.append((o.get('dph_total',o.get('dph')),o.get('cpu_cores_effective',o.get('num_cpus')),o.get('id'),o.get('host_id',o.get('machine_id')),o.get('reliability'),o.get('cuda_vers'),o.get('gpu_name')))
+  rows.sort()
+  for r in rows[:25]: print(r)
+except Exception as e:
+  print('PARSEFAIL',e); print(raw[:3000])
+"
+PARSEFAIL 'list' object has no attribute 'get'
+[
+ {
+  "ask_contract_id": 43165153,
+  "avail_vol_ask_id": 43165162,
+  "avail_vol_dph": 0.0039814814814814825,
+  "avail_vol_size": 1091.0,
+  "bundle_id": 1618714188,
+  "bundled_results": null,
+  "bw_nvlink": 0.0,
+  "cluster_id": null,
+  "compute_cap": 1200,
+  "cpu_arch": "amd64",
+  "cpu_cores": 256,
+  "cpu_cores_effective": 32.0,
+  "cpu_ghz": 2.25,
+  "cpu_name": "AMD EPYC 7B12 64-Core Processor",
+  "cpu_ram": 32214,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "direct_port_count": 12,
+  "discount_rate": 0.0,
+  "discounted_dph_total": 0.47268518518518515,
+  "discounted_hourly": 0.0,
+  "disk_bw": 552.6,
+  "disk_name": "nvme",
+  "disk_space": 283.125,
+  "dlperf": 100.3676326955665,
+  "dlperf_per_dphtotal": 212.33505056065,
+  "dph_base": 0.4666666666666666,
+  "dph_total": 0.47268518518518515,
+  "dph_total_adj": 0.49221643518518515,
+  "driver_vers": 580159003,
+  "driver_version": "580.159.03",
+  "duration": 8352498.377437592,
+  "end_date": 1798592980.0,
+  "expected_reliability": 0.0,
+  "external": null,
+  "flops_per_dphtotal": 228.70122311459355,
+  "geolocation": "United States, US",
+  "geolocode": 433199645,
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.125,
+  "gpu_ids": [
+   207800
+  ],
+  "gpu_lanes": 16,
+  "gpu_max_power": 520.0,
+  "gpu_max_temp": 15.0,
+  "gpu_mem_bw": 728.0,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_total_ram": 32607,
+  "has_avx": 1,
+  "host_id": 410852,
+  "hosting_type": 0,
+  "hostname": null,
+  "id": 43165153,
+  "inet_down": 177.1,
+  "inet_down_cost": 0.015625,
+  "inet_up": 36.3,
+  "inet_up_cost": 0.016927083333333332,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.006018518518518517,
+   "diskHour": 0.006018518518518517,
+   "gpuCostPerHour": 0,
+   "slaPremiumPerHour": 0,
+   "totalHour": 0.006018518518518517
+  },
+  "internet_down_cost_per_tb": 16.0,
+  "internet_up_cost_per_tb": 17.333333333333332,
+  "is_bid": false,
+  "is_vm_deverified": false,
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_id": 142018,
+  "min_bid": 0.365,
+  "mobo_name": "ROME2D32GM-2T",
+  "num_gpus": 1,
+  "nw_disk_avg_bw": null,
+  "nw_disk_max_bw": null,
+  "nw_disk_min_bw": null,
+  "os_version": "22.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 23.2,
+  "public_ipaddr": "137.175.76.24",
+  "reliability": 0.9952307,
+  "reliability2": 0.9952307,
+  "reliability_mult": 0.9544451,
+  "rentable": true,
+  "rented": false,
+  "resource_type": "gpu",
+  "rn": 1,
+  "score": 108.10542195270332,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.47268518518518515,
+   "diskHour": 0.006018518518518517,
+   "gpuCostPerHour": 0.4666666666666666,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.47268518518518515
+  },
+  "sla_broker_rate": null,
+  "sla_r_claim": 0.0,
+  "sla_sigma_x": null,
+  "start_date": null,
+  "static_ip": false,
+  "storage_cost": 0.8666666666666665,
+  "storage_total_cost": 0.006018518518518517,
+  "target_reliability": 0.0,
+  "time_remaining": "",
+  "time_remaining_isbid": "",
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+off=json.load(sys.stdin)
+print(type(off), len(off))
+rows=[]
+for o in off:
+  rows.append((round(o.get('dph_total',9),4),o.get('cpu_cores_effective'),o.get('id'),o.get('machine_id'),round(o.get('reliability',0),4)))
+rows.sort()
+for r in rows[:30]: print(r)
+"
+<class 'list'> 64
+(0.4727, 32.0, 43165153, 142018, 0.9952)
+(0.5094, 24.0, 51390581, 68291, 0.9876)
+(0.5614, 48.0, 49250870, 141821, 0.9956)
+(0.5761, 24.0, 52093612, 131570, 0.9973)
+(0.6001, 16.0, 48446548, 35865, 0.987)
+(0.6009, 12.0, 40374040, 36341, 0.9964)
+(0.6014, 14.0, 49958043, 19569, 0.9915)
+(0.6019, 12.0, 40077664, 41794, 0.9989)
+(0.6043, 16.0, 50237403, 147544, 0.9961)
+(0.6588, 32.0, 51191434, 145701, 0.9883)
+(0.669, 42.666666666666664, 50715635, 55265, 0.9907)
+(0.6713, 12.0, 52077399, 112931, 0.9959)
+(0.7081, 16.0, 52295664, 146669, 0.9934)
+(0.7223, 32.0, 51326859, 80123, 0.9908)
+(0.7347, 16.0, 50615771, 68111, 0.9974)
+(0.7347, 32.0, 38597207, 43130, 0.9868)
+(0.7347, 256.0, 48072857, 144582, 0.9941)
+(0.7356, 48.0, 46953692, 51341, 0.9954)
+(0.777, 48.0, 51826279, 114286, 0.9978)
+(0.8023, 16.0, 39179906, 123046, 0.996)
+(0.8028, 24.0, 50856203, 12140, 0.9985)
+(0.8032, 24.0, 27039375, 44656, 0.9992)
+(0.8336, 56.0, 49059641, 148337, 0.9944)
+(0.8336, 112.0, 48426436, 148338, 0.995)
+(0.8556, 48.0, 50716295, 85726, 0.9968)
+(0.8681, 16.0, 49760564, 149743, 0.9922)
+(0.8681, 32.0, 45028389, 25132, 0.9986)
+(0.8681, 32.0, 45508886, 35115, 0.9985)
+(0.869, 14.222222222222221, 47357388, 58852, 0.9823)
+(0.8943, 12.0, 51969538, 129810, 0.9835)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rsn-296b-train.md 2>&1 | head -80; echo "=====GUARD====="; git show origin/main:handoff/queue/rsn-296b-guard.md 2>&1 | head -40
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+GPU: rent
+
+RENTAL RULES:
+- Search offers with reliability >= 0.98 (vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph), preferring at least 16 CPU cores and more is better (the practice generator is CPU-heavy: use a host with >= 32 cores if one is within $0.10/h of the cheapest). 4090 with the same filter if no 5090.
+- Before renting: `vastai show instances`; if an instance labelled rsn-296b is live and healthy, exit and report DUPLICATE.
+- Label every instance rsn-296b. Check credit first: stop and report LOW-CREDIT if it is under $4.
+- MONEY (Ben 2026-09-23 21:51 UTC: "don't use gpu rentals above 4$"): $4 is the COMBINED limit for this whole task, re-rents included. Keep a running total of dph x hours for every instance you create. If the total would pass $3.80, destroy everything and stop with BUDGET-STOP. A separate guard task (rsn-296b-guard) also watches this.
+- If a new instance is not "running" within 6 min (or create returns success: False), destroy it by exact id and try the next offer on a different host, up to 4 rentals in total. If a running instance goes offline or shows no log progress for 10 min, destroy it and count it. After 4 failures stop with HOST-FAIL. Never 2 instances at once.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it. Destroy the instance at the end and confirm it is gone. Append a ledger line.
+
+YOUR TASK: builder for rsn-296b (296 with ONE change: "told the answer after a miss" in practice; plain arm only). The reasoning thread (Opus) wrote and sealed all code; import and run it, never edit it. If something breaks, stop and report; do not patch. Artifacts go in artifacts/claude-rsn296b-20260924/.
+READ FIRST (on origin/main): artifacts/claude-rsn296b-20260924/PASSMARKS.md, design/v3/30-modes/296b-told-after-miss.md, and the docstrings of scripts/claude_rsn296b_run.py and scripts/claude_rsn296_diag.py.
+INDEPENDENCE: never open or print any item of artifacts/claude-reasonpanel296-20260924/ or artifacts/claude-reasonpanel294-20260923/. You run the eval commands below exactly once per checkpoint; they write category-level counts only.
+
+LESSON FROM rsn-296 (it lost every result file): COPY ALL RESULT FILES BACK TO THE MAC (scp -r W/ and the run logs) AND CHECK THEY ARRIVED BEFORE YOU DESTROY THE INSTANCE. Results first, checkpoints second.
+
+0. Rent as above. Use the image's CUDA torch if it works (python -c "import torch;print(torch.cuda.is_available())"), else a new venv with torch (CUDA) and numpy. Check `nproc`, `nvidia-smi`, `df -h`.
+1. CODE. Tarball of origin/main (git archive) or git clone. From the repo root, `sha256sum -c` on artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt, artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt and artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt: every line OK, else stop.
+2. PILOT (timing only): `python scripts/claude_rsn296b_run.py train --arm plain --seed 9 --out /tmp/pilot --copy-steps 100 --rl-steps 50 --workers 6`. Estimate a full run as 60 x copy minutes + 120 x practice minutes. If the two runs in parallel would take over 90 minutes or the dollars would pass $3.00, stop, destroy and report TOO-SLOW.
+3. TRAIN, both at once, --workers 6 each, from the repo root, run under setsid/nohup so an ssh drop cannot kill them (defaults otherwise):
+   python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-s1
+   python scripts/claude_rsn296b_run.py train --arm plain --seed 2 --out W/plain-s2
+4. SEAL. sha256 of the 4 checkpoints into artifacts/claude-rsn296b-20260924/SEAL-run.sha256.txt BEFORE step 5.
+5. EVAL, ONCE per checkpoint. For R in plain-s1 plain-s2 and C in copy_only.pt final.pt:
+   python scripts/claude_rsn296b_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/R/panel296-<copy|final>.json
+   python scripts/claude_rsn296b_run.py eval --ckpt W/R/C --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/R/panel294-<copy|final>.json
+   and for C = final.pt only:
+   python scripts/claude_rsn296_diag.py --device cuda --n 200 --ckpt W/R/final.pt --out W/R/diag-final.json > W/R/diag-final.txt
+6. COPY BACK (see LESSON): every train_log.jsonl, train_summary.json, panel*.json, diag-final.* into artifacts/claude-rsn296b-20260924/runs/<R>/ on the Mac, and the 4 checkpoints to ~/premonition-models/rsn296b/<R>/. List the copied files, check the checkpoint sha256 against the seal, THEN destroy the instance and confirm it is gone.
+7. RESULTS.md, verdict first: per run minutes, first/last copy loss, first/last practice reward; every mark P296b.1-P296b.5 for both seeds with integer counts and PASS/FAIL, computed from the CHECKED fields (checked_right, checked_answered_without_fact) in the JSON files. The 296 same-seed counting+comparing on the fresh panel was 28 (s1) and 28 (s2). Every miss and deviation.
+PUSH: artifacts/claude-rsn296b-20260924/RESULTS.md artifacts/claude-rsn296b-20260924/SEAL-run.sha256.txt artifacts/claude-rsn296b-20260924/runs artifacts/fable-predictions-ledger.md
+=====GUARD=====
+COMMON RULES (the director, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the plan: design/v3/50-own-model/01-own-ear-mouth-plan.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+YOUR TASK: spending guard for rsn-296b-train (Ben 21:51 UTC: "don't use gpu rentals above 4$"; the $4 is the COMBINED limit per job, re-rents and extra machines included). You rent nothing and change no files except one ledger line.
+- Read the vast.ai key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- Every 60 s: run `vastai show instances --raw`. Take every instance whose label starts with "rsn-296b". Keep a running total, and never forget an instance after it disappears: for each instance id first seen, record its dph (dph_total) and its start time; its cost so far = dph × hours since start (or until it vanished). The earlier rsn-296 instances (label exactly rsn-296) are NOT part of this job; ignore them.
+- When the combined total of all rsn-296b* instances seen since you started reaches $3.80: destroy every live rsn-296b* instance by exact instance id (vastai destroy instance <id>), confirm they are gone, and append a line to artifacts/fable-predictions-ledger.md (cat >>) saying GUARD-STOP with the total.
+- Stop watching when runs/rsn-296b-train/rsn-296b-train.exit exists on origin/builder-outbox (git fetch -q origin builder-outbox; git ls-tree) AND no rsn-296b* instance has been live for 5 min, or after 8 hours.
+- Never touch an instance whose label does not start with rsn-296b.
+Final reply: the instance ids seen, the dph and minutes of each, the combined dollars, and whether you had to stop anything.
+PUSH: artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai create instance 43165153 --image 'pytorch/pytorch:2.4.0-cuda12.1-cudnn9-runtime' --disk 60 --label rsn-296b --ssh --raw 2>&1 | head -20
+{
+ "instance_api_key": "e9629ce80bb72b3f2c40ca3b52745ffd8bf7ad2de26c3d4fe6c137e6a41eb5de",
+ "new_contract": 52383936,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u +%s; echo "RENT1 id=52383936 dph=0.4727 start=$(date -u +%FT%TZ)"; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); sleep 45; vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"
+1790240495
+RENT1 id=52383936 dph=0.4727 start=2026-09-24T09:01:35Z
+loading ba3526e94b2d: Pull complete
+ ssh8.vast.ai 23936
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state','ssh_host','ssh_port','public_ipaddr']})"
+{'actual_status': 'loading', 'status_msg': 'ba3526e94b2d: Pull complete\n', 'cur_state': 'running', 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 23936, 'public_ipaddr': '137.175.76.24'}
+[0m
+[0m$ [0msleep 60; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state','ssh_host','ssh_port']})"
+{'actual_status': 'loading', 'status_msg': 'ba3526e94b2d: Pull complete\n', 'cur_state': 'running', 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 23936}
+[0m
+[0m$ [0msleep 90; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state','ssh_host','ssh_port']})"
+{'actual_status': 'loading', 'status_msg': 'ba3526e94b2d: Pull complete\n', 'cur_state': 'running', 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 23936}
+[0m
+[0m$ [0msleep 90; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state','ssh_host','ssh_port']})"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 23936 root@ssh8.vast.ai 'nproc; nvidia-smi --query-gpu=name --format=csv,noheader; df -h / | tail -1; python -c "import torch;print(torch.cuda.is_available())"' 2>&1 | head -10
+{'actual_status': 'loading', 'status_msg': 'ba3526e94b2d: Pull complete\n', 'cur_state': 'running', 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 23936}
+ssh: connect to host ssh8.vast.ai port 23936: Connection refused
+[0m
+[0m$ [0msleep 120; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state','ssh_host','ssh_port']})"
+{'actual_status': 'loading', 'status_msg': '#6 16.76 Get:17 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [84.6 kB]\n', 'cur_state': 'running', 'ssh_host': 'ssh8.vast.ai', 'ssh_port': 23936}
+[0m
+[0m$ [0msleep 150; export VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai show instance 52383936 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ['actual_status','status_msg','cur_state']})"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 23936 root@ssh8.vast.ai 'echo SSH_OK; nproc' 2>&1 | head -5
+{'actual_status': 'running', 'status_msg': 'success, running pytorch/pytorch_2.4.0-cuda12.1-cudnn9-runtime/ssh', 'cur_state': 'running'}
+Warning: Permanently added '[ssh8.vast.ai]:23936' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+256
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'nproc; nvidia-smi --query-gpu=name,memory.total --format=csv,noheader; df -h / | tail -1; python -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | head -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+256
+NVIDIA GeForce RTX 5090, 32607 MiB
+overlay          60G  772K   60G   1% /
+2.4.0 True
+[0m
+[0m$ [0mgit remote -v; git archive origin/main -o /tmp/rsn296b-main.tar.gz && ls -la /tmp/rsn296b-main.tar.gz
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+-rw-r--r--  1 ben-hannan  wheel  102658403 Sep 24 05:11 /tmp/rsn296b-main.tar.gz
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 23936 /tmp/rsn296b-main.tar.gz root@ssh8.vast.ai:/root/rsn296b-main.tar.gz 2>&1 | tail -2; ssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'mkdir -p /root/rsn && tar xzf /root/rsn296b-main.tar.gz -C /root/rsn && ls /root/rsn | head; cat /root/rsn/artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt | head -8' 2>&1 | tail -12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+archive
+artifacts
+data
+3d878d553777f3c31b7e583ae57ff4ec6364c0149ab8dce48b1e6af5fa543285  scripts/claude_rsn296b_run.py
+792db8dff9495b2dc23d47b80d6df6bb04abc597be7bc98d91e87a07e4ab1592  scripts/claude_rsn296_diag.py
+21b62955602b84753491801a7b15db88d2e631197bcbff68eabdc007edea63a8  scripts/claude_rsn296_gen.py
+18b401bc7f9518043222acb3bdc243e7e5f0be38a5334235e3c72a69586b6bfd  scripts/claude_rsn294_core.py
+d921fdd3b26be107e6fb8fcdfd2d6e45135c0b7bce696d1125506a355d5a7438  scripts/claude_rsn294_run.py
+79cba5444a2a815cf2b39a8e55aaf67bd8fbf71f570573bafdf2f944f4a3e447  design/v3/30-modes/296b-told-after-miss.md
+d852b9686708aaa067a372476d82e93c4751e681bd285ca7fcabd2c680cc341a  artifacts/claude-rsn296b-20260924/PASSMARKS.md
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; python -c "import numpy; print(numpy.__version__)" 2>&1; nvidia-smi 2>&1 | head -12' 2>&1 | tail -16
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+1.26.4
+Thu Sep 24 09:13:14 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:41:00.0 Off |                  N/A |
+| 83%   74C    P1            519W /  520W |    1030MiB /  32607MiB |     98%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv 2>&1 | head -5' 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+pid, process_name, used_gpu_memory [MiB]
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; python scripts/claude_rsn296b_run.py train --arm plain --seed 9 --out /tmp/pilot --copy-steps 100 --rl-steps 50 --workers 6 2>&1 | tail -25' 2>&1 | tail -30
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+python: can't open file '/root/scripts/claude_rsn296b_run.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; python scripts/claude_rsn296b_run.py train --arm plain --seed 9 --out /tmp/pilot --copy-steps 100 --rl-steps 50 --workers 6 2>&1 | tail -25' 2>&1 | tail -30
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+python: can't open file '/root/scripts/claude_rsn296b_run.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'cd /root/rsn && sha256sum -c artifacts/claude-rsn296b-20260924/SEAL-code.sha256.txt && sha256sum -c artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt && sha256sum -c artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt' 2>&1 | tail -15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scripts/claude_rsn296b_run.py: OK
+scripts/claude_rsn296_diag.py: OK
+scripts/claude_rsn296_gen.py: OK
+scripts/claude_rsn294_core.py: OK
+scripts/claude_rsn294_run.py: OK
+design/v3/30-modes/296b-told-after-miss.md: OK
+artifacts/claude-rsn296b-20260924/PASSMARKS.md: OK
+artifacts/claude-reasonpanel296-20260924/items-v2.jsonl: OK
+artifacts/claude-reasonpanel296-20260924/FIX-v2.md: OK
+artifacts/claude-reasonpanel294-20260923/items-v3.jsonl: OK
+artifacts/claude-reasonpanel294-20260923/FIX-v3.md: OK
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'cd /root/rsn && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && date -u +%FT%TZ && time python scripts/claude_rsn296b_run.py train --arm plain --seed 9 --out /tmp/pilot --copy-steps 100 --rl-steps 50 --workers 6 2>&1 | tail -15 && date -u +%FT%TZ' 2>&1 | tail -20
+^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/rsn/scripts/claude_rsn294_core.py", line 415, in forward
+    ids = torch.arange(4 + MAX_WHO + MAX_HOPS, device=e.subj.device)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
+
+real	0m4.489s
+user	0m7.663s
+sys	0m2.587s
+2026-09-24T09:13:40Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'python -m venv /root/venv && /root/venv/bin/pip -q install --upgrade pip 2>&1 | tail -1; /root/venv/bin/pip install torch numpy --index-url https://download.pytorch.org/whl/cu128 2>&1 | tail -3; /root/venv/bin/python -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Installing collected packages: nvidia-cusparselt-cu12, mpmath, cuda-toolkit, typing-extensions, triton, sympy, nvidia-nvtx-cu12, nvidia-nvshmem-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, MarkupSafe, fsspec, filelock, cuda-pathfinder, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, jinja2, cuda-bindings, nvidia-cusolver-cu12, torch
+
+Successfully installed MarkupSafe-3.0.3 cuda-bindings-12.9.7 cuda-pathfinder-1.6.0 cuda-toolkit-12.8.1 filelock-3.32.3 fsspec-2026.7.0 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 numpy-2.4.6 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.19.0.56 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.28.9 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvshmem-cu12-3.4.5 nvidia-nvtx-cu12-12.8.90 sympy-1.14.0 torch-2.11.0+cu128 triton-3.6.0 typing-extensions-4.16.0
+2.11.0+cu128 True
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'cd /root/rsn && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && date -u +%FT%TZ && time /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 9 --out /tmp/pilot --copy-steps 100 --rl-steps 50 --workers 6 2>&1 | tail -12 && date -u +%FT%TZ' 2>&1 | tail -18
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-24T09:20:17Z
+
+real	0m24.395s
+user	1m3.382s
+sys	0m5.249s
+2026-09-24T09:20:41Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'ls -la /tmp/pilot/; head -2 /tmp/pilot/train_log.jsonl 2>/dev/null | cut -c1-400' 2>&1 | tail -8
+drwxr-xr-x 2 root root        91 Sep 24 09:20 .
+drwxrwxrwt 1 root root       182 Sep 24 09:20 ..
+-rw-r--r-- 1 root root 123786512 Sep 24 09:20 copy_only.pt
+-rw-r--r-- 1 root root 123780284 Sep 24 09:20 final.pt
+-rw-r--r-- 1 root root       307 Sep 24 09:20 train_log.jsonl
+-rw-r--r-- 1 root root       200 Sep 24 09:20 train_summary.json
+{"phase": "copy", "step": 0, "loss": 4.2121, "action_ce": 3.9034, "min": 0.02}
+{"phase": "copy", "step": 99, "loss": 2.1338, "action_ce": 2.015, "min": 0.17}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'cat /tmp/pilot/train_log.jsonl; cat /tmp/pilot/train_summary.json' 2>&1 | tail -8
+"copy_steps": 100,
+ "rl_steps": 50,
+ "batch": 256,
+ "rl_batch": 128,
+ "minutes": 0.3,
+ "device": "cuda",
+ "torch": "2.11.0+cu128"
+}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 23936 root@ssh8.vast.ai 'cd /root/rsn && mkdir -p W/plain-s1 W/plain-s2 && setsid nohup env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-s1 > W/plain-s1/nohup.log 2>&1 < /dev/null & setsid nohup env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 2 --out W/plain-s2 > W/plain-s2/nohup.log 2>&1 < /dev/null & sleep 45; ps aux | grep -E "rsn296b" | grep -v grep | awk "{print \$2, \$11, \$12, \$13, \$14, \$15}"; nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader | head' 2>&1 | tail -8
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 23936 root@ssh8.vast.ai 'echo ALIVE; ls -la /root/rsn/W/plain-s1/ /root/rsn/W/plain-s2/ 2>&1' 2>&1 | tail -12
+ALIVE
+/root/rsn/W/plain-s1/:
+total 4
+drwxr-xr-x 2 root root   58 Sep 24 09:21 .
+drwxr-xr-x 4 root root   50 Sep 24 09:21 ..
+-rw-r--r-- 1 root root    0 Sep 24 09:21 nohup.log
+-rw-r--r-- 1 root root 1135 Sep 24 09:23 train_log.jsonl
+
+/root/rsn/W/plain-s2/:
+total 0
+drwxr-xr-x 2 root root  6 Sep 24 09:21 .
+drwxr-xr-x 4 root root 50 Sep 24 09:21 ..
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 23936 root@ssh8.vast.ai 'ps aux | grep rsn296b | grep -v grep | cut -c1-160' 2>&1 | tail -5
+root        1125 40.5  0.1 18762076 492032 ?     Rl   09:21   0:51 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-
+root        1126 42.3  0.1 18762028 492020 ?     Sl   09:21   0:53 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-
+root        1127 40.2  0.1 18762764 492780 ?     Sl   09:21   0:51 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-
+root        1128 42.4  0.1 18762036 492000 ?     Sl   09:21   0:53 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-
+root        1129 42.0  0.1 18762636 492680 ?     Sl   09:21   0:53 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 1 --out W/plain-
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 23936 root@ssh8.vast.ai 'cd /root/rsn && setsid nohup env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 /root/venv/bin/python scripts/claude_rsn296b_run.py train --arm plain --seed 2 --out W/plain-s2 > W/plain-s2/nohup.log 2>&1 < /dev/null & echo LAUNCHED; sleep 5; ls -la W/plain-s2/' 2>&1 | tail -6
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'echo ALIVE' 2>&1 | tail -3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+ALIVE
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'ls -la /root/rsn/W/plain-s2/; ps aux | grep "seed 2" | grep -v grep | cut -c1-120 | head -3' 2>&1 | tail -6
+drwxr-xr-x 4 root root  50 Sep 24 09:21 ..
+-rw-r--r-- 1 root root   0 Sep 24 09:23 nohup.log
+-rw-r--r-- 1 root root 481 Sep 24 09:24 train_log.jsonl
+root        1197  0.0  0.0   4364  1848 ?        S    09:23   0:00 bash -c cd /root/rsn && setsid nohup env OMP_NUM_THRE
+root        1199 89.0  0.6 23261820 1838488 ?    Ssl  09:23   0:59 /root/venv/bin/python scripts/claude_rsn296b_run.py t
+root        1203 33.8  0.1 18762972 492780 ?     Sl   09:23   0:21 /root/venv/bin/python scripts/claude_rsn296b_run.py t
+[0m
+[0m$ [0mls artifacts/claude-rsn296b-20260924/ 2>&1; mkdir -p artifacts/claude-rsn296b-20260924/runs/plain-s1 artifacts/claude-rsn296b-20260924/runs/plain-s2 ~/premonition-models/rsn296b/plain-s1 ~/premonition-models/rsn296b/plain-s2 && echo DIRS_OK; df -g / | tail -1
+ls: artifacts/claude-rsn296b-20260924/: No such file or directory
+DIRS_OK
+/dev/disk3s1s1       460   12        58    18%  484014 613022240    0%   /
+[0m
+[0m$ [0msleep 540; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'tail -3 /root/rsn/W/plain-s1/train_log.jsonl; echo ---; tail -3 /root/rsn/W/plain-s2/train_log.jsonl; echo ---; ps aux | grep rsn296b | grep -v grep | wc -l' 2>&1 | tail -9
+{"phase": "rl", "step": 100, "reward": 0.8359, "loss": 0.2227, "min": 11.23}
+{"phase": "rl", "step": 200, "reward": 0.8207, "loss": 0.2505, "min": 11.65}
+{"phase": "rl", "step": 300, "reward": 0.8556, "loss": 0.3155, "min": 12.08}
+---
+{"phase": "copy", "step": 5400, "loss": 0.0005, "action_ce": 0.0005, "min": 9.86}
+{"phase": "copy", "step": 5500, "loss": 0.0269, "action_ce": 0.0249, "min": 10.03}
+{"phase": "copy", "step": 5600, "loss": 0.0025, "action_ce": 0.0022, "min": 10.2}
+---
+21
+[0m
+[0m$ [0msleep 600; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'tail -2 /root/rsn/W/plain-s1/train_log.jsonl; echo ---; tail -2 /root/rsn/W/plain-s2/train_log.jsonl; echo ---; ls -la /root/rsn/W/plain-s1/ /root/rsn/W/plain-s2/ | grep -E "final|summary"; ps aux | grep rsn296b | grep -v grep | wc -l' 2>&1 | tail -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"phase": "rl", "step": 2900, "reward": 0.9396, "loss": -0.0204, "min": 22.14}
+{"phase": "rl", "step": 3000, "reward": 0.9491, "loss": -0.0147, "min": 22.54}
+---
+{"phase": "rl", "step": 2300, "reward": 0.9208, "loss": -0.0775, "min": 19.66}
+{"phase": "rl", "step": 2400, "reward": 0.9215, "loss": -0.0471, "min": 20.05}
+---
+27
+[0m
+[0m$ [0msleep 600; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'tail -2 /root/rsn/W/plain-s1/train_log.jsonl; echo ---; tail -2 /root/rsn/W/plain-s2/train_log.jsonl; echo ---; ls /root/rsn/W/plain-s1/ /root/rsn/W/plain-s2/; ps aux | grep rsn296b | grep -v grep | wc -l' 2>&1 | tail -12
+{"phase": "rl", "step": 5100, "reward": 0.9436, "loss": -0.0456, "min": 30.27}
+---
+/root/rsn/W/plain-s1/:
+copy_only.pt
+nohup.log
+train_log.jsonl
+
+/root/rsn/W/plain-s2/:
+copy_only.pt
+nohup.log
+train_log.jsonl
+27
+[0m
+[0m$ [0msleep 540; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'echo S1; tail -1 /root/rsn/W/plain-s1/train_log.jsonl; echo S2; tail -1 /root/rsn/W/plain-s2/train_log.jsonl; ls /root/rsn/W/plain-s1/ /root/rsn/W/plain-s2/' 2>&1 | tail -12
+copy_only.pt
+final.pt
+nohup.log
+train_log.jsonl
+train_summary.json
+
+/root/rsn/W/plain-s2/:
+copy_only.pt
+final.pt
+nohup.log
+train_log.jsonl
+train_summary.json
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'echo S1; tail -1 /root/rsn/W/plain-s1/train_log.jsonl; cat /root/rsn/W/plain-s1/train_summary.json; echo S2; tail -1 /root/rsn/W/plain-s2/train_log.jsonl; cat /root/rsn/W/plain-s2/train_summary.json; ps aux | grep rsn296b | grep -v grep | wc -l' 2>&1 | tail -14
+{"phase": "rl", "step": 5999, "reward": 0.9724, "loss": -0.0373, "min": 33.31}
+{
+ "arm": "plain",
+ "size": "30m",
+ "seed": 2,
+ "params": 30938261,
+ "copy_steps": 6000,
+ "rl_steps": 6000,
+ "batch": 256,
+ "rl_batch": 128,
+ "minutes": 33.3,
+ "device": "cuda",
+ "torch": "2.11.0+cu128"
+}0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn && cat W/plain-s1/train_summary.json | grep -E "seed|minutes|params"; sha256sum W/plain-s1/copy_only.pt W/plain-s1/final.pt W/plain-s2/copy_only.pt W/plain-s2/final.pt | tee /root/SEAL-run.txt' 2>&1 | tail -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+ "seed": 1,
+ "params": 30938261,
+ "minutes": 34.1,
+e3c5fb2080bd23fc38d912c57a0a3bc26ee54a92d1051d6114d6b3f9d22da8b8  W/plain-s1/copy_only.pt
+85e13858f3894623724d63f8099e0aaf4cdd4658aeb97f5c1a18af661a9f0970  W/plain-s1/final.pt
+868308c6978dc72854e454afcd4d39d078daf4b9335e8e2b1a0671b0390178c9  W/plain-s2/copy_only.pt
+b73713aeff6e30aa49db6edca6c129ccb65c8b21a5b7e3c1504ed07e5accb547  W/plain-s2/final.pt
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn && export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 && for R in plain-s1 plain-s2; do for C in copy_only final; do P296=artifacts/claude-reasonpanel296-20260924/items-v2.jsonl; P294=artifacts/claude-reasonpanel294-20260923/items-v3.jsonl; /root/venv/bin/python scripts/claude_rsn296b_run.py eval --ckpt W/$R/$C.pt --panel $P296 --out W/$R/panel296-$C.json 2>&1 | tail -2; /root/venv/bin/python scripts/claude_rsn296b_run.py eval --ckpt W/$R/$C.pt --panel $P294 --out W/$R/panel294-$C.json 2>&1 | tail -2; done; /root/venv/bin/python scripts/claude_rsn296_diag.py --device cuda --n 200 --ckpt W/$R/final.pt --out W/$R/diag-final.json > W/$R/diag-final.txt 2>&1; tail -3 W/$R/diag-final.txt; done; echo EVALS_DONE; ls -la W/plain-s1/ W/plain-s2/' 2>&1 | tail -30
+total 241812
+drwxr-xr-x 2 root root      4096 Sep 24 10:03 .
+drwxr-xr-x 4 root root        50 Sep 24 09:21 ..
+-rw-r--r-- 1 root root 123786512 Sep 24 09:31 copy_only.pt
+-rw-r--r-- 1 root root      3265 Sep 24 10:03 diag-final.json
+-rw-r--r-- 1 root root      1575 Sep 24 10:03 diag-final.txt
+-rw-r--r-- 1 root root 123780284 Sep 24 09:55 final.pt
+-rw-r--r-- 1 root root         0 Sep 24 09:21 nohup.log
+-rw-r--r-- 1 root root      1234 Sep 24 10:03 panel294-copy_only.json
+-rw-r--r-- 1 root root      1223 Sep 24 10:03 panel294-final.json
+-rw-r--r-- 1 root root      1274 Sep 24 10:03 panel296-copy_only.json
+-rw-r--r-- 1 root root      1360 Sep 24 10:03 panel296-final.json
+-rw-r--r-- 1 root root      9725 Sep 24 09:55 train_log.jsonl
+-rw-r--r-- 1 root root       204 Sep 24 09:55 train_summary.json
+
+W/plain-s2/:
+total 241812
+drwxr-xr-x 2 root root      4096 Sep 24 10:03 .
+drwxr-xr-x 4 root root        50 Sep 24 09:21 ..
+-rw-r--r-- 1 root root 123786512 Sep 24 09:34 copy_only.pt
+-rw-r--r-- 1 root root      3260 Sep 24 10:03 diag-final.json
+-rw-r--r-- 1 root root      1575 Sep 24 10:03 diag-final.txt
+-rw-r--r-- 1 root root 123780284 Sep 24 09:56 final.pt
+-rw-r--r-- 1 root root         0 Sep 24 09:23 nohup.log
+-rw-r--r-- 1 root root      1249 Sep 24 10:03 panel294-copy_only.json
+-rw-r--r-- 1 root root      1223 Sep 24 10:03 panel294-final.json
+-rw-r--r-- 1 root root      1297 Sep 24 10:03 panel296-copy_only.json
+-rw-r--r-- 1 root root      1310 Sep 24 10:03 panel296-final.json
+-rw-r--r-- 1 root root      9727 Sep 24 09:56 train_log.jsonl
+-rw-r--r-- 1 root root       204 Sep 24 09:56 train_summary.json
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && for R in plain-s1 plain-s2; do mv $R/panel296-copy_only.json $R/panel296-copy.json; mv $R/panel294-copy_only.json $R/panel294-copy.json; done; echo RENAMED; for f in plain-s1/panel296-final.json plain-s2/panel296-final.json plain-s1/panel294-final.json plain-s2/panel294-final.json plain-s1/diag-final.txt plain-s2/diag-final.txt; do echo "===== $f"; cat $f; done' 2>&1 | tail -60
+"checked_right": 30,
+   "n": 30
+  }
+ },
+ "ckpt": "W/plain-s2/final.pt",
+ "arm": "plain",
+ "eval_steps": null,
+ "items": 300
+}===== plain-s1/diag-final.txt
+after_dated2                       72/72   idk    0 wrong    0
+after_dated3                       40/63   idk   10 wrong   13
+after_dated4                       23/65   idk   36 wrong    6
+before_dated2                      62/62   idk    0 wrong    0
+before_dated3                      25/60   idk   18 wrong   17
+before_dated4                      12/78   idk   64 wrong    2
+compare_nums02_adjacent            12/26   idk    0 wrong   14
+compare_nums03-05_adjacent         42/78   idk    0 wrong   36
+compare_nums03-05_apart            16/29   idk    0 wrong   13
+compare_nums06-10_adjacent          6/32   idk    0 wrong   26
+compare_nums06-10_apart            11/26   idk    0 wrong   15
+compare_nums11+_adjacent            3/3    idk    0 wrong    0
+compare_nums11+_apart               3/6    idk    0 wrong    3
+count_01                           35/35   idk    0 wrong    0
+count_02                           24/24   idk    0 wrong    0
+count_03                           34/34   idk    0 wrong    0
+count_04                           19/19   idk    0 wrong    0
+count_05                           28/28   idk    0 wrong    0
+count_06                           36/36   idk    0 wrong    0
+count_07                           24/24   idk    0 wrong    0
+count_08_unpractised                0/40   idk    0 wrong   40
+count_09_unpractised                0/40   idk    0 wrong   40
+count_10_unpractised                0/40   idk    0 wrong   40
+count_11_unpractised                0/40   idk    0 wrong   40
+count_12_unpractised                0/40   idk    0 wrong   40
+===== plain-s2/diag-final.txt
+after_dated2                       71/72   idk    1 wrong    0
+after_dated3                       29/63   idk    0 wrong   34
+after_dated4                        5/65   idk   53 wrong    7
+before_dated2                      62/62   idk    0 wrong    0
+before_dated3                       6/60   idk   48 wrong    6
+before_dated4                       0/78   idk   78 wrong    0
+compare_nums02_adjacent            15/26   idk    0 wrong   11
+compare_nums03-05_adjacent         31/78   idk    0 wrong   47
+compare_nums03-05_apart             9/29   idk    0 wrong   20
+compare_nums06-10_adjacent         12/32   idk    0 wrong   20
+compare_nums06-10_apart            15/26   idk    0 wrong   11
+compare_nums11+_adjacent            3/3    idk    0 wrong    0
+compare_nums11+_apart               3/6    idk    0 wrong    3
+count_01                           35/35   idk    0 wrong    0
+count_02                           24/24   idk    0 wrong    0
+count_03                           34/34   idk    0 wrong    0
+count_04                           19/19   idk    0 wrong    0
+count_05                           28/28   idk    0 wrong    0
+count_06                           36/36   idk    0 wrong    0
+count_07                           24/24   idk    0 wrong    0
+count_08_unpractised                0/40   idk    0 wrong   40
+count_09_unpractised                0/40   idk    0 wrong   40
+count_10_unpractised                0/40   idk    0 wrong   40
+count_11_unpractised                0/40   idk    0 wrong   40
+count_12_unpractised                0/40   idk    0 wrong   40
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && for f in plain-s1/panel296-final.json plain-s2/panel296-final.json; do echo "===== $f"; cat $f; done' 2>&1 | tail -80
+"items": 298
+}===== plain-s2/panel296-final.json
+{
+ "total": {
+  "raw_right": 232,
+  "checked_right": 230,
+  "n": 298,
+  "raw_wrong": 61,
+  "checked_idk": 46,
+  "checked_wrong": 22,
+  "raw_answered_without_fact": 5
+ },
+ "by_category": {
+  "backwards": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "before_after": {
+   "raw_right": 19,
+   "checked_right": 15,
+   "n": 30,
+   "raw_wrong": 11,
+   "checked_idk": 11,
+   "checked_wrong": 4
+  },
+  "comparing": {
+   "raw_wrong": 14,
+   "checked_wrong": 14,
+   "n": 30,
+   "raw_right": 16,
+   "checked_right": 16
+  },
+  "counting": {
+   "raw_right": 29,
+   "checked_right": 29,
+   "n": 30,
+   "raw_wrong": 1,
+   "checked_wrong": 1
+  },
+  "heldout_three_step": {
+   "raw_wrong": 30,
+   "checked_idk": 30,
+   "n": 30
+  },
+  "missing_fact": {
+   "raw_right": 25,
+   "checked_right": 30,
+   "n": 30,
+   "raw_answered_without_fact": 5
+  },
+  "newest_correction": {
+   "raw_right": 23,
+   "checked_right": 20,
+   "n": 28,
+   "raw_wrong": 5,
+   "checked_wrong": 3,
+   "checked_idk": 5
+  },
+  "one_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "two_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "yes_no": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  }
+ },
+ "ckpt": "W/plain-s2/final.pt",
+ "arm": "plain",
+ "eval_steps": null,
+ "items": 298
+}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && cat plain-s1/panel296-final.json' 2>&1 | tail -70
+"by_category": {
+  "backwards": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "before_after": {
+   "raw_right": 19,
+   "checked_right": 14,
+   "n": 30,
+   "raw_wrong": 11,
+   "checked_wrong": 3,
+   "checked_idk": 13
+  },
+  "comparing": {
+   "raw_wrong": 17,
+   "checked_wrong": 17,
+   "n": 30,
+   "raw_right": 13,
+   "checked_right": 13
+  },
+  "counting": {
+   "raw_right": 29,
+   "checked_right": 29,
+   "n": 30,
+   "raw_wrong": 1,
+   "checked_wrong": 1
+  },
+  "heldout_three_step": {
+   "raw_wrong": 29,
+   "checked_idk": 30,
+   "n": 30,
+   "raw_idk": 1
+  },
+  "missing_fact": {
+   "raw_right": 25,
+   "checked_right": 30,
+   "n": 30,
+   "raw_answered_without_fact": 5
+  },
+  "newest_correction": {
+   "raw_wrong": 5,
+   "checked_wrong": 5,
+   "n": 28,
+   "raw_idk": 2,
+   "checked_idk": 3,
+   "raw_right": 21,
+   "checked_right": 20
+  },
+  "one_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "two_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "yes_no": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  }
+ },
+ "ckpt": "W/plain-s1/final.pt",
+ "arm": "plain",
+ "eval_steps": null,
+ "items": 298
+}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && head -12 plain-s1/panel296-final.json; echo ...; head -12 plain-s1/panel294-final.json; echo ...; cat plain-s1/panel294-final.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d[\"total\"]); [print(k, v) for k,v in d[\"by_category\"].items()]"' 2>&1 | tail -30
+"raw_idk": 3,
+  "raw_answered_without_fact": 5
+ },
+ "by_category": {
+...
+{
+ "total": {
+  "raw_wrong": 38,
+  "checked_wrong": 17,
+  "n": 300,
+  "raw_right": 262,
+  "checked_right": 261,
+  "checked_idk": 22
+ },
+ "by_category": {
+  "backwards": {
+   "raw_right": 30,
+...
+{'raw_wrong': 38, 'checked_wrong': 17, 'n': 300, 'raw_right': 262, 'checked_right': 261, 'checked_idk': 22}
+backwards {'raw_right': 30, 'checked_right': 30, 'n': 30}
+before_after {'raw_wrong': 11, 'checked_idk': 7, 'n': 30, 'raw_right': 19, 'checked_right': 18, 'checked_wrong': 5}
+comparing {'raw_wrong': 12, 'checked_wrong': 12, 'n': 30, 'raw_right': 18, 'checked_right': 18}
+counting {'raw_right': 30, 'checked_right': 30, 'n': 30}
+heldout_big_notebook {'raw_right': 15, 'checked_right': 15, 'n': 15}
+heldout_three_step {'raw_wrong': 15, 'checked_idk': 15, 'n': 15}
+missing_fact {'raw_right': 30, 'checked_right': 30, 'n': 30}
+newest_correction {'raw_right': 30, 'checked_right': 30, 'n': 30}
+one_step {'raw_right': 30, 'checked_right': 30, 'n': 30}
+two_step {'raw_right': 30, 'checked_right': 30, 'n': 30}
+yes_no {'raw_right': 30, 'checked_right': 30, 'n': 30}
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && python3 -c "
+import json
+for f in [\"plain-s1/panel296-copy.json\",\"plain-s1/panel296-final.json\",\"plain-s2/panel296-copy.json\",\"plain-s2/panel296-final.json\",\"plain-s1/panel294-copy.json\",\"plain-s1/panel294-final.json\",\"plain-s2/panel294-copy.json\",\"plain-s2/panel294-final.json\"]:
+  d=json.load(open(f)); print(f, json.dumps(d[\"total\"]))
+"' 2>&1 | tail -10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+plain-s1/panel296-copy.json {"raw_right": 175, "checked_right": 178, "n": 298, "raw_wrong": 113, "checked_wrong": 18, "checked_idk": 102, "raw_idk": 5, "raw_answered_without_fact": 5}
+plain-s1/panel296-final.json {"raw_right": 227, "checked_right": 226, "n": 298, "raw_wrong": 63, "checked_wrong": 26, "checked_idk": 46, "raw_idk": 3, "raw_answered_without_fact": 5}
+plain-s2/panel296-copy.json {"raw_right": 178, "checked_right": 177, "n": 298, "raw_wrong": 109, "checked_wrong": 18, "checked_idk": 103, "raw_idk": 6, "raw_answered_without_fact": 5}
+plain-s2/panel296-final.json {"raw_right": 232, "checked_right": 230, "n": 298, "raw_wrong": 61, "checked_idk": 46, "checked_wrong": 22, "raw_answered_without_fact": 5}
+plain-s1/panel294-copy.json {"raw_wrong": 94, "checked_idk": 79, "n": 300, "raw_right": 205, "checked_right": 204, "checked_wrong": 17, "raw_idk": 1}
+plain-s1/panel294-final.json {"raw_wrong": 38, "checked_wrong": 17, "n": 300, "raw_right": 262, "checked_right": 261, "checked_idk": 22}
+plain-s2/panel294-copy.json {"raw_wrong": 91, "checked_idk": 85, "n": 300, "raw_right": 206, "checked_right": 206, "checked_wrong": 9, "raw_idk": 3}
+plain-s2/panel294-final.json {"raw_wrong": 41, "checked_wrong": 19, "n": 300, "raw_right": 259, "checked_right": 255, "checked_idk": 26}
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn296-20260924/RESULTS.md 2>&1 | grep -i -A5 -B2 "doable" | head -40
+(no output)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep "rsn296-2026"; echo ---; git show origin/main:artifacts/claude-rsn296b-20260924/PASSMARKS.md | head -20
+artifacts/claude-rsn296-20260924/DIAG-director.md
+artifacts/claude-rsn296-20260924/PASSMARKS.md
+artifacts/claude-rsn296-20260924/SEAL-code.sha256.txt
+artifacts/claude-rsn296-20260924/VERIFY-director.md
+artifacts/claude-rsn296-20260924/VERIFY-recount.md
+artifacts/claude-rsn296-20260924/codearm_panel294.json
+artifacts/claude-rsn296-20260924/codearm_panel296.json
+artifacts/claude-rsn296-20260924/codearm_panel296v2.json
+---
+# rsn-296b pass marks (fixed before any run; 2026-09-24)
+
+Arm: plain, seeds 1 and 2 (the loop arm is not run). The code is 296's plus scripts/claude_rsn296b_run.py. Checked answers only, i.e. after the fact-check.
+Panels are the same as 296: reasonpanel296 items-v2 (fresh, 298) and reasonpanel294 items-v3 (transfer, 300). Both are TEST-ONLY and reported at category level. The diagnosis uses scripts/claude_rsn296_diag.py (--n 200, generated episodes only).
+
+| mark | what (each seed) | pass |
+|---|---|---|
+| P296b.1 | invented answers, each panel | ≤ 2 |
+| P296b.2 | diagnosis: counts 1–7 right, and comparing right | each ≥ 160/200 |
+| P296b.3 | fresh panel counting + comparing | ≥ 296 same seed + 12, i.e. ≥ 40/60 for both seeds (296: 28 and 28) |
+| P296b.4 | fresh panel total | ≥ 228/298 |
+| P296b.5 | fresh code-doable, and transfer total | ≥ 168/178, and ≥ 228/300 (296 got 238) |
+
+PASS = all five marks on both seeds.
+**What proves the idea wrong:** P296b.2 fails on both seeds. Being told the answer then does not teach this 30M net to count or compare, and the next question is architecture, not practice.
+Predictions:
+- P296b.1 pass.
+- P296b.2 uncertain (the tiny CPU check says it may fail).
+- P296b.3 and P296b.4 follow P296b.2.
+- P296b.5 likely pass.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn296-20260924/PASSMARKS.md 2>&1 | head -40; echo "=====VERIFY====="; git show origin/main:artifacts/claude-rsn296-20260924/VERIFY-recount.md 2>&1 | grep -i -B2 -A8 "doable" | head -50
+# rsn-296 pass marks (fixed before any registered run; 2026-09-24)
+
+Design: design/v3/30-modes/296-sleep-school-practice.md.
+Code: scripts/claude_rsn296_{gen,run}.py plus rsn-294's sealed core/run/codearm (unchanged).
+Panels:
+- reasonpanel296: fresh and blind, artifacts/claude-reasonpanel296-20260924/items.jsonl.
+- reasonpanel294 v3: items never read; its category results are known from 294.
+Both are TEST-ONLY and reported as category-level counts only.
+
+**One change from 294:** practice and dev episodes come from the varied "sleep school" generator.
+Arms, sizes, steps, batches, learning rate, reward, fact-check, seeds (1 and 2) and eval are
+identical to 294. The plain arm is the primary arm. 294's loop never learned to copy on seed 1
+(D2), which is not fixed here, so the loop is reported with the same numbers but has no pass mark.
+
+Scoring: "checked right", after the fact-check. "Code-doable" means one_step, two_step, backwards,
+yes_no, newest_correction and missing_fact (178 items on reasonpanel296 v2).
+
+| mark | what (plain arm, each seed) | pass |
+|---|---|---|
+| P296.1 | invented answers (answered without a fact), each panel | ≤ 2 / 300 |
+| P296.2 | transfer: right on reasonpanel294 | ≥ same-seed 294 plain + 20 (seed 1 ≥ 204, seed 2 ≥ 209) |
+| P296.3 | fresh panel, code-doable categories | ≥ code arm on those − 10 |
+| P296.4 | fresh panel, total right | ≥ code arm total + 20 |
+
+Registered fresh panel: reasonpanel296 **items-v2.jsonl** (298 items). The blind Opus audit flagged 2
+newest_correction items as ambiguous, with no wrong gold, and they were dropped by id (FIX-v2.md).
+Code arm, run before any learned run:
+- reasonpanel296 v2: 208/298, which is 178/178 on the code-doable categories plus 30/30 three-step,
+  and 0 on counting, comparing and before/after;
+- reasonpanel294 v3: 210/300.
+The bars are therefore **P296.3 ≥ 168/178** and **P296.4 ≥ 228/298**.
+
+PASS = P296.1 to P296.4 on both plain seeds. **What proves the idea wrong:** P296.2 fails on both
+seeds, meaning varied practice does not carry over to differently written notebooks.
+
+Predictions (logged before the run):
+- P296.1 pass.
+- P296.2 likely pass.
+- P296.3 uncertain; two-step on varied notebooks is the hard part.
+- P296.4 uncertain; comparing sits at chance (D3) and counting was only partly learned.
+=====VERIFY=====
+| P296.1 invented (checked, after the fact-check) | ≤2 each panel | fresh 0 and transfer 0, PASS | fresh 0 and transfer 0, PASS |
+| P296.2 transfer | ≥204 / ≥209 | 238, PASS | 238, PASS |
+| P296.3 fresh code-doable | ≥168/178 | 173, PASS | 169, PASS |
+| P296.4 fresh total | ≥228/298 | 225, FAIL | 217, FAIL |
+
+- The builder's "5 and 6 invented" were the RAW counts, from before the fact-check (raw 5 and 6 on the fresh finals). The fact-check turned every one of them into "I don't know". P296.1 is scored on checked answers, as P294.1 was.
+- Every final-checkpoint total matches RESULTS.md exactly. One copy-only file differs by 1: plain-s1 on panel294, 194 on the CPU vs 195 on the GPU. It doesn't touch any mark.
+- The loop arms had 0 checked inventions. Their finals were fresh 106 and 101, transfer 89 and 87.
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 23936 root@ssh8.vast.ai 'cd /root/rsn/W && python3 -c "
+import json
+d=json.load(open(\"plain-s2/panel294-final.json\")); print(\"s2-transfer-total\", json.dumps(d[\"total\"])); [print(k, json.dumps(v)) for k,v in d[\"by_category\"].items()]
+"; echo "=== TRAIN ENDPOINTS ==="; python3 -c "
+import json
+for R in [\"plain-s1\",\"plain-s2\"]:
+  rows=[json.loads(l) for l in open(R+\"/train_log.jsonl\")]
+  cp=[r for r in rows if r[\"phase\"]==\"copy\"]; rl=[r for r in rows if r[\"phase\"]==\"rl\"]
+  print(R, \"copy_first\", cp[0], \"copy_last\", cp[-1])
+  print(R, \"rl_first\", rl[0], \"rl_last\", rl[-1])
+"' 2>&1 | tail -25
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+s2-transfer-total {"raw_wrong": 41, "checked_wrong": 19, "n": 300, "raw_right": 259, "checked_right": 255, "checked_idk": 26}
+backwards {"raw_right": 30, "checked_right": 30, "n": 30}
+before_after {"raw_wrong": 9, "checked_idk": 11, "n": 30, "raw_right": 21, "checked_right": 17, "checked_wrong": 2}
+comparing {"raw_wrong": 17, "checked_wrong": 17, "n": 30, "raw_right": 13, "checked_right": 13}
+counting {"raw_right": 30, "checked_right": 30, "n": 30}
+heldout_big_notebook {"raw_right": 15, "checked_right": 15, "n": 15}
+heldout_three_step {"raw_wrong": 15, "checked_idk": 15, "n": 15}
+missing_fact {"raw_right": 30, "checked_right": 30, "n": 30}
+newest_correction {"raw_right": 30, "checked_right": 30, "n": 30}
+one_step {"raw_right": 30, "checked_right": 30, "n": 30}
+two_step {"raw_right": 30, "checked_right": 30, "n": 30}
+yes_no {"raw_right": 30, "checked_right": 30, "n": 30}
+=== TRAIN ENDPOINTS ===
+plain-s1 copy_first {'phase': 'copy', 'step': 0, 'loss': 4.1244, 'action_ce': 3.8537, 'min': 0.03} copy_last {'phase': 'copy', 'step': 5999, 'loss': 0.002, 'action_ce': 0.0017, 'min': 10.79}
+plain-s1 rl_first {'phase': 'rl', 'step': 0, 'reward': 0.6426, 'loss': 9.31, 'min': 10.8} rl_last {'phase': 'rl', 'step': 5999, 'reward': 0.9602, 'loss': 0.2209, 'min': 34.07}
+plain-s2 copy_first {'phase': 'copy', 'step': 0, 'loss': 4.1609, 'action_ce': 3.7891, 'min': 0.02} copy_last {'phase': 'copy', 'step': 5999, 'loss': 0.001, 'action_ce': 0.0009, 'min': 10.89}
+plain-s2 rl_first {'phase': 'rl', 'step': 0, 'reward': 0.6631, 'loss': 11.3645, 'min': 10.91} rl_last {'phase': 'rl', 'step': 5999, 'reward': 0.9724, 'loss': -0.0373, 'min': 33.31}
+[0m
+[0m$ [0mscp -r -o StrictHostKeyChecking=no -P 23936 root@ssh8.vast.ai:/root/rsn/W /tmp/rsn296b-W 2>&1 | tail -2; scp -o StrictHostKeyChecking=no -P 23936 root@ssh8.vast.ai:/root/SEAL-run.txt /tmp/SEAL-run.txt 2>&1 | tail -1; ls -la /tmp/rsn296b-W/plain-s1/ /tmp/rsn296b-W/plain-s2/
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Have fun!
+/tmp/rsn296b-W/plain-s1/:
+total 483616
+drwxr-xr-x  13 ben-hannan  wheel        416 Sep 24 06:07 .
+drwxr-xr-x   4 ben-hannan  wheel        128 Sep 24 06:07 ..
+-rw-r--r--   1 ben-hannan  wheel  123786512 Sep 24 06:06 copy_only.pt
+-rw-r--r--   1 ben-hannan  wheel       3265 Sep 24 06:06 diag-final.json
+-rw-r--r--   1 ben-hannan  wheel       1575 Sep 24 06:06 diag-final.txt
+-rw-r--r--   1 ben-hannan  wheel  123780284 Sep 24 06:06 final.pt
+-rw-r--r--   1 ben-hannan  wheel          0 Sep 24 06:05 nohup.log
+-rw-r--r--   1 ben-hannan  wheel       1234 Sep 24 06:07 panel294-copy.json
+-rw-r--r--   1 ben-hannan  wheel       1223 Sep 24 06:06 panel294-final.json
+-rw-r--r--   1 ben-hannan  wheel       1274 Sep 24 06:07 panel296-copy.json
+-rw-r--r--   1 ben-hannan  wheel       1360 Sep 24 06:06 panel296-final.json
+-rw-r--r--   1 ben-hannan  wheel       9725 Sep 24 06:05 train_log.jsonl
+-rw-r--r--   1 ben-hannan  wheel        204 Sep 24 06:06 train_summary.json
+
+/tmp/rsn296b-W/plain-s2/:
+total 483616
+drwxr-xr-x  13 ben-hannan  wheel        416 Sep 24 06:09 .
+drwxr-xr-x   4 ben-hannan  wheel        128 Sep 24 06:07 ..
+-rw-r--r--   1 ben-hannan  wheel  123786512 Sep 24 06:07 copy_only.pt
+-rw-r--r--   1 ben-hannan  wheel       3260 Sep 24 06:09 diag-final.json
+-rw-r--r--   1 ben-hannan  wheel       1575 Sep 24 06:09 diag-final.txt
+-rw-r--r--   1 ben-hannan  wheel  123780284 Sep 24 06:09 final.pt
+-rw-r--r--   1 ben-hannan  wheel          0 Sep 24 06:07 nohup.log
+-rw-r--r--   1 ben-hannan  wheel       1249 Sep 24 06:09 panel294-copy.json
+-rw-r--r--   1 ben-hannan  wheel       1223 Sep 24 06:09 panel294-final.json
+-rw-r--r--   1 ben-hannan  wheel       1297 Sep 24 06:09 panel296-copy.json
+-rw-r--r--   1 ben-hannan  wheel       1310 Sep 24 06:09 panel296-final.json
+-rw-r--r--   1 ben-hannan  wheel       9727 Sep 24 06:07 train_log.jsonl
+-rw-r--r--   1 ben-hannan  wheel        204 Sep 24 06:09 train_summary.json
+[0m
+[0m$ [0mfor R in plain-s1 plain-s2; do cp /tmp/rsn296b-W/$R/train_log.jsonl /tmp/rsn296b-W/$R/train_summary.json /tmp/rsn296b-W/$R/panel296-copy.json /tmp/rsn296b-W/$R/panel296-final.json /tmp/rsn296b-W/$R/panel294-copy.json /tmp/rsn296b-W/$R/panel294-final.json /tmp/rsn296b-W/$R/diag-final.json /tmp/rsn296b-W/$R/diag-final.txt "artifacts/claude-rsn296b-20260924/runs/$R/"; cp /tmp/rsn296b-W/$R/copy_only.pt /tmp/rsn296b-W/$R/final.pt "$HOME/premonition-models/rsn296b/$R/"; done; cp /tmp/SEAL-run.txt artifacts/claude-rsn296b-20260924/SEAL-run.sha256.txt; echo COPIED; ls artifacts/claude-rsn296b-20260924/runs/plain-s1/ artifacts/claude-rsn296b-20260924/runs/plain-s2/; ls -la ~/premonition-models/rsn296b/plain-s1/ ~/premonition-models/rsn296b/plain-s2/
+COPIED
+artifacts/claude-rsn296b-20260924/runs/plain-s1/:
+diag-final.json
+diag-final.txt
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn296b-20260924/runs/plain-s2/:
+diag-final.json
+diag-final.txt
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+/Users/ben-hannan/premonition-models/rsn296b/plain-s1/:
+total 483536
+drwxr-xr-x  4 ben-hannan  staff        128 Sep 24 06:10 .
+drwxr-xr-x  4 ben-hannan  staff        128 Sep 24 05:24 ..
+-rw-r--r--  1 ben-hannan  staff  123786512 Sep 24 06:10 copy_only.pt
+-rw-r--r--  1 ben-hannan  staff  123780284 Sep 24 06:10 final.pt
+
+/Users/ben-hannan/premonition-models/rsn296b/plain-s2/:
+total 483536
+drwxr-xr-x  4 ben-hannan  staff        128 Sep 24 06:10 .
+drwxr-xr-x  4 ben-hannan  staff        128 Sep 24 05:24 ..
+-rw-r--r--  1 ben-hannan  staff  123786512 Sep 24 06:10 copy_only.pt
+-rw-r--r--  1 ben-hannan  staff  123780284 Sep 24 06:10 final.pt
+[0m
+[0m$ [0msha256sum ~/premonition-models/rsn296b/plain-s1/copy_only.pt ~/premonition-models/rsn296b/plain-s1/final.pt ~/premonition-models/rsn296b/plain-s2/copy_only.pt ~/premonition-models/rsn296b/plain-s2/final.pt; echo ---SEAL---; cat artifacts/claude-rsn296b-20260924/SEAL-run.sha256.txt
+e3c5fb2080bd23fc38d912c57a0a3bc26ee54a92d1051d6114d6b3f9d22da8b8  /Users/ben-hannan/premonition-models/rsn296b/plain-s1/copy_only.pt
+85e13858f3894623724d63f8099e0aaf4cdd4658aeb97f5c1a18af661a9f0970  /Users/ben-hannan/premonition-models/rsn296b/plain-s1/final.pt
+868308c6978dc72854e454afcd4d39d078daf4b9335e8e2b1a0671b0390178c9  /Users/ben-hannan/premonition-models/rsn296b/plain-s2/copy_only.pt
+b73713aeff6e30aa49db6edca6c129ccb65c8b21a5b7e3c1504ed07e5accb547  /Users/ben-hannan/premonition-models/rsn296b/plain-s2/final.pt
+---SEAL---
+e3c5fb2080bd23fc38d912c57a0a3bc26ee54a92d1051d6114d6b3f9d22da8b8  W/plain-s1/copy_only.pt
+85e13858f3894623724d63f8099e0aaf4cdd4658aeb97f5c1a18af661a9f0970  W/plain-s1/final.pt
+868308c6978dc72854e454afcd4d39d078daf4b9335e8e2b1a0671b0390178c9  W/plain-s2/copy_only.pt
+b73713aeff6e30aa49db6edca6c129ccb65c8b21a5b7e3c1504ed07e5accb547  W/plain-s2/final.pt
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); vastai destroy instance 52383936 2>&1 | tail -3; sleep 10; vastai show instances 2>&1 | tail -3
+Are you sure you want to destroy instance 52383936? This is irreversible and will delete all data. [y/N] 
+Aborted.
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mexport VASTAI_API_KEY=$(cat ~/.config/vastai/vast_api_key); echo y | vastai destroy instance 52383936 2>&1 | tail -3; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('live:', [(i.get('id'),i.get('label'),i.get('actual_status')) for i in (d if isinstance(d,list) else d.get('instances',[]))])"
+Are you sure you want to destroy instance 52383936? This is irreversible and will delete all data. [y/N] destroying instance 52383936.
+live: []
+[0m
+[0m$ [0mpython3 -c "
+import json
+for f in ['artifacts/claude-rsn296b-20260924/runs/plain-s1/panel296-copy.json','artifacts/claude-rsn296b-20260924/runs/plain-s2/panel296-copy.json','artifacts/claude-rsn296b-20260924/runs/plain-s1/panel294-copy.json','artifacts/claude-rsn296b-20260924/runs/plain-s2/panel294-copy.json']:
+  d=json.load(open(f)); print(f.split('runs/')[1], 'total=', json.dumps(d['total']), 'missing_fact=', json.dumps(d['by_category'].get('missing_fact')))
+"
+plain-s1/panel296-copy.json total= {"raw_right": 175, "checked_right": 178, "n": 298, "raw_wrong": 113, "checked_wrong": 18, "checked_idk": 102, "raw_idk": 5, "raw_answered_without_fact": 5} missing_fact= {"raw_right": 25, "checked_right": 30, "n": 30, "raw_answered_without_fact": 5}
+plain-s2/panel296-copy.json total= {"raw_right": 178, "checked_right": 177, "n": 298, "raw_wrong": 109, "checked_wrong": 18, "checked_idk": 103, "raw_idk": 6, "raw_answered_without_fact": 5} missing_fact= {"raw_right": 25, "checked_right": 30, "n": 30, "raw_answered_without_fact": 5}
+plain-s1/panel294-copy.json total= {"raw_wrong": 94, "checked_idk": 79, "n": 300, "raw_right": 205, "checked_right": 204, "checked_wrong": 17, "raw_idk": 1} missing_fact= {"raw_right": 30, "checked_right": 30, "n": 30}
+plain-s2/panel294-copy.json total= {"raw_wrong": 91, "checked_idk": 85, "n": 300, "raw_right": 206, "checked_right": 206, "checked_wrong": 9, "raw_idk": 3} missing_fact= {"raw_right": 30, "checked_right": 30, "n": 30}
+[0m
+[0m$ [0mtail -5 artifacts/fable-predictions-ledger.md; wc -l artifacts/fable-predictions-ledger.md
+- P296.1 OUTCOME (same run) invented answers (answered without a fact) final ckpt: seed 1 fresh 5 FAIL (bar <= 2/300) / transfer 0 PASS; seed 2 fresh 6 FAIL / transfer 0 PASS (copy-only: s1 5/0, s2 7/0). Fact-check catches them (missing_fact checked 30/30 all runs) but the raw blurts count. FAIL both seeds.
+- P296.2 OUTCOME (same run) transfer right on reasonpanel294 v3: seed 1 final 238 (bar >= 204: PASS, +54 over 294 plain 184); seed 2 final 238 (bar >= 209: PASS, +49 over 294 plain 189). Copy-only 195/205. PASS both seeds; the registered idea-killer (both fail) did NOT trigger.
+- P296.3 OUTCOME (same run) fresh code-doable (one/two-step, backwards, yes_no, newest_correction, missing_fact) final: seed 1 173/178 (30+30+23+30+30+30, bar >= 168: PASS); seed 2 169/178 (30+30+19+30+30+30: PASS). Two-step 30/30 both seeds; newest_correction the leak (23/28, 19/28).
+- P296.4 OUTCOME (same run) fresh panel296 v2 total final: seed 1 225/298 (bar >= 228: FAIL, miss by 3); seed 2 217/298 (FAIL, miss by 11). Copy-only 167/181. Three-step 0/30 both; comparing 16/30 both; counting 12/30 both; before_after 24/20.
+- P296 OUTCOME (same run) registered verdict FAIL (P296.1 fails both seeds, P296.4 fails both seeds; P296.2 and P296.3 pass both). Training plain 38.0/37.0 min (copy loss 4.12->0.01/4.16->0.00, rl reward 0.59->0.93/0.63->0.98), loop 78.4/77.2 min (copy loss stuck 1.85/1.97, D2 reproduced). Panel items read 0, evals 24/24 once per checkpoint, sealed files edited 0, code never patched. DATA-LOSS deviation: runs/*.json staged on GPU box, never copied back before destroy; counts preserved verbatim in RESULTS.md; runs/<R>/ holds DATA-LOSS.txt. Checkpoints (8 .pt, sha match SEAL-run.sha256.txt) kept at ~/premonition-models/rsn296/<run>/, weights never in git. Spend ~$2.09 over 4 rentals (1 training ok + timeout + success:false + ssh-broken); 0 instances live after. See artifacts/claude-rsn296-20260924/RESULTS.md.
+    2922 artifacts/fable-predictions-ledger.md
+[0m
+[0m← [0mWrite artifacts/claude-rsn296b-20260924/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- P296b OUTCOME (same run) registered verdict FAIL: P296b.2 fails both seeds (diag counts 1-7 200/200 both PASS, comparing 93/200 s1 and 88/200 s2 vs bar 160: FAIL - the registered idea-killer triggered); P296b.4 s1 226/298 FAIL (miss by 2), s2 230/298 PASS. P296b.1 0 invented after check all 8 evals PASS (raw 5 fresh, fixed by check). P296b.3 fresh counting+comparing 42/60 s1, 45/60 s2 (bar 40, 296 had 28/28) PASS both. P296b.5 code-doable 170/178 both PASS, transfer 261/255 PASS. Training plain 34.1/33.3 min (copy loss 4.12->0.00/4.16->0.00, rl reward 0.64->0.96/0.66->0.97). Told-after-miss fixed counting, not comparing; next question is architecture. 1 rental (5090 $0.4727/h, ~$0.60), seals all OK, evals once per checkpoint, panel items read 0, code never patched, all result files + 4 checkpoints copied back and hash-verified before destroy, 0 instances live after. See artifacts/claude-rsn296b-20260924/RESULTS.md.
+EOF
+echo LEDGER_OK; git status --short artifacts/claude-rsn296b-20260924/ artifacts/fable-predictions-ledger.md
+LEDGER_OK
+ M artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit status --short | grep -E "296b|ledger"; echo ---; ls -R artifacts/claude-rsn296b-20260924/ | head -25
+M artifacts/fable-predictions-ledger.md
+---
+RESULTS.md
+runs
+SEAL-run.sha256.txt
+
+artifacts/claude-rsn296b-20260924//runs:
+plain-s1
+plain-s2
+
+artifacts/claude-rsn296b-20260924//runs/plain-s1:
+diag-final.json
+diag-final.txt
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn296b-20260924//runs/plain-s2:
+diag-final.json
+diag-final.txt
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-rsn296b-20260924/RESULTS.md artifacts/fable-predictions-ledger.md 2>&1; git status --short --ignored=no artifacts/ 2>&1 | head -5; git ls-files artifacts/ | head -3
+.gitignore:5:artifacts/	artifacts/claude-rsn296b-20260924/RESULTS.md
+ M artifacts/fable-predictions-ledger.md
+artifacts/claude-aliaspanel237-20260922/README.md
+artifacts/claude-aliaspanel237-20260922/SEAL.sha256.txt
+artifacts/claude-aliaspanel237-20260922/base221.jsonl
+[0m
