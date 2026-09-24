@@ -4,8 +4,9 @@ counting and comparing (scripts/claude_rsn299_tool.py).
 
 Arms (same model, same few-shot examples, same greedy decoding, same token budget):
   P  plain: the 1B writes its steps and does its own arithmetic ("3 x 12 = 36").
-  T  tool:  every calculation is written as <<expr>>; generation stops at ">>", the tool
-            computes it exactly and "=<result>" is appended; the model then continues.
+  T  tool:  the same prompt, word for word. Whenever the model has written a calculation followed
+            by "=", generation stops, the exact calculator (claude_rsn299_tool) writes the result,
+            and the model continues. So the only difference between the arms is who does the sums.
 Both end with a line "Answer: ...". Saying "I'm not sure" is allowed and scored separately.
 
   python claude_rsn299_run.py run   --arm P|T --model DIR --items items.jsonl --out out.jsonl
@@ -29,66 +30,53 @@ import claude_rsn299_tool as TOOL  # noqa: E402
 MAX_NEW = 420          # total new tokens per question, tool results not counted
 MAX_CALLS = 16
 
-HEAD_T = ("Solve each question step by step. Write every calculation inside << >> and a calculator "
-          "fills in the exact result after it. A clock time like 19:40 or a weekday like Monday can be used "
-          "directly: <<19:40+75>>, <<17:10-9:30>>, <<Monday+9>>. The calculator knows + - * / ( ), round(x, 2), ceil(x), "
-          "floor(x), min(...), max(...), t(\"9:47\") for a clock time in minutes, hhmm(minutes) to turn "
-          "minutes back into a clock time, day(\"Tuesday\") and dayname(n) for weekdays, count(\"a, b, c\") "
-          "to count items, letters(\"word\") to count letters, and biggest(\"A\", 3, \"B\", 4) or "
-          "smallest(...) to compare. Never do arithmetic in your head. End with one line \"Answer: ...\". "
-          "If a needed fact is missing, write \"Answer: I'm not sure\" and say what is missing.\n\n")
-HEAD_P = ("Solve each question step by step. Show each calculation. End with one line \"Answer: ...\". "
-          "If a needed fact is missing, write \"Answer: I'm not sure\" and say what is missing.\n\n")
+HEAD = ("Solve each question step by step. Write each calculation as a short sum ending in \" = \", "
+        "for example 3*2.40 = 7.2, 19:40 + 75 = 20:55 (a clock time plus minutes), 17:10 - 9:30 = 460 "
+        "(minutes between two clock times), Monday + 9 = Wednesday (days after a weekday), "
+        "ceil(47/6) = 8 (round up), floor(50/25) = 2 (round down). End with one line \"Answer: ...\". "
+        "If a needed fact is missing, write \"Answer: I'm not sure\" and say what is missing.\n\n")
 
-# the same worked examples for both arms: each step is (tool-arm text, plain-arm text)
+# the same worked examples, word for word, for both arms
 EXAMPLES = [
     ("A café sells muffins for 2.40 each and coffee for 3.10. Tom buys 3 muffins and 2 coffees and pays "
      "with a 20 note. How much change does he get?",
-     [("Muffins cost <<3*2.40>>=7.2.", "Muffins cost 3*2.40 = 7.2."),
-      ("Coffees cost <<2*3.10>>=6.2.", "Coffees cost 2*3.10 = 6.2."),
-      ("Total is <<7.2+6.2>>=13.4.", "Total is 7.2+6.2 = 13.4."),
-      ("Change is <<20-13.4>>=6.6.", "Change is 20-13.4 = 6.6.")], "6.6"),
+     ["Muffins cost 3*2.40 = 7.2.", "Coffees cost 2*3.10 = 6.2.", "Total is 7.2 + 6.2 = 13.4.",
+      "Change is 20 - 13.4 = 6.6."], "6.6"),
+    ("A recipe for 4 people needs 250 g of rice. How much rice for 6 people?",
+     ["Rice per person is 250/4 = 62.5 g.", "For 6 people it is 62.5*6 = 375 g."], "375"),
     ("A bus leaves at 8:52 and the trip takes 1 h 25 min. What time does it arrive?",
-     [("The trip is <<60+25>>=85 minutes.", "The trip is 60+25 = 85 minutes."),
-      ("Arrival is <<8:52+85>>=10:17.", "Arrival is 8:52 plus 85 minutes, which is 10:17.")], "10:17"),
+     ["The trip is 60 + 25 = 85 minutes.", "Arrival is 8:52 + 85 = 10:17."], "10:17"),
     ("The shop is open from 9:30 to 17:10. How many minutes is it open?",
-     [("Open time is <<17:10-9:30>>=460 minutes.", "From 9:30 to 17:10 is 7 hours 40 minutes, which is 7*60+40 = 460 minutes.")],
-     "460"),
+     ["Open time is 17:10 - 9:30 = 460 minutes."], "460"),
     ("Today is Monday. What day will it be 9 days from now?",
-     [("9 days after Monday is <<Monday+9>>=Wednesday.", "9 days is 1 week and 2 days, and 2 days after Monday is Wednesday.")],
-     "Wednesday"),
+     ["9 days after Monday is Monday + 9 = Wednesday."], "Wednesday"),
     ("My shopping list: milk, rice, apples, bread, pears, cheese, plums. How many of these are fruits?",
-     [("The fruits are apples, pears, plums. Counting them: <<count(\"apples, pears, plums\")>>=3.",
-       "The fruits are apples, pears, plums. Counting them gives 3.")], "3"),
+     ["Going through the list: milk no, rice no, apples yes, bread no, pears yes, cheese no, plums yes.",
+      "The fruits are apples, pears and plums, so 1 + 1 + 1 = 3."], "3"),
     ("Brand Kello costs 3.60 for 450 g and brand Moss costs 2.90 for 350 g. Which is cheaper per gram?",
-     [("Kello per gram is <<3.60/450>>=0.008.", "Kello per gram is 3.60/450 = 0.008."),
-      ("Moss per gram is <<2.90/350>>=0.0083.", "Moss per gram is 2.90/350 = 0.0083."),
-      ("The cheaper one is <<smallest(\"Kello\", 0.008, \"Moss\", 0.0083)>>=Kello.",
-       "0.008 is less than 0.0083, so the cheaper one is Kello.")], "Kello"),
-    ("47 guests are coming and each table seats 6. How many tables do we need?",
-     [("Tables needed is <<ceil(47/6)>>=8.", "47/6 = 7.83, rounded up that is 8 tables.")], "8"),
+     ["Kello per gram is 3.60/450 = 0.008.", "Moss per gram is 2.90/350 = 0.0083.",
+      "The smaller price per gram is Kello's, so Kello is cheaper."], "Kello"),
+    ("I have 40 to spend. Each kit costs 9 and shipping is 3 per kit. How many kits can I buy?",
+     ["One kit with shipping is 9 + 3 = 12.", "Kits I can buy is floor(40/12) = 3."], "3"),
     ("A lamp costs 24 and a rug costs more than the lamp. How much do both cost together?",
-     [("The rug's price is never given, so the total can't be worked out.",
-       "The rug's price is never given, so the total can't be worked out.")],
+     ["The rug's price is never given, so the total can't be worked out."],
      "I'm not sure (the rug's price is missing)"),
     ("Parking is 3 an hour for cars. We come with one car and one van for 2 hours. What do we pay?",
-     [("The price for a van is never given, so the total can't be worked out.",
-       "The price for a van is never given, so the total can't be worked out.")],
+     ["The price for a van is never given, so the total can't be worked out."],
      "I'm not sure (the van price is missing)"),
 ]
 
 
-def _ex_text(arm):
+def _ex_text():
     out = []
     for q, steps, ans in EXAMPLES:
-        lines = [f"Question: {q}", "Steps:"] + [(st_t if arm == "T" else st_p) for st_t, st_p in steps]
-        lines.append(f"Answer: {ans}")
-        out.append("\n".join(lines))
+        out.append("\n".join([f"Question: {q}", "Steps:"] + steps + [f"Answer: {ans}"]))
     return "\n\n".join(out) + "\n\n"
 
 
 def prompt(arm: str, question: str) -> str:
-    return (HEAD_T if arm == "T" else HEAD_P) + _ex_text(arm) + f"Question: {question}\nSteps:\n"
+    """the prompt is identical for both arms; only T gets the calculator."""
+    return HEAD + _ex_text() + f"Question: {question}\nSteps:\n"
 
 
 # ----------------------------------------------------------------------------------------
@@ -131,36 +119,55 @@ def _cut(s: str) -> str:
     return s[:m.end()] if m else s
 
 
+# the calculation at the end of the text, just before "=": numbers, clock times, weekdays,
+# operators, brackets, and ceil/floor/round/min/max
+_TAIL = re.compile(r"((?:ceil|floor|round|min|max|abs)?\(?[\d(][\d\s.:+\-*/×÷(),]*|(?:Monday|Tuesday|Wednesday|"
+                   r"Thursday|Friday|Saturday|Sunday)\s*[+\-]\s*\d+)\s*=\s?$", re.I)
+
+
+def _expr_before_eq(body: str):
+    line = body.rsplit("\n", 1)[-1]
+    m = _TAIL.search(line)
+    if not m:
+        return None
+    e = m.group(1).strip()
+    # widen to a function call that opened before the match, e.g. "floor(40/12) ="
+    fm = re.search(r"((?:ceil|floor|round|min|max|abs)\([^()]*\))\s*=\s?$", line)
+    if fm:
+        e = fm.group(1)
+    if not re.search(r"[+\-*/×÷]|^(ceil|floor|round|min|max|abs)\(", e, re.I) or not re.search(r"\d", e):
+        return None
+    return e
+
+
 def solve(arm, question, gen):
-    """gen(text, max_new, stops) -> (new_text, n_tokens). Returns (steps text, calls)."""
+    """gen(text, max_new, stops) -> (new_text, n_tokens). Returns (steps text, calls).
+    T: whenever the model has written a calculation followed by "=", generation stops, the
+    calculator computes it exactly and writes the result; the model then continues."""
     base = prompt(arm, question)
     body, used, calls = "", 0, []
     while used < MAX_NEW:
-        stops = [">>", "\nQuestion:"] if arm == "T" else ["\nQuestion:"]
+        stops = ["=", "\nQuestion:"] if arm == "T" else ["\nQuestion:"]
         new, n = gen(base + body, MAX_NEW - used, stops)
         used += n
-        if arm == "T" and ">>" in new:
-            new = new[:new.index(">>") + 2]            # drop anything the model wrote after the call
+        if arm == "T" and "=" in new:
+            new = new[:new.index("=") + 1]              # drop anything the model wrote after "="
         body += new
         if re.search(r"Answer:[^\n]*\n", body) or "\nQuestion:" in body:
             break
-        m = re.search(r"<<([^<>]*)>>$", body)
-        if arm == "T" and m and len(calls) < MAX_CALLS:
-            res = TOOL.calc(m.group(1))
-            calls.append({"expr": m.group(1), "result": res})
-            body += "=" + res
+        if arm == "T" and body.endswith("=") and len(calls) < MAX_CALLS:
+            e = _expr_before_eq(body)
+            res = TOOL.calc(e) if e else "error"
+            if e and res != "error":
+                calls.append({"expr": e, "result": res})
+                body += " " + res
+            elif not e:
+                pass                                     # not a calculation: let the model go on
+            if n == 0:
+                break
             continue
         break
-    body = _cut(body)
-    # a <<expr>> in the Answer line is computed too
-    am = re.search(r"Answer:\s*(.*)", body)
-    if arm == "T" and am and "<<" in am.group(1):
-        m = re.search(r"<<([^<>]*)>>", am.group(1))
-        if m:
-            res = TOOL.calc(m.group(1))
-            calls.append({"expr": m.group(1), "result": res})
-            body = body[:am.start(1)] + res
-    return body, calls
+    return _cut(body), calls
 
 
 # ----------------------------------------------------------------------------------------
@@ -214,8 +221,8 @@ EQ = re.compile(r"(?<![\d:.*/+×÷x\-])(?<![*/+×÷x\-] )(-?\d+(?:\.\d+)?)\s*([+
 
 
 def arith_errors(steps: str) -> int:
-    """model-written 'a op b = c' in the steps that are wrong (tool-filled <<e>>=r are exact and skipped)."""
-    text = re.sub(r"<<[^<>]*>>=\S+", " ", steps)
+    """'a op b = c' lines in the shown steps that are wrong (calculator-filled ones are exact)."""
+    text = steps
     bad = 0
     for a, o, b, c in EQ.findall(text):
         a, b, c = float(a), float(b), float(c)
@@ -277,19 +284,21 @@ def main():
         print(s_)
         if a.out:
             Path(a.out).write_text(s_)
-    else:   # mock: a fake model that writes one tool call and answers with its result
+    else:   # mock: a fake model that writes one sum and lets the calculator finish it
         def fake(text, mx, stops):
             if text.endswith("Steps:\n"):
-                return "The result is <<2+3>>", 8
-            if text.rstrip().endswith("=5"):
-                return ".\nAnswer: 5\n", 5
-            return "Answer: I'm not sure\n", 5
+                return "Muffins cost 3*2.40 =", 8
+            if text.endswith("= 7.2"):
+                return ".\nAnswer: 7.2\n", 5
+            return " 9.\nAnswer: 9\n", 5
         rows = []
-        for it in items:
-            steps, calls = solve("T", it["question"], fake)
-            rows.append({"id": it["id"], "steps": steps, "calls": calls})
-        print(rows[0]["steps"]); print(json.dumps(score(items, rows)["total"]))
-        print(prompt("P", "Q?")[-900:])
+        for arm in ("T", "P"):
+            steps, calls = solve(arm, "Q?", fake)
+            print(arm, repr(steps), calls)
+        for e in ["Arrival is 8:52 + 85 =", "Kits is floor(40/12) =", "9 days after is Monday + 9 =", "x is big =",
+                  "Total is 7.2 + 6.2 =", "Each pays (67.50 + 9)/3 ="]:
+            print(repr(e), "->", _expr_before_eq(e), TOOL.calc(_expr_before_eq(e)) if _expr_before_eq(e) else "")
+        print(prompt("P", "Q?") == prompt("T", "Q?"))
 
 
 if __name__ == "__main__":
