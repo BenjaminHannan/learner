@@ -24,7 +24,8 @@ model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85e
   filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
 - Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
   Label every instance with the task name. Never 2 instances for one task at once.
-- Credit: check it first. If it is below your task's BUDGET, stop with LOW-CREDIT (the director tells Ben).
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
 - Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
   copy back what exists, destroy everything and stop with BUDGET-STOP.
 - A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
