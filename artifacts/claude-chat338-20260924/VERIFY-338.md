@@ -45,3 +45,15 @@ passes (scratch test: think stripped, unclosed think gives "", the switch is pas
 - **P338.4b: P preferred or tied vs twin b on ≥ 30/60 conversations.** Proved wrong if it fails: then the plain
   1B holds a conversation better than Premonition, and that is what gets reported.
 - Report only: twin b's per-turn natural-and-helpful count and invented facts (same per-turn judge instructions).
+
+## P338.4b result (2026-09-24 ~17:45 UTC): PASS, narrowly
+Run: rent-twinb (RESULTS-twinb.md; twin b arm T, 400 rows, 0 think text, 0 empty). A fresh blind Opus judge with
+the same instructions judged run-twinb/judge_pair_T.jsonl; key applied afterwards by this thread's script.
+- **P preferred or tied vs twin b: 33/60** (P 32, T 27, tie 1). Bar ≥ 30/60: PASS. Not proved wrong.
+- Report only, per-turn judge (same instructions) on twin b: natural and helpful 192/400 (P 213/400); invented
+  facts 6 (P 0): all misattributions (a sister called a niece, a neighbour's dog treated as the user's, ...).
+- Mechanical (run-twinb/summary.json): twin b ask_known right 0/15 (P 3/15), ask_unknown "don't know" 7/10 (P 8/10).
+Reading: against a working plain 1B, Premonition's conversation is roughly level on helpfulness and clearly safer
+(0 vs 6 invented facts). The old P338.4 56/60 figure is withdrawn as a measure of anything.
+Disclosure: while checking the pair-packet format this thread printed the first user line of one chatpanel338
+conversation. 338 had already run and been scored; nothing was changed because of it.
