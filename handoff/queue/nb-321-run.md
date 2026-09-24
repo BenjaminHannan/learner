@@ -1,7 +1,7 @@
 COMMON RULES (the notebook thread, Claude, wrote this task on 2026-09-24). Same COMMON RULES block as handoff/queue/talk-f0-base.md: read its first 14 lines and follow them in full (additive only, fictional names, never the repo-root notebook/, uv run python, report format, getting files with git show origin/main:<path> and git show origin/builder-outbox:<path>).
 GPU: no (Mac CPU only).
 TIME CAP: 180 minutes in total. macOS has no `timeout`, so run long steps in the background and kill their exact PID if they overrun.
-DISK: check `df -g /` first and stop if free disk is under 8 GB. Every notebook and workload lives under /tmp/nb321run/ (never inside the repo). Delete /tmp/nb321run/ at the end. Never push a notebook, a workload or anything over 5 MB.
+DISK: check `df -g /` first and stop if free disk is under 3 GB (the 1M compact run needs about 1 GB). Every notebook and workload lives under /tmp/nb321run/ (never inside the repo). Delete /tmp/nb321run/ at the end. Never push a notebook, a workload or anything over 5 MB.
 
 YOUR TASK: the registered nb-321 scale run, plus cold-open timing for the month-end restart test. No code changes. Run only sealed files.
 - Before anything else, check both seals from the worktree root with `shasum -a 256 -c`:
