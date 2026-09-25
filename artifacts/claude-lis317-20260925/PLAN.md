@@ -1,6 +1,6 @@
 # lis-317: what does the reader read in chatty DEV turns, before any gate? (REPORT ONLY)
 
-Thread "Fix: reading facts from chat" (cmsg_01FuvegZXjMmeUzStiEFVnEWFFJdDCbBKsf18JUgMQeEYH), 2026-09-25 00:50 UTC.
+Thread "Fix: reading facts from chat" (cmsg_01FuvegZXjMmeUzStiEFVnEWFFJdDCbBKsf18JUgMQeEYH), 2026-09-25 00:36 UTC.
 Ben, 00:31 UTC 09-25: fix the known issues; reading facts from chat is the main blocker (336: saved 182/318 = 57%,
 answerable asks right 42/193 = 22%, VERIFY-336.md).
 
@@ -30,7 +30,7 @@ R0 = DEV gold teach/correct facts (131) that appear in the greedy read with mode
 - In between: both; the gate first (it needs no training).
 Report only. Whatever it shows, the fix is a new numbered experiment with its own sealed marks.
 
-## Addendum 01:20 UTC: the compiler's own ceiling (CPU, shown)
+## Addendum 00:38 UTC: the compiler's own ceiling (CPU, shown)
 scripts/claude_lis317_ceiling.py -> ceiling_e2edev.txt. With a PERFECT reader (owner and value copied as typed,
 bank relation mapped generously to the 153-name table) and no confidence gate, the live structural checks
 (claude_lis300_compiler.check_fact) can write 103 of 131 DEV facts (79%). Blocked: 15 relations with no table name
@@ -39,7 +39,7 @@ pointing back to an earlier turn: the reader only sees the assistant's last repl
 not typed word for word ("i drive a tram" -> tram driver, "keep bees" -> beekeeping), 1 "me" fact with no I/my.
 So no gate fix alone can reach 336's 85% bar on this kind of chat; the hand-written checks cap it first.
 
-## Addendum 01:35 UTC: gate comparison script (fixed before the GPU reads land)
+## Addendum 00:41 UTC: gate comparison script (fixed before the GPU reads land)
 scripts/claude_lis317_gates.py compares gates on the same reads, per-fact release (lis-315 semantics).
 Check on lis-301's existing greedy dev reads: at min >= 0.995 it gives 534 right, 2 wrong turns, and at no gate
 743 right, 10 wrong turns, the same numbers as lis-302 arm B, so the counting matches.
