@@ -29,6 +29,20 @@ Numbers for this line: lis-318 and lis-319 (end of the lis block), then rd-370 t
 
 rd-375 and rd-376 change the notebook contract as well as the reader: check the Notebook line's history first, keep the change additive (new optional fields, old logs still load), one change per run.
 
+## Direction change (Ben, 19:22 UTC 09-25): relation facts are ~1% of the work
+The reader stays as a foundation, but this line stops growing the relation table. From now on:
+- M1 memory notes (replaces rd-370 and rd-372): the reader writes short plain-sentence notes of anything worth remembering from
+  a conversation (events, plans, opinions, feelings, preferences, what was discussed, who said it, when), not owner/relation/value.
+  Questions are answered by finding notes by meaning. This is the same thing as the raw-turn episodic memory Benchmarks proposed
+  for 0.2 (owned by Month-end): one shared design, not two.
+- rd-371 (the verifier, queued) is general: "does this source support this statement?" works for any note, for sleep's
+  self-check of what a night learned, and for any thread's checker. It stays.
+- lis-319 (reading with earlier chat) stays: notes and sleep's night re-read both need the conversation, not one turn.
+- rd-373 (confirm guard), rd-375 (dates) and rd-377 (overheard chat) fold into M1: every note carries its time and speaker, and
+  overheard speech is saved as heard, with no confirm questions. rd-376 (silent updates) becomes "newer note wins".
+- Overlaps worked directly with: Fix sleep (night re-read + verifier as self-check), Benchmarks (LoCoMo recall), Month-end (0.2
+  episodic memory), Sleep research (wins checker).
+
 Rules for all of them: DEV data only for building; blind panels sealed before a run and never trained or tuned on;
 no LoCoMo or LongMemEval text (or anything built from them) in any training data; the notebook saves taught facts only;
 registered FAILs stay FAIL, and each FAIL gets one diagnosis-driven follow-up.
