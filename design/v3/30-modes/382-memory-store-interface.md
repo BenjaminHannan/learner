@@ -34,3 +34,18 @@ are the safety count on every row.
 - Benchmarks: the "heard" side and recall(), tested on LoCoMo practice (its pass mark for ep-382).
 - Reading: the "note" writer and rd-371, tested on its own panels.
 - Month-end: joins the store into the 0.x build (one change per step) and runs all six row tests on it.
+
+## Reading thread: the note writer (added 2026-09-25 ~19:50 UTC, reading thread)
+- Model: MiniCPM5-1B + its own LoRA (same recipe as the reader), called once per user turn with the last 6 turns
+  (claude_lis319_common history block) and the speaker names. Output: one JSON line
+  {"notes": [{"text": str, "speaker": str, "cites": [0, -1, ...], "when": str | null}]}; cites are offsets from the current
+  turn (0 = this turn), mapped to turn_ids by the caller; "when" is a time the chat itself gives ("last May", "next Friday"),
+  kept as typed; the caller also passes said_at. Empty list when nothing is worth remembering (small talk).
+- A note is one plain sentence in third person with names, never "I"/"you" ("Mira moved to Faro in May."), true to the
+  cited turns only, never guessing. Overheard speech is written as said ("Kai said Mira moved to Faro."), and plans stay plans.
+- Night use: the same call over the day's transcript (read_dialog style), read-only for sleep; its notes go through
+  remember(source="note") only on the live path, per the write rule above.
+- Every note is checked by rd-371 against its cited turns before it is written; failures are dropped, not asked about.
+- Training data: dialogs and notes written from scratch by Opus agents, checked by a blind judge (never LoCoMo or
+  LongMemEval text). Test: a sealed panel of fresh dialogs with questions; arms heard-only vs heard + notes through the
+  same recall(), counts of evidence found in the top 10 and answers right, plus notes judged unsupported.
