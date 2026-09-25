@@ -62,3 +62,17 @@ depends on other threads. Every step is one change with sealed marks; a register
 - Reading thread: better reader (362 waits on it).
 - Creative thread: `wins/wins.jsonl` records (format agreed 00:54 UTC).
 - Month-end / director: the rent kit must rebuild sleep's base checkpoint on every rental (reported).
+
+## Status 2026-09-25 ~03:30 UTC (Fix-sleep thread)
+| Job | State | Evidence |
+|---|---|---|
+| 360 scrap layer | registered FAIL on a mark typo; behaviour as intended (50/50 rows to scrap, 87/87 replies same) | artifacts/claude-slp360-20260925/RESULTS.md |
+| 361 whole-night undo | PASS 7/7 both seeds | artifacts/claude-slp361-20260925/RESULTS.md |
+| 367 idle sleep | PASS 5/5 both seeds, blind recount agrees | artifacts/claude-slp367-20260925/ |
+| 364 self-check gate | registered FAIL: 13/20 bad nights caught (bar 18), 0/20 clean rejected, twin 0/20 | artifacts/claude-slp364-20260925/RESULTS.md |
+| 368 write lock | sealed, running (from the 364 finding: sleep code could write "taught" rows) | artifacts/claude-slp368-20260925/ |
+| 366 multi-night scorecard | run 1 VOID (crashed at scoring, no numbers seen); run 2 running | artifacts/claude-slp366-20260925/ |
+| 363 practice school | sealed, queued for BensPC after the rsn/lis jobs (4 arms, 2 seeds, --base 296 --arm plain) | artifacts/claude-slp363-20260925/PASSMARKS.md |
+| 364b gate v2 | claim check, new-people sandbox, per-word probe budgets, main-log check, optional restart check; a fresh blind bench is being written by a separate agent | scripts/claude_slp364b_gate.py |
+Correction to an earlier claim: a message that arrives during a running sleep waits for it (~1.5 min on CPU);
+interrupting sleep needs sleep in its own process (later step).
