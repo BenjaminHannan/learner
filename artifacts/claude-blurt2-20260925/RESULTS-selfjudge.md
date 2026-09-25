@@ -14,3 +14,10 @@ Flash), not Claude (provider terms). First check the teacher agrees with the bli
 (scripts/claude_ideajudge_teacher.py, DEV only). Rule fixed now: the teacher is a usable label source if it agrees on
 "good" for >= 85% of blurts AND Cohen's kappa >= 0.5. Otherwise try the stronger teacher once (z-ai/glm-5.3), then
 ask Ben.
+
+## Teacher agreement, GLM 5.3 Flash (Mac, $0.016; the first try failed on an API setting, fixed in 8a0650545)
+It labelled all 40 DEV requests in the blurt file (1,200 blurts); 300 of them have blind Opus labels.
+On those 300: agree on "good" 254/300 (84.7%), kappa 0.567; teacher says good 88, Opus 44, both 43 (it finds 43 of the
+44 good ones but also passes 45 the blind judges rejected). "invented" agrees 288/300 (teacher 11, Opus 17).
+Verdict under the rule fixed above: NOT a usable label source (84.7% is under 85%; kappa passes). It is too lenient.
+Next, as registered: the stronger teacher z-ai/glm-5.3 once (handoff/queue/ideajudge-teacher3.md), then ask Ben.
