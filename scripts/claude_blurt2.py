@@ -325,7 +325,7 @@ def loop(a):
     res.update({"n_train": len(train), "n_test": len(test), "test_dropped_overlap": n0 - len(test), "temp": temp})
     res["S0_test_before"] = evaluate(s, test)
     print(f"[loop] before: test {res['S0_test_before']}/{len(test)}", flush=True)
-    own, wins, recs, lucky, tried, wrong = [], [], [], 0, 0, []
+    own, wins, recs, lucky, tried, wrong, extra = [], [], [], 0, 0, [], []
     for p in train:
         g = s.answer(p)
         if B1.check(g, p["nums"], p["target"]):
@@ -336,6 +336,12 @@ def loop(a):
         lucky, tried = lucky + len(hits), tried + len(bl)
         if hits:
             wins.append((p, hits[0]))
+            if a.all_hits:
+                seen_h = {hits[0].replace(" ", "")}
+                for h in hits[1:]:                   # distinct = different once spaces are ignored
+                    if h.replace(" ", "") not in seen_h:
+                        seen_h.add(h.replace(" ", ""))
+                        extra.append((p, h))
             miss = [t for t in bl if t not in hits and complete(t, p["nums"])]
             if miss:
                 wrong.append((p, miss[0]))
@@ -347,7 +353,8 @@ def loop(a):
                 "train_missed_then_lucky": len(wins), "lucky_blurts_on_misses": lucky, "blurts_on_misses": tried})
     print(f"[loop] practice: reasoner right {len(own)}/{len(train)}, lucky wins on misses {len(wins)} "
           f"({lucky}/{tried} blurts)", flush=True)
-    ex_w = own + wins
+    ex_w = own + wins + extra
+    res["extra_distinct_hits"] = len(extra)
     ex_c = (own * (len(ex_w) // max(1, len(own)) + 1))[:len(ex_w)] if own else []
     ex_p = own + wrong
     ex_p = (ex_p * (len(ex_w) // max(1, len(ex_p)) + 1))[:len(ex_w)] if ex_p else []
@@ -393,6 +400,7 @@ def main():
     ap.add_argument("--temps", default="1.0")
     ap.add_argument("--dev-puzzles", default="")
     ap.add_argument("--arms", default="W,C")
+    ap.add_argument("--all-hits", action="store_true", help="blurt-2b: practise every distinct lucky hit, not only the first")
     a = ap.parse_args()
     {"blurt": blurt, "loop": loop}[a.cmd](a)
 
