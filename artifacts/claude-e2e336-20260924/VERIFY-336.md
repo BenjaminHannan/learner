@@ -79,3 +79,15 @@ and safety to pass). What passed: variety, few clarify replies, 39/40 preferred 
 5. Judges: M1/M2 two blind Opus judges + a third on the 10 splits; M7 two graders on 599 replies + 40 planted errors
    + 40 planted clean; M8c four judges, 10 lives each, arm order shuffled per life (seed 336); M10 one judge.
    Packets built by judges/judge_prep336.py; verdicts and keys in judges/. Keys were kept out of the judges' folders.
+
+## Addendum 2026-09-25 ~01:00 UTC: sleep's learning probably never ran in 336 (learning-over-time row)
+The Fix-sleep thread (artifacts/claude-slp360-20260925/RESULTS.md) found that sleep's learning step needs
+`artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt`, which is not in git (only on Ben's Mac). Without it the
+sleeper skips learning (`recipe: attempted false, "no base checkpoint"`) and still returns `accepted: true`.
+Checked here: the sleep code that loads it (scripts/fable_sleep104_agent.py:82, fable_sleep115_agent.py:107) is in the
+336 seal (SEAL-code lines 212-213), and the rental tree was git archives plus only self122_head.pt (RESULTS-rent.md).
+So in 336 every end-of-day sleep most likely learned nothing (SUGGESTED, not shown: 336 logged no sleep outcomes).
+Facts kept across sleeps (M9, 121/125) are the notebook, not sleep's learning, so M9 stands. The learning-over-time
+row stays FAIL (339 already failed), but 336 is not evidence about what sleep learning does in 0.1.
+Any later rental must rebuild the file on the box (`fable_reasoner44.py --stage base --seed 4102`, ~30 s CPU) and
+check from the sleep report that learning was attempted before scoring.
