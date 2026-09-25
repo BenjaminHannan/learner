@@ -7,6 +7,9 @@ One change: --all-hits. W practises every distinct right blurt on each won puzzl
 the same count. Everything else as blurt-2 (DEV temperature rule, 30 blurts, LoRA r16 3 epochs, seeds 0 and 1).
 New practice set (seed 4) and new fresh test set (seed 779), never printed.
 Where: one GPU run on BensPC ($0); that run is the registered result. (No CPU repeat.)
+Amended 09:25 UTC, before any run started (the Mac job runner stalled at 05:22): the same command also runs on the
+thread's CPU ($0, --out artifacts/claude-blurt2-20260925/cpu-b). If both finish, both are reported and PASS needs both
+(the blurt-2 rule).
 
   python -B scripts/claude_blurt2.py loop --model BASE --out gpu-b --temps 1.0,1.5
       --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --train-seed 4 --test-seed 779 --all-hits
