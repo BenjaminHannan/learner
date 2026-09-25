@@ -91,3 +91,12 @@ interrupting sleep needs sleep in its own process (later step).
 
 Reading after 364e (11:00 UTC): four gate versions failed the same way (each fresh blind bench finds a question kind
 the gate does not ask). Best stack so far: slp-360 scrap + 368 lock + 369 restore + 361 undo + gate v5.
+
+## Status 2026-09-25 ~12:50 UTC: switched to learning (Ben 11:03: "as long as sleep improves the model, it's fine")
+| Job | State | Evidence |
+|---|---|---|
+| 363w school night inside idle sleep (tiny reasoner, CPU) | registered FAIL on no-harm: seed 1 lost 20 of 600 on a fixed panel although every night passed its self-check; plumbing marks pass (notebook untouched, 13/13 bad nights thrown away) | artifacts/claude-slp363w-20260925/ |
+| 363x same, self-check adds a fixed general set compared with the start | PASS 5/5 on fresh seeds 3-4, recounted; no learning claim (panel +7 / -4) | artifacts/claude-slp363x-20260925/ |
+| 363 practice school, full size | the learning test; BensPC, 6th in queue after rd-371 and rsn-353-pc | handoff/queue/slp-363-train.md |
+Next once 363 reports: if SCHOOL beats PLAIN and PLACEBO, run the 363x night on the full-size reasoner (GPU) with the
+same guard. Learned from 363w/x: practice on a narrow set of taught relations lowered general answers at tiny size.
