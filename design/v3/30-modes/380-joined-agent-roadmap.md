@@ -71,3 +71,19 @@ not change (raw turns are not notebook facts).
   can add wrong answers (M2), so M2 stays the guard.
 - Second lever (general-knowledge and math questions go straight to the chat model) is a separate change after it.
 - Order if Ben says yes: ep-382 is 0.2's first join; gram-360 second; old sleep stays until the new sleep passes.
+
+## Rebalance 2026-09-25 ~19:30 UTC (Ben, 19:22 UTC, Fix sleep thread: relations are "genuinely 1% of the work")
+Ben is right about this line. 7 of the 11 marks in 336 (M1-M6, M9) and every 331 bank are about facts on people.
+From now on the six rows are judged by what each row is about, using tests other threads already own. Relation
+facts become one floor check inside memory and safety.
+| Row | Measured on the joined agent by | Shared with |
+|---|---|---|
+| Conversation | open chat panel (338 spec), blind judges; grammar of the 1B's own replies | grammar thread |
+| Creative | creative panel (333 spec) and 24-style puzzle hits, with creative called as a tool | creative thread |
+| Reasoning | GSM8K and MMLU-Redux (Benchmarks harness) and fresh reasoner puzzles; math and general questions go to the chat model or reasoner, not "not sure" | Benchmarks, sleep research |
+| Learning over time | Fix sleep's multi-night scorecard (366) run on the joined agent: better at tasks after nights, not only more facts | Fix sleep |
+| Memory | LoCoMo (Benchmarks) with ep-382 episodic memory; bank C once as the people-facts floor | Benchmarks, reading thread |
+| Safety | wrong things stated as true, counted across all of the above | every thread |
+Stopped: more work on the relation-only confirm harness (381/381b stay registered FAILs). Banks C and D stay sealed
+for a one-time floor check. Every 0.x candidate is one build that all six tests run on, so each thread's part is
+tested inside the whole agent and not only alone.
