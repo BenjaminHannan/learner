@@ -1,6 +1,6 @@
 # reframe-5 result: FAIL (not proved wrong) — reframing helped on 3-number puzzles and hurt on 4-number ones
 
-Marks: PASSMARKS-reframe5.md (main 134415540, committed ~18:15 UTC; the run started after ask-24 ended, ~20:30 UTC).
+Marks: PASSMARKS-reframe5.md (main 134415540, committed 17:57:18 UTC; the run started when ask-24 ended, ~20:33 UTC, and finished 21:30 UTC).
 Run: the creative thread's container CPU, 57.1 minutes, base MiniCPM5-1B, no training. Summary: cpu/reframe5_summary.json.
 Test: 79 fresh puzzles (1 dropped as a DEV overlap), 52 with 3 numbers and 27 with 4. The budget was 30 samples per
 puzzle in both arms (reframe used 2,370 = 79 × 30).
