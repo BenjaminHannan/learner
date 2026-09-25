@@ -19,3 +19,9 @@ CPU, $0. Dev run (2 days, seed 1, SLEEP only) looked at before sealing: both nig
 Prediction, not a mark: the three words that need a grown slot (father_of_mother, boss_of_mother,
 teacher_of_mother) may not all install (the sleeper can grow a limited number of slots); which ones do is reported.
 Proved wrong if: any taught fact is lost, any made-up answer appears, or a kept word falls below 95% later.
+
+## Run 1 VOID (added after run 1, marks above unchanged)
+Run 1 (02:41-02:50 UTC) crashed at the scoring line: the sealed file defines marks366() below its
+`if __name__ == "__main__"` block, so `python claude_slp366_scorecard.py` raises NameError after all nights ran,
+before any result was written or printed. No numbers from run 1 were seen. Run 2 uses scripts/claude_slp366_main.py,
+which imports the sealed module unchanged and calls its main(). The sealed file itself is not edited.
