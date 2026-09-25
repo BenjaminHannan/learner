@@ -13,8 +13,11 @@ exact answer (Ben chose "Both").
 | Old writer (first draft that passes filters) | 7/40 useful vs plain 1B 10/40 (registered FAIL) | VERIFY-333e.md |
 | Idea blurts, 30 per request | 44/300 good (15%); 9/10 requests have at least one good blurt; 17/300 invent a person fact | blind Opus labels, blurt-1 |
 | Free puzzle blurts | 2/1800 (T 0.6) and 4/1800 (T 1.0) right; 69-78% use numbers not given | RESULTS-blurt1.md |
-| Rule-keeping puzzle blurts | in progress (constrained decoding: only the given numbers) | scripts/claude_blurt2.py |
-| 1B judging its own idea blurts | in progress (AUC and pick@1 vs blind labels) | scripts/claude_blurt_selfjudge.py |
+| Rule-keeping puzzle blurts | 42/1,740 right on DEV misses (2.4%, 10x free blurts); 173/379 practice misses cracked | RESULTS-cpu.md |
+| **Learning loop (registered)** | **PASS on CPU**: fresh puzzles 6/127 -> 15, 19 after sleeping on wins; 6, 6 without wins | artifacts/claude-blurt2-20260925/RESULTS-cpu.md |
+| 1B judging its own idea blurts | top pick good 2/10 (rule 6), AUC 0.691: not used | RESULTS-selfjudge.md |
+| Teacher labels for ideas | GLM 5.3 Flash 254/300 agree (fails 85% rule); GLM 5.3 256/300, kappa 0.568 (passes, just) | RESULTS-selfjudge.md |
+| Trained idea judge (1B hidden state, teacher labels) | top pick good 3/10 (not a pass); a good idea in its top 3 on 7/10; AUC 0.799 | RESULTS-selfjudge.md |
 
 ## Plan, one change at a time
 1. **Generator keeps the rules** (blurt-2): constrained decoding for puzzles. Measure lucky rate per 30 on DEV.
@@ -33,5 +36,16 @@ exact answer (Ben chose "Both").
    learns from them once it can read the problems.
 6. **Raise the luck itself**: sleep also trains the generator on its own wins (rejection-sampling fine-tune), so
    later blurts get lucky more often. Measured as lucky blurts per 30 before vs after, on fresh problems.
+
+## Next, in order (updated 05:40 UTC 09-25 after the loop PASS)
+A. GPU repeat of the loop (queued, BensPC, $0). PASS needs it too if it runs.
+B. Placebo arm (sleep research round 2): sleep on WRONG blurts of the same puzzles, same count. Must stay near S0, or the
+   gain is just "more practice examples", not the lucky answers.
+C. Transfer: held-out puzzle family that looks different (e.g. 4 numbers only, or targets outside 5-40). Tests whether
+   the reasoner learned a skill, not this family's habits.
+D. Raise the luck (step 6): train the generator on its own wins, measure lucky blurts per 30 on fresh misses.
+E. Ideas: 333g = blurt 30, trained judge keeps its top 3, the reply offers them labelled as guesses. Registered on the
+   333 panel against twin b before running.
+F. wins.jsonl handed to the sleep thread (173 rows, agreed format).
 
 Honesty rules for every step: register marks first, fresh blind test problems, one change, a FAIL stays FAIL.
