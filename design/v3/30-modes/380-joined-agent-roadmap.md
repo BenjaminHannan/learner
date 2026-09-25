@@ -87,3 +87,10 @@ facts become one floor check inside memory and safety.
 Stopped: more work on the relation-only confirm harness (381/381b stay registered FAILs). Banks C and D stay sealed
 for a one-time floor check. Every 0.x candidate is one build that all six tests run on, so each thread's part is
 tested inside the whole agent and not only alone.
+
+## Update 2026-09-25 ~20:50 UTC: join order for 0.2
+0.2 = 0.1 + gram-360 + ep-382 (scripts/claude_e2e382.py; marks PASSMARKS-382.md; fresh sealed chatpanel382 and
+creativepanel382). Next single change after its verdict: the lis-319 reader (registered PASS, reads up to 6 earlier
+turns; Reader319 in scripts/claude_lis319_read.py), as 0.2b on bank D. Then rd-378 notes into the 382 store and
+rd-371 as the checker, each after its own PASS. The new sleep (Fix sleep: night(model, day_groups) -> adapter)
+joins after dl-1 decides the learning rule.
