@@ -35,6 +35,6 @@ Every step: one change, pass marks sealed first, 2 seeds, a registered FAIL stay
   words (R10 is the bridge).
 
 ## Tonight (Ben asleep, 02:40 UTC)
-- BensPC: rsn-355 (step-3 input). Next in the BensPC queue: puzzle twins (R6), once sealed.
+- BensPC: rsn-355 (step-3 input), then rsn-356 (puzzle twins, R6), both sealed and queued.
 - Rental: rsn-353 (loop fix).
 - CPU here, free: step-3 preview on small models (plain vs loop, old vs shared input); R4 code + CPU test.
