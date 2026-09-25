@@ -55,8 +55,39 @@ def critic_features(one_b, msgs: list[dict], draft: str):
     return torch.cat(parts).cpu()
 
 
+STATS362 = ("log_tokens", "mean_lp", "min_lp", "lp_3rd_lowest", "frac_below_2", "n_below_4", "n_below_6",
+            "worst_window5", "ends_list_number", "no_end_mark", "repeated_trigrams", "repeated_sentences")
+
+
+def critic_stats(one_b, msgs: list[dict], draft: str):
+    """Token-probability and shape signals of a draft, from one pass of the 1B (temperature 1).
+    Garbled phrases and invented words show up as tokens the 1B itself found unlikely."""
+    import math
+    import re
+    torch = one_b.torch
+    prompt, d = render_with_draft(one_b.tok, msgs, draft)
+    p_ids = one_b.tok(prompt, return_tensors="pt")["input_ids"]
+    d_ids = one_b.tok(d, add_special_tokens=False, return_tensors="pt")["input_ids"]
+    ids = torch.cat([p_ids, d_ids], dim=1).to(one_b.dev)
+    n = d_ids.shape[1]
+    with torch.no_grad():
+        logits = one_b.model(input_ids=ids).logits[0, -n - 1:-1, :].float()
+    lp = torch.log_softmax(logits, -1).gather(1, ids[0, -n:].unsqueeze(1)).squeeze(1).cpu() if n else torch.zeros(1)
+    srt = lp.sort().values
+    win = lp.unfold(0, 5, 1).mean(1).min() if len(lp) >= 5 else lp.mean()
+    words = re.findall(r"[a-z']+", d.lower())
+    tri = [tuple(words[i:i + 3]) for i in range(len(words) - 2)]
+    sents = [x.strip().lower() for x in re.split(r"(?<=[.!?])\s+", d) if x.strip()]
+    v = [math.log(1 + n), float(lp.mean()), float(srt[0]), float(srt[min(2, len(srt) - 1)]),
+         float((lp < -2).float().mean()), float((lp < -4).sum()), float((lp < -6).sum()), float(win),
+         float(bool(re.search(r"(^|\s)\d+\.$", d))), float(not re.search(r"[.!?\"')]$", d)),
+         float(len(tri) - len(set(tri))), float(len(sents) - len(set(sents)))]
+    return torch.tensor(v)
+
+
 class Critic362:
-    """Logistic head: P(clean) = sigmoid(w . standardise(x) + b)."""
+    """Logistic head: P(clean) = sigmoid(w . standardise(x) + b). The head file names its feature sets in order:
+    "stats" = critic_stats, "feats" = critic_features."""
 
     def __init__(self, one_b, path: Path = HEAD362):
         d = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -64,9 +95,12 @@ class Critic362:
         self.one_b = one_b
         self.mu, self.sd = t.tensor(d["mu"]), t.tensor(d["sd"])
         self.w, self.b = t.tensor(d["w"]), float(d["b"])
+        self.features = d.get("features", ["feats"])
 
     def score(self, msgs: list[dict], draft: str) -> float:
-        x = (critic_features(self.one_b, msgs, draft) - self.mu) / self.sd
+        fn = {"stats": critic_stats, "feats": critic_features}
+        x = self.one_b.torch.cat([fn[f](self.one_b, msgs, draft) for f in self.features])
+        x = (x - self.mu) / self.sd
         return float(self.one_b.torch.sigmoid(x @ self.w + self.b))
 
 

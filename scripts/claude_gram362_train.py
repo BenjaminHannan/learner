@@ -41,6 +41,24 @@ def feats(drafts: str, model_dir: str, out: str) -> None:
     torch.save({"keys": keys, "x": torch.stack(xs)}, out)
 
 
+def stats(drafts: str, model_dir: str, out: str) -> None:
+    """Token-probability and shape features (G.STATS362) for every draft, same context as feats."""
+    import torch
+
+    import claude_chat338_agent as C38
+    import claude_cre333b_agent as C333B
+    import claude_gram362 as G
+    one_b = C333B.Gen333b(model_dir)
+    xs, keys = [], []
+    for i, r in enumerate(ld(drafts)):
+        msgs = [{"role": "system", "content": C38.SYSTEM338}, {"role": "user", "content": r["user_text"]}]
+        xs.append(G.critic_stats(one_b, msgs, r["draft"]))
+        keys.append(f"{r['pid']}/{r['j']}")
+        if i % 100 == 0:
+            print(i, flush=True)
+    torch.save({"keys": keys, "x": torch.stack(xs)}, out)
+
+
 def auc(scores, ys) -> float:
     pos = [s for s, y in zip(scores, ys) if y]
     neg = [s for s, y in zip(scores, ys) if not y]
@@ -66,7 +84,9 @@ def fit(x, y, l2: float, steps: int = 400):
 
 def train(drafts: str, labels: str, feat_path: str, head_out: str) -> None:
     import torch
-    f = torch.load(feat_path)
+    fs = [torch.load(fp) for fp in feat_path.split(",")]         # several feature files are joined side by side
+    assert all(g["keys"] == fs[0]["keys"] for g in fs)
+    f = {"keys": fs[0]["keys"], "x": torch.cat([g["x"].float() for g in fs], dim=1)}
     lab = {r["key"]: bool(r["ok"]) for r in ld(labels)}
     idx = [i for i, k in enumerate(f["keys"]) if k in lab]
     keys = [f["keys"][i] for i in idx]
@@ -77,7 +97,7 @@ def train(drafts: str, labels: str, feat_path: str, head_out: str) -> None:
     fold = {p: i % 5 for i, p in enumerate(pids)}
     fk = torch.tensor([fold[k.split("/")[0]] for k in keys])
     best = None
-    for l2 in (1e-4, 1e-3, 1e-2, 1e-1, 1.0):
+    for l2 in (1e-4, 1e-3, 1e-2, 1e-1, 1.0, 10.0):
         sc = torch.zeros(len(keys))
         for k in range(5):
             tr, te = fk != k, fk == k
@@ -101,6 +121,7 @@ def train(drafts: str, labels: str, feat_path: str, head_out: str) -> None:
     Path(head_out).parent.mkdir(parents=True, exist_ok=True)
     Path(head_out).write_text(json.dumps({"mu": mu.tolist(), "sd": sd.tolist(), "w": w.tolist(), "b": b,
                                           "l2": best[1], "cv_auc": best[0], "n": len(keys),
+                                          "features": [Path(fp).stem for fp in feat_path.split(",")],
                                           "clean": int(y.sum())}), encoding="utf-8")
     print(json.dumps({"chosen_l2": best[1], "cv_auc": round(best[0], 3), "n": len(keys), "clean": int(y.sum())}))
 
@@ -108,5 +129,7 @@ def train(drafts: str, labels: str, feat_path: str, head_out: str) -> None:
 if __name__ == "__main__":
     if sys.argv[1] == "feats":
         feats(*sys.argv[2:5])
+    elif sys.argv[1] == "stats":
+        stats(*sys.argv[2:5])
     else:
         train(*sys.argv[2:6])
