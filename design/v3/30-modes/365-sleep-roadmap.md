@@ -87,3 +87,7 @@ interrupting sleep needs sleep in its own process (later step).
 | 369 notebook restore | PASS 5/5, recounted (evidence thin on P369.2: 1 restored night): a night that changes the main notebook files is put back | artifacts/claude-slp369-20260925/RESULTS.md |
 | 364d gate v4 | registered FAIL: 15/20 bad nights caught (bar 18) vs v1 10/20; 0/20 honest rejected; replies 20/20 unchanged; main log 40/40. Misses all use question forms or people the gate never asks about (yes/no, multi-step, "Tell me", people with no facts) | artifacts/claude-slp364d-20260925/RESULTS.md |
 | 363 practice school | queued on BensPC (after rsn-353-pc) | handoff/queue/slp-363-train.md |
+| 364e gate v5 | registered FAIL: 17/20 bad nights caught (bar 18) vs v1 9/20; new rules alone 2 (bar 3); 0/20 honest rejected; replies 20/20 unchanged; main log 40/40. Misses: spelled-out word questions, an extra word installed without evidence, reverse "Whose R is X?" questions | artifacts/claude-slp364e-20260925/RESULTS.md |
+
+Reading after 364e (11:00 UTC): four gate versions failed the same way (each fresh blind bench finds a question kind
+the gate does not ask). Best stack so far: slp-360 scrap + 368 lock + 369 restore + 361 undo + gate v5.
