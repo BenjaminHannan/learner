@@ -14,8 +14,14 @@ Honest nights kept: seed 3 7/7, seed 4 3/7 (4 stopped by the general set, 1 of t
 
 ## What this shows, and what it does not
 - Shown: a school night can run inside idle sleep, practise on the user's taught facts, never touch the notebook,
-  never delay a reply, throw away a clearly bad night (14/14), and, with the general set, not leave the reasoner worse
-  on a fixed panel on two fresh seeds (under 363w, one seed lost 20).
-- Not shown: learning. +7 and -4 on 600 items are within run-to-run noise for this tiny model (179,093 weights,
+  never start inside a user turn, leave replies unchanged, throw away a clearly bad night (14/14; one of them only the
+  general set caught), and not leave the reasoner more than 12 worse on a fixed panel on two fresh seeds.
+- Suggested, not shown: that the general set is what prevents 363w's drift. On seed 3 it rejected nothing (so +7 is
+  what 363w alone would give); on seed 4 the 363w-only result was not measured. The only same-seed comparison is the
+  unregistered dev run on seed 1 (-5 vs -20).
+- Not measured: reply delay (no timing data).
+- Not shown: learning. +7 and -4 on 600 items are probably within run-to-run noise (not measured here) for this tiny model (179,093 weights per 363w's train_summary,
   100 + 100 steps a night). Whether practice on taught facts improves the reasoner is slp-363 at full size on BensPC.
 - Raw wrong answers on the panel still rose on seed 3 (150 -> 194); the checked answers did not.
+- Oddity (untested): on seed 3, nights 2-5 left the self-check and general scores unchanged, so those trained copies
+  may have barely changed.
