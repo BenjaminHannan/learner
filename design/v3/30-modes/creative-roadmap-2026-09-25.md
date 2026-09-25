@@ -37,7 +37,15 @@ exact answer (Ben chose "Both").
 6. **Raise the luck itself**: sleep also trains the generator on its own wins (rejection-sampling fine-tune), so
    later blurts get lucky more often. Measured as lucky blurts per 30 before vs after, on fresh problems.
 
-## Next, in order (updated 05:40 UTC 09-25 after the loop PASS)
+## Update 15:10 UTC 09-25
+- Greedy-solve loop: blurt-2 FAIL (GPU +6 vs +8), blurt-2p placebo FAIL (W-P +4 vs +5), blurt-2b all hits FAIL,
+  proved wrong. The reasoner's own first answer gains little.
+- blurt-3 PASS: the guesser's luck doubles after sleeping on its hits (63 -> 131 mean of 1,980; puzzles reached 27 -> 38),
+  while sleeping only on known answers collapses its variety (27 -> 3-4 puzzles). Replication blurt-3r queued.
+- 333g DEV rehearsal (top 3 ideas): useful 3/10, so not registered; ideas need a luckier generator first.
+Next: blurt-3r; then the same luck-raising for ideas with teacher-checked hits; then transfer to a different family.
+
+## Earlier plan (05:40 UTC 09-25, after the first loop run)
 A. GPU repeat of the loop (queued, BensPC, $0). PASS needs it too if it runs.
 B. Placebo arm (sleep research round 2): sleep on WRONG blurts of the same puzzles, same count. Must stay near S0, or the
    gain is just "more practice examples", not the lucky answers.
