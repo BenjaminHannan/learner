@@ -13,7 +13,8 @@ The old harness said yes to 10 wrong claims out of 73; 381 to none. But 381 said
 - the claim names a relation-word owner ("nan's dog" where nan is the user's grandmother);
 - a two-step relation ("your nephew" = the sibling's son);
 - a shorter value ("illustrator" for "freelance illustrator");
-- one parse error (the owner was read from an earlier line).
+- "zadie's hamster Sprout" where the facts say Sprout is Zadie's pet and a gerbil: both judges said yes, 381 said no
+  (arguably 381 is right here; counted against it as registered).
 Proved-wrong clause (H1 > 0) did not fire: parsing the claim is enough to stop wrong "yes" answers.
-Next (381b, one follow-up): fix those five causes as general rules, built on these 73 (now dev), tested on a fresh
+Next (381b, one follow-up): fix the first four causes as general rules, built on these 73 (now dev), tested on a fresh
 blind-written set of confirm questions with fresh blind judges, same marks. 381 is not used on any bank until then.
