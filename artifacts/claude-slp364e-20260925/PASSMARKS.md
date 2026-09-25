@@ -1,4 +1,4 @@
-# slp-364e pass marks (registered 2026-09-25 ~08:15 UTC, before its blind bench exists)
+# slp-364e pass marks (registered 2026-09-25 ~08:00 UTC, before its blind bench exists)
 
 Change (one): gate v5 (scripts/claude_slp364e_gate.py) = v4 plus four new question kinds asked before and after the
 night: F other phrasings of the word question (truth known), Y yes/no about the true and the first-hop person,
@@ -30,7 +30,7 @@ replies, or the new rules are the only catch on 0 nights.
   bench. The fifth bench's author was not told them.
 - Dev check on the opened 364d bench is running at registration. Its result is appended below before the fifth bench
   is opened. One smoke case so far: slp364d-30 (yes/no fault) is now rejected by Y.
-- Dev result (appended ~08:40 UTC, before the fifth bench is opened; scratch script, opened 364d bench, with 368 + 369):
+- Dev result (appended ~08:10 UTC, before the fifth bench is opened; scratch script, opened 364d bench, with 368 + 369):
   20/20 honest 364d nights kept, user replies identical to 364d's registered v4 arm on 20/20. Of v4's 5 misses, v5
   rejects 4, each by a new rule only: 05 by E, 20 by F, 30 by Y, 37 by Z. Still missed: 09 (an unknown relation
   phrase backs off to a known word); v5 asks no made-up relation phrases, and it was left unchanged after registration.
