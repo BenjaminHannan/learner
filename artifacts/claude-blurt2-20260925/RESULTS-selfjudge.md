@@ -36,7 +36,7 @@ cross-validation on those 30 only). Tested once on the 10 Opus-labelled requests
 - Reported: top-3 contains a good one (x/10), AUC vs Opus labels.
 Caution stated now: 10 requests is a small test; a pass is a DEV signal, and 333g is judged on the blind 333 panel.
 
-## Trained judge head: result (CPU, $0, ~05:00 UTC)
+## Trained judge head: result (CPU, $0, ~04:30 UTC)
 {"train_requests": 30, "train_blurts": 900, "train_teacher_good": 200, "layer": 20, "l2": 1.0, "cv_auc_vs_teacher": 0.673, "test_requests": 10, "test_blurts": 300, "test_opus_good": 44, "test_auc_vs_opus": 0.799, "pick1_good": 3, "top3_has_good": 7, "oracle_any_good": 9}
 Verdict: NOT a pass (top pick good on 3/10; mark 6). Not proved wrong either (mark <= 2). It ranks better than the
 1B's own judgement (AUC 0.799 vs 0.691) and a good idea is among its top 3 on 7/10 requests, but its single pick is
