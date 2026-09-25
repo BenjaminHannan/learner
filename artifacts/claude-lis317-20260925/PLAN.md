@@ -38,3 +38,10 @@ bank relation mapped generously to the 153-name table) and no confidence gate, t
 pointing back to an earlier turn: the reader only sees the assistant's last reply, not earlier user turns), 6 values
 not typed word for word ("i drive a tram" -> tram driver, "keep bees" -> beekeeping), 1 "me" fact with no I/my.
 So no gate fix alone can reach 336's 85% bar on this kind of chat; the hand-written checks cap it first.
+
+## Addendum 01:35 UTC: gate comparison script (fixed before the GPU reads land)
+scripts/claude_lis317_gates.py compares gates on the same reads, per-fact release (lis-315 semantics).
+Check on lis-301's existing greedy dev reads: at min >= 0.995 it gives 534 right, 2 wrong turns, and at no gate
+743 right, 10 wrong turns, the same numbers as lis-302 arm B, so the counting matches.
+Selection rule: the agreement level a is chosen on lis-301 dev only (lowest a with wrong turns <= the live gate's 2);
+the e2e DEV numbers are then read at that a, never used to choose it.
