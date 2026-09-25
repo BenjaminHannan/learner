@@ -7,6 +7,7 @@ confirmed and what failed), stored in their own store with their own label, and 
 problem or conversation comes up. Not facts, and never the notebook.
 
 Status: research note plus one proposed first test. Nothing built, sealed or run.
+Superseded as the main plan (19:28 UTC clarification from Ben): see 384b-revert-and-retry.md. This diary idea is kept for later.
 
 ## What the research says (labels: shown = measured in the cited work; suggested = interpretation; untested = ours)
 Checked against the arXiv abstracts on 2026-09-25 (and the full text for Dynamic Cheatsheet).
