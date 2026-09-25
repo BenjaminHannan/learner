@@ -29,5 +29,5 @@ thread in the misses: the gate asks every question in one form, starting from on
 ## Suggested next single change (364e, not started)
 Ask each existing probe in the other forms the loop accepts ("Who's", "Tell me", yes/no with the right and the
 first-hop person, explicit multi-step), and add lures that start from people with no facts of their own.
-Needs a fifth blind bench. slp-368 + slp-369 already keep the main notebook safe, so a missed bad night now costs
-wrong or made-up answers, not lost taught facts.
+Needs a fifth blind bench. slp-368 + slp-369 keep the main notebook FILES safe; a missed night can still give wrong
+or made-up answers (all 5 misses here do) until it is undone.
