@@ -5,7 +5,8 @@ Library:  v = Verifier(model_dir); p = v.p_yes(turn, prev_reply, fact)
 CLI:      python claude_rd371_verify.py --model DIR --rows ROWS.jsonl --reads READS.jsonl --out OUT.jsonl
           ROWS {"id","turn","prev_reply"}; READS = reader output {"id","frame","conf",...}.
           OUT = READS rows with "conf" replaced by P(yes) per fact (0.0 for a non-dict fact) and the reader's
-          min-token confidences kept as "conf_min"; "ms_verify" = time spent verifying that row.
+          min-token confidences kept as "conf_min"; "ms_verify" = time spent verifying that row; "ms" = the
+          reader's ms + ms_verify (the reader's own time kept as "ms_read"), so scorers report the total.
           So any lis-300/318 scorer can gate on the verifier with --threshold.
 """
 from __future__ import annotations
@@ -65,7 +66,9 @@ def main():
             facts = (fr.get("facts") or []) if isinstance(fr, dict) else []
             conf = [v.p_yes(row["turn"], row.get("prev_reply", ""), f) if isinstance(f, dict) else 0.0 for f in facts]
             n += len(facts)
-            out = dict(rd, conf=conf, conf_min=rd.get("conf"), ms_verify=round((time.perf_counter() - t0) * 1000, 1))
+            mv = round((time.perf_counter() - t0) * 1000, 1)
+            out = dict(rd, conf=conf, conf_min=rd.get("conf"), ms_verify=mv, ms_read=rd.get("ms"),
+                       ms=round((rd.get("ms") or 0) + mv, 1))
             fh.write(json.dumps(out, ensure_ascii=False) + "\n")
     print("verified", n, "facts on", v.dev)
 
