@@ -1,0 +1,2451 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -20; echo FETCH_DONE:$?; git rev-parse origin/main --short; git rev-parse origin/builder-outbox --short; git status --short | head -20
+FETCH_DONE:0
+fatal: Needed a single revision
+9e59a71530aed48227192c6db444be2494d14c56
+fatal: Needed a single revision
+1245c634d9e89ceedfc6497e859e8611b2f917af
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m$ [0mgit branch -a | head -30; echo ---; git remote -v | head
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis318-20260925/PASSMARKS.md; echo ===EXIT:$?
+# lis-318: the lis-301 reader, retrained with chatty conversation rows (one change)
+
+Thread "Fix: reading facts from chat" (cmsg_01FuvegZXjMmeUzStiEFVnEWFFJdDCbBKsf18JUgMQeEYH). Written 2026-09-25 02:10 UTC,
+before any chat row was relabelled, any training ran or the panel was run. Ben's ask (00:31 UTC): fix reading facts
+from chat (336: saved 57%, answerable asks right 22%).
+
+## Diagnosis this follows (lis-317, DEV only, RESULTS.md)
+The lis-301 reader finds 89/131 DEV chat facts before any gate and invents some on chatty turns (smalltalk read as a
+fact, corrections saved with the old value). A sampling-agreement gate fails its pre-fixed selection rule. lis-301's
+training rows are mostly short tidy sentences; its "proved wrong" clause was about the confidence gate on tidy text,
+not about reading chat.
+
+## The one change
+Training data. lis-301's data is rebuilt unchanged (scripts/claude_lis301_data.py), then about 2,500 new chatty rows
+written from scratch by 5 Opus agents (brief: data/WRITER.md; dialogs of 4-8 turns; families teach_multi, teach_passing,
+pets, correct, ask, smalltalk-with-names, nosave, short_answer, pronoun) are added. Only rows a blind second Opus
+labeller reproduces (scripts/claude_lis300_agree.py) are kept. 10% of dialogs go to dev (src chat318_dev), the rest are
+repeated 4 times in train. Builder: scripts/claude_lis318_data.py.
+No LoCoMo or LongMemEval text, and nothing built from them (the Benchmarks thread's test and final exam). The writers
+never saw readpanel318, bank A/B or any panel; they avoided every DEV name.
+Unchanged from lis-301: base model and snapshot, LoRA settings, epochs 2, lr 2e-4, rank 32, batch 16, max-len 256,
+seed 300, prompt (turn + previous reply only), frame format, confidence, compiler, the threshold rule (smallest grid T
+with 0 dev wrong-save turns under the lis-300 scorer, else 0.995).
+
+## Registered test
+artifacts/claude-readpanel318-20260925 (TEST-ONLY, sealed 00:50 UTC 09-25, 240 chatty turns, 255 facts, written blind by
+a separate Opus agent; a blind second labeller agreed 255/255). Run ONCE per arm, counts only.
+Arm A = lis-301 reader at T 0.995 (live). Arm B = lis-318 reader at its dev T.
+Scorer: scripts/claude_lis318_score.py (per-fact release; owner + value matching; relation not graded since the panel
+uses free relation words).
+
+## Marks (fixed now)
+| Mark | Bar |
+|---|---|
+| Q1 reads chat: B's R0 (gold facts in the greedy read, saving mode, no gate) | >= 217/255 (85%) AND >= A's R0 + 38 (15 points) |
+| Q2 saves more: B's saved_right at its T | >= A's saved_right + 40 |
+| Q3 safe: B's wrong_turns at its T | <= 2 of 240 |
+| Q4 no invention: B's nofact_rows_with_save (75 nosave + smalltalk rows) | <= 1 |
+| G1 no forgetting: lis-301's original dev (all-or-nothing hits, lis-300 scorer, each arm at its T) | B >= A - 23 (3% of 761) |
+| G2 speed: B median read ms on the rental GPU | <= A median + 200 |
+PASS = all six. Proved wrong: B's R0 <= A's R0 + 13 (5 points) -> chat rows are not the lever; the next step is a
+different mechanism (more context, open relations, or a learned checker), not more rows.
+
+## Report only
+Per-kind counts, held_right (what confirm-at-use could still recover), T and the dev sweep, B's dev numbers per src,
+B on the lis-317 DEV rows (R0, saved at T), training minutes, dollars.
+zsh:1: ==EXIT:0 not found
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -30
+echo ---LIS301---
+git show origin/main:handoff/queue/lis-301-train.md
+echo ---RENTKIT-A---
+git show origin/main:design/v3/30-modes/330-rent-kit.md | sed -n '1,120p'
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+---LIS301---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel301-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-301, the one follow-up to the lis-300 FAIL. It is the same fine-tune as lis-300 with ONE change: extra hard-case training rows. You pick the confidence threshold on dev, then run the new sealed blind panel ONCE. Artifacts go in artifacts/claude-lis301-20260923/. The listener thread (Opus) wrote all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis301-20260923/PASSMARKS.md, design/v3/60-listener/frame-spec.md, design/v3/60-listener/frame-spec-notes-301.md, scripts/claude_lis301_data.py, and the lis-300 task handoff/queue/lis-300-train.md (steps 0-8 are the same unless changed below).
+
+0. GPU. GPU: yes. Use BensPC as in lis-300 (same venv and the same downloaded openbmb/MiniCPM5-1B snapshot are fine; check the safetensors sha256 matches the one in origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md). The vast.ai fallback and its rules are as in lis-300 ($3.00 / 3 h ceiling).
+1. DATA. Get origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. First run `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` and `shasum -a 256 -c artifacts/claude-lis301-20260923/SEAL.sha256.txt` from the repo root: both must be all OK. Then run:
+   python scripts/claude_lis301_data.py --o0b <o0b dir> --o0a2 <o0a2 dir> --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --out <work>/data
+   Record the printed counts.
+2. TRAIN. Same command and flags as lis-300 step 3 (--epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge), with --data <work>/data and --out <work>/run. If it runs out of memory, use --batch 8 once and report it.
+3. DEV + THRESHOLD. Same as lis-300 step 4, with <work>/data/dev.jsonl. Apply the threshold rule exactly. Write THRESHOLD.txt, dev_sweep.txt, and the dev numbers per src (o0b_l2, opus_dev, o0a2, opus301_dev) at T.
+4. SEAL. Run sha256 over THRESHOLD.txt, the merged safetensors and dev_sweep.txt into SEAL-run.sha256.txt BEFORE opening the panel.
+5. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt` (must be all OK). Run the reader on artifacts/claude-lispanel301-20260923/panel.jsonl, and score it against the key file that seal names at T, and at T = 0 (report only). Never print or quote panel turns; report by category only.
+6. RESULTS.md, result first: each P301.n with integer counts and PASS/FAIL, plus everything listed under "Report only" in PASSMARKS; device and median/p90/max ms; training minutes and tok/s; dollars. Append ledger lines P301.1 to P301.6 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis301-merged/ and record its sha256 in RESULTS.md. Keep it on BensPC too. Never push weights.
+8. Copy dev files for the listener thread: <work>/data/dev.jsonl, <work>/dev_rows.jsonl and <work>/dev_pred.jsonl go to artifacts/claude-lis301-20260923/dev/.
+PUSH: artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/SEAL-run.sha256.txt artifacts/claude-lis301-20260923/dev_sweep.txt artifacts/claude-lis301-20260923/panel_score.json artifacts/claude-lis301-20260923/panel_score_T0.json artifacts/claude-lis301-20260923/train_summary.json artifacts/claude-lis301-20260923/train_log.jsonl artifacts/claude-lis301-20260923/dev artifacts/fable-predictions-ledger.md
+---RENTKIT-A---
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-300-train.md
+echo ---END300---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel300-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-300. Fine-tune our own listener (openbmb/MiniCPM5-1B, Apache 2.0; Ben chose it on 2026-09-23 at 11:01 UTC, which is his yes to download it), pick the confidence threshold on dev, then run the sealed blind panel ONCE. Artifacts go in artifacts/claude-lis300-20260923/. The listener thread (Opus) wrote and CPU-smoke-tested all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis300-20260923/PASSMARKS.md (marks, threshold rule), design/v3/60-listener/frame-spec.md, and scripts/claude_lis300_{common,compiler,data,train,read,score,agree}.py.
+
+0. GPU. GPU: yes. Use BensPC (RTX 5070 Ti, free) if it has a working CUDA torch env; check with `python -c "import torch;print(torch.cuda.is_available())"` in <= 10 min. You need torch, transformers >= 5.6, peft, safetensors and huggingface_hub; installing those with pip in a NEW venv is fine. If BensPC is not usable, rent ONE vast.ai RTX 4090/5090 on demand under the rental rules in handoff/queue/269-resume.md:
+   - read the key only as $(cat ~/.config/vastai/vast_api_key) and never print it;
+   - STOP if another instance is running;
+   - ceiling $3.00 and 3 h, enforced by a watchdog;
+   - destroy at the end and confirm the instance list is empty;
+   - append a ledger line.
+   Check `uptime` and `df` first. Weights never go into git.
+1. DATA. On the GPU machine, get the repo at origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. Then run:
+   python scripts/claude_lis300_data.py --o0b <o0b dir> --opus artifacts/claude-lis300-20260923/data --agree artifacts/claude-lis300-20260923/data/agreed_ids.txt --o0a2 <o0a2 dir> --out <work>/data
+   First check `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` from the repo root: it must be all OK. Record the printed counts.
+2. MODEL. Download openbmb/MiniCPM5-1B from Hugging Face with huggingface_hub.snapshot_download (about 2.1 GB). Record the commit hash and the sha256 of the safetensors file.
+3. TRAIN. Run:
+   python scripts/claude_lis300_train.py --model <model dir> --data <work>/data --out <work>/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge
+   If it runs out of memory, use --batch 8 once and report it. Keep train_log.jsonl and summary.json.
+4. DEV + THRESHOLD. Make <work>/dev_rows.jsonl from <work>/data/dev.jsonl (fields id, turn, prev_reply). Then run:
+   python scripts/claude_lis300_read.py --model <work>/run/merged --rows <work>/dev_rows.jsonl --out <work>/dev_pred.jsonl
+   Then run claude_lis300_score.py --gold <work>/data/dev.jsonl --pred <work>/dev_pred.jsonl --sweep. Apply the PASSMARKS threshold rule exactly: T is the smallest grid value with 0 wrong-save turns on the whole dev set, else 0.995. Write T to THRESHOLD.txt along with the sweep table. Also report the dev numbers for each src (o0b_l2, opus_dev, o0a2) at T.
+5. SEAL. Run sha256 over THRESHOLD.txt, the merged model's safetensors, and the dev sweep output. Put the hashes in SEAL-run.sha256.txt BEFORE opening the panel.
+6. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel300-20260923/SEAL-key.sha256.txt` (must be all OK). Then run the reader on panel.jsonl, and score it against the key file that seal names, at T and also at T = 0 (the latter is report only). Never print or quote panel turns. Report by category only.
+7. RESULTS.md, result first:
+   - each P300.n with integer counts, PASS/FAIL;
+   - wrong facts per saved fact and per turn;
+   - recall by family;
+   - device, median/p90/max read ms;
+   - training minutes and tok/s;
+   - dollars spent.
+   Append ledger lines P300.1 to P300.6 (cat >> artifacts/fable-predictions-ledger.md).
+8. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis300-merged/ (make the folder) and record its sha256 in RESULTS.md. The chat page will load it from there later. Also keep it on BensPC if trained there. Never push weights.
+PUSH: artifacts/claude-lis300-20260923/{RESULTS.md,THRESHOLD.txt,SEAL-run.sha256.txt,dev_sweep.txt,panel_score.json,panel_score_T0.json,train_summary.json,train_log.jsonl} artifacts/fable-predictions-ledger.md
+---END300---
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis301-20260923/RESULTS.md | head -150
+echo ===SEAL-LIST===
+git ls-tree -r --name-only origin/main -- artifacts/claude-lis318-20260925/ | head -30
+echo ===BUILDER-LIST===
+git ls-tree -r --name-only origin/builder-outbox | grep -i lis318 | head -30
+echo ===READPANEL-LIST===
+git ls-tree -r --name-only origin/main -- artifacts/claude-readpanel318-20260925/ | head -20
+# lis-301 registered result: FAIL (P301.2 recall 51/145 = 35.2%, bar 85%)
+
+Builder run 2026-09-23 on BensPC (RTX 5070 Ti, CUDA). Sealed code imported and
+run unmodified. Panel 301 run once. Category counts only; no panel turn is quoted.
+
+## Marks table (arm A = reader + compiler at T = 0.995)
+
+| Mark | Bar | Got (integers) | Verdict |
+|---|---|---|---|
+| P301.1 wrong-save turns | ≤ 1 of 240 | 0 of 240 | PASS |
+| P301.2 exact recall of gold writes | ≥ 85% | 51 of 145 = 35.2% | FAIL |
+| P301.3 ASK turns read correctly | ≥ 90% | 34 of 40 = 85.0% | FAIL |
+| P301.4 our/we turns that ask whose | ≥ 90% | 17 of 18 = 94.4% | PASS |
+| P301.5 unparseable outputs | ≤ 2% of turns | 0 of 240 = 0% | PASS |
+| P301.6 median read time on GPU | ≤ 1,500 ms | 1522.7 ms | FAIL |
+
+Overall verdict: FAIL. P301.2 also lands under 75%, and dev still has no
+zero-wrong T below 0.995 (minimum 2 wrong turns at t=0.980/0.990/0.995), so two
+of the three PASSMARKS "proved wrong" clauses trip: more hard-case data alone
+does not make the reader safe and useful at once, and the next step is a
+different mechanism, not more rows.
+
+## What the threshold buys (report only)
+
+- At T = 0.995: 51 pred writes, 51 hits, 0 wrong facts, 0 wrong turns, 93 held-back facts.
+- At T = 0: 147 pred writes, 142 hits, 5 wrong facts, 4 wrong turns, 0 held-back facts.
+- Wrong facts per saved fact: 0/51 at T, 5/147 at T = 0.
+- Wrong facts per turn: 0/240 at T, 4/240 at T = 0.
+- Recall: 51/145 (35.2%) at T, 142/145 (97.9%) at T = 0.
+- The reader itself still reads well (97.9% with no gate); the 0.995 gate holds
+  back 93 of 145 gold facts to reach 0 wrong saves.
+
+## Recall by family at T (hits / gold writes, category level only)
+
+- tell-single 6/14; tell-multi 2/24; tell-plural 9/18; tell-appositive 0/21;
+  tell-verb 6/12; tell-typo 5/8; tell-self 5/7.
+- correct (uses prev_reply) 9/19. short-answer (uses prev_reply) 3/7.
+- pronoun-clear 5/13. pronoun-ambiguous 0 gold writes, 0 wrong turns.
+- our-we: 0 gold writes, 0 wrong turns (17 of 18 asked whose).
+- negation/check/suppose/plan/reported/chat: 0 gold writes each, 0 wrong turns each
+  (12/12/10/10/8/8 turns).
+- questions: wh ask 11/11 (1 gold write held back); inverse 6/8; yesno 7/7
+  (+1 write hit); lowercase 5/7; twohop 3/5. ASK misses: 6 total
+  (2 inverse, 2 lowercase, 2 twohop).
+- The 0 wrong-save turns at T: no family wrote a wrong fact.
+- At T = 0 the 4 wrong turns are: 1 pronoun-ambiguous, 1 tell-typo, 1 our-we,
+  1 tell-appositive (2 of the 4 on no-save turns).
+
+## Timing, training, money
+
+- Read device: BensPC NVIDIA GeForce RTX 5070 Ti, cuda, greedy decode.
+- Panel read ms (240 turns): median 1522.7, p90 2158.8, max 2942.8.
+- Dev read ms (959 turns): median 1482.1, p90 2213.7, max 3684.1.
+- Training: 4622/4622 steps, 2 epochs, 26.05 minutes, 4727.7 tok/s,
+  dev loss 0.0545, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: same openbmb/MiniCPM5-1B snapshot as lis-300 (reused download),
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (verified
+  on BensPC before training; commit 87179e5c as in lis-300 RESULTS.md).
+- Merged reader: sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890,
+  kept at ~/premonition-models/lis301-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis301/work/run/merged/. Never in git.
+- Dollars spent: $0. BensPC used (free). No vast.ai rental. No other instance running.
+
+## Data built (recorded counts)
+
+- SEAL.sha256.txt checks from the BensPC repo copy before building:
+  lis-300 seal 14/14 OK, lis-301 seal 13/13 OK.
+- Built set: train 36,972 (o0b 27,000 + opus 5,012 + opus301 4,960 = 1,240
+  agreed non-dev rows x4), dev 959 (o0b_l2 428 + opus_dev 131 + o0a2 263 +
+  opus301_dev 137), opus301 agreed 1,377, dev dropped by relabel 45
+  (opus_dev 8 + o0a2 37). Matches DATA-AUDIT.md exactly.
+- Threshold: no sweep grid value reached 0 wrong-save dev turns (minimum 2 at
+  t=0.980, t=0.990 and t=0.995), so T = 0.995 by the sealed rule. At T, dev:
+  462/761 hits (60.7%), 2 wrong turns (both o0a2 family rows), ask 77/81,
+  we 13/13. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+- Panel key seal: 2/2 OK (panel.jsonl + key_v2.jsonl). Reader ran on the 240-turn
+  panel exactly once; scored at T and at T = 0.
+
+## Deviations (env only; sealed code untouched)
+
+1. Reused the lis-300 venv (torch 2.11.0+cu128, transformers 5.17.0, peft 0.21.0)
+   and the downloaded base-model snapshot (safetensors sha256 re-verified) instead
+   of a new venv and re-download; new work dir C:/Users/benja/lis301 used throughout.
+2. Windows cp1252 default: set PYTHONUTF8=1 (env var only), as in lis-300.
+3. Train launched with the venv certifi bundle in REQUESTS_CA_BUNDLE/SSL_CERT_FILE
+   (env vars only; training itself is offline after the snapshot reuse).
+4. No OOM at batch 16, so the batch-8 fallback was not used. max-minutes 150
+   cap never bound (run took 26.05 min).
+
+## What it means (plain high-school English)
+
+- The extra hard-case rows did buy safety: the blind panel now has 0 wrong saves
+  (lis-300 had 1), and dev wrong turns fell from 6 to 2 at the top threshold.
+- But the safety gate still throws away almost two thirds of the true facts
+  (93 of 145 held back), so recall collapsed to 35.2% (lis-300 had 51.8%).
+  Safe and useful were not reached together, and dev still has no threshold with
+  zero wrong turns, so adding rows alone is not fixing it.
+
+## What it doesn't mean
+
+- It doesn't mean the reader can't read: with no threshold it gets 142 of 145
+  facts (97.9%), same as lis-300.
+- It doesn't mean the test leaked: panel names N-Z never trained on (A-M only),
+  run once, seals checked first (data 14/14 + 13/13, key 2/2, run sealed pre-panel).
+- Per PASSMARKS, the next step is a different mechanism, not more rows.
+zsh:2: ==SEAL-LIST=== not found
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-lis318-20260925/
+artifacts/claude-lis318-20260925/PASSMARKS.md
+artifacts/claude-lis318-20260925/data/LABELLER.md
+artifacts/claude-lis318-20260925/data/README.md
+artifacts/claude-lis318-20260925/data/SEAL.sha256.txt
+artifacts/claude-lis318-20260925/data/WRITER.md
+artifacts/claude-lis318-20260925/data/agree_w1.json
+artifacts/claude-lis318-20260925/data/agree_w2.json
+artifacts/claude-lis318-20260925/data/agree_w3.json
+artifacts/claude-lis318-20260925/data/agree_w4.json
+artifacts/claude-lis318-20260925/data/agree_w5.json
+artifacts/claude-lis318-20260925/data/agreed_ids.txt
+artifacts/claude-lis318-20260925/data/agreed_w1.txt
+artifacts/claude-lis318-20260925/data/agreed_w2.txt
+artifacts/claude-lis318-20260925/data/agreed_w3.txt
+artifacts/claude-lis318-20260925/data/agreed_w4.txt
+artifacts/claude-lis318-20260925/data/agreed_w5.txt
+artifacts/claude-lis318-20260925/data/chat_w1.jsonl
+artifacts/claude-lis318-20260925/data/chat_w2.jsonl
+artifacts/claude-lis318-20260925/data/chat_w3.jsonl
+artifacts/claude-lis318-20260925/data/chat_w4.jsonl
+artifacts/claude-lis318-20260925/data/chat_w5.jsonl
+artifacts/claude-lis318-20260925/data/label_B_w1.jsonl
+artifacts/claude-lis318-20260925/data/label_B_w2.jsonl
+artifacts/claude-lis318-20260925/data/label_B_w3.jsonl
+artifacts/claude-lis318-20260925/data/label_B_w4.jsonl
+artifacts/claude-lis318-20260925/data/label_B_w5.jsonl
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep lis318; echo ---; git ls-tree -r --name-only origin/main | grep readpanel318; echo ---; git ls-tree -r --name-only origin/main | grep lis317 | head -20
+---
+artifacts/claude-readpanel318-20260925/AUDIT.md
+artifacts/claude-readpanel318-20260925/README.md
+artifacts/claude-readpanel318-20260925/SEAL.sha256.txt
+artifacts/claude-readpanel318-20260925/label_B.jsonl
+artifacts/claude-readpanel318-20260925/panel.jsonl
+---
+artifacts/claude-lis317-20260925/PLAN.md
+artifacts/claude-lis317-20260925/RESULTS.md
+artifacts/claude-lis317-20260925/ceiling_e2edev.txt
+artifacts/claude-lis317-20260925/rows_e2edev.jsonl
+scripts/claude_lis317_ceiling.py
+scripts/claude_lis317_gates.py
+scripts/claude_lis317_rows.py
+scripts/claude_lis317_sample.py
+scripts/claude_lis317_score.py
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-301-train.md | cat
+echo ___
+git log --oneline -15 -- origin/main 2>&1 | head -20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. You may RUN artifacts/claude-lispanel301-20260923 exactly once, in step 6, and only see scores. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: builder for lis-301, the one follow-up to the lis-300 FAIL. It is the same fine-tune as lis-300 with ONE change: extra hard-case training rows. You pick the confidence threshold on dev, then run the new sealed blind panel ONCE. Artifacts go in artifacts/claude-lis301-20260923/. The listener thread (Opus) wrote all code. Import it and run it; never edit it. If something breaks, stop and report the exact error. Do not patch the code.
+
+READ FIRST: artifacts/claude-lis301-20260923/PASSMARKS.md, design/v3/60-listener/frame-spec.md, design/v3/60-listener/frame-spec-notes-301.md, scripts/claude_lis301_data.py, and the lis-300 task handoff/queue/lis-300-train.md (steps 0-8 are the same unless changed below).
+
+0. GPU. GPU: yes. Use BensPC as in lis-300 (same venv and the same downloaded openbmb/MiniCPM5-1B snapshot are fine; check the safetensors sha256 matches the one in origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md). The vast.ai fallback and its rules are as in lis-300 ($3.00 / 3 h ceiling).
+1. DATA. Get origin/main plus origin/builder-outbox:artifacts/claude-own-o0b-20260923 and origin/builder-outbox:artifacts/claude-own-o0a2-20260923. First run `shasum -a 256 -c artifacts/claude-lis300-20260923/SEAL.sha256.txt` and `shasum -a 256 -c artifacts/claude-lis301-20260923/SEAL.sha256.txt` from the repo root: both must be all OK. Then run:
+   python scripts/claude_lis301_data.py --o0b <o0b dir> --o0a2 <o0a2 dir> --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --out <work>/data
+   Record the printed counts.
+2. TRAIN. Same command and flags as lis-300 step 3 (--epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge), with --data <work>/data and --out <work>/run. If it runs out of memory, use --batch 8 once and report it.
+3. DEV + THRESHOLD. Same as lis-300 step 4, with <work>/data/dev.jsonl. Apply the threshold rule exactly. Write THRESHOLD.txt, dev_sweep.txt, and the dev numbers per src (o0b_l2, opus_dev, o0a2, opus301_dev) at T.
+4. SEAL. Run sha256 over THRESHOLD.txt, the merged safetensors and dev_sweep.txt into SEAL-run.sha256.txt BEFORE opening the panel.
+5. PANEL, run ONCE. Check `shasum -a 256 -c artifacts/claude-lispanel301-20260923/SEAL-key.sha256.txt` (must be all OK). Run the reader on artifacts/claude-lispanel301-20260923/panel.jsonl, and score it against the key file that seal names at T, and at T = 0 (report only). Never print or quote panel turns; report by category only.
+6. RESULTS.md, result first: each P301.n with integer counts and PASS/FAIL, plus everything listed under "Report only" in PASSMARKS; device and median/p90/max ms; training minutes and tok/s; dollars. Append ledger lines P301.1 to P301.6 (cat >> artifacts/fable-predictions-ledger.md).
+7. KEEP THE MODEL. Copy <work>/run/merged to the Mac at ~/premonition-models/lis301-merged/ and record its sha256 in RESULTS.md. Keep it on BensPC too. Never push weights.
+8. Copy dev files for the listener thread: <work>/data/dev.jsonl, <work>/dev_rows.jsonl and <work>/dev_pred.jsonl go to artifacts/claude-lis301-20260923/dev/.
+PUSH: artifacts/claude-lis301-20260923/RESULTS.md artifacts/claude-lis301-20260923/THRESHOLD.txt artifacts/claude-lis301-20260923/SEAL-run.sha256.txt artifacts/claude-lis301-20260923/dev_sweep.txt artifacts/claude-lis301-20260923/panel_score.json artifacts/claude-lis301-20260923/panel_score_T0.json artifacts/claude-lis301-20260923/train_summary.json artifacts/claude-lis301-20260923/train_log.jsonl artifacts/claude-lis301-20260923/dev artifacts/fable-predictions-ledger.md
+___
+[0m
+[0m$ [0mls ~/premonition-models/ 2>&1; echo ---; ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/ 2>&1 | head -20; echo ---; uptime; df -g / | head -5
+lis300-merged
+lis301-merged
+minilm
+own-m1-mouth
+own-m1n-mouth
+rsn294
+rsn296
+rsn296b
+rsn350
+rsn351
+---
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/: No such file or directory
+---
+ 2:45  up 1 day, 16:38, 4 users, load averages: 10.46 10.30 11.38
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        20    39%  484014 216746880    0%   /
+[0m
+[0m$ [0mcat ~/.ssh/config 2>&1 | head -40; echo ---; tailscale status 2>&1 | head -20; echo ---; ls ~/.config/vastai/ 2>&1; echo ---; env | grep -i -E "bens|ssh|vast|gpu" | sed 's/=.*KEY.*/=<redacted>/' | head
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---
+100.99.123.88   macbook-pro       benjamin.a.hannan@  macOS    -                               
+100.93.41.100   bens-macbook-pro  benjamin.a.hannan@  macOS    offline, last seen 5d ago       
+100.75.113.114  benspc            benjamin.a.hannan@  windows  idle, tx 185358692 rx 14120252  
+---
+vast_api_key
+vast_role
+---
+SSH_AUTH_SOCK=/var/run/com.apple.launchd.Fr7PJ3zov8/Listeners
+[0m
+[0m# [0mTodos
+[•] Read PASSMARKS + specs + scripts via git show
+[ ] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[ ] Check BensPC GPU idle, venv, BASE + READER sha256
+[ ] Step 1: TREE + SEALS on BensPC
+[ ] Step 2: DATA build on BensPC
+[ ] Step 3: TRAIN (150min cap)
+[ ] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis318-20260925/data/SEAL.sha256.txt; echo ___; git show origin/main:artifacts/claude-readpanel318-20260925/SEAL.sha256.txt; echo ___; git show origin/main:artifacts/claude-lis300-20260923/SEAL.sha256.txt | head -5; echo ___; git ls-tree -r --name-only origin/main -- scripts/ | grep lis31; echo ___; git ls-tree -r --name-only origin/main -- scripts/ | grep lis300
+ddefde4070abf6da139be236b5b68f9aec19986f993bd24d4bea3318efb25a03  artifacts/claude-lis318-20260925/data/chat_w1.jsonl
+a71f5c8b0840527070e554a62171572db01e7cfad4235ae910b085fed4d8a170  artifacts/claude-lis318-20260925/data/chat_w2.jsonl
+88f6d76949714022c1c3a97f97bb05b711437c5c21ce9ecf4d9ed0fa54f3ac23  artifacts/claude-lis318-20260925/data/chat_w3.jsonl
+d707e284db1b7920f64a3bda0e77b9f7dec2e3bf65ddda0e9d31f6a787025b9e  artifacts/claude-lis318-20260925/data/chat_w4.jsonl
+f7315912bb1766a88a4facf4035d04c8364935da5a54953563179f1d5c3c4959  artifacts/claude-lis318-20260925/data/chat_w5.jsonl
+4fdfdeabbd9429e3cc6fca6bf4e04d889161e0f126e090cef5c38376733e4967  artifacts/claude-lis318-20260925/data/label_B_w1.jsonl
+f9bf2b351e00f1555903095624f9f591af93453e258397df253569c9ebd3896d  artifacts/claude-lis318-20260925/data/label_B_w2.jsonl
+bf11ce4fbeaf43b2bb82f4fcc89adf7216cb492575f5dfb666cba9870f408019  artifacts/claude-lis318-20260925/data/label_B_w3.jsonl
+e8143983acce6e30576345e7f4872dcd79f30c098934e7b94ae92728f8fe0691  artifacts/claude-lis318-20260925/data/label_B_w4.jsonl
+a064a5793a27dffc4ebff25d3162909fa5b4a72def52d4f0d7b8b31f9e27f071  artifacts/claude-lis318-20260925/data/label_B_w5.jsonl
+bd0642b2d561cab3c2f8e9177bda5856687bc186bc5e79eec5f995ead792cecd  artifacts/claude-lis318-20260925/data/agreed_ids.txt
+91ee33358dfeb554f3ec1d0d62e7c60945806b768fcd4f991c0ac03c09e97266  artifacts/claude-lis318-20260925/data/WRITER.md
+6434030923ccd7bf43bca54efa8fdd0a50c7c1a61e3ad10fca51abb26f406dd9  artifacts/claude-lis318-20260925/data/LABELLER.md
+c30f656cb97019989a2e2812dc5dcbf1e4331a483735c0d3054c108286734e85  artifacts/claude-lis318-20260925/data/README.md
+___
+2a3a3a0524989561866dc7b453a53860ddca7722929aef85e5dca159c0b1beac  panel.jsonl
+ee0fbaa5c4ae1f67c05464e9b7b26392d5490f7aff447c82f9f3bd57aed065db  label_B.jsonl
+f24ea0b5cbe4fde30df2b640df16b308ccc6fbc94f31e286aeb5e3f9f3408a9a  README.md
+8d54b65edfbf4134e1ead1687b4f5ece3924044e467b6bef5963cb603da2cb9b  AUDIT.md
+___
+3b146670bfe254284948161e3d58ee916bd06702ae0749eecd4d1112acd04073  artifacts/claude-lis300-20260923/PASSMARKS.md
+69ca82561a27764e7982f9481e9492fd747e06ffc9e9ce582d916f2a3e81421f  artifacts/claude-lis300-20260923/data/opus_w1.jsonl
+7b79adc59de8e1358c2eaae1008ead154e771e6b0edfc14b5f251fe30e6eeb8b  artifacts/claude-lis300-20260923/data/opus_w2.jsonl
+4f11e46e32ce0589202f61e3f52b942fbbf52ec21993a7dbaa25a7c536a5edb9  artifacts/claude-lis300-20260923/data/opus_w3.jsonl
+8b3ee54bf90ad2bbcfa09adf1d742e916f9ed4bc2c8c823a2a2de55a65e47ec1  artifacts/claude-lis300-20260923/data/agreed_ids.txt
+___
+scripts/claude_lis312_f0.py
+scripts/claude_lis313_agent.py
+scripts/claude_lis313_f0.py
+scripts/claude_lis313_test.py
+scripts/claude_lis313b_agent.py
+scripts/claude_lis313b_f0.py
+scripts/claude_lis314_agent.py
+scripts/claude_lis314_run.py
+scripts/claude_lis314_test.py
+scripts/claude_lis314b_agent.py
+scripts/claude_lis314b_run.py
+scripts/claude_lis314b_test.py
+scripts/claude_lis315_agent.py
+scripts/claude_lis316_agent.py
+scripts/claude_lis316_devcount.py
+scripts/claude_lis316_guards.py
+scripts/claude_lis317_ceiling.py
+scripts/claude_lis317_gates.py
+scripts/claude_lis317_rows.py
+scripts/claude_lis317_sample.py
+scripts/claude_lis317_score.py
+scripts/claude_lis318_data.py
+scripts/claude_lis318_score.py
+scripts/claude_lis319_agree.py
+scripts/claude_lis319_common.py
+scripts/claude_lis319_data.py
+scripts/claude_lis319_devsplit.py
+scripts/claude_lis319_lencheck.py
+scripts/claude_lis319_read.py
+scripts/claude_lis319_rows.py
+scripts/claude_lis319_score.py
+___
+scripts/claude_lis300_agree.py
+scripts/claude_lis300_common.py
+scripts/claude_lis300_compiler.py
+scripts/claude_lis300_data.py
+scripts/claude_lis300_read.py
+scripts/claude_lis300_score.py
+scripts/claude_lis300_train.py
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis301-20260923/SEAL.sha256.txt | head -20; echo ___; git show origin/builder-outbox:artifacts/claude-lis301-20260923/RESULTS.md | grep -E "sha256|BASE|snapshot|commit" | head -10
+c214b6e0c2ec3c35195efdb8e26cd0b2fe8a8a527edc9ccd8f66ad89ec4c2a20  artifacts/claude-lis301-20260923/PASSMARKS.md
+5f40c83a2b96d51186a8a327bb83280cf15b23ab73220c1b188ec0f53d29bbfa  artifacts/claude-lis301-20260923/DATA-AUDIT.md
+390187ffce087d73a7bc623d1d10d14c3e35aecd4c2c90bb2361a8e6faa891e2  artifacts/claude-lis301-20260923/data/opus_w4.jsonl
+e78540065528d85907dd2c8314e4c4007134141522309ea95a7225a2e1e6c203  artifacts/claude-lis301-20260923/data/opus_w5.jsonl
+ea7da476114587ac2c44238d7449f68b124a2e87970978e6d763c5f02fc38d6b  artifacts/claude-lis301-20260923/data/opus_w6.jsonl
+8cce7a28c095c3de4c927107527e5831b74f3fca13d1ae7b72df6446af644f5b  artifacts/claude-lis301-20260923/data/relabel_w4.jsonl
+3602b2a12e190bc6b59a1cb77063e656e95d9e22c07fdcf128659100c4ac9ed0  artifacts/claude-lis301-20260923/data/relabel_w5.jsonl
+433d47535f8d74f45127d54135abfdd16c815d83d373c8a6b2c2e2f1c912f1f8  artifacts/claude-lis301-20260923/data/relabel_w6.jsonl
+ae6350080804ea6f38d8aa8e3522b7db055ce091513ba0e32f9a020637777609  artifacts/claude-lis301-20260923/data/agreed_ids.txt
+0e9a027ee8cf3a469fc23038c3b68a23b93d38b3e959f759fb1a02ea92e26b55  artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt
+e04a8024c58afefb34683c6fd8c6fde000683ad8c8cdae078055449f33002594  artifacts/claude-lis301-20260923/data/dev_relabel_B.jsonl
+822c07af772d9f74d8644504ceb0646d65b6fd4f1a3b2f340ce38dd5a3b6bcac  scripts/claude_lis301_data.py
+7b639b100b0395652ef3db9405367506daba8aa56629b54abcc1c95325f2b8a9  design/v3/60-listener/frame-spec-notes-301.md
+___
+- Base model: same openbmb/MiniCPM5-1B snapshot as lis-300 (reused download),
+  model-00000-of-00001.safetensors sha256
+  on BensPC before training; commit 87179e5c as in lis-300 RESULTS.md).
+- Merged reader: sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890,
+- SEAL.sha256.txt checks from the BensPC repo copy before building:
+  we 13/13. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+   and the downloaded base-model snapshot (safetensors sha256 re-verified) instead
+   (env vars only; training itself is offline after the snapshot reuse).
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-lis300-20260923/RESULTS.md | grep -A2 -B2 -iE "sha256|snapshot|commit|base"
+dev loss 0.0842, LoRA trainable 22,413,312 of 1,103,046,144 params,
+  batch 16 (no OOM, no fallback), lr 2e-4, rank 32, seed 300.
+- Base model: openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc,
+  model-00000-of-00001.safetensors sha256
+  7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d (2,161,290,912 bytes).
+- Merged reader: sha256 112880d610173aef9b39715e0f6db51a16af8dece42dbd7132b83c0be8285324,
+  kept at ~/premonition-models/lis300-merged/ (Mac, hash verified) and on BensPC
+  at C:/Users/benja/lis300/work/run/merged/. Never in git.
+--
+## Data built (recorded counts)
+
+- SEAL.sha256.txt check from repo root on BensPC: 14/14 OK before building.
+- Built set: train 32,012 (o0b 27,000 + opus 5,012 = 1,253 agreed x4),
+  dev 867 (o0b_l2 428 + opus_dev 139 + o0a2 300),
+  opus agreed 1,392, o0b pronoun-owner dropped 20,000. Matches DATA-AUDIT.md.
+- Threshold: no sweep grid value reached 0 wrong-save dev turns (min 6 at 0.995),
+  so T = 0.995 by the sealed rule. Sealed in SEAL-run.sha256.txt BEFORE the panel.
+- Panel key seal: 2/2 OK (panel.jsonl + key_v2.jsonl). Reader ran on the 240-turn
+  panel exactly once; scored at T and at T = 0.
+[0m
+[0m$ [0mdate -u; echo ---; ssh -o ConnectTimeout=15 benspc "hostname & python -c \"import torch; print(torch.__version__, torch.cuda.is_available())\" & nvidia-smi --query-gpu=name,utilization.gpu,memory.used,memory.total --format=csv & echo PYTHONUTF8=%PYTHONUTF8%" 2>&1 | head -30
+Fri Sep 25 06:45:41 UTC 2026
+---
+BensPC
+2.11.0+cu128 True
+name, utilization.gpu [%], memory.used [MiB], memory.total [MiB]
+NVIDIA GeForce RTX 5070 Ti, 0 %, 599 MiB, 16303 MiB
+PYTHONUTF8=%PYTHONUTF8%
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import torch,transformers,peft; print(torch.__version__, torch.cuda.is_available(), transformers.__version__)\" 2>&1; echo ---; dir C:\\Users\\benja\\lis301\\work\\run\\merged 2>&1 | head -15; echo ---; certutil -hashfile C:\\Users\\benja\\lis301\\work\\run\\merged\\model.safetensors SHA256 2>&1 | head -5"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "nvidia-smi -L"
+GPU 0: NVIDIA GeForce RTX 5070 Ti (UUID: GPU-eff8b256-47f4-fa53-82a9-c4caa2e0ed21)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'C:/Users/benja/lis300/venv/Scripts/python.exe -c "import torch; print(torch.cuda.is_available())"'
+True
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'dir C:\Users\benja\lis301\work\run\merged'
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\run\merged
+
+09/23/2026  02:28 PM    <DIR>          .
+09/23/2026  02:28 PM    <DIR>          ..
+09/23/2026  02:28 PM             9,241 chat_template.jinja
+09/23/2026  02:28 PM               784 config.json
+09/23/2026  02:28 PM               227 generation_config.json
+09/23/2026  02:28 PM     2,161,290,944 model.safetensors
+09/23/2026  02:28 PM         9,894,271 tokenizer.json
+09/23/2026  02:28 PM               477 tokenizer_config.json
+               6 File(s)  2,171,195,944 bytes
+               2 Dir(s)  40,636,178,432 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'certutil -hashfile C:\Users\benja\lis301\work\run\merged\model.safetensors SHA256'
+SHA256 hash of C:\Users\benja\lis301\work\run\merged\model.safetensors:
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'dir C:\Users\benja\lis300\work 2>NUL; dir C:\Users\benja\lis301\work 2>NUL; echo ---; C:/Users/benja/lis300/venv/Scripts/python.exe -c "from huggingface_hub import snapshot_download; print(snapshot_download(repo_id chr(34)openbmb/MiniCPM5-1Bchr(34)))"' 2>&1 | head -20
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'dir C:\Users\benja\lis301'
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301
+
+09/23/2026  03:01 PM    <DIR>          .
+09/24/2026  11:37 PM    <DIR>          ..
+09/23/2026  03:01 PM             2,217 fam_scores301.py
+09/23/2026  02:01 PM        27,023,360 lis301-main.tar
+09/23/2026  02:01 PM        13,568,000 lis301-outbox.tar
+09/23/2026  02:01 PM    <DIR>          repo
+09/23/2026  02:01 PM               732 verify_seal301.py
+09/24/2026  11:20 PM    <DIR>          work
+               4 File(s)     40,594,309 bytes
+               4 Dir(s)  40,636,469,248 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'dir C:\Users\benja\lis301\work; dir C:\Users\benja\lis300'
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work
+
+09/24/2026  11:20 PM    <DIR>          .
+09/23/2026  03:01 PM    <DIR>          ..
+09/25/2026  02:38 AM    <DIR>          bm390
+09/23/2026  02:01 PM    <DIR>          data
+09/23/2026  02:54 PM               470 dev_o0a2.json
+09/23/2026  02:54 PM               401 dev_o0b_l2.json
+09/23/2026  02:54 PM               427 dev_opus301_dev.json
+09/23/2026  02:54 PM               445 dev_opus_dev.json
+09/23/2026  02:54 PM           371,449 dev_pred.jsonl
+09/23/2026  02:28 PM            95,313 dev_rows.jsonl
+09/23/2026  02:54 PM               523 dev_score_T.json
+09/23/2026  02:54 PM               800 dev_sweep.txt
+09/23/2026  03:01 PM            91,838 panel_pred.jsonl
+09/23/2026  02:54 PM            26,977 panel_rows.jsonl
+09/23/2026  03:01 PM               450 panel_score.json
+09/23/2026  03:01 PM               594 panel_score_T0.json
+09/23/2026  02:54 PM    <DIR>          persrc
+09/23/2026  02:28 PM    <DIR>          run
+09/24/2026  09:20 AM    <DIR>          smoke336win
+09/24/2026  09:20 AM       162,728,248 smoke336win-tree.tgz
+09/24/2026  09:22 AM             1,226 smoke336win_run.log
+09/24/2026  09:22 AM               706 smoke336win_run.ps1
+09/24/2026  09:22 AM               626 smoke336win_run2.ps1
+              16 File(s)    163,320,493 bytes
+
+ Directory of C:\Users\benja
+
+
+ Directory of C:\Users\benja\lis300
+
+09/23/2026  08:47 AM    <DIR>          .
+09/24/2026  11:37 PM    <DIR>          ..
+09/23/2026  07:43 AM               846 dlmodel.log
+09/23/2026  08:47 AM             1,868 fam_scores.py
+09/23/2026  07:41 AM        19,701,760 lis300-main.tar
+09/23/2026  07:41 AM        13,568,000 lis300-outbox.tar
+09/23/2026  07:42 AM               961 lis300_dlmodel.py
+09/23/2026  08:40 AM               693 make_panel_rows.py
+09/23/2026  07:43 AM    <DIR>          model
+09/23/2026  07:36 AM             1,103 pip-torch.log
+09/23/2026  07:39 AM               540 pip-torch2.log
+09/23/2026  07:36 AM             9,056 pip.log
+09/23/2026  07:41 AM    <DIR>          repo
+09/23/2026  07:45 AM               535 train.bat
+09/23/2026  08:12 AM            23,632 train.log
+09/23/2026  07:34 AM    <DIR>          venv
+09/23/2026  07:41 AM               996 verify_seal.py
+09/23/2026  08:47 AM    <DIR>          work
+              12 File(s)     33,309,990 bytes
+               6 Dir(s)  40,636,026,880 bytes free
+File Not Found
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'dir C:\Users\benja\lis300\model; type C:\Users\benja\lis300\dlmodel.log'
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis300\model
+
+09/23/2026  07:43 AM    <DIR>          .
+09/23/2026  08:47 AM    <DIR>          ..
+09/23/2026  07:42 AM    <DIR>          .cache
+09/23/2026  07:42 AM             1,519 .gitattributes
+09/23/2026  07:42 AM             9,062 chat_template.jinja
+09/23/2026  07:42 AM               726 config.json
+09/23/2026  07:42 AM               213 generation_config.json
+09/23/2026  07:43 AM     2,161,290,912 model-00000-of-00001.safetensors
+09/23/2026  07:42 AM            18,004 model.safetensors.index.json
+09/23/2026  07:42 AM            22,108 README-cn.md
+09/23/2026  07:42 AM            23,472 README.md
+09/23/2026  07:42 AM               551 special_tokens_map.json
+09/23/2026  07:42 AM         9,894,271 tokenizer.json
+09/23/2026  07:42 AM            94,416 tokenizer_config.json
+              11 File(s)  2,171,355,254 bytes
+
+ Directory of C:\Users\benja
+
+
+ Directory of C:\Users\benja\lis300
+
+09/23/2026  07:43 AM               846 dlmodel.log
+               1 File(s)            846 bytes
+               0 Dir(s)  40,635,863,040 bytes free
+File Not Found
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'certutil -hashfile C:\Users\benja\lis300\model\model-00000-of-00001.safetensors SHA256'
+SHA256 hash of C:\Users\benja\lis300\model\model-00000-of-00001.safetensors:
+7ab8fd86563125929be78aeec8cb3969c7ed2ead3be1ab9d3ec0a9fa69c8660d
+CertUtil: -hashfile command completed successfully.
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[•] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[ ] Step 1: TREE + SEALS on BensPC
+[ ] Step 2: DATA build on BensPC
+[ ] Step 3: TRAIN (150min cap)
+[ ] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; git show origin/main:scripts/claude_lis318_data.py | head -60
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+lis314b-main.log
+lis314b-main.status
+lis314b-test.log
+lis314b-tree
+lis314b-tree.status
+lise2e
+mkpart6.py
+part6_slice.jsonl
+pilot356-log.jsonl
+pilot356-summary.json
+reader-330dev.tgz
+rent330c.log
+ret330c
+rsn356code.tar
+rsn356seal
+smoke336_run.ps1
+smoke336_run2.ps1
+smoke336win
+smoke336win_run.log
+smoke336win-tree.tgz
+teacher-glm53-run
+tree-330c-dev3.tgz
+tree-330dev.tgz
+tree330c.path
+tree330c.poBfd9
+tree330c.tgz
+#!/usr/bin/env python3
+"""lis-318 training data = lis-301 data rebuilt unchanged + chatty Opus rows (the one change).
+
+Steps:
+  1. Build the lis-301 data exactly as before (scripts/claude_lis301_data.py, same args) into OUT/base301.
+  2. Add the chat rows (artifacts/claude-lis318-20260925/data/chat_w*.jsonl) that a blind second Opus
+     labeller reproduced (--agree318, from claude_lis300_agree.py): 10% of them go to dev
+     (src chat318_dev), the rest are repeated --repeat times in train (src chat318), as lis-301 did.
+Same prompt, frame format and target text (claude_lis300_common). No LoCoMo / LongMemEval text: every
+chat row was written from scratch by Opus agents for this experiment.
+
+python3 scripts/claude_lis318_data.py <all claude_lis301_data.py args> --chat318 DIR --agree318 FILE --out DIR
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from claude_lis300_common import build_prompt, frame_text  # noqa: E402
+
+
+def read_jsonl(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    for k in ("--o0b", "--o0a2", "--opus300", "--agree300", "--opus301", "--agree301", "--dev-agree"):
+        ap.add_argument(k, required=True)
+    ap.add_argument("--chat318", required=True)
+    ap.add_argument("--agree318", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--repeat", type=int, default=4)
+    ap.add_argument("--dev-frac", type=float, default=0.1)
+    a = ap.parse_args()
+    out = Path(a.out)
+    base = out / "base301"
+    subprocess.run([sys.executable, str(HERE / "claude_lis301_data.py"), "--o0b", a.o0b, "--o0a2", a.o0a2,
+                    "--opus300", a.opus300, "--agree300", a.agree300, "--opus301", a.opus301,
+                    "--agree301", a.agree301, "--dev-agree", a.dev_agree, "--out", str(base)], check=True)
+    train = read_jsonl(base / "train.jsonl")
+    dev = read_jsonl(base / "dev.jsonl")
+    agree = set(Path(a.agree318).read_text().split())
+    rows = []
+    for p in sorted(Path(a.chat318).glob("chat_w*.jsonl")):
+        rows += [r for r in read_jsonl(p) if r["id"] in agree]
+    # split by dialog so no dialog is in both train and dev
+    dialogs = sorted({r["id"].rsplit("-t", 1)[0] for r in rows})
+    rng = random.Random(318)
+    rng.shuffle(dialogs)
+    dev_d = set(dialogs[: int(len(dialogs) * a.dev_frac)])
+    n_dev = 0
+    for r in rows:
+[0m
+[0m✗ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318 && rm -rf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree && mkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree && git archive origin/builder-outbox | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree && git archive origin/main | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree/scripts/claude_lis318_data.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree/scripts/claude_lis300_train.py /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree/artifacts/claude-lis318-20260925/data/SEAL.sha256.txt && tar czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree.tgz -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318 tree && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318/tree.tgz failed
+[91m[1mError: [0mThe user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules [{"permission":"*","action":"allow","pattern":"*"},{"permission":"*","action":"allow","pattern":"*"},{"permission":"bash","pattern":"*","action":"allow"},{"permission":"bash","pattern":"rm -rf /*","action":"deny"},{"permission":"bash","pattern":"rm -rf ~*","action":"deny"},{"permission":"bash","pattern":"rm -rf $HOME*","action":"deny"},{"permission":"bash","pattern":"sudo *","action":"deny"},{"permission":"bash","pattern":"diskutil *","action":"deny"},{"permission":"bash","pattern":"mkfs*","action":"deny"},{"permission":"bash","pattern":"dd if=*","action":"deny"},{"permission":"bash","pattern":"git push*","action":"deny"},{"permission":"bash","pattern":"curl * | sh","action":"deny"},{"permission":"bash","pattern":"curl * | bash","action":"deny"},{"permission":"bash","pattern":"wget * | sh","action":"deny"},{"permission":"bash","pattern":"wget * | bash","action":"deny"}]
+[0m
+[0m$ [0mmkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree && git archive origin/builder-outbox | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree && git archive origin/main | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree/scripts/claude_lis318_data.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree/scripts/claude_lis318_data.py
+[0m
+[0m$ [0mtar czf /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree.tgz -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b tree && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree.tgz
+-rw-r--r--  1 ben-hannan  staff  167954936 Sep 25 02:48 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree.tgz
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'mkdir C:\Users\benja\lis318 2>NUL; dir C:\Users\benja\lis318'
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc 'Get-Item C:\Users\benja\lis318'
+'Get-Item' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "mkdir C:\\Users\\benja\\lis318"
+A subdirectory or file C:\Users\benja\lis318 already exists.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "dir C:\\Users\\benja\\lis318"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis318
+
+09/25/2026  02:48 AM    <DIR>          .
+09/25/2026  02:48 AM    <DIR>          ..
+               0 File(s)              0 bytes
+               2 Dir(s)  40,637,599,744 bytes free
+[0m
+[0m$ [0mscp -o ConnectTimeout=20 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/lis318b/tree.tgz benspc:C:/Users/benja/lis318/tree.tgz && echo SCP_OK
+SCP_OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "tar xzf C:\\Users\\benja\\lis318\\tree.tgz -C C:\\Users\\benja\\lis318 && dir C:\\Users\\benja\\lis318"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis318
+
+09/25/2026  02:50 AM    <DIR>          .
+09/25/2026  02:48 AM    <DIR>          ..
+09/25/2026  02:47 AM    <DIR>          tree
+09/25/2026  02:50 AM       167,954,936 tree.tgz
+               1 File(s)    167,954,936 bytes
+               3 Dir(s)  38,452,133,888 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "dir C:\\Users\\benja\\lis318\\tree | head -30"
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "dir C:\\Users\\benja\\lis318\\tree"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis318\tree
+
+09/25/2026  02:47 AM    <DIR>          .
+09/25/2026  02:50 AM    <DIR>          ..
+09/25/2026  02:45 AM    <DIR>          .claude
+09/25/2026  02:44 AM             6,148 .DS_Store
+09/25/2026  02:45 AM                97 .gitignore
+09/25/2026  02:45 AM            25,924 ADVERSARIAL_REVIEW.md
+09/25/2026  02:45 AM             8,771 ARCHITECTURE_DECISION.md
+09/25/2026  02:45 AM    <DIR>          archive
+09/25/2026  02:47 AM    <DIR>          artifacts
+09/25/2026  02:45 AM             1,166 CLAUDE.md
+09/25/2026  02:45 AM    <DIR>          data
+09/25/2026  02:47 AM    <DIR>          design
+09/25/2026  02:45 AM    <DIR>          handoff
+09/25/2026  02:45 AM    <DIR>          learnlab
+09/25/2026  02:45 AM    <DIR>          memorylab
+09/25/2026  02:45 AM    <DIR>          premonition
+09/25/2026  02:45 AM             3,610 README.md
+09/25/2026  02:45 AM             8,676 REMOTE_RUN.md
+09/25/2026  02:45 AM            18,053 RESEARCH_REVIEW.md
+09/25/2026  02:45 AM    <DIR>          reviews
+09/25/2026  02:45 AM            10,605 run.py
+09/25/2026  02:45 AM               293 run.sh
+09/25/2026  02:44 AM    <DIR>          runs
+09/25/2026  02:47 AM    <DIR>          scripts
+09/25/2026  02:44 AM    <DIR>          status
+09/25/2026  02:45 AM            63,886 TEACHING_TO_TEST_CONTRACT.md
+09/25/2026  02:45 AM    <DIR>          tests
+              11 File(s)        147,229 bytes
+              16 Dir(s)  38,451,617,792 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "where shasum"
+INFO: Could not find files for the given pattern(s).
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "where git"
+C:\Program Files\Git\cmd\git.exe
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "dir C:\\Program Files\\Git\\usr\\bin | findstr shasum"
+The system cannot find the path specified.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" --version"
+GNU bash, version 5.2.37(1)-release (x86_64-pc-msys)
+Copyright (C) 2022 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+
+This is free software; you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"which sha256sum shasum; sha256sum --version | head -1\""
+/usr/bin/sha256sum
+/usr/bin/core_perl/shasum
+sha256sum (GNU coreutils) 8.32
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[•] Step 1: TREE + SEALS on BensPC
+[ ] Step 2: DATA build on BensPC
+[ ] Step 3: TRAIN (150min cap)
+[ ] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; cd /c/Users/benja/lis318/tree && sha256sum -c artifacts/claude-lis300-20260923/SEAL.sha256.txt 2>&1 | tail -3\""
+Fri, Sep 25, 2026  6:52:18 AM
+scripts/claude_lis300_agree.py: OK
+design/v3/60-listener/frame-spec.md: OK
+design/v3/60-listener/relation-names.txt: OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && echo SEAL300:; sha256sum -c artifacts/claude-lis300-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; sha256sum -c artifacts/claude-lis300-20260923/SEAL.sha256.txt 2>&1 | grep -v OK | head -5; echo SEAL301:; sha256sum -c artifacts/claude-lis301-20260923/SEAL.sha256.txt 2>&1 | grep -c OK; sha256sum -c artifacts/claude-lis301-20260923/SEAL.sha256.txt 2>&1 | grep -v OK | head -5\""
+SEAL300:
+14
+SEAL301:
+13
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && echo SEAL318:; sha256sum -c artifacts/claude-lis318-20260925/data/SEAL.sha256.txt 2>&1 | grep -c OK; sha256sum -c artifacts/claude-lis318-20260925/data/SEAL.sha256.txt 2>&1 | grep -v OK | head -5; echo PANEL:; cd artifacts/claude-readpanel318-20260925 && sha256sum -c SEAL.sha256.txt 2>&1 | grep -c OK; sha256sum -c SEAL.sha256.txt 2>&1 | grep -v OK | head -5\""
+SEAL318:
+14
+PANEL:
+4
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[•] Step 2: DATA build on BensPC
+[ ] Step 3: TRAIN (150min cap)
+[ ] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis318_data.py --o0b artifacts/claude-own-o0b-20260923 --o0a2 artifacts/claude-own-o0a2-20260923 --opus300 artifacts/claude-lis300-20260923/data --agree300 artifacts/claude-lis300-20260923/data/agreed_ids.txt --opus301 artifacts/claude-lis301-20260923/data --agree301 artifacts/claude-lis301-20260923/data/agreed_ids.txt --dev-agree artifacts/claude-lis301-20260923/data/dev_agreed_ids.txt --chat318 artifacts/claude-lis318-20260925/data --agree318 artifacts/claude-lis318-20260925/data/agreed_ids.txt --out /c/Users/benja/lis318/work/data 2>&1 | tail -25; date -u\""
+Fri, Sep 25, 2026  6:52:33 AM
+  "o0b_l2": 428,
+  "opus_dev": 131,
+  "o0a2": 263,
+  "opus301_dev": 137
+ }
+}
+{
+ "train": 45124,
+ "dev": 1181,
+ "chat318_agreed": 2260,
+ "chat318_dev": 222,
+ "train_src": {
+  "o0b": 27000,
+  "opus": 5012,
+  "opus301": 4960,
+  "chat318": 8152
+ },
+ "dev_src": {
+  "o0b_l2": 428,
+  "opus_dev": 131,
+  "o0a2": 263,
+  "opus301_dev": 137,
+  "chat318_dev": 222
+ }
+}
+Fri, Sep 25, 2026  6:52:38 AM
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[•] Step 3: TRAIN (150min cap)
+[ ] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && setsid nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_train.py --model /c/Users/benja/lis300/model --data /c/Users/benja/lis318/work/data --out /c/Users/benja/lis318/work/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge > /c/Users/benja/lis318/work/train.log 2>&1 < /dev/null & echo TRAIN_PID=\$!; sleep 60; tail -5 /c/Users/benja/lis318/work/train.log; date -u\""
+Fri, Sep 25, 2026  6:52:52 AM
+TRAIN_PID=697
+/usr/bin/bash: line 1: setsid: command not found
+Fri, Sep 25, 2026  6:53:52 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"which nohup; ls -la /c/Users/benja/lis318/work/train.log 2>&1; ps aux | grep -i lis300_train | grep -v grep\""
+/usr/bin/nohup
+-rw-r--r-- 1 benja 197121 49 Sep 25 02:52 /c/Users/benja/lis318/work/train.log
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cat /c/Users/benja/lis318/work/train.log\""
+/usr/bin/bash: line 1: setsid: command not found
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_train.py --model /c/Users/benja/lis300/model --data /c/Users/benja/lis318/work/data --out /c/Users/benja/lis318/work/run --epochs 2 --lr 2e-4 --rank 32 --batch 16 --max-len 256 --max-minutes 150 --merge > /c/Users/benja/lis318/work/train.log 2>&1 < /dev/null & echo TRAIN_PID=\$!; disown; sleep 90; echo ---LOG---; cat /c/Users/benja/lis318/work/train.log; echo ---PS---; ps aux | grep lis300_train | grep -v grep | head -3; date -u\""
+Fri, Sep 25, 2026  6:54:06 AM
+TRAIN_PID=1943
+---LOG---
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 69/219 [00:00<00:00, 630.35it/s]Loading weights:  61%|██████    | 133/219 [00:00<00:00, 399.12it/s]Loading weights:  81%|████████▏ | 178/219 [00:00<00:00, 376.12it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 429.78it/s]
+[transformers] `use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+{'step': 1, 'total': 5642, 'loss': 2.865, 'lr': 2.1276594095471757e-06, 'tok_per_s': 1782.7, 'min': 0.02}
+{'step': 20, 'total': 5642, 'loss': 1.8557, 'lr': 2.2339732871235667e-05, 'tok_per_s': 3986.9, 'min': 0.14}
+{'step': 40, 'total': 5642, 'loss': 0.21, 'lr': 4.361161209424528e-05, 'tok_per_s': 3641.0, 'min': 0.3}
+{'step': 60, 'total': 5642, 'loss': 0.1063, 'lr': 6.487551038923111e-05, 'tok_per_s': 3451.1, 'min': 0.48}
+{'step': 80, 'total': 5642, 'loss': 0.1411, 'lr': 8.612747233339025e-05, 'tok_per_s': 3624.6, 'min': 0.61}
+{'step': 100, 'total': 5642, 'loss': 0.0575, 'lr': 0.00010736354496581569, 'tok_per_s': 3693.5, 'min': 0.75}
+{'step': 120, 'total': 5642, 'loss': 0.0421, 'lr': 0.0001285797786047364, 'tok_per_s': 3754.6, 'min': 0.89}
+{'step': 140, 'total': 5642, 'loss': 0.0543, 'lr': 0.0001497722276641886, 'tok_per_s': 3759.4, 'min': 1.03}
+{'step': 160, 'total': 5642, 'loss': 0.041, 'lr': 0.00017093695146997603, 'tok_per_s': 3839.2, 'min': 1.16}
+---PS---
+Fri, Sep 25, 2026  6:55:36 AM
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -3 /c/Users/benja/lis318/work/train.log; date -u\""
+{'step': 480, 'total': 5642, 'loss': 0.007, 'lr': 0.0001964494210713822, 'tok_per_s': 3919.8, 'min': 3.4}
+{'step': 500, 'total': 5642, 'loss': 0.0216, 'lr': 0.00019614932826054273, 'tok_per_s': 3919.3, 'min': 3.54}
+{'step': 520, 'total': 5642, 'loss': 0.033, 'lr': 0.0001958373110825644, 'tok_per_s': 3909.4, 'min': 3.68}
+Fri, Sep 25, 2026  6:58:15 AM
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_read.py | head -50; echo ===SCORE-ARGS===; git show origin/main:scripts/claude_lis300_score.py | grep -E "add_argument|def main" | head -20
+#!/usr/bin/env python3
+"""lis-300 reader: the fine-tuned MiniCPM5-1B listener, with a confidence per fact.
+
+Confidence of fact i = the lowest probability the model gave any token it emitted inside
+the turn's "act" value or inside fact i's JSON object (greedy decoding). The compiler asks
+back when this is below the threshold fixed on dev.
+
+Library:  r = Reader(model_dir); frame, confs, raw, ms = r.read(turn, prev_reply)
+CLI:      python claude_lis300_read.py --model DIR --rows ROWS.jsonl --out OUT.jsonl
+          ROWS rows need {"id","turn","prev_reply"}; OUT rows = {"id","frame","conf","raw","ms"}.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from claude_lis300_common import build_prompt, parse_frame  # noqa: E402
+
+
+def object_spans(text: str):
+    """Char spans of the act value and of each object inside the facts array."""
+    act = None
+    i = text.find('"act"')
+    if i >= 0:
+        j = text.find(",", i)
+        act = (i, j if j > 0 else len(text))
+    facts = []
+    k = text.find('"facts"')
+    if k >= 0:
+        k = text.find("[", k)
+        depth, start, instr, esc = 0, None, False, False
+        for p in range(k + 1, len(text)):
+            ch = text[p]
+            if instr:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    instr = False
+                continue
+            if ch == '"':
+                instr = True
+zsh:1: ==SCORE-ARGS=== not found
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis300_score.py | grep -E "add_argument"
+ap.add_argument("--gold", required=True)
+    ap.add_argument("--pred", required=True)
+    ap.add_argument("--turns")
+    ap.add_argument("--threshold", type=float, default=0.0)
+    ap.add_argument("--sweep", action="store_true")
+    ap.add_argument("--out")
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis318_score.py | head -40; echo ====; git show origin/main:scripts/claude_lis318_score.py | grep -E "add_argument"
+#!/usr/bin/env python3
+"""lis-318 panel scorer (counts only; never prints panel text).
+
+Panel rows (readpanel318): {"id","prev_reply","turn","kind","facts":[{"owner","relation","value"}],"nosave_reason"}.
+Reads: claude_lis300_read.py output {"id","frame","conf","raw","ms"} for one arm.
+Per-fact release (lis-315 semantics): a greedy fact is SAVED if it passes the live structural check
+(claude_lis300_compiler.check_fact) and conf >= T. Saved facts are RIGHT if owner + value match a gold fact
+of that row (owner USER <-> me; else full or first name, any case; value any case), else WRONG.
+Counts:
+  R0            gold facts found in the greedy read with mode ASSERT/CORRECT (no gate, no check)
+  saved_right   gold facts saved at T
+  saved_wrong / wrong_turns    saved facts matching no gold fact / rows with >= 1
+  nofact_rows_with_save        nosave + smalltalk rows (75) with any saved fact
+  held_right    R0 facts not saved at T (what confirm-at-use could still recover)
+  parse_fail, ms median
+python claude_lis318_score.py --panel panel.jsonl --reads reads.jsonl --threshold T [--out OUT.json]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import statistics
+import sys
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_lis300_compiler as CMP  # noqa: E402
+from claude_lis317_gates import e2e_match  # noqa: E402
+
+WRITABLE = {"ASSERT", "CORRECT"}
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def score(panel, reads, T):
+    rd = {r["id"]: r for r in reads}
+    c, per_kind, ms = Counter(), Counter(), []
+zsh:1: === not found
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -2 /c/Users/benja/lis318/work/train.log; date -u\""
+{'step': 540, 'total': 5642, 'loss': 0.009, 'lr': 0.00019551340823358216, 'tok_per_s': 3915.6, 'min': 3.82}
+{'step': 560, 'total': 5642, 'loss': 0.0216, 'lr': 0.0001951776598837829, 'tok_per_s': 3917.9, 'min': 3.96}
+Fri, Sep 25, 2026  6:58:29 AM
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -2 /c/Users/benja/lis318/work/train.log; date -u\""
+{'step': 1780, 'total': 5642, 'loss': 0.014, 'lr': 0.00015477330175299963, 'tok_per_s': 3847.5, 'min': 12.85}
+{'step': 1800, 'total': 5642, 'loss': 0.0055, 'lr': 0.0001538381898786898, 'tok_per_s': 3849.5, 'min': 12.99}
+Fri, Sep 25, 2026  7:07:36 AM
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -2 /c/Users/benja/lis318/work/train.log; date -u\""
+{'step': 3060, 'total': 5642, 'loss': 0.0001, 'lr': 8.673118895034754e-05, 'tok_per_s': 3850.8, 'min': 22.07}
+{'step': 3080, 'total': 5642, 'loss': 0.0011, 'lr': 8.562823654803034e-05, 'tok_per_s': 3853.3, 'min': 22.2}
+Fri, Sep 25, 2026  7:16:40 AM
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -4 /c/Users/benja/lis318/work/train.log; date -u\""
+{'step': 4300, 'total': 5642, 'loss': 0.0024, 'lr': 2.6644334958335192e-05, 'tok_per_s': 3874.8, 'min': 30.82}
+{'step': 4320, 'total': 5642, 'loss': 0.0004, 'lr': 2.5892034663642096e-05, 'tok_per_s': 3877.1, 'min': 30.95}
+{'step': 4340, 'total': 5642, 'loss': 0.0001, 'lr': 2.514892518288988e-05, 'tok_per_s': 3878.7, 'min': 31.07}
+{'step': 4360, 'total': 5642, 'loss': 0.0001, 'lr': 2.441509867595565e-05, 'tok_per_s': 3879.3, 'min': 31.21}
+Fri, Sep 25, 2026  7:25:46 AM
+[0m
+[0m$ [0msleep 480; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -6 /c/Users/benja/lis318/work/train.log; date -u; ls /c/Users/benja/lis318/work/run/merged 2>&1\""
+{'step': 5400, 'total': 5642, 'loss': 0.0002, 'lr': 9.06519319798782e-07, 'tok_per_s': 3877.9, 'min': 38.67}
+{'step': 5420, 'total': 5642, 'loss': 0.0001, 'lr': 7.630560539413134e-07, 'tok_per_s': 3879.3, 'min': 38.8}
+{'step': 5440, 'total': 5642, 'loss': 0.0001, 'lr': 6.319000789901996e-07, 'tok_per_s': 3881.0, 'min': 38.92}
+{'step': 5460, 'total': 5642, 'loss': 0.0002, 'lr': 5.130676608104845e-07, 'tok_per_s': 3880.5, 'min': 39.07}
+{'step': 5480, 'total': 5642, 'loss': 0.0001, 'lr': 4.0657353690900514e-07, 'tok_per_s': 3882.1, 'min': 39.2}
+{'step': 5500, 'total': 5642, 'loss': 0.0001, 'lr': 3.1243091460664286e-07, 'tok_per_s': 3883.9, 'min': 39.32}
+Fri, Sep 25, 2026  7:33:49 AM
+ls: cannot access '/c/Users/benja/lis318/work/run/merged': No such file or directory
+[0m
+[0m$ [0msleep 300; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -8 /c/Users/benja/lis318/work/train.log; date -u; ls /c/Users/benja/lis318/work/run 2>&1\""
+"batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+Fri, Sep 25, 2026  7:38:52 AM
+adapter
+merged
+summary.json
+train_log.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cat /c/Users/benja/lis318/work/run/summary.json; echo; grep -E 'step.: 5642' /c/Users/benja/lis318/work/train.log | tail -2\""
+{
+ "steps": 5642,
+ "planned_steps": 5642,
+ "stopped": null,
+ "train_rows": 45124,
+ "dev_rows": 1181,
+ "dev_loss": 0.04534415479911693,
+ "trainable_params": 22413312,
+ "all_params": 1103046144,
+ "minutes": 40.51,
+ "tok_per_s": 3866.7,
+ "device": "cuda",
+ "args": {
+  "model": "C:/Users/benja/lis300/model",
+  "data": "C:/Users/benja/lis318/work/data",
+  "out": "C:/Users/benja/lis318/work/run",
+  "epochs": 2.0,
+  "lr": 0.0002,
+  "rank": 32,
+  "batch": 16,
+  "max_len": 256,
+  "max_minutes": 150.0,
+  "limit": null,
+  "merge": true,
+  "seed": 300
+ }
+}
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[•] Step 4: DEV + THRESHOLD + G1
+[ ] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import json; gold=[json.loads(l) for l in open('/c/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8')]; out=open('/c/Users/benja/lis318/work/dev_rows.jsonl','w',encoding='utf-8'); [out.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')})+'\n') for r in gold]; print('dev_rows', len(gold))\\\" && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows /c/Users/benja/lis318/work/dev_rows.jsonl --out /c/Users/benja/lis318/work/dev_pred.jsonl > /c/Users/benja/lis318/work/dev_read.log 2>&1 < /dev/null & echo READ_PID=\$!; disown; sleep 120; cat /c/Users/benja/lis318/work/dev_read.log 2>&1 | tail -3; ls -la /c/Users/benja/lis318/work/dev_pred.jsonl 2>&1\""
+READ_PID=539
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/c/Users/benja/lis318/work/data/dev.jsonl'
+cat: /c/Users/benja/lis318/work/dev_read.log: No such file or directory
+ls: cannot access '/c/Users/benja/lis318/work/dev_pred.jsonl': No such file or directory
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"ls -la /c/Users/benja/lis318/work/data/ /c/Users/benja/lis318/work/data/base301/ 2>&1\""
+/c/Users/benja/lis318/work/data/:
+total 21200
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:52 .
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:54 ..
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:52 base301
+-rw-r--r-- 1 benja 197121   816584 Sep 25 02:52 dev.jsonl
+-rw-r--r-- 1 benja 197121 20886100 Sep 25 02:52 train.jsonl
+
+/c/Users/benja/lis318/work/data/base301/:
+total 16812
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:52 .
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:52 ..
+drwxr-xr-x 1 benja 197121        0 Sep 25 02:52 base300
+-rw-r--r-- 1 benja 197121   635402 Sep 25 02:52 dev.jsonl
+-rw-r--r-- 1 benja 197121 16573964 Sep 25 02:52 train.jsonl
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8')]; out=open('C:/Users/benja/lis318/work/dev_rows.jsonl','w',encoding='utf-8'); [out.write(json.dumps({'id':r['id'],'turn':r['turn'],'prev_reply':r.get('prev_reply','')})+'\n') for r in gold]; print('dev_rows', len(gold))\\\"\""
+dev_rows 1181
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows /c/Users/benja/lis318/work/dev_rows.jsonl --out /c/Users/benja/lis318/work/dev_pred.jsonl > /c/Users/benja/lis318/work/dev_read.log 2>&1 < /dev/null & echo READ_PID=\$!; disown; sleep 100; tail -2 /c/Users/benja/lis318/work/dev_read.log; ls -la /c/Users/benja/lis318/work/dev_pred.jsonl 2>&1\""
+READ_PID=1319
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  31%|███       | 67/219 [00:00<00:00, 603.07it/s]Loading weights:  58%|█████▊    | 128/219 [00:00<00:00, 389.94it/s]Loading weights:  78%|███████▊  | 171/219 [00:00<00:00, 328.93it/s]Loading weights:  95%|█████████▍| 207/219 [00:00<00:00, 306.91it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 357.21it/s]
+-rw-r--r-- 1 benja 197121 7895 Sep 25 03:42 /c/Users/benja/lis318/work/dev_pred.jsonl
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred.jsonl; tail -2 /c/Users/benja/lis318/work/dev_read.log; date -u\""
+456 /c/Users/benja/lis318/work/dev_pred.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  31%|███       | 67/219 [00:00<00:00, 603.07it/s]Loading weights:  58%|█████▊    | 128/219 [00:00<00:00, 389.94it/s]Loading weights:  78%|███████▊  | 171/219 [00:00<00:00, 328.93it/s]Loading weights:  95%|█████████▍| 207/219 [00:00<00:00, 306.91it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 357.21it/s]
+Fri, Sep 25, 2026  7:54:35 AM
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred.jsonl; date -u\""
+803 /c/Users/benja/lis318/work/dev_pred.jsonl
+Fri, Sep 25, 2026  8:03:49 AM
+[0m
+[0m$ [0msleep 420; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred.jsonl; date -u\""
+1047 /c/Users/benja/lis318/work/dev_pred.jsonl
+Fri, Sep 25, 2026  8:10:52 AM
+[0m
+[0m$ [0msleep 300; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred.jsonl; tail -3 /c/Users/benja/lis318/work/dev_read.log; date -u\""
+1181 /c/Users/benja/lis318/work/dev_pred.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  31%|███       | 67/219 [00:00<00:00, 603.07it/s]Loading weights:  58%|█████▊    | 128/219 [00:00<00:00, 389.94it/s]Loading weights:  78%|███████▊  | 171/219 [00:00<00:00, 328.93it/s]Loading weights:  95%|█████████▍| 207/219 [00:00<00:00, 306.91it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 357.21it/s]
+read 1181 rows on cuda
+Fri, Sep 25, 2026  8:15:55 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/data/dev.jsonl --pred /c/Users/benja/lis318/work/dev_pred.jsonl --sweep 2>&1 | tail -30\""
+t=0.000 wrong_turns=18 recall=927/971 ask=118/126 we=16/16
+t=0.300 wrong_turns=16 recall=927/971 ask=118/126 we=16/16
+t=0.500 wrong_turns=16 recall=923/971 ask=118/126 we=16/16
+t=0.600 wrong_turns=15 recall=906/971 ask=118/126 we=16/16
+t=0.700 wrong_turns=13 recall=887/971 ask=118/126 we=16/16
+t=0.800 wrong_turns=11 recall=873/971 ask=118/126 we=16/16
+t=0.850 wrong_turns=11 recall=857/971 ask=118/126 we=16/16
+t=0.900 wrong_turns=7 recall=828/971 ask=118/126 we=16/16
+t=0.930 wrong_turns=6 recall=800/971 ask=118/126 we=16/16
+t=0.950 wrong_turns=5 recall=769/971 ask=118/126 we=16/16
+t=0.970 wrong_turns=4 recall=723/971 ask=118/126 we=16/16
+t=0.980 wrong_turns=3 recall=682/971 ask=118/126 we=16/16
+t=0.990 wrong_turns=2 recall=618/971 ask=118/126 we=16/16
+t=0.995 wrong_turns=1 recall=553/971 ask=118/126 we=16/16
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"ls /c/Users/benja/lis318/tree/artifacts/claude-lis301-20260923/dev/; /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import json; r=json.loads(open('C:/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8').readline()); print(sorted(r.keys())); from collections import Counter; print(Counter(json.loads(l).get('src','?') for l in open('C:/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8')))\\\"\""
+dev.jsonl
+dev_pred.jsonl
+dev_rows.jsonl
+['family', 'frame', 'id', 'prev_reply', 'prompt', 'src', 'target', 'turn']
+Counter({'o0b_l2': 428, 'o0a2': 263, 'chat318_dev': 222, 'opus301_dev': 137, 'opus_dev': 131})
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8')]; pred={json.loads(l)['id']:l for l in open('C:/Users/benja/lis318/work/dev_pred.jsonl',encoding='utf-8')}; import os; os.makedirs('C:/Users/benja/lis318/work/persrc',exist_ok=True); from collections import Counter; c=Counter(); f={}; pf={}; import glob; [open(p,'w').close() for p in glob.glob('C:/Users/benja/lis318/work/persrc/*')]; [f.__setitem__(s,open('C:/Users/benja/lis318/work/persrc/gold_'+s+'.jsonl','w',encoding='utf-8')) or pf.__setitem__(s,open('C:/Users/benja/lis318/work/persrc/pred_'+s+'.jsonl','w',encoding='utf-8')) for s in set(r['src'] for r in gold)]; [f[r['src']].write(json.dumps(r)+'\n') or pf[r['src']].write(pred[r['id']]) or c.update([r['src']]) for r in gold]; print(dict(c))\\\" && for s in o0b_l2 opus_dev o0a2 opus301_dev chat318_dev; do echo SRC=\$s; /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/persrc/gold_\$s.jsonl --pred /c/Users/benja/lis318/work/persrc/pred_\$s.jsonl --threshold 0.995; done\""
+{}
+SRC=o0b_l2
+{
+ "turns": 428,
+ "parse_fail": 428,
+ "gold_writes": 352,
+ "pred_writes": 0,
+ "wrong_facts": 0,
+ "ask_turns": 59,
+ "ask_ok": 0,
+ "gold_write_turns": 242,
+ "turn_exact": 0,
+ "held_back_facts": 0,
+ "threshold": 0.995,
+ "recall_exact": 0.0,
+ "ask_acc": 0.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {}
+}
+SRC=opus_dev
+{
+ "turns": 131,
+ "parse_fail": 131,
+ "gold_writes": 74,
+ "pred_writes": 0,
+ "wrong_facts": 0,
+ "gold_write_turns": 54,
+ "turn_exact": 0,
+ "held_back_facts": 0,
+ "ask_turns": 17,
+ "ask_ok": 0,
+ "we_turns": 4,
+ "we_asked": 0,
+ "threshold": 0.995,
+ "recall_exact": 0.0,
+ "ask_acc": 0.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {}
+}
+SRC=o0a2
+{
+ "turns": 263,
+ "parse_fail": 263,
+ "gold_writes": 238,
+ "pred_writes": 0,
+ "wrong_facts": 0,
+ "gold_write_turns": 186,
+ "turn_exact": 0,
+ "held_back_facts": 0,
+ "we_turns": 8,
+ "we_asked": 0,
+ "threshold": 0.995,
+ "recall_exact": 0.0,
+ "ask_acc": 0.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {}
+}
+SRC=opus301_dev
+{
+ "turns": 137,
+ "parse_fail": 137,
+ "gold_writes": 97,
+ "pred_writes": 0,
+ "wrong_facts": 0,
+ "gold_write_turns": 80,
+ "turn_exact": 0,
+ "held_back_facts": 0,
+ "ask_turns": 5,
+ "ask_ok": 0,
+ "we_turns": 1,
+ "we_asked": 0,
+ "threshold": 0.995,
+ "recall_exact": 0.0,
+ "ask_acc": 0.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {}
+}
+SRC=chat318_dev
+{
+ "turns": 222,
+ "parse_fail": 222,
+ "gold_writes": 210,
+ "pred_writes": 0,
+ "wrong_facts": 0,
+ "gold_write_turns": 109,
+ "turn_exact": 0,
+ "held_back_facts": 0,
+ "ask_turns": 45,
+ "ask_ok": 0,
+ "we_turns": 3,
+ "we_asked": 0,
+ "threshold": 0.995,
+ "recall_exact": 0.0,
+ "ask_acc": 0.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {}
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import json; gold=[json.loads(l) for l in open('C:/Users/benja/lis318/work/data/dev.jsonl',encoding='utf-8')]; pred={json.loads(l)['id']:l for l in open('C:/Users/benja/lis318/work/dev_pred.jsonl',encoding='utf-8')}; fh={}; ph={}; [fh.__setitem__(s,open('C:/Users/benja/lis318/work/persrc/gold_'+s+'.jsonl','w',encoding='utf-8')) for s in set(r['src'] for r in gold)]; [ph.__setitem__(s,open('C:/Users/benja/lis318/work/persrc/pred_'+s+'.jsonl','w',encoding='utf-8')) for s in set(r['src'] for r in gold)]; n=0; [0 for r in gold for _ in [fh[r['src']].write(json.dumps(r)+chr(10)), ph[r['src']].write(pred[r['id']].rstrip()+chr(10))]]; print('wrote', len(gold))\\\" && wc -l /c/Users/benja/lis318/work/persrc/pred_*.jsonl\""
+wrote 1181
+   222 /c/Users/benja/lis318/work/persrc/pred_chat318_dev.jsonl
+   263 /c/Users/benja/lis318/work/persrc/pred_o0a2.jsonl
+   428 /c/Users/benja/lis318/work/persrc/pred_o0b_l2.jsonl
+   131 /c/Users/benja/lis318/work/persrc/pred_opus_dev.jsonl
+   137 /c/Users/benja/lis318/work/persrc/pred_opus301_dev.jsonl
+  1181 total
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && for s in o0b_l2 opus_dev o0a2 opus301_dev chat318_dev; do echo SRC=\$s; /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/persrc/gold_\$s.jsonl --pred /c/Users/benja/lis318/work/persrc/pred_\$s.jsonl --threshold 0.995; done\""
+SRC=o0b_l2
+{
+ "turns": 428,
+ "gold_writes": 352,
+ "pred_writes": 231,
+ "wrong_facts": 0,
+ "ask_turns": 59,
+ "ask_ok": 59,
+ "hits": 231,
+ "gold_write_turns": 242,
+ "turn_exact": 162,
+ "held_back_facts": 121,
+ "threshold": 0.995,
+ "recall_exact": 0.65625,
+ "ask_acc": 1.0,
+ "we_ask_rate": 0.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1495.1999999999998,
+ "ms_p90": 2093.1,
+ "ms_max": 3251.6
+}
+SRC=opus_dev
+{
+ "turns": 131,
+ "gold_writes": 74,
+ "pred_writes": 41,
+ "wrong_facts": 0,
+ "hits": 41,
+ "gold_write_turns": 54,
+ "turn_exact": 31,
+ "held_back_facts": 31,
+ "ask_turns": 17,
+ "ask_ok": 15,
+ "we_turns": 4,
+ "we_asked": 4,
+ "threshold": 0.995,
+ "recall_exact": 0.5540540540540541,
+ "ask_acc": 0.8823529411764706,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1464.6,
+ "ms_p90": 2226.8,
+ "ms_max": 3667.3
+}
+SRC=o0a2
+{
+ "turns": 263,
+ "gold_writes": 238,
+ "pred_writes": 147,
+ "hits": 146,
+ "wrong_facts": 1,
+ "gold_write_turns": 186,
+ "turn_exact": 112,
+ "held_back_facts": 89,
+ "we_turns": 8,
+ "we_asked": 8,
+ "wrong_turns": 1,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.6134453781512605,
+ "ask_acc": 0.0,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 1
+ },
+ "ms_median": 1551.3,
+ "ms_p90": 2382.1,
+ "ms_max": 3565.4
+}
+SRC=opus301_dev
+{
+ "turns": 137,
+ "gold_writes": 97,
+ "pred_writes": 66,
+ "wrong_facts": 0,
+ "hits": 66,
+ "gold_write_turns": 80,
+ "turn_exact": 54,
+ "held_back_facts": 30,
+ "ask_turns": 5,
+ "ask_ok": 5,
+ "we_turns": 1,
+ "we_asked": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.6804123711340206,
+ "ask_acc": 1.0,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1508.7,
+ "ms_p90": 2187.0,
+ "ms_max": 3524.3
+}
+SRC=chat318_dev
+{
+ "turns": 222,
+ "gold_writes": 210,
+ "pred_writes": 69,
+ "hits": 69,
+ "wrong_facts": 0,
+ "gold_write_turns": 109,
+ "turn_exact": 44,
+ "held_back_facts": 139,
+ "ask_turns": 45,
+ "ask_ok": 39,
+ "we_turns": 3,
+ "we_asked": 3,
+ "threshold": 0.995,
+ "recall_exact": 0.32857142857142857,
+ "ask_acc": 0.8666666666666667,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {},
+ "ms_median": 1481.25,
+ "ms_p90": 2778.3,
+ "ms_max": 4564.8
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/data/dev.jsonl --pred /c/Users/benja/lis318/work/dev_pred.jsonl --sweep > /c/Users/benja/lis318/work/dev_sweep.txt 2>&1; cat /c/Users/benja/lis318/work/dev_sweep.txt; echo THRESH; /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/data/dev.jsonl --pred /c/Users/benja/lis318/work/dev_pred.jsonl --threshold 0.995\""
+t=0.000 wrong_turns=18 recall=927/971 ask=118/126 we=16/16
+t=0.300 wrong_turns=16 recall=927/971 ask=118/126 we=16/16
+t=0.500 wrong_turns=16 recall=923/971 ask=118/126 we=16/16
+t=0.600 wrong_turns=15 recall=906/971 ask=118/126 we=16/16
+t=0.700 wrong_turns=13 recall=887/971 ask=118/126 we=16/16
+t=0.800 wrong_turns=11 recall=873/971 ask=118/126 we=16/16
+t=0.850 wrong_turns=11 recall=857/971 ask=118/126 we=16/16
+t=0.900 wrong_turns=7 recall=828/971 ask=118/126 we=16/16
+t=0.930 wrong_turns=6 recall=800/971 ask=118/126 we=16/16
+t=0.950 wrong_turns=5 recall=769/971 ask=118/126 we=16/16
+t=0.970 wrong_turns=4 recall=723/971 ask=118/126 we=16/16
+t=0.980 wrong_turns=3 recall=682/971 ask=118/126 we=16/16
+t=0.990 wrong_turns=2 recall=618/971 ask=118/126 we=16/16
+t=0.995 wrong_turns=1 recall=553/971 ask=118/126 we=16/16
+THRESH
+{
+ "turns": 1181,
+ "gold_writes": 971,
+ "pred_writes": 554,
+ "wrong_facts": 1,
+ "ask_turns": 126,
+ "ask_ok": 118,
+ "hits": 553,
+ "gold_write_turns": 671,
+ "turn_exact": 403,
+ "held_back_facts": 410,
+ "we_turns": 16,
+ "we_asked": 16,
+ "wrong_turns": 1,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.5695159629248198,
+ "ask_acc": 0.9365079365079365,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 1
+ },
+ "ms_median": 1498.4,
+ "ms_p90": 2332.6,
+ "ms_max": 4564.8
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && wc -l artifacts/claude-lis301-20260923/dev/dev_rows.jsonl && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows artifacts/claude-lis301-20260923/dev/dev_rows.jsonl --out /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl > /c/Users/benja/lis318/work/dev_read301.log 2>&1 < /dev/null & echo G1_PID=\$!; disown; echo ARM-A; /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred artifacts/claude-lis301-20260923/dev/dev_pred.jsonl --threshold 0.995\""
+G1_PID=409
+ARM-A
+959 artifacts/claude-lis301-20260923/dev/dev_rows.jsonl
+C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe: can't open file 'C:\\Users\\benja\\scripts\\claude_lis300_score.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred artifacts/claude-lis301-20260923/dev/dev_pred.jsonl --threshold 0.995\""
+{
+ "turns": 959,
+ "gold_writes": 761,
+ "pred_writes": 464,
+ "wrong_facts": 2,
+ "ask_turns": 81,
+ "ask_ok": 77,
+ "hits": 462,
+ "gold_write_turns": 562,
+ "turn_exact": 347,
+ "held_back_facts": 294,
+ "we_turns": 13,
+ "we_asked": 13,
+ "wrong_turns": 2,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.607095926412615,
+ "ask_acc": 0.9506172839506173,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 2
+ },
+ "ms_median": 1482.1,
+ "ms_p90": 2213.7,
+ "ms_max": 3684.1
+}
+[0m
+[0m$ [0msleep 540; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl 2>&1; date -u\""
+wc: /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl: No such file or directory
+Fri, Sep 25, 2026  8:25:50 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cat /c/Users/benja/lis318/work/dev_read301.log 2>&1; date -u\""
+Fri, Sep 25, 2026  8:25:56 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; ls -la /c/Users/benja/lis318/work/; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader\""
+Fri, Sep 25, 2026  8:26:09 AM
+total 629
+drwxr-xr-x 1 benja 197121      0 Sep 25 04:16 .
+drwxr-xr-x 1 benja 197121      0 Sep 25 02:52 ..
+drwxr-xr-x 1 benja 197121      0 Sep 25 02:52 data
+-rw-r--r-- 1 benja 197121 462895 Sep 25 04:14 dev_pred.jsonl
+-rw-r--r-- 1 benja 197121    496 Sep 25 04:14 dev_read.log
+-rw-r--r-- 1 benja 197121      0 Sep 25 04:16 dev_read301.log
+-rw-r--r-- 1 benja 197121 130395 Sep 25 03:41 dev_rows.jsonl
+-rw-r--r-- 1 benja 197121    833 Sep 25 04:16 dev_sweep.txt
+drwxr-xr-x 1 benja 197121      0 Sep 25 04:16 persrc
+drwxr-xr-x 1 benja 197121      0 Sep 25 03:34 run
+-rw-r--r-- 1 benja 197121  32672 Sep 25 03:34 train.log
+0 %, 528 MiB
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows artifacts/claude-lis301-20260923/dev/dev_rows.jsonl --out /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl > /c/Users/benja/lis318/work/dev_read301.log 2>&1 < /dev/null & disown; echo LAUNCHED; sleep 100; tail -c 400 /c/Users/benja/lis318/work/dev_read301.log; echo; wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl 2>&1\""
+LAUNCHED
+hts:  26%|██▌       | 57/219 [00:00<00:00, 562.95it/s]Loading weights:  52%|█████▏    | 114/219 [00:00<00:00, 423.23it/s]Loading weights:  73%|███████▎  | 159/219 [00:00<00:00, 349.50it/s]Loading weights:  89%|████████▉ | 196/219 [00:00<00:00, 336.02it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 369.00it/s]
+
+23 /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0msleep 500; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl; date -u\""
+434 /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl
+Fri, Sep 25, 2026  8:38:45 AM
+[0m
+[0m$ [0msleep 500; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl; date -u\""
+747 /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl
+Fri, Sep 25, 2026  8:47:08 AM
+[0m
+[0m$ [0msleep 330; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl; tail -2 /c/Users/benja/lis318/work/dev_read301.log; date -u\""
+929 /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 57/219 [00:00<00:00, 562.95it/s]Loading weights:  52%|█████▏    | 114/219 [00:00<00:00, 423.23it/s]Loading weights:  73%|███████▎  | 159/219 [00:00<00:00, 349.50it/s]Loading weights:  89%|████████▉ | 196/219 [00:00<00:00, 336.02it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 369.00it/s]
+Fri, Sep 25, 2026  8:52:41 AM
+[0m
+[0m$ [0msleep 180; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl; cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold artifacts/claude-lis301-20260923/dev/dev.jsonl --pred /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl --threshold 0.995\""
+959 /c/Users/benja/lis318/work/dev_pred_lis301rows.jsonl
+{
+ "turns": 959,
+ "gold_writes": 761,
+ "pred_writes": 485,
+ "wrong_facts": 1,
+ "ask_turns": 81,
+ "ask_ok": 79,
+ "hits": 484,
+ "gold_write_turns": 562,
+ "turn_exact": 359,
+ "held_back_facts": 271,
+ "we_turns": 13,
+ "we_asked": 13,
+ "wrong_turns": 1,
+ "wrong_turns_on_nosave_turns": 1,
+ "threshold": 0.995,
+ "recall_exact": 0.6360052562417872,
+ "ask_acc": 0.9753086419753086,
+ "we_ask_rate": 1.0,
+ "wrong_turns_by_family": {
+  "o0a2": 1
+ },
+ "ms_median": 1507.1,
+ "ms_p90": 2296.6,
+ "ms_max": 3874.8
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/data/dev.jsonl --pred /c/Users/benja/lis318/work/dev_pred.jsonl --threshold 0.995 > /c/Users/benja/lis318/work/dev_T.json 2>&1 && for s in o0b_l2 opus_dev o0a2 opus301_dev chat318_dev; do /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_score.py --gold /c/Users/benja/lis318/work/persrc/gold_\$s.jsonl --pred /c/Users/benja/lis318/work/persrc/pred_\$s.jsonl --threshold 0.995 > /c/Users/benja/lis318/work/persrc/score_T_\$s.json 2>&1; done; wc -l artifacts/claude-lis317-20260925/rows_e2edev.jsonl; echo DONE\""
+194 artifacts/claude-lis317-20260925/rows_e2edev.jsonl
+DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/work && { echo 'lis-318 threshold: T = 0.995 (no sweep grid value reached 0 wrong-save dev turns; min 1 at t=0.995, sealed rule fallback)'; echo; echo '--- dev sweep (whole dev set, 1181 turns, 971 gold writes) ---'; cat dev_sweep.txt; echo; echo '--- whole dev at T=0.995 ---'; cat dev_T.json; echo; for s in o0b_l2 opus_dev o0a2 opus301_dev chat318_dev; do echo; echo --- persrc \$s at T=0.995 ---; cat persrc/score_T_\$s.json; done; } > THRESHOLD.txt; wc -l THRESHOLD.txt; head -4 THRESHOLD.txt\""
+166 THRESHOLD.txt
+lis-318 threshold: T = 0.995 (no sweep grid value reached 0 wrong-save dev turns; min 1 at t=0.995, sealed rule fallback)
+
+--- dev sweep (whole dev set, 1181 turns, 971 gold writes) ---
+t=0.000 wrong_turns=18 recall=927/971 ask=118/126 we=16/16
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[✓] Step 4: DEV + THRESHOLD + G1
+[•] Step 5: SEAL before panel
+[ ] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/work && sha256sum THRESHOLD.txt run/merged/model.safetensors > /c/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/SEAL-run.sha256.txt && cat /c/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/SEAL-run.sha256.txt && date -u\""
+cc3b74ecc3add0b09ebe52f02b751835c6d61b867aaf71676037364bb96abd57 *THRESHOLD.txt
+8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d *run/merged/model.safetensors
+Fri, Sep 25, 2026  8:56:16 AM
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[✓] Step 4: DEV + THRESHOLD + G1
+[✓] Step 5: SEAL before panel
+[•] Step 6: PANEL once per arm + e2edev
+[ ] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis301/work/run/merged --rows artifacts/claude-readpanel318-20260925/panel.jsonl --out /c/Users/benja/lis318/work/panel_A.jsonl > /c/Users/benja/lis318/work/panel_A.log 2>&1 < /dev/null & disown; echo LAUNCHED-A; sleep 100; wc -l /c/Users/benja/lis318/work/panel_A.jsonl 2>&1\""
+LAUNCHED-A
+22 /c/Users/benja/lis318/work/panel_A.jsonl
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0msleep 420; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/panel_A.jsonl; tail -2 /c/Users/benja/lis318/work/panel_A.log; date -u\""
+240 /c/Users/benja/lis318/work/panel_A.jsonl
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  21%|██▏       | 47/219 [00:00<00:00, 458.27it/s]Loading weights:  42%|████▏     | 93/219 [00:00<00:00, 264.33it/s]Loading weights:  58%|█████▊    | 128/219 [00:00<00:00, 291.14it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 272.72it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 365.84it/s]
+read 240 rows on cuda
+Fri, Sep 25, 2026  9:07:26 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows artifacts/claude-readpanel318-20260925/panel.jsonl --out /c/Users/benja/lis318/work/panel_B.jsonl > /c/Users/benja/lis318/work/panel_B.log 2>&1 < /dev/null & disown; echo LAUNCHED-B; sleep 100; wc -l /c/Users/benja/lis318/work/panel_B.jsonl 2>&1\""
+LAUNCHED-B
+24 /c/Users/benja/lis318/work/panel_B.jsonl
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0msleep 420; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/work/panel_B.jsonl; tail -1 /c/Users/benja/lis318/work/panel_B.log; date -u\""
+240 /c/Users/benja/lis318/work/panel_B.jsonl
+read 240 rows on cuda
+Fri, Sep 25, 2026  9:18:33 AM
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis318_score.py --panel artifacts/claude-readpanel318-20260925/panel.jsonl --reads /c/Users/benja/lis318/work/panel_A.jsonl --threshold 0.995 --out artifacts/claude-lis318-20260925/score_A.json && echo SCORE-A-OK && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis318_score.py --panel artifacts/claude-readpanel318-20260925/panel.jsonl --reads /c/Users/benja/lis318/work/panel_B.jsonl --threshold 0.995 --out artifacts/claude-lis318-20260925/score_B.json && echo SCORE-B-OK && cat artifacts/claude-lis318-20260925/score_A.json && cat artifacts/claude-lis318-20260925/score_B.json\""
+{
+ "rows": 240,
+ "gold": 255,
+ "R0": 239,
+ "saved_right": 111,
+ "held_right": 128,
+ "saved_wrong": 0,
+ "wrong_turns": 0,
+ "threshold": 0.995,
+ "ms_median": 1497.9,
+ "per_kind": {
+  "correct:R0": 20,
+  "correct:gold": 21,
+  "short_answer:R0": 14,
+  "short_answer:gold": 15,
+  "short_answer:saved_right": 3,
+  "teach_multi:R0": 142,
+  "teach_multi:gold": 147,
+  "teach_multi:saved_right": 84,
+  "teach_passing:R0": 23,
+  "teach_passing:gold": 32,
+  "teach_passing:saved_right": 1,
+  "teach_single:R0": 40,
+  "teach_single:gold": 40,
+  "teach_single:saved_right": 23
+ }
+}
+SCORE-A-OK
+{
+ "rows": 240,
+ "gold": 255,
+ "R0": 237,
+ "saved_right": 132,
+ "held_right": 105,
+ "saved_wrong": 0,
+ "wrong_turns": 0,
+ "threshold": 0.995,
+ "ms_median": 1545.6,
+ "per_kind": {
+  "correct:R0": 21,
+  "correct:gold": 21,
+  "correct:saved_right": 3,
+  "short_answer:R0": 14,
+  "short_answer:gold": 15,
+  "short_answer:saved_right": 3,
+  "teach_multi:R0": 140,
+  "teach_multi:gold": 147,
+  "teach_multi:saved_right": 90,
+  "teach_passing:R0": 24,
+  "teach_passing:gold": 32,
+  "teach_passing:saved_right": 12,
+  "teach_single:R0": 38,
+  "teach_single:gold": 40,
+  "teach_single:saved_right": 24
+ }
+}
+SCORE-B-OK
+{
+ "rows": 240,
+ "gold": 255,
+ "R0": 239,
+ "saved_right": 111,
+ "held_right": 128,
+ "saved_wrong": 0,
+ "wrong_turns": 0,
+ "threshold": 0.995,
+ "ms_median": 1497.9,
+ "per_kind": {
+  "correct:R0": 20,
+  "correct:gold": 21,
+  "short_answer:R0": 14,
+  "short_answer:gold": 15,
+  "short_answer:saved_right": 3,
+  "teach_multi:R0": 142,
+  "teach_multi:gold": 147,
+  "teach_multi:saved_right": 84,
+  "teach_passing:R0": 23,
+  "teach_passing:gold": 32,
+  "teach_passing:saved_right": 1,
+  "teach_single:R0": 40,
+  "teach_single:gold": 40,
+  "teach_single:saved_right": 23
+ }
+}
+{
+ "rows": 240,
+ "gold": 255,
+ "R0": 237,
+ "saved_right": 132,
+ "held_right": 105,
+ "saved_wrong": 0,
+ "wrong_turns": 0,
+ "threshold": 0.995,
+ "ms_median": 1545.6,
+ "per_kind": {
+  "correct:R0": 21,
+  "correct:gold": 21,
+  "correct:saved_right": 3,
+  "short_answer:R0": 14,
+  "short_answer:gold": 15,
+  "short_answer:saved_right": 3,
+  "teach_multi:R0": 140,
+  "teach_multi:gold": 147,
+  "teach_multi:saved_right": 90,
+  "teach_passing:R0": 24,
+  "teach_passing:gold": 32,
+  "teach_passing:saved_right": 12,
+  "teach_single:R0": 38,
+  "teach_single:gold": 40,
+  "teach_single:saved_right": 24
+ }
+}
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis318_score.py | grep -E "nofact|parse_fail|ms_median|out\.|json\.dump|print" | head -20
+"""lis-318 panel scorer (counts only; never prints panel text).
+  nofact_rows_with_save        nosave + smalltalk rows (75) with any saved fact
+  parse_fail, ms median
+            c["parse_fail"] += 1
+            c["nofact_rows_with_save"] += 1
+    out["ms_median"] = round(statistics.median(ms), 1) if ms else None
+    print(json.dumps(res, indent=1))
+        Path(a.out).write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis318_score.py | sed -n '40,120p'
+c, per_kind, ms = Counter(), Counter(), []
+    for row in panel:
+        r = rd.get(row["id"])
+        c["rows"] += 1
+        if r is None:
+            c["missing"] += 1
+            continue
+        if "ms" in r:
+            ms.append(r["ms"])
+        fr = r.get("frame")
+        if fr is None:
+            c["parse_fail"] += 1
+            fr = {}
+        facts = [f for f in (fr.get("facts") or []) if isinstance(f, dict)]
+        confs = r.get("conf") or []
+        gold = row["facts"]
+        saved = [f for i, f in enumerate(facts)
+                 if CMP.check_fact(f, row["turn"], row.get("prev_reply", "")) is None
+                 and (confs[i] if i < len(confs) else 0.0) >= T]
+        for g in gold:
+            c["gold"] += 1
+            per_kind[row.get("kind", "all") + ":gold"] += 1
+            if any(e2e_match(f, g) and str(f.get("mode", "")).upper() in WRITABLE for f in facts):
+                c["R0"] += 1
+                per_kind[row.get("kind", "all") + ":R0"] += 1
+                if any(e2e_match(f, g) for f in saved):
+                    c["saved_right"] += 1
+                    per_kind[row.get("kind", "all") + ":saved_right"] += 1
+                else:
+                    c["held_right"] += 1
+        wrong = [f for f in saved if not any(e2e_match(f, g) for g in gold)]
+        c["saved_wrong"] += len(wrong)
+        c["wrong_turns"] += bool(wrong)
+        if wrong:
+            per_kind[row.get("kind", "all") + ":wrong_turns"] += 1
+        if not gold and saved:
+            c["nofact_rows_with_save"] += 1
+    out = dict(c)
+    out["threshold"] = T
+    out["ms_median"] = round(statistics.median(ms), 1) if ms else None
+    out["per_kind"] = dict(sorted(per_kind.items()))
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--panel", required=True)
+    ap.add_argument("--reads", required=True)
+    ap.add_argument("--threshold", type=float, required=True)
+    ap.add_argument("--out")
+    a = ap.parse_args()
+    res = score(load(a.panel), load(a.reads), a.threshold)
+    print(json.dumps(res, indent=1))
+    if a.out:
+        Path(a.out).write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && nohup /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis300_read.py --model /c/Users/benja/lis318/work/run/merged --rows artifacts/claude-lis317-20260925/rows_e2edev.jsonl --out artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl > /c/Users/benja/lis318/work/e2e.log 2>&1 < /dev/null & disown; echo LAUNCHED-E2E; sleep 90; wc -l artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl 2>&1\""
+LAUNCHED-E2E
+wc: artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl: No such file or directory
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 240000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"tail -c 300 /c/Users/benja/lis318/work/e2e.log; echo; ls -la /c/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/; date -u\""
+��▋       | 59/219 [00:00<00:00, 556.43it/s]Loading weights:  53%|█████▎    | 115/219 [00:00<00:00, 437.81it/s]Loading weights:  74%|███████▎  | 161/219 [00:00<00:00, 319.86it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 409.56it/s]
+
+total 342
+drwxr-xr-x 1 benja 197121     0 Sep 25 05:19 .
+drwxr-xr-x 1 benja 197121     0 Sep 25 02:47 ..
+drwxr-xr-x 1 benja 197121     0 Sep 25 02:45 data
+-rw-r--r-- 1 benja 197121  3312 Sep 25 02:45 PASSMARKS.md
+-rw-r--r-- 1 benja 197121 40290 Sep 25 05:23 reads_e2edev_B.jsonl
+-rw-r--r-- 1 benja 197121   596 Sep 25 05:18 score_A.json
+-rw-r--r-- 1 benja 197121   626 Sep 25 05:18 score_B.json
+-rw-r--r-- 1 benja 197121   175 Sep 25 04:56 SEAL-run.sha256.txt
+Fri, Sep 25, 2026  9:23:31 AM
+[0m
+[0m$ [0msleep 300; ssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"wc -l /c/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl; tail -1 /c/Users/benja/lis318/work/e2e.log; date -u\""
+194 /c/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl
+read 194 rows on cuda
+Fri, Sep 25, 2026  9:28:35 AM
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[✓] Step 4: DEV + THRESHOLD + G1
+[✓] Step 5: SEAL before panel
+[✓] Step 6: PANEL once per arm + e2edev
+[•] Step 7: KEEP MODEL copies + sha256
+[ ] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m$ [0mmkdir -p ~/premonition-models/lis318-merged && scp -r benspc:C:/Users/benja/lis318/work/run/merged/model.safetensors ~/premonition-models/lis318-merged/model.safetensors && ls -la ~/premonition-models/lis318-merged/
+total 4227320
+drwxr-xr-x   3 ben-hannan  staff          96 Sep 25 05:28 .
+drwxr-xr-x  14 ben-hannan  staff         448 Sep 25 05:28 ..
+-rw-------   1 ben-hannan  staff  2161290944 Sep 25 05:30 model.safetensors
+[0m
+[0m$ [0mscp benspc:C:/Users/benja/lis318/work/run/merged/config.json ~/premonition-models/lis318-merged/config.json && scp benspc:C:/Users/benja/lis318/work/run/merged/tokenizer.json ~/premonition-models/lis318-merged/tokenizer.json && scp benspc:C:/Users/benja/lis318/work/run/merged/tokenizer_config.json ~/premonition-models/lis318-merged/tokenizer_config.json && scp benspc:C:/Users/benja/lis318/work/run/merged/generation_config.json ~/premonition-models/lis318-merged/generation_config.json && scp benspc:C:/Users/benja/lis318/work/run/merged/chat_template.jinja ~/premonition-models/lis318-merged/chat_template.jinja && ls -la ~/premonition-models/lis318-merged/
+total 4246696
+drwxr-xr-x   8 ben-hannan  staff         256 Sep 25 05:30 .
+drwxr-xr-x  14 ben-hannan  staff         448 Sep 25 05:28 ..
+-rw-------   1 ben-hannan  staff        9241 Sep 25 05:30 chat_template.jinja
+-rw-------   1 ben-hannan  staff         784 Sep 25 05:30 config.json
+-rw-------   1 ben-hannan  staff         227 Sep 25 05:30 generation_config.json
+-rw-------   1 ben-hannan  staff  2161290944 Sep 25 05:30 model.safetensors
+-rw-------   1 ben-hannan  staff         477 Sep 25 05:30 tokenizer_config.json
+-rw-------   1 ben-hannan  staff     9894271 Sep 25 05:30 tokenizer.json
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"sha256sum /c/Users/benja/lis318/work/run/merged/model.safetensors; ls /c/Users/benja/lis318/work/run/merged/\""
+8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d */c/Users/benja/lis318/work/run/merged/model.safetensors
+chat_template.jinja
+config.json
+generation_config.json
+model.safetensors
+tokenizer.json
+tokenizer_config.json
+[0m
+[0m$ [0mshasum -a 256 ~/premonition-models/lis318-merged/model.safetensors
+8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d  /Users/ben-hannan/premonition-models/lis318-merged/model.safetensors
+[0m
+[0m$ [0mmkdir -p /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev && ls /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/
+dev
+[0m
+[0m$ [0mscp benspc:C:/Users/benja/lis318/work/THRESHOLD.txt /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/THRESHOLD.txt && scp benspc:C:/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/SEAL-run.sha256.txt /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/SEAL-run.sha256.txt && scp benspc:C:/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/score_A.json /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/score_A.json && scp benspc:C:/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/score_B.json /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/score_B.json && echo SMALL_OK
+SMALL_OK
+[0m
+[0m$ [0mscp benspc:C:/Users/benja/lis318/tree/artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl && scp benspc:C:/Users/benja/lis318/work/run/summary.json /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/train_summary.json && scp benspc:C:/Users/benja/lis318/work/data/dev.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev/dev.jsonl && scp benspc:C:/Users/benja/lis318/work/dev_rows.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev/dev_rows.jsonl && scp benspc:C:/Users/benja/lis318/work/dev_pred.jsonl /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev/dev_pred.jsonl && echo BIG_OK && ls -la /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev/
+BIG_OK
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/:
+total 168
+drwxr-xr-x    9 ben-hannan  staff    288 Sep 25 05:31 .
+drwxr-xr-x@ 497 ben-hannan  staff  15904 Sep 25 05:31 ..
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 25 05:31 dev
+-rw-------    1 ben-hannan  staff  63376 Sep 25 05:31 reads_e2edev_B.jsonl
+-rw-------    1 ben-hannan  staff    596 Sep 25 05:31 score_A.json
+-rw-------    1 ben-hannan  staff    626 Sep 25 05:31 score_B.json
+-rw-------    1 ben-hannan  staff    175 Sep 25 05:31 SEAL-run.sha256.txt
+-rw-------    1 ben-hannan  staff   3962 Sep 25 05:31 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff    576 Sep 25 05:31 train_summary.json
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-lis318-20260925/dev/:
+total 2768
+drwxr-xr-x  5 ben-hannan  staff     160 Sep 25 05:31 .
+drwxr-xr-x  9 ben-hannan  staff     288 Sep 25 05:31 ..
+-rw-------  1 ben-hannan  staff  462895 Sep 25 05:31 dev_pred.jsonl
+-rw-------  1 ben-hannan  staff  130395 Sep 25 05:31 dev_rows.jsonl
+-rw-------  1 ben-hannan  staff  816584 Sep 25 05:31 dev.jsonl
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-lis317-20260925/RESULTS.md | head -60
+# lis-317 results (REPORT ONLY, DEV data): the reader misreads chat; a sampling gate does not help
+
+Thread "Fix: reading facts from chat", verified 02:09 UTC 2026-09-25 from the builder's files (RESULTS-rent.md,
+reads_*.jsonl on builder-outbox; one rental, $0.68). Recounted on CPU with scripts/claude_lis317_score.py and
+scripts/claude_lis317_gates.py; the scorer line matches the builder's score_e2edev.txt.
+
+## Verdict
+- Before any gate the lis-301 reader finds 89 of 131 DEV chat facts (68%), with owner and value right and a saving mode.
+  PLAN rule band 60-80%: "both; the gate first".
+- The gate-first half is answered already: the agreement gate (same fact in >= a of 8 samples) fails the selection rule
+  fixed in PLAN.md. On lis-301 dev no agreement level gets down to the live gate's 2 wrong turns (8/8 still has 5).
+  The reader repeats its mistakes as confidently as its right reads.
+- So the reader itself is the lever: lis-318 = train it on chatty turns (one change).
+
+## Counts
+- DEV, 131 gold facts: 89 found (82 pass the live structural check, 7 blocked as relation not in the table), 42 not found.
+  At the live gate (min token prob >= 0.995): 20 saved, 0 wrong.
+- Writable facts in greedy reads that match no gold fact: 52 across all 194 turns (teach 27, ask 11, correct 6,
+  smalltalk 5, creative 3). Of those that pass the structural check, 21 (20 turns). Some are true but unlabelled
+  (e.g. a tortoise's age); many are real misreads: a smalltalk line read as "your father is monday energy", two
+  corrections saved with the OLD value as ASSERT, a question word read as a value.
+- Not found (42): relation-table gaps (species, breed, interest), "our X" read as owner "we" (Ben's our/we ruling),
+  pronouns pointing to earlier user turns, asides and lists dropped ("kids are Teddy, he's 9, and Vada").
+
+## Gate table (right / wrong facts / wrong turns, per-fact release)
+```
+[lis] gold writable facts 771; structurally writable greedy facts 753
+gate                       right  wrong_facts  wrong_turns
+min >= 0.0                    743           10           10
+min >= 0.9                    702            5            5
+min >= 0.98                   631            2            2
+min >= 0.99                   594            2            2
+min >= 0.995                  535            2            2
+min >= 0.999                  343            1            1
+agree >= 0/8                 743           10           10
+agree >= 1/8                 743           10           10
+agree >= 2/8                 743           10           10
+agree >= 3/8                 743            8            8
+agree >= 4/8                 743            8            8
+agree >= 5/8                 740            8            8
+agree >= 6/8                 738            8            8
+agree >= 7/8                 731            5            5
+agree >= 8/8                 706            5            5
+agree >= 5/8 & min >= 0.9     701            5            5
+agree >= 5/8 & min >= 0.98    630            2            2
+agree >= 6/8 & min >= 0.9     701            5            5
+agree >= 6/8 & min >= 0.98    630            2            2
+agree >= 7/8 & min >= 0.9     699            4            4
+agree >= 7/8 & min >= 0.98    630            2            2
+agree >= 8/8 & min >= 0.9     676            4            4
+agree >= 8/8 & min >= 0.98    619            2            2
+
+[e2e] gold writable facts 131; structurally writable greedy facts 103
+gate                       right  wrong_facts  wrong_turns
+min >= 0.0                     82           21           20
+min >= 0.9                     50            3            3
+min >= 0.98                    32            1            1
+min >= 0.99                    28            1            1
+min >= 0.995                   20            0            0
+min >= 0.999                    8            0            0
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis317_score.py | grep -E "add_argument"; echo ---; git show origin/main:artifacts/claude-lis317-20260925/rows_e2edev.jsonl | head -1 | cut -c1-400
+ap.add_argument("--rows", required=True)
+    ap.add_argument("--reads", required=True)
+    ap.add_argument("--out", default=None)
+---
+{"id": "e2e-dev-01:0", "turn": "hey! first time using one of these so be patient with me lol", "prev_reply": "", "kind": "smalltalk", "ask_type": null, "facts": [], "gold": null}
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis317_score.py | sed -n '1,80p'
+#!/usr/bin/env python3
+"""lis-317 (report only): score the reader's raw reads on the e2e DEV bank, before any gate.
+
+Inputs: rows_e2edev.jsonl (claude_lis317_rows.py) and the GPU output of claude_lis317_sample.py.
+Counts (all integers; DEV data):
+  R0      gold teach/correct facts found in the greedy read with a writable mode (ASSERT/CORRECT),
+          owner + value matching (owner: USER <-> me; else full or first name, any case; value any case).
+  R0rel   the same, also requiring rel == the bank's relation (the bank uses free relation words,
+          so this is a lower bound).
+  R0_check:<reason>  for R0 facts, the live compiler's structural check (ok, rel_not_in_table, pronoun_owner, ...).
+  RT      R0 facts whose lis-300 confidence clears T = 0.995 (the live gate); RT_and_check_ok also pass the check.
+  W0      writable facts in greedy reads that match no gold fact of that turn (every turn, incl.
+          nosave / smalltalk / ask turns): candidate wrong saves with no gate.
+  agree   for every greedy writable fact, how many of the K samples contain the same
+          (owner, value) with a writable mode; recall / wrong counts at each agreement level.
+  ask     for ask turns: greedy act is ASK; ask owner matches a used fact's owner.
+Decision rule (fixed in PLAN.md before the GPU run) is printed at the end.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+from collections import Counter
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_lis300_compiler as CMP  # noqa: E402 (read-only: the live structural checks)
+
+WRITABLE = {"ASSERT", "CORRECT"}
+USER = {"user", "me", "i", "you", "my"}
+T = 0.995
+
+
+def load(p):
+    return [json.loads(x) for x in Path(p).read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def own_ok(gold, got):
+    g, s = str(gold).strip().lower(), str(got).strip().lower()
+    if g == "user":
+        return s in USER
+    return s == g or s == g.split()[0] or g == s.split()[0] if s else False
+
+
+def val_ok(gold, got):
+    return str(gold).strip().lower() == str(got).strip().lower()
+
+
+def writable(fr):
+    return [f for f in ((fr or {}).get("facts") or []) if str(f.get("mode", "ASSERT")).upper() in WRITABLE]
+
+
+def matches(gf, f):
+    return own_ok(gf["owner"], f.get("owner", "")) and val_ok(gf["value"], f.get("value", ""))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--rows", required=True)
+    ap.add_argument("--reads", required=True)
+    ap.add_argument("--out", default=None)
+    a = ap.parse_args()
+    rows = {r["id"]: r for r in load(a.rows)}
+    reads = {r["id"]: r for r in load(a.reads)}
+    c = Counter()
+    agree_right, agree_wrong = Counter(), Counter()
+    k_max = 0
+    for rid, row in rows.items():
+        rd = reads.get(rid)
+        if rd is None:
+            c["missing_read"] += 1
+            continue
+        fr = rd["frame"]
+        if fr is None:
+            c["unparsed"] += 1
+        wf = writable(fr)
+        allf = (fr or {}).get("facts") or []
+        confs = rd.get("conf") or []
+        samples = rd.get("samples") or []
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"cd /c/Users/benja/lis318/tree && export PYTHONUTF8=1 && /c/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_lis317_score.py --rows artifacts/claude-lis317-20260925/rows_e2edev.jsonl --reads artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl 2>&1 | head -40\""
+R0: 88
+R0_check:ok: 85
+R0_check:rel_not_in_table: 2
+R0_check:value_not_span: 1
+R0rel: 52
+RT: 33
+RT_and_check_ok: 32
+W0: 18
+W0_kind:ask: 1
+W0_kind:correct: 3
+W0_kind:teach: 14
+W_total: 108
+ask_act_ASK: 60
+ask_turns: 71
+gold: 131
+not_found: 43
+agreement (K=0): level -> right writable facts kept / wrong writable facts kept
+  >= 0/0: right 90, wrong 18
+R0 = 88/131 = 67.2%   RT = 33/131   W0 = 18
+DECISION (PLAN.md rule): 60-80% -> both; the gate first (no training).
+[0m
+[0m$ [0mdate -u; date
+Fri Sep 25 09:32:12 UTC 2026
+Fri Sep 25 05:32:12 EDT 2026
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "\"C:\\Program Files\\Git\\bin\\bash.exe\" -lc \"date -u; date\""
+Fri, Sep 25, 2026  9:32:13 AM
+Fri, Sep 25, 2026  5:32:13 AM
+[0m
+[0m$ [0mtail -8 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+- P353.0 (2026-09-25, builder rsn-353 loop-no-step-embedding; 3 rentals created + 1 refused; est spend ~$1.00 of $4 cap) NO RESULT: seed1 trained 37.0 min then instance died mid-seed2 and host would not restart; seed1/seed2 checkpoints and logs lost with the instance; 4th rental refused (account credit 0, balance -$0.04). Observed-before-loss (unsealed, seed1): last copy action_ce 0.1327 at step 5999 (L1 bar <= 0.05). No evals run, no L1-L4 lines appended, nothing pushed.
+- P353-GUARD OUTCOME (2026-09-25, spending guard rsn-353-train) GUARD-OK: exit file runs/rsn-353-train/rsn-353-train.exit present on origin/builder-outbox and no live rsn-353* instance for 5+ min; tracked {"total": 1.0323, "n": 3, "det": {"52515551": {"dph": 0.5388888888888889, "mins": 6.32, "dollars": 0.0568, "live": false, "label": "rsn-353"}, "52516357": {"dph": 0.5388888888888889, "mins": 6.29, "dollars": 0.0565, "live": false, "label": "rsn-353"}, "52517332": {"dph": 0.5266666666666666, "mins": 104.71, "dollars": 0.9191, "live": false, "label": "rsn-353"}}} combined spend $1.0323 (trip $3.80 never reached); nothing destroyed by guard.
+- blurt2-loop GPU OUTCOME (2026-09-25, creative learning loop, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 44 vs 39); test 127 (23 dropped); S0 6; W 13/11 (mean 12.0); C 5/6 (mean 5.5); wins 184/379 (luck 338/11370). L1 +6.0 vs +8 FAIL; L2 +6.5 vs +5 and every W beats every C PASS. Registered verdict FAIL. GPU $0, 27.7 min, no weights saved.
+- rent-lis-318 CREDIT-STOP (2026-09-25, rental agent; task budget $2.00, spent ~$0.23): vast.ai account credit $0.20 at start, balance -$0.04 at 04:12 UTC, autobill $5/threshold $5 never fired in ~55 min of polling (create refused 400 lacks credit); rentals: 52522859 (offer 44173830, create success False, destroyed, 0h $0) + 52522884 (offer 44188475, 1x RTX 5090 32GB, dph $0.5037, ~0.45h ~$0.23: tree.tgz 159MB uploaded + extracted, image torch 2.8.0+cu129 CUDA True, READER rsync --partial broke mid-transfer then instance died stopped, destroyed); tree seals verified from tree root pre-upload (lis300 14/14, lis301 13/13, lis318-data 14/14, readpanel318 4/4 OK); sealed panel readpanel318 never opened/printed/quoted, 0 runs per arm (requeue-safe); month-end code never edited; 0 rent-lis-318 instances live after (confirmed via vastai show instances).
+- T1 OUTCOME (2026-09-25, rsn-356 fresh panel296 v2 total paired vs unpaired, BensPC RTX 5070 Ti --workers 0): s1 paired 231 vs unpaired 235 (-4), bar >= +6: FAIL; s2 paired 231 vs unpaired 227 (+4), bar >= +6: FAIL
+- T2 OUTCOME (2026-09-25, rsn-356 held-out change pairs both-right/600 paired vs unpaired, BensPC): s1 paired 455 vs unpaired 453 (+2), bar >= +30: FAIL; s2 paired 449 vs unpaired 455 (-6), bar >= +30: FAIL (compare twins 0/100 both arms; value/yesno/correction at ceiling)
+- T3 OUTCOME (2026-09-25, rsn-356 invented answers checked, each panel both arms copy+final, BensPC): 296-panel 0 all, 294-panel 0 all (raw invented 5 per 296 checkpoint, all fact-checked to IDK), bar <=2: T3 PASS all
+- T4 OUTCOME (2026-09-25, rsn-356 vs 296 plain per-category + transfer REPORT ONLY, BensPC): fresh paired 231/231 (+6/+14 vs 296 s1 225/s2 217), unpaired 235/227 (+10/+10); transfer paired 257/255 (+19/+17 vs 296 238/238), unpaired 254/254 (+16/+16); counting jumped both arms (fresh 24-25/30 vs 12/30; transfer 29-30/30 vs 12-13/30), comparing flat (16/30, 12/30), three-step 0 everywhere. Registered verdict rsn-356: FAIL (T1+T2 fail both seeds; needed T1+T2+T3). Proved-wrong clause TRIGGERED on both seeds (T2 +2/-6, within ±12). BensPC GPU $0, 59.8/62.7/59.7/62.5 min, seals OK, weights kept on BensPC only.
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[✓] Step 4: DEV + THRESHOLD + G1
+[✓] Step 5: SEAL before panel
+[✓] Step 6: PANEL once per arm + e2edev
+[✓] Step 7: KEEP MODEL copies + sha256
+[•] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
+[0m← [0mWrite artifacts/claude-lis318-20260925/RESULTS-benspc.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md << 'EOF'
+- lis-318 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 4/4 OK): FAIL. Panel readpanel318 once per arm: Q1 B R0 237/255 vs A 239/255 (bar >=217 and >=A+38) FAIL; Q2 B saved_right 132 vs A 111 (bar >=A+40) FAIL; Q3 B wrong_turns 0/240 PASS; Q4 B nofact_rows_with_save 0 PASS; G1 lis-301 dev B 484/761 vs A 462/761 (bar >=A-23) PASS; G2 B median 1545.6ms vs A 1497.9ms (bar <=A+200) PASS. Proved-wrong clause TRIGGERED (237 <= 239+13): chat rows are not the lever. T=0.995 (no zero-wrong grid value; dev 553/971, 1 wrong turn). Train 5642 steps 40.51 min 3866.7 tok/s batch 16, dev loss 0.0453. Merged sha256 8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d kept BensPC + Mac, never in git. GPU $0, wall ~2h50m of 4h cap, no winshim needed, no OOM.
+EOF
+echo LEDGER_OK; git status --short | head -20
+LEDGER_OK
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-lis318-20260925/ artifacts/fable-predictions-ledger.md; echo ---; ls -la artifacts/claude-lis318-20260925/ artifacts/claude-lis318-20260925/dev/
+M artifacts/fable-predictions-ledger.md
+---
+artifacts/claude-lis318-20260925/:
+total 192
+drwxr-xr-x   10 ben-hannan  staff    320 Sep 25 05:33 .
+drwxr-xr-x@ 497 ben-hannan  staff  15904 Sep 25 05:31 ..
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 25 05:31 dev
+-rw-------    1 ben-hannan  staff  63376 Sep 25 05:31 reads_e2edev_B.jsonl
+-rw-r--r--    1 ben-hannan  staff   9193 Sep 25 05:33 RESULTS-benspc.md
+-rw-------    1 ben-hannan  staff    596 Sep 25 05:31 score_A.json
+-rw-------    1 ben-hannan  staff    626 Sep 25 05:31 score_B.json
+-rw-------    1 ben-hannan  staff    175 Sep 25 05:31 SEAL-run.sha256.txt
+-rw-------    1 ben-hannan  staff   3962 Sep 25 05:31 THRESHOLD.txt
+-rw-------    1 ben-hannan  staff    576 Sep 25 05:31 train_summary.json
+
+artifacts/claude-lis318-20260925/dev/:
+total 2768
+drwxr-xr-x   5 ben-hannan  staff     160 Sep 25 05:31 .
+drwxr-xr-x  10 ben-hannan  staff     320 Sep 25 05:33 ..
+-rw-------   1 ben-hannan  staff  462895 Sep 25 05:31 dev_pred.jsonl
+-rw-------   1 ben-hannan  staff  130395 Sep 25 05:31 dev_rows.jsonl
+-rw-------   1 ben-hannan  staff  816584 Sep 25 05:31 dev.jsonl
+[0m
+[0m$ [0mgit status --short | grep -E "lis318|ledger"; echo ---; git check-ignore -v artifacts/claude-lis318-20260925/RESULTS-benspc.md || echo NOT_IGNORED
+M artifacts/fable-predictions-ledger.md
+---
+.gitignore:5:artifacts/	artifacts/claude-lis318-20260925/RESULTS-benspc.md
+[0m
+[0m$ [0mgit show origin/main:.gitignore | head -10; echo ---; git ls-files -- artifacts/claude-lis301-20260923/ | head -5; echo ---; git ls-files -- artifacts/claude-lis318-20260925/ | head -5
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+---
+---
+[0m
+[0m$ [0mshasum -a 256 artifacts/claude-lis318-20260925/THRESHOLD.txt artifacts/claude-lis318-20260925/score_A.json artifacts/claude-lis318-20260925/score_B.json artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl artifacts/claude-lis318-20260925/train_summary.json artifacts/claude-lis318-20260925/dev/dev.jsonl artifacts/claude-lis318-20260925/dev/dev_rows.jsonl artifacts/claude-lis318-20260925/dev/dev_pred.jsonl; cat artifacts/claude-lis318-20260925/SEAL-run.sha256.txt
+cc3b74ecc3add0b09ebe52f02b751835c6d61b867aaf71676037364bb96abd57  artifacts/claude-lis318-20260925/THRESHOLD.txt
+2fd668aabde08c3063c56169a49354cae0508fa0c79958082516c39e239c943a  artifacts/claude-lis318-20260925/score_A.json
+a2d06a2612e7cf3a8afa46a6e1c1c033268ed3594572d00491705404959bb171  artifacts/claude-lis318-20260925/score_B.json
+7475b12f4990dc48ee257f49b6179b5a9498c46054cee62f69d455b5d559a933  artifacts/claude-lis318-20260925/reads_e2edev_B.jsonl
+86befb189a75e8d891904ad956f67065ad780300343c8ab2f9d20168789e692a  artifacts/claude-lis318-20260925/train_summary.json
+0a0210e10f106475a4295d59c2e808a023721840a3bb8e408e0f74c474d2d0ea  artifacts/claude-lis318-20260925/dev/dev.jsonl
+016cd40b63b0404fcef04878509e26187825facd02eb96657a1ab05b1181b933  artifacts/claude-lis318-20260925/dev/dev_rows.jsonl
+d7387e78d0994b7f913d7807688cc668aecfe847aba0669d303d50e543ba25cf  artifacts/claude-lis318-20260925/dev/dev_pred.jsonl
+cc3b74ecc3add0b09ebe52f02b751835c6d61b867aaf71676037364bb96abd57 *THRESHOLD.txt
+8b3fdbda0868277303f1fac893de3b1a88448957ebf3aedbd79e570e0c883e6d *run/merged/model.safetensors
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + specs + scripts via git show
+[✓] Build code tree tgz (builder-outbox + main on top) and stage for BensPC
+[✓] Check BensPC GPU idle, venv, BASE + READER sha256
+[✓] Step 1: TREE + SEALS on BensPC
+[✓] Step 2: DATA build on BensPC
+[✓] Step 3: TRAIN (150min cap)
+[✓] Step 4: DEV + THRESHOLD + G1
+[✓] Step 5: SEAL before panel
+[✓] Step 6: PANEL once per arm + e2edev
+[✓] Step 7: KEEP MODEL copies + sha256
+[✓] Step 8: RESULTS-benspc.md + copy back PUSH files
+[0m
