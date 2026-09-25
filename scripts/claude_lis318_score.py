@@ -58,20 +58,20 @@ def score(panel, reads, T):
                  and (confs[i] if i < len(confs) else 0.0) >= T]
         for g in gold:
             c["gold"] += 1
-            per_kind[row["kind"] + ":gold"] += 1
+            per_kind[row.get("kind", "all") + ":gold"] += 1
             if any(e2e_match(f, g) and str(f.get("mode", "")).upper() in WRITABLE for f in facts):
                 c["R0"] += 1
-                per_kind[row["kind"] + ":R0"] += 1
+                per_kind[row.get("kind", "all") + ":R0"] += 1
                 if any(e2e_match(f, g) for f in saved):
                     c["saved_right"] += 1
-                    per_kind[row["kind"] + ":saved_right"] += 1
+                    per_kind[row.get("kind", "all") + ":saved_right"] += 1
                 else:
                     c["held_right"] += 1
         wrong = [f for f in saved if not any(e2e_match(f, g) for g in gold)]
         c["saved_wrong"] += len(wrong)
         c["wrong_turns"] += bool(wrong)
         if wrong:
-            per_kind[row["kind"] + ":wrong_turns"] += 1
+            per_kind[row.get("kind", "all") + ":wrong_turns"] += 1
         if not gold and saved:
             c["nofact_rows_with_save"] += 1
     out = dict(c)
