@@ -16,5 +16,5 @@ import claude_e2e381b_harness as H      # noqa: E402
 
 if __name__ == "__main__":
     H.install381b()
-    print("381: confirm answers use claude_e2e381b_harness.confirm_answer381bb", flush=True)
+    print("381b: confirm answers use claude_e2e381b_harness.confirm_answer381b", flush=True)
     sys.exit(R.main())
