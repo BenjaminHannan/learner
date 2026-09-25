@@ -29,3 +29,12 @@ R0 = DEV gold teach/correct facts (131) that appear in the greedy read with mode
 - R0 < 79/131 (60%): the reader misreads chat; the lead fix is retraining the reader on chatty turns.
 - In between: both; the gate first (it needs no training).
 Report only. Whatever it shows, the fix is a new numbered experiment with its own sealed marks.
+
+## Addendum 01:20 UTC: the compiler's own ceiling (CPU, shown)
+scripts/claude_lis317_ceiling.py -> ceiling_e2edev.txt. With a PERFECT reader (owner and value copied as typed,
+bank relation mapped generously to the 153-name table) and no confidence gate, the live structural checks
+(claude_lis300_compiler.check_fact) can write 103 of 131 DEV facts (79%). Blocked: 15 relations with no table name
+(species 6, breed 2, interest 2, studies 2, major, subject, unit), 6 owners not in the turn (pronoun or nickname
+pointing back to an earlier turn: the reader only sees the assistant's last reply, not earlier user turns), 6 values
+not typed word for word ("i drive a tram" -> tram driver, "keep bees" -> beekeeping), 1 "me" fact with no I/my.
+So no gate fix alone can reach 336's 85% bar on this kind of chat; the hand-written checks cap it first.

@@ -7,7 +7,8 @@ Counts (all integers; DEV data):
           owner + value matching (owner: USER <-> me; else full or first name, any case; value any case).
   R0rel   the same, also requiring rel == the bank's relation (the bank uses free relation words,
           so this is a lower bound).
-  RT      R0 facts whose lis-300 confidence clears T = 0.995 (the live gate).
+  R0_check:<reason>  for R0 facts, the live compiler's structural check (ok, rel_not_in_table, pronoun_owner, ...).
+  RT      R0 facts whose lis-300 confidence clears T = 0.995 (the live gate); RT_and_check_ok also pass the check.
   W0      writable facts in greedy reads that match no gold fact of that turn (every turn, incl.
           nosave / smalltalk / ask turns): candidate wrong saves with no gate.
   agree   for every greedy writable fact, how many of the K samples contain the same
@@ -20,7 +21,11 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_lis300_compiler as CMP  # noqa: E402 (read-only: the live structural checks)
 
 WRITABLE = {"ASSERT", "CORRECT"}
 USER = {"user", "me", "i", "you", "my"}
@@ -85,8 +90,12 @@ def main():
                 i = hit[0]
                 if str(allf[i].get("rel", "")).lower() == gf["relation"].lower():
                     c["R0rel"] += 1
+                why = CMP.check_fact(allf[i], row["turn"], row.get("prev_reply", ""))
+                c["R0_check:" + (why or "ok")] += 1
                 if i < len(confs) and confs[i] >= T:
                     c["RT"] += 1
+                    if why is None:
+                        c["RT_and_check_ok"] += 1
                 if str(allf[i].get("owner", "")).lower() in ("he", "she", "they", "her", "his", "him", "them"):
                     c["R0_pronoun_owner"] += 1
             elif anyhit:
