@@ -229,15 +229,42 @@ def evaluate(s, ps, model=None) -> int:
     return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
 
 
+def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
+    """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
+    B starts at zero, so the model starts exactly as the base."""
+    import math
+    import torch
+    nn = torch.nn
+
+    class LoRALinear(nn.Module):
+        def __init__(self, base):
+            super().__init__()
+            self.base = base
+            self.A = nn.Parameter(torch.empty(r, base.in_features, dtype=torch.float32, device=base.weight.device))
+            self.B = nn.Parameter(torch.zeros(base.out_features, r, dtype=torch.float32, device=base.weight.device))
+            nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
+            self.drop, self.scale = nn.Dropout(dropout), alpha / r
+
+        def forward(self, x):
+            up = (self.drop(x).float() @ self.A.t() @ self.B.t()) * self.scale
+            return self.base(x) + up.to(x.dtype)
+
+    for prm in model.parameters():
+        prm.requires_grad_(False)
+    for name, mod in list(model.named_modules()):
+        for child, sub in list(mod.named_children()):
+            if child in names and isinstance(sub, nn.Linear):
+                setattr(mod, child, LoRALinear(sub))
+    return model
+
+
 def train_lora(s, examples, epochs, seed):
     import torch
-    from peft import LoraConfig, get_peft_model
     torch.manual_seed(seed)
     from transformers import AutoModelForCausalLM
     base = AutoModelForCausalLM.from_pretrained(s.model.name_or_path, trust_remote_code=True,
                                                 dtype=torch.bfloat16).to(s.dev)
-    m = get_peft_model(base, LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, task_type="CAUSAL_LM",
-                                        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"]))
+    m = add_lora(base)
     opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=2e-4)
     rng = random.Random(seed)
     m.train()
