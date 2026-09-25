@@ -31,3 +31,7 @@ not targeted practice and improvement."
 
 What would show size does not help here: on reasonpanel353 the frozen 3x is within ±5 of the frozen 1x
 on both seeds.
+
+**Update 00:17 UTC 09-25:** Ben: "don't bother with the second run. Just do the first ... for the 3x".
+rsn-351b (1x at lr 1e-4) moved to handoff/held/ before launch ($0). Any 351 gain over the 1x may
+therefore come partly from tuning, not only size; reports must say so.
