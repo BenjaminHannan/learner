@@ -67,6 +67,13 @@ Later, one at a time: dead ends on vs off; recall inside a chat; a second kind o
 - Month-end / Benchmarks / Reading: same recall() code as the 382 store, but a separate file with a separate label.
 - Sleep research: the new small reasoner (358) is the long-term user; it could call recall between thinking rounds.
 
+## Shared attempts format v0 (added ~20:05 UTC from Fix sleep's and Creative's replies; not built by this thread)
+Whoever writes attempts first (Creative's pieces library, a practice loop) should use these fields so sleep can read them:
+task_kind, exact prompt, attempt text, verdict (right / wrong / not checkable), checker name and version, time, group_id
+(several tries at the same task, so a night can learn from right AND wrong tries in a group), used_in_night (set by a
+separate log, never by sleep), source "own-thought". Rows with no right try in their group form the "not solved yet"
+shelf. Rules: sleep only reads; only exact-checker passes are marked right; never the notebook (Creative, Fix sleep).
+
 ## Plain summary for Ben
 Giving the model a memory of its own past tries is one of the better-supported ideas: big models that look up what
 worked and what failed before solve more new problems. The catch is that small models used it badly in the one
