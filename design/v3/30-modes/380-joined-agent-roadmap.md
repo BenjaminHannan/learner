@@ -30,7 +30,7 @@ six month-end rows on the 331-style banks (the 336 marks M1-M11), so there is on
 ## Steps (in order; each has marks fixed before it runs)
 | Step | What | Waits on | Pass mark (short) |
 |---|---|---|---|
-| 336b | 0.1 + gram-360 fill-in finisher, bank B (running on a rental since 01:42 UTC; BensPC only if it fails) | the rental | M1-M11 as 336; grammar +5 over plain 0.1 |
+| 336b | 0.1 + gram-360 fill-in finisher, bank B | done 03:40 UTC | FAIL on M1-M11 (same 3 pass as 336); grammar gain B1 PASS (+10.3 and +7.9); sleep B2 FAIL (0/360 sleeps tried to learn). VERIFY-336b.md |
 | 381 | stricter test harness: "is that right?" answered yes only when owner, value AND relation are right | DEV check | on DEV, 0 wrong "yes"; right "yes" kept ≥ 95% |
 | rd-373 | confirm questions only for clean facts (reading thread owns it, 370-reading-roadmap.md); 381 gives it an honest "yes" | 381 | 0 wrong saves after a confirm |
 | 0.2 | 0.1 + every part with a registered PASS by Sept 29 (candidates: gram-360, lis-318 reader, slp-360 scrap + 361 undo, rd-373) | parts' verdicts | 336 marks on bank C vs 0.1 and twin b |
@@ -49,3 +49,10 @@ six month-end rows on the 331-style banks (the 336 marks M1-M11), so there is on
 Memory (57% saved, 22% right) is the biggest gap, and it belongs to the reader, not the joining. Reasoning and
 creative will not pass by Sept 30: no learned reasoner has passed yet, and the 1B writes the creative replies.
 The Sept 30 report will say so.
+
+## Update 2026-09-25 ~03:40 UTC (336b verified)
+- gram-360 is a candidate for 0.2: end to end it adds 8-10 grammar points and changes no memory count. It still needs
+  its own PASS on bank G (grammar thread) before it joins.
+- Sleep as sealed in 0.1 never learns on ordinary chat: its only recipe needs 8 questions using a new family word.
+  "Learning over time" joins through the Fix-sleep thread's new sleep (365 road map) after its own PASS; 0.2 keeps
+  the old sleep unchanged unless Ben says otherwise.
