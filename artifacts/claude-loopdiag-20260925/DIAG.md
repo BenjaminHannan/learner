@@ -35,3 +35,16 @@ Ben (00:00 UTC): "Why didn't the loop learn? Can you see if you can detect the i
   A tiny initial step vector (std 0.02) may keep the pass signal without the noise; that is running now.
 - Full size (30M, width 1024) and the practice phase are not tested. The loop's extra passes still have
   to be shown to help once it trains.
+
+## Update 01:45 UTC: small step vector (std 0.02 instead of 1.0)
+Same setup, seeds 2 and 3, 1,000 steps, mean ce over steps 800-999:
+
+| arm | seed 2 | seed 3 |
+|---|---|---|
+| loop (as in 294/296, step vector std 1.0) | 1.10 | 1.30 |
+| loop without the step embedding | 0.52 | 0.54 |
+| loop with a small step vector (std 0.02) | **0.58** | **0.54** |
+
+- Suggested: the problem is the SIZE of the step vector at start, not having a pass signal. A small
+  one trains about as well as none (width 256, CPU, copy phase only).
+- rsn-353 (full size, no step embedding) is the registered test; it is held until the Mac has disk space.
