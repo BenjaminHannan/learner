@@ -100,6 +100,14 @@ would flatter every arm and likely hit the ceiling. Revised:
   classic backtracking). Budget set on practice grids so RESTART solves a third to a half.
 - Later rivals to test in the loop reasoner itself: keep refining (TRM-style) and parallel restarts.
 
+## rv-385 result (22:20 UTC): registered FAIL, proved wrong, blind recount agrees
+Plain 1B, 5x5 Latin grids, 60 choices each, 80 fresh grids per seed: restart 0 and 0, revert_ban 46 and 54, revert_note
+13 and 14. The 1B picked numbers already noted as failed 58% and 56% of the time vs 37% and 35% for blind guessing: the
+note pulled it back to the failed path. First choices were near chance (22-29% vs 20%), so this says nothing about a
+skilled or trained model. Design consequence: when the loop reasoner reverts, keep the "not again" list in code on the
+saved state; test a note only on a trained model, as one later change. Next: the latent revert wrapper in the 358 loop,
+after 358a has a result (agreed with Sleep research).
+
 ## Plain summary for Ben
 Your idea is a known family (backtracking) with one new part: doing it by restoring the small reasoner's saved inner
 state. It is not better everywhere. On shallow number puzzles, many fresh tries do as well; tree search over saved
