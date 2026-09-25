@@ -43,3 +43,11 @@ actually learning, not a registered claim since bank A and B differ); the sleep 
 ## Proved wrong
 If B1 fails (G's grammar not at least 5 points above P with both graders), rendering the fill-in lines is not what
 holds whole-reply grammar down, and the next grammar change should target the 1B's replies or the reader's frames.
+
+## Addendum 2026-09-25 ~02:35 UTC, before any run: moved to BensPC
+Ben asked for tonight's GPU work on his own PC (no rentals tonight). The run moves from a rented 5090
+(handoff/held/rent-336b.md, never run) to BensPC's RTX 5070 Ti (handoff/held/benspc-336b.md, slotted by the
+director), with a one-life DEV smoke first (Windows has never run the joined agent end to end). M11's speed marks are
+measured on BensPC, the machine the plan named. scripts/claude_sleepcheck_wrap.py now also loads the Windows
+`resource` stand-in (scripts/winshim), as claude_twinb_wrap.py does; SEAL-code updated for that one file. No mark,
+bar, arm or bank changes.
