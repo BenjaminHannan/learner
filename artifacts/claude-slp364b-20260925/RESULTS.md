@@ -18,7 +18,7 @@ earlier-word-corrupted 1/1 (1), replays-old-turn 1/1 (1), forgetting 1/2 (1), co
 ## The serious finding: P364b.5, 0/20 (the new-people sandbox breaks the loop)
 After a v2 night, teaching a NEW person goes wrong: "Brosheth's spouse is Griteth." is saved as
 "Griteth's spouse is Griteth." (142 of 434 user replies on honest nights differ from v1, all of this kind).
-Cause (from the code): the sandbox puts the notebook objects back by swapping in deep copies of their contents,
+Likely cause (inferred from the code, not yet confirmed by a test): the sandbox puts the notebook objects back by swapping in deep copies of their contents,
 but other parts of the loop still hold the OLD containers (the ones the sandbox's teaching changed), so after the
 night they disagree about who is who. The byte check (P364b.4) passes because the file is restored; the live
 objects are not. v2 must not be installed anywhere as it stands. Nothing uses it today.
