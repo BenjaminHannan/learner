@@ -3,7 +3,7 @@
 Question: on puzzles that are not relation facts, does a net that thinks in rounds (loop, with a learned stop)
 solve BIGGER puzzles than it practised better than its plain same-size twin? Code: scripts/claude_rsn358a_run.py,
 scripts/claude_rsn358a_envs.py. Tests: artifacts/claude-rsn358a-20260925/tests/ (made by code, sealed, 300 each).
-Two arms (plain, loop), seeds 1 and 2, same data stream, steps (40,000), batch (256), learning rate and schedule.
+Two arms (plain, loop), seeds 1 and 2, same data stream, steps (60,000), batch (256), learning rate and schedule.
 Graded by exact code (any valid answer counts). Final checkpoint only; no early stopping; tests run once.
 
 | test | practised? | role |

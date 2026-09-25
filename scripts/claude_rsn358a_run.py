@@ -15,7 +15,7 @@ thinks for up to 48 rounds and stops at the first round whose stop head says "ri
 it was most confident in. Same data stream, steps, batch, learning rate and schedule for both arms.
 
   python -B scripts/claude_rsn358a_run.py make-tests --out artifacts/claude-rsn358a-20260925/tests
-  python -B scripts/claude_rsn358a_run.py train --arm plain|loop --seed 1 --out W/plain-s1 [--steps 40000]
+  python -B scripts/claude_rsn358a_run.py train --arm plain|loop --seed 1 --out W/plain-s1 [--steps 60000]
   python -B scripts/claude_rsn358a_run.py eval  --ckpt W/plain-s1/final.pt --tests DIR --out W/plain-s1/tests.json
   python -B scripts/claude_rsn358a_run.py smoke     (CPU, a few steps of each arm + eval on 20 items per test)
 """
@@ -305,10 +305,13 @@ def train(a):
         opt.step()
         sched.step()
         run["ce"] += ce.item(); run["exact"] += exact.mean().item(); run["halt"] += float(hl.detach()); run["n"] += 1
+        kind = run.setdefault("by_kind", {}).setdefault(f"{items[0].env}{items[0].size}", [0.0, 0])
+        kind[0] += exact.mean().item(); kind[1] += 1
         if step % a.log_every == 0 or step == a.steps:
             n = run["n"]
             rec = {"step": step, "ce": round(run["ce"] / n, 4), "exact": round(run["exact"] / n, 4),
-                   "halt_bce": round(run["halt"] / n, 4), "lr": sched.get_last_lr()[0], "min": round((time.time() - t0) / 60, 1)}
+                   "halt_bce": round(run["halt"] / n, 4), "lr": sched.get_last_lr()[0], "min": round((time.time() - t0) / 60, 1),
+                   "exact_by_kind": {k: round(v[0] / v[1], 3) for k, v in sorted(run.get("by_kind", {}).items())}}
             if step % (a.log_every * 5) == 0 or step == a.steps:
                 rec["dev"] = {k: evaluate(net, v, device)["right"] for k, v in dev.items()}
             log.write(json.dumps(rec) + "\n"); log.flush()
@@ -357,7 +360,7 @@ def main():
     p = sub.add_parser("make-tests"); p.add_argument("--out", required=True)
     p = sub.add_parser("train")
     p.add_argument("--arm", choices=list(ARMS), required=True); p.add_argument("--seed", type=int, required=True)
-    p.add_argument("--out", required=True); p.add_argument("--steps", type=int, default=40000)
+    p.add_argument("--out", required=True); p.add_argument("--steps", type=int, default=60000)
     p.add_argument("--batch", type=int, default=256); p.add_argument("--lr", type=float, default=3e-4)
     p.add_argument("--warmup", type=int, default=1000); p.add_argument("--latin-pool", type=int, default=20000)
     p.add_argument("--log-every", type=int, default=500)
