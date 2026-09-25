@@ -28,6 +28,15 @@ is kept only if the self-check at the end passes. Nothing guessed ever reaches t
    know"). Exact code checks every answer. The notebook rows are always in the input, so no fact is
    learned closed-book. Train the loop reasoner on them with the sleep research thread's recipe, mixed
    with replay of older practice so old skills aren't lost.
+   **Second input: checked creative wins** (Ben, 00:51 UTC 09-25, creative thread). The reasoner should
+   handle most things; the creative generator is for what it usually can't. When a creative idea solves
+   such a problem and an exact checker (or the user) confirms it, the creative line writes it to
+   `<state_dir>/wins/wins.jsonl` (one record: problem, the notebook rows it used, the solution steps, who or
+   what checked it). Sleep turns each win into reasoner training episodes (the solved problem plus
+   recombined variants built from the same kind of rows), so next time the reasoner solves it without the
+   creative detour. Wins train the reasoner only; they never enter the notebook as facts. They are capped
+   in the mix (model-made data at most 40%, CAIRN #47), and the gain must show on fresh blind problems
+   made after the recipe is frozen, never on the wins themselves.
 3. **Self-check before keeping the night (job B).** Re-ask the day's questions plus trick questions
    about things never taught. If the new reasoner states a made-up answer, loses a taught answer, or
    does worse than yesterday's, undo the whole night (weights, scrap layer, agenda).
