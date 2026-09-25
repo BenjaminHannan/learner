@@ -57,3 +57,17 @@ E. Ideas: 333g = blurt 30, trained judge keeps its top 3, the reply offers them 
 F. wins.jsonl handed to the sleep thread (173 rows, agreed format).
 
 Honesty rules for every step: register marks first, fresh blind test problems, one change, a FAIL stays FAIL.
+
+## Update 17:00 UTC 09-25 (Ben's brainstorm and research)
+Research and plans: creative-scaling-plan-2026-09-25.md (a ladder by how exact the check is),
+assistant-practice-plan-2026-09-25.md (practice sets with licences checked, and teaching the model to ask), and
+reviews/creative-research-2026-09-25/ (the sources, with quotes).
+Ben approved (16:59, 17:00):
+- NEXT: ask-24, which teaches "can't" on provably impossible puzzles, with solvable twins. It runs on the CPU for $0.
+- Later rungs he likes, each registered on its own:
+  (a) reframing: blurt restated versions of the problem (another target, a relaxed rule), solve those, and carry
+      the pieces back;
+  (b) a library of reusable pieces: solved sub-results kept as building blocks and fetched as hints;
+  (c) choosing what to practise: keep puzzles it solves sometimes but not always (the Absolute Zero idea).
+- A study of past discoveries is running, to find which discovery mechanisms map to model parts.
+Blurt-3r (the repeat of blurt-3 on BensPC) is still pending.
