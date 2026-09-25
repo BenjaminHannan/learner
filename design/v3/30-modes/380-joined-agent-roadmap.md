@@ -56,3 +56,18 @@ The Sept 30 report will say so.
 - Sleep as sealed in 0.1 never learns on ordinary chat: its only recipe needs 8 questions using a new family word.
   "Learning over time" joins through the Fix-sleep thread's new sleep (365 road map) after its own PASS; 0.2 keeps
   the old sleep unchanged unless Ben says otherwise.
+
+## Update 2026-09-25 ~17:45 UTC: episodic memory proposed for 0.2 (from bm-390; waits on Ben's yes)
+bm-390 (artifacts/claude-bm390-20260925/VERIFY-bm390.md) is a registered FAIL for 0.1: LoCoMo 1-4 F1 2.98 vs 25.06
+for the plain 1B reading the 10 best BM25 turns. 0.1 saved 18 facts from 5,882 turns and said "I don't know" on 923
+of 1,540 questions. The Benchmarks thread proposes one change: **ep-382 episodic memory**. Every heard turn is kept
+word for word (the nb-323 turn log already stores {turn_id, text, t}; t is wall-clock time, so a conversation's own
+date needs its own field). When the notebook has no answer, the MiniLM retriever pulls the most relevant raw turns
+and the chat model answers from them, notebook facts first, citing the turns it used. The notebook write rule does
+not change (raw turns are not notebook facts).
+- Its own pass (Benchmarks thread): LoCoMo practice ≥ 25.06, no loss on MMLU-Redux/GSM8K, labelled "after using
+  LoCoMo for development"; LoCoMo text never trained on.
+- Joining (this thread): 0.1 + ep-382 on bank C vs 0.1 and twin b, 336 marks. It should move M3/M4 (answers) but
+  can add wrong answers (M2), so M2 stays the guard.
+- Second lever (general-knowledge and math questions go straight to the chat model) is a separate change after it.
+- Order if Ben says yes: ep-382 is 0.2's first join; gram-360 second; old sleep stays until the new sleep passes.
