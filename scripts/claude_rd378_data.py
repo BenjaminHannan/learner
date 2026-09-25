@@ -3,7 +3,7 @@
 
 A non-assistant turn becomes a row only when every note on it was judged "ok" and the judge found nothing missed
 (missed == 0); other turns are dropped (never trained on) but still appear as earlier context for later turns.
-10% of dialogs (by id hash) go to dev. Rows: {"id","prompt","target","src","family"} (+ dev rows keep "notes","kind").
+10% of dialogs (by id hash) go to dev; their turns (no notes) are also written to dev_dialogs.jsonl. Rows: {"id","prompt","target","src","family"} (+ dev rows keep "notes","kind").
 No DEV bank, panel, bank A/B, LoCoMo or LongMemEval text: the dialogs are written from scratch.
 python claude_rd378_data.py --notes DIR --out OUT [--repeat 3]
 """
@@ -27,7 +27,7 @@ def main():
     ap.add_argument("--repeat", type=int, default=3)
     a = ap.parse_args()
     c = Counter()
-    train, dev = [], []
+    train, dev, dev_dialogs = [], [], []
     for p in sorted(Path(a.notes).glob("notes_w*.jsonl")):
         jp = p.with_name(p.name.replace("notes_", "judge_"))
         judge = {}
@@ -40,6 +40,9 @@ def main():
                 continue
             d = json.loads(line)
             is_dev = int(hashlib.sha256(d["dialog"].encode()).hexdigest(), 16) % 10 == 0
+            if is_dev:
+                dev_dialogs.append({k: v for k, v in d.items() if k != "turns"} |
+                                   {"turns": [{kk: vv for kk, vv in t.items() if kk != "notes"} for t in d["turns"]]})
             turns = d["turns"]
             for k, t in enumerate(turns):
                 if d["kind"] == "chat" and t["speaker"] == "assistant":
@@ -69,7 +72,10 @@ def main():
         with open(out / f"{name}.jsonl", "w", encoding="utf-8") as fh:
             for r in rows:
                 fh.write(json.dumps(r, ensure_ascii=False) + "\n")
-    c["train_rows"], c["dev_rows"] = len(train), len(dev)
+    with open(out / "dev_dialogs.jsonl", "w", encoding="utf-8") as fh:  # dev dialogs without notes, for the writer CLI
+        for d in dev_dialogs:
+            fh.write(json.dumps(d, ensure_ascii=False) + "\n")
+    c["train_rows"], c["dev_rows"], c["dev_dialogs"] = len(train), len(dev), len(dev_dialogs)
     print(json.dumps(dict(sorted(c.items())), indent=1))
 
 
