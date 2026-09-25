@@ -18,7 +18,7 @@ The GPU repeat (handoff/queue/blurt2-loop.md) has not run yet; if it finishes, P
 - L2 the creative wins caused it: mean W − mean C = +11 (mark ≥ +5), and each W seed (15, 19) beats each C seed
   (6, 6): PASS.
 - Proved-wrong clause: not triggered. Inconclusive clauses: not triggered (173 wins; S0 5%).
-Verdict: PASS on the CPU run.
+Verdict: PASS on the CPU run. OVERALL: registered FAIL, because the GPU repeat missed L1 (+6); see VERIFY-blurt2.md.
 
 What it means: when the 1B could not solve a puzzle, its random rule-keeping guesses sometimes hit; practising those
 hits in a short "sleep" made the 1B solve almost three times as many brand-new puzzles on its first try (6 to 15-19 of
