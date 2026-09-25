@@ -1,0 +1,1858 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; echo FETCH_OK; git rev-parse --abbrev-ref HEAD; git log --oneline -5; ls
+FETCH_OK
+claude/card-experiment-handoff-7c5b27
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo ====; git show origin/main:design/v3/30-modes/330-rent-kit.md
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+zsh:1: === not found
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md > /tmp/rentkit.md; wc -l /tmp/rentkit.md
+55 /tmp/rentkit.md
+[0m
+[0m→ [0mRead /tmp/rentkit.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13 > /tmp/lis13.txt; cat /tmp/lis13.txt
+echo ---AMEND---
+git show origin/main:artifacts/claude-bm390-20260925/AMEND-finish.md > /tmp/amend.md; wc -l /tmp/amend.md
+echo ---VERIFY---
+git show origin/main:artifacts/claude-bm390-20260925/VERIFY-bm390.md > /tmp/verify.md; wc -l /tmp/verify.md
+echo ---PASSMARKS---
+git show origin/main:artifacts/claude-bm390-20260925/PASSMARKS.md > /tmp/pass.md; wc -l /tmp/pass.md
+echo ---OUTBOX---
+git branch -r; git ls-remote origin builder-outbox | head
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+---AMEND---
+      47 /tmp/amend.md
+---VERIFY---
+      82 /tmp/verify.md
+---PASSMARKS---
+      58 /tmp/pass.md
+---OUTBOX---
+  origin/HEAD -> origin/main
+  origin/builder-outbox
+  origin/chat-flags
+  origin/claude/card-experiment-handoff-7c5b27
+  origin/claude/model-architecture-review-0161ce
+  origin/claude/project-thread-0181x3
+  origin/claude/project-thread-h8jbxv
+  origin/claude/project-thread-p68q5v
+  origin/codex/testing-experiment-44
+  origin/main
+  origin/worktree-research
+42b60956be97bb84c77f691f28092715df056966	refs/heads/builder-outbox
+[0m
+[0m→ [0mRead /tmp/amend.md
+[0m→ [0mRead /tmp/verify.md
+[0m→ [0mRead /tmp/pass.md
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-benspc3.md > /tmp/benspc3.md; wc -l /tmp/benspc3.md
+echo ---LIST-OUTBOX---
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-bm390-20260925/ | head -n 50
+echo ---LIST-MAIN---
+git ls-tree -r --name-only origin/main -- artifacts/claude-bm390-20260925/ | head -n 50
+214 /tmp/benspc3.md
+---LIST-OUTBOX---
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_bare.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_reading.jsonl
+artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+artifacts/claude-bm390-20260925/run/sleep_P.jsonl
+---LIST-MAIN---
+artifacts/claude-bm390-20260925/AMEND-finish.md
+artifacts/claude-bm390-20260925/AMEND-winnl.md
+artifacts/claude-bm390-20260925/AMEND-winnl2.md
+artifacts/claude-bm390-20260925/PASSMARKS.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-finish.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-winnl.sha256.txt
+artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt
+artifacts/claude-bm390-20260925/VERIFY-bm390.md
+artifacts/claude-bm390-20260925/data-manifest.json
+artifacts/claude-bm390-20260925/recount3/recount.json
+artifacts/claude-bm390-20260925/recount3/recount.md
+artifacts/claude-bm390-20260925/recount3/recount.py
+artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_bare.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_reading.jsonl
+artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+artifacts/claude-bm390-20260925/run/sleep_P.jsonl
+artifacts/claude-bm390-20260925/score3/per_question.json
+artifacts/claude-bm390-20260925/score3/score.json
+artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+artifacts/claude-bm390-20260925/smoke/locomo10.json
+artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+[0m
+[0m→ [0mRead /tmp/benspc3.md
+[0m
+[0m$ [0mwhich vastai; vastai --help 2>&1 | head -n 20; echo ---; uptime; df -g / 2>&1 | head
+/Users/ben-hannan/.local/bin/vastai
+usage: vastai [-h] [--url URL] [--retry RETRY] [--explain] [--raw] [--full] [--curl] [--api-key API_KEY] [--version]
+              [--no-color]
+              command ...
+
+options:
+ -h, --help                    show this help message and exit
+ --url URL                     Server REST API URL
+ --retry RETRY                 Retry limit
+ --explain                     Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                         Output machine-readable json
+ --full                        Print full results instead of paging with `less` for commands that support it
+ --curl                        Show a curl equivalency to the call
+ --api-key API_KEY             API Key to use. defaults to using the one stored in /Users/ben-hannan/.config/vastai/vast_api_key
+ --version                     Show CLI version
+ --no-color                    Disable colored output for commands that support it
+
+Search:
+ search offers                 Search for instance types using custom query
+ search benchmarks             Search for benchmark results using custom query
+ search templates              Search for template results using custom query
+---
+13:40  up 2 days,  3:33, 4 users, load averages: 40.60 64.58 62.69
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    49%  484014 143625880    0%   /
+[0m
+[0m$ [0mvastai show user --raw 2>&1 | head -n 20; echo ---INSTANCES---; vastai show instances --raw 2>&1 | head -n 100
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 8.683039608599906,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+---INSTANCES---
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "CA",
+  "cpu_arch": "amd64",
+  "cpu_cores": 72,
+  "cpu_cores_effective": 36.0,
+  "cpu_name": "Xeon\u00ae Platinum 8347C",
+  "cpu_ram": 257373,
+  "cpu_util": 0.0,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.2,
+  "cur_state": "running",
+  "direct_port_count": 100,
+  "direct_port_end": -1,
+  "direct_port_start": 65535,
+  "disk_bw": 853.0,
+  "disk_name": "Lexar SSD EQ790 4TB",
+  "disk_space": 60.0,
+  "disk_usage": 9.399999618530273,
+  "disk_util": 9.399999618530273,
+  "dlperf": 198.18225943223663,
+  "dlperf_per_dphtotal": 349.7333989980647,
+  "dph_base": 0.5333333333333333,
+  "dph_total": 0.5666666666666667,
+  "driver_version": "595.71.05",
+  "duration": 8144.454249382019,
+  "end_date": 1803865280.0,
+  "external": false,
+  "extra_env": {},
+  "flops_per_dphtotal": 189.84959999999998,
+  "geolocation": "Alberta, CA",
+  "gpu_arch": "nvidia",
+  "gpu_display_active": false,
+  "gpu_frac": 0.5,
+  "gpu_lanes": 16,
+  "gpu_mem_bw": 1459.5,
+  "gpu_name": "RTX 5090",
+  "gpu_ram": 32607,
+  "gpu_temp": 50.99995,
+  "gpu_totalram": 32607,
+  "gpu_util": 0.0,
+  "has_avx": 1,
+  "host_id": 150140,
+  "host_run_time": 2592000.0,
+  "hosting_type": null,
+  "id": 52609484,
+  "image_args": [],
+  "image_runtype": "ssh_proxy",
+  "image_uuid": "pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime",
+  "inet_down": 480.7,
+  "inet_down_billed": 3261071.36,
+  "inet_down_cost": 0.0026041666666666665,
+  "inet_up": 168.5,
+  "inet_up_billed": 16076.8,
+  "inet_up_cost": 0.00390625,
+  "instance": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0,
+   "diskHour": 0.033333333333333326,
+   "gpuCostPerHour": 0.5333333333333333,
+   "slaPremiumPerHour": 0.0,
+   "totalHour": 0.5666666666666667
+  },
+  "intended_status": "running",
+  "internet_down_cost_per_tb": 2.6666666666666665,
+  "internet_up_cost_per_tb": 4.0,
+  "is_bid": false,
+  "jupyter_token": "3607e1d6dc2ab9ed6074cbc912f7dfca14b402ecdbfd078c6051a91b0f604aed",
+  "label": "rsn-353b",
+  "local_ipaddrs": "10.0.0.80 192.168.122.1 172.17.0.1 2604:3d09:1385:b200:b7ed:2011:a737:16eb 2604:3d09:1385:b200:aaa5:deda:b9a:da3b 2604:3d09:1385:b200:9e6b:ff:fe49:153f",
+  "logo": "/static/logos/vastai_small2.png",
+  "machine_dir_ssh_port": 21299,
+  "machine_id": 34261,
+  "mem_limit": 178.8870656,
+  "mem_usage": 0.5935104,
+  "min_bid": 0.4666666666666666,
+  "mobo_name": "SPC621D8",
+  "next_state": "running",
+  "num_gpus": 1,
+  "onstart": null,
+  "os_version": "24.04",
+  "pci_gen": 4.0,
+  "pcie_bw": 26.9,
+  "public_ipaddr": "174.0.242.177",
+  "reliability2": 0.9883522,
+  "rentable": true,
+  "score": 313.23448703848874,
+  "search": {
+   "discountTotalHour": 0,
+   "discountedTotalPerHour": 0.5666666666666667,
+   "diskHour": 0.033333333333333326,
+   "gpuCostPerHour": 0.5333333333333333,
+   "slaPremiumPerHour": 0.0,
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status')) for x in d])"
+echo ---OUTBOX-CHECK---
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-bm390-20260925/run2 2>&1 | head
+git cat-file -e origin/builder-outbox:artifacts/claude-bm390-20260925/run2 2>&1; echo run2_exit=$?
+git cat-file -e origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-rent2.md 2>&1; echo rent2_exit=$?
+[(52609484, 'rsn-353b', 'running')]
+---OUTBOX-CHECK---
+fatal: path 'artifacts/claude-bm390-20260925/run2' does not exist in 'origin/builder-outbox'
+run2_exit=128
+fatal: path 'artifacts/claude-bm390-20260925/RESULTS-rent2.md' does not exist in 'origin/builder-outbox'
+rent2_exit=128
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+echo ---FINISH---
+git show origin/main:artifacts/claude-bm390-20260925/SEAL-finish.sha256.txt
+echo ---MANIFEST---
+git show origin/main:artifacts/claude-bm390-20260925/data-manifest.json | head -n 40
+echo ---SCRIPTS---
+git ls-tree -r --name-only origin/main -- scripts/ | grep -i bm390
+echo ---SMOKE-LIST---
+git ls-tree -r --name-only origin/main -- artifacts/claude-bm390-20260925/smoke/
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+f53dd2966ba3a8de492ae89ce8658c2468f3029872b24d15a57bc98aee7b81e0  scripts/claude_bm390_score.py
+bfbe2753c947cbdde9d8651d2d41e85efc16bb2b498e12a8923cb6795d3a3dc1  artifacts/claude-bm390-20260925/PASSMARKS.md
+c945527f89c0cadb2bc9e53628a39e3720010b2ebebde0c3010c097b9d87c56d  artifacts/claude-bm390-20260925/data-manifest.json
+edd1ca6b6a521d6a1968d5a666e62d7015f1bd8c94c3dafa08a58d004c708bff  artifacts/claude-bm390-20260925/smoke/locomo10.json
+50043247e37ad8d032f09302f18a139a61f39ebcb33e4b1974cc33a0aa5f1b07  artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+ac1cdbfd2140b256061e5dbe1e7e7de76b3ea5724267f47972f8194f824c17fe  artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+77a3d80201d8e6f10832530dd97c38c736b9553294f57c7d8f9767eb1a7f3980  design/v3/30-modes/390-public-bench-plan.md
+---FINISH---
+8cf8103c8aeb4f192446880d5fa0a225928ff3d0ad69409da83371bc9b93b63c  scripts/claude_gqa_wrap.py
+c1d95ee87e23ca635126cc11d32b3726c706614e74f34919d21934ec45536bf2  scripts/claude_bm390_longctx.py
+33270bdd55b97dbcf348b0d4cb2d22a79772cd8eef0a20d5d375598e3b449c27  artifacts/claude-bm390-20260925/AMEND-finish.md
+1f4d9ad263486667e3407036bc424e210ab01bd3653dc12078965bf2974d0c11  artifacts/claude-bm390-20260925/VERIFY-bm390.md
+---MANIFEST---
+{
+ "gsm8k_revision": "740312add88f781978c0658806c59bc2815b9866",
+ "gsm8k_test_sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59",
+ "locomo10_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+ "locomo_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+ "mmlu_redux_files": {
+  "abstract_algebra": "fe3b1b5aeb5a4a8542707fffb71011757e58102c963891723e72f85ed59e7360",
+  "anatomy": "02e5430bb850c999fd0360c4d0a7b8b497d6a77baa032ddf75a9bbb61edfa2e1",
+  "astronomy": "14ce04c3ab6cce3041b72d5b669d5a2f02bb847e86ea37b45c248b189e5a7b04",
+  "business_ethics": "a951880958fb05bf5a1b413fb8f67db98a4454f8d6c659240fe918039d106028",
+  "clinical_knowledge": "22751969c400ca778350327bf672389cf998b2243c8774ec799fe1dde73cfb70",
+  "college_biology": "e1f6533faf45cc16a5931d73ef73a0f730604aeea55314a2c9304ddb91cefd12",
+  "college_chemistry": "f6c3c5955ef320051bae52881ffd6006bb1d2d1f187fde18a241111f5b155800",
+  "college_computer_science": "f4c2115b5da06e23b5bfcfb5be7d909bb658ac86a1506b564f83339b1163f6ca",
+  "college_mathematics": "86d49192ad35f31bf9666ee194d43d3b852dd52f7463474e8b7b1d691e86cc37",
+  "college_medicine": "77c854a9268649408cce3dc7b9bac2d7140f01b52b8f6fdf1ee70895ce264802",
+  "college_physics": "9877df1697482b5c1add4f1e0169e96ca7413aac9a361d599b23bf3d2cfc7a6a",
+  "computer_security": "c8c91dad780d00c0d6a51123bc870a0eb85fc6d9198b86d053e04c9036b23cf8",
+  "conceptual_physics": "82f09349d8ffb74646bbbe7ce0fa10e43d9c898ee4370b2799cdc25f7e4dcefc",
+  "econometrics": "95ae4551a0df3b6cc84924f5d9fc4bd17f1743b44f5dab7725057126b86354f0",
+  "electrical_engineering": "5c88d812fcb1b10d57d5fa735e2ee8c0d4974ba5e5d3e33a01a3cc2378e0e5b9",
+  "elementary_mathematics": "f4b986d25dd5b76c3dd5bbba6109f39c84caee7b604b97c01fe0d8cc25806cbe",
+  "formal_logic": "9c1b0d50c4c871fe0e8e59d36b53e16f4e241fa6fdb21055336eac180273bb03",
+  "global_facts": "47d3e105a90e91210a942e1d73b36bd86b3c9acf642be5c9e5bbc4090ccb7c97",
+  "high_school_biology": "7921b3460b8faacbe3125e09129f8c8b43d9115ac108b585c96d145af7559026",
+  "high_school_chemistry": "df3ac67951d86f992e997fae622ae8b07b4b54f60ef5cfefdc636880920f8706",
+  "high_school_computer_science": "f478f5265e23fbd20005accdf9631fdc1bf41feb5ae76e50770ce0179f4573db",
+  "high_school_european_history": "bbcd2d1c51a96698f0581b8db6795ed6be4216ca7429822b2ca634d1f15590cf",
+  "high_school_geography": "4fad69de3874d0a36ac2aa5ade2d6700e507d67e9ea11deacac7f424d482d8f3",
+  "high_school_government_and_politics": "d6309c6050c3d5da9320320887504c1b1bd7d34681e3ea38c27e0dab27226658",
+  "high_school_macroeconomics": "4049f204336f1314b84219100f45d857a995a6d33e6e84e0a4a341053fe83e94",
+  "high_school_mathematics": "2b738b8cfeab0ded298c13a8dd5de316304148ddbf345134210a5b10cd748143",
+  "high_school_microeconomics": "a55042dbeb07e799515a0e1da593220d2050fa32ca1e6aceb2fca86cc1775871",
+  "high_school_physics": "645ee034f57fbd95d4200f5ea11303dd0e5a0f059ea6bda6e5b5dd439ae9eec0",
+  "high_school_psychology": "c153b49f62249eed94acd0edec9bd99b60ff3276191424721086c030e65af63b",
+  "high_school_statistics": "56b17e083f6a2a1603425108e84bace31a17003aa1a499d3feabbc14f5090ef5",
+  "high_school_us_history": "97dd3acc62d9e8e6b6a75f8c5e4021a34e27b5e9737228c9384f21bb84c5772d",
+  "high_school_world_history": "e1cb493310b14c680342f67f0b7673543555fb16f4287a6fcd36f2cf39b08f79",
+  "human_aging": "d307bbeb48f2f3aadab26a205f92333a079f455d2fceb0fd69cb9f43118b6fcd",
+  "human_sexuality": "6aa24317b00dc19b2fbd60ad283f4bc1f9377bfab7de74b93cbc6cfdc191af56",
+---SCRIPTS---
+scripts/claude_bm390.py
+scripts/claude_bm390_longctx.py
+scripts/claude_bm390_score.py
+---SMOKE-LIST---
+artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+artifacts/claude-bm390-20260925/smoke/locomo10.json
+artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- scripts/ | grep -i gqa; echo ---; git show origin/main:scripts/claude_bm390.py | wc -l; git show origin/main:scripts/claude_bm390_longctx.py | head -n 60
+scripts/claude_gqa_wrap.py
+---
+     540
+#!/usr/bin/env python3
+"""Long-prompt memory check for bm-390's whole-chat arms (benchmarks thread, 2026-09-25). New file only.
+
+A check, not a benchmark: the prompt is made up (a fictional diary, no benchmark text). It loads a model exactly as
+bm-390's plain arms do (claude_bm390.plain_model: same dtype, same device, same chat template, greedy), builds a
+prompt of about --tokens tokens, generates 4 tokens, and prints one JSON line: prompt tokens, peak GPU memory,
+seconds, and how many attention calls asked PyTorch for grouped-query attention (enable_gqa=True; with the flash
+kernel missing those go to the math kernel, which caused T's out-of-memory error in RESULTS-benspc3.md).
+
+  python -B scripts/claude_bm390_longctx.py --model DIR [--tokens 27000] [--gqa-off]
+
+--gqa-off installs scripts/claude_gqa_wrap.py's change first (transformers repeats key/value heads itself).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+NAMES = ("Wren Ashdown", "Tobin Marle", "Ilsa Fenwick", "Corin Vale")
+PLACES = ("Oakvale", "Brindle Cove", "Harrowgate", "Millbrook")
+
+
+def diary(i: int) -> str:
+    who, other = NAMES[i % 4], NAMES[(i + 1) % 4]
+    return (f"[Day {i}] {who}: I walked to {PLACES[i % 4]} and planted {i % 9 + 2} rows of beans. "
+            f"{other}: Did the rain on day {i // 3} hold off long enough?\n")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--tokens", type=int, default=27000)
+    ap.add_argument("--gqa-off", action="store_true")
+    a = ap.parse_args()
+    if a.gqa_off:
+        import claude_gqa_wrap
+        claude_gqa_wrap.apply()
+    import torch
+    import torch.nn.functional as F
+    import claude_bm390 as B
+
+    calls = {"sdpa": 0, "enable_gqa": 0}
+    real = F.scaled_dot_product_attention
+
+    def counting(*args, **kwargs):
+        calls["sdpa"] += 1
+        calls["enable_gqa"] += int(bool(kwargs.get("enable_gqa", False)))
+        return real(*args, **kwargs)
+
+    F.scaled_dot_product_attention = counting
+    tok, _, dev, ctx = B.plain_model(a.model)
+    lines, n, i = [], 0, 0
+    while n < a.tokens:
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done: credit 8.68, no duplicate)
+[•] Build code tree tgz (builder-outbox + main on top)
+[ ] Rent RTX 5090 labelled rent-bm390f within $3 budget
+[ ] Setup on rental: pip, downloads, env
+[ ] Steps 1-5: seals, fetch, load checks, longctx, smoke
+[ ] Step 6: registered lanes T,C,Tm,Tg,L12,L12m,L12g,Q2x5,Q2m,Q2g
+[ ] Step 7: copy back run2, verify, destroy, ledger
+[ ] Step 8: write RESULTS-rent2.md (counts only)
+[0m
+[0m$ [0mT=$(mktemp -d)/tree && mkdir -p $T && echo "T=$T" && git archive origin/builder-outbox | tar -x -C $T && git archive origin/main | tar -x -C $T && echo ARCHIVE_OK && ls $T | head -n 20 && du -sh $T
+T=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree
+ARCHIVE_OK
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scripts
+status
+1.9G	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree
+[0m
+[0m$ [0mT=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree; du -sh $T/* | sort -rh | head -n 20; echo $T > /tmp/bm390_tree_path.txt; cat /tmp/bm390_tree_path.txt
+1.8G	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts
+ 30M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/scripts
+ 24M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/runs
+8.3M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/data
+7.0M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/archive
+5.9M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/design
+2.9M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/reviews
+2.2M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/tests
+2.1M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/handoff
+704K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/learnlab
+464K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/premonition
+304K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/memorylab
+ 64K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/TEACHING_TO_TEST_CONTRACT.md
+ 28K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/ADVERSARIAL_REVIEW.md
+ 20K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/RESEARCH_REVIEW.md
+ 12K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/run.py
+ 12K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/REMOTE_RUN.md
+ 12K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/ARCHITECTURE_DECISION.md
+8.0K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/status
+4.0K	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/run.sh
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree
+[0m
+[0m$ [0mT=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree; du -sh $T/artifacts/* 2>/dev/null | sort -rh | head -n 25
+144M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-merge138p-20260923
+115M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-mouth241b-20260922
+ 95M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-nhop268b-20260923
+ 63M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-merge138nb-20260923
+ 62M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-merge292-20260923
+ 56M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-concept-toy20-20260920
+ 53M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-yesno293-20260923
+ 50M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-nhop268-20260923
+ 50M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-chain266b-20260923
+ 50M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-chain266-20260923
+ 46M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-dispatcher-v3-20260920
+ 42M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-dispatcher-pilot-20260920
+ 37M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-novelty19b-u8-20260920
+ 35M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-baseline-transformer-v2-20260920
+ 34M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-align147-20260922
+ 32M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-novelty19-replay-20260920
+ 32M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-dispatcher-v4-20260920
+ 29M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-confirmation-panels-20260920
+ 19M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-comma263-20260923
+ 14M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-merge138l-20260922
+ 14M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-f1-20260923
+ 13M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-ears47-20260921
+ 13M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/claude-own-o0b-20260923
+ 12M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-selfgate212-20260922
+ 12M	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC/tree/artifacts/fable-newnames29-20260921
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph 2>&1 | head -n 60
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs     RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  42230251  13.0  1x  RTX_5090  26.5  2.2      32.0     64.5  32.6  303 [0m
+[40m[97m  2  46753304  13.0  1x  RTX_5090  22.7  2.2      32.0     32.2  32.6  141 [0m
+[48;5;240m[97m  3  45669386  13.0  1x  RTX_5090  48.0  5.1      16.0     31.2  32.6  603 [0m
+[40m[97m  4  44173722  13.0  1x  RTX_5090  48.3  5.1      16.0     31.2  32.6  611 [0m
+[48;5;240m[97m  5  45520227  13.0  1x  RTX_5090  48.9  5.1      8.0      31.2  32.6  459 [0m
+[40m[97m  6  43046961  13.2  1x  RTX_5090  51.4  5.1      8.0      31.2  32.6  408 [0m
+[48;5;240m[97m  7  52549118  13.0  1x  RTX_5090  20.8  2.2      32.0     60.4  32.6  248 [0m
+[40m[97m  8  51535926  13.0  1x  RTX_5090  26.1  2.9      25.6     77.4  32.6  551 [0m
+[48;5;240m[97m  9  52169513  13.0  1x  RTX_5090  45.5  6.9      20.0     63.8  32.6  3084[0m
+[40m[97m 10  48446548  13.2  1x  RTX_5090  46.6  8.1      16.0     61.9  32.6  1279[0m
+[48;5;240m[97m 11  47185105  13.2  1x  RTX_5090  27.0  3.1      64.0     48.1  32.6  1219[0m
+[40m[97m 12  51267577  13.0  1x  RTX_5090  27.0  2.9      16.0     64.4  32.6  584 [0m
+[48;5;240m[97m 13  39130889  12.9  1x  RTX_5090  51.3  3.7      24.0     63.4  32.6  184 [0m
+[40m[97m 14  49968734  13.2  1x  RTX_5090  25.5  5.8      16.0     47.1  32.6  460 [0m
+[48;5;240m[97m 15  51595672  13.2  1x  RTX_5090  42.3  5.5      24.0    128.2  32.6  1251[0m
+[40m[97m 16  50184825  13.2  1x  RTX_5090  26.6  3.5      32.0     63.3  32.6  157 [0m
+[48;5;240m[97m 17  50894157  13.2  1x  RTX_5090  23.2  2.5      64.0    513.0  32.6  2331[0m
+[40m[97m 18  50421592  13.2  1x  RTX_5090  38.2  5.5      12.0     31.7  32.6  3113[0m
+[48;5;240m[97m 19  51400491  13.2  1x  RTX_5090  49.0  5.5      12.0     31.2  32.6  1223[0m
+[40m[97m 20  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0     61.9  32.6  1464[0m
+[48;5;240m[97m 21  51102911  13.3  1x  RTX_5090  24.3  3.5      32.0    129.0  32.6  751 [0m
+[40m[97m 22  50259927  13.2  1x  RTX_5090  54.1  3.7      54.9     73.6  32.6  757 [0m
+[48;5;240m[97m 23  51969538  13.2  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  50  [0m
+[40m[97m 24  51969550  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  195 [0m
+[48;5;240m[97m 25  51969543  13.0  1x  RTX_5090  54.3  2.6      12.0     64.3  32.6  96  [0m
+[40m[97m 26  51969545  13.0  1x  RTX_5090  54.2  2.6      12.0     64.3  32.6  17  [0m
+[48;5;240m[97m 27  50247871  13.0  1x  RTX_5090  48.5  5.7      24.0     95.7  32.6  765 [0m
+[40m[97m 28  52127984  13.2  1x  RTX_5090  24.9  3.5      32.0     64.5  32.6  113 [0m
+[48;5;240m[97m 29  27039372  13.1  1x  RTX_5090  24.7  2.3      24.0    129.0  32.6  248 [0m
+[40m[97m 30  46900153  13.2  1x  RTX_5090  22.2  2.4      16.0     64.5  32.6  715 [0m
+[48;5;240m[97m 31  42928597  13.1  1x  RTX_5090  27.0  2.9      64.0    515.6  32.6  1088[0m
+[40m[97m 32  52043015  13.3  1x  RTX_5090  54.4  4.8      13.7     36.8  32.6  437 [0m
+[48;5;240m[97m 33  49900235  13.3  1x  RTX_5090  54.1  3.7      48.0     96.7  32.6  697 [0m
+[40m[97m 34  52599250  13.3  1x  RTX_5090  22.6  2.0      16.0    128.8  32.6  162 [0m
+[48;5;240m[97m 35  49760569  13.2  1x  RTX_5090  54.2  3.9      16.0     96.7  32.6  300 [0m
+[40m[97m 36  46753298  13.0  2x  RTX_5090  26.5  2.2      64.0     64.4  32.6  282 [0m
+[48;5;240m[97m 37  34221919  13.0  1x  RTX_5090  54.1  2.4      48.0     96.6  32.6  1560[0m
+[40m[97m 38  30374680  13.3  1x  RTX_5090  54.1  3.7      48.0    128.9  32.6  540 [0m
+[48;5;240m[97m 39  51541931  13.3  1x  RTX_5090  13.8  5.1      14.0     41.2  32.6  538 [0m
+[40m[97m 40  30220756  13.0  1x  RTX_5090  54.4  4.3      32.0    386.8  32.6  1711[0m
+[48;5;240m[97m 41  51367988  13.2  2x  RTX_5090  13.4  3.5      36.0    128.9  32.6  1439[0m
+[40m[97m 42  51858399  13.0  2x  RTX_5090  26.6  2.6      48.0    128.9  32.6  635 [0m
+[48;5;240m[97m 43  28733608  13.2  1x  RTX_5090  54.2  4.1      24.0     64.5  32.6  1076[0m
+[40m[97m 44  47627478  13.2  1x  RTX_5090  45.5  4.1      24.0     32.2  32.6  1293[0m
+[48;5;240m[97m 45  48062085  13.2  1x  RTX_5090  41.0  5.8      32.0     31.8  32.6  1346[0m
+[40m[97m 46  47876876  13.2  1x  RTX_5090  46.4  5.8      32.0     63.4  32.6  392 [0m
+[48;5;240m[97m 47  47580836  13.0  1x  RTX_5090  13.0  3.6      88.0   1032.0  32.6  638 [0m
+[40m[97m 48  51535927  13.0  2x  RTX_5090  22.2  2.9      51.2    154.7  32.6  1102[0m
+[48;5;240m[97m 49  43602290  13.0  2x  RTX_5090  23.4  2.6      48.0    128.9  32.6  770 [0m
+[40m[97m 50  51479555  13.2  1x  RTX_5090  26.6  3.5      32.0     72.5  32.6  496 [0m
+[48;5;240m[97m 51  36880073  13.1  1x  RTX_5090  54.2  3.7      48.0     96.7  32.6  1558[0m
+[40m[97m 52  49155152  13.3  1x  RTX_5090  54.2  3.7      48.0     96.7  32.6  988 [0m
+[48;5;240m[97m 53  45699906  13.0  2x  RTX_5090  13.3  2.3      24.0     80.5  32.6  240 [0m
+[40m[97m 54  47005874  13.0  1x  RTX_5090  26.5  2.6      192.0  1031.9  32.6  5795[0m
+[48;5;240m[97m 55  52611933  13.3  2x  RTX_5090  26.6  2.0      32.0     96.5  32.6  485 [0m
+[40m[97m 56  29716999  13.0  2x  RTX_5090  26.9  3.7      48.0    128.8  32.6  1081[0m
+[48;5;240m[97m 57  42258998  12.8  2x  RTX_5090  54.1  7.8      32.0    128.5  32.6  1418[0m
+[40m[97m 58  46953689  13.0  2x  RTX_5090  54.1  2.4      96.0    193.4  32.6  1199[0m
+[48;5;240m[97m 59  52127977  13.2  2x  RTX_5090  24.9  3.5      64.0    128.9  32.6  225 [0m
+[0m
+[0m$ [0mtar czf /tmp/bm390_tree.tgz -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.iRvWKZZucC tree && ls -lh /tmp/bm390_tree.tgz; echo TGZ_OK
+-rw-r--r--  1 ben-hannan  wheel   161M Sep 25 13:43 /tmp/bm390_tree.tgz
+TGZ_OK
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1 cpu_cores>=8 disk_space>=60' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('count',len(d))
+for x in d[:15]:
+    print(x.get('id'), 'dph',round(x.get('dph_total',0),3), 'cpu',x.get('cpu_cores_effective'), 'ram',round(x.get('cpu_ram',0)/1024,1), 'disk',x.get('disk_space'), 'up',round(x.get('inet_up',0),1), 'down',round(x.get('inet_down',0),1), 'rel',x.get('reliability2'), 'cuda',x.get('cuda_max_good'))
+"
+count 46
+42230251 dph 0.406 cpu 32.0 ram 63.0 disk 307.46317661927463 up 65.1 down 180.1 rel 0.9883669 cuda 13.0
+46753301 dph 0.446 cpu 32.0 ram 31.5 disk 141.1625 up 63.1 down 880.0 rel 0.9952003 cuda 13.0
+48989852 dph 0.469 cpu 16.0 ram 30.5 disk 484.0 up 514.5 down 560.5 rel 0.9950001 cuda 13.0
+50991036 dph 0.469 cpu 16.0 ram 30.5 disk 509.0 up 556.7 down 450.2 rel 0.9969675 cuda 13.2
+48989566 dph 0.469 cpu 8.0 ram 30.5 disk 491.0 up 579.0 down 541.2 rel 0.9953764 cuda 13.0
+52190758 dph 0.469 cpu 8.0 ram 30.5 disk 491.60000000000014 up 457.5 down 461.8 rel 0.9909938 cuda 13.0
+51858397 dph 0.499 cpu 24.0 ram 62.9 disk 317.5 up 468.6 down 358.9 rel 0.9965559 cuda 13.0
+47185127 dph 0.6 cpu 64.0 ram 62.7 disk 1004.0 up 852.6 down 632.6 rel 0.9887344 cuda 13.2
+40077669 dph 0.602 cpu 12.0 ram 47.1 disk 561.5509463080296 up 757.6 down 884.6 rel 0.998839 cuda 13.2
+51710808 dph 0.603 cpu 24.0 ram 47.1 disk 263.75 up 672.9 down 857.1 rel 0.9819824 cuda 13.0
+52611932 dph 0.607 cpu 16.0 ram 47.1 disk 242.5 up 736.7 down 878.7 rel 0.9847479 cuda 13.3
+51819055 dph 0.615 cpu 16.0 ram 62.9 disk 747.3313669268506 up 976.6 down 1286.7 rel 0.9851482 cuda 13.2
+50184825 dph 0.641 cpu 32.0 ram 61.8 disk 157.0 up 483.4 down 916.9 rel 0.9966954 cuda 13.2
+44457595 dph 0.642 cpu 12.0 ram 45.9 disk 613.068678020372 up 2077.5 down 1943.0 rel 0.9953227 cuda 13.2
+52586698 dph 0.644 cpu 48.0 ram 108.1 disk 1827.2 up 7640.8 down 12760.0 rel 0.9868754 cuda 13.0
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -n 40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mvastai show user --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('credit', d.get('credit'), 'balance', d.get('balance'))"
+vastai create instance 48989852 --image 'pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime' --label rent-bm390f --disk 60 --ssh --raw 2>&1 | head -n 30
+credit 8.651363460599903 balance 0
+{
+ "instance_api_key": "e0667fe9c49df5e3bd711e9803b3486de8cd79deba1106beeb30286d4bc0a915",
+ "new_contract": 52625917,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u; vastai show instance 52625917 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('status',d.get('actual_status'),d.get('cur_state'),d.get('intended_status'))
+print('gpu',d.get('gpu_name'),'dph',d.get('dph_total'),'host',d.get('host_id'))
+print('ssh',d.get('ssh_host'),d.get('ssh_port'))
+"
+Fri Sep 25 17:43:25 UTC 2026
+status None running running
+gpu RTX 5090 dph 0.4944444444444444 host 406325
+ssh ssh8.vast.ai 25916
+[0m
+[0m$ [0msleep 45; vastai show instance 52625917 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual',d.get('actual_status'),'cur',d.get('cur_state'))
+print('ssh',d.get('ssh_host'),d.get('ssh_port'),'idx',d.get('ssh_idx'))
+print('dph',d.get('dph_total'),'gpu',d.get('gpu_name'))
+"
+actual loading cur running
+ssh ssh8.vast.ai 25916 idx 8
+dph 0.4944444444444444 gpu RTX 5090
+[0m
+[0m$ [0msleep 60; vastai show instance 52625917 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual',d.get('actual_status'),'cur',d.get('cur_state'))
+"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -p 25916 root@ssh8.vast.ai 'nvidia-smi; python3 -c "import torch;print(torch.__version__, torch.cuda.is_available())"' 2>&1 | head -n 30
+actual loading cur running
+ssh: connect to host ssh8.vast.ai port 25916: Connection refused
+[0m
+[0m$ [0msleep 90; date -u; vastai show instance 52625917 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('actual',d.get('actual_status'),'cur',d.get('cur_state'))
+"; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 25916 root@ssh8.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv' 2>&1 | head -n 10
+Fri Sep 25 17:46:51 UTC 2026
+actual running cur running
+Warning: Permanently added '[ssh8.vast.ai]:25916' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+name, memory.total [MiB]
+NVIDIA GeForce RTX 5090, 32607 MiB
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done: credit 8.68, no duplicate)
+[✓] Build code tree tgz (builder-outbox + main on top)
+[✓] Rent RTX 5090 labelled rent-bm390f within $3 budget (id 52625917, dph ~0.494, running 17:46 UTC)
+[•] Setup on rental: pip, downloads, env
+[ ] Steps 1-5: seals, fetch, load checks, longctx, smoke
+[ ] Step 6: registered lanes T,C,Tm,Tg,L12,L12m,L12g,Q2x5,Q2m,Q2g
+[ ] Step 7: copy back run2, verify, destroy, ledger
+[ ] Step 8: write RESULTS-rent2.md (counts only)
+[0m
+[0m$ [0mscp -o StrictHostKeyChecking=no -P 25916 /tmp/bm390_tree.tgz root@ssh8.vast.ai:/root/tree.tgz 2>&1 | tail -n 3; echo SCP_DONE
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SCP_DONE
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 25916 root@ssh8.vast.ai 'cd /root && rm -rf tree && mkdir -p tree && tar xzf tree.tgz -C /root && mv /root/tree /root/tree0 2>/dev/null; ls /root; ls /root/tree* 2>/dev/null | head' 2>&1 | tail -n 10
+/root/tree.tgz
+
+/root/tree0:
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+CLAUDE.md
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+TEACHING_TO_TEST_CONTRACT.md
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 25916 root@ssh8.vast.ai 'mv /root/tree0 /root/tree && cd /root/tree && pwd && ls scripts/ | grep bm390 && python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/tree
+claude_bm390.py
+claude_bm390_longctx.py
+claude_bm390_score.py
+2.8.0+cu128 True
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 25916 root@ssh8.vast.ai 'cd /root/tree && setsid nohup bash -c "pip install -q \"transformers>=5\" safetensors huggingface_hub accelerate numpy; python3 -c \"import pyarrow\" || pip install -q pyarrow; python3 -c \"import torch, transformers; print(torch.__version__, transformers.__version__)\"" > /root/logs_setup_pip.log 2>&1 < /dev/null & echo "PID=$!"' 2>&1 | tail -n 3
+mkdir -p /tmp/bm390logs
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+PID=437
+[0m
+[0m$ [0msleep 90; ssh -o StrictHostKeyChecking=no -p 25916 root@ssh8.vast.ai 'cat /root/logs_setup_pip.log; echo ---; ps aux | grep -E "pip|python3 -c" | grep -v grep | head' 2>&1 | tail -n 15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyarrow'
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2.8.0+cu128 5.17.0
+---
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -p 25916 root@ssh8.vast.ai 'python3 -c "import pyarrow; print(\"pyarrow\", pyarrow.__version__)"; cd /root/tree && setsid nohup env HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''Qwen/Qwen3.5-2B'\'', revision='\''15852e8c16360a2fea060d615a32b45270f8a8fc'\'')); print(s('\''LiquidAI/LFM2.5-1.2B-Instruct'\'', revision='\''0f604ada3f766f9f257460c4c9f0b5d6f69d431b'\''))" > /root/logs_setup_dl.log 2>&1 < /dev/null & echo "PID=$!"' 2>&1 | tail -n 4
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 25916 root@ssh8.vast.ai 'cat /root/logs_setup_dl.log 2>/dev/null; echo ---; ps aux | grep snapshot | grep -v grep | head -3; python3 -c "import pyarrow; print(\"pyarrow-ok\")" 2>&1 | tail -1' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  4.36it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 20.47it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 20.84it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 20.84it/s]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  3.91s/it]Fetching 11 files: 100%|██████████| 11/11 [00:27<00:00,  2.48s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:   8%|▊         | 1/13 [00:00<00:02,  4.61it/s]Fetching 13 files:  46%|████▌     | 6/13 [00:00<00:00, 15.77it/s]Fetching 13 files:  85%|████████▍ | 11/13 [00:00<00:00, 19.88it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:12<00:00, 19.88it/s]---
+root         509  0.0  0.0   4364  1756 ?        S    17:50   0:00 bash -c python3 -c "import pyarrow; print(\"pyarrow\", pyarrow.__version__)"; cd /root/tree && setsid nohup env HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('Qwen/Qwen3.5-2B', revision='15852e8c16360a2fea060d615a32b45270f8a8fc')); print(s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b'))" > /root/logs_setup_dl.log 2>&1 < /dev/null & echo "PID=$!"
+root         510 28.4  2.8 5614260 907212 ?      Ssl  17:50   0:19 python3 -c from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('Qwen/Qwen3.5-2B', revision='15852e8c16360a2fea060d615a32b45270f8a8fc')); print(s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b'))
+pyarrow-ok
+[0m
+[0m$ [0msleep 120; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 25916 root@ssh8.vast.ai 'grep -E "^/root" /root/logs_setup_dl.log; echo ---; ps -p 510 >/dev/null 2>&1 && echo STILL_RUNNING || echo DL_DONE; tail -c 400 /root/logs_setup_dl.log' 2>&1 | tail -n 8
+Have fun!
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+---
+DL_DONE
+:00<00:00, 17.29it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:19<00:00, 17.29it/s]Fetching 11 files: 100%|██████████| 11/11 [00:30<00:00,  4.33s/it]Fetching 11 files: 100%|██████████| 11/11 [00:30<00:00,  2.74s/it]
+/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cd /root/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && mkdir -p /root/bm390work artifacts/claude-bm390-20260925/run2 && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; sha256sum -c artifacts/claude-bm390-20260925/SEAL-code.sha256.txt; echo SEAL1_EXIT=\$?; sha256sum -c artifacts/claude-bm390-20260925/SEAL-finish.sha256.txt; echo SEAL2_EXIT=\$?" > /root/logs_step1_seals.log 2>&1 < /dev/null & echo LAUNCHED_PID=$!; exit 0' 2>&1 | tail -n 3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+LAUNCHED_PID=757
+[0m
+[0m$ [0msleep 20; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step1_seals.log' 2>&1 | tail -n 20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+artifacts/claude-bm390-20260925/PASSMARKS.md: OK
+artifacts/claude-bm390-20260925/data-manifest.json: OK
+artifacts/claude-bm390-20260925/smoke/locomo10.json: OK
+artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl: OK
+artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl: OK
+design/v3/30-modes/390-public-bench-plan.md: OK
+SEAL1_EXIT=0
+scripts/claude_gqa_wrap.py: OK
+scripts/claude_bm390_longctx.py: OK
+artifacts/claude-bm390-20260925/AMEND-finish.md: OK
+artifacts/claude-bm390-20260925/VERIFY-bm390.md: OK
+SEAL2_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cd /root/tree && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py fetch --data /root/bm390data; echo FETCH_EXIT=\$?; date -u +%FT%TZ" > /root/logs_step2_fetch.log 2>&1 < /dev/null & echo LAUNCHED_PID=$!; exit 0' 2>&1 | tail -n 2
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 60000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=25 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step2_fetch.log 2>/dev/null; echo ---; ps aux | grep claude_bm390 | grep -v grep | head -3' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T17:54:34Z
+---
+root         786  0.0  0.0   4364  1944 ?        S    17:54   0:00 bash -c cd /root/tree && setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py fetch --data /root/bm390data; echo FETCH_EXIT=\$?; date -u +%FT%TZ" > /root/logs_step2_fetch.log 2>&1 < /dev/null & echo LAUNCHED_PID=$!; exit 0
+root         787  0.0  0.0   4364  3192 ?        Ss   17:54   0:00 bash -c export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py fetch --data /root/bm390data; echo FETCH_EXIT=$?; date -u +%FT%TZ
+root         789  1.2  0.0  31780 26552 ?        S    17:54   0:00 python3 -B scripts/claude_bm390.py fetch --data /root/bm390data
+[0m
+[0m$ [0msleep 100; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=25 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step2_fetch.log; echo ---; ps aux | grep "[c]laude_bm390.py fetch" | head -2' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T17:54:34Z
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "e294f5fc0c94726e640d276d67af3503b9d9a48574dbae357f8e72289f76c049", "gsm8k300_sha256": "df57d09b50357481931bfc5b13903821d22afb986c7bf170941c30038706b949"}
+FETCH_EXIT=0
+2026-09-25T17:55:39Z
+---
+[0m
+[0m$ [0mtimeout 25 ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -c \"import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r./root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc., dtype=torch.bfloat16).to(./cuda.); print(type(m).__name__, sum(p.numel() for p in m.parameters()))\"; echo Q2LOAD_EXIT=\$?; date -u +%FT%TZ" > /root/logs_step3_q2load.log 2>&1 < /dev/null & echo LAUNCHED; exit 0' 2>&1 | tail -n 2; true
+zsh:1: command not found: timeout
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'setsid nohup bash -c "export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -c \"import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r./root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc., dtype=torch.bfloat16).to(./cuda.); print(type(m).__name__, sum(p.numel() for p in m.parameters()))\"; echo Q2LOAD_EXIT=\$?; date -u +%FT%TZ" > /root/logs_step3_q2load.log 2>&1 < /dev/null & echo LAUNCHED; exit 0' 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 75; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step3_q2load.log; echo ---; ps aux | grep "[f]rom_pretrained" | head -2; nvidia-smi --query-gpu=memory.used,memory.free --format=csv' 2>&1 | tail -n 10
+2026-09-25T17:57:44Z
+  File "<string>", line 1
+    import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r./root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc., dtype=torch.bfloat16).to(./cuda.); print(type(m).__name__, sum(p.numel() for p in m.parameters()))
+                                                                                                                                               ^
+SyntaxError: invalid decimal literal
+Q2LOAD_EXIT=1
+2026-09-25T17:57:44Z
+---
+memory.used [MiB], memory.free [MiB]
+2 MiB, 32109 MiB
+[0m
+[0m$ [0mQ2CODE="import torch
+from transformers import AutoModelForCausalLM as M
+m=M.from_pretrained('/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc', dtype=torch.bfloat16).to('cuda')
+print(type(m).__name__, sum(p.numel() for p in m.parameters()))"
+echo "$Q2CODE" | openssl base64 -A > /tmp/q2code.b64; cat /tmp/q2code.b64 | head -c 100; echo; echo B64_OK
+aW1wb3J0IHRvcmNoCmZyb20gdHJhbnNmb3JtZXJzIGltcG9ydCBBdXRvTW9kZWxGb3JDYXVzYWxMTSBhcyBNCm09TS5mcm9tX3By
+B64_OK
+[0m
+[0m$ [0mB64=$(cat /tmp/q2code.b64); ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; echo $B64 | openssl base64 -d | python3; echo Q2LOAD_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step3_q2load2.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 90; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step3_q2load2.log' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T17:59:16Z
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 9919.20it/s]
+Qwen3_5ForCausalLM 1881825088
+Q2LOAD_EXIT=0
+2026-09-25T17:59:21Z
+[0m
+[0m$ [0mL12CODE="import torch
+from transformers import AutoModelForCausalLM as M
+m=M.from_pretrained('/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b', dtype=torch.bfloat16).to('cuda')
+print(type(m).__name__, sum(p.numel() for p in m.parameters()))"
+echo "$L12CODE" | openssl base64 -A > /tmp/l12code.b64; echo B64_OK
+B64_OK
+[0m
+[0m$ [0mB64=$(cat /tmp/l12code.b64); ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; echo $B64 | openssl base64 -d | python3; echo L12LOAD_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step3_l12load.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 60; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step3_l12load.log' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T18:00:58Z
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 19802.12it/s]
+Lfm2ForCausalLM 1170340608
+L12LOAD_EXIT=0
+2026-09-25T18:01:01Z
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390_longctx.py --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc; echo LONGCTX_BASE_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step4_base.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 150; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step4_base.log; echo ---; ps aux | grep "[l]ongctx" | head -2' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T18:02:11Z
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 3072.29it/s]
+{"model": "87179e5c1f455ef22e6223592d2d61351b525bfc", "device": "cuda", "context": 131072, "prompt_tokens": 31114, "gqa_off": false, "ok": true, "reply_chars": 1, "seconds": 1.17, "peak_gib": 3.95, "sdpa_calls": 48, "sdpa_enable_gqa_calls": 48}
+LONGCTX_BASE_EXIT=0
+2026-09-25T18:02:17Z
+---
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390_longctx.py --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc; echo LONGCTX_Q2_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step4_q2.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 120; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'grep -E "^\{|EXIT" /root/logs_step4_q2.log; ps aux | grep "[l]ongctx" | head -2; echo PS_DONE' 2>&1 | tail -n 5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"model": "15852e8c16360a2fea060d615a32b45270f8a8fc", "device": "cuda", "context": 262144, "prompt_tokens": 35760, "gqa_off": false, "ok": true, "reply_chars": 7, "seconds": 2.28, "peak_gib": 8.0, "sdpa_calls": 24, "sdpa_enable_gqa_calls": 24}
+LONGCTX_Q2_EXIT=0
+PS_DONE
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390_longctx.py --model /root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b; echo LONGCTX_L12_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step4_l12.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 75; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'grep -E "^\{|EXIT" /root/logs_step4_l12.log; ps aux | grep "[l]ongctx" | head -2; echo PS_DONE' 2>&1 | tail -n 5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+{"model": "0f604ada3f766f9f257460c4c9f0b5d6f69d431b", "device": "cuda", "context": 128000, "prompt_tokens": 32710, "gqa_off": false, "ok": true, "reply_chars": 15, "seconds": 0.94, "peak_gib": 4.57, "sdpa_calls": 24, "sdpa_enable_gqa_calls": 24}
+LONGCTX_L12_EXIT=0
+PS_DONE
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out /root/bm390work/smoke; echo SMOKE_EXIT=\$?; date -u +%FT%TZ' > /root/logs_step5_smoke.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE
+Have fun!
+LAUNCHED
+MAC_DONE
+[0m
+[0m$ [0msleep 60; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cat /root/logs_step5_smoke.log' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T18:08:30Z
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 19264.54it/s]
+[bm390] smoke-1 plain questions=5
+wrote locomo_T.jsonl rows=5 convs=1
+SMOKE_EXIT=0
+2026-09-25T18:08:34Z
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done: credit 8.68, no duplicate)
+[✓] Build code tree tgz (builder-outbox + main on top)
+[✓] Rent RTX 5090 labelled rent-bm390f within $3 budget (id 52625917, dph ~0.494, running 17:46 UTC)
+[✓] Setup on rental: pip, downloads, env
+[✓] Steps 1-5: seals 8/8+4/4, fetch OK, loads OK, longctx MODE=registered, smoke PASS
+[•] Step 6: registered lanes T,C,Tm,Tg,L12,L12m,L12g,Q2x5,Q2m,Q2g
+[ ] Step 7: copy back run2, verify, destroy, ledger
+[ ] Step 8: write RESULTS-rent2.md (counts only)
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out artifacts/claude-bm390-20260925/run2; echo LANE1_T_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane1_T.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE; date -u +%FT%TZ
+Have fun!
+LAUNCHED
+MAC_DONE
+2026-09-25T18:09:59Z
+[0m
+[0m$ [0msleep 180; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv; echo ---; tail -n 3 /root/logs_lane1_T.log; echo ---; ps aux | grep "[c]laude_bm390.py locomo" | awk "{print \$2, \$11, \$12, \$13, \$14, \$15}" | head -5' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+5074 MiB, 27036 MiB, 100 %
+---
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 18285.11it/s]
+[bm390] conv-26 plain questions=199
+[bm390] conv-30 plain questions=105
+---
+1156 bash -c export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1
+1158 python3 -B scripts/claude_bm390.py locomo --data
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --name L12 --out artifacts/claude-bm390-20260925/run2; echo LANE2_L12_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane2_L12.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE; date -u +%FT%TZ
+Have fun!
+LAUNCHED
+MAC_DONE
+2026-09-25T18:13:11Z
+[0m
+[0m$ [0msleep 180; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv; echo ---T---; tail -n 2 /root/logs_lane1_T.log; echo ---L12---; tail -n 3 /root/logs_lane2_L12.log' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+10837 MiB, 21273 MiB, 96 %
+---T---
+[bm390] conv-30 plain questions=105
+[bm390] conv-41 plain questions=193
+---L12---
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[bm390] conv-26 plain questions=199
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_bm390.py | grep -n -A 4 -i "part\|convs" | head -n 40
+14:  locomo   --data DIR --arm SPEC --name NAME --out DIR [--convs ids] [--limit-q N]
+15-  general  --data DIR --task mmlu|gsm8k --arm SPEC --name NAME --out DIR [--limit N]
+16-
+17-Arm SPEC
+18-  agent:<module:function>  a Premonition-style agent, built as function(state_dir, args) exactly like the
+--
+40:Output: <out>/<bench>_<name>[.part<N>].jsonl, one row per question: qid, category (LoCoMo), reply, ms, plus
+41:arm details. LoCoMo agent arms also write locomo_<name>_reading[.part<N>].jsonl (one row per conversation) and,
+42:with --also-bare, locomo_<name>_bare[.part<N>].jsonl: the same questions without the repo's "write a short
+43-answer" wrapper, asked from the same saved state (report only; never a headline number).
+44-Question and gold text are never copied into outputs; the scorer joins on qid.
+45-"""
+46-from __future__ import annotations
+--
+161:    print(json.dumps({"fetch": "OK", "locomo_convs": len(lc), "locomo_qa": sum(cats.values()),
+162-                      "locomo_by_category": dict(sorted(cats.items())), "mmlu_ok_rows": len(ok),
+163-                      "mmlu_sample": len(mm), "gsm8k_rows": len(gitems), "gsm8k_sample": len(gg),
+164-                      "mmlu300_sha256": _sha(data / "mmlu300.jsonl"),
+165-                      "gsm8k300_sha256": _sha(data / "gsm8k300.jsonl")}), flush=True)
+--
+224:def load_locomo(data: Path, convs: str) -> list[dict]:
+225-    lc = json.loads((data / "locomo10.json").read_text(encoding="utf-8"))
+226:    want = [x for x in convs.split(",") if x]
+227-    return [c for c in lc if not want or c["sample_id"] in want]
+228-
+229-
+230-# ======================================================================= plain models
+--
+324:    mod, _, fn = spec.partition(":")
+325-    if not fn:
+326-        raise SystemExit(f"bm390: agent arm {spec!r} must be 'module:function'")
+327-    return getattr(importlib.import_module(mod), fn)
+328-
+--
+422:    kind, _, target = args.arm.partition(":")
+423:    convs = load_locomo(Path(args.data), args.convs)
+424-    rows: list[dict] = []
+425-    reading: list[dict] = []
+426-    bare: list[dict] | None = [] if args.also_bare else None
+427-    if kind == "agent":
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 1 --convs conv-26,conv-30; echo LANE3_Q2P1_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2p1.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE; date -u +%FT%TZ
+Have fun!
+LAUNCHED
+MAC_DONE
+2026-09-25T18:16:26Z
+[0m
+[0m$ [0msleep 240; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv; echo ---T---; tail -n 2 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p1---; tail -n 3 /root/logs_lane3_Q2p1.log' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+19280 MiB, 12830 MiB, 99 %
+---T---
+[bm390] conv-30 plain questions=105
+[bm390] conv-41 plain questions=193
+---L12---
+[bm390] conv-26 plain questions=199
+[bm390] conv-30 plain questions=105
+---Q2p1---
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv; echo ---T---; tail -n 2 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p1---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p1.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+20650 MiB, 11460 MiB, 97 %
+---T---
+[bm390] conv-41 plain questions=193
+[bm390] conv-42 plain questions=260
+---L12---
+[bm390] conv-30 plain questions=105
+[bm390] conv-41 plain questions=193
+---Q2p1---
+[bm390] conv-26 plain questions=199
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p1---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p1.log | tail -n 3' 2>&1 | tail -n 14
+Have fun!
+memory.used [MiB], memory.free [MiB]
+12407 MiB, 19703 MiB
+---T---
+[bm390] conv-30 plain questions=105
+[bm390] conv-41 plain questions=193
+[bm390] conv-42 plain questions=260
+---L12---
+[bm390] conv-41 plain questions=193
+[bm390] conv-42 plain questions=260
+---Q2p1---
+[bm390] conv-30 plain questions=105
+wrote locomo_Q2.part1.jsonl rows=304 convs=2
+LANE3_Q2P1_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'ps aux | grep "[c]laude_bm390.py locomo" | wc -l' 2>&1 | tail -n 2
+Have fun!
+4
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 2 --convs conv-41,conv-42; echo LANE3_Q2P2_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2p2.log 2>&1 < /dev/null & echo LAUNCHED; exit 0" 2>&1 | tail -n 2; echo MAC_DONE; date -u +%FT%TZ
+Have fun!
+LAUNCHED
+MAC_DONE
+2026-09-25T18:30:26Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB]
+20486 MiB, 11624 MiB
+---T---
+[bm390] conv-41 plain questions=193
+[bm390] conv-42 plain questions=260
+[bm390] conv-43 plain questions=242
+---L12---
+[bm390] conv-42 plain questions=260
+[bm390] conv-43 plain questions=242
+---Q2p2---
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB]
+20486 MiB, 11624 MiB
+---T---
+[bm390] conv-42 plain questions=260
+[bm390] conv-43 plain questions=242
+[bm390] conv-44 plain questions=158
+---L12---
+[bm390] conv-43 plain questions=242
+[bm390] conv-44 plain questions=158
+---Q2p2---
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'tail -n 6 /root/logs_lane3_Q2p2.log; echo ---; ps aux | grep "[c]laude_bm390" | awk "{print \$2, \$3\"%\", \$4\"%\"}" | head -8' 2>&1 | tail -n 12
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 18183.97it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+---
+1156 0.0% 0.0%
+1158 100% 5.5%
+1213 0.0% 0.0%
+1215 100% 5.4%
+1371 0.0% 0.0%
+1373 100% 6.1%
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB]
+20668 MiB, 11442 MiB
+---T---
+[bm390] conv-43 plain questions=242
+[bm390] conv-44 plain questions=158
+[bm390] conv-47 plain questions=190
+---L12---
+[bm390] conv-44 plain questions=158
+[bm390] conv-47 plain questions=190
+---Q2p2---
+[bm390] conv-41 plain questions=193
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB]
+20668 MiB, 11442 MiB
+---T---
+[bm390] conv-43 plain questions=242
+[bm390] conv-44 plain questions=158
+[bm390] conv-47 plain questions=190
+---L12---
+[bm390] conv-47 plain questions=190
+[bm390] conv-48 plain questions=239
+---Q2p2---
+[bm390] conv-41 plain questions=193
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=memory.used,memory.free --format=csv; echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 4' 2>&1 | tail -n 15
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+memory.used [MiB], memory.free [MiB]
+20668 MiB, 11442 MiB
+---T---
+[bm390] conv-44 plain questions=158
+[bm390] conv-47 plain questions=190
+[bm390] conv-48 plain questions=239
+---L12---
+[bm390] conv-48 plain questions=239
+[bm390] conv-49 plain questions=196
+---Q2p2---
+[bm390] conv-41 plain questions=193
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv; echo ---; ls -l --time-style=full-iso /root/logs_lane3_Q2p2.log; date -u; echo ---; ps -o pid,etime,time,cmd -C python3 | head -8' 2>&1 | tail -n 12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+utilization.gpu [%], memory.used [MiB]
+99 %, 20668 MiB
+---
+-rw-r--r-- 1 root root 1127 2026-09-25 18:42:10.147480693 +0000 /root/logs_lane3_Q2p2.log
+Fri Sep 25 18:54:36 UTC 2026
+---
+    PID     ELAPSED     TIME CMD
+   1158       44:37 00:44:37 python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out artifacts/claude-bm390-20260925/run2
+   1215       41:25 00:41:25 python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --name L12 --out artifacts/claude-bm390-20260925/run2
+   1373       24:10 00:24:10 python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 2 --convs conv-41,conv-42
+[0m
+[0m$ [0msleep 240; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---T---; tail -n 3 /root/logs_lane1_T.log; echo ---L12---; tail -n 2 /root/logs_lane2_L12.log; echo ---Q2p2---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p2.log | tail -n 4; ls /root/tree/artifacts/claude-bm390-20260925/run2/' 2>&1 | tail -n 16
+---T---
+wrote locomo_T.jsonl rows=1986 convs=10
+LANE1_T_EXIT=0
+2026-09-25T18:57:54Z
+---L12---
+LANE2_L12_EXIT=0
+2026-09-25T18:55:34Z
+---Q2p2---
+[bm390] conv-41 plain questions=193
+[bm390] conv-42 plain questions=260
+wrote locomo_Q2.part2.jsonl rows=453 convs=2
+LANE3_Q2P2_EXIT=0
+locomo_L12.jsonl
+locomo_Q2.part1.jsonl
+locomo_Q2.part2.jsonl
+locomo_T.jsonl
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'grep -E "wrote|EXIT" /root/logs_lane2_L12.log; ps aux | grep "[c]laude_bm390" | wc -l; nvidia-smi --query-gpu=memory.free --format=csv' 2>&1 | tail -n 5
+wrote locomo_L12.jsonl rows=1986 convs=10
+LANE2_L12_EXIT=0
+0
+memory.free [MiB]
+32109 MiB
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm closed:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name C --out artifacts/claude-bm390-20260925/run2; echo LANE1_C_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane1_C.log 2>&1 < /dev/null & echo LAUNCHED_C; exit 0" 2>&1 | tail -n 1; echo MAC1_DONE; date -u +%FT%TZ
+LAUNCHED_C
+MAC1_DONE
+2026-09-25T18:59:11Z
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task mmlu --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --name L12 --out artifacts/claude-bm390-20260925/run2; echo LANE2_L12M_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane2_L12m.log 2>&1 < /dev/null & echo LAUNCHED_L12M; exit 0" 2>&1 | tail -n 1; echo MAC2_DONE; date -u +%FT%TZ
+LAUNCHED_L12M
+MAC2_DONE
+2026-09-25T18:59:20Z
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 3 --convs conv-43,conv-44; echo LANE3_Q2P3_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2p3.log 2>&1 < /dev/null & echo LAUNCHED_Q2P3; exit 0" 2>&1 | tail -n 1; echo MAC3_DONE; date -u +%FT%TZ
+LAUNCHED_Q2P3
+MAC3_DONE
+2026-09-25T18:59:29Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---C---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane1_C.log | tail -n 3; echo ---L12m---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane2_L12m.log | tail -n 3; echo ---Q2p3---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p3.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---C---
+[bm390] conv-44 closed questions=158
+[bm390] conv-47 closed questions=190
+[bm390] conv-48 closed questions=239
+---L12m---
+wrote mmlu_L12.jsonl rows=300
+LANE2_L12M_EXIT=0
+---Q2p3---
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'ps aux | grep "[c]laude_bm390.py general" | wc -l' 2>&1 | tail -n 1
+ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b --name L12 --out artifacts/claude-bm390-20260925/run2; echo LANE2_L12G_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane2_L12g.log 2>&1 < /dev/null & echo LAUNCHED_L12G; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+0
+LAUNCHED_L12G
+MAC_DONE
+2026-09-25T19:04:25Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---C---; grep -E "wrote|EXIT|Error|Traceback" /root/logs_lane1_C.log | tail -n 3; echo ---L12g---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane2_L12g.log | tail -n 3; echo ---Q2p3---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p3.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---C---
+wrote locomo_C.jsonl rows=1986 convs=10
+LANE1_C_EXIT=0
+---L12g---
+---Q2p3---
+[bm390] conv-43 plain questions=242
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task mmlu --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out artifacts/claude-bm390-20260925/run2; echo LANE1_TM_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane1_Tm.log 2>&1 < /dev/null & echo LAUNCHED_TM; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_TM
+MAC_DONE
+2026-09-25T19:09:17Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Tm---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane1_Tm.log | tail -n 3; echo ---L12g---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane2_L12g.log | tail -n 3; echo ---Q2p3---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p3.log | tail -n 3' 2>&1 | tail -n 14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Tm---
+wrote mmlu_T.jsonl rows=300
+LANE1_TM_EXIT=0
+---L12g---
+wrote gsm8k_L12.jsonl rows=300
+LANE2_L12G_EXIT=0
+---Q2p3---
+[bm390] conv-44 plain questions=158
+wrote locomo_Q2.part3.jsonl rows=400 convs=2
+LANE3_Q2P3_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out artifacts/claude-bm390-20260925/run2; echo LANE1_TG_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane1_Tg.log 2>&1 < /dev/null & echo LAUNCHED_TG; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_TG
+MAC_DONE
+2026-09-25T19:14:08Z
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 4 --convs conv-47,conv-48; echo LANE3_Q2P4_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2p4.log 2>&1 < /dev/null & echo LAUNCHED_Q2P4; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_Q2P4
+MAC_DONE
+2026-09-25T19:14:12Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Tg---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane1_Tg.log | tail -n 3; echo ---Q2p4---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p4.log | tail -n 3' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Tg---
+---Q2p4---
+[0m
+[0m$ [0msleep 200; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Tg---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane1_Tg.log | tail -n 3; echo ---Q2p4---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p4.log | tail -n 3; nvidia-smi --query-gpu=memory.used,memory.free,utilization.gpu --format=csv' 2>&1 | tail -n 11
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Tg---
+---Q2p4---
+[bm390] conv-47 plain questions=190
+memory.used [MiB], memory.free [MiB], utilization.gpu [%]
+10981 MiB, 21129 MiB, 94 %
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'tail -n 4 /root/logs_lane1_Tg.log; echo ---; ps -o pid,etime,time,cmd -C python3 | grep -E "general|locomo" | head -4' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-25T19:14:07Z
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 18601.34it/s]
+---
+   1828       08:25 00:08:25 python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out artifacts/claude-bm390-20260925/run2
+   1866       08:20 00:08:20 python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 4 --convs conv-47,conv-48
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Tg---; grep -E "wrote|EXIT|Error|Traceback" /root/logs_lane1_Tg.log | tail -n 3; echo ---Q2p4---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p4.log | tail -n 3' 2>&1 | tail -n 10
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Tg---
+wrote gsm8k_T.jsonl rows=300
+LANE1_TG_EXIT=0
+---Q2p4---
+[bm390] conv-48 plain questions=239
+wrote locomo_Q2.part4.jsonl rows=429 convs=2
+LANE3_Q2P4_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py locomo --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2 --part 5 --convs conv-49,conv-50; echo LANE3_Q2P5_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2p5.log 2>&1 < /dev/null & echo LAUNCHED_Q2P5; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_Q2P5
+MAC_DONE
+2026-09-25T19:27:23Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2p5---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p5.log | tail -n 4' 2>&1 | tail -n 7
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2p5---
+[bm390] conv-49 plain questions=196
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2p5---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2p5.log | tail -n 4' 2>&1 | tail -n 7
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2p5---
+[bm390] conv-49 plain questions=196
+[bm390] conv-50 plain questions=204
+wrote locomo_Q2.part5.jsonl rows=400 convs=2
+LANE3_Q2P5_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task mmlu --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2; echo LANE3_Q2M_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2m.log 2>&1 < /dev/null & echo LAUNCHED_Q2M; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_Q2M
+MAC_DONE
+2026-09-25T19:37:03Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2m---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2m.log | tail -n 3' 2>&1 | tail -n 6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2m---
+wrote mmlu_Q2.jsonl rows=300
+LANE3_Q2M_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai "setsid nohup bash -c 'export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; cd /root/tree; date -u +%FT%TZ; python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2; echo LANE3_Q2G_EXIT=\$?; date -u +%FT%TZ' > /root/logs_lane3_Q2g.log 2>&1 < /dev/null & echo LAUNCHED_Q2G; exit 0" 2>&1 | tail -n 1; echo MAC_DONE; date -u +%FT%TZ
+LAUNCHED_Q2G
+MAC_DONE
+2026-09-25T19:41:54Z
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2g---; grep -E "bm390|wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2g.log | tail -n 3; echo ---RUN2---; ls -l /root/tree/artifacts/claude-bm390-20260925/run2/' 2>&1 | tail -n 20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2g---
+---RUN2---
+total 1668
+-rw-r--r-- 1 root root 165686 Sep 25 19:12 gsm8k_L12.jsonl
+-rw-r--r-- 1 root root 215399 Sep 25 19:26 gsm8k_T.jsonl
+-rw-r--r-- 1 root root 334498 Sep 25 19:05 locomo_C.jsonl
+-rw-r--r-- 1 root root 298721 Sep 25 18:55 locomo_L12.jsonl
+-rw-r--r-- 1 root root  39334 Sep 25 18:28 locomo_Q2.part1.jsonl
+-rw-r--r-- 1 root root  57749 Sep 25 18:55 locomo_Q2.part2.jsonl
+-rw-r--r-- 1 root root  50798 Sep 25 19:13 locomo_Q2.part3.jsonl
+-rw-r--r-- 1 root root  54142 Sep 25 19:26 locomo_Q2.part4.jsonl
+-rw-r--r-- 1 root root  50271 Sep 25 19:35 locomo_Q2.part5.jsonl
+-rw-r--r-- 1 root root 333388 Sep 25 18:57 locomo_T.jsonl
+-rw-r--r-- 1 root root  19028 Sep 25 18:59 mmlu_L12.jsonl
+-rw-r--r-- 1 root root  18940 Sep 25 19:37 mmlu_Q2.jsonl
+-rw-r--r-- 1 root root  43827 Sep 25 19:10 mmlu_T.jsonl
+[0m
+[0m$ [0msleep 200; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2g---; grep -E "wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2g.log | tail -n 3; ps -o pid,etime,time,cmd -C python3 2>/dev/null | head -4' 2>&1 | tail -n 8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2g---
+    PID     ELAPSED     TIME CMD
+   2087       08:11 00:08:10 python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2g---; grep -E "wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2g.log | tail -n 3; ls /root/tree/artifacts/claude-bm390-20260925/run2/ | wc -l' 2>&1 | tail -n 7
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2g---
+13
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'ps -o pid,etime,time,cmd -C python3 2>/dev/null | head -3; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv' 2>&1 | tail -n 6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+    PID     ELAPSED     TIME CMD
+   2087       13:00 00:13:00 python3 -B scripts/claude_bm390.py general --task gsm8k --data /root/bm390data --arm plain:/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name Q2 --out artifacts/claude-bm390-20260925/run2
+utilization.gpu [%], memory.used [MiB]
+39 %, 4310 MiB
+[0m
+[0m$ [0msleep 280; ssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'echo ---Q2g---; grep -E "wrote|EXIT|Error|Traceback" /root/logs_lane3_Q2g.log | tail -n 3; ls /root/tree/artifacts/claude-bm390-20260925/run2/' 2>&1 | tail -n 20
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+---Q2g---
+gsm8k_L12.jsonl
+gsm8k_T.jsonl
+locomo_C.jsonl
+locomo_L12.jsonl
+locomo_Q2.part1.jsonl
+locomo_Q2.part2.jsonl
+locomo_Q2.part3.jsonl
+locomo_Q2.part4.jsonl
+locomo_Q2.part5.jsonl
+locomo_T.jsonl
+mmlu_L12.jsonl
+mmlu_Q2.jsonl
+mmlu_T.jsonl
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'ps -o pid,etime,time,%cpu,cmd -C python3 2>/dev/null | head -3; nvidia-smi --query-gpu=utilization.gpu --format=csv; tail -c 300 /root/logs_lane3_Q2g.log' 2>&1 | tail -n 8
+Have fun!
+    PID     ELAPSED     TIME %CPU CMD
+utilization.gpu [%]
+0 %
+used_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+wrote gsm8k_Q2.jsonl rows=300
+LANE3_Q2G_EXIT=0
+2026-09-25T19:59:41Z
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done: credit 8.68, no duplicate)
+[✓] Build code tree tgz (builder-outbox + main on top)
+[✓] Rent RTX 5090 labelled rent-bm390f within $3 budget (id 52625917, dph ~0.494, running 17:46 UTC)
+[✓] Setup on rental: pip, downloads, env
+[✓] Steps 1-5: seals 8/8+4/4, fetch OK, loads OK, longctx MODE=registered, smoke PASS
+[✓] Step 6: all 14 commands exit 0 (T,C,Tm,Tg,L12,L12m,L12g,Q2p1-5,Q2m,Q2g)
+[•] Step 7: copy back run2, verify, destroy, ledger
+[ ] Step 8: write RESULTS-rent2.md (counts only)
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'cd /root/tree/artifacts/claude-bm390-20260925/run2 && wc -l *.jsonl && sha256sum *.jsonl && ls -l' 2>&1 | tail -n 35
+400 locomo_Q2.part5.jsonl
+   1986 locomo_T.jsonl
+    300 mmlu_L12.jsonl
+    300 mmlu_Q2.jsonl
+    300 mmlu_T.jsonl
+   9744 total
+1a1cddf660e68c4d228fa4c18a64eeaad21a328e23a538b5c3a197053f920d05  gsm8k_L12.jsonl
+69c1acea4f31d8b15cae5ba4d79d78c2c33c3669b95c7425f1f36bf51661e259  gsm8k_Q2.jsonl
+29e814f502a0e5045fa0f63e1151240508d01a156f74f6ba482058fdd82e244e  gsm8k_T.jsonl
+6d13014675f4642147b46d1eafe3372251a92046b3e3d82829634ea7a7eb8895  locomo_C.jsonl
+5afc0a26c24ba00fa826e5f9d40a5c0afa53b8f0fe6e6e0ee611bf8dd6353ac6  locomo_L12.jsonl
+b70f55be9c17f21edf473741d81f1e62f442cf9649960d02aaf37399f770555f  locomo_Q2.part1.jsonl
+3352ea2c2c90c7167ffca2a990d3a085579e5b8352cd50a5310f79f39ae4a129  locomo_Q2.part2.jsonl
+74c0eead85ec9168b33afb9e513b60284270c6205fc2794feaad16136c4eb448  locomo_Q2.part3.jsonl
+88ab38f9efb1cc566a3968ffe5a296878d553cccc4eca2c45cdf9568c012b880  locomo_Q2.part4.jsonl
+e6d702c9e18e3c2ad8919d3cbe8e0348c9c8156bdbfc352aacfe1247f746b45c  locomo_Q2.part5.jsonl
+35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db  locomo_T.jsonl
+40068cfe70729129664001ca1647b776f22482951b6424385d8d06ed2e0d5297  mmlu_L12.jsonl
+847a4743bda4d372c125a373e6ee719805f39b448a939eb7a997233e7af3c56f  mmlu_Q2.jsonl
+ef1b4e6b2666130679cf6ee92e9c937c17168ad2d5a7dbf12d21b35ba2c9fd62  mmlu_T.jsonl
+total 1872
+-rw-r--r-- 1 root root 165686 Sep 25 19:12 gsm8k_L12.jsonl
+-rw-r--r-- 1 root root 208448 Sep 25 19:59 gsm8k_Q2.jsonl
+-rw-r--r-- 1 root root 215399 Sep 25 19:26 gsm8k_T.jsonl
+-rw-r--r-- 1 root root 334498 Sep 25 19:05 locomo_C.jsonl
+-rw-r--r-- 1 root root 298721 Sep 25 18:55 locomo_L12.jsonl
+-rw-r--r-- 1 root root  39334 Sep 25 18:28 locomo_Q2.part1.jsonl
+-rw-r--r-- 1 root root  57749 Sep 25 18:55 locomo_Q2.part2.jsonl
+-rw-r--r-- 1 root root  50798 Sep 25 19:13 locomo_Q2.part3.jsonl
+-rw-r--r-- 1 root root  54142 Sep 25 19:26 locomo_Q2.part4.jsonl
+-rw-r--r-- 1 root root  50271 Sep 25 19:35 locomo_Q2.part5.jsonl
+-rw-r--r-- 1 root root 333388 Sep 25 18:57 locomo_T.jsonl
+-rw-r--r-- 1 root root  19028 Sep 25 18:59 mmlu_L12.jsonl
+-rw-r--r-- 1 root root  18940 Sep 25 19:37 mmlu_Q2.jsonl
+-rw-r--r-- 1 root root  43827 Sep 25 19:10 mmlu_T.jsonl
+[0m
+[0m$ [0mls artifacts/claude-bm390-20260925/ | head -n 20; echo ---; ls artifacts/claude-bm390-20260925/run2 2>&1
+RESULTS-benspc.md
+RESULTS-benspc2.md
+RESULTS-benspc3.md
+run
+---
+ls: artifacts/claude-bm390-20260925/run2: No such file or directory
+[0m
+[0m$ [0mmkdir -p artifacts/claude-bm390-20260925/run2 && scp -o StrictHostKeyChecking=no -P 25916 "root@ssh8.vast.ai:/root/tree/artifacts/claude-bm390-20260925/run2/*.jsonl" artifacts/claude-bm390-20260925/run2/ 2>&1 | tail -n 3; echo SCP_DONE; ls -l artifacts/claude-bm390-20260925/run2/ | head -n 18
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SCP_DONE
+total 3744
+-rw-r--r--  1 ben-hannan  staff  165686 Sep 25 16:00 gsm8k_L12.jsonl
+-rw-r--r--  1 ben-hannan  staff  208448 Sep 25 16:00 gsm8k_Q2.jsonl
+-rw-r--r--  1 ben-hannan  staff  215399 Sep 25 16:00 gsm8k_T.jsonl
+-rw-r--r--  1 ben-hannan  staff  334498 Sep 25 16:00 locomo_C.jsonl
+-rw-r--r--  1 ben-hannan  staff  298721 Sep 25 16:00 locomo_L12.jsonl
+-rw-r--r--  1 ben-hannan  staff   39334 Sep 25 16:00 locomo_Q2.part1.jsonl
+-rw-r--r--  1 ben-hannan  staff   57749 Sep 25 16:00 locomo_Q2.part2.jsonl
+-rw-r--r--  1 ben-hannan  staff   50798 Sep 25 16:00 locomo_Q2.part3.jsonl
+-rw-r--r--  1 ben-hannan  staff   54142 Sep 25 16:00 locomo_Q2.part4.jsonl
+-rw-r--r--  1 ben-hannan  staff   50271 Sep 25 16:00 locomo_Q2.part5.jsonl
+-rw-r--r--  1 ben-hannan  staff  333388 Sep 25 16:00 locomo_T.jsonl
+-rw-r--r--  1 ben-hannan  staff   19028 Sep 25 16:00 mmlu_L12.jsonl
+-rw-r--r--  1 ben-hannan  staff   18940 Sep 25 16:00 mmlu_Q2.jsonl
+-rw-r--r--  1 ben-hannan  staff   43827 Sep 25 16:00 mmlu_T.jsonl
+[0m
+[0m$ [0mpython3 -c "
+import hashlib, os
+box = {
+ 'gsm8k_L12.jsonl': (165686, '1a1cddf660e68c4d228fa4c18a64eeaad21a328e23a538b5c3a197053f920d05'),
+ 'gsm8k_Q2.jsonl': (208448, '69c1acea4f31d8b15cae5ba4d79d78c2c33c3669b95c7425f1f36bf51661e259'),
+ 'gsm8k_T.jsonl': (215399, '29e814f502a0e5045fa0f63e1151240508d01a156f74f6ba482058fdd82e244e'),
+ 'locomo_C.jsonl': (334498, '6d13014675f4642147b46d1eafe3372251a92046b3e3d82829634ea7a7eb8895'),
+ 'locomo_L12.jsonl': (298721, '5afc0a26c24ba00fa826e5f9d40a5c0afa53b8f0fe6e6e0ee611bf8dd6353ac6'),
+ 'locomo_Q2.part1.jsonl': (39334, 'b70f55be9c17f21edf473741d81f1e62f442cf9649960d02aaf37399f770555f'),
+ 'locomo_Q2.part2.jsonl': (57749, '3352ea2c2c90c7167ffca2a990d3a085579e5b8352cd50a5310f79f39ae4a129'),
+ 'locomo_Q2.part3.jsonl': (50798, '74c0eead85ec9168b33afb9e513b60284270c6205fc2794feaad16136c4eb448'),
+ 'locomo_Q2.part4.jsonl': (54142, '88ab38f9efb1cc566a3968ffe5a296878d553cccc4eca2c45cdf9568c012b880'),
+ 'locomo_Q2.part5.jsonl': (50271, 'e6d702c9e18e3c2ad8919d3cbe8e0348c9c8156bdbfc352aacfe1247f746b45c'),
+ 'locomo_T.jsonl': (333388, '35bdf151ba5160efda06cfe4e1cb274c7a0fa894963db8295286927b5e53b3db'),
+ 'mmlu_L12.jsonl': (19028, '40068cfe70729129664001ca1647b776f22482951b6424385d8d06ed2e0d5297'),
+ 'mmlu_Q2.jsonl': (18940, '847a4743bda4d372c125a373e6ee719805f39b448a939eb7a997233e7af3c56f'),
+ 'mmlu_T.jsonl': (43827, 'ef1b4e6b2666130679cf6ee92e9c937c17168ad2d5a7dbf12d21b35ba2c9fd62'),
+}
+d = 'artifacts/claude-bm390-20260925/run2'
+ok = True
+for f, (size, sha) in sorted(box.items()):
+    p = os.path.join(d, f)
+    st = os.stat(p)
+    h = hashlib.sha256(open(p,'rb').read()).hexdigest()
+    match = (st.st_size == size and h == sha)
+    ok = ok and match
+    print(f, st.st_size, 'OK' if match else 'MISMATCH size=%d sha=%s' % (st.st_size, h))
+print('ALL_MATCH' if ok else 'MISMATCH_FOUND')
+"
+gsm8k_L12.jsonl 165686 OK
+gsm8k_Q2.jsonl 208448 OK
+gsm8k_T.jsonl 215399 OK
+locomo_C.jsonl 334498 OK
+locomo_L12.jsonl 298721 OK
+locomo_Q2.part1.jsonl 39334 OK
+locomo_Q2.part2.jsonl 57749 OK
+locomo_Q2.part3.jsonl 50798 OK
+locomo_Q2.part4.jsonl 54142 OK
+locomo_Q2.part5.jsonl 50271 OK
+locomo_T.jsonl 333388 OK
+mmlu_L12.jsonl 19028 OK
+mmlu_Q2.jsonl 18940 OK
+mmlu_T.jsonl 43827 OK
+ALL_MATCH
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'for f in /root/logs_step1_seals.log /root/logs_step2_fetch.log /root/logs_step4_base.log /root/logs_lane1_T.log /root/logs_lane1_C.log /root/logs_lane1_Tm.log /root/logs_lane1_Tg.log /root/logs_lane2_L12.log /root/logs_lane2_L12m.log /root/logs_lane2_L12g.log /root/logs_lane3_Q2p1.log /root/logs_lane3_Q2p2.log /root/logs_lane3_Q2p3.log /root/logs_lane3_Q2p4.log /root/logs_lane3_Q2p5.log /root/logs_lane3_Q2m.log /root/logs_lane3_Q2g.log /root/logs_step5_smoke.log; do echo "=== $f"; grep -vE "^\s*$|it/s|it\]" "$f" | head -n 4; done' 2>&1 | grep -v "Welcome\|Have fun" | head -n 120
+=== /root/logs_step1_seals.log
+scripts/claude_bm390.py: OK
+scripts/claude_bm390_score.py: OK
+artifacts/claude-bm390-20260925/PASSMARKS.md: OK
+artifacts/claude-bm390-20260925/data-manifest.json: OK
+=== /root/logs_step2_fetch.log
+2026-09-25T17:54:34Z
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "e294f5fc0c94726e640d276d67af3503b9d9a48574dbae357f8e72289f76c049", "gsm8k300_sha256": "df57d09b50357481931bfc5b13903821d22afb986c7bf170941c30038706b949"}
+FETCH_EXIT=0
+2026-09-25T17:55:39Z
+=== /root/logs_step4_base.log
+2026-09-25T18:02:11Z
+{"model": "87179e5c1f455ef22e6223592d2d61351b525bfc", "device": "cuda", "context": 131072, "prompt_tokens": 31114, "gqa_off": false, "ok": true, "reply_chars": 1, "seconds": 1.17, "peak_gib": 3.95, "sdpa_calls": 48, "sdpa_enable_gqa_calls": 48}
+LONGCTX_BASE_EXIT=0
+2026-09-25T18:02:17Z
+=== /root/logs_lane1_T.log
+2026-09-25T18:09:59Z
+[bm390] conv-26 plain questions=199
+[bm390] conv-30 plain questions=105
+[bm390] conv-41 plain questions=193
+=== /root/logs_lane1_C.log
+2026-09-25T18:59:11Z
+[bm390] conv-26 closed questions=199
+[bm390] conv-30 closed questions=105
+[bm390] conv-41 closed questions=193
+=== /root/logs_lane1_Tm.log
+2026-09-25T19:09:17Z
+wrote mmlu_T.jsonl rows=300
+LANE1_TM_EXIT=0
+2026-09-25T19:10:26Z
+=== /root/logs_lane1_Tg.log
+2026-09-25T19:14:07Z
+wrote gsm8k_T.jsonl rows=300
+LANE1_TG_EXIT=0
+2026-09-25T19:26:15Z
+=== /root/logs_lane2_L12.log
+2026-09-25T18:13:11Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[bm390] conv-26 plain questions=199
+=== /root/logs_lane2_L12m.log
+2026-09-25T18:59:20Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+wrote mmlu_L12.jsonl rows=300
+=== /root/logs_lane2_L12g.log
+2026-09-25T19:04:25Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+wrote gsm8k_L12.jsonl rows=300
+=== /root/logs_lane3_Q2p1.log
+2026-09-25T18:16:26Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2p2.log
+2026-09-25T18:30:26Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2p3.log
+2026-09-25T18:59:28Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2p4.log
+2026-09-25T19:14:12Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2p5.log
+2026-09-25T19:27:23Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2m.log
+2026-09-25T19:37:03Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_lane3_Q2g.log
+2026-09-25T19:41:53Z
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `chunk_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+=== /root/logs_step5_smoke.log
+2026-09-25T18:08:30Z
+[bm390] smoke-1 plain questions=5
+wrote locomo_T.jsonl rows=5 convs=1
+SMOKE_EXIT=0
+[0m
+[0m$ [0mssh -n -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 25916 root@ssh8.vast.ai 'for f in /root/logs_lane1_T.log /root/logs_lane1_C.log /root/logs_lane2_L12.log /root/logs_lane2_L12m.log /root/logs_lane2_L12g.log /root/logs_lane3_Q2p1.log /root/logs_lane3_Q2p2.log /root/logs_lane3_Q2p3.log /root/logs_lane3_Q2p4.log /root/logs_lane3_Q2p5.log /root/logs_lane3_Q2m.log /root/logs_lane3_Q2g.log; do echo "=== $f"; grep -E "wrote|EXIT" "$f"; tail -n 1 "$f"; done' 2>&1 | grep -v "Welcome\|Have fun" | head -n 60
+=== /root/logs_lane1_T.log
+wrote locomo_T.jsonl rows=1986 convs=10
+LANE1_T_EXIT=0
+2026-09-25T18:57:54Z
+=== /root/logs_lane1_C.log
+wrote locomo_C.jsonl rows=1986 convs=10
+LANE1_C_EXIT=0
+2026-09-25T19:05:19Z
+=== /root/logs_lane2_L12.log
+wrote locomo_L12.jsonl rows=1986 convs=10
+LANE2_L12_EXIT=0
+2026-09-25T18:55:34Z
+=== /root/logs_lane2_L12m.log
+wrote mmlu_L12.jsonl rows=300
+LANE2_L12M_EXIT=0
+2026-09-25T18:59:29Z
+=== /root/logs_lane2_L12g.log
+wrote gsm8k_L12.jsonl rows=300
+LANE2_L12G_EXIT=0
+2026-09-25T19:12:55Z
+=== /root/logs_lane3_Q2p1.log
+wrote locomo_Q2.part1.jsonl rows=304 convs=2
+LANE3_Q2P1_EXIT=0
+2026-09-25T18:28:18Z
+=== /root/logs_lane3_Q2p2.log
+wrote locomo_Q2.part2.jsonl rows=453 convs=2
+LANE3_Q2P2_EXIT=0
+2026-09-25T18:55:42Z
+=== /root/logs_lane3_Q2p3.log
+wrote locomo_Q2.part3.jsonl rows=400 convs=2
+LANE3_Q2P3_EXIT=0
+2026-09-25T19:13:04Z
+=== /root/logs_lane3_Q2p4.log
+wrote locomo_Q2.part4.jsonl rows=429 convs=2
+LANE3_Q2P4_EXIT=0
+2026-09-25T19:26:54Z
+=== /root/logs_lane3_Q2p5.log
+wrote locomo_Q2.part5.jsonl rows=400 convs=2
+LANE3_Q2P5_EXIT=0
+2026-09-25T19:35:30Z
+=== /root/logs_lane3_Q2m.log
+wrote mmlu_Q2.jsonl rows=300
+LANE3_Q2M_EXIT=0
+2026-09-25T19:37:30Z
+=== /root/logs_lane3_Q2g.log
+wrote gsm8k_Q2.jsonl rows=300
+LANE3_Q2G_EXIT=0
+2026-09-25T19:59:41Z
+[0m
+[0m$ [0mwc -l artifacts/claude-bm390-20260925/run2/*.jsonl
+300 artifacts/claude-bm390-20260925/run2/gsm8k_L12.jsonl
+     300 artifacts/claude-bm390-20260925/run2/gsm8k_Q2.jsonl
+     300 artifacts/claude-bm390-20260925/run2/gsm8k_T.jsonl
+    1986 artifacts/claude-bm390-20260925/run2/locomo_C.jsonl
+    1986 artifacts/claude-bm390-20260925/run2/locomo_L12.jsonl
+     304 artifacts/claude-bm390-20260925/run2/locomo_Q2.part1.jsonl
+     453 artifacts/claude-bm390-20260925/run2/locomo_Q2.part2.jsonl
+     400 artifacts/claude-bm390-20260925/run2/locomo_Q2.part3.jsonl
+     429 artifacts/claude-bm390-20260925/run2/locomo_Q2.part4.jsonl
+     400 artifacts/claude-bm390-20260925/run2/locomo_Q2.part5.jsonl
+    1986 artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+     300 artifacts/claude-bm390-20260925/run2/mmlu_L12.jsonl
+     300 artifacts/claude-bm390-20260925/run2/mmlu_Q2.jsonl
+     300 artifacts/claude-bm390-20260925/run2/mmlu_T.jsonl
+    9744 total
+[0m
+[0m$ [0mvastai show instance 52625917 --raw 2>&1 | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('dph',d.get('dph_total'),'duration_s',round(d.get('duration',0),1),'gpu',d.get('gpu_name'))
+"; date -u +%FT%TZ
+dph 0.4944444444444444 duration_s 8260.4 gpu RTX 5090
+2026-09-25T20:01:03Z
+[0m
+[0m$ [0mvastai destroy instance 52625917 2>&1 | tail -n 3; echo ---; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status')) for x in d])"
+Are you sure you want to destroy instance 52625917? This is irreversible and will delete all data. [y/N] 
+Aborted.
+---
+[(52625917, 'rent-bm390f', 'running'), (52639754, 'rent-blurt5s', 'running'), (52641003, 'rent-rd-371', 'running'), (52642566, 'rent-bm395', 'loading')]
+[0m
+[0m$ [0mecho y | vastai destroy instance 52625917 2>&1 | tail -n 3; echo ---; sleep 15; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([(x.get('id'),x.get('label'),x.get('actual_status')) for x in d])"
+Are you sure you want to destroy instance 52625917? This is irreversible and will delete all data. [y/N] destroying instance 52625917.
+---
+[(52639754, 'rent-blurt5s', 'running'), (52641003, 'rent-rd-371', 'running'), (52642566, 'rent-bm395', 'loading')]
+[0m
+[0m$ [0mls -l artifacts/fable-predictions-ledger.md 2>&1; tail -n 3 artifacts/fable-predictions-ledger.md 2>&1
+-rw-r--r--  1 ben-hannan  staff  654720 Sep 25 15:56 artifacts/fable-predictions-ledger.md
+- P353.L4 OUTCOME (rsn-353b re-run) dev checked_right at 6/12/20 passes (n=1200): seed 1 final 902/901/899 flat, copy 758/746/732 declining; seed 2 final 890/888/777 (20-pass drop, idk 102->271), copy 686/684/579 declining. Thinking longer does not help; report-only.
+- P353 OUTCOME (rsn-353b re-run) registered verdict FAIL (L1 fails seed 1, L2 fails seed 1; L3 passes all; seed 2 passes L1-L3). Training loop 36.2/36.9 min --workers 8 sequential (2-at-once pilot OOM'd, no retune). Evals 12/12 once per checkpoint, panel items read 0, sealed files edited 0, code never patched. All 16 JSONs + 4 checkpoints (sha match SEAL-run.sha256.txt) copied back before destroy; checkpoints kept at ~/premonition-models/rsn353/<run>/, weights never in git. Spend ~$1.37 (1 rental 5090 $0.5667/h ~2.4 h, cap $3.80); 0 rsn-353b instances live after. See artifacts/claude-rsn353-20260925/RESULTS.md.
+- blurt4-loop GPU OUTCOME (2026-09-25, registered run of blurt-4 hindsight hits, rental label rent-blurt4, unmodified origin/main code): contract 52639402 RTX 5090 1x offer 44077681 KR label rent-blurt4 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created 19:33:53Z, running 19:36:31Z, destroyed 19:56:18Z ~0.33 h x $0.4963/h = ~$0.16 (budget $2.00, credit $7.73 at start; first rental 52638727 offer 46753293 US never left loading, host docker-proxy error, destroyed, $0.00); post-destroy 0 rent-blurt4 live. selftest ok; pzcheck 60/60 identical. temp 1.0 (DEV lucky 41 vs 35 on 58 missed); test 64 (16 dropped); L0 66 (32 hit), S0 1/64; practice own 20, won 165/380, hindsight 375, examples 560 each arm. W 219/223 (mean 221.0); H 156/124 (mean 140.0); P 163/117 (mean 140.0). H1 140.0 vs 265.2 FAIL, proved-wrong clause (mean H <= mean W) TRUE; H2 140.0 vs 168.0 FAIL; not inconclusive (375 >= 100, L0 66 >= 10). Registered verdict FAIL. Wall 16.0 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu-4/ (blurt4_summary.json 41 keys + log.txt 36 lines) copied back and verified before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- bm390-finish GPU OUTCOME (2026-09-25, registered finishing run bm-390 rent-bm390f, unmodified origin/main + origin/builder-outbox code): instance 52625917 RTX 5090 32GB offer 48989852 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created ~17:43Z, running 17:46:51Z, destroyed ~20:01Z ~2.29 h x $0.4944/h = ~$1.13 (budget $3.00, credit 8.68 at start, 8.65 at rent; 1 rental, no re-rents); post-destroy 0 rent-bm390f live. All 14 registered commands exit 0: T/C/Tm/Tg (plain MiniCPM5-1B), L12/L12m/L12g (LFM2.5-1.2B), Q2 parts 1-5 + Q2m/Q2g (Qwen3.5-2B); MODE=registered (no gqa wrapper; BASE longctx peak 3.95 GiB). 14 run2/*.jsonl files copied back, sizes+sha256 match. See artifacts/claude-bm390-20260925/RESULTS-rent2.md.
+EOF
+echo LEDGER_OK; tail -n 1 artifacts/fable-predictions-ledger.md | head -c 200; echo
+LEDGER_OK
+- bm390-finish GPU OUTCOME (2026-09-25, registered finishing run bm-390 rent-bm390f, unmodified origin/main + origin/builder-outbox code): instance 52625917 RTX 5090 32GB offer 48989852 image pytorch/
+[0m
+[0m← [0mWrite artifacts/claude-bm390-20260925/RESULTS-rent2.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short | head -n 25; echo ---; git diff --stat | tail -n 5
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+MM artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+---
+ artifacts/fable-predictions-ledger.md | 1 +
+ 1 file changed, 1 insertion(+)
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-bm390-20260925/ artifacts/fable-predictions-ledger.md; echo ---; git diff -- artifacts/fable-predictions-ledger.md | head -n 10
+MM artifacts/fable-predictions-ledger.md
+---
+diff --git a/artifacts/fable-predictions-ledger.md b/artifacts/fable-predictions-ledger.md
+index 77d024390..b7753ca3c 100644
+--- a/artifacts/fable-predictions-ledger.md
++++ b/artifacts/fable-predictions-ledger.md
+@@ -2975,3 +2975,4 @@ Experiments 55b, 57, 58 and 59 ran in parallel and each numbered its predictions
+ - P353.L4 OUTCOME (rsn-353b re-run) dev checked_right at 6/12/20 passes (n=1200): seed 1 final 902/901/899 flat, copy 758/746/732 declining; seed 2 final 890/888/777 (20-pass drop, idk 102->271), copy 686/684/579 declining. Thinking longer does not help; report-only.
+ - P353 OUTCOME (rsn-353b re-run) registered verdict FAIL (L1 fails seed 1, L2 fails seed 1; L3 passes all; seed 2 passes L1-L3). Training loop 36.2/36.9 min --workers 8 sequential (2-at-once pilot OOM'd, no retune). Evals 12/12 once per checkpoint, panel items read 0, sealed files edited 0, code never patched. All 16 JSONs + 4 checkpoints (sha match SEAL-run.sha256.txt) copied back before destroy; checkpoints kept at ~/premonition-models/rsn353/<run>/, weights never in git. Spend ~$1.37 (1 rental 5090 $0.5667/h ~2.4 h, cap $3.80); 0 rsn-353b instances live after. See artifacts/claude-rsn353-20260925/RESULTS.md.
+ - blurt4-loop GPU OUTCOME (2026-09-25, registered run of blurt-4 hindsight hits, rental label rent-blurt4, unmodified origin/main code): contract 52639402 RTX 5090 1x offer 44077681 KR label rent-blurt4 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created 19:33:53Z, running 19:36:31Z, destroyed 19:56:18Z ~0.33 h x $0.4963/h = ~$0.16 (budget $2.00, credit $7.73 at start; first rental 52638727 offer 46753293 US never left loading, host docker-proxy error, destroyed, $0.00); post-destroy 0 rent-blurt4 live. selftest ok; pzcheck 60/60 identical. temp 1.0 (DEV lucky 41 vs 35 on 58 missed); test 64 (16 dropped); L0 66 (32 hit), S0 1/64; practice own 20, won 165/380, hindsight 375, examples 560 each arm. W 219/223 (mean 221.0); H 156/124 (mean 140.0); P 163/117 (mean 140.0). H1 140.0 vs 265.2 FAIL, proved-wrong clause (mean H <= mean W) TRUE; H2 140.0 vs 168.0 FAIL; not inconclusive (375 >= 100, L0 66 >= 10). Registered verdict FAIL. Wall 16.0 min, BASE commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, transformers 5.17.0, no weights saved. gpu-4/ (blurt4_summary.json 41 keys + log.txt 36 lines) copied back and verified before destroy. Code unedited, no TEST-ONLY panel. See artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md.
++- bm390-finish GPU OUTCOME (2026-09-25, registered finishing run bm-390 rent-bm390f, unmodified origin/main + origin/builder-outbox code): instance 52625917 RTX 5090 32GB offer 48989852 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: created ~17:43Z, running 17:46:51Z, destroyed ~20:01Z ~2.29 h x $0.4944/h = ~$1.13 (budget $3.00, credit 8.68 at start, 8.65 at rent; 1 rental, no re-rents); post-destroy 0 rent-bm390f live. All 14 registered commands exit 0: T/C/Tm/Tg (plain MiniCPM5-1B), L12/L12m/L12g (LFM2.5-1.2B), Q2 parts 1-5 + Q2m/Q2g (Qwen3.5-2B); MODE=registered (no gqa wrapper; BASE longctx peak 3.95 GiB). 14 run2/*.jsonl files copied back, sizes+sha256 match. See artifacts/claude-bm390-20260925/RESULTS-rent2.md.
+[0m
+[0m$ [0mgit status --short artifacts/claude-bm390-20260925/run2 artifacts/claude-bm390-20260925/RESULTS-rent2.md; echo ---; ls artifacts/claude-bm390-20260925/run2 | wc -l; wc -l artifacts/claude-bm390-20260925/RESULTS-rent2.md
+---
+      14
+     165 artifacts/claude-bm390-20260925/RESULTS-rent2.md
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-bm390-20260925/run2/locomo_T.jsonl artifacts/claude-bm390-20260925/RESULTS-rent2.md 2>&1; echo ---; git status --porcelain --ignored artifacts/claude-bm390-20260925/ 2>&1 | head -n 20
+.gitignore:5:artifacts/	artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+.gitignore:5:artifacts/	artifacts/claude-bm390-20260925/RESULTS-rent2.md
+---
+!! artifacts/claude-bm390-20260925/
+[0m
+[0m$ [0mgit ls-files artifacts/claude-bm390-20260925/ | head; echo ---; git check-ignore -v artifacts/claude-bm390-20260925/run/locomo_P.jsonl 2>&1; echo ---; git log --oneline -1 -- artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+---
+.gitignore:5:artifacts/	artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+---
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done: credit 8.68, no duplicate)
+[✓] Build code tree tgz (builder-outbox + main on top)
+[✓] Rent RTX 5090 labelled rent-bm390f within $3 budget (id 52625917, dph ~0.494, running 17:46 UTC)
+[✓] Setup on rental: pip, downloads, env
+[✓] Steps 1-5: seals 8/8+4/4, fetch OK, loads OK, longctx MODE=registered, smoke PASS
+[✓] Step 6: all 14 commands exit 0 (T,C,Tm,Tg,L12,L12m,L12g,Q2p1-5,Q2m,Q2g)
+[✓] Step 7: copy back run2, verify, destroy, ledger
+[✓] Step 8: write RESULTS-rent2.md (counts only)
+[0m
