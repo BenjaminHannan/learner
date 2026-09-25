@@ -1,0 +1,2017 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git rev-parse --show-toplevel; git status --short --branch | head -n 50; git log --oneline -5
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 17]
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+e201282b5 judge F1 M4 naturalness: 13 blind pair judgments (X9 Y4 tie0, meaning_change 1)
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1 | head -n 20; echo FETCH_EXIT:$?; git rev-parse origin/main origin/builder-outbox 2>&1 | head
+FETCH_EXIT:0
+490fd6530b2bfc0fc5b80f773d6f247a813bb553
+2c0c7b3c3eecbe9f0ba85ef2d64ba4d7a1cfb0cc
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 60; echo "---SEPARATOR---"; git show origin/main:artifacts/claude-bm390-20260925/PASSMARKS.md 2>&1 | head -n 200; echo "---SEPARATOR2---"; git show origin/main:design/v3/30-modes/390-public-bench-plan.md 2>&1 | head -n 400
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+---SEPARATOR---
+# bm-390 PASSMARKS (benchmarks thread, 2026-09-25; plan design/v3/30-modes/390-public-bench-plan.md)
+
+Registered before any run on real benchmark items. Only made-up smoke items (smoke/, fictional people, written
+by me) have been run. The code is sealed in SEAL-code.sha256.txt; the Premonition build is the one sealed for
+336b (artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt must also check OK on the run machine).
+
+## Data (downloaded at run time, sha256 checked against data-manifest.json)
+- LoCoMo: snap-research/locomo @3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376 data/locomo10.json
+  (sha256 79fa87e9...ff4): 10 conversations, 5,882 turns, 1,986 questions (cat 1: 282, 2: 321, 3: 96, 4: 841, 5: 446).
+- MMLU-Redux-2.0 (edinburgh-dawg, rev 372ea425, CC BY 4.0), 57 subjects, 5,700 rows, 5,330 with error_type "ok";
+  seeded sample of 300 (random.Random(390)); sample file sha256 is printed by `fetch` and must match the one
+  recorded in RESULTS.
+- GSM8K test (openai/gsm8k rev 740312ad, MIT), 1,319 rows; seeded sample of 300 (random.Random(390)).
+
+## Arms (same text for every arm; greedy decoding; thinking off everywhere)
+| Arm | What | Params | In marks |
+|---|---|---|---|
+| P | Premonition 0.1 = claude_e2e330c:build_330c, READER lis-301 + BASE MiniCPM5-1B @87179e5c, reads every turn, one sleep per session, each question from a fresh copy of the after-reading state | ~2.2B | primary |
+| P_bare | P's same saved state, question without the repo's "write a short answer" wrapper | same | report only |
+| T | plain MiniCPM5-1B @87179e5c, whole chat in one prompt (repo's chat-template baseline) | 1.08B | yes |
+| Rb | T's model with the 10 best BM25 turns only | 1.08B | yes |
+| C | T's model with no chat (contamination check) | 1.08B | report only |
+| Q2 | Qwen3.5-2B @15852e8c (text model), whole chat; downloaded on BensPC in this job | 1.88B | yes, when it loads |
+| L12 | LFM2.5-1.2B-Instruct @0f604ada, whole chat; downloaded on BensPC in this job | 1.17B | yes, when it loads |
+General tests: P and T (and Q2, L12, report only) on MMLU-Redux-300 and GSM8K-300, a fresh P state per item.
+A rival that will not load on BensPC (Windows, the job's venv) is reported as NOT RUN; nothing is rented or upgraded for it.
+
+## Registered deviations from the LoCoMo repo's baseline code
+Greedy decoding (repo: temperature 0.4 sampling); sessions in time order (repo's builder puts the newest session
+first); speaker order from speaker_a/speaker_b (repo: an unordered set); category 5 uses adversarial_answer (the
+data file has no answer field for 444 of 446 such items); category 5 option order fixed per question by seed 390.
+The scorer's answer clean-up and F1 are the repo's (scripts/claude_bm390_score.py, VERBATIM block).
+
+## Marks
+- M1 (headline): LoCoMo categories 1-4 (1,540 questions), mean official F1. For EVERY arm X marked "yes" that ran:
+  P - X >= 3.0 points AND the paired bootstrap 95% interval (10,000 resamples of questions, seed 390) is above 0.
+- M3 (made-up answers): on categories 1-4, P's confident-wrong count (reply with no abstain phrase, official F1 = 0;
+  phrase list fixed in the scorer) is lower than every "yes" arm's. Reported with M1; never a win on its own.
+- M4 (no harm): P >= T - 3.0 points on MMLU-Redux-300 AND on GSM8K-300 (letter / final-number rules fixed in the scorer).
+- Verdict: PASS only if M1 and M4 both pass. If a rival did not run, the verdict is partial and says so;
+  a FAIL of M1 against any arm that ran is final for this build.
+- Validity (else VOID, not FAIL): both seals OK; data sha256 OK; 1,986 LoCoMo rows for every arm and 300 rows per
+  general arm; P's sleep log has one row per session (272) and checkpoint_exists true in every row; no traceback.
+
+## Report-only numbers (fixed now)
+Per-category F1 for every arm; category 5 official and strict (strict: right only if the reply picks the
+no-information option by letter, or picks no letter and abstains in words); C's categories 1-4 F1 (above 10 points
+= flag contamination or guessable items); P's stored triples after reading, check questions asked, sleeps with
+learning attempted; P_bare vs P; published anchors (A-Mem Table 1, labelled "different harness").
+
+## Predictions (made before the run)
+- P390.1: M1 FAILS against T. P's categories 1-4 F1 is 3 to 15; T's is 15 to 35.
+- P390.2: M3 PASSES against T and Rb (P makes fewer confident wrong answers).
+- P390.3: M4 is a coin flip: P may route general questions to "I'm not sure" or to its calculator vote.
+- P390.4: C's categories 1-4 F1 is at most 8 (little contamination).
+- P390.5: Rb is within 5 points of T.
+- P390.6: P_bare beats P by at least 2 points (the wrapper text confuses the reader).
+What would count against the memory approach now: P below T on category 4 in both P and P_bare.
+---SEPARATOR2---
+# 390 public benchmarks: Premonition against models its size (benchmarks thread, 2026-09-25)
+
+Ben, 01:49 UTC 2026-09-25 (/goal): "Make this model perform better on public benchmarks than other models its size."
+Ben, 02:12 UTC: rivals under our own harness = both Qwen3.5-2B and LFM2.5-1.2B-Instruct.
+Numbers for this line: bm-390 to bm-399 (rd-370..379 belong to the reading thread, 380 to the joined agent).
+
+## Where things stand (checked today)
+- Premonition 0.1 = lis-301 reader (a fine-tuned MiniCPM5-1B, 1.08B) + the base MiniCPM5-1B (1.08B, used by
+  creative, think299b and chat338b) + MiniLM router (22M) + the notebook, hand-written reasoner and sleep.
+  About 2.2B parameters in all, so fair rivals go up to ~2B.
+- General tests: the base model is already the 1B-class leader on its makers' table (model card image
+  public_leaderboard_en.png, thinking mode): MMLU-Redux 70.06 vs LFM2.5-1.2B 66.08, Qwen3.5-0.8B 61.50,
+  Qwen3-0.6B 55.47; BBH 71.89 vs 57.32 / 54.58 / 47.86. That is OpenBMB's result, not ours. 0.1 calls the 1B
+  with thinking off and starts knowing nothing, so on general tests our parts can only match it or lose.
+  Our job there is "no harm".
+- Memory tests are where our parts can win or lose on their own. LoCoMo (Maharana et al., ACL 2024; repo
+  snap-research/locomo, CC BY-NC 4.0): 10 long chats between made-up people (5,882 turns), 1,986 questions in
+  5 categories (1 multi-hop 282, 2 temporal 321, 3 open-domain 96, 4 single-hop 841, 5 adversarial 446).
+  Official metric: stemmed token F1 (evaluation.py). Category 5 is a two-option choice whose official score
+  gives full marks for any reply without "(a)" when option (b) is "No information available", so an agent
+  that always abstains gets about half of it free. It is reported but never counted as a win.
+- Published same-size LoCoMo numbers (A-Mem, arXiv 2502.12110, Table 1, checked in the PDF today; a different
+  harness: their prompts, Ollama, top-k tuned per category), F1 for categories 1 / 2 / 3 / 4 / 5:
+  Llama 3.2 1B + A-Mem 19.06 / 17.80 / 17.55 / 28.51 / 58.81; Llama 3.2 1B full context 11.25 / 7.38 / 11.90 /
+  12.86 / 51.89; Qwen2.5-1.5B + A-Mem 18.23 / 24.32 / 16.48 / 23.63 / 46.00. Cited, never mixed into our marks.
+- ARC-AGI-1 (asked by Ben 01:53): public (400 training + 400 evaluation tasks). TRM, 7M parameters, 44.6% on
+  the public evaluation set with 2 tries (arXiv 2510.04871, Table 5, checked) after about 3 days on 4 H100s.
+  Far over our $30 cap, and the loop reasoner belongs to the sleep research thread. Parked.
+
+## The plan
+1. bm-390 (tonight, BensPC; Ben asked for no rentals tonight). The starting line, nothing tuned: Premonition
+   0.1 exactly as sealed for 336/336b (claude_e2e330c:build_330c) against plain MiniCPM5-1B with the whole
+   chat in its prompt (T), the same model with the 10 best BM25 turns (Rb, "is it just a search engine?"),
+   and the same model with no chat (C, contamination check). Plus the no-harm check: P and T on 300 seeded
+   MMLU-Redux-2.0 items (error_type "ok" only) and 300 seeded GSM8K test items. Marks:
+   artifacts/claude-bm390-20260925/PASSMARKS.md.
+2. The two rivals Ben approved run in the same job on BensPC (downloaded there; Ben asked for no rentals
+   tonight): Qwen3.5-2B (text model 1.88B) and LFM2.5-1.2B-Instruct (1.17B), thinking off, same code and marks.
+   A rival that will not load on Windows with the job's Python is reported as not run.
+3. After bm-390, LoCoMo becomes our practice test. Every later LoCoMo number is labelled "after using LoCoMo
+   for development". Only aggregate counts from bm-390 go to other threads; nobody trains on LoCoMo text.
+   Changes come one at a time from the owning threads (reader: rd-370..379; grammar; sleep; reasoner), through
+   the coordinator, each with its own registered PASS first.
+4. The final exam is LongMemEval (Wu et al., ICLR 2025; 500 questions: extraction, multi-session reasoning,
+   knowledge updates, time, abstention). Nobody downloads or reads it until a 0.x build beats every same-size
+   arm on LoCoMo practice. Then it is registered and run once, against the same rivals.
+
+## Honest expectations (predictions are in the PASSMARKS)
+- The reader is the bottleneck (336: 57% of taught facts saved; lis-317: the gate keeps 20 of 89 right reads),
+  and LoCoMo's facts are chattier than our banks. Expect P to lose on F1 and win on not making things up.
+- On general tests expect P at or below T: 0.1 routes some questions to "I'm not sure".
+- What would count against the memory approach at this stage: P below T on single-hop questions (category 4)
+  even in the question-only variant (P_bare). That would say storing facts with today's reader does not beat
+  "keep the whole chat in the prompt" at 1B scale, and the reader work must close that gap before anything else
+  is worth measuring.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm390-20260925/run 2>&1 | head -n 20; echo "---"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-bm390-20260925/ 2>&1 | head -n 50; echo "---MAIN---"; git ls-tree -r --name-only origin/main -- artifacts/claude-bm390-20260925/ 2>&1 | head -n 50
+fatal: path 'artifacts/claude-bm390-20260925/run' does not exist in 'origin/builder-outbox'
+---
+---MAIN---
+artifacts/claude-bm390-20260925/PASSMARKS.md
+artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+artifacts/claude-bm390-20260925/data-manifest.json
+artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+artifacts/claude-bm390-20260925/smoke/locomo10.json
+artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/ | head -n 100
+echo "---HELD---"
+git ls-tree -r --name-only origin/main -- handoff/held/ 2>&1 | head -n 50
+echo "---QUEUE---"
+git ls-tree -r --name-only origin/main -- handoff/queue/ 2>&1 | head -n 50
+handoff/HANDOFF.md
+handoff/held/benspc-336b.md
+handoff/held/e2e-330-dev.md
+handoff/held/e2e-333-creative.md
+handoff/held/e2e-338-chat.md
+handoff/held/e2e-339-style.md
+handoff/held/lis-318-train.md
+handoff/held/lis-319-train.md
+handoff/held/own-e1-pretrain.md
+handoff/held/own-m1-bpc.md
+handoff/held/rent-336b.md
+handoff/held/rsn-351b-guard.md
+handoff/held/rsn-351b-train.md
+handoff/held/rsn-354-guard.md
+handoff/held/rsn-354-train.md
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+handoff/kit/briefs/corrpanel291-spec.txt
+handoff/kit/briefs/corrtail258-spec.txt
+handoff/kit/briefs/earpanel235b-spec.txt
+handoff/kit/briefs/earpanel257-spec.txt
+handoff/kit/briefs/earpanel261-spec.txt
+handoff/kit/briefs/earpanel261b-spec.txt
+handoff/kit/briefs/earpanel264-spec.txt
+handoff/kit/briefs/invpanel138nb-spec.txt
+handoff/kit/briefs/looppanel254-spec.txt
+handoff/kit/briefs/mixpanel292-spec.txt
+handoff/kit/briefs/nhoppanel268-spec.txt
+handoff/kit/briefs/nhoppanel268b-spec.txt
+handoff/kit/briefs/openpanel260-spec.txt
+handoff/kit/briefs/ourpanel265-spec.txt
+handoff/kit/briefs/yesnopanel293-spec.txt
+handoff/kit/dialog.py
+handoff/kit/diskscan.py
+handoff/kit/mimo/RESTART-WATCHER.md
+handoff/kit/mimo/after15.sh
+handoff/kit/mimo/common-muse.txt
+handoff/kit/mimo/diskguard.sh
+handoff/kit/mimo/ocdb.sh
+handoff/kit/mimo/resume.sh
+handoff/kit/mimo/run1.sh
+handoff/kit/mimo/rungo.sh
+handoff/kit/mimo/rungo2.sh
+handoff/kit/mimo/rungo4.sh
+handoff/kit/mimo/runq.sh
+handoff/kit/mimo/t138nf.txt
+handoff/kit/mimo/t252cf.txt
+handoff/kit/mimo/t255f.txt
+handoff/kit/mimo/t260f.txt
+handoff/kit/mimo/t261build.txt
+handoff/kit/mimo/t261panel.txt
+handoff/kit/mimo/verify.py
+handoff/kit/mimo/wait_all.sh
+handoff/kit/mimo/wait_any.sh
+handoff/kit/mimo/watch.sh
+handoff/kit/mimo/watcher.sh
+handoff/kit/rebuild_kit.py
+handoff/kit/recount235.py
+handoff/kit/recount235b.py
+handoff/kit/recount243.py
+handoff/kit/recount252.py
+handoff/kit/recount252b.py
+---HELD---
+handoff/held/benspc-336b.md
+handoff/held/e2e-330-dev.md
+handoff/held/e2e-333-creative.md
+handoff/held/e2e-338-chat.md
+handoff/held/e2e-339-style.md
+handoff/held/lis-318-train.md
+handoff/held/lis-319-train.md
+handoff/held/own-e1-pretrain.md
+handoff/held/own-m1-bpc.md
+handoff/held/rent-336b.md
+handoff/held/rsn-351b-guard.md
+handoff/held/rsn-351b-train.md
+handoff/held/rsn-354-guard.md
+handoff/held/rsn-354-train.md
+---QUEUE---
+handoff/queue/000-benspc-check.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/001-bench-bm390.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+handoff/queue/270-build.md
+handoff/queue/270-panel.md
+handoff/queue/270b-build.md
+handoff/queue/270b-panel.md
+handoff/queue/271-threshold.md
+handoff/queue/273-build.md
+handoff/queue/274-build.md
+handoff/queue/blurt2-loop.md
+handoff/queue/chat-demo-build.md
+handoff/queue/chat-weakspots.md
+handoff/queue/ideajudge-teacher.md
+handoff/queue/ideajudge-teacher2.md
+handoff/queue/lis-300-publish.md
+handoff/queue/lis-300-train.md
+handoff/queue/lis-301-train.md
+handoff/queue/lis-302-gpu.md
+handoff/queue/lis-310-chat-build.md
+handoff/queue/lis-311-chat292.md
+handoff/queue/lis-311b-chat292.md
+handoff/queue/lis-312-f0.md
+handoff/queue/lis-313-f0.md
+handoff/queue/lis-313b-f0.md
+handoff/queue/lis-314-panel.md
+handoff/queue/lis-314b-panel.md
+handoff/queue/lis-317-diag.md
+handoff/queue/lis-e2e-dev.md
+handoff/queue/mut0-build.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/001-bench-bm390.md 2>&1 | head -n 300
+echo "===HELD-BENSPC==="
+git show origin/main:handoff/held/benspc-336b.md 2>&1 | head -n 400
+COMMON RULES (the benchmarks thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). Ben asked for tonight's GPU work on his PC: NO RENTALS, whatever fails.
+TIME CAP: 7 hours in total. If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: bench-bm390, THE REGISTERED RUN bm-390: Premonition 0.1 against plain same-size models on public benchmarks (LoCoMo, MMLU-Redux, GSM8K). Marks: artifacts/claude-bm390-20260925/PASSMARKS.md; plan: design/v3/30-modes/390-public-bench-plan.md. Read both. Run ONCE. If artifacts/claude-bm390-20260925/run already exists on origin/builder-outbox, stop with DUPLICATE. The benchmark files are public test sets: the scripts download and read them; you never open, print or quote a question, an answer or a reply (count rows only). Nothing is trained.
+
+SETUP (Windows, as benspc-336b / smoke-336-win):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/bm390/tree. scripts/claude_bm390.py and scripts/claude_sleepcheck_wrap.py put scripts/winshim on the path themselves on Windows.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1 (except the one download command in step 3).
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- MiniLM (the self122 router's model) must be at C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 (from benspc-336b / 000-cache-pin). If missing, copy the Mac's pinned snapshot exactly as handoff/held/benspc-336b.md says (copy, never move; delete nothing). Check from the tree root: `python -B -c "import sys; sys.path[:0]=['scripts','scripts/winshim']; import fable_self122 as S; print(S.route122('what is your name?'))"` prints a route, no error.
+- pyarrow (reads the public data files): `python -c "import pyarrow"`; only if that fails, `python -m pip install pyarrow` into the same venv. Install or upgrade nothing else.
+- DATA = C:/Users/benja/lis301/work/bm390/data. OUT = artifacts/claude-bm390-20260925/run (inside the tree).
+
+STEPS
+1. From the tree root BEFORE anything else: check artifacts/claude-bm390-20260925/SEAL-code.sha256.txt and artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt (sha256sum -c, or the same check in Python): every line OK. Any mismatch: stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint (not in git): `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44` (about 30 s), then copy r44/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Do not write into that runs folder directly. Report the printed JSON line and the .pt sha256.
+3. Data and the two rival models (Ben approved both rivals at 02:12 UTC 2026-09-25; these are the ONLY downloads allowed):
+   `python -B scripts/claude_bm390.py fetch --data DATA` must print one line starting {"fetch": "OK" with locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300. Report that JSON line verbatim (counts and hashes only). Any DATA-MISMATCH or network error: stop, report the exact error.
+   With HF_HUB_OFFLINE=0 for this one command: `python -c "from huggingface_hub import snapshot_download as s; print(s('Qwen/Qwen3.5-2B', revision='15852e8c16360a2fea060d615a32b45270f8a8fc')); print(s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b'))"`. Q2DIR and L12DIR = the two printed paths (about 7 GB in all).
+   Load check, each separately: `python -c "import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'Q2DIR', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))"` and the same with L12DIR. A rival whose load check fails is NOT RUN: skip its commands below, report the exact error. Do not upgrade transformers or anything else for it.
+4. SMOKE on made-up data (fictional people, not a benchmark):
+   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out C:/Users/benja/lis301/work/bm390/smoke
+   python -B scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:BASE --name T --out C:/Users/benja/lis301/work/bm390/smoke
+   Both must exit 0 and print "wrote locomo_... rows=5"; the smoke sleep log must have 2 rows, both with checkpoint_exists true. If not: stop with SMOKE-FAIL, report the exact error and full traceback, run nothing on the real data. Report the smoke's wall time.
+5. Registered arms. Each command is its own process, launched ONCE (check the process list before any retry; in 336 a retry started a duplicate). Two lanes:
+   Lane 1, in this order:
+     P:   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-bm390-20260925/run/sleep_P.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out OUT
+     Pm:  python -B scripts/claude_bm390.py general --task mmlu --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+     Pg:  python -B scripts/claude_bm390.py general --task gsm8k --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+   Lane 2, in this order (plain models; each loads its model once):
+     T:   python -B scripts/claude_bm390.py locomo --data DATA --arm plain:BASE --name T --out OUT
+     Rb:  python -B scripts/claude_bm390.py locomo --data DATA --arm bm25:BASE --name Rb --out OUT
+     C:   python -B scripts/claude_bm390.py locomo --data DATA --arm closed:BASE --name C --out OUT
+     Tm:  python -B scripts/claude_bm390.py general --task mmlu --data DATA --arm plain:BASE --name T --out OUT
+     Tg:  python -B scripts/claude_bm390.py general --task gsm8k --data DATA --arm plain:BASE --name T --out OUT
+     Q2:  python -B scripts/claude_bm390.py locomo --data DATA --arm plain:Q2DIR --name Q2 --out OUT
+     Q2m: python -B scripts/claude_bm390.py general --task mmlu --data DATA --arm plain:Q2DIR --name Q2 --out OUT
+     Q2g: python -B scripts/claude_bm390.py general --task gsm8k --data DATA --arm plain:Q2DIR --name Q2 --out OUT
+     L12, L12m, L12g: the same three commands with plain:L12DIR and --name L12.
+   Start lane 1. Once P has printed its first "[bm390] conv-" line, start lane 2 at the same time if nvidia-smi shows at least 8 GB of GPU memory free; otherwise run lane 2 after lane 1. If P stops with SLEEP-NOT-LEARNING or STATE-RESET-FAILED: stop lane 1, let lane 2 finish, copy back what exists, report. A lane-2 command that fails does not stop the others; report its traceback.
+6. Copy run/ back to the Mac; check sizes and sha256 match BensPC. Leave the downloaded models on BensPC.
+7. RESULTS-benspc.md in artifacts/claude-bm390-20260925/, counts only: seal results (both); step 2's JSON line and sha256; step 3's fetch line, the two model paths and load-check lines (or errors); the smoke result; for each command, its last printed "wrote ..." line, exit code and wall time; the row count of every run/*.jsonl file; for sleep_P.jsonl: rows, rows with checkpoint_exists true, rows with attempted true; lane 2 parallel or after; GPU; any traceback in full. Quote no question, answer or reply.
+PUSH: artifacts/claude-bm390-20260925/RESULTS-benspc.md artifacts/claude-bm390-20260925/run
+===HELD-BENSPC===
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). Ben asked for tonight's GPU work on his PC (no rentals tonight).
+TIME CAP: 3 hours in total. If the cap is reached, stop, copy back what exists, report.
+
+YOUR TASK: benspc-336b, THE REGISTERED FOLLOW-UP RUN 336b of Premonition 0.1, on BensPC (Windows). Marks: artifacts/claude-e2e336b-20260925/PASSMARKS-336b.md and what it points to in artifacts/claude-e2e336-20260924/; read them. Ben approved this run (00:56 UTC 2026-09-25). This replaces handoff/held/rent-336b.md (same run, rental version, never run). Bank artifacts/claude-e2e331-bankB-20260925 is TEST-ONLY: never open, print or quote it; only the runner and scorer read it. If artifacts/claude-e2e336b-20260925/run already exists on origin/builder-outbox, stop with DUPLICATE.
+
+SETUP (as smoke-336-win did, artifacts/claude-smoke336win-20260924/RESULTS.md):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/e2e336b/tree.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- MiniLM (the self122 router's model; smoke-336-win failed only because it was missing on BensPC): copy the Mac's pinned snapshot (~/premonition-models/minilm/, from 000-cache-pin; else the Mac's ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2) to C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 with the same folder layout (refs/, snapshots/<rev>/). Copy, never move; delete nothing. This is the same model the stack already uses, not a new download. Check: `python -B -c "import sys; sys.path[:0]=['scripts','scripts/winshim']; import fable_self122 as S; print(S.route122('what is your name?'))"` from the tree root prints a route, no error.
+
+STEPS
+1. From the tree root BEFORE anything else: `sha256sum -c artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt` (or the same check in Python) must be OK for all 229 lines, and the bank's SEAL.sha256.txt OK for all 3 (run inside the bank folder). Any mismatch: stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint (not in git): `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/e2e336b/r44` (about 30 s), then copy r44/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Do not write into that runs folder directly. Report the printed JSON line and the .pt sha256.
+3. SMOKE (report only, DEV bank, not bank B): arm G on one DEV life, with the sleep check:
+   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=C:/Users/benja/lis301/work/e2e336b/smoke/sleep_G.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out C:/Users/benja/lis301/work/e2e336b/smoke --arm claude_e2e360:build_360 --name G --model READER --gen-model BASE --lives e2e-dev-01
+   It must exit 0, write arm_G.jsonl with >= 20 rows, and the sleep log must have >= 1 row, all with checkpoint_exists true. If not: stop with SMOKE-FAIL, report the exact error and full traceback, do not touch bank B. Report the smoke's median and slowest ms per turn.
+4. Four arms on bank B, one after another, each its own process, each launched ONCE (check the process list before any retry; in 336 a retry started a duplicate). All with `--bank artifacts/claude-e2e331-bankB-20260925 --out artifacts/claude-e2e336b-20260925/run`. First two printed lines of each: "sleepcheck: ..." and "twinb: the plain twin is Twin336b (enable_thinking=False)". If an arm stops with SLEEP-NOT-LEARNING: stop the task, copy the sleep log back, report.
+   G: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-e2e336b-20260925/run/sleep_G.jsonl GRAM360_LOG=artifacts/claude-e2e336b-20260925/run/gram360_parts_G.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm claude_e2e360:build_360 --name G --model READER --gen-model BASE
+   P: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-e2e336b-20260925/run/sleep_P.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm claude_e2e330c:build_330c --name P --model READER --gen-model BASE
+   T: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-e2e336b-20260925/run/sleep_T.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm twin --name T --model BASE
+   B: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-e2e336b-20260925/run/sleep_B.jsonl python -B scripts/claude_sleepcheck_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm 292t --name B --model READER
+   (T has no sleep, so sleep_T.jsonl may not exist.)
+5. python -B scripts/claude_e2e336_score.py --bank artifacts/claude-e2e331-bankB-20260925 --runs artifacts/claude-e2e336b-20260925/run/arm_G.jsonl artifacts/claude-e2e336b-20260925/run/arm_P.jsonl artifacts/claude-e2e336b-20260925/run/arm_T.jsonl artifacts/claude-e2e336b-20260925/run/arm_B.jsonl --out artifacts/claude-e2e336b-20260925/score
+6. Copy run/ (including sleep_*.jsonl and gram360_parts_G.jsonl) and score/ back to the Mac; check sizes and sha256.
+7. RESULTS-benspc.md in artifacts/claude-e2e336b-20260925/, counts only: the scorer's printed line for each arm; seal results; step 2's JSON line and sha256; the smoke result; per sleep log: rows, rows with checkpoint_exists true, rows with attempted true; GPU, wall time per arm; any traceback in full. Do NOT open any judge_*.jsonl, grammar_*.jsonl, gram360_parts_G.jsonl or the bank, and quote no reply.
+PUSH: artifacts/claude-e2e336b-20260925/RESULTS-benspc.md artifacts/claude-e2e336b-20260925/run artifacts/claude-e2e336b-20260925/score
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/000-benspc-check.md 2>&1 | head -n 150
+echo "===000-smoke==="
+git show origin/main:handoff/queue/000-smoke.md 2>&1 | head -n 200
+COMMON RULES (the director, Claude, wrote this task on 2026-09-25). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md. REPORT ONLY: change nothing, install nothing, stop nothing.
+GPU: yes (BensPC; one job at a time).
+TIME CAP: 5 minutes in total.
+
+YOUR TASK: 000-benspc-check. Ben asked for tonight's GPU work to run on his own PC. Check that BensPC is reachable and ready.
+1. Run `nvidia-smi` on BensPC and report the exact GPU name, total memory, driver version, and whether any process is using the GPU.
+2. Report free disk space on C:.
+3. Report whether C:/Users/benja/lis300/venv/Scripts/python.exe runs `import torch; print(torch.cuda.is_available())`.
+Final reply: one line per item, then `BENSPC OK` or `BENSPC FAIL: <reason>`.
+===000-smoke===
+SMOKE TEST (director, 2026-09-23). You are a Muse agent in the worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27.
+Do not create, edit or delete any file. Run only: `df -g /`, `uptime`, `git log --oneline -1`.
+Final reply: the three outputs, then the single word SMOKE-OK.
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/330-rent-kit.md 2>&1 | head -n 300
+echo "===OPUS-RULES head==="
+git show origin/main:handoff/kit/briefs/OPUS-RULES.txt 2>&1 | head -n 100
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+===OPUS-RULES head===
+RULES (read fully before starting)
+Repo (work only here): /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (a git worktree; run everything from this directory; use repo-relative paths in seals).
+Python: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ...
+Hard rules:
+- Additive only. Create new files (scripts/claude_<exp>_*.py, artifacts/claude-<name>-20260922/, design/v3/30-modes/<exp>-<name>-opus.md). Never edit an existing file, a sealed artifact, another agent's file, or anything under archive/, premonition/, learnlab/, artifacts/opus-*. Subclass or wrap existing agents instead of editing them. The predictions ledger artifacts/fable-predictions-ledger.md is append-only (add lines with cat >>; never change an existing line).
+- Never write to the repo-root notebook/ directory; always pass an isolated scratch notebook/work dir.
+- Fictional names only in any data you write.
+- Test sets you must never open, print or tune on: the reading panels (reading94, reading94b), artifacts/fable-naturalpanel208-20260922/, artifacts/claude-tablepanel221-20260922/.
+- Validation split only; never load test.pt. No network. No git commits, PRs or pushes. Never read or print anything under ~/.config, any API key, or opencode config.
+- The Mac (10 cores) is shared with other agents: run heavy suites one at a time; check `uptime` before each registered run and wait while the 1-minute load is above 60. Keep each run under 25 minutes.
+- Registration protocol: pilot everything first. Then write PASSMARKS.md (marks, bars, predicted moves) and seal it together with your agent code, config and case files: from the repo root, shasum -a 256 <repo-relative paths> > artifacts/<your dir>/SEAL.sha256.txt. Append numbered predictions P<exp>.<n> to the ledger. Only then do the registered runs. Any change to a sealed file after the seal makes the registered verdict FAIL (say so; never re-seal). A driver-only bug fix after the seal must be reported with its diff. Report every case and every seed. A FAIL is reported as FAIL with one diagnosis note; no silent re-runs.
+- Finish with artifacts/<your dir>/RESULTS.md: result first; a marks table with integer counts; every move listed; deviations; "What it means" and "What it doesn't mean" in plain high-school English. Claims never exceed evidence. Your final message: verdict, marks table, deviations, means / doesn't-mean lines.
+Useful existing tools:
+- Base agent 138i (the accepted base): scripts/fable_loop138i_agent.py with config artifacts/fable-agent138i-20260922/loop138i-config.json.
+- Probe runner: python -B /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/dialog_nb.py <agent.py> <config> <fresh workdir> <probe.json> (probe.json = list of dialogs, each a list of turns; prints each reply and the stored triples).
+- Frozen-suite diff: scripts/fable_suitediff218.py --agent <agent.py> --config <config> --base 138i --out <dir> --only rt136,rt143,sessions152,bench (moves by class + a GATE clean/NOT clean line; --base-dir compares against another agent's saved rows; see --help).
+- Sleep smoke: scripts/fable_sleepsmoke206.py (see --help).
+- Known flake: about 1 in 800 bench items (and rarely an rt143 case) flips between identical runs, always toward an abstain or "Was that a question?". Agent 228 is hunting it. If a registered run shows one unpredicted move of that kind, report it as it is (it still counts against the mark), then run that item alone 5 times and report those results too.
+- Panel schema contract (added 2026-09-22 16:10 after 232b lost its run to a field mismatch). When a separate writer makes your blind panel, the director's brief gives you its exact schema: file names, field names, family names and expect labels. Your scorer must check that schema when it loads the panel, before scoring anything. If a required file, field, family or label is missing or unexpected, the scorer prints SCHEMA-MISMATCH and exits with code 3. It gives no verdict at all. That run is VOID, not FAIL. Report it to the director and do not score by hand. Writers must use the schema exactly as given, and must not add fields the scorer needs to read unless the brief lists them.
+- Trap items: a trap states no fact the scorer should count as correct. If an item states a true fact and also asks something the agent should decline, label it with its own family, not "trap".
+
+ADDED 2026-09-22 18:05: on this Mac, `python3` under bash may resolve to a broken x86 binary. Run every script (drivers, scorers, checks) with the uv prefix (`uv run --offline --no-project --python 3.12 ... python -B`) or /usr/bin/python3, and write sealed drivers that way. Test the driver's interpreter in the pilot, before the seal.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/000-cache-pin.md 2>&1 | head -n 200
+echo "===000-ckpt-copy==="
+git show origin/main:handoff/queue/000-ckpt-copy.md 2>&1 | head -n 150
+CACHE PIN + FIND THE DELETER (director, 2026-09-24 03:58 UTC). Small CPU task on the Mac. Never print secrets. Never delete anything. Stop processes only by exact PID, and only if the director says so (here: don't).
+Context: ~/.cache/huggingface/hub (the MiniLM router snapshot used by the self122 router) vanished twice on 2026-09-23 (~22:02 ET during 274, again during mut-0).
+1. Check the snapshot is present now (ls ~/.cache/huggingface/hub). If missing, report MISSING-CACHE and stop.
+2. Copy (cp -R, not move) the MiniLM snapshot directory to ~/premonition-models/minilm/ and record its file sha256s in runs/000-cache-pin/pin.txt.
+3. Find what deleted it: grep the watcher log (~/premonition-watch/watch.log) and every runs/*/ reply and script in the worktree and ~/premonition-watch for "huggingface", "rm -rf", ".cache", "cache purge", "hf cache", and list the tasks running at ~22:00 ET on 2026-09-23. Also check crontab -l and launchctl list for cleanup jobs. Report the likely culprit(s) with evidence; change nothing.
+Final line: PINNED <path> and CULPRIT <best guess or UNKNOWN>.
+PUSH: runs/000-cache-pin/pin.txt
+===000-ckpt-copy===
+COMMON RULES (the director, Claude, wrote this task on 2026-09-22). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+
+GETTING YOUR FILES: git fetch -q origin main, then read each named file with git show origin/main:<path>.
+
+YOUR TASK: builder for exp 264, the question-answering checker. Read design/v3/30-modes/264-qa-checker.md (the one change, exact prompts and save rule) and handoff/kit/briefs/261-earcheck.txt (BensPC, llama-server, ear, arms). In this worktree read artifacts/claude-earcheck261b-20260923/PASSMARKS.md + RESULTS.md and scripts/claude_earcheck261_*.py + scripts/claude_earcheck261b_*.py (read-only; import, never edit). New files only: scripts/claude_earcheck264_*.py, artifacts/claude-earcheck264-20260923/, ledger lines P264.n.
+GPU: yes
+
+YOUR TASK: make a local backup of the v4.1 ear checkpoint so cloud GPUs can use it. Over ssh benspc, find the file whose sha256 starts 55284dec (under C:\Users\benja\smolear235\out_v41\). Copy it (scp) to ~/premonition-weights/smolear235_v41/ on the Mac (NOT inside the repo; never git add it). Verify the sha256 on the Mac matches exactly. Report the path, size and sha. Touch nothing else on BensPC; never touch pythonw 13036.
+PUSH:
+[0m
+[0m$ [0mcat ~/.ssh/config 2>&1 | head -n 100; echo "---"; ssh -o ConnectTimeout=10 -o BatchMode=yes benspc "echo OK; hostname; nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv 2>&1 | head" 2>&1 | head -n 30
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo OK" 2>&1 | head -n 20
+echo "---NVIDIASMI---"
+ssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1 | head -n 40
+OK
+---NVIDIASMI---
+Thu Sep 24 23:17:29 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   35C    P8              8W /  250W |     599MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19328    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+[0m
+[0m# [0mTodos
+[•] Verify no DUPLICATE + read PASSMARKS/plan, check seals locally
+[ ] Build tree (builder-outbox + main + self122_head) and copy to BensPC C:/Users/benja/lis301/work/bm390/tree
+[ ] BensPC setup checks (READER/BASE/MiniLM/router/pyarrow)
+[ ] Step 1 seals + Step 2 r44 base + Step 3 fetch + rival downloads + load checks
+[ ] Step 4 smoke on made-up data
+[ ] Step 5 registered arms Lane1+Lane2
+[ ] Step 6 copy run/ back + verify, Step 7 RESULTS-benspc.md + push
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-bm390-20260925/SEAL-code.sha256.txt 2>&1 | head -n 30
+echo "===count==="
+git show origin/main:artifacts/claude-bm390-20260925/SEAL-code.sha256.txt 2>&1 | wc -l
+echo "===data-manifest==="
+git show origin/main:artifacts/claude-bm390-20260925/data-manifest.json 2>&1 | head -n 100
+echo "===e2e336b seal count==="
+git show origin/main:artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt 2>&1 | wc -l
+eb50c203fdcf38821b49b4439d31d340e53a83f0bba2faae33d1baaa797467b3  scripts/claude_bm390.py
+f53dd2966ba3a8de492ae89ce8658c2468f3029872b24d15a57bc98aee7b81e0  scripts/claude_bm390_score.py
+bfbe2753c947cbdde9d8651d2d41e85efc16bb2b498e12a8923cb6795d3a3dc1  artifacts/claude-bm390-20260925/PASSMARKS.md
+c945527f89c0cadb2bc9e53628a39e3720010b2ebebde0c3010c097b9d87c56d  artifacts/claude-bm390-20260925/data-manifest.json
+edd1ca6b6a521d6a1968d5a666e62d7015f1bd8c94c3dafa08a58d004c708bff  artifacts/claude-bm390-20260925/smoke/locomo10.json
+50043247e37ad8d032f09302f18a139a61f39ebcb33e4b1974cc33a0aa5f1b07  artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+ac1cdbfd2140b256061e5dbe1e7e7de76b3ea5724267f47972f8194f824c17fe  artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+77a3d80201d8e6f10832530dd97c38c736b9553294f57c7d8f9767eb1a7f3980  design/v3/30-modes/390-public-bench-plan.md
+===count===
+       8
+===data-manifest===
+{
+ "gsm8k_revision": "740312add88f781978c0658806c59bc2815b9866",
+ "gsm8k_test_sha256": "ee7b8da9e381df27b9e3f7758a159ab2bdaa4dbaa910546cbbc47e0cb44e4f59",
+ "locomo10_sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+ "locomo_commit": "3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+ "mmlu_redux_files": {
+  "abstract_algebra": "fe3b1b5aeb5a4a8542707fffb71011757e58102c963891723e72f85ed59e7360",
+  "anatomy": "02e5430bb850c999fd0360c4d0a7b8b497d6a77baa032ddf75a9bbb61edfa2e1",
+  "astronomy": "14ce04c3ab6cce3041b72d5b669d5a2f02bb847e86ea37b45c248b189e5a7b04",
+  "business_ethics": "a951880958fb05bf5a1b413fb8f67db98a4454f8d6c659240fe918039d106028",
+  "clinical_knowledge": "22751969c400ca778350327bf672389cf998b2243c8774ec799fe1dde73cfb70",
+  "college_biology": "e1f6533faf45cc16a5931d73ef73a0f730604aeea55314a2c9304ddb91cefd12",
+  "college_chemistry": "f6c3c5955ef320051bae52881ffd6006bb1d2d1f187fde18a241111f5b155800",
+  "college_computer_science": "f4c2115b5da06e23b5bfcfb5be7d909bb658ac86a1506b564f83339b1163f6ca",
+  "college_mathematics": "86d49192ad35f31bf9666ee194d43d3b852dd52f7463474e8b7b1d691e86cc37",
+  "college_medicine": "77c854a9268649408cce3dc7b9bac2d7140f01b52b8f6fdf1ee70895ce264802",
+  "college_physics": "9877df1697482b5c1add4f1e0169e96ca7413aac9a361d599b23bf3d2cfc7a6a",
+  "computer_security": "c8c91dad780d00c0d6a51123bc870a0eb85fc6d9198b86d053e04c9036b23cf8",
+  "conceptual_physics": "82f09349d8ffb74646bbbe7ce0fa10e43d9c898ee4370b2799cdc25f7e4dcefc",
+  "econometrics": "95ae4551a0df3b6cc84924f5d9fc4bd17f1743b44f5dab7725057126b86354f0",
+  "electrical_engineering": "5c88d812fcb1b10d57d5fa735e2ee8c0d4974ba5e5d3e33a01a3cc2378e0e5b9",
+  "elementary_mathematics": "f4b986d25dd5b76c3dd5bbba6109f39c84caee7b604b97c01fe0d8cc25806cbe",
+  "formal_logic": "9c1b0d50c4c871fe0e8e59d36b53e16f4e241fa6fdb21055336eac180273bb03",
+  "global_facts": "47d3e105a90e91210a942e1d73b36bd86b3c9acf642be5c9e5bbc4090ccb7c97",
+  "high_school_biology": "7921b3460b8faacbe3125e09129f8c8b43d9115ac108b585c96d145af7559026",
+  "high_school_chemistry": "df3ac67951d86f992e997fae622ae8b07b4b54f60ef5cfefdc636880920f8706",
+  "high_school_computer_science": "f478f5265e23fbd20005accdf9631fdc1bf41feb5ae76e50770ce0179f4573db",
+  "high_school_european_history": "bbcd2d1c51a96698f0581b8db6795ed6be4216ca7429822b2ca634d1f15590cf",
+  "high_school_geography": "4fad69de3874d0a36ac2aa5ade2d6700e507d67e9ea11deacac7f424d482d8f3",
+  "high_school_government_and_politics": "d6309c6050c3d5da9320320887504c1b1bd7d34681e3ea38c27e0dab27226658",
+  "high_school_macroeconomics": "4049f204336f1314b84219100f45d857a995a6d33e6e84e0a4a341053fe83e94",
+  "high_school_mathematics": "2b738b8cfeab0ded298c13a8dd5de316304148ddbf345134210a5b10cd748143",
+  "high_school_microeconomics": "a55042dbeb07e799515a0e1da593220d2050fa32ca1e6aceb2fca86cc1775871",
+  "high_school_physics": "645ee034f57fbd95d4200f5ea11303dd0e5a0f059ea6bda6e5b5dd439ae9eec0",
+  "high_school_psychology": "c153b49f62249eed94acd0edec9bd99b60ff3276191424721086c030e65af63b",
+  "high_school_statistics": "56b17e083f6a2a1603425108e84bace31a17003aa1a499d3feabbc14f5090ef5",
+  "high_school_us_history": "97dd3acc62d9e8e6b6a75f8c5e4021a34e27b5e9737228c9384f21bb84c5772d",
+  "high_school_world_history": "e1cb493310b14c680342f67f0b7673543555fb16f4287a6fcd36f2cf39b08f79",
+  "human_aging": "d307bbeb48f2f3aadab26a205f92333a079f455d2fceb0fd69cb9f43118b6fcd",
+  "human_sexuality": "6aa24317b00dc19b2fbd60ad283f4bc1f9377bfab7de74b93cbc6cfdc191af56",
+  "international_law": "f6efce8412ceeed65e96425c6ce2f1e38a4fc1386bdae24225b81e7edab9970d",
+  "jurisprudence": "e76c98d24d27ce8e846a73dbdd54c217d2bcf35d172bc50b303d0a140ee01f57",
+  "logical_fallacies": "38485e4408802f675196563d3e58f613c53b6481e0c78f54f4bc0411d839ac41",
+  "machine_learning": "3b02f5e1b78c35f055c32b7eee84df7b51afa675546742d4118d3e2f1a9c7734",
+  "management": "def84bb6273b45fa6edbfd40481119a0fb71f7e5120d62027e8b1e7fbab7c28c",
+  "marketing": "9519c42a10af236db619dc7bae97dc512a0b2a69ad2eb0a47d93d5da2e7e7675",
+  "medical_genetics": "5e986a5c15a0608b70d56d57ecfb1a1407200519930f96f4e652b03ce1919b3c",
+  "miscellaneous": "e889cf0f0c5a7548addeeeae9b466ced84e7ef5e4ae0634bd837240ae54dfe48",
+  "moral_disputes": "7a82a2394729c58858c0ecbf793c1503727cfe55aee57483c9a8794383c57cc7",
+  "moral_scenarios": "2bb49ed349c1b197745062937029032a75bac696489c514e9518f509c7b1ce87",
+  "nutrition": "bc091ad9e2e0f8a9138d8a63fee63ea1db0ab74b5ef30157975c446b90102e2a",
+  "philosophy": "ef81ced829d9ba6ef07cdb738f2b1684f392b32793dbeff73a9e9f4aaef0019d",
+  "prehistory": "0b19068bddbd35c09492fac5b446cdda08270e4eed2c7627d2f8832fdc6c3066",
+  "professional_accounting": "5bcc48f8dc90f7ca1c6cfcacd2fd2d1912f882008ebd6e80bee77c467793ad69",
+  "professional_law": "96e999ac932c6f16dfabc6a75ca010e4e834df5fc4c232a5111b39ab63cead73",
+  "professional_medicine": "4ac9504b1c446a79970f9b738e257bcee6bd23861ed53feb04ee15441d375adc",
+  "professional_psychology": "c2ce518a4e5a77ee8eac6888301b0d1f5cffdef7664631c3a790b979e8a872e0",
+  "public_relations": "fd73ee7872e32e7b92ad1b17623a6b5267fc25673eacadb2655c7a48e20b4980",
+  "security_studies": "b107d1a96a3cf0afd220a82ef1a88b50cf8efe51279b06f30e4cd05b972a9203",
+  "sociology": "f4ba2696248ad871f13a86f937e8f4151b486ac90b667172e9c2cec51ff9fa97",
+  "us_foreign_policy": "f116de49a5b8fa99b28f139ed9033ef633ff00549cad74894808e8e8613f2b73",
+  "virology": "0582accdff6d056143441c1a1170876f51b09098cbca31cbd0b9ecbca5210c53",
+  "world_religions": "17982b7da6d53701879648508ecd674dbb497f37eb43bf6d75b90af1a682deac"
+ },
+ "mmlu_redux_revision": "372ea425445d51e1ba1188c56e5e893f8138621f"
+}===e2e336b seal count===
+     229
+[0m
+[0m$ [0mdate -u; uptime; df -g / 2>&1 | head; ls ~/premonition-models/ 2>&1 | head -n 20; ls ~/premonition-models/minilm/ 2>&1 | head -n 20; shasum -a 256 artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head; ls ~/.cache/huggingface/hub/ 2>&1 | head -n 20
+Fri Sep 25 03:17:39 UTC 2026
+23:17  up 1 day, 13:10, 4 users, load averages: 19.67 24.30 25.40
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        29    31%  484014 304938720    0%   /
+lis300-merged
+lis301-merged
+minilm
+own-m1-mouth
+own-m1n-mouth
+rsn294
+rsn296
+rsn296b
+rsn350
+rsn351
+models--sentence-transformers--all-MiniLM-L6-v2
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+models--sentence-transformers--all-MiniLM-L6-v2
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"Get-PSDrive C | Select-Object Used,Free; Test-Path C:/Users/benja/lis301/work/bm390/tree; Test-Path C:/Users/benja/lis301/work/run/merged; Test-Path 'C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B'; Test-Path 'C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2'\"" 2>&1 | head -n 30
+Used        Free
+        ----        ----
+969320853504 53822980096
+False
+True
+True
+False
+[0m
+[0m$ [0mls ~/premonition-models/minilm/ 2>&1 | head -n 30; echo "---HUB---"; ls ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/ 2>&1 | head -n 30; echo "---SNAP---"; ls ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/ 2>&1 | head; echo "---REFS---"; ls ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/refs/ 2>&1 | head; echo "---LIS301---"; shasum -a 256 ~/premonition-models/lis301-merged/model.safetensors 2>&1 | head; echo "---BLOBS count---"; ls ~/premonition-models/minilm/snapshots/*/ 2>&1 | head -n 20
+models--sentence-transformers--all-MiniLM-L6-v2
+---HUB---
+snapshots
+---SNAP---
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+---REFS---
+ls: /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/refs/: No such file or directory
+---LIS301---
+b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890  /Users/ben-hannan/premonition-models/lis301-merged/model.safetensors
+---BLOBS count---
+zsh:1: no matches found: /Users/ben-hannan/premonition-models/minilm/snapshots/*/
+[0m
+[0m$ [0mls -R ~/premonition-models/minilm/ 2>&1 | head -n 50; echo "==="; ls -R ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/ 2>&1 | head -n 50; echo "==="; git show origin/main:handoff/queue/000-cache-pin.md 2>&1 | head -n 100; echo "===pin file on builder-outbox?==="; git ls-tree -r --name-only origin/builder-outbox -- runs/000-cache-pin/ 2>&1 | head
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/premonition-models/minilm//models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+===
+snapshots
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2//snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2//snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+===
+CACHE PIN + FIND THE DELETER (director, 2026-09-24 03:58 UTC). Small CPU task on the Mac. Never print secrets. Never delete anything. Stop processes only by exact PID, and only if the director says so (here: don't).
+Context: ~/.cache/huggingface/hub (the MiniLM router snapshot used by the self122 router) vanished twice on 2026-09-23 (~22:02 ET during 274, again during mut-0).
+1. Check the snapshot is present now (ls ~/.cache/huggingface/hub). If missing, report MISSING-CACHE and stop.
+2. Copy (cp -R, not move) the MiniLM snapshot directory to ~/premonition-models/minilm/ and record its file sha256s in runs/000-cache-pin/pin.txt.
+3. Find what deleted it: grep the watcher log (~/premonition-watch/watch.log) and every runs/*/ reply and script in the worktree and ~/premonition-watch for "huggingface", "rm -rf", ".cache", "cache purge", "hf cache", and list the tasks running at ~22:00 ET on 2026-09-23. Also check crontab -l and launchctl list for cleanup jobs. Report the likely culprit(s) with evidence; change nothing.
+Final line: PINNED <path> and CULPRIT <best guess or UNKNOWN>.
+PUSH: runs/000-cache-pin/pin.txt
+===pin file on builder-outbox?===
+runs/000-cache-pin/000-cache-pin.exit
+runs/000-cache-pin/000-cache-pin.go1.done
+runs/000-cache-pin/000-cache-pin.go1.err.txt
+runs/000-cache-pin/000-cache-pin.go1.reply.md
+runs/000-cache-pin/000-cache-pin.md
+runs/000-cache-pin/pin.txt
+[0m
+[0m$ [0mgit show origin/builder-outbox:runs/000-cache-pin/pin.txt 2>&1 | head -n 30
+echo "===SMOKE336==="
+git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-smoke336win-20260924/ 2>&1 | head -n 20
+echo "===ARTIFACTS main bm390 smoke files?==="
+git show origin/main:artifacts/claude-bm390-20260925/smoke/locomo10.json 2>&1 | head -c 500; echo
+# CACHE PIN - MiniLM router snapshot - 2026-09-24 04:23 UTC (director task)
+# source: ~/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+# pinned copy: ~/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2
+# method: cp -R (copy, not move); sha256 verified source==dest
+Thu Sep 24 04:24:06 UTC 2026
+
+## source sha256:
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+
+## pinned copy sha256:
+953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json
+53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/model.safetensors
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3  /Users/ben-hannan/premonition-models/minilm/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/vocab.txt
+
+## ls source:
+models--sentence-transformers--all-MiniLM-L6-v2
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2:
+snapshots
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots:
+1110a243fdf4706b3f48f1d95db1a4f5529b4d41
+
+/Users/ben-hannan/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/1110a243fdf4706b3f48f1d95db1a4f5529b4d41:
+config.json
+model.safetensors
+vocab.txt
+
+===SMOKE336===
+artifacts/claude-smoke336win-20260924/RESULTS.md
+artifacts/claude-smoke336win-20260924/run/smoke336win_console.txt
+===ARTIFACTS main bm390 smoke files?===
+[
+ {
+  "sample_id": "smoke-1",
+  "conversation": {
+   "speaker_a": "Wren",
+   "speaker_b": "Tobin",
+   "session_1_date_time": "4:10 pm on 3 March, 2024",
+   "session_1": [
+    {
+     "speaker": "Wren",
+     "dia_id": "D1:1",
+     "text": "Hi Tobin! I started a pottery class last week."
+    },
+    {
+     "speaker": "Tobin",
+     "dia_id": "D1:2",
+     "text": "Nice! My sister Juno is a nurse in Harrowgate, she loves pottery too."
+    },
+    {
+     "speaker": "Wren",
+     "dia_id": "D1:3",
+     "t
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-smoke336win-20260924/RESULTS.md 2>&1 | head -n 200
+# smoke-336-win RESULTS: FAIL (BensPC, 2026-09-24)
+
+Verdict: FAIL. The joined month-end agent did not run on BensPC. Exit code 1
+after ~1.7 s wall time. Nothing was written: `arm_smoke.jsonl` was not created
+(the `--out` directory was never created on BensPC). No code was edited.
+
+## Command (from tree root, exactly as specified)
+
+```
+python -B scripts/claude_e2e336_run.py --bank artifacts/claude-e2e331-dev-20260924 --out artifacts/claude-smoke336win-20260924/run --arm claude_chat338_run:build_P --name smoke --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --lives e2e-dev-01
+```
+
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe (3.10.9)
+- Env: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+- Exit code: 1. Wall time: ~1.7 s (WALLSEC 1.68 on run 1; rerun for log capture
+  identical). GPU idle before run (~599 MiB used); process exited immediately.
+
+## Exact error (console stdout, in full)
+
+```
+MISSING-CACHE: the self122 MiniLM router did not load (FileNotFoundError(2, 'The system cannot find the path specified')); restore the Hugging Face snapshot, then rerun. Nothing was run.
+```
+
+Traceback: none. The runner raises SystemExit with the message above
+(scripts/claude_e2e336_run.py preflight, lines ~212-218); there is no Python
+traceback. The full console output is preserved in `run/smoke336win_console.txt`.
+
+## Counts
+
+- Rows written to arm_smoke.jsonl: 0 (file not created; expected >= 20 = the 20
+  user turns of DEV life e2e-dev-01, plus any confirm_answer rows).
+- Median ms per turn: n/a (nothing ran).
+- Slowest ms per turn: n/a (nothing ran).
+- GPU: NVIDIA GeForce RTX 5070 Ti, 16303 MiB total.
+- Lives attempted: e2e-dev-01 only (20 user turns: day1=6, day2=7, day3=7).
+
+## Verified inputs (all matched, none pushed)
+
+- Combined tree: git archive origin/builder-outbox, then git archive
+  origin/main on top; self122_head.pt copied in, sha256
+  5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25 (match).
+  Tree on BensPC: C:/Users/benja/lis301/work/smoke336win/tree (scripts,
+  winshim, DEV bank all present).
+- READER C:/Users/benja/lis301/work/run/merged/model.safetensors sha256
+  b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890 (full match).
+- BASE C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+  (commit hash matches expected 87179e5c...).
+- DEV bank artifacts/claude-e2e331-dev-20260924 (dev data, 10 lives, 194 turns,
+  131 facts) present in tree. No panel file opened, read, or quoted.
+
+## What this means (and does not mean)
+
+- The Windows `resource` shim is NOT the blocker: `import resource` via
+  scripts/winshim succeeds on BensPC (ru_maxrss=0 namespace), and
+  `import fable_reasoner50` (the module with the Unix-only `import resource`)
+  succeeds with scripts + scripts/winshim on sys.path, exactly as the runner
+  sets up on nt.
+- The blocker is the missing self122 MiniLM snapshot on BensPC:
+  C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2
+  does not exist (cache holds only allenai scibert and openbmb MiniCPM5-1B).
+  The preflight calls fable_self122.route122 with HF_HUB_OFFLINE=1, so it
+  cannot download mid-run and exits before any turn.
+- Recommendation: Sunday's registered run 336 should NOT stay on BensPC as-is.
+  Either restore the MiniLM snapshot to benja's Hugging Face cache on BensPC
+  and re-run this smoke, or keep 336 on a rented Linux GPU per
+  design/v3/30-modes/330-rent-kit.md.
+[0m
+[0m$ [0mls /tmp/ 2>&1 | head; echo "START BUILD"; T=$(mktemp -d)/tree; mkdir -p $T; echo "T=$T"; git archive origin/builder-outbox | tar -x -C $T; echo "builder-outbox done $?"; git archive origin/main | tar -x -C $T; echo "main done $?"; mkdir -p $T/artifacts/fable-self122-20260922; cp artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/; shasum -a 256 $T/artifacts/fable-self122-20260922/self122_head.pt; echo "TREE_ROOT=$T"; ls $T | head -n 20; echo $T > /tmp/bm390_tree_path.txt; cat /tmp/bm390_tree_path.txt
+__KMP_REGISTERED_LIB_19337
+__KMP_REGISTERED_LIB_73221
+__KMP_REGISTERED_LIB_73222
+__KMP_REGISTERED_LIB_73227
+__KMP_REGISTERED_LIB_73229
+__KMP_REGISTERED_LIB_73236
+__KMP_REGISTERED_LIB_73239
+__KMP_REGISTERED_LIB_73242
+__KMP_REGISTERED_LIB_73245
+__KMP_REGISTERED_LIB_73248
+START BUILD
+T=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.mDoPdljV3K/tree
+builder-outbox done 0
+main done 0
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.mDoPdljV3K/tree/artifacts/fable-self122-20260922/self122_head.pt
+TREE_ROOT=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.mDoPdljV3K/tree
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+CLAUDE.md
+data
+design
+handoff
+learnlab
+memorylab
+premonition
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scripts
+status
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.mDoPdljV3K/tree
+[0m
+[0m$ [0mT=$(cat /tmp/bm390_tree_path.txt); du -sh $T 2>&1 | head; tar czf /tmp/bm390_tree.tgz -C $(dirname $T) tree 2>&1 | head; ls -lh /tmp/bm390_tree.tgz 2>&1 | head
+1.9G	/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.mDoPdljV3K/tree
+-rw-r--r--  1 ben-hannan  wheel   159M Sep 24 23:20 /tmp/bm390_tree.tgz
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/bm390_tree.tgz benspc:"C:/Users/benja/lis301/work/bm390/tree.tgz" 2>&1 | head -n 20; echo SCP_EXIT:$?
+scp: dest open "C:/Users/benja/lis301/work/bm390/tree.tgz": No such file or directory
+scp: failed to upload file /tmp/bm390_tree.tgz to C:/Users/benja/lis301/work/bm390/tree.tgz
+SCP_EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"New-Item -ItemType Directory -Force -Path C:/Users/benja/lis301/work/bm390/tree | Out-Null; Test-Path C:/Users/benja/lis301/work/bm390/tree\"" 2>&1 | head
+True
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/bm390_tree.tgz benspc:"C:/Users/benja/lis301/work/bm390/tree.tgz" 2>&1 | head -n 20; echo DONE
+DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"tar xzf C:/Users/benja/lis301/work/bm390/tree.tgz -C C:/Users/benja/lis301/work/bm390/; Get-ChildItem C:/Users/benja/lis301/work/bm390/tree | Select-Object -First 10 Name\"" 2>&1 | head -n 30
+Name       
+----       
+.claude    
+archive    
+artifacts  
+data       
+design     
+handoff    
+learnlab   
+memorylab  
+premonition
+reviews
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"Get-ChildItem C:/Users/benja/lis301/work/bm390/ | Select-Object Name; Get-ChildItem C:/Users/benja/lis301/work/bm390/tree/ | Select-Object -First 15 Name\"" 2>&1 | head -n 40
+Name       
+----       
+tree       
+tree.tgz   
+.claude    
+archive    
+artifacts  
+data       
+design     
+handoff    
+learnlab   
+memorylab  
+premonition
+reviews    
+runs       
+scripts    
+status     
+tests      
+.DS_Store
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"Test-Path C:/Users/benja/lis301/work/bm390/tree/scripts/claude_bm390.py; Test-Path C:/Users/benja/lis301/work/bm390/tree/artifacts/fable-self122-20260922/self122_head.pt; Test-Path C:/Users/benja/lis301/work/bm390/tree/artifacts/claude-bm390-20260925/SEAL-code.sha256.txt\"" 2>&1 | head
+True
+True
+True
+[0m
+[0m$ [0mtar czf /tmp/minilm.tgz -C ~/premonition-models/minilm models--sentence-transformers--all-MiniLM-L6-v2 2>&1 | head; ls -lh /tmp/minilm.tgz; scp -o ConnectTimeout=30 /tmp/minilm.tgz benspc:"C:/Users/benja/lis301/work/bm390/minilm.tgz" 2>&1 | head; echo SCP_DONE
+-rw-r--r--  1 ben-hannan  wheel    79M Sep 24 23:24 /tmp/minilm.tgz
+SCP_DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"New-Item -ItemType Directory -Force -Path C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 | Out-Null; tar xzf C:/Users/benja/lis301/work/bm390/minilm.tgz -C C:/Users/benja/.cache/huggingface/hub/; Get-ChildItem -Recurse C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 | Select-Object FullName\"" 2>&1 | head -n 30
+FullName                                                                                                               
+--------                                                                                                               
+C:\Users\benja\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots                        
+C:\Users\benja\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\1110a243fdf4706b3f48...
+C:\Users\benja\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\1110a243fdf4706b3f48...
+C:\Users\benja\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\1110a243fdf4706b3f48...
+C:\Users\benja\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\1110a243fdf4706b3f48...
+[0m
+[0m# [0mTodos
+[✓] Verify no DUPLICATE + read PASSMARKS/plan, check seals locally
+[✓] Build tree (builder-outbox + main + self122_head) and copy to BensPC C:/Users/benja/lis301/work/bm390/tree
+[•] BensPC setup checks (READER/BASE/MiniLM/router/pyarrow)
+[ ] Step 1 seals + Step 2 r44 base + Step 3 fetch + rival downloads + load checks
+[ ] Step 4 smoke on made-up data
+[ ] Step 5 registered arms Lane1+Lane2
+[ ] Step 6 copy run/ back + verify, Step 7 RESULTS-benspc.md + push
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import sys; sys.path[:0]=['C:/Users/benja/lis301/work/bm390/tree/scripts','C:/Users/benja/lis301/work/bm390/tree/scripts/winshim']; import os; os.chdir('C:/Users/benja/lis301/work/bm390/tree'); import fable_self122 as S; print(S.route122('what is your name?'))\"" 2>&1 | head -n 20
+('D8', {'top1': 'D8', 'conf': 0.9732, 'margin': 3.595, 'top3': [('D8', 14.24), ('OOS', 10.65), ('C2', 3.32)], 'tau': 0.6, 'mu': 1.5, 'guard': 'pass'})
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import pyarrow; print(pyarrow.__version__)\"" 2>&1 | head -n 20
+echo "---READER SHA---"
+ssh -o ConnectTimeout=30 benspc "powershell -Command \"Get-FileHash C:/Users/benja/lis301/work/run/merged/model.safetensors -Algorithm SHA256 | Select-Object Hash\"" 2>&1 | head -n 20
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyarrow'
+---READER SHA---
+
+Hash                                                            
+----                                                            
+B4FD93A2B29FC9E246CFDD2AE5C815576957480F410D85EB24BB8DF00D21B890
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -m pip install pyarrow" 2>&1 | tail -n 20
+ERROR: Could not install packages due to an OSError: Could not find a suitable TLS CA certificate bundle, invalid path: C:\Users\benja\Downloads\pokemon\loop\research\ca_merged.pem
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"Get-ChildItem Env: | Where-Object { \$_.Name -match 'SSL|CERT|CA|PIP|PYTHON|HF_|OMP|MKL' } | Format-Table Name,Value -Wrap\"" 2>&1 | head -n 40
+Name                    Value                                                       
+----                    -----                                                       
+APCA_API_KEY_ID         PK7332VGGEMVI2MOJGOLULY5WK                                  
+APCA_API_SECRET_KEY     CRE7fGyLPjQZ7Z5JbFVy8sgfnp7B3nnSbScHxdH6vfqC                
+COMPUTERNAME            BENSPC                                                      
+LOCALAPPDATA            C:\Users\benja\AppData\Local                                
+PROMPT                  benja@BENSPC $P$G                                           
+REQUESTS_CA_BUNDLE      C:\Users\benja\Downloads\pokemon\loop\research\ca_merged.pem
+TORCHINDUCTOR_CACHE_DIR C:\Users\benja\.unsloth\studio\TORCHINDUCTOR_CACHE_DIR      
+TRITON_CACHE_DIR        C:\triton_cache_comfy
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "powershell -Command \"\$env:REQUESTS_CA_BUNDLE=''; \$env:SSL_CERT_FILE=''; C:/Users/benja/lis300/venv/Scripts/python.exe -m pip install pyarrow\"" 2>&1 | tail -n 20
+Collecting pyarrow
+  Downloading pyarrow-25.0.1-cp310-cp310-win_amd64.whl.metadata (3.0 kB)
+Downloading pyarrow-25.0.1-cp310-cp310-win_amd64.whl (27.8 MB)
+   ---------------------------------------- 27.8/27.8 MB 33.3 MB/s  0:00:00
+Installing collected packages: pyarrow
+Successfully installed pyarrow-25.0.1
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -c \"import pyarrow; print(pyarrow.__version__)\"" 2>&1 | head
+25.0.1
+[0m
+[0m# [0mTodos
+[✓] Verify no DUPLICATE + read PASSMARKS/plan, check seals locally
+[✓] Build tree (builder-outbox + main + self122_head) and copy to BensPC C:/Users/benja/lis301/work/bm390/tree
+[✓] BensPC setup checks (READER/BASE/MiniLM/router/pyarrow)
+[•] Step 1 seals + Step 2 r44 base + Step 3 fetch + rival downloads + load checks
+[ ] Step 4 smoke on made-up data
+[ ] Step 5 registered arms Lane1+Lane2
+[ ] Step 6 copy run/ back + verify, Step 7 RESULTS-benspc.md + push
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \"import hashlib,os; os.chdir('C:/Users/benja/lis301/work/bm390/tree'); ok=True; 
+for f in ['artifacts/claude-bm390-20260925/SEAL-code.sha256.txt','artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt']:
+    print('CHECK',f);
+    lines=open(f).read().strip().splitlines();
+    print('LINES',len(lines));
+    fails=[];
+    [fails.append(l) or print('FAIL',l) for l in lines if hashlib.sha256(open(l.split('  ')[1].strip().replace('/','\\\\') if False else l.split('  ',1)[1].strip(), 'rb').read()).hexdigest()!=l.split('  ')[0]];
+    print('FAILS',len(fails));
+    ok=ok and not fails
+print('ALL-OK' if ok else 'MISMATCH')\"" 2>&1 | head -n 30
+(no output)
+[0m
+[0m$ [0mcat > /tmp/sealcheck.py << 'PYEOF'
+import hashlib, os, sys
+os.chdir('C:/Users/benja/lis301/work/bm390/tree')
+allok=True
+for f in ['artifacts/claude-bm390-20260925/SEAL-code.sha256.txt','artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt']:
+    print('CHECK '+f, flush=True)
+    lines=[l.rstrip('\n') for l in open(f, encoding='utf-8') if l.strip()]
+    print('LINES '+str(len(lines)), flush=True)
+    fails=0
+    for l in lines:
+        parts=l.split()
+        exp=parts[0]; path=parts[-1]
+        # seal paths use repo-relative with forward slashes
+        p=os.path.join('.', *path.split('/'))
+        h=hashlib.sha256(open(p,'rb').read()).hexdigest()
+        if h!=exp:
+            print('FAIL '+path+' exp='+exp+' got='+h, flush=True); fails+=1; allok=False
+        else:
+            print('OK '+path, flush=True)
+    print('FAILS '+str(fails), flush=True)
+print('ALL-OK' if allok else 'SEAL-MISMATCH', flush=True)
+PYEOF
+scp -o ConnectTimeout=30 /tmp/sealcheck.py benspc:"C:/Users/benja/lis301/work/bm390/sealcheck.py" 2>&1 | head; echo DONE
+DONE
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "C:/Users/benja/lis300/venv/Scripts/python.exe -B C:/Users/benja/lis301/work/bm390/sealcheck.py" 2>&1 | head -n 300
+CHECK artifacts/claude-bm390-20260925/SEAL-code.sha256.txt
+LINES 8
+OK scripts/claude_bm390.py
+OK scripts/claude_bm390_score.py
+OK artifacts/claude-bm390-20260925/PASSMARKS.md
+OK artifacts/claude-bm390-20260925/data-manifest.json
+OK artifacts/claude-bm390-20260925/smoke/locomo10.json
+OK artifacts/claude-bm390-20260925/smoke/mmlu300.jsonl
+OK artifacts/claude-bm390-20260925/smoke/gsm8k300.jsonl
+OK design/v3/30-modes/390-public-bench-plan.md
+FAILS 0
+CHECK artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt
+LINES 229
+OK artifacts/claude-gram360-20260925/words_cap.txt
+OK artifacts/claude-gram360-20260925/words_lower.txt
+OK scripts/claude_age334_agent.py
+OK scripts/claude_chat338_agent.py
+OK scripts/claude_chat338b_agent.py
+OK scripts/claude_cre333_agent.py
+OK scripts/claude_cre333b_agent.py
+OK scripts/claude_cre333d_agent.py
+OK scripts/claude_e2e330_arms.py
+OK scripts/claude_e2e330c.py
+OK scripts/claude_e2e336_run.py
+OK scripts/claude_e2e336_score.py
+OK scripts/claude_e2e336_twin.py
+OK scripts/claude_e2e336_twinb.py
+OK scripts/claude_e2e360.py
+OK scripts/claude_fix138nb_label.py
+OK scripts/claude_fix228_srcguard.py
+OK scripts/claude_fix252_correct.py
+OK scripts/claude_fix252b_screen.py
+OK scripts/claude_fix252c_merge.py
+OK scripts/claude_fix258_comment.py
+OK scripts/claude_fix259_boundary.py
+OK scripts/claude_fix260_openers.py
+OK scripts/claude_fix266_chainlift.py
+OK scripts/claude_fix266b_detector.py
+OK scripts/claude_fix268_nhopdir.py
+OK scripts/claude_fix280_capab.py
+OK scripts/claude_fix280b_general.py
+OK scripts/claude_fix281_called.py
+OK scripts/claude_fix282_small.py
+OK scripts/claude_fix282b_vocab.py
+OK scripts/claude_fix291_glue.py
+OK scripts/claude_fix293_yesno.py
+OK scripts/claude_fix298_branches.py
+OK scripts/claude_gram360.py
+OK scripts/claude_identity227c.py
+OK scripts/claude_lis300_common.py
+OK scripts/claude_lis300_compiler.py
+OK scripts/claude_lis300_read.py
+OK scripts/claude_lis310_agent.py
+OK scripts/claude_lis313_agent.py
+OK scripts/claude_lis313b_agent.py
+OK scripts/claude_lis314_agent.py
+OK scripts/claude_lis314b_agent.py
+OK scripts/claude_lis315_agent.py
+OK scripts/claude_lis316_agent.py
+OK scripts/claude_lis316_guards.py
+OK scripts/claude_lis_e2e_armsb.py
+OK scripts/claude_lis_stack.py
+OK scripts/claude_lis_stackb.py
+OK scripts/claude_loop138k_agent.py
+OK scripts/claude_loop138l_agent.py
+OK scripts/claude_loop138m_agent.py
+OK scripts/claude_loop138n_agent.py
+OK scripts/claude_loop138nb_agent.py
+OK scripts/claude_loop221b_agent.py
+OK scripts/claude_loop221c_agent.py
+OK scripts/claude_loop224c_agent.py
+OK scripts/claude_loop227b_agent.py
+OK scripts/claude_loop227c_agent.py
+OK scripts/claude_loop229_agent.py
+OK scripts/claude_loop230_agent.py
+OK scripts/claude_loop230b_agent.py
+OK scripts/claude_loop230c_agent.py
+OK scripts/claude_loop232_agent.py
+OK scripts/claude_loop232c_agent.py
+OK scripts/claude_loop233_agent.py
+OK scripts/claude_loop234_agent.py
+OK scripts/claude_loop236_agent.py
+OK scripts/claude_loop237_agent.py
+OK scripts/claude_loop274_agent.py
+OK scripts/claude_loop291_agent.py
+OK scripts/claude_loop292_agent.py
+OK scripts/claude_loop292t_agent.py
+OK scripts/claude_nb323_turnlog.py
+OK scripts/claude_rsn299_run.py
+OK scripts/claude_rsn299_tool.py
+OK scripts/claude_rsn299b_run.py
+OK scripts/claude_sleepcheck_wrap.py
+OK scripts/claude_think299_agent.py
+OK scripts/claude_think299b_agent.py
+OK scripts/claude_twinb_wrap.py
+OK scripts/claude_vary330c.py
+OK scripts/fable_agent_loop.py
+OK scripts/fable_bench65_notebook_arm.py
+OK scripts/fable_bench73_english_arm.py
+OK scripts/fable_bench92_english_arm.py
+OK scripts/fable_daemon108_run.py
+OK scripts/fable_daemon141_settle.py
+OK scripts/fable_daemon74_run.py
+OK scripts/fable_decline224.py
+OK scripts/fable_doubt146_store.py
+OK scripts/fable_doubt146b_store.py
+OK scripts/fable_earsguard91.py
+OK scripts/fable_fix129_punct.py
+OK scripts/fable_fix135_office.py
+OK scripts/fable_fix137_names.py
+OK scripts/fable_fix137c_hypo.py
+OK scripts/fable_fix137d_frame.py
+OK scripts/fable_fix139_valueguard.py
+OK scripts/fable_fix139b_valueguard.py
+OK scripts/fable_fix139c_tail.py
+OK scripts/fable_fix139d_tail.py
+OK scripts/fable_fix139e_tail.py
+OK scripts/fable_fix140_tail.py
+OK scripts/fable_fix144_ofname.py
+OK scripts/fable_fix150_subjectguard.py
+OK scripts/fable_fix150b_subject150b.py
+OK scripts/fable_fix150c_closedclass.py
+OK scripts/fable_fix153_reverse.py
+OK scripts/fable_fix154_yesno.py
+OK scripts/fable_fix154b_multival.py
+OK scripts/fable_fix154c_allowlist.py
+OK scripts/fable_fix154d_yesno.py
+OK scripts/fable_fix154e_allowlist.py
+OK scripts/fable_fix154f_negate.py
+OK scripts/fable_fix154g_nocorrect.py
+OK scripts/fable_fix155_inverted.py
+OK scripts/fable_fix156b_smalltalk.py
+OK scripts/fable_fix157_filler.py
+OK scripts/fable_fix158_qform.py
+OK scripts/fable_fix159_hop.py
+OK scripts/fable_fix162_thename.py
+OK scripts/fable_fix162b_plural.py
+OK scripts/fable_fix164_about.py
+OK scripts/fable_fix165_typo.py
+OK scripts/fable_fix166_me.py
+OK scripts/fable_fix167_verb.py
+OK scripts/fable_fix167b_valuescreen.py
+OK scripts/fable_fix167c_label.py
+OK scripts/fable_fix167d_verb.py
+OK scripts/fable_fix167e_label.py
+OK scripts/fable_fix168_ground.py
+OK scripts/fable_fix170_compose.py
+OK scripts/fable_fix171_nameval.py
+OK scripts/fable_fix171b_nameval.py
+OK scripts/fable_fix173_username.py
+OK scripts/fable_fix173b_username.py
+OK scripts/fable_fix174_chainof.py
+OK scripts/fable_fix190_reverse.py
+OK scripts/fable_fix192_correctreply.py
+OK scripts/fable_fix193_apos.py
+OK scripts/fable_fix219_selfname.py
+OK scripts/fable_fix220_restartindex.py
+OK scripts/fable_fix221_tableask.py
+OK scripts/fable_fix222_ofteachb.py
+OK scripts/fable_fix77_core.py
+OK scripts/fable_identity227.py
+OK scripts/fable_listening_english.py
+OK scripts/fable_listening_m1.py
+OK scripts/fable_loop102_agent.py
+OK scripts/fable_loop113_agent.py
+OK scripts/fable_loop113b_agent.py
+OK scripts/fable_loop113c_agent.py
+OK scripts/fable_loop121_agent.py
+OK scripts/fable_loop129b_agent.py
+OK scripts/fable_loop132_agent.py
+OK scripts/fable_loop134_agent.py
+OK scripts/fable_loop138_agent.py
+OK scripts/fable_loop138b_agent.py
+OK scripts/fable_loop138d_agent.py
+OK scripts/fable_loop138f_agent.py
+OK scripts/fable_loop138g_agent.py
+OK scripts/fable_loop138h_agent.py
+OK scripts/fable_loop138i_agent.py
+OK scripts/fable_loop138j_agent.py
+OK scripts/fable_loop139b_agent.py
+OK scripts/fable_loop144_agent.py
+OK scripts/fable_loop148b_agent.py
+OK scripts/fable_loop150_agent.py
+OK scripts/fable_loop151_agent.py
+OK scripts/fable_loop154b_agent.py
+OK scripts/fable_loop154c_agent.py
+OK scripts/fable_loop154e_agent.py
+OK scripts/fable_loop158b_agent.py
+OK scripts/fable_loop158c_agent.py
+OK scripts/fable_loop162_agent.py
+OK scripts/fable_loop162b_agent.py
+OK scripts/fable_loop164b_agent.py
+OK scripts/fable_loop166_agent.py
+OK scripts/fable_loop166c_agent.py
+OK scripts/fable_loop172_agent.py
+OK scripts/fable_loop173_agent.py
+OK scripts/fable_loop180b_agent.py
+OK scripts/fable_loop187_agent.py
+OK scripts/fable_loop188_agent.py
+OK scripts/fable_loop189_agent.py
+OK scripts/fable_loop189b_agent.py
+OK scripts/fable_loop190_agent.py
+OK scripts/fable_loop190b_agent.py
+OK scripts/fable_loop209_agent.py
+OK scripts/fable_loop212_agent.py
+OK scripts/fable_loop215_agent.py
+OK scripts/fable_loop216_agent.py
+OK scripts/fable_loop219_agent.py
+OK scripts/fable_loop221_agent.py
+OK scripts/fable_loop222_agent.py
+OK scripts/fable_loop223_agent.py
+OK scripts/fable_loop224_agent.py
+OK scripts/fable_loop226_agent.py
+OK scripts/fable_loop227_agent.py
+OK scripts/fable_loop90_agent.py
+OK scripts/fable_loop96_agent.py
+OK scripts/fable_notebook_contract.py
+OK scripts/fable_perf128_index.py
+OK scripts/fable_perf142_index.py
+OK scripts/fable_qmark151_core.py
+OK scripts/fable_qrewrite132.py
+OK scripts/fable_qual56_reasoner.py
+OK scripts/fable_reasoner44.py
+OK scripts/fable_reasoner50.py
+OK scripts/fable_screen148_mixin.py
+OK scripts/fable_self105.py
+OK scripts/fable_self114.py
+OK scripts/fable_self122.py
+OK scripts/fable_self127.py
+OK scripts/fable_self99.py
+OK scripts/fable_sleep104_agent.py
+OK scripts/fable_sleep115_agent.py
+OK scripts/fable_sleep130_agent.py
+OK scripts/fable_sleep131_agent.py
+OK scripts/fable_sleep145_agent.py
+OK scripts/fable_thinking_m2.py
+OK scripts/fable_thought49_notebook.py
+OK scripts/fable_thought49_schema.py
+OK scripts/fable_webfix89_thinking.py
+OK scripts/fable_wire51_adapters.py
+OK scripts/fable_wire57_e2e.py
+OK scripts/fable_wordmatch149_core.py
+FAILS 0
+ALL-OK
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; cd C:/Users/benja/lis301/work/bm390/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44\"" 2>&1 | tail -n 20
+{"stage": "base", "seed": 4102, "seconds": 12.9, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"Copy-Item C:/Users/benja/lis301/work/bm390/r44/base-seed4102.pt -Destination C:/Users/benja/lis301/work/bm390/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt -Force; Get-FileHash C:/Users/benja/lis301/work/bm390/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt -Algorithm SHA256 | Select-Object Hash; Get-Item C:/Users/benja/lis301/work/bm390/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt | Select-Object Length\"" 2>&1 | head -n 20
+Hash                                                            
+----                                                            
+4655B7610B50E91B57DBB6A780F1935DBA8863E3810C4877408D901F1BE5EDB3
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"(Get-Item C:/Users/benja/lis301/work/bm390/tree/artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt).Length\"" 2>&1 | head
+2969
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; \$env:REQUESTS_CA_BUNDLE=''; \$env:SSL_CERT_FILE=''; cd C:/Users/benja/lis301/work/bm390/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_bm390.py fetch --data C:/Users/benja/lis301/work/bm390/data\"" 2>&1 | tail -n 30
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850", "gsm8k300_sha256": "073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b"}
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='0'; \$env:REQUESTS_CA_BUNDLE=''; \$env:SSL_CERT_FILE=''; \$env:HF_HUB_VERBOSITY='info'; C:/Users/benja/lis300/venv/Scripts/python.exe -c \\\"from huggingface_hub import snapshot_download as s; print(s('Qwen/Qwen3.5-2B', revision='15852e8c16360a2fea060d615a32b45270f8a8fc')); print(s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b'))\\\"\"" 2>&1 | tail -n 30
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 13 files:   8%|▊         | 1/13 [00:00<00:01,  6.31it/s]Fetching 13 files:  54%|█████▍    | 7/13 [00:00<00:00, 28.22it/s]Fetching 13 files:  85%|████████▍ | 11/13 [00:00<00:00, 20.61it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:19<00:00, 20.61it/s]Fetching 13 files: 100%|██████████| 13/13 [01:14<00:00,  9.14s/it]Fetching 13 files: 100%|██████████| 13/13 [01:14<00:00,  5.70s/it]
+C:\Users\benja\.cache\huggingface\hub\models--Qwen--Qwen3.5-2B\snapshots\15852e8c16360a2fea060d615a32b45270f8a8fc
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files:   9%|▉         | 1/11 [00:00<00:01,  7.95it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 36.36it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:15<00:00, 36.36it/s]Fetching 11 files: 100%|██████████| 11/11 [00:40<00:00,  4.77s/it]C:\Users\benja\.cache\huggingface\hub\models--LiquidAI--LFM2.5-1.2B-Instruct\snapshots\0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+Fetching 11 files: 100%|██████████| 11/11 [00:40<00:00,  3.65s/it]
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; C:/Users/benja/lis300/venv/Scripts/python.exe -c \\\"import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'C:/Users/benja/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))\\\"\"" 2>&1 | tail -n 20
+Loading weights:   0%|          | 0/320 [00:00<?, ?it/s]Loading weights:  22%|██▏       | 70/320 [00:00<00:00, 617.51it/s]Loading weights:  41%|████▏     | 132/320 [00:00<00:00, 437.98it/s]Loading weights:  56%|█████▌    | 179/320 [00:00<00:00, 361.26it/s]Loading weights:  68%|██████▊   | 217/320 [00:00<00:00, 360.04it/s]Loading weights:  80%|███████▉  | 255/320 [00:00<00:00, 332.32it/s]Loading weights:  90%|█████████ | 289/320 [00:00<00:00, 325.17it/s]Loading weights: 100%|██████████| 320/320 [00:00<00:00, 365.30it/s]
+Qwen3_5ForCausalLM 1881825088
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; C:/Users/benja/lis300/venv/Scripts/python.exe -c \\\"import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))\\\"\"" 2>&1 | tail -n 20
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 38/148 [00:00<00:00, 359.47it/s]Loading weights:  50%|█████     | 74/148 [00:00<00:00, 304.02it/s]Loading weights:  71%|███████   | 105/148 [00:00<00:00, 236.41it/s]Loading weights:  89%|████████▉ | 132/148 [00:00<00:00, 212.30it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 261.85it/s]
+Lfm2ForCausalLM 1170340608
+[0m
+[0m# [0mTodos
+[✓] Verify no DUPLICATE + read PASSMARKS/plan, check seals locally
+[✓] Build tree (builder-outbox + main + self122_head) and copy to BensPC C:/Users/benja/lis301/work/bm390/tree
+[✓] BensPC setup checks (READER/BASE/MiniLM/router/pyarrow)
+[✓] Step 1 seals + Step 2 r44 base + Step 3 fetch + rival downloads + load checks
+[•] Step 4 smoke on made-up data
+[ ] Step 5 registered arms Lane1+Lane2
+[ ] Step 6 copy run/ back + verify, Step 7 RESULTS-benspc.md + push
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; \$env:SLEEPCHECK_STOP='1'; \$env:SLEEPCHECK_LOG='C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl'; Measure-Command { C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out C:/Users/benja/lis301/work/bm390/smoke } | Select-Object TotalSeconds; echo SMOKE-P-EXIT:\$LASTEXITCODE\"" 2>&1 | tail -n 40
+C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe: can't open file 'C:\\Users\\benja\\scripts\\claude_sleepcheck_wrap.py': [Errno 2] No such file or directory
+
+TotalSeconds
+------------
+   0.0385592
+SMOKE-P-EXIT:2
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; \$env:SLEEPCHECK_STOP='1'; \$env:SLEEPCHECK_LOG='C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl'; cd C:/Users/benja/lis301/work/bm390/tree; Measure-Command { C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out C:/Users/benja/lis301/work/bm390/smoke } | Select-Object TotalSeconds; echo SMOKE-P-EXIT:\$LASTEXITCODE\"" 2>&1 | tail -n 40
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  14%|█▎        | 30/219 [00:00<00:00, 277.99it/s]Loading weights:  33%|███▎      | 73/219 [00:00<00:00, 343.57it/s]Loading weights:  49%|████▉     | 108/219 [00:00<00:00, 309.64it/s]Loading weights:  64%|██████▍   | 140/219 [00:00<00:00, 294.85it/s]Loading weights:  78%|███████▊  | 170/219 [00:00<00:00, 281.43it/s]Loading weights:  91%|█████████ | 199/219 [00:00<00:00, 253.28it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 303.40it/s]
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  14%|█▍        | 31/219 [00:00<00:00, 284.18it/s]Loading weights:  36%|███▌      | 79/219 [00:00<00:00, 391.17it/s]Loading weights:  57%|█████▋    | 125/219 [00:00<00:00, 399.33it/s]Loading weights:  77%|███████▋  | 169/219 [00:00<00:00, 409.94it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 435.55it/s]
+Traceback (most recent call last):
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_sleepcheck_wrap.py", line 66, in <module>
+    main()
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_sleepcheck_wrap.py", line 62, in main
+    runpy.run_path(target, run_name="__main__")
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "scripts/claude_bm390.py", line 540, in <module>
+    sys.exit(main())
+  File "scripts/claude_bm390.py", line 531, in main
+    run_locomo(args)
+  File "scripts/claude_bm390.py", line 432, in run_locomo
+    locomo_agent(builder, aargs, conv, args.limit_q, rows, reading, bare)
+  File "scripts/claude_bm390.py", line 363, in locomo_agent
+    reply, _, _ = R.one(agent, text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_e2e336_run.py", line 158, in one
+    parts = agent.turn(text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 320, in _turn323
+    turn_id = log.append_begin(text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 229, in append_begin
+    self._append({"kind": "BEGIN", "turn_id": turn_id,
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 221, in _append
+    raise TurnLog323Corrupt("turnlog323: read-back mismatch")
+claude_nb323_turnlog.TurnLog323Corrupt: turnlog323: read-back mismatch
+
+TotalSeconds
+------------
+   8.2018914
+SMOKE-P-EXIT:1
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_nb323_turnlog.py 2>&1 | sed -n '200,340p'
+(no output)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- scripts/ | grep -i "323\|turnlog" | head; echo "---builder-outbox---"; git ls-tree -r --name-only origin/builder-outbox -- scripts/ | grep -i "323\|turnlog" | head
+---builder-outbox---
+scripts/claude_nb323_test.py
+scripts/claude_nb323_turnlog.py
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_nb323_turnlog.py 2>&1 | head -n 350 | tail -n 160
+raw = self.path.read_bytes().decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise TurnLog323Corrupt(
+                f"turnlog323 {self.path}: not valid UTF-8 ({exc})")
+        good, _, torn = raw.rpartition("\n")
+        sidecar = self.path.parent / (self.path.name + ".torn-tail.txt")
+        sidecar.write_text(torn, encoding="utf-8")
+        tmp = self.path.with_suffix(".tmp323")
+        tmp.write_text(good + "\n" if good else "", encoding="utf-8")
+        os.replace(tmp, self.path)
+        self._verify()
+        if self.torn_tail:
+            raise TurnLog323Corrupt(
+                f"turnlog323 {self.path}: tail still torn after repair")
+
+    def _append(self, record: dict) -> dict:
+        if self.torn_tail:
+            raise TurnLog323Corrupt(
+                f"turnlog323 {self.path}: torn final line present; run "
+                "repair_torn_tail() first")
+        record = dict(record, n=self.n_lines + 1, prev=self.last_sha,
+                      v=FORMAT323)
+        line = json.dumps(record, sort_keys=True, ensure_ascii=False)
+        with open(self.path, "a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        with open(self.path, "rb") as handle:  # read-back before returning
+            handle.seek(-(len(line.encode("utf-8")) + 1), os.SEEK_END)
+            if handle.read().decode("utf-8") != line + "\n":
+                raise TurnLog323Corrupt("turnlog323: read-back mismatch")
+        self.n_lines += 1
+        self.last_sha = _sha323(line)
+        return record
+
+    def append_begin(self, text: str) -> int:
+        """Write the BEGIN record before the inner turn runs; return turn_id."""
+        turn_id = self.n_begins + 1
+        self._append({"kind": "BEGIN", "turn_id": turn_id,
+                      "t": _now_iso323(), "text": str(text)})
+        self.n_begins += 1
+        self.last_turn_id = turn_id
+        self.open_ids.append(turn_id)
+        return turn_id
+
+    def append_end(self, turn_id: int, reply: list[str], records: list,
+                   ears_stage: str, ears_score: float,
+                   new_fact_ids: list, new_entities: dict,
+                   turn_count: int, notebook_events_before: int,
+                   notebook_events_after: int, mode: str,
+                   deaf_s: float | None) -> dict:
+        """Write the END record after the reply exists."""
+        rec = self._append({
+            "kind": "END", "turn_id": int(turn_id), "t": _now_iso323(),
+            "reply": [str(line) for line in (reply or [])],
+            "records": list(records or []),
+            "ears_stage": str(ears_stage or ""),
+            "ears_score": float(ears_score or 0.0),
+            "new_fact_ids": list(new_fact_ids or []),
+            "new_entities": dict(new_entities or {}),
+            "turn_count": int(turn_count),
+            "notebook_events_before": int(notebook_events_before),
+            "notebook_events_after": int(notebook_events_after),
+            "mode": str(mode or ""),
+            "deaf_s": (None if deaf_s is None else float(deaf_s)),
+        })
+        if int(turn_id) in self.open_ids:
+            self.open_ids.remove(int(turn_id))
+        return rec
+
+
+def read_turns(path: str | os.PathLike) -> dict:
+    """Read the log in order; report interrupted turns (BEGIN with no END).
+
+    Returns {"records", "interrupted", "torn"} where interrupted is a
+    list of {"turn_id", "text", "t"} in turn order. Raises
+    TurnLog323Corrupt on any broken link that is not a torn final line.
+    """
+    log = TurnLog323(path)
+    torn = bool(log.torn_tail)
+    if not log.path.exists():
+        return {"records": [], "interrupted": [], "torn": torn}
+    raw = log.path.read_bytes().decode("utf-8")  # verified above
+    lines = raw.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    if torn:
+        lines = lines[:-1]
+    records = [json.loads(line) for line in lines]
+    begins = {int(r["turn_id"]): r for r in records
+              if r.get("kind") == "BEGIN"}
+    ended = {int(r["turn_id"]) for r in records if r.get("kind") == "END"}
+    interrupted = [{"turn_id": tid, "text": begins[tid].get("text", ""),
+                    "t": begins[tid].get("t", "")}
+                   for tid in sorted(begins) if tid not in ended]
+    return {"records": records, "interrupted": interrupted, "torn": torn}
+
+
+def _nb_snapshot323(loop) -> tuple[int, set, dict]:
+    """Read-only notebook snapshot (never writes)."""
+    nb = getattr(loop, "nb", None)
+    for obj in (nb, getattr(nb, "nb", None)):
+        try:
+            if obj is not None and hasattr(obj, "events"):
+                return (len(obj.events), set(obj.facts),
+                        dict(obj.entities))
+        except (AttributeError, TypeError):
+            continue
+    return (-1, set(), {})
+
+
+def _deaf_last323(loop):
+    try:
+        rows = getattr(loop, "deaf_log274", None)
+        if isinstance(rows, list) and rows:
+            return float(rows[-1].get("deaf_s"))
+    except (AttributeError, TypeError, ValueError):
+        pass
+    return None
+
+
+def _turn323(self, text: str) -> list[str]:
+    """BEGIN before the saved turn runs, END after the reply exists.
+
+    The saved (274 reply-first) turn stack is kept whole; the reply it
+    returns is written to the log and returned unchanged.
+    """
+    log = self.turnlog323
+    nb_before, facts_before, ents_before = _nb_snapshot323(self)
+    turn_id = log.append_begin(text)
+    log.last_turn_id = turn_id
+    try:
+        said = self._orig_turn323(text)
+    except Exception:
+        raise  # the BEGIN stays without an END: an interrupted turn
+    nb_after, facts_after, ents_after = _nb_snapshot323(self)
+    try:
+        records = list(getattr(self, "last_records", []) or [])
+    except TypeError:
+        records = []
+    new_entities = {eid: ents_after[eid]
+                    for eid in set(ents_after) - set(ents_before)}
+    try:
+        ears = getattr(self, "ears", None)
+        stage = getattr(ears, "last_stage", "")
+        score = float(getattr(ears, "last_score", 0.0))
+    except (AttributeError, TypeError, ValueError):
+        stage, score = "", 0.0
+    try:
+        turn_count = int(self.counters.get("turns", 0))
+    except (AttributeError, TypeError, ValueError):
+        turn_count = 0
+    log.append_end(
+        turn_id, list(said) if said else [], records, stage, score,
+        sorted(set(facts_after) - set(facts_before)), new_entities,
+        turn_count, nb_before, nb_after, getattr(self, "mode", ""),
+        _deaf_last323(self))
+    return said
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- scripts/winshim/ 2>&1 | head; git ls-tree -r --name-only origin/main -- scripts/winshim/ 2>&1 | head; echo "---"; git show origin/builder-outbox:scripts/claude_bm390.py 2>&1 | grep -n "winshim\|newline\|turnlog\|TurnLog" | head -n 30
+scripts/winshim/resource.py
+---
+[0m
+[0m$ [0mgit show origin/builder-outbox:scripts/claude_bm390.py 2>&1 | head -n 120 | tail -n 80; echo "===WRAP==="; git show origin/main:scripts/claude_sleepcheck_wrap.py 2>&1 | head -n 80
+fatal: path 'scripts/claude_bm390.py' does not exist in 'origin/builder-outbox'
+===WRAP===
+#!/usr/bin/env python3
+"""Sleep check for rented runs (month-end line, 2026-09-25). New file only; no agent or runner code changes.
+
+Why: sleep's learning step needs artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt, which is not in git.
+When it is missing, the sleeper skips learning ("no base checkpoint") and still reports accepted: true, so the
+registered 336 run most likely had no sleep learning (VERIFY-336.md addendum; slp-360 RESULTS.md).
+
+What: before the next script starts, wraps Sleep145Sleeper.sleep (the sleeper of the 292t loop that 330c is built
+on) so that every sleep appends one JSON line to $SLEEPCHECK_LOG: the state dir, accepted, recipe.attempted and
+recipe.reason. With SLEEPCHECK_STOP=1 the run stops at the first sleep whose checkpoint file is missing or whose recipe says
+"no base checkpoint".
+The sleep itself and its outcome are unchanged.
+
+  SLEEPCHECK_LOG=run/sleep_P.jsonl SLEEPCHECK_STOP=1 python -B scripts/claude_sleepcheck_wrap.py \
+      scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --arm ... [runner args]
+"""
+from __future__ import annotations
+
+import json
+import os
+import runpy
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+if os.name == "nt":                     # Windows (BensPC): stand-in for the Unix-only resource module
+    sys.path.insert(0, str(HERE / "winshim"))
+
+import fable_sleep145_agent as S145   # noqa: E402
+
+LOG = os.environ.get("SLEEPCHECK_LOG", "")
+STOP = os.environ.get("SLEEPCHECK_STOP", "") == "1"
+_inner = S145.Sleep145Sleeper.sleep
+
+
+def _sleep_checked(self, *a, **kw):
+    out = _inner(self, *a, **kw)
+    outcome = out if isinstance(out, dict) else dict(getattr(self, "last_outcome", {}) or {})
+    recipe = outcome.get("recipe", {}) if isinstance(outcome.get("recipe", {}), dict) else {}
+    row = {"state_dir": str(getattr(self, "state_dir", "")), "accepted": outcome.get("accepted"),
+           "attempted": recipe.get("attempted"), "reason": recipe.get("reason"),
+           "checkpoint_exists": Path(str(getattr(self, "checkpoint", ""))).exists()}
+    if LOG:
+        Path(LOG).parent.mkdir(parents=True, exist_ok=True)
+        with open(LOG, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+    if STOP and ("no base checkpoint" in str(recipe.get("reason", "")) or not row["checkpoint_exists"]):
+        raise SystemExit("SLEEP-NOT-LEARNING: sleep's base checkpoint is missing; nothing was scored")
+    return out
+
+
+S145.Sleep145Sleeper.sleep = _sleep_checked
+
+
+def main() -> None:
+    if len(sys.argv) < 2:
+        raise SystemExit("usage: claude_sleepcheck_wrap.py <script.py> [args]")
+    target = sys.argv[1]
+    sys.argv = [target] + sys.argv[2:]
+    print(f"sleepcheck: logging every sleep to {LOG or '(no log)'}; stop on missing checkpoint = {STOP}", flush=True)
+    runpy.run_path(target, run_name="__main__")
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- scripts/ | grep bm390; echo "---"; git show origin/main:scripts/claude_bm390.py 2>&1 | grep -n "winshim\|newline\|turnlog\|TurnLog\|sys.path" | head -n 30
+scripts/claude_bm390.py
+scripts/claude_bm390_score.py
+---
+68:if str(SCRIPTS) not in sys.path:
+69:    sys.path.insert(0, str(SCRIPTS))
+71:    sys.path.insert(0, str(SCRIPTS / "winshim"))
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"Get-ChildItem -Recurse C:/Users/benja/lis301/work/bm390/smoke/ | Select-Object FullName,Length; echo '---SLEEPLOG---'; Get-Content C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl -ErrorAction SilentlyContinue | Select-Object -First 10; echo '---PYTHON---'; C:/Users/benja/lis300/venv/Scripts/python.exe --version\"" 2>&1 | head -n 40
+---SLEEPLOG---
+---PYTHON---Get-ChildItem : Cannot find path 'C:\Users\benja\lis301\work\bm390\s' because it does not exist.
+At line:1 char:1
++ Get-ChildItem -Recurse C:/Users/benja/lis301/work/bm390/smoke/ | Sele ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\benja\lis301\work\bm390\s:String) [Get-ChildItem], ItemNotFoun 
+   dException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+
+Python 3.10.9
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "cmd /c dir C:\\Users\\benja\\lis301\\work\\bm390\\smoke" 2>&1 | head -n 30
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\bm390
+
+File Not Found
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "cmd /c dir C:\\Users\\benja\\lis301\\work\\bm390" 2>&1 | head -n 30
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\bm390
+
+09/24/2026  11:27 PM    <DIR>          .
+09/24/2026  11:20 PM    <DIR>          ..
+09/24/2026  11:28 PM    <DIR>          data
+09/24/2026  11:26 PM        83,298,805 minilm.tgz
+09/24/2026  11:27 PM    <DIR>          r44
+09/24/2026  11:27 PM               888 sealcheck.py
+09/24/2026  11:23 PM    <DIR>          tree
+09/24/2026  11:22 PM       167,165,394 tree.tgz
+               3 File(s)    250,465,087 bytes
+               5 Dir(s)  44,447,809,536 bytes free
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "cmd /c \"cd C:\\Users\\benja\\lis301\\work\\bm390\\tree && set PYTHONUTF8=1 && set OMP_NUM_THREADS=1 && set MKL_NUM_THREADS=1 && set HF_HUB_OFFLINE=1 && C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe -B scripts\\claude_bm390.py locomo --data artifacts\\claude-bm390-20260925\\smoke --arm plain:C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots\\87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out C:\\Users\\benja\\lis301\\work\\bm390\\smoke\"" 2>&1 | tail -n 20
+Fatal Python error: preconfig_init_utf8_mode: invalid PYTHONUTF8 environment variable value
+Python runtime state: preinitializing
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; cd C:/Users/benja/lis301/work/bm390/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name T --out C:/Users/benja/lis301/work/bm390/smoke\"" 2>&1 | tail -n 20
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 61/219 [00:00<00:00, 593.60it/s]Loading weights:  55%|█████▌    | 121/219 [00:00<00:00, 497.24it/s]Loading weights:  79%|███████▊  | 172/219 [00:00<00:00, 453.90it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 499.14it/s]
+[bm390] smoke-1 plain questions=5
+wrote locomo_T.jsonl rows=5 convs=1
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "cmd /c tasklist | findstr python" 2>&1 | head -n 20; echo "---GPU---"; ssh -o ConnectTimeout=30 benspc "nvidia-smi" 2>&1 | head -n 12
+pythonw.exe                   8456 Console                    1      3,420 K
+pythonw.exe                   8916 Console                    1     10,844 K
+---GPU---
+Thu Sep 24 23:32:04 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   35C    P8              8W /  250W |     599MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "powershell -Command \"\$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; \$env:SLEEPCHECK_STOP='1'; \$env:SLEEPCHECK_LOG='C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl'; cd C:/Users/benja/lis301/work/bm390/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out C:/Users/benja/lis301/work/bm390/smoke > C:/Users/benja/lis301/work/bm390/smoke_P_console.txt 2>&1; echo SMOKE-P-EXIT:\$LASTEXITCODE\"" 2>&1 | tail -n 5
+SMOKE-P-EXIT:1
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 benspc:"C:/Users/benja/lis301/work/bm390/smoke_P_console.txt" /tmp/smoke_P_console.txt 2>&1 | head -n 3; wc -l /tmp/smoke_P_console.txt 2>&1 | head
+49 /tmp/smoke_P_console.txt
+[0m
+[0m✗ [0mRead /tmp/smoke_P_console.txt failed
+[91m[1mError: [0mCannot read binary file: /tmp/smoke_P_console.txt
+[0m
+[0m$ [0mfile /tmp/smoke_P_console.txt; python3 -c "d=open('/tmp/smoke_P_console.txt','rb').read(); print(len(d)); print(d[:200])" 2>&1 | head
+/tmp/smoke_P_console.txt: Unicode text, UTF-16, little-endian text, with CRLF line terminators
+6472
+b'\xff\xfes\x00l\x00e\x00e\x00p\x00c\x00h\x00e\x00c\x00k\x00:\x00 \x00l\x00o\x00g\x00g\x00i\x00n\x00g\x00 \x00e\x00v\x00e\x00r\x00y\x00 \x00s\x00l\x00e\x00e\x00p\x00 \x00t\x00o\x00 \x00C\x00:\x00/\x00U\x00s\x00e\x00r\x00s\x00/\x00b\x00e\x00n\x00j\x00a\x00/\x00l\x00i\x00s\x003\x000\x001\x00/\x00w\x00o\x00r\x00k\x00/\x00b\x00m\x003\x009\x000\x00/\x00s\x00m\x00o\x00k\x00e\x00/\x00s\x00l\x00e\x00e\x00p\x00_\x00P\x00.\x00j\x00s\x00o\x00n\x00l\x00;\x00 \x00s\x00t\x00o\x00p\x00 \x00o\x00n\x00 \x00m\x00i\x00'
+[0m
+[0m$ [0mpython3 -c "t=open('/tmp/smoke_P_console.txt',encoding='utf-16').read(); print(t)" 2>&1 | head -n 60
+sleepcheck: logging every sleep to C:/Users/benja/lis301/work/bm390/smoke/sleep_P.jsonl; stop on missing checkpoint = True
+C:/Users/benja/lis300/venv/Scripts/python.exe : [transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+At line:1 char:243
++ ... bm390/tree; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([transformers] ...dtype` instead!:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights:  25%|ΓûêΓûêΓûì       | 54/219 [00:00<00:00, 522.46it/s]
+Loading weights:  60%|ΓûêΓûêΓûêΓûêΓûêΓûë    | 131/219 [00:00<00:00, 660.50it/s]
+Loading weights:  90%|ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê | 198/219 [00:00<00:00, 568.04it/s]
+Loading weights: 100%|ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê| 219/219 [00:00<00:00, 594.93it/s]
+
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights:  14%|ΓûêΓûì        | 31/219 [00:00<00:00, 274.56it/s]
+Loading weights:  38%|ΓûêΓûêΓûêΓûè      | 83/219 [00:00<00:00, 397.22it/s]
+Loading weights:  63%|ΓûêΓûêΓûêΓûêΓûêΓûêΓûÄ   | 137/219 [00:00<00:00, 410.22it/s]
+Loading weights:  84%|ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûì | 184/219 [00:00<00:00, 399.74it/s]
+Loading weights: 100%|ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê| 219/219 [00:00<00:00, 439.90it/s]
+Traceback (most recent call last):
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_sleepcheck_wrap.py", line 66, in <module>
+    main()
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_sleepcheck_wrap.py", line 62, in main
+    runpy.run_path(target, run_name="__main__")
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "scripts/claude_bm390.py", line 540, in <module>
+    sys.exit(main())
+  File "scripts/claude_bm390.py", line 531, in main
+    run_locomo(args)
+  File "scripts/claude_bm390.py", line 432, in run_locomo
+    locomo_agent(builder, aargs, conv, args.limit_q, rows, reading, bare)
+  File "scripts/claude_bm390.py", line 363, in locomo_agent
+    reply, _, _ = R.one(agent, text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_e2e336_run.py", line 158, in one
+    parts = agent.turn(text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 320, in _turn323
+    turn_id = log.append_begin(text)
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 229, in append_begin
+    self._append({"kind": "BEGIN", "turn_id": turn_id,
+  File "C:\Users\benja\lis301\work\bm390\tree\scripts\claude_nb323_turnlog.py", line 221, in _append
+    raise TurnLog323Corrupt("turnlog323: read-back mismatch")
+claude_nb323_turnlog.TurnLog323Corrupt: turnlog323: read-back mismatch
+[0m
+[0m$ [0mssh -o ConnectTimeout=30 benspc "cmd /c dir C:\\Users\\benja\\lis301\\work\\bm390\\smoke" 2>&1 | head -n 20; echo "==="; scp -o ConnectTimeout=30 benspc:"C:/Users/benja/lis301/work/bm390/smoke/locomo_T.jsonl" /tmp/smoke_T.jsonl 2>&1 | head -n 3; python3 -c "rows=open('/tmp/smoke_T.jsonl',encoding='utf-8').read().strip().splitlines(); print('T-ROWS',len(rows)); import json; ks={}; [ks.update({k:1 for k in json.loads(r)}) for r in rows]; print('KEYS',sorted(ks))"
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\bm390\smoke
+
+09/24/2026  11:31 PM    <DIR>          .
+09/24/2026  11:32 PM    <DIR>          ..
+09/24/2026  11:31 PM               650 locomo_T.jsonl
+               1 File(s)            650 bytes
+               2 Dir(s)  44,446,691,328 bytes free
+===
+T-ROWS 5
+KEYS ['category', 'ms', 'prompt_tokens', 'qid', 'reply', 'turns_dropped']
+[0m
+[0m$ [0mls artifacts/claude-bm390-20260925/ 2>&1 | head; echo "---"; git status --short artifacts/claude-bm390-20260925/ 2>&1 | head; echo "---date---"; date -u
+ls: artifacts/claude-bm390-20260925/: No such file or directory
+---
+---date---
+Fri Sep 25 03:33:02 UTC 2026
+[0m
+[0m$ [0mls -d artifacts 2>&1 | head; ls artifacts/ 2>&1 | head -n 20
+artifacts
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+[0m
+[0m$ [0mmkdir "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-bm390-20260925" 2>&1 | head; ls -d "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-bm390-20260925" 2>&1 | head
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-bm390-20260925
+[0m
+[0m← [0mWrite artifacts/claude-bm390-20260925/RESULTS-benspc.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short 2>&1 | grep -v "^ M\|^??" | head; echo "---new paths---"; git status --short artifacts/claude-bm390-20260925/ 2>&1 | head; wc -l artifacts/claude-bm390-20260925/RESULTS-benspc.md
+---new paths---
+     134 artifacts/claude-bm390-20260925/RESULTS-benspc.md
+[0m
+[0m$ [0mgit status --short 2>&1 | head -n 60; echo "---"; git check-ignore artifacts/claude-bm390-20260925/RESULTS-benspc.md 2>&1 | head
+M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+---
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+[0m
+[0m$ [0mgit status --short 2>&1 | grep -i "bm390\|RESULTS-benspc" | head; echo "---ignore---"; git check-ignore -v artifacts/claude-bm390-20260925/RESULTS-benspc.md 2>&1 | head; echo "---gitignore---"; cat .gitignore 2>&1 | head -n 30
+---ignore---
+.gitignore:5:artifacts/	artifacts/claude-bm390-20260925/RESULTS-benspc.md
+---gitignore---
+__pycache__/
+*.pyc
+.runtime/
+.budget/
+artifacts/
+.venv/
+
+data/village/stream/
+runtime.local.json
+[0m
+[0m# [0mTodos
+[✓] Verify no DUPLICATE + read PASSMARKS/plan, check seals locally
+[✓] Build tree (builder-outbox + main + self122_head) and copy to BensPC C:/Users/benja/lis301/work/bm390/tree
+[✓] BensPC setup checks (READER/BASE/MiniLM/router/pyarrow)
+[✓] Step 1 seals + Step 2 r44 base + Step 3 fetch + rival downloads + load checks
+[✓] Step 4 smoke on made-up data
+[✓] Step 5 registered arms Lane1+Lane2 (not launched - stopped at smoke per spec)
+[✓] Step 6 copy run/ back + verify, Step 7 RESULTS-benspc.md + push
+[0m
