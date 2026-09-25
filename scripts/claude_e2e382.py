@@ -16,7 +16,8 @@ Nothing here writes the notebook (checked every turn); the notebook stays the ex
 Layer order: 330a_334 -> rec360 -> cre333d -> think299b -> chat338b -> answer382 -> vary330c -> gram360
              -> heard382 -> turnlog323.
 The store module is claude_ep382_store_v2 unless EP382_STORE names another (fixed in the seal before a run).
-Counters: loop.ep382_stats.
+Counters: loop.ep382_stats; with EP382_LOG=<path>, one JSON line per tried turn (outcome, row ids, guard
+failures; no text).
 
   python -B scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank BANK \
       --arm claude_e2e382:build_382 --name E --model <reader dir> --gen-model <MiniCPM5-1B dir> --out OUT
@@ -35,6 +36,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 K382 = 10
+LOG382 = os.environ.get("EP382_LOG", "")
 N382 = 4
 STORE382 = os.environ.get("EP382_STORE", "claude_ep382_store_v2")
 SYSTEM382 = ("You are a helpful and honest assistant. Below are things the user said in earlier conversations, "
@@ -86,6 +88,13 @@ def _rows_block(rows: list[dict]) -> str:
     return "\n".join(out)
 
 
+def _log(row: dict) -> None:
+    if LOG382:
+        import json
+        with open(LOG382, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+
+
 def install_answer382(loop, gen, store, k: int = K382, n: int = N382) -> None:
     import claude_chat338_agent as C38
     import claude_chat338b_agent as C38B
@@ -105,7 +114,9 @@ def install_answer382(loop, gen, store, k: int = K382, n: int = N382) -> None:
         rows = store.recall(query_of(text), k=k)
         if not rows:
             loop.ep382_stats["no_rows"] += 1
+            _log({"state": str(getattr(loop, "dir", "")), "outcome": "no_rows"})
             return parts
+        fails = []
         known = C38._words([text] + [r["text"] for r in rows] + [r.get("said_at") or "" for r in rows])
         msgs = [{"role": "system", "content": SYSTEM382 + "\n\n" + _rows_block(rows)},
                 {"role": "user", "content": text}]
@@ -114,16 +125,20 @@ def install_answer382(loop, gen, store, k: int = K382, n: int = N382) -> None:
             g = C38.guard(c, text, known, strict=True) or ("G5" if g5_unsupported(c, known) else None)
             if g is not None:
                 loop.ep382_stats[g] += 1
+                fails.append(g)
                 continue
             if abstains(c):
                 loop.ep382_stats["abstained"] += 1
+                fails.append("abstained")
                 continue
             if len(loop.nb.events) != ev0:
                 raise RuntimeError("382: answer phase wrote to the notebook")
             loop.ep382_stats["replaced"] += 1
             loop.ep382_last_rows = [r["id"] for r in rows]
+            _log({"state": str(getattr(loop, "dir", "")), "outcome": "replaced", "rows": loop.ep382_last_rows, "fails": fails})
             return [c]
         loop.ep382_stats["all_failed"] += 1
+        _log({"state": str(getattr(loop, "dir", "")), "outcome": "all_failed", "rows": [r["id"] for r in rows], "fails": fails})
         return parts
 
     answer382.__name__ = "answer382"
