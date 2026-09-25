@@ -17,12 +17,12 @@ Every step: one change, pass marks sealed first, 2 seeds, a registered FAIL stay
 | stage | what | gate to move on | status |
 |---|---|---|---|
 | R1 | loop learns at all (rsn-353) | copy loss ≤ 0.05; fresh ≥ plain − 10 | running |
-| R2 | step 3 visible (rsn-355, plain) | three-step ≥ 6/30 both seeds | queued (BensPC) |
+| R2 | step 3 visible (rsn-355, plain) | three-step ≥ 6/30 both seeds | FAIL (0/30, even raw) |
 | R3 | combine R1 + R2 on the loop | loop three-step ≥ plain's | after R1, R2 |
-| R4 | one step per thinking round + "hold" (solver labels which row each round should point at) | three-step ≥ 15/30 without practising it; more rounds never lower the score | code tonight, CPU test |
+| R4 | one step per thinking round + "hold" (solver labels which row each round should point at) | three-step ≥ 15/30 without practising it; more rounds never lower the score | CPU preview: no better than plain loop; parked |
 | R5 | thinking stop token (learned; trained on a frozen net from "has the answer settled?") | ≥ 40% fewer rounds, ≤ 1/30 accuracy loss, rounds track steps not question length | after R4 |
 | R6 | anti-shortcut practice: puzzle twins that differ by one fact | blind pair consistency +15 points | code tonight, queue BensPC |
-| R7 | depth beyond 3: shared step input lets 4+ step chains be written (raise MAX_HOPS) | practise ≤ 3, answer 4-5 steps above chance | after R4 |
+| R7 | depth beyond 3: shared step input lets 4+ step chains be written (raise MAX_HOPS) | practise ≤ 3, answer 4 steps: ≥ 30/300 checked | rsn-357 queued (BensPC) |
 | R8 | sleep trains it: practice school on taught facts + checked creative wins (Fix-sleep plan 360/363) | beats no-sleep, plain extra practice AND scrambled-grade sleep on fresh blind questions | after R4 |
 | R9 | grow: 3x then 10x, on the loop, equal tuning for both sizes, fresh blind panel after freeze | 3x ≥ 1x + 10 on the fresh blind panel | after R4-R6 (Ben chose "fix loop first") |
 | R10 | English: the loop idea inside MiniCPM5-1B (retrofit), the only affordable route to fluent reasoning in chat | beats the plain 1B on the 331 bank's reasoning rows | after R9 |
@@ -38,3 +38,10 @@ Every step: one change, pass marks sealed first, 2 seeds, a registered FAIL stay
 - BensPC: rsn-355 (step-3 input), then rsn-356 (puzzle twins, R6), both sealed and queued.
 - Rental: rsn-353 (loop fix).
 - CPU here, free: step-3 preview on small models (plain vs loop, old vs shared input); R4 code + CPU test.
+
+## Update 04:55 UTC
+- R2 rsn-355 = registered FAIL (VERIFY.md): three-step 0/30 on both seeds, even raw.
+- CPU previews (artifacts/claude-stepdiag-20260925/PREVIEW.md): the shared input opens a little raw
+  three-step in small nets, but almost none passes the fact-check; R4 as built is no better; more rounds flat.
+- Next: rsn-357 (R7) practises three-step and tests four-step, plain and loop arms, queued on BensPC
+  after rsn-356 (twins). rsn-353 (R1) still on its rental.
