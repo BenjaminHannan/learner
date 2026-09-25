@@ -32,3 +32,8 @@ objects are not. v2 must not be installed anywhere as it stands. Nothing uses it
 ## Next (364c, one change set, needs a new blind bench since this one is now opened)
 Run the new-people check in a forked copy of the process (the real loop's memory is never touched; files are put
 back as now), add one correction to it, and include earlier words in the restart check.
+
+## Addendum (07:35 UTC, from slp-369)
+The likely cause above is now better supported: building slp-369, a plain deep copy of the outer notebook's state
+reproduced the same symptom, because it also copies the inner notebook the outer one points to. Keeping the inner
+object fixed removed it (slp-369 PASSMARKS disclosure). Not re-tested on 364b itself.
