@@ -21,3 +21,17 @@ On those 300: agree on "good" 254/300 (84.7%), kappa 0.567; teacher says good 88
 44 good ones but also passes 45 the blind judges rejected). "invented" agrees 288/300 (teacher 11, Opus 17).
 Verdict under the rule fixed above: NOT a usable label source (84.7% is under 85%; kappa passes). It is too lenient.
 Next, as registered: the stronger teacher z-ai/glm-5.3 once (handoff/queue/ideajudge-teacher3.md), then ask Ben.
+
+## Teacher agreement, GLM 5.3 (Mac, $0.20)
+On the same 300: agree on "good" 256/300 (85.3%), kappa 0.568; teacher good 82, Opus 44, both 41. "invented" 290/300.
+Verdict: passes the rule (>= 85% and kappa >= 0.5), only just. Both teachers are about twice as generous as the blind
+judges; the full model is barely different from Flash.
+
+## Next (one change): a trained judge head, registered before running (written ~04:20 UTC)
+scripts/claude_ideajudge_head.py: GLM 5.3 labels on the 30 DEV requests WITHOUT Opus labels (900 blurts) train a
+logistic head on the 1B's hidden state at the end of the judging prompt (layer and regularisation chosen by grouped
+cross-validation on those 30 only). Tested once on the 10 Opus-labelled requests (teacher labels for them unused).
+- PASS (333g uses the trained head): its top pick is good on >= 6/10 requests.
+- Proved wrong: top pick good on <= 2/10 (no better than the 1B's own judgement).
+- Reported: top-3 contains a good one (x/10), AUC vs Opus labels.
+Caution stated now: 10 requests is a small test; a pass is a DEV signal, and 333g is judged on the blind 333 panel.
