@@ -1,6 +1,6 @@
 # bm-393 RESULTS: does search find the chat line that holds the answer? (after using LoCoMo for development)
 
-Run 2026-09-25 ~19:55 UTC in the cloud container, CPU, 1 min 49 s, $0 (PLAN.md and the script were sealed first,
+Run 2026-09-25 ~19:28 UTC in the cloud container, CPU, 1 min 49 s, $0 (PLAN.md and the script were sealed first,
 main 17d7de294). Counts only. Check: for 497 questions (3 chats) the BM25 top 10 here equals the turns bm-390's Rb
 arm was shown, 497 of 497.
 

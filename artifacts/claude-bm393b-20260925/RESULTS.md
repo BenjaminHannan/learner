@@ -1,6 +1,6 @@
 # bm-393b RESULTS: the ep-382 store's recall() on LoCoMo practice (after using LoCoMo for development)
 
-Run 2026-09-25 ~20:20 UTC, cloud CPU, 2 min 1 s, $0, sealed code at main 1319cb5b8. Self-test EP382-SELFTEST PASS
+Run 2026-09-25 ~19:35 UTC, cloud CPU, 2 min 1 s, $0, sealed code at main 1319cb5b8. Self-test EP382-SELFTEST PASS
 (9 of 9). Counts only.
 
 ## Evidence found in the top 10 (any / all evidence turns), and any at 20
