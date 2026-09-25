@@ -1,0 +1,332 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead handoff/queue/lis-302-gpu.md failed
+[91m[1mError: [0mFile not found: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/queue/lis-302-gpu.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "---STATUS---"; git branch --show-current; git worktree list; ls
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+---STATUS---
+claude/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model                                                    8199e8adf [codex/testing-experiment-44]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27   063c52c48 [claude/card-experiment-handoff-7c5b27]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-architecture-review-0161ce 4ea0021dc (detached HEAD)
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/model-issues-audit-abcf60        79fc1f56b [claude/restart-watcher-handoff-fd48d3]
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/premonition-design-review-792236 f74835b33 (detached HEAD)
+ADVERSARIAL_REVIEW.md
+ARCHITECTURE_DECISION.md
+archive
+artifacts
+data
+design
+handoff
+learnlab
+memorylab
+notebook
+premonition
+private
+README.md
+REMOTE_RUN.md
+RESEARCH_REVIEW.md
+reviews
+run.py
+run.sh
+runs
+scratchpad
+scripts
+state.json
+TEACHING_TO_TEST_CONTRACT.md
+tests
+[0m
+[0m$ [0mcat "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt" 2>&1 | head -n 50; echo "---"; uptime; df -g / | head
+cat: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt: No such file or directory
+---
+22:14  up 1 day, 12:07, 4 users, load averages: 24.13 21.89 36.99
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        32    28%  484014 343838400    0%   /
+[0m
+[0m$ [0mgit show origin/main:scratchpad/briefs/OPUS-RULES.txt 2>&1 | head -n 40; echo "==="; ls handoff/kit/briefs/ 2>&1; cat REMOTE_RUN.md 2>&1 | head -n 60
+fatal: path 'scratchpad/briefs/OPUS-RULES.txt' does not exist in 'origin/main'
+===
+138n-merge.txt
+206-sleepsmoke.txt
+207-atomicinbox.txt
+208-naturalpanel.txt
+209-writescreen.txt
+210-reversal.txt
+211-fairsmol.txt
+212-selfgate.txt
+213-earssafety.txt
+214-suitediff.txt
+215-ofteach.txt
+216-declinecue.txt
+218-suitediff2.txt
+219-selfname.txt
+220-restartindex.txt
+222-ofteachb.txt
+223-cantdo.txt
+227-identity.txt
+231b-chainnames.txt
+241-mouthA.txt
+241-stylesheet.txt
+241b-mouthA2.txt
+241b-stylesheet.txt
+243fixes-common.txt
+252-correct.txt
+252c-merge.txt
+255-fixedtext.txt
+256-earloop.txt
+257-earv4.txt
+258-commentclause.txt
+259-valueboundary.txt
+260-openers.txt
+261-earcheck.txt
+askpanel243-schema.txt
+corrpanel252-schema.txt
+corrtail258-spec.txt
+earpanel235b-spec.txt
+earpanel257-spec.txt
+earpanel261-spec.txt
+looppanel254-spec.txt
+openpanel260-spec.txt
+OPUS-RULES.txt
+# Conservative BensPC remote workflow
+
+This workflow targets the already-verified Tailscale/SSH host alias `benspc` and the existing Windows Python executable:
+
+`C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe`
+
+It intentionally uses only `ssh` and `scp`. It does not install or download anything, assumes no `rsync` on Windows, never deletes remote project data during sync, and never kills or stops pre-existing processes. SSH is detached from stdin so it cannot consume the sync file-list pipe. Every SSH/SCP connection uses `BatchMode=yes`, a 10-second `ConnectTimeout`, a 15-second `ServerAliveInterval`, and `ServerAliveCountMax=2`, so both connection setup and a dead established transport fail finitely instead of hanging indefinitely.
+
+## 1. Read-only preflight
+
+From the local project root:
+
+```sh
+sh scripts/remote_benspc.sh preflight
+```
+
+Preflight performs no remote writes. It verifies the fixed Python path, `nvidia-smi`, the selected GPU, current free VRAM, and whether the remote project path already exists. The default Pilot VRAM floor is 12000 MiB. Low VRAM is reported as `PILOT_GPU_READY=false` / `PILOT_GPU_STATUS=LOW_VRAM`; preflight itself still succeeds so the status check cannot block non-GPU preparation. Missing Python, missing `nvidia-smi`, or an invalid GPU query still fails the status command.
+
+Useful overrides:
+
+```sh
+BENSPC_MIN_FREE_MIB=14000 sh scripts/remote_benspc.sh preflight
+BENSPC_GPU_INDEX=0 sh scripts/remote_benspc.sh preflight
+```
+
+## 2. Sync without deleting remote data
+
+The default destination is `C:/Users/benja/beautiful-model`:
+
+```sh
+sh scripts/remote_benspc.sh sync
+```
+
+Sync does not query or gate on GPU state. It creates missing destination directories and copies local regular files with `scp`. It never issues a remote delete and does not use `rsync --delete` or any equivalent. Existing remote files with matching project-relative names are updated; unrelated or stale remote files are left in place.
+
+Generated/local runtime state is not copied: `.budget/`, `.runtime/`, `.git/`, `__pycache__/`, `artifacts/`, and any directory named `cache/` are pruned. The current project filename set uses conservative characters that survive the local shell, `scp`, Windows OpenSSH, and PowerShell command parsing without an extra quoting layer; sync rejects a future project-relative filename outside that set instead of attempting an ambiguous copy. `runtime.local.json` is copied as project source, but remote execution does **not** use its Mac-specific paths.
+
+To use a different destination, keep it under the verified Windows profile and avoid spaces or shell metacharacters:
+
+```sh
+BENSPC_REMOTE_PROJECT=C:/Users/benja/beautiful-model-pilot sh scripts/remote_benspc.sh sync
+```
+
+## 3. Fast CPU tests
+
+After a sync:
+
+```sh
+sh scripts/remote_benspc.sh test
+```
+
+The remote helper does **not** query or enforce the VRAM floor for this action. It runs from the project root with the fixed Python executable and `CUDA_VISIBLE_DEVICES=-1`, so tests remain available while GPU memory is busy. It executes every portable Python model/task/storage test. `test_remote_runner.py` is intentionally local-only because it tests the POSIX `sh` coordinator with fake `ssh`/`scp` binaries, which native Windows does not provide. If `tests/` or the portable test modules do not exist, the command fails instead of reporting a misleading zero-test success.
+
+## 4. Explicitly time-boxed pilot
+
+The Pilot wrapper is limited to 600 seconds and invokes the real current `run.py` entry point using a temporary Windows runtime JSON instead of the Mac-only `runtime.local.json`:
+
+```sh
+sh scripts/remote_benspc.sh pilot
+```
+[0m
+[0m$ [0msh scripts/remote_benspc.sh preflight 2>&1 | head -n 40; echo "===SCRIPT-HEAD==="; head -n 80 scripts/remote_benspc.sh
+HOST=BENSPC
+PYTHON=C:/Users/benja/AppData/Local/Programs/Python/Python310/python.exe
+PYTHON_VERSION=Python 3.10.9
+GPU_INDEX=0
+GPU_NAME=NVIDIA GeForce RTX 5070 Ti
+GPU_FREE_MIB=15397
+MIN_FREE_MIB=12000
+REMOTE_PROJECT=C:/Users/benja/beautiful-model
+REMOTE_PROJECT_EXISTS=True
+PILOT_GPU_READY=true
+PILOT_GPU_STATUS=READY
+===SCRIPT-HEAD===
+#!/bin/sh
+set -eu
+
+# Local coordinator for the already-configured Tailscale/SSH alias "benspc".
+# It deliberately uses only ssh/scp: no rsync, package install, download, or
+# process-management command is used here.
+
+PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+HOST=${BENSPC_HOST:-benspc}
+REMOTE_PROJECT=${BENSPC_REMOTE_PROJECT:-C:/Users/benja/beautiful-model}
+REMOTE_PYTHON='C:/Users/benja/AppData/Local/Programs/Python/Python310/python.exe'
+MIN_FREE_MIB=${BENSPC_MIN_FREE_MIB:-12000}
+GPU_INDEX=${BENSPC_GPU_INDEX:-0}
+PILOT_SECONDS=${BENSPC_PILOT_SECONDS:-600}
+
+# Bound both initial connection setup and an established connection that stops
+# responding. These are OpenSSH client options and apply equally to ssh/scp.
+SSH_CONNECT_TIMEOUT_SECONDS=10
+SSH_SERVER_ALIVE_INTERVAL_SECONDS=15
+SSH_SERVER_ALIVE_COUNT_MAX=2
+
+die() {
+    printf '%s\n' "remote_benspc: $*" >&2
+    exit 2
+}
+
+case "$HOST" in
+    *[!A-Za-z0-9_.-]*|'') die "BENSPC_HOST contains unsafe characters" ;;
+esac
+
+case "$REMOTE_PROJECT" in
+    C:/Users/benja/*) ;;
+    *) die "BENSPC_REMOTE_PROJECT must stay below C:/Users/benja/" ;;
+esac
+case "$REMOTE_PROJECT" in
+    *[!A-Za-z0-9_./:-]*) die "BENSPC_REMOTE_PROJECT must not contain spaces or shell metacharacters" ;;
+esac
+
+validate_gpu_config() {
+    case "$MIN_FREE_MIB" in *[!0-9]*|'') die "BENSPC_MIN_FREE_MIB must be a positive integer" ;; esac
+    case "$GPU_INDEX" in *[!0-9]*|'') die "BENSPC_GPU_INDEX must be a nonnegative integer" ;; esac
+    [ "$MIN_FREE_MIB" -gt 0 ] || die "BENSPC_MIN_FREE_MIB must be positive"
+}
+
+validate_pilot_seconds() {
+    case "$PILOT_SECONDS" in *[!0-9]*|'') die "BENSPC_PILOT_SECONDS must be an integer from 1 to 600" ;; esac
+    [ "$PILOT_SECONDS" -ge 1 ] && [ "$PILOT_SECONDS" -le 600 ] || die "BENSPC_PILOT_SECONDS must be between 1 and 600"
+}
+
+ssh_benspc() {
+    ssh \
+        -n \
+        -o BatchMode=yes \
+        -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT_SECONDS" \
+        -o "ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL_SECONDS" \
+        -o "ServerAliveCountMax=$SSH_SERVER_ALIVE_COUNT_MAX" \
+        "$@"
+}
+
+scp_benspc() {
+    scp \
+        -o BatchMode=yes \
+        -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT_SECONDS" \
+        -o "ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL_SECONDS" \
+        -o "ServerAliveCountMax=$SSH_SERVER_ALIVE_COUNT_MAX" \
+        "$@"
+}
+
+remote_preflight() {
+    # Read-only. In particular, no New-Item, Set-Content, process stop, or file
+    # transfer happens here. Low VRAM is pilot readiness state, not a failure
+    # that could accidentally gate sync or CPU-only tests.
+    validate_gpu_config
+    ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"\$ErrorActionPreference='Stop'; \$python='$REMOTE_PYTHON'; \$project='$REMOTE_PROJECT'; \$gpu=$GPU_INDEX; \$minimum=$MIN_FREE_MIB; if (-not (Test-Path -LiteralPath \$python -PathType Leaf)) { throw 'Expected Python 3.10 executable is missing' }; \$smi=(Get-Command nvidia-smi.exe -ErrorAction Stop).Source; \$freeText=& \$smi --id=\$gpu --query-gpu=memory.free --format=csv,noheader,nounits; if (\$LASTEXITCODE -ne 0) { throw 'nvidia-smi memory query failed' }; \$free=[int]((\$freeText | Select-Object -First 1).Trim()); \$nameText=& \$smi --id=\$gpu --query-gpu=name --format=csv,noheader; if (\$LASTEXITCODE -ne 0) { throw 'nvidia-smi name query failed' }; \$version=& \$python --version 2>&1; Write-Output ('HOST=' + \$env:COMPUTERNAME); Write-Output ('PYTHON=' + \$python); Write-Output ('PYTHON_VERSION=' + \$version); Write-Output ('GPU_INDEX=' + \$gpu); Write-Output ('GPU_NAME=' + ((\$nameText | Select-Object -First 1).Trim())); Write-Output ('GPU_FREE_MIB=' + \$free); Write-Output ('MIN_FREE_MIB=' + \$minimum); Write-Output ('REMOTE_PROJECT=' + \$project); Write-Output ('REMOTE_PROJECT_EXISTS=' + (Test-Path -LiteralPath \$project -PathType Container)); if (\$free -lt \$minimum) { Write-Output 'PILOT_GPU_READY=false'; Write-Output 'PILOT_GPU_STATUS=LOW_VRAM' } else { Write-Output 'PILOT_GPU_READY=true'; Write-Output 'PILOT_GPU_STATUS=READY' }\""
+}
+
+sync_project() {
+    ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"New-Item -ItemType Directory -Force -Path '$REMOTE_PROJECT' | Out-Null\""
+
+    # Copy regular project files while excluding generated/runtime state. Each
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv; echo '---PROCS---'; nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv"
+Only one --query-* switch can be used at a time.
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv"
+name, memory.total [MiB], driver_version
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 591.86
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv; echo EXIT:$?"
+ERROR: Option echo is not recognized. Please run 'nvidia-smi -h' for help.
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell.exe -NoProfile -NonInteractive -Command \"nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv\""
+pid, process_name, used_gpu_memory [MiB]
+1768, C:\Windows\System32\dwm.exe, [N/A]
+4152, C:\Windows\System32\ShellHost.exe, [N/A]
+10064, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\CrossDeviceResume.exe, [N/A]
+8564, C:\Windows\explorer.exe, [N/A]
+13348, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\SearchHost.exe, [N/A]
+13380, C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe, [N/A]
+15392, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\153.0.4234.48\msedgewebview2.exe, [N/A]
+19200, C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe, [N/A]
+17304, C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy\ShellExperienceHost.exe, [N/A]
+19892, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TextInputHost.exe, [N/A]
+5112, C:\Program Files\Okta\Okta Verify\OktaVerify.exe, [N/A]
+19504, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.AdvancedPaste.exe, [N/A]
+15856, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.Peek.UI.exe, [N/A]
+5268, C:\Program Files\PowerToys\PowerToys.ColorPickerUI.exe, [N/A]
+10660, C:\Program Files\PowerToys\PowerToys.FancyZones.exe, [N/A]
+13148, C:\Program Files\PowerToys\PowerToys.PowerLauncher.exe, [N/A]
+3328, C:\Users\benja\AppData\Local\Discord\app-1.0.9259\Discord.exe, [N/A]
+2316, C:\Program Files (x86)\e2eSoft\iVCam\iVCam.exe, [N/A]
+20964, C:\Users\benja\AppData\Local\Programs\Lunar Client\Lunar Client.exe, [N/A]
+12760, C:\Program Files\WindowsApps\12030rocksdanister.LivelyWallpaper_1.0.163.0_x64__97hta09mmv6hy\Build\Lively.exe, [N/A]
+18288, C:\Program Files\ShareX\ShareX.exe, [N/A]
+21352, C:\Windows\System32\Taskmgr.exe, [N/A]
+12604, C:\Windows\System32\ApplicationFrameHost.exe, [N/A]
+20844, C:\Windows\ImmersiveControlPanel\SystemSettings.exe, [N/A]
+19328, C:\Program Files\WindowsApps\Microsoft.YourPhone_1.26072.255.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe, [N/A]
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell.exe -NoProfile -NonInteractive -Command \"Get-PSDrive C | Select-Object Free,Used; fsutil volume diskfree C:\""
+Total free bytes                :    54,020,755,456 ( 50.3 GB)
+Total bytes                     : 1,023,143,833,600 (952.9 GB)
+Total quota free bytes          :    54,020,755,456 ( 50.3 GB)
+Unavailable pool bytes          :                 0 (  0.0 KB)
+Quota unavailable pool bytes    :                 0 (  0.0 KB)
+Used bytes                      :   969,099,083,776 (902.5 GB)
+Total Reserved bytes            :        23,994,368 ( 22.9 MB)
+Volume storage reserved bytes   :                 0 (  0.0 KB)
+Available committed bytes       :                 0 (  0.0 KB)
+Pool available bytes            :                 0 (  0.0 KB)
+       Free         Used
+       ----         ----
+54020755456 969123078144
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell.exe -NoProfile -NonInteractive -Command \"& 'C:/Users/benja/lis300/venv/Scripts/python.exe' -c 'import torch; print(torch.cuda.is_available())'\""
+True
+[0m
