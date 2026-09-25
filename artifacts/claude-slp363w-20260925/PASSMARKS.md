@@ -1,4 +1,4 @@
-# slp-363w pass marks (registered 2026-09-25 ~12:25 UTC, before the seed 1-2 run)
+# slp-363w pass marks (registered 2026-09-25 ~11:35 UTC, before the seed 1-2 run)
 
 Ben 11:03 UTC: "Switch to learning, but I think as long as sleep improves the model, it's fine."
 Change (one): scripts/claude_slp363w_night.py, a school night after every idle sleep. It builds practice and a
