@@ -1,4 +1,4 @@
-# slp-363x pass marks (registered 2026-09-25 ~12:30 UTC, before the seed 3-4 run)
+# slp-363x pass marks (registered 2026-09-25 ~12:10 UTC, before the seed 3-4 run)
 
 Change (one, the keep rule only): scripts/claude_slp363x_night.py. On top of slp-363w's check against the night
 before, a school night is kept only if the trained copy is not worse than the reasoner BEFORE THE FIRST NIGHT on
