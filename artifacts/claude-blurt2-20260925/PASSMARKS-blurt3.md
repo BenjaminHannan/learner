@@ -18,3 +18,7 @@ Marks (lucky blurts on the fresh test set, mean of the two seeds):
 - U2 the wins caused it: mean W ≥ 1.3 × mean C, and each W seed beats each C seed.
 - PASS = U1 and U2. Proved wrong: mean W ≤ mean C. Inconclusive: fewer than 20 won practice puzzles, or L0 < 10.
 - Reported: puzzles with at least one lucky blurt (before/after), greedy solves (as in blurt-2).
+
+## Replication blurt-3r (registered 15:10 UTC 09-25, after blurt-3 PASSED, before 3r runs)
+Same command and marks, new seeds: --train-seed 6 --test-seed 781 --n-test 80, out gpu-3r, on BensPC ($0).
+It reports on its own; the blurt-3 verdict stands either way, and "replicated" is claimed only if 3r also passes.
