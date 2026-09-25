@@ -29,3 +29,7 @@ score those same reads. Scorer: claude_lis318_score.py (owner + value match, cou
 | G2 time: B median ms (reader + verifier) | <= A's + 400 |
 PASS = all five. Proved wrong: B saved_right <= A's + 10 (the verifier does not recover right facts the cutoff throws away).
 Report only: saved_right and wrong per kind, the per-fact dev curve for both gates.
+
+Addendum 10:01 UTC, before any rd-371 training or run (description only; no bar changed): after the blind audit readpanel371
+holds 240 turns and 426 facts (was 411; key fixes and 20 rewritten turns, second blind pass on the 28 changed rows). Final agreement:
+426/426 gold facts, 8 extra labeller facts left out of the key, 233/240 rows. Seal: artifacts/claude-readpanel371-20260925/SEAL.sha256.txt.
