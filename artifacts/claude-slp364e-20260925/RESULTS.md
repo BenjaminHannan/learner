@@ -25,5 +25,5 @@ The sleeper's own flag caught 3/20; slp-369 put the notebook back on 3 nights (3
 
 ## Reading
 Four gate versions in a row have failed the same way: each fresh blind bench finds a question kind or a process
-step the gate does not look at. v5 is still the best gate so far (17/20 vs v1 9/20, 0 honest nights rejected, honest
-replies unchanged). slp-368 + slp-369 keep the main notebook files safe on every night tested.
+step the gate does not look at. v5 caught the most of any gate on its own bench so far (17/20 vs v1 9/20, 0 honest nights rejected, honest
+replies unchanged). In this run the main log was unchanged on 80/80 nights (slp-368 + slp-369); earlier runs are in their own folders.
