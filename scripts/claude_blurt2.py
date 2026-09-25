@@ -17,7 +17,9 @@ model ... ensuring learning". Here the reasoner stand-in is the 1B's single gree
   creative blurts, an exact checker keeps the lucky hits (wins, also written to wins/wins.jsonl in the sleep
   thread's format) -> "sleep": a LoRA practises them -> after-eval on the same fresh test puzzles.
   Arms: W = practice on wins + the reasoner's own correct answers; C = the reasoner's own correct answers only,
-  repeated to the same number of examples (so W and C differ only in the creative wins).
+  repeated to the same number of examples (so W and C differ only in the creative wins). P (placebo, --arms W,P) =
+  own correct answers + one WRONG legal blurt from each won puzzle, same count (so W and P differ only in whether
+  the practised guesses were right).
 
   python -B scripts/claude_blurt2.py blurt --model M --puzzles F --out F [--n 30 --temp 1.0]      rule-keeping blurts
   python -B scripts/claude_blurt2.py loop  --model M --out DIR [--train-seed 2 --n-train 400 --test-seed 777
@@ -323,7 +325,7 @@ def loop(a):
     res.update({"n_train": len(train), "n_test": len(test), "test_dropped_overlap": n0 - len(test), "temp": temp})
     res["S0_test_before"] = evaluate(s, test)
     print(f"[loop] before: test {res['S0_test_before']}/{len(test)}", flush=True)
-    own, wins, recs, lucky, tried = [], [], [], 0, 0
+    own, wins, recs, lucky, tried, wrong = [], [], [], 0, 0, []
     for p in train:
         g = s.answer(p)
         if B1.check(g, p["nums"], p["target"]):
@@ -334,6 +336,9 @@ def loop(a):
         lucky, tried = lucky + len(hits), tried + len(bl)
         if hits:
             wins.append((p, hits[0]))
+            miss = [t for t in bl if t not in hits and complete(t, p["nums"])]
+            if miss:
+                wrong.append((p, miss[0]))
             recs.append({"problem": f"Use each of {p['nums']} once with + - * / and brackets to make {p['target']}",
                          "rows_used": [], "steps": [hits[0]], "answer": hits[0], "checked_by": "exact-checker",
                          "turn_id": p["id"], "source": "creative-blurt", "tries": bl.index(hits[0]) + 1})
@@ -344,9 +349,14 @@ def loop(a):
           f"({lucky}/{tried} blurts)", flush=True)
     ex_w = own + wins
     ex_c = (own * (len(ex_w) // max(1, len(own)) + 1))[:len(ex_w)] if own else []
+    ex_p = own + wrong
+    ex_p = (ex_p * (len(ex_w) // max(1, len(ex_p)) + 1))[:len(ex_w)] if ex_p else []
     res["examples_W"], res["examples_C"] = len(ex_w), len(ex_c)
+    if "P" in a.arms:
+        res["examples_P"], res["placebo_wrong_answers"] = len(ex_p), len(wrong)
     seeds = [int(x) for x in a.lora_seeds.split(",")]
-    for arm, ex in (("W", ex_w), ("C", ex_c)):
+    arms = {"W": ex_w, "C": ex_c, "P": ex_p}
+    for arm, ex in ((k, arms[k]) for k in a.arms.split(",")):
         for sd in seeds:
             k = f"{arm}_seed{sd}"
             if not ex:
@@ -382,6 +392,7 @@ def main():
     ap.add_argument("--lora-seeds", default="0,1")
     ap.add_argument("--temps", default="1.0")
     ap.add_argument("--dev-puzzles", default="")
+    ap.add_argument("--arms", default="W,C")
     a = ap.parse_args()
     {"blurt": blurt, "loop": loop}[a.cmd](a)
 
