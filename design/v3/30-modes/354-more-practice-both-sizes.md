@@ -26,6 +26,3 @@ seeds (dev = generated seed-777 items, not a panel; plan 352 rule 2). Ties go to
 ## What a win would and would not mean
 A PASS here is not the goal met. Plan 352 rule 5 still applies: freeze both recipes, write the fresh blind
 reasonpanel353, score once, blind recount. Panel296 has now scored five size runs, so it is only the gate.
-
-**Update 01:50 UTC 09-25: HELD before launch ($0).** Ben chose "Fix loop first" on the decision card: wait
-for the full-size loop test (rsn-353), then compare sizes on the loop reasoner. Tasks moved to handoff/held/.
