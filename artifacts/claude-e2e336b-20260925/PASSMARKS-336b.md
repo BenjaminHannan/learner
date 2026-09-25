@@ -51,3 +51,8 @@ director), with a one-life DEV smoke first (Windows has never run the joined age
 measured on BensPC, the machine the plan named. scripts/claude_sleepcheck_wrap.py now also loads the Windows
 `resource` stand-in (scripts/winshim), as claude_twinb_wrap.py does; SEAL-code updated for that one file. No mark,
 bar, arm or bank changes.
+
+## Correction 2026-09-25 ~02:35 UTC
+The move above did not happen: the watcher had already launched rent-336b at 01:42 UTC (before the move commit), so
+336b runs on the rental under the task and seal as they stood at launch. benspc-336b stays held and runs only if the
+rental fails without writing run/ (director, 02:22 UTC). M11 is therefore measured on the rented GPU, as in 336.

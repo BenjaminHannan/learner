@@ -14,12 +14,10 @@ report. The parts have their own road maps; this file says how they come togethe
 | Reasoning | two-step asks 8/37 | 1/37 | reasoner not joined; learned reasoners all FAIL so far | sleep research thread, reasoner-roadmap-2026-09-25.md |
 | Creative | useful 12/40; 11 made-up person facts | 10/40 useful (333 panel) | the 1B is the limit; 333e FAIL | creative thread |
 
-## What "best in class" means for the joined agent (fixed now)
-On a fresh blind bank, judged blind, all at once: (1) beats the same-size plain model on every row; (2) states
-0 wrong facts about the user's life and never invents one; (3) grammar 99%+ by two valid graders; (4) keeps 100%
-of taught facts across sleeps; (5) gets better after nights of sleep than a copy that never sleeps. Then the same
-test against the best open 1-3B chat models (Ben's yes needed for any download). Today only (2)'s "wrong answers"
-half is close (3 vs the twin's 187).
+## What "best in class" means (not defined here)
+Public-benchmark "best in class" belongs to the Benchmarks thread, which registers its own marks: LoCoMo against
+Qwen3.5-2B, LFM2.5-1.2B and plain MiniCPM5-1B, with LongMemEval as the final exam. This file's marks cover only the
+six month-end rows on the 331-style banks (the 336 marks M1-M11), so there is one definition of best in class.
 
 ## How parts come in (the rule for every 0.x)
 1. A part joins only after its own registered PASS on its own blind test.
@@ -32,7 +30,7 @@ half is close (3 vs the twin's 187).
 ## Steps (in order; each has marks fixed before it runs)
 | Step | What | Waits on | Pass mark (short) |
 |---|---|---|---|
-| 336b | 0.1 + gram-360 fill-in finisher, bank B, BensPC tonight | director slot | M1-M11 as 336; grammar +5 over plain 0.1 |
+| 336b | 0.1 + gram-360 fill-in finisher, bank B (running on a rental since 01:42 UTC; BensPC only if it fails) | the rental | M1-M11 as 336; grammar +5 over plain 0.1 |
 | 381 | stricter test harness: "is that right?" answered yes only when owner, value AND relation are right | DEV check | on DEV, 0 wrong "yes"; right "yes" kept ≥ 95% |
 | rd-373 | confirm questions only for clean facts (reading thread owns it, 370-reading-roadmap.md); 381 gives it an honest "yes" | 381 | 0 wrong saves after a confirm |
 | 0.2 | 0.1 + every part with a registered PASS by Sept 29 (candidates: gram-360, lis-318 reader, slp-360 scrap + 361 undo, rd-373) | parts' verdicts | 336 marks on bank C vs 0.1 and twin b |
@@ -41,7 +39,8 @@ half is close (3 vs the twin's 187).
 | 0.3 (Oct) | trained reasoner joined (after a PASS), sleep practice school on, creative as a tool call | reasoner + sleep lanes | beats twin on two-step asks by +20 |
 
 ## Tonight (Ben asleep; no rentals)
-- 336b on BensPC (handoff/held/benspc-336b.md, waiting for the director's slot); verify when it lands.
+- 336b is running on the rental the watcher launched at 01:42 UTC, before the move to BensPC; benspc-336b stays held
+  unless the rental fails. Verify when it lands.
 - Banks C and D being written blind into /mnt/project-files/escrow-331/C and D; blind audit after.
 - 381 harness (scripts/claude_e2e381_harness.py, runner claude_e2e381_run.py) built on DEV; held-out check with two
   blind judges on 73 other DEV confirm questions (marks in artifacts/claude-e2e381-20260925/PASSMARKS-381.md).
