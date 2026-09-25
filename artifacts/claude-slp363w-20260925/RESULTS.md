@@ -17,8 +17,10 @@ What happened: the self-check kept all 13 honest nights (7 + 6). Each night's ch
 raw wrong 167 -> 197 (seed 1) and 109 -> 193 (seed 2); checked wrong 113 -> 139 (seed 1), 43 -> 48 (seed 2).
 
 ## Reading (inferred, not tested)
-1. The self-check compares each night only with the night before, so small allowed drops add up.
-2. The self-check is built from the same taught facts as the practice (seven person relations only). It cannot see
+1. ~~The self-check compares each night only with the night before, so small allowed drops add up.~~ [Edit after the
+   blind recount: the data do not fit this. Summed over the nights the self-check went UP (right +5 / +10, wrong -5 / -10),
+   while the panel fell. Each night used a different self-check set, so the sums are rough.]
+2. (Fits the data better.) The self-check is built from the same taught facts as the practice (seven person relations only). It cannot see
    the reasoner getting worse at other kinds of question (places, jobs, counts, pets), which the panel has.
 3. At this size (179k parameters, 100 + 100 steps a night) practice on taught facts did not help on the panel.
    Whether it helps at full size is slp-363's question (BensPC, 6th in the queue).
