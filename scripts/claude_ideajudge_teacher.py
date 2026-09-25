@@ -7,6 +7,9 @@ labels may break provider terms if used to train our model; the teacher Ben appr
 not have that problem. This script asks the teacher for the same two labels the blind Opus judges gave (same rubric),
 one call per request with all 30 blurts, then reports agreement with the Opus labels. No training here.
 
+This model's endpoint requires reasoning (it refuses {"enabled": false}), so reasoning effort is set to low; the reply
+is read from the final message only.
+
 Key rules: the key is read from ~/.config/openrouter/key into memory only. Never printed, logged or written.
 
   python -B scripts/claude_ideajudge_teacher.py --dev artifacts/claude-cre333e-dev-20260924 \
@@ -41,7 +44,7 @@ def load(p):
 
 def call(key, model, text, tries=4):
     body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": 0,
-                       "max_tokens": 4000, "reasoning": {"enabled": False}}).encode()
+                       "max_tokens": 16000, "reasoning": {"effort": "low"}}).encode()
     for i in range(tries):
         req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
             "Authorization": "Bearer " + key, "Content-Type": "application/json"})
