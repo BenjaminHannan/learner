@@ -1,0 +1,4140 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git log --oneline -5; git status --short | head -n 50
+FETCH_EXIT:0
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md 2>&1 | head -n 400
+echo "---SEPARATOR---"
+git show origin/main:scripts/claude_blurt2.py 2>&1 | head -n 250
+# blurt-3: does sleeping on lucky hits raise the luck itself? (registered ~13:00 UTC 2026-09-25, before running)
+
+Why: blurt-2/2p/2b (all registered FAILs) asked whether the reasoner (greedy answer) solves more fresh puzzles after
+sleeping on lucky hits; the gain was small and unstable. Ben's stated aim is to "maximize the number of times it gets
+lucky", and the 333g DEV rehearsal showed weak guesses sink replies. So the question moves to the guesser: after
+sleep, are its random rule-keeping guesses right more often on fresh puzzles?
+Same procedure as blurt-2 (arms W = own right + first lucky hit per won puzzle; C = own right repeated to the same
+count; LoRA r16 3 epochs, seeds 0 and 1; DEV temperature rule; 30 blurts). New measure (--luck): on each fresh test
+puzzle, 30 sampled blurts at the chosen temperature, before sleep (L0) and after each arm; count right blurts.
+New practice set (seed 5) and fresh test set (seed 780, 80 puzzles before overlap drops), never printed.
+One CPU run on the thread container ($0); it is the registered result.
+
+  python -B scripts/claude_blurt2.py loop --model BASE --out artifacts/claude-blurt2-20260925/cpu-3 --temps 1.0,1.5
+      --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --train-seed 5 --test-seed 780 --n-test 80 --luck
+
+Marks (lucky blurts on the fresh test set, mean of the two seeds):
+- U1 luck rises: mean W ≥ 1.5 × L0.
+- U2 the wins caused it: mean W ≥ 1.3 × mean C, and each W seed beats each C seed.
+- PASS = U1 and U2. Proved wrong: mean W ≤ mean C. Inconclusive: fewer than 20 won practice puzzles, or L0 < 10.
+- Reported: puzzles with at least one lucky blurt (before/after), greedy solves (as in blurt-2).
+
+## Replication blurt-3r (registered 15:10 UTC 09-25, after blurt-3 PASSED, before 3r runs)
+Same command and marks, new seeds: --train-seed 6 --test-seed 781 --n-test 80, out gpu-3r, on BensPC ($0).
+It reports on its own; the blurt-3 verdict stands either way, and "replicated" is claimed only if 3r also passes.
+---SEPARATOR---
+#!/usr/bin/env python3
+"""blurt-2: rule-keeping blurts and the creative learning loop on number puzzles (creative research thread, 2026-09-25).
+
+Why: in blurt-1 (artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md) the base MiniCPM5-1B was right on 2/1800
+and 4/1800 free blurts; most tries used numbers the puzzle never gave, or no formula at all. It was breaking the
+rules, not getting unlucky.
+
+One change for blurting: constrained decoding. At every step only tokens that keep the text a legal prefix of an
+expression over exactly the given numbers (+ - * / and brackets) are allowed; end-of-text is allowed only when the
+expression is complete. The 1B's own probabilities still choose among the legal tokens, so blurts stay its own
+guesses. Temperature sets how wild they are.
+
+Ben's loop (00:51 UTC 2026-09-25): "the reasoner should be able to do most things. The creative thing is for
+generating ideas for things the reasoner can't do usually, and then the creative ideas get saved/written into the
+model ... ensuring learning". Here the reasoner stand-in is the 1B's single greedy (rule-keeping) answer.
+  loop: before-eval on fresh test puzzles -> the reasoner tries every practice puzzle once -> on each miss, N
+  creative blurts, an exact checker keeps the lucky hits (wins, also written to wins/wins.jsonl in the sleep
+  thread's format) -> "sleep": a LoRA practises them -> after-eval on the same fresh test puzzles.
+  Arms: W = practice on wins + the reasoner's own correct answers; C = the reasoner's own correct answers only,
+  repeated to the same number of examples (so W and C differ only in the creative wins). P (placebo, --arms W,P) =
+  own correct answers + one WRONG legal blurt from each won puzzle, same count (so W and P differ only in whether
+  the practised guesses were right).
+
+  python -B scripts/claude_blurt2.py blurt --model M --puzzles F --out F [--n 30 --temp 1.0]      rule-keeping blurts
+  python -B scripts/claude_blurt2.py loop  --model M --out DIR [--train-seed 2 --n-train 400 --test-seed 777
+                                           --n-test 150 --n 30 --temps 1.0,1.5 --dev-puzzles F --epochs 3
+                                           --lora-seeds 0,1]
+The test puzzles are made from --test-seed inside the run and are never printed; only counts are reported.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_blurt1 as B1  # noqa: E402
+
+OPCH = set("+-*/")
+
+
+def _scan(s: str, nums: list[int], state=None):
+    """Walk an expression prefix (optionally continuing from an earlier state). Returns (remaining numbers, open
+    brackets, expecting_operand, pending digits), or None if the prefix breaks a rule."""
+    if state is None:
+        rem, depth, want_operand, digits = [str(n) for n in nums], 0, True, ""
+    else:
+        rem, depth, want_operand, digits = list(state[0]), state[1], state[2], state[3]
+    for ch in s:
+        if ch == " ":
+            if digits:
+                if digits not in rem:
+                    return None
+                rem.remove(digits)
+                digits, want_operand = "", False
+            continue
+        if ch.isdigit():
+            if not want_operand:
+                return None
+            cand = digits + ch
+            if not any(r.startswith(cand) for r in rem):
+                return None
+            if cand.startswith("0") and cand not in rem:
+                return None
+            digits = cand
+            continue
+        if digits:                                   # a number ends here
+            if digits not in rem:
+                return None
+            rem.remove(digits)
+            digits, want_operand = "", False
+        if ch == "(":
+            if not want_operand:
+                return None
+            depth += 1
+        elif ch == ")":
+            if want_operand or depth == 0:
+                return None
+            depth -= 1
+        elif ch in OPCH:
+            if want_operand:
+                return None
+            want_operand = True
+        else:
+            return None
+    return rem, depth, want_operand, digits
+
+
+def legal_prefix(s: str, nums, state=None) -> bool:
+    """A prefix that can still be completed: an operand is never owed with no numbers left, and brackets stay
+    shallower than the number count (otherwise the 1B can loop on "( ( (" after using every number).
+    With `state` (from _scan of the text before), `s` is only the new piece."""
+    st = _scan(s, nums, state)
+    if st is None:
+        return False
+    rem, depth, want_operand, digits = st
+    if want_operand and not digits and not rem:
+        return False
+    return depth <= len(nums) - 1
+
+
+def complete(s: str, nums) -> bool:
+    st = _scan(s, nums)
+    if st is None:
+        return False
+    rem, depth, want_operand, digits = st
+    if digits:
+        if digits not in rem:
+            return False
+        rem = list(rem)
+        rem.remove(digits)
+        want_operand = False
+    return not rem and depth == 0 and not want_operand
+
+
+_VOCAB: dict = {}
+
+
+def _expr_tokens(tok):
+    """Every token made only of digits, + - * / ( ) and single spaces (decoded once per tokenizer, then cached)."""
+    key = id(tok)
+    if key not in _VOCAB:
+        ch = set("0123456789+-*/() ")
+        out = []
+        for i in range(len(tok)):
+            t = tok.decode([i])
+            if t and set(t) <= ch and "  " not in t and len(t) <= 6:
+                out.append((i, t))
+        _VOCAB[key] = out
+    return _VOCAB[key]
+
+
+class RuleKeeper:
+    """A transformers LogitsProcessor that keeps every sequence a legal expression over `nums`."""
+
+    def __init__(self, tok, nums, cut: int):
+        import torch
+        self.torch, self.tok, self.nums, self.cut = torch, tok, list(nums), cut
+        allowed_ch = set("".join(str(n) for n in nums)) | set("+-*/() ")
+        self.cands = [(i, t) for i, t in _expr_tokens(tok) if set(t) <= allowed_ch]
+        self.eos = tok.eos_token_id
+        self.memo: dict[str, list[int]] = {}
+
+    def allowed(self, text: str) -> list[int]:
+        if text not in self.memo:
+            st = _scan(text, self.nums)
+            ok = [] if st is None else [i for i, t in self.cands if legal_prefix(t, self.nums, st)]
+            if complete(text, self.nums) or not ok:
+                ok.append(self.eos)
+            self.memo[text] = ok
+        return self.memo[text]
+
+    def __call__(self, input_ids, scores):
+        mask = self.torch.full_like(scores, float("-inf"))
+        for b in range(input_ids.shape[0]):
+            mask[b, self.allowed(self.tok.decode(input_ids[b, self.cut:], skip_special_tokens=True))] = 0.0
+        return scores + mask
+
+
+class Solver:
+    def __init__(self, model_dir):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+                                                          dtype=torch.bfloat16).to(self.dev).eval()
+
+    def prompt(self, p) -> str:
+        return self.tok.apply_chat_template(B1.puzzle_prompt(p), tokenize=False, add_generation_prompt=True,
+                                            enable_thinking=False)
+
+    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+        from transformers import LogitsProcessorList
+        m = model or self.model
+        ids = self.tok(self.prompt(p), return_tensors="pt").to(self.dev)
+        cut = ids["input_ids"].shape[1]
+        kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
+             {"do_sample": False}
+        with self.torch.no_grad():
+            out = m.generate(**ids, max_new_tokens=32, pad_token_id=self.tok.eos_token_id,
+                             logits_processor=LogitsProcessorList([RuleKeeper(self.tok, p["nums"], cut)]), **kw)
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+
+    def answer(self, p, model=None) -> str:
+        return self.generate(p, 1, None, model)[0]
+
+
+def puzzles(seed, n):
+    class A:
+        pass
+    a = A()
+    a.seed, a.n, a.out = seed, n, None
+    rng, out, seen = random.Random(seed), [], set()
+    while len(out) < n:                                  # same recipe as claude_blurt1.make
+        k = 3 if len(out) % 3 else 4
+        nums = sorted(rng.randint(1, 9 if k == 3 else 13) for _ in range(k))
+        target = 24 if k == 4 else rng.randint(5, 40)
+        key = (tuple(nums), target)
+        if key in seen:
+            continue
+        sol = B1.solve(nums, target)
+        if sol is None:
+            continue
+        seen.add(key)
+        out.append({"id": f"pz-s{seed}-{len(out) + 1:03d}", "nums": nums, "target": target})
+    return out
+
+
+def blurt(a):
+    s = Solver(a.model)
+    rows, tot = [], 0
+    for p in [json.loads(x) for x in Path(a.puzzles).read_text().splitlines() if x]:
+        bl = s.generate(p, a.n, a.temp)
+        hits = [B1.check(t, p["nums"], p["target"]) for t in bl]
+        greedy = s.answer(p)
+        rows.append({"id": p["id"], "blurts": bl, "hits": hits, "greedy": greedy,
+                     "greedy_hit": B1.check(greedy, p["nums"], p["target"])})
+        tot += sum(hits)
+        print(f"[blurt2] {p['id']} hits {sum(hits)}/{a.n} greedy {int(rows[-1]['greedy_hit'])}", flush=True)
+    Path(a.out).write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    print(f"puzzles {len(rows)}: lucky blurts {tot}/{len(rows) * a.n}, solved at least once "
+          f"{sum(1 for r in rows if any(r['hits']))}/{len(rows)}, greedy right {sum(r['greedy_hit'] for r in rows)}")
+
+
+def evaluate(s, ps, model=None) -> int:
+    return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
+
+
+def luck(s, ps, n, temp, model=None) -> tuple[int, int]:
+    """blurt-3: lucky blurts out of len(ps) * n sampled blurts, and puzzles with at least one lucky blurt."""
+    tot = solved = 0
+    for p in ps:
+        h = sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, n, temp, model))
+        tot, solved = tot + h, solved + (h > 0)
+    return tot, solved
+
+
+def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
+    """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
+    B starts at zero, so the model starts exactly as the base."""
+    import math
+    import torch
+    nn = torch.nn
+
+    class LoRALinear(nn.Module):
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md 2>&1
+echo "===FILES===" 
+git ls-tree -r --name-only origin/main -- scripts/claude_blurt* artifacts/claude-blurt* 2>&1 | head -n 100
+# blurt-3: does sleeping on lucky hits raise the luck itself? (registered ~13:00 UTC 2026-09-25, before running)
+
+Why: blurt-2/2p/2b (all registered FAILs) asked whether the reasoner (greedy answer) solves more fresh puzzles after
+sleeping on lucky hits; the gain was small and unstable. Ben's stated aim is to "maximize the number of times it gets
+lucky", and the 333g DEV rehearsal showed weak guesses sink replies. So the question moves to the guesser: after
+sleep, are its random rule-keeping guesses right more often on fresh puzzles?
+Same procedure as blurt-2 (arms W = own right + first lucky hit per won puzzle; C = own right repeated to the same
+count; LoRA r16 3 epochs, seeds 0 and 1; DEV temperature rule; 30 blurts). New measure (--luck): on each fresh test
+puzzle, 30 sampled blurts at the chosen temperature, before sleep (L0) and after each arm; count right blurts.
+New practice set (seed 5) and fresh test set (seed 780, 80 puzzles before overlap drops), never printed.
+One CPU run on the thread container ($0); it is the registered result.
+
+  python -B scripts/claude_blurt2.py loop --model BASE --out artifacts/claude-blurt2-20260925/cpu-3 --temps 1.0,1.5
+      --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --train-seed 5 --test-seed 780 --n-test 80 --luck
+
+Marks (lucky blurts on the fresh test set, mean of the two seeds):
+- U1 luck rises: mean W ≥ 1.5 × L0.
+- U2 the wins caused it: mean W ≥ 1.3 × mean C, and each W seed beats each C seed.
+- PASS = U1 and U2. Proved wrong: mean W ≤ mean C. Inconclusive: fewer than 20 won practice puzzles, or L0 < 10.
+- Reported: puzzles with at least one lucky blurt (before/after), greedy solves (as in blurt-2).
+
+## Replication blurt-3r (registered 15:10 UTC 09-25, after blurt-3 PASSED, before 3r runs)
+Same command and marks, new seeds: --train-seed 6 --test-seed 781 --n-test 80, out gpu-3r, on BensPC ($0).
+It reports on its own; the blurt-3 verdict stands either way, and "replicated" is claimed only if 3r also passes.
+===FILES===
+zsh:3: no matches found: scripts/claude_blurt*
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main 2>&1 | grep -i -E "blurt|ledger|gpu-3|RESULTS" | head -n 100
+echo "---"
+git log --oneline origin/main -20 2>&1 | head -n 20
+artifacts/claude-apos247-20260922/RESULTS.md
+artifacts/claude-blurt1-dev-20260925/labels/labels0.jsonl
+artifacts/claude-blurt1-dev-20260925/labels/labels1.jsonl
+artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt2b.md
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt2p.md
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md
+artifacts/claude-blurt2-20260925/RESULTS-cpu.md
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/RESULTS-selfjudge.md
+artifacts/claude-blurt2-20260925/VERIFY-blurt2.md
+artifacts/claude-blurt2-20260925/VERIFY-blurt2b.md
+artifacts/claude-blurt2-20260925/VERIFY-blurt2p.md
+artifacts/claude-blurt2-20260925/VERIFY-blurt3.md
+artifacts/claude-blurt2-20260925/cpu-3/log_loop.txt
+artifacts/claude-blurt2-20260925/cpu-3/loop_summary.json
+artifacts/claude-blurt2-20260925/cpu-3/wins/wins.jsonl
+artifacts/claude-blurt2-20260925/cpu-b/log_loop.txt
+artifacts/claude-blurt2-20260925/cpu-b/loop_summary.json
+artifacts/claude-blurt2-20260925/cpu-b/wins/wins.jsonl
+artifacts/claude-blurt2-20260925/cpu-p/log_loop.txt
+artifacts/claude-blurt2-20260925/cpu-p/loop_summary.json
+artifacts/claude-blurt2-20260925/cpu-p/wins/wins.jsonl
+artifacts/claude-blurt2-20260925/cpu/log_loop.txt
+artifacts/claude-blurt2-20260925/cpu/log_selfjudge.txt
+artifacts/claude-blurt2-20260925/cpu/loop_summary.json
+artifacts/claude-blurt2-20260925/cpu/selfjudge.jsonl
+artifacts/claude-blurt2-20260925/cpu/wins/wins.jsonl
+artifacts/claude-blurt2-20260925/dev333g/DEV-333g.md
+artifacts/claude-blurt2-20260925/dev333g/dev_top3.jsonl
+artifacts/claude-blurt2-20260925/dev333g/dev_top3_judged.jsonl
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-blurt2-20260925/ideahead/head.json
+artifacts/claude-blurt2-20260925/ideahead/result.json
+artifacts/claude-blurt2-20260925/log_ideahead.txt
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+artifacts/claude-boundary259-20260922/RESULTS.md
+artifacts/claude-chain231-20260922/RESULTS.md
+artifacts/claude-chain231-20260922/sleepsmoke/RESULTS-s1-231.md
+artifacts/claude-chain231b-20260922/RESULTS.md
+artifacts/claude-chain231b-20260922/sleepsmoke/RESULTS-s1-231b.md
+artifacts/claude-comment258-20260922/RESULTS.md
+artifacts/claude-convjudge239-A-20260922/RESULTS-138k.md
+artifacts/claude-convjudge239-A-20260922/RESULTS-138l.md
+artifacts/claude-convjudge239-A-20260922/RESULTS-138m.md
+artifacts/claude-convjudge239-A-20260922/RESULTS.md
+artifacts/claude-convjudge239-B-20260922/RESULTS-138k.md
+artifacts/claude-convjudge239-B-20260922/RESULTS-138l.md
+artifacts/claude-convjudge239-B-20260922/RESULTS-138m.md
+artifacts/claude-convjudge239-B-20260922/RESULTS.md
+artifacts/claude-correct252-20260922/RESULTS.md
+artifacts/claude-correct252b-20260922/RESULTS.md
+artifacts/claude-decline224c-20260922/RESULTS.md
+artifacts/claude-demo-dryrun-20260922/RESULTS.md
+artifacts/claude-determinism228-20260922/RESULTS.md
+artifacts/claude-diag243-20260922/RESULTS.md
+artifacts/claude-direction251-20260922/RESULTS.md
+artifacts/claude-earcheck261-20260922/RESULTS.md
+artifacts/claude-firstname236-20260922/RESULTS.md
+artifacts/claude-firstname236-20260922/sleepsmoke/RESULTS-s1-236.md
+artifacts/claude-firstperson249-20260922/RESULTS.md
+artifacts/claude-fixedtext255-20260922/RESULTS.md
+artifacts/claude-fullname232-20260922/RESULTS.md
+artifacts/claude-fullname232b-20260922/RESULTS.md
+artifacts/claude-fullname232c-20260922/RESULTS.md
+artifacts/claude-grammar238-20260922/RESULTS.md
+artifacts/claude-identity227c-20260922/RESULTS.md
+artifacts/claude-lis302-20260924/RESULTS.md
+artifacts/claude-lis317-20260925/RESULTS.md
+artifacts/claude-lis318-20260925/RESULTS.md
+artifacts/claude-mentionwalk246-20260922/RESULTS.md
+artifacts/claude-merge138k-20260922/RESULTS.md
+artifacts/claude-merge138l-20260922/RESULTS.md
+artifacts/claude-merge138m-20260922/RESULTS.md
+artifacts/claude-merge138n-20260922/RESULTS.md
+artifacts/claude-merge252c-20260922/RESULTS.md
+artifacts/claude-mouth241-20260922/RESULTS.md
+artifacts/claude-myrel245-20260922/RESULTS.md
+artifacts/claude-name227b-20260922/RESULTS.md
+artifacts/claude-namecheck230b-20260922/RESULTS.md
+artifacts/claude-namecheck230br-20260922/RESULTS.md
+artifacts/claude-namecheck230c-20260922/RESULTS.md
+artifacts/claude-openers260-20260922/RESULTS.md
+artifacts/claude-polite233-20260922/RESULTS.md
+artifacts/claude-qnorm221c-20260922/RESULTS.md
+artifacts/claude-qnorm221c-20260922/sleepsmoke/RESULTS-s1-221c.md
+artifacts/claude-rsn294-20260923/RESULTS.md
+artifacts/claude-rsn299b-20260924/RESULTS.md
+artifacts/claude-slp360-20260925/RESULTS.md
+---
+355a9a6ae creative: practice-set and asking research, assistant practice plan
+ee8688ee9 creative: research notes (122 sources, quotes fetched) and puzzles-to-real-world scaling plan
+936b4a331 queue: rent rsn-353b (credit-gated, $3.80) now that vast has credit; hold BensPC copy
+33c69b4f8 queue: slot blurt3r-loop after gram-364 on BensPC
+1a7a9a542 creative road map: 15:10 update
+1ba41aed4 blurt-3r: registered replication of blurt-3, BensPC task
+aec2aa4d1 blurt-3 = registered PASS: sleeping on lucky hits doubles lucky guesses on fresh puzzles (63 -> 126/136 vs 85/87)
+61fb293d9 365 road map: switched to learning; 363w FAIL, 363x PASS
+7054cacae slp-363x: blind recount agrees (PASS 5/5); narrow claims about the general set and reply delay
+9cdb8255b slp-363x: registered PASS 5/5 (school night inside idle sleep; wider self-check stops the 363w drift; no learning claim)
+6a9112b91 blurt-3 registered: does sleeping on lucky hits raise the guesser's luck on fresh puzzles
+930c6b11a 333g: fix selftest string
+9b9b0fbed 333g DEV rehearsal: top-3 idea replies useful 3/10, invented 2/10; not registered
+19c96ddcb queue: hold 008-blurt2b-loop (CPU run already registered FAIL; creative thread asked to skip)
+cac9cdc26 blurt-2b = registered FAIL, proved wrong (all hits 7 vs own-only 8 of 119)
+56300fc18 slp-363x PASSMARKS: correct registration time
+b7f708801 slp-363x: school-night keep rule also checks a fixed general set against the start; marks registered before the seed 3-4 run
+c3e754a68 slp-363w: blind recount agrees (FAIL on P363w.5); strike a reading the data do not support
+8d80465a1 slp-363w: registered FAIL on the no-harm mark (seed 1 -20 on the fixed panel, bar -12); plumbing marks pass (notebook untouched, 13/13 sabotaged nights rejected)
+89633642e queue: set BensPC order after bm-390 via filename prefixes (gram-364, lis-319, rd-371, rsn-353-pc, slp-363, rsn-357, blurt2b)
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main 2>&1 | grep -E "scripts/claude_blurt|scripts/claude_cre333|fable-predictions-ledger|RESULTS-gpu-3r|gpu-3r" | head -n 30
+echo "--- ledger tail ---"
+git show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -n 40
+artifacts/fable-predictions-ledger.md
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_blurt_selfjudge.py
+scripts/claude_cre333_agent.py
+scripts/claude_cre333_run.py
+scripts/claude_cre333b_agent.py
+scripts/claude_cre333b_test.py
+scripts/claude_cre333b_wrap.py
+scripts/claude_cre333d_agent.py
+scripts/claude_cre333d_test.py
+scripts/claude_cre333d_wrap.py
+scripts/claude_cre333e_agent.py
+scripts/claude_cre333e_devgen.py
+scripts/claude_cre333e_test.py
+scripts/claude_cre333e_train.py
+scripts/claude_cre333e_wrap.py
+scripts/claude_cre333g_agent.py
+--- ledger tail ---
+- P259.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P258 OUTCOME (2026-09-22 18:00) registered FAIL on M1: that_denial 7/12 (252b 0), that_correction 3/12 (0), pure_denial_that 6/10 (2); junk 0 over 80 (252b 2), false claims 0 (4), wrong values 18 (31); question/unstored/keep/control all pass. M2-M7 PASS exactly as predicted (dev252b 29 moves, c252-022 only, suites = 252b, smoke 0 diffs, M6 0/0/0, +0.23 ms). P258.1-.3 right; P258.4 ranges too optimistic for that_correction (3 vs 9-11) and that_denial (7 vs 8-11); P258.5 right. Cause: 252b grammar gaps on the shortened turns (lowercase, first person, multi-valued relations) + whole-turn gate misses ", not Y, that's ...". Scorers first run with a broken bash python3; re-scored once with uv 3.12, no re-run.
+
+- P257.1 (2026-09-22 18:15) Exp 257 (ear v4.1 = data v4 + C8, table v2; ckpt 55284dec…; tau 9.3 by the sealed rule, no fallback; SEAL.sha256.txt sha a2f8031fb0a3…): M1 passes (0-1 no_save saves), ~75 %.
+- P257.2 M2 wrong saves 2-4; pass (<= 1) ~25 %.
+- P257.3 M3 A recall 65-80 %: FAIL ~85 %; A_brake 85-95 %; B 10-25 %.
+- P257.4 M3b UNSURE 10-20 % of gold TEACH; pass (<= 12 %) ~35 %.
+- P257.5 M4 ASK recall 85-95 %; pass (>= 90 %) ~55 %.
+- P257.6 M5 GPU median 120-200 ms: pass ~97 %.
+- P257.7 Overall registered PASS ~5 %.
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt2-20260925/VERIFY-blurt3.md 2>&1 | head -n 200
+echo "===RESULTS gpu earlier?==="
+git show origin/main:artifacts/claude-blurt2-20260925/RESULTS-gpu.md 2>&1 | head -n 200
+# blurt-3 (does sleep raise the guesser's luck?) = registered PASS (one CPU run)
+
+Run: thread CPU, $0, 168 min, main 6a9112b91. DEV rule picked temperature 1.5 (41 vs 40). Practice seed 5; fresh test
+seed 780: 66 puzzles after 14 overlaps dropped (the 80 in the passmarks was before drops). 30 blurts per test puzzle
+= 1,980 per measurement. Reasoner right 23/400 in practice; wins on 151 of 377 misses.
+
+| | seed 0 | seed 1 | mean |
+|---|---|---|---|
+| L0 lucky blurts before sleep | 63 | | 63 |
+| W: slept on lucky hits + own right | 126 | 136 | 131 |
+| C: slept on own right only (same count) | 85 | 87 | 86 |
+| Test puzzles with at least one lucky blurt: before / W / C | 27 | 38, 38 | 3, 4 |
+| Greedy solves (reasoner alone): before / W / C | 2 | 4, 7 | 3, 3 |
+
+- U1 luck rises: 131 ≥ 1.5 × 63 = 94.5: PASS.
+- U2 the wins caused it: 131 ≥ 1.3 × 86 = 111.8, and each W seed (126, 136) beats each C seed (85, 87): PASS.
+- Proved wrong / inconclusive clauses: not triggered (151 wins; L0 63).
+Verdict: PASS.
+
+Important detail (found while verifying, not a mark): C's lucky blurts sit on only 3-4 puzzles. Practising its own
+23 answers over and over made its guesses nearly all the same, so when it is right it is right 30 times, and on
+almost every other puzzle it never gets lucky at all (27 puzzles hit before, 3-4 after). W kept its variety and
+widened it: 38 puzzles hit, up from 27. So the counted marks, if anything, flatter C.
+Shown: sleeping on lucky hits made the guesser right about twice as often on fresh puzzles and reach 11 more puzzles.
+Not shown: that it replicates (the greedy-solve result shrank on replication, +11 then +6); transfer to other kinds of
+problems; any effect on ideas.
+Lesson for sleep: practising only the same few known answers kills the guesser's variety (a creativity collapse).
+===RESULTS gpu earlier?===
+# blurt-2 learning loop: GPU result (BensPC, 2026-09-25)
+
+Registered rule: artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md (origin/main).
+Code: scripts/claude_blurt2.py + scripts/claude_blurt1.py + scripts/claude_cre333b_agent.py from origin/main (unmodified).
+Command: `python -B scripts/claude_blurt2.py loop --model BASE --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl`
+BASE = local MiniCPM5-1B snapshot on BensPC (openbmb/MiniCPM5-1B, no download, thinking off).
+Python: C:\Users\benja\text-predict\.venv\Scripts\python.exe (torch 2.11.0+cu128, CUDA True, transformers 5.15.0).
+
+## loop_summary.json (whole file)
+
+```json
+{
+ "dev_missed": 58,
+ "dev_lucky_by_temp": {
+  "1.0": 39,
+  "1.5": 44
+ },
+ "temp_chosen": 1.5,
+ "n_train": 400,
+ "n_test": 127,
+ "test_dropped_overlap": 23,
+ "temp": 1.5,
+ "S0_test_before": 6,
+ "train_reasoner_right": 21,
+ "train_missed": 379,
+ "train_missed_then_lucky": 184,
+ "lucky_blurts_on_misses": 338,
+ "blurts_on_misses": 11370,
+ "examples_W": 205,
+ "examples_C": 205,
+ "S_W_seed0_test_after": 13,
+ "S_W_seed0_train_missed_after": 39,
+ "S_W_seed1_test_after": 11,
+ "S_W_seed1_train_missed_after": 30,
+ "S_W_test_after_mean": 12.0,
+ "S_C_seed0_test_after": 5,
+ "S_C_seed0_train_missed_after": 2,
+ "S_C_seed1_test_after": 6,
+ "S_C_seed1_train_missed_after": 4,
+ "S_C_test_after_mean": 5.5,
+ "minutes": 27.7
+}
+```
+
+## Marks (fresh test set, 127 puzzles after dropping 23 practice/DEV overlaps, reasoner alone, one greedy answer each)
+
+- L1 learning (bar: mean S_W_after − S0 ≥ +8): mean W after = 12 (seeds 13, 11), S0 = 6 → +6. **L1 FAIL.**
+  Not proved-wrong (12.0 > 5.5 and 12.0 > 6) and not inconclusive (184 creative wins ≥ 20; S0 6/127 = 4.7% < 60%).
+- L2 the creative wins caused it (bar: mean S_W_after − mean S_C_after ≥ +5 AND each W seed beats each C seed):
+  12.0 − 5.5 = +6.5; W seeds 13, 11 each beat C seeds 5, 6. **L2 PASS.**
+
+Registered verdict: **FAIL** (PASS needs L1 and L2; L1 failed, L2 passed).
+
+Reported, not marked: temp picked on DEV = 1.5 (lucky blurts 44 vs 39 at 1.0 on 58 missed DEV puzzles);
+luck rate on practice misses 338/11370 per-blurt (≈ 1 per 30), 184/379 misses solved at least once;
+practice misses solved after sleep: W 39 + 30 (seeds 0, 1), C 2 + 4; seed gap W 2, C 1.
+Test puzzles were made inside the run (seed 777) and never printed.
+
+## Run facts
+
+- GPU: NVIDIA GeForce RTX 5070 Ti (BensPC, CUDA 13.1, driver 591.86)
+- Wall: 27.7 minutes
+- Model commit hash (HF snapshot revision): 87179e5c1f455ef22e6223592d2d61351b525bfc
+- No weights pushed (the run saves none; LoRA adapters lived only in GPU memory).
+- Files: artifacts/claude-blurt2-20260925/gpu/loop_summary.json, gpu/wins.jsonl (184 rows), gpu/log_loop.txt.
+[0m
+[0m$ [0mgit show origin/builder-outbox:. 2>&1 | head -n 100
+echo "---"
+git ls-tree -r --name-only origin/builder-outbox 2>&1 | head -n 100
+fatal: path '.' exists on disk, but not in 'origin/builder-outbox'
+---
+.DS_Store
+artifacts/.DS_Store
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/log_ideas_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t06.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_bare.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_reading.jsonl
+artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+artifacts/claude-bm390-20260925/run/sleep_P.jsonl
+artifacts/claude-called281-20260923/PASSMARKS.md
+artifacts/claude-called281-20260923/RESULTS.md
+artifacts/claude-called281-20260923/SEAL.sha256.txt
+artifacts/claude-called281-20260923/devcases281.json
+artifacts/claude-called281-20260923/loop281-config.json
+artifacts/claude-called281-20260923/pilot/dev-score.json
+artifacts/claude-called281-20260923/pilot/dev260.json
+artifacts/claude-called281-20260923/pilot/dev281.json
+artifacts/claude-called281-20260923/pilot/reg/regscore.txt
+artifacts/claude-called281-20260923/pilot/reg/regscore281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate-281.json
+artifacts/claude-called281-20260923/pilot/reg/rt143nogate.log
+artifacts/claude-called281-20260923/pilot/reg/sd.log
+artifacts/claude-called281-20260923/pilot/reg/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/sessions152-rows.json
+artifacts/claude-called281-20260923/pilot/reg/sd136.log
+artifacts/claude-called281-20260923/pilot/reg/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd136/rt136-rows.json
+artifacts/claude-called281-20260923/pilot/reg/uptime.log
+artifacts/claude-called281-20260923/pilot/reg/vp-281.json
+artifacts/claude-called281-20260923/pilot/reg/vp-281.log
+artifacts/claude-called281-20260923/pilot/reg/vs-281.json
+artifacts/claude-called281-20260923/pilot/reg/vs-281.log
+artifacts/claude-called281-20260923/pilot/regscore-pilot.json
+artifacts/claude-called281-20260923/predicted_moves281.json
+artifacts/claude-called281-20260923/run/own-seal-check.txt
+artifacts/claude-called281-20260923/run/panel-260.json
+artifacts/claude-called281-20260923/run/panel-260.log
+artifacts/claude-called281-20260923/run/panel-281.json
+artifacts/claude-called281-20260923/run/panel-281.log
+artifacts/claude-called281-20260923/run/panel-files.txt
+artifacts/claude-called281-20260923/run/panel-score.txt
+artifacts/claude-called281-20260923/run/panel-score281.json
+artifacts/claude-called281-20260923/run/panel-seal-check.txt
+artifacts/claude-called281-20260923/run/regscore.txt
+artifacts/claude-called281-20260923/run/regscore281.json
+artifacts/claude-called281-20260923/run/rt143nogate-281.json
+artifacts/claude-called281-20260923/run/rt143nogate.log
+artifacts/claude-called281-20260923/run/sd.log
+artifacts/claude-called281-20260923/run/sd/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-diff.json
+artifacts/claude-called281-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/sessions152-diff.json
+artifacts/claude-called281-20260923/run/sd/sessions152-rows.json
+artifacts/claude-called281-20260923/run/sd136.log
+artifacts/claude-called281-20260923/run/sd136/SUITEDIFF218-SUMMARY.json
+artifacts/claude-called281-20260923/run/sd136/rt136-diff.json
+artifacts/claude-called281-20260923/run/sd136/rt136-rows.json
+artifacts/claude-called281-20260923/run/uptime.log
+artifacts/claude-called281-20260923/run/vp-281.json
+artifacts/claude-called281-20260923/run/vp-281.log
+artifacts/claude-called281-20260923/run/vs-281.json
+artifacts/claude-called281-20260923/run/vs-281.log
+artifacts/claude-called281b-20260923/PASSMARKS.md
+artifacts/claude-called281b-20260923/RESULTS.md
+artifacts/claude-called281b-20260923/SEAL.sha256.txt
+artifacts/claude-called281b-20260923/devcases281b.json
+artifacts/claude-called281b-20260923/loop281b-config.json
+artifacts/claude-called281b-20260923/pilot/dev-score.json
+artifacts/claude-called281b-20260923/pilot/dev281.json
+artifacts/claude-called281b-20260923/pilot/dev281b.json
+[0m
+[0m$ [0mgit log --oneline origin/main --grep="blurt2-loop\|BensPC\|benspc" -i | head -n 20
+echo "---"
+git log --oneline origin/main --grep="blurt" -i | head -n 30
+936b4a331 queue: rent rsn-353b (credit-gated, $3.80) now that vast has credit; hold BensPC copy
+33c69b4f8 queue: slot blurt3r-loop after gram-364 on BensPC
+1ba41aed4 blurt-3r: registered replication of blurt-3, BensPC task
+89633642e queue: set BensPC order after bm-390 via filename prefixes (gram-364, lis-319, rd-371, rsn-353-pc, slp-363, rsn-357, blurt2b)
+e1337b499 readpanel371 sealed (TEST-ONLY, 240 turns, 426 facts, blind agreement 426/426); rd-371 verifier queued on BensPC
+91459c8b5 lis-319 task: BensPC settings
+9b04cf7ed lis-319: queued on BensPC (arm A = lis-318 merged 8b3fdbda, T_A 0.995)
+7d0e89c1b queue: release gram-364-benspc
+040d4e079 board: gram-364 registered, held for BensPC
+cecfa1775 gram-364: fill-in finisher v2, blind bank H (sealed), registered marks and sealed code; BensPC task held for the Director
+c168442e7 bm-390 attempt 3 on BensPC: fixed wrapper registered and sealed (AMEND-winnl2.md, SEAL-winnl2 3/3); task held for the Director (001-bench-bm390x)
+dd594e99c winnl2: fixed Windows line-ending wrapper (open as a non-binding callable; v1 broke Python 3.10 pathlib on BensPC) + test on 3.10 and 3.11 (binding and unit PASS; not yet registered for bm-390)
+7ed9cd5cb blurt-2b registered: practise every distinct lucky hit; BensPC task
+2194ac72a bm-390 on BensPC with the Windows line-ending wrapper: amendment registered and sealed (AMEND-winnl.md, SEAL-winnl 3/3), task held for the Director (001-bench-bm390w)
+c0e857b78 winnl: Linux line endings on Windows for BensPC runs (new wrapper, sealed files untouched) + simulated-Windows test (unit test passes; not yet registered for bm-390)
+7471e1b92 rsn-353 re-run queued for BensPC (rental run: NO RESULT); same sealed code, workers 0, one run at a time
+37365dcd4 lis-318: back to BensPC (rent-lis-318 stopped: vast.ai credit empty, nothing trained, panel untouched)
+4c05a7bbc rsn-357: practise three-step, test four-step (plain + loop arms), sealed, queued for BensPC after rsn-356
+fbc5e8886 bm-390 moves to a rental (Director, 03:51 UTC: BensPC smoke hit a Windows-only turn-log bug): hold 001-bench-bm390, queue rent-bm390 ($3 cap, same sealed run, P split over three processes by conversation)
+457004242 slp-363 sealed + queued for BensPC (GPU: yes): one night of practice school vs plain practice vs scrambled-grade placebo vs no sleep, 2 seeds, marks registered
+---
+33c69b4f8 queue: slot blurt3r-loop after gram-364 on BensPC
+1ba41aed4 blurt-3r: registered replication of blurt-3, BensPC task
+aec2aa4d1 blurt-3 = registered PASS: sleeping on lucky hits doubles lucky guesses on fresh puzzles (63 -> 126/136 vs 85/87)
+6a9112b91 blurt-3 registered: does sleeping on lucky hits raise the guesser's luck on fresh puzzles
+19c96ddcb queue: hold 008-blurt2b-loop (CPU run already registered FAIL; creative thread asked to skip)
+cac9cdc26 blurt-2b = registered FAIL, proved wrong (all hits 7 vs own-only 8 of 119)
+89633642e queue: set BensPC order after bm-390 via filename prefixes (gram-364, lis-319, rd-371, rsn-353-pc, slp-363, rsn-357, blurt2b)
+4f666d9aa blurt-2b passmarks: correct the reason for the CPU run
+c7f740b90 blurt-2b: also run on the thread CPU (job runner stalled); PASS needs both if both finish
+ba7f3237b blurt-2p placebo = registered FAIL: right guesses +5.5, wrong guesses +1.5 (bars +8 and W-P +5)
+7ed9cd5cb blurt-2b registered: practise every distinct lucky hit; BensPC task
+f1b93900a blurt-2 overall = registered FAIL: GPU repeat L1 +6 (bar +8), L2 pass in both runs
+8813be47c blurt-2p: placebo arm (wrong guesses) registered
+ee265a833 blurt-2 learning loop CPU run: PASS (fresh puzzles 6 -> 15/19 with creative wins, 6/6 without)
+62f8df010 blurt-2: built-in LoRA (no extra package), GPU repeat task for the director
+adc6e5d97 blurt-2: rule-keeping blurts, registered learning-loop pass marks, idea self-judge, creative road map
+2d37b0b5a blurt-1: measure how often the 1B gets lucky (number puzzles with an exact checker + DEV idea blurts); queue rent-blurt1 (DEV only, $0.60)
+[0m
+[0m$ [0mgit show 1ba41aed4 --stat 2>&1 | head -n 50
+echo "==="
+git show 1ba41aed4 2>&1 | head -n 300
+commit 1ba41aed4ad873b06875b854a1209bf05cdb9c4b
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 15:06:16 2026 +0000
+
+    blurt-3r: registered replication of blurt-3, BensPC task
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01SsmkQ3qUuVpWRn8kK25kGx
+
+ artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md |  4 ++++
+ handoff/queue/blurt3r-loop.md                        | 16 ++++++++++++++++
+ 2 files changed, 20 insertions(+)
+===
+commit 1ba41aed4ad873b06875b854a1209bf05cdb9c4b
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 15:06:16 2026 +0000
+
+    blurt-3r: registered replication of blurt-3, BensPC task
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01SsmkQ3qUuVpWRn8kK25kGx
+
+diff --git a/artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md b/artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md
+index 913f1a082..d83898b4c 100644
+--- a/artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md
++++ b/artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md
+@@ -18,3 +18,7 @@ Marks (lucky blurts on the fresh test set, mean of the two seeds):
+ - U2 the wins caused it: mean W ≥ 1.3 × mean C, and each W seed beats each C seed.
+ - PASS = U1 and U2. Proved wrong: mean W ≤ mean C. Inconclusive: fewer than 20 won practice puzzles, or L0 < 10.
+ - Reported: puzzles with at least one lucky blurt (before/after), greedy solves (as in blurt-2).
++
++## Replication blurt-3r (registered 15:10 UTC 09-25, after blurt-3 PASSED, before 3r runs)
++Same command and marks, new seeds: --train-seed 6 --test-seed 781 --n-test 80, out gpu-3r, on BensPC ($0).
++It reports on its own; the blurt-3 verdict stands either way, and "replicated" is claimed only if 3r also passes.
+diff --git a/handoff/queue/blurt3r-loop.md b/handoff/queue/blurt3r-loop.md
+new file mode 100644
+index 000000000..71b3d3765
+--- /dev/null
++++ b/handoff/queue/blurt3r-loop.md
+@@ -0,0 +1,16 @@
++COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
++GPU: yes (BensPC; Ben 02:12 UTC 09-25: tonight's GPU jobs run on his PC. One job at a time, after whatever the director has queued ahead of it. Free, no rental: never rent for this task.)
++
++YOUR TASK: blurt3r-loop, the registered replication of blurt-3 (one GPU run). The creative thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (the test puzzles are made inside the run and never printed).
++READ FIRST (origin/main): artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md (section "Replication blurt-3r") and the docstring of scripts/claude_blurt2.py.
++Needs: torch with CUDA, transformers (the text-predict benchmark venv on BensPC, as in blurt2-loop; launch detached so the process survives SSH closing), plain MiniCPM5-1B (already on BensPC, thinking off; no download). No other packages.
++
++1. Copy `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md` to BensPC and extract, keeping the paths. BASE = the local MiniCPM5-1B folder.
++2. Check: `python -B scripts/claude_blurt1.py make --out pzcheck --n 60 --seed 1`, then compare pzcheck/puzzles.jsonl with artifacts/claude-blurt1-dev-20260925/puzzles.jsonl byte for byte (fc /b on Windows). Must be identical after normalising line endings (the blurt2-loop run found CRLF only), else stop.
++3. One process, with a log (it prints progress lines):
++   python -B scripts/claude_blurt2.py loop --model BASE --out gpu-3r --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --train-seed 6 --test-seed 781 --n-test 80 --luck
++   If it has not reached the "[loop] practice:" line after 3 hours, stop it and report TOO-SLOW with the last log lines.
++4. Copy gpu-3r/loop_summary.json, gpu-3r/wins/wins.jsonl and the log back to the Mac as artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json, gpu-3r/wins.jsonl, gpu-3r/log_loop.txt (force-add; artifacts/ is git-ignored).
++5. RESULTS-gpu-3r.md in artifacts/claude-blurt2-20260925/: the whole loop_summary.json, then U1 and U2 from PASSMARKS-blurt3.md (section "Replication blurt-3r") with integer counts and PASS / FAIL / INCONCLUSIVE, GPU name, wall minutes, model commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
++Never push weights (the run saves none).
++PUSH: artifacts/claude-blurt2-20260925/gpu-3r artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit log --oneline origin/main -- handoff/queue/ | head -n 30
+echo "---"
+git ls-tree -r --name-only origin/main -- handoff/queue/ | head -n 50
+936b4a331 queue: rent rsn-353b (credit-gated, $3.80) now that vast has credit; hold BensPC copy
+33c69b4f8 queue: slot blurt3r-loop after gram-364 on BensPC
+1ba41aed4 blurt-3r: registered replication of blurt-3, BensPC task
+19c96ddcb queue: hold 008-blurt2b-loop (CPU run already registered FAIL; creative thread asked to skip)
+89633642e queue: set BensPC order after bm-390 via filename prefixes (gram-364, lis-319, rd-371, rsn-353-pc, slp-363, rsn-357, blurt2b)
+e1337b499 readpanel371 sealed (TEST-ONLY, 240 turns, 426 facts, blind agreement 426/426); rd-371 verifier queued on BensPC
+91459c8b5 lis-319 task: BensPC settings
+9b04cf7ed lis-319: queued on BensPC (arm A = lis-318 merged 8b3fdbda, T_A 0.995)
+7d0e89c1b queue: release gram-364-benspc
+b4ba946b8 queue: release 001-bench-bm390x (winnl2 wrapper fix)
+7ed9cd5cb blurt-2b registered: practise every distinct lucky hit; BensPC task
+b5e136813 queue: release 001-bench-bm390w (rent-bm390 exited CREDIT-STOP); hold rent-bm390
+7471e1b92 rsn-353 re-run queued for BensPC (rental run: NO RESULT); same sealed code, workers 0, one run at a time
+37365dcd4 lis-318: back to BensPC (rent-lis-318 stopped: vast.ai credit empty, nothing trained, panel untouched)
+4c05a7bbc rsn-357: practise three-step, test four-step (plain + loop arms), sealed, queued for BensPC after rsn-356
+fbc5e8886 bm-390 moves to a rental (Director, 03:51 UTC: BensPC smoke hit a Windows-only turn-log bug): hold 001-bench-bm390, queue rent-bm390 ($3 cap, same sealed run, P split over three processes by conversation)
+2ae8a4a3a creative: GLM 5.3 Flash label agreement 254/300 (under the 85% rule); stronger-teacher check queued
+8a0650545 creative: teacher label check keeps reasoning on (endpoint requires it); re-run task
+457004242 slp-363 sealed + queued for BensPC (GPU: yes): one night of practice school vs plain practice vs scrambled-grade placebo vs no sleep, 2 seeds, marks registered
+f501c765f lis-318 moves to a rental (Director, 02:57 UTC: BensPC busy with bm-390 ~5 h): hold lis-318-train, queue rent-lis-318 ($2 cap, same run, same sealed panel)
+27286e5d9 bm-390 registered and sealed: Premonition 0.1 vs plain same-size models on LoCoMo, MMLU-Redux, GSM8K; queued on BensPC
+48a5deec1 creative: idea self-judge result (2/10, not used); teacher label agreement check queued
+62f8df010 blurt-2: built-in LoRA (no extra package), GPU repeat task for the director
+686000eb5 lis-318: chat training rows (2,260/2,500 agreed by a blind second labeller), sealed; queue lis-318-train on BensPC
+8c0f8ea4f rsn-356: one-fact twins (paired vs same-mix unpaired), sealed, queued for BensPC after rsn-355
+224cc2c11 336b moves to BensPC (Ben: no rentals tonight): hold rent-336b, add benspc-336b with a one-life Windows smoke; sleep check loads the winshim; reseal
+bedbc51fa rsn-355: shared chain-step input (the 3rd step slot was never trained), sealed, queued for BensPC
+6a8f4602a queue: 000-benspc-check (tonight's GPU work goes to BensPC)
+8225b6bc5 rsn-354 held before launch: Ben chose fix the loop first
+bb0cba96e rsn-354: twice the practice for both sizes (plan 352 S2), sealed and queued
+---
+handoff/queue/000-benspc-check.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/001-bench-bm390w.md
+handoff/queue/001-bench-bm390x.md
+handoff/queue/002-gram-364-benspc.md
+handoff/queue/002b-blurt3r-loop.md
+handoff/queue/003-lis-319-train.md
+handoff/queue/004-rd-371-train.md
+handoff/queue/006-slp-363-train.md
+handoff/queue/007-rsn-357-train.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+handoff/queue/270-build.md
+handoff/queue/270-panel.md
+handoff/queue/270b-build.md
+handoff/queue/270b-panel.md
+handoff/queue/271-threshold.md
+handoff/queue/273-build.md
+handoff/queue/274-build.md
+handoff/queue/blurt2-loop.md
+handoff/queue/chat-demo-build.md
+handoff/queue/chat-weakspots.md
+handoff/queue/ideajudge-teacher.md
+handoff/queue/ideajudge-teacher2.md
+handoff/queue/ideajudge-teacher3.md
+handoff/queue/lis-300-publish.md
+handoff/queue/lis-300-train.md
+handoff/queue/lis-301-train.md
+handoff/queue/lis-302-gpu.md
+handoff/queue/lis-310-chat-build.md
+handoff/queue/lis-311-chat292.md
+handoff/queue/lis-311b-chat292.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/blurt2-loop.md 2>&1
+echo "===002b==="
+git show origin/main:handoff/queue/002b-blurt3r-loop.md 2>&1
+echo "===000-benspc-check==="
+git show origin/main:handoff/queue/000-benspc-check.md 2>&1 | head -n 150
+COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC; Ben 02:12 UTC 09-25: tonight's GPU jobs run on his PC. One job at a time, after whatever the director has queued ahead of it. Free, no rental: never rent for this task.)
+
+YOUR TASK: blurt2-loop, the registered creative learning loop (GPU repeat; the same command also runs on the creative thread's CPU). The creative thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (the test puzzles are made inside the run and never printed).
+READ FIRST (origin/main): artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md and the docstring of scripts/claude_blurt2.py.
+Needs: torch with CUDA, transformers (the benchmark venv on BensPC), plain MiniCPM5-1B (already on BensPC, thinking off; no download). No other packages.
+
+1. Copy `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md` to BensPC and extract, keeping the paths. BASE = the local MiniCPM5-1B folder.
+2. Check: `python -B scripts/claude_blurt1.py make --out pzcheck --n 60 --seed 1`, then compare pzcheck/puzzles.jsonl with artifacts/claude-blurt1-dev-20260925/puzzles.jsonl byte for byte (fc /b on Windows). Must be identical, else stop.
+3. One process, with a log (it prints progress lines):
+   python -B scripts/claude_blurt2.py loop --model BASE --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+   If it has not reached the "[loop] practice:" line after 3 hours, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu/loop_summary.json, gpu/wins/wins.jsonl and the log back to the Mac as artifacts/claude-blurt2-20260925/gpu/loop_summary.json, gpu/wins.jsonl, gpu/log_loop.txt.
+5. RESULTS-gpu.md in artifacts/claude-blurt2-20260925/: the whole loop_summary.json, then L1 and L2 from PASSMARKS-blurt2.md with integer counts and PASS / FAIL / INCONCLUSIVE, GPU name, wall minutes, model commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-blurt2-20260925/gpu artifacts/claude-blurt2-20260925/RESULTS-gpu.md artifacts/fable-predictions-ledger.md
+===002b===
+COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC; Ben 02:12 UTC 09-25: tonight's GPU jobs run on his PC. One job at a time, after whatever the director has queued ahead of it. Free, no rental: never rent for this task.)
+
+YOUR TASK: blurt3r-loop, the registered replication of blurt-3 (one GPU run). The creative thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (the test puzzles are made inside the run and never printed).
+READ FIRST (origin/main): artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md (section "Replication blurt-3r") and the docstring of scripts/claude_blurt2.py.
+Needs: torch with CUDA, transformers (the text-predict benchmark venv on BensPC, as in blurt2-loop; launch detached so the process survives SSH closing), plain MiniCPM5-1B (already on BensPC, thinking off; no download). No other packages.
+
+1. Copy `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md` to BensPC and extract, keeping the paths. BASE = the local MiniCPM5-1B folder.
+2. Check: `python -B scripts/claude_blurt1.py make --out pzcheck --n 60 --seed 1`, then compare pzcheck/puzzles.jsonl with artifacts/claude-blurt1-dev-20260925/puzzles.jsonl byte for byte (fc /b on Windows). Must be identical after normalising line endings (the blurt2-loop run found CRLF only), else stop.
+3. One process, with a log (it prints progress lines):
+   python -B scripts/claude_blurt2.py loop --model BASE --out gpu-3r --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl --train-seed 6 --test-seed 781 --n-test 80 --luck
+   If it has not reached the "[loop] practice:" line after 3 hours, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu-3r/loop_summary.json, gpu-3r/wins/wins.jsonl and the log back to the Mac as artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json, gpu-3r/wins.jsonl, gpu-3r/log_loop.txt (force-add; artifacts/ is git-ignored).
+5. RESULTS-gpu-3r.md in artifacts/claude-blurt2-20260925/: the whole loop_summary.json, then U1 and U2 from PASSMARKS-blurt3.md (section "Replication blurt-3r") with integer counts and PASS / FAIL / INCONCLUSIVE, GPU name, wall minutes, model commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-blurt2-20260925/gpu-3r artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md artifacts/fable-predictions-ledger.md
+===000-benspc-check===
+COMMON RULES (the director, Claude, wrote this task on 2026-09-25). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md. REPORT ONLY: change nothing, install nothing, stop nothing.
+GPU: yes (BensPC; one job at a time).
+TIME CAP: 5 minutes in total.
+
+YOUR TASK: 000-benspc-check. Ben asked for tonight's GPU work to run on his own PC. Check that BensPC is reachable and ready.
+1. Run `nvidia-smi` on BensPC and report the exact GPU name, total memory, driver version, and whether any process is using the GPU.
+2. Report free disk space on C:.
+3. Report whether C:/Users/benja/lis300/venv/Scripts/python.exe runs `import torch; print(torch.cuda.is_available())`.
+Final reply: one line per item, then `BENSPC OK` or `BENSPC FAIL: <reason>`.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 80
+echo "===002-gram==="
+git show origin/main:handoff/queue/002-gram-364-benspc.md 2>&1 | head -n 120
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+===002-gram===
+COMMON RULES (the grammar thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS, whatever fails.
+TIME CAP: 1.5 hours in total (the same run took ~20 minutes on a rented 5090). If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: gram-364-benspc, THE REGISTERED RUN of gram-364 (fill-in finisher v2). Marks: artifacts/claude-gram364-20260925/PASSMARKS.md (do not edit it). One arm on bank H (artifacts/claude-gram364-bankH-20260925, sealed test data: the runner reads it; you never open, print or quote its turns, truth or any reply). Run ONCE.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-gram364-20260925/run or RESULTS-benspc.md exists on origin/builder-outbox.
+
+SETUP (Windows, exactly as bench-bm390x, handoff/queue/001-bench-bm390x.md SETUP):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/gram364/tree.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc. Download nothing, install nothing.
+- W = `python -B scripts/claude_winnl2_wrap.py`. Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). Otherwise stop with WINNL-FAIL.
+- RUN = artifacts/claude-gram364-20260925/run (inside the tree; create it; gram364_parts.jsonl must not exist before step 4).
+
+STEPS (from the tree root)
+1. Seals: `sha256sum -c` (or the same check in Python) of artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt run from inside that folder (4 OK) and artifacts/claude-gram364-20260925/SEAL-code.sha256.txt from the tree root (9 OK). Any mismatch: stop with SEAL-MISMATCH.
+2. Tests, each must print exactly: `python -B scripts/claude_gram364_test.py` "gram364 tests: 45/45 OK"; `python -B scripts/claude_gram360_test.py` "gram360 tests: 16/16 OK"; `python -B scripts/claude_chat338b_test.py` "338b tests: 3/3 OK"; `python -B scripts/claude_cre333d_test.py` "333d tests: 2/2 OK"; `python -B scripts/claude_vary330c_test.py` "vary330c tests: 2/2 OK". W CHECK: `W scripts/claude_winnl2_test.py probe` prints "ok": true and "crlf": 0. Any other output: stop, report it.
+3. Sleep's base checkpoint (the agent includes sleep): `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/gram364/r44c`, then copy r44c/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Report the JSON line and the .pt sha256.
+4. The arm (first printed lines: the winnl2 line, then "twinb: the plain twin is Twin336b (enable_thinking=False)"):
+   GRAM360_LOG=artifacts/claude-gram364-20260925/run/gram364_parts.jsonl W scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank artifacts/claude-gram364-bankH-20260925 --arm claude_e2e364:build_364 --name P364 --model READER --gen-model BASE --out artifacts/claude-gram364-20260925/run
+5. `W scripts/claude_e2e336_score.py --bank artifacts/claude-gram364-bankH-20260925 --runs artifacts/claude-gram364-20260925/run/arm_P364.jsonl --out artifacts/claude-gram364-20260925/score`
+6. `W scripts/claude_gram364_check.py --bank artifacts/claude-gram364-bankH-20260925 --run artifacts/claude-gram364-20260925/run/arm_P364.jsonl --log artifacts/claude-gram364-20260925/run/gram364_parts.jsonl --out artifacts/claude-gram364-20260925/check`
+7. Count "\r\n" in every file under run/, score/ and check/ (a byte count only; expected 0). Copy run/, score/ and check/ back to the Mac; check sizes and sha256 match BensPC.
+8. RESULTS-benspc.md (a NEW file) in artifacts/claude-gram364-20260925/, counts only: the seal results; each test line and the W CHECK line; step 3's JSON line and sha256; the arm's first two printed lines, last "wrote ..." line, exit code, start and end time (UTC); the scorer's printed line; the checker's last printed line (its WORDS/ASK lines as counts only); the "\r\n" counts; GPU; any traceback in full. Do not quote any reply or turn text. Do not open any check/*.jsonl file.
+PUSH: artifacts/claude-gram364-20260925/RESULTS-benspc.md artifacts/claude-gram364-20260925/run artifacts/claude-gram364-20260925/score artifacts/claude-gram364-20260925/check
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- handoff/kit/ | head -n 40
+echo "---"
+git show origin/main:handoff/queue/001-bench-bm390x.md 2>&1 | head -n 120
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+handoff/kit/briefs/261-earcheck.txt
+handoff/kit/briefs/OPUS-RULES.txt
+handoff/kit/briefs/askpanel243-schema.txt
+handoff/kit/briefs/chainpanel266-spec.txt
+handoff/kit/briefs/chainpanel266b-spec.txt
+handoff/kit/briefs/commapanel263-spec.txt
+handoff/kit/briefs/corrpanel252-schema.txt
+---
+COMMON RULES (the benchmarks thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS, whatever fails (the vast.ai account is out of credit).
+TIME CAP: 7 hours in total. If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: bench-bm390x, THE REGISTERED RUN bm-390, third attempt on BensPC. Attempt 1 (001-bench-bm390) stopped at its smoke test: the sealed turn log and notebook check their own writes byte for byte, and Windows writes "\n" as "\r\n" (RESULTS-benspc.md). Attempt 2 (001-bench-bm390w) stopped at its smoke test with a TypeError in the first line-ending wrapper, a bug on Python 3.10 (RESULTS-benspc2.md). This attempt runs every command through scripts/claude_winnl2_wrap.py, the fixed wrapper, tested on Python 3.10 with Windows line endings simulated. Nothing sealed changes; the difference is registered in artifacts/claude-bm390-20260925/AMEND-winnl2.md (and AMEND-winnl.md, which it updates). Read both, PASSMARKS.md and design/v3/30-modes/390-public-bench-plan.md. Run ONCE.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-bm390-20260925/run, RESULTS-rent.md or RESULTS-benspc3.md exists on origin/builder-outbox. The benchmark files are public test sets: the scripts download and read them; you never open, print or quote a question, an answer or a reply (count rows only). Nothing is trained. Edit no file.
+
+SETUP (Windows, as the first two attempts, which set up everything below):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/bm390/tree3 (leave the earlier trees as they are).
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- Q2DIR and L12DIR = the two paths in RESULTS-benspc2.md (already downloaded; download nothing). If either is missing, that rival is NOT RUN.
+- MiniLM and pyarrow were set up by the first attempt; check only: the route122 check from the tree root prints a route, and `python -c "import pyarrow"` works. Install nothing.
+- DATA = C:/Users/benja/lis301/work/bm390/data3 (a NEW folder). OUT = artifacts/claude-bm390-20260925/run (inside the tree).
+- W = `python -B scripts/claude_winnl2_wrap.py` (every command below starts with it; claude_winnl_wrap.py is NOT used). Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). If it prints anything else, stop with WINNL-FAIL.
+- W CHECK right after step 1 (a check, not a benchmark), from the tree root: (a) `python -B scripts/claude_winnl2_test.py probe` (no wrapper) prints one JSON line, expected "ok": true with "crlf" above 0 (plain Windows writes \r\n); (b) `W scripts/claude_winnl2_test.py probe` must print "ok": true and "crlf": 0. The probe writes two tiny temp files through pathlib and open and reads package metadata the way tqdm does, which is where attempt 2 broke. Report both lines. If (b) is not ok with crlf 0: stop with WINNL-FAIL and the full output.
+
+STEPS
+1. From the tree root: `sha256sum -c` (or the same check in Python) of artifacts/claude-bm390-20260925/SEAL-code.sha256.txt (8 OK), artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt (3 OK) and artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt (229 OK). Any mismatch: stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44c`, then copy r44c/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Report the JSON line and the .pt sha256.
+3. `python -B scripts/claude_bm390.py fetch --data DATA` must print one line starting {"fetch": "OK" with locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300, mmlu300_sha256 1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850, gsm8k300_sha256 073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b. Report it verbatim. Anything else: stop, report the exact error.
+   Load check, each separately: `python -c "import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'Q2DIR', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))"` and the same with L12DIR (expected Qwen3_5ForCausalLM 1881825088; Lfm2ForCausalLM 1170340608).
+4. SMOKE on made-up data (fictional people, not a benchmark). This is the Windows check the Director asked for:
+   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out C:/Users/benja/lis301/work/bm390/smoke3
+   W scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:BASE --name T --out C:/Users/benja/lis301/work/bm390/smoke3
+   Both exit 0 and print "wrote locomo_... rows=5"; the smoke sleep log has 2 rows, both checkpoint_exists true. Also count "\r\n" in every file under smoke3 (a byte count only): it must be 0. If anything fails: stop with SMOKE-FAIL, report the exact error and full traceback, run nothing on the real data. Report the smoke wall time.
+5. Registered arms. Each command is its own process, launched ONCE (check the process list before any retry). Two lanes:
+   Lane 1, in this order:
+     P:   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-bm390-20260925/run/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out OUT
+     Pm:  W scripts/claude_bm390.py general --task mmlu --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+     Pg:  W scripts/claude_bm390.py general --task gsm8k --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+   Lane 2, in this order (plain models, LoCoMo first):
+     T:   W scripts/claude_bm390.py locomo --data DATA --arm plain:BASE --name T --out OUT
+     Rb:  W scripts/claude_bm390.py locomo --data DATA --arm bm25:BASE --name Rb --out OUT
+     C:   W scripts/claude_bm390.py locomo --data DATA --arm closed:BASE --name C --out OUT
+     Q2:  W scripts/claude_bm390.py locomo --data DATA --arm plain:Q2DIR --name Q2 --out OUT
+     L12: W scripts/claude_bm390.py locomo --data DATA --arm plain:L12DIR --name L12 --out OUT
+     Tm, Tg: W scripts/claude_bm390.py general --task mmlu|gsm8k --data DATA --arm plain:BASE --name T --out OUT
+     Q2m, Q2g, L12m, L12g: the same general commands with plain:Q2DIR --name Q2 and plain:L12DIR --name L12
+   Start lane 1. Once P has printed its first "[bm390] conv-" line, start lane 2 at the same time if nvidia-smi shows at least 8 GB of GPU memory free; otherwise run lane 2 after lane 1. If P stops with SLEEP-NOT-LEARNING or STATE-RESET-FAILED: stop lane 1, let lane 2 finish, copy back what exists, report. A lane-2 command that fails does not stop the others; report its traceback. At the time cap, stop what is still running (exact PID) and copy back what finished.
+6. Copy run/ back to the Mac; check sizes and sha256 match BensPC. Leave the models on BensPC.
+7. RESULTS-benspc3.md (a NEW file) in artifacts/claude-bm390-20260925/, counts only: the three seal results; both W CHECK lines; step 2's JSON line and sha256; the fetch line; the load-check lines (or errors); the smoke result, its "\r\n" byte count and wall time; for each command its first printed line (the winnl2 line), last printed "wrote ..." line, exit code, start and end time (UTC); the row count of every run/*.jsonl file; the count of "\r\n" in every run/ file; for sleep_P.jsonl: rows, rows with checkpoint_exists true, rows with attempted true; lane 2 parallel or after; GPU; any traceback in full. Quote no question, answer or reply.
+PUSH: artifacts/claude-bm390-20260925/RESULTS-benspc3.md artifacts/claude-bm390-20260925/run
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; cat ~/.ssh/config 2>&1 | head -n 100
+echo "---env---"
+env | grep -i -E "bens|ssh|gpu|vast" | head -n 20
+echo "---scratchpad briefs---"
+ls scratchpad/briefs/ 2>&1 | head -n 30
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---env---
+SSH_AUTH_SOCK=/var/run/com.apple.launchd.Fr7PJ3zov8/Listeners
+---scratchpad briefs---
+ls: scratchpad/briefs/: No such file or directory
+[0m
+[0m# [0mTodos
+[•] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[ ] Check BensPC GPU status + queue position (one job at a time)
+[ ] Copy git archive to BensPC and extract, set BASE
+[ ] Run pzcheck reproducibility check (fc /b)
+[ ] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[ ] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
+[0m$ [0mgit branch --show-current; git status --short | head -n 20; git show origin/main:scripts/claude_blurt2.py 2>&1 | wc -l
+git show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -c "^- P"
+git show origin/main:artifacts/claude-blurt2-20260925/cpu-3/loop_summary.json 2>&1 | head -n 100
+claude/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+     425
+1496
+{
+ "dev_missed": 58,
+ "dev_lucky_by_temp": {
+  "1.0": 40,
+  "1.5": 41
+ },
+ "temp_chosen": 1.5,
+ "n_train": 400,
+ "n_test": 66,
+ "test_dropped_overlap": 14,
+ "temp": 1.5,
+ "S0_test_before": 2,
+ "L0_lucky_blurts": 63,
+ "L0_puzzles_hit": 27,
+ "train_reasoner_right": 23,
+ "train_missed": 377,
+ "train_missed_then_lucky": 151,
+ "lucky_blurts_on_misses": 294,
+ "blurts_on_misses": 11310,
+ "extra_distinct_hits": 0,
+ "examples_W": 174,
+ "examples_C": 174,
+ "S_W_seed0_test_after": 4,
+ "L_W_seed0_lucky_blurts": 126,
+ "L_W_seed0_puzzles_hit": 38,
+ "S_W_seed0_train_missed_after": 24,
+ "S_W_seed1_test_after": 7,
+ "L_W_seed1_lucky_blurts": 136,
+ "L_W_seed1_puzzles_hit": 38,
+ "S_W_seed1_train_missed_after": 38,
+ "S_W_test_after_mean": 5.5,
+ "S_C_seed0_test_after": 3,
+ "L_C_seed0_lucky_blurts": 85,
+ "L_C_seed0_puzzles_hit": 3,
+ "S_C_seed0_train_missed_after": 2,
+ "S_C_seed1_test_after": 3,
+ "L_C_seed1_lucky_blurts": 87,
+ "L_C_seed1_puzzles_hit": 4,
+ "S_C_seed1_train_missed_after": 2,
+ "S_C_test_after_mean": 3.0,
+ "minutes": 168.4
+}
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader; echo ---PROCS---; nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader; echo ---DISK---; wmic logicaldisk where DeviceID=\"C:\" get Size,FreeSpace /format:list 2>&1 | head -n 20; echo ---TASKS---; tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE 2>&1 | head -n 30"
+(no output)
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -o BatchMode=yes benspc "echo OK; hostname" 2>&1; echo EXIT:$?
+OK; hostname
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader" 2>&1; echo EXIT:$?
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 591.86
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader" 2>&1; echo EXIT:$?
+1768, C:\Windows\System32\dwm.exe, [N/A]
+4152, C:\Windows\System32\ShellHost.exe, [N/A]
+10064, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\CrossDeviceResume.exe, [N/A]
+8564, C:\Windows\explorer.exe, [N/A]
+13348, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\SearchHost.exe, [N/A]
+13380, C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe, [N/A]
+15392, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\153.0.4234.48\msedgewebview2.exe, [N/A]
+19200, C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe, [N/A]
+17304, C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy\ShellExperienceHost.exe, [N/A]
+19892, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TextInputHost.exe, [N/A]
+5112, C:\Program Files\Okta\Okta Verify\OktaVerify.exe, [N/A]
+19504, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.AdvancedPaste.exe, [N/A]
+15856, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.Peek.UI.exe, [N/A]
+5268, C:\Program Files\PowerToys\PowerToys.ColorPickerUI.exe, [N/A]
+10660, C:\Program Files\PowerToys\PowerToys.FancyZones.exe, [N/A]
+13148, C:\Program Files\PowerToys\PowerToys.PowerLauncher.exe, [N/A]
+3328, C:\Users\benja\AppData\Local\Discord\app-1.0.9259\Discord.exe, [N/A]
+2316, C:\Program Files (x86)\e2eSoft\iVCam\iVCam.exe, [N/A]
+20964, C:\Users\benja\AppData\Local\Programs\Lunar Client\Lunar Client.exe, [N/A]
+12760, C:\Program Files\WindowsApps\12030rocksdanister.LivelyWallpaper_1.0.163.0_x64__97hta09mmv6hy\Build\Lively.exe, [N/A]
+18288, C:\Program Files\ShareX\ShareX.exe, [N/A]
+21352, C:\Windows\System32\Taskmgr.exe, [N/A]
+12604, C:\Windows\System32\ApplicationFrameHost.exe, [N/A]
+20844, C:\Windows\ImmersiveControlPanel\SystemSettings.exe, [N/A]
+16788, C:\Program Files\WindowsApps\Microsoft.YourPhone_1.26072.255.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe, [N/A]
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'tasklist /FI "IMAGENAME eq python.exe" 2>&1' 2>&1; echo EXIT:$?
+INFO: No tasks are running which match the specified criteria.
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc 'dir C:\Users\benja\lis301\work\gram364 2>&1; echo ---; dir C:\Users\benja\text-predict 2>&1 | head -n 30; echo ---; ls C:/Users/benja/.cache/huggingface/hub/ 2>&1 | head -n 20' 2>&1; echo EXIT:$?
+EXIT:255
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo hello" 2>&1; echo EXIT:$?
+hello
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis301\\work" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work
+
+09/25/2026  12:44 PM    <DIR>          .
+09/23/2026  03:01 PM    <DIR>          ..
+09/25/2026  11:59 AM    <DIR>          bm390
+09/23/2026  02:01 PM    <DIR>          data
+09/23/2026  02:54 PM               470 dev_o0a2.json
+09/23/2026  02:54 PM               401 dev_o0b_l2.json
+09/23/2026  02:54 PM               427 dev_opus301_dev.json
+09/23/2026  02:54 PM               445 dev_opus_dev.json
+09/23/2026  02:54 PM           371,449 dev_pred.jsonl
+09/23/2026  02:28 PM            95,313 dev_rows.jsonl
+09/23/2026  02:54 PM               523 dev_score_T.json
+09/23/2026  02:54 PM               800 dev_sweep.txt
+09/25/2026  12:47 PM    <DIR>          gram364
+09/25/2026  12:44 PM       169,129,336 gram364_tree.tgz
+09/23/2026  03:01 PM            91,838 panel_pred.jsonl
+09/23/2026  02:54 PM            26,977 panel_rows.jsonl
+09/23/2026  03:01 PM               450 panel_score.json
+09/23/2026  03:01 PM               594 panel_score_T0.json
+09/23/2026  02:54 PM    <DIR>          persrc
+09/23/2026  02:28 PM    <DIR>          run
+09/24/2026  09:20 AM    <DIR>          smoke336win
+09/24/2026  09:20 AM       162,728,248 smoke336win-tree.tgz
+09/24/2026  09:22 AM             1,226 smoke336win_run.log
+09/24/2026  09:22 AM               706 smoke336win_run.ps1
+09/24/2026  09:22 AM               626 smoke336win_run2.ps1
+              17 File(s)    332,449,829 bytes
+               8 Dir(s)  36,773,453,824 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis301\\work\\gram364" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\gram364
+
+09/25/2026  12:47 PM    <DIR>          .
+09/25/2026  12:44 PM    <DIR>          ..
+09/25/2026  12:47 PM    <DIR>          r44c
+09/25/2026  12:43 PM    <DIR>          tree
+               0 File(s)              0 bytes
+               4 Dir(s)  36,772,851,712 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis301\\work\\gram364\\tree 2>&1 & dir C:\\Users\\benja\\text-predict 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work\gram364\tree
+
+09/25/2026  12:43 PM    <DIR>          .
+09/25/2026  12:47 PM    <DIR>          ..
+09/25/2026  12:25 PM    <DIR>          .claude
+09/25/2026  12:41 PM             6,148 .DS_Store
+09/25/2026  12:25 PM                97 .gitignore
+09/25/2026  12:25 PM            25,924 ADVERSARIAL_REVIEW.md
+09/25/2026  12:25 PM             8,771 ARCHITECTURE_DECISION.md
+09/25/2026  12:25 PM    <DIR>          archive
+09/25/2026  12:43 PM    <DIR>          artifacts
+09/25/2026  12:25 PM             1,166 CLAUDE.md
+09/25/2026  12:25 PM    <DIR>          data
+09/25/2026  12:43 PM    <DIR>          design
+09/25/2026  12:25 PM    <DIR>          handoff
+09/25/2026  12:25 PM    <DIR>          learnlab
+09/25/2026  12:25 PM    <DIR>          memorylab
+09/25/2026  12:25 PM    <DIR>          premonition
+09/25/2026  12:25 PM             3,610 README.md
+09/25/2026  12:25 PM             8,676 REMOTE_RUN.md
+09/25/2026  12:25 PM            18,053 RESEARCH_REVIEW.md
+09/25/2026  12:25 PM    <DIR>          reviews
+09/25/2026  12:25 PM            10,605 run.py
+09/25/2026  12:25 PM               293 run.sh
+09/25/2026  12:41 PM    <DIR>          runs
+09/25/2026  12:43 PM    <DIR>          scripts
+09/25/2026  12:41 PM    <DIR>          status
+09/25/2026  12:25 PM            63,886 TEACHING_TO_TEST_CONTRACT.md
+09/25/2026  12:25 PM    <DIR>          tests
+              11 File(s)        147,229 bytes
+              16 Dir(s)  36,772,851,712 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\text-predict
+
+08/17/2026  05:22 PM    <DIR>          .
+09/25/2026  02:48 AM    <DIR>          ..
+08/17/2026  05:02 PM    <DIR>          .venv
+08/17/2026  04:54 PM    <DIR>          common
+08/17/2026  04:51 PM    <DIR>          data
+08/17/2026  04:55 PM    <DIR>          phase3
+08/17/2026  05:15 PM    <DIR>          phase4
+08/17/2026  04:54 PM    <DIR>          phase5
+08/17/2026  04:54 PM    <DIR>          phase6
+08/17/2026  05:22 PM    <DIR>          runs
+08/17/2026  05:15 PM                 0 train_plain.err
+08/17/2026  05:15 PM                 0 train_plain.log
+               2 File(s)              0 bytes
+              10 Dir(s)  36,772,851,712 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub 2>&1 & C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \"import torch,transformers; print(torch.__version__, torch.cuda.is_available(), transformers.__version__)\" 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.cache\huggingface\hub
+
+09/24/2026  11:29 PM    <DIR>          .
+09/21/2026  10:07 PM    <DIR>          ..
+09/24/2026  11:29 PM    <DIR>          .locks
+09/24/2026  11:30 PM    <DIR>          blobs
+09/21/2026  10:07 PM               195 CACHEDIR.TAG
+09/21/2026  10:07 PM    <DIR>          models--allenai--scibert_scivocab_uncased
+09/24/2026  11:29 PM    <DIR>          models--LiquidAI--LFM2.5-1.2B-Instruct
+09/24/2026  12:39 AM    <DIR>          models--openbmb--MiniCPM5-1B
+09/24/2026  11:28 PM    <DIR>          models--Qwen--Qwen3.5-2B
+09/24/2026  11:26 PM    <DIR>          models--sentence-transformers--all-MiniLM-L6-v2
+               1 File(s)            195 bytes
+               9 Dir(s)  36,772,851,712 bytes free
+2.11.0+cu128 True 5.15.0
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots
+
+09/24/2026  12:39 AM    <DIR>          .
+09/24/2026  12:39 AM    <DIR>          ..
+09/24/2026  12:40 AM    <DIR>          87179e5c1f455ef22e6223592d2d61351b525bfc
+               0 File(s)              0 bytes
+               3 Dir(s)  36,772,802,560 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\lis301\\work\\blurt* 2>&1 & dir C:\\blurt* 2>&1 & dir C:\\Users\\benja\\blurt* 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\lis301\work
+
+File Not Found
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\
+
+File Not Found
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja
+
+09/24/2026  11:40 PM    <DIR>          blurt2gpu
+               0 File(s)              0 bytes
+               1 Dir(s)  36,772,802,560 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\blurt2gpu 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu
+
+09/24/2026  11:40 PM    <DIR>          .
+09/25/2026  02:48 AM    <DIR>          ..
+09/24/2026  11:20 PM    <DIR>          artifacts
+09/24/2026  11:37 PM            51,200 blurt2gpu.tar
+09/25/2026  12:07 AM    <DIR>          gpu
+09/24/2026  11:40 PM               379 launch.bat
+09/25/2026  12:04 AM               644 log_loop.err.txt
+09/25/2026  12:07 AM             1,539 log_loop.txt
+09/24/2026  11:37 PM    <DIR>          pzcheck
+09/24/2026  11:20 PM    <DIR>          scripts
+               4 File(s)         53,762 bytes
+               6 Dir(s)  36,772,249,600 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt2gpu\\launch.bat 2>&1 & type C:\\Users\\benja\\blurt2gpu\\log_loop.txt 2>&1" 2>&1; echo EXIT:$?
+@echo off
+cd /d C:\Users\benja\blurt2gpu
+C:\Users\benja\text-predict\.venv\Scripts\python.exe -B scripts\claude_blurt2.py loop --model C:\Users\benja\.cache\huggingface\hub\models--openbmb--MiniCPM5-1B\snapshots\87179e5c1f455ef22e6223592d2d61351b525bfc --out gpu --temps 1.0,1.5 --dev-puzzles artifacts\claude-blurt1-dev-20260925\puzzles.jsonl > log_loop.txt 2> log_loop.err.txt
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+[loop] practice: reasoner right 21/400, lucky wins on misses 184 (338/11370 blurts)
+[sleep] epoch 1/3 last batch loss 1.019
+[sleep] epoch 2/3 last batch loss 0.745
+[sleep] epoch 3/3 last batch loss 0.675
+[loop] arm W seed 0: test 13/127
+[sleep] epoch 1/3 last batch loss 0.941
+[sleep] epoch 2/3 last batch loss 0.979
+[sleep] epoch 3/3 last batch loss 0.839
+[loop] arm W seed 1: test 11/127
+[sleep] epoch 1/3 last batch loss 0.031
+[sleep] epoch 2/3 last batch loss 0.000
+[sleep] epoch 3/3 last batch loss 0.000
+[loop] arm C seed 0: test 5/127
+[sleep] epoch 1/3 last batch loss 0.024
+[sleep] epoch 2/3 last batch loss 0.001
+[sleep] epoch 3/3 last batch loss 0.000
+[loop] arm C seed 1: test 6/127
+{"dev_missed": 58, "dev_lucky_by_temp": {"1.0": 39, "1.5": 44}, "temp_chosen": 1.5, "n_train": 400, "n_test": 127, "test_dropped_overlap": 23, "temp": 1.5, "S0_test_before": 6, "train_reasoner_right": 21, "train_missed": 379, "train_missed_then_lucky": 184, "lucky_blurts_on_misses": 338, "blurts_on_misses": 11370, "examples_W": 205, "examples_C": 205, "S_W_seed0_test_after": 13, "S_W_seed0_train_missed_after": 39, "S_W_seed1_test_after": 11, "S_W_seed1_train_missed_after": 30, "S_W_test_after_mean": 12.0, "S_C_seed0_test_after": 5, "S_C_seed0_train_missed_after": 2, "S_C_seed1_test_after": 6, "S_C_seed1_train_missed_after": 4, "S_C_test_after_mean": 5.5, "minutes": 27.7}
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[✓] Check BensPC GPU status + queue position (one job at a time)
+[•] Copy git archive to BensPC and extract, set BASE
+[ ] Run pzcheck reproducibility check (fc /b)
+[ ] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[ ] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md -o /tmp/blurt3r.tar && ls -l /tmp/blurt3r.tar && tar tf /tmp/blurt3r.tar | head -n 20
+-rw-r--r--  1 ben-hannan  wheel  51200 Sep 25 13:02 /tmp/blurt3r.tar
+artifacts/
+artifacts/claude-blurt1-dev-20260925/
+artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+artifacts/claude-blurt2-20260925/
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md
+scripts/
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_cre333b_agent.py
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/blurt3r.tar benspc:'C:/Users/benja/blurt3r.tar' 2>&1; echo EXIT:$?
+ssh -o ConnectTimeout=15 benspc "mkdir C:\\Users\\benja\\blurt3r 2>&1 & tar -xf C:\\Users\\benja\\blurt3r.tar -C C:\\Users\\benja\\blurt3r 2>&1 & dir C:\\Users\\benja\\blurt3r 2>&1 & dir C:\\Users\\benja\\blurt3r\\scripts 2>&1" 2>&1; echo EXIT:$?
+EXIT:0
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r
+
+09/25/2026  01:02 PM    <DIR>          .
+09/25/2026  01:02 PM    <DIR>          ..
+09/25/2026  12:57 PM    <DIR>          artifacts
+09/25/2026  12:57 PM    <DIR>          scripts
+               0 File(s)              0 bytes
+               4 Dir(s)  36,771,803,136 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r\scripts
+
+09/25/2026  12:57 PM    <DIR>          .
+09/25/2026  01:02 PM    <DIR>          ..
+09/25/2026  12:57 PM             8,233 claude_blurt1.py
+09/25/2026  12:57 PM            19,733 claude_blurt2.py
+09/25/2026  12:57 PM             3,605 claude_cre333b_agent.py
+               3 File(s)         31,571 bytes
+               2 Dir(s)  36,771,803,136 bytes free
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[✓] Check BensPC GPU status + queue position (one job at a time)
+[✓] Copy git archive to BensPC and extract, set BASE
+[•] Run pzcheck reproducibility check (fc /b)
+[ ] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[ ] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\blurt3r & C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -B scripts\\claude_blurt1.py make --out pzcheck --n 60 --seed 1 2>&1" 2>&1; echo EXIT:$?
+made 60 puzzles (seed 1)
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\blurt3r & fc /b pzcheck\\puzzles.jsonl artifacts\\claude-blurt1-dev-20260925\\puzzles.jsonl 2>&1" 2>&1; echo EXIT:$?
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0d9848f9b001kYvozq48Ewk2yA
+
+00000541: 5B 65
+00000542: 34 74
+00000543: 2C 22
+00000544: 20 3A
+00000545: 37 20
+00000546: 2C 36
+00000547: 20 2C
+00000548: 39 20
+00000549: 5D 22
+0000054A: 2C 73
+0000054B: 20 6F
+0000054C: 22 6C
+0000054D: 74 75
+0000054E: 61 74
+0000054F: 72 69
+00000550: 67 6F
+00000551: 65 6E
+00000552: 74 22
+00000553: 22 3A
+00000554: 3A 20
+00000555: 20 22
+00000556: 36 28
+00000557: 2C 39
+00000558: 20 2B
+00000559: 22 28
+0000055A: 73 34
+0000055B: 6F 2D
+0000055C: 6C 37
+0000055D: 75 29
+0000055E: 74 29
+0000055F: 69 22
+00000560: 6F 7D
+00000561: 6E 0A
+00000562: 22 7B
+00000563: 3A 22
+00000564: 20 69
+00000565: 22 64
+00000566: 28 22
+00000567: 39 3A
+00000568: 2B 20
+00000569: 28 22
+0000056A: 34 70
+0000056B: 2D 7A
+0000056C: 37 2D
+0000056D: 29 73
+0000056E: 29 31
+0000056F: 22 2D
+00000570: 7D 30
+00000571: 0D 31
+00000572: 0A 38
+00000573: 7B 22
+00000574: 22 2C
+00000575: 69 20
+00000576: 64 22
+00000577: 22 6E
+00000578: 3A 75
+00000579: 20 6D
+0000057A: 22 73
+0000057B: 70 22
+0000057C: 7A 3A
+0000057D: 2D 20
+0000057E: 73 5B
+0000057F: 31 36
+00000580: 2D 2C
+00000581: 30 20
+00000582: 31 37
+00000583: 38 2C
+00000584: 22 20
+00000585: 2C 37
+00000586: 20 5D
+00000587: 22 2C
+00000588: 6E 20
+00000589: 75 22
+0000058A: 6D 74
+0000058B: 73 61
+0000058C: 22 72
+0000058D: 3A 67
+0000058E: 20 65
+0000058F: 5B 74
+00000590: 36 22
+00000591: 2C 3A
+00000593: 37 38
+00000596: 37 22
+00000597: 5D 73
+00000598: 2C 6F
+00000599: 20 6C
+0000059A: 22 75
+0000059C: 61 69
+0000059D: 72 6F
+0000059E: 67 6E
+0000059F: 65 22
+000005A0: 74 3A
+000005A1: 22 20
+000005A2: 3A 22
+000005A3: 20 28
+000005A4: 38 37
+000005A5: 2C 2D
+000005A6: 20 28
+000005A7: 22 36
+000005A8: 73 2D
+000005A9: 6F 37
+000005AA: 6C 29
+000005AB: 75 29
+000005AC: 74 22
+000005AD: 69 7D
+000005AE: 6F 0A
+000005AF: 6E 7B
+000005B1: 3A 69
+000005B2: 20 64
+000005B4: 28 3A
+000005B5: 37 20
+000005B6: 2D 22
+000005B7: 28 70
+000005B8: 36 7A
+000005BA: 37 73
+000005BB: 29 31
+000005BC: 29 2D
+000005BD: 22 30
+000005BE: 7D 31
+000005BF: 0D 39
+000005C0: 0A 22
+000005C1: 7B 2C
+000005C2: 22 20
+000005C3: 69 22
+000005C4: 64 6E
+000005C5: 22 75
+000005C6: 3A 6D
+000005C7: 20 73
+000005C9: 70 3A
+000005CA: 7A 20
+000005CB: 2D 5B
+000005CC: 73 33
+000005CD: 31 2C
+000005CE: 2D 20
+000005CF: 30 34
+000005D0: 31 2C
+000005D1: 39 20
+000005D2: 22 35
+000005D5: 22 31
+000005D6: 6E 32
+000005D7: 75 5D
+000005D8: 6D 2C
+000005D9: 73 20
+000005DB: 3A 74
+000005DC: 20 61
+000005DD: 5B 72
+000005DE: 33 67
+000005DF: 2C 65
+000005E0: 20 74
+000005E1: 34 22
+000005E2: 2C 3A
+000005E4: 35 32
+000005E5: 2C 34
+000005E6: 20 2C
+000005E7: 31 20
+000005E8: 32 22
+000005E9: 5D 73
+000005EA: 2C 6F
+000005EB: 20 6C
+000005EC: 22 75
+000005EE: 61 69
+000005EF: 72 6F
+000005F0: 67 6E
+000005F1: 65 22
+000005F2: 74 3A
+000005F3: 22 20
+000005F4: 3A 22
+000005F5: 20 28
+000005F6: 32 28
+000005F7: 34 33
+000005F8: 2C 2B
+000005F9: 20 34
+000005FA: 22 29
+000005FB: 73 2B
+000005FC: 6F 28
+000005FD: 6C 35
+000005FE: 75 2B
+000005FF: 74 31
+00000600: 69 32
+00000601: 6F 29
+00000602: 6E 29
+00000604: 3A 7D
+00000605: 20 0A
+00000606: 22 7B
+00000607: 28 22
+00000608: 28 69
+00000609: 33 64
+0000060A: 2B 22
+0000060B: 34 3A
+0000060C: 29 20
+0000060D: 2B 22
+0000060E: 28 70
+0000060F: 35 7A
+00000610: 2B 2D
+00000611: 31 73
+00000612: 32 31
+00000613: 29 2D
+00000614: 29 30
+00000615: 22 32
+00000616: 7D 30
+00000617: 0D 22
+00000618: 0A 2C
+00000619: 7B 20
+0000061B: 69 6E
+0000061C: 64 75
+0000061D: 22 6D
+0000061E: 3A 73
+0000061F: 20 22
+00000620: 22 3A
+00000621: 70 20
+00000622: 7A 5B
+00000623: 2D 31
+00000624: 73 2C
+00000625: 31 20
+00000626: 2D 32
+00000627: 30 2C
+00000628: 32 20
+00000629: 30 35
+0000062A: 22 5D
+0000062E: 6E 74
+0000062F: 75 61
+00000630: 6D 72
+00000631: 73 67
+00000632: 22 65
+00000633: 3A 74
+00000634: 20 22
+00000635: 5B 3A
+00000636: 31 20
+00000637: 2C 39
+00000638: 20 2C
+00000639: 32 20
+0000063A: 2C 22
+0000063B: 20 73
+0000063C: 35 6F
+0000063D: 5D 6C
+0000063E: 2C 75
+0000063F: 20 74
+00000640: 22 69
+00000641: 74 6F
+00000642: 61 6E
+00000643: 72 22
+00000644: 67 3A
+00000645: 65 20
+00000646: 74 22
+00000647: 22 28
+00000648: 3A 28
+00000649: 20 32
+0000064A: 39 2A
+0000064B: 2C 35
+0000064C: 20 29
+0000064D: 22 2D
+0000064E: 73 31
+0000064F: 6F 29
+00000650: 6C 22
+00000651: 75 7D
+00000652: 74 0A
+00000653: 69 7B
+00000654: 6F 22
+00000655: 6E 69
+00000656: 22 64
+00000657: 3A 22
+00000658: 20 3A
+00000659: 22 20
+0000065A: 28 22
+0000065B: 28 70
+0000065C: 32 7A
+0000065D: 2A 2D
+0000065E: 35 73
+0000065F: 29 31
+00000661: 31 30
+00000662: 29 32
+00000663: 22 31
+00000664: 7D 22
+00000665: 0D 2C
+00000666: 0A 20
+00000667: 7B 22
+00000668: 22 6E
+00000669: 69 75
+0000066A: 64 6D
+0000066B: 22 73
+0000066C: 3A 22
+0000066D: 20 3A
+0000066E: 22 20
+0000066F: 70 5B
+00000670: 7A 31
+00000671: 2D 2C
+00000672: 73 20
+00000673: 31 37
+00000674: 2D 2C
+00000675: 30 20
+00000676: 32 39
+00000677: 31 5D
+00000678: 22 2C
+00000679: 2C 20
+0000067A: 20 22
+0000067B: 22 74
+0000067C: 6E 61
+0000067D: 75 72
+0000067E: 6D 67
+0000067F: 73 65
+00000680: 22 74
+00000681: 3A 22
+00000682: 20 3A
+00000683: 5B 20
+00000685: 2C 37
+00000686: 20 2C
+00000687: 37 20
+00000688: 2C 22
+00000689: 20 73
+0000068A: 39 6F
+0000068B: 5D 6C
+0000068C: 2C 75
+0000068D: 20 74
+0000068E: 22 69
+0000068F: 74 6F
+00000690: 61 6E
+00000691: 72 22
+00000692: 67 3A
+00000693: 65 20
+00000694: 74 22
+00000695: 22 28
+00000696: 3A 39
+00000697: 20 2B
+00000698: 31 28
+00000699: 37 31
+0000069A: 2C 2B
+0000069B: 20 37
+0000069C: 22 29
+0000069D: 73 29
+0000069E: 6F 22
+0000069F: 6C 7D
+000006A0: 75 0A
+000006A1: 74 7B
+000006A2: 69 22
+000006A3: 6F 69
+000006A4: 6E 64
+000006A9: 28 70
+000006AA: 39 7A
+000006AB: 2B 2D
+000006AC: 28 73
+000006AE: 2B 2D
+000006AF: 37 30
+000006B0: 29 32
+000006B1: 29 32
+000006B3: 7D 2C
+000006B4: 0D 20
+000006B5: 0A 22
+000006B6: 7B 6E
+000006B7: 22 75
+000006B8: 69 6D
+000006B9: 64 73
+000006BD: 22 5B
+000006BE: 70 32
+000006BF: 7A 2C
+000006C0: 2D 20
+000006C1: 73 34
+000006C2: 31 2C
+000006C3: 2D 20
+000006C4: 30 36
+000006C5: 32 2C
+000006C6: 32 20
+000006C7: 22 31
+000006C8: 2C 30
+000006C9: 20 5D
+000006CA: 22 2C
+000006CB: 6E 20
+000006CC: 75 22
+000006CD: 6D 74
+000006CE: 73 61
+000006CF: 22 72
+000006D0: 3A 67
+000006D1: 20 65
+000006D2: 5B 74
+000006D3: 32 22
+000006D4: 2C 3A
+000006D6: 34 32
+000006D7: 2C 34
+000006D8: 20 2C
+000006D9: 36 20
+000006DA: 2C 22
+000006DB: 20 73
+000006DC: 31 6F
+000006DD: 30 6C
+000006DE: 5D 75
+000006DF: 2C 74
+000006E0: 20 69
+000006E1: 22 6F
+000006E2: 74 6E
+000006E3: 61 22
+000006E4: 72 3A
+000006E5: 67 20
+000006E6: 65 22
+000006E7: 74 28
+000006E8: 22 28
+000006E9: 3A 32
+000006EA: 20 2B
+000006EB: 32 34
+000006EC: 34 29
+000006ED: 2C 2A
+000006EE: 20 28
+000006EF: 22 31
+000006F0: 73 30
+000006F1: 6F 2D
+000006F2: 6C 36
+000006F3: 75 29
+000006F4: 74 29
+000006F5: 69 22
+000006F6: 6F 7D
+000006F7: 6E 0A
+000006F8: 22 7B
+000006F9: 3A 22
+000006FA: 20 69
+000006FB: 22 64
+000006FC: 28 22
+000006FD: 28 3A
+000006FE: 32 20
+000006FF: 2B 22
+00000700: 34 70
+00000701: 29 7A
+00000702: 2A 2D
+00000703: 28 73
+00000705: 30 2D
+00000706: 2D 30
+00000707: 36 32
+00000708: 29 33
+00000709: 29 22
+0000070A: 22 2C
+0000070B: 7D 20
+0000070C: 0D 22
+0000070D: 0A 6E
+0000070E: 7B 75
+0000070F: 22 6D
+00000710: 69 73
+00000711: 64 22
+00000712: 22 3A
+00000713: 3A 20
+00000714: 20 5B
+00000715: 22 34
+00000716: 70 2C
+00000717: 7A 20
+00000718: 2D 37
+00000719: 73 2C
+0000071A: 31 20
+0000071B: 2D 38
+0000071C: 30 5D
+0000071D: 32 2C
+0000071E: 33 20
+00000720: 2C 74
+00000721: 20 61
+00000722: 22 72
+00000723: 6E 67
+00000724: 75 65
+00000725: 6D 74
+00000726: 73 22
+00000727: 22 3A
+00000728: 3A 20
+00000729: 20 31
+0000072A: 5B 31
+0000072B: 34 2C
+0000072C: 2C 20
+0000072D: 20 22
+0000072E: 37 73
+0000072F: 2C 6F
+00000730: 20 6C
+00000731: 38 75
+00000732: 5D 74
+00000733: 2C 69
+00000734: 20 6F
+00000735: 22 6E
+00000736: 74 22
+00000737: 61 3A
+00000738: 72 20
+00000739: 67 22
+0000073A: 65 28
+0000073B: 74 38
+0000073C: 22 2D
+0000073D: 3A 28
+0000073E: 20 34
+0000073F: 31 2D
+00000740: 31 37
+00000741: 2C 29
+00000742: 20 29
+00000744: 73 7D
+00000745: 6F 0A
+00000746: 6C 7B
+00000747: 75 22
+00000748: 74 69
+00000749: 69 64
+0000074A: 6F 22
+0000074B: 6E 3A
+0000074C: 22 20
+0000074D: 3A 22
+0000074E: 20 70
+0000074F: 22 7A
+00000750: 28 2D
+00000751: 38 73
+00000752: 2D 31
+00000753: 28 2D
+00000754: 34 30
+00000755: 2D 32
+00000756: 37 34
+00000757: 29 22
+00000758: 29 2C
+00000759: 22 20
+0000075A: 7D 22
+0000075B: 0D 6E
+0000075C: 0A 75
+0000075D: 7B 6D
+0000075E: 22 73
+0000075F: 69 22
+00000760: 64 3A
+00000761: 22 20
+00000762: 3A 5B
+00000763: 20 36
+00000764: 22 2C
+00000765: 70 20
+00000766: 7A 38
+00000767: 2D 2C
+00000768: 73 20
+00000769: 31 39
+0000076A: 2D 5D
+0000076B: 30 2C
+0000076C: 32 20
+0000076D: 34 22
+0000076E: 22 74
+0000076F: 2C 61
+00000770: 20 72
+00000771: 22 67
+00000772: 6E 65
+00000773: 75 74
+00000774: 6D 22
+00000775: 73 3A
+00000776: 22 20
+00000777: 3A 33
+00000778: 20 39
+00000779: 5B 2C
+0000077A: 36 20
+0000077B: 2C 22
+0000077C: 20 73
+0000077D: 38 6F
+0000077E: 2C 6C
+0000077F: 20 75
+00000780: 39 74
+00000781: 5D 69
+00000782: 2C 6F
+00000783: 20 6E
+00000785: 74 3A
+00000786: 61 20
+00000787: 72 22
+00000788: 67 28
+00000789: 65 28
+0000078A: 74 36
+0000078B: 22 2A
+0000078C: 3A 38
+0000078D: 20 29
+0000078E: 33 2D
+00000790: 2C 29
+00000791: 20 22
+00000792: 22 7D
+00000793: 73 0A
+00000794: 6F 7B
+00000795: 6C 22
+00000796: 75 69
+00000797: 74 64
+00000798: 69 22
+00000799: 6F 3A
+0000079A: 6E 20
+0000079C: 3A 70
+0000079D: 20 7A
+0000079E: 22 2D
+0000079F: 28 73
+000007A0: 28 31
+000007A1: 36 2D
+000007A2: 2A 30
+000007A3: 38 32
+000007A4: 29 35
+000007A5: 2D 22
+000007A6: 39 2C
+000007A7: 29 20
+000007A9: 7D 6E
+000007AA: 0D 75
+000007AB: 0A 6D
+000007AC: 7B 73
+000007AE: 69 3A
+000007AF: 64 20
+000007B0: 22 5B
+000007B1: 3A 31
+000007B2: 20 2C
+000007B3: 22 20
+000007B4: 70 32
+000007B5: 7A 2C
+000007B6: 2D 20
+000007B7: 73 34
+000007B8: 31 2C
+000007B9: 2D 20
+000007BA: 30 31
+000007BC: 35 5D
+000007BD: 22 2C
+000007BE: 2C 20
+000007BF: 20 22
+000007C0: 22 74
+000007C1: 6E 61
+000007C2: 75 72
+000007C3: 6D 67
+000007C4: 73 65
+000007C5: 22 74
+000007C6: 3A 22
+000007C7: 20 3A
+000007C8: 5B 20
+000007C9: 31 32
+000007CA: 2C 34
+000007CB: 20 2C
+000007CC: 32 20
+000007CD: 2C 22
+000007CE: 20 73
+000007CF: 34 6F
+000007D0: 2C 6C
+000007D1: 20 75
+000007D2: 31 74
+000007D3: 32 69
+000007D4: 5D 6F
+000007D5: 2C 6E
+000007D6: 20 22
+000007D7: 22 3A
+000007D8: 74 20
+000007D9: 61 22
+000007DA: 72 28
+000007DB: 67 28
+000007DC: 65 31
+000007DD: 74 2B
+000007DE: 22 32
+000007DF: 3A 29
+000007E0: 20 2A
+000007E1: 32 28
+000007E2: 34 31
+000007E3: 2C 32
+000007E4: 20 2D
+000007E5: 22 34
+000007E6: 73 29
+000007E7: 6F 29
+000007E8: 6C 22
+000007E9: 75 7D
+000007EA: 74 0A
+000007EB: 69 7B
+000007EC: 6F 22
+000007ED: 6E 69
+000007EE: 22 64
+000007EF: 3A 22
+000007F0: 20 3A
+000007F1: 22 20
+000007F2: 28 22
+000007F3: 28 70
+000007F4: 31 7A
+000007F5: 2B 2D
+000007F6: 32 73
+000007F7: 29 31
+000007F8: 2A 2D
+000007F9: 28 30
+000007FA: 31 32
+000007FB: 32 36
+000007FC: 2D 22
+000007FD: 34 2C
+000007FE: 29 20
+000007FF: 29 22
+00000800: 22 6E
+00000801: 7D 75
+00000802: 0D 6D
+00000803: 0A 73
+00000804: 7B 22
+00000805: 22 3A
+00000806: 69 20
+00000807: 64 5B
+00000808: 22 32
+00000809: 3A 2C
+0000080B: 22 33
+0000080C: 70 2C
+0000080D: 7A 20
+0000080E: 2D 33
+0000080F: 73 5D
+00000810: 31 2C
+00000811: 2D 20
+00000812: 30 22
+00000813: 32 74
+00000814: 36 61
+00000815: 22 72
+00000816: 2C 67
+00000817: 20 65
+00000818: 22 74
+00000819: 6E 22
+0000081A: 75 3A
+0000081B: 6D 20
+0000081C: 73 31
+0000081D: 22 35
+0000081E: 3A 2C
+00000820: 5B 22
+00000821: 32 73
+00000822: 2C 6F
+00000823: 20 6C
+00000824: 33 75
+00000825: 2C 74
+00000826: 20 69
+00000827: 33 6F
+00000828: 5D 6E
+00000829: 2C 22
+0000082A: 20 3A
+0000082B: 22 20
+0000082C: 74 22
+0000082D: 61 28
+0000082E: 72 33
+0000082F: 67 2A
+00000830: 65 28
+00000831: 74 32
+00000832: 22 2B
+00000833: 3A 33
+00000834: 20 29
+00000835: 31 29
+00000836: 35 22
+00000837: 2C 7D
+00000838: 20 0A
+00000839: 22 7B
+0000083A: 73 22
+0000083B: 6F 69
+0000083C: 6C 64
+0000083D: 75 22
+0000083E: 74 3A
+0000083F: 69 20
+00000840: 6F 22
+00000841: 6E 70
+00000842: 22 7A
+00000843: 3A 2D
+00000844: 20 73
+00000845: 22 31
+00000846: 28 2D
+00000847: 33 30
+00000848: 2A 32
+00000849: 28 37
+0000084A: 32 22
+0000084B: 2B 2C
+0000084C: 33 20
+0000084D: 29 22
+0000084E: 29 6E
+0000084F: 22 75
+00000850: 7D 6D
+00000851: 0D 73
+00000852: 0A 22
+00000853: 7B 3A
+00000854: 22 20
+00000855: 69 5B
+00000856: 64 32
+00000857: 22 2C
+00000858: 3A 20
+00000859: 20 35
+0000085A: 22 2C
+0000085B: 70 20
+0000085C: 7A 36
+0000085D: 2D 5D
+0000085E: 73 2C
+0000085F: 31 20
+00000860: 2D 22
+00000861: 30 74
+00000862: 32 61
+00000863: 37 72
+00000864: 22 67
+00000865: 2C 65
+00000866: 20 74
+00000868: 6E 3A
+00000869: 75 20
+0000086A: 6D 32
+0000086B: 73 30
+0000086C: 22 2C
+0000086D: 3A 20
+0000086E: 20 22
+0000086F: 5B 73
+00000870: 32 6F
+00000871: 2C 6C
+00000872: 20 75
+00000873: 35 74
+00000874: 2C 69
+00000875: 20 6F
+00000876: 36 6E
+00000877: 5D 22
+00000878: 2C 3A
+0000087B: 74 28
+0000087C: 61 35
+0000087D: 72 2A
+0000087E: 67 28
+0000087F: 65 36
+00000880: 74 2D
+00000881: 22 32
+00000882: 3A 29
+00000883: 20 29
+00000884: 32 22
+00000885: 30 7D
+00000886: 2C 0A
+00000887: 20 7B
+00000889: 73 69
+0000088A: 6F 64
+0000088B: 6C 22
+0000088C: 75 3A
+0000088D: 74 20
+0000088E: 69 22
+0000088F: 6F 70
+00000890: 6E 7A
+00000891: 22 2D
+00000892: 3A 73
+00000893: 20 31
+00000894: 22 2D
+00000895: 28 30
+00000896: 35 32
+00000897: 2A 38
+00000898: 28 22
+00000899: 36 2C
+0000089A: 2D 20
+0000089B: 32 22
+0000089C: 29 6E
+0000089D: 29 75
+0000089E: 22 6D
+0000089F: 7D 73
+000008A0: 0D 22
+000008A1: 0A 3A
+000008A2: 7B 20
+000008A3: 22 5B
+000008A4: 69 38
+000008A5: 64 2C
+000008A6: 22 20
+000008A7: 3A 31
+000008A8: 20 30
+000008A9: 22 2C
+000008AA: 70 20
+000008AB: 7A 31
+000008AC: 2D 32
+000008AD: 73 2C
+000008AE: 31 20
+000008AF: 2D 31
+000008B0: 30 33
+000008B1: 32 5D
+000008B2: 38 2C
+000008B3: 22 20
+000008B4: 2C 22
+000008B5: 20 74
+000008B6: 22 61
+000008B7: 6E 72
+000008B8: 75 67
+000008B9: 6D 65
+000008BA: 73 74
+000008BE: 5B 32
+000008BF: 38 34
+000008C2: 31 22
+000008C3: 30 73
+000008C4: 2C 6F
+000008C5: 20 6C
+000008C6: 31 75
+000008C7: 32 74
+000008C8: 2C 69
+000008C9: 20 6F
+000008CA: 31 6E
+000008CB: 33 22
+000008CC: 5D 3A
+000008CD: 2C 20
+000008CE: 20 22
+000008CF: 22 28
+000008D0: 74 28
+000008D1: 61 31
+000008D2: 72 30
+000008D3: 67 2A
+000008D4: 65 31
+000008D5: 74 32
+000008D6: 22 29
+000008D7: 3A 2F
+000008D8: 20 28
+000008D9: 32 31
+000008DA: 34 33
+000008DB: 2C 2D
+000008DC: 20 38
+000008DD: 22 29
+000008DE: 73 29
+000008DF: 6F 22
+000008E0: 6C 7D
+000008E1: 75 0A
+000008E2: 74 7B
+000008E3: 69 22
+000008E4: 6F 69
+000008E5: 6E 64
+000008EA: 28 70
+000008EB: 28 7A
+000008EC: 31 2D
+000008ED: 30 73
+000008EE: 2A 31
+000008EF: 31 2D
+000008F0: 32 30
+000008F1: 29 32
+000008F2: 2F 39
+000008F3: 28 22
+000008F4: 31 2C
+000008F5: 33 20
+000008F6: 2D 22
+000008F7: 38 6E
+000008F8: 29 75
+000008F9: 29 6D
+000008FA: 22 73
+000008FB: 7D 22
+000008FC: 0D 3A
+000008FD: 0A 20
+000008FE: 7B 5B
+000008FF: 22 32
+00000900: 69 2C
+00000901: 64 20
+00000902: 22 33
+00000903: 3A 2C
+00000905: 22 39
+00000906: 70 5D
+00000907: 7A 2C
+00000908: 2D 20
+00000909: 73 22
+0000090A: 31 74
+0000090B: 2D 61
+0000090C: 30 72
+0000090D: 32 67
+0000090E: 39 65
+0000090F: 22 74
+00000910: 2C 22
+00000911: 20 3A
+00000912: 22 20
+00000913: 6E 32
+00000914: 75 35
+00000915: 6D 2C
+00000916: 73 20
+00000918: 3A 73
+00000919: 20 6F
+0000091A: 5B 6C
+0000091B: 32 75
+0000091C: 2C 74
+0000091D: 20 69
+0000091E: 33 6F
+0000091F: 2C 6E
+00000920: 20 22
+00000921: 39 3A
+00000922: 5D 20
+00000923: 2C 22
+00000924: 20 28
+00000925: 22 28
+00000926: 74 33
+00000927: 61 2A
+00000928: 72 39
+00000929: 67 29
+0000092A: 65 2D
+0000092B: 74 32
+0000092C: 22 29
+0000092D: 3A 22
+0000092E: 20 7D
+0000092F: 32 0A
+00000930: 35 7B
+00000931: 2C 22
+00000932: 20 69
+00000933: 22 64
+00000934: 73 22
+00000935: 6F 3A
+00000936: 6C 20
+00000937: 75 22
+00000938: 74 70
+00000939: 69 7A
+0000093A: 6F 2D
+0000093B: 6E 73
+0000093C: 22 31
+0000093D: 3A 2D
+0000093E: 20 30
+0000093F: 22 33
+00000940: 28 30
+00000941: 28 22
+00000942: 33 2C
+00000943: 2A 20
+00000944: 39 22
+00000945: 29 6E
+00000946: 2D 75
+00000947: 32 6D
+00000948: 29 73
+0000094A: 7D 3A
+0000094B: 0D 20
+0000094C: 0A 5B
+0000094D: 7B 33
+0000094E: 22 2C
+0000094F: 69 20
+00000950: 64 33
+00000951: 22 2C
+00000952: 3A 20
+00000953: 20 36
+00000954: 22 5D
+00000955: 70 2C
+00000956: 7A 20
+00000957: 2D 22
+00000958: 73 74
+00000959: 31 61
+0000095A: 2D 72
+0000095B: 30 67
+0000095C: 33 65
+0000095D: 30 74
+0000095F: 2C 3A
+00000961: 22 31
+00000962: 6E 32
+00000963: 75 2C
+00000964: 6D 20
+00000965: 73 22
+00000966: 22 73
+00000967: 3A 6F
+00000968: 20 6C
+00000969: 5B 75
+0000096A: 33 74
+0000096B: 2C 69
+0000096C: 20 6F
+0000096D: 33 6E
+0000096E: 2C 22
+0000096F: 20 3A
+00000970: 36 20
+00000971: 5D 22
+00000972: 2C 28
+00000973: 20 36
+00000974: 22 2B
+00000975: 74 28
+00000976: 61 33
+00000977: 72 2B
+00000978: 67 33
+00000979: 65 29
+0000097A: 74 29
+0000097C: 3A 7D
+0000097D: 20 0A
+0000097E: 31 7B
+0000097F: 32 22
+00000980: 2C 69
+00000981: 20 64
+00000983: 73 3A
+00000984: 6F 20
+00000985: 6C 22
+00000986: 75 70
+00000987: 74 7A
+00000988: 69 2D
+00000989: 6F 73
+0000098A: 6E 31
+0000098B: 22 2D
+0000098C: 3A 30
+0000098D: 20 33
+0000098E: 22 31
+0000098F: 28 22
+00000990: 36 2C
+00000991: 2B 20
+00000992: 28 22
+00000993: 33 6E
+00000994: 2B 75
+00000995: 33 6D
+00000996: 29 73
+00000997: 29 22
+00000998: 22 3A
+00000999: 7D 20
+0000099A: 0D 5B
+0000099B: 0A 32
+0000099C: 7B 2C
+0000099D: 22 20
+0000099E: 69 34
+0000099F: 64 2C
+000009A0: 22 20
+000009A1: 3A 39
+000009A2: 20 2C
+000009A3: 22 20
+000009A4: 70 31
+000009A5: 7A 30
+000009A6: 2D 5D
+000009A7: 73 2C
+000009A8: 31 20
+000009A9: 2D 22
+000009AA: 30 74
+000009AB: 33 61
+000009AC: 31 72
+000009AD: 22 67
+000009AE: 2C 65
+000009AF: 20 74
+000009B1: 6E 3A
+000009B2: 75 20
+000009B3: 6D 32
+000009B4: 73 34
+000009B5: 22 2C
+000009B6: 3A 20
+000009B7: 20 22
+000009B8: 5B 73
+000009B9: 32 6F
+000009BA: 2C 6C
+000009BB: 20 75
+000009BC: 34 74
+000009BD: 2C 69
+000009BE: 20 6F
+000009BF: 39 6E
+000009C0: 2C 22
+000009C1: 20 3A
+000009C2: 31 20
+000009C3: 30 22
+000009C4: 5D 28
+000009C5: 2C 28
+000009C6: 20 32
+000009C7: 22 2A
+000009C8: 74 39
+000009C9: 61 29
+000009CA: 72 2D
+000009CB: 67 28
+000009CC: 65 34
+000009CD: 74 2D
+000009CE: 22 31
+000009CF: 3A 30
+000009D0: 20 29
+000009D1: 32 29
+000009D2: 34 22
+000009D3: 2C 7D
+000009D4: 20 0A
+000009D5: 22 7B
+000009D6: 73 22
+000009D7: 6F 69
+000009D8: 6C 64
+000009D9: 75 22
+000009DA: 74 3A
+000009DB: 69 20
+000009DC: 6F 22
+000009DD: 6E 70
+000009DE: 22 7A
+000009DF: 3A 2D
+000009E0: 20 73
+000009E1: 22 31
+000009E2: 28 2D
+000009E3: 28 30
+000009E4: 32 33
+000009E5: 2A 32
+000009E6: 39 22
+000009E7: 29 2C
+000009E8: 2D 20
+000009E9: 28 22
+000009EA: 34 6E
+000009EB: 2D 75
+000009EC: 31 6D
+000009ED: 30 73
+000009EE: 29 22
+000009EF: 29 3A
+000009F0: 22 20
+000009F1: 7D 5B
+000009F2: 0D 31
+000009F3: 0A 2C
+000009F4: 7B 20
+000009F5: 22 32
+000009F6: 69 2C
+000009F7: 64 20
+000009F8: 22 35
+000009F9: 3A 5D
+000009FA: 20 2C
+000009FB: 22 20
+000009FC: 70 22
+000009FD: 7A 74
+000009FE: 2D 61
+000009FF: 73 72
+00000A00: 31 67
+00000A01: 2D 65
+00000A02: 30 74
+00000A03: 33 22
+00000A04: 32 3A
+00000A05: 22 20
+00000A06: 2C 35
+00000A07: 20 2C
+00000A08: 22 20
+00000A09: 6E 22
+00000A0A: 75 73
+00000A0B: 6D 6F
+00000A0C: 73 6C
+00000A0D: 22 75
+00000A0E: 3A 74
+00000A0F: 20 69
+00000A10: 5B 6F
+00000A11: 31 6E
+00000A12: 2C 22
+00000A13: 20 3A
+00000A14: 32 20
+00000A15: 2C 22
+00000A16: 20 28
+00000A18: 5D 2A
+00000A19: 2C 28
+00000A1A: 20 32
+00000A1B: 22 2D
+00000A1C: 74 31
+00000A1D: 61 29
+00000A1E: 72 29
+00000A1F: 67 22
+00000A20: 65 7D
+00000A21: 74 0A
+00000A22: 22 7B
+00000A23: 3A 22
+00000A24: 20 69
+00000A25: 35 64
+00000A26: 2C 22
+00000A27: 20 3A
+00000A28: 22 20
+00000A29: 73 22
+00000A2A: 6F 70
+00000A2B: 6C 7A
+00000A2C: 75 2D
+00000A2D: 74 73
+00000A2E: 69 31
+00000A2F: 6F 2D
+00000A30: 6E 30
+00000A31: 22 33
+00000A32: 3A 33
+00000A33: 20 22
+00000A34: 22 2C
+00000A35: 28 20
+00000A36: 35 22
+00000A37: 2A 6E
+00000A38: 28 75
+00000A39: 32 6D
+00000A3A: 2D 73
+00000A3B: 31 22
+00000A3C: 29 3A
+00000A3D: 29 20
+00000A3E: 22 5B
+00000A3F: 7D 31
+00000A40: 0D 2C
+00000A41: 0A 20
+00000A42: 7B 32
+00000A43: 22 2C
+00000A44: 69 20
+00000A45: 64 37
+00000A46: 22 5D
+00000A47: 3A 2C
+00000A4A: 70 74
+00000A4B: 7A 61
+00000A4C: 2D 72
+00000A4D: 73 67
+00000A4E: 31 65
+00000A4F: 2D 74
+00000A50: 30 22
+00000A51: 33 3A
+00000A52: 33 20
+00000A53: 22 31
+00000A54: 2C 32
+00000A55: 20 2C
+00000A56: 22 20
+00000A57: 6E 22
+00000A58: 75 73
+00000A59: 6D 6F
+00000A5A: 73 6C
+00000A5B: 22 75
+00000A5C: 3A 74
+00000A5D: 20 69
+00000A5E: 5B 6F
+00000A5F: 31 6E
+00000A60: 2C 22
+00000A61: 20 3A
+00000A62: 32 20
+00000A63: 2C 22
+00000A64: 20 28
+00000A65: 37 32
+00000A66: 5D 2A
+00000A67: 2C 28
+00000A68: 20 37
+00000A69: 22 2D
+00000A6A: 74 31
+00000A6B: 61 29
+00000A6C: 72 29
+00000A6D: 67 22
+00000A6E: 65 7D
+00000A6F: 74 0A
+00000A70: 22 7B
+00000A71: 3A 22
+00000A72: 20 69
+00000A73: 31 64
+00000A74: 32 22
+00000A75: 2C 3A
+00000A78: 73 70
+00000A79: 6F 7A
+00000A7A: 6C 2D
+00000A7B: 75 73
+00000A7C: 74 31
+00000A7D: 69 2D
+00000A7E: 6F 30
+00000A7F: 6E 33
+00000A80: 22 34
+00000A81: 3A 22
+00000A82: 20 2C
+00000A83: 22 20
+00000A84: 28 22
+00000A85: 32 6E
+00000A86: 2A 75
+00000A87: 28 6D
+00000A88: 37 73
+00000A89: 2D 22
+00000A8A: 31 3A
+00000A8B: 29 20
+00000A8C: 29 5B
+00000A8D: 22 33
+00000A8E: 7D 2C
+00000A8F: 0D 20
+00000A90: 0A 37
+00000A91: 7B 2C
+00000A92: 22 20
+00000A93: 69 31
+00000A94: 64 30
+00000A95: 22 2C
+00000A96: 3A 20
+00000A97: 20 31
+00000A98: 22 33
+00000A99: 70 5D
+00000A9A: 7A 2C
+00000A9B: 2D 20
+00000A9C: 73 22
+00000A9D: 31 74
+00000A9E: 2D 61
+00000A9F: 30 72
+00000AA0: 33 67
+00000AA1: 34 65
+00000AA2: 22 74
+00000AA3: 2C 22
+00000AA4: 20 3A
+00000AA5: 22 20
+00000AA6: 6E 32
+00000AA7: 75 34
+00000AA8: 6D 2C
+00000AA9: 73 20
+00000AAB: 3A 73
+00000AAC: 20 6F
+00000AAD: 5B 6C
+00000AAE: 33 75
+00000AAF: 2C 74
+00000AB0: 20 69
+00000AB1: 37 6F
+00000AB2: 2C 6E
+00000AB3: 20 22
+00000AB4: 31 3A
+00000AB5: 30 20
+00000AB6: 2C 22
+00000AB7: 20 28
+00000AB8: 31 28
+00000ABA: 5D 2A
+00000ABB: 2C 37
+00000ABC: 20 29
+00000ABD: 22 2D
+00000ABE: 74 28
+00000ABF: 61 31
+00000AC0: 72 30
+00000AC1: 67 2D
+00000AC2: 65 31
+00000AC3: 74 33
+00000AC4: 22 29
+00000AC5: 3A 29
+00000AC6: 20 22
+00000AC7: 32 7D
+00000AC8: 34 0A
+00000AC9: 2C 7B
+00000ACA: 20 22
+00000ACB: 22 69
+00000ACC: 73 64
+00000ACD: 6F 22
+00000ACE: 6C 3A
+00000ACF: 75 20
+00000AD0: 74 22
+00000AD1: 69 70
+00000AD2: 6F 7A
+00000AD3: 6E 2D
+00000AD4: 22 73
+00000AD5: 3A 31
+00000AD6: 20 2D
+00000AD7: 22 30
+00000AD8: 28 33
+00000AD9: 28 35
+00000ADA: 33 22
+00000ADB: 2A 2C
+00000ADC: 37 20
+00000ADD: 29 22
+00000ADE: 2D 6E
+00000ADF: 28 75
+00000AE0: 31 6D
+00000AE1: 30 73
+00000AE2: 2D 22
+00000AE3: 31 3A
+00000AE4: 33 20
+00000AE5: 29 5B
+00000AE6: 29 31
+00000AE7: 22 2C
+00000AE8: 7D 20
+00000AE9: 0D 31
+00000AEA: 0A 2C
+00000AEB: 7B 20
+00000AEC: 22 36
+00000AED: 69 5D
+00000AEE: 64 2C
+00000AEF: 22 20
+00000AF0: 3A 22
+00000AF1: 20 74
+00000AF2: 22 61
+00000AF3: 70 72
+00000AF4: 7A 67
+00000AF5: 2D 65
+00000AF6: 73 74
+00000AF7: 31 22
+00000AF8: 2D 3A
+00000AF9: 30 20
+00000AFA: 33 35
+00000AFB: 35 2C
+00000AFC: 22 20
+00000AFD: 2C 22
+00000AFE: 20 73
+00000AFF: 22 6F
+00000B00: 6E 6C
+00000B02: 6D 74
+00000B03: 73 69
+00000B04: 22 6F
+00000B05: 3A 6E
+00000B06: 20 22
+00000B07: 5B 3A
+00000B08: 31 20
+00000B09: 2C 22
+00000B0A: 20 28
+00000B0B: 31 36
+00000B0C: 2C 2D
+00000B0D: 20 28
+00000B0E: 36 31
+00000B0F: 5D 2A
+00000B10: 2C 31
+00000B11: 20 29
+00000B12: 22 29
+00000B13: 74 22
+00000B14: 61 7D
+00000B15: 72 0A
+00000B16: 67 7B
+00000B17: 65 22
+00000B18: 74 69
+00000B19: 22 64
+00000B1A: 3A 22
+00000B1B: 20 3A
+00000B1C: 35 20
+00000B1D: 2C 22
+00000B1E: 20 70
+00000B1F: 22 7A
+00000B20: 73 2D
+00000B21: 6F 73
+00000B22: 6C 31
+00000B23: 75 2D
+00000B24: 74 30
+00000B25: 69 33
+00000B26: 6F 36
+00000B27: 6E 22
+00000B28: 22 2C
+00000B29: 3A 20
+00000B2A: 20 22
+00000B2B: 22 6E
+00000B2C: 28 75
+00000B2D: 36 6D
+00000B2E: 2D 73
+00000B2F: 28 22
+00000B30: 31 3A
+00000B31: 2A 20
+00000B32: 31 5B
+00000B33: 29 33
+00000B34: 29 2C
+00000B35: 22 20
+00000B36: 7D 35
+00000B37: 0D 2C
+00000B38: 0A 20
+00000B39: 7B 39
+00000B3A: 22 5D
+00000B3B: 69 2C
+00000B3C: 64 20
+00000B3E: 3A 74
+00000B3F: 20 61
+00000B40: 22 72
+00000B41: 70 67
+00000B42: 7A 65
+00000B43: 2D 74
+00000B44: 73 22
+00000B45: 31 3A
+00000B46: 2D 20
+00000B47: 30 31
+00000B48: 33 38
+00000B49: 36 2C
+00000B4A: 22 20
+00000B4B: 2C 22
+00000B4C: 20 73
+00000B4D: 22 6F
+00000B4E: 6E 6C
+00000B50: 6D 74
+00000B51: 73 69
+00000B52: 22 6F
+00000B53: 3A 6E
+00000B54: 20 22
+00000B55: 5B 3A
+00000B56: 33 20
+00000B57: 2C 22
+00000B58: 20 28
+00000B59: 35 39
+00000B5A: 2C 2A
+00000B5B: 20 28
+00000B5C: 39 35
+00000B5D: 5D 2D
+00000B5E: 2C 33
+00000B5F: 20 29
+00000B60: 22 29
+00000B61: 74 22
+00000B62: 61 7D
+00000B63: 72 0A
+00000B64: 67 7B
+00000B65: 65 22
+00000B66: 74 69
+00000B67: 22 64
+00000B68: 3A 22
+00000B69: 20 3A
+00000B6A: 31 20
+00000B6B: 38 22
+00000B6C: 2C 70
+00000B6D: 20 7A
+00000B6E: 22 2D
+00000B70: 6F 31
+00000B71: 6C 2D
+00000B72: 75 30
+00000B73: 74 33
+00000B74: 69 37
+00000B75: 6F 22
+00000B76: 6E 2C
+00000B77: 22 20
+00000B78: 3A 22
+00000B79: 20 6E
+00000B7A: 22 75
+00000B7B: 28 6D
+00000B7C: 39 73
+00000B7D: 2A 22
+00000B7E: 28 3A
+00000B7F: 35 20
+00000B80: 2D 5B
+00000B81: 33 34
+00000B82: 29 2C
+00000B83: 29 20
+00000B84: 22 34
+00000B85: 7D 2C
+00000B86: 0D 20
+00000B87: 0A 35
+00000B88: 7B 2C
+00000B89: 22 20
+00000B8A: 69 36
+00000B8B: 64 5D
+00000B8C: 22 2C
+00000B8D: 3A 20
+00000B8E: 20 22
+00000B8F: 22 74
+00000B90: 70 61
+00000B91: 7A 72
+00000B92: 2D 67
+00000B93: 73 65
+00000B94: 31 74
+00000B95: 2D 22
+00000B96: 30 3A
+00000B97: 33 20
+00000B98: 37 32
+00000B99: 22 34
+00000B9D: 6E 73
+00000B9E: 75 6F
+00000B9F: 6D 6C
+00000BA0: 73 75
+00000BA1: 22 74
+00000BA2: 3A 69
+00000BA3: 20 6F
+00000BA4: 5B 6E
+00000BA5: 34 22
+00000BA6: 2C 3A
+00000BA8: 34 22
+00000BA9: 2C 28
+00000BAA: 20 36
+00000BAB: 35 2A
+00000BAC: 2C 28
+00000BAD: 20 35
+00000BAE: 36 2D
+00000BAF: 5D 28
+00000BB0: 2C 34
+00000BB1: 20 2F
+00000BB2: 22 34
+00000BB3: 74 29
+00000BB4: 61 29
+00000BB5: 72 29
+00000BB6: 67 22
+00000BB7: 65 7D
+00000BB8: 74 0A
+00000BB9: 22 7B
+00000BBA: 3A 22
+00000BBB: 20 69
+00000BBC: 32 64
+00000BBD: 34 22
+00000BBE: 2C 3A
+00000BC1: 73 70
+00000BC2: 6F 7A
+00000BC3: 6C 2D
+00000BC4: 75 73
+00000BC5: 74 31
+00000BC6: 69 2D
+00000BC7: 6F 30
+00000BC8: 6E 33
+00000BC9: 22 38
+00000BCA: 3A 22
+00000BCB: 20 2C
+00000BCC: 22 20
+00000BCD: 28 22
+00000BCE: 36 6E
+00000BCF: 2A 75
+00000BD0: 28 6D
+00000BD1: 35 73
+00000BD2: 2D 22
+00000BD3: 28 3A
+00000BD4: 34 20
+00000BD5: 2F 5B
+00000BD7: 29 2C
+00000BD8: 29 20
+00000BD9: 29 35
+00000BDA: 22 2C
+00000BDB: 7D 20
+00000BDC: 0D 36
+00000BDD: 0A 5D
+00000BDE: 7B 2C
+00000BDF: 22 20
+00000BE0: 69 22
+00000BE1: 64 74
+00000BE2: 22 61
+00000BE3: 3A 72
+00000BE4: 20 67
+00000BE5: 22 65
+00000BE6: 70 74
+00000BE7: 7A 22
+00000BE8: 2D 3A
+00000BE9: 73 20
+00000BEA: 31 32
+00000BEB: 2D 36
+00000BEC: 30 2C
+00000BED: 33 20
+00000BEE: 38 22
+00000BEF: 22 73
+00000BF0: 2C 6F
+00000BF1: 20 6C
+00000BF2: 22 75
+00000BF3: 6E 74
+00000BF4: 75 69
+00000BF5: 6D 6F
+00000BF6: 73 6E
+00000BFA: 5B 22
+00000BFB: 34 28
+00000BFC: 2C 36
+00000BFD: 20 2B
+00000BFE: 35 28
+00000BFF: 2C 34
+00000C00: 20 2A
+00000C01: 36 35
+00000C02: 5D 29
+00000C03: 2C 29
+00000C04: 20 22
+00000C05: 22 7D
+00000C06: 74 0A
+00000C07: 61 7B
+00000C08: 72 22
+00000C09: 67 69
+00000C0A: 65 64
+00000C0B: 74 22
+00000C0C: 22 3A
+00000C0D: 3A 20
+00000C0E: 20 22
+00000C0F: 32 70
+00000C10: 36 7A
+00000C11: 2C 2D
+00000C12: 20 73
+00000C13: 22 31
+00000C14: 73 2D
+00000C15: 6F 30
+00000C16: 6C 33
+00000C17: 75 39
+00000C18: 74 22
+00000C19: 69 2C
+00000C1A: 6F 20
+00000C1B: 6E 22
+00000C1C: 22 6E
+00000C1D: 3A 75
+00000C1E: 20 6D
+00000C1F: 22 73
+00000C20: 28 22
+00000C21: 36 3A
+00000C22: 2B 20
+00000C23: 28 5B
+00000C24: 34 32
+00000C25: 2A 2C
+00000C26: 35 20
+00000C27: 29 32
+00000C28: 29 2C
+00000C29: 22 20
+00000C2A: 7D 39
+00000C2B: 0D 5D
+00000C2C: 0A 2C
+00000C2D: 7B 20
+00000C2F: 69 74
+00000C30: 64 61
+00000C31: 22 72
+00000C32: 3A 67
+00000C33: 20 65
+00000C34: 22 74
+00000C35: 70 22
+00000C36: 7A 3A
+00000C37: 2D 20
+00000C38: 73 32
+00000C39: 31 30
+00000C3A: 2D 2C
+00000C3B: 30 20
+00000C3C: 33 22
+00000C3D: 39 73
+00000C3E: 22 6F
+00000C3F: 2C 6C
+00000C40: 20 75
+00000C41: 22 74
+00000C42: 6E 69
+00000C43: 75 6F
+00000C44: 6D 6E
+00000C45: 73 22
+00000C46: 22 3A
+00000C47: 3A 20
+00000C48: 20 22
+00000C49: 5B 28
+00000C4B: 2C 2B
+00000C4C: 20 28
+00000C4E: 2C 2A
+00000C4F: 20 39
+00000C50: 39 29
+00000C51: 5D 29
+00000C52: 2C 22
+00000C53: 20 7D
+00000C54: 22 0A
+00000C55: 74 7B
+00000C56: 61 22
+00000C57: 72 69
+00000C58: 67 64
+00000C59: 65 22
+00000C5A: 74 3A
+00000C5B: 22 20
+00000C5C: 3A 22
+00000C5D: 20 70
+00000C5E: 32 7A
+00000C5F: 30 2D
+00000C60: 2C 73
+00000C61: 20 31
+00000C62: 22 2D
+00000C63: 73 30
+00000C64: 6F 34
+00000C65: 6C 30
+00000C66: 75 22
+00000C67: 74 2C
+00000C68: 69 20
+00000C69: 6F 22
+00000C6B: 22 75
+00000C6C: 3A 6D
+00000C6D: 20 73
+00000C6F: 28 3A
+00000C70: 32 20
+00000C71: 2B 5B
+00000C72: 28 32
+00000C73: 32 2C
+00000C74: 2A 20
+00000C75: 39 35
+00000C76: 29 2C
+00000C77: 29 20
+00000C78: 22 37
+00000C79: 7D 2C
+00000C7A: 0D 20
+00000C7B: 0A 39
+00000C7C: 7B 5D
+00000C7D: 22 2C
+00000C7E: 69 20
+00000C7F: 64 22
+00000C80: 22 74
+00000C81: 3A 61
+00000C82: 20 72
+00000C83: 22 67
+00000C84: 70 65
+00000C85: 7A 74
+00000C86: 2D 22
+00000C87: 73 3A
+00000C88: 31 20
+00000C89: 2D 32
+00000C8A: 30 34
+00000C8B: 34 2C
+00000C8C: 30 20
+00000C8E: 2C 73
+00000C8F: 20 6F
+00000C90: 22 6C
+00000C91: 6E 75
+00000C92: 75 74
+00000C93: 6D 69
+00000C94: 73 6F
+00000C95: 22 6E
+00000C96: 3A 22
+00000C97: 20 3A
+00000C98: 5B 20
+00000C99: 32 22
+00000C9A: 2C 28
+00000C9B: 20 28
+00000C9D: 2C 2A
+00000C9E: 20 37
+00000C9F: 37 29
+00000CA0: 2C 2D
+00000CA1: 20 28
+00000CA2: 39 32
+00000CA3: 5D 2B
+00000CA4: 2C 39
+00000CA5: 20 29
+00000CA6: 22 29
+00000CA7: 74 22
+00000CA8: 61 7D
+00000CA9: 72 0A
+00000CAA: 67 7B
+00000CAB: 65 22
+00000CAC: 74 69
+00000CAD: 22 64
+00000CAE: 3A 22
+00000CAF: 20 3A
+00000CB0: 32 20
+00000CB1: 34 22
+00000CB2: 2C 70
+00000CB3: 20 7A
+00000CB4: 22 2D
+00000CB6: 6F 31
+00000CB7: 6C 2D
+00000CB8: 75 30
+00000CB9: 74 34
+00000CBA: 69 31
+00000CBB: 6F 22
+00000CBC: 6E 2C
+00000CBD: 22 20
+00000CBE: 3A 22
+00000CBF: 20 6E
+00000CC0: 22 75
+00000CC1: 28 6D
+00000CC2: 28 73
+00000CC3: 35 22
+00000CC4: 2A 3A
+00000CC5: 37 20
+00000CC6: 29 5B
+00000CC7: 2D 31
+00000CC8: 28 2C
+00000CC9: 32 20
+00000CCA: 2B 32
+00000CCB: 39 2C
+00000CCC: 29 20
+00000CCD: 29 32
+00000CCE: 22 5D
+00000CCF: 7D 2C
+00000CD0: 0D 20
+00000CD1: 0A 22
+00000CD2: 7B 74
+00000CD3: 22 61
+00000CD4: 69 72
+00000CD5: 64 67
+00000CD6: 22 65
+00000CD7: 3A 74
+00000CD8: 20 22
+00000CD9: 22 3A
+00000CDA: 70 20
+00000CDB: 7A 35
+00000CDC: 2D 2C
+00000CDD: 73 20
+00000CDE: 31 22
+00000CDF: 2D 73
+00000CE0: 30 6F
+00000CE1: 34 6C
+00000CE2: 31 75
+00000CE3: 22 74
+00000CE4: 2C 69
+00000CE5: 20 6F
+00000CE6: 22 6E
+00000CE7: 6E 22
+00000CE8: 75 3A
+00000CE9: 6D 20
+00000CEA: 73 22
+00000CEB: 22 28
+00000CEC: 3A 32
+00000CED: 20 2B
+00000CEE: 5B 28
+00000CF0: 2C 2B
+00000CF1: 20 32
+00000CF2: 32 29
+00000CF3: 2C 29
+00000CF4: 20 22
+00000CF5: 32 7D
+00000CF6: 5D 0A
+00000CF7: 2C 7B
+00000CF8: 20 22
+00000CF9: 22 69
+00000CFA: 74 64
+00000CFB: 61 22
+00000CFC: 72 3A
+00000CFD: 67 20
+00000CFE: 65 22
+00000CFF: 74 70
+00000D00: 22 7A
+00000D01: 3A 2D
+00000D02: 20 73
+00000D03: 35 31
+00000D04: 2C 2D
+00000D05: 20 30
+00000D06: 22 34
+00000D07: 73 32
+00000D08: 6F 22
+00000D09: 6C 2C
+00000D0A: 75 20
+00000D0B: 74 22
+00000D0C: 69 6E
+00000D0D: 6F 75
+00000D0E: 6E 6D
+00000D0F: 22 73
+00000D10: 3A 22
+00000D11: 20 3A
+00000D12: 22 20
+00000D13: 28 5B
+00000D15: 2B 2C
+00000D16: 28 20
+00000D17: 31 35
+00000D18: 2B 2C
+00000D19: 32 20
+00000D1A: 29 39
+00000D1B: 29 5D
+00000D1C: 22 2C
+00000D1D: 7D 20
+00000D1E: 0D 22
+00000D1F: 0A 74
+00000D20: 7B 61
+00000D21: 22 72
+00000D22: 69 67
+00000D23: 64 65
+00000D24: 22 74
+00000D25: 3A 22
+00000D26: 20 3A
+00000D27: 22 20
+00000D28: 70 31
+00000D29: 7A 33
+00000D2A: 2D 2C
+00000D2B: 73 20
+00000D2C: 31 22
+00000D2D: 2D 73
+00000D2E: 30 6F
+00000D2F: 34 6C
+00000D30: 32 75
+00000D31: 22 74
+00000D32: 2C 69
+00000D33: 20 6F
+00000D34: 22 6E
+00000D35: 6E 22
+00000D36: 75 3A
+00000D37: 6D 20
+00000D38: 73 22
+00000D39: 22 28
+00000D3A: 3A 28
+00000D3B: 20 32
+00000D3C: 5B 2A
+00000D3D: 32 39
+00000D3E: 2C 29
+00000D3F: 20 2D
+00000D41: 2C 29
+00000D42: 20 22
+00000D43: 39 7D
+00000D44: 5D 0A
+00000D45: 2C 7B
+00000D46: 20 22
+00000D47: 22 69
+00000D48: 74 64
+00000D49: 61 22
+00000D4A: 72 3A
+00000D4B: 67 20
+00000D4C: 65 22
+00000D4D: 74 70
+00000D4E: 22 7A
+00000D4F: 3A 2D
+00000D50: 20 73
+00000D52: 33 2D
+00000D53: 2C 30
+00000D54: 20 34
+00000D55: 22 33
+00000D56: 73 22
+00000D57: 6F 2C
+00000D58: 6C 20
+00000D59: 75 22
+00000D5A: 74 6E
+00000D5B: 69 75
+00000D5C: 6F 6D
+00000D5D: 6E 73
+00000D61: 22 5B
+00000D62: 28 33
+00000D63: 28 2C
+00000D64: 32 20
+00000D65: 2A 34
+00000D66: 39 2C
+00000D67: 29 20
+00000D68: 2D 39
+00000D69: 35 2C
+00000D6A: 29 20
+00000D6B: 22 31
+00000D6C: 7D 32
+00000D6D: 0D 5D
+00000D6E: 0A 2C
+00000D6F: 7B 20
+00000D71: 69 74
+00000D72: 64 61
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\blurt3r & C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \"import pathlib; a=pathlib.Path('pzcheck/puzzles.jsonl').read_bytes(); b=pathlib.Path('artifacts/claude-blurt1-dev-20260925/puzzles.jsonl').read_bytes(); print('pzcheck', len(a), repr(a[:80])); print('ref', len(b), repr(b[:80])); print('crlf_pz', a.count(b'\\r\\n'), 'lf_pz', a.count(b'\\n')); print('crlf_ref', b.count(b'\\r\\n'), 'lf_ref', b.count(b'\\n')); print('norm_equal', a.replace(b'\\r\\n',b'\\n')==b.replace(b'\\r\\n',b'\\n')))\" 2>&1" 2>&1; echo EXIT:$?
+File "<string>", line 1
+    import pathlib; a=pathlib.Path('pzcheck/puzzles.jsonl').read_bytes(); b=pathlib.Path('artifacts/claude-blurt1-dev-20260925/puzzles.jsonl').read_bytes(); print('pzcheck', len(a), repr(a[:80])); print('ref', len(b), repr(b[:80])); print('crlf_pz', a.count(b'\r\n'), 'lf_pz', a.count(b'\n')); print('crlf_ref', b.count(b'\r\n'), 'lf_ref', b.count(b'\n')); print('norm_equal', a.replace(b'\r\n',b'\n')==b.replace(b'\r\n',b'\n')))
+                                                                                                                                                                                                                                                                                                                                                                                                                                            ^
+SyntaxError: unmatched ')'
+EXIT:1
+[0m
+[0m$ [0mpython3 -c "print('test')"; ls -l /tmp/blurt3r.tar
+test
+-rw-r--r--  1 ben-hannan  wheel  51200 Sep 25 13:02 /tmp/blurt3r.tar
+[0m
+[0m← [0mWrite /tmp/pzcheck_compare.py
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/pzcheck_compare.py benspc:'C:/Users/benja/blurt3r/pzcheck_compare.py' 2>&1; echo SCP_EXIT:$?
+ssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\blurt3r & C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe pzcheck_compare.py 2>&1" 2>&1; echo EXIT:$?
+SCP_EXIT:0
+pzcheck 4917
+ref 4857
+crlf_pz 60 lf_pz 60
+crlf_ref 0 lf_ref 60
+norm_equal True
+pz_lines 60 ref_lines 60
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\blurt3r\\gpu-3r 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r
+
+File Not Found
+EXIT:1
+[0m
+[0m← [0mWrite /tmp/launch3r.bat
+Wrote file successfully.
+[0m
+[0m$ [0mscp -o ConnectTimeout=30 /tmp/launch3r.bat benspc:'C:/Users/benja/blurt3r/launch3r.bat' 2>&1; echo SCP_EXIT:$?
+SCP_EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "powershell -Command \"Start-Process -FilePath 'C:\\Users\\benja\\blurt3r\\launch3r.bat' -WorkingDirectory 'C:\\Users\\benja\\blurt3r' -WindowStyle Hidden; echo STARTED\"" 2>&1; echo EXIT:$?
+sleep 20
+ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & echo ---ERR--- & type C:\\Users\\benja\\blurt3r\\log_loop.err.txt 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+STARTED
+EXIT:0
+---ERR--- 
+INFO: No tasks are running which match the specified criteria.
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\blurt3r 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r
+
+09/25/2026  01:02 PM    <DIR>          .
+09/25/2026  01:02 PM    <DIR>          ..
+09/25/2026  12:57 PM    <DIR>          artifacts
+09/25/2026  01:02 PM               430 launch3r.bat
+09/25/2026  01:02 PM                 0 log_loop.err.txt
+09/25/2026  01:02 PM                 0 log_loop.txt
+09/25/2026  01:02 PM    <DIR>          pzcheck
+09/25/2026  01:02 PM               479 pzcheck_compare.py
+09/25/2026  12:57 PM    <DIR>          scripts
+               4 File(s)            909 bytes
+               5 Dir(s)  36,771,545,088 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "powershell -Command \"Start-Process -FilePath 'cmd.exe' -ArgumentList '/c C:\\Users\\benja\\blurt3r\\launch3r.bat' -WorkingDirectory 'C:\\Users\\benja\\blurt3r' -WindowStyle Hidden; echo STARTED2\"" 2>&1; echo EXIT:$?
+STARTED2
+EXIT:0
+[0m
+[0m$ [0msleep 45; ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & echo ---ERR--- & type C:\\Users\\benja\\blurt3r\\log_loop.err.txt 2>&1" 2>&1; echo EXIT:$?
+ssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" 2>&1 & dir C:\\Users\\benja\\blurt3r\\gpu-3r 2>&1" 2>&1; echo EXIT:$?
+---ERR--- 
+EXIT:0
+INFO: No tasks are running which match the specified criteria.
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r
+
+File Not Found
+EXIT:1
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "cd C:\\Users\\benja\\blurt3r & C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -B scripts\\claude_blurt2.py --help 2>&1" 2>&1; echo EXIT:$?
+usage: claude_blurt2.py [-h] --model MODEL [--puzzles PUZZLES] --out OUT
+                        [--n N] [--temp TEMP] [--train-seed TRAIN_SEED]
+                        [--n-train N_TRAIN] [--test-seed TEST_SEED]
+                        [--n-test N_TEST] [--epochs EPOCHS]
+                        [--lora-seeds LORA_SEEDS] [--temps TEMPS]
+                        [--dev-puzzles DEV_PUZZLES] [--arms ARMS] [--luck]
+                        [--all-hits]
+                        {blurt,loop}
+
+positional arguments:
+  {blurt,loop}
+
+options:
+  -h, --help            show this help message and exit
+  --model MODEL
+  --puzzles PUZZLES
+  --out OUT
+  --n N
+  --temp TEMP
+  --train-seed TRAIN_SEED
+  --n-train N_TRAIN
+  --test-seed TEST_SEED
+  --n-test N_TEST
+  --epochs EPOCHS
+  --lora-seeds LORA_SEEDS
+  --temps TEMPS
+  --dev-puzzles DEV_PUZZLES
+  --arms ARMS
+  --luck                blurt-3: also count lucky blurts on the test puzzles
+  --all-hits            blurt-2b: practise every distinct lucky hit, not only
+                        the first
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "powershell -Command \"Start-Process -FilePath 'cmd.exe' -ArgumentList '/c C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \\\"import time; open(\\\"C:\\\\Users\\\\benja\\\\blurt3r\\\\probe.txt\\\",\\\"w\\\").write(\\\"started\\\"); time.sleep(30)\\\"' -WorkingDirectory 'C:\\Users\\benja\\blurt3r' -WindowStyle Hidden; echo PROBE_STARTED\"" 2>&1; echo EXIT:$?
+sleep 5
+ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\probe.txt 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+PROBE_STARTED
+EXIT:0
+The system cannot find the file specified.
+INFO: No tasks are running which match the specified criteria.
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "time /t 2>&1 & date /t 2>&1" 2>&1; echo EXIT:$?
+01:04 PM
+Fri 09/25/2026 
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "schtasks /create /tn blurt3r-probe /tr \"C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \\\"import time; open('C:/Users/benja/blurt3r/probe2.txt','w').write('hi')\\\"\" /sc once /st 13:10 /f 2>&1" 2>&1; echo EXIT:$?
+SUCCESS: The scheduled task "blurt3r-probe" has successfully been created.
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "schtasks /delete /tn blurt3r-probe /f 2>&1 & schtasks /create /tn blurt3r-loop /tr \"C:\\Users\\benja\\blurt3r\\launch3r.bat\" /sc once /st 13:10 /f 2>&1" 2>&1; echo EXIT:$?
+SUCCESS: The scheduled task "blurt3r-probe" was successfully deleted.
+SUCCESS: The scheduled task "blurt3r-loop" has successfully been created.
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "schtasks /run /tn blurt3r-loop 2>&1 & timeout 10 2>&1 & type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+SUCCESS: Attempted to run the scheduled task "blurt3r-loop".
+ERROR: Input redirection is not supported, exiting the process immediately.
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   14004 Console                    1      1,992 K
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   14004 Console                    1      4,312 K
+python.exe                    9040 Console                    1    553,572 K
+EXIT:0
+[0m
+[0m$ [0msleep 90; ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1" 2>&1; echo EXIT:$?
+ssh -o ConnectTimeout=15 benspc "tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+EXIT:0
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   14004 Console                    1      4,280 K
+python.exe                    9040 Console                    1  1,867,236 K
+EXIT:0
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M UTC"; ssh -o ConnectTimeout=15 benspc "powershell -Command \"Get-Date -Format 'yyyy-MM-dd HH:mm:ss K'\" 2>&1" 2>&1; echo EXIT:$?
+2026-09-25 17:06 UTC
+2026-09-25 13:06:30 -04:00
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[✓] Check BensPC GPU status + queue position (one job at a time)
+[✓] Copy git archive to BensPC and extract, set BASE
+[✓] Run pzcheck reproducibility check (fc /b)
+[•] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[ ] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
+[0m$ [0msleep 600; ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & echo ---ERR-SIZE--- & dir C:\\Users\\benja\\blurt3r\\log_loop* 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+[dev] T 1.0: lucky blurts 27/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 46/1740 on 58 missed DEV puzzles
+[loop] luck before: 59/2010 blurts
+[loop] before: test 1/67
+---ERR-SIZE--- 
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r
+
+09/25/2026  01:04 PM                 0 log_loop.err.txt
+09/25/2026  01:09 PM               182 log_loop.txt
+               2 File(s)            182 bytes
+               0 Dir(s)  36,728,111,104 bytes free
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   14004 Console                    1      4,356 K
+python.exe                    9040 Console                    1     99,696 K
+EXIT:0
+[0m
+[0m$ [0msleep 900; ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+[dev] T 1.0: lucky blurts 27/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 46/1740 on 58 missed DEV puzzles
+[loop] luck before: 59/2010 blurts
+[loop] before: test 1/67
+[loop] practice: reasoner right 22/400, lucky wins on misses 158 (304/11340 blurts)
+[sleep] epoch 1/3 last batch loss 0.929
+[sleep] epoch 2/3 last batch loss 0.632
+[sleep] epoch 3/3 last batch loss 0.864
+[loop] luck arm W seed 0: 129/2010
+[loop] arm W seed 0: test 6/67
+[sleep] epoch 1/3 last batch loss 0.719
+[sleep] epoch 2/3 last batch loss 0.766
+[sleep] epoch 3/3 last batch loss 0.863
+[loop] luck arm W seed 1: 148/2010
+[loop] arm W seed 1: test 6/67
+[sleep] epoch 1/3 last batch loss 0.007
+[sleep] epoch 2/3 last batch loss 0.107
+[sleep] epoch 3/3 last batch loss 0.001
+[loop] luck arm C seed 0: 59/2010
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   14004 Console                    1      4,356 K
+python.exe                    9040 Console                    1    200,232 K
+EXIT:0
+[0m
+[0m$ [0msleep 600; ssh -o ConnectTimeout=15 benspc "type C:\\Users\\benja\\blurt3r\\log_loop.txt 2>&1 & echo --- & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1 & dir C:\\Users\\benja\\blurt3r\\gpu-3r 2>&1" 2>&1; echo EXIT:$?
+[dev] T 1.0: lucky blurts 27/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 46/1740 on 58 missed DEV puzzles
+[loop] luck before: 59/2010 blurts
+[loop] before: test 1/67
+[loop] practice: reasoner right 22/400, lucky wins on misses 158 (304/11340 blurts)
+[sleep] epoch 1/3 last batch loss 0.929
+[sleep] epoch 2/3 last batch loss 0.632
+[sleep] epoch 3/3 last batch loss 0.864
+[loop] luck arm W seed 0: 129/2010
+[loop] arm W seed 0: test 6/67
+[sleep] epoch 1/3 last batch loss 0.719
+[sleep] epoch 2/3 last batch loss 0.766
+[sleep] epoch 3/3 last batch loss 0.863
+[loop] luck arm W seed 1: 148/2010
+[loop] arm W seed 1: test 6/67
+[sleep] epoch 1/3 last batch loss 0.007
+[sleep] epoch 2/3 last batch loss 0.107
+[sleep] epoch 3/3 last batch loss 0.001
+[loop] luck arm C seed 0: 59/2010
+[loop] arm C seed 0: test 2/67
+[sleep] epoch 1/3 last batch loss 0.008
+[sleep] epoch 2/3 last batch loss 0.023
+[sleep] epoch 3/3 last batch loss 0.001
+[loop] luck arm C seed 1: 58/2010
+[loop] arm C seed 1: test 2/67
+{"dev_missed": 58, "dev_lucky_by_temp": {"1.0": 27, "1.5": 46}, "temp_chosen": 1.5, "n_train": 400, "n_test": 67, "test_dropped_overlap": 13, "temp": 1.5, "S0_test_before": 1, "L0_lucky_blurts": 59, "L0_puzzles_hit": 29, "train_reasoner_right": 22, "train_missed": 378, "train_missed_then_lucky": 158, "lucky_blurts_on_misses": 304, "blurts_on_misses": 11340, "extra_distinct_hits": 0, "examples_W": 180, "examples_C": 180, "S_W_seed0_test_after": 6, "L_W_seed0_lucky_blurts": 129, "L_W_seed0_puzzles_hit": 40, "S_W_seed0_train_missed_after": 34, "S_W_seed1_test_after": 6, "L_W_seed1_lucky_blurts": 148, "L_W_seed1_puzzles_hit": 43, "S_W_seed1_train_missed_after": 48, "S_W_test_after_mean": 6.0, "S_C_seed0_test_after": 2, "L_C_seed0_lucky_blurts": 59, "L_C_seed0_puzzles_hit": 4, "S_C_seed0_train_missed_after": 0, "S_C_seed1_test_after": 2, "L_C_seed1_lucky_blurts": 58, "L_C_seed1_puzzles_hit": 3, "S_C_seed1_train_missed_after": 0, "S_C_test_after_mean": 2.0, "minutes": 31.1}
+--- 
+INFO: No tasks are running which match the specified criteria.
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r\gpu-3r
+
+09/25/2026  01:35 PM    <DIR>          .
+09/25/2026  01:04 PM    <DIR>          ..
+09/25/2026  01:35 PM             1,069 loop_summary.json
+09/25/2026  01:04 PM    <DIR>          wins
+               1 File(s)          1,069 bytes
+               3 Dir(s)  36,704,571,392 bytes free
+EXIT:0
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "dir C:\\Users\\benja\\blurt3r\\gpu-3r\\wins 2>&1" 2>&1; echo EXIT:$?
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt3r\gpu-3r\wins
+
+09/25/2026  01:22 PM    <DIR>          .
+09/25/2026  01:35 PM    <DIR>          ..
+09/25/2026  01:22 PM            38,660 wins.jsonl
+               1 File(s)         38,660 bytes
+               2 Dir(s)  36,700,442,624 bytes free
+EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[✓] Check BensPC GPU status + queue position (one job at a time)
+[✓] Copy git archive to BensPC and extract, set BASE
+[✓] Run pzcheck reproducibility check (fc /b)
+[✓] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[•] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
+[0m$ [0mls artifacts/claude-blurt2-20260925/ 2>&1 | head -n 30; echo ---; git check-ignore -v artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json 2>&1; echo ---; tail -n 5 artifacts/fable-predictions-ledger.md 2>&1 | cut -c1-300
+gpu
+RESULTS-gpu.md
+teacher
+teacher-glm53
+---
+.gitignore:5:artifacts/	artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+---
+- T1 OUTCOME (2026-09-25, rsn-356 fresh panel296 v2 total paired vs unpaired, BensPC RTX 5070 Ti --workers 0): s1 paired 231 vs unpaired 235 (-4), bar >= +6: FAIL; s2 paired 231 vs unpaired 227 (+4), bar >= +6: FAIL
+- T2 OUTCOME (2026-09-25, rsn-356 held-out change pairs both-right/600 paired vs unpaired, BensPC): s1 paired 455 vs unpaired 453 (+2), bar >= +30: FAIL; s2 paired 449 vs unpaired 455 (-6), bar >= +30: FAIL (compare twins 0/100 both arms; value/yesno/correction at ceiling)
+- T3 OUTCOME (2026-09-25, rsn-356 invented answers checked, each panel both arms copy+final, BensPC): 296-panel 0 all, 294-panel 0 all (raw invented 5 per 296 checkpoint, all fact-checked to IDK), bar <=2: T3 PASS all
+- T4 OUTCOME (2026-09-25, rsn-356 vs 296 plain per-category + transfer REPORT ONLY, BensPC): fresh paired 231/231 (+6/+14 vs 296 s1 225/s2 217), unpaired 235/227 (+10/+10); transfer paired 257/255 (+19/+17 vs 296 238/238), unpaired 254/254 (+16/+16); counting jumped both arms (fresh 24-25/30 vs 12/3
+- lis-318 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 4/4 OK): FAIL. Panel readpanel318 once per arm: Q1 B R0 237/255 vs A 239/255 (bar >=217 and >=A+38) FAIL; Q2 B saved_right 132 vs A 111 (bar >
+[0m
+[0m$ [0mmkdir -p artifacts/claude-blurt2-20260925/gpu-3r && scp -o ConnectTimeout=30 benspc:'C:/Users/benja/blurt3r/gpu-3r/loop_summary.json' artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json 2>&1; echo S1:$?
+scp -o ConnectTimeout=30 benspc:'C:/Users/benja/blurt3r/gpu-3r/wins/wins.jsonl' artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl 2>&1; echo S2:$?
+scp -o ConnectTimeout=30 benspc:'C:/Users/benja/blurt3r/log_loop.txt' artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt 2>&1; echo S3:$?
+ls -l artifacts/claude-blurt2-20260925/gpu-3r/ 2>&1
+S1:0
+S2:0
+S3:0
+total 96
+-rw-------  1 ben-hannan  staff   2013 Sep 25 13:42 log_loop.txt
+-rw-------  1 ben-hannan  staff   1069 Sep 25 13:42 loop_summary.json
+-rw-------  1 ben-hannan  staff  38660 Sep 25 13:42 wins.jsonl
+[0m
+[0m$ [0mcat artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json 2>&1; echo ---; wc -l artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt 2>&1
+{
+ "dev_missed": 58,
+ "dev_lucky_by_temp": {
+  "1.0": 27,
+  "1.5": 46
+ },
+ "temp_chosen": 1.5,
+ "n_train": 400,
+ "n_test": 67,
+ "test_dropped_overlap": 13,
+ "temp": 1.5,
+ "S0_test_before": 1,
+ "L0_lucky_blurts": 59,
+ "L0_puzzles_hit": 29,
+ "train_reasoner_right": 22,
+ "train_missed": 378,
+ "train_missed_then_lucky": 158,
+ "lucky_blurts_on_misses": 304,
+ "blurts_on_misses": 11340,
+ "extra_distinct_hits": 0,
+ "examples_W": 180,
+ "examples_C": 180,
+ "S_W_seed0_test_after": 6,
+ "L_W_seed0_lucky_blurts": 129,
+ "L_W_seed0_puzzles_hit": 40,
+ "S_W_seed0_train_missed_after": 34,
+ "S_W_seed1_test_after": 6,
+ "L_W_seed1_lucky_blurts": 148,
+ "L_W_seed1_puzzles_hit": 43,
+ "S_W_seed1_train_missed_after": 48,
+ "S_W_test_after_mean": 6.0,
+ "S_C_seed0_test_after": 2,
+ "L_C_seed0_lucky_blurts": 59,
+ "L_C_seed0_puzzles_hit": 4,
+ "S_C_seed0_train_missed_after": 0,
+ "S_C_seed1_test_after": 2,
+ "L_C_seed1_lucky_blurts": 58,
+ "L_C_seed1_puzzles_hit": 3,
+ "S_C_seed1_train_missed_after": 0,
+ "S_C_test_after_mean": 2.0,
+ "minutes": 31.1
+}---
+     158 artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+      26 artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+     184 total
+[0m
+[0m$ [0mcat artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt 2>&1 | head -n 30
+[dev] T 1.0: lucky blurts 27/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 46/1740 on 58 missed DEV puzzles
+[loop] luck before: 59/2010 blurts
+[loop] before: test 1/67
+[loop] practice: reasoner right 22/400, lucky wins on misses 158 (304/11340 blurts)
+[sleep] epoch 1/3 last batch loss 0.929
+[sleep] epoch 2/3 last batch loss 0.632
+[sleep] epoch 3/3 last batch loss 0.864
+[loop] luck arm W seed 0: 129/2010
+[loop] arm W seed 0: test 6/67
+[sleep] epoch 1/3 last batch loss 0.719
+[sleep] epoch 2/3 last batch loss 0.766
+[sleep] epoch 3/3 last batch loss 0.863
+[loop] luck arm W seed 1: 148/2010
+[loop] arm W seed 1: test 6/67
+[sleep] epoch 1/3 last batch loss 0.007
+[sleep] epoch 2/3 last batch loss 0.107
+[sleep] epoch 3/3 last batch loss 0.001
+[loop] luck arm C seed 0: 59/2010
+[loop] arm C seed 0: test 2/67
+[sleep] epoch 1/3 last batch loss 0.008
+[sleep] epoch 2/3 last batch loss 0.023
+[sleep] epoch 3/3 last batch loss 0.001
+[loop] luck arm C seed 1: 58/2010
+[loop] arm C seed 1: test 2/67
+{"dev_missed": 58, "dev_lucky_by_temp": {"1.0": 27, "1.5": 46}, "temp_chosen": 1.5, "n_train": 400, "n_test": 67, "test_dropped_overlap": 13, "temp": 1.5, "S0_test_before": 1, "L0_lucky_blurts": 59, "L0_puzzles_hit": 29, "train_reasoner_right": 22, "train_missed": 378, "train_missed_then_lucky": 158, "lucky_blurts_on_misses": 304, "blurts_on_misses": 11340, "extra_distinct_hits": 0, "examples_W": 180, "examples_C": 180, "S_W_seed0_test_after": 6, "L_W_seed0_lucky_blurts": 129, "L_W_seed0_puzzles_hit": 40, "S_W_seed0_train_missed_after": 34, "S_W_seed1_test_after": 6, "L_W_seed1_lucky_blurts": 148, "L_W_seed1_puzzles_hit": 43, "S_W_seed1_train_missed_after": 48, "S_W_test_after_mean": 6.0, "S_C_seed0_test_after": 2, "L_C_seed0_lucky_blurts": 59, "L_C_seed0_puzzles_hit": 4, "S_C_seed0_train_missed_after": 0, "S_C_seed1_test_after": 2, "L_C_seed1_lucky_blurts": 58, "L_C_seed1_puzzles_hit": 3, "S_C_seed1_train_missed_after": 0, "S_C_test_after_mean": 2.0, "minutes": 31.1}
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | grep -i "blurt" | tail -n 10 | cut -c1-400
+(no output)
+[0m
+[0m$ [0mgit log --oneline origin/main -5 -- artifacts/fable-predictions-ledger.md 2>&1 | head; git show origin/main:artifacts/claude-blurt2-20260925/RESULTS-gpu.md 2>&1 | tail -n 20
+f9d3b4d07 Premonition work from the card-experiment-handoff worktree (Sep 19-22)
+
+- L1 learning (bar: mean S_W_after − S0 ≥ +8): mean W after = 12 (seeds 13, 11), S0 = 6 → +6. **L1 FAIL.**
+  Not proved-wrong (12.0 > 5.5 and 12.0 > 6) and not inconclusive (184 creative wins ≥ 20; S0 6/127 = 4.7% < 60%).
+- L2 the creative wins caused it (bar: mean S_W_after − mean S_C_after ≥ +5 AND each W seed beats each C seed):
+  12.0 − 5.5 = +6.5; W seeds 13, 11 each beat C seeds 5, 6. **L2 PASS.**
+
+Registered verdict: **FAIL** (PASS needs L1 and L2; L1 failed, L2 passed).
+
+Reported, not marked: temp picked on DEV = 1.5 (lucky blurts 44 vs 39 at 1.0 on 58 missed DEV puzzles);
+luck rate on practice misses 338/11370 per-blurt (≈ 1 per 30), 184/379 misses solved at least once;
+practice misses solved after sleep: W 39 + 30 (seeds 0, 1), C 2 + 4; seed gap W 2, C 1.
+Test puzzles were made inside the run (seed 777) and never printed.
+
+## Run facts
+
+- GPU: NVIDIA GeForce RTX 5070 Ti (BensPC, CUDA 13.1, driver 591.86)
+- Wall: 27.7 minutes
+- Model commit hash (HF snapshot revision): 87179e5c1f455ef22e6223592d2d61351b525bfc
+- No weights pushed (the run saves none; LoRA adapters lived only in GPU memory).
+- Files: artifacts/claude-blurt2-20260925/gpu/loop_summary.json, gpu/wins.jsonl (184 rows), gpu/log_loop.txt.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi 2>&1 | head -n 12" 2>&1; echo EXIT:$?
+'head' is not recognized as an internal or external command,
+operable program or batch file.
+EXIT:255
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "nvidia-smi" 2>&1; echo EXIT:$?
+Fri Sep 25 13:42:25 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   33C    P8              8W /  250W |     456MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+|    0   N/A  N/A           13348    C+G   ..._cw5n1h2txyewy\SearchHost.exe      N/A      |
+|    0   N/A  N/A           13380    C+G   ...y\StartMenuExperienceHost.exe      N/A      |
+|    0   N/A  N/A           15392    C+G   ....0.4234.48\msedgewebview2.exe      N/A      |
+|    0   N/A  N/A           15856    C+G   ...UI3Apps\PowerToys.Peek.UI.exe      N/A      |
+|    0   N/A  N/A           16788    C+G   ...8bbwe\PhoneExperienceHost.exe      N/A      |
+|    0   N/A  N/A           17304    C+G   ...xyewy\ShellExperienceHost.exe      N/A      |
+|    0   N/A  N/A           18288    C+G   ...ogram Files\ShareX\ShareX.exe      N/A      |
+|    0   N/A  N/A           19200    C+G   ...crosoft shared\ink\TabTip.exe      N/A      |
+|    0   N/A  N/A           19504    C+G   ...s\PowerToys.AdvancedPaste.exe      N/A      |
+|    0   N/A  N/A           19892    C+G   ...5n1h2txyewy\TextInputHost.exe      N/A      |
+|    0   N/A  N/A           20844    C+G   ...ntrolPanel\SystemSettings.exe      N/A      |
+|    0   N/A  N/A           20964    C+G   ...Lunar Client\Lunar Client.exe      N/A      |
+|    0   N/A  N/A           21352    C+G   C:\Windows\System32\Taskmgr.exe       N/A      |
++-----------------------------------------------------------------------------------------+
+EXIT:0
+[0m
+[0m← [0mWrite artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+@@ -43,9 +43,8 @@
+ "S_C_seed0_test_after": 2,
+ "L_C_seed0_lucky_blurts": 59,
+ "L_C_seed0_puzzles_hit": 4,
+ "S_C_seed0_train_missed_after": 0,
+-"S_C_seed1_train_missed_after": 0,
+ "S_C_seed1_test_after": 2,
+ "L_C_seed1_lucky_blurts": 58,
+ "L_C_seed1_puzzles_hit": 3,
+ "S_C_seed1_train_missed_after": 0,
+
+[0m
+[0m$ [0mpython3 -c "
+import json, re
+md = open('artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md').read()
+m = re.search(r'\`\`\`json\n(.*?)\n\`\`\`', md, re.S)
+block = json.loads(m.group(1))
+file = json.load(open('artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json'))
+print('json_equal:', block == file)
+print('keys_block:', len(block), 'keys_file:', len(file))
+"
+json_equal: True
+keys_block: 37 keys_file: 37
+[0m
+[0m$ [0mgit diff --stat 2>&1 | head; git diff artifacts/fable-predictions-ledger.md 2>&1 | tail -n 20 | cut -c1-400
+artifacts/fable-predictions-ledger.md | 53 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
++- Y2 (same vs rsn-350 211/209) s1 221 (+10, exactly at bar 221) PASS, s2 218 (+9, bar 219) FAIL by 1. "Proved wrong" clause (fail both) not triggered.
++- Y3 (fresh three-step never practised) 0/30 (296) and 0/15 (294) on both seeds: FAIL (bar >= 6/30 one seed).
++- Y4 (invented answers checked, each panel) 0 on all 4 cells (raw invented 5 on 296 panels, all fact-checked to IDK): PASS. Registered verdict rsn-351: FAIL (Y1 fails both; needed Y1+Y4 both seeds). ~$0.70 GPU total.
++- Pblurt1-rent OUTCOME (2026-09-25, rent-blurt1 DEV measurement, no pass marks) contract 52513848 RTX 5090 1x offer 45669396 KR 16 vCPU label rent-blurt1 image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime: rented 01:46:36Z, running ~01:49Z, destroyed 02:00:27Z ~0.23 h x $0.4963/h = ~$0.11 (budget $0.60, credit $1.90 at start); post-destroy 0 rent-blurt1 live. cmp /tmp/pzcheck/puzzles.jsonl vs ar
++- lis-317-diag OUTCOME (2026-09-25, REPORT ONLY DEV, no marks) contract 52507626 RTX 5090 1x offer 44173708 16 vCPU label lis-317-diag image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime: rented 00:41:59Z, running ~00:45Z, destroyed ~02:02:50Z ~1.35 h x $0.5037/h = ~$0.68 (budget $1.50); READER safetensors sha b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890 (match), seal 3/3 OK; 
++- P360-rent OUTCOME (2026-09-25, rent-360-gram REGISTERED gram-360 run on bank G, rented Linux GPU) contract 52513907 RTX 5090 1x offer 45669186 label rent-360-gram image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime: rented ~01:48Z, running ~01:52Z-02:23Z, destroyed ~02:25Z ~0.60 h x $0.5037037/h = ~$0.30 (budget $1.50, credit $1.90 at start); post-destroy 0 rent-360-gram live. Bank SEAL 3/3 OK;
++- rent-336b OUTCOME (2026-09-25, REGISTERED 336b follow-up run of Premonition 0.1 on bank B, 40 lives x 4 arms, rented Linux GPU) contract1 52513837 RTX 5090 offer 43982841 (machine 142842, ip 180.189.55.38) label rent-336b: rented 01:46:33Z, running ~01:49:56Z, ssh key auth refused 10+ min, destroyed 01:58Z ~0.19 h x $0.4944/h = ~$0.09 SSH-FAIL; contract2 52514776 RTX 5090 1x 32607 MiB offer 489
++- H1 OUTCOME (2026-09-25, rsn-355 plain shared-step seed 1+2 REGISTERED fresh panel296 v2, BensPC RTX 5070 Ti --workers 0): s1 0/30, s2 0/30 checked (all IDK after fact-check), bar >=6/30 BOTH seeds (296: 0/0): H1 FAIL both
++- H2 OUTCOME (2026-09-25, rsn-355 plain shared-step fresh panel296 v2 total WITHOUT three-step, BensPC): s1 final checked 223 (raw 217) vs bar >=220 (296 s1: 225): PASS; s2 final checked 197 (raw 205) vs bar >=212 (296 s2: 217): FAIL (comparing 0/30, counting 8/30 checked)
++- H3 OUTCOME (2026-09-25, rsn-355 invented answers checked, each panel both seeds, BensPC): 296-panel 0/0, 294-panel 0/0 (raw invented 6 s1 + 5 s2 on 296, all fact-checked to IDK), bar <=2: H3 PASS all
++- H4 OUTCOME (2026-09-25, rsn-355 transfer panel294 v3 three-step + dev value3 REPORT ONLY, BensPC): panel294 three-step 0/15 copy+final both seeds; dev value3 0/100 copy+final both seeds (all IDK). Registered verdict rsn-355: FAIL (H1 both + H2 s2 fail; needed H1+H2+H3 both seeds). Proved-wrong clause triggers for s1 only (H1 0/30 + H2 pass), not s2. BensPC GPU $0, 43.9/43.8 min, seals OK, weigh
++- P353.0 (2026-09-25, builder rsn-353 loop-no-step-embedding; 3 rentals created + 1 refused; est spend ~$1.00 of $4 cap) NO RESULT: seed1 trained 37.0 min then instance died mid-seed2 and host would not restart; seed1/seed2 checkpoints and logs lost with the instance; 4th rental refused (account credit 0, balance -$0.04). Observed-before-loss (unsealed, seed1): last copy action_ce 0.1327 at step 
++- P353-GUARD OUTCOME (2026-09-25, spending guard rsn-353-train) GUARD-OK: exit file runs/rsn-353-train/rsn-353-train.exit present on origin/builder-outbox and no live rsn-353* instance for 5+ min; tracked {"total": 1.0323, "n": 3, "det": {"52515551": {"dph": 0.5388888888888889, "mins": 6.32, "dollars": 0.0568, "live": false, "label": "rsn-353"}, "52516357": {"dph": 0.5388888888888889, "mins": 6.2
++- blurt2-loop GPU OUTCOME (2026-09-25, creative learning loop, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 44 vs 39); test 127 (23 dropped); S0 6; W 13/11 (mean 12.0); C 5/6 (mean 5.5); wins 184/379 (luck 338/11370). L1 +6.0 vs +8 FAIL; L2 +6.5 vs +5 and every W beats every C PASS. Registered verdict FAIL. GPU $0, 27.7 min, no weights saved
++- rent-lis-318 CREDIT-STOP (2026-09-25, rental agent; task budget $2.00, spent ~$0.23): vast.ai account credit $0.20 at start, balance -$0.04 at 04:12 UTC, autobill $5/threshold $5 never fired in ~55 min of polling (create refused 400 lacks credit); rentals: 52522859 (offer 44173830, create success False, destroyed, 0h $0) + 52522884 (offer 44188475, 1x RTX 5090 32GB, dph $0.5037, ~0.45h ~$0.23: 
++- T1 OUTCOME (2026-09-25, rsn-356 fresh panel296 v2 total paired vs unpaired, BensPC RTX 5070 Ti --workers 0): s1 paired 231 vs unpaired 235 (-4), bar >= +6: FAIL; s2 paired 231 vs unpaired 227 (+4), bar >= +6: FAIL
++- T2 OUTCOME (2026-09-25, rsn-356 held-out change pairs both-right/600 paired vs unpaired, BensPC): s1 paired 455 vs unpaired 453 (+2), bar >= +30: FAIL; s2 paired 449 vs unpaired 455 (-6), bar >= +30: FAIL (compare twins 0/100 both arms; value/yesno/correction at ceiling)
++- T3 OUTCOME (2026-09-25, rsn-356 invented answers checked, each panel both arms copy+final, BensPC): 296-panel 0 all, 294-panel 0 all (raw invented 5 per 296 checkpoint, all fact-checked to IDK), bar <=2: T3 PASS all
++- T4 OUTCOME (2026-09-25, rsn-356 vs 296 plain per-category + transfer REPORT ONLY, BensPC): fresh paired 231/231 (+6/+14 vs 296 s1 225/s2 217), unpaired 235/227 (+10/+10); transfer paired 257/255 (+19/+17 vs 296 238/238), unpaired 254/254 (+16/+16); counting jumped both arms (fresh 24-25/30 vs 12/30; transfer 29-30/30 vs 12-13/30), comparing flat (16/30, 12/30), three-step 0 everywhere. Register
++- lis-318 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 4/4 OK): FAIL. Panel readpanel318 once per arm: Q1 B R0 237/255 vs A 239/255 (bar >=217 and >=A+38) FAIL; Q2 B saved_right 132 vs A 111 (bar >=A+40) FAIL; Q3 B wrong_turns 0/240 PASS; Q4 B nofact_rows_with_save 0 PASS; G1 lis-301 dev B 484/7
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- blurt3r-loop GPU OUTCOME (2026-09-25, replication of blurt-3, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 46 vs 27); test 67 (13 dropped); L0 59; W 129/148 (mean 138.5); C 59/58 (mean 58.5); wins 158/378 (luck 304/11340). U1 138.5 vs 88.5 PASS; U2 138.5 vs 76.05 and every W beats every C PASS. Registered verdict PASS (replicated). GPU $0, 31.1 min, no weights saved.
+EOF
+tail -n 2 artifacts/fable-predictions-ledger.md | cut -c1-400
+- lis-318 OUTCOME (2026-09-25, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main + builder-outbox code, seals 14/14 + 13/13 + 14/14 + 4/4 OK): FAIL. Panel readpanel318 once per arm: Q1 B R0 237/255 vs A 239/255 (bar >=217 and >=A+38) FAIL; Q2 B saved_right 132 vs A 111 (bar >=A+40) FAIL; Q3 B wrong_turns 0/240 PASS; Q4 B nofact_rows_with_save 0 PASS; G1 lis-301 dev B 484/76
+- blurt3r-loop GPU OUTCOME (2026-09-25, replication of blurt-3, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 46 vs 27); test 67 (13 dropped); L0 59; W 129/148 (mean 138.5); C 59/58 (mean 58.5); wins 158/378 (luck 304/11340). U1 138.5 vs 88.5 PASS; U2 138.5 vs 76.05 and every W beats every C PASS. Registered verdict PASS (replicated). GPU $0,
+[0m
+[0m$ [0mssh -o ConnectTimeout=20 benspc "schtasks /delete /tn blurt3r-loop /f 2>&1 & tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo EXIT:$?
+git status --short -- artifacts/ 2>&1 | head -n 20
+SUCCESS: The scheduled task "blurt3r-loop" was successfully deleted.
+INFO: No tasks are running which match the specified criteria.
+EXIT:0
+ M artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit add -f artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md artifacts/fable-predictions-ledger.md 2>&1; echo ADD_EXIT:$?; git status --short -- artifacts/ 2>&1 | head -n 20
+ADD_EXIT:0
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+M  artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit status --short 2>&1 | grep -i notebook | head; echo NOTEBOOK_CHECK_DONE
+git diff --cached --stat 2>&1 | tail -n 10
+?? notebook/
+NOTEBOOK_CHECK_DONE
+ artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md |  79 +++++++++++
+ .../claude-blurt2-20260925/gpu-3r/log_loop.txt     |  26 ++++
+ .../gpu-3r/loop_summary.json                       |  42 ++++++
+ artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl | 158 +++++++++++++++++++++
+ artifacts/fable-predictions-ledger.md              |  54 +++++++
+ 5 files changed, 359 insertions(+)
+[0m
+[0m# [0mTodos
+[✓] Fetch origin/main and read PASSMARKS-blurt3 + claude_blurt2 docstring
+[✓] Check BensPC GPU status + queue position (one job at a time)
+[✓] Copy git archive to BensPC and extract, set BASE
+[✓] Run pzcheck reproducibility check (fc /b)
+[✓] Launch detached loop run with log, monitor for [loop] practice line / 3h
+[✓] Copy results back to Mac gpu-3r + write RESULTS-gpu-3r.md + ledger line
+[0m
