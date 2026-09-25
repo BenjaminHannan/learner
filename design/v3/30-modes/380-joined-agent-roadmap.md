@@ -94,3 +94,4 @@ creativepanel382). Next single change after its verdict: the lis-319 reader (reg
 turns; Reader319 in scripts/claude_lis319_read.py), as 0.2b on bank D. Then rd-378 notes into the 382 store and
 rd-371 as the checker, each after its own PASS. The new sleep (Fix sleep: night(model, day_groups) -> adapter)
 joins after dl-1 decides the learning rule.
+- 20:40 UTC: rd-371 (learned checker) is a registered FAIL, so it leaves the join order. 0.2's answers from memory keep the plain cite check (every name and number must appear in the retrieved turns; scripts/claude_e2e382.py G3/G5). A new checker is a follow-up after rd-378.
