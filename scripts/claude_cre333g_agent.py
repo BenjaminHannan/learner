@@ -129,7 +129,7 @@ def install_creative333g(loop, gen, router, judge: IdeaJudge333g, n: int = N333G
 
 
 def _selftest() -> None:
-    assert trim("One idea. Another that stops mid") == "One idea."
+    assert trim("One whole idea for a gift. Another that stops mid") == "One whole idea for a gift."
     assert trim("short. rest") == "short. rest"                     # too short to trim
     assert pick(["a plan here.", "A plan here!", "other plan x."], [0.9, 0.8, 0.1], 2) == ["a plan here.", "other plan x."]
     assert compose([]) == FALLBACK333G and compose(["x"]).startswith(LEAD333G)
