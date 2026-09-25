@@ -58,9 +58,51 @@ Next single changes, one at a time: the learned judge (Creative's test 3) replac
 reasoner version inside 358 with hidden-state snapshots (Sleep research owns that model); then training on its own
 revert traces (Stream of Search, Self-Backtracking) through sleep.
 
+## Honest comparison with the alternatives (added ~20:15 UTC after Ben's "don't yes-man me", 19:31 UTC)
+Extra papers checked on arXiv today: Huang et al. 2310.01798, Zhang et al. 2404.17140, rStar 2408.06195, DeepSeek-R1
+2501.12948; full text of To Backtrack or Not (2504.07052) and TRM (2510.04871).
+Where an existing approach beats or matches Ben's idea:
+- Many separate fresh tries (what blurt already does). Shown (2504.07052, models of 3M-144M trained from scratch, close to
+  our reasoner's size): on Countdown, separate tries beat one backtracking try at equal compute, and the gap widened with
+  size; the backtracking model was capped by the search traces it imitated. Backtracking won on Sudoku, and the paper
+  ties the difference to search depth. After RL (GRPO) the backtracking model improved and found new strategies.
+- Tree search over saved states. Going back to the last good point (depth-first) is the narrowest use of snapshots; with
+  a score per state the model can resume the most promising one. Shown (rStar): LLaMA2-7B on GSM8K 12.5% -> 63.9% with
+  tree search plus a second model checking. Suggested: best-first over snapshots is at least as flexible as reverting.
+- Redrafting the whole answer each round. Shown (TRM): a 5-7M loop model with no backtracking beat the previous best on
+  Sudoku-Extreme (55% -> 87%) and Maze-Hard (75% -> 85%). Suggested: in a loop that refines the whole answer, early
+  mistakes can be fixed without reverting, so revert helps only if the loop gets stuck.
+- Ruling out the failed step. Classic backtracking just never picks the abandoned step again; the model does not read it.
+  Suggested (experience-following, 2505.16067): models tend to repeat what they are shown, so the note could steer a
+  small model back into the same path. Whether the note beats a plain ban is untested.
+- The "don't like where I am" signal. Shown (2310.01798): without outside feedback, models often fail to fix their own
+  reasoning and sometimes get worse. Shown (2404.17140): small models self-correct well only with a strong verifier.
+  So the idea is only as good as its judge; this is its biggest risk.
+Where Ben's idea is better:
+- Short working memory. Reasoning models back up in text ("wait, let me try another way", shown to emerge from RL in
+  DeepSeek-R1), which keeps every dead end in the context. Small models handle long context badly (Dynamic Cheatsheet
+  sec. 4.5, shown for GPT-4o-mini), and a 30-100M loop reasoner has little room. Restoring a saved state plus a short
+  note keeps it small. Suggested.
+- Cheap: restoring a latent is a copy, not a re-think. Untested whether it pays in accuracy.
+- New: I found no work that reverts a loop reasoner's hidden state with the failed branch as input (quick search).
+
+## Correction to rv-385 (supersedes the test above; still not sealed)
+Flaw found in my own design: an exact dead-end check on number puzzles does most of the solving (it is a search), so it
+would flatter every arm and likely hit the ceiling. Revised:
+- Task: 358a-style small Latin-square/Sudoku grids (deeper search, where theory expects backtracking to matter), with
+  only the visible rule check (no repeated symbol in a row, column or box). A partial grid can pass that check and still
+  be a dead end, found only later; that is where going back matters. Plain MiniCPM5-1B proposes one cell at a time.
+- Arms, same step budget and same rule check: RESTART (start over after a conflict); REVERT+BAN (go back to the last
+  conflict-free state and rule out the failed step, the model sees nothing); REVERT+NOTE (go back and show the abandoned
+  path, no ban; Ben's version). One change between neighbouring arms.
+- Marks to fix before any run: PASS if REVERT+NOTE solves at least 6 more grids than RESTART and more than REVERT+BAN,
+  both seeds. Proved wrong: REVERT+NOTE no better than REVERT+BAN in both seeds (then the note adds nothing over
+  classic backtracking). Budget set on practice grids so RESTART solves a third to a half.
+- Later rivals to test in the loop reasoner itself: keep refining (TRM-style) and parallel restarts.
+
 ## Plain summary for Ben
-Your idea is close to "backtracking", and it has good evidence: a 1B model trained to back up one step on a 24-like
-puzzle went from 29% to about 70%. One study found that on number puzzles, simply taking many separate fresh tries
-works as well for the same effort, so the fair test is "go back one step and remember the dead end" against "start
-over", with the same budget. That test costs nothing and runs on the CPU. The version inside the new small reasoner's
-hidden state is new as far as I found, and comes after its first test works.
+Your idea is a known family (backtracking) with one new part: doing it by restoring the small reasoner's saved inner
+state. It is not better everywhere. On shallow number puzzles, many fresh tries do as well; tree search over saved
+states and loops that redraft the whole answer are strong rivals; and it only works if the model can tell when it is on
+a bad path, which models are often bad at without a checker. Its real advantage is keeping the thinking short, which
+matters for a small model. The fair test pits it against starting over and against plain backtracking, on grids.
