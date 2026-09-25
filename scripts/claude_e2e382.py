@@ -164,6 +164,15 @@ def install_heard382(loop, store) -> None:
 
 
 def build_382(state_dir, args):
+    return _build382(state_dir, args, K382)
+
+
+def build_382b(state_dir, args):
+    """382b: the same agent with recall()'s top 20 (bm-395 report-only E20; k chosen on LoCoMo practice)."""
+    return _build382(state_dir, args, 20)
+
+
+def _build382(state_dir, args, k):
     import claude_chat338_agent as C38
     import claude_chat338b_agent as C38B
     import claude_cre333b_agent as C333B
@@ -186,7 +195,7 @@ def build_382(state_dir, args):
     C333D.install_creative333d(loop, E330C._G338B[args.gen_model])
     T299B.install_think299b(loop, one_b)
     C38B.install_chat338b(loop, E330C._G338B[args.gen_model])
-    install_answer382(loop, E330C._G338B[args.gen_model], store)
+    install_answer382(loop, E330C._G338B[args.gen_model], store, k=k)
     VARY.install_vary330c(loop)
     GR.install_gram360(loop)
     install_heard382(loop, store)

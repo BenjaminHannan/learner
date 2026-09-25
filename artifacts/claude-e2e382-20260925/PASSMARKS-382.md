@@ -40,3 +40,8 @@ together (seed 3822). Bank C: as 336 (two judges per save/answer packet, third o
 If Y1 or Y2 fails, keeping raw turns does not by itself fix memory in the joined agent, and the next memory change
 goes to what decides when to look (the abstain trigger) or to the reader's notes. If C1 fails while C2 passes, the
 chat layer (338b), not memory, holds conversation back.
+
+## Addendum 2026-09-25 ~21:25 UTC, before any run: precondition failed, 382 does not run
+bm-395 (artifacts/claude-bm395-20260925/RESULTS.md), ep-382's own test, is a registered FAIL: the plain 1B on the
+store's top 10 scored 26.84 vs 25.18 for BM25's top 10, +1.66 [+0.31, +3.03], below the +3.0 mark. As written above,
+382 does not run. The one follow-up is 382b (PASSMARKS-382b.md).
