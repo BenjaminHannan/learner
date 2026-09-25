@@ -1,6 +1,6 @@
 # lis-319: the reader reads the conversation, not one turn (one change on top of lis-318)
 
-Thread "Fix: reading facts from chat". Written 2026-09-25 03:00 UTC, before any lis-319 data was labelled, any training
+Thread "Fix: reading facts from chat". Written 2026-09-25 02:42 UTC, before any lis-319 data was labelled, any training
 ran or readpanel319 was sealed or run. Road map: design/v3/30-modes/370-reading-roadmap.md.
 
 ## Why
