@@ -71,3 +71,15 @@ Ben approved (16:59, 17:00):
   (c) choosing what to practise: keep puzzles it solves sometimes but not always (the Absolute Zero idea).
 - A study of past discoveries is running, to find which discovery mechanisms map to model parts.
 Blurt-3r (the repeat of blurt-3 on BensPC) is still pending.
+
+## Update 17:50 UTC 09-25
+- blurt-3r = PASS (BensPC, seeds 6/781): luck 59 -> 129/148 vs C 59/58. blurt-3 is REPLICATED (VERIFY-blurt3r.md).
+- Ben 17:47 liked the top three from the discoveries study (reviews/creative-research-2026-09-25/F-discoveries.md):
+  (1) surprises first (an open-problems shelf retried after each sleep), (2) restate the puzzle and carry the pieces
+  back, (3) a pieces library retrieved by shape. These are the next rungs after ask-24, one at a time.
+- Ben 17:47: "give it tools like a calculator". New rung: tools that help with steps but never solve the whole
+  puzzle (a calculator or Python sandbox for sub-expressions). Sleep learns when a tool call led to a checked hit.
+- GPT-6 Pro brainstorm prompt: reviews/gpt6pro-creative-mind-brainstorm-2026-09-25.md. Check every claim in the
+  answer before acting on it.
+- ask-24 base on its fresh test: none on 78/78 impossible AND 71/71 solvable. The run continues (Ben chose to test
+  telling the two apart).
