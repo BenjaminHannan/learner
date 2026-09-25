@@ -231,6 +231,15 @@ def evaluate(s, ps, model=None) -> int:
     return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
 
 
+def luck(s, ps, n, temp, model=None) -> tuple[int, int]:
+    """blurt-3: lucky blurts out of len(ps) * n sampled blurts, and puzzles with at least one lucky blurt."""
+    tot = solved = 0
+    for p in ps:
+        h = sum(B1.check(t, p["nums"], p["target"]) for t in s.generate(p, n, temp, model))
+        tot, solved = tot + h, solved + (h > 0)
+    return tot, solved
+
+
 def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
     """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
     B starts at zero, so the model starts exactly as the base."""
@@ -324,6 +333,9 @@ def loop(a):
     test = [p for p in test if (tuple(p["nums"]), p["target"]) not in keys]
     res.update({"n_train": len(train), "n_test": len(test), "test_dropped_overlap": n0 - len(test), "temp": temp})
     res["S0_test_before"] = evaluate(s, test)
+    if a.luck:
+        res["L0_lucky_blurts"], res["L0_puzzles_hit"] = luck(s, test, a.n, temp)
+        print(f"[loop] luck before: {res['L0_lucky_blurts']}/{len(test) * a.n} blurts", flush=True)
     print(f"[loop] before: test {res['S0_test_before']}/{len(test)}", flush=True)
     own, wins, recs, lucky, tried, wrong, extra = [], [], [], 0, 0, [], []
     for p in train:
@@ -371,6 +383,9 @@ def loop(a):
                 continue
             m = train_lora(s, list(ex), a.epochs, sd)
             res[f"S_{k}_test_after"] = evaluate(s, test, m)
+            if a.luck:
+                res[f"L_{k}_lucky_blurts"], res[f"L_{k}_puzzles_hit"] = luck(s, test, a.n, temp, m)
+                print(f"[loop] luck arm {arm} seed {sd}: {res[f'L_{k}_lucky_blurts']}/{len(test) * a.n}", flush=True)
             res[f"S_{k}_train_missed_after"] = sum(B1.check(s.answer(p, m), p["nums"], p["target"]) for p, _ in wins)
             print(f"[loop] arm {arm} seed {sd}: test {res[f'S_{k}_test_after']}/{len(test)}", flush=True)
             del m
@@ -400,6 +415,7 @@ def main():
     ap.add_argument("--temps", default="1.0")
     ap.add_argument("--dev-puzzles", default="")
     ap.add_argument("--arms", default="W,C")
+    ap.add_argument("--luck", action="store_true", help="blurt-3: also count lucky blurts on the test puzzles")
     ap.add_argument("--all-hits", action="store_true", help="blurt-2b: practise every distinct lucky hit, not only the first")
     a = ap.parse_args()
     {"blurt": blurt, "loop": loop}[a.cmd](a)
