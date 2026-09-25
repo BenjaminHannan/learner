@@ -100,3 +100,27 @@ the gate does not ask). Best stack so far: slp-360 scrap + 368 lock + 369 restor
 | 363 practice school, full size | the learning test; BensPC, 6th in queue after rd-371 and rsn-353-pc | handoff/queue/slp-363-train.md |
 Next once 363 reports: if SCHOOL beats PLAIN and PLACEBO, run the 363x night on the full-size reasoner (GPU) with the
 same guard. Learned from 363w/x: practice on a narrow set of taught relations lowered general answers at tiny size.
+
+## Status 2026-09-25 ~20:05 UTC: sleep is about everything checkable, and learns the RL way
+Ben's direction (19:22-19:38 UTC):
+- Family facts are about 1% of the model's work.
+- Nights should almost never make it worse.
+- Bored mode and sleep become one downtime-learning loop.
+- "Rapidly improve for the work it does day to day", and also for other things.
+- No questions to Ben until ~23:40 UTC.
+
+Research: reviews/sleep-nights-research-2026-09-25/REPORT.md.
+- On-policy learning from right and wrong tries forgets less than copying.
+- Labs make steps small and check whole runs, so the night check should be a rare tripwire, not a per-night veto.
+- Per-kind adapters are the cleanest way to learn the day's work fast without harming other skills.
+
+| Job | State | Evidence |
+|---|---|---|
+| dl-1: three nights on the 1B's number puzzles. Copy practice (S) vs reward learning from right+wrong tries (R) vs shuffled-reward placebo (Z). A 300-item harm panel counted in flips, and KL to base, in every arm | registered; rental (rent-dl1, $3 cap) | artifacts/claude-dl1-20260925/PASSMARKS.md |
+| 363 school (tiny reasoner) | still queued on BensPC; now a side line (relations) | handoff/queue/006-slp-363-train.md |
+
+Next single changes after dl-1, in order:
+1. Per-kind adapter for the day's work.
+2. Nightly replay of older checked answers.
+3. Material from other threads (code with tests, tool calls, Creative's hindsight hits, the grammar critic).
+4. Tripwire calibration: it should fire on fewer than 1 in 20 honest nights.
