@@ -1,0 +1,1558 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m
+[0m$ [0mpwd; git fetch -q origin main; git rev-parse --abbrev-ref HEAD; git log --oneline -3; uptime; df -g /
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+claude/card-experiment-handoff-7c5b27
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+ 0:13  up 1 day, 14:06, 4 users, load averages: 18.49 17.49 20.43
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        24    35%  484014 255210400    0%   /
+[0m
+[0m$ [0mls scratchpad/briefs/ 2>&1; ls /private/tmp/claude-502/ 2>&1 | head -20; git fetch -q origin main 2>&1; git show origin/main:artifacts/claude-rsn356-20260925/PASSMARKS.md 2>&1 | head -100
+ls: scratchpad/briefs/: No such file or directory
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-moe
+-Users-ben-hannan-Desktop-projects-polymarket
+-Users-ben-hannan-Desktop-projects-school-access
+-Users-ben-hannan-novel-model
+bash-edit-diff
+cache-break-state-21e20d85-1d09-4e57-af8e-bfe4302fa04c.json
+cache-break-state-2d726b85-174f-453d-98c6-02dbf74deef1.json
+cache-break-state-506ce75f-c7e4-475d-a1e3-ae1c0ff95394.json
+cache-break-state-7b7b8c35-6c3b-4421-a988-d03ad645df68.json
+cache-break-state-b39bf427-6d2a-4795-977e-814d5804900d.json
+cache-break-state-b3a9f302-8021-48c4-be22-8ed9c2e22cc0.json
+cache-break-state-ee12a9b9-e997-4b23-82d5-2e00d7543624.json
+# rsn-356 pass marks (fixed before any run; 2026-09-25)
+
+Paired twins vs unpaired twins (same mix), 296's plain arm otherwise, seeds 1 and 2, same job.
+Scoring as in 296: checked right, 294's sealed scorer, TEST-ONLY panels at category level only.
+
+| mark | what (each seed) | pass |
+|---|---|---|
+| T1 | fresh panel296 v2 total, paired vs unpaired | paired ≥ unpaired + 6 |
+| T2 | held-out change pairs (600), both answers right, paired vs unpaired | paired ≥ unpaired + 30 |
+| T3 | invented answers (checked), each panel, both arms | ≤ 2 |
+| T4 | both arms vs 296 (225 / 217), per category; transfer panel294 totals | report |
+
+Verdict: **PASS = T1, T2 and T3 on both seeds.**
+
+**Proved wrong ("pairing makes the model read the deciding fact"):** T2 within ±12 of unpaired on both seeds.
+
+Predictions: T3 pass; T2 uncertain (value and yes/no pairs are near ceiling already, so any gain must come
+from compare, count and correction); T1 unlikely (+6 on a panel where the weak rows are counting and
+comparing, which twins only touch through count).
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/" 2>&1 | head; find "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27" -maxdepth 4 -name "*.txt" 2>&1 | head -20
+76c622f5-1395-42cc-b432-71b65f256cf4
+e74bc27e-706d-45b2-849a-15f682aeceaf
+[0m
+[0m$ [0mfind "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4" -maxdepth 4 2>&1 | head -30
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad
+[0m
+[0m$ [0mfind "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad" -maxdepth 5 2>&1 | head -30
+/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad
+[0m
+[0m$ [0mgit show origin/main:design/v3/30-modes/356-one-fact-twins.md 2>&1 | head -150; echo ===SEALFILES===; git show origin/main:artifacts/claude-rsn356-20260925/SEAL-code.sha256.txt 2>&1 | head -20
+# 356: practice with one-fact twins (road map R6)
+
+Sleep research thread, 2026-09-25 03:00 UTC. From sleep research round 2, idea #1 (with the skeptic's
+fixes: no "reorder rows" twins, pairing is the new part, a held-out edit type, a same-mix control).
+
+## Idea (plain words)
+A lazy trick gives the same answer to two puzzles that look alike. If every puzzle comes with a twin that
+differs by one needed fact (so the right answer changes), and both land side by side in the same practice
+batch, the lazy trick gets one of each pair wrong and loses reward. The model is pushed to read the fact
+that decides the answer. Evidence is mixed: counterfactual pairs cut shortcut use (Kaushik 1909.12434,
+shown) but were no better than the same amount of plain data on NLI (Huang 2010.04762, shown). That is
+why the control has the same puzzles, just not paired.
+
+## The one change (scripts/claude_rsn356_run.py, scripts/claude_rsn356_twins.py)
+Training only. After each practice puzzle that has a clean twin, the next puzzle is:
+- paired arm: its own twin (one needed row deleted: a chain step -> "I don't know"; a counted member ->
+  one fewer; the newest of a correction -> the older value). Re-solved by 296's independent solver.
+- unpaired arm (control): the twin of a different, freshly made puzzle that is thrown away.
+Both arms get the same mix (checked on 2,000 puzzles: 537 vs 546 twins, 422 vs 435 "I don't know"
+answers; paired twins sit next to their original 537/537 times, unpaired 0). Everything else is 296's
+plain arm. Base: 296, not 355, so the two tonight's runs don't depend on each other.
+
+## Held-out test (scripts/claude_rsn356_pairs.py)
+600 code-made pairs at seed 4242 using an edit type practice never uses ("change": an answer value
+changes, yes/no flips, a compared number flips the winner, a counted member is added, correction stamps
+swap). Counted: pairs where BOTH answers are right after the fact-check. Code-made pairs share the
+generator's quirks, so the fresh blind panel296 is the main mark.
+Deviation (as in 355): BensPC is Windows, so --workers 0.
+zsh:1: ==SEALFILES=== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn356-20260925/SEAL-code.sha256.txt 2>&1 | head -20
+18b401bc7f9518043222acb3bdc243e7e5f0be38a5334235e3c72a69586b6bfd  scripts/claude_rsn294_core.py
+d921fdd3b26be107e6fb8fcdfd2d6e45135c0b7bce696d1125506a355d5a7438  scripts/claude_rsn294_run.py
+21b62955602b84753491801a7b15db88d2e631197bcbff68eabdc007edea63a8  scripts/claude_rsn296_gen.py
+386b1310f1cb832fe4d5199c8e397d3dc61b080b07aa1283a38140e7e4f6add5  scripts/claude_rsn356_run.py
+2e81b1446246b1ebec902b3350c32e3942519441e8dc4cf3c41a5ef652a11077  scripts/claude_rsn356_twins.py
+69c1800108759ed22567229525b53a73fd7daccdf0696ac2ab09d9cbbfee89aa  scripts/claude_rsn356_pairs.py
+e8815437ef08169854934e821c06b2933663207a9a57fe78609df3683ab2a07c  artifacts/claude-rsn356-20260925/PASSMARKS.md
+e4bc1df4bb643ecc381cce13b8ac8299593667364128f367a0a6902f300c0d62  design/v3/30-modes/356-one-fact-twins.md
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn356_run.py 2>&1 | head -80
+#!/usr/bin/env python3
+"""rsn-356 runner: exactly rsn-296's runner (varied generator, plain arm 6x640, steps, batches, lr,
+reward, fact-check, seeds, eval), with ONE change in TRAINING only: practice puzzles come with
+one-fact twins (scripts/claude_rsn356_twins.py, mode "delete").
+
+  --twins paired    after each puzzle that has a clean twin, the next puzzle is ITS twin (same notebook
+                    with one needed row deleted, so the right answer changes). The pair lands side by
+                    side in the same batch, so a lazy trick that gives the same answer to both loses.
+  --twins unpaired  the control: after each such puzzle, the next puzzle is the twin of a DIFFERENT,
+                    freshly made puzzle (which is thrown away). Same mix of puzzle types and answers
+                    (the same extra "I don't know" and one-fewer puzzles), but never shown as a pair.
+
+The comparison is paired vs unpaired (same job, same machine), so a gain can only come from pairing,
+not from the extra kinds of puzzles. dev and eval are unchanged (no twins).
+
+  python claude_rsn356_run.py train --twins paired --arm plain --seed 1 --out DIR
+  python claude_rsn356_run.py dev|eval ...   (same arguments as claude_rsn294_run.py)
+"""
+import runpy
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import claude_rsn294_core as C  # noqa: E402
+import claude_rsn296_gen  # noqa: E402,F401  (replaces claude_rsn294_core.gen_episode, as in 296)
+import claude_rsn356_twins as T  # noqa: E402
+
+MODE = None
+if "--twins" in sys.argv:
+    i = sys.argv.index("--twins")
+    MODE = sys.argv[i + 1]
+    del sys.argv[i:i + 2]
+    if MODE not in ("paired", "unpaired"):
+        raise SystemExit("--twins must be paired or unpaired")
+if len(sys.argv) > 1 and sys.argv[1] == "train" and MODE is None:
+    raise SystemExit("rsn-356 train needs --twins paired|unpaired")
+
+_base = C.gen_episode
+_stash = []
+
+
+def gen356(rng, kind=None, hops=None, n_rows=None, **kw):
+    if _stash:
+        return _stash.pop()
+    ep = _base(rng, kind, hops, n_rows, **kw)
+    src = ep if MODE == "paired" else _base(rng, kind, hops, n_rows, **kw)
+    tw = T.make_twin(src, rng, "delete")
+    if tw is not None:
+        _stash.append(tw)
+    return ep
+
+
+if MODE is not None and len(sys.argv) > 1 and sys.argv[1] == "train":
+    C.gen_episode = gen356
+
+if __name__ == "__main__":
+    runpy.run_path(str(HERE / "claude_rsn294_run.py"), run_name="__main__")
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn356_twins.py 2>&1 | head -60; echo ---PAIRS---; git show origin/main:scripts/claude_rsn356_pairs.py 2>&1 | head -60
+#!/usr/bin/env python3
+"""rsn-356: one-fact twins. make_twin(ep, rng, mode) returns a copy of a practice episode with ONE
+support row edited so the right answer changes, re-solved by 296's independent solver (None if no
+clean twin exists for this episode).
+
+  mode "delete" (practice): delete one needed row.
+      value1/value2 -> "I don't know"; count -> one fewer; correction (delete the newest) -> the older value.
+  mode "change" (held out, evaluation only; never used in practice):
+      value1/value2 -> the answer row's value changes; yesno -> the asked value flips yes/no;
+      compare -> one number changes so the answer flips; count -> one member added;
+      correction -> the two stamps swap so the other value is newest.
+Other kinds get no twin (None).
+"""
+import copy
+import random
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn294_core as C  # noqa: E402
+import claude_rsn296_gen as G  # noqa: E402
+
+_K = C._key
+
+
+def _sup_rows(ep):
+    s = set(ep["gold"]["support"])
+    return [r for r in ep["notebook"] if r["fid"] in s]
+
+
+def _next_fid(ep):
+    return "f%d" % (1 + max(int(r["fid"][1:]) for r in ep["notebook"]))
+
+
+def _fresh_value(rng, rel, avoid):
+    for _ in range(50):
+        v = str(C.num_value(rng, rel) if rel in C.NUM_RELS else C.thing_value(rng, rel))
+        if _K(v) not in avoid:
+            return v
+    return None
+
+
+def make_twin(ep: dict, rng: random.Random, mode: str):
+    cat, fr = ep["category"], ep["frame"]
+    t = copy.deepcopy(ep)
+    rows, sup = t["notebook"], _sup_rows(t)
+    if not sup:
+        return None
+    if mode == "delete":
+        if cat in ("value1", "value2"):
+            gone = rng.choice(sup)
+            t["notebook"] = [r for r in rows if r is not gone]
+            t["gold"] = {"answer": "UNKNOWN", "support": []}
+        elif cat == "count":
+            if len(sup) < 2:
+                return None
+            gone = rng.choice(sup)
+            t["notebook"] = [r for r in rows if r is not gone]
+            t["gold"] = {"answer": str(len(sup) - 1), "support": [r["fid"] for r in sup if r is not gone]}
+        elif cat == "correction":
+---PAIRS---
+#!/usr/bin/env python3
+"""rsn-356 held-out twin-pair test (evaluation only). Makes 600 base puzzles with 296's generator at a
+fixed seed (100 each of value1, value2, yesno, compare, count, correction), each with a "change" twin
+(an edit type practice never uses), answers both with the checkpoint, and counts pairs where BOTH
+answers are right after the fact-check.
+
+  python claude_rsn356_pairs.py --ckpt W/R/final.pt --out W/R/pairs-final.json
+"""
+import argparse
+import json
+import random
+import sys
+from collections import Counter, defaultdict
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn294_core as C  # noqa: E402
+import claude_rsn296_gen  # noqa: E402,F401
+import claude_rsn356_twins as T  # noqa: E402
+import claude_rsn294_run as Rn  # noqa: E402
+
+KINDS = ["value1", "value2", "yesno", "compare", "count", "correction"]
+
+
+def make_pairs(seed=4242, per=100):
+    rng = random.Random(seed)
+    pairs = []
+    for k in KINDS:
+        got = 0
+        while got < per:
+            ep = C.gen_episode(rng, k)
+            tw = T.make_twin(ep, rng, "change")
+            if tw is None:
+                continue
+            ep["cat"] = tw["cat"] = k
+            pairs.append((ep, tw))
+            got += 1
+    return pairs
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ckpt", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    a = ap.parse_args()
+    dev = torch.device(a.device)
+    model, arm = Rn.load(a.ckpt, dev)
+    pairs = make_pairs()
+    items = [x for p in pairs for x in p]
+    with torch.no_grad():
+        ans = Rn.answer(model, arm, items, dev)
+    by = defaultdict(Counter)
+    for i, (ep, tw) in enumerate(pairs):
+        ok = [C._key(ans[2 * i + j][1]) == C._key(x["gold"]["answer"]) for j, x in enumerate((ep, tw))]
+        c = by[ep["cat"]]
+        c["n"] += 1
+        c["base_right"] += ok[0]
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1; mkdir -p /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356seal && git archive origin/main | tar -x -C /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356seal && ls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356seal/artifacts/claude-rsn356-20260925/
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+lis314b-armA.log
+lis314b-armC.log
+lis314b-armG.log
+lis314b-armK.log
+lis314b-armP.log
+lis314b-armS.log
+lis314b-box.log
+lis314b-main.log
+lis314b-main.status
+lis314b-test.log
+lis314b-tree
+lis314b-tree.status
+lise2e
+mkpart6.py
+part6_slice.jsonl
+reader-330dev.tgz
+rent330c.log
+ret330c
+smoke336_run.ps1
+smoke336_run2.ps1
+smoke336win
+smoke336win_run.log
+smoke336win-tree.tgz
+teacher-glm53-run
+tree-330c-dev3.tgz
+tree-330dev.tgz
+tree330c.path
+tree330c.poBfd9
+tree330c.tgz
+PASSMARKS.md
+SEAL-code.sha256.txt
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-rsn356-20260925/SEAL-code.sha256.txt 2>&1; echo ---; shasum -a 256 -c artifacts/claude-reasonpanel296-20260924/SEAL-v2.sha256.txt 2>&1 | tail -5; echo ---; shasum -a 256 -c artifacts/claude-reasonpanel294-20260923/SEAL-v3.sha256.txt 2>&1 | tail -5
+scripts/claude_rsn294_core.py: OK
+scripts/claude_rsn294_run.py: OK
+scripts/claude_rsn296_gen.py: OK
+scripts/claude_rsn356_run.py: OK
+scripts/claude_rsn356_twins.py: OK
+scripts/claude_rsn356_pairs.py: OK
+artifacts/claude-rsn356-20260925/PASSMARKS.md: OK
+design/v3/30-modes/356-one-fact-twins.md: OK
+---
+artifacts/claude-reasonpanel296-20260924/items-v2.jsonl: OK
+artifacts/claude-reasonpanel296-20260924/FIX-v2.md: OK
+---
+artifacts/claude-reasonpanel294-20260923/items-v3.jsonl: OK
+artifacts/claude-reasonpanel294-20260923/FIX-v3.md: OK
+[0m
+[0m$ [0mssh benspc "nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total --format=csv; echo ---; ps aux | grep -i python | grep -v grep | head -10; echo ---; ls C:/Users/benja/premonition-models/ 2>/dev/null || ls ~/premonition-models/ 2>/dev/null; echo ---; ls /c/Users/benja/premonition-models/ 2>/dev/null" 2>&1
+'grep' is not recognized as an internal or external command,
+operable program or batch file.
+[0m
+[0m$ [0mssh benspc "nvidia-smi --query-gpu=index,name,utilization.gpu,memory.used,memory.total --format=csv" 2>&1
+index, name, utilization.gpu [%], memory.used [MiB], memory.total [MiB]
+0, NVIDIA GeForce RTX 5070 Ti, 0 %, 599 MiB, 16303 MiB
+[0m
+[0m$ [0mssh benspc "tasklist /FI \"IMAGENAME eq python.exe\" 2>&1" 2>&1; echo ===; ssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\ 2>&1" 2>&1
+INFO: No tasks are running which match the specified criteria.
+zsh:1: == not found
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models
+
+09/24/2026  10:19 PM    <DIR>          .
+09/24/2026  11:37 PM    <DIR>          ..
+09/24/2026  11:12 PM    <DIR>          rsn355
+               0 File(s)              0 bytes
+               3 Dir(s)  44,291,842,048 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\rsn355" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn355
+
+09/24/2026  11:12 PM    <DIR>          .
+09/24/2026  10:19 PM    <DIR>          ..
+09/24/2026  10:22 PM    <DIR>          code
+09/24/2026  11:12 PM    <DIR>          plain355-s1
+09/24/2026  11:12 PM    <DIR>          plain355-s2
+               0 File(s)              0 bytes
+               5 Dir(s)  44,291,661,824 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\rsn355\\plain355-s1" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn355\plain355-s1
+
+09/24/2026  11:12 PM    <DIR>          .
+09/24/2026  11:12 PM    <DIR>          ..
+09/24/2026  10:42 PM       125,430,989 copy_only.pt
+09/24/2026  11:11 PM       125,424,557 final.pt
+               2 File(s)    250,855,546 bytes
+               2 Dir(s)  44,291,842,048 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\rsn355\\plain355-s2" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn355\plain355-s2
+
+09/24/2026  11:12 PM    <DIR>          .
+09/24/2026  11:12 PM    <DIR>          ..
+09/24/2026  10:42 PM       125,430,989 copy_only.pt
+09/24/2026  11:11 PM       125,424,557 final.pt
+               2 File(s)    250,855,546 bytes
+               2 Dir(s)  44,292,202,496 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\rsn355\\code" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn355\code
+
+09/24/2026  10:22 PM    <DIR>          .
+09/24/2026  11:12 PM    <DIR>          ..
+09/24/2026  10:16 PM    <DIR>          artifacts
+09/24/2026  10:20 PM    <DIR>          pilot-355
+09/24/2026  10:21 PM    <DIR>          pilot2-8
+09/24/2026  10:21 PM    <DIR>          pilot2-9
+09/24/2026  10:16 PM    <DIR>          scripts
+09/24/2026  10:22 PM    <DIR>          W
+               0 File(s)              0 bytes
+               8 Dir(s)  44,292,198,400 bytes free
+[0m
+[0m$ [0mssh benspc "where python; python --version" 2>&1
+C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+C:\Users\benja\AppData\Local\Programs\Python\Python313\python.exe
+C:\Users\benja\AppData\Local\Microsoft\WindowsApps\python.exe
+INFO: Could not find "python;".
+INFO: Could not find "--version".
+[0m
+[0m$ [0mssh benspc "python --version" 2>&1
+Python 3.10.9
+[0m
+[0m$ [0mssh benspc "python -c \"import torch, numpy; print(torch.__version__, torch.cuda.is_available())\"" 2>&1
+2.11.0+cu128 True
+[0m
+[0m$ [0mgit archive origin/main scripts artifacts/claude-rsn356-20260925 artifacts/claude-reasonpanel296-20260924 artifacts/claude-reasonpanel294-20260923 -o /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356code.tar && ls -la /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356code.tar
+-rw-r--r--  1 ben-hannan  staff  22118400 Sep 25 00:14 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356code.tar
+[0m
+[0m$ [0mssh benspc "cmd /c mkdir C:\\Users\\benja\\premonition-models\\rsn356 2>&1; cmd /c mkdir C:\\Users\\benja\\premonition-models\\rsn356\\code 2>&1"
+The syntax of the command is incorrect.
+[0m
+[0m$ [0mscp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/rsn356code.tar benspc:premonition-models/rsn356code.tar 2>&1
+(no output)
+[0m
+[0m$ [0mssh benspc "cmd /c dir C:\\Users\\benja\\premonition-models\\rsn356code.tar" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models
+
+09/25/2026  12:14 AM        22,118,400 rsn356code.tar
+               1 File(s)     22,118,400 bytes
+               0 Dir(s)  44,269,412,352 bytes free
+[0m
+[0m$ [0mssh benspc "mkdir premonition-models\\rsn356\\code" 2>&1
+(no output)
+[0m
+[0m$ [0mssh benspc "tar -xf premonition-models\\rsn356code.tar -C premonition-models\\rsn356\\code" 2>&1
+(no output)
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code
+
+09/25/2026  12:14 AM    <DIR>          .
+09/25/2026  12:14 AM    <DIR>          ..
+09/25/2026  12:12 AM    <DIR>          artifacts
+09/25/2026  12:12 AM    <DIR>          scripts
+               0 File(s)              0 bytes
+               4 Dir(s)  44,244,414,464 bytes free
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn296_gen.py" 2>&1
+row-count buckets {0: 9831, 10: 6080, 20: 3605, 30: 2367, 40: 117} gold-action mismatches 0
+selftest ok
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_twins.py" 2>&1
+('change', 'before') 0 / 500
+('change', 'compare') 500 / 500
+('change', 'correction') 500 / 500
+('change', 'count') 500 / 500
+('change', 'value1') 500 / 500
+('change', 'value2') 500 / 500
+('change', 'who') 0 / 500
+('change', 'yesno') 500 / 500
+('delete', 'before') 0 / 500
+('delete', 'compare') 0 / 500
+('delete', 'correction') 500 / 500
+('delete', 'count') 422 / 500
+('delete', 'value1') 500 / 500
+('delete', 'value2') 500 / 500
+('delete', 'who') 0 / 500
+('delete', 'yesno') 0 / 500
+selftest ok
+[0m
+[0m$ [0mdate +%s; ssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_run.py train --twins paired --arm plain --seed 9 --out pilot-356 --copy-steps 100 --rl-steps 50 --workers 0" 2>&1; date +%s
+1790309724
+1790309761
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code\\pilot-356" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code\pilot-356
+
+09/25/2026  12:16 AM    <DIR>          .
+09/25/2026  12:15 AM    <DIR>          ..
+09/25/2026  12:15 AM       123,786,512 copy_only.pt
+09/25/2026  12:16 AM       123,780,284 final.pt
+09/25/2026  12:16 AM               314 train_log.jsonl
+09/25/2026  12:16 AM               212 train_summary.json
+               4 File(s)    247,567,322 bytes
+               2 Dir(s)  43,996,815,360 bytes free
+[0m
+[0m$ [0mscp benspc:premonition-models/rsn356/code/pilot-356/train_summary.json /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/pilot356-summary.json && scp benspc:premonition-models/rsn356/code/pilot-356/train_log.jsonl /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/pilot356-log.jsonl && echo OK
+OK
+[0m
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/pilot356-log.jsonl
+[0m→ [0mRead /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode/pilot356-summary.json
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_run.py train --twins paired --arm plain --seed 1 --out W\\paired-s1 --workers 0" 2>&1; echo EXIT=$?
+EXIT=0
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_run.py train --twins unpaired --arm plain --seed 1 --out W\\unpaired-s1 --workers 0" 2>&1; echo EXIT=$?
+EXIT=0
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code\\W\\paired-s1" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code\W\paired-s1
+
+09/25/2026  01:16 AM    <DIR>          .
+09/25/2026  12:16 AM    <DIR>          ..
+09/25/2026  12:40 AM       123,786,512 copy_only.pt
+09/25/2026  01:16 AM       123,780,284 final.pt
+09/25/2026  01:16 AM             9,899 train_log.jsonl
+09/25/2026  01:16 AM               216 train_summary.json
+               4 File(s)    247,576,911 bytes
+               2 Dir(s)  43,426,410,496 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code\\W\\unpaired-s1" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code\W\unpaired-s1
+
+09/25/2026  01:19 AM    <DIR>          .
+09/25/2026  12:16 AM    <DIR>          ..
+09/25/2026  12:42 AM       123,786,512 copy_only.pt
+09/25/2026  01:19 AM       123,780,284 final.pt
+09/25/2026  01:19 AM             9,902 train_log.jsonl
+09/25/2026  01:19 AM               216 train_summary.json
+               4 File(s)    247,576,914 bytes
+               2 Dir(s)  43,426,549,760 bytes free
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_run.py train --twins paired --arm plain --seed 2 --out W\\paired-s2 --workers 0" 2>&1; echo EXIT=$?
+EXIT=0
+[0m
+[0m$ [0mssh benspc "cd premonition-models\\rsn356\\code && python -B scripts\\claude_rsn356_run.py train --twins unpaired --arm plain --seed 2 --out W\\unpaired-s2 --workers 0" 2>&1; echo EXIT=$?
+EXIT=0
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code\\W\\paired-s2" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code\W\paired-s2
+
+09/25/2026  02:19 AM    <DIR>          .
+09/25/2026  01:19 AM    <DIR>          ..
+09/25/2026  01:43 AM       123,786,512 copy_only.pt
+09/25/2026  02:19 AM       123,780,284 final.pt
+09/25/2026  02:19 AM             9,899 train_log.jsonl
+09/25/2026  02:19 AM               216 train_summary.json
+               4 File(s)    247,576,911 bytes
+               2 Dir(s)  42,879,397,888 bytes free
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356\\code\\W\\unpaired-s2" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356\code\W\unpaired-s2
+
+09/25/2026  02:22 AM    <DIR>          .
+09/25/2026  01:19 AM    <DIR>          ..
+09/25/2026  01:45 AM       123,786,512 copy_only.pt
+09/25/2026  02:22 AM       123,780,284 final.pt
+09/25/2026  02:22 AM             9,900 train_log.jsonl
+09/25/2026  02:22 AM               216 train_summary.json
+               4 File(s)    247,576,912 bytes
+               2 Dir(s)  42,879,234,048 bytes free
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && python -c "import hashlib,glob; [print(hashlib.sha256(open(f,\"rb\").read()).hexdigest()+\"  \"+f.replace(chr(92),\"/\")) for f in sorted(glob.glob(\"W/*/*.pt\"))]"' 2>&1
+2adb3851a5da0bccea2a546750c9c6a20fd4fab0b60f3ccfe1f2c44b8dcc16ff  W/paired-s1/copy_only.pt
+d556e56e44c538f104bdc1716ef99791091f05401ed2d8911138c8e95d236772  W/paired-s1/final.pt
+f12a6296614bae83057b3fd490e1a784bcb1e7b4d7241a6440a70b3e9e65d6e0  W/paired-s2/copy_only.pt
+3a00213dd15b3cdabae4e83a387465be71cad61c43d9614786daf7045bd41920  W/paired-s2/final.pt
+d169cdf1d157752bccd45b6cbaf4971b18b88605332cf781d81c3ca05e1ad040  W/unpaired-s1/copy_only.pt
+2c58c4e5eaf65de6466fd1c7bb3699240c63950f9c13bc8acb92decb5f139a0d  W/unpaired-s1/final.pt
+3dd046752e4c7c6641a2b4ec25848a9973951919149d64797832563ded2679e8  W/unpaired-s2/copy_only.pt
+236c1887b84052d1394a67a7ecd11767a35819343d303d46bc52b4c2fd0d8235  W/unpaired-s2/final.pt
+[0m
+[0m$ [0mls artifacts/claude-rsn356-20260925/; git status --short | head
+ls: artifacts/claude-rsn356-20260925/: No such file or directory
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+[0m
+[0m$ [0mls artifacts/ | head -20
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-bm390-20260925
+claude-boundary259-20260922
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+[0m
+[0m← [0mWrite artifacts/claude-rsn356-20260925/SEAL-run.sha256.txt
+Wrote file successfully.
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && python -B scripts/claude_rsn356_run.py dev --ckpt W/paired-s1/copy_only.pt --out W/paired-s1/dev-copy.json && python -B scripts/claude_rsn356_run.py dev --ckpt W/paired-s1/final.pt --out W/paired-s1/dev-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s1/copy_only.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/paired-s1/panel296-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s1/final.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/paired-s1/panel296-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s1/copy_only.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/paired-s1/panel294-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s1/final.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/paired-s1/panel294-final.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/paired-s1/copy_only.pt --out W/paired-s1/pairs-copy.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/paired-s1/final.pt --out W/paired-s1/pairs-final.json' 2>&1; echo EXIT=$?
+{"steps_None": {"raw_right": 764, "checked_right": 760, "n": 1200, "raw_wrong": 436, "checked_wrong": 41, "checked_idk": 399}}
+{"steps_None": {"raw_right": 979, "checked_right": 979, "n": 1200, "raw_wrong": 219, "checked_wrong": 121, "checked_idk": 100, "raw_idk": 2}}
+{"raw_right": 173, "checked_right": 176, "n": 298, "raw_wrong": 115, "checked_wrong": 15, "checked_idk": 107, "raw_idk": 5, "raw_answered_without_fact": 5}
+{"raw_right": 226, "checked_right": 231, "n": 298, "raw_wrong": 62, "checked_wrong": 32, "raw_idk": 5, "checked_idk": 35, "raw_answered_without_fact": 5}
+{"raw_wrong": 95, "checked_idk": 85, "n": 300, "raw_right": 205, "checked_right": 205, "checked_wrong": 10}
+{"raw_wrong": 43, "checked_wrong": 28, "n": 300, "raw_right": 257, "checked_right": 257, "checked_idk": 15}
+{"n": 600, "base_right": 398, "twin_right": 399, "both_right": 398, "twin_wrong_not_idk": 1}
+{"n": 600, "base_right": 530, "twin_right": 502, "both_right": 455, "twin_wrong_not_idk": 98}
+EXIT=0
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && python -B scripts/claude_rsn356_run.py dev --ckpt W/unpaired-s2/copy_only.pt --out W/unpaired-s2/dev-copy.json && python -B scripts/claude_rsn356_run.py dev --ckpt W/unpaired-s2/final.pt --out W/unpaired-s2/dev-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s2/copy_only.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/unpaired-s2/panel296-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s2/final.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/unpaired-s2/panel296-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s2/copy_only.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/unpaired-s2/panel294-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s2/final.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/unpaired-s2/panel294-final.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/unpaired-s2/copy_only.pt --out W/unpaired-s2/pairs-copy.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/unpaired-s2/final.pt --out W/unpaired-s2/pairs-final.json' 2>&1; echo EXIT=$?
+{"steps_None": {"raw_right": 761, "checked_right": 753, "n": 1200, "raw_idk": 15, "checked_idk": 322, "raw_wrong": 424, "checked_wrong": 125}}
+{"steps_None": {"raw_right": 983, "checked_right": 971, "n": 1200, "raw_wrong": 211, "checked_wrong": 110, "checked_idk": 119, "raw_idk": 6}}
+{"raw_right": 174, "checked_right": 179, "n": 298, "raw_wrong": 110, "checked_wrong": 21, "checked_idk": 98, "raw_idk": 9, "raw_answered_without_fact": 5}
+{"raw_right": 223, "checked_right": 227, "n": 298, "raw_wrong": 65, "checked_wrong": 35, "checked_idk": 36, "raw_idk": 5, "raw_answered_without_fact": 5}
+{"raw_wrong": 92, "checked_idk": 77, "n": 300, "raw_right": 206, "checked_right": 205, "checked_wrong": 18, "raw_idk": 2}
+{"raw_wrong": 46, "checked_wrong": 30, "n": 300, "raw_right": 254, "checked_right": 254, "checked_idk": 16}
+{"n": 600, "base_right": 398, "twin_right": 395, "both_right": 394, "twin_wrong_not_idk": 5}
+{"n": 600, "base_right": 534, "twin_right": 501, "both_right": 455, "twin_wrong_not_idk": 99}
+EXIT=0
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && python -B scripts/claude_rsn356_run.py dev --ckpt W/unpaired-s1/copy_only.pt --out W/unpaired-s1/dev-copy.json && python -B scripts/claude_rsn356_run.py dev --ckpt W/unpaired-s1/final.pt --out W/unpaired-s1/dev-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s1/copy_only.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/unpaired-s1/panel296-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s1/final.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/unpaired-s1/panel296-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s1/copy_only.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/unpaired-s1/panel294-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/unpaired-s1/final.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/unpaired-s1/panel294-final.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/unpaired-s1/copy_only.pt --out W/unpaired-s1/pairs-copy.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/unpaired-s1/final.pt --out W/unpaired-s1/pairs-final.json' 2>&1; echo EXIT=$?
+{"steps_None": {"raw_right": 754, "checked_right": 742, "n": 1200, "raw_idk": 3, "checked_idk": 367, "raw_wrong": 443, "checked_wrong": 91}}
+{"steps_None": {"raw_right": 974, "checked_right": 974, "n": 1200, "raw_wrong": 225, "checked_wrong": 124, "checked_idk": 102, "raw_idk": 1}}
+{"raw_right": 177, "checked_right": 178, "n": 298, "raw_wrong": 111, "checked_wrong": 17, "checked_idk": 103, "raw_idk": 5, "raw_answered_without_fact": 5}
+{"raw_right": 231, "checked_right": 235, "n": 298, "raw_wrong": 60, "checked_wrong": 28, "checked_idk": 35, "raw_idk": 2, "raw_answered_without_fact": 5}
+{"raw_wrong": 95, "checked_idk": 83, "n": 300, "raw_right": 205, "checked_right": 203, "checked_wrong": 14}
+{"raw_wrong": 46, "checked_wrong": 31, "n": 300, "raw_right": 254, "checked_right": 254, "checked_idk": 15}
+{"n": 600, "base_right": 397, "twin_right": 395, "both_right": 392, "twin_wrong_not_idk": 3}
+{"n": 600, "base_right": 529, "twin_right": 500, "both_right": 453, "twin_wrong_not_idk": 100}
+EXIT=0
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && python -B scripts/claude_rsn356_run.py dev --ckpt W/paired-s2/copy_only.pt --out W/paired-s2/dev-copy.json && python -B scripts/claude_rsn356_run.py dev --ckpt W/paired-s2/final.pt --out W/paired-s2/dev-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s2/copy_only.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/paired-s2/panel296-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s2/final.pt --panel artifacts/claude-reasonpanel296-20260924/items-v2.jsonl --out W/paired-s2/panel296-final.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s2/copy_only.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/paired-s2/panel294-copy.json && python -B scripts/claude_rsn356_run.py eval --ckpt W/paired-s2/final.pt --panel artifacts/claude-reasonpanel294-20260923/items-v3.jsonl --out W/paired-s2/panel294-final.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/paired-s2/copy_only.pt --out W/paired-s2/pairs-copy.json && python -B scripts/claude_rsn356_pairs.py --ckpt W/paired-s2/final.pt --out W/paired-s2/pairs-final.json' 2>&1; echo EXIT=$?
+{"steps_None": {"raw_right": 731, "checked_right": 728, "n": 1200, "raw_wrong": 463, "checked_wrong": 41, "checked_idk": 431, "raw_idk": 6}}
+{"steps_None": {"raw_right": 970, "checked_right": 970, "n": 1200, "raw_wrong": 222, "checked_wrong": 130, "checked_idk": 100, "raw_idk": 8}}
+{"raw_right": 170, "checked_right": 175, "n": 298, "raw_wrong": 117, "checked_idk": 113, "checked_wrong": 10, "raw_idk": 6, "raw_answered_without_fact": 5}
+{"raw_right": 226, "checked_right": 231, "n": 298, "raw_wrong": 61, "checked_wrong": 31, "raw_idk": 6, "checked_idk": 36, "raw_answered_without_fact": 5}
+{"raw_wrong": 96, "checked_idk": 92, "n": 300, "raw_right": 204, "checked_right": 204, "checked_wrong": 4}
+{"raw_wrong": 45, "checked_wrong": 30, "n": 300, "raw_right": 255, "checked_right": 255, "checked_idk": 15}
+{"n": 600, "base_right": 393, "twin_right": 397, "both_right": 391, "twin_wrong_not_idk": 3}
+{"n": 600, "base_right": 531, "twin_right": 498, "both_right": 449, "twin_wrong_not_idk": 102}
+EXIT=0
+[0m
+[0m$ [0mmkdir -p artifacts/claude-rsn356-20260925/runs/paired-s1 artifacts/claude-rsn356-20260925/runs/unpaired-s1 artifacts/claude-rsn356-20260925/runs/paired-s2 artifacts/claude-rsn356-20260925/runs/unpaired-s2 && ls artifacts/claude-rsn356-20260925/
+runs
+SEAL-run.sha256.txt
+[0m
+[0m$ [0mscp benspc:premonition-models/rsn356/code/W/paired-s1/'*.json' artifacts/claude-rsn356-20260925/runs/paired-s1/ && scp benspc:premonition-models/rsn356/code/W/unpaired-s1/'*.json' artifacts/claude-rsn356-20260925/runs/unpaired-s1/ && ls artifacts/claude-rsn356-20260925/runs/paired-s1/ artifacts/claude-rsn356-20260925/runs/unpaired-s1/
+artifacts/claude-rsn356-20260925/runs/paired-s1/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/unpaired-s1/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_summary.json
+[0m
+[0m$ [0mscp benspc:premonition-models/rsn356/code/W/paired-s1/'*.jsonl' artifacts/claude-rsn356-20260925/runs/paired-s1/ && scp benspc:premonition-models/rsn356/code/W/unpaired-s1/'*.jsonl' artifacts/claude-rsn356-20260925/runs/unpaired-s1/ && scp benspc:premonition-models/rsn356/code/W/paired-s2/'*.json' artifacts/claude-rsn356-20260925/runs/paired-s2/ && scp benspc:premonition-models/rsn356/code/W/paired-s2/'*.jsonl' artifacts/claude-rsn356-20260925/runs/paired-s2/ && scp benspc:premonition-models/rsn356/code/W/unpaired-s2/'*.json' artifacts/claude-rsn356-20260925/runs/unpaired-s2/ && scp benspc:premonition-models/rsn356/code/W/unpaired-s2/'*.jsonl' artifacts/claude-rsn356-20260925/runs/unpaired-s2/ && ls artifacts/claude-rsn356-20260925/runs/paired-s1/ artifacts/claude-rsn356-20260925/runs/paired-s2/ artifacts/claude-rsn356-20260925/runs/unpaired-s2/
+artifacts/claude-rsn356-20260925/runs/paired-s1/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/paired-s2/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/unpaired-s2/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('artifacts/claude-rsn356-20260925/runs/paired-s1/panel296-final.json'))
+print(type(d)); print(json.dumps(d,indent=1)[:2000])
+"
+<class 'dict'>
+{
+ "total": {
+  "raw_right": 226,
+  "checked_right": 231,
+  "n": 298,
+  "raw_wrong": 62,
+  "checked_wrong": 32,
+  "raw_idk": 5,
+  "checked_idk": 35,
+  "raw_answered_without_fact": 5
+ },
+ "by_category": {
+  "backwards": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "before_after": {
+   "raw_right": 21,
+   "checked_right": 21,
+   "n": 30,
+   "raw_wrong": 9,
+   "checked_wrong": 9
+  },
+  "comparing": {
+   "raw_wrong": 14,
+   "checked_wrong": 14,
+   "n": 30,
+   "raw_right": 16,
+   "checked_right": 16
+  },
+  "counting": {
+   "raw_right": 24,
+   "checked_right": 24,
+   "n": 30,
+   "raw_wrong": 6,
+   "checked_wrong": 6
+  },
+  "heldout_three_step": {
+   "raw_wrong": 30,
+   "checked_idk": 30,
+   "n": 30
+  },
+  "missing_fact": {
+   "raw_right": 25,
+   "checked_right": 30,
+   "n": 30,
+   "raw_answered_without_fact": 5
+  },
+  "newest_correction": {
+   "raw_wrong": 3,
+   "checked_wrong": 3,
+   "n": 28,
+   "raw_right": 20,
+   "checked_right": 20,
+   "raw_idk": 5,
+   "checked_idk": 5
+  },
+  "one_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "two_step": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  },
+  "yes_no": {
+   "raw_right": 30,
+   "checked_right": 30,
+   "n": 30
+  }
+ },
+ "ckpt": "W/paired-s1/final.pt",
+ "arm": "plain",
+ "eval_steps": null,
+ "items": 298
+}
+[0m
+[0m$ [0mpython3 -c "
+import json
+d=json.load(open('artifacts/claude-rsn356-20260925/runs/paired-s1/pairs-final.json'))
+print(json.dumps(d,indent=1)[:2500])
+print('====DEV====')
+d=json.load(open('artifacts/claude-rsn356-20260925/runs/paired-s1/dev-final.json'))
+print(json.dumps(d,indent=1)[:2500])
+"
+{
+ "total": {
+  "n": 600,
+  "base_right": 530,
+  "twin_right": 502,
+  "both_right": 455,
+  "twin_wrong_not_idk": 98
+ },
+ "by_category": {
+  "value1": {
+   "n": 100,
+   "base_right": 100,
+   "twin_right": 100,
+   "both_right": 100,
+   "twin_wrong_not_idk": 0
+  },
+  "value2": {
+   "n": 100,
+   "base_right": 99,
+   "twin_right": 100,
+   "both_right": 99,
+   "twin_wrong_not_idk": 0
+  },
+  "yesno": {
+   "n": 100,
+   "base_right": 100,
+   "twin_right": 100,
+   "both_right": 100,
+   "twin_wrong_not_idk": 0
+  },
+  "compare": {
+   "n": 100,
+   "base_right": 54,
+   "twin_right": 46,
+   "both_right": 0,
+   "twin_wrong_not_idk": 54
+  },
+  "count": {
+   "n": 100,
+   "base_right": 77,
+   "twin_right": 56,
+   "both_right": 56,
+   "twin_wrong_not_idk": 44
+  },
+  "correction": {
+   "n": 100,
+   "base_right": 100,
+   "twin_right": 100,
+   "both_right": 100,
+   "twin_wrong_not_idk": 0
+  }
+ }
+}
+====DEV====
+{
+ "steps_None": {
+  "total": {
+   "raw_right": 979,
+   "checked_right": 979,
+   "n": 1200,
+   "raw_wrong": 219,
+   "checked_wrong": 121,
+   "checked_idk": 100,
+   "raw_idk": 2
+  },
+  "by_category": {
+   "after": {
+    "raw_right": 70,
+    "checked_right": 70,
+    "n": 100,
+    "raw_wrong": 30,
+    "checked_wrong": 30
+   },
+   "before": {
+    "raw_right": 73,
+    "checked_right": 73,
+    "n": 100,
+    "raw_wrong": 27,
+    "checked_wrong": 27
+   },
+   "big_notebook": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   },
+   "compare": {
+    "raw_wrong": 45,
+    "checked_wrong": 45,
+    "n": 100,
+    "raw_right": 55,
+    "checked_right": 55
+   },
+   "correction": {
+    "raw_right": 99,
+    "checked_right": 99,
+    "n": 100,
+    "raw_wrong": 1,
+    "checked_wrong": 1
+   },
+   "count": {
+    "raw_right": 82,
+    "checked_right": 82,
+    "n": 100,
+    "raw_wrong": 18,
+    "checked_wrong": 18
+   },
+   "missing": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   },
+   "value1": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   },
+   "value2": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   },
+   "value3": {
+    "raw_wrong": 98,
+    "checked_idk": 100,
+    "n": 100,
+    "raw_idk": 2
+   },
+   "who": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   },
+   "yesno": {
+    "raw_right": 100,
+    "checked_right": 100,
+    "n": 100
+   }
+  }
+ }
+}
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+from collections import defaultdict
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/train_summary.json')):
+    d=json.load(open(f)); print(f.split('runs/')[1], d)
+"
+paired-s1/train_summary.json {'arm': 'plain', 'size': '30m', 'seed': 1, 'params': 30938261, 'copy_steps': 6000, 'rl_steps': 6000, 'batch': 256, 'rl_batch': 128, 'minutes': 59.8, 'device': 'cuda', 'torch': '2.11.0+cu128'}
+paired-s2/train_summary.json {'arm': 'plain', 'size': '30m', 'seed': 2, 'params': 30938261, 'copy_steps': 6000, 'rl_steps': 6000, 'batch': 256, 'rl_batch': 128, 'minutes': 59.7, 'device': 'cuda', 'torch': '2.11.0+cu128'}
+unpaired-s1/train_summary.json {'arm': 'plain', 'size': '30m', 'seed': 1, 'params': 30938261, 'copy_steps': 6000, 'rl_steps': 6000, 'batch': 256, 'rl_batch': 128, 'minutes': 62.7, 'device': 'cuda', 'torch': '2.11.0+cu128'}
+unpaired-s2/train_summary.json {'arm': 'plain', 'size': '30m', 'seed': 2, 'params': 30938261, 'copy_steps': 6000, 'rl_steps': 6000, 'batch': 256, 'rl_batch': 128, 'minutes': 62.5, 'device': 'cuda', 'torch': '2.11.0+cu128'}
+[0m
+[0m$ [0mgit log --oneline origin/main -- artifacts/claude-rsn296-20260924/ 2>/dev/null | head; git show origin/main --stat 2>/dev/null | head -5; git ls-tree origin/main artifacts/ --name-only 2>&1 | grep -i -E "296|355" | head
+0af573da5 rsn-296 diagnosis (counting/comparing are fixed picks, not learned); 296b runner draft
+e101ab646 rsn-296: recount from CPU re-eval; P296.1 PASS (0 checked inventions); FAIL on P296.4 only
+59096acb2 rsn-296: verify (registered FAIL on P296.4 both seeds; P296.1 disputed raw-vs-checked; CPU re-eval queued)
+b80ca2241 rsn 296 registered: panel296 v2 (2 ambiguous items dropped after blind audit), code arm 208/298, pass marks + code sealed; GPU task + $4 combined guard queued
+commit f1b93900a64c046c73cf93c6161312c1fa9c06a5
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 06:10:05 2026 +0000
+
+    blurt-2 overall = registered FAIL: GPU repeat L1 +6 (bar +8), L2 pass in both runs
+artifacts/claude-reasonpanel296-20260924
+artifacts/claude-rsn296-20260924
+artifacts/claude-rsn296b-20260924
+artifacts/claude-rsn355-20260925
+[0m
+[0m$ [0mgit ls-tree origin/main artifacts/claude-rsn296-20260924/ --name-only 2>&1 | head -20
+artifacts/claude-rsn296-20260924/DIAG-director.md
+artifacts/claude-rsn296-20260924/PASSMARKS.md
+artifacts/claude-rsn296-20260924/SEAL-code.sha256.txt
+artifacts/claude-rsn296-20260924/VERIFY-director.md
+artifacts/claude-rsn296-20260924/VERIFY-recount.md
+artifacts/claude-rsn296-20260924/codearm_panel294.json
+artifacts/claude-rsn296-20260924/codearm_panel296.json
+artifacts/claude-rsn296-20260924/codearm_panel296v2.json
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn296-20260924/PASSMARKS.md 2>&1 | head -40
+# rsn-296 pass marks (fixed before any registered run; 2026-09-24)
+
+Design: design/v3/30-modes/296-sleep-school-practice.md.
+Code: scripts/claude_rsn296_{gen,run}.py plus rsn-294's sealed core/run/codearm (unchanged).
+Panels:
+- reasonpanel296: fresh and blind, artifacts/claude-reasonpanel296-20260924/items.jsonl.
+- reasonpanel294 v3: items never read; its category results are known from 294.
+Both are TEST-ONLY and reported as category-level counts only.
+
+**One change from 294:** practice and dev episodes come from the varied "sleep school" generator.
+Arms, sizes, steps, batches, learning rate, reward, fact-check, seeds (1 and 2) and eval are
+identical to 294. The plain arm is the primary arm. 294's loop never learned to copy on seed 1
+(D2), which is not fixed here, so the loop is reported with the same numbers but has no pass mark.
+
+Scoring: "checked right", after the fact-check. "Code-doable" means one_step, two_step, backwards,
+yes_no, newest_correction and missing_fact (178 items on reasonpanel296 v2).
+
+| mark | what (plain arm, each seed) | pass |
+|---|---|---|
+| P296.1 | invented answers (answered without a fact), each panel | ≤ 2 / 300 |
+| P296.2 | transfer: right on reasonpanel294 | ≥ same-seed 294 plain + 20 (seed 1 ≥ 204, seed 2 ≥ 209) |
+| P296.3 | fresh panel, code-doable categories | ≥ code arm on those − 10 |
+| P296.4 | fresh panel, total right | ≥ code arm total + 20 |
+
+Registered fresh panel: reasonpanel296 **items-v2.jsonl** (298 items). The blind Opus audit flagged 2
+newest_correction items as ambiguous, with no wrong gold, and they were dropped by id (FIX-v2.md).
+Code arm, run before any learned run:
+- reasonpanel296 v2: 208/298, which is 178/178 on the code-doable categories plus 30/30 three-step,
+  and 0 on counting, comparing and before/after;
+- reasonpanel294 v3: 210/300.
+The bars are therefore **P296.3 ≥ 168/178** and **P296.4 ≥ 228/298**.
+
+PASS = P296.1 to P296.4 on both plain seeds. **What proves the idea wrong:** P296.2 fails on both
+seeds, meaning varied practice does not carry over to differently written notebooks.
+
+Predictions (logged before the run):
+- P296.1 pass.
+- P296.2 likely pass.
+- P296.3 uncertain; two-step on varied notebooks is the hard part.
+- P296.4 uncertain; comparing sits at chance (D3) and counting was only partly learned.
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn296-20260924/VERIFY-recount.md 2>&1 | head -80
+# rsn-296 recount from files (reasoning thread, 2026-09-24; source reeval-cpu/ on builder-outbox)
+
+A CPU re-eval of all 8 kept checkpoints restored the panel JSONs. All 8 checkpoints matched the run seal. I recounted from the JSONs myself.
+
+**Verdict: 296 = registered FAIL on P296.4 only.** P296.1, P296.2 and P296.3 all PASS on both plain seeds.
+
+| mark | bar | plain s1 | plain s2 |
+|---|---|---|---|
+| P296.1 invented (checked, after the fact-check) | ≤2 each panel | fresh 0 and transfer 0, PASS | fresh 0 and transfer 0, PASS |
+| P296.2 transfer | ≥204 / ≥209 | 238, PASS | 238, PASS |
+| P296.3 fresh code-doable | ≥168/178 | 173, PASS | 169, PASS |
+| P296.4 fresh total | ≥228/298 | 225, FAIL | 217, FAIL |
+
+- The builder's "5 and 6 invented" were the RAW counts, from before the fact-check (raw 5 and 6 on the fresh finals). The fact-check turned every one of them into "I don't know". P296.1 is scored on checked answers, as P294.1 was.
+- Every final-checkpoint total matches RESULTS.md exactly. One copy-only file differs by 1: plain-s1 on panel294, 194 on the CPU vs 195 on the GPU. It doesn't touch any mark.
+- The loop arms had 0 checked inventions. Their finals were fresh 106 and 101, transfer 89 and 87.
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox --name-only 2>&1 | head -30
+.DS_Store
+artifacts
+design
+runs
+scripts
+status
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox artifacts/ --name-only 2>&1 | head -30; echo ---; git ls-tree origin/builder-outbox artifacts/claude-rsn296-20260924/ --name-only 2>&1 | head -30
+artifacts/.DS_Store
+artifacts/claude-blurt1-dev-20260925
+artifacts/claude-blurt2-20260925
+artifacts/claude-bm390-20260925
+artifacts/claude-called281-20260923
+artifacts/claude-called281b-20260923
+artifacts/claude-calledpanel281-20260923
+artifacts/claude-calledpanel281b-20260923
+artifacts/claude-capab280-20260923
+artifacts/claude-capab280b-20260923
+artifacts/claude-capabilpanel280-20260923
+artifacts/claude-capabilpanel280b-20260923
+artifacts/claude-chain266-20260923
+artifacts/claude-chain266b-20260923
+artifacts/claude-chainpanel266-20260923
+artifacts/claude-chainpanel266b-20260923
+artifacts/claude-chat338-20260924
+artifacts/claude-chatdemo-20260923
+artifacts/claude-chatweak-20260923
+artifacts/claude-comma263-20260923
+artifacts/claude-commapanel263-20260923
+artifacts/claude-convbench-f0-20260923
+artifacts/claude-convf0-20260923
+artifacts/claude-corrpanel291-20260923
+artifacts/claude-cre333-20260924
+artifacts/claude-devset267-20260923
+artifacts/claude-diag267-20260923
+artifacts/claude-diag271-20260923
+artifacts/claude-diag290-20260923
+artifacts/claude-diag293-20260923
+---
+artifacts/claude-rsn296-20260924/RESULTS.md
+artifacts/claude-rsn296-20260924/SEAL-run.sha256.txt
+artifacts/claude-rsn296-20260924/diag-cpu
+artifacts/claude-rsn296-20260924/reeval-cpu
+artifacts/claude-rsn296-20260924/runs
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-rsn296-20260924/RESULTS.md 2>&1 | head -120
+# rsn-296 results (builder): varied "sleep school" practice — registered verdict FAIL
+
+Verdict first: **FAIL**. P296.1 fails on both plain seeds (fresh panel: 5 and 6 invented answers vs bar ≤ 2) and
+P296.4 fails on both plain seeds (fresh-panel totals 225 and 217 vs bar ≥ 228). P296.2 passes both seeds
+(transfer 238 and 238 vs bars 204/209 — the idea-killer did NOT trigger) and P296.3 passes both seeds
+(code-doable 173 and 169 of 178 vs bar ≥ 168). PASS needed P296.1–P296.4 on both plain seeds.
+
+Design: design/v3/30-modes/296-sleep-school-practice.md. One change from rsn-294: practice/dev episodes from
+scripts/claude_rsn296_gen.py. Arms, sizes (~30.9M plain / ~30.8M loop), steps (6000 copy + 6000 practice),
+batches, LR, reward, fact-check, seeds 1–2, eval code identical to 294. Reasoner code sealed and unpatched;
+all code/panel seals verified OK on the GPU box before training (SEAL-code 6/6, panel296-v2 2/2, panel294-v3 2/2)
+and `python scripts/claude_rsn296_gen.py` printed "selftest ok" (gold-action mismatches 0).
+
+## Training (4 runs, 2 at a time, --workers 6, RTX 5090, torch 2.8.0+cu128)
+
+| run | minutes | copy loss first → last | practice reward first → last |
+|---|---|---|---|
+| plain-s1 | 38.0 | 4.1244 → 0.0065 | 0.5944 → 0.9307 |
+| loop-s1 | 78.4 | 4.2000 → 1.8531 | 0.0875 → 0.2565 |
+| plain-s2 | 37.0 | 4.1609 → 0.0003 | 0.6296 → 0.9801 |
+| loop-s2 | 77.2 | 4.2580 → 1.9657 | -0.0074 → 0.2544 |
+
+Loop copy loss stays high both seeds (1.85/1.97): 294's loop seed-1 copy problem (D2) reproduced, deliberately unfixed.
+
+## Panel totals (checked_right; each checkpoint evaluated exactly once)
+
+reasonpanel296 v2 (298 items; code arm 208: 178/178 code-doable + 30/30 three-step, 0 counting/comparing/before-after):
+
+| run | copy-only | final |
+|---|---|---|
+| plain-s1 | 167 | 225 |
+| loop-s1 | 57 | 106 |
+| plain-s2 | 181 | 217 |
+| loop-s2 | 47 | 101 |
+
+reasonpanel294 v3 (300 items; 294 plain finals were 184 seed 1 / 189 seed 2; code arm 210):
+
+| run | copy-only | final |
+|---|---|---|
+| plain-s1 | 195 | 238 |
+| loop-s1 | 59 | 89 |
+| plain-s2 | 205 | 238 |
+| loop-s2 | 49 | 87 |
+
+Final-checkpoint category detail, fresh panel (checked_right / n): plain-s1 — backwards 30/30, before_after 24/30,
+comparing 16/30, counting 12/30, three-step 0/30, missing 30/30, newest_correction 23/28, one_step 30/30,
+two_step 30/30, yes_no 30/30. plain-s2 — backwards 30/30, before_after 20/30, comparing 16/30, counting 12/30,
+three-step 0/30, missing 30/30, newest_correction 19/28, one_step 30/30, two_step 30/30, yes_no 30/30.
+Transfer panel finals: both plain seeds 30/30 on backwards, missing, newest_correction, one_step, two_step, yes_no
+plus 15/15 big-notebook; three-step 0/15; before_after 19/18, comparing 12/12, counting 12/13 (s1/s2).
+
+## Marks (plain arm, final checkpoints, integer counts)
+
+| mark | bar | seed 1 | seed 2 |
+|---|---|---|---|
+| P296.1 invented answers (answered without a fact), per panel ≤ 2/300 | ≤ 2 | fresh 5 FAIL / transfer 0 PASS → **FAIL** | fresh 6 FAIL / transfer 0 PASS → **FAIL** |
+| P296.2 right on reasonpanel294 (≥ same-seed 294 plain + 20) | s1 ≥ 204, s2 ≥ 209 | 238 **PASS** (+54) | 238 **PASS** (+49) |
+| P296.3 fresh code-doable (≥ code arm − 10) | ≥ 168/178 | 173 (30+30+23+30+30+30) **PASS** | 169 (30+30+19+30+30+30) **PASS** |
+| P296.4 fresh total (≥ code arm + 20) | ≥ 228/298 | 225 **FAIL** (miss by 3) | 217 **FAIL** (miss by 11) |
+
+Loop (no marks, same format): fresh final 106 (s1) / 101 (s2) of 298; transfer final 89 (s1) / 87 (s2) of 300;
+invented fresh 4 (s1) / 0 (s2), transfer 2 (s1) / 1 (s2); loop copy-only checkpoints never learned one/two-step
+(0/30), as in 294.
+
+## Money
+
+~$2.09 total across 4 rentals (dph × hours): training box 5090 $0.4727/h × ~3.52 h ≈ $1.66; recovery rentals
+~$0.43 (one 6-min timeout, one success:false, one ssh-broken — all destroyed, 0 live after). Under the $4 combined cap.
+
+## Checkpoints
+
+Kept at ~/premonition-models/rsn296/<run>/ (copy_only.pt + final.pt per run); all 8 local sha256 match
+SEAL-run.sha256.txt above. Weights never pushed.
+
+## Deviations (all reported; code never patched, panels never read)
+
+1. DATA LOSS (major): runs/*.json (train logs/summaries, dev, panel files) were staged on the training box but
+   never copied back before its destroy; a 4th rental could not re-enter (ssh key rejected, box destroyed).
+   Panel counts in this file are the verbatim category-level outputs printed from the one-per-checkpoint evals
+   before the destroy; runs/<R>/ holds a DATA-LOSS note instead of the JSONs. train_log.jsonl full step series
+   is unrecoverable; endpoints are in the table above.
+2. Evals ran once per checkpoint (24/24, no FAILED lines) — the planned file-recovery re-run never happened
+   (rental cap of 4 reached: 1 training success + timeout + success:false + ssh-broken).
+3. Fresh-container torch 2.8.0+cu128 + numpy 2.3.2 used in place of a new venv (brand-new container).
+4. RESULTS.md written on the Mac from transcript counts after the destroy (GPU gone); no numbers invented —
+   every count above was printed from an actual eval output.
+5. Pilot loop seed was 9 for both arms as specified (an earlier tangled launch with a wrong-cwd loop start
+   failed instantly with no training; clean pilots: plain copy 0.23 min + practice 0.20 min, loop copy
+   0.51 min + practice 0.33 min → pair estimate ~142 min wall, under the 150-min gate).
+
+## What it means (plain high-school English)
+
+Varied practice worked for carrying skills to differently written notebooks: both plain models jumped from
+~184–189 to 238 on the old blind test, learned two-step fully (30/30 fresh), and beat the pass bars for
+transfer and code-doable questions. But it did not make a full reasoner: both models still invent answers
+5–6 times when no fact exists (bar: at most 2), still get zero three-step questions, and fall 3 and 11 points
+short of the fresh-panel total bar. Comparing sits at 16/30 and counting at 12/30 — better than chance now,
+not solved.
+
+## What it doesn't mean
+
+It doesn't mean varied practice failed — the transfer mark passed big on both seeds, which is exactly what
+would have proven the idea wrong had it failed. It doesn't mean the loop arm works — loop never learned to
+copy (same as 294, still broken). It doesn't mean models reason like the code — the code gets 208 with zero
+guessing, while the models guess without facts and miss every three-step question.
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/panel*.json')):
+    d=json.load(open(f))
+    t=d['total']
+    print(f.split('runs/')[1], '| n:',t.get('n'),'| raw_right:',t.get('raw_right'),'| checked_right:',t.get('checked_right'),'| raw_wrong:',t.get('raw_wrong'),'| checked_wrong:',t.get('checked_wrong'),'| checked_idk:',t.get('checked_idk'),'| raw_wof:',t.get('raw_answered_without_fact'),'| checked_wof:',t.get('checked_answered_without_fact'))
+"
+paired-s1/panel294-copy.json | n: 300 | raw_right: 205 | checked_right: 205 | raw_wrong: 95 | checked_wrong: 10 | checked_idk: 85 | raw_wof: None | checked_wof: None
+paired-s1/panel294-final.json | n: 300 | raw_right: 257 | checked_right: 257 | raw_wrong: 43 | checked_wrong: 28 | checked_idk: 15 | raw_wof: None | checked_wof: None
+paired-s1/panel296-copy.json | n: 298 | raw_right: 173 | checked_right: 176 | raw_wrong: 115 | checked_wrong: 15 | checked_idk: 107 | raw_wof: 5 | checked_wof: None
+paired-s1/panel296-final.json | n: 298 | raw_right: 226 | checked_right: 231 | raw_wrong: 62 | checked_wrong: 32 | checked_idk: 35 | raw_wof: 5 | checked_wof: None
+paired-s2/panel294-copy.json | n: 300 | raw_right: 204 | checked_right: 204 | raw_wrong: 96 | checked_wrong: 4 | checked_idk: 92 | raw_wof: None | checked_wof: None
+paired-s2/panel294-final.json | n: 300 | raw_right: 255 | checked_right: 255 | raw_wrong: 45 | checked_wrong: 30 | checked_idk: 15 | raw_wof: None | checked_wof: None
+paired-s2/panel296-copy.json | n: 298 | raw_right: 170 | checked_right: 175 | raw_wrong: 117 | checked_wrong: 10 | checked_idk: 113 | raw_wof: 5 | checked_wof: None
+paired-s2/panel296-final.json | n: 298 | raw_right: 226 | checked_right: 231 | raw_wrong: 61 | checked_wrong: 31 | checked_idk: 36 | raw_wof: 5 | checked_wof: None
+unpaired-s1/panel294-copy.json | n: 300 | raw_right: 205 | checked_right: 203 | raw_wrong: 95 | checked_wrong: 14 | checked_idk: 83 | raw_wof: None | checked_wof: None
+unpaired-s1/panel294-final.json | n: 300 | raw_right: 254 | checked_right: 254 | raw_wrong: 46 | checked_wrong: 31 | checked_idk: 15 | raw_wof: None | checked_wof: None
+unpaired-s1/panel296-copy.json | n: 298 | raw_right: 177 | checked_right: 178 | raw_wrong: 111 | checked_wrong: 17 | checked_idk: 103 | raw_wof: 5 | checked_wof: None
+unpaired-s1/panel296-final.json | n: 298 | raw_right: 231 | checked_right: 235 | raw_wrong: 60 | checked_wrong: 28 | checked_idk: 35 | raw_wof: 5 | checked_wof: None
+unpaired-s2/panel294-copy.json | n: 300 | raw_right: 206 | checked_right: 205 | raw_wrong: 92 | checked_wrong: 18 | checked_idk: 77 | raw_wof: None | checked_wof: None
+unpaired-s2/panel294-final.json | n: 300 | raw_right: 254 | checked_right: 254 | raw_wrong: 46 | checked_wrong: 30 | checked_idk: 16 | raw_wof: None | checked_wof: None
+unpaired-s2/panel296-copy.json | n: 298 | raw_right: 174 | checked_right: 179 | raw_wrong: 110 | checked_wrong: 21 | checked_idk: 98 | raw_wof: 5 | checked_wof: None
+unpaired-s2/panel296-final.json | n: 298 | raw_right: 223 | checked_right: 227 | raw_wrong: 65 | checked_wrong: 35 | checked_idk: 36 | raw_wof: 5 | checked_wof: None
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn294_run.py 2>&1 | grep -n "without_fact" | head; echo ---; git show origin/main:scripts/claude_rsn294_core.py 2>&1 | grep -n "without_fact" | head
+204:                by[c][tag + "_answered_without_fact"] += 1
+---
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn294_run.py 2>&1 | sed -n '150,230p'
+lc, _ = copy_loss(model, a.arm, next(copy_it), dev, rng)
+            loss = lr_ + 0.5 * lc
+        opt.zero_grad(); loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0); opt.step(); sched.step()
+        if s % 100 == 0 or s == a.rl_steps - 1:
+            log.write(json.dumps({"phase": "rl", "step": s, "reward": round(rmean, 4),
+                                  "loss": round(loss.item(), 4), "min": round((time.time() - t0) / 60, 2)}) + "\n"); log.flush()
+    torch.save({"arm": a.arm, "size": a.size, "state": model.state_dict()}, out / "final.pt")
+    json.dump({"arm": a.arm, "size": a.size, "seed": a.seed, "params": C.n_params(model),
+               "copy_steps": a.copy_steps, "rl_steps": a.rl_steps, "batch": a.batch,
+               "rl_batch": a.rl_batch, "minutes": round((time.time() - t0) / 60, 1),
+               "device": str(dev), "torch": torch.__version__},
+              open(out / "train_summary.json", "w"), indent=1)
+
+
+def load(path, device):
+    ck = torch.load(path, map_location=device, weights_only=True)
+    m = C.build(ck["arm"], ck["size"]).to(device)
+    m.load_state_dict(ck["state"])
+    m.eval()
+    return m, ck["arm"]
+
+
+@torch.no_grad()
+def answer(model, arm, items, device, steps=EVAL_STEPS, bs=64):
+    """-> list of (raw answer, checked answer). checked = fact-check on the way out."""
+    rng = random.Random(4242)
+    res = []
+    for i in range(0, len(items), bs):
+        chunk = items[i:i + bs]
+        enc, infos = C.encode(chunk, rng)
+        enc = enc.to(device)
+        logits, sl = model(enc, steps) if arm == "loop" else model(enc)
+        acts = logits.argmax(-1).tolist()
+        sbits = (sl > 0).tolist()
+        for a, sb, inf in zip(acts, sbits, infos):
+            raw = C.decode(a, inf)
+            chk = raw if C.supported(a, sb, inf) else "UNKNOWN"
+            res.append((raw, chk))
+    return res
+
+
+def score(items, answers, cat_key):
+    by = defaultdict(Counter)
+    for it, (raw, chk) in zip(items, answers):
+        c = it[cat_key]
+        g = C._key(it["gold"]["answer"])
+        for tag, p in (("raw", raw), ("checked", chk)):
+            p = C._key(p)
+            if p == g:
+                by[c][tag + "_right"] += 1
+            elif p == "unknown":
+                by[c][tag + "_idk"] += 1
+            elif g == "unknown":
+                by[c][tag + "_answered_without_fact"] += 1
+            else:
+                by[c][tag + "_wrong"] += 1
+        by[c]["n"] += 1
+    tot = Counter()
+    for c in by.values():
+        tot.update(c)
+    return {"total": dict(tot), "by_category": {k: dict(v) for k, v in sorted(by.items())}}
+
+
+def dev(a):
+    device = torch.device(a.device)
+    model, arm = load(a.ckpt, device)
+    rng = random.Random(777)
+    items = []
+    for k in ALL_KINDS + ["value3"]:
+        for _ in range(a.n):
+            e = C.gen_episode(rng, k); e["cat"] = k; items.append(e)
+    for _ in range(a.n):
+        e = C.gen_episode(rng, rng.choice(["value1", "value2"]), n_rows=(30, 40))
+        e["cat"] = "big_notebook"; items.append(e)
+    out = {}
+    for st in ([6, 12, 20] if arm == "loop" else [None]):
+        out[f"steps_{st}"] = score(items, answer(model, arm, items, device, st or EVAL_STEPS), "cat")
+    json.dump(out, open(a.out, "w"), indent=1)
+    print(json.dumps({k: v["total"] for k, v in out.items()}))
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/pairs-*.json')):
+    d=json.load(open(f)); t=d['total']
+    cats=' '.join(f\"{k}={v.get('both_right')}\" for k,v in d['by_category'].items())
+    print(f.split('runs/')[1],'| both:',t['both_right'],'| base:',t['base_right'],'| twin:',t['twin_right'],'|',cats)
+"
+paired-s1/pairs-copy.json | both: 398 | base: 398 | twin: 399 | value1=100 value2=100 yesno=100 compare=0 count=0 correction=98
+paired-s1/pairs-final.json | both: 455 | base: 530 | twin: 502 | value1=100 value2=99 yesno=100 compare=0 count=56 correction=100
+paired-s2/pairs-copy.json | both: 391 | base: 393 | twin: 397 | value1=100 value2=100 yesno=96 compare=0 count=0 correction=95
+paired-s2/pairs-final.json | both: 449 | base: 531 | twin: 498 | value1=100 value2=100 yesno=100 compare=0 count=51 correction=98
+unpaired-s1/pairs-copy.json | both: 392 | base: 397 | twin: 395 | value1=99 value2=99 yesno=97 compare=0 count=0 correction=97
+unpaired-s1/pairs-final.json | both: 453 | base: 529 | twin: 500 | value1=100 value2=100 yesno=100 compare=0 count=54 correction=99
+unpaired-s2/pairs-copy.json | both: 394 | base: 398 | twin: 395 | value1=100 value2=99 yesno=98 compare=0 count=0 correction=97
+unpaired-s2/pairs-final.json | both: 455 | base: 534 | twin: 501 | value1=100 value2=100 yesno=99 compare=0 count=57 correction=99
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/panel296-*.json')):
+    d=json.load(open(f)); t=d['total']
+    cats=' '.join(f\"{k}={v.get('checked_right',0)}/{v.get('n')}\" for k,v in d['by_category'].items())
+    print(f.split('runs/')[1],'| checked:',t['checked_right'],'| raw:',t.get('raw_right'),'|',cats)
+"
+paired-s1/panel296-copy.json | checked: 176 | raw: 173 | backwards=30/30 before_after=6/30 comparing=0/30 counting=0/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=20/28 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s1/panel296-final.json | checked: 231 | raw: 226 | backwards=30/30 before_after=21/30 comparing=16/30 counting=24/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=20/28 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s2/panel296-copy.json | checked: 175 | raw: 170 | backwards=30/30 before_after=6/30 comparing=0/30 counting=0/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=19/28 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s2/panel296-final.json | checked: 231 | raw: 226 | backwards=30/30 before_after=21/30 comparing=16/30 counting=25/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=19/28 one_step=30/30 two_step=30/30 yes_no=30/30
+unpaired-s1/panel296-copy.json | checked: 178 | raw: 177 | backwards=30/30 before_after=8/30 comparing=0/30 counting=0/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=21/28 one_step=30/30 two_step=29/30 yes_no=30/30
+unpaired-s1/panel296-final.json | checked: 235 | raw: 231 | backwards=30/30 before_after=23/30 comparing=16/30 counting=25/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=21/28 one_step=30/30 two_step=30/30 yes_no=30/30
+unpaired-s2/panel296-copy.json | checked: 179 | raw: 174 | backwards=30/30 before_after=11/30 comparing=0/30 counting=0/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=20/28 one_step=30/30 two_step=28/30 yes_no=30/30
+unpaired-s2/panel296-final.json | checked: 227 | raw: 223 | backwards=30/30 before_after=18/30 comparing=16/30 counting=25/30 heldout_three_step=0/30 missing_fact=30/30 newest_correction=18/28 one_step=30/30 two_step=30/30 yes_no=30/30
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/panel294-*.json')):
+    d=json.load(open(f)); t=d['total']
+    cats=' '.join(f\"{k}={v.get('checked_right',0)}/{v.get('n')}\" for k,v in d['by_category'].items())
+    print(f.split('runs/')[1],'| checked:',t['checked_right'],'| raw:',t.get('raw_right'),'|',cats)
+"
+paired-s1/panel294-copy.json | checked: 205 | raw: 205 | backwards=30/30 before_after=11/30 comparing=0/30 counting=0/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=29/30 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s1/panel294-final.json | checked: 257 | raw: 257 | backwards=30/30 before_after=20/30 comparing=12/30 counting=30/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s2/panel294-copy.json | checked: 204 | raw: 204 | backwards=30/30 before_after=9/30 comparing=0/30 counting=0/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=30/30 yes_no=30/30
+paired-s2/panel294-final.json | checked: 255 | raw: 255 | backwards=30/30 before_after=19/30 comparing=12/30 counting=29/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=30/30 yes_no=30/30
+unpaired-s1/panel294-copy.json | checked: 203 | raw: 205 | backwards=30/30 before_after=10/30 comparing=0/30 counting=0/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=28/30 yes_no=30/30
+unpaired-s1/panel294-final.json | checked: 254 | raw: 254 | backwards=30/30 before_after=18/30 comparing=12/30 counting=29/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=30/30 yes_no=30/30
+unpaired-s2/panel294-copy.json | checked: 205 | raw: 206 | backwards=30/30 before_after=12/30 comparing=0/30 counting=0/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=29/30 one_step=30/30 two_step=29/30 yes_no=30/30
+unpaired-s2/panel294-final.json | checked: 254 | raw: 254 | backwards=30/30 before_after=17/30 comparing=12/30 counting=30/30 heldout_big_notebook=15/15 heldout_three_step=0/15 missing_fact=30/30 newest_correction=30/30 one_step=30/30 two_step=30/30 yes_no=30/30
+[0m
+[0m$ [0mpython3 -c "
+import json,glob
+from collections import defaultdict
+for f in sorted(glob.glob('artifacts/claude-rsn356-20260925/runs/*/train_log.jsonl')):
+    copy=[json.loads(l) for l in open(f) if json.loads(l)['phase']=='copy']
+    rl=[json.loads(l) for l in open(f) if json.loads(l)['phase']=='rl']
+    bins=defaultdict(list)
+    for r in rl: bins[r['step']//1000].append(r['reward'])
+    means={k:round(sum(v)/len(v),4) for k,v in sorted(bins.items())}
+    print(f.split('runs/')[1],'| copy action_ce first:',copy[0]['action_ce'],'last:',copy[-1]['action_ce'],'| copy steps:',len(copy),'rl steps:',len(rl),'| reward means/1k:',means)
+"
+paired-s1/train_log.jsonl | copy action_ce first: 3.8787 last: 0.0105 | copy steps: 61 rl steps: 61 | reward means/1k: {0: 0.7459, 1: 0.8038, 2: 0.8472, 3: 0.8653, 4: 0.8632, 5: 0.8623}
+paired-s2/train_log.jsonl | copy action_ce first: 3.7855 last: 0.0051 | copy steps: 61 rl steps: 61 | reward means/1k: {0: 0.7376, 1: 0.7794, 2: 0.7654, 3: 0.8233, 4: 0.8501, 5: 0.8659}
+unpaired-s1/train_log.jsonl | copy action_ce first: 3.8747 last: 0.0046 | copy steps: 61 rl steps: 61 | reward means/1k: {0: 0.709, 1: 0.7702, 2: 0.8069, 3: 0.8283, 4: 0.889, 5: 0.8461}
+unpaired-s2/train_log.jsonl | copy action_ce first: 3.7518 last: 0.0312 | copy steps: 61 rl steps: 61 | reward means/1k: {0: 0.7209, 1: 0.7617, 2: 0.8068, 3: 0.856, 4: 0.866, 5: 0.8877}
+[0m
+[0m$ [0mtail -8 artifacts/fable-predictions-ledger.md
+- H1 OUTCOME (2026-09-25, rsn-355 plain shared-step seed 1+2 REGISTERED fresh panel296 v2, BensPC RTX 5070 Ti --workers 0): s1 0/30, s2 0/30 checked (all IDK after fact-check), bar >=6/30 BOTH seeds (296: 0/0): H1 FAIL both
+- H2 OUTCOME (2026-09-25, rsn-355 plain shared-step fresh panel296 v2 total WITHOUT three-step, BensPC): s1 final checked 223 (raw 217) vs bar >=220 (296 s1: 225): PASS; s2 final checked 197 (raw 205) vs bar >=212 (296 s2: 217): FAIL (comparing 0/30, counting 8/30 checked)
+- H3 OUTCOME (2026-09-25, rsn-355 invented answers checked, each panel both seeds, BensPC): 296-panel 0/0, 294-panel 0/0 (raw invented 6 s1 + 5 s2 on 296, all fact-checked to IDK), bar <=2: H3 PASS all
+- H4 OUTCOME (2026-09-25, rsn-355 transfer panel294 v3 three-step + dev value3 REPORT ONLY, BensPC): panel294 three-step 0/15 copy+final both seeds; dev value3 0/100 copy+final both seeds (all IDK). Registered verdict rsn-355: FAIL (H1 both + H2 s2 fail; needed H1+H2+H3 both seeds). Proved-wrong clause triggers for s1 only (H1 0/30 + H2 pass), not s2. BensPC GPU $0, 43.9/43.8 min, seals OK, weights kept on BensPC only.
+- P353.0 (2026-09-25, builder rsn-353 loop-no-step-embedding; 3 rentals created + 1 refused; est spend ~$1.00 of $4 cap) NO RESULT: seed1 trained 37.0 min then instance died mid-seed2 and host would not restart; seed1/seed2 checkpoints and logs lost with the instance; 4th rental refused (account credit 0, balance -$0.04). Observed-before-loss (unsealed, seed1): last copy action_ce 0.1327 at step 5999 (L1 bar <= 0.05). No evals run, no L1-L4 lines appended, nothing pushed.
+- P353-GUARD OUTCOME (2026-09-25, spending guard rsn-353-train) GUARD-OK: exit file runs/rsn-353-train/rsn-353-train.exit present on origin/builder-outbox and no live rsn-353* instance for 5+ min; tracked {"total": 1.0323, "n": 3, "det": {"52515551": {"dph": 0.5388888888888889, "mins": 6.32, "dollars": 0.0568, "live": false, "label": "rsn-353"}, "52516357": {"dph": 0.5388888888888889, "mins": 6.29, "dollars": 0.0565, "live": false, "label": "rsn-353"}, "52517332": {"dph": 0.5266666666666666, "mins": 104.71, "dollars": 0.9191, "live": false, "label": "rsn-353"}}} combined spend $1.0323 (trip $3.80 never reached); nothing destroyed by guard.
+- blurt2-loop GPU OUTCOME (2026-09-25, creative learning loop, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 44 vs 39); test 127 (23 dropped); S0 6; W 13/11 (mean 12.0); C 5/6 (mean 5.5); wins 184/379 (luck 338/11370). L1 +6.0 vs +8 FAIL; L2 +6.5 vs +5 and every W beats every C PASS. Registered verdict FAIL. GPU $0, 27.7 min, no weights saved.
+- rent-lis-318 CREDIT-STOP (2026-09-25, rental agent; task budget $2.00, spent ~$0.23): vast.ai account credit $0.20 at start, balance -$0.04 at 04:12 UTC, autobill $5/threshold $5 never fired in ~55 min of polling (create refused 400 lacks credit); rentals: 52522859 (offer 44173830, create success False, destroyed, 0h $0) + 52522884 (offer 44188475, 1x RTX 5090 32GB, dph $0.5037, ~0.45h ~$0.23: tree.tgz 159MB uploaded + extracted, image torch 2.8.0+cu129 CUDA True, READER rsync --partial broke mid-transfer then instance died stopped, destroyed); tree seals verified from tree root pre-upload (lis300 14/14, lis301 13/13, lis318-data 14/14, readpanel318 4/4 OK); sealed panel readpanel318 never opened/printed/quoted, 0 runs per arm (requeue-safe); month-end code never edited; 0 rent-lis-318 instances live after (confirmed via vastai show instances).
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code\W && move paired-s1 ..\paired-s1 && move unpaired-s1 ..\unpaired-s1 && move paired-s2 ..\paired-s2 && move unpaired-s2 ..\unpaired-s2' 2>&1
+1 dir(s) moved.
+        1 dir(s) moved.
+        1 dir(s) moved.
+        1 dir(s) moved.
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356 && python -c "import hashlib,glob; [print(hashlib.sha256(open(f,\"rb\").read()).hexdigest()+\"  \"+f.replace(chr(92),\"/\")) for f in sorted(glob.glob(\"*/*.pt\"))]"' 2>&1
+(no output)
+[0m
+[0m$ [0mssh benspc "cmd /c dir premonition-models\\rsn356" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\premonition-models\rsn356
+
+09/25/2026  12:14 AM    <DIR>          .
+09/25/2026  12:14 AM    <DIR>          ..
+09/25/2026  02:25 AM    <DIR>          code
+               0 File(s)              0 bytes
+               3 Dir(s)  42,874,245,120 bytes free
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356\code && move paired-s1 ..\paired-s1 && move unpaired-s1 ..\unpaired-s1 && move paired-s2 ..\paired-s2 && move unpaired-s2 ..\unpaired-s2' 2>&1
+1 dir(s) moved.
+        1 dir(s) moved.
+        1 dir(s) moved.
+        1 dir(s) moved.
+[0m
+[0m$ [0mssh benspc 'cd premonition-models\rsn356 && python -c "import hashlib,glob; [print(hashlib.sha256(open(f,\"rb\").read()).hexdigest()+\"  \"+f.replace(chr(92),\"/\")) for f in sorted(glob.glob(\"*/*.pt\"))]"' 2>&1
+2adb3851a5da0bccea2a546750c9c6a20fd4fab0b60f3ccfe1f2c44b8dcc16ff  paired-s1/copy_only.pt
+d556e56e44c538f104bdc1716ef99791091f05401ed2d8911138c8e95d236772  paired-s1/final.pt
+f12a6296614bae83057b3fd490e1a784bcb1e7b4d7241a6440a70b3e9e65d6e0  paired-s2/copy_only.pt
+3a00213dd15b3cdabae4e83a387465be71cad61c43d9614786daf7045bd41920  paired-s2/final.pt
+d169cdf1d157752bccd45b6cbaf4971b18b88605332cf781d81c3ca05e1ad040  unpaired-s1/copy_only.pt
+2c58c4e5eaf65de6466fd1c7bb3699240c63950f9c13bc8acb92decb5f139a0d  unpaired-s1/final.pt
+3dd046752e4c7c6641a2b4ec25848a9973951919149d64797832563ded2679e8  unpaired-s2/copy_only.pt
+236c1887b84052d1394a67a7ecd11767a35819343d303d46bc52b4c2fd0d8235  unpaired-s2/final.pt
+[0m
+[0m← [0mWrite artifacts/claude-rsn356-20260925/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md <<'EOF'
+- T1 OUTCOME (2026-09-25, rsn-356 fresh panel296 v2 total paired vs unpaired, BensPC RTX 5070 Ti --workers 0): s1 paired 231 vs unpaired 235 (-4), bar >= +6: FAIL; s2 paired 231 vs unpaired 227 (+4), bar >= +6: FAIL
+- T2 OUTCOME (2026-09-25, rsn-356 held-out change pairs both-right/600 paired vs unpaired, BensPC): s1 paired 455 vs unpaired 453 (+2), bar >= +30: FAIL; s2 paired 449 vs unpaired 455 (-6), bar >= +30: FAIL (compare twins 0/100 both arms; value/yesno/correction at ceiling)
+- T3 OUTCOME (2026-09-25, rsn-356 invented answers checked, each panel both arms copy+final, BensPC): 296-panel 0 all, 294-panel 0 all (raw invented 5 per 296 checkpoint, all fact-checked to IDK), bar <=2: T3 PASS all
+- T4 OUTCOME (2026-09-25, rsn-356 vs 296 plain per-category + transfer REPORT ONLY, BensPC): fresh paired 231/231 (+6/+14 vs 296 s1 225/s2 217), unpaired 235/227 (+10/+10); transfer paired 257/255 (+19/+17 vs 296 238/238), unpaired 254/254 (+16/+16); counting jumped both arms (fresh 24-25/30 vs 12/30; transfer 29-30/30 vs 12-13/30), comparing flat (16/30, 12/30), three-step 0 everywhere. Registered verdict rsn-356: FAIL (T1+T2 fail both seeds; needed T1+T2+T3). Proved-wrong clause TRIGGERED on both seeds (T2 +2/-6, within ±12). BensPC GPU $0, 59.8/62.7/59.7/62.5 min, seals OK, weights kept on BensPC only.
+EOF
+tail -4 artifacts/fable-predictions-ledger.md | cut -c1-120
+- T1 OUTCOME (2026-09-25, rsn-356 fresh panel296 v2 total paired vs unpaired, BensPC RTX 5070 Ti --workers 0): s1 paired
+- T2 OUTCOME (2026-09-25, rsn-356 held-out change pairs both-right/600 paired vs unpaired, BensPC): s1 paired 455 vs unp
+- T3 OUTCOME (2026-09-25, rsn-356 invented answers checked, each panel both arms copy+final, BensPC): 296-panel 0 all, 2
+- T4 OUTCOME (2026-09-25, rsn-356 vs 296 plain per-category + transfer REPORT ONLY, BensPC): fresh paired 231/231 (+6/+1
+[0m
+[0m$ [0mls artifacts/claude-rsn356-20260925/ artifacts/claude-rsn356-20260925/runs/*/ | head -60; echo ---; git status --short artifacts/ | head
+artifacts/claude-rsn356-20260925/:
+RESULTS.md
+runs
+SEAL-run.sha256.txt
+
+artifacts/claude-rsn356-20260925/runs/paired-s1/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/paired-s2/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/unpaired-s1/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+
+artifacts/claude-rsn356-20260925/runs/unpaired-s2/:
+dev-copy.json
+dev-final.json
+pairs-copy.json
+pairs-final.json
+panel294-copy.json
+panel294-final.json
+panel296-copy.json
+panel296-final.json
+train_log.jsonl
+train_summary.json
+---
+ M artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mgit status --short artifacts/claude-rsn356-20260925/; git check-ignore -v artifacts/claude-rsn356-20260925/RESULTS.md; echo ---; git status --short | head -20
+.gitignore:5:artifacts/	artifacts/claude-rsn356-20260925/RESULTS.md
+---
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
