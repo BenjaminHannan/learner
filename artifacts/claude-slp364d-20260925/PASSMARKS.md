@@ -25,3 +25,7 @@ Reported, not a mark: v4 vs v1 on the bench's made-up-answer faults.
 ## Disclosures written at seal time
 - v4 was written after reading why v3 missed slp364c-07 and -34 (opened bench). Dev check on the opened 364c bench
   is running at registration; its result is appended below before the fourth bench is opened.
+- Dev result (appended ~07:00 UTC, before the fourth bench is opened; scratch script, opened 364c bench, with 368 + 369):
+  20/20 honest 364c nights kept, user replies identical to 364c's registered v3 arm on 20/20; slp364c-07 now rejected
+  by L2 (2 lures), slp364c-34 by U (2 near-miss questions). Dev used the same cases that motivated v4, so it shows
+  only that v4 does what it was written to do and costs nothing on those 20 honest nights, not that it generalises.
