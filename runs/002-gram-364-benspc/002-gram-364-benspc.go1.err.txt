@@ -1,0 +1,1769 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main origin/builder-outbox --short; git status --short | head -n 50
+FETCH_EXIT:0
+fatal: Needed a single revision
+ee8688ee949e922a585a5669a7672abb997ec490
+2cb314cd137681cd97a0b4ba3691c74b42ee1583
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+[0m
+[0m$ [0mgit branch -a | head -n 30; echo ---; git remote -v; echo ---; git fetch -q origin builder-outbox 2>&1; echo FETCH2:$?; git rev-parse origin/builder-outbox --short; echo ---; git ls-remote --heads origin | head -n 20
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+  remotes/origin/main
+  remotes/origin/worktree-research
+---
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+---
+FETCH2:0
+fatal: Needed a single revision
+2cb314cd137681cd97a0b4ba3691c74b42ee1583
+---
+2cb314cd137681cd97a0b4ba3691c74b42ee1583	refs/heads/builder-outbox
+9cacb3d2828a51a1738a771539c8d2f2f82303e0	refs/heads/chat-flags
+e3fbf3c51de5c73734803d19738e90fa049be4eb	refs/heads/claude/card-experiment-handoff-7c5b27
+4ea0021dce250cb859f712601cec960ab3f147a3	refs/heads/claude/model-architecture-review-0161ce
+86be159f4b6e50e5400788b0d9f080e6c4831b16	refs/heads/claude/project-thread-0181x3
+4006142d1a79bddba0e25f1bc3eeeb7640cae27a	refs/heads/claude/project-thread-h8jbxv
+21e34fa08df03ae956c2fef8c6278205fede60a7	refs/heads/claude/project-thread-p68q5v
+8199e8adf17711923234fa19b9e552360c622fea	refs/heads/codex/testing-experiment-44
+ee8688ee949e922a585a5669a7672abb997ec490	refs/heads/main
+73c975c9e25acf72417779ed1f6cddb35b714146	refs/heads/worktree-research
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse --short origin/main; git rev-parse --short origin/builder-outbox; git log --oneline -3 origin/main; echo ---; git log --oneline -3 origin/builder-outbox
+FETCH_EXIT:0
+ee8688ee9
+2cb314cd1
+ee8688ee9 creative: research notes (122 sources, quotes fetched) and puzzles-to-real-world scaling plan
+936b4a331 queue: rent rsn-353b (credit-gated, $3.80) now that vast has credit; hold BensPC copy
+33c69b4f8 queue: slot blurt3r-loop after gram-364 on BensPC
+---
+2cb314cd1 watcher status
+6821223ed builder results: 001-bench-bm390x
+91f62d8fe watcher status
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "===LINES13==="; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 13 | cat -A | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+===LINES13===
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md | head -n 13
+echo "---END13---"
+python3 -c "import subprocess; out=subprocess.check_output(['git','show','origin/main:handoff/queue/lis-302-gpu.md']).decode(); lines=out.splitlines(); print('\n'.join(f'{i+1}: {l}' for i,l in enumerate(lines[:13])))"
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+---END13---
+1: COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+2: First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+3: - Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+4: - Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+5: - Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+6: - TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+7: - Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+8: - Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+9: - You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+10: Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+11: 
+12: GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+13: INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-gram364-20260925/ 2>&1; echo "---EXIT:$?"; echo "===check run==="; git cat-file -e origin/builder-outbox:artifacts/claude-gram364-20260925/run 2>&1; echo "run-exists-check:$?"; git cat-file -e origin/builder-outbox:artifacts/claude-gram364-20260925/RESULTS-benspc.md 2>&1; echo "results-exists-check:$?"
+---EXIT:0
+===check run===
+fatal: path 'artifacts/claude-gram364-20260925/run' does not exist in 'origin/builder-outbox'
+run-exists-check:128
+fatal: path 'artifacts/claude-gram364-20260925/RESULTS-benspc.md' does not exist in 'origin/builder-outbox'
+results-exists-check:128
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i gram364 | head -n 50; echo "---"; git ls-tree -r --name-only origin/main | grep -i gram364 | head -n 50
+---
+artifacts/claude-gram364-20260925/PASSMARKS.md
+artifacts/claude-gram364-20260925/SEAL-code.sha256.txt
+artifacts/claude-gram364-bankH-20260925/README.md
+artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt
+artifacts/claude-gram364-bankH-20260925/check_bank.py
+artifacts/claude-gram364-bankH-20260925/truth.jsonl
+artifacts/claude-gram364-bankH-20260925/turns.jsonl
+scripts/claude_gram364.py
+scripts/claude_gram364_check.py
+scripts/claude_gram364_grade.py
+scripts/claude_gram364_test.py
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-gram364-20260925/PASSMARKS.md
+echo "=====SEAL-CODE====="
+git show origin/main:artifacts/claude-gram364-20260925/SEAL-code.sha256.txt
+echo "=====BANK-README====="
+git show origin/main:artifacts/claude-gram364-bankH-20260925/README.md
+echo "=====BANK-SEAL====="
+git show origin/main:artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt
+# gram-364 pass marks (grammar thread, registered 2026-09-25 before any run on bank H)
+
+## Question
+After gram-360 (VERIFY-360.md) the rule agent's fill-in lines are about 91% clean. On DEV, what is still flagged
+is partly the reader's nonsense (not fixable by wording) and partly rendering misses. Does a second version of
+the finisher fix the rendering misses without changing anything else?
+
+## The one change
+Arm P364 = 330c + the fill-in finisher v2 (scripts/claude_gram364.py via scripts/claude_e2e364.py:build_364) in
+the place of gram-360's finisher. v2 is gram-360 plus six rendering changes, each for a DEV miss:
+1. the catch-all relation "other": 'your note about O says "V"' / 'does your note about O say "V"?' instead of
+   "V goes with O";
+2. a value "you" turns the sentence round: "are you Saoirse's child?" instead of "is Saoirse's child you?";
+3. a one-word value of an animal relation is a name ("is Uriah's hamster Sprout?"), unless it is a state word
+   ("sick") or an -ing/-ed/-ly word ("limping");
+4. an owner that is an animal noun is "the hamster's", not "Hamster's";
+5. short acronyms inside a longer value in capitals ("ER nurse");
+6. "a"/"an" before a thing value whose first word ends in -ed/-ing ("a bearded dragon"), and for "employer".
+Unit tests: scripts/claude_gram364_test.py (45/45: gram-360's 16 cases, 2 of them intentionally changed, plus
+15 new cases and 14 no-word-lost checks). Built on DEV only.
+
+## DEV basis (report only)
+234 distinct DEV fill-in lines (330a / 330c / lis e2e DEV rehearsals), rendered by gram-360, one strict blind
+grader: 41 flagged, about 24 of them reader nonsense ("allergy is talking", "granddaughter is this"). v2 changes
+21 of the 234 lines; a second fresh blind grader flags 4 of those 21 (the first grader flagged 19 of their
+gram-360 versions): 2 reader nonsense turned round ("are you Uriah's snack?"), 1 reader nonsense elsewhere in the
+line, 1 "your note about hamster" (then fixed as item 4).
+
+## Test data
+Bank H: artifacts/claude-gram364-bankH-20260925, 10 fresh lives (199 turns, 123 facts) written blind to spec 331
+by a separate agent that never saw any finisher code (names A to D, unlike DEV's S to Z and bank G's E to J).
+Five checks pass. Sealed (SEAL.sha256.txt, 4 files) before the run. Nobody in this thread has read its turns.
+
+## Run (one arm, paired replay)
+BensPC (Windows, through scripts/claude_winnl2_wrap.py as bm-390), MiniCPM5-1B 87179e5c with
+enable_thinking=False, lis-301 reader, GRAM360_LOG=<run>/gram364_parts.jsonl:
+  W scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank <bank H> --arm claude_e2e364:build_364 \
+      --name P364 --model READER --gen-model BASE --out <run>
+scripts/claude_gram364_check.py re-renders every raw rule-agent part with gram-360's realise and the same seen
+names (checked against the bank G run: 0 of 183 parts differ from what gram-360 rendered live), so gram-360 and
+v2 are compared on exactly the same parts.
+
+## Grading
+scripts/claude_gram364_grade.py prep: two blind Opus graders, each one shuffled file with the union of rule_raw,
+rule_final360, rule_final364 and all_final (a line in several sets is graded once) + 336's 40 planted errors + 40
+planted clean lines (seeds 3641, 3642). Question: "Is this line grammatical, natural English with no simple
+mistakes (spelling, capitalisation, punctuation, agreement, word order, missing or extra words)? Do not judge
+whether the content is true or fits a conversation." (gram-360's wording.) A grader counts only with >= 36/40
+planted errors caught and >= 36/40 clean kept.
+
+## Marks (fixed now)
+| Mark | What | Bar |
+|---|---|---|
+| P364.1 | v2 fill-in lines (rule_final364) graded grammatical, each grader | >= 94% |
+| P364.2 | gain over gram-360 on the same parts (rule_final364 % minus rule_final360 %), each grader | >= +3 points |
+| P364.3 | v2 changes no score: confirm flag, the harness's confirm answer, the 336 ask class (raw vs final reply); parts not from the rule agent changed | 0 and 0 |
+| P364.4 | slot words lost by v2 rendering (checker) | 0 |
+
+Proved wrong: if either valid grader gives rule_final364 less than rule_final360 + 1 point, these rendering misses
+are not a real share of what graders flag on fresh lives.
+Report only: all distinct P364 replies graded grammatical; the 336 scorer's line for P364; how many parts v2
+renders differently from gram-360; which lines are still flagged, by shape (counts only).
+=====SEAL-CODE=====
+e78b5b88e4fe5632ed1311eb91ae37124aa8d12c9d72e0d091d38b3d19a55afc  scripts/claude_gram364.py
+7278dcaa0db65f7ad6bd27a72dbf4cede36d40c18a0daf1893e06118978a793d  scripts/claude_gram364_test.py
+e2979cb12beff97d5222afd3a94fb330baedd0d0ad356603edbb34aae6016cca  scripts/claude_gram364_check.py
+2ff507f30ae0b8bfa9fd52a756282c63d65a1b457825eb7e02ae7c7a3e50f0b6  scripts/claude_gram364_grade.py
+72ff8d62d58d806d4e9a93c93fde632b3d5ba34a6260c764b59d3f66032a5203  scripts/claude_e2e364.py
+7d1b3d16aa1e738403cb9d6e2f3ef339deae706ee4dceb92e991e23bcc72454a  scripts/claude_gram360.py
+c211b0a81ee516f7accc0ddf616e6d7f7abf8d9e59b0d96678c4a6b2a5964f25  scripts/claude_gram360_check.py
+4688b5e360fd42c4b767787a0ff44a1c535f4640d885c9fd4118134c214e78e9  scripts/claude_gram360_gradeprep.py
+9efa38ae3eb5283b67ab1e6a402a1e2c79366f5798999b9cd5c693e7f94f5b2b  artifacts/claude-gram364-20260925/PASSMARKS.md
+=====BANK-README=====
+# Bank H (gram364, spec 331 format)
+
+Written blind on 2026-09-25 in the format of bank DEV. 10 lives, ids `e2e-g364-01`..`e2e-g364-10`, 3 days each,
+199 user turns, 123 facts on the truth sheet (10 of them closed by a correction).
+
+Files: `turns.jsonl` (one object per user turn), `truth.jsonl` (one object per fact), `check_bank.py` (the five checks).
+
+## Names
+
+Every person's and pet's first name starts with a letter from **A to D**. Invented towns, companies, clinics,
+schools, farms, stables and the like also start with A to D, and so do the real big cities (and the one real
+town) used as places. No person, pet or place name repeats across lives.
+
+## Counts per kind
+
+| kind | count | minimum (spec / 4, rounded up) |
+|---|---:|---:|
+| teach | 59 | 35 |
+| correct | 10 | 7 |
+| nosave | 17 | 7 |
+| ask | 72 | 53 (sum of ask minimums) |
+| smalltalk | 31 | 13 |
+| creative | 10 | 8 |
+| other | 0 | - |
+
+Teach breakdown: 21 single-fact turns (min 18), 38 turns with 2 or more facts (min 10); 10 of the teach turns
+give a fact in passing or inside an aside (min 8; counted by the writer, not by the checker).
+
+## Counts per ask_type
+
+| ask_type | count | minimum |
+|---|---:|---:|
+| one_hop | 17 | 15 |
+| two_hop | 11 | 9 |
+| reversal | 10 | 7 |
+| edit | 10 (all 10 two-hop through the corrected fact) | 7 (3 two-hop) |
+| yesno | 10 (6 yes, 4 no) | 4 |
+| never_told | 10 | 8 |
+| partial | 4 | 3 |
+
+Asks on day 3 whose facts were all taught on day 1: 22 (minimum 15).
+
+## Counts per day
+
+| day | turns | teach | correct | nosave | ask | smalltalk | creative |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 67 | 40 | 0 | 10 | 0 | 17 | 0 |
+| 2 | 62 | 19 | 10 | 7 | 22 | 4 | 0 |
+| 3 | 70 | 0 | 0 | 0 | 50 | 10 | 10 |
+
+Asks by day: day 2 has one_hop 12, two_hop 6, reversal 4; day 3 has edit 10, reversal 6, two_hop 5,
+yesno 10, never_told 10, one_hop 5, partial 4. Each life has 19 or 20 turns, with 6 or 7 turns per day.
+
+## Conventions
+
+- Fact ids are `g364NN-fMM` (`NN` = life number); `MM` is a label local to the life and is not in teaching order.
+- `gold.values` is empty for `yesno` and `never_told`; for `yesno` the `uses_facts` are the facts that
+  decide the answer from the notebook as it stands.
+- For `reversal` asks the gold value is the fact's owner (the thing asked for), not its value.
+- For `partial` asks the gold value is the known first-hop value; the second hop was never taught.
+- For `two_hop` and two-hop `edit` asks, `values` holds only the final answer; `uses_facts` holds both hops
+  (one two_hop ask, in life 06, runs three hops and cites all three).
+- The old fact is closed at the correcting turn; every correction here keeps the relation and changes the value.
+
+## Checks run (spec 331, five checks; `python3 check_bank.py`)
+
+1. Every line parses and has exactly the spec keys: pass.
+2. Every `uses_facts` id exists, was taught before the ask and was not closed before it: pass.
+3. Every gold value equals the value (or, for reversal, the owner) of a fact it cites, after corrections: pass.
+4. Every name obeys A to D and no name repeats across lives: pass.
+5. Kind and ask_type minimums (bank / 4, rounded up) are met: pass.
+
+Check 1 also confirms turn order, 4 to 7 turns per day, that truth and the turns' `facts` lists match one to one,
+and that each correction closes an older fact at its own turn. Check 2 also covers `creative_seed_facts`.
+Check 3 also requires two-hop answers to be the last hop of a chain and edit answers to be the corrected value.
+Check 4 also scans the user text: capitalised mid-sentence words must be A to D names (weekdays, months and
+"I" excepted), and no life's text uses another life's names.
+=====BANK-SEAL=====
+80e7df0113c4529ba6651423c6a16f872c81314c0c765df178969923f071fef5  turns.jsonl
+04ee5f01804d5cfdb4a6a059eb9e9dfe88f392efb7db42c9755583dda19beaae  truth.jsonl
+a5919e97632b8bf04e5d2cf93f8f6ec164188a6bfaf47d9333ce2ae801a9e60f  README.md
+1f4c850eab9fa6284cfe3386babb2fc5be25e5500ad09f4db7ca6793f1f4951b  check_bank.py
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/001-bench-bm390x.md | head -n 120
+echo "=====RENTKIT-A====="
+git show origin/main:design/v3/30-modes/330-rent-kit.md | head -n 150
+COMMON RULES (the benchmarks thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS, whatever fails (the vast.ai account is out of credit).
+TIME CAP: 7 hours in total. If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: bench-bm390x, THE REGISTERED RUN bm-390, third attempt on BensPC. Attempt 1 (001-bench-bm390) stopped at its smoke test: the sealed turn log and notebook check their own writes byte for byte, and Windows writes "\n" as "\r\n" (RESULTS-benspc.md). Attempt 2 (001-bench-bm390w) stopped at its smoke test with a TypeError in the first line-ending wrapper, a bug on Python 3.10 (RESULTS-benspc2.md). This attempt runs every command through scripts/claude_winnl2_wrap.py, the fixed wrapper, tested on Python 3.10 with Windows line endings simulated. Nothing sealed changes; the difference is registered in artifacts/claude-bm390-20260925/AMEND-winnl2.md (and AMEND-winnl.md, which it updates). Read both, PASSMARKS.md and design/v3/30-modes/390-public-bench-plan.md. Run ONCE.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-bm390-20260925/run, RESULTS-rent.md or RESULTS-benspc3.md exists on origin/builder-outbox. The benchmark files are public test sets: the scripts download and read them; you never open, print or quote a question, an answer or a reply (count rows only). Nothing is trained. Edit no file.
+
+SETUP (Windows, as the first two attempts, which set up everything below):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/bm390/tree3 (leave the earlier trees as they are).
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- Q2DIR and L12DIR = the two paths in RESULTS-benspc2.md (already downloaded; download nothing). If either is missing, that rival is NOT RUN.
+- MiniLM and pyarrow were set up by the first attempt; check only: the route122 check from the tree root prints a route, and `python -c "import pyarrow"` works. Install nothing.
+- DATA = C:/Users/benja/lis301/work/bm390/data3 (a NEW folder). OUT = artifacts/claude-bm390-20260925/run (inside the tree).
+- W = `python -B scripts/claude_winnl2_wrap.py` (every command below starts with it; claude_winnl_wrap.py is NOT used). Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). If it prints anything else, stop with WINNL-FAIL.
+- W CHECK right after step 1 (a check, not a benchmark), from the tree root: (a) `python -B scripts/claude_winnl2_test.py probe` (no wrapper) prints one JSON line, expected "ok": true with "crlf" above 0 (plain Windows writes \r\n); (b) `W scripts/claude_winnl2_test.py probe` must print "ok": true and "crlf": 0. The probe writes two tiny temp files through pathlib and open and reads package metadata the way tqdm does, which is where attempt 2 broke. Report both lines. If (b) is not ok with crlf 0: stop with WINNL-FAIL and the full output.
+
+STEPS
+1. From the tree root: `sha256sum -c` (or the same check in Python) of artifacts/claude-bm390-20260925/SEAL-code.sha256.txt (8 OK), artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt (3 OK) and artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt (229 OK). Any mismatch: stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44c`, then copy r44c/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Report the JSON line and the .pt sha256.
+3. `python -B scripts/claude_bm390.py fetch --data DATA` must print one line starting {"fetch": "OK" with locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300, mmlu300_sha256 1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850, gsm8k300_sha256 073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b. Report it verbatim. Anything else: stop, report the exact error.
+   Load check, each separately: `python -c "import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'Q2DIR', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))"` and the same with L12DIR (expected Qwen3_5ForCausalLM 1881825088; Lfm2ForCausalLM 1170340608).
+4. SMOKE on made-up data (fictional people, not a benchmark). This is the Windows check the Director asked for:
+   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out C:/Users/benja/lis301/work/bm390/smoke3
+   W scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:BASE --name T --out C:/Users/benja/lis301/work/bm390/smoke3
+   Both exit 0 and print "wrote locomo_... rows=5"; the smoke sleep log has 2 rows, both checkpoint_exists true. Also count "\r\n" in every file under smoke3 (a byte count only): it must be 0. If anything fails: stop with SMOKE-FAIL, report the exact error and full traceback, run nothing on the real data. Report the smoke wall time.
+5. Registered arms. Each command is its own process, launched ONCE (check the process list before any retry). Two lanes:
+   Lane 1, in this order:
+     P:   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-bm390-20260925/run/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out OUT
+     Pm:  W scripts/claude_bm390.py general --task mmlu --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+     Pg:  W scripts/claude_bm390.py general --task gsm8k --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT
+   Lane 2, in this order (plain models, LoCoMo first):
+     T:   W scripts/claude_bm390.py locomo --data DATA --arm plain:BASE --name T --out OUT
+     Rb:  W scripts/claude_bm390.py locomo --data DATA --arm bm25:BASE --name Rb --out OUT
+     C:   W scripts/claude_bm390.py locomo --data DATA --arm closed:BASE --name C --out OUT
+     Q2:  W scripts/claude_bm390.py locomo --data DATA --arm plain:Q2DIR --name Q2 --out OUT
+     L12: W scripts/claude_bm390.py locomo --data DATA --arm plain:L12DIR --name L12 --out OUT
+     Tm, Tg: W scripts/claude_bm390.py general --task mmlu|gsm8k --data DATA --arm plain:BASE --name T --out OUT
+     Q2m, Q2g, L12m, L12g: the same general commands with plain:Q2DIR --name Q2 and plain:L12DIR --name L12
+   Start lane 1. Once P has printed its first "[bm390] conv-" line, start lane 2 at the same time if nvidia-smi shows at least 8 GB of GPU memory free; otherwise run lane 2 after lane 1. If P stops with SLEEP-NOT-LEARNING or STATE-RESET-FAILED: stop lane 1, let lane 2 finish, copy back what exists, report. A lane-2 command that fails does not stop the others; report its traceback. At the time cap, stop what is still running (exact PID) and copy back what finished.
+6. Copy run/ back to the Mac; check sizes and sha256 match BensPC. Leave the models on BensPC.
+7. RESULTS-benspc3.md (a NEW file) in artifacts/claude-bm390-20260925/, counts only: the three seal results; both W CHECK lines; step 2's JSON line and sha256; the fetch line; the load-check lines (or errors); the smoke result, its "\r\n" byte count and wall time; for each command its first printed line (the winnl2 line), last printed "wrote ..." line, exit code, start and end time (UTC); the row count of every run/*.jsonl file; the count of "\r\n" in every run/ file; for sleep_P.jsonl: rows, rows with checkpoint_exists true, rows with attempted true; lane 2 parallel or after; GPU; any traceback in full. Quote no question, answer or reply.
+PUSH: artifacts/claude-bm390-20260925/RESULTS-benspc3.md artifacts/claude-bm390-20260925/run
+=====RENTKIT-A=====
+# 330 rent kit: how month-end runs use a rented Linux GPU (month-end line, 2026-09-24)
+
+Every `rent-33x-*` queue task says "follow design/v3/30-modes/330-rent-kit.md". Read all of it first.
+Why rented: Ben, 12:29 UTC 2026-09-24: "remember you can also use cloud gpus". Also, BensPC runs Windows,
+where the agent needed a Unix-only module (fixed for later with scripts/winshim/, but the rentals are Linux anyway).
+
+## A. Getting your files (on the Mac)
+Run `git fetch -q origin main builder-outbox`. Read files with `git show origin/main:<path>`. Never check out,
+merge or push a branch yourself; the watcher pushes your PUSH paths. Build the code tree for the GPU:
+```
+T=$(mktemp -d)/tree && mkdir -p $T
+git archive origin/builder-outbox | tar -x -C $T
+git archive origin/main | tar -x -C $T            # main on top: main wins
+mkdir -p $T/artifacts/fable-self122-20260922
+cp <main checkout>/artifacts/fable-self122-20260922/self122_head.pt $T/artifacts/fable-self122-20260922/
+tar czf tree.tgz -C $(dirname $T) tree
+```
+self122_head.pt sha256 must be 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25.
+If your task needs READER: the lis-301 merged reader is ~/premonition-models/lis301-merged/ on the Mac; its
+model.safetensors sha256 must be b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890. Never push weights.
+
+## B. Rental rules (the director's rent lane; Ben's limit: at most $4 per job, re-rents included)
+- Search: `vastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true' -o dph`, 4090 with the same
+  filter if no 5090. At least 8 CPU cores, at least 60 GB disk, prefer upload/download >= 200 Mbps.
+- Before renting: `vastai show instances`; if an instance with your task's label is live, exit with DUPLICATE.
+  Label every instance with the task name. Never 2 instances for one task at once.
+- Credit: check it and record it. No LOW-CREDIT stop (Ben, 18:21 UTC 2026-09-24: the vast.ai account auto-refills).
+  The task's BUDGET, the $4 per-job cap and the $30 total cap still apply.
+- Money: keep a running total of dph x hours for every instance you create. If it would pass your task's BUDGET,
+  copy back what exists, destroy everything and stop with BUDGET-STOP.
+- A new instance not "running" within 6 min (or create returns success False): destroy it by exact id, try another
+  host; at most 4 rentals in total, then HOST-FAIL. A running job with no new log line for 10 min: watchdog,
+  destroy and count it.
+- Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+- LESSON FROM rsn-296: copy every result file back to the Mac and check it arrived BEFORE destroying. Then destroy,
+  confirm it is gone with `vastai show instances`, and append one line to artifacts/fable-predictions-ledger.md
+  (cat >>): date, task, instance id(s), GPU, hours, dph, dollars, outcome.
+
+## C. On the rental
+```
+scp tree.tgz (and READER if needed) to the instance; tar xzf tree.tgz; cd tree
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"   # image torch if True, else venv + CUDA torch
+pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy
+HF_HUB_OFFLINE=0 python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B')); print(s('sentence-transformers/all-MiniLM-L6-v2'))"
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+python -c "import sys; sys.path.insert(0,'scripts'); import fable_self122 as S; print(S.route122('what is your name?'))"   # must not raise
+```
+BASE = the first printed snapshot path (Ben's yes 2026-09-23 covers this model; record its commit hash, expected
+87179e5c1f455ef22e6223592d2d61351b525bfc). Run every step under nohup/setsid with a log file so an ssh drop
+cannot kill it. Never download any other model.
+
+## D. Independence
+TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
+grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
+exists, destroy, and report the exact error and traceback.
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/001-bench-bm390x.md | grep -i -A2 -B2 "ssh\|scp\|BensPC\|benja\|host" | head -n 100
+echo "===FILES===" 
+git ls-tree -r --name-only origin/main -- handoff/ | head -n 50
+COMMON RULES (the benchmarks thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS, whatever fails (the vast.ai account is out of credit).
+TIME CAP: 7 hours in total. If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: bench-bm390x, THE REGISTERED RUN bm-390, third attempt on BensPC. Attempt 1 (001-bench-bm390) stopped at its smoke test: the sealed turn log and notebook check their own writes byte for byte, and Windows writes "\n" as "\r\n" (RESULTS-benspc.md). Attempt 2 (001-bench-bm390w) stopped at its smoke test with a TypeError in the first line-ending wrapper, a bug on Python 3.10 (RESULTS-benspc2.md). This attempt runs every command through scripts/claude_winnl2_wrap.py, the fixed wrapper, tested on Python 3.10 with Windows line endings simulated. Nothing sealed changes; the difference is registered in artifacts/claude-bm390-20260925/AMEND-winnl2.md (and AMEND-winnl.md, which it updates). Read both, PASSMARKS.md and design/v3/30-modes/390-public-bench-plan.md. Run ONCE.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-bm390-20260925/run, RESULTS-rent.md or RESULTS-benspc3.md exists on origin/builder-outbox. The benchmark files are public test sets: the scripts download and read them; you never open, print or quote a question, an answer or a reply (count rows only). Nothing is trained. Edit no file.
+
+SETUP (Windows, as the first two attempts, which set up everything below):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/bm390/tree3 (leave the earlier trees as they are).
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- Q2DIR and L12DIR = the two paths in RESULTS-benspc2.md (already downloaded; download nothing). If either is missing, that rival is NOT RUN.
+- MiniLM and pyarrow were set up by the first attempt; check only: the route122 check from the tree root prints a route, and `python -c "import pyarrow"` works. Install nothing.
+- DATA = C:/Users/benja/lis301/work/bm390/data3 (a NEW folder). OUT = artifacts/claude-bm390-20260925/run (inside the tree).
+- W = `python -B scripts/claude_winnl2_wrap.py` (every command below starts with it; claude_winnl_wrap.py is NOT used). Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). If it prints anything else, stop with WINNL-FAIL.
+- W CHECK right after step 1 (a check, not a benchmark), from the tree root: (a) `python -B scripts/claude_winnl2_test.py probe` (no wrapper) prints one JSON line, expected "ok": true with "crlf" above 0 (plain Windows writes \r\n); (b) `W scripts/claude_winnl2_test.py probe` must print "ok": true and "crlf": 0. The probe writes two tiny temp files through pathlib and open and reads package metadata the way tqdm does, which is where attempt 2 broke. Report both lines. If (b) is not ok with crlf 0: stop with WINNL-FAIL and the full output.
+--
+STEPS
+1. From the tree root: `sha256sum -c` (or the same check in Python) of artifacts/claude-bm390-20260925/SEAL-code.sha256.txt (8 OK), artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt (3 OK) and artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt (229 OK). Any mismatch: stop with SEAL-MISMATCH, report the failing lines.
+2. Sleep's base checkpoint: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44c`, then copy r44c/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Report the JSON line and the .pt sha256.
+3. `python -B scripts/claude_bm390.py fetch --data DATA` must print one line starting {"fetch": "OK" with locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300, mmlu300_sha256 1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850, gsm8k300_sha256 073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b. Report it verbatim. Anything else: stop, report the exact error.
+   Load check, each separately: `python -c "import torch; from transformers import AutoModelForCausalLM as M; m=M.from_pretrained(r'Q2DIR', dtype=torch.bfloat16).to('cuda'); print(type(m).__name__, sum(p.numel() for p in m.parameters()))"` and the same with L12DIR (expected Qwen3_5ForCausalLM 1881825088; Lfm2ForCausalLM 1170340608).
+4. SMOKE on made-up data (fictional people, not a benchmark). This is the Windows check the Director asked for:
+   SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out C:/Users/benja/lis301/work/bm390/smoke3
+   W scripts/claude_bm390.py locomo --data artifacts/claude-bm390-20260925/smoke --arm plain:BASE --name T --out C:/Users/benja/lis301/work/bm390/smoke3
+   Both exit 0 and print "wrote locomo_... rows=5"; the smoke sleep log has 2 rows, both checkpoint_exists true. Also count "\r\n" in every file under smoke3 (a byte count only): it must be 0. If anything fails: stop with SMOKE-FAIL, report the exact error and full traceback, run nothing on the real data. Report the smoke wall time.
+5. Registered arms. Each command is its own process, launched ONCE (check the process list before any retry). Two lanes:
+--
+     Q2m, Q2g, L12m, L12g: the same general commands with plain:Q2DIR --name Q2 and plain:L12DIR --name L12
+   Start lane 1. Once P has printed its first "[bm390] conv-" line, start lane 2 at the same time if nvidia-smi shows at least 8 GB of GPU memory free; otherwise run lane 2 after lane 1. If P stops with SLEEP-NOT-LEARNING or STATE-RESET-FAILED: stop lane 1, let lane 2 finish, copy back what exists, report. A lane-2 command that fails does not stop the others; report its traceback. At the time cap, stop what is still running (exact PID) and copy back what finished.
+6. Copy run/ back to the Mac; check sizes and sha256 match BensPC. Leave the models on BensPC.
+7. RESULTS-benspc3.md (a NEW file) in artifacts/claude-bm390-20260925/, counts only: the three seal results; both W CHECK lines; step 2's JSON line and sha256; the fetch line; the load-check lines (or errors); the smoke result, its "\r\n" byte count and wall time; for each command its first printed line (the winnl2 line), last printed "wrote ..." line, exit code, start and end time (UTC); the row count of every run/*.jsonl file; the count of "\r\n" in every run/ file; for sleep_P.jsonl: rows, rows with checkpoint_exists true, rows with attempted true; lane 2 parallel or after; GPU; any traceback in full. Quote no question, answer or reply.
+PUSH: artifacts/claude-bm390-20260925/RESULTS-benspc3.md artifacts/claude-bm390-20260925/run
+===FILES===
+handoff/HANDOFF.md
+handoff/held/001-bench-bm390.md
+handoff/held/005-rsn-353-pc.md
+handoff/held/008-blurt2b-loop.md
+handoff/held/benspc-336b.md
+handoff/held/e2e-330-dev.md
+handoff/held/e2e-333-creative.md
+handoff/held/e2e-338-chat.md
+handoff/held/e2e-339-style.md
+handoff/held/own-e1-pretrain.md
+handoff/held/own-m1-bpc.md
+handoff/held/rent-336b.md
+handoff/held/rent-bm390.md
+handoff/held/rsn-351b-guard.md
+handoff/held/rsn-351b-train.md
+handoff/held/rsn-354-guard.md
+handoff/held/rsn-354-train.md
+handoff/kit/briefs/138n-merge.txt
+handoff/kit/briefs/138p-merge.txt
+handoff/kit/briefs/206-sleepsmoke.txt
+handoff/kit/briefs/207-atomicinbox.txt
+handoff/kit/briefs/208-naturalpanel.txt
+handoff/kit/briefs/209-writescreen.txt
+handoff/kit/briefs/210-reversal.txt
+handoff/kit/briefs/211-fairsmol.txt
+handoff/kit/briefs/212-selfgate.txt
+handoff/kit/briefs/213-earssafety.txt
+handoff/kit/briefs/214-suitediff.txt
+handoff/kit/briefs/215-ofteach.txt
+handoff/kit/briefs/216-declinecue.txt
+handoff/kit/briefs/218-suitediff2.txt
+handoff/kit/briefs/219-selfname.txt
+handoff/kit/briefs/220-restartindex.txt
+handoff/kit/briefs/222-ofteachb.txt
+handoff/kit/briefs/223-cantdo.txt
+handoff/kit/briefs/227-identity.txt
+handoff/kit/briefs/231b-chainnames.txt
+handoff/kit/briefs/241-mouthA.txt
+handoff/kit/briefs/241-stylesheet.txt
+handoff/kit/briefs/241b-mouthA2.txt
+handoff/kit/briefs/241b-stylesheet.txt
+handoff/kit/briefs/243fixes-common.txt
+handoff/kit/briefs/252-correct.txt
+handoff/kit/briefs/252c-merge.txt
+handoff/kit/briefs/255-fixedtext.txt
+handoff/kit/briefs/256-earloop.txt
+handoff/kit/briefs/257-earv4.txt
+handoff/kit/briefs/258-commentclause.txt
+handoff/kit/briefs/259-valueboundary.txt
+handoff/kit/briefs/260-openers.txt
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox | grep -i -E "benspc|bench|gram|RESULTS" | head -n 80
+echo "===QUEUE MAIN==="
+git ls-tree -r --name-only origin/main -- handoff/queue/ | head -n 80
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-called281-20260923/RESULTS.md
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-diff.json
+artifacts/claude-called281-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/RESULTS.md
+artifacts/claude-called281b-20260923/pilot/suites/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/pilot/suites/sd/bench-diff.json
+artifacts/claude-called281b-20260923/pilot/suites/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281b-20260923/pilot/suites/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/pilot/suites/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/run/sd/bench-diff.json
+artifacts/claude-called281b-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-called281b-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-called281b-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/RESULTS.md
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-diff.json
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/pilot/reg/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-diff.json
+artifacts/claude-capab280-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/RESULTS-RERUN.md
+artifacts/claude-capab280b-20260923/RESULTS.md
+artifacts/claude-capab280b-20260923/pilot/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/pilot/sd/bench-diff.json
+artifacts/claude-capab280b-20260923/pilot/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280b-20260923/pilot/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/pilot/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/run/sd/bench-diff.json
+artifacts/claude-capab280b-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-capab280b-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-capab280b-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-chain266-20260923/RESULTS.md
+artifacts/claude-chain266-20260923/run/sd/bench-bench132_4hop-rows.jsonl
+artifacts/claude-chain266-20260923/run/sd/bench-diff.json
+artifacts/claude-chain266-20260923/run/sd/bench-edit200-rows.jsonl
+artifacts/claude-chain266-20260923/run/sd/bench-new_121_4hop-rows.jsonl
+artifacts/claude-chain266-20260923/run/sd/bench-old_s2fresh_4hop-rows.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-report.json
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-rows-fable_edit_200.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-rows-s2fresh_4hop.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/.DS_Store
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/daemon.log.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t001.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t002.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/done/t003.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/notebook/events.fix77.seal.json
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/notebook/events.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t001.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t002.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/outbox/t003.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/receipts.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-00/state.json
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/daemon.log.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t001.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t002.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/done/t003.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/notebook/events.fix77.seal.json
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/notebook/events.jsonl
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t001.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t002.txt
+artifacts/claude-chain266-20260923/run/sd/marks123/bench-tmp/fable_edit_200/bench65-abs-absent-01/outbox/t003.txt
+===QUEUE MAIN===
+handoff/queue/000-benspc-check.md
+handoff/queue/000-cache-pin.md
+handoff/queue/000-ckpt-copy.md
+handoff/queue/000-smoke.md
+handoff/queue/000-vast-rescue.md
+handoff/queue/000-watcher-dedupe.md
+handoff/queue/000-watcher-upgrade.md
+handoff/queue/001-bench-bm390w.md
+handoff/queue/001-bench-bm390x.md
+handoff/queue/002-gram-364-benspc.md
+handoff/queue/002b-blurt3r-loop.md
+handoff/queue/003-lis-319-train.md
+handoff/queue/004-rd-371-train.md
+handoff/queue/006-slp-363-train.md
+handoff/queue/007-rsn-357-train.md
+handoff/queue/261b-build.md
+handoff/queue/261b-panel.md
+handoff/queue/263-build.md
+handoff/queue/263-panel.md
+handoff/queue/263-probe.md
+handoff/queue/264-build.md
+handoff/queue/264-panel.md
+handoff/queue/265-build.md
+handoff/queue/265-panel.md
+handoff/queue/267-devset.md
+handoff/queue/267-diag.md
+handoff/queue/269-build.md
+handoff/queue/269-panel.md
+handoff/queue/269-resume.md
+handoff/queue/269-resume2.md
+handoff/queue/270-build.md
+handoff/queue/270-panel.md
+handoff/queue/270b-build.md
+handoff/queue/270b-panel.md
+handoff/queue/271-threshold.md
+handoff/queue/273-build.md
+handoff/queue/274-build.md
+handoff/queue/blurt2-loop.md
+handoff/queue/chat-demo-build.md
+handoff/queue/chat-weakspots.md
+handoff/queue/ideajudge-teacher.md
+handoff/queue/ideajudge-teacher2.md
+handoff/queue/ideajudge-teacher3.md
+handoff/queue/lis-300-publish.md
+handoff/queue/lis-300-train.md
+handoff/queue/lis-301-train.md
+handoff/queue/lis-302-gpu.md
+handoff/queue/lis-310-chat-build.md
+handoff/queue/lis-311-chat292.md
+handoff/queue/lis-311b-chat292.md
+handoff/queue/lis-312-f0.md
+handoff/queue/lis-313-f0.md
+handoff/queue/lis-313b-f0.md
+handoff/queue/lis-314-panel.md
+handoff/queue/lis-314b-panel.md
+handoff/queue/lis-317-diag.md
+handoff/queue/lis-318-train.md
+handoff/queue/lis-e2e-dev.md
+handoff/queue/mut0-build.md
+handoff/queue/mut1-build.md
+handoff/queue/nb-320-baseline.md
+handoff/queue/nb-321-build.md
+handoff/queue/nb-321-run.md
+handoff/queue/nb-323-build.md
+handoff/queue/or-keycheck.md
+handoff/queue/own-m0-mouthdata.md
+handoff/queue/own-m1-train.md
+handoff/queue/own-m1b-train.md
+handoff/queue/own-m1n-train.md
+handoff/queue/own-m1v-run.md
+handoff/queue/own-o0a-oracle.md
+handoff/queue/own-o0a2-oracle.md
+handoff/queue/own-o0a3-permission.md
+handoff/queue/own-o0b-generator.md
+handoff/queue/own-o0c-pretrain-data.md
+handoff/queue/own-o0d-ear-code.md
+handoff/queue/own-o0d2-ear-fix.md
+handoff/queue/own-o0e-baseline-code.md
+handoff/queue/own-o0e2-baseline-reseal.md
+handoff/queue/own-o0f-bench.md
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/002-gram-364-benspc.md
+echo "===BENSCHECK==="
+git show origin/main:handoff/queue/000-benspc-check.md 2>&1 | head -n 100
+COMMON RULES (the grammar thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti; one job at a time). NO RENTALS, whatever fails.
+TIME CAP: 1.5 hours in total (the same run took ~20 minutes on a rented 5090). If the cap is reached, stop, copy back what exists, report which commands finished.
+
+YOUR TASK: gram-364-benspc, THE REGISTERED RUN of gram-364 (fill-in finisher v2). Marks: artifacts/claude-gram364-20260925/PASSMARKS.md (do not edit it). One arm on bank H (artifacts/claude-gram364-bankH-20260925, sealed test data: the runner reads it; you never open, print or quote its turns, truth or any reply). Run ONCE.
+DUPLICATE GUARD, before anything else: stop with DUPLICATE if artifacts/claude-gram364-20260925/run or RESULTS-benspc.md exists on origin/builder-outbox.
+
+SETUP (Windows, exactly as bench-bm390x, handoff/queue/001-bench-bm390x.md SETUP):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/gram364/tree.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- READER = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890). BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc. Download nothing, install nothing.
+- W = `python -B scripts/claude_winnl2_wrap.py`. Its first printed line must be: winnl2: Windows text-mode writes use Linux line endings (newline=''). Otherwise stop with WINNL-FAIL.
+- RUN = artifacts/claude-gram364-20260925/run (inside the tree; create it; gram364_parts.jsonl must not exist before step 4).
+
+STEPS (from the tree root)
+1. Seals: `sha256sum -c` (or the same check in Python) of artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt run from inside that folder (4 OK) and artifacts/claude-gram364-20260925/SEAL-code.sha256.txt from the tree root (9 OK). Any mismatch: stop with SEAL-MISMATCH.
+2. Tests, each must print exactly: `python -B scripts/claude_gram364_test.py` "gram364 tests: 45/45 OK"; `python -B scripts/claude_gram360_test.py` "gram360 tests: 16/16 OK"; `python -B scripts/claude_chat338b_test.py` "338b tests: 3/3 OK"; `python -B scripts/claude_cre333d_test.py` "333d tests: 2/2 OK"; `python -B scripts/claude_vary330c_test.py` "vary330c tests: 2/2 OK". W CHECK: `W scripts/claude_winnl2_test.py probe` prints "ok": true and "crlf": 0. Any other output: stop, report it.
+3. Sleep's base checkpoint (the agent includes sleep): `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/gram364/r44c`, then copy r44c/base-seed4102.pt to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in the tree. Report the JSON line and the .pt sha256.
+4. The arm (first printed lines: the winnl2 line, then "twinb: the plain twin is Twin336b (enable_thinking=False)"):
+   GRAM360_LOG=artifacts/claude-gram364-20260925/run/gram364_parts.jsonl W scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank artifacts/claude-gram364-bankH-20260925 --arm claude_e2e364:build_364 --name P364 --model READER --gen-model BASE --out artifacts/claude-gram364-20260925/run
+5. `W scripts/claude_e2e336_score.py --bank artifacts/claude-gram364-bankH-20260925 --runs artifacts/claude-gram364-20260925/run/arm_P364.jsonl --out artifacts/claude-gram364-20260925/score`
+6. `W scripts/claude_gram364_check.py --bank artifacts/claude-gram364-bankH-20260925 --run artifacts/claude-gram364-20260925/run/arm_P364.jsonl --log artifacts/claude-gram364-20260925/run/gram364_parts.jsonl --out artifacts/claude-gram364-20260925/check`
+7. Count "\r\n" in every file under run/, score/ and check/ (a byte count only; expected 0). Copy run/, score/ and check/ back to the Mac; check sizes and sha256 match BensPC.
+8. RESULTS-benspc.md (a NEW file) in artifacts/claude-gram364-20260925/, counts only: the seal results; each test line and the W CHECK line; step 3's JSON line and sha256; the arm's first two printed lines, last "wrote ..." line, exit code, start and end time (UTC); the scorer's printed line; the checker's last printed line (its WORDS/ASK lines as counts only); the "\r\n" counts; GPU; any traceback in full. Do not quote any reply or turn text. Do not open any check/*.jsonl file.
+PUSH: artifacts/claude-gram364-20260925/RESULTS-benspc.md artifacts/claude-gram364-20260925/run artifacts/claude-gram364-20260925/score artifacts/claude-gram364-20260925/check
+===BENSCHECK===
+COMMON RULES (the director, Claude, wrote this task on 2026-09-25). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md. REPORT ONLY: change nothing, install nothing, stop nothing.
+GPU: yes (BensPC; one job at a time).
+TIME CAP: 5 minutes in total.
+
+YOUR TASK: 000-benspc-check. Ben asked for tonight's GPU work to run on his own PC. Check that BensPC is reachable and ready.
+1. Run `nvidia-smi` on BensPC and report the exact GPU name, total memory, driver version, and whether any process is using the GPU.
+2. Report free disk space on C:.
+3. Report whether C:/Users/benja/lis300/venv/Scripts/python.exe runs `import torch; print(torch.cuda.is_available())`.
+Final reply: one line per item, then `BENSPC OK` or `BENSPC FAIL: <reason>`.
+[0m
+[0m$ [0mgit show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-benspc3.md 2>&1 | head -n 150
+echo "===SECOND TRY RESULTS-benspc2 head==="
+git show origin/builder-outbox:artifacts/claude-bm390-20260925/RESULTS-benspc2.md 2>&1 | head -n 80
+# bm-390 RESULTS-benspc3: TIME-CAP partial, winnl2 PASS (BensPC, 2026-09-25, third attempt)
+
+Verdict: TIME-CAP. The 7-hour cap was reached with lane 1 complete (P, Pm, Pg) and lane 2 partial (Rb OK, T OOM, C killed with no output, Q2 stopped at cap, rest not run). No file was edited; nothing was trained. No benchmark question, answer or reply is quoted anywhere in this file; only counts, hashes, paths, timings and tracebacks.
+Winnl2 wrapper: PASS. Smoke passed with 0 CRLF. Seals ALL-OK.
+
+Time: start 2026-09-25 09:35:50 UTC (Mac date), cap 2026-09-25 16:35:50 UTC (7 h). Stopped Q2 at 2026-09-25 16:37:15 UTC (exact PIDs 10028,14012). GPU work only on BensPC; no rentals.
+DUPLICATE guard: PASS (origin/builder-outbox has only artifacts/claude-bm390-20260925/RESULTS-benspc.md and RESULTS-benspc2.md; no run/, no RESULTS-rent.md, no RESULTS-benspc3.md before start).
+
+## 1. Seals (step 1, BensPC tree3 C:/Users/benja/lis301/work/bm390/tree3): ALL-OK
+
+- artifacts/claude-bm390-20260925/SEAL-code.sha256.txt: 8 lines, 8 OK, 0 FAIL.
+- artifacts/claude-bm390-20260925/SEAL-winnl2.sha256.txt: 3 lines, 3 OK, 0 FAIL.
+- artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt: 229 lines, 229 OK, 0 FAIL.
+
+## W CHECK (right after step 1, from tree3 root)
+
+- (a) no wrapper `python -B scripts/claude_winnl2_test.py probe` printed one JSON line:
+{"python": "3.10.9", "pathlib_loaded_before_fix": false, "sim": false, "fix": "none", "ok": true, "crlf": 3, "text_ok": true, "metadata_ok": true}
+  Expected ok true with crlf above 0 (plain Windows writes \r\n): met (crlf 3).
+- (b) with wrapper `python -B scripts/claude_winnl2_wrap.py scripts/claude_winnl2_test.py probe` printed first line:
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+  then one JSON line:
+{"python": "3.10.9", "pathlib_loaded_before_fix": false, "sim": false, "fix": "none", "ok": true, "crlf": 0, "text_ok": true, "metadata_ok": true}
+  Expected ok true and crlf 0: met. Not WINNL-FAIL.
+
+## 2. Sleep base checkpoint (step 2, plain as listed)
+
+- Command: `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44c`. Exit 0.
+- Printed JSON line:
+{"stage": "base", "seed": 4102, "seconds": 13.4, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+- Copied to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in tree3.
+- .pt sha256: 4655b7610b50e91b57dbb6a780f1935dba8863e3810c4877408d901f1be5edb3, size 2969 bytes.
+
+## 3. Data and rival models (step 3, plain as listed)
+
+- Fetch `python -B scripts/claude_bm390.py fetch --data C:/Users/benja/lis301/work/bm390/data3` printed exactly one JSON line (exit 0):
+{"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850", "gsm8k300_sha256": "073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b"}
+  locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300 as registered. DATA = C:/Users/benja/lis301/work/bm390/data3 (new folder).
+- Rival paths (already downloaded, download nothing):
+  - Q2DIR = C:/Users/benja/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc (exists)
+  - L12DIR = C:/Users/benja/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b (exists)
+- Load checks (each separately, HF_HUB_OFFLINE=1, to cuda, dtype bfloat16): both RUN, exit 0.
+  - Q2: Qwen3_5ForCausalLM 1881825088
+  - L12: Lfm2ForCausalLM 1170340608
+
+## 4. Smoke on made-up data (step 4, both through W): PASS
+
+Smoke data: artifacts/claude-bm390-20260925/smoke (fictional people, not a benchmark). OUT = C:/Users/benja/lis301/work/bm390/smoke3. SLEEPCHECK_LOG = C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl.
+
+- P (agent through W + sleepcheck): exit 0. Start 2026-09-25T09:45:16Z, end 2026-09-25T09:45:55Z (wall 39 s).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Second line: `sleepcheck: logging every sleep to C:/Users/benja/lis301/work/bm390/smoke3/sleep_P.jsonl; stop on missing checkpoint = True`.
+  Last line: `wrote locomo_P.jsonl rows=5 convs=1 bare=5`.
+- T (plain through W): exit 0. Start 2026-09-25T09:46:01Z, end 2026-09-25T09:46:09Z (wall 8 s).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Last line: `wrote locomo_T.jsonl rows=5 convs=1`.
+- sleep_P.jsonl: 2 rows, both checkpoint_exists true (2), attempted true 0.
+- Files under smoke3: 5 files. CRLF byte counts (all 0):
+  locomo_P.jsonl bytes=718 crlf=0; locomo_P_bare.jsonl bytes=852 crlf=0; locomo_P_reading.jsonl bytes=146 crlf=0; locomo_T.jsonl bytes=645 crlf=0; sleep_P.jsonl bytes=434 crlf=0.
+  locomo_P.jsonl rows=5; locomo_T.jsonl rows=5.
+- Required bar (both exit 0 rows=5, sleep 2 rows both checkpoint_exists true, 0 CRLF): met. Nothing ran on real data before smoke passed.
+- Each smoke command launched once; process list checked (GPU free 15460 MiB, only background pythonw, no python.exe jobs).
+
+## 5. Registered arms (step 5): TIME-CAP partial
+
+OUT = artifacts/claude-bm390-20260925/run (inside tree3). DATA = C:/Users/benja/lis301/work/bm390/data3.
+W = `python -B scripts/claude_winnl2_wrap.py`. First printed line of every W command is the winnl2 line above. Env every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1 (plus SLEEPCHECK_STOP=1 SLEEPCHECK_LOG for P).
+Each command its own process, launched once. Process list checked before each launch (no stray python.exe; background pythonw only).
+
+Lane 1 (in order): P, Pm, Pg — all complete.
+Lane 2 (in order, plain LoCoMo first): T, Rb, C, Q2, L12, Tm, Tg, Q2m, Q2g, L12m, L12g.
+Lane 2 parallel or after: AFTER. P printed first `[bm390] conv-` line at 2026-09-25 ~10:19Z (`[bm390] conv-26 turns=439 questions=199`); nvidia-smi at that time showed 8089 MiB free (below 8192 MiB = 8 GB), so lane 2 ran after lane 1 per the registered rule. GPU free later dropped to 6787 MiB during P QA and 6189 MiB during Pm; never 8 GB free while P ran.
+
+### Lane 1
+
+- P: SLEEPCHECK_STOP=1 SLEEPCHECK_LOG=artifacts/claude-bm390-20260925/run/sleep_P.jsonl W scripts/claude_sleepcheck_wrap.py scripts/claude_bm390.py locomo --data DATA --arm agent:claude_e2e330c:build_330c --name P --also-bare --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T09:48:09Z, end 2026-09-25T14:08:47Z (wall ~4 h 20 min). Exit 0 (inferred: wrote line present, no traceback, processes exited, output files present; Mac monitor ssh timed out at ~11:00Z due to client network timeout, server process survived with no relaunch, monitoring resumed by polling BensPC logs — reported as deviation, no duplicate launch).
+  First printed line: `winnl2: Windows text-mode writes use Linux line endings (newline='')`.
+  Second line: `sleepcheck: logging every sleep to artifacts/claude-bm390-20260925/run/sleep_P.jsonl; stop on missing checkpoint = True`.
+  Last line: `wrote locomo_P.jsonl rows=1986 convs=10 bare=1986`.
+  No SLEEP-NOT-LEARNING, no STATE-RESET-FAILED, no traceback.
+- Pm: W scripts/claude_bm390.py general --task mmlu --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T14:09:09Z, end 2026-09-25T14:52:33Z (wall 43 min). Exit 0.
+  First: winnl2 line. Last: `wrote mmlu_P.jsonl rows=300`. No traceback.
+- Pg: W scripts/claude_bm390.py general --task gsm8k --data DATA --arm agent:claude_e2e330c:build_330c --name P --model READER --gen-model BASE --out OUT.
+  Start 2026-09-25T14:52:38Z, end 2026-09-25T15:59:17Z (wall ~1 h 07 min). Exit 0.
+  First: winnl2 line. Last: `wrote gsm8k_P.jsonl rows=300`. No traceback.
+
+### Lane 2
+
+- T: W scripts/claude_bm390.py locomo --data DATA --arm plain:BASE --name T --out OUT.
+  Start 2026-09-25T15:59:31Z, end before 2026-09-25T16:00:14Z (failed fast). Exit non-zero (OOM, no wrote line, no output file).
+  First: winnl2 line. Last: no wrote line (crashed on first generate). Full traceback below (CUDA OOM).
+  A lane-2 failure does not stop the others.
+- Rb: W scripts/claude_bm390.py locomo --data DATA --arm bm25:BASE --name Rb --out OUT.
+  Start 2026-09-25T16:00:14Z, end 2026-09-25T16:08:13Z (wall 8 min). Exit 0.
+  First: winnl2 line. Last: `wrote locomo_Rb.jsonl rows=1986 convs=10`. No traceback.
+- C: W scripts/claude_bm390.py locomo --data DATA --arm closed:BASE --name C --out OUT.
+  Start 2026-09-25T16:08:20Z. Mac tool timeout 10 min killed the Mac ssh client at ~16:18:20Z; BensPC process continued (9 conv lines in Mac log, no wrote, no traceback), gone by 2026-09-25T16:26:38Z with no output file. Launched once; process list checked (no python.exe before launch). No wrote line, no traceback captured, no locomo_C.jsonl. Reported as killed/no-output (tool timeout, not cap).
+  First: winnl2 line. Last: no wrote line (`[bm390] conv-49 ...` was last conv in partial log, conv-50 missing).
+- Q2: W scripts/claude_bm390.py locomo --data DATA --arm plain:Q2DIR --name Q2 --out OUT.
+  Start 2026-09-25T16:26:57Z. At time cap 2026-09-25T16:35:50Z still running (loading done, warnings about causal_conv1d/flash-linear-attention fallback, no conv line, no wrote, no traceback). Stopped at 2026-09-25T16:37:15Z by exact PIDs 10028 and 14012 (both StartTime 9/25/2026 12:26:58 PM, paths venv python and system python; no other python processes; GPU free after stop 15540 MiB). No output file. Launched once.
+  First: winnl2 line. Last: no wrote line.
+- L12, Tm, Tg, Q2m, Q2g, L12m, L12g: never launched (0 files). Time cap reached.
+
+### Run files (counts only, local copy verified against BensPC sizes and sha256)
+
+- gsm8k_P.jsonl bytes=40929 crlf=0 rows=300 sha256=1b94b4507be7b8160e392715eb645783f8ead230c9fcaad13a8c20ed4bb7a6ef
+- locomo_P.jsonl bytes=267386 crlf=0 rows=1986 sha256=01df3f97943911a3369c07cf7928909032f8d6314e9b5c2fc4438953fea0d59c
+- locomo_P_bare.jsonl bytes=321073 crlf=0 rows=1986 sha256=6cc23aa16c85503008edb9a0827fab88b0d0252995a5048af647a3b4e3210391
+- locomo_P_reading.jsonl bytes=1536 crlf=0 rows=10 sha256=255f8ca78925b0f75a12a79d077656bbdfc680471cc2bc68d6f2052795a1b5e6
+- locomo_Rb.jsonl bytes=274510 crlf=0 rows=1986 sha256=af15f49e14d89669187c6794e169b9b6bc0f6a40af38ddd957dfe44e1633fe55
+- mmlu_P.jsonl bytes=45339 crlf=0 rows=300 sha256=81aef79fe0cd78b56423278b6db858aafb8e07914952f38d4517a7e1dcd305f5
+- sleep_P.jsonl bytes=59024 crlf=0 rows=272 sha256=7694e95e8a655e6fe8fabe0956b8703d52595c5709bb4b7477526da571d98cf6
+- Total run/*.jsonl files: 7. Row counts above. CRLF counts all 0.
+- sleep_P.jsonl: rows 272, checkpoint_exists true 272, attempted true 0.
+- Missing (never finished, 0 files): locomo_T.jsonl, locomo_C.jsonl, locomo_Q2.jsonl, locomo_L12.jsonl, general_T_mmlu/gsm8k, general_Q2_mmlu/gsm8k, general_L12_mmlu/gsm8k (names per runner; none exist).
+
+## 6. Copy-back (step 6)
+
+- Copied 7 run/ files above from BensPC tree3 to Mac worktree artifacts/claude-bm390-20260925/run/ via scp. Sizes match BensPC (listed above). Sha256 match BensPC (listed above, case-insensitive).
+- Models left on BensPC (READER, BASE, Q2DIR, L12DIR, MiniLM). Data3, r44c, smoke3, tree3 left on BensPC. Nothing deleted.
+
+## 7. Setup notes
+
+- Tree: git archive origin/builder-outbox then origin/main on top, plus self122_head.pt sha256 5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25 (match), copied to NEW folder C:/Users/benja/lis301/work/bm390/tree3 (161 MB tgz). Earlier trees left as is. Tree3 seal files present before step 1.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe 3.10.9. Env every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1 (plus SLEEPCHECK_STOP=1 SLEEPCHECK_LOG for P).
+- READER C:/Users/benja/lis301/work/run/merged model.safetensors exists (sha check from prior attempts b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890, not re-hashed this run to save time; prior attempts matched).
+- BASE snapshot 87179e5c1f455ef22e6223592d2d61351b525bfc present.
+- MiniLM route122 check from tree3 root prints a route (D8, conf 0.9732), no error.
+- pyarrow 25.0.1 imports, no error. Nothing installed or upgraded.
+- GPU: NVIDIA GeForce RTX 5070 Ti, 16303 MiB total, driver 591.86, CUDA 13.1. Idle before (15460 MiB free, 0% util, desktop processes only) and after stop (15540 MiB free). During P: free down to 6787 MiB, util up to 45%. During Pm: free 6189 MiB, util 31%. One GPU job at a time kept (only our python.exe plus background pythonw and desktop processes; process list checked before each launch; no rentals).
+- No benchmark question, answer or reply is quoted anywhere in this file; only counts, hashes, paths, timings and tracebacks.
+
+## Tracebacks in full
+
+### T OOM (lane2_T, exit non-zero, no output file)
+
+```
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+Traceback (most recent call last):
+  File "C:\Users\benja\lis301\work\bm390\tree3\scripts\claude_winnl2_wrap.py", line 70, in <module>
+    main()
+  File "C:\Users\benja\lis301\work\bm390\tree3\scripts\claude_winnl2_wrap.py", line 66, in main
+    runpy.run_path(target, run_name="__main__")
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\runpy.py", line 86, in _run_code
+===SECOND TRY RESULTS-benspc2 head===
+# bm-390 RESULTS-benspc2: SMOKE-FAIL, wrapper bug (BensPC, 2026-09-25, second attempt)
+
+Verdict: SMOKE-FAIL. The registered run never started on real benchmark items.
+Nothing was run on the real data (no run/ directory was created on BensPC).
+Both smoke commands through scripts/claude_winnl_wrap.py crash on Windows
+before writing any row, with TypeError in the wrapper itself (not the turn log).
+No file was edited; nothing was trained. No benchmark question, answer or reply
+is quoted anywhere in this file; only counts, hashes, paths, timings and tracebacks.
+
+Time: start 2026-09-25 06:28:33 UTC, stopped 2026-09-25 ~06:41 UTC (about 13 min,
+within the 7-hour cap). GPU work ran only on BensPC; no rentals.
+DUPLICATE guard: PASS (origin/builder-outbox has only
+artifacts/claude-bm390-20260925/RESULTS-benspc.md, no run/, no RESULTS-rent.md
+for bm-390; runs/rent-bm390/rent-bm390.exit exists with rc=0).
+
+## 1. Seals (step 1, BensPC tree2 root C:/Users/benja/lis301/work/bm390/tree2): ALL-OK
+
+- artifacts/claude-bm390-20260925/SEAL-code.sha256.txt: 8 lines, 8 OK, 0 FAIL.
+- artifacts/claude-bm390-20260925/SEAL-winnl.sha256.txt: 3 lines, 3 OK, 0 FAIL.
+- artifacts/claude-e2e336b-20260925/SEAL-code.sha256.txt: 229 lines, 229 OK, 0 FAIL.
+
+## 2. Sleep base checkpoint (step 2)
+
+- Registered command (plain, as listed): `python -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/bm390/r44b`. Exit 0.
+- Printed JSON line: {"stage": "base", "seed": 4102, "seconds": 12.9, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+- Copied to artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt in tree2.
+- .pt sha256: 4655b7610b50e91b57dbb6a780f1935dba8863e3810c4877408d901f1be5edb3, size 2969 bytes.
+- Diagnosis run (extra, same command through the wrapper): exit 1. First line
+  `winnl: Windows text-mode writes use Linux line endings (newline='')`, then
+  TypeError in claude_winnl_wrap.py line 35 (see smoke traceback below for the
+  same error). This extra run is reported as a deviation; the registered plain
+  run above is the one that produced the checkpoint.
+
+## 3. Data and rival models (step 3, plain python as listed)
+
+- Fetch command printed exactly one JSON line (counts and hashes only):
+  {"fetch": "OK", "locomo_convs": 10, "locomo_qa": 1986, "locomo_by_category": {"1": 282, "2": 321, "3": 96, "4": 841, "5": 446}, "mmlu_ok_rows": 5330, "mmlu_sample": 300, "gsm8k_rows": 1319, "gsm8k_sample": 300, "mmlu300_sha256": "1a44e3041355e7fcc1e4d2b188dec0f2362a2ceb9820f62acd957b29909e3850", "gsm8k300_sha256": "073acc01184dc13caa732adf33fb9d69e049153549d8364401f4320ca0bc555b"}
+  locomo_qa 1986, mmlu_sample 300, gsm8k_sample 300 as registered. Exit 0.
+  DATA = C:/Users/benja/lis301/work/bm390/data2 (new folder, created).
+- Rival paths (already downloaded, download nothing):
+  - Q2DIR = C:\Users\benja\.cache\huggingface\hub\models--Qwen--Qwen3.5-2B\snapshots\15852e8c16360a2fea060d615a32b45270f8a8fc (exists)
+  - L12DIR = C:\Users\benja\.cache\huggingface\hub\models--LiquidAI--LFM2.5-1.2B-Instruct\snapshots\0f604ada3f766f9f257460c4c9f0b5d6f69d431b (exists)
+- Load checks (each separately, HF_HUB_OFFLINE=1, to cuda, dtype bfloat16): both RUN.
+  - Q2: Qwen3_5ForCausalLM 1881825088, exit 0.
+  - L12: Lfm2ForCausalLM 1170340608, exit 0.
+
+## 4. Smoke on made-up data (step 4, both through W): FAIL
+
+Smoke data: artifacts/claude-bm390-20260925/smoke (fictional people, not a benchmark).
+OUT = C:/Users/benja/lis301/work/bm390/smoke2 (never created; both commands crashed
+before mkdir). SLEEPCHECK_LOG = C:/Users/benja/lis301/work/bm390/smoke2/sleep_P.jsonl
+(never created).
+
+- P (agent arm through W + sleepcheck wrap): exit code 1. No "wrote ..." line.
+  Start 2026-09-25 06:39:58.313 UTC, end 2026-09-25 06:39:58.495 UTC (0.2 s).
+  First printed line: `winnl: Windows text-mode writes use Linux line endings (newline='')`.
+  Second line: `sleepcheck: logging every sleep to C:/Users/benja/lis301/work/bm390/smoke2/sleep_P.jsonl; stop on missing checkpoint = True`.
+  Then the TypeError traceback below (load_locomo read_text, before any turn).
+- T (plain arm through W): exit code 1. No "wrote ..." line.
+  Start 2026-09-25 06:40:21.018 UTC, end 2026-09-25 06:40:21.110 UTC (0.1 s).
+  First printed line: `winnl: Windows text-mode writes use Linux line endings (newline='')`.
+  Then the identical TypeError traceback below.
+- sleep_P.jsonl: 0 rows; the file was never created. Rows with checkpoint_exists
+  true: 0. Rows with attempted true: 0.
+- Files under smoke2: 0 files (folder does not exist). Count of "\r\n" in every
+  file under smoke2: n/a (0 files, byte count 0 by vacuity).
+- Required bar (both exit 0 with rows=5, sleep log 2 rows both checkpoint_exists
+  true, 0 "\r\n"): NOT met. Stopped with SMOKE-FAIL; nothing ran on real data.
+- Each smoke command was launched ONCE; process list checked before any retry
+  (no python processes remained); no retries were made.
+
+### Exact error and full traceback (P smoke; T smoke identical except target lines)
+
+P console stdout (3 lines): SMOKE-P-START marker, the winnl line, the sleepcheck
+line. P stderr in full:
+
+```
+Traceback (most recent call last):
+  File "C:\Users\benja\lis301\work\bm390\tree2\scripts\claude_winnl_wrap.py", line 63, in <module>
+    main()
+[0m
+[0m$ [0mpython3 -c "
+import subprocess
+# search main branch for benspc connection hints without opening test panels
+out=subprocess.check_output(['git','grep','-i','benspc','origin/main','--','*.md'], text=True)
+print(out[:8000])
+"
+origin/main:ARCHITECTURE_DECISION.md:Neither backbone passes the preset gates (PC-E >= 95%, PC-W >= 90%). On these single-hop controls the transformer does not beat the GRU (mean about 2 points lower, within seed noise) while costing about 1.6x wall time. Its expected advantage, multi-hop chaining and structured intermediate values, is not yet tested. GPU utilization is low (about 205 MiB peak; steps are bound by kernel launches and synchronization), so larger item batches are nearly free. Raw results: `artifacts/benspc/`.
+origin/main:ARCHITECTURE_DECISION.md:Measured PC-C on BensPC RTX 5070 Ti, transformer seed 0, 2,000 steps, lr 3e-4, 16 held-out worlds / 32 two-hop queries:
+origin/main:ARCHITECTURE_DECISION.md:This passes the preset PC-C >=90% gate and localizes the old failure to the recurrent slot-carry/read-decode path rather than an inability of the transformer to use two sequential memory reads. It does **not** yet show that the learned workspace can infer the second-hop key on its own: PC-C deliberately teacher-forces that key. The next research discriminator remains learned re-keying/adaptive retrieval, after the prerequisite learned-key/writer controls are brought through their gates. Raw v3 result and checkpoint are under `artifacts/benspc/pc-chain-transformer-reader3-seed0-final-20260918.*`.
+origin/main:ARCHITECTURE_DECISION.md:The same run exposed a wall-clock accounting defect: a nominal 300 s pilot took 346.7 s because the selected transformer's ~58 MiB AdamW recovery checkpoint was serialized after the training deadline inside the evaluation reserve. `run_experiment` now reserves an additional measured 120 s checkpoint window for full-size transformer pilots; tiny transformer fixtures and GRU runs keep the previous budget. After PC-C and reader v3, the local regression suite is 98/98 and the BensPC platform-applicable suite is 86/86.
+origin/main:README.md:## Conservative BensPC workflow
+origin/main:README.md:sh scripts/remote_benspc.sh preflight
+origin/main:README.md:sh scripts/remote_benspc.sh sync
+origin/main:README.md:sh scripts/remote_benspc.sh test
+origin/main:README.md:BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pilot --device=cuda --steps=10000 --seconds=480 --tiers=1,2 --eval-worlds=4
+origin/main:README.md:BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pc-reader --device=cuda --steps=10000 --seconds=480 --tiers=2,3 --eval-worlds=8
+origin/main:REMOTE_RUN.md:# Conservative BensPC remote workflow
+origin/main:REMOTE_RUN.md:This workflow targets the already-verified Tailscale/SSH host alias `benspc` and the existing Windows Python executable:
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh preflight
+origin/main:REMOTE_RUN.md:BENSPC_MIN_FREE_MIB=14000 sh scripts/remote_benspc.sh preflight
+origin/main:REMOTE_RUN.md:BENSPC_GPU_INDEX=0 sh scripts/remote_benspc.sh preflight
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh sync
+origin/main:REMOTE_RUN.md:BENSPC_REMOTE_PROJECT=C:/Users/benja/beautiful-model-pilot sh scripts/remote_benspc.sh sync
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh test
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh pilot
+origin/main:REMOTE_RUN.md:BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pilot --device=cuda --steps=10000 --seconds=480 --tiers=1,2 --eval-worlds=4
+origin/main:REMOTE_RUN.md:BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pc-reader --device=cuda --steps=10000 --seconds=480 --tiers=2,3 --eval-worlds=8
+origin/main:REMOTE_RUN.md:`BENSPC_PILOT_SECONDS` is restricted to 1–600 seconds. Only Pilot and `launch` enforce `BENSPC_MIN_FREE_MIB`; sync and CPU tests do not depend on free VRAM. Pilot uses the fixed existing Windows Python installation and its already-installed packages (including Torch); the temporary runtime has no dependency import roots and performs no install or download. The helper does not enumerate or terminate existing GPU processes. If the pilot itself exceeds its deadline, it terminates only the exact child PID that this invocation started, then returns failure.
+origin/main:REMOTE_RUN.md:The Windows runtime JSON (temporary for Pilot, `runtime.json` in the run directory for `launch`) keeps `hard_bytes=100000000000` and `steady_bytes=80000000000` as conservative project/accounted-root bounds. That accounting only sees the remote project plus any explicitly registered roots (none are added by this helper). It therefore does **not** claim or provide host-global 100 GB aggregation across unrelated BensPC directories, other projects, caches, or processes.
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh launch pc-reader --device=cuda --steps=200000 --seconds=14400 --tiers=2,3
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh status RUN_ID
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh fetch RUN_ID
+origin/main:REMOTE_RUN.md:sh scripts/remote_benspc.sh stop RUN_ID
+origin/main:REMOTE_RUN.md:- `launch` applies the same argument whitelist and `BENSPC_MIN_FREE_MIB` gate as Pilot, then returns once `run.py` is running and prints `RUN_ID=<UTC timestamp>-<8 random hex>`. Its files live in `<remote project>/.runtime/runs/RUN_ID/`: `stdout.log`, `stderr.log`, `runtime.json`, `run.json` (run_id, pid, process start time, command line, started_at, args) and, after exit, `exit.json` (exit code). A new run directory is created without `-Force`, so an existing run is never overwritten. There is no wall-clock limit; bound the experiment with its own `--seconds`.
+origin/main:REMOTE_RUN.md:- `fetch` refuses while the run is alive (a snapshot would block the final copy). Afterwards it copies the run directory's files plus every existing `artifacts/<name>` that `run.py` printed to stdout into local `artifacts/benspc/RUN_ID/` (listed artifacts under `artifacts/benspc/RUN_ID/artifacts/`). Existing local files are never overwritten; each copy lands in a `.partial` file first and is renamed only when complete. Listed names are re-validated locally; anything outside `[A-Za-z0-9_.-]` or starting with `.` aborts the fetch.
+origin/main:REMOTE_RUN.md:- Host alias: `benspc` (override with `BENSPC_HOST`).
+origin/main:archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md:**CLI.** A new `run.py` subcommand. `remote_benspc.sh launch` passes it through, because it only checks argument characters.
+origin/main:archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md:  Mac work is free; BensPC remains off-limits. Ledger: artifacts/spend-ledger.md.
+origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt2b.md:Where: one GPU run on BensPC ($0); that run is the registered result. (No CPU repeat.)
+origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt2b.md:Amended 09:25 UTC, before any run started (BensPC is busy with other jobs first; an earlier note here said the job runner had stalled, which was a misread of its local-time clock): the same command also runs on the
+origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt3.md:Same command and marks, new seeds: --train-seed 6 --test-seed 781 --n-test 80, out gpu-3r, on BensPC ($0).
+origin/main:artifacts/claude-blurt2-20260925/RESULTS-gpu.md:# blurt-2 learning loop: GPU result (BensPC, 2026-09-25)
+origin/main:artifacts/claude-blurt2-20260925/RESULTS-gpu.md:BASE = local MiniCPM5-1B snapshot on BensPC (openbmb/MiniCPM5-1B, no download, thinking off).
+origin/main:artifacts/claude-blurt2-20260925/RESULTS-gpu.md:- GPU: NVIDIA GeForce RTX 5070 Ti (BensPC, CUDA 13.1, driver 591.86)
+origin/main:artifacts/claude-blurt2-20260925/VERIFY-blurt2.md:| GPU (BensPC 5070 Ti) | 1.5 | 184/379 | 6/127 | 13, 11 (12) | 5, 6 (5.5) | +6 FAIL | +6.5 PASS |
+origin/main:artifacts/claude-bm390-20260925/AMEND-winnl.md:difference to how bm-390 is launched on BensPC. Nothing about the marks, arms, data, prompts or scoring changes.
+origin/main:artifacts/claude-bm390-20260925/AMEND-winnl.md:bm-390's first attempt on BensPC stopped at its smoke test on made-up data
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 -o BatchMode=yes benspc "echo OK; hostname; nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv" 2>&1 | head -n 20
+echo "---SSH EXIT:$?"
+cat ~/.ssh/config 2>&1 | head -n 60; echo "---"; which ssh; uptime; df -g / 2>&1 | head
+OK; hostname; nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
+---SSH EXIT:0
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---
+/usr/bin/ssh
+12:41  up 2 days,  2:35, 4 users, load averages: 58.97 38.50 34.48
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        13    50%  484014 137469160    0%   /
+[0m
+[0m$ [0mgit show origin/main:scripts/remote_benspc.sh | head -n 120
+echo "===LOCAL scripts?==="
+ls scripts/remote_benspc.sh 2>&1; ls scripts/ | grep -i benspc | head
+#!/bin/sh
+set -eu
+
+# Local coordinator for the already-configured Tailscale/SSH alias "benspc".
+# It deliberately uses only ssh/scp: no rsync, package install, download, or
+# process-management command is used here.
+
+PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+HOST=${BENSPC_HOST:-benspc}
+REMOTE_PROJECT=${BENSPC_REMOTE_PROJECT:-C:/Users/benja/beautiful-model}
+REMOTE_PYTHON='C:/Users/benja/AppData/Local/Programs/Python/Python310/python.exe'
+MIN_FREE_MIB=${BENSPC_MIN_FREE_MIB:-12000}
+GPU_INDEX=${BENSPC_GPU_INDEX:-0}
+PILOT_SECONDS=${BENSPC_PILOT_SECONDS:-600}
+
+# Bound both initial connection setup and an established connection that stops
+# responding. These are OpenSSH client options and apply equally to ssh/scp.
+SSH_CONNECT_TIMEOUT_SECONDS=10
+SSH_SERVER_ALIVE_INTERVAL_SECONDS=15
+SSH_SERVER_ALIVE_COUNT_MAX=2
+
+die() {
+    printf '%s\n' "remote_benspc: $*" >&2
+    exit 2
+}
+
+case "$HOST" in
+    *[!A-Za-z0-9_.-]*|'') die "BENSPC_HOST contains unsafe characters" ;;
+esac
+
+case "$REMOTE_PROJECT" in
+    C:/Users/benja/*) ;;
+    *) die "BENSPC_REMOTE_PROJECT must stay below C:/Users/benja/" ;;
+esac
+case "$REMOTE_PROJECT" in
+    *[!A-Za-z0-9_./:-]*) die "BENSPC_REMOTE_PROJECT must not contain spaces or shell metacharacters" ;;
+esac
+
+validate_gpu_config() {
+    case "$MIN_FREE_MIB" in *[!0-9]*|'') die "BENSPC_MIN_FREE_MIB must be a positive integer" ;; esac
+    case "$GPU_INDEX" in *[!0-9]*|'') die "BENSPC_GPU_INDEX must be a nonnegative integer" ;; esac
+    [ "$MIN_FREE_MIB" -gt 0 ] || die "BENSPC_MIN_FREE_MIB must be positive"
+}
+
+validate_pilot_seconds() {
+    case "$PILOT_SECONDS" in *[!0-9]*|'') die "BENSPC_PILOT_SECONDS must be an integer from 1 to 600" ;; esac
+    [ "$PILOT_SECONDS" -ge 1 ] && [ "$PILOT_SECONDS" -le 600 ] || die "BENSPC_PILOT_SECONDS must be between 1 and 600"
+}
+
+ssh_benspc() {
+    ssh \
+        -n \
+        -o BatchMode=yes \
+        -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT_SECONDS" \
+        -o "ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL_SECONDS" \
+        -o "ServerAliveCountMax=$SSH_SERVER_ALIVE_COUNT_MAX" \
+        "$@"
+}
+
+scp_benspc() {
+    scp \
+        -o BatchMode=yes \
+        -o "ConnectTimeout=$SSH_CONNECT_TIMEOUT_SECONDS" \
+        -o "ServerAliveInterval=$SSH_SERVER_ALIVE_INTERVAL_SECONDS" \
+        -o "ServerAliveCountMax=$SSH_SERVER_ALIVE_COUNT_MAX" \
+        "$@"
+}
+
+remote_preflight() {
+    # Read-only. In particular, no New-Item, Set-Content, process stop, or file
+    # transfer happens here. Low VRAM is pilot readiness state, not a failure
+    # that could accidentally gate sync or CPU-only tests.
+    validate_gpu_config
+    ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"\$ErrorActionPreference='Stop'; \$python='$REMOTE_PYTHON'; \$project='$REMOTE_PROJECT'; \$gpu=$GPU_INDEX; \$minimum=$MIN_FREE_MIB; if (-not (Test-Path -LiteralPath \$python -PathType Leaf)) { throw 'Expected Python 3.10 executable is missing' }; \$smi=(Get-Command nvidia-smi.exe -ErrorAction Stop).Source; \$freeText=& \$smi --id=\$gpu --query-gpu=memory.free --format=csv,noheader,nounits; if (\$LASTEXITCODE -ne 0) { throw 'nvidia-smi memory query failed' }; \$free=[int]((\$freeText | Select-Object -First 1).Trim()); \$nameText=& \$smi --id=\$gpu --query-gpu=name --format=csv,noheader; if (\$LASTEXITCODE -ne 0) { throw 'nvidia-smi name query failed' }; \$version=& \$python --version 2>&1; Write-Output ('HOST=' + \$env:COMPUTERNAME); Write-Output ('PYTHON=' + \$python); Write-Output ('PYTHON_VERSION=' + \$version); Write-Output ('GPU_INDEX=' + \$gpu); Write-Output ('GPU_NAME=' + ((\$nameText | Select-Object -First 1).Trim())); Write-Output ('GPU_FREE_MIB=' + \$free); Write-Output ('MIN_FREE_MIB=' + \$minimum); Write-Output ('REMOTE_PROJECT=' + \$project); Write-Output ('REMOTE_PROJECT_EXISTS=' + (Test-Path -LiteralPath \$project -PathType Container)); if (\$free -lt \$minimum) { Write-Output 'PILOT_GPU_READY=false'; Write-Output 'PILOT_GPU_STATUS=LOW_VRAM' } else { Write-Output 'PILOT_GPU_READY=true'; Write-Output 'PILOT_GPU_STATUS=READY' }\""
+}
+
+sync_project() {
+    ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"New-Item -ItemType Directory -Force -Path '$REMOTE_PROJECT' | Out-Null\""
+
+    # Copy regular project files while excluding generated/runtime state. Each
+    # destination directory is created if needed. Nothing remote is deleted.
+    find "$PROJECT_ROOT" \
+        \( -type d \( -name .budget -o -name .runtime -o -name .git -o -name __pycache__ -o -name artifacts -o -name cache \) -prune \) -o \
+        -type f -print |
+    while IFS= read -r local_file; do
+        relative=${local_file#"$PROJECT_ROOT/"}
+        case "$relative" in
+            *[!A-Za-z0-9_./-]*) die "Refusing to sync path with unsafe characters: $relative" ;;
+        esac
+        remote_file="$REMOTE_PROJECT/$relative"
+        remote_dir=${remote_file%/*}
+        ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"New-Item -ItemType Directory -Force -Path '$remote_dir' | Out-Null\""
+        scp_benspc -q -p -- "$local_file" "$HOST:$remote_file"
+        printf 'synced %s\n' "$relative"
+    done
+
+    printf 'sync complete: %s:%s\n' "$HOST" "$REMOTE_PROJECT"
+    printf 'No remote files were deleted. Generated .budget/.runtime/artifacts/cache data were not copied.\n'
+}
+
+remote_helper() {
+    # $1 is the helper action; the remaining words are already-validated
+    # helper arguments joined into the single remote command line.
+    action=$1
+    shift
+    ssh_benspc "$HOST" "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $REMOTE_PROJECT/scripts/remote_benspc.ps1 -Action $action -ProjectPath $REMOTE_PROJECT $*"
+}
+
+join_run_args() {
+    # Sets run_args_option for Pilot/Launch. No extra args means no invented
+    # subcommand: run.py then takes its real default path (currently audit).
+    run_args_text=""
+    for arg in "$@"; do
+        case "$arg" in
+            *[!A-Za-z0-9_./:=,+-]*|'') die "run.py arguments may contain only conservative CLI characters: $arg" ;;
+        esac
+        if [ -z "$run_args_text" ]; then run_args_text=$arg; else run_args_text="$run_args_text $arg"; fi
+    done
+    # Windows rejects command lines over 8191 characters; stay well below.
+    [ "${#run_args_text}" -le 2000 ] || die "run.py arguments exceed 2000 characters"
+===LOCAL scripts?===
+scripts/remote_benspc.sh
+remote_benspc.ps1
+remote_benspc.sh
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$env:COMPUTERNAME; nvidia-smi --query-gpu=name,memory.total,memory.free,driver_version --format=csv\"" 2>&1 | head -n 20; echo EXIT:$?
+BENSPC
+name, memory.total [MiB], memory.free [MiB], driver_version
+NVIDIA GeForce RTX 5070 Ti, 16303 MiB, 15540 MiB, 591.86
+EXIT:0
+[0m
+[0m# [0mTodos
+[•] Duplicate guard + read PASSMARKS/seals/queue spec (no edits)
+[ ] BensPC preflight: GPU, disk, python, READER, BASE, existing gram364 folder
+[ ] Build tree via git archive (builder-outbox then main on top) + self122_head.pt, verify sha
+[ ] Copy tree to BensPC as NEW C:/Users/benja/lis301/work/gram364/tree
+[ ] Step1 seals + Step2 tests + W CHECK on BensPC
+[ ] Step3 sleep base checkpoint
+[ ] Step4 arm P364 (GRAM360_LOG, twinb wrap)
+[ ] Steps5-7 score, check, CRLF counts, copy back + verify sha
+[ ] Step8 write RESULTS-benspc.md (NEW, counts only) + report
+[0m
+[0m$ [0mdate -u +"%Y-%m-%dT%H:%M:%SZ"; git rev-parse --short origin/main; git rev-parse --short origin/builder-outbox; git show origin/main:artifacts/claude-gram364-20260925/SEAL-code.sha256.txt; echo "---BANK SEAL---"; git show origin/main:artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt
+2026-09-25T16:42:20Z
+ee8688ee9
+2cb314cd1
+e78b5b88e4fe5632ed1311eb91ae37124aa8d12c9d72e0d091d38b3d19a55afc  scripts/claude_gram364.py
+7278dcaa0db65f7ad6bd27a72dbf4cede36d40c18a0daf1893e06118978a793d  scripts/claude_gram364_test.py
+e2979cb12beff97d5222afd3a94fb330baedd0d0ad356603edbb34aae6016cca  scripts/claude_gram364_check.py
+2ff507f30ae0b8bfa9fd52a756282c63d65a1b457825eb7e02ae7c7a3e50f0b6  scripts/claude_gram364_grade.py
+72ff8d62d58d806d4e9a93c93fde632b3d5ba34a6260c764b59d3f66032a5203  scripts/claude_e2e364.py
+7d1b3d16aa1e738403cb9d6e2f3ef339deae706ee4dceb92e991e23bcc72454a  scripts/claude_gram360.py
+c211b0a81ee516f7accc0ddf616e6d7f7abf8d9e59b0d96678c4a6b2a5964f25  scripts/claude_gram360_check.py
+4688b5e360fd42c4b767787a0ff44a1c535f4640d885c9fd4118134c214e78e9  scripts/claude_gram360_gradeprep.py
+9efa38ae3eb5283b67ab1e6a402a1e2c79366f5798999b9cd5c693e7f94f5b2b  artifacts/claude-gram364-20260925/PASSMARKS.md
+---BANK SEAL---
+80e7df0113c4529ba6651423c6a16f872c81314c0c765df178969923f071fef5  turns.jsonl
+04ee5f01804d5cfdb4a6a059eb9e9dfe88f392efb7db42c9755583dda19beaae  truth.jsonl
+a5919e97632b8bf04e5d2cf93f8f6ec164188a6bfaf47d9333ce2ae801a9e60f  README.md
+1f4c850eab9fa6284cfe3386babb2fc5be25e5500ad09f4db7ca6793f1f4951b  check_bank.py
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; Write-Output ('GPU_PROCS:'); nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv; Write-Output ('DISK_C:'); Get-PSDrive C | Format-Table -AutoSize | Out-String -Width 200; Write-Output ('GRAM364_EXISTS:'); Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364'; Get-ChildItem -LiteralPath 'C:/Users/benja/lis301/work/gram364' -ErrorAction SilentlyContinue | Select-Object Name,LastWriteTime | Out-String -Width 200; Write-Output ('PYTHON:'); C:/Users/benja/lis300/venv/Scripts/python.exe --version 2>&1; Write-Output ('READER:'); Test-Path -LiteralPath 'C:/Users/benja/lis301/work/run/merged/model.safetensors'; Write-Output ('BASE:'); Test-Path -LiteralPath 'C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc'\"" 2>&1 | head -n 60
+GPU_PROCS:
+pid, process_name, used_gpu_memory [MiB]
+1768, C:\Windows\System32\dwm.exe, [N/A]
+4152, C:\Windows\System32\ShellHost.exe, [N/A]
+10064, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\CrossDeviceResume.exe, [N/A]
+8564, C:\Windows\explorer.exe, [N/A]
+13348, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\SearchHost.exe, [N/A]
+13380, C:\Windows\SystemApps\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\StartMenuExperienceHost.exe, [N/A]
+15392, C:\Program Files (x86)\Microsoft\EdgeWebView\Application\153.0.4234.48\msedgewebview2.exe, [N/A]
+19200, C:\Program Files\Common Files\microsoft shared\ink\TabTip.exe, [N/A]
+17304, C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy\ShellExperienceHost.exe, [N/A]
+19892, C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\TextInputHost.exe, [N/A]
+5112, C:\Program Files\Okta\Okta Verify\OktaVerify.exe, [N/A]
+19504, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.AdvancedPaste.exe, [N/A]
+15856, C:\Program Files\PowerToys\WinUI3Apps\PowerToys.Peek.UI.exe, [N/A]
+5268, C:\Program Files\PowerToys\PowerToys.ColorPickerUI.exe, [N/A]
+10660, C:\Program Files\PowerToys\PowerToys.FancyZones.exe, [N/A]
+13148, C:\Program Files\PowerToys\PowerToys.PowerLauncher.exe, [N/A]
+3328, C:\Users\benja\AppData\Local\Discord\app-1.0.9259\Discord.exe, [N/A]
+2316, C:\Program Files (x86)\e2eSoft\iVCam\iVCam.exe, [N/A]
+20964, C:\Users\benja\AppData\Local\Programs\Lunar Client\Lunar Client.exe, [N/A]
+12760, C:\Program Files\WindowsApps\12030rocksdanister.LivelyWallpaper_1.0.163.0_x64__97hta09mmv6hy\Build\Lively.exe, [N/A]
+18288, C:\Program Files\ShareX\ShareX.exe, [N/A]
+21352, C:\Windows\System32\Taskmgr.exe, [N/A]
+12604, C:\Windows\System32\ApplicationFrameHost.exe, [N/A]
+20844, C:\Windows\ImmersiveControlPanel\SystemSettings.exe, [N/A]
+16788, C:\Program Files\WindowsApps\Microsoft.YourPhone_1.26072.255.0_x64__8wekyb3d8bbwe\PhoneExperienceHost.exe, [N/A]
+DISK_C:
+
+Name Used (GB) Free (GB) Provider   Root CurrentLocation
+---- --------- --------- --------   ---- ---------------
+C       917.01     35.86 FileSystem C:\      Users\benja
+
+
+
+GRAM364_EXISTS:
+False
+False
+
+PYTHON:
+Python 3.10.9
+READER:
+True
+BASE:
+True
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main | grep -i self122 | head; echo "---"; git ls-tree -r --name-only origin/builder-outbox | grep -i self122 | head; echo "---local check---"; ls -lh artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head; sha256sum artifacts/fable-self122-20260922/self122_head.pt 2>&1 | head
+artifacts/fable-self122-20260922/PASSMARKS.md
+artifacts/fable-self122-20260922/RESULTS.md
+artifacts/fable-self122-20260922/SEAL.sha256.txt
+artifacts/fable-self122-20260922/WRONGS.md
+artifacts/fable-self122-20260922/heldout122.jsonl
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.fix77.seal.json
+artifacts/fable-self122-20260922/self122-notebook/notebook/events.jsonl
+artifacts/fable-self122-20260922/self122-notebook/state.json
+artifacts/fable-self122-20260922/self122-results.json
+artifacts/fable-self122-20260922/train122.jsonl
+---
+---local check---
+-rw-r--r--  1 ben-hannan  staff    64K Sep 22 00:46 artifacts/fable-self122-20260922/self122_head.pt
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  artifacts/fable-self122-20260922/self122_head.pt
+[0m
+[0m$ [0mls /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/opencode 2>&1 | head; T=$(mktemp -d)/tree; mkdir -p "$T"; echo "T=$T"; git archive origin/builder-outbox | tar -x -C "$T"; echo "builder-outbox extracted:$?"; git archive origin/main | tar -x -C "$T"; echo "main extracted:$?"; mkdir -p "$T/artifacts/fable-self122-20260922"; cp artifacts/fable-self122-20260922/self122_head.pt "$T/artifacts/fable-self122-20260922/"; sha256sum "$T/artifacts/fable-self122-20260922/self122_head.pt"; echo "$T" > /tmp/gram364_tree_path.txt; cat /tmp/gram364_tree_path.txt; ls "$T/artifacts/claude-gram364-20260925/" ; ls "$T/artifacts/claude-gram364-bankH-20260925/" ; ls "$T/scripts/" | grep -E "gram364|gram360|twinb|winnl2|e2e336|e2e364|fable_reasoner" | head -n 20
+e2e330tree
+gen_part6.py
+grade_b_part1_writer.py
+guard-296b
+guard-350
+lis313b-armA.log
+lis313b-armC.log
+lis313b-armD.log
+lis313b-report.txt
+lis313b-tree
+T=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SWJmBw505t/tree
+builder-outbox extracted:0
+main extracted:0
+5ca02173dc7bd4ae400957375be3cf7e1d39574df5dca2a4119fb807c6c8ee25  /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SWJmBw505t/tree/artifacts/fable-self122-20260922/self122_head.pt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SWJmBw505t/tree
+PASSMARKS.md
+SEAL-code.sha256.txt
+check_bank.py
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+claude_e2e336_run.py
+claude_e2e336_score.py
+claude_e2e336_twin.py
+claude_e2e336_twinb.py
+claude_e2e364.py
+claude_gram360_check.py
+claude_gram360_gradeprep.py
+claude_gram360_score.py
+claude_gram360_test.py
+claude_gram360.py
+claude_gram364_check.py
+claude_gram364_grade.py
+claude_gram364_test.py
+claude_gram364.py
+claude_twinb_wrap.py
+claude_winnl2_test.py
+claude_winnl2_wrap.py
+fable_reasoner44_score.py
+fable_reasoner44_stress.py
+fable_reasoner44.py
+[0m
+[0m$ [0mT=$(cat /tmp/gram364_tree_path.txt); echo "T=$T"; tar czf /tmp/gram364_tree.tgz -C "$(dirname "$T")" tree; ls -lh /tmp/gram364_tree.tgz; echo "---verify seal files in tree---"; ls "$T/artifacts/claude-gram364-20260925/"; echo "---bank---"; ls "$T/artifacts/claude-gram364-bankH-20260925/"
+T=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.SWJmBw505t/tree
+-rw-r--r--  1 ben-hannan  wheel   161M Sep 25 12:44 /tmp/gram364_tree.tgz
+---verify seal files in tree---
+PASSMARKS.md
+SEAL-code.sha256.txt
+---bank---
+check_bank.py
+README.md
+SEAL.sha256.txt
+truth.jsonl
+turns.jsonl
+[0m
+[0m$ [0mscp -o BatchMode=yes -o ConnectTimeout=10 /tmp/gram364_tree.tgz benspc:"C:/Users/benja/lis301/work/gram364_tree.tgz" 2>&1; echo SCP_EXIT:$?
+ssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; New-Item -ItemType Directory -Force -Path 'C:/Users/benja/lis301/work/gram364' | Out-Null; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364_tree.tgz'; (Get-Item 'C:/Users/benja/lis301/work/gram364_tree.tgz').Length\"" 2>&1
+SCP_EXIT:0
+False
+True
+169129336
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; tar xzf C:/Users/benja/lis301/work/gram364_tree.tgz -C C:/Users/benja/lis301/work/gram364; Move-Item -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree' -Destination 'C:/Users/benja/lis301/work/gram364/tree_tmp_check' -ErrorAction SilentlyContinue; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Get-ChildItem -LiteralPath 'C:/Users/benja/lis301/work/gram364' | Select-Object Name | Out-String -Width 200\"" 2>&1
+False
+
+Name          
+----          
+tree_tmp_check
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; Move-Item -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree_tmp_check' -Destination 'C:/Users/benja/lis301/work/gram364/tree'; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Get-ChildItem -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree' | Select-Object Name | Out-String -Width 200; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/scripts/claude_gram364_test.py'; Test-Path -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/SEAL-code.sha256.txt'\"" 2>&1
+True
+
+Name                        
+----                        
+.claude                     
+archive                     
+artifacts                   
+data                        
+design                      
+handoff                     
+learnlab                    
+memorylab                   
+premonition                 
+reviews                     
+runs                        
+scripts                     
+status                      
+tests                       
+.DS_Store                   
+.gitignore                  
+ADVERSARIAL_REVIEW.md       
+ARCHITECTURE_DECISION.md    
+CLAUDE.md                   
+README.md                   
+REMOTE_RUN.md               
+RESEARCH_REVIEW.md          
+run.py                      
+run.sh                      
+TEACHING_TO_TEST_CONTRACT.md
+
+
+
+True
+True
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard + read PASSMARKS/seals/queue spec (no edits)
+[✓] BensPC preflight: GPU, disk, python, READER, BASE, existing gram364 folder
+[✓] Build tree via git archive (builder-outbox then main on top) + self122_head.pt, verify sha
+[✓] Copy tree to BensPC as NEW C:/Users/benja/lis301/work/gram364/tree
+[•] Step1 seals + Step2 tests + W CHECK on BensPC
+[ ] Step3 sleep base checkpoint
+[ ] Step4 arm P364 (GRAM360_LOG, twinb wrap)
+[ ] Steps5-7 score, check, CRLF counts, copy back + verify sha
+[ ] Step8 write RESULTS-benspc.md (NEW, counts only) + report
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Write-Output '---BANK SEAL---'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-bankH-20260925'; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import hashlib,pathlib; ok=0; fail=0; lines=pathlib.Path('SEAL.sha256.txt').read_text().splitlines(); print('seal_lines='+str(len(lines))); [print(l) for l in lines]; import sys;\\\"\" 2>&1" | head -n 20
+---BANK SEAL---
+seal_lines=4
+80e7df0113c4529ba6651423c6a16f872c81314c0c765df178969923f071fef5  turns.jsonl
+04ee5f01804d5cfdb4a6a059eb9e9dfe88f392efb7db42c9755583dda19beaae  truth.jsonl
+a5919e97632b8bf04e5d2cf93f8f6ec164188a6bfaf47d9333ce2ae801a9e60f  README.md
+1f4c850eab9fa6284cfe3386babb2fc5be25e5500ad09f4db7ca6793f1f4951b  check_bank.py
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-bankH-20260925'; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import hashlib,pathlib; ok=0; fail=0; f=open('SEAL.sha256.txt'); ls=[l.strip() for l in f if l.strip()]; print('lines='+str(len(ls))); import sys; e=0; \nfor l in ls:\n h,n=l.split(maxsplit=1); n=n.strip().lstrip('*'); hh=hashlib.sha256(open(n,'rb').read()).hexdigest(); s='OK' if hh==h else 'FAIL '+hh; print(n+': '+s); e+=0 if hh==h else 1\nprint('bank_ok='+str(len(ls)-e)+' fail='+str(e))\\\"; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; C:/Users/benja/lis300/venv/Scripts/python.exe -B -c \\\"import hashlib; f=open('artifacts/claude-gram364-20260925/SEAL-code.sha256.txt'); ls=[l.strip() for l in f if l.strip()]; print('lines='+str(len(ls))); e=0; \nfor l in ls:\n h,n=l.split(maxsplit=1); n=n.strip().lstrip('*'); hh=hashlib.sha256(open(n,'rb').read()).hexdigest(); s='OK' if hh==h else 'FAIL '+hh; print(n+': '+s); e+=0 if hh==h else 1\nprint('code_ok='+str(len(ls)-e)+' fail='+str(e))\\\"\"" 2>&1 | head -n 40
+File "<string>", line 1
+    import hashlib,pathlib; ok=0; fail=0; f=open('SEAL.sha256.txt'); ls=[l.strip() for l in f if l.strip()]; print('lines='+str(len(ls))); import sys; e=0; \nfor l in ls:\n h,n=l.split(maxsplit=1); n=n.strip().lstrip('*'); hh=hashlib.sha256(open(n,'rb').read()).hexdigest(); s='OK' if hh==h else 'FAIL '+hh; print(n+': '+s); e+=0 if hh==h else 1\nprint('bank_ok='+str(len(ls)-e)+' fail='+str(e))
+                                                                                                                                                             ^
+SyntaxError: unexpected character after line continuation character
+  File "<string>", line 1
+    import hashlib; f=open('artifacts/claude-gram364-20260925/SEAL-code.sha256.txt'); ls=[l.strip() for l in f if l.strip()]; print('lines='+str(len(ls))); e=0; \nfor l in ls:\n h,n=l.split(maxsplit=1); n=n.strip().lstrip('*'); hh=hashlib.sha256(open(n,'rb').read()).hexdigest(); s='OK' if hh==h else 'FAIL '+hh; print(n+': '+s); e+=0 if hh==h else 1\nprint('code_ok='+str(len(ls)-e)+' fail='+str(e))
+                                                                                                                                                                  ^
+SyntaxError: unexpected character after line continuation character
+[0m
+[0m$ [0mpython3 -c "import pathlib; p=pathlib.Path('/tmp/check_seal.py'); p.write_text('import hashlib,pathlib,sys\ndef check(seal):\n    ls=[l.strip() for l in open(seal) if l.strip()]\n    print(\"seal=\"+seal+\" lines=\"+str(len(ls)))\n    e=0\n    base=pathlib.Path(seal).parent\n    for l in ls:\n        h,n=l.split(maxsplit=1)\n        n=n.strip().lstrip(\"*\")\n        fp=base/n if not pathlib.Path(n).is_absolute() else pathlib.Path(n)\n        # for code seal, paths are relative to tree root\n        if str(seal).endswith(\"SEAL-code.sha256.txt\"):\n            fp=pathlib.Path(n)\n        hh=hashlib.sha256(open(fp,\"rb\").read()).hexdigest()\n        ok=(hh==h)\n        print(n+\": \"+(\"OK\" if ok else \"FAIL \"+hh))\n        e+=0 if ok else 1\n    print((\"bank_ok=\" if \"bankH\" in seal else \"code_ok=\")+str(len(ls)-e)+\" fail=\"+str(e))\n    return e\nimport os; os.chdir(r\"C:/Users/benja/lis301/work/gram364/tree\") if pathlib.Path(r\"C:/Users/benja/lis301/work/gram364/tree\").exists() else None\nsys.exit(0)\n'); print(open('/tmp/check_seal.py').read())"
+import hashlib,pathlib,sys
+def check(seal):
+    ls=[l.strip() for l in open(seal) if l.strip()]
+    print("seal="+seal+" lines="+str(len(ls)))
+    e=0
+    base=pathlib.Path(seal).parent
+    for l in ls:
+        h,n=l.split(maxsplit=1)
+        n=n.strip().lstrip("*")
+        fp=base/n if not pathlib.Path(n).is_absolute() else pathlib.Path(n)
+        # for code seal, paths are relative to tree root
+        if str(seal).endswith("SEAL-code.sha256.txt"):
+            fp=pathlib.Path(n)
+        hh=hashlib.sha256(open(fp,"rb").read()).hexdigest()
+        ok=(hh==h)
+        print(n+": "+("OK" if ok else "FAIL "+hh))
+        e+=0 if ok else 1
+    print(("bank_ok=" if "bankH" in seal else "code_ok=")+str(len(ls)-e)+" fail="+str(e))
+    return e
+import os; os.chdir(r"C:/Users/benja/lis301/work/gram364/tree") if pathlib.Path(r"C:/Users/benja/lis301/work/gram364/tree").exists() else None
+sys.exit(0)
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-bankH-20260925'; Get-FileHash -Algorithm SHA256 turns.jsonl,truth.jsonl,README.md,check_bank.py | Select-Object Hash,Path | Out-String -Width 200; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Get-Content artifacts/claude-gram364-bankH-20260925/SEAL.sha256.txt; Get-Content artifacts/claude-gram364-20260925/SEAL-code.sha256.txt\"" 2>&1 | head -n 40
+Hash                                                             Path                                                                                         
+----                                                             ----                                                                                         
+80E7DF0113C4529BA6651423C6A16F872C81314C0C765DF178969923F071FEF5 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-bankH-20260925\turns.jsonl  
+04EE5F01804D5CFDB4A6A059EB9E9DFE88F392EFB7DB42C9755583DDA19BEAAE C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-bankH-20260925\truth.jsonl  
+A5919E97632B8BF04E5D2CF93F8F6EC164188A6BFAF47D9333CE2AE801A9E60F C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-bankH-20260925\README.md    
+1F4C850EAB9FA6284CFE3386BABB2FC5BE25E5500AD09F4DB7CA6793F1F4951B C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-bankH-20260925\check_bank.py
+
+
+
+80e7df0113c4529ba6651423c6a16f872c81314c0c765df178969923f071fef5  turns.jsonl
+04ee5f01804d5cfdb4a6a059eb9e9dfe88f392efb7db42c9755583dda19beaae  truth.jsonl
+a5919e97632b8bf04e5d2cf93f8f6ec164188a6bfaf47d9333ce2ae801a9e60f  README.md
+1f4c850eab9fa6284cfe3386babb2fc5be25e5500ad09f4db7ca6793f1f4951b  check_bank.py
+e78b5b88e4fe5632ed1311eb91ae37124aa8d12c9d72e0d091d38b3d19a55afc  scripts/claude_gram364.py
+7278dcaa0db65f7ad6bd27a72dbf4cede36d40c18a0daf1893e06118978a793d  scripts/claude_gram364_test.py
+e2979cb12beff97d5222afd3a94fb330baedd0d0ad356603edbb34aae6016cca  scripts/claude_gram364_check.py
+2ff507f30ae0b8bfa9fd52a756282c63d65a1b457825eb7e02ae7c7a3e50f0b6  scripts/claude_gram364_grade.py
+72ff8d62d58d806d4e9a93c93fde632b3d5ba34a6260c764b59d3f66032a5203  scripts/claude_e2e364.py
+7d1b3d16aa1e738403cb9d6e2f3ef339deae706ee4dceb92e991e23bcc72454a  scripts/claude_gram360.py
+c211b0a81ee516f7accc0ddf616e6d7f7abf8d9e59b0d96678c4a6b2a5964f25  scripts/claude_gram360_check.py
+4688b5e360fd42c4b767787a0ff44a1c535f4640d885c9fd4118134c214e78e9  scripts/claude_gram360_gradeprep.py
+9efa38ae3eb5283b67ab1e6a402a1e2c79366f5798999b9cd5c693e7f94f5b2b  artifacts/claude-gram364-20260925/PASSMARKS.md
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Get-FileHash -Algorithm SHA256 scripts/claude_gram364.py,scripts/claude_gram364_test.py,scripts/claude_gram364_check.py,scripts/claude_gram364_grade.py,scripts/claude_e2e364.py,scripts/claude_gram360.py,scripts/claude_gram360_check.py,scripts/claude_gram360_gradeprep.py | Select-Object Hash,Path | Out-String -Width 250; Get-FileHash -Algorithm SHA256 artifacts/claude-gram364-20260925/PASSMARKS.md | Select-Object Hash,Path | Out-String -Width 250\"" 2>&1 | head -n 30
+Hash                                                             Path                                                                       
+----                                                             ----                                                                       
+E78B5B88E4FE5632ED1311EB91AE37124AA8D12C9D72E0D091D38B3D19A55AFC C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram364.py          
+7278DCAA0DB65F7AD6BD27A72DBF4CEDE36D40C18A0DAF1893E06118978A793D C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram364_test.py     
+E2979CB12BEFF97D5222AFD3A94FB330BAEDD0D0AD356603EDBB34AAE6016CCA C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram364_check.py    
+2FF507F30AE0B8BFA9FD52A756282C63D65A1B457825EB7E02AE7C7A3E50F0B6 C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram364_grade.py    
+72FF8D62D58D806D4E9A93C93FDE632B3D5BA34A6260C764B59D3F66032A5203 C:\Users\benja\lis301\work\gram364\tree\scripts\claude_e2e364.py           
+7D1B3D16AA1E738403CB9D6E2F3EF339DEAE706EE4DCEB92E991E23BCC72454A C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram360.py          
+C211B0A81EE516F7ACCC0DDF616E6D7F7ABF8D9E59B0D96678C4A6B2A5964F25 C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram360_check.py    
+4688B5E360FD42C4B767787A0FF44A1C535F4640D885C9FD4118134C214E78E9 C:\Users\benja\lis301\work\gram364\tree\scripts\claude_gram360_gradeprep.py
+
+
+
+
+Hash                                                             Path                                                                                  
+----                                                             ----                                                                                  
+9EFA38AE3EB5283B67AB1E6A402A1E2C79366F5798999B9CD5C693E7F94F5B2B C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\PASSMARKS.md
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=120 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_gram364_test.py 2>&1; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_gram360_test.py 2>&1; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_chat338b_test.py 2>&1; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_cre333d_test.py 2>&1; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_vary330c_test.py 2>&1\"" 2>&1
+gram364 tests: 45/45 OK
+gram360 tests: 16/16 OK
+338b tests: 3/3 OK
+333d tests: 2/2 OK
+vary330c tests: 2/2 OK
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=60 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_winnl2_wrap.py scripts/claude_winnl2_test.py probe 2>&1\"" 2>&1
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+{"python": "3.10.9", "pathlib_loaded_before_fix": false, "sim": false, "fix": "none", "ok": true, "crlf": 0, "text_ok": true, "metadata_ok": true}
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=120 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; New-Item -ItemType Directory -Force -Path 'artifacts/claude-gram364-20260925/run' | Out-Null; Test-Path -LiteralPath 'artifacts/claude-gram364-20260925/run/gram364_parts.jsonl'; Get-ChildItem -LiteralPath 'artifacts/claude-gram364-20260925/run' -ErrorAction SilentlyContinue | Out-String -Width 200; Write-Output '---STEP3 START---'; \$t0=(Get-Date).ToUniversalTime().ToString('o'); Write-Output ('start='+\$t0); C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/fable_reasoner44.py --stage base --seed 4102 --out C:/Users/benja/lis301/work/gram364/r44c 2>&1; Write-Output ('exit='+\$LASTEXITCODE); Get-ChildItem -LiteralPath 'C:/Users/benja/lis301/work/gram364/r44c' | Select-Object Name,Length | Out-String -Width 200\"" 2>&1
+False
+
+---STEP3 START---
+start=2026-09-25T16:47:24.1692556Z
+{"stage": "base", "seed": 4102, "seconds": 13.5, "fresh_hop1to3": 1.0, "fresh_depth10": 1.0, "big_depth10": 1.0, "unknown_rate": 1.0}
+exit=0
+
+Name               Length
+----               ------
+base-seed4102.json   1251
+base-seed4102.pt     2969
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Copy-Item -LiteralPath 'C:/Users/benja/lis301/work/gram364/r44c/base-seed4102.pt' -Destination 'artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt' -Force; Get-FileHash -Algorithm SHA256 artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt, C:/Users/benja/lis301/work/gram364/r44c/base-seed4102.pt | Select-Object Hash,Path | Out-String -Width 250; (Get-Item artifacts/fable-reasoner44-20260921/runs/base-seed4102.pt).Length\"" 2>&1
+Hash                                                             Path                                                                                             
+----                                                             ----                                                                                             
+4655B7610B50E91B57DBB6A780F1935DBA8863E3810C4877408D901F1BE5EDB3 C:\Users\benja\lis301\work\gram364\tree\artifacts\fable-reasoner44-20260921\runs\base-seed4102.pt
+4655B7610B50E91B57DBB6A780F1935DBA8863E3810C4877408D901F1BE5EDB3 C:\Users\benja\lis301\work\gram364\r44c\base-seed4102.pt                                         
+
+
+
+2969
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard + read PASSMARKS/seals/queue spec (no edits)
+[✓] BensPC preflight: GPU, disk, python, READER, BASE, existing gram364 folder
+[✓] Build tree via git archive (builder-outbox then main on top) + self122_head.pt, verify sha
+[✓] Copy tree to BensPC as NEW C:/Users/benja/lis301/work/gram364/tree
+[✓] Step1 seals + Step2 tests + W CHECK on BensPC
+[✓] Step3 sleep base checkpoint
+[•] Step4 arm P364 (GRAM360_LOG, twinb wrap)
+[ ] Steps5-7 score, check, CRLF counts, copy back + verify sha
+[ ] Step8 write RESULTS-benspc.md (NEW, counts only) + report
+[0m
+[0m$ [0mdate -u +"%Y-%m-%dT%H:%M:%SZ"; ssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits; Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime,Path | Out-String -Width 200\"" 2>&1 | head -n 20
+2026-09-25T16:47:55Z
+15540
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Stop'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; \$env:GRAM360_LOG='artifacts/claude-gram364-20260925/run/gram364_parts.jsonl'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Write-Output ('arm_start='+(Get-Date).ToUniversalTime().ToString('o')); C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_winnl2_wrap.py scripts/claude_twinb_wrap.py scripts/claude_e2e336_run.py --bank artifacts/claude-gram364-bankH-20260925 --arm claude_e2e364:build_364 --name P364 --model C:/Users/benja/lis301/work/run/merged --gen-model C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --out artifacts/claude-gram364-20260925/run 2>&1; Write-Output ('arm_exit='+\$LASTEXITCODE); Write-Output ('arm_end='+(Get-Date).ToUniversalTime().ToString('o'))\"" 2>&1
+arm_start=2026-09-25T16:47:59.7105515Z
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+twinb: the plain twin is Twin336b (enable_thinking=False)
+[336/P364] e2e-g364-01 turns=20
+[336/P364] e2e-g364-02 turns=20
+[336/P364] e2e-g364-03 turns=20
+[336/P364] e2e-g364-04 turns=20
+[336/P364] e2e-g364-05 turns=19
+[336/P364] e2e-g364-06 turns=20
+[336/P364] e2e-g364-07 turns=20
+[336/P364] e2e-g364-08 turns=20
+[336/P364] e2e-g364-09 turns=20
+[336/P364] e2e-g364-10 turns=20
+wrote arm_P364.jsonl rows=256 lives=10
+C:/Users/benja/lis300/venv/Scripts/python.exe : [transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+At line:1 char:349
++ ... ring('o')); C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([transformers] ...dtype` instead!:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Get-ChildItem -LiteralPath 'artifacts/claude-gram364-20260925/run' | Select-Object Name,Length | Out-String -Width 200; Write-Output '---END LIST---'; date -u 2>&1; (Get-Date).ToUniversalTime().ToString('o')\"" 2>&1 | head -n 30
+Name                Length
+----                ------
+arm_P364.jsonl      142203
+gram364_parts.jsonl  92595
+
+
+
+---END LIST---
+Get-Date : Missing an argument for parameter 'UFormat'. Specify a parameter of type 'System.String' and try again.
+At line:1 char:226
++ ... Out-String -Width 200; Write-Output '---END LIST---'; date -u 2>&1; ( ...
++                                                                ~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Date], ParameterBindingException
+    + FullyQualifiedErrorId : MissingArgument,Microsoft.PowerShell.Commands.GetDateCommand
+ 
+2026-09-25T16:55:58.7825277Z
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=30 benspc "powershell.exe -NoProfile -NonInteractive -Command \"Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; (Get-Item 'artifacts/claude-gram364-20260925/run/arm_P364.jsonl').LastWriteTimeUtc.ToString('o'); (Get-Item 'artifacts/claude-gram364-20260925/run/gram364_parts.jsonl').LastWriteTimeUtc.ToString('o'); (Get-Content 'artifacts/claude-gram364-20260925/run/arm_P364.jsonl' | Measure-Object -Line).Lines; (Get-Content 'artifacts/claude-gram364-20260925/run/gram364_parts.jsonl' | Measure-Object -Line).Lines; Get-Process python -ErrorAction SilentlyContinue | Select-Object Id,StartTime | Out-String -Width 200; Write-Output 'no-python-means-done'\"" 2>&1 | head -n 20
+2026-09-25T16:55:49.9644191Z
+2026-09-25T16:55:49.9488127Z
+256
+256
+
+no-python-means-done
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Continue'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Write-Output ('score_start='+(Get-Date).ToUniversalTime().ToString('o')); C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_winnl2_wrap.py scripts/claude_e2e336_score.py --bank artifacts/claude-gram364-bankH-20260925 --runs artifacts/claude-gram364-20260925/run/arm_P364.jsonl --out artifacts/claude-gram364-20260925/score 2>&1; Write-Output ('score_exit='+\$LASTEXITCODE); Write-Output ('score_end='+(Get-Date).ToUniversalTime().ToString('o')); Get-ChildItem -LiteralPath 'artifacts/claude-gram364-20260925/score' -ErrorAction SilentlyContinue | Select-Object Name,Length | Out-String -Width 200\"" 2>&1
+score_start=2026-09-25T16:56:31.6090783Z
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+{"arm": "P364", "asks": {"ALL": {"ABSTAIN": 41, "CONFIRM_OTHER": 8, "RIGHT": 11, "RIGHT_CONFIRM": 4, "WRONG_CANDIDATE": 8}, "edit": {"ABSTAIN": 5, "CONFIRM_OTHER": 4, "WRONG_CANDIDATE": 1}, "never_told": {"RIGHT": 8, "WRONG_CANDIDATE": 2}, "one_hop": {"ABSTAIN": 8, "CONFIRM_OTHER": 1, "RIGHT": 2, "RIGHT_CONFIRM": 4, "WRONG_CANDIDATE": 2}, "partial": {"ABSTAIN": 3, "WRONG_CANDIDATE": 1}, "reversal": {"ABSTAIN": 9, "WRONG_CANDIDATE": 1}, "two_hop": {"ABSTAIN": 7, "CONFIRM_OTHER": 3, "RIGHT": 1}, "yesno": {"ABSTAIN": 9, "WRONG_CANDIDATE": 1}}, "clarify_replies": 14, "confirm_rows": 57, "creative_turns": 10, "creative_turns_with_writes": 0, "day1_saved_facts": 42, "day1_saved_facts_kept_at_end": 42, "distinct_replies": 138, "facts_saved": 54, "facts_total": 123, "most_common_reply_count": 9, "ms_median": 1991.9, "ms_p90": 3283.8, "new_triples": 62, "new_triples_owner_value_unsupported": 7, "nosave_turns_with_writes": 0, "user_rows": 199}
+score_exit=0
+score_end=2026-09-25T16:56:31.6896765Z
+
+Name                   Length
+----                   ------
+grammar_P364.jsonl      19847
+judge_asks_P364.jsonl    1594
+judge_saves_P364.jsonl  46077
+mechanical.json          1155
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=10 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Continue'; \$env:PYTHONUTF8='1'; \$env:OMP_NUM_THREADS='1'; \$env:MKL_NUM_THREADS='1'; \$env:HF_HUB_OFFLINE='1'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree'; Write-Output ('check_start='+(Get-Date).ToUniversalTime().ToString('o')); C:/Users/benja/lis300/venv/Scripts/python.exe -B scripts/claude_winnl2_wrap.py scripts/claude_gram364_check.py --bank artifacts/claude-gram364-bankH-20260925 --run artifacts/claude-gram364-20260925/run/arm_P364.jsonl --log artifacts/claude-gram364-20260925/run/gram364_parts.jsonl --out artifacts/claude-gram364-20260925/check 2>&1; Write-Output ('check_exit='+\$LASTEXITCODE); Write-Output ('check_end='+(Get-Date).ToUniversalTime().ToString('o')); Get-ChildItem -LiteralPath 'artifacts/claude-gram364-20260925/check' -ErrorAction SilentlyContinue | Select-Object Name,Length | Out-String -Width 200\"" 2>&1
+check_start=2026-09-25T16:56:36.8180443Z
+winnl2: Windows text-mode writes use Linux line endings (newline='')
+{"P364.3": "FAIL", "P364.3_ask_class": 0, "P364.3_confirm_answer": 2, "P364.3_confirm_flag": 0, "P364.4": "PASS", "P364.4_word_losses": 0, "distinct_all_final": 191, "distinct_rule_final360": 146, "distinct_rule_final364": 146, "distinct_rule_raw": 146, "nonrule_changed": 0, "nonrule_parts": 111, "replies_changed": 43, "rows": 256, "rule_parts": 183, "rule_parts_changed": 48, "rule_parts_differ_from_360": 8}
+check_exit=0
+check_end=2026-09-25T16:56:36.9307997Z
+
+Name                Length
+----                ------
+all_final.jsonl      19656
+check.json             430
+rule_final360.jsonl   9621
+rule_final364.jsonl   9745
+rule_raw.jsonl        9611
+[0m
+[0m$ [0mssh -n -o BatchMode=yes -o ConnectTimeout=60 benspc "powershell.exe -NoProfile -NonInteractive -Command \"\$ErrorActionPreference='Continue'; Set-Location -LiteralPath 'C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925'; \$files = Get-ChildItem -Recurse -File -LiteralPath 'run','score','check' 2>&1; foreach (\$f in \$files) { \$b=[IO.File]::ReadAllBytes(\$f.FullName); \$c=0; for (\$i=0; \$i -lt \$b.Length-1; \$i++) { if (\$b[\$i] -eq 13 -and \$b[\$i+1] -eq 10) { \$c++ } }; \$rel=\$f.FullName.Replace('C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/',''); Write-Output (\$rel+' bytes='+\$b.Length+' crlf='+\$c) }; Write-Output 'crlf-done'; Get-FileHash -Algorithm SHA256 (Get-ChildItem -Recurse -File -LiteralPath 'run','score','check' | Select-Object -ExpandProperty FullName) | Select-Object Hash,Path | Out-String -Width 300\"" 2>&1
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\run\arm_P364.jsonl bytes=142203 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\run\gram364_parts.jsonl bytes=92595 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\grammar_P364.jsonl bytes=19847 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\judge_asks_P364.jsonl bytes=1594 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\judge_saves_P364.jsonl bytes=46077 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\mechanical.json bytes=1155 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\all_final.jsonl bytes=19656 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\check.json bytes=430 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_final360.jsonl bytes=9621 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_final364.jsonl bytes=9745 crlf=0
+C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_raw.jsonl bytes=9611 crlf=0
+crlf-done
+
+Hash                                                             Path                                                                                                  
+----                                                             ----                                                                                                  
+FD2F57E2BC831E759AB3848C98A783210AB657ED059B24D1B94CD1F1EF9F82AA C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\run\arm_P364.jsonl          
+2EA7D82A94FABF50139AAA4BD31B929BAADC91F0E65E75CC2B24F246DACE4CE1 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\run\gram364_parts.jsonl     
+F04FEFA926B2046290BE39747ED047C74A0A95DA6ECAF3E1694D9BC77039CFB5 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\grammar_P364.jsonl    
+F5470551B8A2583250A22868B220F957BF8D77DFA110BE36CE24FCAD29266D47 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\judge_asks_P364.jsonl 
+F4070D1AA372F9E06EC6CE4C29A25EDA76C744321B0841413A828149A9D12BBC C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\judge_saves_P364.jsonl
+EA351C143C0D0373259F592E9C427EB799D794C1A949908E481411350CBA2BCE C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\score\mechanical.json       
+9FAFF14424554DBCBA6B764133490C57390780B0744E032400F2D28AEE729822 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\all_final.jsonl       
+219B2583401CCB8BE04A9C56FC4C044EB9F0AA130DA0F61C90B7C98E4775F282 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\check.json            
+7CC0D5146FF7C5A44E9A062AE45FB84FF7001B629B944BE02124E48D9A742DDE C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_final360.jsonl   
+B8533F7468931D9C61A480189F6AAB526C042EB444FCE50D21FECC32AE6BC55C C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_final364.jsonl   
+759E62311FC91AC64883FD7F3D9015510D7B594F34B10DD9E81688BC1CECEB76 C:\Users\benja\lis301\work\gram364\tree\artifacts\claude-gram364-20260925\check\rule_raw.jsonl
+[0m
+[0m$ [0mls artifacts/claude-gram364-20260925/ 2>&1; echo "---"; ls artifacts/claude-gram364-bankH-20260925/ 2>&1 | head; mkdir -p artifacts/claude-gram364-20260925/run artifacts/claude-gram364-20260925/score artifacts/claude-gram364-20260925/check; echo MKDIR_OK
+scp -o BatchMode=yes -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/run/arm_P364.jsonl" artifacts/claude-gram364-20260925/run/arm_P364.jsonl 2>&1; echo S1:$?
+scp -o BatchMode=yes -o ConnectTimeout=30 "benspc:C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/run/gram364_parts.jsonl" artifacts/claude-gram364-20260925/run/gram364_parts.jsonl 2>&1; echo S2:$?
+scp -o BatchMode=yes -o ConnectTimeout=30 -r "benspc:C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/score/" artifacts/claude-gram364-20260925/score_tmp 2>&1; echo S3:$?; ls artifacts/claude-gram364-20260925/score_tmp/ 2>&1
+scp -o BatchMode=yes -o ConnectTimeout=30 -r "benspc:C:/Users/benja/lis301/work/gram364/tree/artifacts/claude-gram364-20260925/check/" artifacts/claude-gram364-20260925/check_tmp 2>&1; echo S4:$?; ls artifacts/claude-gram364-20260925/check_tmp/ 2>&1
+ls: artifacts/claude-gram364-20260925/: No such file or directory
+---
+ls: artifacts/claude-gram364-bankH-20260925/: No such file or directory
+MKDIR_OK
+S1:0
+S2:0
+S3:0
+grammar_P364.jsonl
+judge_asks_P364.jsonl
+judge_saves_P364.jsonl
+mechanical.json
+S4:0
+all_final.jsonl
+check.json
+rule_final360.jsonl
+rule_final364.jsonl
+rule_raw.jsonl
+[0m
+[0m$ [0mcp artifacts/claude-gram364-20260925/score_tmp/* artifacts/claude-gram364-20260925/score/; cp artifacts/claude-gram364-20260925/check_tmp/* artifacts/claude-gram364-20260925/check/; rm -rf artifacts/claude-gram364-20260925/score_tmp artifacts/claude-gram364-20260925/check_tmp; ls -l artifacts/claude-gram364-20260925/run/ artifacts/claude-gram364-20260925/score/ artifacts/claude-gram364-20260925/check/; sha256sum artifacts/claude-gram364-20260925/run/* artifacts/claude-gram364-20260925/score/* artifacts/claude-gram364-20260925/check/*
+artifacts/claude-gram364-20260925/check/:
+total 120
+-rw-------  1 ben-hannan  staff  19656 Sep 25 12:56 all_final.jsonl
+-rw-------  1 ben-hannan  staff    430 Sep 25 12:56 check.json
+-rw-------  1 ben-hannan  staff   9621 Sep 25 12:56 rule_final360.jsonl
+-rw-------  1 ben-hannan  staff   9745 Sep 25 12:56 rule_final364.jsonl
+-rw-------  1 ben-hannan  staff   9611 Sep 25 12:56 rule_raw.jsonl
+
+artifacts/claude-gram364-20260925/run/:
+total 464
+-rw-------  1 ben-hannan  staff  142203 Sep 25 12:56 arm_P364.jsonl
+-rw-------  1 ben-hannan  staff   92595 Sep 25 12:56 gram364_parts.jsonl
+
+artifacts/claude-gram364-20260925/score/:
+total 152
+-rw-------  1 ben-hannan  staff  19847 Sep 25 12:56 grammar_P364.jsonl
+-rw-------  1 ben-hannan  staff   1594 Sep 25 12:56 judge_asks_P364.jsonl
+-rw-------  1 ben-hannan  staff  46077 Sep 25 12:56 judge_saves_P364.jsonl
+-rw-------  1 ben-hannan  staff   1155 Sep 25 12:56 mechanical.json
+fd2f57e2bc831e759ab3848c98a783210ab657ed059b24d1b94cd1f1ef9f82aa  artifacts/claude-gram364-20260925/run/arm_P364.jsonl
+2ea7d82a94fabf50139aaa4bd31b929baadc91f0e65e75cc2b24f246dace4ce1  artifacts/claude-gram364-20260925/run/gram364_parts.jsonl
+f04fefa926b2046290be39747ed047c74a0a95da6ecaf3e1694d9bc77039cfb5  artifacts/claude-gram364-20260925/score/grammar_P364.jsonl
+f5470551b8a2583250a22868b220f957bf8d77dfa110be36ce24fcad29266d47  artifacts/claude-gram364-20260925/score/judge_asks_P364.jsonl
+f4070d1aa372f9e06ec6ce4c29a25eda76c744321b0841413a828149a9d12bbc  artifacts/claude-gram364-20260925/score/judge_saves_P364.jsonl
+ea351c143c0d0373259f592e9c427eb799d794c1a949908e481411350cba2bce  artifacts/claude-gram364-20260925/score/mechanical.json
+9faff14424554dbcba6b764133490c57390780b0744e032400f2d28aee729822  artifacts/claude-gram364-20260925/check/all_final.jsonl
+219b2583401ccb8be04a9c56fc4c044eb9f0aa130da0f61c90b7c98e4775f282  artifacts/claude-gram364-20260925/check/check.json
+7cc0d5146ff7c5a44e9a062ae45fb84ff7001b629b944be02124e48d9a742dde  artifacts/claude-gram364-20260925/check/rule_final360.jsonl
+b8533f7468931d9c61a480189f6aab526c042eb444fce50d21fecc32ae6bc55c  artifacts/claude-gram364-20260925/check/rule_final364.jsonl
+759e62311fc91ac64883fd7f3d9015510d7b594f34b10dd9e81688bc1ceceb76  artifacts/claude-gram364-20260925/check/rule_raw.jsonl
+[0m
+[0m$ [0mpython3 -c "
+import pathlib
+base=pathlib.Path('artifacts/claude-gram364-20260925')
+for sub in ['run','score','check']:
+    for p in sorted((base/sub).iterdir()):
+        b=p.read_bytes()
+        print(f'{sub}/{p.name} bytes={len(b)} crlf={b.count(bytes([13,10]))}')
+"
+run/arm_P364.jsonl bytes=142203 crlf=0
+run/gram364_parts.jsonl bytes=92595 crlf=0
+score/grammar_P364.jsonl bytes=19847 crlf=0
+score/judge_asks_P364.jsonl bytes=1594 crlf=0
+score/judge_saves_P364.jsonl bytes=46077 crlf=0
+score/mechanical.json bytes=1155 crlf=0
+check/all_final.jsonl bytes=19656 crlf=0
+check/check.json bytes=430 crlf=0
+check/rule_final360.jsonl bytes=9621 crlf=0
+check/rule_final364.jsonl bytes=9745 crlf=0
+check/rule_raw.jsonl bytes=9611 crlf=0
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard + read PASSMARKS/seals/queue spec (no edits)
+[✓] BensPC preflight: GPU, disk, python, READER, BASE, existing gram364 folder
+[✓] Build tree via git archive (builder-outbox then main on top) + self122_head.pt, verify sha
+[✓] Copy tree to BensPC as NEW C:/Users/benja/lis301/work/gram364/tree
+[✓] Step1 seals + Step2 tests + W CHECK on BensPC
+[✓] Step3 sleep base checkpoint
+[✓] Step4 arm P364 (GRAM360_LOG, twinb wrap)
+[✓] Steps5-7 score, check, CRLF counts, copy back + verify sha
+[•] Step8 write RESULTS-benspc.md (NEW, counts only) + report
+[0m
+[0m← [0mWrite artifacts/claude-gram364-20260925/RESULTS-benspc.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short artifacts/claude-gram364-20260925/ 2>&1 | head -n 20; echo "---"; wc -l artifacts/claude-gram364-20260925/RESULTS-benspc.md; sha256sum artifacts/claude-gram364-20260925/RESULTS-benspc.md; date -u +"%Y-%m-%dT%H:%M:%SZ"
+---
+     157 artifacts/claude-gram364-20260925/RESULTS-benspc.md
+d7444d07605f630f252377f6b80c8573bc5a0d9145824a7eea0124d52e3aaa0e  artifacts/claude-gram364-20260925/RESULTS-benspc.md
+2026-09-25T16:57:37Z
+[0m
+[0m$ [0mgit status --short | grep -i gram364 | head -n 20; echo "---all---"; git status --short | head -n 20; git check-ignore -v artifacts/claude-gram364-20260925/RESULTS-benspc.md 2>&1
+---all---
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+.gitignore:5:artifacts/	artifacts/claude-gram364-20260925/RESULTS-benspc.md
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard + read PASSMARKS/seals/queue spec (no edits)
+[✓] BensPC preflight: GPU, disk, python, READER, BASE, existing gram364 folder
+[✓] Build tree via git archive (builder-outbox then main on top) + self122_head.pt, verify sha
+[✓] Copy tree to BensPC as NEW C:/Users/benja/lis301/work/gram364/tree
+[✓] Step1 seals + Step2 tests + W CHECK on BensPC
+[✓] Step3 sleep base checkpoint
+[✓] Step4 arm P364 (GRAM360_LOG, twinb wrap)
+[✓] Steps5-7 score, check, CRLF counts, copy back + verify sha
+[✓] Step8 write RESULTS-benspc.md (NEW, counts only) + report
+[0m
