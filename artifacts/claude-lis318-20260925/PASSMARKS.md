@@ -1,6 +1,6 @@
 # lis-318: the lis-301 reader, retrained with chatty conversation rows (one change)
 
-Thread "Fix: reading facts from chat" (cmsg_01FuvegZXjMmeUzStiEFVnEWFFJdDCbBKsf18JUgMQeEYH). Written 2026-09-25 ~02:30 UTC,
+Thread "Fix: reading facts from chat" (cmsg_01FuvegZXjMmeUzStiEFVnEWFFJdDCbBKsf18JUgMQeEYH). Written 2026-09-25 02:10 UTC,
 before any chat row was relabelled, any training ran or the panel was run. Ben's ask (00:31 UTC): fix reading facts
 from chat (336: saved 57%, answerable asks right 22%).
 
