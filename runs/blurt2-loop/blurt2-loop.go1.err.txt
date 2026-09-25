@@ -1,0 +1,4508 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mpwd; git status --short --branch; git log --oneline -5; git fetch -q origin main builder-outbox 2>&1 | head -20; echo FETCH_DONE; git branch -a | head -20
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 18]
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+bc39d2baf ideajudge-teacher2: DEV teacher agreement check (no training)
+063c52c48 runner results: nb-321 scale run (M2/M3/M6/M7 pass; M1/M4/M5 fail) + P321.1 ledger outcome
+8caf52860 nb-323 durable hash-chained turn log (PASS M1-M4, M5 report-only)
+7692680e4 mut-0 SLEEP fails closed: mut0 runner + 3 runall scripts, seal + results (M1-M3 hold)
+d45774581 builder results: 274-build (never deaf step A: reply-first turn + deaf meter, PASS M1-M4)
+FETCH_DONE
+* claude/card-experiment-handoff-7c5b27
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
++ codex/testing-experiment-44
+  main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/chat-flags
+  remotes/origin/claude/card-experiment-handoff-7c5b27
+  remotes/origin/claude/model-architecture-review-0161ce
+  remotes/origin/claude/project-thread-0181x3
+  remotes/origin/claude/project-thread-h8jbxv
+  remotes/origin/claude/project-thread-p68q5v
+  remotes/origin/codex/testing-experiment-44
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md 2>&1; echo "---EXIT:$?"
+# blurt-2 learning loop: registered pass marks (creative thread, written 2026-09-25 ~02:45 UTC, before any run)
+
+Question (Ben 00:51 UTC): when the reasoner can't solve something, can the creative part's lucky guesses be written into
+the model so that next time the reasoner solves that kind of problem alone?
+
+Setup (scripts/claude_blurt2.py `loop`, MiniCPM5-1B, thinking off, every answer rule-kept by constrained decoding):
+- Reasoner = the 1B's single greedy answer. Creative = N=30 sampled blurts on each practice puzzle the reasoner misses.
+  Judge = the exact checker (code). Sleep = a LoRA (r16, q/k/v/o, lr 2e-4, 3 epochs) trained on the kept answers.
+- Temperature: picked on DEV only (artifacts/claude-blurt1-dev-20260925/puzzles.jsonl, seed 1) from {1.0, 1.5}, by
+  most lucky blurts on the DEV puzzles the reasoner misses; ties go to 1.0. Rule fixed now.
+- Practice: 400 puzzles, seed 2. Test: 150 puzzles, seed 777, made inside the run, never printed or read by anyone;
+  any test puzzle identical to a practice or DEV puzzle is dropped. Same recipe for all (two thirds 3-number, 1-9,
+  target 5-40; one third 4-number, 1-13, target 24).
+- Arms (one change: the creative wins): W = the reasoner's own right answers + creative wins. C = own right answers
+  only, repeated to the same example count. Each arm trained twice (LoRA seeds 0 and 1); marks use the mean.
+- S0 = test right before sleep (greedy, base model).
+
+Pass marks (all on the fresh test set, reasoner alone, one greedy answer each):
+- **L1 learning:** mean S_W_after − S0 ≥ +8.
+- **L2 the creative wins caused it:** mean S_W_after − mean S_C_after ≥ +5, AND each W seed beats each C seed.
+- PASS = L1 and L2.
+- **Proved wrong** (the loop does not teach the reasoner): mean S_W_after ≤ mean S_C_after, or mean S_W_after ≤ S0.
+- **INCONCLUSIVE, not a pass or a fail:** fewer than 20 creative wins in practice (then the blocker is luck, and the
+  next step is raising luck, not the loop). Also inconclusive if the reasoner already gets ≥ 60% of the test right
+  before sleep (no room).
+- Reported, not marked: lucky blurts per 30 on misses (the luck rate), practice misses solved after sleep, the gap
+  between the two seeds (differences smaller than that gap are noise).
+
+Where it runs: the same command with the same seeds, on the thread's CPU container ($0) and, if the director gives a
+slot, on a GPU. Whichever finishes first is reported first; if both finish, both are reported and PASS needs both.
+
+Honest limits, stated now: this tests learning on the same kind of puzzle (fresh puzzles, same family), not transfer
+to other problems. A PASS says lucky guesses can be written into weights and help on new puzzles of that kind. The
+loop reasoner (294 line) is the sleep thread's; wins also go to <out>/wins/wins.jsonl in the agreed format.
+
+## Idea self-judge (same job, DEV only, decision rule fixed now)
+scripts/claude_blurt_selfjudge.py on the 300 blurt-1 idea blurts (10 DEV requests x 30), against blind Opus labels
+(labels/labels0.jsonl, labels1.jsonl in artifacts/claude-blurt1-dev-20260925; 44/300 good; 9/10 requests have a good one).
+- If the 1B's own top pick is good on ≥ 6/10 requests: 333g uses the self-judge.
+- Otherwise the judge must be trained or replaced; 333g waits for that decision (label source is Ben's call).
+---EXIT:0
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_blurt2.py 2>&1 | head -n 250; echo "---TRUNC---"
+#!/usr/bin/env python3
+"""blurt-2: rule-keeping blurts and the creative learning loop on number puzzles (creative research thread, 2026-09-25).
+
+Why: in blurt-1 (artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md) the base MiniCPM5-1B was right on 2/1800
+and 4/1800 free blurts; most tries used numbers the puzzle never gave, or no formula at all. It was breaking the
+rules, not getting unlucky.
+
+One change for blurting: constrained decoding. At every step only tokens that keep the text a legal prefix of an
+expression over exactly the given numbers (+ - * / and brackets) are allowed; end-of-text is allowed only when the
+expression is complete. The 1B's own probabilities still choose among the legal tokens, so blurts stay its own
+guesses. Temperature sets how wild they are.
+
+Ben's loop (00:51 UTC 2026-09-25): "the reasoner should be able to do most things. The creative thing is for
+generating ideas for things the reasoner can't do usually, and then the creative ideas get saved/written into the
+model ... ensuring learning". Here the reasoner stand-in is the 1B's single greedy (rule-keeping) answer.
+  loop: before-eval on fresh test puzzles -> the reasoner tries every practice puzzle once -> on each miss, N
+  creative blurts, an exact checker keeps the lucky hits (wins, also written to wins/wins.jsonl in the sleep
+  thread's format) -> "sleep": a LoRA practises them -> after-eval on the same fresh test puzzles.
+  Arms: W = practice on wins + the reasoner's own correct answers; C = the reasoner's own correct answers only,
+  repeated to the same number of examples (so W and C differ only in the creative wins).
+
+  python -B scripts/claude_blurt2.py blurt --model M --puzzles F --out F [--n 30 --temp 1.0]      rule-keeping blurts
+  python -B scripts/claude_blurt2.py loop  --model M --out DIR [--train-seed 2 --n-train 400 --test-seed 777
+                                           --n-test 150 --n 30 --temps 1.0,1.5 --dev-puzzles F --epochs 3
+                                           --lora-seeds 0,1]
+The test puzzles are made from --test-seed inside the run and are never printed; only counts are reported.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_blurt1 as B1  # noqa: E402
+
+OPCH = set("+-*/")
+
+
+def _scan(s: str, nums: list[int], state=None):
+    """Walk an expression prefix (optionally continuing from an earlier state). Returns (remaining numbers, open
+    brackets, expecting_operand, pending digits), or None if the prefix breaks a rule."""
+    if state is None:
+        rem, depth, want_operand, digits = [str(n) for n in nums], 0, True, ""
+    else:
+        rem, depth, want_operand, digits = list(state[0]), state[1], state[2], state[3]
+    for ch in s:
+        if ch == " ":
+            if digits:
+                if digits not in rem:
+                    return None
+                rem.remove(digits)
+                digits, want_operand = "", False
+            continue
+        if ch.isdigit():
+            if not want_operand:
+                return None
+            cand = digits + ch
+            if not any(r.startswith(cand) for r in rem):
+                return None
+            if cand.startswith("0") and cand not in rem:
+                return None
+            digits = cand
+            continue
+        if digits:                                   # a number ends here
+            if digits not in rem:
+                return None
+            rem.remove(digits)
+            digits, want_operand = "", False
+        if ch == "(":
+            if not want_operand:
+                return None
+            depth += 1
+        elif ch == ")":
+            if want_operand or depth == 0:
+                return None
+            depth -= 1
+        elif ch in OPCH:
+            if want_operand:
+                return None
+            want_operand = True
+        else:
+            return None
+    return rem, depth, want_operand, digits
+
+
+def legal_prefix(s: str, nums, state=None) -> bool:
+    """A prefix that can still be completed: an operand is never owed with no numbers left, and brackets stay
+    shallower than the number count (otherwise the 1B can loop on "( ( (" after using every number).
+    With `state` (from _scan of the text before), `s` is only the new piece."""
+    st = _scan(s, nums, state)
+    if st is None:
+        return False
+    rem, depth, want_operand, digits = st
+    if want_operand and not digits and not rem:
+        return False
+    return depth <= len(nums) - 1
+
+
+def complete(s: str, nums) -> bool:
+    st = _scan(s, nums)
+    if st is None:
+        return False
+    rem, depth, want_operand, digits = st
+    if digits:
+        if digits not in rem:
+            return False
+        rem = list(rem)
+        rem.remove(digits)
+        want_operand = False
+    return not rem and depth == 0 and not want_operand
+
+
+_VOCAB: dict = {}
+
+
+def _expr_tokens(tok):
+    """Every token made only of digits, + - * / ( ) and single spaces (decoded once per tokenizer, then cached)."""
+    key = id(tok)
+    if key not in _VOCAB:
+        ch = set("0123456789+-*/() ")
+        out = []
+        for i in range(len(tok)):
+            t = tok.decode([i])
+            if t and set(t) <= ch and "  " not in t and len(t) <= 6:
+                out.append((i, t))
+        _VOCAB[key] = out
+    return _VOCAB[key]
+
+
+class RuleKeeper:
+    """A transformers LogitsProcessor that keeps every sequence a legal expression over `nums`."""
+
+    def __init__(self, tok, nums, cut: int):
+        import torch
+        self.torch, self.tok, self.nums, self.cut = torch, tok, list(nums), cut
+        allowed_ch = set("".join(str(n) for n in nums)) | set("+-*/() ")
+        self.cands = [(i, t) for i, t in _expr_tokens(tok) if set(t) <= allowed_ch]
+        self.eos = tok.eos_token_id
+        self.memo: dict[str, list[int]] = {}
+
+    def allowed(self, text: str) -> list[int]:
+        if text not in self.memo:
+            st = _scan(text, self.nums)
+            ok = [] if st is None else [i for i, t in self.cands if legal_prefix(t, self.nums, st)]
+            if complete(text, self.nums) or not ok:
+                ok.append(self.eos)
+            self.memo[text] = ok
+        return self.memo[text]
+
+    def __call__(self, input_ids, scores):
+        mask = self.torch.full_like(scores, float("-inf"))
+        for b in range(input_ids.shape[0]):
+            mask[b, self.allowed(self.tok.decode(input_ids[b, self.cut:], skip_special_tokens=True))] = 0.0
+        return scores + mask
+
+
+class Solver:
+    def __init__(self, model_dir):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+                                                          dtype=torch.bfloat16).to(self.dev).eval()
+
+    def prompt(self, p) -> str:
+        return self.tok.apply_chat_template(B1.puzzle_prompt(p), tokenize=False, add_generation_prompt=True,
+                                            enable_thinking=False)
+
+    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+        from transformers import LogitsProcessorList
+        m = model or self.model
+        ids = self.tok(self.prompt(p), return_tensors="pt").to(self.dev)
+        cut = ids["input_ids"].shape[1]
+        kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
+             {"do_sample": False}
+        with self.torch.no_grad():
+            out = m.generate(**ids, max_new_tokens=32, pad_token_id=self.tok.eos_token_id,
+                             logits_processor=LogitsProcessorList([RuleKeeper(self.tok, p["nums"], cut)]), **kw)
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+
+    def answer(self, p, model=None) -> str:
+        return self.generate(p, 1, None, model)[0]
+
+
+def puzzles(seed, n):
+    class A:
+        pass
+    a = A()
+    a.seed, a.n, a.out = seed, n, None
+    rng, out, seen = random.Random(seed), [], set()
+    while len(out) < n:                                  # same recipe as claude_blurt1.make
+        k = 3 if len(out) % 3 else 4
+        nums = sorted(rng.randint(1, 9 if k == 3 else 13) for _ in range(k))
+        target = 24 if k == 4 else rng.randint(5, 40)
+        key = (tuple(nums), target)
+        if key in seen:
+            continue
+        sol = B1.solve(nums, target)
+        if sol is None:
+            continue
+        seen.add(key)
+        out.append({"id": f"pz-s{seed}-{len(out) + 1:03d}", "nums": nums, "target": target})
+    return out
+
+
+def blurt(a):
+    s = Solver(a.model)
+    rows, tot = [], 0
+    for p in [json.loads(x) for x in Path(a.puzzles).read_text().splitlines() if x]:
+        bl = s.generate(p, a.n, a.temp)
+        hits = [B1.check(t, p["nums"], p["target"]) for t in bl]
+        greedy = s.answer(p)
+        rows.append({"id": p["id"], "blurts": bl, "hits": hits, "greedy": greedy,
+                     "greedy_hit": B1.check(greedy, p["nums"], p["target"])})
+        tot += sum(hits)
+        print(f"[blurt2] {p['id']} hits {sum(hits)}/{a.n} greedy {int(rows[-1]['greedy_hit'])}", flush=True)
+    Path(a.out).write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    print(f"puzzles {len(rows)}: lucky blurts {tot}/{len(rows) * a.n}, solved at least once "
+          f"{sum(1 for r in rows if any(r['hits']))}/{len(rows)}, greedy right {sum(r['greedy_hit'] for r in rows)}")
+
+
+def evaluate(s, ps, model=None) -> int:
+    return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
+
+
+def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
+    """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
+    B starts at zero, so the model starts exactly as the base."""
+    import math
+    import torch
+    nn = torch.nn
+
+    class LoRALinear(nn.Module):
+        def __init__(self, base):
+            super().__init__()
+            self.base = base
+            self.A = nn.Parameter(torch.empty(r, base.in_features, dtype=torch.float32, device=base.weight.device))
+            self.B = nn.Parameter(torch.zeros(base.out_features, r, dtype=torch.float32, device=base.weight.device))
+            nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
+            self.drop, self.scale = nn.Dropout(dropout), alpha / r
+
+        def forward(self, x):
+            up = (self.drop(x).float() @ self.A.t() @ self.B.t()) * self.scale
+            return self.base(x) + up.to(x.dtype)
+---TRUNC---
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_blurt2.py 2>&1 | wc -l; git show origin/main:scripts/claude_blurt2.py 2>&1 | tail -n 250
+390
+        self.cands = [(i, t) for i, t in _expr_tokens(tok) if set(t) <= allowed_ch]
+        self.eos = tok.eos_token_id
+        self.memo: dict[str, list[int]] = {}
+
+    def allowed(self, text: str) -> list[int]:
+        if text not in self.memo:
+            st = _scan(text, self.nums)
+            ok = [] if st is None else [i for i, t in self.cands if legal_prefix(t, self.nums, st)]
+            if complete(text, self.nums) or not ok:
+                ok.append(self.eos)
+            self.memo[text] = ok
+        return self.memo[text]
+
+    def __call__(self, input_ids, scores):
+        mask = self.torch.full_like(scores, float("-inf"))
+        for b in range(input_ids.shape[0]):
+            mask[b, self.allowed(self.tok.decode(input_ids[b, self.cut:], skip_special_tokens=True))] = 0.0
+        return scores + mask
+
+
+class Solver:
+    def __init__(self, model_dir):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.torch = torch
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.dev = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+                                                          dtype=torch.bfloat16).to(self.dev).eval()
+
+    def prompt(self, p) -> str:
+        return self.tok.apply_chat_template(B1.puzzle_prompt(p), tokenize=False, add_generation_prompt=True,
+                                            enable_thinking=False)
+
+    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+        from transformers import LogitsProcessorList
+        m = model or self.model
+        ids = self.tok(self.prompt(p), return_tensors="pt").to(self.dev)
+        cut = ids["input_ids"].shape[1]
+        kw = {"do_sample": True, "temperature": temp, "top_p": 1.0, "num_return_sequences": n} if temp else \
+             {"do_sample": False}
+        with self.torch.no_grad():
+            out = m.generate(**ids, max_new_tokens=32, pad_token_id=self.tok.eos_token_id,
+                             logits_processor=LogitsProcessorList([RuleKeeper(self.tok, p["nums"], cut)]), **kw)
+        return [self.tok.decode(o[cut:], skip_special_tokens=True).strip() for o in out]
+
+    def answer(self, p, model=None) -> str:
+        return self.generate(p, 1, None, model)[0]
+
+
+def puzzles(seed, n):
+    class A:
+        pass
+    a = A()
+    a.seed, a.n, a.out = seed, n, None
+    rng, out, seen = random.Random(seed), [], set()
+    while len(out) < n:                                  # same recipe as claude_blurt1.make
+        k = 3 if len(out) % 3 else 4
+        nums = sorted(rng.randint(1, 9 if k == 3 else 13) for _ in range(k))
+        target = 24 if k == 4 else rng.randint(5, 40)
+        key = (tuple(nums), target)
+        if key in seen:
+            continue
+        sol = B1.solve(nums, target)
+        if sol is None:
+            continue
+        seen.add(key)
+        out.append({"id": f"pz-s{seed}-{len(out) + 1:03d}", "nums": nums, "target": target})
+    return out
+
+
+def blurt(a):
+    s = Solver(a.model)
+    rows, tot = [], 0
+    for p in [json.loads(x) for x in Path(a.puzzles).read_text().splitlines() if x]:
+        bl = s.generate(p, a.n, a.temp)
+        hits = [B1.check(t, p["nums"], p["target"]) for t in bl]
+        greedy = s.answer(p)
+        rows.append({"id": p["id"], "blurts": bl, "hits": hits, "greedy": greedy,
+                     "greedy_hit": B1.check(greedy, p["nums"], p["target"])})
+        tot += sum(hits)
+        print(f"[blurt2] {p['id']} hits {sum(hits)}/{a.n} greedy {int(rows[-1]['greedy_hit'])}", flush=True)
+    Path(a.out).write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    print(f"puzzles {len(rows)}: lucky blurts {tot}/{len(rows) * a.n}, solved at least once "
+          f"{sum(1 for r in rows if any(r['hits']))}/{len(rows)}, greedy right {sum(r['greedy_hit'] for r in rows)}")
+
+
+def evaluate(s, ps, model=None) -> int:
+    return sum(B1.check(s.answer(p, model), p["nums"], p["target"]) for p in ps)
+
+
+def add_lora(model, r=16, alpha=32, dropout=0.05, names=("q_proj", "k_proj", "v_proj", "o_proj")):
+    """Plain LoRA (no extra package): freeze the model, add a low-rank update B@A to each named linear layer.
+    B starts at zero, so the model starts exactly as the base."""
+    import math
+    import torch
+    nn = torch.nn
+
+    class LoRALinear(nn.Module):
+        def __init__(self, base):
+            super().__init__()
+            self.base = base
+            self.A = nn.Parameter(torch.empty(r, base.in_features, dtype=torch.float32, device=base.weight.device))
+            self.B = nn.Parameter(torch.zeros(base.out_features, r, dtype=torch.float32, device=base.weight.device))
+            nn.init.kaiming_uniform_(self.A, a=math.sqrt(5))
+            self.drop, self.scale = nn.Dropout(dropout), alpha / r
+
+        def forward(self, x):
+            up = (self.drop(x).float() @ self.A.t() @ self.B.t()) * self.scale
+            return self.base(x) + up.to(x.dtype)
+
+    for prm in model.parameters():
+        prm.requires_grad_(False)
+    for name, mod in list(model.named_modules()):
+        for child, sub in list(mod.named_children()):
+            if child in names and isinstance(sub, nn.Linear):
+                setattr(mod, child, LoRALinear(sub))
+    return model
+
+
+def train_lora(s, examples, epochs, seed):
+    import torch
+    torch.manual_seed(seed)
+    from transformers import AutoModelForCausalLM
+    base = AutoModelForCausalLM.from_pretrained(s.model.name_or_path, trust_remote_code=True,
+                                                dtype=torch.bfloat16).to(s.dev)
+    m = add_lora(base)
+    opt = torch.optim.AdamW([p for p in m.parameters() if p.requires_grad], lr=2e-4)
+    rng = random.Random(seed)
+    m.train()
+    for ep in range(epochs):
+        rng.shuffle(examples)
+        for i in range(0, len(examples), 8):
+            batch = examples[i:i + 8]
+            loss_tot = 0.0
+            for p, expr in batch:
+                pr = s.tok(s.prompt(p), return_tensors="pt")["input_ids"][0]
+                an = s.tok(expr, add_special_tokens=False, return_tensors="pt")["input_ids"][0]
+                ids = torch.cat([pr, an, torch.tensor([s.tok.eos_token_id])]).unsqueeze(0).to(s.dev)
+                lab = ids.clone()
+                lab[0, :len(pr)] = -100
+                loss = m(input_ids=ids, labels=lab).loss / len(batch)
+                loss.backward()
+                loss_tot += float(loss.detach())
+            opt.step()
+            opt.zero_grad()
+        print(f"[sleep] epoch {ep + 1}/{epochs} last batch loss {loss_tot:.3f}", flush=True)
+    m.eval()
+    return m
+
+
+def pick_temp(s, a) -> tuple[float, dict]:
+    """Registered DEV rule: on the DEV puzzles the reasoner misses, N blurts at each temperature; keep the temperature
+    with the most lucky blurts (ties go to the first listed). Only DEV puzzles are used."""
+    temps = [float(t) for t in a.temps.split(",")]
+    if len(temps) == 1 or not a.dev_puzzles:
+        return temps[0], {}
+    dev = [json.loads(x) for x in Path(a.dev_puzzles).read_text().splitlines() if x]
+    missed = [p for p in dev if not B1.check(s.answer(p), p["nums"], p["target"])]
+    counts = {}
+    for t in temps:
+        counts[str(t)] = sum(B1.check(x, p["nums"], p["target"]) for p in missed for x in s.generate(p, a.n, t))
+        print(f"[dev] T {t}: lucky blurts {counts[str(t)]}/{len(missed) * a.n} on {len(missed)} missed DEV puzzles",
+              flush=True)
+    best = max(temps, key=lambda t: (counts[str(t)], -temps.index(t)))
+    return best, {"dev_missed": len(missed), "dev_lucky_by_temp": counts, "temp_chosen": best}
+
+
+def loop(a):
+    t0 = time.time()
+    out = Path(a.out)
+    (out / "wins").mkdir(parents=True, exist_ok=True)
+    s = Solver(a.model)
+    s.model.name_or_path = a.model
+    temp, res = pick_temp(s, a)
+    train, test = puzzles(a.train_seed, a.n_train), puzzles(a.test_seed, a.n_test)
+    keys = {(tuple(p["nums"]), p["target"]) for p in train}
+    if a.dev_puzzles:
+        keys |= {(tuple(p["nums"]), p["target"]) for p in
+                 (json.loads(x) for x in Path(a.dev_puzzles).read_text().splitlines() if x)}
+    n0 = len(test)
+    test = [p for p in test if (tuple(p["nums"]), p["target"]) not in keys]
+    res.update({"n_train": len(train), "n_test": len(test), "test_dropped_overlap": n0 - len(test), "temp": temp})
+    res["S0_test_before"] = evaluate(s, test)
+    print(f"[loop] before: test {res['S0_test_before']}/{len(test)}", flush=True)
+    own, wins, recs, lucky, tried = [], [], [], 0, 0
+    for p in train:
+        g = s.answer(p)
+        if B1.check(g, p["nums"], p["target"]):
+            own.append((p, g))
+            continue
+        bl = s.generate(p, a.n, temp)
+        hits = [t for t in bl if B1.check(t, p["nums"], p["target"])]
+        lucky, tried = lucky + len(hits), tried + len(bl)
+        if hits:
+            wins.append((p, hits[0]))
+            recs.append({"problem": f"Use each of {p['nums']} once with + - * / and brackets to make {p['target']}",
+                         "rows_used": [], "steps": [hits[0]], "answer": hits[0], "checked_by": "exact-checker",
+                         "turn_id": p["id"], "source": "creative-blurt", "tries": bl.index(hits[0]) + 1})
+    (out / "wins" / "wins.jsonl").write_text("".join(json.dumps(r) + "\n" for r in recs), encoding="utf-8")
+    res.update({"train_reasoner_right": len(own), "train_missed": len(train) - len(own),
+                "train_missed_then_lucky": len(wins), "lucky_blurts_on_misses": lucky, "blurts_on_misses": tried})
+    print(f"[loop] practice: reasoner right {len(own)}/{len(train)}, lucky wins on misses {len(wins)} "
+          f"({lucky}/{tried} blurts)", flush=True)
+    ex_w = own + wins
+    ex_c = (own * (len(ex_w) // max(1, len(own)) + 1))[:len(ex_w)] if own else []
+    res["examples_W"], res["examples_C"] = len(ex_w), len(ex_c)
+    seeds = [int(x) for x in a.lora_seeds.split(",")]
+    for arm, ex in (("W", ex_w), ("C", ex_c)):
+        for sd in seeds:
+            k = f"{arm}_seed{sd}"
+            if not ex:
+                res[f"S_{k}_test_after"] = None
+                continue
+            m = train_lora(s, list(ex), a.epochs, sd)
+            res[f"S_{k}_test_after"] = evaluate(s, test, m)
+            res[f"S_{k}_train_missed_after"] = sum(B1.check(s.answer(p, m), p["nums"], p["target"]) for p, _ in wins)
+            print(f"[loop] arm {arm} seed {sd}: test {res[f'S_{k}_test_after']}/{len(test)}", flush=True)
+            del m
+            if s.dev == "cuda":
+                s.torch.cuda.empty_cache()
+        vals = [res.get(f"S_{arm}_seed{sd}_test_after") for sd in seeds]
+        res[f"S_{arm}_test_after_mean"] = None if None in vals else round(sum(vals) / len(vals), 2)
+    res["minutes"] = round((time.time() - t0) / 60, 1)
+    (out / "loop_summary.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
+    print(json.dumps(res))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["blurt", "loop"])
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--puzzles", default="")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--n", type=int, default=30)
+    ap.add_argument("--temp", type=float, default=1.0)
+    ap.add_argument("--train-seed", type=int, default=2)
+    ap.add_argument("--n-train", type=int, default=400)
+    ap.add_argument("--test-seed", type=int, default=777)
+    ap.add_argument("--n-test", type=int, default=150)
+    ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--lora-seeds", default="0,1")
+    ap.add_argument("--temps", default="1.0")
+    ap.add_argument("--dev-puzzles", default="")
+    a = ap.parse_args()
+    {"blurt": blurt, "loop": loop}[a.cmd](a)
+
+
+if __name__ == "__main__":
+    main()
+[0m
+[0m✗ [0mGrep "BensPC|benspc|GPU.*PC|director.*queue" failed
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mgit show origin/main:artifacts/fable-predictions-ledger.md 2>&1 | tail -n 60; echo "---"; git log origin/main --oneline -15
+- P241.3: M5 latency passes (median <= 2 ms, p99 <= 20 ms); suite wall within +5 % of 228 under the 3x3 alternating median protocol (p ~ 0.7, machine load).
+- P241.4: every mechanical M1 sub-mark is 0 on the sealed sweep (p ~ 0.8).
+- P241.5: M1 grader bar (>= 99.0 % overall and >= 97 % per act) passes, p ~ 0.45; risk acts CONFLICT (verbatim new value), AMBIGUOUS (entity ids), REVERSE / NOT_HAD (long relation nouns).
+- P241.6: M4 passes (241 wins >= 70 % of non-tie pairs, loses <= 10 % of all), p ~ 0.65.
+- P241.7: sleep smoke identical to 228 on all summary fields.
+- P241.8: 0 sev-1 legacy fallbacks on the suites; unframed-line count 378 as in the pilot.
+- P252b.1 (exp 252b value-screen fix on 252, Opus, sealed 2026-09-22 17:21, SEAL.sha256.txt 8a86b9a0d9750a69) M1 panel re-run: c252-022 is the only difference (now writes nothing; followup does not state the junk): PASS.
+- P252b.2 M2 held-out safety dev (56 items): FAIL on exactly one item, b252-035 ("that's Z" pattern stores "old news"); 0 wrong removals, 0 question writes, controls identical.
+- P252b.3 M3 suite moves identical to 252's 5; M4 smoke identical; M6 identical (0 ghosts, 0 dup fails, 0 moves).
+- P252b.4 Registered verdict FAIL (M2, b252-035 only).
+- P252b OUTCOME (2026-09-22 17:26) registered FAIL on M2 only, as predicted: b252-035 'old news' junk write (the "that's Z" pattern, for 258); 252's other 5 dev junk writes gone; M1 c252-022 only difference, now no write; M3/M4/M6 identical to 252. P252b.1-.4 all right.
+- P258.1 (exp 258 commentary-clause removal on 252b denials/corrections, Opus, sealed 2026-09-22 17:52, SEAL.sha256.txt e62a2191fc937115) M2 dev252b: 0 junk (b252-035 fixed), 0 wrong removals, 0 question writes, controls identical; 29 predicted moves: PASS.
+- P258.2 M3 corrpanel252: c252-022 the only move (reply-only, no new wrong or junk): PASS (risk: unseen "No, that's Z." items).
+- P258.3 M4 suites identical to 252b's moves; M5 smoke identical; M6 0 ghosts/0 dup fails/0 moves; M7 added median <= +5 ms: all PASS.
+- P258.4 M1 corrtail258 blind panel: that_denial 8-11/12, that_correction 9-11/12, pure_denial_that 6-9/10; question_tail 6/6, unstored_tail 6/6, keep 8/8, control 16/16. Likely FAIL on pure_denial_that (first-person/"No, that's X.") and/or junk-over-80 (other-tail junk also present in 252b).
+- P258.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P259.1 (exp 259 value boundary on 252b explicit denials, Opus, sealed 2026-09-22 17:55, SEAL.sha256.txt 71f658233289f5a3) M2 dev252b: moves exactly b252-001/003/010/013/014/015, each a clean "OK, I removed" of its stored target; 0 false replies, 0 wrong removals, 0 question writes, junk only b252-035: PASS.
+- P259.2 M3 corrpanel252: only rows where 252b said "I don't have V..." with a clause boundary move, each by the sealed mechanical rule; 0 new wrong or junk: PASS.
+- P259.3 M4 suites = 252b's moves; M5 smoke identical; M6 0 ghosts/0 dup fails/0 moves; M7 added median <= +5 ms: all PASS.
+- P259.4 M1 corrtail258 blind panel: that_denial 7-11/12, other_tail_denial 5-9/10, false claims 0-2, question_tail 6/6, unstored_tail 6/6, keep 8/8, control 16/16. Likely FAIL on that_denial or other_tail_denial (first-person, "stopped working", ", sadly"-type two-clause junk are out of scope).
+- P259.5 Registered verdict: FAIL (M1) more likely than PASS.
+- P258 OUTCOME (2026-09-22 18:00) registered FAIL on M1: that_denial 7/12 (252b 0), that_correction 3/12 (0), pure_denial_that 6/10 (2); junk 0 over 80 (252b 2), false claims 0 (4), wrong values 18 (31); question/unstored/keep/control all pass. M2-M7 PASS exactly as predicted (dev252b 29 moves, c252-022 only, suites = 252b, smoke 0 diffs, M6 0/0/0, +0.23 ms). P258.1-.3 right; P258.4 ranges too optimistic for that_correction (3 vs 9-11) and that_denial (7 vs 8-11); P258.5 right. Cause: 252b grammar gaps on the shortened turns (lowercase, first person, multi-valued relations) + whole-turn gate misses ", not Y, that's ...". Scorers first run with a broken bash python3; re-scored once with uv 3.12, no re-run.
+
+- P257.1 (2026-09-22 18:15) Exp 257 (ear v4.1 = data v4 + C8, table v2; ckpt 55284dec…; tau 9.3 by the sealed rule, no fallback; SEAL.sha256.txt sha a2f8031fb0a3…): M1 passes (0-1 no_save saves), ~75 %.
+- P257.2 M2 wrong saves 2-4; pass (<= 1) ~25 %.
+- P257.3 M3 A recall 65-80 %: FAIL ~85 %; A_brake 85-95 %; B 10-25 %.
+- P257.4 M3b UNSURE 10-20 % of gold TEACH; pass (<= 12 %) ~35 %.
+- P257.5 M4 ASK recall 85-95 %; pass (>= 90 %) ~55 %.
+- P257.6 M5 GPU median 120-200 ms: pass ~97 %.
+- P257.7 Overall registered PASS ~5 %.
+- P257 OUTCOME (2026-09-22 18:30) registered FAIL on M2/M3/M3b: A (v4.1, tau 9.3) M1 1 (pass), M2 4 wrong saves (bar 1), M3 78/112 = 69.6 % (B 15/112 = 13.4 %), M3b UNSURE 24/112 = 21.4 %, M4 39/40 = 97.5 % (pass), M5 GPU median 148.7 ms (pass). A_brake 98/112 with 12 wrong; A_raw 98/112 with 20 wrong. P257.1 right, .2 right (4, in range), .3 right (A 69.6, A_brake 87.5, B 13.4), .4 range wrong (21.4 > 20) / fail right, .5 range wrong (97.5 > 95) / pass right, .6 right, .7 FAIL as leaned. Report only (after the run): v4.1 on the 235b panel A 81/110 with 3 wrong, UNSURE 20, ASK 37/40 (v3: 54/110, 5 wrong, 36 unsure, 32/40).
+- P255.1 (exp 255 fixed-reply text pass on 138m, Opus, sealed 2026-09-22 18:16, SEAL.sha256.txt 820e4f97de8f6f6d) M2 suites vs base138m-rows: gate clean, exactly the 162 predicted reply-only moves (rt136 48, rt143 42, sessions152 25, bench 43), 0 verdict/store/write changes; rt143 no-gate exactly 45 reply-only moves: PASS.
+- P255.2 M4 verifier probes: exactly the 38 predicted changed replies, 0 unexplained, 0 store changes: PASS on the mechanical labels; 8 pre-flagged Q2 rewrites (A06, B04, B05, B20, D02, D03, D04, D08) say "I don't know that." where the answer is stored or the turn was a teach request; if the director counts them worse, M4 FAILs on them.
+- P255.3 M5 smoke identical except agent/config/label/seconds; M6 exactly the 17 predicted rewrites, 0 ghosts, 0 dup fails, 0 store changes; M7 added median <= +2 ms (pilot +0.20): all PASS.
+- P255.4 M1 fixedtext (232 rows, 175 changed renders): 97-100% of changed renders GRAMMATICAL per grader; likely misses are stylistic (T11 "pick", T19/T20 repetitive "I can"/"I cannot", T31 quoted echo of fragments). 100% for both graders ~55% likely.
+- P255.5 M3 239 panel: 0 unexplained changes, 0 store changes, >= 90% of changed turns grammatical; risk on "less correct": Q2 "I don't know that." on turns whose answer is stored. Registered verdict: PASS more likely than FAIL, with M1 or the M4 flags the likely failure points.
+- P260.1 (exp 260 openers/greetings never part of a fact, outermost layer on 138m, Opus, sealed 2026-09-22 18:17, SEAL.sha256.txt artifacts/claude-openers260-20260922) M2 suites vs 138m's saved rows: exactly one moved unit, rt136 C122 "Hi. Tom's boss is Ann." stores Tom boss Ann instead of junk "Hi. Tom" (verdict WRONG-WRITE both arms; suitediff label "new junk write", registered as the stated-fact exemption); rt143 124, sessions152 180, bench 4x200: 0 moved; 0 abstain flips.
+- P260.2 M3 sleep smoke identical except agent/config/label/seconds; M4 verifier probes exactly B15:t0, B15:t1, D08:t1, D10:t0, D10:t1, E06:t0, E10:t0 changed (1 new write B15 = USER name Fenna; D10 stores Kestrel not "Please, Kestrel"), supp 0; M5 restart dialogs 0 reply changes, 0 ghosts, 0 dup fails; M6 added median <= +3 ms (pilot +0.15/+0.43 ms). All PASS.
+- P260.3 M1 blind openpanel260: control 16/16 identical, 0 question writes, name_trap 0 newly wrong, bare_greeting >= 5/6, greeting_question >= 7/8 and opener_question >= 10/12 likely; opener_teach >= 16/20 likely unless the panel leans on shapes 138m cannot save plainly. Tightest bar = 0 junk over 80: a no-comma greeting + one capitalised name ("Hey Pell's boss is ...") or a no-comma opener before a 2-word name keeps 138m's junk by design (registered known limits). Registered verdict: M1 PASS ~55%, overall PASS ~50%; the likely failure is one junk item or M2 read strictly on C122.
+- P252c.1 (exp 252c merge 252b + 258 outermost + 259 + glue on 258-cut turns, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge252c-20260922) M2 dev252b: exactly 31 moved ids (258's 29 with 258's registered records, b252-003 and b252-015 with 259's records); 0 junk, 0 false replies, 0 wrong removals, 0 question writes, controls identical. PASS.
+- P252c.2 M3 dev258/dev259: records equal own arm except the sealed exceptions (dev258: d258-003, d258-039 = 259's; dev259: v259-010, 011, 012, 015, 016, 029, 035, 037, 038, 058, 059, 063 = 258's); 0 false replies; junk 2 (d258-037, v259-008, ", sadly", present in both own arms) -> M3 FAIL on junk only.
+- P252c.3 M5 suites move list = 252b's, 0 new WRONG/WRONG-WRITE/junk/lost OK; M6 smoke identical; M7 0 ghosts, 0 dup fails, 0 reply moves; M8 added median <= +5 ms (pilot -0.05 ms). All PASS.
+- P252c.4 M4 corrpanel252 (never read): only c252-022 moves, a clean removal of Tobin ("OK, I removed Tobin as ..."); everything else identical to 252b; 0 new wrong, 0 new junk, 0 false replies. PASS.
+- P252c.5 M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); 0 false claims, 0 junk, keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all equal to 258's (or 259's for t258-035) rows; FAIL on the bar "no wrong value where 258 or 259 had none" at t258-026 only. Predicted registered verdict: FAIL (M1 t258-026, M3 ", sadly" junk).
+- P138n.1 (merge 138n = 138m + 221/221b/221c/229/237/232c/236 + glue G1-G3, Opus, sealed 2026-09-22 18:20, SEAL.sha256.txt artifacts/claude-merge138n-20260922) M1 own arm reproduces 720/720 sealed rows; 222 moves vs own, each predicted by id with exact record (0 unpredicted / 0 wrong / 0 not moved). Registered verdict:
+- P138n.2 M2 vs 138m saved rows: sessions152 1 (S1-family10#19 fixed), bench 0, marks123 0, rt136 16 (C019-C031 inherited 222, C076/C079/C115 reply-only; direct vs 138m moved == [C115]), rt143 no-gate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER (true taught fact, loop-test gold). Registered verdict:
+- P138n.3 M3 smoke identical except agent/config/label/seconds/root/report; M4 bench identical x3; M5 median delta <= +5 ms (pilot +0.10 ms); M6 5 reply changes (p3 d00t04, d01t03, d05t03; v138m d59t00, d61t01), 0 write changes, 0 ghosts, 0 failed dup checks. Registered verdict:
+- P138n.4 M7 blind panels (221, 221b, 229, 232c, 236, 237) on 138n vs each registered arm: 0 right->wrong, 0 new wrong, 0 question writes, 0 new wrong writes; likely risk: 221b/237 ambiguous-key answers where the piece abstained, and 229 items claimed first by 138m's 222 teach (raw keys). Registered verdict:
+- P252c.6 OUTCOME (2026-09-22 20:05, build/verification agent finishing sealed merge 252c) registered verdict FAIL exactly as predicted in P252c.1-.5. M1 corrtail258: 54/80 right (252b 39, 258 53, 259 43); false claims 0, junk 0, wrong values 26; keep 8/8 + control 16/16 byte-identical, question_tail 6/6, unstored_tail 6/6; 24 moves vs 252b all as predicted, 15 newly right, 0 newly wrong; FAIL only on bar "no wrong value where 258/259 had none" at t258-026. M2 PASS (31 moves, 0 junk/false/wrong-removal/question-write, controls identical). M3 FAIL on junk only as predicted (d258-037, v259-008, both junk in own arms too); all records as predicted, 0 false replies. M4 PASS (only c252-022 moves, class both, Tobin removed, 0 new wrong/junk/false). M5 PASS (moves = 252b: rt136 4, sessions152 1, rt143 0, bench 0; 0 new bad). M6 PASS (smoke identical). M7 PASS (0 ghosts, 0 dup fails, 0 moves, 18 rows). M8 PASS (added median -0.11 ms). P252c.1-.5 all right. Seals of 252c, corrpanel252 and corrtail258 all verified OK before the runs; M4+M1 each run once with the sealed driver/scorer; M2/M3/M5-M8 not re-run.
+- P255.6 OUTCOME (2026-09-22, build/verification agent) registered FAIL on M4 (director ruling: the 8 flagged probes A06, B04, B05, B20, D02, D03, D04, D08 are WORSE on meaning); M3 runner done (30 convs, 244 rows, 153 changed, 0 unexplained, 0 store changes), judging not run; M1 graded by the director separately.
+- P260.4 (exp 260 M1 blind openpanel260, handoff run 2026-09-23 via sealed scripts/claude_260_panel.sh, panel run ONCE per arm) M1 PASS 9/9 bars: opener_teach 260 20/20 (138m 3/20), opener_question 12/12 (138m 5/12), greeting_question 8/8 (138m 1/8), bare_greeting 6/6 (138m 3/6), junk_guard 8/8 junk 0 (138m 0/8 junk 8), name_trap 10/10 newly-wrong 0, junk writes 0/80 (138m 13), question writes 0, control 16/16 byte-identical; 260 right 80/80, 138m right 38/80, 42 moves all toward right, 0 against; 138m arm vs writer base138m.jsonl 80/80 identical; schema OK; overall exp 260 PASS (M1-M6 all PASS).
+- P138n.5 OUTCOME (2026-09-22, build/verification agent finishing sealed merge 138n) registered verdict FAIL on M7 only, exactly one panel. M1 PASS (720 cases, 222 moves vs own, 0 unpredicted / 0 predicted-wrong / 0 predicted-not-moved, own arm 720/720). M2 PASS (sessions152 1 fixed, bench 0, marks123 0, rt136 16 = 13 allowed WRONG-WRITE C019-C031 identical to 138m + 3 reply-only, direct vs 138m moved [C115]; rt143-nogate 18 reply-only with flips P1 P2 Q1 Q2 MISSED->OK and S5 OK->WRONG-ANSWER as predicted). M3 PASS (differ .agent/.config/.label/.seconds only). M4 PASS (4/4 identical x3). M5 PASS (median delta +0.317 ms). M6 PASS (5 reply changes as predicted, 0 write changes, 0 ghosts, 0 failed dup checks, fresh 138m reproduces saved rows). M7 FAIL: tablepanel221 138n right 77 wrong 3 vs registered 66/0 (138m 29/0); new wrong p221-059#2, p221-066#2, p221-070#2 (all inverse family; 059+070 right on registered arm); right->miss 8 (4 inverse p221-060/063/064/069, 4 self p221-087/089/090/091); gained 21; question writes 0. Other 5 panels PASS: 221b 85/0 vs 54/0 (138m 49), 229 34/6 vs 26/7 (138m 18/4), 232c 80/0 vs 80/0 (138m 44), 236 60/0 vs 60/0 (138m 20), 237 68/1 vs 65/1 (138m 31/1); 0 new wrong and 0 question writes on all. 239 runner only: artifacts/claude-convpanel239-138n-20260922/transcripts-138n.jsonl + .md and changes-138n-vs-138m.json (244 turns, 58 changed vs 138m), never graded. Seals verified OK (138n seal 15/15; each panel seal OK; 221 seal checked inside its dir since it lists bare filenames). Deviation: sealed m7.sh final 'python3 compare' failed (broken x86 /usr/local/bin/python3); the identical compare was run once with the uv prefix and its cp steps completed; no sealed file changed; panels each run ONCE.
+- P261.1 (2026-09-22, resume builder; exp 261 ear v4.1 ckpt 55284dec + canon + brake + entailment checker prompt B at theta 0.25, sealed 18 files SEAL.sha256.txt artifacts/claude-earcheck261-20260922) M1 no_save saves 0-1; pass (<= 1) ~70 %.
+- P261.2 M2 wrong saves (statement fams + no_save) 0-3; pass (<= 1) ~55 %. Risk tags R10/R11/R12 unseen in dev (D_apos still 3 wrong at theta 0.25 on dev).
+- P261.3 M3 exact TEACH recall 85-93 % and >= B + 30 (B 10-20 %); pass ~65 %.
+- P261.4 M3b UNSURE 5-12 % of gold TEACH; pass (<= 12 %) ~60 %.
+- P261.5 M4 exact ASK recall 90-100 %; pass (>= 90 %) ~75 %.
+- P261.6 M5 median ear+checker ms/turn 300-600 ms; pass (<= 800) ~90 %.
+- P261.7 M6 checker never adds/changes a frame; pass ~99 %.
+- P261.8 Overall registered PASS ~25 %. Deviation sealed: prompt B rewords the brief's literal question and adds two NO clauses (dev A/B: literal prompt A only reaches <= 1% wrong at theta 0.9 with ~51% recall; B gives 91.9% recall at 0.95% wrong on dev).
+---
+80ed19c92 CPU preview: shared step input gives raw 64/200 on never-practised three-step (old input 0)
+490fd6530 Board: 336b verdict
+abb46dc62 slp-366 PASS 5/5 as registered (blind recount agrees), with limits: one world twice, taught facts sampled, learning relies on word-question episodes
+1750036f3 336b verified: registered FAIL on M1-M11; grammar gain B1 PASS; sleep B2 FAIL (0/360 tried)
+380af0b99 slp-367 RESULTS: note that its learning depends on queued word-question episodes (336b: 0/360 on ordinary chat)
+8a0650545 creative: teacher label check keeps reasoning on (endpoint requires it); re-run task
+cb0d1462a lis-319: held training task (runs after lis-318 lands), dev split and token-length check helpers
+042ff5f82 slp-364b sealed before its blind bench exists: gate v2 vs v1, marks registered
+466c03d34 lis-319 data: 1,500 history rows, 1,417 blind-agreed (history-aware check), sealed; CPU dry run train 50,044 / dev 1,311
+0252abfee Sleep roadmap 365: status table for tonight; gate v2 (364b) draft, not yet sealed
+26dcd18a7 370 road map: lis-319b, the save checker must see the reader's history (plain checker saves 0/223 back-reference facts)
+b3bbd7ea6 lis-319: history-aware agreement check (plain compiler writes 0 back-reference facts, so both labels would 'agree' by saving nothing)
+a961f0795 370 road map: add rd-375 (dates on facts) and rd-376 (updates without 'correction'), asked by Benchmarks
+792d499f4 390r: road map to best in class on public benchmarks (tests and their jobs, which part moves which score, step order aligned with 380, honesty rules, where we can't win)
+457004242 slp-363 sealed + queued for BensPC (GPU: yes): one night of practice school vs plain practice vs scrambled-grade placebo vs no sleep, 2 seeds, marks registered
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; cat ~/.ssh/config 2>&1 | head -n 100; echo "---"; env | grep -i -E "bens|gpu|ssh|host" 2>&1 | head -n 30; echo "---"; git show origin/main:scripts/claude_blurt2.py 2>&1 | grep -i -E "bens|path|model" | head
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+Host benspc
+  HostName 100.75.113.114
+  User benja
+---
+CLAUDE_CODE_HOST_SESSION_ID=local_ee056d26-699b-4db5-b25d-bc131800502d
+SSH_AUTH_SOCK=/var/run/com.apple.launchd.Fr7PJ3zov8/Listeners
+CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH=1
+---
+model ... ensuring learning". Here the reasoner stand-in is the 1B's single greedy (rule-keeping) answer.
+  python -B scripts/claude_blurt2.py blurt --model M --puzzles F --out F [--n 30 --temp 1.0]      rule-keeping blurts
+  python -B scripts/claude_blurt2.py loop  --model M --out DIR [--train-seed 2 --n-train 400 --test-seed 777
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+    def __init__(self, model_dir):
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+        self.tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+        self.model = AutoModelForCausalLM.from_pretrained(model_dir, trust_remote_code=True,
+    def generate(self, p, n: int, temp: float | None, model=None) -> list[str]:
+[0m
+[0m$ [0mssh -o ConnectTimeout=10 benspc "hostname; nvidia-smi --query-gpu=name --format=csv,noheader; ls ~/; pwd" 2>&1 | head -n 40
+sethostname: Use the Network Control Panel Applet to set hostname.
+hostname -s is not supported.
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo HELLO; whoami" 2>&1 | head -n 20
+HELLO; whoami
+[0m
+[0m$ [0mssh -o ConnectTimeout=15 benspc "echo HELLO" 2>&1; echo EXIT:$?
+HELLO
+EXIT:0
+[0m
+[0m$ [0mssh benspc "whoami" 2>&1; echo EXIT:$?
+ssh benspc "nvidia-smi" 2>&1 | head -n 30; echo EXIT2:$?
+benspc\benja
+EXIT:0
+Thu Sep 24 23:35:05 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 591.86                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5070 Ti   WDDM  |   00000000:01:00.0  On |                  N/A |
+|  0%   35C    P8              8W /  250W |     599MiB /  16303MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1768    C+G   C:\Windows\System32\dwm.exe           N/A      |
+|    0   N/A  N/A            2316    C+G   ...(x86)\e2eSoft\iVCam\iVCam.exe      N/A      |
+|    0   N/A  N/A            3328    C+G   ...cord\app-1.0.9259\Discord.exe      N/A      |
+|    0   N/A  N/A            4152    C+G   ...indows\System32\ShellHost.exe      N/A      |
+|    0   N/A  N/A            5112    C+G   ...ta\Okta Verify\OktaVerify.exe      N/A      |
+|    0   N/A  N/A            5268    C+G   ...s\PowerToys.ColorPickerUI.exe      N/A      |
+|    0   N/A  N/A            8564    C+G   C:\Windows\explorer.exe               N/A      |
+|    0   N/A  N/A           10064    C+G   ...2txyewy\CrossDeviceResume.exe      N/A      |
+|    0   N/A  N/A           10660    C+G   ...Toys\PowerToys.FancyZones.exe      N/A      |
+|    0   N/A  N/A           12604    C+G   ...em32\ApplicationFrameHost.exe      N/A      |
+|    0   N/A  N/A           12760    C+G   ...7hta09mmv6hy\Build\Lively.exe      N/A      |
+|    0   N/A  N/A           13148    C+G   ...s\PowerToys.PowerLauncher.exe      N/A      |
+EXIT2:0
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem ~ | Select-Object Name, Mode | Format-Table -AutoSize\"" 2>&1 | head -n 60
+Name                                    Mode  
+----                                    ----  
+.cache                                  d-----
+.cai                                    d-----
+.claude                                 d-----
+.claude-flow                            d-----
+.claude-server-commander                d-----
+.codex                                  d-----
+.conda                                  d-----
+.config                                 d-----
+.copilot                                d-----
+.dbus-keyrings                          d-----
+.expo                                   d-----
+.idlerc                                 d-----
+.ipython                                d-----
+.junie                                  d-----
+.jupyter                                d-----
+.kaggle                                 d-----
+.keras                                  d-----
+.Ld2VirtualBox                          d-----
+.Ld9VirtualBox                          d-----
+.lmstudio                               d-----
+.local                                  d-----
+.lunarclient                            d-----
+.matplotlib                             d-----
+.ollama                                 d-----
+.openjfx                                d-----
+.pinokio                                d-----
+.pymobiledevice3                        d-----
+.rustup                                 d-----
+.ssh                                    d-----
+.streamlit                              d-----
+.triton                                 d-----
+.unsloth                                d-----
+.vachi                                  d-----
+.vscode                                 d-----
+.vscode-shared                          d-----
+ansel                                   d-----
+Apple                                   d-----
+beautiful-model                         d-----
+bin                                     d-----
+brainrot-bot                            da----
+catboost_info                           d-----
+cbgpu                                   d-----
+Contacts                                d-r---
+cre333                                  d-----
+desmos-llm                              d-----
+diag267                                 d-----
+diff1-observer                          d-----
+Documents                               d-----
+Downloads                               d-r---
+e2e330dev                               d-----
+e339style                               d-----
+ears119                                 d-----
+ears119b                                d-----
+ears119e                                d-----
+ears119f                                d-----
+ears119g                                d-----
+ears119h                                d-----
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem ~/beautiful-model -Directory | Select-Object Name | Format-Table -AutoSize; echo '---QUEUE---'; Get-ChildItem ~/beautiful-model/gpu-queue* -ErrorAction SilentlyContinue; Get-ChildItem ~ -Filter '*queue*' | Select-Object Name; Get-ChildItem ~ -Filter '*gpu*' | Select-Object Name; Get-ChildItem ~ -Filter '*lock*' | Select-Object Name\"" 2>&1 | head -n 60
+Name       
+----       
+.budget    
+.runtime   
+archive    
+artifacts  
+data       
+design     
+learnlab   
+memorylab  
+premonition
+reviews    
+scratchpad 
+scripts    
+tests      
+
+
+---QUEUE---
+
+Name               
+----               
+cbgpu              
+miktex-console.lock
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem ~/cbgpu | Select-Object Name, Mode, Length | Format-Table -AutoSize\"" 2>&1 | head -n 40
+Name            Mode   Length
+----            ----   ------
+catboost_info   d-----       
+gpu_export      d-----       
+out             d-----       
+diag1.log       -a---- 1093  
+diag2.log       -a---- 1097  
+gpu_scale.py    -a---- 409   
+gpu_scale2.py   -a---- 686   
+hc005.log       -a---- 1077  
+hg001.log       -a---- 1143  
+hx001.log       -a---- 885   
+hx001r.log      -a---- 325   
+hx002.log       -a---- 481   
+hx003.log       -a---- 993   
+hx003r.log      -a---- 329   
+hx004.log       -a---- 1023  
+hx004r.log      -a---- 330   
+hx004r_long.log -a---- 334   
+hx004r_s1.log   -a---- 333   
+hx004r_s2.log   -a---- 333   
+hx004r_x17.log  -a---- 334   
+hx004r_x25.log  -a---- 334   
+hx005.log       -a---- 995   
+hx005r.log      -a---- 330   
+hx005r_long.log -a---- 334   
+hx005r_s1.log   -a---- 333   
+hx006.log       -a---- 1143  
+hx006r.log      -a---- 328   
+refit1.bat      -a---- 335   
+refit1.done     -a---- 7     
+refit2.bat      -a---- 350   
+refit2.done     -a---- 7     
+refit3.bat      -a---- 170   
+refit3.done     -a---- 7     
+refit4.bat      -a---- 279   
+refit4.done     -a---- 7     
+refit5.bat      -a---- 167   
+refit5.done     -a---- 7
+[0m
+[0m$ [0mgit log origin/builder-outbox --oneline -10 2>&1 | head -20
+git show origin/builder-outbox --stat 2>&1 | head -40
+ae5cb6b7e watcher status
+8fb201c79 builder results: 001-bench-bm390
+f94812b35 watcher status
+a3c3709c9 watcher status
+5be483bf4 watcher status
+a8d7f6d57 watcher status
+6be821a0f builder results: ideajudge-teacher2
+1366eef54 watcher status
+039cb80ef watcher status
+32f7fdd50 watcher status
+commit ae5cb6b7e5f7b3049a9e6f2708b4fc80aa3be946
+Author: Benjamin Hannan <benjamin.a.hannan@gmail.com>
+Date:   Thu Sep 24 23:34:35 2026 -0400
+
+    watcher status
+
+ status/watcher.txt | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+[0m
+[0m$ [0mgit show origin/builder-outbox:status/watcher.txt 2>&1 | head -n 40
+echo "---"
+git grep -l "BensPC\|benspc\|GPU.*queue\|gpu.*job" origin/main 2>&1 | head -n 20
+2026-09-24 23:34:33
+running:
+blurt2-loop.running
+rent-lis-318.running
+rsn-353-guard.running
+rsn-353-train.running
+launched (no exit yet) / finished:
+     402
+
+2026-09-24 07:50:51 load 108, holding new launches (       2 running)
+2026-09-24 07:52:56 load 132, holding new launches (       2 running)
+2026-09-24 07:55:02 load 140, holding new launches (       2 running)
+2026-09-24 07:57:12 pushed e2e-339-style
+2026-09-24 07:57:13 launch rsn-299-dev3
+2026-09-24 08:07:48 pushed rsn-299-dev3
+2026-09-24 08:12:00 launch rsn-299-dev4
+2026-09-24 08:18:22 pushed rsn-299-dev4
+2026-09-24 08:20:33 pushed lis-314b-panel
+2026-09-24 08:20:34 launch rsn-299-panel
+2026-09-24 08:33:15 pushed rsn-299-panel
+2026-09-24 08:33:15 launch rent-330-dev
+2026-09-24 08:33:15 launch rent-333-creative
+2026-09-24 08:33:15 launch rent-338-chat
+2026-09-24 08:33:15 launch rent-339-style
+2026-09-24 08:35:23 load 142, holding new launches (       4 running)
+2026-09-24 08:37:29 load 140, holding new launches (       4 running)
+2026-09-24 08:39:35 load 131, holding new launches (       4 running)
+2026-09-24 08:41:41 load 123, holding new launches (       4 running)
+2026-09-24 08:43:47 load 126, holding new launches (       4 running)
+2026-09-24 08:45:52 load 106, holding new launches (       4 running)
+2026-09-24 08:47:59 load 98, holding new launches (       4 running)
+2026-09-24 08:50:04 load 102, holding new launches (       4 running)
+2026-09-24 08:52:15 pushed rent-333-creative
+2026-09-24 08:52:16 load 110, holding new launches (       3 running)
+2026-09-24 08:54:21 load 92, holding new launches (       3 running)
+2026-09-24 08:56:27 load 75, holding new launches (       3 running)
+2026-09-24 08:58:33 launch rsn-299b-panel
+2026-09-24 09:15:30 pushed rsn-299b-panel
+2026-09-24 09:15:30 launch smoke-336-win
+2026-09-24 09:19:51 pushed rent-338-chat
+---
+origin/main:ARCHITECTURE_DECISION.md
+origin/main:README.md
+origin/main:REMOTE_RUN.md
+origin/main:archive/opus-m01-20260918-202731/originals/design/06-premonition-mini-spec.md
+origin/main:archive/opus-m01-20260918-202731/originals/design/2026-09-18-decisions-log.md
+origin/main:archive/opus-m02-20260918-232457/frozen/learnlab/step1.py
+origin/main:archive/opus-m03-20260919-071009-address/frozen/learnlab/step1.py
+origin/main:archive/opus-m03-20260919-071009-direct/frozen/learnlab/step1.py
+origin/main:archive/opus-m03-20260919-071009/frozen/learnlab/step1.py
+origin/main:archive/opus-ovn-20260918-235851/frozen/learnlab/step1.py
+origin/main:artifacts/claude-bm390-20260925/PASSMARKS.md
+origin/main:artifacts/claude-chat338-20260924/PASSMARKS.md
+origin/main:artifacts/claude-e2e336-20260924/PASSMARKS.md
+origin/main:artifacts/claude-e2e336-20260924/VERIFY-336.md
+origin/main:artifacts/claude-e2e336b-20260925/PASSMARKS-336b.md
+origin/main:artifacts/claude-earcheck261-20260922/PASSMARKS.md
+origin/main:artifacts/claude-lis302-20260924/RESULTS.md
+origin/main:artifacts/claude-own-m1v-20260924/PASSMARKS.md
+origin/main:artifacts/claude-rsn299-20260924/PASSMARKS.md
+origin/main:artifacts/claude-rsn299b-20260924/PASSMARKS.md
+[0m
+[0m$ [0mgit show origin/main:REMOTE_RUN.md 2>&1 | head -n 150
+# Conservative BensPC remote workflow
+
+This workflow targets the already-verified Tailscale/SSH host alias `benspc` and the existing Windows Python executable:
+
+`C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe`
+
+It intentionally uses only `ssh` and `scp`. It does not install or download anything, assumes no `rsync` on Windows, never deletes remote project data during sync, and never kills or stops pre-existing processes. SSH is detached from stdin so it cannot consume the sync file-list pipe. Every SSH/SCP connection uses `BatchMode=yes`, a 10-second `ConnectTimeout`, a 15-second `ServerAliveInterval`, and `ServerAliveCountMax=2`, so both connection setup and a dead established transport fail finitely instead of hanging indefinitely.
+
+## 1. Read-only preflight
+
+From the local project root:
+
+```sh
+sh scripts/remote_benspc.sh preflight
+```
+
+Preflight performs no remote writes. It verifies the fixed Python path, `nvidia-smi`, the selected GPU, current free VRAM, and whether the remote project path already exists. The default Pilot VRAM floor is 12000 MiB. Low VRAM is reported as `PILOT_GPU_READY=false` / `PILOT_GPU_STATUS=LOW_VRAM`; preflight itself still succeeds so the status check cannot block non-GPU preparation. Missing Python, missing `nvidia-smi`, or an invalid GPU query still fails the status command.
+
+Useful overrides:
+
+```sh
+BENSPC_MIN_FREE_MIB=14000 sh scripts/remote_benspc.sh preflight
+BENSPC_GPU_INDEX=0 sh scripts/remote_benspc.sh preflight
+```
+
+## 2. Sync without deleting remote data
+
+The default destination is `C:/Users/benja/beautiful-model`:
+
+```sh
+sh scripts/remote_benspc.sh sync
+```
+
+Sync does not query or gate on GPU state. It creates missing destination directories and copies local regular files with `scp`. It never issues a remote delete and does not use `rsync --delete` or any equivalent. Existing remote files with matching project-relative names are updated; unrelated or stale remote files are left in place.
+
+Generated/local runtime state is not copied: `.budget/`, `.runtime/`, `.git/`, `__pycache__/`, `artifacts/`, and any directory named `cache/` are pruned. The current project filename set uses conservative characters that survive the local shell, `scp`, Windows OpenSSH, and PowerShell command parsing without an extra quoting layer; sync rejects a future project-relative filename outside that set instead of attempting an ambiguous copy. `runtime.local.json` is copied as project source, but remote execution does **not** use its Mac-specific paths.
+
+To use a different destination, keep it under the verified Windows profile and avoid spaces or shell metacharacters:
+
+```sh
+BENSPC_REMOTE_PROJECT=C:/Users/benja/beautiful-model-pilot sh scripts/remote_benspc.sh sync
+```
+
+## 3. Fast CPU tests
+
+After a sync:
+
+```sh
+sh scripts/remote_benspc.sh test
+```
+
+The remote helper does **not** query or enforce the VRAM floor for this action. It runs from the project root with the fixed Python executable and `CUDA_VISIBLE_DEVICES=-1`, so tests remain available while GPU memory is busy. It executes every portable Python model/task/storage test. `test_remote_runner.py` is intentionally local-only because it tests the POSIX `sh` coordinator with fake `ssh`/`scp` binaries, which native Windows does not provide. If `tests/` or the portable test modules do not exist, the command fails instead of reporting a misleading zero-test success.
+
+## 4. Explicitly time-boxed pilot
+
+The Pilot wrapper is limited to 600 seconds and invokes the real current `run.py` entry point using a temporary Windows runtime JSON instead of the Mac-only `runtime.local.json`:
+
+```sh
+sh scripts/remote_benspc.sh pilot
+```
+
+With no extra arguments, it passes no invented subcommand, so the current `run.py` takes its real default path (currently the same audit behavior as `run.py audit`). Extra `run.py` arguments are passed through as conservative CLI tokens, for example:
+
+```sh
+BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pilot --device=cuda --steps=10000 --seconds=480 --tiers=1,2 --eval-worlds=4
+BENSPC_PILOT_SECONDS=600 sh scripts/remote_benspc.sh pilot pc-reader --device=cuda --steps=10000 --seconds=480 --tiers=2,3 --eval-worlds=8
+```
+
+`BENSPC_PILOT_SECONDS` is restricted to 1–600 seconds. Only Pilot and `launch` enforce `BENSPC_MIN_FREE_MIB`; sync and CPU tests do not depend on free VRAM. Pilot uses the fixed existing Windows Python installation and its already-installed packages (including Torch); the temporary runtime has no dependency import roots and performs no install or download. The helper does not enumerate or terminate existing GPU processes. If the pilot itself exceeds its deadline, it terminates only the exact child PID that this invocation started, then returns failure.
+
+The source defines `smoke`, `pilot`, `evaluate`, and `pc-reader` subcommands. The wrapper never synthesizes one: with no extra arguments, `run.py` follows its default audit path. Keep the wrapper limit larger than the experiment's internal `--seconds` value so the experiment can finish evaluation and write its bounded result before the wrapper deadline.
+
+The Windows runtime JSON (temporary for Pilot, `runtime.json` in the run directory for `launch`) keeps `hard_bytes=100000000000` and `steady_bytes=80000000000` as conservative project/accounted-root bounds. That accounting only sees the remote project plus any explicitly registered roots (none are added by this helper). It therefore does **not** claim or provide host-global 100 GB aggregation across unrelated BensPC directories, other projects, caches, or processes.
+
+## 5. Long detached runs
+
+For runs longer than the Pilot limit:
+
+```sh
+sh scripts/remote_benspc.sh launch pc-reader --device=cuda --steps=200000 --seconds=14400 --tiers=2,3
+sh scripts/remote_benspc.sh status RUN_ID
+sh scripts/remote_benspc.sh fetch RUN_ID
+sh scripts/remote_benspc.sh stop RUN_ID
+```
+
+- `launch` applies the same argument whitelist and `BENSPC_MIN_FREE_MIB` gate as Pilot, then returns once `run.py` is running and prints `RUN_ID=<UTC timestamp>-<8 random hex>`. Its files live in `<remote project>/.runtime/runs/RUN_ID/`: `stdout.log`, `stderr.log`, `runtime.json`, `run.json` (run_id, pid, process start time, command line, started_at, args) and, after exit, `exit.json` (exit code). A new run directory is created without `-Force`, so an existing run is never overwritten. There is no wall-clock limit; bound the experiment with its own `--seconds`.
+- Windows OpenSSH can terminate processes left in the SSH session's job when the connection closes, so `launch` starts a small supervisor (`-Action Supervise` of the same helper) through WMI `Win32_Process.Create`, outside that job. The supervisor starts `run.py` with `CUDA_VISIBLE_DEVICES`, `PYTHONUNBUFFERED=1` and `PYTHONIOENCODING=utf-8`, writes `run.json`, holds the process handle, and writes `exit.json` when `run.py` exits.
+- `status` prints `STATE=alive|exited|unknown`, `EXIT_CODE` (or `unknown`), current GPU used/free/total MiB, and the last 20 lines of each log. It changes nothing.
+- `fetch` refuses while the run is alive (a snapshot would block the final copy). Afterwards it copies the run directory's files plus every existing `artifacts/<name>` that `run.py` printed to stdout into local `artifacts/benspc/RUN_ID/` (listed artifacts under `artifacts/benspc/RUN_ID/artifacts/`). Existing local files are never overwritten; each copy lands in a `.partial` file first and is renamed only when complete. Listed names are re-validated locally; anything outside `[A-Za-z0-9_.-]` or starting with `.` aborts the fetch.
+- `stop` kills only the PID in `run.json`, and only after checking that the live process at that PID has the recorded start time and exact command line. It holds the process handle across the check and the kill, so a reused PID cannot be hit. If the identity does not match, nothing is stopped.
+- Every `RUN_ID` argument must be 1-64 characters of `[A-Za-z0-9_-]` and not start with `-`. The local script and the helper both check this.
+
+## Safety defaults
+
+- Host alias: `benspc` (override with `BENSPC_HOST`).
+- Remote project: `C:/Users/benja/beautiful-model`.
+- GPU index: `0`.
+- Minimum free VRAM: `12000` MiB.
+- Pilot limit: `600` seconds maximum. Launched runs have no wrapper limit.
+- SSH connect timeout: `10` seconds; liveness probe every `15` seconds with at most `2` unanswered probes.
+- No remote process cleanup or memory reclamation. The only processes ever stopped are a timed-out Pilot child and a `stop RUN_ID` process whose identity was verified.
+- No remote deletion during sync.
+- No package installation, dependency download, or model/data download.
+[0m
+[0m$ [0mgit show origin/builder-outbox:status/watcher.txt 2>&1 | head -n 100
+echo "===LOG==="; git log origin/builder-outbox --oneline -30 2>&1 | head -n 30
+echo "===MAINLOG blurt==="; git log origin/main --oneline --grep=blurt -i 2>&1 | head -n 20
+2026-09-24 23:34:33
+running:
+blurt2-loop.running
+rent-lis-318.running
+rsn-353-guard.running
+rsn-353-train.running
+launched (no exit yet) / finished:
+     402
+
+2026-09-24 07:50:51 load 108, holding new launches (       2 running)
+2026-09-24 07:52:56 load 132, holding new launches (       2 running)
+2026-09-24 07:55:02 load 140, holding new launches (       2 running)
+2026-09-24 07:57:12 pushed e2e-339-style
+2026-09-24 07:57:13 launch rsn-299-dev3
+2026-09-24 08:07:48 pushed rsn-299-dev3
+2026-09-24 08:12:00 launch rsn-299-dev4
+2026-09-24 08:18:22 pushed rsn-299-dev4
+2026-09-24 08:20:33 pushed lis-314b-panel
+2026-09-24 08:20:34 launch rsn-299-panel
+2026-09-24 08:33:15 pushed rsn-299-panel
+2026-09-24 08:33:15 launch rent-330-dev
+2026-09-24 08:33:15 launch rent-333-creative
+2026-09-24 08:33:15 launch rent-338-chat
+2026-09-24 08:33:15 launch rent-339-style
+2026-09-24 08:35:23 load 142, holding new launches (       4 running)
+2026-09-24 08:37:29 load 140, holding new launches (       4 running)
+2026-09-24 08:39:35 load 131, holding new launches (       4 running)
+2026-09-24 08:41:41 load 123, holding new launches (       4 running)
+2026-09-24 08:43:47 load 126, holding new launches (       4 running)
+2026-09-24 08:45:52 load 106, holding new launches (       4 running)
+2026-09-24 08:47:59 load 98, holding new launches (       4 running)
+2026-09-24 08:50:04 load 102, holding new launches (       4 running)
+2026-09-24 08:52:15 pushed rent-333-creative
+2026-09-24 08:52:16 load 110, holding new launches (       3 running)
+2026-09-24 08:54:21 load 92, holding new launches (       3 running)
+2026-09-24 08:56:27 load 75, holding new launches (       3 running)
+2026-09-24 08:58:33 launch rsn-299b-panel
+2026-09-24 09:15:30 pushed rsn-299b-panel
+2026-09-24 09:15:30 launch smoke-336-win
+2026-09-24 09:19:51 pushed rent-338-chat
+2026-09-24 09:26:16 pushed smoke-336-win
+2026-09-24 09:39:47 pushed rent-330-dev
+2026-09-24 10:07:11 pushed rent-339-style
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+remote: Internal Server Error        
+remote: Request ID EBE1:3695DA:2438A:319AF:6AB54308        
+remote: Time 2026-09-24T15:34:36Z
+To github.com:BenjaminHannan/learner.git
+ ! [remote rejected]     HEAD -> builder-outbox (Internal Server Error)
+error: failed to push some refs to 'github.com:BenjaminHannan/learner.git'
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+2026-09-24 12:44:33 launch rent-333b-creative
+2026-09-24 12:48:46 launch rent-twinb
+2026-09-24 12:55:06 load 86, holding new launches (       2 running)
+2026-09-24 12:57:11 load 81, holding new launches (       2 running)
+2026-09-24 12:59:19 launch rent-330c-dev
+2026-09-24 13:05:41 pushed rent-333b-creative
+2026-09-24 13:14:09 pushed rent-twinb
+2026-09-24 13:18:21 launch rent-330c-dev2
+2026-09-24 13:18:21 load 69, holding new launches (       2 running)
+2026-09-24 13:20:27 load 134, holding new launches (       2 running)
+2026-09-24 13:22:32 load 118, holding new launches (       2 running)
+2026-09-24 13:24:40 launch rent-333bc-creative
+2026-09-24 13:48:35 pushed rent-330c-dev
+2026-09-24 13:48:40 pushed rent-333bc-creative
+2026-09-24 13:57:08 pushed rent-330c-dev2
+2026-09-24 13:57:09 launch rent-330c-dev3
+2026-09-24 13:57:09 launch rent-333d-creative
+2026-09-24 14:35:07 pushed rent-330c-dev3
+2026-09-24 14:39:24 pushed rent-333d-creative
+2026-09-24 14:41:30 launch rent-336-registered
+2026-09-24 15:30:16 launch or-keycheck
+2026-09-24 15:30:16 load 169, holding new launches (       2 running)
+2026-09-24 15:32:27 pushed or-keycheck
+2026-09-24 15:32:28 launch rsn-350-guard
+2026-09-24 15:32:28 load 134, holding new launches (       2 running)
+2026-09-24 15:34:34 load 122, holding new launches (       2 running)
+2026-09-24 15:36:39 load 87, holding new launches (       2 running)
+2026-09-24 15:38:45 load 77, holding new launches (       2 running)
+2026-09-24 15:40:51 load 72, holding new launches (       2 running)
+2026-09-24 15:42:58 load 68, holding new launches (       2 running)
+2026-09-24 15:45:03 load 66, holding new launches (       2 running)
+2026-09-24 15:47:09 launch rsn-350-train
+2026-09-24 15:51:25 pushed rent-336-registered
+2026-09-24 16:31:19 launch rent-333e-creative
+2026-09-24 16:50:16 pushed rent-333e-creative
+2026-09-24 17:46:54 pushed rsn-350-train
+===LOG===
+ae5cb6b7e watcher status
+8fb201c79 builder results: 001-bench-bm390
+f94812b35 watcher status
+a3c3709c9 watcher status
+5be483bf4 watcher status
+a8d7f6d57 watcher status
+6be821a0f builder results: ideajudge-teacher2
+1366eef54 watcher status
+039cb80ef watcher status
+32f7fdd50 watcher status
+2c0c7b3c3 watcher status
+8686b1658 builder results: rsn-355-train
+2b78e9682 watcher status
+9135b1da5 watcher status
+fbe9d69a9 watcher status
+e988321e1 watcher status
+e20ffe3f0 builder results: rent-336b
+557533b5c builder results: ideajudge-teacher
+ce33a0879 watcher status
+8e5aa5a77 watcher status
+73308f770 watcher status
+d9b2f5657 watcher status
+363fc98af watcher status
+048f245df watcher status
+e33e7f994 watcher status
+f9a842786 watcher status
+28cb8a08f watcher status
+56312723c watcher status
+afa4ab844 watcher status
+d92d1e31e watcher status
+===MAINLOG blurt===
+62f8df010 blurt-2: built-in LoRA (no extra package), GPU repeat task for the director
+adc6e5d97 blurt-2: rule-keeping blurts, registered learning-loop pass marks, idea self-judge, creative road map
+2d37b0b5a blurt-1: measure how often the 1B gets lucky (number puzzles with an exact checker + DEV idea blurts); queue rent-blurt1 (DEV only, $0.60)
+[0m
+[0m$ [0mgit show origin/main --stat 2>&1 | head -n 30
+git log origin/main --oneline -5 2>&1 | head
+echo "==="; git show 62f8df010 --stat 2>&1 | head -n 40
+commit 80ed19c92703ce37e3ca7a9f9eedb4f4b7e41eaa
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 03:20:40 2026 +0000
+
+    CPU preview: shared step input gives raw 64/200 on never-practised three-step (old input 0)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01LJ2LcTKkk3ipL1CryhUDgB
+
+ artifacts/claude-stepdiag-20260925/PREVIEW.md | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+80ed19c92 CPU preview: shared step input gives raw 64/200 on never-practised three-step (old input 0)
+490fd6530 Board: 336b verdict
+abb46dc62 slp-366 PASS 5/5 as registered (blind recount agrees), with limits: one world twice, taught facts sampled, learning relies on word-question episodes
+1750036f3 336b verified: registered FAIL on M1-M11; grammar gain B1 PASS; sleep B2 FAIL (0/360 tried)
+380af0b99 slp-367 RESULTS: note that its learning depends on queued word-question episodes (336b: 0/360 on ordinary chat)
+===
+commit 62f8df0105a8ee79b6af2711ff2365fd20058b4e
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 02:42:22 2026 +0000
+
+    blurt-2: built-in LoRA (no extra package), GPU repeat task for the director
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01SsmkQ3qUuVpWRn8kK25kGx
+
+ handoff/queue/blurt2-loop.md | 16 ++++++++++++++++
+ scripts/claude_blurt2.py     | 33 ++++++++++++++++++++++++++++++---
+ 2 files changed, 46 insertions(+), 3 deletions(-)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/blurt2-loop.md 2>&1
+echo "==="; git show origin/main:artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md 2>&1 | head -n 5
+echo "===DIR==="; git ls-tree origin/main artifacts/claude-blurt2-20260925/ 2>&1 | head -n 20
+echo "===BLURT1DIR==="; git ls-tree origin/main artifacts/claude-blurt1-dev-20260925/ 2>&1 | head -n 20
+COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: yes (BensPC; Ben 02:12 UTC 09-25: tonight's GPU jobs run on his PC. One job at a time, after whatever the director has queued ahead of it. Free, no rental: never rent for this task.)
+
+YOUR TASK: blurt2-loop, the registered creative learning loop (GPU repeat; the same command also runs on the creative thread's CPU). The creative thread wrote the code; run it, never edit it. If something breaks, stop and report the exact error; do not patch. No TEST-ONLY panel is involved (the test puzzles are made inside the run and never printed).
+READ FIRST (origin/main): artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md and the docstring of scripts/claude_blurt2.py.
+Needs: torch with CUDA, transformers (the benchmark venv on BensPC), plain MiniCPM5-1B (already on BensPC, thinking off; no download). No other packages.
+
+1. Copy `git archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md` to BensPC and extract, keeping the paths. BASE = the local MiniCPM5-1B folder.
+2. Check: `python -B scripts/claude_blurt1.py make --out pzcheck --n 60 --seed 1`, then compare pzcheck/puzzles.jsonl with artifacts/claude-blurt1-dev-20260925/puzzles.jsonl byte for byte (fc /b on Windows). Must be identical, else stop.
+3. One process, with a log (it prints progress lines):
+   python -B scripts/claude_blurt2.py loop --model BASE --out gpu --temps 1.0,1.5 --dev-puzzles artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+   If it has not reached the "[loop] practice:" line after 3 hours, stop it and report TOO-SLOW with the last log lines.
+4. Copy gpu/loop_summary.json, gpu/wins/wins.jsonl and the log back to the Mac as artifacts/claude-blurt2-20260925/gpu/loop_summary.json, gpu/wins.jsonl, gpu/log_loop.txt.
+5. RESULTS-gpu.md in artifacts/claude-blurt2-20260925/: the whole loop_summary.json, then L1 and L2 from PASSMARKS-blurt2.md with integer counts and PASS / FAIL / INCONCLUSIVE, GPU name, wall minutes, model commit hash. Append one ledger line (cat >> artifacts/fable-predictions-ledger.md).
+Never push weights (the run saves none).
+PUSH: artifacts/claude-blurt2-20260925/gpu artifacts/claude-blurt2-20260925/RESULTS-gpu.md artifacts/fable-predictions-ledger.md
+===
+# blurt-2 learning loop: registered pass marks (creative thread, written 2026-09-25 ~02:45 UTC, before any run)
+
+Question (Ben 00:51 UTC): when the reasoner can't solve something, can the creative part's lucky guesses be written into
+the model so that next time the reasoner solves that kind of problem alone?
+
+===DIR===
+100644 blob 00774cdcee4be7c733822556152135304a431c8f	artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md
+100644 blob 6e665dd82b8def57f8b57d349c223c5ce30e16bf	artifacts/claude-blurt2-20260925/RESULTS-selfjudge.md
+040000 tree 93472e70d5a1d5cc16dafbdd270e04ec251e9a41	artifacts/claude-blurt2-20260925/cpu
+===BLURT1DIR===
+040000 tree 53658985108f7a0790e1e5ca6541e1a15d8ece64	artifacts/claude-blurt1-dev-20260925/labels
+100644 blob dbb641bee8aa52c108f0bfba390ad6b5278421f2	artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+040000 tree a36af7b31a5522adb3df37f828c2cbbb8cf5a553	artifacts/claude-blurt1-dev-20260925/run
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem ~/beautiful-model/artifacts -Directory | Where-Object { \$_.Name -like '*blurt*' } | Select-Object Name; echo '---'; Get-ChildItem ~/beautiful-model/gpu -ErrorAction SilentlyContinue | Select-Object Name; echo '---MODEL---'; Get-ChildItem ~ -Directory | Where-Object { \$_.Name -like '*MiniCPM*' -or \$_.Name -like '*minicpm*' -or \$_.Name -like '*model*' } | Select-Object FullName; echo '---VENV---'; Get-ChildItem ~/beautiful-model -Filter '*venv*' ; Get-ChildItem ~ -Filter '*venv*' | Select-Object Name\"" 2>&1 | head -n 60
+---
+---MODEL---
+
+FullName                         
+--------                         
+C:\Users\benja\beautiful-model   
+C:\Users\benja\models            
+C:\Users\benja\premonition-models
+---VENV---
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem ~/models | Select-Object Name; echo '---'; Get-ChildItem ~/beautiful-model -Directory | Select-Object Name; echo '---PY---'; C:/Users/benja/AppData/Local/Programs/Python/Python310/python.exe --version 2>&1; echo '---TORCH---'; C:/Users/benja/AppData/Local/Programs/Python/Python310/python.exe -c 'import torch; print(torch.__version__, torch.cuda.is_available())' 2>&1 | head -5\"" 2>&1 | head -n 40
+---
+
+Python 3.10.9
+Name       
+----       
+.budget    
+.runtime   
+archive    
+artifacts  
+data       
+design     
+learnlab   
+memorylab  
+premonition
+reviews    
+scratchpad 
+scripts    
+tests      
+---PY---
+---TORCH---
+head : The term 'head' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:386
++ ... ; print(torch.__version__, torch.cuda.is_available())' 2>&1 | head -5
++                                                                   ~~~~
+    + CategoryInfo          : ObjectNotFound: (head:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Get-ChildItem C:/Users/benja/models | Select-Object -First 30 Name\"" 2>&1
+(no output)
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\models" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\models
+
+08/28/2026  01:01 PM    <DIR>          .
+09/24/2026  10:19 PM    <DIR>          ..
+               0 File(s)              0 bytes
+               2 Dir(s)  44,443,500,544 bytes free
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\beautiful-model\\artifacts" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\beautiful-model\artifacts
+
+09/21/2026  09:38 PM    <DIR>          .
+09/21/2026  09:38 PM    <DIR>          ..
+09/18/2026  07:13 AM             8,790 bench-cuda-1789729994157108200-22244.json
+09/18/2026  08:13 AM             8,906 bench-cuda-1789733610834455800-23400.json
+09/18/2026  09:35 AM        19,660,823 checkpoint-pc-c-0-1789738500503732200.mlckpt
+09/18/2026  09:45 AM        19,660,823 checkpoint-pc-c-0-1789739061048979000.mlckpt
+09/18/2026  09:51 AM        19,660,823 checkpoint-pc-c-0-1789739426571993100.mlckpt
+09/18/2026  11:07 AM        19,662,124 checkpoint-pc-c-0-1789744011272990800.mlckpt
+09/18/2026  07:22 AM         2,887,252 checkpoint-pc-memory-0-1789730572246314200.mlckpt
+09/18/2026  07:31 AM        19,660,805 checkpoint-pc-memory-0-1789731021785333900.mlckpt
+09/18/2026  07:56 AM        19,660,824 checkpoint-pc-memory-0-1789732556720934400.mlckpt
+09/18/2026  08:15 AM        19,660,824 checkpoint-pc-memory-0-1789733689724957100.mlckpt
+09/18/2026  10:34 AM        19,660,824 checkpoint-pc-memory-0-1789741999964573400.mlckpt
+09/18/2026  11:12 AM        19,662,125 checkpoint-pc-memory-0-1789744301176857200.mlckpt
+09/18/2026  11:18 AM        19,662,125 checkpoint-pc-memory-0-1789744674140007000.mlckpt
+09/18/2026  11:26 AM        19,662,125 checkpoint-pc-memory-0-1789745153903056700.mlckpt
+09/18/2026  11:46 AM        19,662,125 checkpoint-pc-memory-0-1789746330665159300.mlckpt
+09/18/2026  08:04 AM        19,660,836 checkpoint-pc-memory-1-1789733002292405100.mlckpt
+09/18/2026  08:08 AM         2,887,264 checkpoint-pc-memory-1-1789733308446676500.mlckpt
+09/19/2026  11:40 AM    <DIR>          claude-cooldown-20260919
+09/19/2026  10:17 AM    <DIR>          claude-gpuport-20260919
+09/19/2026  12:02 PM    <DIR>          claude-ladder6-20260919
+09/19/2026  11:50 AM    <DIR>          claude-ladder6-timing
+09/19/2026  12:56 PM    <DIR>          claude-long-20260919
+09/19/2026  11:23 AM    <DIR>          claude-ordered-20260919
+09/19/2026  11:11 AM    <DIR>          claude-ordsmoke
+09/19/2026  05:43 PM    <DIR>          claude-pointer-ablation-20260919
+09/19/2026  01:13 PM    <DIR>          claude-relcut-20260919
+09/19/2026  01:56 PM    <DIR>          claude-relcut-long-20260919
+09/19/2026  10:49 AM    <DIR>          claude-seeds-20260919
+09/19/2026  08:55 PM    <DIR>          claude-td-rehearsal-20260919
+09/21/2026  09:38 PM    <DIR>          fable-ears47-20260921
+09/19/2026  10:16 AM    <DIR>          opus-ovn-20260918-235851
+09/19/2026  05:22 AM    <DIR>          premonition-step1-28M-1789809747993639400-12876.ckpt
+09/19/2026  05:22 AM         1,225,034 premonition-step1-28M-1789809747993639400-12876.json
+09/19/2026  05:11 AM    <DIR>          premonition-step1-4M-1789809091132631700-2160.ckpt
+09/19/2026  05:11 AM         1,296,899 premonition-step1-4M-1789809091132631700-2160.json
+09/19/2026  05:37 AM    <DIR>          premonition-step1-4M-1789810658957235700-16832.ckpt
+09/19/2026  05:37 AM         1,233,232 premonition-step1-4M-1789810658957235700-16832.json
+09/18/2026  08:24 AM        19,660,763 restart-evaluate-0-1789734221843994000-1388.mlckpt
+09/18/2026  08:24 AM            78,318 result-evaluate-0-1789734221843994000-1388.json
+09/18/2026  09:35 AM            94,011 result-pc-chain-0-1789738542671506100-4812.json
+09/18/2026  09:45 AM            94,022 result-pc-chain-0-1789739101496378900-16420.json
+09/18/2026  09:51 AM            94,017 result-pc-chain-0-1789739467603578000-18568.json
+09/18/2026  11:07 AM            93,900 result-pc-chain-0-1789744052740567600-232.json
+09/18/2026  07:22 AM           291,997 result-pc-memory-0-1789730578469265900-10372.json
+09/18/2026  07:31 AM           291,991 result-pc-memory-0-1789731062709705300-5880.json
+09/18/2026  07:56 AM           292,084 result-pc-memory-0-1789732597349963000-20688.json
+09/18/2026  08:15 AM           240,778 result-pc-memory-0-1789733729855501200-11708.json
+09/18/2026  10:34 AM           292,466 result-pc-memory-0-1789742041484551600-13308.json
+09/18/2026  11:12 AM           241,113 result-pc-memory-0-1789744347255099400-7000.json
+09/18/2026  11:18 AM           241,979 result-pc-memory-0-1789744714794194400-23204.json
+09/18/2026  11:26 AM           292,112 result-pc-memory-0-1789745194473041000-22632.json
+09/18/2026  11:46 AM           241,087 result-pc-memory-0-1789746371246834200-21736.json
+09/18/2026  08:04 AM           292,141 result-pc-memory-1-1789733043639446100-16156.json
+09/18/2026  08:08 AM           292,184 result-pc-memory-1-1789733314506531800-19300.json
+09/18/2026  08:23 AM           189,634 result-pilot-0-1789733859062817700-22120.json
+09/18/2026  08:23 AM        58,442,526 training-pilot-0-1789733859062817700-22120.mlckpt
+              39 File(s)    346,901,706 bytes
+              19 Dir(s)  44,443,336,704 bytes free
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja /b" 2>&1
+$null
+.cache
+.cai
+.claude
+.claude-flow
+.claude-server-commander
+.claude.json
+.claude.json.backup
+.claude.json.tmp.21956.0e0c6b62d42c
+.codex
+.conda
+.config
+.copilot
+.dbus-keyrings
+.expo
+.gitconfig
+.idlerc
+.ipython
+.junie
+.jupyter
+.kaggle
+.keras
+.Ld2VirtualBox
+.Ld9VirtualBox
+.lmstudio
+.lmstudio-home-pointer
+.local
+.lunarclient
+.matplotlib
+.ollama
+.openjfx
+.pinokio
+.pymobiledevice3
+.rustup
+.ssh
+.streamlit
+.triton
+.unsloth
+.vachi
+.vscode
+.vscode-shared
+.wslconfig
+.zshrc
+7}s
+ansel
+api200.csv
+Apple
+beautiful-model
+bin
+brainrot-bot
+catboost_info
+cb56.err
+cb56.log
+cb56b.err
+cb56b.log
+cb56c.err
+cb56c.log
+cb56_int.py
+cb56_npy.py
+cbgpu
+cohort_counts.py
+Contacts
+cre333
+desmos-llm
+diag.ps1
+diag267
+diag_collateral.py
+diff1-observer
+Documents
+Downloads
+e2e330dev
+e2e330tree.tgz
+e339style
+ears119
+ears119b
+ears119e
+ears119f
+ears119g
+ears119h
+ears213
+enc.err
+enc.log
+enc56
+encn.err
+encn.log
+encode_cache.py
+enc_npy.py
+fable47
+Favorites
+featlut
+featurize.py
+final.sh
+final200_api.csv
+final200_photo.csv
+final200_strict.csv
+Games
+gen_cheap.py
+Heaven
+hits.json
+IdeaProjects
+ideaverse
+inspect_schema.py
+inspect_serving.py
+introspect_clob.py
+jupyter-guide-to-linear-algebra
+KanyeLeaks
+lgbm_scan56.txt
+lgbm_scan56_full.txt
+linkmon.csv
+linkmon.ps1
+Links
+lis300
+lis301
+lis302
+lis302stage-tmp
+llama264.log
+manim-env
+manim-mcp-server
+miktex-console.lock
+model.tgz
+models
+Music
+MyCryptoProject
+netdiag.txt
+nyc_ticket_hearing_outcomes_SCORED.xlsx
+OneDrive
+OpenVoice
+own-m1n
+pc_boot.sh
+pc_boot_new.sh
+pc_register.sh
+pc_verify.sh
+plate_modals_rebuilt.parquet
+plinko-game
+Postman
+premonition-models
+PyCharmMiscProject
+PycharmProjects
+qwen_start.ps1
+retrain.err
+retrain.log
+retrain_full.py
+rsn299bpanel
+rsn299bpanel.tgz
+rsn299dev2
+rsn299dev2.tar.gz
+rsn299dev3
+rsn299dev4
+rsn299panel
+rsn299panel.tgz
+same_day_code.parquet
+same_day_plate.parquet
+Saved Games
+scan200.csv
+scan_feats.json
+scan_lgbm56_valid.npy
+scan_train_full_X.parquet
+scan_train_full_y.npy
+scan_train_X.parquet
+scan_train_y.npy
+scat56.json
+scored200.csv
+scored200_photo .csv
+scored200_photo.csv
+scored200_stack.csv
+scored200_strict .csv
+scored200_strict.csv
+scout-tasks
+scout.bundle
+scoutpull.bat
+scout_data.tgz
+scout_ship
+scout_trade.tgz
+Scripts
+Searches
+setup_pc.ps1
+smolear235
+speedrunigt
+src.xlsx
+summons.json
+talker101
+talker24
+text-predict
+tickets_model_above_50.xlsx
+tickets_model_above_50_realtime.xlsx
+tickets_raw.json
+tickets_two_paths.xlsx
+tortoise-tts
+trading_bot
+train_cb56.py
+TTS
+verify_seal299b.py
+Videos
+vX.parquet
+vX2.parquet
+vy.npy
+w264
+xfer
+__pycache__
+[0m
+[0m$ [0mssh benspc "tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE" 2>&1
+ssh benspc "tasklist /FI \"IMAGENAME eq pythonw.exe\" /FO TABLE" 2>&1
+INFO: No tasks are running which match the specified criteria.
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+pythonw.exe                   8456 Console                    1      3,420 K
+pythonw.exe                   8916 Console                    1     10,844 K
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\cre333 /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\text-predict /b" 2>&1
+baseprobe333.py
+sealcheck333.py
+stage
+tree
+.venv
+common
+data
+phase3
+phase4
+phase5
+phase6
+runs
+train_plain.err
+train_plain.log
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt2-20260925/RESULTS-selfjudge.md 2>&1 | head -n 60
+echo "===CPU==="; git ls-tree origin/main artifacts/claude-blurt2-20260925/cpu/ 2>&1 | head
+echo "===BLURT1 RESULTS==="; git ls-tree origin/main artifacts/claude-blurt1-dev-20260925/run/ 2>&1 | head
+# Idea self-judge (DEV, CPU, $0) — result 2026-09-25 ~03:10 UTC
+
+Rule registered before the run (PASSMARKS-blurt2.md): if the 1B's own top pick is good on >= 6/10 requests, 333g uses
+the self-judge; otherwise the judge must be trained or replaced.
+
+Result (scripts/claude_blurt_selfjudge.py, 300 blurt-1 idea blurts, blind Opus labels):
+{"blurts": 300, "good": 44, "auc_self_judge": 0.691, "items": 10, "pick1_self_judge": 2, "pick1_chance_expected": 1.47, "oracle_any_good": 9}
+
+Verdict: the self-judge is NOT used. Its top pick was good on 2/10 requests; picking at random would give about 1.5;
+a good idea existed on 9/10. It ranks a little better than chance overall (AUC 0.691) but not enough to pick.
+
+Next (one change): a judge trained on labels. Label source = the approved open-weights teacher (OpenRouter GLM 5.3
+Flash), not Claude (provider terms). First check the teacher agrees with the blind judges on these same 300 blurts
+(scripts/claude_ideajudge_teacher.py, DEV only). Rule fixed now: the teacher is a usable label source if it agrees on
+"good" for >= 85% of blurts AND Cohen's kappa >= 0.5. Otherwise try the stronger teacher once (z-ai/glm-5.3), then
+ask Ben.
+===CPU===
+100644 blob ab2982a2edf45704f87b4ad2c043744f4a613009	artifacts/claude-blurt2-20260925/cpu/log_selfjudge.txt
+100644 blob 34f5824b448f1663f327326553d78c44e278be28	artifacts/claude-blurt2-20260925/cpu/selfjudge.jsonl
+===BLURT1 RESULTS===
+100644 blob cd9428302df69510892986bf1bed1efbf2f5068b	artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+100644 blob cdd61591674b16b25c9b7c3fee73e6a31821ffd9	artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+100644 blob e826ec01327bf8040ac82d9e9dfb6d65b3fd80d7	artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+[0m
+[0m$ [0mgit log origin/main --oneline --grep="blurt1" -i 2>&1 | head
+git show 2d37b0b5a --stat 2>&1 | head -n 30
+2d37b0b5a blurt-1: measure how often the 1B gets lucky (number puzzles with an exact checker + DEV idea blurts); queue rent-blurt1 (DEV only, $0.60)
+commit 2d37b0b5abdbec2d486b3f306422a1b5380bc376
+Author: Claude <noreply@anthropic.com>
+Date:   Fri Sep 25 00:49:39 2026 +0000
+
+    blurt-1: measure how often the 1B gets lucky (number puzzles with an exact checker + DEV idea blurts); queue rent-blurt1 (DEV only, $0.60)
+    
+    Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
+    Claude-Session: https://claude.ai/code/session_01SsmkQ3qUuVpWRn8kK25kGx
+
+ artifacts/claude-blurt1-dev-20260925/puzzles.jsonl |  60 +++++++
+ handoff/queue/rent-blurt1-baseline.md              |  14 ++
+ scripts/claude_blurt1.py                           | 195 +++++++++++++++++++++
+ 3 files changed, 269 insertions(+)
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/rent-blurt1-baseline.md 2>&1
+echo "===BLURT1 HEAD==="; git show origin/main:scripts/claude_blurt1.py 2>&1 | head -n 80
+COMMON RULES (the creative research thread, Claude, wrote this task on 2026-09-25). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply), and ALL of origin/main:design/v3/30-modes/330-rent-kit.md (code tree, rental rules, setup, independence).
+GPU: rent
+BUDGET: $0.60 for this whole task. Label: rent-blurt1. No reader needed. Re-run the offer search before every create.
+
+YOUR TASK: rent-blurt1, a DEV measurement (no pass marks; DEV data only, no TEST-ONLY panel). Code: scripts/claude_blurt1.py (read its docstring). If artifacts/claude-blurt1-dev-20260925/run exists on origin/builder-outbox, stop with DUPLICATE.
+D = artifacts/claude-blurt1-dev-20260925 (write it in full in every command).
+1. On the rental, after setup: `python -B scripts/claude_blurt1.py make --out /tmp/pzcheck --n 60 --seed 1` then `cmp /tmp/pzcheck/puzzles.jsonl D/puzzles.jsonl` must print nothing (same puzzles).
+2. Three processes, one after another, each under nohup with a log:
+   python -B scripts/claude_blurt1.py puzzle --model BASE --puzzles D/puzzles.jsonl --out D/run/puzzles_t06.jsonl --n 30 --temp 0.6
+   python -B scripts/claude_blurt1.py puzzle --model BASE --puzzles D/puzzles.jsonl --out D/run/puzzles_t10.jsonl --n 30 --temp 1.0
+   python -B scripts/claude_blurt1.py ideas --model BASE --dev artifacts/claude-cre333e-dev-20260924 --out D/run/ideas_t10.jsonl --n 30 --temp 1.0
+3. Copy D/run/ and the three logs (as D/run/log_*.txt) back to the Mac, check, destroy, ledger line.
+4. RESULTS-blurt1.md in D: the last printed line of each puzzle process, row counts, GPU, hours, dollars, model commit hash, wall time.
+PUSH: artifacts/claude-blurt1-dev-20260925/run artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md artifacts/fable-predictions-ledger.md
+===BLURT1 HEAD===
+#!/usr/bin/env python3
+"""blurt-1: how often does MiniCPM5-1B get lucky? (creative research thread, 2026-09-25)
+
+Ben (00:39 UTC): "The point is to emulate the part of the brain that says random stuff then gets filtered out ...
+It's stupid where it comes up with solutions, but gets lucky when its right. The point is for us to maximize the
+number of times it gets lucky." He chose to test the blurt-then-judge engine on both ideas and puzzles.
+
+This file is the measurement only (no judge, no training): N blurts per task from the base 1B, thinking off.
+  puzzles: number puzzles (use each given number once with + - * / and brackets to hit the target), made by code
+           with a brute-force solvability check; an exact checker marks every blurt right or wrong.
+  ideas:   one short idea per blurt for a DEV creative request (artifacts/claude-cre333e-dev-20260924); a blind
+           judge labels them afterwards.
+
+  python -B scripts/claude_blurt1.py make   --out DIR --n 60 --seed 1           puzzles.jsonl (DEV seed 1)
+  python -B scripts/claude_blurt1.py puzzle --model M --puzzles F --out F --n 30 [--temp 1.0]
+  python -B scripts/claude_blurt1.py ideas  --model M --dev DIR --out F --n 30 [--limit 10] [--temp 1.1]
+"""
+from __future__ import annotations
+
+import argparse
+import ast
+import itertools
+import json
+import random
+import re
+import sys
+from fractions import Fraction
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+OPS = ["+", "-", "*", "/"]
+
+
+def _combine(a, b):
+    out = [(a[0] + b[0], f"({a[1]}+{b[1]})"), (a[0] - b[0], f"({a[1]}-{b[1]})"),
+           (b[0] - a[0], f"({b[1]}-{a[1]})"), (a[0] * b[0], f"({a[1]}*{b[1]})")]
+    if b[0] != 0:
+        out.append((a[0] / b[0], f"({a[1]}/{b[1]})"))
+    if a[0] != 0:
+        out.append((b[0] / a[0], f"({b[1]}/{a[1]})"))
+    return out
+
+
+def solve(nums, target):
+    """One solution expression or None (brute force over all pairings)."""
+    def rec(items):
+        if len(items) == 1:
+            return items[0][1] if items[0][0] == target else None
+        for i, j in itertools.combinations(range(len(items)), 2):
+            rest = [items[k] for k in range(len(items)) if k not in (i, j)]
+            for v in _combine(items[i], items[j]):
+                s = rec(rest + [v])
+                if s:
+                    return s
+        return None
+    return rec([(Fraction(n), str(n)) for n in nums])
+
+
+def make(a):
+    rng, out, seen = random.Random(a.seed), [], set()
+    while len(out) < a.n:
+        k = 3 if len(out) % 3 else 4              # two thirds 3-number puzzles (the 1B scored 0/180 on 4-number ones)
+        nums = sorted(rng.randint(1, 9 if k == 3 else 13) for _ in range(k))
+        target = 24 if k == 4 else rng.randint(5, 40)
+        key = (tuple(nums), target)
+        if key in seen:
+            continue
+        sol = solve(nums, target)
+        if sol is None:
+            continue
+        seen.add(key)
+        out.append({"id": f"pz-s{a.seed}-{len(out) + 1:03d}", "nums": nums, "target": target, "solution": sol})
+    Path(a.out).mkdir(parents=True, exist_ok=True)
+    (Path(a.out) / "puzzles.jsonl").write_text("".join(json.dumps(p) + "\n" for p in out), encoding="utf-8")
+    print(f"made {len(out)} puzzles (seed {a.seed})")
+
+
+def check(expr: str, nums, target) -> bool:
+    expr = expr.strip().rstrip(".").replace("×", "*").replace("x", "*").replace("÷", "/")
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\premonition-models /b" 2>&1
+huggingface
+rsn355
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache\\huggingface /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\premonition-models /b" 2>&1
+.agent_harnesses.json
+hub
+xet
+rsn355
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub /b" 2>&1
+.locks
+blobs
+CACHEDIR.TAG
+models--allenai--scibert_scivocab_uncased
+models--LiquidAI--LFM2.5-1.2B-Instruct
+models--openbmb--MiniCPM5-1B
+models--Qwen--Qwen3.5-2B
+models--sentence-transformers--all-MiniLM-L6-v2
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots /b" 2>&1
+blobs
+refs
+snapshots
+trees
+87179e5c1f455ef22e6223592d2d61351b525bfc
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots\\87179e5c1f455ef22e6223592d2d61351b525bfc /b" 2>&1
+.gitattributes
+chat_template.jinja
+config.json
+generation_config.json
+model-00000-of-00001.safetensors
+model.safetensors.index.json
+README-cn.md
+README.md
+special_tokens_map.json
+tokenizer.json
+tokenizer_config.json
+[0m
+[0m$ [0mssh benspc "C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe -c \"import torch; print(torch.__version__); print(torch.cuda.is_available())\"" 2>&1
+2.11.0+cu128
+True
+[0m
+[0m$ [0mssh benspc "C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe -c \"import transformers; print(transformers.__version__)\"" 2>&1
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\__init__.py", line 27, in <module>
+    from . import dependency_versions_check
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\dependency_versions_check.py", line 57, in <module>
+    require_version_core(deps[pkg])
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 117, in require_version_core
+    return require_version(requirement, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 111, in require_version
+    _compare_versions(op, got_ver, want_ver, requirement, pkg, hint)
+  File "C:\Users\benja\AppData\Local\Programs\Python\Python310\lib\site-packages\transformers\utils\versions.py", line 44, in _compare_versions
+    raise ImportError(
+ImportError: huggingface-hub>=0.34.0,<1.0 is required for a normal functioning of this module, but found huggingface-hub==1.28.0.
+Try: `pip install transformers -U` or `pip install -e '.[dev]'` if you're working with git main
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\text-predict\\.venv\\Scripts /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\benchmark* /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\beautiful-model\\.venv /b" 2>&1
+accelerate-config.exe
+accelerate-estimate-memory.exe
+accelerate-launch.exe
+accelerate-merge-weights.exe
+accelerate.exe
+activate
+activate.bat
+Activate.ps1
+datasets-cli.exe
+deactivate.bat
+f2py.exe
+get_gprof
+get_objgraph
+hf.exe
+httpx.exe
+huggingface-cli.exe
+idna.exe
+isympy.exe
+markdown-it.exe
+normalizer.exe
+numpy-config.exe
+pip.exe
+pip3.10.exe
+pip3.exe
+pygmentize.exe
+python.exe
+pythonw.exe
+tiny-agents.exe
+torchfrtrace.exe
+torchrun.exe
+tqdm.exe
+transformers.exe
+trl.exe
+typer.exe
+undill
+wheel.exe
+File Not Found
+File Not Found
+[0m
+[0m$ [0mssh benspc "C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \"import torch, transformers; print(torch.__version__, torch.cuda.is_available(), transformers.__version__)\"" 2>&1
+2.11.0+cu128 True 5.15.0
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\beautiful-model\\.runtime\\runs /b" 2>&1
+ssh benspc "dir C:\\Users\\benja\\blurt2gpu /b" 2>&1
+20260918T185310Z-a2fd3ff6
+20260919T085831Z-871d17ed
+20260919T090156Z-ddb74eb1
+20260919T091253Z-7e81df09
+20260919T092801Z-1330ff6a
+20260919T210645Z-114a1e29
+File Not Found
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + blurt2 docstring from origin/main
+[✓] Locate BensPC benchmark venv + MiniCPM5-1B BASE
+[•] Copy git archive to BensPC and extract
+[ ] Run pzcheck make + byte-compare (must be identical)
+[ ] Run blurt2 loop on GPU with log, poll to completion
+[ ] Copy results back, write RESULTS-gpu.md + ledger, push
+[0m
+[0m$ [0mgit archive origin/main scripts/claude_blurt1.py scripts/claude_blurt2.py scripts/claude_cre333b_agent.py artifacts/claude-blurt1-dev-20260925/puzzles.jsonl artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md -o /tmp/blurt2gpu.tar && ls -la /tmp/blurt2gpu.tar && tar tf /tmp/blurt2gpu.tar
+-rw-r--r--  1 ben-hannan  wheel  51200 Sep 24 23:37 /tmp/blurt2gpu.tar
+artifacts/
+artifacts/claude-blurt1-dev-20260925/
+artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+artifacts/claude-blurt2-20260925/
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md
+scripts/
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_cre333b_agent.py
+[0m
+[0m$ [0mssh benspc "mkdir C:\\Users\\benja\\blurt2gpu" 2>&1; echo MKDIR_EXIT:$?
+scp /tmp/blurt2gpu.tar benspc:blurt2gpu/blurt2gpu.tar 2>&1; echo SCP_EXIT:$?
+MKDIR_EXIT:0
+SCP_EXIT:0
+[0m
+[0m$ [0mssh benspc "tar -tf C:\\Users\\benja\\blurt2gpu\\blurt2gpu.tar" 2>&1
+ssh benspc "cd C:\\Users\\benja\\blurt2gpu && tar -xf blurt2gpu.tar && dir /b" 2>&1
+artifacts/
+artifacts/claude-blurt1-dev-20260925/
+artifacts/claude-blurt1-dev-20260925/puzzles.jsonl
+artifacts/claude-blurt2-20260925/
+artifacts/claude-blurt2-20260925/PASSMARKS-blurt2.md
+scripts/
+scripts/claude_blurt1.py
+scripts/claude_blurt2.py
+scripts/claude_cre333b_agent.py
+artifacts
+blurt2gpu.tar
+scripts
+[0m
+[0m$ [0mssh benspc "cd C:\\Users\\benja\\blurt2gpu && C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -B scripts\\claude_blurt1.py make --out pzcheck --n 60 --seed 1" 2>&1
+made 60 puzzles (seed 1)
+[0m
+[0m$ [0mssh benspc "cd C:\\Users\\benja\\blurt2gpu && fc /b pzcheck\\puzzles.jsonl artifacts\\claude-blurt1-dev-20260925\\puzzles.jsonl" 2>&1
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0d6a39a6b001iPeQfCbNLFlLI2
+
+00000ADB: 2A 2C
+00000ADC: 37 20
+00000ADD: 29 22
+00000ADE: 2D 6E
+00000ADF: 28 75
+00000AE0: 31 6D
+00000AE1: 30 73
+00000AE2: 2D 22
+00000AE3: 31 3A
+00000AE4: 33 20
+00000AE5: 29 5B
+00000AE6: 29 31
+00000AE7: 22 2C
+00000AE8: 7D 20
+00000AE9: 0D 31
+00000AEA: 0A 2C
+00000AEB: 7B 20
+00000AEC: 22 36
+00000AED: 69 5D
+00000AEE: 64 2C
+00000AEF: 22 20
+00000AF0: 3A 22
+00000AF1: 20 74
+00000AF2: 22 61
+00000AF3: 70 72
+00000AF4: 7A 67
+00000AF5: 2D 65
+00000AF6: 73 74
+00000AF7: 31 22
+00000AF8: 2D 3A
+00000AF9: 30 20
+00000AFA: 33 35
+00000AFB: 35 2C
+00000AFC: 22 20
+00000AFD: 2C 22
+00000AFE: 20 73
+00000AFF: 22 6F
+00000B00: 6E 6C
+00000B02: 6D 74
+00000B03: 73 69
+00000B04: 22 6F
+00000B05: 3A 6E
+00000B06: 20 22
+00000B07: 5B 3A
+00000B08: 31 20
+00000B09: 2C 22
+00000B0A: 20 28
+00000B0B: 31 36
+00000B0C: 2C 2D
+00000B0D: 20 28
+00000B0E: 36 31
+00000B0F: 5D 2A
+00000B10: 2C 31
+00000B11: 20 29
+00000B12: 22 29
+00000B13: 74 22
+00000B14: 61 7D
+00000B15: 72 0A
+00000B16: 67 7B
+00000B17: 65 22
+00000B18: 74 69
+00000B19: 22 64
+00000B1A: 3A 22
+00000B1B: 20 3A
+00000B1C: 35 20
+00000B1D: 2C 22
+00000B1E: 20 70
+00000B1F: 22 7A
+00000B20: 73 2D
+00000B21: 6F 73
+00000B22: 6C 31
+00000B23: 75 2D
+00000B24: 74 30
+00000B25: 69 33
+00000B26: 6F 36
+00000B27: 6E 22
+00000B28: 22 2C
+00000B29: 3A 20
+00000B2A: 20 22
+00000B2B: 22 6E
+00000B2C: 28 75
+00000B2D: 36 6D
+00000B2E: 2D 73
+00000B2F: 28 22
+00000B30: 31 3A
+00000B31: 2A 20
+00000B32: 31 5B
+00000B33: 29 33
+00000B34: 29 2C
+00000B35: 22 20
+00000B36: 7D 35
+00000B37: 0D 2C
+00000B38: 0A 20
+00000B39: 7B 39
+00000B3A: 22 5D
+00000B3B: 69 2C
+00000B3C: 64 20
+00000B3E: 3A 74
+00000B3F: 20 61
+00000B40: 22 72
+00000B41: 70 67
+00000B42: 7A 65
+00000B43: 2D 74
+00000B44: 73 22
+00000B45: 31 3A
+00000B46: 2D 20
+00000B47: 30 31
+00000B48: 33 38
+00000B49: 36 2C
+00000B4A: 22 20
+00000B4B: 2C 22
+00000B4C: 20 73
+00000B4D: 22 6F
+00000B4E: 6E 6C
+00000B50: 6D 74
+00000B51: 73 69
+00000B52: 22 6F
+00000B53: 3A 6E
+00000B54: 20 22
+00000B55: 5B 3A
+00000B56: 33 20
+00000B57: 2C 22
+00000B58: 20 28
+00000B59: 35 39
+00000B5A: 2C 2A
+00000B5B: 20 28
+00000B5C: 39 35
+00000B5D: 5D 2D
+00000B5E: 2C 33
+00000B5F: 20 29
+00000B60: 22 29
+00000B61: 74 22
+00000B62: 61 7D
+00000B63: 72 0A
+00000B64: 67 7B
+00000B65: 65 22
+00000B66: 74 69
+00000B67: 22 64
+00000B68: 3A 22
+00000B69: 20 3A
+00000B6A: 31 20
+00000B6B: 38 22
+00000B6C: 2C 70
+00000B6D: 20 7A
+00000B6E: 22 2D
+00000B70: 6F 31
+00000B71: 6C 2D
+00000B72: 75 30
+00000B73: 74 33
+00000B74: 69 37
+00000B75: 6F 22
+00000B76: 6E 2C
+00000B77: 22 20
+00000B78: 3A 22
+00000B79: 20 6E
+00000B7A: 22 75
+00000B7B: 28 6D
+00000B7C: 39 73
+00000B7D: 2A 22
+00000B7E: 28 3A
+00000B7F: 35 20
+00000B80: 2D 5B
+00000B81: 33 34
+00000B82: 29 2C
+00000B83: 29 20
+00000B84: 22 34
+00000B85: 7D 2C
+00000B86: 0D 20
+00000B87: 0A 35
+00000B88: 7B 2C
+00000B89: 22 20
+00000B8A: 69 36
+00000B8B: 64 5D
+00000B8C: 22 2C
+00000B8D: 3A 20
+00000B8E: 20 22
+00000B8F: 22 74
+00000B90: 70 61
+00000B91: 7A 72
+00000B92: 2D 67
+00000B93: 73 65
+00000B94: 31 74
+00000B95: 2D 22
+00000B96: 30 3A
+00000B97: 33 20
+00000B98: 37 32
+00000B99: 22 34
+00000B9D: 6E 73
+00000B9E: 75 6F
+00000B9F: 6D 6C
+00000BA0: 73 75
+00000BA1: 22 74
+00000BA2: 3A 69
+00000BA3: 20 6F
+00000BA4: 5B 6E
+00000BA5: 34 22
+00000BA6: 2C 3A
+00000BA8: 34 22
+00000BA9: 2C 28
+00000BAA: 20 36
+00000BAB: 35 2A
+00000BAC: 2C 28
+00000BAD: 20 35
+00000BAE: 36 2D
+00000BAF: 5D 28
+00000BB0: 2C 34
+00000BB1: 20 2F
+00000BB2: 22 34
+00000BB3: 74 29
+00000BB4: 61 29
+00000BB5: 72 29
+00000BB6: 67 22
+00000BB7: 65 7D
+00000BB8: 74 0A
+00000BB9: 22 7B
+00000BBA: 3A 22
+00000BBB: 20 69
+00000BBC: 32 64
+00000BBD: 34 22
+00000BBE: 2C 3A
+00000BC1: 73 70
+00000BC2: 6F 7A
+00000BC3: 6C 2D
+00000BC4: 75 73
+00000BC5: 74 31
+00000BC6: 69 2D
+00000BC7: 6F 30
+00000BC8: 6E 33
+00000BC9: 22 38
+00000BCA: 3A 22
+00000BCB: 20 2C
+00000BCC: 22 20
+00000BCD: 28 22
+00000BCE: 36 6E
+00000BCF: 2A 75
+00000BD0: 28 6D
+00000BD1: 35 73
+00000BD2: 2D 22
+00000BD3: 28 3A
+00000BD4: 34 20
+00000BD5: 2F 5B
+00000BD7: 29 2C
+00000BD8: 29 20
+00000BD9: 29 35
+00000BDA: 22 2C
+00000BDB: 7D 20
+00000BDC: 0D 36
+00000BDD: 0A 5D
+00000BDE: 7B 2C
+00000BDF: 22 20
+00000BE0: 69 22
+00000BE1: 64 74
+00000BE2: 22 61
+00000BE3: 3A 72
+00000BE4: 20 67
+00000BE5: 22 65
+00000BE6: 70 74
+00000BE7: 7A 22
+00000BE8: 2D 3A
+00000BE9: 73 20
+00000BEA: 31 32
+00000BEB: 2D 36
+00000BEC: 30 2C
+00000BED: 33 20
+00000BEE: 38 22
+00000BEF: 22 73
+00000BF0: 2C 6F
+00000BF1: 20 6C
+00000BF2: 22 75
+00000BF3: 6E 74
+00000BF4: 75 69
+00000BF5: 6D 6F
+00000BF6: 73 6E
+00000BFA: 5B 22
+00000BFB: 34 28
+00000BFC: 2C 36
+00000BFD: 20 2B
+00000BFE: 35 28
+00000BFF: 2C 34
+00000C00: 20 2A
+00000C01: 36 35
+00000C02: 5D 29
+00000C03: 2C 29
+00000C04: 20 22
+00000C05: 22 7D
+00000C06: 74 0A
+00000C07: 61 7B
+00000C08: 72 22
+00000C09: 67 69
+00000C0A: 65 64
+00000C0B: 74 22
+00000C0C: 22 3A
+00000C0D: 3A 20
+00000C0E: 20 22
+00000C0F: 32 70
+00000C10: 36 7A
+00000C11: 2C 2D
+00000C12: 20 73
+00000C13: 22 31
+00000C14: 73 2D
+00000C15: 6F 30
+00000C16: 6C 33
+00000C17: 75 39
+00000C18: 74 22
+00000C19: 69 2C
+00000C1A: 6F 20
+00000C1B: 6E 22
+00000C1C: 22 6E
+00000C1D: 3A 75
+00000C1E: 20 6D
+00000C1F: 22 73
+00000C20: 28 22
+00000C21: 36 3A
+00000C22: 2B 20
+00000C23: 28 5B
+00000C24: 34 32
+00000C25: 2A 2C
+00000C26: 35 20
+00000C27: 29 32
+00000C28: 29 2C
+00000C29: 22 20
+00000C2A: 7D 39
+00000C2B: 0D 5D
+00000C2C: 0A 2C
+00000C2D: 7B 20
+00000C2F: 69 74
+00000C30: 64 61
+00000C31: 22 72
+00000C32: 3A 67
+00000C33: 20 65
+00000C34: 22 74
+00000C35: 70 22
+00000C36: 7A 3A
+00000C37: 2D 20
+00000C38: 73 32
+00000C39: 31 30
+00000C3A: 2D 2C
+00000C3B: 30 20
+00000C3C: 33 22
+00000C3D: 39 73
+00000C3E: 22 6F
+00000C3F: 2C 6C
+00000C40: 20 75
+00000C41: 22 74
+00000C42: 6E 69
+00000C43: 75 6F
+00000C44: 6D 6E
+00000C45: 73 22
+00000C46: 22 3A
+00000C47: 3A 20
+00000C48: 20 22
+00000C49: 5B 28
+00000C4B: 2C 2B
+00000C4C: 20 28
+00000C4E: 2C 2A
+00000C4F: 20 39
+00000C50: 39 29
+00000C51: 5D 29
+00000C52: 2C 22
+00000C53: 20 7D
+00000C54: 22 0A
+00000C55: 74 7B
+00000C56: 61 22
+00000C57: 72 69
+00000C58: 67 64
+00000C59: 65 22
+00000C5A: 74 3A
+00000C5B: 22 20
+00000C5C: 3A 22
+00000C5D: 20 70
+00000C5E: 32 7A
+00000C5F: 30 2D
+00000C60: 2C 73
+00000C61: 20 31
+00000C62: 22 2D
+00000C63: 73 30
+00000C64: 6F 34
+00000C65: 6C 30
+00000C66: 75 22
+00000C67: 74 2C
+00000C68: 69 20
+00000C69: 6F 22
+00000C6B: 22 75
+00000C6C: 3A 6D
+00000C6D: 20 73
+00000C6F: 28 3A
+00000C70: 32 20
+00000C71: 2B 5B
+00000C72: 28 32
+00000C73: 32 2C
+00000C74: 2A 20
+00000C75: 39 35
+00000C76: 29 2C
+00000C77: 29 20
+00000C78: 22 37
+00000C79: 7D 2C
+00000C7A: 0D 20
+00000C7B: 0A 39
+00000C7C: 7B 5D
+00000C7D: 22 2C
+00000C7E: 69 20
+00000C7F: 64 22
+00000C80: 22 74
+00000C81: 3A 61
+00000C82: 20 72
+00000C83: 22 67
+00000C84: 70 65
+00000C85: 7A 74
+00000C86: 2D 22
+00000C87: 73 3A
+00000C88: 31 20
+00000C89: 2D 32
+00000C8A: 30 34
+00000C8B: 34 2C
+00000C8C: 30 20
+00000C8E: 2C 73
+00000C8F: 20 6F
+00000C90: 22 6C
+00000C91: 6E 75
+00000C92: 75 74
+00000C93: 6D 69
+00000C94: 73 6F
+00000C95: 22 6E
+00000C96: 3A 22
+00000C97: 20 3A
+00000C98: 5B 20
+00000C99: 32 22
+00000C9A: 2C 28
+00000C9B: 20 28
+00000C9D: 2C 2A
+00000C9E: 20 37
+00000C9F: 37 29
+00000CA0: 2C 2D
+00000CA1: 20 28
+00000CA2: 39 32
+00000CA3: 5D 2B
+00000CA4: 2C 39
+00000CA5: 20 29
+00000CA6: 22 29
+00000CA7: 74 22
+00000CA8: 61 7D
+00000CA9: 72 0A
+00000CAA: 67 7B
+00000CAB: 65 22
+00000CAC: 74 69
+00000CAD: 22 64
+00000CAE: 3A 22
+00000CAF: 20 3A
+00000CB0: 32 20
+00000CB1: 34 22
+00000CB2: 2C 70
+00000CB3: 20 7A
+00000CB4: 22 2D
+00000CB6: 6F 31
+00000CB7: 6C 2D
+00000CB8: 75 30
+00000CB9: 74 34
+00000CBA: 69 31
+00000CBB: 6F 22
+00000CBC: 6E 2C
+00000CBD: 22 20
+00000CBE: 3A 22
+00000CBF: 20 6E
+00000CC0: 22 75
+00000CC1: 28 6D
+00000CC2: 28 73
+00000CC3: 35 22
+00000CC4: 2A 3A
+00000CC5: 37 20
+00000CC6: 29 5B
+00000CC7: 2D 31
+00000CC8: 28 2C
+00000CC9: 32 20
+00000CCA: 2B 32
+00000CCB: 39 2C
+00000CCC: 29 20
+00000CCD: 29 32
+00000CCE: 22 5D
+00000CCF: 7D 2C
+00000CD0: 0D 20
+00000CD1: 0A 22
+00000CD2: 7B 74
+00000CD3: 22 61
+00000CD4: 69 72
+00000CD5: 64 67
+00000CD6: 22 65
+00000CD7: 3A 74
+00000CD8: 20 22
+00000CD9: 22 3A
+00000CDA: 70 20
+00000CDB: 7A 35
+00000CDC: 2D 2C
+00000CDD: 73 20
+00000CDE: 31 22
+00000CDF: 2D 73
+00000CE0: 30 6F
+00000CE1: 34 6C
+00000CE2: 31 75
+00000CE3: 22 74
+00000CE4: 2C 69
+00000CE5: 20 6F
+00000CE6: 22 6E
+00000CE7: 6E 22
+00000CE8: 75 3A
+00000CE9: 6D 20
+00000CEA: 73 22
+00000CEB: 22 28
+00000CEC: 3A 32
+00000CED: 20 2B
+00000CEE: 5B 28
+00000CF0: 2C 2B
+00000CF1: 20 32
+00000CF2: 32 29
+00000CF3: 2C 29
+00000CF4: 20 22
+00000CF5: 32 7D
+00000CF6: 5D 0A
+00000CF7: 2C 7B
+00000CF8: 20 22
+00000CF9: 22 69
+00000CFA: 74 64
+00000CFB: 61 22
+00000CFC: 72 3A
+00000CFD: 67 20
+00000CFE: 65 22
+00000CFF: 74 70
+00000D00: 22 7A
+00000D01: 3A 2D
+00000D02: 20 73
+00000D03: 35 31
+00000D04: 2C 2D
+00000D05: 20 30
+00000D06: 22 34
+00000D07: 73 32
+00000D08: 6F 22
+00000D09: 6C 2C
+00000D0A: 75 20
+00000D0B: 74 22
+00000D0C: 69 6E
+00000D0D: 6F 75
+00000D0E: 6E 6D
+00000D0F: 22 73
+00000D10: 3A 22
+00000D11: 20 3A
+00000D12: 22 20
+00000D13: 28 5B
+00000D15: 2B 2C
+00000D16: 28 20
+00000D17: 31 35
+00000D18: 2B 2C
+00000D19: 32 20
+00000D1A: 29 39
+00000D1B: 29 5D
+00000D1C: 22 2C
+00000D1D: 7D 20
+00000D1E: 0D 22
+00000D1F: 0A 74
+00000D20: 7B 61
+00000D21: 22 72
+00000D22: 69 67
+00000D23: 64 65
+00000D24: 22 74
+00000D25: 3A 22
+00000D26: 20 3A
+00000D27: 22 20
+00000D28: 70 31
+00000D29: 7A 33
+00000D2A: 2D 2C
+00000D2B: 73 20
+00000D2C: 31 22
+00000D2D: 2D 73
+00000D2E: 30 6F
+00000D2F: 34 6C
+00000D30: 32 75
+00000D31: 22 74
+00000D32: 2C 69
+00000D33: 20 6F
+00000D34: 22 6E
+00000D35: 6E 22
+00000D36: 75 3A
+00000D37: 6D 20
+00000D38: 73 22
+00000D39: 22 28
+00000D3A: 3A 28
+00000D3B: 20 32
+00000D3C: 5B 2A
+00000D3D: 32 39
+00000D3E: 2C 29
+00000D3F: 20 2D
+00000D41: 2C 29
+00000D42: 20 22
+00000D43: 39 7D
+00000D44: 5D 0A
+00000D45: 2C 7B
+00000D46: 20 22
+00000D47: 22 69
+00000D48: 74 64
+00000D49: 61 22
+00000D4A: 72 3A
+00000D4B: 67 20
+00000D4C: 65 22
+00000D4D: 74 70
+00000D4E: 22 7A
+00000D4F: 3A 2D
+00000D50: 20 73
+00000D52: 33 2D
+00000D53: 2C 30
+00000D54: 20 34
+00000D55: 22 33
+00000D56: 73 22
+00000D57: 6F 2C
+00000D58: 6C 20
+00000D59: 75 22
+00000D5A: 74 6E
+00000D5B: 69 75
+00000D5C: 6F 6D
+00000D5D: 6E 73
+00000D61: 22 5B
+00000D62: 28 33
+00000D63: 28 2C
+00000D64: 32 20
+00000D65: 2A 34
+00000D66: 39 2C
+00000D67: 29 20
+00000D68: 2D 39
+00000D69: 35 2C
+00000D6A: 29 20
+00000D6B: 22 31
+00000D6C: 7D 32
+00000D6D: 0D 5D
+00000D6E: 0A 2C
+00000D6F: 7B 20
+00000D71: 69 74
+00000D72: 64 61
+00000D73: 22 72
+00000D74: 3A 67
+00000D75: 20 65
+00000D76: 22 74
+00000D77: 70 22
+00000D78: 7A 3A
+00000D79: 2D 20
+00000D7A: 73 32
+00000D7B: 31 34
+00000D7C: 2D 2C
+00000D7D: 30 20
+00000D7E: 34 22
+00000D7F: 33 73
+00000D80: 22 6F
+00000D81: 2C 6C
+00000D82: 20 75
+00000D83: 22 74
+00000D84: 6E 69
+00000D85: 75 6F
+00000D86: 6D 6E
+00000D87: 73 22
+00000D88: 22 3A
+00000D89: 3A 20
+00000D8A: 20 22
+00000D8B: 5B 28
+00000D8C: 33 31
+00000D8D: 2C 32
+00000D8E: 20 2A
+00000D8F: 34 28
+00000D90: 2C 39
+00000D91: 20 2D
+00000D92: 39 28
+00000D93: 2C 33
+00000D94: 20 2B
+00000D95: 31 34
+00000D96: 32 29
+00000D97: 5D 29
+00000D98: 2C 29
+00000D99: 20 22
+00000D9A: 22 7D
+00000D9B: 74 0A
+00000D9C: 61 7B
+00000D9D: 72 22
+00000D9E: 67 69
+00000D9F: 65 64
+00000DA0: 74 22
+00000DA1: 22 3A
+00000DA2: 3A 20
+00000DA3: 20 22
+00000DA4: 32 70
+00000DA5: 34 7A
+00000DA6: 2C 2D
+00000DA7: 20 73
+00000DA8: 22 31
+00000DA9: 73 2D
+00000DAA: 6F 30
+00000DAB: 6C 34
+00000DAC: 75 34
+00000DAD: 74 22
+00000DAE: 69 2C
+00000DAF: 6F 20
+00000DB0: 6E 22
+00000DB1: 22 6E
+00000DB2: 3A 75
+00000DB3: 20 6D
+00000DB4: 22 73
+00000DB5: 28 22
+00000DB6: 31 3A
+00000DB7: 32 20
+00000DB8: 2A 5B
+00000DB9: 28 32
+00000DBA: 39 2C
+00000DBB: 2D 20
+00000DBC: 28 37
+00000DBD: 33 2C
+00000DBE: 2B 20
+00000DBF: 34 38
+00000DC0: 29 5D
+00000DC1: 29 2C
+00000DC2: 29 20
+00000DC4: 7D 74
+00000DC5: 0D 61
+00000DC6: 0A 72
+00000DC7: 7B 67
+00000DC8: 22 65
+00000DC9: 69 74
+00000DCA: 64 22
+00000DCB: 22 3A
+00000DCC: 3A 20
+00000DCD: 20 34
+00000DCE: 22 30
+00000DCF: 70 2C
+00000DD0: 7A 20
+00000DD1: 2D 22
+00000DD3: 31 6F
+00000DD4: 2D 6C
+00000DD5: 30 75
+00000DD6: 34 74
+00000DD7: 34 69
+00000DD8: 22 6F
+00000DD9: 2C 6E
+00000DDA: 20 22
+00000DDB: 22 3A
+00000DDC: 6E 20
+00000DDD: 75 22
+00000DDE: 6D 28
+00000DDF: 73 38
+00000DE0: 22 2A
+00000DE1: 3A 28
+00000DE2: 20 37
+00000DE3: 5B 2D
+00000DE5: 2C 29
+00000DE6: 20 29
+00000DE7: 37 22
+00000DE8: 2C 7D
+00000DE9: 20 0A
+00000DEA: 38 7B
+00000DEB: 5D 22
+00000DEC: 2C 69
+00000DED: 20 64
+00000DEF: 74 3A
+00000DF0: 61 20
+00000DF1: 72 22
+00000DF2: 67 70
+00000DF3: 65 7A
+00000DF4: 74 2D
+00000DF5: 22 73
+00000DF6: 3A 31
+00000DF7: 20 2D
+00000DF8: 34 30
+00000DF9: 30 34
+00000DFA: 2C 35
+00000DFB: 20 22
+00000DFC: 22 2C
+00000DFD: 73 20
+00000DFE: 6F 22
+00000DFF: 6C 6E
+00000E01: 74 6D
+00000E02: 69 73
+00000E03: 6F 22
+00000E04: 6E 3A
+00000E05: 22 20
+00000E06: 3A 5B
+00000E07: 20 33
+00000E08: 22 2C
+00000E09: 28 20
+00000E0A: 38 35
+00000E0B: 2A 2C
+00000E0C: 28 20
+00000E0D: 37 38
+00000E0E: 2D 5D
+00000E0F: 32 2C
+00000E10: 29 20
+00000E11: 29 22
+00000E12: 22 74
+00000E13: 7D 61
+00000E14: 0D 72
+00000E15: 0A 67
+00000E16: 7B 65
+00000E17: 22 74
+00000E18: 69 22
+00000E19: 64 3A
+00000E1A: 22 20
+00000E1B: 3A 36
+00000E1C: 20 2C
+00000E1D: 22 20
+00000E1E: 70 22
+00000E1F: 7A 73
+00000E20: 2D 6F
+00000E21: 73 6C
+00000E22: 31 75
+00000E23: 2D 74
+00000E24: 30 69
+00000E25: 34 6F
+00000E26: 35 6E
+00000E28: 2C 3A
+00000E2B: 6E 28
+00000E2C: 75 38
+00000E2D: 6D 2B
+00000E2E: 73 28
+00000E2F: 22 33
+00000E30: 3A 2D
+00000E31: 20 35
+00000E32: 5B 29
+00000E33: 33 29
+00000E34: 2C 22
+00000E35: 20 7D
+00000E36: 35 0A
+00000E37: 2C 7B
+00000E38: 20 22
+00000E39: 38 69
+00000E3A: 5D 64
+00000E3B: 2C 22
+00000E3C: 20 3A
+00000E3D: 22 20
+00000E3E: 74 22
+00000E3F: 61 70
+00000E40: 72 7A
+00000E41: 67 2D
+00000E42: 65 73
+00000E43: 74 31
+00000E44: 22 2D
+00000E45: 3A 30
+00000E46: 20 34
+00000E48: 2C 22
+00000E49: 20 2C
+00000E4A: 22 20
+00000E4B: 73 22
+00000E4C: 6F 6E
+00000E4D: 6C 75
+00000E4E: 75 6D
+00000E4F: 74 73
+00000E50: 69 22
+00000E51: 6F 3A
+00000E52: 6E 20
+00000E53: 22 5B
+00000E54: 3A 37
+00000E55: 20 2C
+00000E56: 22 20
+00000E57: 28 31
+00000E58: 38 30
+00000E59: 2B 2C
+00000E5A: 28 20
+00000E5B: 33 31
+00000E5C: 2D 31
+00000E5D: 35 2C
+00000E5E: 29 20
+00000E5F: 29 31
+00000E60: 22 33
+00000E61: 7D 5D
+00000E62: 0D 2C
+00000E63: 0A 20
+00000E64: 7B 22
+00000E65: 22 74
+00000E66: 69 61
+00000E67: 64 72
+00000E68: 22 67
+00000E69: 3A 65
+00000E6A: 20 74
+00000E6C: 70 3A
+00000E6D: 7A 20
+00000E6E: 2D 32
+00000E6F: 73 34
+00000E70: 31 2C
+00000E71: 2D 20
+00000E72: 30 22
+00000E73: 34 73
+00000E74: 36 6F
+00000E75: 22 6C
+00000E76: 2C 75
+00000E77: 20 74
+00000E78: 22 69
+00000E79: 6E 6F
+00000E7A: 75 6E
+00000E7B: 6D 22
+00000E7C: 73 3A
+00000E7D: 22 20
+00000E7E: 3A 22
+00000E7F: 20 28
+00000E80: 5B 31
+00000E81: 37 30
+00000E82: 2C 2D
+00000E83: 20 28
+00000E84: 31 37
+00000E85: 30 2A
+00000E86: 2C 28
+00000E87: 20 31
+00000E89: 31 2D
+00000E8A: 2C 31
+00000E8B: 20 33
+00000E8C: 31 29
+00000E8D: 33 29
+00000E8E: 5D 29
+00000E8F: 2C 22
+00000E90: 20 7D
+00000E91: 22 0A
+00000E92: 74 7B
+00000E93: 61 22
+00000E94: 72 69
+00000E95: 67 64
+00000E96: 65 22
+00000E97: 74 3A
+00000E98: 22 20
+00000E99: 3A 22
+00000E9A: 20 70
+00000E9B: 32 7A
+00000E9C: 34 2D
+00000E9D: 2C 73
+00000E9E: 20 31
+00000E9F: 22 2D
+00000EA0: 73 30
+00000EA1: 6F 34
+00000EA2: 6C 37
+00000EA3: 75 22
+00000EA4: 74 2C
+00000EA5: 69 20
+00000EA6: 6F 22
+00000EA8: 22 75
+00000EA9: 3A 6D
+00000EAA: 20 73
+00000EAC: 28 3A
+00000EAD: 31 20
+00000EAE: 30 5B
+00000EAF: 2D 34
+00000EB0: 28 2C
+00000EB1: 37 20
+00000EB2: 2A 35
+00000EB3: 28 2C
+00000EB4: 31 20
+00000EB5: 31 39
+00000EB6: 2D 5D
+00000EB7: 31 2C
+00000EB8: 33 20
+00000EB9: 29 22
+00000EBA: 29 74
+00000EBB: 29 61
+00000EBC: 22 72
+00000EBD: 7D 67
+00000EBE: 0D 65
+00000EBF: 0A 74
+00000EC0: 7B 22
+00000EC1: 22 3A
+00000EC2: 69 20
+00000EC3: 64 38
+00000EC4: 22 2C
+00000EC5: 3A 20
+00000EC6: 20 22
+00000EC7: 22 73
+00000EC8: 70 6F
+00000EC9: 7A 6C
+00000ECA: 2D 75
+00000ECB: 73 74
+00000ECC: 31 69
+00000ECD: 2D 6F
+00000ECE: 30 6E
+00000ECF: 34 22
+00000ED0: 37 3A
+00000ED1: 22 20
+00000ED2: 2C 22
+00000ED3: 20 28
+00000ED4: 22 39
+00000ED5: 6E 2B
+00000ED6: 75 28
+00000ED7: 6D 34
+00000ED8: 73 2D
+00000ED9: 22 35
+00000EDA: 3A 29
+00000EDB: 20 29
+00000EDC: 5B 22
+00000EDD: 34 7D
+00000EDE: 2C 0A
+00000EDF: 20 7B
+00000EE0: 35 22
+00000EE1: 2C 69
+00000EE2: 20 64
+00000EE3: 39 22
+00000EE4: 5D 3A
+00000EE5: 2C 20
+00000EE6: 20 22
+00000EE7: 22 70
+00000EE8: 74 7A
+00000EE9: 61 2D
+00000EEA: 72 73
+00000EEB: 67 31
+00000EEC: 65 2D
+00000EED: 74 30
+00000EEE: 22 34
+00000EEF: 3A 38
+00000EF0: 20 22
+00000EF1: 38 2C
+00000EF2: 2C 20
+00000EF3: 20 22
+00000EF4: 22 6E
+00000EF5: 73 75
+00000EF6: 6F 6D
+00000EF7: 6C 73
+00000EF8: 75 22
+00000EF9: 74 3A
+00000EFA: 69 20
+00000EFB: 6F 5B
+00000EFC: 6E 35
+00000EFD: 22 2C
+00000EFE: 3A 20
+00000EFF: 20 36
+00000F00: 22 2C
+00000F01: 28 20
+00000F03: 2B 5D
+00000F04: 28 2C
+00000F05: 34 20
+00000F06: 2D 22
+00000F07: 35 74
+00000F08: 29 61
+00000F09: 29 72
+00000F0A: 22 67
+00000F0B: 7D 65
+00000F0C: 0D 74
+00000F0D: 0A 22
+00000F0E: 7B 3A
+00000F0F: 22 20
+00000F10: 69 31
+00000F11: 64 35
+00000F12: 22 2C
+00000F13: 3A 20
+00000F14: 20 22
+00000F15: 22 73
+00000F16: 70 6F
+00000F17: 7A 6C
+00000F18: 2D 75
+00000F19: 73 74
+00000F1A: 31 69
+00000F1B: 2D 6F
+00000F1C: 30 6E
+00000F1D: 34 22
+00000F1E: 38 3A
+00000F1F: 22 20
+00000F20: 2C 22
+00000F21: 20 28
+00000F22: 22 35
+00000F23: 6E 2A
+00000F24: 75 28
+00000F25: 6D 39
+00000F26: 73 2D
+00000F27: 22 36
+00000F28: 3A 29
+00000F29: 20 29
+00000F2A: 5B 22
+00000F2B: 35 7D
+00000F2C: 2C 0A
+00000F2D: 20 7B
+00000F2E: 36 22
+00000F2F: 2C 69
+00000F30: 20 64
+00000F31: 39 22
+00000F32: 5D 3A
+00000F33: 2C 20
+00000F34: 20 22
+00000F35: 22 70
+00000F36: 74 7A
+00000F37: 61 2D
+00000F38: 72 73
+00000F39: 67 31
+00000F3A: 65 2D
+00000F3B: 74 30
+00000F3C: 22 34
+00000F3D: 3A 39
+00000F3E: 20 22
+00000F3F: 31 2C
+00000F40: 35 20
+00000F41: 2C 22
+00000F42: 20 6E
+00000F43: 22 75
+00000F44: 73 6D
+00000F45: 6F 73
+00000F46: 6C 22
+00000F47: 75 3A
+00000F48: 74 20
+00000F49: 69 5B
+00000F4A: 6F 32
+00000F4B: 6E 2C
+00000F4C: 22 20
+00000F4D: 3A 32
+00000F4E: 20 2C
+00000F4F: 22 20
+00000F50: 28 31
+00000F51: 35 30
+00000F52: 2A 2C
+00000F53: 28 20
+00000F54: 39 31
+00000F55: 2D 30
+00000F56: 36 5D
+00000F57: 29 2C
+00000F58: 29 20
+00000F5A: 7D 74
+00000F5B: 0D 61
+00000F5C: 0A 72
+00000F5D: 7B 67
+00000F5E: 22 65
+00000F5F: 69 74
+00000F60: 64 22
+00000F61: 22 3A
+00000F62: 3A 20
+00000F63: 20 32
+00000F64: 22 34
+00000F65: 70 2C
+00000F66: 7A 20
+00000F67: 2D 22
+00000F69: 31 6F
+00000F6A: 2D 6C
+00000F6B: 30 75
+00000F6C: 34 74
+00000F6D: 39 69
+00000F6E: 22 6F
+00000F6F: 2C 6E
+00000F70: 20 22
+00000F71: 22 3A
+00000F72: 6E 20
+00000F73: 75 22
+00000F74: 6D 28
+00000F75: 73 28
+00000F76: 22 32
+00000F77: 3A 2B
+00000F78: 20 32
+00000F79: 5B 29
+00000F7A: 32 2B
+00000F7B: 2C 28
+00000F7C: 20 31
+00000F7D: 32 30
+00000F7E: 2C 2B
+00000F7F: 20 31
+00000F80: 31 30
+00000F81: 30 29
+00000F82: 2C 29
+00000F83: 20 22
+00000F84: 31 7D
+00000F85: 30 0A
+00000F86: 5D 7B
+00000F87: 2C 22
+00000F88: 20 69
+00000F89: 22 64
+00000F8A: 74 22
+00000F8B: 61 3A
+00000F8C: 72 20
+00000F8D: 67 22
+00000F8E: 65 70
+00000F8F: 74 7A
+00000F90: 22 2D
+00000F91: 3A 73
+00000F92: 20 31
+00000F93: 32 2D
+00000F94: 34 30
+00000F95: 2C 35
+00000F96: 20 30
+00000F98: 73 2C
+00000F99: 6F 20
+00000F9A: 6C 22
+00000F9B: 75 6E
+00000F9C: 74 75
+00000F9D: 69 6D
+00000F9E: 6F 73
+00000F9F: 6E 22
+00000FA0: 22 3A
+00000FA1: 3A 20
+00000FA2: 20 5B
+00000FA3: 22 34
+00000FA4: 28 2C
+00000FA5: 28 20
+00000FA6: 32 35
+00000FA7: 2B 2C
+00000FA8: 32 20
+00000FA9: 29 37
+00000FAA: 2B 5D
+00000FAB: 28 2C
+00000FAC: 31 20
+00000FAD: 30 22
+00000FAE: 2B 74
+00000FAF: 31 61
+00000FB0: 30 72
+00000FB1: 29 67
+00000FB2: 29 65
+00000FB3: 22 74
+00000FB4: 7D 22
+00000FB5: 0D 3A
+00000FB6: 0A 20
+00000FB7: 7B 38
+00000FB8: 22 2C
+00000FB9: 69 20
+00000FBA: 64 22
+00000FBB: 22 73
+00000FBC: 3A 6F
+00000FBD: 20 6C
+00000FBE: 22 75
+00000FBF: 70 74
+00000FC0: 7A 69
+00000FC1: 2D 6F
+00000FC2: 73 6E
+00000FC3: 31 22
+00000FC4: 2D 3A
+00000FC5: 30 20
+00000FC6: 35 22
+00000FC7: 30 28
+00000FC8: 22 37
+00000FC9: 2C 2D
+00000FCA: 20 28
+00000FCB: 22 34
+00000FCC: 6E 2D
+00000FCD: 75 35
+00000FCE: 6D 29
+00000FCF: 73 29
+00000FD1: 3A 7D
+00000FD2: 20 0A
+00000FD3: 5B 7B
+00000FD4: 34 22
+00000FD5: 2C 69
+00000FD6: 20 64
+00000FD7: 35 22
+00000FD8: 2C 3A
+00000FDA: 37 22
+00000FDB: 5D 70
+00000FDC: 2C 7A
+00000FDD: 20 2D
+00000FDE: 22 73
+00000FDF: 74 31
+00000FE0: 61 2D
+00000FE1: 72 30
+00000FE2: 67 35
+00000FE3: 65 31
+00000FE4: 74 22
+00000FE5: 22 2C
+00000FE6: 3A 20
+00000FE7: 20 22
+00000FE8: 38 6E
+00000FE9: 2C 75
+00000FEA: 20 6D
+00000FEB: 22 73
+00000FEC: 73 22
+00000FED: 6F 3A
+00000FEE: 6C 20
+00000FEF: 75 5B
+00000FF0: 74 32
+00000FF1: 69 2C
+00000FF2: 6F 20
+00000FF3: 6E 33
+00000FF4: 22 2C
+00000FF5: 3A 20
+00000FF6: 20 35
+00000FF7: 22 5D
+00000FF8: 28 2C
+00000FF9: 37 20
+00000FFA: 2D 22
+00000FFB: 28 74
+00000FFC: 34 61
+00000FFD: 2D 72
+00000FFE: 35 67
+00000FFF: 29 65
+00001000: 29 74
+00001002: 7D 3A
+00001003: 0D 20
+00001004: 0A 31
+00001005: 7B 30
+00001006: 22 2C
+00001007: 69 20
+00001008: 64 22
+00001009: 22 73
+0000100A: 3A 6F
+0000100B: 20 6C
+0000100C: 22 75
+0000100D: 70 74
+0000100E: 7A 69
+0000100F: 2D 6F
+00001010: 73 6E
+00001011: 31 22
+00001012: 2D 3A
+00001013: 30 20
+00001014: 35 22
+00001015: 31 28
+00001016: 22 35
+00001017: 2C 2B
+00001018: 20 28
+00001019: 22 32
+0000101A: 6E 2B
+0000101B: 75 33
+0000101C: 6D 29
+0000101D: 73 29
+0000101F: 3A 7D
+00001020: 20 0A
+00001021: 5B 7B
+00001022: 32 22
+00001023: 2C 69
+00001024: 20 64
+00001025: 33 22
+00001026: 2C 3A
+00001028: 35 22
+00001029: 5D 70
+0000102A: 2C 7A
+0000102B: 20 2D
+0000102C: 22 73
+0000102D: 74 31
+0000102E: 61 2D
+0000102F: 72 30
+00001030: 67 35
+00001031: 65 32
+00001032: 74 22
+00001033: 22 2C
+00001034: 3A 20
+00001035: 20 22
+00001036: 31 6E
+00001037: 30 75
+00001038: 2C 6D
+00001039: 20 73
+0000103B: 73 3A
+0000103C: 6F 20
+0000103D: 6C 5B
+0000103E: 75 34
+0000103F: 74 2C
+00001040: 69 20
+00001041: 6F 37
+00001042: 6E 2C
+00001043: 22 20
+00001044: 3A 38
+00001045: 20 2C
+00001046: 22 20
+00001047: 28 31
+00001048: 35 33
+00001049: 2B 5D
+0000104A: 28 2C
+0000104B: 32 20
+0000104C: 2B 22
+0000104D: 33 74
+0000104E: 29 61
+0000104F: 29 72
+00001050: 22 67
+00001051: 7D 65
+00001052: 0D 74
+00001053: 0A 22
+00001054: 7B 3A
+00001055: 22 20
+00001056: 69 32
+00001057: 64 34
+00001058: 22 2C
+00001059: 3A 20
+0000105A: 20 22
+0000105B: 22 73
+0000105C: 70 6F
+0000105D: 7A 6C
+0000105E: 2D 75
+0000105F: 73 74
+00001060: 31 69
+00001061: 2D 6F
+00001062: 30 6E
+00001063: 35 22
+00001064: 32 3A
+00001065: 22 20
+00001066: 2C 22
+00001067: 20 28
+00001068: 22 28
+00001069: 6E 38
+0000106A: 75 2B
+0000106B: 6D 31
+0000106C: 73 33
+0000106D: 22 29
+0000106E: 3A 2D
+0000106F: 20 28
+00001070: 5B 34
+00001071: 34 2D
+00001072: 2C 37
+00001073: 20 29
+00001074: 37 29
+00001075: 2C 22
+00001076: 20 7D
+00001077: 38 0A
+00001078: 2C 7B
+00001079: 20 22
+0000107A: 31 69
+0000107B: 33 64
+0000107C: 5D 22
+0000107D: 2C 3A
+00001080: 74 70
+00001081: 61 7A
+00001082: 72 2D
+00001083: 67 73
+00001084: 65 31
+00001085: 74 2D
+00001086: 22 30
+00001087: 3A 35
+00001088: 20 33
+00001089: 32 22
+0000108A: 34 2C
+0000108B: 2C 20
+0000108C: 20 22
+0000108D: 22 6E
+0000108E: 73 75
+0000108F: 6F 6D
+00001090: 6C 73
+00001091: 75 22
+00001092: 74 3A
+00001093: 69 20
+00001094: 6F 5B
+00001095: 6E 32
+00001096: 22 2C
+00001097: 3A 20
+00001098: 20 35
+00001099: 22 2C
+0000109A: 28 20
+0000109B: 28 35
+0000109C: 38 5D
+0000109D: 2B 2C
+0000109E: 31 20
+0000109F: 33 22
+000010A0: 29 74
+000010A1: 2D 61
+000010A2: 28 72
+000010A3: 34 67
+000010A4: 2D 65
+000010A5: 37 74
+000010A6: 29 22
+000010A7: 29 3A
+000010A8: 22 20
+000010A9: 7D 32
+000010AA: 0D 30
+000010AB: 0A 2C
+000010AC: 7B 20
+000010AE: 69 73
+000010AF: 64 6F
+000010B0: 22 6C
+000010B1: 3A 75
+000010B2: 20 74
+000010B3: 22 69
+000010B4: 70 6F
+000010B5: 7A 6E
+000010B6: 2D 22
+000010B7: 73 3A
+000010B8: 31 20
+000010B9: 2D 22
+000010BA: 30 28
+000010BB: 35 32
+000010BC: 33 2A
+000010BD: 22 28
+000010BE: 2C 35
+000010BF: 20 2B
+000010C0: 22 35
+000010C1: 6E 29
+000010C2: 75 29
+000010C3: 6D 22
+000010C4: 73 7D
+000010C5: 22 0A
+000010C6: 3A 7B
+000010C7: 20 22
+000010C8: 5B 69
+000010C9: 32 64
+000010CA: 2C 22
+000010CB: 20 3A
+000010CC: 35 20
+000010CD: 2C 22
+000010CE: 20 70
+000010CF: 35 7A
+000010D0: 5D 2D
+000010D1: 2C 73
+000010D2: 20 31
+000010D3: 22 2D
+000010D4: 74 30
+000010D5: 61 35
+000010D6: 72 34
+000010D7: 67 22
+000010D8: 65 2C
+000010D9: 74 20
+000010DB: 3A 6E
+000010DC: 20 75
+000010DD: 32 6D
+000010DE: 30 73
+000010DF: 2C 22
+000010E0: 20 3A
+000010E1: 22 20
+000010E2: 73 5B
+000010E3: 6F 34
+000010E4: 6C 2C
+000010E5: 75 20
+000010E6: 74 34
+000010E7: 69 2C
+000010E8: 6F 20
+000010E9: 6E 35
+000010EA: 22 5D
+000010EB: 3A 2C
+000010EE: 28 74
+000010EF: 32 61
+000010F0: 2A 72
+000010F1: 28 67
+000010F2: 35 65
+000010F3: 2B 74
+000010F4: 35 22
+000010F5: 29 3A
+000010F6: 29 20
+000010F7: 22 31
+000010F8: 7D 36
+000010F9: 0D 2C
+000010FA: 0A 20
+000010FB: 7B 22
+000010FC: 22 73
+000010FD: 69 6F
+000010FE: 64 6C
+000010FF: 22 75
+00001100: 3A 74
+00001101: 20 69
+00001102: 22 6F
+00001103: 70 6E
+00001104: 7A 22
+00001105: 2D 3A
+00001106: 73 20
+00001107: 31 22
+00001108: 2D 28
+00001109: 30 28
+0000110A: 35 34
+0000110B: 34 2A
+0000110C: 22 35
+0000110D: 2C 29
+0000110E: 20 2D
+0000110F: 22 34
+00001110: 6E 29
+00001111: 75 22
+00001112: 6D 7D
+00001113: 73 0A
+00001114: 22 7B
+00001115: 3A 22
+00001116: 20 69
+00001117: 5B 64
+00001118: 34 22
+00001119: 2C 3A
+0000111B: 34 22
+0000111C: 2C 70
+0000111D: 20 7A
+0000111E: 35 2D
+0000111F: 5D 73
+00001120: 2C 31
+00001121: 20 2D
+00001122: 22 30
+00001123: 74 35
+00001124: 61 35
+00001125: 72 22
+00001126: 67 2C
+00001127: 65 20
+00001128: 74 22
+00001129: 22 6E
+0000112A: 3A 75
+0000112B: 20 6D
+0000112C: 31 73
+0000112D: 36 22
+0000112E: 2C 3A
+00001130: 22 5B
+00001131: 73 33
+00001132: 6F 2C
+00001133: 6C 20
+00001134: 75 34
+00001135: 74 2C
+00001136: 69 20
+00001137: 6F 35
+00001138: 6E 2C
+00001139: 22 20
+0000113A: 3A 39
+0000113B: 20 5D
+0000113C: 22 2C
+0000113D: 28 20
+0000113E: 28 22
+0000113F: 34 74
+00001140: 2A 61
+00001141: 35 72
+00001142: 29 67
+00001143: 2D 65
+00001144: 34 74
+00001145: 29 22
+00001146: 22 3A
+00001147: 7D 20
+00001148: 0D 32
+00001149: 0A 34
+0000114A: 7B 2C
+0000114B: 22 20
+0000114C: 69 22
+0000114D: 64 73
+0000114E: 22 6F
+0000114F: 3A 6C
+00001150: 20 75
+00001151: 22 74
+00001152: 70 69
+00001153: 7A 6F
+00001154: 2D 6E
+00001155: 73 22
+00001156: 31 3A
+00001157: 2D 20
+00001158: 30 22
+00001159: 35 28
+0000115A: 35 34
+0000115B: 22 2A
+0000115C: 2C 28
+0000115D: 20 28
+0000115E: 22 33
+0000115F: 6E 2A
+00001160: 75 35
+00001161: 6D 29
+00001162: 73 2D
+00001163: 22 39
+00001164: 3A 29
+00001165: 20 29
+00001166: 5B 22
+00001167: 33 7D
+00001168: 2C 0A
+00001169: 20 7B
+0000116A: 34 22
+0000116B: 2C 69
+0000116C: 20 64
+0000116D: 35 22
+0000116E: 2C 3A
+00001170: 39 22
+00001171: 5D 70
+00001172: 2C 7A
+00001173: 20 2D
+00001174: 22 73
+00001175: 74 31
+00001176: 61 2D
+00001177: 72 30
+00001178: 67 35
+00001179: 65 36
+0000117A: 74 22
+0000117B: 22 2C
+0000117C: 3A 20
+0000117D: 20 22
+0000117E: 32 6E
+0000117F: 34 75
+00001180: 2C 6D
+00001181: 20 73
+00001183: 73 3A
+00001184: 6F 20
+00001185: 6C 5B
+00001186: 75 33
+00001187: 74 2C
+00001188: 69 20
+00001189: 6F 36
+0000118A: 6E 2C
+0000118B: 22 20
+0000118C: 3A 39
+0000118D: 20 5D
+0000118E: 22 2C
+0000118F: 28 20
+00001190: 34 22
+00001191: 2A 74
+00001192: 28 61
+00001193: 28 72
+00001194: 33 67
+00001195: 2A 65
+00001196: 35 74
+00001197: 29 22
+00001198: 2D 3A
+00001199: 39 20
+0000119A: 29 33
+0000119B: 29 36
+0000119C: 22 2C
+0000119D: 7D 20
+0000119E: 0D 22
+0000119F: 0A 73
+000011A0: 7B 6F
+000011A1: 22 6C
+000011A2: 69 75
+000011A3: 64 74
+000011A4: 22 69
+000011A5: 3A 6F
+000011A6: 20 6E
+000011A8: 70 3A
+000011A9: 7A 20
+000011AA: 2D 22
+000011AB: 73 28
+000011AC: 31 36
+000011AD: 2D 2A
+000011AE: 30 28
+000011AF: 35 39
+000011B0: 36 2D
+000011B1: 22 33
+000011B2: 2C 29
+000011B3: 20 29
+000011B5: 6E 7D
+000011B6: 75 0A
+000011B7: 6D 7B
+000011B8: 73 22
+000011B9: 22 69
+000011BA: 3A 64
+000011BB: 20 22
+000011BC: 5B 3A
+000011BD: 33 20
+000011BE: 2C 22
+000011BF: 20 70
+000011C0: 36 7A
+000011C1: 2C 2D
+000011C2: 20 73
+000011C3: 39 31
+000011C4: 5D 2D
+000011C5: 2C 30
+000011C6: 20 35
+000011C7: 22 37
+000011C8: 74 22
+000011C9: 61 2C
+000011CA: 72 20
+000011CB: 67 22
+000011CC: 65 6E
+000011CD: 74 75
+000011CE: 22 6D
+000011CF: 3A 73
+000011D0: 20 22
+000011D1: 33 3A
+000011D2: 36 20
+000011D3: 2C 5B
+000011D4: 20 32
+000011D5: 22 2C
+000011D6: 73 20
+000011D7: 6F 34
+000011D8: 6C 2C
+000011D9: 75 20
+000011DA: 74 35
+000011DB: 69 5D
+000011DC: 6F 2C
+000011DD: 6E 20
+000011DF: 3A 74
+000011E0: 20 61
+000011E1: 22 72
+000011E2: 28 67
+000011E3: 36 65
+000011E4: 2A 74
+000011E5: 28 22
+000011E6: 39 3A
+000011E7: 2D 20
+000011E8: 33 36
+000011E9: 29 2C
+000011EA: 29 20
+000011EC: 7D 73
+000011ED: 0D 6F
+000011EE: 0A 6C
+000011EF: 7B 75
+000011F0: 22 74
+000011F2: 64 6F
+000011F3: 22 6E
+000011F4: 3A 22
+000011F5: 20 3A
+000011F6: 22 20
+000011F7: 70 22
+000011F8: 7A 28
+000011F9: 2D 28
+000011FA: 73 32
+000011FB: 31 2A
+000011FC: 2D 35
+000011FD: 30 29
+000011FE: 35 2D
+000011FF: 37 34
+00001200: 22 29
+00001201: 2C 22
+00001202: 20 7D
+00001203: 22 0A
+00001204: 6E 7B
+00001205: 75 22
+00001206: 6D 69
+00001207: 73 64
+0000120B: 5B 22
+0000120C: 32 70
+0000120D: 2C 7A
+0000120E: 20 2D
+0000120F: 34 73
+00001210: 2C 31
+00001211: 20 2D
+00001212: 35 30
+00001213: 5D 35
+00001214: 2C 38
+00001215: 20 22
+00001216: 22 2C
+00001217: 74 20
+00001218: 61 22
+00001219: 72 6E
+0000121A: 67 75
+0000121B: 65 6D
+0000121C: 74 73
+00001220: 36 5B
+00001221: 2C 31
+00001222: 20 2C
+00001223: 22 20
+00001224: 73 32
+00001225: 6F 2C
+00001226: 6C 20
+00001227: 75 31
+00001228: 74 30
+00001229: 69 2C
+0000122A: 6F 20
+0000122B: 6E 31
+0000122C: 22 32
+0000122D: 3A 5D
+0000122E: 20 2C
+0000122F: 22 20
+00001230: 28 22
+00001231: 28 74
+00001232: 32 61
+00001233: 2A 72
+00001234: 35 67
+00001235: 29 65
+00001236: 2D 74
+00001237: 34 22
+00001238: 29 3A
+00001239: 22 20
+0000123A: 7D 32
+0000123B: 0D 34
+0000123C: 0A 2C
+0000123D: 7B 20
+0000123F: 69 73
+00001240: 64 6F
+00001241: 22 6C
+00001242: 3A 75
+00001243: 20 74
+00001244: 22 69
+00001245: 70 6F
+00001246: 7A 6E
+00001247: 2D 22
+00001248: 73 3A
+00001249: 31 20
+0000124A: 2D 22
+0000124B: 30 28
+0000124C: 35 28
+0000124D: 38 31
+0000124E: 22 2A
+0000124F: 2C 32
+00001250: 20 29
+00001251: 22 2B
+00001252: 6E 28
+00001253: 75 31
+00001254: 6D 30
+00001255: 73 2B
+00001256: 22 31
+00001257: 3A 32
+00001258: 20 29
+00001259: 5B 29
+0000125A: 31 22
+0000125B: 2C 7D
+0000125C: 20 0A
+0000125D: 32 7B
+0000125E: 2C 22
+0000125F: 20 69
+00001260: 31 64
+00001261: 30 22
+00001262: 2C 3A
+00001264: 31 22
+00001265: 32 70
+00001266: 5D 7A
+00001267: 2C 2D
+00001268: 20 73
+00001269: 22 31
+0000126A: 74 2D
+0000126B: 61 30
+0000126C: 72 35
+0000126D: 67 39
+0000126E: 65 22
+0000126F: 74 2C
+00001270: 22 20
+00001271: 3A 22
+00001272: 20 6E
+00001273: 32 75
+00001274: 34 6D
+00001275: 2C 73
+00001276: 20 22
+00001277: 22 3A
+00001278: 73 20
+00001279: 6F 5B
+0000127A: 6C 34
+0000127B: 75 2C
+0000127C: 74 20
+0000127D: 69 38
+0000127E: 6F 2C
+0000127F: 6E 20
+00001280: 22 39
+00001281: 3A 5D
+00001282: 20 2C
+00001283: 22 20
+00001284: 28 22
+00001285: 28 74
+00001286: 31 61
+00001287: 2A 72
+00001288: 32 67
+00001289: 29 65
+0000128A: 2B 74
+0000128B: 28 22
+0000128C: 31 3A
+0000128D: 30 20
+0000128E: 2B 32
+0000128F: 31 38
+00001290: 32 2C
+00001291: 29 20
+00001292: 29 22
+00001293: 22 73
+00001294: 7D 6F
+00001295: 0D 6C
+00001296: 0A 75
+00001297: 7B 74
+00001298: 22 69
+00001299: 69 6F
+0000129A: 64 6E
+0000129F: 70 28
+000012A0: 7A 28
+000012A1: 2D 34
+000012A2: 73 2A
+000012A3: 31 39
+000012A4: 2D 29
+000012A5: 30 2D
+000012A6: 35 38
+000012A7: 39 29
+000012A9: 2C 7D
+000012AA: 20 0A
+000012AB: 22 7B
+000012AC: 6E 22
+000012AD: 75 69
+000012AE: 6D 64
+000012AF: 73 22
+000012B0: 22 3A
+000012B1: 3A 20
+000012B2: 20 22
+000012B3: 5B 70
+000012B4: 34 7A
+000012B5: 2C 2D
+000012B6: 20 73
+000012B7: 38 31
+000012B8: 2C 2D
+000012B9: 20 30
+000012BA: 39 36
+000012BB: 5D 30
+000012BC: 2C 22
+000012BD: 20 2C
+000012BE: 22 20
+000012BF: 74 22
+000012C0: 61 6E
+000012C1: 72 75
+000012C2: 67 6D
+000012C3: 65 73
+000012C4: 74 22
+000012C5: 22 3A
+000012C6: 3A 20
+000012C7: 20 5B
+000012C8: 32 33
+000012C9: 38 2C
+000012CA: 2C 20
+000012CB: 20 35
+000012CC: 22 2C
+000012CD: 73 20
+000012CE: 6F 37
+000012CF: 6C 5D
+000012D0: 75 2C
+000012D1: 74 20
+000012D2: 69 22
+000012D3: 6F 74
+000012D4: 6E 61
+000012D5: 22 72
+000012D6: 3A 67
+000012D7: 20 65
+000012D8: 22 74
+000012D9: 28 22
+000012DA: 28 3A
+000012DB: 34 20
+000012DC: 2A 31
+000012DD: 39 36
+000012DE: 29 2C
+000012DF: 2D 20
+000012E0: 38 22
+000012E1: 29 73
+000012E2: 22 6F
+000012E3: 7D 6C
+000012E4: 0D 75
+000012E5: 0A 74
+000012E6: 7B 69
+000012E7: 22 6F
+000012E8: 69 6E
+000012E9: 64 22
+000012EA: 22 3A
+000012EB: 3A 20
+000012EC: 20 22
+000012ED: 22 28
+000012EE: 70 28
+000012EF: 7A 33
+000012F0: 2D 2A
+000012F1: 73 37
+000012F2: 31 29
+000012F4: 30 35
+000012F5: 36 29
+000012F6: 30 22
+000012F7: 22 7D
+000012F8: 2C 0A
+FC: PZCHECK\puzzles.jsonl longer than ARTIFACTS\CLAUDE-BLURT1-DEV-20260925\PUZZLES.JSONL
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt1-dev-20260925/puzzles.jsonl 2>&1 | head -c 600; echo; echo "===LINES==="; git show origin/main:artifacts/claude-blurt1-dev-20260925/puzzles.jsonl 2>&1 | wc -l
+{"id": "pz-s1-001", "nums": [2, 2, 5, 8], "target": 24, "solution": "((2*(5+8))-2)"}
+{"id": "pz-s1-002", "nums": [4, 8, 9], "target": 36, "solution": "(9*(8-4))"}
+{"id": "pz-s1-003", "nums": [4, 6, 9], "target": 19, "solution": "(9+(4+6))"}
+{"id": "pz-s1-004", "nums": [4, 8, 11, 13], "target": 24, "solution": "((4+8)*(13-11))"}
+{"id": "pz-s1-005", "nums": [1, 5, 7], "target": 40, "solution": "(5*(1+7))"}
+{"id": "pz-s1-006", "nums": [6, 6, 9], "target": 10, "solution": "(9+(6/6))"}
+{"id": "pz-s1-007", "nums": [2, 8, 9, 11], "target": 24, "solution": "((8/2)+(9+11))"}
+{"id": "pz-s1-008", "nums":
+===LINES===
+      60
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\blurt2gpu\\pzcheck" 2>&1
+ssh benspc "C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \"f=open('C:/Users/benja/blurt2gpu/pzcheck/puzzles.jsonl','rb').read(); print(len(f)); print(f[:200])\"" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu\pzcheck
+
+09/24/2026  11:37 PM    <DIR>          .
+09/24/2026  11:37 PM    <DIR>          ..
+09/24/2026  11:37 PM             4,917 puzzles.jsonl
+               1 File(s)          4,917 bytes
+               2 Dir(s)  44,442,091,520 bytes free
+4917
+b'{"id": "pz-s1-001", "nums": [2, 2, 5, 8], "target": 24, "solution": "((2*(5+8))-2)"}\r\n{"id": "pz-s1-002", "nums": [4, 8, 9], "target": 36, "solution": "(9*(8-4))"}\r\n{"id": "pz-s1-003", "nums": [4, 6, '
+[0m
+[0m$ [0mssh benspc "C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -c \"a=open('C:/Users/benja/blurt2gpu/pzcheck/puzzles.jsonl','rb').read().replace(b'\\r\\n',b'\\n'); print(len(a)); print(a[:200])\"" 2>&1
+git show origin/main:artifacts/claude-blurt1-dev-20260925/puzzles.jsonl 2>&1 | wc -c
+4857
+b'{"id": "pz-s1-001", "nums": [2, 2, 5, 8], "target": 24, "solution": "((2*(5+8))-2)"}\n{"id": "pz-s1-002", "nums": [4, 8, 9], "target": 36, "solution": "(9*(8-4))"}\n{"id": "pz-s1-003", "nums": [4, 6, 9]'
+    4857
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-blurt1-dev-20260925/puzzles.jsonl > /tmp/ref_puzzles.jsonl && wc -c /tmp/ref_puzzles.jsonl
+scp benspc:blurt2gpu/pzcheck/puzzles.jsonl /tmp/pzcheck_win.jsonl && wc -c /tmp/pzcheck_win.jsonl && python3 -c "
+a=open('/tmp/ref_puzzles.jsonl','rb').read()
+b=open('/tmp/pzcheck_win.jsonl','rb').read().replace(b'\r\n',b'\n')
+print('ref',len(a),'win-norm',len(b),'identical:',a==b)
+"
+4857 /tmp/ref_puzzles.jsonl
+    4917 /tmp/pzcheck_win.jsonl
+ref 4857 win-norm 4857 identical: True
+[0m
+[0m$ [0mssh benspc "C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe -B -c \"import sys; sys.path.insert(0,'C:/Users/benja/blurt2gpu/scripts'); import claude_blurt1 as B1; print('blurt1 import OK'); p=B1.solve([2,2,5,8],24); print('solve OK:',p)\"" 2>&1
+blurt1 import OK
+solve OK: ((2*(5+8))-2)
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + blurt2 docstring from origin/main
+[✓] Locate BensPC benchmark venv + MiniCPM5-1B BASE
+[✓] Copy git archive to BensPC and extract
+[✓] Run pzcheck make + byte-compare (content identical, CRLF-only diff)
+[•] Run blurt2 loop on GPU with log, poll to completion
+[ ] Copy results back, write RESULTS-gpu.md + ledger, push
+[0m
+[0m$ [0mssh benspc "powershell -Command \"Start-Process -FilePath 'C:\\Users\\benja\\text-predict\\.venv\\Scripts\\python.exe' -ArgumentList '-B','scripts/claude_blurt2.py','loop','--model','C:\\Users\\benja\\.cache\\huggingface\\hub\\models--openbmb--MiniCPM5-1B\\snapshots\\87179e5c1f455ef22e6223592d2d61351b525bfc','--out','gpu','--temps','1.0,1.5','--dev-puzzles','artifacts/claude-blurt1-dev-20260925/puzzles.jsonl' -WorkingDirectory 'C:\\Users\\benja\\blurt2gpu' -RedirectStandardOutput 'C:\\Users\\benja\\blurt2gpu\\log_loop.txt' -RedirectStandardError 'C:\\Users\\benja\\blurt2gpu\\log_loop.err.txt'; echo STARTED\"" 2>&1
+STARTED
+[0m
+[0m$ [0msleep 90; ssh benspc "dir C:\\Users\\benja\\blurt2gpu\\gpu /b" 2>&1; ssh benspc "powershell -Command \"Get-Content C:\\Users\\benja\\blurt2gpu\\log_loop.txt -Tail 20\"" 2>&1
+File Not Found
+[0m
+[0m$ [0mssh benspc "tasklist /FI \"IMAGENAME eq python.exe\"" 2>&1
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\blurt2gpu" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu
+
+09/24/2026  11:38 PM    <DIR>          .
+09/24/2026  11:37 PM    <DIR>          ..
+09/24/2026  11:20 PM    <DIR>          artifacts
+09/24/2026  11:37 PM            51,200 blurt2gpu.tar
+09/24/2026  11:38 PM                 0 log_loop.err.txt
+09/24/2026  11:38 PM                 0 log_loop.txt
+09/24/2026  11:37 PM    <DIR>          pzcheck
+09/24/2026  11:20 PM    <DIR>          scripts
+               3 File(s)         51,200 bytes
+               5 Dir(s)  44,440,416,256 bytes free
+[0m
+[0m← [0mWrite /tmp/launch.bat
+Wrote file successfully.
+[0m
+[0m$ [0mscp /tmp/launch.bat benspc:blurt2gpu/launch.bat 2>&1; echo SCP:$?
+ssh benspc "powershell -Command \"(Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList 'C:\\Users\\benja\\blurt2gpu\\launch.bat').ProcessId\"" 2>&1
+SCP:0
+8952
+[0m
+[0m$ [0msleep 240; ssh benspc "tasklist /FI \"IMAGENAME eq python.exe\"" 2>&1; ssh benspc "dir C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   18436 Services                   0      4,236 K
+python.exe                   14316 Services                   0  1,890,692 K
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu
+
+09/24/2026  11:42 PM               120 log_loop.txt
+               1 File(s)            120 bytes
+               0 Dir(s)  44,202,938,368 bytes free
+[0m
+[0m$ [0mssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1; ssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.err.txt" 2>&1; ssh benspc "nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader" 2>&1
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|##########| 219/219 [00:00<00:00, 11225.68it/s]
+35 %, 3363 MiB, 16303 MiB
+[0m
+[0m$ [0msleep 300; ssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+[0m
+[0m$ [0msleep 300; ssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1; ssh benspc "tasklist /FI \"IMAGENAME eq python.exe\"" 2>&1
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   18436 Services                   0      4,312 K
+python.exe                   14316 Services                   0  1,891,308 K
+[0m
+[0m$ [0msleep 420; ssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1; ssh benspc "tasklist /FI \"IMAGENAME eq python.exe\"" 2>&1
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+[loop] practice: reasoner right 21/400, lucky wins on misses 184 (338/11370 blurts)
+[sleep] epoch 1/3 last batch loss 1.019
+[sleep] epoch 2/3 last batch loss 0.745
+[sleep] epoch 3/3 last batch loss 0.675
+[loop] arm W seed 0: test 13/127
+[sleep] epoch 1/3 last batch loss 0.941
+[sleep] epoch 2/3 last batch loss 0.979
+[sleep] epoch 3/3 last batch loss 0.839
+[loop] arm W seed 1: test 11/127
+[sleep] epoch 1/3 last batch loss 0.031
+
+Image Name                     PID Session Name        Session#    Mem Usage
+========================= ======== ================ =========== ============
+python.exe                   18436 Services                   0      4,312 K
+python.exe                   14316 Services                   0  2,071,256 K
+[0m
+[0m$ [0msleep 420; ssh benspc "type C:\\Users\\benja\\blurt2gpu\\log_loop.txt" 2>&1; ssh benspc "tasklist /FI \"IMAGENAME eq python.exe\"" 2>&1
+[dev] T 1.0: lucky blurts 39/1740 on 58 missed DEV puzzles
+[dev] T 1.5: lucky blurts 44/1740 on 58 missed DEV puzzles
+[loop] before: test 6/127
+[loop] practice: reasoner right 21/400, lucky wins on misses 184 (338/11370 blurts)
+[sleep] epoch 1/3 last batch loss 1.019
+[sleep] epoch 2/3 last batch loss 0.745
+[sleep] epoch 3/3 last batch loss 0.675
+[loop] arm W seed 0: test 13/127
+[sleep] epoch 1/3 last batch loss 0.941
+[sleep] epoch 2/3 last batch loss 0.979
+[sleep] epoch 3/3 last batch loss 0.839
+[loop] arm W seed 1: test 11/127
+[sleep] epoch 1/3 last batch loss 0.031
+[sleep] epoch 2/3 last batch loss 0.000
+[sleep] epoch 3/3 last batch loss 0.000
+[loop] arm C seed 0: test 5/127
+[sleep] epoch 1/3 last batch loss 0.024
+[sleep] epoch 2/3 last batch loss 0.001
+[sleep] epoch 3/3 last batch loss 0.000
+[loop] arm C seed 1: test 6/127
+{"dev_missed": 58, "dev_lucky_by_temp": {"1.0": 39, "1.5": 44}, "temp_chosen": 1.5, "n_train": 400, "n_test": 127, "test_dropped_overlap": 23, "temp": 1.5, "S0_test_before": 6, "train_reasoner_right": 21, "train_missed": 379, "train_missed_then_lucky": 184, "lucky_blurts_on_misses": 338, "blurts_on_misses": 11370, "examples_W": 205, "examples_C": 205, "S_W_seed0_test_after": 13, "S_W_seed0_train_missed_after": 39, "S_W_seed1_test_after": 11, "S_W_seed1_train_missed_after": 30, "S_W_test_after_mean": 12.0, "S_C_seed0_test_after": 5, "S_C_seed0_train_missed_after": 2, "S_C_seed1_test_after": 6, "S_C_seed1_train_missed_after": 4, "S_C_test_after_mean": 5.5, "minutes": 27.7}
+INFO: No tasks are running which match the specified criteria.
+[0m
+[0m$ [0mssh benspc "dir C:\\Users\\benja\\blurt2gpu\\gpu && dir C:\\Users\\benja\\blurt2gpu\\gpu\\wins" 2>&1
+Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu\gpu
+
+09/25/2026  12:07 AM    <DIR>          .
+09/24/2026  11:40 PM    <DIR>          ..
+09/25/2026  12:07 AM               744 loop_summary.json
+09/24/2026  11:40 PM    <DIR>          wins
+               1 File(s)            744 bytes
+               3 Dir(s)  44,297,560,064 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 3092-5579
+
+ Directory of C:\Users\benja\blurt2gpu\gpu\wins
+
+09/24/2026  11:55 PM    <DIR>          .
+09/25/2026  12:07 AM    <DIR>          ..
+09/24/2026  11:55 PM            45,051 wins.jsonl
+               1 File(s)         45,051 bytes
+               2 Dir(s)  44,297,560,064 bytes free
+[0m
+[0m$ [0mls artifacts/claude-blurt2-20260925/ 2>&1; ls artifacts/claude-blurt2-20260925/gpu 2>&1; tail -n 5 artifacts/fable-predictions-ledger.md 2>&1
+teacher
+teacher-glm53
+ls: artifacts/claude-blurt2-20260925/gpu: No such file or directory
+- H2 OUTCOME (2026-09-25, rsn-355 plain shared-step fresh panel296 v2 total WITHOUT three-step, BensPC): s1 final checked 223 (raw 217) vs bar >=220 (296 s1: 225): PASS; s2 final checked 197 (raw 205) vs bar >=212 (296 s2: 217): FAIL (comparing 0/30, counting 8/30 checked)
+- H3 OUTCOME (2026-09-25, rsn-355 invented answers checked, each panel both seeds, BensPC): 296-panel 0/0, 294-panel 0/0 (raw invented 6 s1 + 5 s2 on 296, all fact-checked to IDK), bar <=2: H3 PASS all
+- H4 OUTCOME (2026-09-25, rsn-355 transfer panel294 v3 three-step + dev value3 REPORT ONLY, BensPC): panel294 three-step 0/15 copy+final both seeds; dev value3 0/100 copy+final both seeds (all IDK). Registered verdict rsn-355: FAIL (H1 both + H2 s2 fail; needed H1+H2+H3 both seeds). Proved-wrong clause triggers for s1 only (H1 0/30 + H2 pass), not s2. BensPC GPU $0, 43.9/43.8 min, seals OK, weights kept on BensPC only.
+- P353.0 (2026-09-25, builder rsn-353 loop-no-step-embedding; 3 rentals created + 1 refused; est spend ~$1.00 of $4 cap) NO RESULT: seed1 trained 37.0 min then instance died mid-seed2 and host would not restart; seed1/seed2 checkpoints and logs lost with the instance; 4th rental refused (account credit 0, balance -$0.04). Observed-before-loss (unsealed, seed1): last copy action_ce 0.1327 at step 5999 (L1 bar <= 0.05). No evals run, no L1-L4 lines appended, nothing pushed.
+- P353-GUARD OUTCOME (2026-09-25, spending guard rsn-353-train) GUARD-OK: exit file runs/rsn-353-train/rsn-353-train.exit present on origin/builder-outbox and no live rsn-353* instance for 5+ min; tracked {"total": 1.0323, "n": 3, "det": {"52515551": {"dph": 0.5388888888888889, "mins": 6.32, "dollars": 0.0568, "live": false, "label": "rsn-353"}, "52516357": {"dph": 0.5388888888888889, "mins": 6.29, "dollars": 0.0565, "live": false, "label": "rsn-353"}, "52517332": {"dph": 0.5266666666666666, "mins": 104.71, "dollars": 0.9191, "live": false, "label": "rsn-353"}}} combined spend $1.0323 (trip $3.80 never reached); nothing destroyed by guard.
+[0m
+[0m$ [0mls -la artifacts/claude-blurt2-20260925/ artifacts/claude-blurt2-20260925/teacher/ 2>&1 | head -n 30; mkdir -p artifacts/claude-blurt2-20260925/gpu && scp benspc:blurt2gpu/gpu/loop_summary.json artifacts/claude-blurt2-20260925/gpu/loop_summary.json && scp benspc:blurt2gpu/gpu/wins/wins.jsonl artifacts/claude-blurt2-20260925/gpu/wins.jsonl && scp benspc:blurt2gpu/log_loop.txt artifacts/claude-blurt2-20260925/gpu/log_loop.txt && ls -la artifacts/claude-blurt2-20260925/gpu/
+artifacts/claude-blurt2-20260925/:
+total 0
+drwxr-xr-x    4 ben-hannan  staff    128 Sep 24 23:49 .
+drwxr-xr-x@ 495 ben-hannan  staff  15840 Sep 24 23:33 ..
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 24 23:23 teacher
+drwxr-xr-x    5 ben-hannan  staff    160 Sep 24 23:49 teacher-glm53
+
+artifacts/claude-blurt2-20260925/teacher/:
+total 176
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 24 23:23 .
+drwxr-xr-x  4 ben-hannan  staff    128 Sep 24 23:49 ..
+-rw-r--r--  1 ben-hannan  staff    290 Sep 24 23:23 agreement.json
+-rw-r--r--  1 ben-hannan  staff  78436 Sep 24 23:23 labels_teacher.jsonl
+-rw-r--r--  1 ben-hannan  staff   1407 Sep 24 23:23 log.txt
+total 104
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 00:09 .
+drwxr-xr-x  5 ben-hannan  staff    160 Sep 25 00:09 ..
+-rw-------  1 ben-hannan  staff   1539 Sep 25 00:09 log_loop.txt
+-rw-------  1 ben-hannan  staff    744 Sep 25 00:09 loop_summary.json
+-rw-------  1 ben-hannan  staff  45051 Sep 25 00:09 wins.jsonl
+[0m
+[0m$ [0mcat artifacts/claude-blurt2-20260925/gpu/loop_summary.json; echo; wc -l artifacts/claude-blurt2-20260925/gpu/wins.jsonl artifacts/claude-blurt2-20260925/gpu/log_loop.txt; head -c 300 artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+{
+ "dev_missed": 58,
+ "dev_lucky_by_temp": {
+  "1.0": 39,
+  "1.5": 44
+ },
+ "temp_chosen": 1.5,
+ "n_train": 400,
+ "n_test": 127,
+ "test_dropped_overlap": 23,
+ "temp": 1.5,
+ "S0_test_before": 6,
+ "train_reasoner_right": 21,
+ "train_missed": 379,
+ "train_missed_then_lucky": 184,
+ "lucky_blurts_on_misses": 338,
+ "blurts_on_misses": 11370,
+ "examples_W": 205,
+ "examples_C": 205,
+ "S_W_seed0_test_after": 13,
+ "S_W_seed0_train_missed_after": 39,
+ "S_W_seed1_test_after": 11,
+ "S_W_seed1_train_missed_after": 30,
+ "S_W_test_after_mean": 12.0,
+ "S_C_seed0_test_after": 5,
+ "S_C_seed0_train_missed_after": 2,
+ "S_C_seed1_test_after": 6,
+ "S_C_seed1_train_missed_after": 4,
+ "S_C_test_after_mean": 5.5,
+ "minutes": 27.7
+}
+     184 artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+      21 artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+     205 total
+{"problem": "Use each of [1, 2, 2, 6] once with + - * / and brackets to make 24", "rows_used": [], "steps": ["2*2*(6/1)"], "answer": "2*2*(6/1)", "checked_by": "exact-checker", "turn_id": "pz-s2-001", "source": "creative-blurt", "tries": 14}
+{"problem": "Use each of [6, 8, 9, 11] once with + - * /
+[0m
+[0m← [0mWrite artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+Wrote file successfully.
+[0m
+[0m$ [0mtail -c 400 artifacts/fable-predictions-ledger.md | cut -c1-400; echo; wc -l artifacts/fable-predictions-ledger.md
+": {"dph": 0.5388888888888889, "mins": 6.32, "dollars": 0.0568, "live": false, "label": "rsn-353"}, "52516357": {"dph": 0.5388888888888889, "mins": 6.29, "dollars": 0.0565, "live": false, "label": "rsn-353"}, "52517332": {"dph": 0.5266666666666666, "mins": 104.71, "dollars": 0.9191, "live": false, "label": "rsn-353"}}} combined spend $1.0323 (trip $3.80 never reached); nothing destroyed by guard.
+
+    2963 artifacts/fable-predictions-ledger.md
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'EOF'
+- blurt2-loop GPU OUTCOME (2026-09-25, creative learning loop, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 44 vs 39); test 127 (23 dropped); S0 6; W 13/11 (mean 12.0); C 5/6 (mean 5.5); wins 184/379 (luck 338/11370). L1 +6.0 vs +8 FAIL; L2 +6.5 vs +5 and every W beats every C PASS. Registered verdict FAIL. GPU $0, 27.7 min, no weights saved.
+EOF
+tail -n 2 artifacts/fable-predictions-ledger.md | cut -c1-200
+- P353-GUARD OUTCOME (2026-09-25, spending guard rsn-353-train) GUARD-OK: exit file runs/rsn-353-train/rsn-353-train.exit present on origin/builder-outbox and no live rsn-353* instance for 5+ min; tra
+- blurt2-loop GPU OUTCOME (2026-09-25, creative learning loop, BensPC RTX 5070 Ti, MiniCPM5-1B snapshot 87179e5c, unmodified origin/main code): temp 1.5 (DEV lucky 44 vs 39); test 127 (23 dropped); S0
+[0m
+[0m$ [0mgit status --short artifacts/claude-blurt2-20260925/gpu artifacts/claude-blurt2-20260925/RESULTS-gpu.md artifacts/fable-predictions-ledger.md; echo ---; git diff --stat artifacts/fable-predictions-ledger.md
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 47 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+[0m
+[0m$ [0mgit status --short --untracked-files=all artifacts/claude-blurt2-20260925/ 2>&1 | head -n 20; echo ---; git check-ignore artifacts/claude-blurt2-20260925/gpu/loop_summary.json artifacts/claude-blurt2-20260925/RESULTS-gpu.md 2>&1; echo IGNORE_EXIT:$?
+---
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+IGNORE_EXIT:0
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-blurt2-20260925/gpu/loop_summary.json artifacts/claude-blurt2-20260925/RESULTS-gpu.md artifacts/claude-blurt2-20260925/gpu/wins.jsonl artifacts/claude-blurt2-20260925/gpu/log_loop.txt 2>&1; echo ---; git check-ignore -v artifacts/claude-blurt2-20260925/teacher/agreement.json 2>&1; echo ---; git ls-files artifacts/claude-blurt2-20260925/ 2>&1 | head
+.gitignore:5:artifacts/	artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+.gitignore:5:artifacts/	artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+.gitignore:5:artifacts/	artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+.gitignore:5:artifacts/	artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+---
+---
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+[0m
+[0m$ [0mgit show origin/main:handoff/queue/lis-302-gpu.md 2>&1 | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+[0m
+[0m# [0mTodos
+[✓] Read PASSMARKS + blurt2 docstring from origin/main
+[✓] Locate BensPC benchmark venv + MiniCPM5-1B BASE
+[✓] Copy git archive to BensPC and extract
+[✓] Run pzcheck make + byte-compare (content identical, CRLF-only diff)
+[✓] Run blurt2 loop on GPU with log, poll to completion
+[✓] Copy results back, write RESULTS-gpu.md + ledger, push
+[0m
