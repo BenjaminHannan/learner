@@ -23,8 +23,11 @@ notebook on 1 night per arm (slp364d-07, a file write), and that night was rejec
 | 30 | false-confirmation | yes/no questions about a word check only the first hop | the gate asks no yes/no questions |
 | 37 | made-up-answer | people with no facts of their own are answered by walking the route backwards | the gate's lures start from people who have facts |
 
-v4's L2 and U rules caught the case they were built from (dev) and 1 of 4 new made-up-answer faults (27). The common
-thread in the misses: the gate asks every question in one form, starting from one kind of person. Users do not.
+Correction after the blind recount: the new L2 and U rules fired on NO bench night (no "L2:" or "U:" reason on any
+row; reasons are cut to 8 on 03, 17 and 24, but v1 caught those too). The one made-up-answer catch (27) came from v1's
+own L rule. v4's +5 over v1 came from the older v2/v3 rules (R on 13; C and P on 15 and 38; P on 21 and 35). So v4's
+one change caught only the two dev cases it was built from. The common thread in the misses: the gate asks every
+question in one form, starting from one kind of person. Users do not.
 
 ## Suggested next single change (364e, not started)
 Ask each existing probe in the other forms the loop accepts ("Who's", "Tell me", yes/no with the right and the
