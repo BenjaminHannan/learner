@@ -28,3 +28,11 @@ answered 10 of the 20 grandmother questions (K11-K20) that FORCED could only ans
 Sleep no longer has to be forced once a day: the assistant now sleeps by itself when it is idle and has enough new
 material, never in the middle of a reply, and it can learn during the day. It does not yet let a new message cut
 a sleep short.
+
+## Added 03:20 UTC after the 336b rental report
+The 10 extra right answers came from real learning: the word file shows the word installed at the idle sleep after
+turn 60 (blind recount), and both arms install it (FORCED at the end of the day). But this world, like 360/361/366,
+asks the bare word question 20 times, which is what queues the sleeper's learning episodes. 336b showed that in
+ordinary chat that never happens 8 times, so on ordinary chat today's sleeper attempts no learning at all (0/360
+sleeps). 367 shows WHEN sleep runs, not that today's sleeper has anything to learn from normal conversation; that
+is 363's job (practice built from taught facts).
