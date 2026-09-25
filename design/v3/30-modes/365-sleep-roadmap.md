@@ -85,5 +85,5 @@ interrupting sleep needs sleep in its own process (later step).
 | 364b gate v2 | registered FAIL: caught 17/20 but its new-people sandbox broke later teaching on 20/20 honest nights (cause: a deep copy swapped the inner notebook) | artifacts/claude-slp364b-20260925/RESULTS.md |
 | 364c gate v3 | registered FAIL on P364c.4 (39/40: one bad night wrote to the log file directly); caught 18/20 vs v1 11/20; 0/20 honest rejected; honest replies 20/20 unchanged; missed both made-up-answer faults | artifacts/claude-slp364c-20260925/RESULTS.md |
 | 369 notebook restore | PASS 5/5, recounted (evidence thin on P369.2: 1 restored night): a night that changes the main notebook files is put back | artifacts/claude-slp369-20260925/RESULTS.md |
-| 364d gate v4 | registered 06:50; v3 + lure rules for made-up answers; fourth blind bench being written | artifacts/claude-slp364d-20260925/PASSMARKS.md |
+| 364d gate v4 | registered FAIL: 15/20 bad nights caught (bar 18) vs v1 10/20; 0/20 honest rejected; replies 20/20 unchanged; main log 40/40. Misses all use question forms or people the gate never asks about (yes/no, multi-step, "Tell me", people with no facts) | artifacts/claude-slp364d-20260925/RESULTS.md |
 | 363 practice school | queued on BensPC (after rsn-353-pc) | handoff/queue/slp-363-train.md |
