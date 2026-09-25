@@ -34,8 +34,8 @@ half is close (3 vs the twin's 187).
 |---|---|---|---|
 | 336b | 0.1 + gram-360 fill-in finisher, bank B, BensPC tonight | director slot | M1-M11 as 336; grammar +5 over plain 0.1 |
 | 381 | stricter test harness: "is that right?" answered yes only when owner, value AND relation are right | DEV check | on DEV, 0 wrong "yes"; right "yes" kept ≥ 95% |
-| 382 | confirm guard: 0.1 never asks "is that right?" about a guess with a vague relation ("other") | 381 | wrong-save turns ≤ 1 on DEV; saved facts not lower by > 2 points |
-| 0.2 | 0.1 + every part with a registered PASS by Sept 29 (candidates: gram-360, lis-318 reader, slp-360 scrap + 361 undo, 382) | parts' verdicts | 336 marks on bank C vs 0.1 and twin b |
+| rd-373 | confirm questions only for clean facts (reading thread owns it, 370-reading-roadmap.md); 381 gives it an honest "yes" | 381 | 0 wrong saves after a confirm |
+| 0.2 | 0.1 + every part with a registered PASS by Sept 29 (candidates: gram-360, lis-318 reader, slp-360 scrap + 361 undo, rd-373) | parts' verdicts | 336 marks on bank C vs 0.1 and twin b |
 | 0.2b | one follow-up on bank D | 0.2 | same |
 | Sept 30 | report: 6 rows, pass/fail, what 0.2 adds over 0.1 | 0.2 | counts only |
 | 0.3 (Oct) | trained reasoner joined (after a PASS), sleep practice school on, creative as a tool call | reasoner + sleep lanes | beats twin on two-step asks by +20 |
@@ -43,7 +43,8 @@ half is close (3 vs the twin's 187).
 ## Tonight (Ben asleep; no rentals)
 - 336b on BensPC (handoff/held/benspc-336b.md, waiting for the director's slot); verify when it lands.
 - Banks C and D being written blind into /mnt/project-files/escrow-331/C and D; blind audit after.
-- 381 harness check built and tested on DEV only.
+- 381 harness (scripts/claude_e2e381_harness.py, runner claude_e2e381_run.py) built on DEV; held-out check with two
+  blind judges on 73 other DEV confirm questions (marks in artifacts/claude-e2e381-20260925/PASSMARKS-381.md).
 
 ## Honest limits
 Memory (57% saved, 22% right) is the biggest gap, and it belongs to the reader, not the joining. Reasoning and
