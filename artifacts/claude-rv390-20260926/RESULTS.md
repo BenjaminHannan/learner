@@ -83,3 +83,13 @@ untested.
 - So the next single change is RESTART + GUESS against RESTART: guesses written during each fresh 48-round start. It
   runs on a new day seed with the same hard-puzzle marks, on the retrained nets (rsn-358i2) if they exist.
 - Going back is then built on top of that, with the trigger rv-391's measurement picks.
+
+## CAVEAT 2 (added 19:04 UTC by date -u): how much the code parts solve alone
+GUESS has hand-written parts. On grids, the guess candidates skip symbols already in the cell's row or column. An
+unregistered control on PRACTICE grids only used an untrained loop net running this same GUESS worker for 480 rounds
+(artifacts/claude-rv392-20260926/dev-untrained/). It solved 28 and 20 of 300 7x7 puzzles and 63 and 49 of 300 6x6
+puzzles (init seeds 0 and 1), none within 48 rounds. KEEP has no such code part, so G (GUESS against KEEP) compares
+"net plus the code's candidate filter" with "net alone". Part of G's margin (+14 to +33) may come from the code, not
+the net. That is suggested; the puzzles differ. The rerun on rsn-358i2 adds an untrained-net row on the same puzzles
+(artifacts/claude-rv392-20260926/ADDENDUM-1-untrained-net-control.md). Until it lands, G's PASS says only that
+writing guesses with this code helps, not that the net learned to guess.
