@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""rt-02h prototype, step 2 (Plain-English puzzles thread, 2026-09-26; dev only, not registered): a small yes/no head on
+"""rt-02h step 2 (Plain-English puzzles thread, 2026-09-26; marks artifacts/claude-rt02h-20260926/PASSMARKS-rt02h.md): a small yes/no head on
 the plain 1B's inner state decides "is this message asking for a number puzzle?"; the 1B then copies out the numbers
 and target (rt-02g's V1 forced reading, 156 of 159 exact on practice).
 
@@ -11,7 +11,8 @@ most 1% of negatives. rt-02d's dev set and the blind agent's practice set are us
 Never reads any TEST panel.
 
   python -B scripts/claude_rt02h_probe.py feats --model BASE --drafts D.jsonl --out FEATS.pt
-  python -B scripts/claude_rt02h_probe.py fit --feats FEATS.pt --v1 artifacts/claude-rt02g-20260926/dev/margins_V1.jsonl
+  python -B scripts/claude_rt02h_probe.py fit --feats FEATS.pt --v1 artifacts/claude-rt02g-20260926/dev/margins_V1.jsonl \
+      --head artifacts/claude-rt02h-20260926/head.pt
 """
 from __future__ import annotations
 
@@ -29,14 +30,40 @@ ASK = ("Message: {text}\n\nQuestion: is this person asking you to solve a number
 LAYERS = [6, 9, 12, 15, 18, 21, 24]
 
 
+def features(one_b, text: str, layers=LAYERS):
+    """Hidden state of the last prompt token of ASK at each layer (every LoRA scale 0 during the call)."""
+    import claude_sleep02c as SL
+    tok, model, torch = one_b.tok, one_b.model, one_b.torch
+    prompt = tok.apply_chat_template([{"role": "user", "content": ASK.format(text=text)}], tokenize=False,
+                                     add_generation_prompt=True, enable_thinking=False)
+    ids = tok(prompt, return_tensors="pt").to(one_b.dev)
+    mods = SL.lora_mods(model)
+    saved = [x.scale for x in mods]
+    for x in mods:
+        x.scale = 0.0
+    try:
+        with torch.no_grad():
+            hs = model(**ids, output_hidden_states=True).hidden_states
+    finally:
+        for x, sc in zip(mods, saved):
+            x.scale = sc
+    return torch.stack([hs[l][0, -1].float().cpu() for l in layers])
+
+
+def load_head(path):
+    import torch
+    return torch.load(path)
+
+
+def head_score(head, feat_all_layers) -> float:
+    x = feat_all_layers[head["layer_index"]]
+    return float(((x - head["mu"]) / head["sd"]) @ head["w"] + head["b"])
+
+
 def feats(a) -> None:
     import torch
     import claude_rt02g as G
-    import claude_sleep02c as SL
     one_b = G.load_one_b(a.model)
-    tok, model = one_b.tok, one_b.model
-    for x in SL.lora_mods(model):
-        x.scale = 0.0
     items = []                                           # (source, group, label or None, text, extra)
     for r in (json.loads(x) for x in Path(a.drafts).read_text().splitlines()):
         if r["keep"]:
@@ -46,12 +73,7 @@ def feats(a) -> None:
             items.append((src, k, int(want is not None), text, want))
     X = []
     for i, (_, _, _, text, _) in enumerate(items):
-        prompt = tok.apply_chat_template([{"role": "user", "content": ASK.format(text=text)}], tokenize=False,
-                                         add_generation_prompt=True, enable_thinking=False)
-        ids = tok(prompt, return_tensors="pt").to(one_b.dev)
-        with torch.no_grad():
-            hs = model(**ids, output_hidden_states=True).hidden_states
-        X.append(torch.stack([hs[l][0, -1].float().cpu() for l in LAYERS]))
+        X.append(features(one_b, text))
         if i % 50 == 0:
             print(i, len(items), flush=True)
     torch.save({"X": torch.stack(X), "meta": [(s, g, y, w) for s, g, y, _, w in items],
@@ -73,7 +95,9 @@ def _fit(X, y, l2, steps=300):
         loss.backward()
         return loss
     opt.step(closure)
-    return lambda Xn: ((Xn - mu) / sd) @ w.detach() + b.detach()
+    h = lambda Xn: ((Xn - mu) / sd) @ w.detach() + b.detach()
+    h.params = {"mu": mu, "sd": sd, "w": w.detach().clone(), "b": float(b.detach())}
+    return h
 
 
 def fit(a) -> None:
@@ -103,6 +127,9 @@ def fit(a) -> None:
                 best = (rec, li, l2, cut)
     rec, li, l2, cut = best
     h = _fit(X[tr][:, li], y, l2)
+    if a.head:
+        torch.save({**h.params, "layer": LAYERS[li], "layer_index": li, "l2": l2, "cut": cut, "cv_recall": rec,
+                    "n_drafts": len(tr), "n_pos": int(y.sum())}, a.head)
     se = h(X[ev][:, li])
     v1 = {r["k"]: r for r in (json.loads(x) for x in Path(a.v1).read_text().splitlines())}
     out = {}
@@ -125,6 +152,7 @@ def main() -> None:
     ap.add_argument("--out", default="")
     ap.add_argument("--feats", default="")
     ap.add_argument("--v1", default="")
+    ap.add_argument("--head", default="")
     a = ap.parse_args()
     {"feats": feats, "fit": fit}[a.cmd](a)
 
