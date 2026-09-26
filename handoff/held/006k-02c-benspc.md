@@ -1,0 +1,22 @@
+COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
+GPU: yes (BensPC RTX 5070 Ti 16 GB; one job at a time). BACKUP of rent-02c: the Director releases this ONLY if rent-02c stopped with LOW-CREDIT (or never launched) and nothing of it ran. $0, no rental.
+TIME CAP: stop by 10:50 UTC 2026-09-26 whatever the step. If reached: stop by exact PID, copy back what exists, report "partial".
+
+YOUR TASK: 02c-benspc, THE REGISTERED RUN of Premonition 0.2c (marks: artifacts/claude-e2e02c-20260926/PASSMARKS-02c.md, read it with every addendum), on BensPC instead of a rental. Same sealed code, same commands, same order as origin/main:handoff/held/rent-02c.md; only the machine, the paths and step 4b's timing differ. TEST-ONLY, never open, print or quote: artifacts/claude-e2e331-bankD-20260925 and artifacts/claude-panel02c-20260926 (only runners and scorers read them). Run ONCE.
+DUPLICATE: if artifacts/claude-e2e02c-20260926/run or artifacts/claude-e2e02c-20260926/RESULTS-rent.md exists on origin/builder-outbox, or a rent-02c rental is running, stop with DUPLICATE.
+
+SETUP (as origin/main:handoff/held/benspc-336b.md did; same fixes as 006e-lis-319c-bar: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths):
+- Tree: design/v3/30-modes/330-rent-kit.md section A (git archive origin/builder-outbox, then origin/main on top, self122_head.pt copied in, sha256 5ca02173...), copied to BensPC as a NEW folder C:/Users/benja/lis301/work/e2e02c/tree. W = C:/Users/benja/lis301/work/e2e02c.
+- Python: C:/Users/benja/lis300/venv/Scripts/python.exe. Env for every command: PYTHONUTF8=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 HF_HUB_OFFLINE=1.
+- BASE = C:/Users/benja/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc.
+- READER (lis-301, for G) = C:/Users/benja/lis301/work/run/merged (model.safetensors sha256 b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890).
+- READER319 (lis-319, for X) = C:/Users/benja/lis319/work/run/merged (model.safetensors sha256 e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76). Check both hashes first; a mismatch: stop.
+- MiniLM (the self122 router's model): if C:/Users/benja/.cache/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2 is missing, copy it from the Mac exactly as benspc-336b's setup says (copy, never move, delete nothing). Check: `python -B -c "import sys; sys.path[:0]=['scripts','scripts/winshim']; import fable_self122 as S; print(S.route122('what is your name?'))"` from the tree root prints a route.
+- Before step 5, check free VRAM: nothing else of ours may be on the GPU.
+
+STEPS: exactly rent-02c's steps 1, 2, 3 (DEV GATE), 4 (sleep), 4a, 5 (bank D X/G/T and score), 6 (panels), 7a, with these substitutions only: OUT = artifacts/claude-e2e02c-20260926/run in the tree; /tmp/r44 -> W/r44; DOUT as in rent-02c; BASE/READER/READER319 as above.
+- Step 4b (Benchmarks' GSM8K/MMLU lanes) does NOT run in the background here (16 GB): run the two lanes one after another AFTER step 6, only if it is before 09:30 UTC, and stop any still running at 10:35 UTC by exact PID (report "partial"; a lane not run is "not measured"). Its fetch needs the network: run that one command without HF_HUB_OFFLINE; any error or hash mismatch: skip 4b, note it.
+- Each registered process is launched ONCE; check the process list before any retry.
+7. Copy back to the Mac, check sizes and sha256. Never push adapter02c.pt (report its size and sha256 only); adapter02c.json may be pushed.
+8. RESULTS-benspc.md in artifacts/claude-e2e02c-20260926/, the same contents rent-02c step 8 lists (counts only; never open judge_*, chat_pair_*, chat_turns_*, creative_judge*, grammar_* files, the bank or the panels; quote no reply), plus: machine BensPC, wall time per step, VRAM peak if logged.
+PUSH: artifacts/claude-bm391-20260926/run02c artifacts/claude-e2e02c-dev-20260926 artifacts/claude-e2e02c-20260926/RESULTS-benspc.md artifacts/claude-e2e02c-20260926/score artifacts/claude-e2e02c-20260926/run (exclude run/sleep/adapter02c.pt and the dev adapter02c.pt)
