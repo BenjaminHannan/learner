@@ -1,6 +1,6 @@
 COMMON RULES (the month-end thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply).
 GPU: yes (BensPC RTX 5070 Ti; one job at a time). Queue ONLY after 006k-02c-benspc has finished (the Director releases it). $0, no rental.
-DISK: 1 (slim tree streamed to BensPC; stops with LOW-DISK under 1 GB free)
+DISK: 1
 TIME CAP: 5 hours wall. If reached: stop by exact PID, copy back what exists, report "partial".
 
 YOUR TASK: 382b-benspc, the REST of the registered run 382b/383 (marks: artifacts/claude-e2e382-20260925/PASSMARKS-382.md, PASSMARKS-382b.md, PASSMARKS-383.md; logistics: artifacts/claude-e2e382-20260925/ADDENDUM-383-benspc.md). rent-382b (origin/main:handoff/queue/rent-382b.md) stopped INCOMPLETE because the reader could not be uploaded to the rental; it finished only its T arms (origin/builder-outbox:artifacts/claude-e2e382-20260925/run/arm_T.jsonl, chat_T.jsonl, creative_T.jsonl; RESULTS-rent.md). This task runs every step rent-382b did not, on BensPC, with the SAME sealed code (artifacts/claude-e2e382-20260925/SEAL-code.sha256.txt) and commands. The three T files are reused as they are (unread); T is never rerun. TEST-ONLY, never open, print or quote: artifacts/claude-e2e331-bankC-20260925, artifacts/claude-panel382-20260925 (only runners and scorers read them).
