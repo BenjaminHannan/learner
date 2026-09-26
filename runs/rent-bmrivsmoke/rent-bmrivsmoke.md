@@ -1,0 +1,29 @@
+COMMON RULES (the Benchmarks thread, Claude, wrote this task on 2026-09-26 at 14:55 UTC). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/<branch>:<path>` (your worktree is NOT up to date). Follow ALL of origin/main:design/v3/30-modes/330-rent-kit.md (stream only the listed paths, never stage a tree on the Mac, reliability >= 0.98, the 6-min start rule, the 10-min no-log watchdog, copy back BEFORE destroy, destroy and confirm, ledger line), plus: additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: every result line asked for, integer counts, every deviation. ONLY the Benchmarks thread or the Director may stop or destroy claude-benchmarks-bmrivsmoke. This job does NOT need READER, self122_head.pt, MiniLM or the route122 check.
+GPU: rent
+DISK: 1
+BUDGET: $0.30 for this whole task, re-rents included, from the Benchmarks thread's $2 (Ben, 12:59 UTC 09-26; $1.50 already on rent-bm398r; the Director keeps the ledger and may lower this). Label: claude-benchmarks-bmrivsmoke. The cheapest RTX 5090 or 4090 that passes the kit's filter.
+TIME CAP: 40 min on the rental in total. At it, stop every command still running (kill by exact PID), copy back what exists (rows are written as they finish), destroy, and report which commands finished.
+CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Under $0.30: rent nothing, stop with CREDIT-STOP (vast auto-refills; the gate only guards this cap). Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+MONEY RULE: keep the kit's running total. At $0.27 spent, stop every command still running (kill by exact PID), copy back what exists, destroy, stop with BUDGET-STOP and list which commands finished.
+DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox has artifacts/claude-bmriv-smoke-20260926/run or artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md, or `vastai show instances` shows a live instance labelled claude-benchmarks-bmrivsmoke.
+
+YOUR TASK: a smoke run, not a registered experiment. Four rival arms answer Sleep research's 30-item SMOKE panel (seed 36000; NOT a test panel) so Sleep research can check its scorer reads real free-form rival replies before the rsn-358b3 gate is sealed. Read origin/main:artifacts/claude-bmriv-smoke-20260926/README.md. The Benchmarks thread wrote all code: run it, never edit it. If something breaks, copy back what exists, destroy, report the exact error and full traceback. Nothing is trained. Print counts only; do not quote replies in the report.
+
+SETUP (the ONLY downloads and uploads allowed)
+- Stream to the rental (kit section A; no tree on the Mac):
+  `git archive origin/main scripts/claude_bm390.py scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl artifacts/claude-bmriv-smoke-20260926 | ssh <target> 'mkdir -p ~/tree && tar -x -C ~/tree'`
+  (panel.jsonl only; answers.jsonl is not sent.)
+- pip: the kit's line. Install nothing else. Record `python -c "import torch, transformers; print(torch.__version__, transformers.__version__)"` and `python --version`.
+- `unset HF_HOME HF_HUB_CACHE`, then with HF_HUB_OFFLINE=0 for this one command: `python -c "from huggingface_hub import snapshot_download as s; print(s('openbmb/MiniCPM5-1B', revision='87179e5c1f455ef22e6223592d2d61351b525bfc')); print(s('Qwen/Qwen3.5-2B', revision='15852e8c16360a2fea060d615a32b45270f8a8fc')); print(s('LiquidAI/LFM2.5-1.2B-Instruct', revision='0f604ada3f766f9f257460c4c9f0b5d6f69d431b'))"`. BASE, Q2DIR, L12DIR = the three printed paths in that order (Ben approved both rivals at 02:12 UTC 2026-09-25).
+- Then `export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1` for everything else. Run every command from ~/tree under nohup/setsid with its own log file. PANEL = artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl, OUT = artifacts/claude-bmriv-smoke-20260926/run (a NEW folder in the tree).
+
+STEPS
+1. `sha256sum PANEL` must be da7202db858cee9537acbb4d40d2316921673e00cf27a19a60ef09c1973012e7, and `python -B scripts/claude_bmriv_rivals.py selftest --tok BASE` must end "BMRIV-SELFTEST PASS 12/12". Else destroy, stop with SEAL-MISMATCH, report the failing lines.
+2. Start these four lanes together, each a fresh process with its own log (R = `python -B scripts/claude_bmriv_rivals.py run --panel PANEL --out OUT`):
+   Lane 1 (in order): `R --model BASE --name plain1b`, then `R --model Q2DIR --name qwen2b`, then `R --model L12DIR --name lfm12b`.
+   Lanes 2-4: `R --model Q2DIR --name qwen2b_think_s0 --think on --max-new 4096 --shard 0/3`, the same with `_s1 ... --shard 1/3` and `_s2 ... --shard 2/3`.
+   Each run ends with one JSON line (counts only). Report every line verbatim, with exit code and start/end time (UTC).
+3. When lanes 2-4 have all exited 0: `python -B scripts/claude_bmriv_rivals.py merge --panel PANEL --name qwen2b_think --parts qwen2b_think_s0,qwen2b_think_s1,qwen2b_think_s2 --out OUT`. Report its JSON line verbatim. If the time cap stopped a lane, skip the merge and say so; the shard files keep what finished.
+4. Copy back OUT (all files) to the Mac, check sizes and sha256 match the box, THEN destroy, confirm with vastai show instances, append the ledger line (cat >>).
+5. RESULTS-rent.md (a NEW file) in artifacts/claude-bmriv-smoke-20260926/, counts only: credit number; the panel hash and selftest result; torch, transformers and python versions; GPU; the three model paths; every JSON line from steps 2-3 with exit codes and times; the row count and sha256 of every OUT file; peak GPU memory seen; instance id(s), hours, dph, dollars; any traceback in full.
+PUSH (builder-outbox): artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md artifacts/claude-bmriv-smoke-20260926/run artifacts/fable-predictions-ledger.md

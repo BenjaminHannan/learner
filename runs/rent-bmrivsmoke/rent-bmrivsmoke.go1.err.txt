@@ -1,0 +1,889 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo FETCH_EXIT:$?; git rev-parse origin/main origin/builder-outbox --short 2>&1 | head -20
+error: cannot lock ref 'refs/remotes/origin/builder-outbox': is at daecec3db2e4a1782cc00082ba378138b043c18b but expected b2939358a0ed41cbb65d190f4708b37458ce04b8
+FETCH_EXIT:1
+fatal: Needed a single revision
+a9b6c86be3aa4dcf5e690f4ccef4931bba15120d
+daecec3db2e4a1782cc00082ba378138b043c18b
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo MAIN_EXIT:$?; git rev-parse origin/main --short; git ls-remote origin builder-outbox | head -5; git rev-parse origin/builder-outbox --short 2>&1
+MAIN_EXIT:0
+fatal: Needed a single revision
+a9b6c86be3aa4dcf5e690f4ccef4931bba15120d
+daecec3db2e4a1782cc00082ba378138b043c18b	refs/heads/builder-outbox
+fatal: Needed a single revision
+daecec3db2e4a1782cc00082ba378138b043c18b
+[0m
+[0m$ [0mls .git/refs/remotes/origin/ 2>&1; ls .git/*.lock 2>&1; git for-each-ref | head -20
+ls: .git/refs/remotes/origin/: Not a directory
+zsh:1: no matches found: .git/*.lock
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/0b170d73b4615e42dbc9ae60b701b6f1/fb97efa10a026c7bc870f07c0a10bb4e/1789933050746/23972d82-53f2-409a-8dda-1810ce0caa28
+9fc14309f085bfef3565482d427704e442a88d64 tree	refs/codex/turn-diffs/checkpoints/108680adc85dbe1223fbf1ab19e51212/f093854ec0e791f5572c70c101d37af6/1789844660120/4c67a9e2-f338-4d36-bb4e-8c2732747ba2
+34e0a1bb70e9b6e7dc816f76eb623643ff770035 tree	refs/codex/turn-diffs/checkpoints/14e41bc3630c6646c78bfcc156fa20d3/d896af1888d5e7a5c2576efc04605387/1790385582169/b087cfce-954a-406d-97c6-02b205cc8926
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/19b08ace0a0e6b2dcfd7a6254f7bc0d6/d6d441712fa8bdf8f3e23f602aaffacc/1790016863065/d4aa7892-2f3c-4306-a446-974cf12d83a7
+3c74e97535e24b042a398b9c19edbad1b5f524f3 tree	refs/codex/turn-diffs/checkpoints/20275048e2f11945d3b5d127c7064b69/5a556b93f7bb988f53bea43cbe960210/1789842890780/3260802c-d6a3-4b2b-8ea0-ba48c3ebcdd7
+bc2533968078ada32f2de8815dcef804664e04df tree	refs/codex/turn-diffs/checkpoints/234b24fc3af49d81eb01142780ea4d1f/c1fa39c1c137e008aba80a7ffa67b9ce/1789825736940/a85a4b21-23a5-406d-989f-4086fa733f4a
+b8b8e4933917d8f69a49a9f77b6230e84ccad12a tree	refs/codex/turn-diffs/checkpoints/25b1c6e05fa40019c0f21d24785afabc/0322048e5bfa1ae6b78cfb6b78fff197/1789852582103/ec674ce3-66f9-4a26-bad7-5d432cdd4712
+e2e5ffa9ca8098453ca26db1ac4852e3cd1f02fc tree	refs/codex/turn-diffs/checkpoints/268db251fcb38130e5664ac9c461242a/8f53cb7720ef88516692b70ac0720582/1790429288439/5569511a-3a3d-4c10-b582-1ac8a0289d76
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/2967ac9f31b6fb4dc4ca34d047b0b509/9f395bf28c8e89d1a7bff4c9acedea3c/1789942529679/583c1e3c-fb04-4c58-905b-bb7571c37356
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/2e61174c7ba381644015da1501fcab1f/fba058088919ce586911d19afc152aef/1790014772961/f0cbfc56-b097-4e1b-bafa-96aa4ddeac76
+f01f2da708cd5fa911e1228785ab0a19dc53f17e tree	refs/codex/turn-diffs/checkpoints/31d5ebd871b8decc2d341837e9fab7c3/cca77e0b3a2db3a2d0531c490ccf315c/1789858087321/9bd0a722-27c4-4d86-81ca-3d74f8a1279e
+0bad2ded114faf3482056fb1755ed33ea666967d tree	refs/codex/turn-diffs/checkpoints/33f67dc63cd845b2a007f0bd279e4005/ad1d6d186b52df35204cc5ffb9e536ba/1789859238007/3e780f30-d6ec-4c16-afb3-31801dc396b5
+ee96966c2e460f2372286cc2adef8f69a34e2e4b tree	refs/codex/turn-diffs/checkpoints/36b3585c8471543fcad0afd3afb58108/267d4996886306cfc0d99bf692c720fc/1789864992740/0e63d841-f9c7-46b3-979b-978ed3f829e0
+c7859969761d41b53a86cebad4a6d2da035bd54d tree	refs/codex/turn-diffs/checkpoints/41ce4333f306fe0c04bb8ad02aba19d6/2f6cea26d490f22ce38c70525cdd3ea0/1789850784842/702cd508-1300-4575-936a-c12605e54f62
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/42b76a65a65eb68b0e08f7aab3125474/649bd7c589645df9594098972a0cffb0/1789929331052/c061d732-2ba9-4de8-a6e5-c7720545bf7d
+45640ee70ccf4ed1145cd746aeb4e429ef0f1707 tree	refs/codex/turn-diffs/checkpoints/42fbd382bf9c57db45c99d689afc707f/fc351623b6a1ad5e441ccfb17096ccdc/1789927781470/bffb05a7-6796-4273-9763-a0ba5cf74b13
+0bad2ded114faf3482056fb1755ed33ea666967d tree	refs/codex/turn-diffs/checkpoints/4863c6f0508211a4a00398f06d4d5acc/e8f91f7cccb33b0ef11f787e830f04d7/1789859691310/c6eaebc2-0ee5-43a7-bf6c-2a85422fb06c
+2952d93b7dd4d646b3b857180d30d79366f62be9 tree	refs/codex/turn-diffs/checkpoints/489ced9137c5195b71410140d25b6007/701677c0264f949883674fe40700b809/1789853531474/0d817688-2293-4c47-ad6e-5c22672dbc99
+836e66271c3861ceb3acadafb652eec1920a457e tree	refs/codex/turn-diffs/checkpoints/4e83159f53140910818f7fc94b8f5266/9ec9b4855e31ee666d7813b5bd9c714a/1789846004838/e88ed8d3-4930-4c44-b34d-c8b3e09890de
+b1c30280ab4adaff5487bc6f571c2a177c78e772 tree	refs/codex/turn-diffs/checkpoints/532df78991cb60332b514b61f1221671/a31d047136c08979d6c5a1b89b075797/1789906856394/ec08d3f8-de57-4b85-960c-b182648cb1dd
+[0m
+[0m$ [0mgit fetch origin builder-outbox:refs/remotes/origin/builder-outbox 2>&1 || git fetch origin +refs/heads/builder-outbox:refs/remotes/origin/builder-outbox 2>&1; echo EXIT:$?; git rev-parse origin/builder-outbox --short 2>&1; git rev-parse origin/main --short
+EXIT:0
+fatal: Needed a single revision
+daecec3db2e4a1782cc00082ba378138b043c18b
+fatal: Needed a single revision
+a9b6c86be3aa4dcf5e690f4ccef4931bba15120d
+[0m
+[0m$ [0mpython3 -c "import subprocess; print(subprocess.run(['git','show-ref'],capture_output=True,text=True).stdout[-2000:])"; cat .git/packed-refs 2>/dev/null | grep -E "builder-outbox|^# pack" | head; git status --short | head; git branch -a | head -20
+f01b9e266b938722f5141d973209fb1a25d5f refs/heads/claude/loop-net-generalization-analysis-729ee3
+f74835b33e18c0a4d2a0cee89cb95de820afa73f refs/heads/claude/loving-newton-d9904d
+4ea0021dce250cb859f712601cec960ab3f147a3 refs/heads/claude/model-architecture-review-0161ce
+f74835b33e18c0a4d2a0cee89cb95de820afa73f refs/heads/claude/model-issues-audit-abcf60
+f74835b33e18c0a4d2a0cee89cb95de820afa73f refs/heads/claude/premonition-design-review-792236
+f74835b33e18c0a4d2a0cee89cb95de820afa73f refs/heads/claude/premonition-evidence-audit-e92eb1
+edab57103506854948ddee8d6759b5242e284053 refs/heads/claude/pull-from-main-629dc4
+79fc1f56ba2cc789531f3a5e811890c7397d11d9 refs/heads/claude/restart-watcher-handoff-fd48d3
+f74835b33e18c0a4d2a0cee89cb95de820afa73f refs/heads/codex/research-astra-breakthrough
+8199e8adf17711923234fa19b9e552360c622fea refs/heads/codex/testing-experiment-44
+3a18860981c039cbf0664964aa93344fd25cda3a refs/heads/main
+73c975c9e25acf72417779ed1f6cddb35b714146 refs/heads/worktree-research
+a9b6c86be3aa4dcf5e690f4ccef4931bba15120d refs/remotes/origin/HEAD
+daecec3db2e4a1782cc00082ba378138b043c18b refs/remotes/origin/builder-outbox
+daecec3db2e4a1782cc00082ba378138b043c18b refs/remotes/origin/builder-outbox-tmp
+9cacb3d2828a51a1738a771539c8d2f2f82303e0 refs/remotes/origin/chat-flags
+e3fbf3c51de5c73734803d19738e90fa049be4eb refs/remotes/origin/claude/card-experiment-handoff-7c5b27
+4ea0021dce250cb859f712601cec960ab3f147a3 refs/remotes/origin/claude/model-architecture-review-0161ce
+86be159f4b6e50e5400788b0d9f080e6c4831b16 refs/remotes/origin/claude/project-thread-0181x3
+4006142d1a79bddba0e25f1bc3eeeb7640cae27a refs/remotes/origin/claude/project-thread-h8jbxv
+21e34fa08df03ae956c2fef8c6278205fede60a7 refs/remotes/origin/claude/project-thread-p68q5v
+8199e8adf17711923234fa19b9e552360c622fea refs/remotes/origin/codex/testing-experiment-44
+a9b6c86be3aa4dcf5e690f4ccef4931bba15120d refs/remotes/origin/main
+73c975c9e25acf72417779ed1f6cddb35b714146 refs/remotes/origin/worktree-research
+
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+* claude/card-experiment-handoff-7c5b27
++ claude/fact-saving-note-filtering-4ff1ff
++ claude/forgetting-plain-english-gap-9258f0
++ claude/locomo-length-penalty-408e2a
++ claude/loop-net-generalization-analysis-729ee3
+  claude/loving-newton-d9904d
+  claude/model-architecture-review-0161ce
+  claude/model-issues-audit-abcf60
+  claude/premonition-design-review-792236
+  claude/premonition-evidence-audit-e92eb1
++ claude/pull-from-main-629dc4
+  claude/restart-watcher-handoff-fd48d3
+  codex/research-astra-breakthrough
+  codex/testing-experiment-44
++ main
+  worktree-research
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/builder-outbox
+  remotes/origin/builder-outbox-tmp
+  remotes/origin/chat-flags
+[0m
+[0m$ [0mgit show refs/remotes/origin/main:design/v3/30-modes/330-rent-kit.md > /tmp/kit.md 2>&1; echo EXIT:$?; wc -l /tmp/kit.md; git show refs/remotes/origin/main:artifacts/claude-bmriv-smoke-20260926/README.md > /tmp/smoke_readme.md 2>&1; echo README_EXIT:$?; wc -l /tmp/smoke_readme.md; git ls-tree -r --name-only daecec3db2e4a1782cc00082ba378138b043c18b -- artifacts/claude-bmriv-smoke-20260926/ 2>&1 | head -30
+EXIT:0
+      58 /tmp/kit.md
+README_EXIT:0
+      26 /tmp/smoke_readme.md
+[0m
+[0m→ [0mRead /tmp/kit.md
+[0m→ [0mRead /tmp/smoke_readme.md
+[0m
+[0m$ [0mwhich vastai; vastai show user --raw 2>&1 | head -20
+/Users/ben-hannan/.local/bin/vastai
+{
+ "autobill_amount": 5.0,
+ "autobill_threshold": 5.0,
+ "balance": 0,
+ "balance_referrals": 0.0,
+ "balance_threshold": -0.01,
+ "balance_threshold_enabled": true,
+ "billaddress_city": null,
+ "billaddress_country": null,
+ "billaddress_line1": null,
+ "billaddress_line2": null,
+ "billaddress_taxinfo": null,
+ "billaddress_zip": null,
+ "billed_expected": 0.0,
+ "billed_verified": 0.0,
+ "billing_creditonly": 1,
+ "can_pay": true,
+ "created_at": 1779583287787,
+ "credit": 6.303551406269861,
+ "crisp_hmac": "07dd0e039b59ed7f642732f4d5bd7d84b66f5ed7f833ff0e47645cf18e8e79f4",
+[0m
+[0m$ [0mvastai show instances 2>&1 | head -60
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m─────────[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;33;48;2;0;0;0mloading[0m[97;48;2;0;0;0m  ·  [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m  [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m             [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 4070[0m[97;48;2;0;0;0m  ·  [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰───────────────────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m─────────────────────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m──────────────────────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m11 instances[0m[48;2;0;0;0m                                                         [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mclaude-everydaychat-ch403: 2  ·  claude-director-depot: 1  ·  [0m[48;2;0;0;0m      [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-fixsleep-dl4b: 1  ·  claude-monthend-02dr: 1  ·  claude-notes-rd378L:[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m1  ·  claude-plainpuzzles-rt02d: 1  ·  claude-wrongfact-sf401: 1  ·  [0m[48;2;0;0;0m       [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[97;48;2;0;0;0mrent-358i: 1  ·  rent-brd8: 1  ·  rent-lis-319f: 1[0m[48;2;0;0;0m                          [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰──────────────────────────────────────────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═══════════════════╤═══════════════╤═════════╤══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m      Label      [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            I[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼───────────────────┼───────────────┼─────────┼──────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-lis-319f    [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-director-…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 4070 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.1136[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mubuntu:22.04 [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-358i        [0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4852[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-notes-rd3…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4944[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-fixsleep-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mrent-brd8        [0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4944[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;33;48;5;234mloading[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-everydayc…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090  [0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4963[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-everydayc…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4963[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-wrongfact…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.4944[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mclaude-plainpuzz…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.5630[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mclaude-monthend-…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytor[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═══════════════════╧═══════════════╧═════════╧══════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mvastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), repr(x.get('label')), x.get('actual_status') or x.get('status_msg')) for x in d]" 2>&1 | head -20
+52751954 'rent-lis-319f' running
+52755827 'claude-director-depot' running
+52757832 'rent-358i' running
+52757951 'claude-notes-rd378L' running
+52758310 'claude-fixsleep-dl4b' running
+52761669 'rent-brd8' running
+52761986 'claude-everydaychat-ch403' loading
+52761993 'claude-everydaychat-ch403' running
+52762309 'claude-wrongfact-sf401' running
+52763126 'claude-plainpuzzles-rt02d' running
+52763487 'claude-monthend-02dr' running
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done, passing)
+[•] Search cheapest 5090/4090 offer, rent with label
+[ ] Stream tree, setup pip + models, selftest + panel hash
+[ ] Run 4 lanes, merge, copy back, destroy, ledger
+[ ] Write RESULTS-rent.md, push via watcher paths, final report
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1 cpu_cores>=8 disk_space>=60' -o dph 2>&1 | head -40
+[40m[97m  #  ID        CUDA   N  Model     PCIE  cpu_ghz  vCPUs    RAM  VRAM  Disk[0m
+[48;5;240m[97m  1  48284957  13.0  1x  RTX_5090  20.2  4.9      16.0    48.1  32.6  569 [0m
+[40m[97m  2  51710808  13.0  1x  RTX_5090  25.9  2.6      24.0    48.3  32.6  239 [0m
+[48;5;240m[97m  3  45410075  12.8  1x  RTX_5090  26.9  2.4      12.8    64.4  32.6  1141[0m
+[40m[97m  4  45409902  13.0  1x  RTX_5090  26.8  2.4      18.3    73.7  32.6  794 [0m
+[48;5;240m[97m  5  46295493  13.0  1x  RTX_5090  18.3  4.4      12.0    64.1  32.6  983 [0m
+[40m[97m  6  50734484  12.8  1x  RTX_5090  13.1  3.7      6.0     32.1  32.6  515 [0m
+[48;5;240m[97m  7  50849750  12.9  1x  RTX_5090  27.0  3.2      64.0    64.4  32.6  624 [0m
+[40m[97m  8  52702162  13.2  1x  RTX_5090  36.4  4.9      20.0    64.0  32.6  1437[0m
+[48;5;240m[97m  9  51102777  13.3  1x  RTX_5090  13.5  3.6      16.0    64.2  32.6  788 [0m
+[40m[97m 10  35126127  13.0  1x  RTX_5090  54.2  3.1      32.0   193.5  32.6  514 [0m
+[48;5;240m[97m 11  51522989  13.2  1x  RTX_5090  27.5  5.7      32.0    64.1  32.6  1608[0m
+[40m[97m 12  51191429  13.2  1x  RTX_5090  22.8  3.5      32.0   256.5  32.6  1261[0m
+[48;5;240m[97m 13  51477564  13.2  1x  RTX_5090  6.8   5.8      16.0    63.2  32.6  1240[0m
+[40m[97m 14  51178170  13.0  1x  RTX_5090  3.3   1.6      272.0   64.1  32.6  3074[0m
+[48;5;240m[97m 15  52729557  13.0  1x  RTX_5090  45.7  5.9      32.0   127.9  32.6  1376[0m
+[40m[97m 16  52070243  13.0  1x  RTX_5090  26.5  2.8      96.0   128.6  32.6  1569[0m
+[48;5;240m[97m 17  46953695  13.0  1x  RTX_5090  54.0  2.4      48.0    96.7  32.6  561 [0m
+[40m[97m 18  30949251  13.3  1x  RTX_5090  26.6  2.6      24.0   129.0  32.6  225 [0m
+[48;5;240m[97m 19  52077399  13.2  1x  RTX_5090  36.4  5.5      12.0    61.9  32.6  1421[0m
+[40m[97m 20  40871605  13.0  1x  RTX_5090  45.4  5.2      14.0    63.9  32.6  1051[0m
+[48;5;240m[97m 21  29436756  13.0  1x  RTX_5090  54.0  3.7      48.0    64.4  32.6  726 [0m
+[40m[97m 22  41379383  13.0  1x  RTX_5090  27.5  5.8      16.0    63.2  32.6  962 [0m
+[48;5;240m[97m 23  52070420  13.2  1x  RTX_5090  25.5  2.2      32.0   129.0  32.6  1446[0m
+[40m[97m 24  50716290  13.1  1x  RTX_5090  27.4  3.7      48.0    96.7  32.6  2785[0m
+[48;5;240m[97m 25  51326860  13.3  1x  RTX_5090  27.0  2.2      32.0   112.8  32.6  501 [0m
+[40m[97m 26  52015832  12.8  1x  RTX_5090  54.0  3.8      18.3    36.8  32.6  774 [0m
+[48;5;240m[97m 27  49759783  13.2  1x  RTX_5090  27.0  3.6      12.0    80.3  32.6  311 [0m
+[40m[97m 28  27039365  13.4  1x  RTX_5090  24.7  2.3      24.0   129.0  32.6  278 [0m
+[48;5;240m[97m 29  51969533  13.2  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  227 [0m
+[40m[97m 30  51969550  13.0  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  225 [0m
+[48;5;240m[97m 31  52003777  13.2  1x  RTX_5090  54.3  2.6      12.0    64.3  32.6  344 [0m
+[40m[97m 32  52437387  13.3  1x  RTX_5090  44.8  4.3      8.0     48.2  32.6  781 [0m
+[48;5;240m[97m 33  52015081  13.0  1x  RTX_5090  54.1  8.2      32.0   128.6  32.6  1512[0m
+[40m[97m 34  51639930  13.3  1x  RTX_5090  54.1  3.7      42.7    42.9  32.6  602 [0m
+[48;5;240m[97m 35  48425190  13.0  1x  RTX_5090  54.2  4.1      18.3    73.6  32.6  409 [0m
+[40m[97m 36  52699998  13.2  1x  RTX_5090  26.5  3.7      32.0   129.0  32.6  1354[0m
+[48;5;240m[97m 37  49760564  13.2  1x  RTX_5090  54.2  3.9      16.0    96.7  32.6  277 [0m
+[40m[97m 38  25507609  13.3  1x  RTX_5090  23.1  2.4      32.0   513.0  32.6  504 [0m
+[48;5;240m[97m 39  35967350  12.8  1x  RTX_5090  51.8  3.7      40.0    96.6  32.6  1361[0m
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_5090 reliability>=0.98 rentable=true num_gpus=1 cpu_cores>=8 disk_space>=60' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+try:
+  d=json.loads(raw)
+except Exception as e:
+  print('PARSE FAIL', e); print(raw[:2000]); sys.exit()
+print('N offers:', len(d))
+rows=[]
+for o in d:
+  rows.append((o.get('dph_total') or o.get('dph'), o.get('id'), o.get('cpu_cores_effective', o.get('num_cpus')), o.get('disk_space'), o.get('reliability2', o.get('reliability')), round(o.get('inet_down',0),1), round(o.get('inet_up',0),1), o.get('rentable'), o.get('rented'), o.get('cuda_max_good'), o.get('gpu_name')))
+rows.sort(key=lambda r: (r[0] if r[0] else 9))
+for r in rows[:12]: print(r)
+"
+N offers: 49
+(0.4060185185185185, 46753293, 32.0, 151.9125, 0.9957208, 848.2, 63.4, True, False, 13.0, 'RTX 5090')
+(0.4060185185185185, 43165161, 32.0, 275.875, 0.9956102, 513.5, 51.1, True, False, 13.0, 'RTX 5090')
+(0.4694444444444444, 50971285, 40.0, 339.75, 0.9855506, 922.0, 840.2, True, False, 13.0, 'RTX 5090')
+(0.47268518518518515, 51858236, 24.0, 360.45, 0.9963556, 341.4, 484.0, True, False, 13.0, 'RTX 5090')
+(0.5103703703703703, 52723081, 24.0, 301.25, 0.9947771, 896.9, 835.0, True, False, 13.0, 'RTX 5090')
+(0.5637037037037037, 45409902, 18.285714285714285, 794.1285714285715, 0.9966698, 653.3, 879.4, True, False, 13.0, 'RTX 5090')
+(0.6009259259259259, 46295493, 12.0, 983.362336250376, 0.9991432, 762.7, 725.9, True, False, 13.0, 'RTX 5090')
+(0.6013888888888889, 50734486, 6.0, 515.0, 0.9890173, 381.0, 351.0, True, False, 12.8, 'RTX 5090')
+(0.6013888888888889, 50849750, 64.0, 623.5, 0.9900242, 706.8, 32.7, True, False, 12.9, 'RTX 5090')
+(0.6271296296296296, 49820922, 16.0, 1253.0, 0.9928102, 536.0, 613.2, True, False, 13.2, 'RTX 5090')
+(0.6289814814814814, 35126127, 32.0, 513.875, 0.9851634, 1366.9, 1223.1, True, False, 13.0, 'RTX 5090')
+(0.6337962962962963, 51481584, 24.0, 1549.0, 0.9851498, 3868.4, 2530.1, True, False, 13.4, 'RTX 5090')
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true num_gpus=1 cpu_cores>=8 disk_space>=60' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+raw=sys.stdin.read()
+d=json.loads(raw)
+print('N offers:', len(d))
+rows=[]
+for o in d:
+  rows.append((o.get('dph_total') or o.get('dph'), o.get('id'), o.get('cpu_cores_effective', o.get('num_cpus')), round(o.get('disk_space',0),1), round(o.get('reliability2', o.get('reliability',0)),4), round(o.get('inet_down',0),1), round(o.get('inet_up',0),1), o.get('cuda_max_good')))
+rows.sort(key=lambda r: (r[0] if r[0] else 9))
+for r in rows[:12]: print(r)
+"
+N offers: 57
+(0.39964814814814814, 52652212, 32.0, 1540.3, 0.9971, 891.1, 903.4, 13.0)
+(0.40138888888888885, 39064492, 36.57142857142857, 749.7, 0.9953, 1531.3, 1327.8, 13.0)
+(0.40138888888888885, 30946286, 32.0, 685.2, 0.9956, 1371.1, 1131.5, 13.0)
+(0.4018518518518518, 38381893, 32.0, 1007.0, 0.9937, 1300.2, 1282.7, 13.2)
+(0.41453703703703704, 46151935, 16.0, 70.6, 0.9973, 450.3, 366.5, 13.2)
+(0.4146296296296296, 48293175, 27.428571428571427, 188.9, 0.9866, 801.3, 731.7, 13.2)
+(0.415, 41245407, 32.0, 1010.8, 0.9935, 6585.8, 6584.5, 12.6)
+(0.4280555555555556, 51057916, 16.0, 302.9, 0.9987, 660.7, 743.0, 12.9)
+(0.42990740740740746, 52764786, 8.0, 326.4, 0.9865, 808.6, 776.4, 13.2)
+(0.4412037037037037, 47635774, 16.0, 614.4, 0.9979, 334.3, 321.1, 12.6)
+(0.4412037037037037, 48470907, 16.0, 448.2, 0.9958, 424.7, 383.4, 12.8)
+(0.4570370370370371, 51243838, 32.0, 749.0, 0.9981, 12797.4, 8029.0, 13.0)
+[0m
+[0m$ [0mvastai create instance --help 2>&1 | head -40
+usage: vastai create instance ID [OPTIONS] [--args ...]
+
+positional arguments:
+ id                                id of instance type to launch (returned from search offers)
+
+options:
+ -h, --help                        show this help message and exit
+ --template_hash TEMPLATE_HASH     Create instance from template info
+ --user USER                       User to use with docker create. This breaks some images, so only use this if you are certain you need it.
+ --disk DISK                       size of local disk partition in GB
+ --image IMAGE                     docker container image to launch
+ --login LOGIN                     docker login arguments for private repo authentication, surround with '' 
+ --label LABEL                     label to set on the instance
+ --onstart ONSTART                 filename to use as onstart script
+ --onstart-cmd ONSTART_CMD         contents of onstart script as single argument
+ --entrypoint ENTRYPOINT           override entrypoint for args launch instance
+ --ssh                             Launch as an ssh instance type
+ --jupyter                         Launch as a jupyter instance instead of an ssh instance
+ --direct                          Use (faster) direct connections for jupyter & ssh
+ --jupyter-dir JUPYTER_DIR         For runtype 'jupyter', directory in instance to use to launch jupyter. Defaults to image's working directory
+ --jupyter-lab                     For runtype 'jupyter', Launch instance with jupyter lab
+ --lang-utf8                       Workaround for images with locale problems: install and generate locales before instance launch, and set locale to C.UTF-8
+ --python-utf8                     Workaround for images with locale problems: set python's locale to C.UTF-8
+ --env ENV                         env variables and port mapping options, surround with '' 
+ --args ...                        list of arguments passed to container ENTRYPOINT. Onstart is recommended for this purpose. (must be last argument)
+ --force                           Skip sanity checks when creating from an existing instance
+ --cancel-unavail                  Return error if scheduling fails (rather than creating a stopped instance)
+ --bid_price BID_PRICE             (OPTIONAL) create an INTERRUPTIBLE instance with per machine bid price in $/hour
+ --create-volume VOLUME_ASK_ID     Create a new local volume using an ID returned from the "search volumes" command and link it to the new instance
+ --link-volume EXISTING_VOLUME_ID  ID of an existing rented volume to link to the instance during creation. (returned from "show volumes" cmd)
+ --volume-size VOLUME_SIZE         Size of the volume to create in GB. Only usable with --create-volume (default 15GB)
+ --mount-path MOUNT_PATH           The path to the volume from within the new instance container. e.g. /root/volume
+ --volume-label VOLUME_LABEL       (optional) A name to give the new volume. Only usable with --create-volume
+
+Global options (available for all commands):
+ --url URL                         Server REST API URL
+ --retry RETRY                     Retry limit
+ --explain                         Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw                             Output machine-readable json
+ --full                            Print full results instead of paging with `less` for commands that support it
+[0m
+[0m$ [0mVAST_KEY=$(cat ~/.config/vastai/vast_api_key); export VASTAI_API_KEY="$VAST_KEY"; vastai create instance 52652212 --image 'pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime' --disk 80 --label 'claude-benchmarks-bmrivsmoke' --ssh --raw 2>&1 | head -20
+{
+ "instance_api_key": "9e93ca672d401e0d693244ebe591ca3f038433f68790f8e4b52c3d1aa7389e79",
+ "new_contract": 52766147,
+ "success": true
+}
+[0m
+[0m$ [0mdate -u +%FT%TZ; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('dph_total'), d.get('gpu_name'), d.get('label'))"
+2026-09-26T15:01:12Z
+52766147 None None 0.43437037037037035 RTX 4090 claude-benchmarks-bmrivsmoke
+[0m
+[0m$ [0msleep 45; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"
+52766147 loading f5718f919d50: Verifying Checksum
+f5718f919d50: Download complete
+ ssh8.vast.ai 16146
+[0m
+[0m$ [0msleep 60; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"
+52766147 loading 2a4b7dddaae6: Verifying Checksum
+2a4b7dddaae6: Download complete
+ ssh8.vast.ai 16146
+[0m
+[0m$ [0msleep 90; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"; date -u +%FT%TZ
+52766147 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh8.vast.ai 16146
+2026-09-26T15:04:41Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -p 16146 root@ssh8.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name,memory.total --format=csv; python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())" 2>&1 | tail -2; df -h / | tail -1' 2>&1 | tail -10
+Warning: Permanently added '[ssh8.vast.ai]:16146' (ED25519) to the list of known hosts.
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mls ~/.ssh/ 2>&1; vastai --help 2>&1 | grep -i -A2 ssh | head -20
+agent
+authorized_keys
+config
+id_ed25519
+id_ed25519.pub
+known_hosts
+known_hosts.old
+rent-bm395
+rent-bm395.pub
+rent336b
+rent336b.pub
+ssh-copy-id.dyqOlQW0o4
+ssh-copy-id.slWcbCWO63
+ ssh-url                       ssh url helper
+ scp-url                       scp url helper
+ take snapshot                 Schedule a snapshot of a running container and push it to your repo in a container registry
+--
+ create ssh-key                Create a new ssh-key
+ show ssh-keys                 List your ssh keys associated with your account
+ delete ssh-key                Remove an ssh-key
+ update ssh-key                Update an existing SSH key
+ attach ssh                    Attach an ssh key to an instance. This will allow you to connect to the instance with the ssh key
+ detach ssh                    Detach an ssh key from an instance
+ set api-key                   Set api-key (get your api-key from the console/CLI)
+ set role                      Set host role to view host-only commands
+[0m
+[0m$ [0mvastai show ssh-keys --raw 2>&1 | head -20; echo ---; head -c 80 ~/.ssh/id_ed25519.pub
+[
+ {
+  "created_at": 1783680918.6525881,
+  "default": null,
+  "deleted_at": null,
+  "id": 1073966,
+  "private_key": null,
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGsaSCgGiDJAKKDkM5DvmPV6D+avvzeBfi7Dz+H5s7e4 vast-training",
+  "user_id": 553012
+ },
+ {
+  "created_at": 1790189104.767285,
+  "default": null,
+  "deleted_at": null,
+  "id": 1420036,
+  "private_key": null,
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517 ben@paynycfines.com",
+  "user_id": 553012
+ },
+ {
+---
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICnYSZnoTma419UtHDuRQsNq29uzJowmyfJu69xas517
+[0m
+[0m$ [0msleep 10; ssh -o StrictHostKeyChecking=no -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | tail -5
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | tail -5; echo ===; vastai ssh-url 52766147 2>&1 | tail -3
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+zsh:1: == not found
+[0m
+[0m$ [0mvastai attach ssh --help 2>&1 | head -15; vastai ssh-url 52766147 2>&1 | tail -5
+usage: vastai attach ssh instance_id ssh_key
+
+positional arguments:
+ instance_id        id of instance to attach to
+ ssh_key            ssh key to attach to instance
+
+options:
+ -h, --help         show this help message and exit
+
+Global options (available for all commands):
+ --url URL          Server REST API URL
+ --retry RETRY      Retry limit
+ --explain          Output verbose explanation of mapping of CLI calls to HTTPS API endpoints
+ --raw              Output machine-readable json
+ --full             Print full results instead of paging with `less` for commands that support it
+ssh://root@ssh8.vast.ai:16146
+[0m
+[0m$ [0mvastai attach ssh 52766147 "$(cat ~/.ssh/id_ed25519.pub)" 2>&1 | tail -5; sleep 15; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | tail -3
+{'success': False, 'msg': 'SSH key already associated with instance.'}
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0msleep 60; date -u +%FT%TZ; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader' 2>&1 | tail -5
+2026-09-26T15:06:52Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mdiff <(cat ~/.ssh/id_ed25519.pub) <(vastai show ssh-keys --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print([k['public_key'] for k in d if 'ben@' in k['public_key']][0])") && echo KEY_MATCH || echo KEY_DIFF; ssh -vv -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -o ConnectTimeout=15 -p 16146 root@ssh8.vast.ai 'echo OK' 2>&1 | grep -E "Offering|Authenticated|denied|publickey" | head -10
+KEY_MATCH
+debug1: kex_ext_info_check_ver: publickey-hostbound@openssh.com=<0>
+debug1: Authentications that can continue: publickey
+debug1: Next authentication method: publickey
+debug1: Offering public key: /Users/ben-hannan/.ssh/id_ed25519 ED25519 SHA256:uZ2190NRveh3i1Ai6Hbh+pTpPazMhGbpwchVApLYvJw explicit agent
+debug2: we sent a publickey packet, wait for reply
+debug1: Authentications that can continue: publickey
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0msleep 120; date -u +%FT%TZ; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | tail -3; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('actual_status'), d.get('status_msg'))"
+2026-09-26T15:09:05Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh
+[0m
+[0m$ [0mssh-keygen -t ed25519 -f ~/.ssh/rent-bmrivsmoke -N "" -C "bmrivsmoke" 2>&1 | tail -2; vastai create ssh-key "$(cat ~/.ssh/rent-bmrivsmoke.pub)" 2>&1 | tail -3
+|        . o      |
++----[SHA256]-----+
+Adding provided SSH public key to account...
+ssh-key created {'success': True, 'key': {'id': 1438112, 'user_id': 553012, 'default': None, 'public_key': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILpK1RJmmgVC2xsIwTVkgPcg56IcW5IKsSrWgJFynPYF bmrivsmoke', 'private_key': None, 'created_at': 1790435353.963753, 'deleted_at': None}}
+Note: You may need to add the new public key to any pre-existing instances
+[0m
+[0m$ [0mvastai attach ssh 52766147 "$(cat ~/.ssh/rent-bmrivsmoke.pub)" 2>&1 | tail -2; sleep 20; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -o ConnectTimeout=20 -p 16146 root@ssh8.vast.ai 'echo SSH_OK' 2>&1 | tail -3
+{'success': True, 'msg': 'SSH key added to instance.', 'key': '{"id": 1438112, "user_id": 553012, "default": null, "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILpK1RJmmgVC2xsIwTVkgPcg56IcW5IKsSrWgJFynPYF bmrivsmoke", "private_key": null, "created_at": 1790435353.963753, "deleted_at": null}'}
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+root@ssh8.vast.ai: Permission denied (publickey).
+[0m
+[0m$ [0mdate -u +%FT%TZ; vastai destroy instance 52766147 2>&1 | tail -2; sleep 5; vastai show instance 52766147 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'))" 2>&1 | head -3
+2026-09-26T15:09:45Z
+Are you sure you want to destroy instance 52766147? This is irreversible and will delete all data. [y/N] 
+Aborted.
+52766147 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh
+[0m
+[0m$ [0mecho y | vastai destroy instance 52766147 2>&1 | tail -2; sleep 10; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print([ (x.get('id'), x.get('label'), x.get('actual_status')) for x in d if x.get('id')==52766147 or (x.get('label') or '')=='claude-benchmarks-bmrivsmoke'])"
+Are you sure you want to destroy instance 52766147? This is irreversible and will delete all data. [y/N] destroying instance 52766147.
+[]
+[0m
+[0m$ [0mvastai search offers 'gpu_name=RTX_4090 reliability>=0.98 rentable=true num_gpus=1 cpu_cores>=8 disk_space>=60' -o dph --raw 2>&1 | python3 -c "
+import json,sys
+d=json.loads(sys.stdin.read())
+ids=[39064492,30946286,38381893,52652212]
+avail={o['id']: (o.get('dph_total'), o.get('rentable'), o.get('rented')) for o in d}
+for i in ids: print(i, avail.get(i,'GONE'))
+"; date -u +%FT%TZ
+39064492 (0.40138888888888885, True, False)
+30946286 GONE
+38381893 GONE
+52652212 GONE
+2026-09-26T15:10:18Z
+[0m
+[0m$ [0mvastai create instance 39064492 --image 'pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime' --disk 80 --label 'claude-benchmarks-bmrivsmoke' --ssh --raw 2>&1 | head -8; date -u +%FT%TZ
+{
+ "instance_api_key": "2583a4ece10804aefd9ba1d3f0f88d353eb2a6103a0a70fabcc1b4e9a125b409",
+ "new_contract": 52767389,
+ "success": true
+}
+2026-09-26T15:10:22Z
+[0m
+[0m$ [0msleep 90; vastai show instance 52767389 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'), d.get('dph_total'), d.get('gpu_name'))"; date -u +%FT%TZ
+52767389 loading f5718f919d50: Download complete
+ ssh3.vast.ai 17388 0.42222222222222217 RTX 4090
+2026-09-26T15:11:55Z
+[0m
+[0m$ [0msleep 90; vastai show instance 52767389 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"; date -u +%FT%TZ
+52767389 loading f5718f919d50: Download complete
+ ssh3.vast.ai 17388
+2026-09-26T15:13:27Z
+[0m
+[0m$ [0msleep 120; vastai show instance 52767389 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"; date -u +%FT%TZ
+52767389 loading Successfully loaded pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime ssh3.vast.ai 17388
+2026-09-26T15:15:29Z
+[0m
+[0m$ [0msleep 60; vastai show instance 52767389 --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id'), d.get('actual_status'), d.get('status_msg'), d.get('ssh_host'), d.get('ssh_port'))"; date -u +%FT%TZ
+52767389 running success, running pytorch/pytorch_2.8.0-cuda12.9-cudnn9-runtime/ssh ssh3.vast.ai 17388
+2026-09-26T15:16:32Z
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -o ConnectTimeout=20 -p 17388 root@ssh3.vast.ai 'echo SSH_OK; nvidia-smi --query-gpu=name --format=csv,noheader' 2>&1 | tail -4
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+SSH_OK
+NVIDIA GeForce RTX 4090
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done, passing)
+[✓] Search cheapest 5090/4090 offer, rent with label (rental2 52767389 running)
+[•] Stream tree, setup pip + models, selftest + panel hash
+[ ] Run 4 lanes, merge, copy back, destroy, ledger
+[ ] Write RESULTS-rent.md, push via watcher paths, final report
+[0m
+[0m$ [0mgit archive refs/remotes/origin/main scripts/claude_bm390.py scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl artifacts/claude-bmriv-smoke-20260926 2>&1 | tail -3; echo ARCHIVE_EXIT:$?
+if __name__ == "__main__":
+    sys.exit(main())
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ARCHIVE_EXIT:0
+[0m
+[0m$ [0mgit archive refs/remotes/origin/main scripts/claude_bm390.py scripts/claude_bmriv_rivals.py artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl artifacts/claude-bmriv-smoke-20260926 | ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'mkdir -p ~/tree && tar -x -C ~/tree && find ~/tree -type f | head -20'; echo STREAM_EXIT:$?
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+/root/tree/artifacts/claude-bmriv-smoke-20260926/README.md
+/root/tree/artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+/root/tree/scripts/claude_bm390.py
+/root/tree/scripts/claude_bmriv_rivals.py
+STREAM_EXIT:0
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())" 2>&1 | tail -3'
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2.8.0+cu129 True
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && pip install -q "transformers>=5" safetensors huggingface_hub accelerate numpy 2>&1 | tail -3; python3 -c "import torch, transformers; print(torch.__version__, transformers.__version__)"; python3 --version' 2>&1 | tail -6
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+2.8.0+cu129 5.17.0
+Python 3.11.13
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && unset HF_HOME HF_HUB_CACHE && HF_HUB_OFFLINE=0 python3 -c "from huggingface_hub import snapshot_download as s; print(s('\''openbmb/MiniCPM5-1B'\'', revision='\''87179e5c1f455ef22e6223592d2d61351b525bfc'\'')); print(s('\''Qwen/Qwen3.5-2B'\'', revision='\''15852e8c16360a2fea060d615a32b45270f8a8fc'\'')); print(s('\''LiquidAI/LFM2.5-1.2B-Instruct'\'', revision='\''0f604ada3f766f9f257460c4c9f0b5d6f69d431b'\''))" 2>&1 | tail -6' 2>&1 | tail -8
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:02,  3.46it/s]Fetching 11 files:  18%|█▊        | 2/11 [00:00<00:01,  4.55it/s]Fetching 11 files:  55%|█████▍    | 6/11 [00:00<00:00, 13.71it/s]Fetching 11 files:  73%|███████▎  | 8/11 [00:00<00:00, 12.88it/s]Fetching 11 files:  91%|█████████ | 10/11 [00:01<00:00,  4.48it/s]Fetching 11 files: 100%|██████████| 11/11 [00:14<00:00,  1.32s/it]
+/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:   8%|▊         | 1/13 [00:00<00:03,  3.56it/s]Fetching 13 files:  15%|█▌        | 2/13 [00:00<00:02,  4.60it/s]Fetching 13 files:  38%|███▊      | 5/13 [00:00<00:00, 11.60it/s]Fetching 13 files:  54%|█████▍    | 7/13 [00:00<00:00, 10.43it/s]Fetching 13 files:  69%|██████▉   | 9/13 [00:00<00:00, 11.86it/s]Fetching 13 files:  85%|████████▍ | 11/13 [00:01<00:00, 10.25it/s]Fetching 13 files:  92%|█████████▏| 12/13 [00:15<00:00, 10.25it/s]Fetching 13 files: 100%|██████████| 13/13 [00:20<00:00,  3.24s/it]Fetching 13 files: 100%|██████████| 13/13 [00:20<00:00,  1.57s/it]
+/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]Fetching 11 files:   9%|▉         | 1/11 [00:00<00:04,  2.18it/s]Fetching 11 files:  64%|██████▎   | 7/11 [00:00<00:00, 11.03it/s]Fetching 11 files:  82%|████████▏ | 9/11 [00:00<00:00, 11.13it/s]Fetching 11 files: 100%|██████████| 11/11 [00:12<00:00,  1.84s/it]Fetching 11 files: 100%|██████████| 11/11 [00:12<00:00,  1.17s/it]
+/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+[0m
+[0m$ [0mdate -u +%FT%TZ; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && PANEL=artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl && sha256sum $PANEL && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && python3 -B scripts/claude_bmriv_rivals.py selftest --tok $BASE 2>&1 | tail -5' 2>&1 | tail -8
+2026-09-26T15:18:38Z
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+da7202db858cee9537acbb4d40d2316921673e00cf27a19a60ef09c1973012e7  artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+PASS thinking off: whole text
+PASS message and system are in the prompt
+PASS think flag reaches the chat template
+PASS duplicate ids refused
+BMRIV-SELFTEST PASS 12/12
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1 && BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc && Q2DIR=/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc && L12DIR=/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b && PANEL=artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl && OUT=artifacts/claude-bmriv-smoke-20260926/run && mkdir -p $OUT && cat > /tmp/lane1.sh <<EOF
+#!/bin/bash
+cd ~/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+BASE=/root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc
+Q2DIR=/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+L12DIR=/root/.cache/huggingface/hub/models--LiquidAI--LFM2.5-1.2B-Instruct/snapshots/0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+PANEL=artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+OUT=artifacts/claude-bmriv-smoke-20260926/run
+run_one() {
+  local extra="\$1"; local name="\$2"; shift 2
+  S=\$(date -u +%FT%TZ)
+  python3 -B scripts/claude_bmriv_rivals.py run --panel \$PANEL --out \$OUT --model \$1 --name \$name \$extra
+  C=\$?
+  E=\$(date -u +%FT%TZ)
+  echo "META name=\$name start=\$S end=\$E exit=\$C"
+}
+run_one "" plain1b \$BASE
+run_one "" qwen2b \$Q2DIR
+run_one "" lfm12b \$L12DIR
+EOF
+cat > /tmp/lanex.sh <<EOF
+#!/bin/bash
+# args: shard name logextra
+cd ~/tree
+export HF_HUB_OFFLINE=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1
+Q2DIR=/root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc
+PANEL=artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl
+OUT=artifacts/claude-bmriv-smoke-20260926/run
+NAME=\$1; SHARD=\$2
+S=\$(date -u +%FT%TZ)
+python3 -B scripts/claude_bmriv_rivals.py run --panel \$PANEL --out \$OUT --model \$Q2DIR --name \$NAME --think on --max-new 4096 --shard \$SHARD
+C=\$?
+E=\$(date -u +%FT%TZ)
+echo "META name=\$NAME start=\$S end=\$E exit=\$C"
+EOF
+chmod +x /tmp/lane1.sh /tmp/lanex.sh && setsid nohup /tmp/lane1.sh > ~/tree/lane1.log 2>&1 < /dev/null & echo LANE1_PID:$! && setsid nohup /tmp/lanex.sh qwen2b_think_s0 0/3 > ~/tree/lane2.log 2>&1 < /dev/null & echo LANE2_PID:$! && setsid nohup /tmp/lanex.sh qwen2b_think_s1 1/3 > ~/tree/lane3.log 2>&1 < /dev/null & echo LANE3_PID:$! && setsid nohup /tmp/lanex.sh qwen2b_think_s2 2/3 > ~/tree/lane4.log 2>&1 < /dev/null & echo LANE4_PID:$! && sleep 2 && date -u +%FT%TZ && ps aux | grep -E "claude_bmriv" | grep -v grep | wc -l' 2>&1 | tail -8
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; ps aux | grep claude_bmriv | grep -v grep | head; ls -la ~/tree/*.log /tmp/lane*.sh 2>&1' 2>&1 | tail -10
+root        1003 99.5  0.1 19428800 1711968 ?    Rl   15:19   2:09 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s0 --think on --max-new 4096 --shard 0/3
+root        1004 99.4  0.1 19430136 1722272 ?    Rl   15:19   2:09 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s2 --think on --max-new 4096 --shard 2/3
+root        1005 99.5  0.1 19462988 1739620 ?    Rl   15:19   2:09 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s1 --think on --max-new 4096 --shard 1/3
+root        1006 99.6  0.1 16669752 1582996 ?    Rl   15:19   2:09 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--openbmb--MiniCPM5-1B/snapshots/87179e5c1f455ef22e6223592d2d61351b525bfc --name plain1b
+-rw-r--r-- 1 root root  213 Sep 26 15:21 /root/tree/lane1.log
+-rw-r--r-- 1 root root 1229 Sep 26 15:19 /root/tree/lane2.log
+-rw-r--r-- 1 root root 1233 Sep 26 15:19 /root/tree/lane3.log
+-rw-r--r-- 1 root root 1229 Sep 26 15:19 /root/tree/lane4.log
+-rwxr-xr-x 1 root root  899 Sep 26 15:19 /tmp/lane1.sh
+-rwxr-xr-x 1 root root  598 Sep 26 15:19 /tmp/lanex.sh
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; tail -c 600 ~/tree/lane1.log; echo; echo ---LANE2; tail -c 400 ~/tree/lane2.log; echo; nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total --format=csv,noheader' 2>&1 | tail -12
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T15:21:38Z
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 7385.23it/s]
+[bmriv] plain1b 5/30 seconds=64
+[bmriv] plain1b 10/30 seconds=113
+
+---LANE2
+ce PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+
+99 %, 15196 MiB, 24564 MiB
+[0m
+[0m$ [0msleep 150; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; grep -h bmr politely ~/tree/lane1.log 2>/dev/null; grep -h "\[bmriv\]" ~/tree/lane1.log ~/tree/lane2.log ~/tree/lane3.log ~/tree/lane4.log | tail -12; ls ~/tree/artifacts/claude-bmriv-smoke-20260926/run/ 2>/dev/null' 2>&1 | tail -16
+Have fun!
+2026-09-26T15:24:16Z
+[bmriv] plain1b 5/30 seconds=64
+[bmriv] plain1b 10/30 seconds=113
+[bmriv] plain1b 15/30 seconds=169
+[bmriv] plain1b 20/30 seconds=223
+[bmriv] plain1b 25/30 seconds=279
+[bmriv] plain1b 5/30 seconds=64
+[bmriv] plain1b 10/30 seconds=113
+[bmriv] plain1b 15/30 seconds=169
+[bmriv] plain1b 20/30 seconds=223
+[bmriv] plain1b 25/30 seconds=279
+rival_plain1b.jsonl
+rival_qwen2b_think_s0.jsonl
+rival_qwen2b_think_s1.jsonl
+rival_qwen2b_think_s2.jsonl
+[0m
+[0m$ [0msleep 150; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; grep -h "\[bmriv\]" ~/tree/lane1.log | tail -4; echo ---; grep -h "\[bmriv\]" ~/tree/lane2.log ~/tree/lane3.log ~/tree/lane4.log | tail -6; echo ---; ps aux | grep claude_bmriv | grep -v grep | awk "{print \$13, \$15}" | head -6' 2>&1 | tail -14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T15:26:53Z
+[bmriv] plain1b 20/30 seconds=223
+[bmriv] plain1b 25/30 seconds=279
+[bmriv] plain1b 30/30 seconds=318
+[bmriv] qwen2b 5/30 seconds=113
+---
+---
+scripts/claude_bmriv_rivals.py --panel
+scripts/claude_bmriv_rivals.py --panel
+scripts/claude_bmriv_rivals.py --panel
+scripts/claude_bmriv_rivals.py --panel
+[0m
+[0m$ [0msleep 170; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; grep -h "\[bmriv\]" ~/tree/lane1.log | tail -3; echo ---; for f in lane2 lane3 lane4; do echo "== $f"; grep "\[bmriv\]" ~/tree/$f.log | tail -2; done' 2>&1 | tail -14
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T15:30:05Z
+[bmriv] qwen2b 5/30 seconds=113
+[bmriv] qwen2b 10/30 seconds=218
+[bmriv] qwen2b 15/30 seconds=324
+---
+== lane2
+== lane3
+== lane4
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'tail -c 800 ~/tree/lane2.log; echo; echo ===; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl; nvidia-smi --query-gpu=memory.used --format=csv,noheader' 2>&1 | tail -10
+[transformers] `fused_recurrent_gated_delta_rule` is falling back to its reference PyTorch implementation because `flash-linear-attention` is not installed. This is correct but much slower; install `flash-linear-attention` for the optimized kernel.
+
+===
+   30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+   15 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+    3 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+    4 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+    3 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+   55 total
+16926 MiB
+[0m
+[0m$ [0msleep 150; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; grep -h "\[bmriv\]" ~/tree/lane1.log | tail -2; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl' 2>&1 | tail -10
+Have fun!
+2026-09-26T15:32:56Z
+[bmriv] qwen2b 15/30 seconds=324
+[bmriv] qwen2b 20/30 seconds=430
+   30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+   23 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+    4 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+    5 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+    4 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+   66 total
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; ps -eo pid,etime,args | grep "claude_bmriv_rivals.py run" | grep -v grep' 2>&1 | tail -7
+Welcome to vast.ai. If authentication fails, try again after a few seconds, and double check your ssh key.
+Have fun!
+2026-09-26T15:33:05Z
+   1003       13:47 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s0 --think on --max-new 4096 --shard 0/3
+   1004       13:47 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s2 --think on --max-new 4096 --shard 2/3
+   1005       13:47 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b_think_s1 --think on --max-new 4096 --shard 1/3
+   1233       08:28 python3 -B scripts/claude_bmriv_rivals.py run --panel artifacts/claude-panel-rsn358b3-smoke-20260926/panel.jsonl --out artifacts/claude-bmriv-smoke-20260926/run --model /root/.cache/huggingface/hub/models--Qwen--Qwen3.5-2B/snapshots/15852e8c16360a2fea060d615a32b45270f8a8fc --name qwen2b
+[0m
+[0m$ [0msleep 180; ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; grep -h "\[bmriv\]" ~/tree/lane1.log | tail -3; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl' 2>&1 | tail -10
+[bmriv] qwen2b 25/30 seconds=535
+[bmriv] qwen2b 30/30 seconds=640
+[bmriv] lfm12b 5/30 seconds=46
+    6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+   30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+   30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+    6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+    6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+    6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+   84 total
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; PIDS=$(pgrep -f "claude_bmriv_rivals.py run"); echo "KILL_PIDS:$PIDS"; kill $PIDS; sleep 3; pgrep -f "claude_bmriv_rivals.py run" || echo "ALL_DEAD"; date -u +%FT%TZ; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl' 2>&1 | tail -10
+2026-09-26T15:36:47Z
+KILL_PIDS:989
+990
+991
+992
+1003
+1004
+1005
+1367
+1436
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'date -u +%FT%TZ; pgrep -f "claude_bmriv_rivals[.]py run" || echo ALL_DEAD; wc -l ~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl; tail -c 300 ~/tree/lane1.log' 2>&1 | tail -12
+10 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+    30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+    30 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+     6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+     6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+     6 /root/tree/artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+    88 total
+PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[bmriv] lfm12b 5/30 seconds=46
+[bmriv] lfm12b 10/30 seconds=86
+Terminated
+META name=lfm12b start=2026-09-26T15:35:18Z end=2026-09-26T15:36:48Z exit=143
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'pgrep -f "claude_bmriv_rivals[.]py run" && echo STILL_ALIVE || echo ALL_DEAD; cd ~/tree && sha256sum artifacts/claude-bmriv-smoke-20260926/run/*.jsonl; ls -la artifacts/claude-bmriv-smoke-20260926/run/' 2>&1 | tail -12
+e04012937776503f7a32337e03e188ea243ccb8d5d56df3feec131a36448c0a7  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+aec1e6b43f549572e551a260209b26221ebeb70b206a705cd6723d4e93280770  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+968d150a70269e29db87eb6fc485a02f679fcd51361b119abd2b0bccfeca80c1  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+total 116
+drwxr-xr-x 2 root root  4096 Sep 26 15:35 .
+drwxrwxr-x 3 root root    46 Sep 26 15:19 ..
+-rw-r--r-- 1 root root 14200 Sep 26 15:36 rival_lfm12b.jsonl
+-rw-r--r-- 1 root root 40339 Sep 26 15:24 rival_plain1b.jsonl
+-rw-r--r-- 1 root root 41690 Sep 26 15:35 rival_qwen2b.jsonl
+-rw-r--r-- 1 root root  1205 Sep 26 15:36 rival_qwen2b_think_s0.jsonl
+-rw-r--r-- 1 root root  2212 Sep 26 15:35 rival_qwen2b_think_s1.jsonl
+-rw-r--r-- 1 root root   798 Sep 26 15:36 rival_qwen2b_think_s2.jsonl
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'pgrep -f "claude_bmriv_rivals[.]py run" && echo STILL_ALIVE || echo ALL_DEAD; cd ~/tree && sha256sum artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl' 2>&1 | grep -vE "Welcome|authentication|Have fun" | tail -6
+ALL_DEAD
+dd5b756c2b73f8b64ce1607b587864a4d961f30015109fdead43113880a1ec77  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+96213ade82a727aa442bbc98c8a9f5017961f191fd61bfab1bc1719e44d91ba6  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+82ebbf2a2da785f0dd0b90b46bacf1f2adccb28588ac086d215eaf7ac95dabc7  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+[0m
+[0m$ [0mssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -p 17388 root@ssh3.vast.ai 'cd ~/tree && grep -h META lane1.log lane2.log lane3.log lane4.log; echo ===JSON===; grep -h "^{" lane1.log lane2.log lane3.log lane4.log' 2>&1 | grep -vE "Welcome|authentication|Have fun" | tail -14
+META name=plain1b start=2026-09-26T15:19:17Z end=2026-09-26T15:24:37Z exit=0
+META name=qwen2b start=2026-09-26T15:24:37Z end=2026-09-26T15:35:18Z exit=0
+META name=lfm12b start=2026-09-26T15:35:18Z end=2026-09-26T15:36:48Z exit=143
+META name=qwen2b_think_s0 start=2026-09-26T15:19:17Z end=2026-09-26T15:36:48Z exit=143
+META name=qwen2b_think_s1 start=2026-09-26T15:19:17Z end=2026-09-26T15:36:48Z exit=143
+META name=qwen2b_think_s2 start=2026-09-26T15:19:17Z end=2026-09-26T15:36:48Z exit=143
+===JSON===
+{"name": "plain1b", "rows": 30, "think": "off", "max_new": 512, "shard": "0/1", "seconds": 318, "hit_max": 25, "think_closed": 0, "empty_replies": 0, "median_new_tokens": 512.0, "median_ms": 11191.7, "sha256": "dd5b756c2b73f8b64ce1607b587864a4d961f30015109fdead43113880a1ec77"}
+{"name": "qwen2b", "rows": 30, "think": "off", "max_new": 512, "shard": "0/1", "seconds": 640, "hit_max": 30, "think_closed": 0, "empty_replies": 0, "median_new_tokens": 512.0, "median_ms": 21090.65, "sha256": "96213ade82a727aa442bbc98c8a9f5017961f191fd61bfab1bc1719e44d91ba6"}
+[0m
+[0m$ [0mls artifacts/claude-bmriv-smoke-20260926/ 2>&1; git status --short -- artifacts/ 2>&1 | head -5; git branch --show-current
+ls: artifacts/claude-bmriv-smoke-20260926/: No such file or directory
+ M artifacts/fable-predictions-ledger.md
+claude/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mmkdir -p artifacts/claude-bmriv-smoke-20260926/run && scp -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i ~/.ssh/rent-bmrivsmoke -P 17388 root@ssh3.vast.ai:'~/tree/artifacts/claude-bmriv-smoke-20260926/run/*.jsonl' artifacts/claude-bmriv-smoke-20260926/run/ 2>&1 | grep -vE "Welcome|authentication|Have fun" | tail -3; ls -la artifacts/claude-bmriv-smoke-20260926/run/; sha256sum artifacts/claude-bmriv-smoke-20260926/run/*.jsonl
+total 224
+drwxr-xr-x  8 ben-hannan  staff    256 Sep 26 11:38 .
+drwxr-xr-x  3 ben-hannan  staff     96 Sep 26 11:37 ..
+-rw-r--r--  1 ben-hannan  staff  14200 Sep 26 11:37 rival_lfm12b.jsonl
+-rw-r--r--  1 ben-hannan  staff  40339 Sep 26 11:38 rival_plain1b.jsonl
+-rw-r--r--  1 ben-hannan  staff   1205 Sep 26 11:38 rival_qwen2b_think_s0.jsonl
+-rw-r--r--  1 ben-hannan  staff   2212 Sep 26 11:38 rival_qwen2b_think_s1.jsonl
+-rw-r--r--  1 ben-hannan  staff    798 Sep 26 11:38 rival_qwen2b_think_s2.jsonl
+-rw-r--r--  1 ben-hannan  staff  41690 Sep 26 11:38 rival_qwen2b.jsonl
+82ebbf2a2da785f0dd0b90b46bacf1f2adccb28588ac086d215eaf7ac95dabc7  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+dd5b756c2b73f8b64ce1607b587864a4d961f30015109fdead43113880a1ec77  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+e04012937776503f7a32337e03e188ea243ccb8d5d56df3feec131a36448c0a7  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+aec1e6b43f549572e551a260209b26221ebeb70b206a705cd6723d4e93280770  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+968d150a70269e29db87eb6fc485a02f679fcd51361b119abd2b0bccfeca80c1  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+96213ade82a727aa442bbc98c8a9f5017961f191fd61bfab1bc1719e44d91ba6  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+[0m
+[0m$ [0mdate -u +%FT%TZ; echo y | vastai destroy instance 52767389 2>&1 | tail -1; sleep 8; vastai show instances --raw 2>&1 | python3 -c "import json,sys; d=json.load(sys.stdin); print('bmrivsmoke_live:', [ (x.get('id'),x.get('actual_status')) for x in d if (x.get('label') or '')=='claude-benchmarks-bmrivsmoke']); print('total:', len(d))"; date -u +%FT%TZ
+2026-09-26T15:38:15Z
+Are you sure you want to destroy instance 52767389? This is irreversible and will delete all data. [y/N] destroying instance 52767389.
+bmrivsmoke_live: []
+total: 14
+2026-09-26T15:38:34Z
+[0m
+[0m$ [0mtail -5 artifacts/fable-predictions-ledger.md
+- rent-lis-319f GPU OUTCOME (2026-09-26, label rent-lis-319f, origin/main code unmodified, 6/6 seals 0 failures): RUN COMPLETE, M1-M3 pending judges (reading thread judges the pairs files). Panel former_as_current OLD 6 / NEW 0 (64 former items, 49 former rows, 240 rows, T 0.995; panel valid: 49>=30 rows, 6>=2 old saves); pairs OLD saved 125 exact 72 needs_judge 46 nomatch 7 pairs 47 / NEW saved 119 exact 76 needs_judge 42 nomatch 1 pairs 43 (gold 355); BUILD train 51244 dev 1461 (parsed-JSON-equal to dryrun); LENGTHS 0 over (train max 491 p99 320, dev max 382 p99 315); train 6406 steps 33.96 min 6753.9 tok/s batch 16 no-OOM device cuda; dev report: NEW dev_score turns 1461 pred_writes 659 wrong_turns 2 ms_median 748.2, dev_former NEW 3 vs OLD 27 (117 scored, saved_right 17 vs 1). Rentals: 52750756 (offer 46753304 host 410852, 5090 dph 0.4963, docker-proxy fail in loading past 6-min rule, destroyed ~13:17Z, ~0.11h ~$0.05) + 52751954 (offer 49024414 host 406325 KR, 5090 dph 0.5037, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60...80, torch 2.8.0+cu128 CUDA True, rented 13:17:32Z running 13:19:05Z destroyed 15:04:43Z, 1.79h ~$0.90); task total ~$0.95 of $2.00 budget, 2 rentals of max 4; post-destroy 0 rent-lis-319f live. OLD reader e688e1b2 verified on rental (direct Mac rsync, BensPC fallback unused); NEW reader 970ef0ac sealed on rental and sha-matched on Mac before destroy. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, credit at gate 6.749200177269863. Deviations: 4 design text files + lis319 dev_pred.jsonl streamed to rental (TREE list omits seal/score inputs); peft 0.21.0 pip-installed; pairs scorer re-run CPU-only byte-identical. No code edits, no weights pushed, no panel text quoted. See artifacts/claude-lis319f-20260926/RESULTS-rent.md.
+- claude-sleep-358b2 GPU OUTCOME (2026-09-26, label claude-sleep-358b2, origin/main code unmodified, SEAL-code 6/6 OK, selftest ok): RUN COMPLETE, verdict INCONCLUSIVE (B0 validity not met at any size: copy_exact 25/39/28 vs >=80/100; a copying problem). Per size (n=100, seed 35900): 5x5 A 0/0/100 B 19/73/8 stages 25/63/27/27/21 C 100/0/0 rounds 9.05; 6x6 A 0/0/100 B 30/63/7 stages 39/57/37/37/31 C 95/0/5 rounds 5.21; 7x7 A 0/0/100 B 13/78/9 stages 28/66/22/22/13 C 71/0/29 rounds 6.21. B1 not met (+30/+13, need +40 on 6 and 7); B2 met (8/7/9 <= 100); proved-wrong clause N/A (B0 unmet). Instance 52766179 (offer 45520225, RTX 5090, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime disk 60, torch 2.8.0+cu128, transformers 5.17.0, numpy 2.3.2, rented 15:01:21Z destroyed 15:09:35Z ~0.137h x dph $0.49444444 = ~$0.07 of $0.40); 1 rental of max 3; post-destroy 0 claude-sleep-358b2 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc (HF download on rental); loop-s1 final.pt sha c9f4934f... (25764244 B) verified both ends. Credit at gate 6.236215526269859 (gate: none). Copy-back sha256-verified 5 files. No code edits, no weights pushed. See artifacts/claude-rsn358b2-20260926/RESULTS.md + run/.
+- rent-brd8 GPU OUTCOME (2026-09-26, label rent-brd8, origin/main code unmodified, selftest ok): RUN COMPLETE, verdict NOT SHOWN for compounding, G7 MET (ITER cov@30 143/161/166 vs CTRL 152/152/167 vs base 108 of 240; per-seed ITER-CTRL -9/+9/-1, need +12 each; CI ITER-CTRL [-3.96,+3.33] not above 0, upper 3.33% = 8 puzzles of 240, not below 6-puzzle proved-wrong bar; ITER-base +35/+53/+58, need +24 each, CI [+14.66,+25.65]; round-1 wins 165; ITER round-2 wins 200/215/185 vs CTRL 171, posed). Rentals: 52750932 (offer 43165147 US, 5090 dph 0.4722, stuck loading past 6-min rule, destroyed ~13:18Z, ~0.10h ~$0.05) + 52752114 (offer 52583402 RO, 5090 dph 0.47, ran 13:23Z-~14:20Z, host died mid-seed-1 exited/stopped, restart queued-unavailable, destroyed, ~1.0h ~$0.47) + 52761669 (offer 45669213 KR, 5090 dph 0.4944, ran 14:32Z-15:05Z script 31.2 min, destroyed 15:13Z, ~0.72h ~$0.36); task total ~$0.88 of $1.00 budget, 3 rentals of max 3; post-destroy 0 rent-brd8 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128, credit at gate 6.67843962726986. Copy-back 4 files (brd8_summary.json, streams.json, practice.json, log.txt). No code edits, no weights. See artifacts/claude-brd8-20260926/RESULTS-gpu.md + gpu/.
+- 2026-09-26 15:15 UTC claude-notes-rd378L (rd-378L): RTX 5090 rental 52757951 (~1.16h x $0.4944 = ~$0.58) + loading-only 52756139/52757075 (worst-case ~$0.11 if vast bills loading; two success:False creates 52757822/52757917 destroyed, $0). Total <= ~$0.69 of $1.80 BUDGET. Outcome: WRITE-FAIL, nothing scored. transformers==5.17.0 hard-imports torchvision at image_utils.py:54, and the mandated torch==2.11.0 upgrade left the image's torchvision 0.23.0 ABI-broken (torchvision::nms does not exist), so LlamaConfig is unimportable and the sealed writer cannot load; peft==0.21.0 also unimportable (needs BloomPreTrainedModel, removed in transformers 5.x), so the rebuild path failed too. Writer reached rental via Mac rsync fallback (sha dbcc8db5a5840d839fe049f720bdfeacf094deb78f2652984c28c53f8c388510 OK) but could not run. Copied back before destroy: dialogs.jsonl (2760 turns, sha 82b56b441abd57fb88b1e5076ceb3be209c7ea5e2b02d301fd6d7fdf467677f9) + setup/rebuild/write/data/selftest logs to ~/rd378L-private/ (outside git). No RESULTS.md/notes_recall.json/ranked_turns.jsonl created (retry not blocked).
+- 2026-09-26 15:33 UTC 0.2d-r rent (label claude-monthend-02dr, code unmodified, R0 refusal ok, SEAL-code 347/347 OK, SEAL-02dr 3/3 OK, bankD SEAL 3/3 OK, selftest 9/9): RUN COMPLETE. X' 816 rows 40 lives (0.2c X: 953/40); Tr 658 rows 40 lives. Score mechanical: X RIGHT 77 / ABSTAIN 99 ms 955.5/1800.5; G RIGHT 53 / ABSTAIN 109 ms 1515.5/2491.7; T RIGHT 28 / ABSTAIN 42 ms 906.5/1318.6; Tr RIGHT 23 / ABSTAIN 52 ms 473.2/718.5 (Tr never_told RIGHT 13 vs T 12, edit RIGHT 0 vs 3). Instance 52763487 (RTX 5090, offer 49024471, dph 0.5037, 14:42:02Z-15:33:30Z ~0.86h ~$0.43 of $0.80); 1 rental of max 4; post-destroy 0 claude-monthend-02dr live. Reader depot 52755827 read-only (~12 min depot-to-rental incl. flatten, sha e688e1b2 match); adapter a33211dc match. Deviations: ep382_X.jsonl and sleep_Tr.jsonl never written; ssh launch client-timeouts (server processes ok, each launched once); dph actual vs estimate. Copy-back 24 files sha-verified. No weights, no TEST-ONLY panel. See artifacts/claude-e2e02dr-20260926/RESULTS-rent.md + run/ + score/ + score-machine/ + logs/.
+[0m
+[0m$ [0mcat >> artifacts/fable-predictions-ledger.md << 'LEDGER_EOF'
+- 2026-09-26 15:38 UTC claude-benchmarks-bmrivsmoke (Benchmarks bm-riv smoke, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.257, final ~$0.261 of $0.30; would have breached $0.27). Finished: plain1b 30 rows, qwen2b 30 rows. Killed (exit 143, rows kept): lfm12b 10 rows, qwen2b_think_s0/s1/s2 6 rows each; merge skipped. Rentals: 52766147 (offer 52652212, 4090 dph 0.43437, created 15:01:12Z, SSH key-sync fail incl. fresh attached key, destroyed ~15:10:10Z, ~0.15h ~$0.065) + 52767389 (offer 39064492, 4090 dph 0.42222, image pytorch/pytorch:2.8.0-cuda12.9-cudnn9-runtime disk 80, torch 2.8.0+cu129 transformers 5.17.0 py 3.11.13, created 15:10:22Z running 15:16:32Z lanes 15:19:17Z killed 15:36:48Z destroyed 15:38:15Z, ~0.46h ~$0.196); task total ~$0.261 of $0.30 budget, 2 rentals of max 4; post-destroy 0 claude-benchmarks-bmrivsmoke live. Credit at gate 6.303551406269861. Copy-back 6 files sha-verified. Peak GPU mem 16926/24564 MiB. No code edits, no traceback, no replies quoted. See artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md + run/.
+LEDGER_EOF
+tail -1 artifacts/fable-predictions-ledger.md | head -c 300; echo
+- 2026-09-26 15:38 UTC claude-benchmarks-bmrivsmoke (Benchmarks bm-riv smoke, origin/main code unmodified, panel seal da7202db ok, selftest 12/12): BUDGET-STOP (killed at ~$0.257, final ~$0.261 of $0.30; would have breached $0.27). Finished: plain1b 30 rows, qwen2b 30 rows. Killed (exit 143, rows ke
+[0m
+[0m← [0mWrite artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-bmriv-smoke-20260926/ artifacts/fable-predictions-ledger.md; echo ---; git diff --stat -- artifacts/fable-predictions-ledger.md | tail -2; wc -l artifacts/claude-bmriv-smoke-20260926/run/*.jsonl | tail -7
+M artifacts/fable-predictions-ledger.md
+---
+ artifacts/fable-predictions-ledger.md | 4 ++++
+ 1 file changed, 4 insertions(+)
+      10 artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+      30 artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+       6 artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+       6 artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+       6 artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+      30 artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+      88 total
+[0m
+[0m$ [0mgit status --short | grep -E "bmriv|ledger"; echo ---; git status --porcelain --untracked-files=all -- artifacts/claude-bmriv-smoke-20260926/ | head -10
+M artifacts/fable-predictions-ledger.md
+---
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md 2>&1; git check-ignore -v artifacts/fable-predictions-ledger.md 2>&1; echo IGNORE_EXIT:$?
+.gitignore:5:artifacts/	artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+.gitignore:5:artifacts/	artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+IGNORE_EXIT:1
+[0m
+[0m$ [0mgit add -f artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl artifacts/fable-predictions-ledger.md 2>&1; git status --short | grep -E "bmriv|ledger"
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+M  artifacts/fable-predictions-ledger.md
+[0m
+[0m# [0mTodos
+[✓] Gates: credit + duplicate (done, passing)
+[✓] Search cheapest 5090/4090 offer, rent with label (rental2 52767389 running)
+[✓] Stream tree, setup pip + models, selftest + panel hash
+[✓] Run 4 lanes, merge, copy back, destroy, ledger
+[✓] Write RESULTS-rent.md, push via watcher paths, final report
+[0m
