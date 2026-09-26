@@ -5,9 +5,11 @@ panel: python claude_lis319f_score.py panel --panel P --reads R --threshold 0.99
        P rows carry "facts" (current, stated as true) and "former" (no longer true). A saved fact (same live save rule
        as claude_lis319_fullclaim.saved_facts) is FORMER-AS-CURRENT when its owner and value match a former item of its
        row (claude_lis317_gates.e2e_match) and match no current fact of that row.
-dev:   python claude_lis319f_score.py dev --dev DEV.jsonl --pred PRED.jsonl --threshold 0.995 --out OUT.json
+dev:   python claude_lis319f_score.py dev --dev DEV.jsonl --pred PRED.jsonl [--pred PRED2.jsonl] --threshold 0.995 --out OUT.json
        Same count on built dev rows whose gold frame has a FORMER fact (rows missing from PRED are skipped and
        counted), plus right/wrong saves on those rows by claude_lis300_score.match.
+subset: python claude_lis319f_score.py subset --dev DEV.jsonl --src-prefix former319 --out ROWS.jsonl
+       writes the dev rows whose src starts with the prefix (to read them with the old reader).
 """
 from __future__ import annotations
 
@@ -47,7 +49,7 @@ def panel(a):
 
 
 def dev(a):
-    P = {r["id"]: r for r in load(a.pred)}
+    P = {r["id"]: r for p in a.pred for r in load(p)}
     c = Counter()
     for row in load(a.dev):
         fr = json.loads(row["target"].split("<END>")[0])
@@ -76,17 +78,24 @@ def dev(a):
     print(json.dumps(out))
 
 
+def subset(a):
+    rows = [r for r in load(a.dev) if str(r.get("src", "")).startswith(a.src_prefix)]
+    Path(a.out).write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    print(json.dumps({"rows": len(rows)}))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["panel", "dev"])
+    ap.add_argument("mode", choices=["panel", "dev", "subset"])
     ap.add_argument("--panel")
     ap.add_argument("--reads")
     ap.add_argument("--dev")
-    ap.add_argument("--pred")
+    ap.add_argument("--pred", action="append", default=[])
+    ap.add_argument("--src-prefix")
     ap.add_argument("--threshold", type=float, default=0.995)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    (panel if a.mode == "panel" else dev)(a)
+    {"panel": panel, "dev": dev, "subset": subset}[a.mode](a)
 
 
 if __name__ == "__main__":
