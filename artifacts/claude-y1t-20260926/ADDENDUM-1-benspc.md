@@ -15,3 +15,9 @@ still on the same machine as the trained model's (PLAN step 5), so the compariso
   (GATE-data.md).
 - The step 6b rows for the Wrong-answers-stated-as-fact thread's y1t-H1 marks run on BensPC too; that thread's $0.20
   is not spent.
+
+**Update, 18:52 UTC:** Ben corrected himself at 18:47 UTC (relayed by the Thread manager, 18:50): the project has one
+$30 rental pool, and each rental needs the Thread manager's OK. So the rental job is held again as an alternative, not
+retired. Whichever machine is free first after the data gate runs it, the BensPC job at $0 or the rental with the
+Thread manager's cap. The DUPLICATE gate on the run folder stops the second. The run's RESULTS file names the
+machine. Nothing else changes.
