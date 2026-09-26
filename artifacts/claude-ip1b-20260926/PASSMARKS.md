@@ -30,3 +30,10 @@ messages found a night still running.
 ## Limits
 CPU, tiny sizes, the bare 1B as the live model. Stops here use SIGTERM first (the real path); ip-1 covered SIGKILL at
 every stage.
+
+## Addendum 1 (2026-09-26 15:37:25 UTC, written while the run is going and before any of its results were read)
+Negative control, report-only (Thread manager's push): after the run, fingerprint_close is applied to the recorded
+fingerprints of every pair of DIFFERENT versions made in this run (v0001 vs v0002, and so on). Every pair must come out
+"not close". If any pair comes out close, the 0.02 tolerance cannot tell adapters apart, J2 and J4 carry no
+information, and the result will say so whatever the marks say. Also reported: the smallest largest-log-prob gap
+between any two different versions, next to the largest gap seen between reloads of the same version.
