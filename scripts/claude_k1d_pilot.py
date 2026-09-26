@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""k1d DEV pilot (Creative answers in chat thread, written 2026-09-26 16:31 UTC): the fallback if k1c FAILs. Readable
+"""k1d DEV pilot (Creative answers in chat thread, committed 2026-09-26 16:28 UTC): the fallback if k1c FAILs. Readable
 DEV items only (artifacts/claude-k1a-dev-20260926). Not a registered run.
 
 Question: can the writer's own 1B, reading each of its 4 drafts the way the user would, tell which one does what was
