@@ -1,4 +1,4 @@
-# rv-391 dev 2 results on the retrained nets: the learned critic on rsn-358i2 (thought-memory thread; written 2026-09-26 22:14 UTC by date -u)
+# rv-391 dev 2 results on the retrained nets: the learned critic on rsn-358i2 (thought-memory thread; written about 22:10 UTC and committed 22:11:15 UTC. Time fix at 22:12 UTC by date -u: the first stamp here said 22:14, which was typed without running date -u and was ahead of the real time)
 
 Raw output: critic/run-358i2/, committed at 39b867609 (Mac CPU job rv391critic2, 21:45 to 21:56 UTC, $0, no GLM). The
 seal checked 14 of 14 and the code was not edited. Nets: rsn-358i2 loop-s1..s4, each sha256 equal to its line in
