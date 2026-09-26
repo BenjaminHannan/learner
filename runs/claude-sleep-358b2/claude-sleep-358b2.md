@@ -1,0 +1,16 @@
+COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
+GPU: rent
+BUDGET: $0.40 for this task, re-rents included (sleep research thread's $2, Ben 12:59 UTC 09-26; the Director keeps the ledger). TIME CAP: 1 h 15 min from the first rental. Label: claude-sleep-358b2.
+CREDIT GATE (first): apply the Director's current rental gate. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
+RENTAL RULES: RTX 5090 or 4090, reliability >= 0.98, >= 40 GB disk. Running total of dph x hours; at $0.35 or 1 h 10 min, stop by exact PID, copy back what exists, destroy, BUDGET-STOP. Not running within 6 min or no log progress for 10 min: destroy and try another host (max 3). Launch detached (nohup/setsid). Destroy at the end and confirm. Append a ledger line.
+DUPLICATE GATE: stop with DUPLICATE if origin/main or origin/builder-outbox already has artifacts/claude-rsn358b2-20260926/RESULTS.md or a live instance is labelled claude-sleep-358b2.
+
+YOUR TASK: builder for rsn-358b2 (chat bridge: the 1B copies a number square out of a chat message, a sealed loop net fills it, the 1B replies; vs the 1B alone). Code sealed by the sleep research thread; run it, never edit it; if something breaks, stop and report the exact error. Artifacts go in artifacts/claude-rsn358b2-20260926/.
+READ FIRST (origin/main): artifacts/claude-rsn358b2-20260926/PASSMARKS.md and the docstring of scripts/claude_rsn358b2_bridge.py.
+1. On the rental: `git archive origin/main scripts artifacts/claude-rsn358b2-20260926`, extract. pip install torch numpy transformers (versions as the other MiniCPM5-1B rental jobs use; trust_remote_code is needed).
+2. MODELS: the 1B is plain MiniCPM5-1B, the project's already-approved base model: download `openbmb/MiniCPM5-1B` from Hugging Face on the rental (not a new model; if the Director's rules say to copy it from BensPC/Mac instead, do that). The loop net: copy ~/premonition-models/rsn358a/loop-s1/final.pt from the Mac (25,764,244 bytes) to the rental; `sha256sum` must equal c9f4934f2ab62a0abd0c5103c10785b6286aea9fdafabd06ebbf7727bf3ca2c4, else stop.
+3. SEAL: `sha256sum -c artifacts/claude-rsn358b2-20260926/SEAL-code.sha256.txt` all OK, else stop. `python -B scripts/claude_rsn358b2_bridge.py selftest` -> "selftest ok".
+4. RUN once: python -B scripts/claude_rsn358b2_bridge.py run --model <MiniCPM5-1B dir> --ckpt <loop-s1 final.pt> --sizes 5,6,7 --n 100 --seed 35900 --out W/b2 2>&1 | tee W/b2.log
+5. Copy W/b2/bridge.json, W/b2/transcripts-*.jsonl and W/b2.log into artifacts/claude-rsn358b2-20260926/run/ (force-add; artifacts/ is git-ignored).
+6. RESULTS.md, verdict first: B0-B2 per PASSMARKS.md with integer counts (per size: A right / couldnt / wrong given; B the same; B stage counts; C); PASS / FAIL / INCONCLUSIVE; proved-wrong clause; GPU, minutes, dollars; every deviation. Append a ledger line (cat >> artifacts/fable-predictions-ledger.md).
+PUSH: artifacts/claude-rsn358b2-20260926/RESULTS.md artifacts/claude-rsn358b2-20260926/run artifacts/fable-predictions-ledger.md
