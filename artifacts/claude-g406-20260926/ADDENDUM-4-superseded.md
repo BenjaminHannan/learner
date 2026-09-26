@@ -1,4 +1,4 @@
-# g406 ADDENDUM-4: the resume will not run; g406-2 replaces it (written 2026-09-26 23:49 UTC by date -u)
+# g406 ADDENDUM-4: the resume will not run; g406-2 replaces it (written 2026-09-26, committed 23:45 UTC by date -u)
 
 The resume (handoff/held/claude-madeup-g406r-mac.md, ADDENDUM-3) was held until the reading thread's opencode
 diagnosis. That diagnosis (lis-320 ADDENDUM-6) found that opencode's default reasoning effort makes a call take

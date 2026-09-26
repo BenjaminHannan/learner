@@ -1,6 +1,6 @@
 # g406-2 and g406b: can GLM 5.3 Flash, at reasoning effort "low", spot made-up claims about the user the way the blind judges do?
 
-"Making things up about you" thread. Written 2026-09-26 23:44 UTC (date -u). DRAFT for the Thread manager's review. It will be sealed
+"Making things up about you" thread. Written 2026-09-26, committed 23:45 UTC (date -u). DRAFT for the Thread manager's review. It will be sealed
 before any GLM call, and nothing below changes after an answer has been seen. DEV data only. Nothing is trained.
 Cost: $0 (Mac CPU, GLM through Ben's opencode subscription, this thread's share of 3 calls at a time).
 

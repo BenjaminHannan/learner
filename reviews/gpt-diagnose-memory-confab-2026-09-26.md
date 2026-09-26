@@ -1,6 +1,6 @@
 # Prompt for GPT (web): a 1B chat model with memory makes things up about the user; what to try first?
 
-(Written 2026-09-26 23:48 UTC by the "Making things up about you" thread. GPT cannot see the repo, so everything it needs is below.)
+(Written 2026-09-26, committed 23:45 UTC (date -u) by the "Making things up about you" thread. GPT cannot see the repo, so everything it needs is below.)
 
 ---
 

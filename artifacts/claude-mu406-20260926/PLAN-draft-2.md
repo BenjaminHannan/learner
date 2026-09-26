@@ -1,4 +1,4 @@
-# mu-406 plan, draft 2 (written 2026-09-26 23:46 UTC by date -u; not sealed; for the Thread manager's review)
+# mu-406 plan, draft 2 (written 2026-09-26, committed 23:45 UTC by date -u; not sealed; for the Thread manager's review)
 
 PLAN-draft.md (19:29) and PLAN-review-1.md (9f3639a96) stay as written. This draft changes the plan after mu-405b
 (VERIFY.md 00816bdbe). The test is still rejection-sampling fine-tuning: the 1B trains on its own replies that a
