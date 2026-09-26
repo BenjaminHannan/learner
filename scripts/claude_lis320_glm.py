@@ -120,7 +120,8 @@ def guard(*texts):
 
 def call(key, model, text, temperature, tries=4):
     body = json.dumps({"model": model, "messages": [{"role": "user", "content": text}], "temperature": temperature,
-                       "max_tokens": 8000, "reasoning": {"effort": "low"}}).encode()
+                       "max_tokens": 8000, "reasoning": {"effort": "low"},
+                       "usage": {"include": True}}).encode()
     for i in range(tries):
         req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", data=body, headers={
             "Authorization": "Bearer " + key, "Content-Type": "application/json"})
