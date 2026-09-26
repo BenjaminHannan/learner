@@ -1,0 +1,1054 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Read origin/main:handoff/queue/lis-302-gpu.md first 13 lines + fetch
+[ ] TREE: extract scripts + artifacts to temp dir
+[ ] Generate seeds (2400, seed 4027)
+[ ] Split seeds into 4 parts
+[ ] Run 4 GLM processes in parallel
+[ ] Concat raw + check kept/drops
+[ ] Build items + copy to worktree + RESULTS-mac.md + cleanup
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 30; echo "---STATUS---"; git status --short; echo "---BRANCH---"; git branch --show-current; git rev-parse --show-toplevel
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+---STATUS---
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+A  artifacts/claude-brd9-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd9-20260926/gpu/brd9_summary.json
+A  artifacts/claude-brd9-20260926/gpu/log.txt
+A  artifacts/claude-brd9-20260926/gpu/practice.json
+A  artifacts/claude-brd9-20260926/gpu/streams.json
+A  artifacts/claude-brd9-20260926/gpu/transfer_streams.json
+A  artifacts/claude-k1a-20260926/RESULTS-rent.md
+A  artifacts/claude-k1a-20260926/run/creative_B.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_KB0.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_T.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_X.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_judge_u.jsonl
+A  artifacts/claude-k1a-20260926/run/creative_key.json
+A  artifacts/claude-k1a-20260926/run/creative_key_u.json
+A  artifacts/claude-k1a-20260926/run/dev/creative_K.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/creative_KB.jsonl
+A  artifacts/claude-k1a-20260926/run/dev/logdev.txt
+A  artifacts/claude-k1a-20260926/run/dev/logdevkb.txt
+A  artifacts/claude-k1a-20260926/run/logB.txt
+A  artifacts/claude-k1a-20260926/run/logK.txt
+A  artifacts/claude-k1a-20260926/run/logKB.txt
+A  artifacts/claude-k1a-20260926/run/logKB0.txt
+A  artifacts/claude-k1a-20260926/run/logT.txt
+A  artifacts/claude-k1a-20260926/run/logX.txt
+A  artifacts/claude-k1a-20260926/run/summary_creative.json
+A  artifacts/claude-rd378L-20260926/RESULTS.md
+A  artifacts/claude-rd378L-20260926/notes_recall.json
+A  artifacts/claude-rd378L-20260926/ranked_turns.jsonl
+A  artifacts/claude-rd378u-20260926/RESULTS.md
+A  artifacts/claude-rd378u-20260926/notes_confirm.json
+A  artifacts/claude-rd378u-20260926/ranked_turns.jsonl
+A  artifacts/claude-rd379q-20260926/RESULTS.md
+A  artifacts/claude-rd379q-20260926/notes_recall.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3.json
+A  artifacts/claude-rd379q-20260926/notes_recall_v3_facts.json
+A  artifacts/claude-rd379q-20260926/ranked_turns.jsonl
+A  artifacts/claude-rt02d-20260926/RESULTS-rent.md
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+?? scripts/claude_263_runall.sh
+?? scripts/claude_266_devscore.py
+?? scripts/claude_266_panelrun.py
+?? scripts/claude_266_runall.sh
+?? scripts/claude_266_score.py
+?? scripts/claude_266b_devscore.py
+?? scripts/claude_266b_panelrun.py
+?? scripts/claude_266b_runall.sh
+?? scripts/claude_266b_score.py
+?? scripts/claude_268_devrepro.py
+?? scripts/claude_268_panelrun.py
+?? scripts/claude_268_runall.sh
+?? scripts/claude_268_score.py
+?? scripts/claude_268_supp.py
+?? scripts/claude_280_panel.sh
+?? scripts/claude_280_runall.sh
+?? scripts/claude_280b_panel.sh
+?? scripts/claude_280b_runall.sh
+?? scripts/claude_280m_panel.sh
+?? scripts/claude_280m_runall.sh
+?? scripts/claude_280n_panel.sh
+?? scripts/claude_280p_panel.sh
+?? scripts/claude_281_panel.sh
+?? scripts/claude_281_panelrun.sh
+?? scripts/claude_281_runall.sh
+?? scripts/claude_281b_panel.sh
+?? scripts/claude_281b_runall.sh
+?? scripts/claude_282_panel.sh
+?? scripts/claude_282_panelrun.sh
+?? scripts/claude_282_runall.sh
+?? scripts/claude_282b_panelrun.sh
+?? scripts/claude_282b_runall.sh
+?? scripts/claude_291_m1.py
+?? scripts/claude_291_m7run.py
+?? scripts/claude_291_m8.sh
+?? scripts/claude_291_panel.sh
+?? scripts/claude_291_runall.sh
+?? scripts/claude_291_score.py
+?? scripts/claude_292_corrarm_run.py
+?? scripts/claude_292_m5.sh
+?? scripts/claude_292_m5run.py
+?? scripts/claude_292_panelrun.py
+?? scripts/claude_292_runall.sh
+?? scripts/claude_292_score.py
+?? scripts/claude_called281_devcases.py
+?? scripts/claude_called281_panelrun.py
+?? scripts/claude_called281_panelscore.py
+?? scripts/claude_called281_regscore.py
+?? scripts/claude_called281_run.py
+?? scripts/claude_called281_score.py
+?? scripts/claude_called281b_devcases.py
+?? scripts/claude_called281b_panelrun.py
+?? scripts/claude_called281b_panelscore.py
+?? scripts/claude_called281b_regscore.py
+?? scripts/claude_called281b_run.py
+?? scripts/claude_called281b_score.py
+?? scripts/claude_capab280_devcases.py
+?? scripts/claude_capab280_regscore.py
+?? scripts/claude_capab280_run.py
+?? scripts/claude_capab280_score.py
+?? scripts/claude_capab280b_devcases.py
+?? scripts/claude_capab280b_paneladapt.py
+?? scripts/claude_capab280b_regscore.py
+?? scripts/claude_capab280b_run.py
+?? scripts/claude_capab280b_score.py
+?? scripts/claude_comma263_devcases.py
+?? scripts/claude_comma263_regscore.py
+?? scripts/claude_comma263_run.py
+?? scripts/claude_comma263_score.py
+?? scripts/claude_diag267_c3.py
+?? scripts/claude_diag267_c3client.py
+?? scripts/claude_diag267_qbuild.py
+?? scripts/claude_diag267_score.py
+?? scripts/claude_diag267_turns.py
+?? scripts/claude_diag271_roc.py
+?? scripts/claude_diag290_bisect.py
+?? scripts/claude_diag290_bisect2.py
+?? scripts/claude_diag290_pilot.py
+?? scripts/claude_diag290_probe.py
+?? scripts/claude_diag290_probe2.py
+?? scripts/claude_diag290_run.py
+?? scripts/claude_diag290_summary.py
+?? scripts/claude_diag293_pilot.py
+?? scripts/claude_diag293_pilot2.py
+?? scripts/claude_diag293_run.py
+?? scripts/claude_diag293_summary.py
+?? scripts/claude_ear265_armb.py
+?? scripts/claude_ear265_arms.py
+?? scripts/claude_ear265_canon.py
+?? scripts/claude_ear265_devset.py
+?? scripts/claude_ear265_panel.py
+?? scripts/claude_ear265_qbuild.py
+?? scripts/claude_ear265_scoremain.py
+?? scripts/claude_ear265_turns.py
+?? scripts/claude_ear269_armb.py
+?? scripts/claude_ear269_arms.py
+?? scripts/claude_ear269_devset.py
+?? scripts/claude_ear269_groupcheck.py
+?? scripts/claude_ear269_panel.py
+?? scripts/claude_ear269_qbuild.py
+?? scripts/claude_ear269_scoremain.py
+?? scripts/claude_ear269_turns.py
+?? scripts/claude_earcheck261b_armb.py
+?? scripts/claude_earcheck261b_arms.py
+?? scripts/claude_earcheck261b_devset5.py
+?? scripts/claude_earcheck261b_guard.py
+?? scripts/claude_earcheck261b_guarddev.py
+?? scripts/claude_earcheck261b_panel.py
+?? scripts/claude_earcheck261b_scoremain.py
+?? scripts/claude_earcheck261b_turns.py
+?? scripts/claude_earcheck264_armb.py
+?? scripts/claude_earcheck264_arms.py
+?? scripts/claude_earcheck264_client.py
+?? scripts/claude_earcheck264_commatags.py
+?? scripts/claude_earcheck264_devreport.py
+?? scripts/claude_earcheck264_devset.py
+?? scripts/claude_earcheck264_panel.py
+?? scripts/claude_earcheck264_qa.py
+?? scripts/claude_earcheck264_qbuild.py
+?? scripts/claude_earcheck264_scoremain.py
+?? scripts/claude_earcheck264_turns.py
+?? scripts/claude_fix138nb_label.py
+?? scripts/claude_fix255b_test.py
+?? scripts/claude_fix255b_text.py
+?? scripts/claude_fix263_comma.py
+?? scripts/claude_fix266_chainlift.py
+?? scripts/claude_fix266b_detector.py
+?? scripts/claude_fix268_nhopdir.py
+?? scripts/claude_fix280_capab.py
+?? scripts/claude_fix280b_general.py
+?? scripts/claude_fix281_called.py
+?? scripts/claude_fix281b_casual.py
+?? scripts/claude_fix282_small.py
+?? scripts/claude_fix282b_vocab.py
+?? scripts/claude_fix291_glue.py
+?? scripts/claude_join280m_regscore.py
+?? scripts/claude_join280m_run.py
+?? scripts/claude_join280m_score.py
+?? scripts/claude_join280n_score.py
+?? scripts/claude_join280p_score.py
+?? scripts/claude_lis310_agent.py
+?? scripts/claude_lis310_demo.py
+?? scripts/claude_lis310_test.py
+?? scripts/claude_lis311_agent.py
+?? scripts/claude_lis311_server.py
+?? scripts/claude_lis311_start.sh
+?? scripts/claude_lis311_try.py
+?? scripts/claude_loop138nb_agent.py
+?? scripts/claude_loop138p_agent.py
+?? scripts/claude_loop255b_agent.py
+?? scripts/claude_loop263_agent.py
+?? scripts/claude_loop266_agent.py
+?? scripts/claude_loop266b_agent.py
+?? scripts/claude_loop268_agent.py
+?? scripts/claude_loop280_agent.py
+?? scripts/claude_loop280b_agent.py
+?? scripts/claude_loop280m_agent.py
+?? scripts/claude_loop281_agent.py
+?? scripts/claude_loop281b_agent.py
+?? scripts/claude_loop282_agent.py
+?? scripts/claude_loop282b_agent.py
+?? scripts/claude_loop291_agent.py
+?? scripts/claude_loop292_agent.py
+?? scripts/claude_mouth241b_devrender_r.py
+?? scripts/claude_mouth241b_rer241_r.py
+?? scripts/claude_mut1_k1.py
+?? scripts/claude_mut1_k2.py
+?? scripts/claude_mut1_k3.py
+?? scripts/claude_mut1_k4.py
+?? scripts/claude_nb321_store.py
+?? scripts/claude_nb321_test.py
+?? scripts/claude_own_m0_build.py
+?? scripts/claude_own_m0_check.py
+?? scripts/claude_own_o0a2_compiler.py
+?? scripts/claude_own_o0a3_mutate.py
+?? scripts/claude_own_o0a_compiler.py
+?? scripts/claude_own_o0b_check.py
+?? scripts/claude_own_o0b_gen.py
+?? scripts/claude_own_o0c_prep.py
+?? scripts/claude_own_o0c_tok.py
+?? scripts/claude_own_o0d2_model.py
+?? scripts/claude_own_o0d2_test.py
+?? scripts/claude_own_o0d2_train.py
+?? scripts/claude_own_o0d_model.py
+?? scripts/claude_own_o0d_test.py
+?? scripts/claude_own_o0d_train.py
+?? scripts/claude_own_o0e2_model.py
+?? scripts/claude_own_o0e2_tests.py
+?? scripts/claude_own_o0e_model.py
+?? scripts/claude_own_o0e_serialize.py
+?? scripts/claude_own_o0e_tests.py
+?? scripts/claude_own_o0e_train.py
+?? scripts/claude_own_o0f_bench.py
+?? scripts/claude_probe255b_director.py
+?? scripts/claude_probe280p_run.py
+?? scripts/claude_probe280p_score.py
+?? scripts/claude_small282_devcases.py
+?? scripts/claude_small282_panelrun2.py
+?? scripts/claude_small282_regscore.py
+?? scripts/claude_small282_run.py
+?? scripts/claude_small282_score.py
+?? scripts/claude_small282b_devcases.py
+?? scripts/claude_small282b_regscore.py
+?? scripts/claude_small282b_run.py
+?? scripts/claude_small282b_score.py
+?? scripts/claude_type270_agent.py
+?? scripts/claude_type270_devrun.py
+?? scripts/claude_type270_devscore.py
+?? scripts/claude_type270_devset.py
+?? scripts/claude_type270_normalise.py
+?? scripts/claude_type270_panelrun.py
+?? scripts/claude_type270_panelscore.py
+?? scripts/claude_type270b_devscore.py
+?? scripts/claude_type270b_devset.py
+?? scripts/claude_type270b_normalise.py
+?? scripts/claude_type270b_panelscore.py
+?? scripts/claude_type270b_panelscore2.py
+?? scripts/claude_type270b_panelturns.py
+?? scripts/claude_type270b_qbuild.py
+?? scripts/claude_type270b_turns.py
+?? scripts/claude_typepanel270b_make.py
+?? scripts/scratchpad/fable-sleep104-20260921/trial/seed9/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep104-20260921/trial/z5/seed1-noise4/sleep-checkpoints/
+?? scripts/scratchpad/fable-sleep115-20260922/smoke/l1/l1-seed1/sleep-checkpoints/
+?? state.json
+---BRANCH---
+claude/card-experiment-handoff-7c5b27
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0muptime; df -g /; date -u; ls artifacts/ 2>&1 | head -n 50; git log --oneline origin/main -5 2>&1 | head
+13:28  up 3 days,  3:21, 4 users, load averages: 88.13 83.37 87.35
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 562267240    0%   /
+Sat Sep 26 17:28:34 UTC 2026
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-bm398i-20260926
+claude-bm398r-20260926
+claude-bmriv-smoke-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-brd8-20260926
+claude-brd9-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-ch403-20260926
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+f71f67750 dl-5 carry row also saves harm-panel replies (base + S adapters) to split lost/gained into wrong fact vs format; PASSMARKS addendum 2 (report-only)
+e9426db9b gr-1: learned grid reader code (selftest 14/14) and sealed blind panel (100 squares, 40 lookalikes)
+9004c8c9a y1t-H1 addendum 2: a pass shows reconsolidation on short chats only (25-27 user turns per life vs ~590 per LoCoMo chat)
+83622d6a2 brd-9 VERIFY addendum: forgetting not measured; replication gets a sealed no-harm mark
+8a0f8e4d5 world_latin: shared 'blanks' reply mode (prompt_blanks/check_blanks, exact blank count) for Creative
+[0m
+[0m# [0mTodos
+[✓] Read origin/main:handoff/queue/lis-302-gpu.md first 13 lines + fetch
+[•] TREE: extract scripts + artifacts to temp dir
+[ ] Generate seeds (2400, seed 4027)
+[ ] Split seeds into 4 parts
+[ ] Run 4 GLM processes in parallel
+[ ] Concat raw + check kept/drops
+[ ] Build items + copy to worktree + RESULTS-mac.md + cleanup
+[0m
+[0m$ [0mD=$(mktemp -d); echo "$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D"; echo "EXTRACT_EXIT:$?"; ls "$D"; ls "$D/scripts" | grep -E "lis320|y1t"; ls "$D/artifacts/claude-lis320-20260926" | head -n 20; echo "$D" > /tmp/y1t_D_path.txt; cat /tmp/y1t_D_path.txt
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w
+EXTRACT_EXIT:0
+artifacts
+design
+scripts
+claude_lis320_avoidtest.py
+claude_lis320_check.py
+claude_lis320_glm.py
+claude_lis320_score.py
+claude_lis320_seed.py
+claude_lis320_style.py
+claude_y1t_data.py
+claude_y1t_h1run.py
+claude_y1tH1_marks.py
+claude_y1tH1_score.py
+ADDENDUM-1-ask-back.md
+avoid_names_dev.txt
+avoid_test.sha256
+PASSMARKS.md
+PASSMARKS.sha256.txt
+PILOT-REVIEW.md
+PILOT-THRESHOLDS.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); mkdir -p "$D/artifacts/claude-y1t-20260926/glm"; ls -R "$D/artifacts/claude-y1t-20260926" 2>&1; date -u +%s > /tmp/y1t_start_epoch.txt; date -u; echo "D=$D"
+glm
+
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm:
+Sat Sep 26 17:28:47 UTC 2026
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); O="artifacts/claude-y1t-20260926/glm"; python3 -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out "$O/seeds.jsonl" 2>&1; echo "EXIT:$?"
+{"dialogs": 2400, "turns": 16816, "intents": {"ambiguous_pronoun": 517, "ask": 1253, "backref": 1548, "confirm": 480, "correct": 1586, "doubt": 544, "former": 1271, "hypothetical": 516, "jobhome": 825, "negation_only": 484, "plan": 482, "question": 502, "smalltalk": 652, "someone_else": 468, "teach": 5688}}
+EXIT:0
+[0m
+[0m$ [0mpython3 -B scripts/claude_y1t_data.py split-seeds --seeds artifacts/claude-y1t-20260926/glm/seeds.jsonl --parts 4 2>&1; echo "EXIT:$?"; wc -l artifacts/claude-y1t-20260926/glm/seeds*.jsonl
+{"dialogs": 2400, "parts": 4}
+EXIT:0
+     600 artifacts/claude-y1t-20260926/glm/seeds_0.jsonl
+     600 artifacts/claude-y1t-20260926/glm/seeds_1.jsonl
+     600 artifacts/claude-y1t-20260926/glm/seeds_2.jsonl
+     600 artifacts/claude-y1t-20260926/glm/seeds_3.jsonl
+    2400 artifacts/claude-y1t-20260926/glm/seeds.jsonl
+    4800 total
+[0m
+[0m$ [0mpython3 -c "import ast; src=open('scripts/claude_lis320_glm.py').read(); print(src[:3000])"
+#!/usr/bin/env python3
+"""lis-320 pilot, step 2 of 3: GLM writes the wording for each dialog seed (one OpenRouter call per dialog).
+
+Input: claude_lis320_seed.py output. For every turn GLM gets the intent (described in the abstract), the facts chosen by
+code, the strings that MUST appear verbatim and the strings that must NOT appear. The instruction holds no example
+sentences or phrasings: all wording comes from GLM. GLM returns JSON: per turn, the assistant's short reply just
+before the user's message ("reply_before") and the user's message ("user").
+
+Key rules (as claude_ideajudge_teacher.py): the key is read from ~/.config/openrouter/key into memory only. Never
+printed, logged or written. If any model output contains "sk-or", nothing more is written and the run aborts.
+
+python3 claude_lis320_glm.py --seeds seeds.jsonl --out raw.jsonl [--model z-ai/glm-5.3-flash] [--temperature 1.0]
+        [--limit N]                  resumes: dialog ids already in --out are skipped
+python3 claude_lis320_glm.py --seeds seeds.jsonl --dry-run [--dialog ID]   prints one prompt, no API call
+python3 claude_lis320_glm.py --selftest                                     fake reply, no network
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+MODEL = "z-ai/glm-5.3-flash"
+KEY_MARK = "sk-or"
+
+HEAD = """You are writing training data: realistic text chats between a user and a personal assistant app. Below is the plan for ONE conversation. Code chose every fact; your job is only the wording.
+
+For each numbered turn write two strings:
+- "reply_before": what the assistant said just before this user message, reacting briefly to the user's previous message. At most about 15 words. It states no facts, guesses nothing, does not ask about anything the plan has not reached yet, and uses no name the user has not already typed. {opener}
+- "user": the user's message for this turn, following the turn's plan.
+
+How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message. About one message in four is long (25 to 50 words) and rambles, with the planned content in the middle or at the end and chatter around it; the chatter adds no facts, names, places or numbers. Never copy words of the plan itself (such as "first person", "owner", "relation", "intent") into a message.
+
+Hard rules (a message that breaks one is thrown away):
+1. Each MUST INCLUDE string appears in that user message spelled exactly as given, letter for letter. Typing it all in lowercase is fine; nothing else may change: no typo, plural, hyphen, nickname or abbreviation inside it.
+2. No MUST NOT INCLUDE string appears in that user message. Where the turn says "al
+[0m
+[0m$ [0mtest -f ~/.config/openrouter/key && echo "key-exists"; ls -l ~/.config/openrouter/key; date -u
+key-exists
+-rw-------  1 ben-hannan  staff  73 Sep 24 15:29 /Users/ben-hannan/.config/openrouter/key
+Sat Sep 26 17:28:58 UTC 2026
+[0m
+[0m# [0mTodos
+[✓] Read origin/main:handoff/queue/lis-302-gpu.md first 13 lines + fetch
+[✓] TREE: extract scripts + artifacts to temp dir
+[✓] Generate seeds (2400, seed 4027)
+[✓] Split seeds into 4 parts
+[•] Run 4 GLM processes in parallel
+[ ] Concat raw + check kept/drops
+[ ] Build items + copy to worktree + RESULTS-mac.md + cleanup
+[0m
+[0m$ [0mO="artifacts/claude-y1t-20260926/glm"; for i in 0 1 2 3; do nohup python3 -B scripts/claude_lis320_glm.py --seeds "$O/seeds_$i.jsonl" --out "$O/raw_$i.jsonl" > "$O/glm_$i.log" 2>&1 & echo "started $i pid $!"; done; wait; echo "ALL_DONE_EXIT:$?"; date -u; echo "---TAILS---"; tail -n 5 "$O/glm_0.log"; tail -n 5 "$O/glm_1.log"; tail -n 5 "$O/glm_2.log"; tail -n 5 "$O/glm_3.log"
+started 0 pid 54435
+started 1 pid 54436
+started 2 pid 54437
+started 3 pid 54438
+ALL_DONE_EXIT:0
+Sat Sep 26 17:29:02 UTC 2026
+---TAILS---
+nohup: python3: Bad CPU type in executable
+nohup: python3: Bad CPU type in executable
+nohup: python3: Bad CPU type in executable
+nohup: python3: Bad CPU type in executable
+[0m
+[0m$ [0mwhich python3; file $(which python3); arch; which nohup; file $(which nohup); which uv; uv --version 2>&1 | head; ls -la $(which python3)
+/usr/local/bin/python3
+/usr/local/bin/python3: Mach-O 64-bit executable x86_64
+arm64/usr/bin/nohup
+/usr/bin/nohup: Mach-O universal binary with 3 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64e:Mach-O 64-bit executable arm64e] [arm64e.x1:Mach-O 64-bit executable arm64e.x1]
+/usr/bin/nohup (for architecture x86_64):	Mach-O 64-bit executable x86_64
+/usr/bin/nohup (for architecture arm64e):	Mach-O 64-bit executable arm64e
+/usr/bin/nohup (for architecture arm64e.x1):	Mach-O 64-bit executable arm64e.x1
+/Users/ben-hannan/.local/bin/uv
+uv 0.12.7 (61291a8ca 2026-08-27 aarch64-apple-darwin)
+lrwxr-xr-x@ 1 ben-hannan  admin  40 Aug 11 18:34 /usr/local/bin/python3 -> ../Cellar/python@3.14/3.14.6/bin/python3
+[0m
+[0m$ [0mls /opt/homebrew/bin/python3* 2>&1; /opt/homebrew/bin/python3 --version 2>&1; /usr/bin/python3 --version 2>&1; ls /usr/bin/python3*; ~/.local/bin/uv python find 2>&1 | head -n 20
+zsh:1: no matches found: /opt/homebrew/bin/python3*
+zsh:1: no such file or directory: /opt/homebrew/bin/python3
+Python 3.9.6
+/usr/bin/python3
+/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12
+[0m
+[0m$ [0mPY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; file "$PY"; "$PY" --version; "$PY" -B -c "import urllib.request, json, re, sys; print('stdlib-ok')"; D=$(cat /tmp/y1t_D_path.txt); "$PY" -B scripts/claude_lis320_glm.py --help 2>&1 | head -n 20
+/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12: Mach-O 64-bit executable arm64
+Python 3.12.14
+stdlib-ok
+usage: claude_lis320_glm.py [-h] [--seeds SEEDS] [--out OUT] [--model MODEL]
+                            [--temperature TEMPERATURE] [--limit LIMIT]
+                            [--dry-run] [--dialog DIALOG] [--selftest]
+
+options:
+  -h, --help            show this help message and exit
+  --seeds SEEDS
+  --out OUT
+  --model MODEL
+  --temperature TEMPERATURE
+  --limit LIMIT
+  --dry-run
+  --dialog DIALOG
+  --selftest
+[0m
+[0m$ [0mPY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; O="artifacts/claude-y1t-20260926/glm"; date -u; echo "launching 4 GLM processes with $PY"; for i in 0 1 2 3; do "$PY" -B scripts/claude_lis320_glm.py --seeds "$O/seeds_$i.jsonl" --out "$O/raw_$i.jsonl" > "$O/glm_$i.log" 2>&1 & echo "started $i pid $!"; done; wait; echo "ALL_DONE_EXIT:$?"; date -u; echo "---TAILS---"; for i in 0 1 2 3; do echo "== glm_$i.log =="; tail -n 8 "$O/glm_$i.log"; done; echo "---COUNTS---"; for i in 0 1 2 3; do echo -n "raw_$i: "; wc -l < "$O/raw_$i.jsonl"; done
+Sat Sep 26 17:29:28 UTC 2026
+launching 4 GLM processes with /Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12
+started 0 pid 54582
+started 1 pid 54583
+started 2 pid 54584
+started 3 pid 54585
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 7000000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mdate -u; ps aux | grep -E "claude_lis320_glm" | grep -v grep; echo "---LOGS---"; D=$(cat /tmp/y1t_D_path.txt); O="$D/artifacts/claude-y1t-20260926/glm"; for i in 0 1 2 3; do echo "== glm_$i.log tail =="; tail -n 6 "$O/glm_$i.log" 2>&1; echo -n "raw_$i lines: "; wc -l < "$O/raw_$i.jsonl" 2>&1; done; ls -la "$O"
+Sat Sep 26 19:26:15 UTC 2026
+ben-hannan       54227  36.2  2.1 563006944 704768   ??  RN    1:28PM   2:40.08 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:y1t-glm-mac.go1.54149 COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 2400 network calls to OpenRouter, GLM 5.3 Flash; the lis-320 pilot cost $0.0072 for 30 calls, so expect about $0.60). No reader, no rental, no BensPC. Label: y1t-glm. TIME CAP: 120 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: y1g (doubt at recall) was NO-GO (efa4d8923). Its named fallback is trained doubt: the 1B learns when to say "I don't know" from its own code-graded drafts. Ben's 16:39 "Use GLM": nothing trained on may be written or judged by Claude. These practice chats use Reading facts' lis-320 scripts UNCHANGED (code picks every fact, GLM writes every word, code checks every turn), on this thread's own seed. Reading facts agreed (17:12 UTC). Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-y1t-20260926/glm; mkdir -p $O.\0122. python3 -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (no --ask-back; record the printed counts)\0123. python3 -B scripts/claude_y1t_data.py split-seeds --seeds $O/seeds.jsonl --parts 4   (writes $O/seeds_0.jsonl .. seeds_3.jsonl; record the printed line)\0124. Start 4 GLM processes together, each with its own log, and wait for all 4 to exit:\012   for i in 0 1 2 3; do nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds_$i.jsonl --out $O/raw_$i.jsonl > $O/glm_$i.log 2>&1 & done; wait\012   Each prints totals at the end (calls, parsed, tokens, cost_usd); record all four lines. If the time cap nears (at 100 minutes), stop the 4 processes by exact PID and go on with what exists (raw rows are written as each dialog finishes); say so.\0125. cat $O/raw_0.jsonl $O/raw_1.jsonl $O/raw_2.jsonl $O/raw_3.jsonl > $O/raw.jsonl\012   python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)\0126. python3 -B scripts/claude_y1t_data.py items --seeds $O/seeds.jsonl --kept $O/kept.jsonl --out $O/items   (record the printed line verbatim)\0127. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, items/items_train.jsonl, items/items_dev.jsonl, glm_0..3.log) into artifacts/claude-y1t-20260926/glm/ of your worktree and write RESULTS-mac.md there: every printed line verbatim, the total cost in USD (sum of the four), wall time, any error. GLM output may be quoted (it is not Claude text), but keep RESULTS-mac.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-y1t-20260926/glm
+---LOGS---
+== glm_0.log tail ==
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-4027-01216 unparsed
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+raw_0 lines:      305
+== glm_1.log tail ==
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-4027-00989 unparsed
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+raw_1 lines:      248
+== glm_2.log tail ==
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-4027-00886 unparsed
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+raw_2 lines:      222
+== glm_3.log tail ==
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 3 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+[glm320] s320-4027-00983 unparsed
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+raw_3 lines:      246
+total 45632
+drwxr-xr-x  15 ben-hannan  staff       480 Sep 26 13:29 .
+drwxr-xr-x   3 ben-hannan  staff        96 Sep 26 13:28 ..
+-rw-r--r--   1 ben-hannan  staff     34076 Sep 26 15:26 glm_0.log
+-rw-r--r--   1 ben-hannan  staff     30926 Sep 26 15:26 glm_1.log
+-rw-r--r--   1 ben-hannan  staff     28242 Sep 26 15:26 glm_2.log
+-rw-r--r--   1 ben-hannan  staff     33102 Sep 26 15:26 glm_3.log
+-rw-r--r--   1 ben-hannan  staff    608468 Sep 26 15:26 raw_0.jsonl
+-rw-r--r--   1 ben-hannan  staff    460724 Sep 26 15:25 raw_1.jsonl
+-rw-r--r--   1 ben-hannan  staff    417174 Sep 26 15:26 raw_2.jsonl
+-rw-r--r--   1 ben-hannan  staff    433609 Sep 26 15:26 raw_3.jsonl
+-rw-r--r--   1 ben-hannan  staff   2685328 Sep 26 13:28 seeds_0.jsonl
+-rw-r--r--   1 ben-hannan  staff   2667152 Sep 26 13:28 seeds_1.jsonl
+-rw-r--r--   1 ben-hannan  staff   2657783 Sep 26 13:28 seeds_2.jsonl
+-rw-r--r--   1 ben-hannan  staff   2636073 Sep 26 13:28 seeds_3.jsonl
+-rw-r--r--   1 ben-hannan  staff  10646336 Sep 26 13:28 seeds.jsonl
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); O="$D/artifacts/claude-y1t-20260926/glm"; echo "=== heads ==="; for i in 0 1 2 3; do echo "== glm_$i.log head =="; head -n 5 "$O/glm_$i.log"; done; echo "=== grep totals ==="; grep -h -E "totals|calls|parsed|tokens|cost_usd|done|finished|Traceback|402" "$O/glm_0.log" | sort | uniq -c | head -n 20; echo "=== raw sample ==="; head -c 600 "$O/raw_0.jsonl"; echo; echo "=== raw line counts ==="; wc -l "$O"/raw_*.jsonl; echo "=== key-leak check ==="; grep -l "sk-or" "$O"/* 2>&1; echo "leakcheck_exit:$?"; echo "=== ps ==="; ps aux | grep "lis320" | grep -v grep | head; echo "ps_done"
+=== heads ===
+== glm_0.log head ==
+[glm320] s320-4027-00000 ok
+[glm320] s320-4027-00004 ok
+[glm320] s320-4027-00008 ok
+[glm320] s320-4027-00012 ok
+[glm320] s320-4027-00016 ok
+== glm_1.log head ==
+[glm320] s320-4027-00001 ok
+[glm320] s320-4027-00005 ok
+[glm320] s320-4027-00009 ok
+[glm320] s320-4027-00013 ok
+[glm320] s320-4027-00017 ok
+== glm_2.log head ==
+[glm320] s320-4027-00002 ok
+[glm320] s320-4027-00006 ok
+[glm320] s320-4027-00010 ok
+[glm320] s320-4027-00014 ok
+[glm320] s320-4027-00018 ok
+== glm_3.log head ==
+[glm320] s320-4027-00003 ok
+[glm320] s320-4027-00007 ok
+[glm320] s320-4027-00011 ok
+[glm320] s320-4027-00015 ok
+[glm320] s320-4027-00019 ok
+=== grep totals ===
+   1 [glm320] s320-4027-00000 ok
+   1 [glm320] s320-4027-00004 ok
+   1 [glm320] s320-4027-00008 ok
+   1 [glm320] s320-4027-00012 ok
+   1 [glm320] s320-4027-00016 ok
+   1 [glm320] s320-4027-00020 ok
+   1 [glm320] s320-4027-00024 ok
+   1 [glm320] s320-4027-00028 ok
+   1 [glm320] s320-4027-00032 ok
+   1 [glm320] s320-4027-00036 ok
+   1 [glm320] s320-4027-00040 ok
+   1 [glm320] s320-4027-00044 ok
+   1 [glm320] s320-4027-00048 ok
+   1 [glm320] s320-4027-00052 ok
+   1 [glm320] s320-4027-00056 ok
+   1 [glm320] s320-4027-00060 ok
+   1 [glm320] s320-4027-00064 ok
+   1 [glm320] s320-4027-00068 ok
+   1 [glm320] s320-4027-00072 ok
+   1 [glm320] s320-4027-00076 ok
+=== raw sample ===
+{"dialog_id": "s320-4027-00000", "model": "z-ai/glm-5.3-flash", "temperature": 1.0, "prompt_chars": 4724, "parsed": {"turns": [{"n": 1, "reply_before": "", "user": "hey just so you know my neighbour Ishelle has a cat named Ishy, love that little guy honestly"}, {"n": 2, "reply_before": "aw that's sweet", "user": "oh and Ishelle might be getting a second cat soon, thinking of calling it Sikin, nothing decided yet tho"}, {"n": 3, "reply_before": "haha two cats would be fun", "user": "i dont have a parrot btw, never been a bird person"}, {"n": 4, "reply_before": "got it", "user": "fun fact, Ishel
+=== raw line counts ===
+     305 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw_0.jsonl
+     248 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw_1.jsonl
+     222 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw_2.jsonl
+     246 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw_3.jsonl
+    1021 total
+=== key-leak check ===
+leakcheck_exit:1
+=== ps ===
+ben-hannan       54227   5.2  2.1 562815568 696352   ??  SN    1:28PM   2:44.55 /usr/local/bin/opencode run --model opencode-go/muse-spark-1.3-contributor --auto --dir /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 --title mimo:y1t-glm-mac.go1.54149 COMMON RULES (the "Answering from memory" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, at most 4 parallel processes, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).\012GPU: no (Mac CPU only; about 2400 network calls to OpenRouter, GLM 5.3 Flash; the lis-320 pilot cost $0.0072 for 30 calls, so expect about $0.60). No reader, no rental, no BensPC. Label: y1t-glm. TIME CAP: 120 minutes. DISK: 1.\012KEY RULES: the key lives ONLY in ~/.config/openrouter/key. The script reads it itself. Never print, echo, log, copy or commit it; never put it on a command line. If any output you are about to write contains "sk-or", stop and write KEY-LEAK-RISK instead.\012WHY: y1g (doubt at recall) was NO-GO (efa4d8923). Its named fallback is trained doubt: the 1B learns when to say "I don't know" from its own code-graded drafts. Ben's 16:39 "Use GLM": nothing trained on may be written or judged by Claude. These practice chats use Reading facts' lis-320 scripts UNCHANGED (code picks every fact, GLM writes every word, code checks every turn), on this thread's own seed. Reading facts agreed (17:12 UTC). Nothing is trained here.\012\0121. TREE: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D; O=artifacts/claude-y1t-20260926/glm; mkdir -p $O.\0122. python3 -B scripts/claude_lis320_seed.py --seed 4027 --n 2400 --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out $O/seeds.jsonl   (no --ask-back; record the printed counts)\0123. python3 -B scripts/claude_y1t_data.py split-seeds --seeds $O/seeds.jsonl --parts 4   (writes $O/seeds_0.jsonl .. seeds_3.jsonl; record the printed line)\0124. Start 4 GLM processes together, each with its own log, and wait for all 4 to exit:\012   for i in 0 1 2 3; do nohup python3 -B scripts/claude_lis320_glm.py --seeds $O/seeds_$i.jsonl --out $O/raw_$i.jsonl > $O/glm_$i.log 2>&1 & done; wait\012   Each prints totals at the end (calls, parsed, tokens, cost_usd); record all four lines. If the time cap nears (at 100 minutes), stop the 4 processes by exact PID and go on with what exists (raw rows are written as each dialog finishes); say so.\0125. cat $O/raw_0.jsonl $O/raw_1.jsonl $O/raw_2.jsonl $O/raw_3.jsonl > $O/raw.jsonl\012   python3 -B scripts/claude_lis320_check.py --seeds $O/seeds.jsonl --raw $O/raw.jsonl --out $O/kept.jsonl --drops $O/drops.jsonl   (record the printed counts verbatim)\0126. python3 -B scripts/claude_y1t_data.py items --seeds $O/seeds.jsonl --kept $O/kept.jsonl --out $O/items   (record the printed line verbatim)\0127. Copy $O (seeds.jsonl, raw.jsonl, kept.jsonl, drops.jsonl, items/items_train.jsonl, items/items_dev.jsonl, glm_0..3.log) into artifacts/claude-y1t-20260926/glm/ of your worktree and write RESULTS-mac.md there: every printed line verbatim, the total cost in USD (sum of the four), wall time, any error. GLM output may be quoted (it is not Claude text), but keep RESULTS-mac.md to counts. Then rm -rf "$D" (exact path) and confirm it is gone.\012PUSH: artifacts/claude-y1t-20260926/glm
+ps_done
+[0m
+[0m# [0mTodos
+[✓] Read origin/main:handoff/queue/lis-302-gpu.md first 13 lines + fetch
+[✓] TREE: extract scripts + artifacts to temp dir
+[✓] Generate seeds (2400, seed 4027)
+[✓] Split seeds into 4 parts
+[✓] Run 4 GLM processes in parallel
+[•] Concat raw + check kept/drops
+[ ] Build items + copy to worktree + RESULTS-mac.md + cleanup
+[0m
+[0m$ [0mPY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; O="artifacts/claude-y1t-20260926/glm"; cat "$O/raw_0.jsonl" "$O/raw_1.jsonl" "$O/raw_2.jsonl" "$O/raw_3.jsonl" > "$O/raw.jsonl"; wc -l "$O/raw.jsonl"; "$PY" -B scripts/claude_lis320_check.py --seeds "$O/seeds.jsonl" --raw "$O/raw.jsonl" --out "$O/kept.jsonl" --drops "$O/drops.jsonl" 2>&1; echo "CHECK_EXIT:$?"
+1021 artifacts/claude-y1t-20260926/glm/raw.jsonl
+{
+ "counts": {
+  "cue:ask:?": 3,
+  "cue:ask:again": 17,
+  "cue:ask:how old": 15,
+  "cue:ask:remind me": 28,
+  "cue:ask:what": 146,
+  "cue:ask:whats": 66,
+  "cue:ask:where": 9,
+  "cue:ask:who": 72,
+  "cue:ask:whos": 2,
+  "cue:confirm:?": 13,
+  "cue:confirm:check": 63,
+  "cue:confirm:correct": 1,
+  "cue:confirm:did i say": 5,
+  "cue:confirm:did i tell": 2,
+  "cue:confirm:right": 36,
+  "cue:confirm:was it": 4,
+  "cue:doubt:can't remember": 1,
+  "cue:doubt:cant remember": 7,
+  "cue:doubt:could be": 1,
+  "cue:doubt:maybe": 1,
+  "cue:doubt:might": 2,
+  "cue:doubt:no idea": 1,
+  "cue:doubt:not 100% sure": 2,
+  "cue:doubt:not certain": 1,
+  "cue:doubt:not even sure": 25,
+  "cue:doubt:not really sure": 1,
+  "cue:doubt:not sure": 58,
+  "cue:doubt:not totally sure": 13,
+  "cue:doubt:think": 30,
+  "cue:doubt:unsure": 1,
+  "cue:former:anymore": 29,
+  "cue:former:before": 2,
+  "cue:former:left": 2,
+  "cue:former:no longer": 2,
+  "cue:former:quit": 2,
+  "cue:former:used to": 245,
+  "cue:former:was": 14,
+  "cue:hypothetical:hypothetically": 2,
+  "cue:hypothetical:if": 107,
+  "cue:hypothetical:imagine": 36,
+  "cue:hypothetical:pretend": 1,
+  "cue:negation_only:n't": 17,
+  "cue:negation_only:never": 3,
+  "cue:negation_only:no": 5,
+  "cue:negation_only:not": 1,
+  "cue:negation_only:nt": 82,
+  "cue:plan:'ll": 1,
+  "cue:plan:going to": 6,
+  "cue:plan:gonna": 19,
+  "cue:plan:hoping": 3,
+  "cue:plan:next": 6,
+  "cue:plan:planning": 3,
+  "cue:plan:soon": 64,
+  "cue:plan:thinking about": 5,
+  "cue:plan:thinking of": 2,
+  "cue:plan:want to": 3,
+  "cue:plan:wants to": 10,
+  "cue:plan:will": 2,
+  "cue:question:?": 133,
+  "cue:someone_else:apparently": 7,
+  "cue:someone_else:claims": 2,
+  "cue:someone_else:heard": 36,
+  "cue:someone_else:mentioned": 3,
+  "cue:someone_else:says": 6,
+  "cue:someone_else:supposedly": 2,
+  "cue:someone_else:told": 53,
+  "dialogs": 1021,
+  "dialogs_unparsed": 376,
+  "drop:assert_hedged": 119,
+  "drop:assert_reported": 60,
+  "drop:dialog_unparsed": 2641,
+  "drop:forbidden_in_reply": 10,
+  "drop:forbidden_in_turn": 4,
+  "drop:former_present_cue": 41,
+  "drop:must_missing": 64,
+  "drop:no_cue": 46,
+  "drop:no_first_person": 8,
+  "drop:no_past_cue": 3,
+  "drop:plan_leak": 8,
+  "drop:reads_former": 5,
+  "drop:ref_word_missing": 4,
+  "drop:reply_new_name": 1,
+  "drop:role_word_missing": 1,
+  "drop:smalltalk_self": 16,
+  "drop:stray_name": 6,
+  "dropped": 333,
+  "dropped:ambiguous_pronoun": 2,
+  "dropped:ask": 6,
+  "dropped:backref": 52,
+  "dropped:confirm": 5,
+  "dropped:correct": 19,
+  "dropped:doubt": 10,
+  "dropped:former": 51,
+  "dropped:hypothetical": 4,
+  "dropped:jobhome": 1,
+  "dropped:negation_only": 6,
+  "dropped:plan": 20,
+  "dropped:question": 7,
+  "dropped:smalltalk": 16,
+  "dropped:someone_else": 15,
+  "dropped:teach": 119,
+  "kept": 4186,
+  "recased": 2096,
+  "turns": 7160
+ },
+ "kept_by_family": {
+  "ambiguous_pronoun": 140,
+  "ask": 358,
+  "backref": 363,
+  "confirm": 124,
+  "correct": 392,
+  "doubt": 144,
+  "former": 296,
+  "hypothetical": 146,
+  "jobhome": 215,
+  "negation_only": 108,
+  "plan": 124,
+  "question": 133,
+  "smalltalk": 147,
+  "someone_else": 109,
+  "teach": 1387
+ }
+}
+CHECK_EXIT:0
+[0m
+[0m$ [0mPY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; O="artifacts/claude-y1t-20260926/glm"; "$PY" -B scripts/claude_y1t_data.py items --seeds "$O/seeds.jsonl" --kept "$O/kept.jsonl" --out "$O/items" 2>&1; echo "ITEMS_EXIT:$?"; ls -la "$O/items" 2>&1; wc -l "$O"/kept.jsonl "$O"/drops.jsonl 2>&1
+{"counts": {"asks_kept": 358, "corrected": 14, "items_answerable": 334, "items_never_told": 334, "skip_no_current_fact": 24}, "train_items": 566, "dev_items": 102}
+ITEMS_EXIT:0
+total 784
+drwxr-xr-x   4 ben-hannan  staff     128 Sep 26 15:27 .
+drwxr-xr-x  19 ben-hannan  staff     608 Sep 26 15:27 ..
+-rw-r--r--   1 ben-hannan  staff   62735 Sep 26 15:27 items_dev.jsonl
+-rw-r--r--   1 ben-hannan  staff  333674 Sep 26 15:27 items_train.jsonl
+    4186 artifacts/claude-y1t-20260926/glm/kept.jsonl
+     333 artifacts/claude-y1t-20260926/glm/drops.jsonl
+    4519 total
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); O="$D/artifacts/claude-y1t-20260926/glm"; echo "=== glm totals search ==="; grep -h -E "calls|parsed|tokens|cost_usd|Traceback" "$O"/glm_*.log | head -n 20; echo "=== per-log line counts ==="; for i in 0 1 2 3; do echo -n "glm_$i ok:"; grep -c " ok$" "$O/glm_$i.log"; echo -n "glm_$i unparsed:"; grep -c "unparsed" "$O/glm_$i.log"; echo -n "glm_$i 402:"; grep -c "402" "$O/glm_$i.log"; done; echo "=== raw/kept/drops/items ==="; wc -l "$O"/seeds.jsonl "$O"/raw.jsonl "$O"/kept.jsonl "$O"/drops.jsonl "$O"/items/items_train.jsonl "$O"/items/items_dev.jsonl; echo "=== START ==="; cat /tmp/y1t_start_epoch.txt; date -u +%s; date -u
+=== glm totals search ===
+[glm320] s320-4027-00132 unparsed
+[glm320] s320-4027-00404 unparsed
+[glm320] s320-4027-00480 unparsed
+[glm320] s320-4027-00560 unparsed
+[glm320] s320-4027-00568 unparsed
+[glm320] s320-4027-00584 unparsed
+[glm320] s320-4027-00592 unparsed
+[glm320] s320-4027-00616 unparsed
+[glm320] s320-4027-00656 unparsed
+[glm320] s320-4027-00660 unparsed
+[glm320] s320-4027-00664 unparsed
+[glm320] s320-4027-00668 unparsed
+[glm320] s320-4027-00672 unparsed
+[glm320] s320-4027-00676 unparsed
+[glm320] s320-4027-00696 unparsed
+[glm320] s320-4027-00700 unparsed
+[glm320] s320-4027-00704 unparsed
+[glm320] s320-4027-00708 unparsed
+[glm320] s320-4027-00712 unparsed
+[glm320] s320-4027-00736 unparsed
+=== per-log line counts ===
+glm_0 ok:207
+glm_0 unparsed:98
+glm_0 402:683
+glm_1 ok:156
+glm_1 unparsed:92
+glm_1 402:603
+glm_2 ok:137
+glm_2 unparsed:85
+glm_2 402:548
+glm_3 ok:145
+glm_3 unparsed:101
+glm_3 402:634
+=== raw/kept/drops/items ===
+    2400 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/seeds.jsonl
+    1021 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw.jsonl
+    4186 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/kept.jsonl
+     333 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/drops.jsonl
+     566 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_train.jsonl
+     102 /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_dev.jsonl
+    8608 total
+=== START ===
+1790443727
+1790450840
+Sat Sep 26 19:27:20 UTC 2026
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); O="$D/artifacts/claude-y1t-20260926/glm"; PY=/Users/ben-hannan/.local/share/uv/python/cpython-3.12-macos-aarch64-none/bin/python3.12; "$PY" -B scripts/claude_lis320_check.py --seeds "$O/seeds.jsonl" --raw "$O/raw.jsonl" --out /tmp/y1t_kept2.jsonl --drops /tmp/y1t_drops2.jsonl > /tmp/y1t_check_out.txt 2>&1; echo "RECHECK_EXIT:$?"; diff -q /tmp/y1t_kept2.jsonl "$O/kept.jsonl" && echo "kept-identical"; W="$PWD/artifacts/claude-y1t-20260926/glm"; ls "$W" 2>&1; mkdir -p "$W/items"; cp "$O/seeds.jsonl" "$O/raw.jsonl" "$O/kept.jsonl" "$O/drops.jsonl" "$W/"; cp "$O/items/items_train.jsonl" "$O/items/items_dev.jsonl" "$W/items/"; cp "$O/glm_0.log" "$O/glm_1.log" "$O/glm_2.log" "$O/glm_3.log" "$W/"; echo "COPY_EXIT:$?"; ls -la "$W" "$W/items"; grep -l "sk-or" "$W"/* "$W"/items/* 2>&1; echo "leakcheck_exit:$?"
+RECHECK_EXIT:0
+kept-identical
+drops.jsonl
+glm_0.log
+glm_1.log
+glm_2.log
+glm_3.log
+items
+kept.jsonl
+raw_0.jsonl
+raw_1.jsonl
+raw_2.jsonl
+raw_3.jsonl
+raw.jsonl
+seeds_0.jsonl
+seeds_1.jsonl
+seeds_2.jsonl
+seeds_3.jsonl
+seeds.jsonl
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/seeds.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/seeds.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/raw.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/kept.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/kept.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/drops.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/drops.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_train.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_train.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_dev.jsonl and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items/items_dev.jsonl are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_0.log and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_0.log are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_1.log and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_1.log are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_2.log and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_2.log are identical (not copied).
+cp: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_3.log and /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/glm_3.log are identical (not copied).
+COPY_EXIT:1
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm:
+total 62376
+drwxr-xr-x  19 ben-hannan  staff       608 Sep 26 15:27 .
+drwxr-xr-x   3 ben-hannan  staff        96 Sep 26 13:28 ..
+-rw-r--r--   1 ben-hannan  staff     83416 Sep 26 15:26 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff     34076 Sep 26 15:26 glm_0.log
+-rw-r--r--   1 ben-hannan  staff     30926 Sep 26 15:26 glm_1.log
+-rw-r--r--   1 ben-hannan  staff     28242 Sep 26 15:26 glm_2.log
+-rw-r--r--   1 ben-hannan  staff     33102 Sep 26 15:26 glm_3.log
+drwxr-xr-x   4 ben-hannan  staff       128 Sep 26 15:27 items
+-rw-r--r--   1 ben-hannan  staff   6564007 Sep 26 15:26 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff    608468 Sep 26 15:26 raw_0.jsonl
+-rw-r--r--   1 ben-hannan  staff    460724 Sep 26 15:25 raw_1.jsonl
+-rw-r--r--   1 ben-hannan  staff    417174 Sep 26 15:26 raw_2.jsonl
+-rw-r--r--   1 ben-hannan  staff    433609 Sep 26 15:26 raw_3.jsonl
+-rw-r--r--   1 ben-hannan  staff   1919975 Sep 26 15:26 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff   2685328 Sep 26 13:28 seeds_0.jsonl
+-rw-r--r--   1 ben-hannan  staff   2667152 Sep 26 13:28 seeds_1.jsonl
+-rw-r--r--   1 ben-hannan  staff   2657783 Sep 26 13:28 seeds_2.jsonl
+-rw-r--r--   1 ben-hannan  staff   2636073 Sep 26 13:28 seeds_3.jsonl
+-rw-r--r--   1 ben-hannan  staff  10646336 Sep 26 13:28 seeds.jsonl
+
+/private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items:
+total 784
+drwxr-xr-x   4 ben-hannan  staff     128 Sep 26 15:27 .
+drwxr-xr-x  19 ben-hannan  staff     608 Sep 26 15:27 ..
+-rw-r--r--   1 ben-hannan  staff   62735 Sep 26 15:27 items_dev.jsonl
+-rw-r--r--   1 ben-hannan  staff  333674 Sep 26 15:27 items_train.jsonl
+grep: /private/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w/artifacts/claude-y1t-20260926/glm/items: Is a directory
+leakcheck_exit:2
+[0m
+[0m$ [0mWT="/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27"; ls "$WT/artifacts/claude-y1t-20260926/glm" 2>&1; echo "---"; ls "$WT/artifacts" | grep -i y1t 2>&1; echo "---worktree-root---"; pwd
+ls: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm: No such file or directory
+---
+---worktree-root---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); O="$D/artifacts/claude-y1t-20260926/glm"; W="/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm"; mkdir -p "$W/items"; cp "$O/seeds.jsonl" "$O/raw.jsonl" "$O/kept.jsonl" "$O/drops.jsonl" "$W/"; cp "$O/items/items_train.jsonl" "$O/items/items_dev.jsonl" "$W/items/"; cp "$O/glm_0.log" "$O/glm_1.log" "$O/glm_2.log" "$O/glm_3.log" "$W/"; echo "COPY_EXIT:$?"; ls -la "$W" "$W/items"; wc -l "$W"/seeds.jsonl "$W"/raw.jsonl "$W"/kept.jsonl "$W"/drops.jsonl "$W"/items/*.jsonl; grep -r "sk-or" "$W" 2>&1; echo "leakcheck_exit:$?"
+COPY_EXIT:0
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm:
+total 37808
+drwxr-xr-x  11 ben-hannan  staff       352 Sep 26 15:28 .
+drwxr-xr-x   3 ben-hannan  staff        96 Sep 26 15:28 ..
+-rw-r--r--   1 ben-hannan  staff     83416 Sep 26 15:28 drops.jsonl
+-rw-r--r--   1 ben-hannan  staff     34076 Sep 26 15:28 glm_0.log
+-rw-r--r--   1 ben-hannan  staff     30926 Sep 26 15:28 glm_1.log
+-rw-r--r--   1 ben-hannan  staff     28242 Sep 26 15:28 glm_2.log
+-rw-r--r--   1 ben-hannan  staff     33102 Sep 26 15:28 glm_3.log
+drwxr-xr-x   4 ben-hannan  staff       128 Sep 26 15:28 items
+-rw-r--r--   1 ben-hannan  staff   6564007 Sep 26 15:28 kept.jsonl
+-rw-r--r--   1 ben-hannan  staff   1919975 Sep 26 15:28 raw.jsonl
+-rw-r--r--   1 ben-hannan  staff  10646336 Sep 26 15:28 seeds.jsonl
+
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/items:
+total 784
+drwxr-xr-x   4 ben-hannan  staff     128 Sep 26 15:28 .
+drwxr-xr-x  11 ben-hannan  staff     352 Sep 26 15:28 ..
+-rw-r--r--   1 ben-hannan  staff   62735 Sep 26 15:28 items_dev.jsonl
+-rw-r--r--   1 ben-hannan  staff  333674 Sep 26 15:28 items_train.jsonl
+    2400 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/seeds.jsonl
+    1021 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/raw.jsonl
+    4186 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/kept.jsonl
+     333 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/drops.jsonl
+     102 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/items/items_dev.jsonl
+     566 /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm/items/items_train.jsonl
+    8608 total
+leakcheck_exit:1
+[0m
+[0m→ [0mRead /tmp/y1t_check_out.txt
+[0m
+[0m$ [0mW="/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm"; for i in 0 1 2 3; do echo "glm_$i last:"; tail -n 1 "$W/glm_$i.log"; done; date -u +%s; date -u
+glm_0 last:
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+glm_1 last:
+[glm320] try 4 failed: HTTPError HTTP Error 402: Payment Required
+glm_2 last:
+[glm320] try 2 failed: HTTPError HTTP Error 402: Payment Required
+glm_3 last:
+[glm320] try 1 failed: HTTPError HTTP Error 402: Payment Required
+1790450898
+Sat Sep 26 19:28:18 UTC 2026
+[0m
+[0m← [0mWrite artifacts/claude-y1t-20260926/glm/RESULTS-mac.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/y1t_D_path.txt); echo "D=$D"; rm -rf "$D"; echo "RM_EXIT:$?"; ls "$D" 2>&1; test ! -e "$D" && echo "CONFIRMED-GONE"; ls "/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/claude-y1t-20260926/glm"
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.LTx7pIhm3w: No such file or directory
+CONFIRMED-GONE
+drops.jsonl
+glm_0.log
+glm_1.log
+glm_2.log
+glm_3.log
+items
+kept.jsonl
+raw.jsonl
+RESULTS-mac.md
+seeds.jsonl
+[0m
+[0m# [0mTodos
+[✓] Read origin/main:handoff/queue/lis-302-gpu.md first 13 lines + fetch
+[✓] TREE: extract scripts + artifacts to temp dir
+[✓] Generate seeds (2400, seed 4027)
+[✓] Split seeds into 4 parts
+[✓] Run 4 GLM processes in parallel
+[✓] Concat raw + check kept/drops
+[✓] Build items + copy to worktree + RESULTS-mac.md + cleanup
+[0m
