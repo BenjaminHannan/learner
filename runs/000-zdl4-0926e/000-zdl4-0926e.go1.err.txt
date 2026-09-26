@@ -1,0 +1,380 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m✗ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt failed
+[91m[1mError: [0mFile not found: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead .
+[0m✗ [0mGlob "**/OPUS-RULES*" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls scratchpad/briefs/; echo ---; ls artifacts/ | head -50; echo ---; uptime; df -g /
+ls: scratchpad/briefs/: No such file or directory
+---
+claude-adapters-20260926d
+claude-aliaspanel237-20260922
+claude-aliaspanel237b-20260922
+claude-apos247-20260922
+claude-askpanel243-20260922
+claude-bench125-fairness-20260922
+claude-blurt1-dev-20260925
+claude-blurt2-20260925
+claude-blurt4-20260925
+claude-blurt5s-20260925
+claude-bm390-20260925
+claude-bm391-20260926
+claude-bm395-20260925
+claude-bm397t-20260926
+claude-boundary259-20260922
+claude-brd5-20260926
+claude-brd6-20260926
+claude-brd7-20260926
+claude-called281-20260923
+claude-called281b-20260923
+claude-calledpanel281-20260923
+claude-calledpanel281b-20260923
+claude-capab280-20260923
+claude-capab280b-20260923
+claude-capabilpanel280-20260923
+claude-capabilpanel280b-20260923
+claude-chain231-20260922
+claude-chain231b-20260922
+claude-chain266-20260923
+claude-chain266b-20260923
+claude-chainpanel231-20260922
+claude-chainpanel266-20260923
+claude-chainpanel266b-20260923
+claude-chat338-20260924
+claude-chatdemo-20260923
+claude-chatweak-20260923
+claude-comma263-20260923
+claude-commapanel263-20260923
+claude-comment258-20260922
+claude-convbench-f0-20260923
+claude-convf0-20260923
+claude-convjudge239-A-20260922
+claude-convjudge239-B-20260922
+claude-convpanel239-138l-20260922
+claude-convpanel239-138m-20260922
+claude-convpanel239-138n-20260922
+claude-convpanel239-20260922
+claude-correct252-20260922
+claude-correct252b-20260922
+claude-corrpanel252-20260922
+---
+ 9:43  up 2 days, 23:36, 4 users, load averages: 71.97 61.83 60.97
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        57    19%  484014 599366280    0%   /
+[0m
+[0m$ [0mls scratchpad/ 2>&1; echo ---; ls handoff/kit/mimo/ 2>&1 | head -30; echo ---; pwd; git status --short | head -20
+o0c-scratch-20260923
+srv270b.ps1
+stop270b_panel.ps1
+stop270b.ps1
+w255
+w255b
+---
+after15.sh
+common-muse.txt
+diskguard.sh
+ocdb.sh
+resume.sh
+run1.sh
+rungo.sh
+rungo2.sh
+rungo4.sh
+runq.sh
+t138nf.txt
+t252cf.txt
+t255f.txt
+t260f.txt
+t261build.txt
+t261panel.txt
+verify.py
+wait_all.sh
+wait_any.sh
+watch.sh
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+A  artifacts/claude-brd6-20260926/gpu/streams.json
+[0m
+[0m$ [0mls /private/tmp/claude-502/ 2>&1 | head; echo ---; ls ~/premonition-watch/queue/ 2>&1 | head -40; echo ---; cat handoff/kit/mimo/watcher.sh 2>&1 | head -60
+-private-var-folders-6q-27cy8k2s7w7cyb5spxrkj2mm0000gp-T-claude-sandbox-status-D5zpSz
+-Users-ben-hannan
+-Users-ben-hannan-Desktop
+-Users-ben-hannan-Desktop-projects-beautiful-model
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-fact-saving-note-filtering-4ff1ff
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-forgetting-plain-english-gap-9258f0
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-architecture-review-0161ce
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-model-issues-audit-abcf60
+-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-premonition-design-review-792236
+---
+000-adapters-0926d.exit
+000-adapters-0926d.go1.done
+000-adapters-0926d.go1.err.txt
+000-adapters-0926d.go1.reply.md
+000-adapters-0926d.md
+000-adapters-0926d.pushed
+000-benspc-check.exit
+000-benspc-check.go1.done
+000-benspc-check.go1.err.txt
+000-benspc-check.go1.reply.md
+000-benspc-check.md
+000-benspc-check.pushed
+000-cache-pin.exit
+000-cache-pin.go1.done
+000-cache-pin.go1.err.txt
+000-cache-pin.go1.reply.md
+000-cache-pin.md
+000-cache-pin.pushed
+000-ckpt-copy.exit
+000-ckpt-copy.go1.done
+000-ckpt-copy.go1.err.txt
+000-ckpt-copy.go1.reply.md
+000-ckpt-copy.md
+000-ckpt-copy.pushed
+000-credit-0926b.exit
+000-credit-0926b.go1.done
+000-credit-0926b.go1.err.txt
+000-credit-0926b.go1.reply.md
+000-credit-0926b.md
+000-credit-0926b.pushed
+000-diskcheck-0926.exit
+000-diskcheck-0926.go1.done
+000-diskcheck-0926.go1.err.txt
+000-diskcheck-0926.go1.reply.md
+000-diskcheck-0926.md
+000-diskcheck-0926.pushed
+000-instances-0926c.exit
+000-instances-0926c.go1.done
+000-instances-0926c.go1.err.txt
+000-instances-0926c.go1.reply.md
+---
+cat: handoff/kit/mimo/watcher.sh: No such file or directory
+[0m
+[0m$ [0mls handoff/kit/mimo/ 2>&1; echo ---; ls handoff/ 2>&1 | head -30; echo ---; find handoff -maxdepth 4 -name "watcher*" 2>&1 | head
+after15.sh
+common-muse.txt
+diskguard.sh
+ocdb.sh
+resume.sh
+run1.sh
+rungo.sh
+rungo2.sh
+rungo4.sh
+runq.sh
+t138nf.txt
+t252cf.txt
+t255f.txt
+t260f.txt
+t261build.txt
+t261panel.txt
+verify.py
+wait_all.sh
+wait_any.sh
+watch.sh
+---
+HANDOFF.md
+kit
+memory
+replies
+---
+[0m
+[0m$ [0mhead -50 handoff/kit/mimo/watch.sh; echo ===; ls ~/premonition-watch/queue/ | grep -i zdl4 2>&1; echo ===; ls ~/premonition-watch/queue/ | grep -i dl4 2>&1
+#!/bin/bash
+# Emits one line per newly finished agent (.done) and per new killed/failed log line. Seen-list kept in a file.
+Q=/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue
+SEEN=$Q/.watch_seen; touch $SEEN
+n0=$(wc -l < $Q/log.txt)
+while true; do
+  for f in $Q/*.done; do
+    [ -e "$f" ] || continue
+    b=$(basename "$f")
+    if ! grep -qx "$b" $SEEN; then echo "$b" >> $SEEN; echo "NEW DONE: $b [$(cat "$f")]"; fi
+  done
+  n1=$(wc -l < $Q/log.txt)
+  if [ "$n1" -gt "$n0" ]; then tail -n $((n1-n0)) $Q/log.txt | grep "killed\|failed\|stopped" | sed 's/^/LOG: /'; n0=$n1; fi
+  sleep 20
+done
+zsh:1: == not found
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue" | grep -i dl4
+ls: /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/mimo/queue: No such file or directory
+[0m
+[0m$ [0mls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/" 2>&1; echo "---"; ls "/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/" 2>&1
+---
+scratchpad
+[0m
+[0m$ [0mls ~/premonition-watch/queue/ | grep dl4; echo "exit=$?"
+000-zdl4-0926e.go1.err.txt
+000-zdl4-0926e.go1.reply.md
+000-zdl4-0926e.md
+000-zdl4-0926e.running
+rent-zdl4.exit
+rent-zdl4.go1.done
+rent-zdl4.go1.err.txt
+rent-zdl4.go1.reply.md
+rent-zdl4.md
+rent-zdl4.pushed
+exit=0
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances 2>&1 | head -60
+[K[97;48;2;0;0;0m╭─[0m[97;48;2;0;0;0m──[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mFilterable Values[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m───[0m[97;48;2;0;0;0m─╮[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--status:       [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--verification: [0m[38;5;83;48;2;0;0;0mverified[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0m--gpu-name:     [0m[97;48;2;0;0;0mRTX 5090[0m[48;2;0;0;0m [0m[97;48;2;0;0;0m│[0m
+[97;48;2;0;0;0m╰──────────────────────────╯[0m
+
+[93;48;2;0;0;0m╭─[0m[93;48;2;0;0;0m────────────[0m[93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mResults Summary[0m[93;48;2;0;0;0m [0m[93;48;2;0;0;0m────────────[0m[93;48;2;0;0;0m─╮[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mTotal: [0m[1;97;48;2;0;0;0m2 instances[0m[48;2;0;0;0m                       [0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;93;48;2;0;0;0mLabels: [0m[97;48;2;0;0;0mrent-brd8: 1  ·  rent-lis-319f: 1[0m[48;2;0;0;0m [0m[93;48;2;0;0;0m│[0m
+[93;48;2;0;0;0m╰───────────────────────────────────────────╯[0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╔══════╤═════════╤═════════╤═══════════════╤═════════╤════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m ID [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0mStatus [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m Label [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m     GPU     [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m $/hr  [0m[1;93;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[1;93;48;2;0;0;0m [0m[1;93;48;2;0;0;0m            Image      [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╟──────┼─────────┼─────────┼───────────────┼─────────┼────────────────────────[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;5;234m [0m[97;48;5;234m527…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[48;5;234m [0m[1;32;48;5;234mrunning[0m[48;5;234m [0m[37;48;2;0;0;0m│[0m[97;48;5;234m [0m[97;48;5;234mrent-l…[0m[97;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;5;234m [0m[38;5;81;48;5;234m1x RTX 5090 …[0m[38;5;81;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;5;234m [0m[38;5;83;48;5;234m$0.5037[0m[38;5;83;48;5;234m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;5;234m [0m[38;5;170;48;5;234mpytorch/pytorch:2.8.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m║[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0m527…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[48;2;0;0;0m [0m[1;32;48;2;0;0;0mrunning[0m[48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[97;48;2;0;0;0m [0m[97;48;2;0;0;0mrent-b…[0m[97;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;81;48;2;0;0;0m [0m[38;5;81;48;2;0;0;0m1x RTX 5090 …[0m[38;5;81;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;83;48;2;0;0;0m [0m[38;5;83;48;2;0;0;0m$0.4700[0m[38;5;83;48;2;0;0;0m [0m[37;48;2;0;0;0m│[0m[38;5;170;48;2;0;0;0m [0m[38;5;170;48;2;0;0;0mpytorch/pytorch:2.8.0-c[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[37;48;2;0;0;0m╚══════╧═════════╧═════════╧═══════════════╧═════════╧════════════════════════[0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[48;2;0;0;0m                                                                              [0m[48;2;0;0;0m [0m
+[48;2;0;0;0m [0m[2;48;2;0;0;0mColumns hidden to fit terminal width: Disk  ·  use --cols to customize (see --[0m[48;2;0;0;0m [0m
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances --raw 2>&1 | head -20; echo "---convénient---"; pgrep -fl "rungo4.sh .*rent-zdl4.md"; echo "pgrep_exit=$?"
+[
+ {
+  "actual_status": "running",
+  "bundle_id": null,
+  "bw_nvlink": 0.0,
+  "client_run_time": 1.1,
+  "compute_cap": 1200,
+  "country_code": "KR",
+  "cpu_arch": "amd64",
+  "cpu_cores": 16,
+  "cpu_cores_effective": 16.0,
+  "cpu_name": "AMD Ryzen 7 7800X3D 8-Core Processor",
+  "cpu_ram": 31197,
+  "cpu_util": 6.36,
+  "credit_balance": null,
+  "credit_discount": null,
+  "credit_discount_max": 0.0,
+  "cuda_max_good": 13.0,
+  "cur_state": "running",
+  "direct_port_count": 100,
+---convénient---
+pgrep_exit=1
+[0m
+[0m$ [0mpgrep -fl rungo4; echo "e1=$?"; pgrep -fl "rent-zdl4"; echo "e2=$?"; pgrep -fl zdl4; echo "e3=$?"
+27213 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-lis-319f.md
+28624 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-brd8.md
+40609 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-depot.md
+74439 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/007b-382b-benspc.md
+e1=0
+e2=1
+e3=1
+[0m
+[0m$ [0mexport VAST_API_KEY="$(cat ~/.config/vastai/vast_api_key)"; vastai show instances --raw 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); [print(x.get('id'), repr(x.get('label')), x.get('actual_status')) for x in d]"
+52751954 'rent-lis-319f' running
+52752114 'rent-brd8' running
+[0m
+[0m$ [0mls -la ~/premonition-watch/queue/rent-zdl4* ~/premonition-watch/queue/*zdl4* 2>&1; echo "---tail---"; tail -30 ~/premonition-watch/queue/rent-zdl4.go1.err.txt 2>&1
+-rw-r--r--  1 ben-hannan  staff  15028 Sep 26 09:44 /Users/ben-hannan/premonition-watch/queue/000-zdl4-0926e.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff    254 Sep 26 09:43 /Users/ben-hannan/premonition-watch/queue/000-zdl4-0926e.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   2883 Sep 26 09:42 /Users/ben-hannan/premonition-watch/queue/000-zdl4-0926e.md
+-rw-r--r--  1 ben-hannan  staff      0 Sep 26 09:42 /Users/ben-hannan/premonition-watch/queue/000-zdl4-0926e.running
+-rw-r--r--  1 ben-hannan  staff      5 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.exit
+-rw-r--r--  1 ben-hannan  staff      5 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.exit
+-rw-r--r--  1 ben-hannan  staff     39 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.done
+-rw-r--r--  1 ben-hannan  staff     39 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.done
+-rw-r--r--  1 ben-hannan  staff  89149 Sep 26 09:39 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff  89149 Sep 26 09:39 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.err.txt
+-rw-r--r--  1 ben-hannan  staff   3348 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   3348 Sep 26 09:40 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.go1.reply.md
+-rw-r--r--  1 ben-hannan  staff   3413 Sep 26 08:36 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.md
+-rw-r--r--  1 ben-hannan  staff   3413 Sep 26 08:36 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.md
+-rw-r--r--  1 ben-hannan  staff      0 Sep 26 09:42 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.pushed
+-rw-r--r--  1 ben-hannan  staff      0 Sep 26 09:42 /Users/ben-hannan/premonition-watch/queue/rent-zdl4.pushed
+---tail---
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+996b9348e rent-dl3: replay-into-the-night GPU run (verdict FAIL; F3-F5 pass, F1-F2 fail) + ledger line
+b588f1e37 rsn-358c1: answer-cell stop eval, sealed code run once per seed (verdict FAIL; stop fix NOT NEEDED, K4 split s1 PASS s2 FAIL) + ledger lines
+2ff497f88 ideajudge-teacher3: DEV teacher agreement check with z-ai/glm-5.3 (no training)
+===
+artifacts/fable-predictions-ledger.md
+    3006 artifacts/fable-predictions-ledger.md
+[0m
+[0m→ [0mRead artifacts/fable-predictions-ledger.md[90m [offset=3006][0m
+[0m
+[0m← [0mEdit artifacts/fable-predictions-ledger.md
+Index: /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+===================================================================
+--- /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
++++ /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/artifacts/fable-predictions-ledger.md
+@@ -3003,4 +3003,5 @@
+ - rent-358d GPU SPEND (2026-09-26, credit 6.33 at gate): rental 1 offer 46753295 (docker registry proxy refused, restarted once same error, destroyed stopped) + rental 2 offer 44173691 RTX 5090 dph 0.4852 (03:44:46Z-04:34:03Z, 0.82 h, ~$0.40); task total ~$0.41 of $0.80 budget, 2 rentals of max 3, 54 min of 1 h 30 min cap; post-destroy 0 rent-358d live. Checkpoints discarded with rental (Mac had 7 GB free < 8 GB copy bar) after sha256 recorded; 4 required files per run copied back.
+ - rent-dl3 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-dl3, origin/main code unmodified, selftest ok): registered verdict FAIL (F1 false: A final lost sum 56 vs S 63, needs <= 31.5, per-seed s4 20 < 39 but s5 36 > 24; F2 false: 11 of 14 A nights lost > 10; F3 true: A final lucky 227, 216 >= 118 each, gains 325 >= 0.8 x 310; F4 true: 1 worse night, A s5n7 266 -> 216; F5 true: reached 53, 59 >= 30). Proved-wrong clause NOT triggered. Not INCONCLUSIVE (L0 59, S lost sum 63, pool 908). Rentals: 52685064 offer 46753297 (registry proxy error while stopped, destroyed ~$0) + 52685812 offer 44173877 KR dph 0.5130 (run 03:35-04:56Z, 81.2 min, destroyed 05:01Z); task total ~$0.86 of $1.50 budget, 2 rentals of max 3; post-destroy 0 rent-dl3 live. BASE openbmb/MiniCPM5-1B commit 87179e5c, torch 2.8.0+cu128, transformers 5.17.0. Code from origin/main ca08ccc1, byte-identical for dl-3 inputs at 43457707. No weights saved. See artifacts/claude-dl3-20260926/RESULTS-gpu.md + gpu/.
+ - rent-bm391 GPU OUTCOME (2026-09-26, rented Linux GPU, label rent-bm391, unmodified origin/main + origin/builder-outbox code, seals bm391 3/3 + bm390-code 8/8 + e2e382-code 239/239 OK, selftests 10/10 + 13/13): BUDGET-STOP, no registered command completed except lane-3 mmlu_R (300 rows). Instance 52677751 (RTX 5090 offer 52604857, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 100, rented 01:51:26Z, destroyed 08:03:50Z, 6.21 h x dph $0.5103 = ~$3.17 projected; credit 9.0581 -> 7.4877 = $1.57 billed at destroy check, billing may lag); 1 rental of max 4; post-destroy 0 rent-bm391 live. Agent pace ~2 rows/min/LoCoMo-arm made 3x1986-row runs infeasible in $3.50 (needs ~14 h/arm). Killed by exact PID (2619, 2620, 3126 + drivers 2612, 2613, 2999; exits 143); lane drivers auto-advanced in kill window launching lane1-mmlu-ER, lane2-mmlu-E, lane3-locomo-R (~30 s, no output files, killed PIDs 3277, 3279, 3281, reported as deviation, not relaunched). Finished: GENERAL(mmlu,383,R) exit 0 wrote mmlu_R.jsonl rows=300. Unfinished with partial EP382 logs: LOCOMO(383e,ER) 456 rows, LOCOMO(382b,E) 445 rows (no locomo_*.jsonl wrote lines). Never started: both gsms, lane3 locomo (beyond 30 s stub), lane1/2 mmlu+gsm8k (beyond stubs). BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, MiniLM path exact, READER safetensors b4fd93a2...890 verified on box, torch 2.8.0+cu128, transformers 5.17.0, pyarrow ok. Fetch OK locomo_qa 1986 mmlu300 e294f5fc...f76c049 gsm8k300 df57d09b...8706b949. Sleep base-seed4102 JSON line recorded, pt 2ada54ac...ff069057. Smoke 6/6 exit 0. Peak GPU mem ~16933 MiB. Copy-back sha256-verified 5 files. See artifacts/claude-bm391-20260926/RESULTS-rent.md + run/.
+ - rent-brd7 GPU OUTCOME (2026-09-26, rented RTX 5090, label rent-brd7, origin/main code unmodified, selftest ok, panel md5 matched): registered verdict NOT SHOWN (W cov@30 158,158,146 vs base 135, deltas +23,+23,+11, bar +24=159 missed every seed; W-base CI [2.65,13.31] above 0 so not proved wrong; W-C deltas 130,125,119; 183 wins + 20 own so not inconclusive; N 99,89,96 and C 28,33,27 collapse). Instance 52734191 (RTX 5090 offer 44173814 KR, image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, rented 10:57:28Z, destroyed 11:27:06Z, ~0.494 h x dph $0.49444 = ~$0.24); 1 rental of max 3; post-destroy 0 rent-brd7 live. BASE openbmb/MiniCPM5-1B commit 87179e5c1f455ef22e6223592d2d61351b525bfc, torch 2.8.0+cu128. Run wall 20.1 min. No weights saved. See artifacts/claude-brd7-20260926/RESULTS-gpu.md + gpu/.
++- rent-dl4 GPU OUTCOME (2026-09-26, label rent-dl4, origin/main code unmodified, selftest ok): NO REGISTERED VERDICT, HOST-LOST. Rental 1 contract 52746763 offer 46753304 RTX 5090 dph 0.4722 (docker registry proxy refused while loading, destroyed, ~$0). Rental 2 contract 52747127 offer 43165155 RTX 5090 dph 0.4722 (loading ~10 min, SSH refused, destroyed; deviation: kept ~10 min vs 6-min rule, host showed no error). Rental 3 contract 52748076 offer 43995364 KR RTX 5090 dph 0.4944 (image pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel disk 60, torch 2.8.0+cu128 CUDA True, transformers 5.17.0 installed, BASE openbmb/MiniCPM5-1B @87179e5c downloaded; run launched detached 12:54Z, observed anchor pool 880 items, base lucky 59 reached 37 greedy 4 harm_right 200, S s6 n1 lost 7 lucky 82 KL 0.037, S s6 n2 lost 10 lucky 98 KL 0.058, then SSH refused and the instance record vanished = destroyed externally, Director notes Mac-agent destroy ~$0.32 to Fix sleep). 3 rentals of max 3; nothing copied back (disk lost with host); post-check 0 rent-dl4 live. Credit at gate 7.2011843180698705. No code edits, no weights, no TEST-ONLY panel (test puzzles generated in-run, never printed). Ledger appended locally, not pushed (this worktree branch serves another task; no result files exist to push).
+
+[0m
+[0m
+[0m$ [0mcat ~/premonition-watch/queue/rent-zdl4.exit; echo "---done---"; cat ~/premonition-watch/queue/rent-zdl4.go1.done; echo "---ls-b---"; ls ~/premonition-watch/queue/ | grep zdl4b; echo "exit_b=$?"; echo "---pscheck---"; ps -o pid,ppid,etime,command -p 27213,28624,40609,74439 2>&1 | head; echo "---date---"; date -u
+rc=0
+---done---
+opencode-go/muse-spark-1.3-contributor
+---ls-b---
+exit_b=1
+---pscheck---
+  PID  PPID  ELAPSED COMMAND
+27213 27211    36:25 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-lis-319f.md
+28624 28622    34:02 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-brd8.md
+40609 40607    01:35 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/rent-depot.md
+74439 74437 02:48:12 bash /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/handoff/kit/mimo/rungo4.sh /Users/ben-hannan/premonition-watch/queue/007b-382b-benspc.md
+---date---
+Sat Sep 26 13:44:17 UTC 2026
+[0m
+[0m$ [0mls artifacts/claude-zdl4check-20260926e 2>&1; mkdir -p artifacts/claude-zdl4check-20260926e && ls artifacts/claude-zdl4check-20260926e
+ls: artifacts/claude-zdl4check-20260926e: No such file or directory
+[0m
+[0m← [0mWrite artifacts/claude-zdl4check-20260926e/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status --short artifacts/claude-zdl4check-20260926e/; wc -l artifacts/claude-zdl4check-20260926e/REPORT.md
+52 artifacts/claude-zdl4check-20260926e/REPORT.md
+[0m
+[0m$ [0mgit status --short | grep zdl4check; echo "grep_exit=$?"; ls -la artifacts/claude-zdl4check-20260926e/
+grep_exit=1
+total 16
+drwxr-xr-x    3 ben-hannan  staff     96 Sep 26 09:44 .
+drwxr-xr-x@ 530 ben-hannan  staff  16960 Sep 26 09:44 ..
+-rw-r--r--    1 ben-hannan  staff   5211 Sep 26 09:44 REPORT.md
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-zdl4check-20260926e/REPORT.md; echo "exit=$?"
+.gitignore:5:artifacts/	artifacts/claude-zdl4check-20260926e/REPORT.md
+exit=0
+[0m
