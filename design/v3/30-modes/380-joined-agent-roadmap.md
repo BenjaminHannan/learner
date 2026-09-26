@@ -109,3 +109,6 @@ joins after dl-1 decides the learning rule.
   on bank C; if they fail, the "proved wrong" clause of PASSMARKS-383 applies. (GSM8K 300 practice: 0 questions use
   i/me/we/us/my/our, so a first-person rule would cost no GSM8K routing there.)
 - LoCoMo practice bar 32.85 for 0.2: Benchmarks' call in bm-391.
+- 01:40 UTC 09-26: rd-378 (1B note writer) = registered FAIL (31% of notes unsupported by their turns). 0.2/382b uses
+  heard rows only, so nothing changes for the rental. The "rd-378 notes" join step is removed; notes join only after a
+  faithfulness PASS, and then only as search aids whose answers are checked against the cited heard rows.
