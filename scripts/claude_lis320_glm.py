@@ -33,7 +33,7 @@ For each numbered turn write two strings:
 - "reply_before": what the assistant said just before this user message, reacting briefly to the user's previous message. At most about 15 words. It states no facts, guesses nothing, does not ask about anything the plan has not reached yet, and uses no name the user has not already typed. {opener}
 - "user": the user's message for this turn, following the turn's plan.
 
-How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message.
+How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message. About one message in four is long (25 to 50 words) and rambles, with the planned content in the middle or at the end and chatter around it; the chatter adds no facts, names, places or numbers. Never copy words of the plan itself (such as "first person", "owner", "relation", "intent") into a message.
 
 Hard rules (a message that breaks one is thrown away):
 1. Each MUST INCLUDE string appears in that user message spelled exactly as given, letter for letter. Typing it all in lowercase is fine; nothing else may change: no typo, plural, hyphen, nickname or abbreviation inside it.

@@ -49,21 +49,30 @@ ASSERTING = {"teach", "jobhome", "correct", "backref"}
 LOOK = {"question", "plan", "doubt", "someone_else", "hypothetical", "negation_only", "confirm", "ambiguous_pronoun"}
 
 # check-only cue classes (never trained on)
-PAST = re.compile(r"\b(used to|was|were|formerly|before|previously|last)\b", re.I)
+PAST = re.compile(r"\b(used to|was|were|formerly|before|previously|last|anymore|no longer|once|quit|left)\b", re.I)
+# "not anymore / over now / im not one now": a negated present, not a present cue (removed before PRESENT is checked)
+NEG_NOW = re.compile(r"\b(not|isnt|isn't|aint|dont|don't|doesnt|doesn't|no longer)\b(\s+\w+){0,3}?\s+(now|anymore)\b|"
+                     r"\b(over|done|finished|behind me)\s+now\b", re.I)
+PLAN_LEAK = re.compile(r"\bfirst person\b|\bowner:|\brelation:|\bintent\b|\bMUST\b")
+# second-hand source for a stated-as-true fact ("my neighbour mentioned it"); the user's own "i said/mentioned" is not
+REPORTED = re.compile(r"\b(apparently|according to|supposedly|reckons|rumou?r|i heard|heard that)\b|"
+                      r"(?<!\bi )(?<!\bive )(?<!\bi've )(?<!\bhave )(?<!\bnever )\bmentioned (it|that)\b", re.I)
 HEDGE = re.compile(r"\b(maybe|might|not sure|what if|suppose|imagine|apparently|supposedly|probably|i heard|"
                    r"i think)\b", re.I)
 CUES = {
-    "ask": re.compile(r"\?"),
+    "ask": re.compile(r"\?|\b(remind me|again|what|whats|what's|who|whos|who's|where|wheres|where's|how old|when)\b",
+                      re.I),
     "question": re.compile(r"\?"),
     "plan": re.compile(r"\b(going to|gonna|will|next|plan|plans|planning|wants? to|hoping|hopes? to|about to|soon|"
                        r"thinking of|thinking about)\b|'ll\b", re.I),
-    "doubt": re.compile(r"\b(think|thinks|maybe|not sure|might|probably|perhaps|guess|could be|idk|dunno|unsure)\b",
+    "doubt": re.compile(r"\b(think|thinks|maybe|not (even |really |totally |100% |a hundred percent )?sure|might|probably|"
+                        r"perhaps|guess|could be|idk|dunno|unsure|can'?t remember|don'?t remember|not certain|no idea)\b",
                         re.I),
-    "someone_else": re.compile(r"\b(says|said|told|tells|heard|apparently|according to|claims|claimed|reckons|"
+    "someone_else": re.compile(r"\b(says|said|told|tells|heard|apparently|according to|claims|claimed|reckons|mentioned|"
                                r"rumou?r|supposedly)\b", re.I),
     "hypothetical": re.compile(r"\b(if|suppose|supposing|imagine|pretend|hypothetically|let'?s say)\b", re.I),
     "negation_only": re.compile(r"\b(not|no|never|none|without)\b|n'?t\b", re.I),
-    "confirm": re.compile(r"\?|\b(right|yeah|yea|yes|correct|innit)\b", re.I),
+    "confirm": re.compile(r"\?|\b(right|yeah|yea|yes|correct|innit|check|did i (say|tell)|was it)\b", re.I),
 }
 # ask-back families: the user's answer to the assistant's yes/no question (check-only)
 YES = re.compile(r"\b(yes|yeah|yep|yup|yea|ya|yh|correct|right|exactly|true|sure is|she is|he is|i am|i do|she does|"
@@ -189,9 +198,13 @@ def check_turn(d, parsed, i):
                 R.append("yes_missing")
             if HEDGE.search(u):
                 R.append("assert_hedged")
+    if PLAN_LEAK.search(u) or PLAN_LEAK.search(rb):
+        R.append("plan_leak")
     if intent in ASSERTING:
         if HEDGE.search(u):
             R.append("assert_hedged")
+        if REPORTED.search(u):
+            R.append("assert_reported")
         for f in gold["facts"]:
             ff = dict(f, value=rename.get(f["value"], f["value"]), mode="ASSERT")
             if f["rel"] in CURRENT_RELS and is_former(ff, u):
@@ -199,7 +212,7 @@ def check_turn(d, parsed, i):
     elif intent == "former":
         if not PAST.search(u):
             R.append("no_past_cue")
-        if PRESENT.search(u):
+        if PRESENT.search(NEG_NOW.sub(" ", u)):
             R.append("former_present_cue")
     elif intent in LOOK or intent == "ask":
         assert not any(f["mode"] in WRITE for f in gold["facts"]), (d["dialog_id"], t["k"])
