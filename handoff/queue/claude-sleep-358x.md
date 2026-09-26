@@ -1,5 +1,5 @@
 COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
-STATUS: HELD until Ben's yes to the spend (relayed by the Thread manager) AND until rent-358i has pushed artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt and its 8 checkpoints are on the Mac under ~/premonition-models/rsn358i/.
+STATUS: RELEASED. Ben approved up to $0.60 at 15:50 UTC 09-26 (decision card cmsg_01FuvegZXjMmeUzStiEFVnEW1ZcuTEwvWrMr3xypKg1TBi, "Approve"), relayed by the Thread manager. The 358i checkpoints are on the Mac (artifacts/claude-grab358i-20260926/REPORT.md).
 GPU: rent
 BUDGET: $0.60 including re-rents, on the sleep research line of the Director's ledger. TIME CAP: 1 h 15 min from the first rental. Label: claude-sleep-358x. Never destroy an instance this task did not create.
 CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Follow the Director's current rental gate. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
