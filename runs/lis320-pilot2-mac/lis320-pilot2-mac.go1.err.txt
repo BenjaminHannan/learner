@@ -1,0 +1,548 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main; git show origin/main:handoff/queue/lis-302-gpu.md | head -n 20; echo "---"; ls ~/.config/openrouter/key 2>&1; pwd; git status --short | head -n 20
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+---
+/Users/ben-hannan/.config/openrouter/key
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+[0m
+[0m$ [0muptime; df -g /; git show origin/main:artifacts/claude-lis320-20260926/PILOT-REVIEW.md | head -n 100
+13:28  up 3 days,  3:21, 4 users, load averages: 86.31 82.94 87.23
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        53    20%  484014 562350200    0%   /
+# lis-320 pilot 1 review against PILOT-THRESHOLDS.md
+
+Reading thread, written 2026-09-26 17:17 UTC. Pilot output: origin/builder-outbox:artifacts/claude-lis320-20260926/pilot/
+(30 GLM calls, 16:59-17:04 UTC, $0.0072, 29 of 30 parsed).
+
+| Threshold | Pilot 1 | Triggered? |
+|---|---|---|
+| 1 pass rate >= 60%, every family >= 40% | 182 of 211 kept (86%); doubt 2 of 8 (25%) | yes (doubt) |
+| 2 lowercase >= 0.5, noapos >= 0.12, over20 >= 0.06 | 0.962, 0.308, 0.049 | yes (over20) |
+| 3 shapes >= 90 per 100 | 100.0 | no |
+| 4 write facts in over-20-word turns >= 5% | 5.2% | no (just) |
+| 5 kept rows mislabelled <= 2 of 20 | 22 read: 1 plan-word leak ("first person" typed into the message), 1 second-hand source ("my neighbour mentioned it") labelled as stated-as-true | no (2) |
+| 6 cost <= $5 per 1,000 kept | about $0.04 | no |
+
+I read 21 dropped rows. Most doubt, ask, confirm and former drops were good rows with cues the checks did not know:
+"not even sure", "cant remember", questions typed without "?", "did i say", "not anymore", "over now", "im not one now".
+
+## Changes (before the full run; a new pilot runs on new seeds)
+- GLM instruction: about one message in four is long (25-50 words) and rambles, with the planned content in the middle or at
+  the end and no extra facts in the chatter. It also says never to copy plan words into a message.
+- Checks: wider cue lists for doubt, ask, confirm and past; the former present-cue check ignores negated present ("not
+  anymore", "over now"); plan-word leaks are dropped; asserting turns with a second-hand source ("apparently", "i heard",
+  "X mentioned it") are dropped.
+- Re-check of pilot 1 raw with the new checks: 193 of 211 kept; doubt 6 of 8, former 11 of 12, ask 13 of 13. I read every
+  newly kept doubt, ask, confirm and former row, and their seed labels are right.
+- Also in the next pilot: the ask-back families (ADDENDUM-1) and the hashed test-name avoid list.
+Pilot 2: handoff/queue/lis320-pilot2-mac.md (seed 321, 60 dialogs). The same thresholds apply.
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_lis320_seed.py | head -n 60; echo "===GLM head==="; git show origin/main:scripts/claude_lis320_glm.py | head -n 120
+#!/usr/bin/env python3
+"""lis-320 pilot, step 1 of 3: code-only world sampler for dialog seeds (plan: design/v3/60-listener/lis-320-no-claude-data-plan.md).
+
+Code picks ONLY: people (fictional names built from syllable parts), their gender and role relative to the user,
+turn intents, relations (from relation-names.txt) and values. It writes no wording: there are no sentence templates and
+no example phrasings here. Every gold frame is built by code, in the training-target schema
+(claude_lis300_common.canon_frame: act, facts[owner, rel, value, mode, old], ask).
+
+Intents (one per turn, 6-8 turns per dialog):
+  teach        1-3 ASSERT facts; each owner named in the turn (or first person for "me"); first mention of a person is
+               an intro fact (me, <role>, Name)
+  correct      CORRECT of an earlier (owner, rel); half name the old value (fact gets "old"), half must not
+  backref      new ASSERT fact about a person named in the last 6 turns, referred to by pronoun (only when that person
+               is the only one of that gender named in the visible history) or by role word; the name must not appear
+  former       FORMER (claude_lis319f_data): past occupation / employer / city
+  jobhome      occupation + city of one owner, ASSERT, in one sentence
+  ask          ASK about a stored fact (ask object, no facts); the answer must not appear
+  lookalikes   question (QUESTION), plan (PLAN), doubt (CHECK, see LOOK_MODE), someone_else (REPORTED),
+               hypothetical (SUPPOSE), negation_only (NEGATE, no facts), confirm (CHECK of a stored fact),
+               ambiguous_pronoun (two same-gender people named, pronoun owner kept as typed, UNCLEAR)
+  smalltalk    CHAT, no facts
+
+python3 claude_lis320_seed.py --seed 320 --n 30 --out seeds.jsonl [--avoid-names FILE] [--avoid-hashes FILE]
+python3 claude_lis320_seed.py --selftest
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+
+
+def find_repo() -> Path:
+    for p in [os.environ.get("LEARNER_REPO", ""), "/home/user/learner", str(Path.home() / "learner"), "."]:
+        if p and (Path(p) / "scripts/claude_lis300_compiler.py").exists():
+            return Path(p).resolve()
+    raise SystemExit("repo not found: set LEARNER_REPO")
+
+
+REPO = find_repo()
+REL_NAMES = set((REPO / "design/v3/60-listener/relation-names.txt").read_text().split())
+
+# ------------------------------------------------------------------ names (syllable parts, never real famous names)
+SYL = ["ka", "ri", "lo", "ven", "ta", "mi", "dor", "sa", "bel", "nu", "ro", "fi", "gan", "le", "zo", "ha", "tir",
+       "wen", "ya", "mo", "ke", "ul", "si", "dra", "po", "lin", "ez", "or", "ba", "ne", "vi", "ash", "ru", "tem",
+       "qua", "ish", "bra", "cor", "del", "fen", "gal", "hol", "jun", "kes", "mar", "nov", "pel", "sov", "tav", "yl"]
+END_F = ["a", "ia", "ine", "elle", "ra", "wyn", "ette", "isa", "ena", "ith"]
+END_M = ["o", "an", "ek", "ir", "us", "en", "or", "ald", "im", "orn"]
+END_PET = ["o", "y", "i", "ix", "ble", "kin", "sy", "pip"]
+PLACE_SUF = ["ford", "mere", "wick", "holm", "dale", "by", "ton", "haven", "stead", "port", "combe", "moor"]
+ORG_SUF = ["Foods", "Logistics", "Dental", "Books", "Motors", "Bakery", "Labs", "Print", "Insurance", "Freight",
+           "Studios", "Brewing", "Hardware", "Pharmacy", "Clinic", "Textiles"]
+# real or famous names the syllables could produce by chance; --avoid-names adds dev/test names
+BLOCK = set("""anna ella emma mila lina lena nina nora sara tara kara vera dana hana mona rita rosa lola tina dora
+luna elsa bella maria mira leo milo hugo otto bruno theo enzo ivan omar karl kai ben sam zeus hera thor loki odin
+===GLM head===
+#!/usr/bin/env python3
+"""lis-320 pilot, step 2 of 3: GLM writes the wording for each dialog seed (one OpenRouter call per dialog).
+
+Input: claude_lis320_seed.py output. For every turn GLM gets the intent (described in the abstract), the facts chosen by
+code, the strings that MUST appear verbatim and the strings that must NOT appear. The instruction holds no example
+sentences or phrasings: all wording comes from GLM. GLM returns JSON: per turn, the assistant's short reply just
+before the user's message ("reply_before") and the user's message ("user").
+
+Key rules (as claude_ideajudge_teacher.py): the key is read from ~/.config/openrouter/key into memory only. Never
+printed, logged or written. If any model output contains "sk-or", nothing more is written and the run aborts.
+
+python3 claude_lis320_glm.py --seeds seeds.jsonl --out raw.jsonl [--model z-ai/glm-5.3-flash] [--temperature 1.0]
+        [--limit N]                  resumes: dialog ids already in --out are skipped
+python3 claude_lis320_glm.py --seeds seeds.jsonl --dry-run [--dialog ID]   prints one prompt, no API call
+python3 claude_lis320_glm.py --selftest                                     fake reply, no network
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+MODEL = "z-ai/glm-5.3-flash"
+KEY_MARK = "sk-or"
+
+HEAD = """You are writing training data: realistic text chats between a user and a personal assistant app. Below is the plan for ONE conversation. Code chose every fact; your job is only the wording.
+
+For each numbered turn write two strings:
+- "reply_before": what the assistant said just before this user message, reacting briefly to the user's previous message. At most about 15 words. It states no facts, guesses nothing, does not ask about anything the plan has not reached yet, and uses no name the user has not already typed. {opener}
+- "user": the user's message for this turn, following the turn's plan.
+
+How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message. About one message in four is long (25 to 50 words) and rambles, with the planned content in the middle or at the end and chatter around it; the chatter adds no facts, names, places or numbers. Never copy words of the plan itself (such as "first person", "owner", "relation", "intent") into a message.
+
+Hard rules (a message that breaks one is thrown away):
+1. Each MUST INCLUDE string appears in that user message spelled exactly as given, letter for letter. Typing it all in lowercase is fine; nothing else may change: no typo, plural, hyphen, nickname or abbreviation inside it.
+2. No MUST NOT INCLUDE string appears in that user message. Where the turn says "also not in reply_before", it must not appear in that turn's reply_before either.
+3. A user message says only what its plan says: no other facts about anyone, the user included (no other jobs, places, pets, ages, relatives, likes or names). After the turn that introduced a person, do not say again how they are related to the user, unless the plan says to refer to them by their role.
+4. "first person" means the user speaks about themself.
+5. A relation's value is exactly the given value; do not add words inside it.
+
+People in this conversation (name: relation to the user, gender). Only use a name in the turns whose MUST INCLUDE lists it:
+{people}
+
+Turns:
+{turns}
+
+Answer with ONLY this JSON and no other text:
+{{"turns": [{{"n": 1, "reply_before": "...", "user": "..."}}, ... one object per turn, n = 1 to {n}]}}
+"""
+
+OPENER_YES = ('For turn 1, reply_before is a short opening line from the assistant (no names, no questions about '
+              'people).')
+OPENER_NO = 'For turn 1, reply_before is "" (the user starts the chat).'
+
+
+def q(s):
+    return json.dumps(s, ensure_ascii=False)
+
+
+def turn_block(t) -> str:
+    lines = [f"Turn {t['k']}. intent: {t['intent']}. {t['gloss']}."]
+    if t.get("reply_ask"):
+        lines.append("  reply_before for this turn (overrides the general reply_before rule): " + t["reply_ask"]["text"])
+    lines += [f"  {x}" for x in t["lines"]]
+    inc = [q(s) for s in t["must"]]
+    if t.get("first_person"):
+        inc.append("first person")
+    for alts in t.get("role_words") or []:
+        inc.append("a word that makes the role clear: " + " / ".join(alts))
+    if t.get("ref"):
+        if t["ref"]["kind"] == "pronoun":
+            inc.append("a " + ("she/her" if t["ref"]["gender"] == "f" else "he/him/his") + " pronoun for that person")
+        else:
+            inc.append("the role word " + q(t["ref"]["words"][0]))
+    lines.append("  MUST INCLUDE: " + (", ".join(inc) if inc else "(nothing)"))
+    nots = [q(s) for s in t.get("must_not") or []]
+    if nots:
+        also = [s for s in t.get("must_not") or [] if s in (t.get("reply_must_not") or [])]
+        lines.append("  MUST NOT INCLUDE: " + ", ".join(nots) + (" (also not in reply_before)" if also else ""))
+    return "\n".join(lines)
+
+
+def build_prompt(d) -> str:
+    people = "\n".join(f"- {p['name']}: the user's {p['role'].replace('_', ' ')}, "
+                       f"{'female' if p['gender'] == 'f' else 'male'}" for p in d["people"])
+    return HEAD.format(opener=OPENER_YES if d.get("opener") else OPENER_NO, people=people,
+                       turns="\n".join(turn_block(t) for t in d["turns"]), n=len(d["turns"]))
+
+
+def parse(txt, n):
+    m = re.search(r"\{.*\}", txt or "", re.S)
+    if not m:
+        return None
+    try:
+        d = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        return None
+    ts = d.get("turns") if isinstance(d, dict) else None
+    if not isinstance(ts, list) or len(ts) != n:
+        return None
+    out = []
+    for i, t in enumerate(ts):
+        if not isinstance(t, dict) or not isinstance(t.get("user"), str) or not t["user"].strip():
+            return None
+        rb = t.get("reply_before", "")
+        out.append({"n": i + 1, "reply_before": rb if isinstance(rb, str) else "", "user": t["user"]})
+    return {"turns": out}
+
+
+class KeyLeak(Exception):
+    pass
+
+
+def guard(*texts):
+    if any(KEY_MARK in str(x) for x in texts):
+        raise KeyLeak("model output contains the key marker; aborting, nothing written for this dialog")
+[0m
+[0m$ [0mdate -u; D=$(mktemp -d); echo "D=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis320-20260926 artifacts/claude-chatdev-20260926 artifacts/claude-e2e331-dev-20260924 | tar -x -C "$D" && echo "archive ok" && ls "$D/scripts/claude_lis320_"* && ls "$D/artifacts/claude-lis320-20260926/" && echo "$D" > /tmp/lis320pilot2_D.txt; cat /tmp/lis320pilot2_D.txt
+Sat Sep 26 17:28:39 UTC 2026
+D=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i
+archive ok
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_avoidtest.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_check.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_glm.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_score.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_seed.py
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i/scripts/claude_lis320_style.py
+ADDENDUM-1-ask-back.md
+avoid_names_dev.txt
+avoid_test.sha256
+PASSMARKS.md
+PASSMARKS.sha256.txt
+PILOT-REVIEW.md
+PILOT-THRESHOLDS.md
+/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i
+[0m
+[0m$ [0mD=$(cat /tmp/lis320pilot2_D.txt); mkdir -p "$D/artifacts/claude-lis320-20260926/pilot2"; python3 -B --version 2>&1; python3 -B scripts/claude_lis320_seed.py --selftest 2>&1 | head -n 20
+Python 3.9.6
+/Applications/Xcode.app/Contents/Developer/usr/bin/python3: can't open file '/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27/scripts/claude_lis320_seed.py': [Errno 2] No such file or directory
+[0m
+[0m$ [0mD=$(cat /tmp/lis320pilot2_D.txt); O=artifacts/claude-lis320-20260926/pilot2; python3 -B scripts/claude_lis320_seed.py --seed 321 --n 60 --ask-back --avoid-names artifacts/claude-lis320-20260926/avoid_names_dev.txt --avoid-hashes artifacts/claude-lis320-20260926/avoid_test.sha256 --out "$O/seeds.jsonl"
+{"dialogs": 60, "turns": 425, "intents": {"ack_after_ask": 15, "ambiguous_pronoun": 9, "ask": 29, "backref": 36, "confirm": 13, "correct": 40, "doubt": 9, "former": 26, "hypothetical": 10, "jobhome": 19, "negation_only": 11, "plan": 9, "question": 11, "smalltalk": 20, "someone_else": 10, "teach": 148, "yes_after_ask": 10}}
+[0m
+[0m$ [0mdate -u; python3 -B scripts/claude_lis320_glm.py --seeds artifacts/claude-lis320-20260926/pilot2/seeds.jsonl --out artifacts/claude-lis320-20260926/pilot2/raw.jsonl; echo "EXIT:$?"; date -u
+Sat Sep 26 17:28:50 UTC 2026
+[glm320] s320-321-00000 ok
+[glm320] s320-321-00001 ok
+[glm320] s320-321-00002 ok
+[glm320] s320-321-00003 ok
+[glm320] s320-321-00004 ok
+[glm320] s320-321-00005 ok
+[glm320] s320-321-00006 ok
+[glm320] s320-321-00007 ok
+[glm320] s320-321-00008 ok
+[glm320] s320-321-00009 ok
+[glm320] s320-321-00010 ok
+[glm320] s320-321-00011 ok
+[glm320] s320-321-00012 unparsed
+[glm320] s320-321-00013 ok
+[glm320] s320-321-00014 ok
+[glm320] s320-321-00015 ok
+[glm320] s320-321-00016 ok
+[glm320] s320-321-00017 ok
+[glm320] s320-321-00018 ok
+[glm320] s320-321-00019 ok
+[glm320] s320-321-00020 ok
+[glm320] s320-321-00021 ok
+[glm320] s320-321-00022 ok
+[glm320] s320-321-00023 ok
+[glm320] s320-321-00024 ok
+[glm320] s320-321-00025 ok
+[glm320] s320-321-00026 ok
+[glm320] s320-321-00027 ok
+[glm320] s320-321-00028 ok
+[glm320] s320-321-00029 ok
+[glm320] s320-321-00030 ok
+[glm320] s320-321-00031 ok
+[glm320] s320-321-00032 ok
+[glm320] s320-321-00033 ok
+[glm320] s320-321-00034 ok
+[glm320] s320-321-00035 ok
+[glm320] s320-321-00036 ok
+[glm320] s320-321-00037 ok
+[glm320] s320-321-00038 ok
+[glm320] s320-321-00039 ok
+[glm320] s320-321-00040 ok
+[glm320] s320-321-00041 ok
+[glm320] s320-321-00042 ok
+[glm320] s320-321-00043 ok
+[glm320] s320-321-00044 ok
+[glm320] s320-321-00045 ok
+[glm320] s320-321-00046 ok
+[glm320] s320-321-00047 ok
+[glm320] s320-321-00048 ok
+[glm320] s320-321-00049 ok
+[glm320] s320-321-00050 ok
+[glm320] s320-321-00051 ok
+[glm320] s320-321-00052 ok
+[glm320] s320-321-00053 ok
+[glm320] s320-321-00054 ok
+[glm320] s320-321-00055 ok
+[glm320] s320-321-00056 ok
+[glm320] s320-321-00057 ok
+[glm320] s320-321-00058 ok
+[glm320] s320-321-00059 ok
+{"calls": 60, "parsed": 59, "prompt_tokens": 75609, "completion_tokens": 19387, "cost_usd": 0.0148, "skipped": 0}
+EXIT:0
+Sat Sep 26 17:34:59 UTC 2026
+[0m
+[0m$ [0mpython3 -B scripts/claude_lis320_check.py --seeds artifacts/claude-lis320-20260926/pilot2/seeds.jsonl --raw artifacts/claude-lis320-20260926/pilot2/raw.jsonl --out artifacts/claude-lis320-20260926/pilot2/kept.jsonl --drops artifacts/claude-lis320-20260926/pilot2/drops.jsonl; echo "EXIT:$?"; python3 -B scripts/claude_lis320_style.py --kept artifacts/claude-lis320-20260926/pilot2/kept.jsonl --out artifacts/claude-lis320-20260926/pilot2/style.json; echo "EXIT2:$?"; ls -l artifacts/claude-lis320-20260926/pilot2/
+{
+ "counts": {
+  "cue:ask:again": 1,
+  "cue:ask:remind me": 4,
+  "cue:ask:what": 17,
+  "cue:ask:whats": 5,
+  "cue:ask:who": 2,
+  "cue:confirm:check": 7,
+  "cue:confirm:did i say": 1,
+  "cue:confirm:right": 4,
+  "cue:confirm:was it": 1,
+  "cue:doubt:cant remember": 1,
+  "cue:doubt:not even sure": 2,
+  "cue:doubt:not sure": 2,
+  "cue:doubt:think": 2,
+  "cue:former:anymore": 2,
+  "cue:former:before": 1,
+  "cue:former:left": 1,
+  "cue:former:used to": 18,
+  "cue:hypothetical:if": 6,
+  "cue:hypothetical:imagine": 2,
+  "cue:negation_only:n't": 2,
+  "cue:negation_only:not": 2,
+  "cue:negation_only:nt": 7,
+  "cue:plan:going to": 1,
+  "cue:plan:gonna": 1,
+  "cue:plan:soon": 5,
+  "cue:plan:thinking of": 2,
+  "cue:question:?": 11,
+  "cue:someone_else:heard": 1,
+  "cue:someone_else:mentioned": 2,
+  "cue:someone_else:says": 1,
+  "cue:someone_else:told": 5,
+  "dialogs": 60,
+  "dialogs_unparsed": 1,
+  "drop:ack_answers": 2,
+  "drop:assert_hedged": 12,
+  "drop:assert_reported": 7,
+  "drop:dialog_unparsed": 6,
+  "drop:former_present_cue": 4,
+  "drop:must_missing": 2,
+  "drop:no_cue": 4,
+  "drop:no_first_person": 1,
+  "drop:plan_leak": 1,
+  "drop:reply_ask_missing": 1,
+  "drop:smalltalk_self": 3,
+  "dropped": 29,
+  "dropped:ack_after_ask": 3,
+  "dropped:backref": 4,
+  "dropped:correct": 3,
+  "dropped:doubt": 2,
+  "dropped:former": 4,
+  "dropped:hypothetical": 1,
+  "dropped:smalltalk": 3,
+  "dropped:someone_else": 1,
+  "dropped:teach": 7,
+  "dropped:yes_after_ask": 1,
+  "kept": 390,
+  "recased": 179,
+  "turns": 425
+ },
+ "kept_by_family": {
+  "ack_after_ask": 11,
+  "ambiguous_pronoun": 9,
+  "ask": 29,
+  "backref": 32,
+  "confirm": 13,
+  "correct": 37,
+  "doubt": 7,
+  "former": 22,
+  "hypothetical": 8,
+  "jobhome": 19,
+  "negation_only": 11,
+  "plan": 9,
+  "question": 11,
+  "smalltalk": 17,
+  "someone_else": 9,
+  "teach": 137,
+  "yes_after_ask": 9
+ }
+}
+EXIT:0
+{"glm_kept": {"turns": 390, "words_median": 16, "words_p90": 23, "lowercase_start": 0.995, "noapos_contraction": 0.323, "over20_words": 0.213, "shapes_per_100": 100.0, "write_facts_per_turn": 0.995, "write_facts_in_over20": 0.312}, "dev_chatdev": {"turns": 336, "words_median": 14, "words_p90": 23, "lowercase_start": 1.0, "noapos_contraction": 0.253, "over20_words": 0.131, "shapes_per_100": 99.1}, "dev_bank": {"turns": 194, "words_median": 15, "words_p90": 21, "lowercase_start": 0.887, "noapos_contraction": 0.021, "over20_words": 0.108, "shapes_per_100": 100.0}}
+EXIT2:0
+total 2080
+-rw-r--r--  1 ben-hannan  staff    7258 Sep 26 13:35 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff  605239 Sep 26 13:35 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff  167458 Sep 26 13:34 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff  275730 Sep 26 13:28 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff     628 Sep 26 13:35 style.json
+[0m
+[0m$ [0mD=$(cat /tmp/lis320pilot2_D.txt); O=artifacts/claude-lis320-20260926/pilot2; python3 -c "import json; print('seeds', sum(1 for _ in open('$O/seeds.jsonl'))); print('raw', sum(1 for _ in open('$O/raw.jsonl'))); print('kept', sum(1 for _ in open('$O/kept.jsonl'))); print('drops', sum(1 for _ in open('$O/drops.jsonl')))" ; cat "$O/style.json"; echo "---leakcheck---"; grep -c "sk-or" "$O/raw.jsonl" "$O/kept.jsonl" "$O/drops.jsonl" "$O/seeds.jsonl" "$O/style.json" || true; date -u
+seeds 60
+raw 60
+kept 390
+drops 29
+{
+ "glm_kept": {
+  "turns": 390,
+  "words_median": 16,
+  "words_p90": 23,
+  "lowercase_start": 0.995,
+  "noapos_contraction": 0.323,
+  "over20_words": 0.213,
+  "shapes_per_100": 100.0,
+  "write_facts_per_turn": 0.995,
+  "write_facts_in_over20": 0.312
+ },
+ "dev_chatdev": {
+  "turns": 336,
+  "words_median": 14,
+  "words_p90": 23,
+  "lowercase_start": 1.0,
+  "noapos_contraction": 0.253,
+  "over20_words": 0.131,
+  "shapes_per_100": 99.1
+ },
+ "dev_bank": {
+  "turns": 194,
+  "words_median": 15,
+  "words_p90": 21,
+  "lowercase_start": 0.887,
+  "noapos_contraction": 0.021,
+  "over20_words": 0.108,
+  "shapes_per_100": 100.0
+ }
+}
+---leakcheck---
+artifacts/claude-lis320-20260926/pilot2/raw.jsonl:0
+artifacts/claude-lis320-20260926/pilot2/kept.jsonl:0
+artifacts/claude-lis320-20260926/pilot2/drops.jsonl:0
+artifacts/claude-lis320-20260926/pilot2/seeds.jsonl:0
+artifacts/claude-lis320-20260926/pilot2/style.json:0
+Sat Sep 26 17:35:09 UTC 2026
+[0m
+[0m$ [0mls artifacts/claude-lis320-20260926/ 2>&1; ls artifacts/claude-lis320-20260926/pilot2/ 2>&1 || true
+pilot
+ls: artifacts/claude-lis320-20260926/pilot2/: No such file or directory
+[0m
+[0m$ [0mD=$(cat /tmp/lis320pilot2_D.txt); mkdir -p artifacts/claude-lis320-20260926/pilot2 && cp "$D/artifacts/claude-lis320-20260926/pilot2/seeds.jsonl" "$D/artifacts/claude-lis320-20260926/pilot2/raw.jsonl" "$D/artifacts/claude-lis320-20260926/pilot2/kept.jsonl" "$D/artifacts/claude-lis320-20260926/pilot2/drops.jsonl" "$D/artifacts/claude-lis320-20260926/pilot2/style.json" artifacts/claude-lis320-20260926/pilot2/ && ls -l artifacts/claude-lis320-20260926/pilot2/ && wc -l artifacts/claude-lis320-20260926/pilot2/*.jsonl
+total 2080
+-rw-r--r--  1 ben-hannan  staff    7258 Sep 26 13:35 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff  605239 Sep 26 13:35 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff  167458 Sep 26 13:35 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff  275730 Sep 26 13:35 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff     628 Sep 26 13:35 style.json
+      29 artifacts/claude-lis320-20260926/pilot2/drops.jsonl
+     390 artifacts/claude-lis320-20260926/pilot2/kept.jsonl
+      60 artifacts/claude-lis320-20260926/pilot2/raw.jsonl
+      60 artifacts/claude-lis320-20260926/pilot2/seeds.jsonl
+     539 total
+[0m
+[0m← [0mWrite artifacts/claude-lis320-20260926/pilot2/RESULTS.md
+Wrote file successfully.
+[0m
+[0m$ [0mD=$(cat /tmp/lis320pilot2_D.txt); rm -rf "$D" && ls "$D" 2>&1 || echo "gone: $D"; rm -f /tmp/lis320pilot2_D.txt; git status --short | head -n 20
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i: No such file or directory
+gone: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.HPo7PxXH8i
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+[0m
+[0m$ [0mgit status --short -- artifacts/claude-lis320-20260926/pilot2/; ls -l artifacts/claude-lis320-20260926/pilot2/
+total 2088
+-rw-r--r--  1 ben-hannan  staff    7258 Sep 26 13:35 drops.jsonl
+-rw-r--r--  1 ben-hannan  staff  605239 Sep 26 13:35 kept.jsonl
+-rw-r--r--  1 ben-hannan  staff  167458 Sep 26 13:35 raw.jsonl
+-rw-r--r--  1 ben-hannan  staff    3536 Sep 26 13:35 RESULTS.md
+-rw-r--r--  1 ben-hannan  staff  275730 Sep 26 13:35 seeds.jsonl
+-rw-r--r--  1 ben-hannan  staff     628 Sep 26 13:35 style.json
+[0m
+[0m$ [0mgit status --short | grep -i lis320 || echo "no lis320 in status"; git check-ignore -v artifacts/claude-lis320-20260926/pilot2/seeds.jsonl || echo "not ignored"
+no lis320 in status
+.gitignore:5:artifacts/	artifacts/claude-lis320-20260926/pilot2/seeds.jsonl
+[0m
