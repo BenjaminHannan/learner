@@ -1,0 +1,293 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox; echo FETCH_EXIT=$?; git rev-parse --short origin/main; git rev-parse --short origin/builder-outbox; git rev-parse --short HEAD
+FETCH_EXIT=0
+fab637227
+dc3664f54
+bd788695a
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main -- artifacts/claude-rsn358i2-20260926/ 2>&1; echo ---; git ls-tree -r --name-only origin/main -- artifacts/claude-rsn358i-20260926/ 2>&1 | head -n 100; echo ---; git ls-tree -r --name-only origin/main -- scripts/claude_rsn358i2_run.py scripts/claude_stage0_autocast_grad.py scripts/claude_rsn358a_envs.py 2>&1; echo ---; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-rsn358i2-20260926/ 2>&1
+artifacts/claude-rsn358i2-20260926/PASSMARKS.md
+artifacts/claude-rsn358i2-20260926/SEAL-code.sha256.txt
+---
+artifacts/claude-rsn358i-20260926/EXIT-RULE-ADDENDUM-1.md
+artifacts/claude-rsn358i-20260926/EXIT-RULE.md
+artifacts/claude-rsn358i-20260926/NOTE-vs-TRM.md
+artifacts/claude-rsn358i-20260926/PASSMARKS.md
+artifacts/claude-rsn358i-20260926/RESULTS.md
+artifacts/claude-rsn358i-20260926/SEAL-code.sha256.txt
+artifacts/claude-rsn358i-20260926/SEAL-run.sha256.txt
+artifacts/claude-rsn358i-20260926/VERIFY-recount.md
+artifacts/claude-rsn358i-20260926/runs/loop-s1/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s1/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s2/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s2/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s3/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s3/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/loop-s4/tests.json
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train.log
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/loop-s4/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/plain-s1/tests.json
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train.log
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/plain-s1/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/plain-s2/tests.json
+artifacts/claude-rsn358i-20260926/runs/plain-s2/train.log
+artifacts/claude-rsn358i-20260926/runs/plain-s2/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/plain-s2/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/plain-s3/tests.json
+artifacts/claude-rsn358i-20260926/runs/plain-s3/train.log
+artifacts/claude-rsn358i-20260926/runs/plain-s3/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/plain-s3/train_summary.json
+artifacts/claude-rsn358i-20260926/runs/plain-s4/tests.json
+artifacts/claude-rsn358i-20260926/runs/plain-s4/train.log
+artifacts/claude-rsn358i-20260926/runs/plain-s4/train_log.jsonl
+artifacts/claude-rsn358i-20260926/runs/plain-s4/train_summary.json
+artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+artifacts/claude-rsn358i-20260926/trial/README.md
+artifacts/claude-rsn358i-20260926/trial/attn_trial.py
+artifacts/claude-rsn358i-20260926/trial/res/loop-base-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/loop-base-s2.json
+artifacts/claude-rsn358i-20260926/trial/res/loop-fade-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/loop-mixed-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/loop-mixed-s2.json
+artifacts/claude-rsn358i-20260926/trial/res/plain-base-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/plain-base-s2.json
+artifacts/claude-rsn358i-20260926/trial/res/plain-fade-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/plain-mixed-s1.json
+artifacts/claude-rsn358i-20260926/trial/res/plain-mixed-s2.json
+---
+scripts/claude_rsn358a_envs.py
+scripts/claude_rsn358i2_run.py
+scripts/claude_stage0_autocast_grad.py
+---
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i2-20260926/PASSMARKS.md; echo ===SEAL===; git show origin/main:artifacts/claude-rsn358i2-20260926/SEAL-code.sha256.txt
+# rsn-358i2 pass marks (fixed before any run; sleep research thread, 2026-09-26 17:06 UTC)
+
+**Question:** is the autocast weight cache what made 358i's loop learn slowly on rentals and lose on grids?
+**One change** vs 358i's loop arm: bf16 autocast with cache_enabled=False (scripts/claude_rsn358i2_run.py docstring). This is a bug repair, not a design change. Plain never runs no-grad rounds, so it is unaffected, and plain for grading is 358i's own runs/plain-s{1..4}/tests.json (on main).
+The marks are the Thread manager's audit Test A (/mnt/project-files/thread-manager/loop-training-audit-2026-09-26.md), fixed there at 16:59 UTC before any fix existed. They are adopted unchanged, plus validity mark V0.
+Evidence so far: artifacts/claude-stage0-autocast-20260926/CPU-RESULT.md (SHOWN on CPU; CUDA not yet checked).
+
+## Stage 0, on the rental, before any training
+1. Print torch.__version__.
+2. Run `python -B scripts/claude_stage0_autocast_grad.py`.
+3. If the loop line with free=3 and cache=True shows 0/12 on the rental's CUDA, the mechanism is **proved wrong** on the rental. Stop and train nothing. The fallback is the audit's: 358i loop, seeds 1-2, unchanged, on BensPC, needing Ben's yes.
+
+## Stage 1 marks (loop arm, seeds 1-4, 60,000 steps; 358i's sealed tests, once per checkpoint)
+- **V0 validity:** steps_block_nograd = 0 in every train_summary.json. Otherwise the fix did not take, and the result is INCONCLUSIVE.
+- **M1 learning speed** (train-log dev, not the test files): dev grids5 at step 10,000 >= 100/200 on >= 3 of 4 seeds.
+  - 358i loop: 0/1/2/1.
+  - 358a loop (BensPC): 176/163.
+  - 358i plain: 160-174.
+- **M2:** 4-seed mean of loop - plain on grids5 >= -10. 358i: -77.5.
+- **M3:** 4-seed mean of loop - plain on grids6 >= -10. 358i: -83.
+- **Suspect confirmed** = V0, M1, M2 and M3.
+- **Proved wrong:** dev grids5 at step 10,000 <= 20/200 on >= 3 of 4 seeds, AND the 4-seed mean of loop - plain on grids5 <= -50.
+- Anything between is PARTIAL, reported as such with no rescue.
+- **Report only:**
+  - sums6/8/10/12, grids7, numbers;
+  - loop at fixed rounds;
+  - seed 4;
+  - the 358t-style G0-G3 against plain, for reading beside 358i;
+  - torch/CUDA/GPU, and the grad-norm table.
+
+## What each outcome means for registered verdicts
+358d, 358i and 358x stay registered as they are and are never rewritten. If the suspect is confirmed, each gets an addendum saying "possibly hit by the autocast cache bug: loop trained on a torch 2.8 rental".
+- Rental use is SHOWN for 358i (5090), 358d and 358x. The torch version is recorded nowhere, only in the rent kit.
+- Next after a confirmation: 358t reruns with the fix (loop-trm, loop8), then the 358y sweep, all using this autocast.
+
+**Prediction:** suspect confirmed 60%. On CPU the 2.8 bug removes the layers' gradient on about 85% of steps. That fits the 7x slowdown, but the rental's CUDA path and torch version are not yet seen.
+
+**Cost:** 4 loop runs at once on one RTX 5090. 358d's 4 loops took 35 min, and 358i's took 75 min alongside 4 plains. With Stage 0 and evals, about 1.0-1.5 h at about $0.49/h, so $0.50-0.75. Cap: $0.90.
+zsh:1: ==SEAL=== not found
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-rsn358i2-20260926/SEAL-code.sha256.txt
+8d69958c053342d47f44895375c16de3afdef7a55accdf4136ac55220fc82877  scripts/claude_rsn358i2_run.py
+0dc2f9423a09b3e808bf8644c8946b57ef913d8fa1def7f8156c8297472c3599  scripts/claude_stage0_autocast_grad.py
+4b9dfb907e49d47caefbbe606bc1610d12f15a85b39bce6aaa32ef78771f5ef4  scripts/claude_rsn358i_run.py
+0a82d5a512fe3da9a737a07935f9cd07fa78fbecd4446b736e85230355c0c928  scripts/claude_rsn358g_run.py
+80513101e4a6820f3fc32b2d23d01bcfc1ccca9457ae928826bdf37d89d816fe  scripts/claude_rsn358a2_run.py
+9b0e1a03ffdf354575e0a19acc58042c869c261565ba62e91e71af899cbca9b0  scripts/claude_rsn358a_run.py
+af350749936eaa084af696cf191c9111cc3aaf03594cd84e8827ba883c9b54d0  scripts/claude_rsn358a_envs.py
+c00aa62f4bc9ed710019581ee61288256238539c5bcfb6759d17f89c01a958de  scripts/claude_blurt1.py
+cfbdb334f1e8f0fb3fda980ae71d906dde250d77664f0cb14d0378070d4689c9  artifacts/claude-rsn358i-20260926/tests/grids5.jsonl
+1f922b36e6ecc74375079cca0447c11e0dce836d3deba54d187bb38147225179  artifacts/claude-rsn358i-20260926/tests/grids6.jsonl
+c9b56b4a766af88e7d520b7c440c46a45e407c90c46c6abf0f6ffae9584d2ee9  artifacts/claude-rsn358i-20260926/tests/grids7.jsonl
+e887fb6154ddd811fccec38884a6a88dbd69320bc72806147c18d7b40f6d1387  artifacts/claude-rsn358i-20260926/tests/numbers4.jsonl
+d9d53c3409f298870c0469dc2476556ea7839b6f2469a4c3b0e8f4abb01897ec  artifacts/claude-rsn358i-20260926/tests/numbers5.jsonl
+67e459cd8f5a482a66a9efb3d88906f65657a01f2894e364efcfa70125322f8b  artifacts/claude-rsn358i-20260926/tests/sums10.jsonl
+71eca5d906a2c3bd45e1f075ed763d166af5c903884fed69f18211e18cef868f  artifacts/claude-rsn358i-20260926/tests/sums12.jsonl
+01728d1912b590221e48835b7f787be4cb94f4f93aa4eae765fd46db1d7c5bfb  artifacts/claude-rsn358i-20260926/tests/sums4.jsonl
+a6ab304257625c83c87de063c925014cef49e3bfe3ec0c45a149b5ac2c3c9322  artifacts/claude-rsn358i-20260926/tests/sums6.jsonl
+312c46fd6c9fb54e28185ca9533e1993c11d8a4d6fc9ee4775edb7046a121465  artifacts/claude-rsn358i-20260926/tests/sums8.jsonl
+e9dc761cf6ca1b1dad466136a925493d07a3b032bb693fc9c8fc138795c00c9f  artifacts/claude-rsn358i2-20260926/PASSMARKS.md
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_rsn358i2_run.py | head -n 120
+#!/usr/bin/env python3
+"""rsn-358i2 (sleep research thread, 2026-09-26): rsn-358i's loop arm with ONE change, a bug repair: bf16 autocast
+runs with its weight cache OFF.
+
+Why (artifacts/claude-stage0-autocast-20260926/CPU-RESULT.md; the Thread manager's audit,
+/mnt/project-files/thread-manager/loop-training-audit-2026-09-26.md, Test A): the loop's free rounds run under
+torch.no_grad() inside the same `with amp:` block as its graded rounds (scripts/claude_rsn358a_run.py:118-121, :286).
+On torch 2.8 autocast caches the bf16 copy of each Linear weight the first time it is cast; a copy made under
+no_grad has no gradient link, and the graded rounds reuse it, so the loop's layer weights get no gradient on every
+step with at least one free round (about 85% of steps). Plain never runs a free round and is unaffected. Newer torch
+(2.11, 2.14) does not show it. cache_enabled=False removes the cache on every version; the forward numbers are the
+same (the same bf16 casts, made again each time instead of reused).
+Nothing else changes: 358i's data, sizes, steps, schedule, stop rule v2, tests. Added logging only (no effect on
+training): torch/CUDA versions, GPU name, and gradient checks in train_summary.json:
+  steps_block_nograd = how many optimizer steps had any block Linear weight with no or all-zero gradient (should be 0)
+  grad_norms = per-block gradient norm every 2,500 steps.
+
+  python -B scripts/claude_rsn358i2_run.py train --arm loop --seed S --out DIR
+  python -B scripts/claude_rsn358i2_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
+  python -B scripts/claude_rsn358i2_run.py selftest | smoke | check-mask
+"""
+from __future__ import annotations
+
+import json
+import platform
+import sys
+from pathlib import Path
+
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_rsn358i_run as I  # noqa: E402  (358i: legend grids + v2 stop rule + half-narrow heads)
+
+R, E = I.R, I.E
+NORM_EVERY = 2500
+
+
+class NoCacheAutocast(torch.autocast):
+    """torch.autocast with the weight cache off unless a caller asks otherwise; the only training change"""
+
+    def __init__(self, *args, **kw):
+        kw.setdefault("cache_enabled", False)
+        super().__init__(*args, **kw)
+
+
+torch.autocast = NoCacheAutocast
+
+_STATS = {"net": None, "steps": 0, "steps_block_nograd": 0, "grad_norms": []}
+_init = R.Net.__init__
+
+
+def _net_init(self, *a, **k):
+    _init(self, *a, **k)
+    _STATS["net"] = self
+
+
+R.Net.__init__ = _net_init
+_clip = torch.nn.utils.clip_grad_norm_
+
+
+def _block_mats(net):
+    return [(n, p) for n, p in net.named_parameters() if n.startswith("blocks.") and p.dim() == 2
+            and not n.endswith((".br", ".bc"))]
+
+
+def _clip_and_check(params, *a, **k):
+    net = _STATS["net"]
+    if net is not None and net.training:
+        _STATS["steps"] += 1
+        mats = _block_mats(net)
+        if any(p.grad is None or not bool(p.grad.detach().abs().sum()) for _, p in mats):
+            _STATS["steps_block_nograd"] += 1
+        if _STATS["steps"] == 1 or _STATS["steps"] % NORM_EVERY == 0:
+            by_block = {}
+            for n, p in mats:
+                b = n.split(".")[1]
+                by_block[b] = by_block.get(b, 0.0) + (0.0 if p.grad is None else float(p.grad.detach().float().norm()) ** 2)
+            _STATS["grad_norms"].append({"step": _STATS["steps"], **{f"block{b}": round(v ** 0.5, 6) for b, v in by_block.items()}})
+    return _clip(params, *a, **k)
+
+
+torch.nn.utils.clip_grad_norm_ = _clip_and_check
+_train = R.train
+
+
+def train(a):
+    _STATS.update(steps=0, steps_block_nograd=0, grad_norms=[])
+    _train(a)
+    f = Path(a.out) / "train_summary.json"
+    d = json.loads(f.read_text(encoding="utf-8"))
+    d.update({"torch": torch.__version__, "cuda": torch.version.cuda, "python": platform.python_version(),
+              "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+              "autocast_cache": False, "steps_seen": _STATS["steps"],
+              "steps_block_nograd": _STATS["steps_block_nograd"], "grad_norms": _STATS["grad_norms"]})
+    f.write_text(json.dumps(d, indent=1), encoding="utf-8")
+
+
+R.train = train
+
+
+def selftest():
+    """the stage 0 check through this file's autocast: no block Linear weight is left without gradient"""
+    import random
+    torch.manual_seed(0)
+    rng = random.Random(0)
+    items = [E.latin_item(rng, *E.make_latin_base(rng, 5)) for _ in range(8)]
+    t, s, y, env = R.tensors(items, "cpu")
+    net = R.Net("loop")
+    with torch.autocast("cpu", dtype=torch.bfloat16):
+        outs = net.loop_train(t, s, env, 3, 2)
+        loss = sum(R.ce_and_exact(lg, s, y)[0] + q.float().mean() for lg, q in outs)
+    loss.backward()
+    mats = _block_mats(net)
+    none = sum(p.grad is None or not bool(p.grad.abs().sum()) for _, p in mats)
+    assert len(mats) == 8 and none == 0, (len(mats), none)
+    assert torch.autocast is NoCacheAutocast
+    print(f"selftest ok: torch {torch.__version__}, cache off, 0/8 block Linear weights without gradient after 3 free + 2 graded rounds")
+
+
+if __name__ == "__main__":
+[0m
+[0m$ [0mgit cat-file -e origin/main:artifacts/claude-rsn358i2-20260926/RESULTS.md 2>&1; echo MAIN_RESULTS_EXIT=$?; git cat-file -e origin/builder-outbox:artifacts/claude-rsn358i2-20260926/RESULTS.md 2>&1; echo OUTBOX_RESULTS_EXIT=$?; git status --short 2>&1 | head -n 20; echo ---; ls artifacts/claude-rsn358i2-20260926/ 2>&1
+fatal: path 'artifacts/claude-rsn358i2-20260926/RESULTS.md' does not exist in 'origin/main'
+MAIN_RESULTS_EXIT=128
+fatal: path 'artifacts/claude-rsn358i2-20260926/RESULTS.md' does not exist in 'origin/builder-outbox'
+OUTBOX_RESULTS_EXIT=128
+A  artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+A  artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+A  artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+A  artifacts/claude-bm398r-20260926/RESULTS-rent.md
+A  artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+A  artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+A  artifacts/claude-bm398r-20260926/run/train398r.json
+A  artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+A  artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+---
+ls: artifacts/claude-rsn358i2-20260926/: No such file or directory
+[0m
