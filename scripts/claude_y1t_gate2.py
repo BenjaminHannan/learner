@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """y1t data gate, part 2: never-told twins whose answer is a person (Answering-from-memory thread, 2026-09-26). New file.
-Rule: artifacts/claude-y1t-20260926/GATE-ADDENDUM-1.md. claude_y1t_gate.py stays as sealed.
+Rule: artifacts/claude-y1t-20260926/GATE-ADDENDUM-1.md, where F1 is registered as G1b (the sealed G1 FAILED as
+written and stays on the record). claude_y1t_gate.py stays as sealed.
 
 Before the combined GLM set existed, the sealed G1 check (a twin fails when any turn it keeps contains the gold value)
 was run on the first run's items: 64 of 283 training twins failed it. Counted by code (no item read for this count),
