@@ -5,7 +5,7 @@ BUDGET: $0.80 for this whole task, re-rents included: $0.60 from the Answering-f
 CREDIT: check and record the balance number only (vast auto-refills, per Ben); no credit stop.
 TIME CAP: 90 minutes on the rental. If reached: stop by exact PID, copy back what exists, destroy, report PARTIAL with which steps finished.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-y1t-20260926/run, or a live instance is labelled claude-memory-y1t.
-WAITS FOR: origin/builder-outbox:artifacts/claude-y1t-20260926/glm/items/items_train.jsonl and items_dev.jsonl (the y1t-glm-mac job). If they are missing, stop with NO-DATA before renting.
+WAITS FOR: origin/builder-outbox:artifacts/claude-y1t-20260926/glm/items/items_train.jsonl and items_dev.jsonl (the y1t-glm-mac job) and origin/main:artifacts/claude-y1t-20260926/gate/gate_result.json with G2 and G3 true plus the thread's GATE-PASS line in artifacts/claude-y1t-20260926/gate/GATE-RESULT.md (artifacts/claude-y1t-20260926/GATE-data.md). If any is missing or not PASS, stop with NO-DATA before renting.
 
 YOUR TASK: y1t, trained doubt, selection on DEV data (readable; no TEST-ONLY bank or panel is involved). The plain MiniCPM5-1B answers GLM-written practice questions, code grades its drafts, a LoRA is trained on its own right drafts and "I don't know" rows, and the merged model is checked on the DEV bank. The thread wrote all code: run it, never edit it. If something breaks, copy back what exists, destroy, report the exact error and full traceback; do not patch. Print and report counts only.
 READ FIRST (origin/main): artifacts/claude-y1t-20260926/PLAN.md and the docstring of scripts/claude_y1t_data.py.
