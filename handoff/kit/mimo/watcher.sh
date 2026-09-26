@@ -57,6 +57,18 @@ while [ ! -e "$H/STOP" ]; do
     # Ben 06:54 UTC 09-26 made Mac disk the pipeline's job ("You have this responsibility"): jobs marked LOWDISK-OK
     # (no model copy-back to the Mac) may launch down to 2 GB free; everything else keeps the 5 GB rule
     if [ "${freegb:-0}" -lt 5 ] && [ "${freegb:-0}" -ge 2 ] && git -C "$W" show "origin/$IN:$f" 2>/dev/null | grep -q '^LOWDISK-OK: yes'; then log "disk ${freegb} GB free, launching LOWDISK-OK $n"; freegb=5; fi
+    # Ben 11:26 UTC 09-26 "yes, clean pipeline files": below 5 GB, remove scratch the pipeline itself made once the job
+    # that made it is gone (rent-kit mktemp code trees and tree.tgz bundles), then re-read free space. Never models or Ben's files.
+    if [ "${freegb:-0}" -lt 5 ] && [ ! -e "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)" ]; then touch "$H/clean.$(date +%Y%m%d%H%M | cut -c1-11)"
+      b=$freegb; TD=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || echo "${TMPDIR:-/tmp}")
+      log "clean: ${b} GB free; largest in temp: $(du -sk "$TD"/tmp.* 2>/dev/null | sort -rn | head -3 | awk '{printf "%s %dMB; ", $2, $1/1024}')"
+      for t in "$TD"/tmp.*/tree; do [ -d "$t" ] || continue
+        [ -n "$(find "$t" -maxdepth 0 -mmin -120)" ] && continue   # touched in the last 2 h: a running job may still use it
+        rm -rf "$(dirname "$t")" && log "clean: removed $(dirname "$t")"; done
+      for z in "$W/tree.tgz" "$TD"/tmp.*/tree.tgz; do [ -f "$z" ] || continue
+        [ -n "$(find "$z" -mmin -120)" ] && continue
+        rm -f "$z" && log "clean: removed $z"; done
+      freegb=$(df -g / | tail -1 | awk '{print $4}'); log "clean: ${b} -> ${freegb} GB free"; fi
     if [ "${freegb:-0}" -lt 5 ]; then log "disk ${freegb} GB free, holding new launches"
       # uv cache prune when low (never uv cache clean); Trash emptied at most once
       # Ben 02:16/02:17 UTC 09-26: yes to trashing these two models and "also have it empty the trash"; Finder timed out, so remove exactly these two from the Trash
