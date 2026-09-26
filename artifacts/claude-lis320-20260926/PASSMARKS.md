@@ -1,6 +1,6 @@
 # lis-320 pass marks: a reader trained with no Claude-written or Claude-judged data must match lis-319f
 
-Reading-facts thread. Written 2026-09-26 17:07 UTC. This is before the GLM pilot landed, before the full GLM data run,
+Reading-facts thread. Written 2026-09-26 17:05 UTC. This is before the GLM pilot landed, before the full GLM data run,
 before any lis-320 training, and before the test panel below was written. Plan:
 design/v3/60-listener/lis-320-no-claude-data-plan.md. Ben 16:46 ("Retrain first"): lis-320 is the 0.2d reader only if it
 matches lis-319f on a fresh sealed test. If it falls short, the demo waits, and lis-319f is not used as a fallback in the build.
