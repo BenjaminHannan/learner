@@ -44,6 +44,9 @@ while [ ! -e "$H/STOP" ]; do
   if git -C "$W" show "origin/$IN:handoff/kit/mimo/watcher.sh" > "$H/watcher.new" 2>/dev/null && [ -s "$H/watcher.new" ] && ! cmp -s "$H/watcher.new" "$0"; then
     bash -n "$H/watcher.new" && { mv "$H/watcher.new" "$0"; log "self-update, restarting"; exec bash "$0"; }
   fi
+  # briefs point at OPUS-RULES.txt under /private/tmp, which macOS can wipe: restore it from main each round (Director 19:20 UTC 09-26)
+  RB=/private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs
+  mkdir -p "$RB" 2>/dev/null && git -C "$W" show "origin/$IN:handoff/kit/briefs/OPUS-RULES.txt" > "$RB/OPUS-RULES.txt.new" 2>/dev/null && [ -s "$RB/OPUS-RULES.txt.new" ] && mv "$RB/OPUS-RULES.txt.new" "$RB/OPUS-RULES.txt"
   # orphan repair: a task whose watcher subshell died (e.g. an old loop was stopped) still gets published
   for r in "$Q"/*.running; do [ -e "$r" ] || continue; n=$(basename "$r" .running)
     pgrep -f "rungo4.sh $Q/$n.md" >/dev/null || { echo "rc=orphan" > "$Q/$n.exit"; rm -f "$r"; log "orphan finished $n"; }; done
