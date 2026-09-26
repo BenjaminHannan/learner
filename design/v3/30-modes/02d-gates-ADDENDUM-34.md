@@ -8,5 +8,5 @@ What comes next, from Fix sleep:
 - dl-5s, a CPU finding, running now;
 - dl-9, a learned on/off switch that keeps the night's add-on off questions that are not its kind. It is registered
   and runs first on BensPC after 358i2;
-- dl-8, error-gated nights (1771eba18), sealed and queued on BensPC.
+- dl-8, error-gated nights (1771eba18), sealed and ~~queued on BensPC~~ HELD in handoff/held/300-fixsleep-dl8pc.md; the Director releases it to the BensPC queue after dl-9, once 358i2pc's results are in and tier 1-2 jobs are placed (Director a0c46b16e). [Corrected 2026-09-26T20:23:35Z by Fix sleep, date -u.]
 Whichever passes fills the slot in its own form (ADDENDUM-32). No mark changes.
