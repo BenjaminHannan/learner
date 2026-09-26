@@ -5,7 +5,8 @@ scripts/claude_k1h_glm.py (sealed in SEAL-k1h.sha256.txt, not edited) with one c
 scripts/claude_glm_opencode_v11.py, which deletes exactly the opencode session each call creates (v1,
 claude_glm_opencode.py sha 3b597086, left one session behind per call: the Director's 000-glm-throughput finding).
 Same model, prompts, parsing, resume, time cap and outputs; at most 2 calls at once (k1h's share of the Director's
-opencode budget of 16, the Thread manager 20:00 UTC).
+opencode budget of 16, the Thread manager 20:00 UTC); each call may take up to 600 s instead of 300 (a 20-chat writing
+call had run 4 min 58 s when the first launch was stopped: artifacts/claude-stop-k1h-20260926/REPORT.md).
   python3 -B scripts/claude_k1h_glm_v11.py chats|answer|selftest ...   (the same arguments as claude_k1h_glm.py)
 """
 from __future__ import annotations
@@ -20,11 +21,12 @@ if str(SCRIPTS) not in sys.path:
 import claude_k1h_glm as K      # noqa: E402
 
 MAX_WORKERS = 2
+TIMEOUT = 600
 
 
 def _call_v11(text: str) -> str:
     import claude_glm_opencode_v11 as G11
-    return G11.call(text, model=K.MODEL, timeout=300)
+    return G11.call(text, model=K.MODEL, timeout=TIMEOUT)
 
 
 def main() -> None:
