@@ -78,6 +78,7 @@ CTX_CHARS02D = 12000     # W input read whole up to this many characters (y1w/y1
 K02D = 20                # store rows when the whole chat does not fit (y1w)
 RECALL_MODE02D = "fused" # store v4 ranking (BM25 + frozen MiniLM); the no-model selftest uses "bm25"
 MAX_NEW02D = 160         # the 336 plain twin's cap
+W_PLACE02D = "system"    # where the W block goes: "system" (as drafted) or "user" (mu-405b arm U); set by addendum after mu-405b
 LOG02D = "e2e02d_log.jsonl"
 FACTS02D = "facts02d.json"
 USER = "USER"            # how "me" facts are stored (0.2c's notebook, 336 scorer's USER_OWNERS)
@@ -223,11 +224,20 @@ def reasoner_note(res: dict | None) -> str:
     return "\n\nReasoner result for the number square in the last message: no square fits its clues."
 
 
+def w_block(rows: list[dict]) -> str:
+    import claude_y1f_layout as Y
+    return (Y.L1_HEAD + "".join('User said, "' + r["text"] + '"\n' for r in rows)) if rows else ""
+
+
 def system_text(rows: list[dict], note: str) -> str:
     import claude_e2e336_twin as TW
-    import claude_y1f_layout as Y
-    w = ("\n\n" + Y.L1_HEAD + "".join('User said, "' + r["text"] + '"\n' for r in rows)) if rows else ""
+    w = ("\n\n" + w_block(rows)) if (rows and W_PLACE02D == "system") else ""
     return TW.SYSTEM + note + w
+
+
+def user_text(rows: list[dict], text: str) -> str:
+    """W_PLACE02D "user" = mu-405b's arm U: the block, a blank line, then the user's turn as written."""
+    return w_block(rows) + "\n" + text if (rows and W_PLACE02D == "user") else text
 
 
 # ------------------------------------------------------------------------------------------------ the agent
@@ -278,7 +288,7 @@ class Agent02d:
         msgs = []
         for u, a in self.pairs[-HIST_PAIRS:]:
             msgs += [{"role": "user", "content": u}, {"role": "assistant", "content": a}]
-        msgs.append({"role": "user", "content": text})
+        msgs.append({"role": "user", "content": user_text(rows, text)})
         reply = self._talk.reply(system_text(rows, reasoner_note(res)), msgs, self.max_new)
         self.turn_no += 1
         self.store.remember(text, source="heard", speaker="user", turn_ids=[self.turn_no], said_at=self.said_at,
@@ -397,6 +407,16 @@ def selftest() -> None:
         big = "word " * 3000
         b.turn(big)
         b.turn("anything about dogs?")
+        global W_PLACE02D
+        W_PLACE02D = "user"
+        b.turn("and my dog?")
+        sysm, um = tk.seen[-1][0], tk.seen[-1][1][-1]["content"]
+        ok["user placement: block only in the latest user message"] = ("User said" not in sysm
+                                                                       and um.endswith("\n\nand my dog?")
+                                                                       and 'User said, "My dog is Bo."' in um
+                                                                       and all("User said" not in m["content"]
+                                                                               for m in tk.seen[-1][1][:-1]))
+        W_PLACE02D = "system"
         ok["too long: store top-k used"] = json.loads((Path(d) / LOG02D).read_text().splitlines()[-1])["w"] == "top_k"
     for name, v in ok.items():
         print(("PASS " if v else "FAIL ") + name)
