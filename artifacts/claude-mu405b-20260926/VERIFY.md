@@ -83,7 +83,7 @@ change answers to direct questions: it leaks into every reply.
 
 Cost: $0 (this container's CPU; judges are blind agents, not training data). Nothing trained on any of it.
 
-## Note on the panel's wording (added 2026-09-26 23:46 UTC, date -u)
+## Note on the panel's wording (added 2026-09-26 23:45 UTC, date -u)
 
 The 60 chats' user turns were written by Claude writer agents from code-chosen facts (mu-405 PASSMARKS.md, Setup).
 Nothing was trained on them or on any reply here. I read the 16:39 rule ("nothing a model trains on is Claude-written")
