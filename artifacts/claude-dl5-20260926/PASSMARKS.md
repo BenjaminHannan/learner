@@ -40,3 +40,12 @@ gate on the final S adapters and on adapter02c (thought-memory thread, from the 
 ## Rules
 Additive only. A FAIL stays a FAIL. Blind recount of dl5_results.json against these marks before any report. Adapters
 are saved but never pushed. Seeds and test seed above are fixed; nothing is tuned on TEST.
+
+## Addendum 1 (2026-09-26 15:42:42 UTC, before any dl-5 result was seen; the run launched on its rental ~15:28 UTC with the sealed code)
+Carry-over row, report-only (Ben 15:41: "apply skills learned to other places"; Thread manager's push). The running
+code cannot change, so this is measured afterwards from the two saved S adapters (dl5-S-s8.pt, dl5-S-s9.pt, copied
+back to the Mac, never pushed): the number-puzzle measure that grid nights never practised (claude_blurt2.luck: right
+guesses on 100 fresh number puzzles x 20 guesses at temperature 1.5, plus greedy solves; test seed 3490, not used by
+any earlier run), base vs each S adapter. Limit stated now: the placebo adapters are not saved, so this row cannot be
+compared against the placebo; it shows only whether grid nights moved an unpractised kind up, down, or not at all.
+No mark. A proper carry-over test of nights (fixed bar, placebo arm) is designed and ranked after dl-5's verdict.
