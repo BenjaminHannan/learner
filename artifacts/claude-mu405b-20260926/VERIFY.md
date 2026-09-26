@@ -82,3 +82,12 @@ change answers to direct questions: it leaks into every reply.
 - judge/runs/talk_H.jsonl d3466d7242db1784962120bbc7390ce8d1d277c5320d7a7211dd785b422b0884
 
 Cost: $0 (this container's CPU; judges are blind agents, not training data). Nothing trained on any of it.
+
+## Note on the panel's wording (added 2026-09-26 23:46 UTC, date -u)
+
+The 60 chats' user turns were written by Claude writer agents from code-chosen facts (mu-405 PASSMARKS.md, Setup).
+Nothing was trained on them or on any reply here. I read the 16:39 rule ("nothing a model trains on is Claude-written")
+and its "finding only" label as covering rows a model trains on. dl-5's reason was a Claude prefix in its trained
+target, so the rule does not cover this untrained comparison, and mu-405b is reported as a registered result. The
+Thread manager can overrule that reading. mu-406's registered test panel will be GLM-worded either way
+(PLAN-draft-2.md).
