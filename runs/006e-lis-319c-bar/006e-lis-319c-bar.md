@@ -1,0 +1,15 @@
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Build the code tree as section A of origin/main:design/v3/30-modes/330-rent-kit.md says (git archive builder-outbox, then main on top); you do NOT need self122_head.pt, MiniLM or the route122 check.
+GPU: yes (BensPC)
+TIME CAP: 1 hour wall. BENSPC: run as 003-lis-319-train did (origin/builder-outbox:artifacts/claude-lis319-20260925/RESULTS.md, incl. its fixes: git-bash sha256sum, nohup+disown and wait ~100 s after launching a long step, native Windows paths, PYTHONUTF8=1): venv C:/Users/benja/lis300/venv, READER = C:/Users/benja/lis319/work/run/merged (check model.safetensors sha256 = e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 first; mismatch: stop). No training, no downloads, no rental, $0. One job at a time on the GPU. Label: lis-319c-bar.
+INDEPENDENCE: never open, print or quote artifacts/claude-readpanel319c-20260926/panel.jsonl or label_B.jsonl. You RUN the reader on it exactly once and see only scorer counts.
+
+YOUR TASK: lis-319c, the same lis-319 reader scored at two save bars. Read origin/main:artifacts/claude-lis319c-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, report the exact error. Artifacts go in artifacts/claude-lis319c-20260926/ (new files only).
+1. SEALS: from the tree root `sha256sum -c artifacts/claude-lis319c-20260926/SEAL.sha256.txt` (the PASSMARKS seal) and `cd artifacts/claude-readpanel319c-20260926 && sha256sum -c SEAL.sha256.txt` (all OK). Check READER's sha256. Any failure: stop.
+2. READ ONCE:
+   python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel319c-20260926/panel.jsonl --out WORK/panel_hist.jsonl
+   python -B scripts/claude_lis319_read.py --model READER --rows WORK/panel_hist.jsonl --out WORK/panel_reads.jsonl
+3. SCORE the same reads at both bars:
+   python -B scripts/claude_lis319_score.py --panel artifacts/claude-readpanel319c-20260926/panel.jsonl --reads WORK/panel_reads.jsonl --threshold 0.995 --out artifacts/claude-lis319c-20260926/score_A.json
+   python -B scripts/claude_lis319_score.py --panel artifacts/claude-readpanel319c-20260926/panel.jsonl --reads WORK/panel_reads.jsonl --threshold 0.98 --out artifacts/claude-lis319c-20260926/score_B.json
+4. RESULTS.md: marks S1-S3 and the proved-wrong clause from the PASSMARKS table with integer counts (score_A.json and score_B.json verbatim), GPU, wall time per step. Never quote panel text. Delete WORK/panel_reads.jsonl after scoring (it holds panel text); keep nothing else from the panel.
+PUSH: artifacts/claude-lis319c-20260926/RESULTS.md artifacts/claude-lis319c-20260926/score_A.json artifacts/claude-lis319c-20260926/score_B.json
