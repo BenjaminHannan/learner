@@ -16,6 +16,9 @@ score:   python claude_rd378L_recall.py score --data DATA --convs 0-4 --notes NO
          union of turn_ids of the top k items. Reports any@k / all@k (k 5, 10, 20) per category and 1-4.
          Addendum B (PASSMARKS-B.md): also turns@k (distinct turns covered by the top k items, summed) and anyT@k
          (evidence among the first k distinct turns reached in rank order: the same turn budget for both stores).
+         Addendum C: ranked_turns.jsonl = per question and store, the first 20 distinct turn positions in rank order
+         (first mode, fused by default; positions only, numbered as claude_bm395_store_answer.build_store numbers them),
+         for Benchmarks' answer-level follow-up.
 selftest: python claude_rd378L_recall.py selftest
 """
 from __future__ import annotations
@@ -108,7 +111,7 @@ def build_store(d, turns, notes, with_notes):
     return s
 
 
-def budget_turns(hits, k):
+def budget_list(hits, k):
     """Addendum B: the first k DISTINCT turns reached by walking the ranked items in order (a note's cited turns are
     taken from its own turn backwards), so both stores are compared at the same number of turns shown."""
     seen = []
@@ -117,14 +120,18 @@ def budget_turns(hits, k):
             if t not in seen:
                 seen.append(t)
                 if len(seen) == k:
-                    return set(seen)
-    return set(seen)
+                    return seen
+    return seen
+
+
+def budget_turns(hits, k):
+    return set(budget_list(hits, k))
 
 
 def score(a):
     modes = tuple(a.modes.split(","))
     notes, nc = note_rows(a.notes)
-    rows = []
+    rows, ranked = [], []
     for conv in load(a.data, conv_range(a.convs)):
         turns = chat_turns(conv)
         pos = {dia: p for _s, _d, p, dia, _spk, _t in turns}
@@ -136,6 +143,8 @@ def score(a):
                     if not ev or qa["category"] not in (1, 2, 3, 4):
                         continue
                     r = {"qid": f"{conv['sample_id']}#{i}", "cat": qa["category"], "arm": arm}
+                    ranked.append({"qid": r["qid"], "arm": arm, "turns": budget_list(
+                        s.recall(qa["question"], k=3 * max(KS), mode=modes[0]), max(KS))})
                     for mode in modes:
                         hits = s.recall(qa["question"], k=3 * max(KS), mode=mode)
                         for k in KS:
@@ -157,6 +166,7 @@ def score(a):
     out.mkdir(parents=True, exist_ok=True)
     res = {"label": "after using LoCoMo for development", "convs": a.convs, "notes": nc, "summary": summary}
     (out / "notes_recall.json").write_text(json.dumps(res, indent=1) + "\n", encoding="utf-8")
+    (out / "ranked_turns.jsonl").write_text("".join(json.dumps(r) + "\n" for r in ranked), encoding="utf-8")
     (out / "notes_recall_per_question.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     print(json.dumps({"notes": nc, "A:1-4": summary["A:1-4"], "B:1-4": summary["B:1-4"]}))
 
