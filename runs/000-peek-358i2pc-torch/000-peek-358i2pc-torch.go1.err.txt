@@ -1,0 +1,350 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m→ [0mRead /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt
+[0m→ [0mRead .
+[0m
+[0m$ [0muptime; echo ---; df -g /; echo ---; pwd; git -C /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 status --short | head -20
+15:22  up 3 days,  5:15, 4 users, load averages: 155.50 109.95 97.03
+---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    19%  484014 575765960    0%   /
+---
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+[0m
+[0m✗ [0mGrep "BensPC|benja|rsn358i2|ssh.*pc|sleep-358" failed[90m in .[0m
+[91m[1mError: [0mEBADARCH: unknown error, posix_spawn '/usr/local/bin/rg'
+[0m
+[0m$ [0mls artifacts/ | grep -i -E "358|peek|sleep" | head -20; echo ---; ls ~/.ssh/config 2>&1; echo ---; grep -i "benspc\|Host " ~/.ssh/config 2>/dev/null | head -20 || echo "no ssh config match"
+claude-grab358i-20260926
+claude-peek-358i2pc-20260926
+claude-rsn358a-20260925
+claude-rsn358b2-20260926
+claude-rsn358c-20260926
+claude-rsn358d-20260926
+claude-rsn358i-20260926
+claude-rsn358t-20260926
+claude-rsn358x-20260926
+fable-autosleep42-20260921
+fable-cardfold-sleep-20260922
+fable-livesleep52-20260921
+fable-sharedsleep43b-20260921
+fable-sleep104-20260921
+fable-sleep115-20260922
+fable-sleep116-20260922
+fable-sleep130-20260922
+fable-sleep131-20260922
+fable-sleep145-20260922
+fable-sleepselect43e-20260921
+---
+/Users/ben-hannan/.ssh/config
+---
+Host benspc
+[0m
+[0m$ [0mls -R "artifacts/claude-peek-358i2pc-20260926" 2>&1 | head -30; echo ===; ls "artifacts/claude-grab358i-20260926" 2>&1 | head -30
+REPORT.md
+zsh:1: == not found
+[0m
+[0m→ [0mRead artifacts/claude-peek-358i2pc-20260926/REPORT.md
+[0m
+[0m$ [0mls scripts/ | head -50; echo ---; ls artifacts/claude-rsn358i-20260926/ 2>&1 | head -20
+__pycache__
+address_probe.py
+claude_138l_l1.py
+claude_138l_rt143nogate.py
+claude_138l_runall.sh
+claude_138l_score.py
+claude_138m_l1.py
+claude_138m_predict.py
+claude_138m_runall.sh
+claude_138m_score.py
+claude_138n_conv239_changes.py
+claude_138n_l1.py
+claude_138n_m7.py
+claude_138n_m7.sh
+claude_138n_predict.py
+claude_138n_runall.sh
+claude_138n_score.py
+claude_138nb_devrepro.py
+claude_138nb_m1.py
+claude_138nb_m2.py
+claude_138nb_m6.py
+claude_138nb_runall.sh
+claude_138nb_score.py
+claude_138p_l1.py
+claude_138p_panel.sh
+claude_138p_runall.sh
+claude_138p_score.py
+claude_221b_run.py
+claude_221b_unit.py
+claude_224c_cases.py
+claude_224c_score.py
+claude_255_m1gen.py
+claude_255_m2check.py
+claude_255_m3changes.py
+claude_255_m3format.py
+claude_255_runall.sh
+claude_255_score.py
+claude_255b_m1gen.py
+claude_255b_m2check.py
+claude_255b_m3changes.py
+claude_255b_m3format.py
+claude_255b_runall.sh
+claude_255b_score.py
+claude_255b_v255check.py
+claude_260_panel.sh
+claude_260_runall.sh
+claude_263_openpanel.sh
+claude_263_panel.sh
+claude_263_runall.sh
+claude_266_devscore.py
+---
+RESULTS.md
+runs
+SEAL-run.sha256.txt
+[0m
+[0m→ [0mRead REMOTE_RUN.md
+[0m
+[0m$ [0mls scripts/remote* 2>&1; echo ---; ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"[DateTime]::UtcNow.ToString('yyyy-MM-dd HH:mm:ss')\"" 2>&1 | head -5
+scripts/remote_benspc.ps1
+scripts/remote_benspc.sh
+---
+2026-09-26 19:22:50
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-CimInstance Win32_Process -Filter \\\"Name='python.exe'\\\" | Select-Object ProcessId, ExecutablePath, CommandLine | Format-List\"" 2>&1 | head -100
+ProcessId      : 21280
+ExecutablePath : C:\Users\benja\lis300\venv\Scripts\python.exe
+CommandLine    : C:\Users\benja\lis300\venv\Scripts\python.exe  -B scripts\claude_rsn358i2_run.py train --arm loop 
+                 --seed 3 --out W\loop-s3 
+
+ProcessId      : 20136
+ExecutablePath : C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+CommandLine    : "C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe" -B scripts\claude_rsn358i2_run.py 
+                 train --arm loop --seed 3 --out W\loop-s3 
+
+ProcessId      : 19328
+ExecutablePath : C:\Users\benja\lis300\venv\Scripts\python.exe
+CommandLine    : C:\Users\benja\lis300\venv\Scripts\python.exe  -B scripts\claude_rsn358i2_run.py train --arm loop 
+                 --seed 4 --out W\loop-s4 
+
+ProcessId      : 10112
+ExecutablePath : C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe
+CommandLine    : "C:\Users\benja\AppData\Local\Programs\Python\Python310\python.exe" -B scripts\claude_rsn358i2_run.py 
+                 train --arm loop --seed 4 --out W\loop-s4
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"(Get-CimInstance Win32_Process -Filter \\\"Name='python.exe'\\\").Count; Get-CimInstance Win32_Process -Filter \\\"Name='pythonw.exe'\\\" | Select-Object ProcessId, ExecutablePath, CommandLine | Format-List\"" 2>&1 | head -40
+4
+
+
+ProcessId      : 8456
+ExecutablePath : C:\Users\benja\Downloads\reminder-server\venv\Scripts\pythonw.exe
+CommandLine    : "C:\Users\benja\Downloads\reminder-server\venv\Scripts\pythonw.exe" 
+                 C:\Users\benja\Downloads\reminder-server\reminder_server.py
+
+ProcessId      : 8916
+ExecutablePath : C:\Users\benja\manim-env\Scripts\pythonw.exe
+CommandLine    : "C:\Users\benja\manim-env\Scripts\pythonw.exe" 
+                 "C:\Users\benja\OneDrive\Documents\Claude\Projects\Oliver Machine learning\render_server.py"
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"& 'C:\\Users\\benja\\AppData\\Local\\Programs\\Python\\Python310\\python.exe' -c 'import torch;print(torch.__version__, torch.version.cuda)'\"" 2>&1 | head -20
+2.11.0+cu128 12.8
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"& 'C:\\Users\\benja\\lis300\\venv\\Scripts\\python.exe' -c 'import torch;print(torch.__version__, torch.version.cuda)'\"" 2>&1 | head -20
+2.11.0+cu128 12.8
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:\\Users\\benja\\rsn358i2' -Include *.log,*.txt,RESULTS* -File | Select-Object Name, Length | Format-Table -AutoSize\"" 2>&1 | head -40
+(no output)
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:/Users/benja/rsn358i2' | Select-Object Name, Length | Format-Table -AutoSize\"" 2>&1 | head -60
+Name      Length
+----      ------
+artifacts       
+scripts         
+W
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:/Users/benja/rsn358i2/W' | Select-Object Name | Format-Table -AutoSize\"" 2>&1 | head -30
+Name       
+----       
+loop-s1    
+loop-s2    
+loop-s3    
+loop-s4    
+loop-s1.log
+loop-s2.log
+loop-s3.log
+loop-s4.log
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Select-String -Path 'C:/Users/benja/rsn358i2/W/*.log' -Pattern 'torch|autocast' -CaseSensitive:\$false | Select-Object Filename, LineNumber, Line | Format-List\"" 2>&1 | head -60
+(no output)
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:/Users/benja/rsn358i2' -Recurse -File -Include *.log,*.txt,RESULTS* | Select-Object FullName, Length | Format-Table -AutoSize\"" 2>&1 | head -60
+FullName                                                                                                         Length
+--------                                                                                                         ------
+C:\Users\benja\rsn358i2\artifacts\claude-rsn358i2-20260926\SEAL-code.sha256.txt                                    2080
+C:\Users\benja\rsn358i2\artifacts\claude-rsn358i2-20260926\SEAL-run.sha256.txt                                       86
+C:\Users\benja\rsn358i2\scripts\scratchpad\dev163_smoke\done\a.txt                                                   19
+C:\Users\benja\rsn358i2\scripts\scratchpad\dev163_smoke\done\b.txt                                                   19
+C:\Users\benja\rsn358i2\scripts\scratchpad\dev163_smoke\outbox\a.txt                                                 26
+C:\Users\benja\rsn358i2\scripts\scratchpad\dev163_smoke\outbox\b.txt                                                 25
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146-evidence\console.log                                           4379
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146\done\s001.txt                             21
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146\done\s002.txt                             27
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146\outbox\s001.txt                           28
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146\outbox\s002.txt                           71
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146c\done\s001.txt                            21
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146c\done\s002.txt                            27
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146c\outbox\s001.txt                          28
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag\loop146c\outbox\s002.txt                          71
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\done\s001.txt                                    21
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\done\s002.txt                                    27
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\done\s003.txt                                    33
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\done\s004.txt                                    20
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\outbox\s001.txt                                  28
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\outbox\s002.txt                                  71
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\outbox\s003.txt                                  63
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\diag2\outbox\s004.txt                                  23
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\done\s001.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\done\s002.txt                                       32
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\done\s003.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\outbox\s001.txt                                     26
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\outbox\s002.txt                                     97
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t0\outbox\s003.txt                                     19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\done\s001.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\done\s002.txt                                       59
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\done\s003.txt                                       31
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\done\s004.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\outbox\s001.txt                                     26
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\outbox\s002.txt                                     56
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\outbox\s003.txt                                     97
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t1\outbox\s004.txt                                     19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\done\s001.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\done\s002.txt                                       33
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\done\s003.txt                                       19
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\outbox\s001.txt                                     26
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\outbox\s002.txt                                     97
+C:\Users\benja\rsn358i2\scripts\scratchpad\doubt146b-evidence\t2\outbox\s003.txt                                     19
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t001.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t002.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t003.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t004.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t005.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t006.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t007.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t008.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t009.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t010.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t011.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t012.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t013.txt                         21
+C:\Users\benja\rsn358i2\scripts\scratchpad\fable-sleep104-20260921\trial\seed9\done\t014.txt                         21
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:/Users/benja/rsn358i2' -File | Select-Object Name | Format-Table -AutoSize; echo '---WFILES---'; Get-ChildItem 'C:/Users/benja/rsn358i2/W/loop-s*' -File | Select-Object Name, Length | Format-Table -AutoSize\"" 2>&1 | head -60
+---WFILES---
+
+Name        Length
+----        ------
+loop-s1.log  31924
+loop-s2.log  31941
+loop-s3.log  31954
+loop-s4.log  31936
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-ChildItem 'C:/Users/benja/rsn358i2/W/loop-s1', 'C:/Users/benja/rsn358i2/W/loop-s2', 'C:/Users/benja/rsn358i2/W/loop-s3', 'C:/Users/benja/rsn358i2/W/loop-s4' | Select-Object FullName, Length | Format-Table -AutoSize\"" 2>&1 | head -60
+FullName                                               Length
+--------                                               ------
+C:\Users\benja\rsn358i2\W\loop-s1\final.pt           25764244
+C:\Users\benja\rsn358i2\W\loop-s1\train_log.jsonl       31867
+C:\Users\benja\rsn358i2\W\loop-s1\train_summary.json     2293
+C:\Users\benja\rsn358i2\W\loop-s2\final.pt           25764244
+C:\Users\benja\rsn358i2\W\loop-s2\train_log.jsonl       31884
+C:\Users\benja\rsn358i2\W\loop-s2\train_summary.json     2295
+C:\Users\benja\rsn358i2\W\loop-s3\final.pt           25764244
+C:\Users\benja\rsn358i2\W\loop-s3\train_log.jsonl       31897
+C:\Users\benja\rsn358i2\W\loop-s3\train_summary.json     2287
+C:\Users\benja\rsn358i2\W\loop-s4\final.pt           25764244
+C:\Users\benja\rsn358i2\W\loop-s4\train_log.jsonl       31879
+C:\Users\benja\rsn358i2\W\loop-s4\train_summary.json     2286
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Get-Content 'C:/Users/benja/rsn358i2/W/loop-s1/train_log.jsonl' -TotalCount 1; Get-Content 'C:/Users/benja/rsn358i2/W/loop-s2/train_log.jsonl' -TotalCount 1; Get-Content 'C:/Users/benja/rsn358i2/W/loop-s3/train_log.jsonl' -TotalCount 1; Get-Content 'C:/Users/benja/rsn358i2/W/loop-s4/train_log.jsonl' -TotalCount 1\"" 2>&1 | head -20
+{"step": 500, "ce": 2.5274, "exact": 0.0036, "halt_bce": 0.0727, "lr": 0.00015027424797191312, "min": 0.6, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.029, "sums2": 0.006, "sums3": 0.001, "sums4": 0.0}}
+{"step": 500, "ce": 2.5483, "exact": 0.0031, "halt_bce": 0.0801, "lr": 0.00015027424797191312, "min": 0.8, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.035, "sums2": 0.006, "sums3": 0.0, "sums4": 0.0}}
+{"step": 500, "ce": 2.516, "exact": 0.002, "halt_bce": 0.0827, "lr": 0.00015027424797191312, "min": 1.1, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.02, "sums2": 0.003, "sums3": 0.0, "sums4": 0.0}}
+{"step": 500, "ce": 2.5352, "exact": 0.0026, "halt_bce": 0.0717, "lr": 0.00015027424797191312, "min": 1.2, "exact_by_kind": {"grids4": 0.0, "grids5": 0.0, "numbers3": 0.001, "numbers4": 0.0, "sums1": 0.03, "sums2": 0.004, "sums3": 0.0, "sums4": 0.0}}
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Select-String -Path 'C:/Users/benja/rsn358i2/W/*.log' -Pattern 'torch|autocast' -CaseSensitive:\$false; echo '---TXT-RESULTS-TOP---'; Get-ChildItem 'C:/Users/benja/rsn358i2' -File -Include *.txt,RESULTS* -ErrorAction SilentlyContinue | Select-Object Name; echo '---ARTIFACTS---'; Get-ChildItem 'C:/Users/benja/rsn358i2/artifacts' -Recurse -File -Include *.txt,RESULTS*,*.log -ErrorAction SilentlyContinue | Select-Object FullName\"" 2>&1 | head -40
+---TXT-RESULTS-TOP---
+---ARTIFACTS---
+
+FullName                                                                       
+--------                                                                       
+C:\Users\benja\rsn358i2\artifacts\claude-rsn358i2-20260926\SEAL-code.sha256.txt
+C:\Users\benja\rsn358i2\artifacts\claude-rsn358i2-20260926\SEAL-run.sha256.txt
+[0m
+[0m$ [0mssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 benspc "powershell -NoProfile -Command \"Select-String -Path 'C:/Users/benja/rsn358i2/W/loop-s*/train_log.jsonl', 'C:/Users/benja/rsn358i2/W/loop-s*/train_summary.json' -Pattern 'torch|autocast' -CaseSensitive:\$false; echo '---DONE---'; Get-Content 'C:/Users/benja/rsn358i2/W/loop-s1/train_summary.json'\"" 2>&1 | head -30
+rsn358i2\W\loop-s1\train_summary.json:12: "torch": "2.11.0+cu128",
+rsn358i2\W\loop-s1\train_summary.json:16: "autocast_cache": false,
+rsn358i2\W\loop-s2\train_summary.json:12: "torch": "2.11.0+cu128",
+rsn358i2\W\loop-s2\train_summary.json:16: "autocast_cache": false,
+rsn358i2\W\loop-s3\train_summary.json:12: "torch": "2.11.0+cu128",
+rsn358i2\W\loop-s3\train_summary.json:16: "autocast_cache": false,
+rsn358i2\W\loop-s4\train_summary.json:12: "torch": "2.11.0+cu128",
+rsn358i2\W\loop-s4\train_summary.json:16: "autocast_cache": false,
+---DONE---
+{
+ "arm": "loop",
+ "seed": 1,
+ "weights": 6438302,
+ "steps": 60000,
+ "batch": 256,
+ "lr": 0.0003,
+ "warmup": 1000,
+ "latin_pool": 20000,
+ "minutes": 102.9,
+ "device": "cuda",
+ "torch": "2.11.0+cu128",
+ "cuda": "12.8",
+ "python": "3.10.9",
+ "gpu": "NVIDIA GeForce RTX 5070 Ti",
+ "autocast_cache": false,
+ "steps_seen": 60000,
+ "steps_block_nograd": 0,
+ "grad_norms": [
+  {
+[0m
+[0m$ [0mdate -u; echo ---; uptime; df -g / | head -3
+Sat Sep 26 19:23:59 UTC 2026
+---
+15:23  up 3 days,  5:17, 4 users, load averages: 142.79 119.69 102.25
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    19%  484014 575483160    0%   /
+[0m
+[0m$ [0mls artifacts/ > /dev/null && mkdir "artifacts/claude-peek-358i2pc-torch-20260926" && ls -d "artifacts/claude-peek-358i2pc-torch-20260926"
+artifacts/claude-peek-358i2pc-torch-20260926
+[0m
+[0m← [0mWrite artifacts/claude-peek-358i2pc-torch-20260926/REPORT.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -l "artifacts/claude-peek-358i2pc-torch-20260926/"; echo ---; git status --short "artifacts/claude-peek-358i2pc-torch-20260926/"
+total 16
+-rw-r--r--  1 ben-hannan  staff  5603 Sep 26 15:24 REPORT.md
+---
+[0m
