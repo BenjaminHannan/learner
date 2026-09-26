@@ -1,0 +1,55 @@
+You are writing training data: realistic text chats between a user and a personal assistant app. Below is the plan for ONE conversation. Code chose every fact; your job is only the wording.
+
+For each numbered turn write two strings:
+- "reply_before": what the assistant said just before this user message, reacting briefly to the user's previous message. At most about 15 words. It states no facts, guesses nothing, does not ask about anything the plan has not reached yet, and uses no name the user has not already typed. For turn 1, reply_before is "" (the user starts the chat).
+- "user": the user's message for this turn, following the turn's plan.
+
+How the user writes: like a real person texting on a phone. Casual, often all lowercase, sometimes run-on sentences or missing punctuation, occasional small typos in ordinary words, varied lengths (very short to a few sentences) and varied openings. Every message should sound different from the others. Do not greet in every message. About one message in four is long (25 to 50 words) and rambles, with the planned content in the middle or at the end and chatter around it; the chatter adds no facts, names, places or numbers. Never copy words of the plan itself (such as "first person", "owner", "relation", "intent") into a message.
+
+Hard rules (a message that breaks one is thrown away):
+1. Each MUST INCLUDE string appears in that user message spelled exactly as given, letter for letter. Typing it all in lowercase is fine; nothing else may change: no typo, plural, hyphen, nickname or abbreviation inside it.
+2. No MUST NOT INCLUDE string appears in that user message. Where the turn says "also not in reply_before", it must not appear in that turn's reply_before either.
+3. A user message says only what its plan says: no other facts about anyone, the user included (no other jobs, places, pets, ages, relatives, likes or names). After the turn that introduced a person, do not say again how they are related to the user, unless the plan says to refer to them by their role.
+4. "first person" means the user speaks about themself.
+5. A relation's value is exactly the given value; do not add words inside it.
+
+People in this conversation (name: relation to the user, gender). Only use a name in the turns whose MUST INCLUDE lists it:
+- Tavyao: the user's boss, male
+- Ficoren: the user's father, male
+- Tirelle: the user's niece, female
+- Nulinim: the user's husband, male
+- Tiror: the user's neighbour, male
+
+Turns:
+Turn 1. intent: teach. the user tells the assistant these facts as plainly true now.
+  owner: the user; relation: husband (husband); value: "Nulinim"
+  owner: Nulinim (the user's husband); relation: city (the town where they live); value: "Galyaford"
+  MUST INCLUDE: "Nulinim", "Galyaford", first person, a word that makes the role clear: husband
+Turn 2. intent: ambiguous_pronoun. the user names both people in the message, then tells the fact about one of them using only the pronoun given as the subject, so it is unclear which of the two it means.
+  people named: Nulinim and Tavyao; pronoun owner: "he"; relation: employer (the company they work for); value: "Riri Brewing"
+  MUST INCLUDE: "Nulinim", "Tavyao", "he", "Riri Brewing"
+Turn 3. intent: backref. the user tells a new fact about a person they named earlier, but refers to that person only in the way given (never by name).
+  owner: Nulinim, referred to only by the role word "husband" (as the user's husband); relation: occupation (their job); value: "translator"
+  MUST INCLUDE: "translator", the role word "husband"
+  MUST NOT INCLUDE: "Nulinim" (also not in reply_before)
+Turn 4. intent: former. the user tells a fact that was true in the past and is no longer true; the message must make it clear that it is over.
+  owner: Nulinim (the user's husband); relation: occupation (their job); value: "nurse"
+  MUST INCLUDE: "nurse", "Nulinim"
+Turn 5. intent: teach. the user tells the assistant these facts as plainly true now.
+  owner: the user; relation: niece (niece); value: "Tirelle"
+  owner: Tirelle (the user's niece); relation: parrot (the name of their parrot); value: "Sovpip"
+  MUST INCLUDE: "Tirelle", "Sovpip", first person, a word that makes the role clear: niece
+Turn 6. intent: correct. the user corrects something they said earlier: the new value replaces the old one.
+  owner: Nulinim (the user's husband); relation: city (the town where they live); value: "Bralindale"
+  old value said earlier: "Galyaford" (the message must NOT name it)
+  why: the old value was said by mistake; the user fixes it
+  MUST INCLUDE: "Bralindale", "Nulinim"
+  MUST NOT INCLUDE: "Galyaford"
+Turn 7. intent: jobhome. in one single sentence the user tells both facts as true now.
+  owner: Tirelle (the user's niece); relation: occupation (their job); value: "social worker"
+  owner: Tirelle (the user's niece); relation: city (the town where they live); value: "Poorton"
+  MUST INCLUDE: "social worker", "Poorton", "Tirelle"
+
+Answer with ONLY this JSON and no other text:
+{"turns": [{"n": 1, "reply_before": "...", "user": "..."}, ... one object per turn, n = 1 to 7]}
+
