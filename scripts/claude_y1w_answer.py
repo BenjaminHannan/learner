@@ -10,7 +10,7 @@ step runs on a question turn when the agent's final reply
       as a statement to save.
 The answer step reads every heard user turn, oldest first, when they fit in CTX_CHARS_Y1W characters, else the
 store's top K_Y1W for the question, oldest first (Benchmarks, 14:39 UTC: identical on bank-sized lives, where the
-top 20 is every earlier turn, and it avoids the store's misses on long histories). It reads them in the prompt layout and decoding that y1f picked on DEV
+top 20 is every earlier turn, and it skips the store's ranking whenever the whole history fits; about 3k tokens, so not LoCoMo-length). It reads them in the prompt layout and decoding that y1f picked on DEV
 by its pre-set rule (artifacts/claude-y1f-20260926/PLAN.md; scripts/claude_y1f_layout.py: messages() and checked(),
 i.e. 338 strict guard + G5, abstaining answers skipped). It fails closed: if no answer passes, the agent's own reply
 stays. Settings, fixed at the seal:
