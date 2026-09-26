@@ -74,3 +74,7 @@ night (not only ≤ 0 after night 3), and L5 variety kept: TEST puzzles reached 
 harm is measured, not hidden. The adapter is on for chat too, so the bank D and chat rows are the agent-level
 no-harm check. Checks: scripts/claude_sleep02c.py uses claude_blurt2.Solver's own prompt/generate/answer on the
 agent's tokenizer and model (no second copy), and D1.train_copy leaves the model in eval mode before any measure.
+- ~02:15 UTC: item 3 includes the lis-319 history reader itself (registered PASS, artifacts/claude-lis319-20260925/
+  VERIFY.md), joined through claude_lis319_arms (Reading facts); at 0.995, or 0.98 only if lis-319c passes. X then
+  uses the lis-319 merged reader; G and T are unchanged (G keeps 0.1's lis-301 reader, so H1-H4 and Y1 compare the
+  whole of 0.2c with the last accepted build).

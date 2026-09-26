@@ -8,6 +8,9 @@ each), and then the code is sealed. A switch is on only when its fix's own regis
   ROUTE02C   route383: plain questions go to the 1B (383, with its 512-token / 350-word route cap)
   SLEEP02C   the shared 1B carries the copy-practice adapter (scripts/claude_sleep02c.py); with
              SLEEP02C_ADAPTER=<adapter02c.pt> the agent starts with the weights its nights trained
+  READER02C  "r319" = the lis-319 history reader at 0.995 (claude_lis319_arms, registered PASS), "r319c" = the
+             same at 0.98 (only if lis-319c passes), "" = 0.1's reader; with r319/r319c, --model is the lis-319
+             merged reader (sha256 e688e1b2...6a76), not lis-301
 Layer order as claude_e2e383._build: 330a_334 -> rec360 -> cre333d -> think299b -> chat338b -> [answer382] ->
 [route383] -> vary330c -> gram360 -> [heard382] -> turnlog323.
 """
@@ -23,6 +26,7 @@ if str(SCRIPTS) not in sys.path:
 MEM02C = 20        # 0 = off
 ROUTE02C = True
 SLEEP02C = True
+READER02C = "r319"
 
 
 def build_02c(state_dir, args):
@@ -49,7 +53,11 @@ def build_02c(state_dir, args):
         E330C._G338B[args.gen_model] = C38.Gen338(share=one_b)
     gen = E330C._G338B[args.gen_model]
     store = importlib.import_module(E382.STORE382).MemoryStore(state_dir) if MEM02C else None
-    loop = A.build_330a_334(state_dir, args)
+    if READER02C:
+        import claude_lis319_arms as L319
+        loop = {"r319": L319.build_330a_334_r319, "r319c": L319.build_330a_334_r319c}[READER02C](state_dir, args)
+    else:
+        loop = A.build_330a_334(state_dir, args)
     GR.record_inner360(loop)
     C333D.install_creative333d(loop, gen)
     T299B.install_think299b(loop, one_b)
