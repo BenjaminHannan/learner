@@ -1,0 +1,160 @@
+{
+ "config": {
+  "out": "/tmp/claude-0/-home-user-learner/b31ae535-dfca-5cc0-b1cc-3d161e211b0b/scratchpad/dl3dev",
+  "arms": "S,A",
+  "seeds": "4",
+  "nights": 2,
+  "n_day": 4,
+  "n_guess": 4,
+  "n_test": 3,
+  "n_guess_test": 3,
+  "n_harm": 12,
+  "n_kl": 4,
+  "n_ask": 30,
+  "seed_shift": 60000,
+  "selftest": false,
+  "dev": true
+ },
+ "n_test": 3,
+ "n_harm": 12,
+ "temp": 1.5,
+ "test_seed": 3790,
+ "pool_size": 6,
+ "base": {
+  "lucky": 1,
+  "reached": 1,
+  "greedy": 0,
+  "harm_right": 12
+ },
+ "arms": [
+  {
+   "arm": "S",
+   "seed": 4,
+   "nights": [
+    {
+     "night": 1,
+     "day_greedy_right": 0,
+     "day_right_guesses": 0,
+     "right_examples": 0,
+     "train": {
+      "examples": 0
+     },
+     "test": {
+      "lucky": 0,
+      "reached": 0,
+      "greedy": 0
+     },
+     "harm": {
+      "lost": 0,
+      "gained": 0,
+      "net_harm": 0,
+      "right": 12
+     },
+     "kl": 0.0,
+     "minutes": 1.9
+    },
+    {
+     "night": 2,
+     "day_greedy_right": 0,
+     "day_right_guesses": 0,
+     "right_examples": 0,
+     "train": {
+      "examples": 0
+     },
+     "test": {
+      "lucky": 0,
+      "reached": 0,
+      "greedy": 0
+     },
+     "harm": {
+      "lost": 0,
+      "gained": 0,
+      "net_harm": 0,
+      "right": 12
+     },
+     "kl": 0.0,
+     "minutes": 1.9
+    }
+   ]
+  },
+  {
+   "arm": "A",
+   "seed": 4,
+   "nights": [
+    {
+     "night": 1,
+     "day_greedy_right": 0,
+     "day_right_guesses": 0,
+     "right_examples": 0,
+     "train": {
+      "examples": 0
+     },
+     "test": {
+      "lucky": 0,
+      "reached": 0,
+      "greedy": 0
+     },
+     "harm": {
+      "lost": 0,
+      "gained": 0,
+      "net_harm": 0,
+      "right": 12
+     },
+     "kl": 0.0,
+     "minutes": 1.9
+    },
+    {
+     "night": 2,
+     "day_greedy_right": 0,
+     "day_right_guesses": 0,
+     "right_examples": 0,
+     "train": {
+      "examples": 0
+     },
+     "test": {
+      "lucky": 0,
+      "reached": 0,
+      "greedy": 0
+     },
+     "harm": {
+      "lost": 0,
+      "gained": 0,
+      "net_harm": 0,
+      "right": 12
+     },
+     "kl": 0.0,
+     "minutes": 1.9
+    }
+   ]
+  }
+ ],
+ "marks": {
+  "L0": 1,
+  "reached0": 1,
+  "A_final_lost": [
+   0
+  ],
+  "S_final_lost": [
+   0
+  ],
+  "A_final_lucky": [
+   0
+  ],
+  "S_final_lucky": [
+   0
+  ],
+  "A_nights_lost_over_15": 0,
+  "A_worse_nights": 1,
+  "A_final_reached": [
+   0
+  ],
+  "F1 forgetting cut: A final lost <= 0.5 x S final lost (sums), and each A seed < each S seed": false,
+  "F2 low forgetting all week: A nights with lost > 15 <= 1 of 14": true,
+  "F3 still learns: A final lucky >= 2 x L0 on each seed, and A sum >= 0.85 x S sum": false,
+  "F4 nights rarely hurt the day's work: A nights with TEST lucky > 15% below the night before <= 1 of 14": true,
+  "F5 variety kept: A final reached >= base on each seed": false,
+  "verdict": "INCONCLUSIVE",
+  "proved_wrong": true
+ },
+ "minutes": 12.3
+}
