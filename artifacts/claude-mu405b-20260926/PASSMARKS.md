@@ -16,10 +16,19 @@ about the user?
 ## Setup (scripts/claude_mu405b_talk.py, scripts/claude_mu405b_judge.py)
 - One new arm, U: the twin's system line only; every session-2 turn's latest user message = claude_y1f_layout.L1_HEAD +
   session 1's 'User said, "..."' lines + a blank line + the user's turn as written; earlier session-2 turns stay in the
-  history as plain text. Everything else is mu-405's: the plain MiniCPM5-1B 87179e5c, greedy, 160 new tokens,
+  history as plain text. That is ALL the user message contains: the moved block and the user's words. No QA_PROMPT
+  (claude_y1f_layout.py:60), no LOCOMO_SYSTEM, no other wording. The block rides on every turn (smalltalk, feelings,
+  advice, followup, ask), as 0.2d puts it on every turn (Month-end, 21:55 UTC). So U vs W is placement alone, and
+  0.2d's fix can copy U exactly: the same block, moved from system_text into the latest user message. Everything else is mu-405's: the plain MiniCPM5-1B 87179e5c, greedy, 160 new tokens,
   enable_thinking off, the same 60 two-session DEV chats and facts, this container's CPU (fp32, torch 2.14.0+cpu).
 - Controls come from mu-405's registered run (run2, same machine, greedy): N (nothing added) and W (the same block in
-  the system message). H (whole chat as real history) is report only. mu-405's K is not used.
+  the system message), sha256 of talk_N.jsonl 1ed656f1749beeb4eabee778b6e32c213c7d3dfda3de1376cae815573293df76 and of
+  talk_W.jsonl 3a6a73409645e29ab9a88e4af7edf2911af56cb372facdc19fb29c3223aa7ce5 (talk_H's sha256 goes in SEAL when H
+  ends, before sealing). H (whole chat as real history) is report only. mu-405's K is not used. None of mu-405's replies
+  were ever judged: N, W, U and H are all judged fresh in the same packets by the same two blind judges per packet,
+  mixed and shuffled, so a drift in the judges cannot favour U.
+- Smoke: the 3 smoke chats (mu405-s1..s3) are separate items, never among the 60; the smoke is a format check only
+  (rows written, no empty replies, no <think> leftovers) and nothing from it changes a mark.
 - $0 counts before the run: every U prompt carries all 3 of its chat's facts (300 of 300); the system line carries none.
 - Claims judging: mu-405's text (JUDGE-claims405.md: mu-402's rubric, the earlier session's user messages shown and
   counted as said), one packet per (arm, chat) for arms N, W, U, H (240 packets), arms mixed and shuffled (seeds
@@ -34,7 +43,10 @@ about the user?
   <= W's.
 - Q3 (this thread's question): PASS (shown on DEV: using the memory raises made-up claims) when C_U - C_W >= 10
   (C = flags summed over two judges on session 2's 300 replies) and, per chat, U has more flags than W more often than
-  fewer (p <= 0.05). Proved wrong: C_U <= C_W.
+  fewer (p <= 0.05). Proved wrong: C_U <= C_W. In plain words, a Q3 PASS is BAD news: giving the talker memory it can
+  use makes it invent MORE about the user. Q3 proved wrong (C_U <= C_W) is the good outcome: usable memory adds no
+  made-up claims. Anything in between (C_U above C_W but short of a PASS) is FAIL, not proved wrong: not shown either
+  way.
 - Report only: C_U vs C_N and C_U vs C_H with the same sign test; ask right for H; flags by turn kind.
 
 ## What each result means
