@@ -25,6 +25,7 @@ Arms (same hands, same budget of model steps, same random numbers per hand):
 One change between END and JUDGE: the early go-back signal. JUDGE vs PLACEBO: whether the signal carries information.
 
   python -B scripts/claude_rv388.py judge-check --model DIR --out DIR   (refit the heads; reproduce feas-24b seed 0)
+  python -B scripts/claude_rv388.py calibrate --model DIR --out DIR --seed S --n N --budget B   (practice hands)
   python -B scripts/claude_rv388.py run --model DIR --out DIR --seed S --n N --budget B --arms end,judge,placebo,oracle
   python -B scripts/claude_rv388.py selftest
 """
@@ -108,6 +109,17 @@ class Model:
         self.move_cache, self.feat_cache = {}, {}
         self.calls = {"move_states": 0, "judge_states": 0}
 
+    def load_feats(self, path):
+        if path and Path(path).exists():
+            d = np.load(path, allow_pickle=True)
+            for k, x in zip(d["keys"], d["X"]):
+                self.feat_cache[tuple(Fraction(v) for v in k.split(","))] = x.astype(np.float64)
+
+    def save_feats(self, path):
+        keys = list(self.feat_cache)
+        np.savez_compressed(path, X=np.stack([self.feat_cache[k] for k in keys]).astype(np.float16),
+                            keys=np.array([",".join(str(v) for v in k) for k in keys]))
+
     def move_scores(self, state):
         """{next_state: pooled log-probability} over every step from this state (cached by state)."""
         if state in self.move_cache:
@@ -188,6 +200,7 @@ def logit(h, x):
 def judge_check(a):
     """reproduce feas-24b's seed-0 pair counts (real 158, shuffled 111) from the refit heads."""
     model = Model(a.model)
+    model.load_feats(a.feats)
     heads, trained, pairs = fit_heads(model)
     out = {"trained_states": len(trained)}
     for name, h in heads.items():
@@ -197,6 +210,8 @@ def judge_check(a):
                      "final_grad": h["grad"]}
     Path(a.out).mkdir(parents=True, exist_ok=True)
     (Path(a.out) / "judge-check.json").write_text(json.dumps(out, indent=1) + "\n")
+    if a.feats:
+        model.save_feats(a.feats)
     print(json.dumps(out))
 
 
@@ -278,8 +293,38 @@ def flags_for(arm, model, heads, cuts):
     return lambda s: logit(h, model.feature(s)) < cuts[arm]
 
 
+def calibrate(a):
+    """practice hands only (never the held-out test hands): END's solved-by-step curve for the budget, and the
+    placebo cut that flags the same share of END's entered states as the real judge at logit 0."""
+    model = Model(a.model)
+    model.load_feats(a.feats)
+    heads, _, _ = fit_heads(model)
+    _, practice = held_out_hands()
+    hands = pick_hands(a.seed, a.n, practice)
+    xs = run_arm(model, hands, "end", a.seed, a.budget, None)
+    at = [x.steps for x in xs if x.solved]
+    curve = {b: sum(s <= b for s in at) for b in range(5, a.budget + 1, 5)}
+    states = sorted(set().union(*[x.visited for x in xs]))
+    real = np.array([logit(heads["real"], model.feature(st)) for st in states])
+    shuf = np.array([logit(heads["shuffled"], model.feature(st)) for st in states])
+    reach = np.array([F.reach(st) for st in states])
+    share = float((real < 0).mean())
+    out = {"seed": a.seed, "n": len(hands), "max_budget": a.budget, "end_solved_by_step": curve,
+           "entered_states": len(states), "reachable": int(reach.sum()), "real_flag_share": round(share, 4),
+           "real_flags_on_dead": int(((real < 0) & ~reach).sum()), "real_flags_on_live": int(((real < 0) & reach).sum()),
+           "cuts": {"judge": 0.0, "placebo": float(np.quantile(shuf, share))}, "calls": model.calls}
+    out["placebo_flags_on_dead"] = int(((shuf < out["cuts"]["placebo"]) & ~reach).sum())
+    out["placebo_flags_on_live"] = int(((shuf < out["cuts"]["placebo"]) & reach).sum())
+    Path(a.out).mkdir(parents=True, exist_ok=True)
+    (Path(a.out) / f"calibrate-seed{a.seed}.json").write_text(json.dumps(out, indent=1) + "\n")
+    if a.feats:
+        model.save_feats(a.feats)
+    print(json.dumps(out))
+
+
 def run(a):
     model = Model(a.model)
+    model.load_feats(a.feats)
     heads, trained, _ = fit_heads(model)
     cuts = json.loads(Path(a.cuts).read_text()) if a.cuts else {"judge": 0.0, "placebo": 0.0}
     test, practice = held_out_hands()
@@ -326,7 +371,7 @@ def selftest():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["judge-check", "run", "selftest"])
+    ap.add_argument("cmd", choices=["judge-check", "calibrate", "run", "selftest"])
     ap.add_argument("--model", default="")
     ap.add_argument("--out", default="")
     ap.add_argument("--seed", type=int, default=0)
@@ -335,8 +380,9 @@ def main():
     ap.add_argument("--arms", default=",".join(ARMS))
     ap.add_argument("--cuts", default="")
     ap.add_argument("--practice", action="store_true")
+    ap.add_argument("--feats", default="")
     a = ap.parse_args()
-    {"judge-check": judge_check, "run": run, "selftest": lambda _a: selftest()}[a.cmd](a)
+    {"judge-check": judge_check, "calibrate": calibrate, "run": run, "selftest": lambda _a: selftest()}[a.cmd](a)
 
 
 if __name__ == "__main__":
