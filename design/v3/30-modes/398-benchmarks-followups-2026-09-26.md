@@ -122,3 +122,13 @@ unanswerable questions). Each experiment below is one change, registered before 
 - The next semantic audits include supporting context and Qwen.
 - A replacement for the MMLU no-harm baseline gets its own registered evaluation. T's 50/300 mostly measures
   missing letters, so holding 50 protects nothing.
+
+## bm-398d result (13:25 UTC; artifacts/claude-bm398d-20260926/RESULTS.md, recount agrees)
+- D1 = "both". Right lines only: 137 of 297 blind-right; whole chat: 109; Qwen whole chat: 138.
+- Even with the right lines, 160 are not fully right. Dates (cat 2) reach 17% and multi-hop (cat 1) 23%.
+- D3 true, two questions from its line. Where the store missed evidence, adding it back gains +30.6 on 111 questions.
+- D2 false (−6.1).
+- Order kept, as the sealed plan says for "both":
+  - the evidence-trained reader adapter first (step 3 above, with dates and multi-part questions weighted);
+  - a retrieval change registered alongside at $0;
+  - adapter isolation (step 2) as bm-398i, $0 on CPU. Month-end owns the router and bm-397m (agreed 12:50 UTC).
