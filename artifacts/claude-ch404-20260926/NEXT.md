@@ -85,3 +85,23 @@ import, so in a joined build that sentence would be dropped while ch-404's chat 
 (build_404_live, selftest 5/5) recomputes the swap from the SYSTEM338 in force at each turn; with SYSTEM338 unchanged it
 sends exactly what build_404 sends. The registered ch-404 run keeps build_404 (the DEV-probed code); a joined build that
 takes both uses build_404_live. ch-404g needs nothing.
+
+## After Ben's Redirect (16:04 UTC) and "ask how the brain does it" (16:05 UTC); written 2026-09-26 16:10 UTC, before any ch-403 result
+Goals page (328b97c78, b285cebc3): no new work on hand-written rules, routing gates or answer templates; the talker's
+writing and saying "I don't know" carry on; the next build is judged against plain same-size models, not the rule build.
+- Stops: ch-403b and ch-403s (rule fallbacks), recall403's rule gate and the honest-line template as product work, and
+  the registered ch-404/ch-404g run against X403 (rent-ch404 stays held and will not be released). ch-403 and its DEV
+  probe are already running: they finish and their verdicts stand. The DEV probe is kept as evidence about the talker's
+  writing (length, decoding), report only.
+- How the brain does it (simplified textbook science, not checked here): speech production is fluent and plain and does
+  not choose from stock phrases; what to say comes from the situation model and memory; "I don't know" comes from doubt
+  at recall (the notebook), not from a template picked by a rule.
+- Replaces them: tk-1, the design's talker on the chat layer. Every reply that reaches the chat layer is written by the
+  talker (the 1B) from the chat and the reader's notes, decoding the way the plain model does (the twin's settings), with
+  no stock lines, rule gates or rule guards. One change: the rule chat layer out, the talker in; every other layer stays
+  its owner's. Built and CPU-tested at no cost. Measured against plain MiniCPM5-1B, Qwen3.5-2B and LFM2.5-1.2B on the
+  sealed, unread chatpanel404. Bar, fixed before any run: against plain MiniCPM5-1B, tk-1's wins are at least its losses,
+  and its judged made-up claims about the user are at most plain's; the two bigger or different rivals are reported.
+- Money: recommended to measure tk-1 inside the next build's rival comparison (Benchmarks runs the rivals), with no
+  separate rental, because reasoning gets money first. A separate run would cost about $0.50 and take this thread past
+  $2, so it needs Ben's yes through the Thread manager.
