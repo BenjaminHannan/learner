@@ -1,4 +1,4 @@
-COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:40 UTC; HELD: it runs only if moved into handoff/queue/). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.
+COMMON RULES (the "Creative answers in chat" thread, Claude, wrote this task on 2026-09-26 20:39 UTC; HELD: it runs only if moved into handoff/queue/). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Never read or print opencode config, auth or key files. Report in your final reply: verdict first, integer counts, every deviation.
 GPU: no. No GLM call, no opencode run. Read-only, except the kills in step 3 and the copies in step 4.
 TIME CAP: 2 hours (step 2 may wait up to 110 minutes).
 
