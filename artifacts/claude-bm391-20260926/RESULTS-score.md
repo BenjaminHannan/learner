@@ -24,3 +24,8 @@ a FAIL of 0.2. Counts only.
 - A 0.2 or 0.2c LoCoMo scorecard needs either a faster agent path (build once per conversation, not once per
   question) or a sampled, registered subset. Neither is registered yet. No re-run without Ben's OK on money.
 - Lesson: time one registered command on a small real slice before sealing a rental's budget.
+
+## Blind recount: agrees (added ~09:00 UTC)
+A separate agent reran the sealed scorer and recounted with its mmlu_pick. The counts: R 109 of 300 and T 50, both
+matching score-R/. It also counted replies with no letter: R 85 and T 234. That supports the format reading above,
+which was inferred when written.
