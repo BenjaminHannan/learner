@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
-"""rsn-358t (sleep research thread, 2026-09-26): rsn-358i (scripts/claude_rsn358i_run.py: 358a v2 + grid legend +
-half-narrow attention) with ONE change, the loop's TRAINING SCHEDULE, copied in outline from the Tiny Recursive
-Model (TRM, arXiv 2510.04871). Why: artifacts/claude-rsn358i-20260926/NOTE-vs-TRM.md rows 1, 2, 4.
+"""rsn-358t (sleep research thread, 2026-09-26): two single changes against rsn-358i's LOOP arm
+(scripts/claude_rsn358i_run.py: 358a v2 + grid legend + half-narrow attention), each graded against 358i's plain arm.
 
-358i's loop schedule (scripts/claude_rsn358a_run.py:291-299): each batch draws 1-16 rounds from a blank state and
-grades the answer after each of the last 1-6 rounds, so one batch in 16 grades a bare round-1 answer. Training never
-goes past 16 rounds, but tests run up to 48.
-358t's schedule ("carried state", TRM-style deep supervision):
-  - a batch of one puzzle kind lives for up to N_SUP = 16 optimizer steps ("segments");
-  - each segment continues from the state the previous segment left (carried forward, detached): F_ROUNDS = 4
-    rounds without gradient, then G_ROUNDS = 4 rounds with gradient, then ONE grade (answer loss + stop-head loss)
-    on the final round only; the answer is never graded on a fresh first pass alone;
-  - a puzzle whose answer has been exactly right at the end of 2 segments in a row leaves the batch and is replaced
-    by a fresh puzzle of the same kind with a blank state (easy puzzles leave, so practice goes to hard ones);
-  - EMA of the weights (decay 0.999); the EMA weights are the ones saved as final.pt and tested.
-One segment costs about what one 358i loop step costs (8 rounds forward and 4 back, vs about 8.5 forward and 3.5 back
-on average), and the number of optimizer steps (60,000), batch, lr, schedule, data stream, nets, tests and the v2
-stop rule are 358i's. A puzzle can be practised up to 16 x 8 = 128 rounds deep, so 48 test rounds are practised.
-TRM's other settings (weight decay 1.0, lr 1e-4, batch 768, two states, stable-max loss) are NOT copied.
+Arm "loop-trm", a change of TRAINING SCHEDULE only (2 layers x 512, as 358i's loop). Copied in outline from the Tiny
+Recursive Model (TRM, arXiv 2510.04871); why: artifacts/claude-rsn358i-20260926/NOTE-vs-TRM.md rows 1-2.
+  358i's schedule (scripts/claude_rsn358a_run.py:291-299): each batch draws 1-16 rounds from a blank state and grades
+  the answer after each of the last 1-6, so one batch in 16 grades a bare round-1 answer; training never goes past 16
+  rounds while tests run up to 48.
+  "carried state": a batch of one puzzle kind lives for up to N_SUP = 16 optimizer steps ("segments"); each segment
+  continues from the state the previous one left (carried, detached): F_ROUNDS = 4 rounds without gradient, then
+  G_ROUNDS = 4 with gradient, then ONE grade (answer + stop-head loss) on the final round only; a puzzle right at the
+  end of 2 segments in a row is replaced by a fresh one of the same kind with a blank state. One segment costs about
+  one 358i loop step (8 rounds forward and 4 back vs about 8.5 and 3.5). Up to 16 x 8 = 128 rounds deep.
+Arm "loop8", a change of ARCHITECTURE only (Ben's idea, 15:09 UTC: "What if we had the eight layers, but then looped
+  the eight layers?"): the plain arm's own 8 layers x 256 stack, looped with 358i's loop schedule, state norm and stop
+  head. Per-round compute matches the 2 x 512 round (8 x 256^2 = 2 x 512^2). Its round 1 is the nearest thing to a
+  plain pass (reported, not graded).
+Arm "loop8-trm" (report only): both changes. Arm "loop" and "plain" (358i's recipes) are here only as a fallback
+  when a 358i checkpoint's results are missing.
+Every arm also keeps an EMA copy of its weights (decay 0.999) that never touches training: final.pt = the raw
+weights (graded), final-ema.pt = the EMA copy (report only). Steps (60,000), batch, lr, schedule, data stream,
+tests and the v2 stop rule are 358i's. TRM's other settings (weight decay 1.0, lr 1e-4, batch 768, two states,
+stable-max loss) are NOT copied.
 
-The plain arm here is report-only: 358i's plain recipe unchanged plus an EMA copy (final.pt = EMA, final-raw.pt =
-raw weights, which re-run 358i's plain recipe). The graded comparison uses 358i's own plain results.
-
-  python -B scripts/claude_rsn358t_run.py train --arm loop|plain --seed S --out DIR      (other flags as 358a)
+  python -B scripts/claude_rsn358t_run.py train --arm loop-trm|loop8|loop8-trm|loop|plain --seed S --out DIR
   python -B scripts/claude_rsn358t_run.py eval --ckpt DIR/final.pt --tests artifacts/claude-rsn358i-20260926/tests --out F
   python -B scripts/claude_rsn358t_run.py smoke | check-mask | audit | selftest
 """
@@ -44,6 +45,35 @@ import claude_rsn358i_run as I  # noqa: E402  (legend grids + v2 stop rule + hal
 
 R, E = I.R, I.E
 F_ROUNDS, G_ROUNDS, N_SUP, KEEP_RIGHT, EMA_DECAY = 4, 4, 16, 2, 0.999
+R.ARMS["loop-trm"] = dict(R.ARMS["loop"])
+R.ARMS["loop8"] = dict(d=256, layers=8, heads=8)
+R.ARMS["loop8-trm"] = dict(R.ARMS["loop8"])
+
+
+def schedule_of(arm):
+    return "plain" if arm == "plain" else ("trm" if arm.endswith("-trm") else "358i")
+
+
+_net_init = R.Net.__init__
+
+
+def net_init(self, arm):
+    """every loop arm gets the loop's state norm and stop head (358a's code gives them to arm == 'loop' only)"""
+    _net_init(self, arm)
+    if arm != "plain" and not hasattr(self, "halt"):
+        d = R.ARMS[arm]["d"]
+        self.ln_state = torch.nn.LayerNorm(d)
+        self.halt = torch.nn.Linear(d, 1)
+
+
+def read(self, h):
+    logits = self.head(self.ln_out(h))
+    q = self.halt(self.ln_out(h).mean(1)).squeeze(-1) if self.arm != "plain" else None
+    return logits, q
+
+
+R.Net.__init__ = net_init
+R.Net.read = read
 
 
 def segment(net, h, t, s, env):
@@ -105,11 +135,14 @@ def train(a):
                    "replaced": run["replaced"], "batches": run["batches"], "min": round((time.time() - t0) / 60, 1),
                    "exact_by_kind": {kk: round(v[0] / v[1], 3) for kk, v in sorted(run.get("by_kind", {}).items())}}
             if step % (a.log_every * 5) == 0 or step == a.steps:
+                rec["dev"] = {kk: R.evaluate(net, v, device)["right"] for kk, v in dev.items()}
                 rec["dev_ema"] = {kk: R.evaluate(ema, v, device)["right"] for kk, v in dev.items()}
             log.write(json.dumps(rec) + "\n"); log.flush()
             print(json.dumps(rec), flush=True)
             run = {"ce": 0.0, "exact": 0.0, "halt": 0.0, "n": 0, "replaced": 0, "batches": 0}
 
+    sch = schedule_of(a.arm)
+    round_rng = random.Random(9000 + a.seed)                       # 358i's loop schedule draws, as in 358a
     while step < a.steps:
         net.train()
         items = src.batch(a.batch)
@@ -117,16 +150,30 @@ def train(a):
         kind = f"{env_name}{size}"
         t, s, y, env = R.tensors(items, device)
         run["batches"] += 1
-        if a.arm == "plain":
+        if sch != "trm":                                            # 358a/358i step, unchanged
             with amp:
-                ce, exact = R.ce_and_exact(net.plain_forward(t, s, env), s, y)
+                if sch == "plain":
+                    ce, exact = R.ce_and_exact(net.plain_forward(t, s, env), s, y)
+                    loss, hl = ce, torch.zeros(())
+                else:
+                    total = round_rng.randint(1, R.TRAIN_ROUNDS)
+                    k = round_rng.randint(1, min(total, R.GRAD_ROUNDS))
+                    outs = net.loop_train(t, s, env, total - k, k)
+                    ces, hls = [], []
+                    for lg, q in outs:
+                        c_, ex = R.ce_and_exact(lg, s, y)
+                        ces.append(c_)
+                        hls.append(F.binary_cross_entropy_with_logits(q.float(), ex))
+                    ce, hl = torch.stack(ces).mean(), torch.stack(hls).mean()
+                    exact = ex
+                    loss = ce + 0.5 * hl
             opt.zero_grad(set_to_none=True)
-            ce.backward()
+            loss.backward()
             step += 1
-            after_step(ce, torch.zeros(()), exact, kind)
+            after_step(ce, hl, exact, kind)
             continue
         B, T = t.shape[0], t.shape[1] * t.shape[2]
-        h = torch.zeros(B, T, R.ARMS["loop"]["d"], device=device)
+        h = torch.zeros(B, T, R.ARMS[a.arm]["d"], device=device)
         streak = torch.zeros(B, device=device)
         for seg in range(N_SUP):
             if step >= a.steps:
@@ -150,10 +197,10 @@ def train(a):
                 h[done] = 0.0
                 streak[done] = 0.0
                 run["replaced"] += len(done)
-    torch.save({"arm": a.arm, "seed": a.seed, "state": ema.state_dict(), "weights": "ema"}, out / "final.pt")
-    torch.save({"arm": a.arm, "seed": a.seed, "state": net.state_dict(), "weights": "raw"}, out / "final-raw.pt")
+    torch.save({"arm": a.arm, "seed": a.seed, "state": net.state_dict(), "weights": "raw"}, out / "final.pt")
+    torch.save({"arm": a.arm, "seed": a.seed, "state": ema.state_dict(), "weights": "ema"}, out / "final-ema.pt")
     json.dump({"arm": a.arm, "seed": a.seed, "weights": nparams, "steps": a.steps, "batch": a.batch, "lr": a.lr,
-               "warmup": a.warmup, "latin_pool": a.latin_pool, "schedule": "carried-state" if a.arm == "loop" else "358i",
+               "warmup": a.warmup, "latin_pool": a.latin_pool, "schedule": sch,
                "F_ROUNDS": F_ROUNDS, "G_ROUNDS": G_ROUNDS, "N_SUP": N_SUP, "KEEP_RIGHT": KEEP_RIGHT,
                "EMA_DECAY": EMA_DECAY, "minutes": round((time.time() - t0) / 60, 1), "device": device},
               open(out / "train_summary.json", "w"), indent=1)
@@ -180,7 +227,11 @@ def selftest():
     ema_update(ema, net)
     moved = sum(float((p.detach() - b.detach()).abs().sum()) for p, b in zip(ema.parameters(), before))
     assert moved > 0, "EMA did not move"
-    print("selftest ok: carried state gets no gradient; EMA updates")
+    n8, np_ = sum(p.numel() for p in R.Net("loop8").parameters()), sum(p.numel() for p in R.Net("plain").parameters())
+    assert 0 < n8 - np_ < 1000, (n8, np_)                  # the plain stack + a state norm and a stop head
+    assert [schedule_of(x) for x in ("plain", "loop", "loop8", "loop-trm", "loop8-trm")] == \
+        ["plain", "358i", "358i", "trm", "trm"]
+    print(f"selftest ok: carried state gets no gradient; EMA updates; loop8 = plain stack + {n8 - np_} weights")
 
 
 if __name__ == "__main__":
