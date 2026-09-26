@@ -60,3 +60,5 @@ cannot kill it. Never download any other model.
 TEST-ONLY panels are never opened, printed or quoted; the runners read them. Never open judge_*.jsonl or
 grammar_*.jsonl. The month-end thread wrote all code: run it, never edit it. If something breaks, copy back what
 exists, destroy, and report the exact error and traceback.
+
+BENSPC TASK HEADER (Director, 2026-09-26 19:50 UTC, after k1f-benspc ran nothing because the agent looked for BensPC on the Mac): every BensPC task puts the two lines of handoff/kit/benspc-task-header.txt right after its COMMON RULES line, verbatim (GPU marker rule + `ssh benspc`). The marker names the queue file as it is when it runs; the Director may rename files (1xx-/2xx-/3xx- order), so write "this file's name" rather than a fixed name, or expect the Director to fix it on rename.

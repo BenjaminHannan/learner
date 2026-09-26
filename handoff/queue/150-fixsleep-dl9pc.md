@@ -1,5 +1,6 @@
 COMMON RULES: follow the first 14 lines of origin/main:handoff/queue/lis-302-gpu.md (the Fix-sleep thread, Claude, wrote this task on 2026-09-26). Report in your final reply: verdict first, integer counts, every deviation.
-GPU: yes (BensPC; one job at a time; $0, no rental). The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job 301-fixsleep-dl9pc" while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+GPU: yes (BensPC; one job at a time; $0, no rental). The watcher writes C:\Users\benja\GPU-BUSY.txt as "queue job 150-fixsleep-dl9pc" (the director renamed this file from 301- to 150- to set its order) while this task runs: that is this job, so go on and leave the file to the watcher. If the file names any other job, stop with BUSY and run nothing.
+WHERE: you run on the Mac. BensPC (Windows, RTX 5070 Ti) is reached from the Mac with `ssh benspc` (PowerShell, or git-bash for sha256sum/tar). Every BensPC command below runs ON BensPC over that ssh; stream the tree with `git archive ... | ssh benspc "tar -x -C <folder>"`; copy results back to the Mac worktree with scp. Never look for BensPC paths on the Mac itself.
 TIME CAP: 4 hours in total.
 DUPLICATE GATE: stop with DUPLICATE if origin/builder-outbox or origin/main already has artifacts/claude-dl9-20260926/RESULTS-gpu.md.
 
