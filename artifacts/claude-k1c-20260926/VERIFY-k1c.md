@@ -69,3 +69,12 @@ L 103), per-panel useful, made-up (10, 9, 8, 6, 3), fallbacks (0), C-only 12 / K
 (800), that every arm under a line gave the same reply, and that judge 3 covers exactly the 55 split lines. Its
 "lead" line used items with 2 or more earlier turns (34 items), not the scorer's 1 or more (105); that line is
 report-only.
+
+## Correction (added 2026-09-26 17:31 UTC, after the Thread manager's question; nothing above is changed)
+"The model's drafts are the limit" in "What this means" is inferred, not measured, and overstated. Only the kept reply
+was judged on the test panels; the runs did not save the 4 drafts. The one measurement of all 4 drafts is DEV
+(artifacts/claude-k1d-20260926/PILOT-k1d.md: 40 chats, blind judges): at least one of the 4 drafts was useful on 26,
+the first passing draft on 12, the 1B's own picks on 15 (k1c's P) and 14 (k1d's listener). So on DEV a useful draft is
+often there and MiniCPM5-1B's own ways of choosing miss it. What the test panels show is narrower: with its first
+passing draft or its own pick, the MiniCPM5-1B writer is level with plain MiniCPM5-1B and far behind plain Qwen3.5-2B
+and plain LFM2.5-1.2B.
