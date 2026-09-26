@@ -39,3 +39,10 @@ artifacts/claude-y1t-20260926/glm/RESULTS-mac.md):
 one opencode session behind per call. It now runs through scripts/claude_y1t_glm_oc11.py: Reading facts' wrapper
 unchanged, with the Director's helper v1.1 (scripts/claude_glm_opencode_v11.py, sha256 7a067cfb...; same call()
 interface and reply text, deletes its own session) in place of v1. 3 workers (the Director's share of the route).
+
+**Route update 2 (22:05 UTC, before any top-up call):** Reading facts' ocdiag3 found that opencode's `--variant low`
+(GLM reasoning effort low) parses lis-320 prompts in 5-15 s instead of 88-460 s. The first run also used reasoning
+effort low (claude_lis320_glm.py sends {"effort": "low"} to OpenRouter), so this brings the top-up back to the first
+run's setting. The job now runs Reading facts' scripts/claude_lis320_glm_oclow.py (sha256 cd7b7c48..., sealed in
+their SEAL-ADDENDA-6): helper v1.1 with "--variant low", wrapper unchanged. claude_y1t_glm_oc11.py is not used.
+It waits for lis-320's pilot 4 on the same wrapper.
