@@ -1172,3 +1172,13 @@ Seals checked from repo root: 138l 23/23, 245 8/8, 246 6/6, 251 8/8, 231b 22/22,
 - No new work on hand-written rules (question parsing, hand-written reasoner, templates, rule puzzle/routing gates). Stand-ins only as disclosed scaffolding for a learned part. Running tests finish; verdicts stand.
 - When stuck, ask "how does the brain do this?", then one sealed single-change test.
 - Director: before launching a queued or held rule-route job, check with its owner. Held 006m-bm391-02c and 007r stay held until then.
+
+## 18:54 UTC 09-26: money and BensPC order
+- Vast: Ben 18:42 said no refills, then at 18:47 gave a $30 pool (not yet on the account; $4.08 read at 18:46). Every new rental needs the Thread manager's OK. The depot is being stopped (000-stop-depot).
+- GLM: Ben chose "Keep GLM" at 18:50, through his opencode plan. OpenRouter is out of funds. The probe (000-glm-opencode-probe) comes first; the helper scripts/claude_glm_opencode.py prefers the OpenCode Go API key at ~/.config/opencode-go/key (read only by the script), with the opencode CLI as fallback.
+- BensPC order after claude-sleep-358i2pc (Thread manager 18:55); within a tier, whichever job is ready goes first:
+  - T1: Sleep research seeds 5-8 (only if 358i2 G0-G3 read like a pass); lis-320-benspc if no rental is approved.
+  - T2: rv390-358i2-pc; the 358x carry-over rerun.
+  - T3: rd378g-pc (after the gate3 PASS and re-grade); benspc-y1t (after its data gate); dl-8; 0.2d D0 (moves to T1 once D0 is ready).
+  - claude-sleep-358t3pc stays held.
+  - I set file prefixes to match: 1xx-, 2xx-, 3xx- before the name.
