@@ -1,0 +1,644 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[ ] Duplicate guard check on origin/builder-outbox
+[ ] Fetch origin and read required docs from origin/main
+[ ] Assess environment (Mac vs BensPC) and determine executability
+[ ] Report verdict with counts and deviations
+[0m
+[0m# [0mTodos
+[•] Duplicate guard check on origin/builder-outbox
+[ ] Fetch origin and read required docs from origin/main
+[ ] Assess environment (Mac vs BensPC) and determine executability
+[ ] Report verdict with counts and deviations
+[0m
+[0m$ [0mgit fetch -q origin main builder-outbox 2>&1; echo "FETCH_EXIT:$?"; git ls-tree -r --name-only origin/builder-outbox -- artifacts/claude-k1f-20260926/run artifacts/claude-k1f-20260926/RESULTS-benspc.md 2>&1; echo "LSTREE_EXIT:$?"
+FETCH_EXIT:0
+LSTREE_EXIT:0
+[0m
+[0m$ [0mgit ls-tree origin/builder-outbox -- artifacts/claude-k1f-20260926/ 2>&1; echo "---"; git log --oneline origin/builder-outbox -5 2>&1; echo "---"; uname -a; pwd
+---
+44b2636e6 watcher status
+c97734ae4 builder results: rd378g-teacher
+624bfb13e builder results: claude-sleep-358i2pc
+4165dc0bd watcher status
+8406a9378 builder results: 000-credit-0926k
+---
+Darwin MacBook-Pro 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:22:49 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T6000 arm64
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox 2>&1 | head -n 100; echo "COUNT:"; git ls-tree -r --name-only origin/builder-outbox 2>&1 | wc -l
+.DS_Store
+artifacts/.DS_Store
+artifacts/claude-adapters-20260926d/REPORT.md
+artifacts/claude-blurt1-dev-20260925/RESULTS-blurt1.md
+artifacts/claude-blurt1-dev-20260925/run/ideas_t10.jsonl
+artifacts/claude-blurt1-dev-20260925/run/log_ideas_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t06.txt
+artifacts/claude-blurt1-dev-20260925/run/log_puzzle_t10.txt
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t06.jsonl
+artifacts/claude-blurt1-dev-20260925/run/puzzles_t10.jsonl
+artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+artifacts/claude-blurt2-20260925/RESULTS-gpu.md
+artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+artifacts/claude-blurt2-20260925/gpu/log_loop.txt
+artifacts/claude-blurt2-20260925/gpu/loop_summary.json
+artifacts/claude-blurt2-20260925/gpu/wins.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/agreement.json
+artifacts/claude-blurt2-20260925/teacher-glm53/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher-glm53/log.txt
+artifacts/claude-blurt2-20260925/teacher/agreement.json
+artifacts/claude-blurt2-20260925/teacher/labels_teacher.jsonl
+artifacts/claude-blurt2-20260925/teacher/log.txt
+artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+artifacts/claude-blurt4-20260925/gpu-4/log.txt
+artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+artifacts/claude-bm390-20260925/RESULTS-benspc.md
+artifacts/claude-bm390-20260925/RESULTS-benspc2.md
+artifacts/claude-bm390-20260925/RESULTS-benspc3.md
+artifacts/claude-bm390-20260925/RESULTS-rent2.md
+artifacts/claude-bm390-20260925/run/gsm8k_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_bare.jsonl
+artifacts/claude-bm390-20260925/run/locomo_P_reading.jsonl
+artifacts/claude-bm390-20260925/run/locomo_Rb.jsonl
+artifacts/claude-bm390-20260925/run/mmlu_P.jsonl
+artifacts/claude-bm390-20260925/run/sleep_P.jsonl
+artifacts/claude-bm390-20260925/run2/gsm8k_L12.jsonl
+artifacts/claude-bm390-20260925/run2/gsm8k_Q2.jsonl
+artifacts/claude-bm390-20260925/run2/gsm8k_T.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_C.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_L12.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_Q2.part1.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_Q2.part2.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_Q2.part3.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_Q2.part4.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_Q2.part5.jsonl
+artifacts/claude-bm390-20260925/run2/locomo_T.jsonl
+artifacts/claude-bm390-20260925/run2/mmlu_L12.jsonl
+artifacts/claude-bm390-20260925/run2/mmlu_Q2.jsonl
+artifacts/claude-bm390-20260925/run2/mmlu_T.jsonl
+artifacts/claude-bm391-20260926/RESULTS-rent.md
+artifacts/claude-bm391-20260926/run/ep382_ER_locomo.jsonl
+artifacts/claude-bm391-20260926/run/ep382_E_locomo.jsonl
+artifacts/claude-bm391-20260926/run/mmlu_R.jsonl
+artifacts/claude-bm391-20260926/run/sleep_E.jsonl
+artifacts/claude-bm391-20260926/run/sleep_ER.jsonl
+artifacts/claude-bm395-20260925/RESULTS-rent.md
+artifacts/claude-bm395-20260925/run/locomo_E.jsonl
+artifacts/claude-bm395-20260925/run/locomo_E20.jsonl
+artifacts/claude-bm395-20260925/run/locomo_Rb2.jsonl
+artifacts/claude-bm397t-20260926/RESULTS-rent.md
+artifacts/claude-bm397t-20260926/run/gsm8k_TS.jsonl
+artifacts/claude-bm397t-20260926/run/locomo_TS.jsonl
+artifacts/claude-bm397t-20260926/run/mmlu_TS.jsonl
+artifacts/claude-bm397t-20260926/run/train397t.json
+artifacts/claude-bm398e-20260926/RESULTS-rent.md
+artifacts/claude-bm398e-20260926/spans/spans_T.jsonl.gz
+artifacts/claude-bm398e-20260926/spans/spans_made.jsonl.gz
+artifacts/claude-bm398i-20260926/run-gpu/a/replies398i.jsonl
+artifacts/claude-bm398i-20260926/run-gpu/a/result.json
+artifacts/claude-bm398i-20260926/run-gpu/b/replies398i.jsonl
+artifacts/claude-bm398i-20260926/run-gpu/b/result.json
+artifacts/claude-bm398r-20260926/RESULTS-rent.md
+artifacts/claude-bm398r-20260926/run/gsm8k_TR.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_E20B.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_E20R.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_GB.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_GDB.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_GDR.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_GR.jsonl
+artifacts/claude-bm398r-20260926/run/locomo_TR.jsonl
+artifacts/claude-bm398r-20260926/run/mmlu_TR.jsonl
+artifacts/claude-bm398r-20260926/run/train398r.json
+artifacts/claude-bmriv-smoke-20260926/RESULTS-rent.md
+artifacts/claude-bmriv-smoke-20260926/RESULTS-rent2.md
+artifacts/claude-bmriv-smoke-20260926/run/rival_lfm12b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_plain1b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s0.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s1.jsonl
+artifacts/claude-bmriv-smoke-20260926/run/rival_qwen2b_think_s2.jsonl
+artifacts/claude-bmriv-smoke-20260926/run2/rival_lfm12b_4k.jsonl
+artifacts/claude-bmriv-smoke-20260926/run2/rival_plain1b_4k.jsonl
+artifacts/claude-bmriv-smoke-20260926/run2/rival_qwen2b_4k.jsonl
+artifacts/claude-brd5-20260926/RESULTS-gpu.md
+COUNT:
+  159449
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/builder-outbox 2>&1 | grep -E "k1f-20260926/(run|RESULTS-benspc)"; echo "GREP_EXIT:$?"; git ls-tree -r --name-only origin/builder-outbox 2>&1 | grep -E "k1f-20260926" | head -n 50; echo "---DONE---"
+GREP_EXIT:1
+---DONE---
+[0m
+[0m$ [0mgit ls-tree -r --name-only origin/main 2>&1 | grep -E "k1f-20260926" | head -n 100; echo "---"; git ls-tree -r --name-only origin/main 2>&1 | grep -E "k1fpanel-20260926" | head -n 20
+artifacts/claude-k1f-20260926/ADDENDUM-1-benspc.md
+artifacts/claude-k1f-20260926/JUDGE-k1f.md
+artifacts/claude-k1f-20260926/PASSMARKS-k1f.md
+artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt
+artifacts/claude-k1f-20260926/SEAL.sha256.txt
+---
+artifacts/claude-k1fpanel-20260926/README.md
+artifacts/claude-k1fpanel-20260926/SEAL.sha256.txt
+artifacts/claude-k1fpanel-20260926/creative/AUDIT.md
+artifacts/claude-k1fpanel-20260926/creative/README.md
+artifacts/claude-k1fpanel-20260926/creative/items.jsonl
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check on origin/builder-outbox
+[•] Fetch origin and read required docs from origin/main
+[ ] Assess environment (Mac vs BensPC) and determine executability
+[ ] Report verdict with counts and deviations
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-k1f-20260926/PASSMARKS-k1f.md 2>&1; echo "===END_PASSMARKS==="
+# PASSMARKS k1f: LFM2.5-1.2B-Instruct writes the creative replies (Creative answers in chat thread, written 2026-09-26 17:26 UTC)
+
+Fixed before any registered run. Sealed in SEAL.sha256.txt with the code, the judge instructions and the panel's
+seal. Registered FAILs stay FAILs. Not launched until Ben says yes (or doesn't object) through the Thread manager:
+which model writes creative replies is an architecture choice, so it is his.
+
+## Why
+k1c (VERIFY-k1c.md, blind judges and a blind recount): on the same plain recipe (the twin's system line, the whole
+chat, thinking off, greedy, at most 160 new tokens) plain MiniCPM5-1B was useful on 46 of 160 creative requests,
+plain LFM2.5-1.2B-Instruct on 103 and plain Qwen3.5-2B on 114. Our writer (k1a, 46) and the 1B picking among its own
+drafts (k1c, 47) stayed level with plain MiniCPM5-1B. The drafts are the limit, so the model that writes them is the
+thing to change. LFM2.5-1.2B is the same-size choice (Qwen is 2B).
+
+Brain picture (Ben 16:05; textbook-level, inferred, not checked here): the brain's generator for new ideas is not the
+system that parses language or keeps track of the conversation; different circuits propose and select. Here the part
+that proposes creative drafts becomes a model that proposes better ones, while the rest of the build stays as it is.
+No hand-written rule is added (Ben's Redirect, 16:04).
+
+## The single change
+k1f, scripts/claude_k1f_cre.py (build_null_k1f): the k1a writer, unchanged, with its model swapped from the build's
+MiniCPM5-1B to LFM2.5-1.2B-Instruct @0f604ada3f766f9f257460c4c9f0b5d6f69d431b (env K1F_WRITER_MODEL; no sleep
+adapter on it). Same routing (is_creative333c), same prompt (SYSTEM333D + notebook facts, the chat's last 12 messages,
+the request), same sampling (4 samples, temperature 0.7, top_p 0.9, 200 new tokens, thinking off), same trim, same
+guards (guard333d: 140 words, refusals, memory claims, unknown relatives' names), same FALLBACK line, no notebook
+writes. Everything else in the build, the sleep adapter included, stays on MiniCPM5-1B. Which turns count as creative
+is decided by is_creative333c (scripts/claude_cre333b_agent.py:57), a hand-written regex in the build since 0.2c; k1f
+adds no rule but depends on that one.
+Tests: scripts/claude_k1f_test.py (8/8; the prompt, reply, counters and WORK entry equal k1a's for the same drafts; the
+draft log below is a pass-through).
+The LFM model is not in the cloud container, so no CPU check with the real model was possible; the DEV gate below
+is the first run with it.
+
+## Arms (one rental; runner scripts/claude_panel382_run.py unchanged; per-turn seeds identical in F and K)
+- K = claude_k1f_cre:build_null_k1a_log = claude_k1a_cre:build_null_k1a (k1a as registered: 0.2c's build with the
+  k1a writer, NullReader, per-turn seeds, SLEEP02C_ADAPTER = 0.2c's adapter02c.pt, sha256 a33211dc...36f5) with the
+  pass-through draft log on its writer. The base.
+- F = claude_k1f_cre:build_null_k1f = K with the writer on LFM2.5-1.2B-Instruct. Registered (marks K1f).
+- T = plain MiniCPM5-1B @87179e5c, Q = plain Qwen3.5-2B @15852e8c16360a2fea060d615a32b45270f8a8fc,
+  L = plain LFM2.5-1.2B-Instruct @0f604ada3f766f9f257460c4c9f0b5d6f69d431b, all on the plain twin recipe
+  (scripts/claude_e2e336_twinb.py), downloaded on the rental at those pins (Benchmarks' pins; Ben approved both rivals
+  02:12 UTC 2026-09-25). Nothing comes from BensPC's copies.
+
+## Panel (TEST-ONLY, never read by the builder)
+k1fpanel, artifacts/claude-k1fpanel-20260926/creative: 100 fresh items written blind by a separate agent from the same
+spec as k1cpanel and crepanel02d (35 idea with 1 lead-in turn, 35 idea with none, 30 uses_facts with 1, 2 or 3 teach
+turns), audited blind by another agent against the DEV set, k1apanel, k1cpanel and crepanel02d (63 items reworded as
+near-copies or for a reused name; creative/AUDIT.md, counts only). Sealed: artifacts/claude-k1fpanel-20260926/
+SEAL.sha256.txt. Fresh because LFM was chosen from k1c's results on k1cpanel and k1apanel. Never run before.
+
+## DEV gate (before any panel run; readable DEV data, artifacts/claude-k1a-dev-20260926, 40 chats)
+F runs once on the 40 DEV chats. It must exit 0 with 40 item lines, print the V1 line, and have at most 2 fallback
+lines and no empty reply on the last request. Otherwise the rental stops with DEV-FAIL before any panel run and the
+thread diagnoses on DEV (the F replies are readable). Why: LFM might write past guard333d's 140 words on all 4 samples
+more often than MiniCPM does, which would show up as fallbacks.
+
+## Judging (JUDGE-k1f.md)
+Every arm's reply to the last request, shuffled together by the runner's --score step (seed 3822), cut to one line
+per distinct reply to each item by claude_k1f_score.py --dedupe (seed 3824, ids F....). Judges 1 and 2 (blind Opus
+agents, private folders, chunks of at most 150 lines) judge every line; judge 3 decides the lines they split on
+(useful, or made-up >= 1). Keys applied by scripts/claude_k1f_score.py. A blind recount by a separate agent before
+anything is reported.
+
+## Marks for k1f (F vs K over all 100 items; PASS = all three)
+| Mark | What | Bar |
+|---|---|---|
+| K1f.1 | useful, F - K; and a one-sided exact sign test on the items where exactly one of F, K is useful | >= +8 and p <= 0.05 |
+| K1f.2 | replies with a made-up fact about the user, F vs K | F <= K + 4 |
+| K1f.3 | fallback lines on the last request, F vs K | F <= K + 2 |
+
+## The K1 line (the owner problem's bar; registered, its own verdict, reported beside k1f)
+F useful on >= 60 of 100 AND F >= T, F >= Q and F >= L on useful.
+
+## 0.2d's K1 row as a dry run (registered readings, not part of the k1f verdict)
+For F and for K: claude_k1rival_score.score (sealed for 0.2d, 6fdf00563) on this panel: per rival T, Q, L the
+reading ("behind" / "level" / "ahead", one-sided exact sign test at p <= 0.05) and the made-up margin (build <= rival
++ 3); the row passes when all three pass.
+
+## The drafts (report only; added 17:45 UTC before the seal, at the Thread manager's question)
+K and F run with the draft log (claude_k1f_cre.DraftLog: the 4 drafts of every creative turn, trimmed and guarded as
+the writer does; no random numbers, no reply changed). Every distinct guard-passing draft of the last request goes in
+a separate blind packet (claude_k1f_score.py --draft-packet, ids H...., seed 3825), judged with the same words and
+procedure (judges 1 and 2, judge 3 on splits). Readings per arm: items with no passing draft, first passing draft
+useful, at least one passing draft useful (all in that one judging), and the check that every run reply is its first
+passing draft. What it answers: how much a perfect picker could add to each writer (an upper bound; "any of 4" is
+inflated by judge noise). DEV said 26 of 40 for MiniCPM5-1B's drafts against 12 for its first passing draft.
+
+## Report only
+F - K on lead, no-lead and uses_facts items; F vs L (the same model on our writer vs on the plain recipe): difference,
+items only one side got, reading; per arm: made-up, fallbacks, empty replies, bare list endings, median words.
+
+## Expected before running (from k1c's counts; nothing about LFM in our writer has been measured)
+On k1c's 160 items K was useful on 29% and plain L on 64%. If F keeps most of L's lead on a fresh panel of the same
+recipe: F about 50 to 65 of 100, K about 25 to 35, F - K about +20 to +35, and K1f.1 passes in most draws. K1f.3 is the
+mark most at risk (the 140-word guard; see the DEV gate). The K1 line needs F >= Q too; Q led L by 11 of 160 in k1c,
+so the K1 line and 0.2d's row against Q may still fail even if k1f passes.
+
+## What would prove it wrong
+K1f.1 failing (F - K below +8, or sign p above 0.05) proves the swap wrong: LFM's drafts in our writer are not more
+useful, and k1c's gap came from the plain recipe (greedy decoding, the twin's system line, no guards), not from the
+model. F's made-up replies above K's + 4, or its fallbacks above K's + 2, also fail it. Report-only: F vs L "behind"
+means our prompt, sampling or guards cost LFM its lead.
+
+## After the verdict
+- PASS: tell the Thread manager (for Ben) and Month-end: 0.2d's creative writer can be install_creative_k1f, with
+  LFM2.5-1.2B-Instruct as a second small model loaded for creative turns only. It joins 0.2d only with Ben's yes.
+- FAIL: read F's DEV replies and the F vs L reading to find where it loses; the next single change is sealed before
+  any run.
+===END_PASSMARKS===
+[0m
+[0m$ [0mgit show origin/main:artifacts/claude-k1f-20260926/ADDENDUM-1-benspc.md 2>&1; echo "===END_ADDENDUM==="
+# k1f ADDENDUM 1: run on BensPC instead of a rental (Creative answers in chat thread, written 2026-09-26 19:16 UTC)
+
+Written before any k1f command has run anywhere. Registered FAILs stay FAILs; nothing in the marks changes.
+
+## Why
+- rent-k1f ended HOST-FAIL (runs/rent-k1f on builder-outbox): three RTX 5090 rentals either never finished loading or
+  never accepted SSH, so no k1f command ran. About $0.10 spent, nothing copied back, all rentals destroyed.
+- Ben, 18:42 and 18:54 UTC: the rest runs on BensPC, and any new rental needs his yes on a written plan. BensPC is free
+  and already holds every model this test needs at the pinned revisions.
+
+## What changes (the machine only)
+- Machine: BensPC (Windows, RTX 5070 Ti 16 GB, its torch 2.11 and Python 3.10 venv), not a rented Linux 5090.
+- Arms run one after another, not at once (bm-390 on BensPC ran out of GPU memory running arms side by side).
+- Models come from BensPC's Hugging Face cache at the same pinned commits: MiniCPM5-1B 87179e5c1f455ef22e6223592d2d61351b525bfc,
+  Qwen3.5-2B 15852e8c16360a2fea060d615a32b45270f8a8fc, LFM2.5-1.2B-Instruct 0f604ada3f766f9f257460c4c9f0b5d6f69d431b
+  (the snapshot folder names are those commits; bm-390 loaded both rivals there on 2026-09-25). This replaces the
+  PASSMARKS line that the rivals are downloaded on the rental and that nothing comes from BensPC's copies; that line
+  was about where the files come from, and the pinned files are the same.
+- Windows line endings: every Python command goes through scripts/claude_winnl2_wrap.py, as in gram-364 and bm-390,
+  so written files keep Linux line endings (checked by a CRLF count, expected 0).
+
+## What does not change
+The code, the seals (SEAL.sha256.txt), the panel and its seal, the arms and their env settings (K1F_WRITER_MODEL for
+F only, K1F_DRAFTS for K and F, SLEEP02C_ADAPTER = 0.2c's adapter02c.pt sha256 a33211dc...36f5 for K and F), the DEV
+gate, the V1 lines, the marks K1f.1-3, the K1 line, the rival readings, the draft report, the judging and the recount.
+===END_ADDENDUM===
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_k1f_cre.py 2>&1 | head -n 120; echo "===END_CRE_PY_HEAD==="
+#!/usr/bin/env python3
+"""k1f: LFM2.5-1.2B-Instruct writes the creative replies (Creative answers in chat thread, 2026-09-26). One change on
+k1a.
+
+Why: k1c (artifacts/claude-k1c-20260926/VERIFY-k1c.md, blind judges and recount) found that on the same plain recipe
+(the twin's system line, the whole chat, thinking off, greedy, <= 160 new tokens) plain MiniCPM5-1B was useful on 46
+of 160 creative requests, plain LFM2.5-1.2B-Instruct on 103 and plain Qwen3.5-2B on 114, while the k1a writer (46) and
+the 1B picking among its own drafts (47) stayed level with plain MiniCPM5-1B. The drafts, not the choice among them,
+are the limit, so the model that writes them is the thing to change. LFM2.5-1.2B is the same-size option (Qwen is 2B).
+
+What: install_creative_k1f(loop, gen) is claude_k1a_cre.install_creative_k1a with one change: the writer's model is
+the LFM2.5-1.2B-Instruct snapshot named by env K1F_WRITER_MODEL (required; loaded once per process, with no sleep
+adapter), not the build's MiniCPM5-1B. The gen passed in by build_02c is not used for creative turns. Unchanged:
+routing (is_creative333c), the prompt (SYSTEM333D + the notebook facts, then the chat's last 12 messages, then the
+request), Gen338's sampling (4 samples, temperature 0.7, top_p 0.9, 200 new tokens, thinking off), trim, guard333d
+(140 words, refusals, memory claims, unknown relatives' names), the FALLBACK line, counters, the WORK entry and no
+notebook writes. Everything else in the build (reader, routing, chat, think, answer paths, the sleep adapter) stays
+on MiniCPM5-1B.
+
+build_null_k1f(state_dir, args) = the k1a swap around claude_mu402.build_null02c (NullReader, per-turn seeds from
+(turn number, text), the same seeds for every arm), with install_creative_k1f in place of install_creative333d, so the
+k1f arm differs from the k1a arm (claude_k1a_cre.build_null_k1a) by the writer's model only. It prints one line,
+"k1f: creative writer = install_creative_k1f; writer = <model_type> @<snapshot>; layers = [...]", for the rental's
+V1 check. build_k1f wraps claude_e2e02c.build_02c the same way. New file only.
+
+Draft log (report-only, added 17:40 UTC before the seal, at the Thread manager's question "how often is a useful draft
+among the 4?"): when env K1F_DRAFTS names a file, the writer's gen is wrapped in DraftLog, a pass-through that returns
+the same 4 drafts and appends them to that file, trimmed and guarded exactly as the writer does (the first passing one
+is the reply). It draws no random numbers and changes no reply. build_null_k1a_log is claude_k1a_cre.build_null_k1a
+itself, with its install function wrapped the same way for the length of the build, so the K arm's code path, V1 line
+and replies are k1a's.
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import claude_chat338_agent as C38     # noqa: E402
+import claude_cre333b_agent as CB      # noqa: E402
+import claude_cre333d_agent as CD      # noqa: E402
+import claude_k1a_cre as K1A           # noqa: E402
+
+WRITER_ENV = "K1F_WRITER_MODEL"
+DRAFTS_ENV = "K1F_DRAFTS"
+FACTS_PREFIX = CD.SYSTEM333D + " Facts the user has told you: "
+_GEN: dict = {}
+_PRINTED: list = []
+
+
+def writer_gen(load=None):
+    """The LFM writer as a Gen338 (the same sampling k1a uses), loaded once per process from $K1F_WRITER_MODEL."""
+    d = os.environ.get(WRITER_ENV, "")
+    if not d:
+        raise SystemExit(f"k1f: set {WRITER_ENV} to the LFM2.5-1.2B-Instruct snapshot directory")
+    if d not in _GEN:
+        one = (load or CB.Gen333b)(d)
+        if getattr(one, "sleep02c", False):
+            raise RuntimeError("k1f: the writer model carries the sleep adapter; it must be the plain LFM")
+        _GEN[d] = C38.Gen338(share=one)
+    return _GEN[d]
+
+
+def writer_name() -> str:
+    d = os.environ.get(WRITER_ENV, "")
+    g = _GEN.get(d)
+    mt = getattr(getattr(getattr(g, "g", None), "model", None), "config", None)
+    mt = getattr(mt, "model_type", "?")
+    return f"{mt} @{Path(d).name[:8]}"
+
+
+class DraftLog:
+    """Pass-through around a writer gen: the same drafts come back; each call's drafts are appended to `path`, trimmed
+    and guarded as k1a's write_k1a does, with the state folder's name and the request (to find the item later)."""
+
+    def __init__(self, gen, loop, path: str):
+        self.gen, self.loop, self.path = gen, loop, path
+
+    def sample_chat(self, msgs, n):
+        out = self.gen.sample_chat(msgs, n)
+        system, text, hist = msgs[0]["content"], msgs[-1]["content"], msgs[1:-1]
+        facts = system[len(FACTS_PREFIX):] if system.startswith(FACTS_PREFIX) else ""
+        known = C38._words([text, facts] + [m["content"] for m in hist])
+        drafts = []
+        for c in out:
+            tc = C38.trim(c)
+            drafts.append({"trimmed": tc, "guard": CD.guard333d(tc, text, known)})
+        with open(self.path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"dir": Path(self.loop.dir).name, "request": text, "hist_msgs": len(hist),
+                                 "drafts": drafts}, ensure_ascii=False) + "\n")
+        return out
+
+
+def _logged(gen, loop):
+    p = os.environ.get(DRAFTS_ENV, "")
+    return DraftLog(gen, loop, p) if p else gen
+
+
+def install_creative_k1f(loop, gen=None, n: int = CD.N333D) -> None:
+    """k1a's writer on the LFM gen. `gen` (the build's MiniCPM5-1B Gen338) is ignored for creative turns."""
+    K1A.install_creative_k1a(loop, _logged(writer_gen(), loop), n)
+    loop.k1f_writer = writer_name()
+
+
+def _swapped(build, state_dir, args):
+    old = CD.install_creative333d
+    CD.install_creative333d = install_creative_k1f
+    try:
+        loop = build(state_dir, args)
+    finally:
+        CD.install_creative333d = old
+    loop.layers330c = [("cre_k1f" if x == "cre333d" else x) for x in loop.layers330c]
+    if not _PRINTED:
+        _PRINTED.append(1)
+        print(f"k1f: creative writer = install_creative_k1f; writer = {writer_name()}; layers = {loop.layers330c}",
+===END_CRE_PY_HEAD===
+[0m
+[0m$ [0mgit show origin/main:scripts/claude_k1f_score.py 2>&1 | head -n 140; echo "===END_SCORE_HEAD==="
+#!/usr/bin/env python3
+"""k1f scorer (Creative answers in chat thread, 2026-09-26). Counts only: never prints panel or reply text.
+
+One panel, k1fpanel (artifacts/claude-k1fpanel-20260926/creative, 100 fresh blind items), run by
+claude_panel382_run.py and scored by its --score step. Arms: F (k1f: the k1a writer on LFM2.5-1.2B-Instruct),
+K (k1a, the writer on MiniCPM5-1B), T (plain MiniCPM5-1B), Q (plain Qwen3.5-2B), L (plain LFM2.5-1.2B); T, Q and L
+on the plain twin recipe (claude_e2e336_twinb.py).
+
+Step 1, one verdict per distinct reply (arms that wrote the same reply to the same item share it):
+  python -B scripts/claude_k1f_score.py --dedupe SCORE
+      = claude_k1c_score.dedupe(SCORE, "F"): SCORE/creative_judge_u.jsonl (ids F0000.., seed 3824) and
+      SCORE/creative_key_u.json; counts only.
+Step 2, after judges 1 and 2 judged the packet (and judge 3 the lines they split on):
+  python -B scripts/claude_k1f_score.py --panel P/items.jsonl --runs OUT --key SCORE/creative_key_u.json \
+      --judges J1,J2[,J3] [--splits-out SPLITS.json] [--out RESULTS.json]
+  (a judge slot may join several files with "+"). Without judge 3 it writes the ids that need a third judge to
+  --splits-out and stops. Judge 3 decides a field only where judges 1 and 2 split on it (as in k1a and k1c).
+Marks: artifacts/claude-k1f-20260926/PASSMARKS-k1f.md (fixed before any registered run). K1f.1-3 compare F with K.
+The rival readings for F and for K are claude_k1rival_score.score, the scorer sealed for 0.2d's K1 row, unchanged.
+  python -B scripts/claude_k1f_score.py --selftest     (CPU, synthetic data)
+
+Report-only, the drafts (added 17:45 UTC before the seal, at the Thread manager's question "how often is a useful
+draft among the 4?"). The K and F arms run with K1F_DRAFTS=OUT/drafts_K.jsonl and OUT/drafts_F.jsonl (a pass-through
+log; claude_k1f_cre.DraftLog). Then:
+  python -B scripts/claude_k1f_score.py --draft-packet OUT --panel P/items.jsonl
+      one line per distinct (item, guard-passing draft of the last request) over K and F, shuffled with seed 3825,
+      ids H0000..: OUT/drafts_judge.jsonl and OUT/drafts_key.json; counts only.
+  python -B scripts/claude_k1f_score.py --draft-score OUT --panel P/items.jsonl --judges J1,J2[,J3] [--splits-out F]
+      per arm: items with a creative last request, items with no passing draft, first passing draft useful (k1a's
+      reply) and at least one passing draft useful, all in this one judging; and how often the arm's run reply is
+      its first passing draft (it must be every time). Same judge words (JUDGE-k1f.md), a separate packet.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import random
+import statistics
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_k1c_score as KC  # noqa: E402
+import claude_k1rival_score as KR  # noqa: E402
+
+ARMS = ("F", "K", "T", "Q", "L")
+RIVALS = KR.RIVALS
+BAR_GAIN, BAR_P, BAR_MADEUP, BAR_FALLBACK, K1_SHARE = 8, 0.05, 4, 2, 0.6
+load, yes, sign_p, two_sided, madeup = KC.load, KC.yes, KC.sign_p, KC.two_sided, KC.madeup
+
+
+def score(panel: str, runs: str, keyp: str, judge_spec: str, splits_out: str = "") -> dict | None:
+    items = {it["item_id"]: it for it in load(panel)}
+    key = {cid: (v if isinstance(v, list) else [v])
+           for cid, v in json.loads(Path(keyp).read_text(encoding="utf-8")).items()}
+    js = KC._judges(judge_spec)
+    j1, j2 = js[0], js[1]
+    miss = [cid for cid in key if cid not in j1 or cid not in j2]
+    if miss:
+        raise SystemExit(f"k1f score: {len(miss)} ids missing from judge 1 or 2")
+    split_u = [cid for cid in key if yes(j1[cid]["useful"]) != yes(j2[cid]["useful"])]
+    split_m = [cid for cid in key if madeup(j1[cid]) != madeup(j2[cid])]
+    splits = sorted(set(split_u) | set(split_m))
+    if len(js) < 3:
+        if splits_out:
+            Path(splits_out).write_text(json.dumps(splits), encoding="utf-8")
+        print(json.dumps({"lines": len(key), "useful_splits": len(split_u), "madeup_splits": len(split_m),
+                          "need_third": len(splits)}))
+        return None
+    j3 = js[2]
+    if any(cid not in j3 for cid in splits):
+        raise SystemExit("k1f score: split ids missing from judge 3")
+    useful, made = {}, {}
+    for cid, who in key.items():
+        u1, u2 = yes(j1[cid]["useful"]), yes(j2[cid]["useful"])
+        m1, m2 = madeup(j1[cid]), madeup(j2[cid])
+        u = u1 if u1 == u2 else yes(j3[cid]["useful"])
+        m = m1 if m1 == m2 else madeup(j3[cid])
+        for k in who:
+            useful[(k["arm"], k["item_id"])] = u
+            made[(k["arm"], k["item_id"])] = m
+    ids = sorted(items)
+    for x in ARMS:
+        if any((x, i) not in useful for i in ids):
+            raise SystemExit(f"k1f score: arm {x} missing or lacks some items")
+    import claude_cre333_agent as C
+    last = {}
+    for x in ARMS:
+        p = Path(runs) / f"creative_{x}.jsonl"
+        if not p.exists():
+            raise SystemExit(f"k1f score: {p} missing")
+        for r in load(p):
+            if r.get("last"):
+                last[(x, r["item_id"])] = r.get("reply") or ""
+    if any((x, i) not in last for x in ARMS for i in ids):
+        raise SystemExit("k1f score: a run file lacks some items")
+    groups = {"all": ids, "lead": [i for i in ids if items[i]["turns"]],
+              "nolead": [i for i in ids if not items[i]["turns"]],
+              "idea": [i for i in ids if items[i]["kind"] == "idea"],
+              "uses_facts": [i for i in ids if items[i]["kind"] == "uses_facts"]}
+
+    def cnt(arm, grp):
+        return sum(useful[(arm, i)] for i in grp)
+
+    def pair(a1, a2, grp):
+        return (sum(useful[(a1, i)] and not useful[(a2, i)] for i in grp),
+                sum(useful[(a2, i)] and not useful[(a1, i)] for i in grp))
+    res = {"lines": len(key), "items": len(ids), **{f"n_{g}": len(v) for g, v in groups.items() if g != "all"},
+           "judge12_useful_agree": len(key) - len(split_u), "judge12_madeup_agree": len(key) - len(split_m),
+           "third_judged": len(splits)}
+    for x in ARMS:
+        res[x] = {**{f"useful_{g}": cnt(x, v) for g, v in groups.items()},
+                  "madeup_replies": sum(made[(x, i)] for i in ids),
+                  "fallbacks": sum(last[(x, i)] == C.FALLBACK for i in ids),
+                  "empty_replies": sum(not last[(x, i)].strip() for i in ids),
+                  "bare_list_endings": sum(bool(KC.KS.BARE_END.search(last[(x, i)])) for i in ids),
+                  "median_words": statistics.median(len(last[(x, i)].split()) for i in ids)}
+    b, c = pair("F", "K", ids)
+    d = res["F"]["useful_all"] - res["K"]["useful_all"]
+    p = sign_p(b, c)
+    marks = {
+        "K1f.1": {"F_minus_K": d, "F_only": b, "K_only": c, "sign_p": round(p, 4),
+                  "pass": d >= BAR_GAIN and p <= BAR_P},
+        "K1f.2": {"F_madeup": res["F"]["madeup_replies"], "K_madeup": res["K"]["madeup_replies"],
+                  "pass": res["F"]["madeup_replies"] <= res["K"]["madeup_replies"] + BAR_MADEUP},
+        "K1f.3": {"F_fallbacks": res["F"]["fallbacks"], "K_fallbacks": res["K"]["fallbacks"],
+                  "pass": res["F"]["fallbacks"] <= res["K"]["fallbacks"] + BAR_FALLBACK},
+    }
+    res["marks_k1f"] = marks
+    res["verdict_k1f"] = "PASS" if all(m["pass"] for m in marks.values()) else "FAIL"
+    need = math.ceil(K1_SHARE * len(ids))
+    k1 = {"F_useful_all": res["F"]["useful_all"], "need": need,
+          **{f"{r}_useful_all": res[r]["useful_all"] for r in RIVALS}}
+    k1["pass"] = res["F"]["useful_all"] >= need and all(res["F"]["useful_all"] >= res[r]["useful_all"] for r in RIVALS)
+    res["K1_line"] = k1
+    for arm in ("F", "K"):                     # 0.2d's K1 row, scored by its own sealed code, as a dry run
+        rr = KR.score(panel, runs, keyp, judge_spec, arm)
+        if rr[arm]["useful_all"] != res[arm]["useful_all"] or rr[arm]["madeup_replies"] != res[arm]["madeup_replies"]:
+===END_SCORE_HEAD===
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check on origin/builder-outbox
+[✓] Fetch origin and read required docs from origin/main
+[•] Assess environment (Mac vs BensPC) and determine executability
+[ ] Report verdict with counts and deviations
+[0m
+[0m$ [0mgit status --short 2>&1 | head -n 20; echo "---STATUS_DONE---"; git branch --show-current 2>&1; git log --oneline -3 2>&1; echo "---"; ls /C:/ 2>&1 || echo "NO_C_DRIVE"; ls C:/Users/benja 2>&1 || echo "NO_BENSPC_PATH"; which python3 2>&1; python3 --version 2>&1
+A  artifacts/claude-rsn358i2-20260926/RESULTS.md
+A  artifacts/claude-rsn358i2-20260926/SEAL-run.sha256.txt
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/loop-s1.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s1/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/loop-s2.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s2/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/loop-s3.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s3/train_summary.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/loop-s4.log
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/tests.json
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_log.jsonl
+A  artifacts/claude-rsn358i2-20260926/runs/loop-s4/train_summary.json
+M  artifacts/fable-predictions-ledger.md
+?? .claude/
+---STATUS_DONE---
+claude/card-experiment-handoff-7c5b27
+599f870cd claude-credit-20260926k: read-only vast money check 2026-09-26
+ef311c7bd depot 52755827 STOPPED (disk kept) 2026-09-26
+5484e6460 rent-mu405 STOPPED by owner (duplicate of CPU run) 2026-09-26
+---
+ls: /C:/: No such file or directory
+NO_C_DRIVE
+ls: C:/Users/benja: No such file or directory
+NO_BENSPC_PATH
+/usr/local/bin/python3
+Python 3.9.6
+[0m
+[0m$ [0mecho "K1F_FILES_ON_MAIN:"; git ls-tree -r --name-only origin/main -- artifacts/claude-k1f-20260926 2>&1; echo "---"; echo "K1F_COUNT:"; git ls-tree -r --name-only origin/main -- artifacts/claude-k1f-20260926 2>&1 | wc -l; echo "SEAL_LINES:"; git show origin/main:artifacts/claude-k1f-20260926/SEAL.sha256.txt 2>&1 | wc -l; git show origin/main:artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt 2>&1 | wc -l; echo "SCRIPTS:"; git ls-tree -r --name-only origin/main -- scripts/claude_k1f_cre.py scripts/claude_k1f_score.py scripts/claude_k1f_test.py scripts/claude_winnl2_wrap.py scripts/claude_twinb_wrap.py scripts/claude_panel382_run.py 2>&1; echo "---PANEL_NAME_COUNT_ONLY:"; git ls-tree -r --name-only origin/main -- artifacts/claude-k1fpanel-20260926 2>&1 | wc -l
+K1F_FILES_ON_MAIN:
+artifacts/claude-k1f-20260926/ADDENDUM-1-benspc.md
+artifacts/claude-k1f-20260926/JUDGE-k1f.md
+artifacts/claude-k1f-20260926/PASSMARKS-k1f.md
+artifacts/claude-k1f-20260926/SEAL-addendum1.sha256.txt
+artifacts/claude-k1f-20260926/SEAL.sha256.txt
+---
+K1F_COUNT:
+       5
+SEAL_LINES:
+      21
+       2
+SCRIPTS:
+scripts/claude_k1f_cre.py
+scripts/claude_k1f_score.py
+scripts/claude_k1f_test.py
+scripts/claude_panel382_run.py
+scripts/claude_twinb_wrap.py
+scripts/claude_winnl2_wrap.py
+---PANEL_NAME_COUNT_ONLY:
+       5
+[0m
+[0m$ [0mgit ls-files --others --cached -- artifacts/claude-k1f-20260926/ 2>&1 | head -n 20; echo "---LOCAL_COUNT:"; git ls-files --others --cached -- artifacts/claude-k1f-20260926/ 2>&1 | wc -l; echo "---WORKTREE_K1F_DIR:"; ls artifacts/claude-k1f-20260926/ 2>&1 || echo "NO_LOCAL_K1F_DIR"
+warning: could not open directory 'artifacts/claude-k1f-20260926/': No such file or directory
+---LOCAL_COUNT:
+       1
+---WORKTREE_K1F_DIR:
+ls: artifacts/claude-k1f-20260926/: No such file or directory
+NO_LOCAL_K1F_DIR
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check on origin/builder-outbox
+[✓] Fetch origin and read required docs from origin/main
+[✓] Assess environment (Mac vs BensPC) and determine executability
+[•] Report verdict with counts and deviations
+[0m
+[0m# [0mTodos
+[✓] Duplicate guard check on origin/builder-outbox
+[✓] Fetch origin and read required docs from origin/main
+[✓] Assess environment (Mac vs BensPC) and determine executability
+[✓] Report verdict with counts and deviations
+[0m
