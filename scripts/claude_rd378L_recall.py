@@ -14,6 +14,8 @@ score:   python claude_rd378L_recall.py score --data DATA --convs 0-4 --notes NO
          none valid -> the note's own turn), said_at = the session date. For each question with evidence, recall(k=20)
          over (A) heard only and (B) heard + notes, modes fused and bm25. An evidence turn is found@k when it is in the
          union of turn_ids of the top k items. Reports any@k / all@k (k 5, 10, 20) per category and 1-4.
+         Addendum B (PASSMARKS-B.md): also turns@k (distinct turns covered by the top k items, summed) and anyT@k
+         (evidence among the first k distinct turns reached in rank order: the same turn budget for both stores).
 selftest: python claude_rd378L_recall.py selftest
 """
 from __future__ import annotations
@@ -106,6 +108,19 @@ def build_store(d, turns, notes, with_notes):
     return s
 
 
+def budget_turns(hits, k):
+    """Addendum B: the first k DISTINCT turns reached by walking the ranked items in order (a note's cited turns are
+    taken from its own turn backwards), so both stores are compared at the same number of turns shown."""
+    seen = []
+    for h in hits:
+        for t in sorted(h["turn_ids"], reverse=True):
+            if t not in seen:
+                seen.append(t)
+                if len(seen) == k:
+                    return set(seen)
+    return set(seen)
+
+
 def score(a):
     modes = tuple(a.modes.split(","))
     notes, nc = note_rows(a.notes)
@@ -122,18 +137,20 @@ def score(a):
                         continue
                     r = {"qid": f"{conv['sample_id']}#{i}", "cat": qa["category"], "arm": arm}
                     for mode in modes:
-                        hits = s.recall(qa["question"], k=max(KS), mode=mode)
+                        hits = s.recall(qa["question"], k=3 * max(KS), mode=mode)
                         for k in KS:
                             got = set().union(*[h["turn_ids"] for h in hits[:k]]) if hits else set()
                             r[f"{mode}_any@{k}"] = int(bool(ev & got))
                             r[f"{mode}_all@{k}"] = int(ev <= got)
+                            r[f"{mode}_turns@{k}"] = len(got)
+                            r[f"{mode}_anyT@{k}"] = int(bool(ev & budget_turns(hits, k)))
                     rows.append(r)
     summary = {}
     for arm in ("A", "B"):
         for cat in ("1", "2", "3", "4", "1-4"):
             sel = [r for r in rows if r["arm"] == arm and (cat == "1-4" or str(r["cat"]) == cat)]
             s = {"questions": len(sel)}
-            for key in [f"{m}_{kind}@{k}" for m in modes for kind in ("any", "all") for k in KS]:
+            for key in [f"{m}_{kind}@{k}" for m in modes for kind in ("any", "all", "anyT", "turns") for k in KS]:
                 s[key] = sum(r[key] for r in sel)
             summary[f"{arm}:{cat}"] = s
     out = Path(a.out)
