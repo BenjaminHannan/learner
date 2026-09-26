@@ -34,3 +34,8 @@ artifacts/claude-y1t-20260926/glm/RESULTS-mac.md):
    benspc-y1t (and y1r) then read glm2's items instead of glm's; nothing else in PLAN.md changes.
 6. If the combined set still has fewer than 1,500 training items after every redo dialog has had one try, y1t goes on
    with what exists (the drafts step's repeat to 1,500 rows handles it), disclosed as a deviation. No third route.
+
+**Route update (20:13 UTC, before any top-up call):** the Director held the job at 20:09 UTC because helper v1 leaves
+one opencode session behind per call. It now runs through scripts/claude_y1t_glm_oc11.py: Reading facts' wrapper
+unchanged, with the Director's helper v1.1 (scripts/claude_glm_opencode_v11.py, sha256 7a067cfb...; same call()
+interface and reply text, deletes its own session) in place of v1. 3 workers (the Director's share of the route).
