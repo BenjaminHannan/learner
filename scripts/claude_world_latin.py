@@ -8,6 +8,10 @@ chat-puzzle gate (358b3) use, so hits found by one thread are usable by the othe
   prompt: one line, rows separated by " / ", "_" for blanks; the reply is the finished square in the same form.
   check(item, reply): exact code check. Any square that keeps every clue and has 1..s once in every row and column
   counts, so squares with several answers are fine.
+  Reply mode "blanks" (added 2026-09-26 for Creative's DEV finding that the 1B won't copy the square back):
+  prompt_blanks(item) asks for only the missing numbers, left to right and top to bottom; check_blanks(item, reply)
+  needs EXACTLY as many numbers in the reply as there are blanks, fills them in reading order and calls check().
+  (Claude-written prompt frames: test prompts only. Training on them needs GLM wording, Ben 16:39.)
 Seeds: the Creative thread owns 900000-999999; the sleep research thread never uses them.
 
   python -B scripts/claude_world_latin.py selftest
@@ -56,6 +60,21 @@ def check(item, reply):
             and all(set(row) == full for row in g) and all({g[r][c] for r in range(s)} == full for c in range(s)))
 
 
+def prompt_blanks(item):
+    s = item["size"]
+    text = " / ".join(" ".join(str(v) if v else "_" for v in row) for row in item["puz"])
+    return (f"In this {s}x{s} square every row and every column must hold 1 to {s} once: {text}. "
+            f"Reply with only the missing numbers, left to right and top to bottom, separated by spaces.")
+
+
+def check_blanks(item, reply):
+    puz, vals = item["puz"], [int(x) for x in re.findall(r"\d+", reply)]
+    if len(vals) != sum(v == 0 for row in puz for v in row):
+        return False
+    it = iter(vals)
+    return check(item, " / ".join(" ".join(str(v if v else next(it)) for v in row) for row in puz))
+
+
 def selftest():
     seen = set()
     for size in (3, 4, 5, 6):
@@ -67,8 +86,16 @@ def selftest():
             bad[0][0], bad[0][1] = bad[0][1], bad[0][0]
             assert not check(it, " / ".join(" ".join(map(str, r)) for r in bad))
             seen.add(it["prompt"])
+            fill = [it["sol"][r][c] for r in range(size) for c in range(size) if it["puz"][r][c] == 0]
+            assert check_blanks(it, "The missing numbers: " + ", ".join(map(str, fill)) + ".")
+            assert not check_blanks(it, " ".join(map(str, fill[:-1])))                   # one short
+            assert not check_blanks(it, " ".join(map(str, fill + [1])))                  # one extra
+            bad = fill[:]
+            bad[0] = bad[0] % size + 1                                                   # one cell changed
+            assert not check_blanks(it, " ".join(map(str, bad)))
     assert len(seen) >= 1150, len(seen)
-    print(f"selftest ok: {len(seen)} distinct prompts in 1,200; the solution checks; a swapped pair fails")
+    print(f"selftest ok: {len(seen)} distinct prompts in 1,200; the solution checks; a swapped pair fails; "
+          f"blanks mode needs exactly the blank count")
 
 
 if __name__ == "__main__":
