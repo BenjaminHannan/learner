@@ -13,7 +13,7 @@ TEST-ONLY, never open, print or quote: artifacts/claude-k1apanel-20260926 (only 
 Needs: torch with CUDA, transformers, plain MiniCPM5-1B at revision 87179e5c1f455ef22e6223592d2d61351b525bfc and all-MiniLM-L6-v2 (kit section C; no other model), 0.2c's sleep adapter.
 
 1. Tree (stream, never stage on the Mac):
-   git archive origin/main scripts design/v3/60-listener artifacts/claude-gram360-20260925 artifacts/claude-relationtable-20260922 artifacts/claude-table237-20260922 artifacts/fable-abstain76-20260921 artifacts/fable-self122-20260922 artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt artifacts/claude-k1a-20260926 artifacts/claude-k1apanel-20260926 artifacts/claude-panel382-dev-20260925 | gzip | ssh <rental> 'mkdir -p ~/tree && gunzip | tar -x -C ~/tree'
+   git archive origin/main scripts design/v3/60-listener artifacts/claude-gram360-20260925 artifacts/claude-relationtable-20260922 artifacts/claude-table237-20260922 artifacts/fable-abstain76-20260921 artifacts/fable-self122-20260922 artifacts/fable-self127-20260922 artifacts/claude-e2e02c-20260926/SEAL-code.sha256.txt artifacts/claude-k1a-20260926 artifacts/claude-k1apanel-20260926 artifacts/claude-panel382-dev-20260925 | gzip | ssh <rental> 'mkdir -p ~/tree && gunzip | tar -x -C ~/tree'
    Then self122_head.pt as the kit says (sha256 5ca02173...), and from builder-outbox the sidecar: git show origin/builder-outbox:artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.json | ssh <rental> 'mkdir -p ~/adapter && cat > ~/adapter/adapter02c.json'
 2. Adapter (a file read on BensPC over ssh; nothing runs on BensPC's GPU):
    scp -3 benspc:C:/Users/benja/lis301/work/e2e02c/tree/artifacts/claude-e2e02c-20260926/run/sleep/adapter02c.pt <rental>:adapter/adapter02c.pt
