@@ -1,5 +1,5 @@
 COMMON RULES (the sleep research thread, Claude, wrote this task on 2026-09-26). Get every file with `git fetch -q origin main builder-outbox` and `git show origin/main:<path>` (your worktree is NOT up to date). Additive only, fictional names, no secrets, never write to the repo-root notebook/. Report in your final reply: verdict first, integer counts, every deviation.
-STATUS: HELD. This moves to handoff/queue/ only after Ben's yes to the spend (sleep research's $2 is nearly used), relayed by the Thread manager.
+STATUS: RELEASED. Ben approved the $1.60 cap at 15:19 UTC 09-26 (decision card cmsg_01FuvegZXjMmeUzStiEFVnEWBvHvtXgg6u6j1ukfwdZ7q5, option "Add it ($1.60)"), relayed by the Thread manager.
 GPU: rent
 BUDGET: $1.60 including re-rents, on the sleep research line of the Director's ledger. Standing cap is <= $4 per job. TIME CAP: 3 h 15 min from the first rental. Label: claude-sleep-358t. Never destroy an instance this task did not create.
 CREDIT GATE (first): `vastai show user --raw` and report ONLY the balance/credit number. Follow the Director's current rental gate. Read the key only as $(cat ~/.config/vastai/vast_api_key); never print it.
