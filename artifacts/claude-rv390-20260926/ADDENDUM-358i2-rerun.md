@@ -21,3 +21,4 @@ $0.40, and rv-390's $0.90 cap); the builder reports rv-390 cost about $0.37. Any
 manager first.
 
 Update (18:48 UTC by date -u): Ben (18:42 UTC, relayed by the Thread manager at 18:48) ended new vast rentals unless the Thread manager assigns part of the remaining balance. The rerun therefore runs on BensPC only, as handoff/held/rv390-358i2-pc.md already says. If BensPC is busy, the job waits in the queue. It does not go to a rental.
+Correction (18:50 UTC by date -u): Ben (18:47 UTC, relayed by the Thread manager at 18:51) gave one $30 rental pool for the project. The Director counts it, and each new rental needs the Thread manager's OK. The job stays on BensPC. A rental would be asked for only if BensPC cannot run it.
