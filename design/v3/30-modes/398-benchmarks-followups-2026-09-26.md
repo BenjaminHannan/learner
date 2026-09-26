@@ -163,3 +163,23 @@ Taken, one change each:
 - **E3 (a picker over several tries):** waits until the six-tries headroom is measured here, with a registered
   plan.
 - **E2:** done by bm-398d for Qwen. The MMLU letter-only baseline is already queued.
+
+## While bm-398i and bm-398e run (14:50 UTC)
+- **bm-398r registered and sealed** (artifacts/claude-bm398r-20260926/PLAN.md): the evidence-trained reader adapter,
+  step 3 above.
+  - Practice is code-made chats of LoCoMo length (median about 21k tokens), with eleven question kinds, 16 date
+    phrasings and look-alike facts. Dates and multi-part questions are drawn three times as often.
+  - It uses bm-397t's recipe, so only the data differs.
+  - Marks: R1 is +15 blind-right answers over T on the 297 with the interval above 0; R2 is F1 ≥ 32.50; R3 is
+    abstentions ≤ T + 20.
+  - It is queued as one rental (handoff/queue/rent-bm398r.md, cap $1.50 of the $2), together with bm-398i's GPU
+    check with the real bm-397t adapter.
+- **bm-398 (evidence expansion) is withdrawn before registration.** A $0 count on bm-398d's 297 (store top-20
+  positions only, no model):
+  - at the same 20-line budget, recalled lines plus neighbours hold every evidence line on 177-191 questions,
+    against E20's 186;
+  - only 43 of the 187 evidence lines E20 misses sit next to a line it recalled.
+  - So neighbours do not fix the store's misses. The retrieval change stays open, and it needs another idea.
+- **For Month-end (agent path):** bm-398d already showed the plain 1B reading the whole chat beats reading the
+  store's top 20 (109 vs 88 of 297 blind-right, +7.1 points, interval +4.4..+10.1). Chats that fit in context may be
+  better read whole.
