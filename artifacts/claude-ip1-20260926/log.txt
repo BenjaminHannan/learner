@@ -1,0 +1,31 @@
+[ip1] k00 stage train None: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k01 stage save None: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k02 stage record None: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k03 stage switch None: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k04 stage after None: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k05 random none 7.3: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": false}
+[ip1] k06 random none 31.7: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": false}
+[ip1] k07 random none 88.3: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": true}
+[ip1] k08 random none 62.1: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": false, "I3_live_answers_same_and_fast": false}
+[ip1] k09 random none 31.8: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": false}
+[ip1] k10 random none 77.4: {"I1_active_is_old_or_complete_new": true, "I2_active_loads_and_matches": true, "I3_live_answers_same_and_fast": false}
+{
+ "marks": {
+  "I0 every staged kill reached its stage": true,
+  "I1 after every kill ACTIVE is the old version or a complete accepted new one": true,
+  "I2 after every kill the active version loads in a fresh process and its fingerprint matches": false,
+  "I3 the live assistant answered identically, each answer within the limit, during and after every kill": false,
+  "I4 a clean night after all kills is accepted and becomes active": false,
+  "I5 stop_night stops a running night within grace + 1 s": true,
+  "D1-D4 the dormancy gate": true
+ },
+ "verdict": "FAIL",
+ "random_kill_stages": [
+  "load/score",
+  "train",
+  "exit",
+  "train",
+  "train",
+  "train"
+ ]
+}
