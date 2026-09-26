@@ -55,4 +55,4 @@ PASSMARKS were registered. This record is why no sealed zero-shot test follows.
 - So lis-320 never practises a correction whose owner was named only earlier ("sorry, she's 13"). That is the
   largest single cause of missed corrections in lis-319k VERIFY.md:19-21 (owner_not_span 14 of 60).
 - backref rows teach owners named earlier, but only for plain new facts.
-- The pilots agree: 0 of 56 correction seeds carry a ref.
+- The pilots agree: 0 of 53 correction seeds carry a ref.
