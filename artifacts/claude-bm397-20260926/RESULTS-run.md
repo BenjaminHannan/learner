@@ -58,3 +58,31 @@ So the shortening also changed meaning. It turned 13 of 103 right answers into p
 
 ## Still to add (registered, running)
 The GSM8K/MMLU no-drop marks (AMEND-general); E20F (report only); blind recount.
+
+## No-drop on GSM8K and MMLU (AMEND-general): FAIL (added ~03:20 UTC)
+Seals: SEAL-general.sha256.txt 3/3 OK. The run started 2026-09-26T02:48:34Z on CPU here (same snapshot) and took
+912.3 s (GSM8K) and 940.3 s (MMLU). T reproduced 191 and 50, so the script did not stop.
+
+| | T right | TF right | lost | gained | median words T → TF | mark |
+|---|---|---|---|---|---|---|
+| GSM8K-300 | 191 | 172 | 19 | 0 | 103 → 4 | G1 (≥ 191): FAIL |
+| MMLU-Redux-300 | 50 | 51 | 0 | 1 | 15 → 14 | G2 (≥ 50): PASS |
+
+- final_kept reasons: GSM8K changed 288, not_copy 10, same 2. MMLU same 190, not_copy 106, changed 3, abstains 1.
+- GSM8K under the strict pick ("answer is N" only): T 189, TF 170. An earlier quick check by the review subagent
+  counted 190 for T. The two strict rules may differ; not investigated.
+- Files: run/gsm8k_TF.jsonl (300 rows, sha256 931b40ac9225728961bcb98f0c816dd203e1b69de81877d0447723de2a06ce57),
+  run/mmlu_TF.jsonl (300 rows, sha256 d82404986435805a67f7e340f4fadd2ef1cf87403f87f119316aa02dd762f4d0),
+  run/general-score.jsonl (the scorer's three printed lines), run/run_general.log.txt.
+- Meaning (shown): run on math answers, the trim step cuts the working down to the final number, and 19 of 191 right
+  answers become wrong, none the other way. By AMEND-general's rule, trimming everywhere is a FAIL. It would have
+  been allowed only on the memory path, and F1 and F2 already failed, so nothing from bm-397 ships.
+
+## Blind recount: agrees (added ~03:20 UTC)
+A separate agent recomputed items F1, F2 and the finaliser counts from the raw files, without reading this file. It
+matched every number above. Its score.json and per_question.json are byte-identical to score/, and its audit score
+equals audit/F2-score.json. It noted that run2/locomo_T.jsonl lives on builder-outbox (commit 0c88d4ba0), not on
+main; its sha256 matches bm-391's baselines.sha256.txt.
+
+## Still to add
+E20F (report only), started 2026-09-26T03:20:21Z on CPU here.
