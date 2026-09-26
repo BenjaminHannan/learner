@@ -45,3 +45,14 @@ Counted from runs/{dense,moe,moe-grow}-s{1,2}/result.json. A blind recount by a 
 
 ## Next
 Per ADDENDUM-1/2 and the Thread manager's notes: the replay test (one change: 250 of 2,500 phase-B steps are grids from the phase-A training pool), at equal size in the moe-grow-eq layout if it is run as a graded test. Its marks are in NEXT-replay-draft.md, and the moe-grow-eq caveat is in NOTE-moe-grow-eq-caveat.md. It is $0 on CPU.
+
+## Added 2026-09-26 23:47 UTC: the two report-only arms (ADDENDUM-1); the verdict above is unchanged
+Dev counts of 200, seed 1 / seed 2:
+
+| arm | weights | grids5 after A | grids5 after B | F | sums4 after B | maze7 after C | S after B (block 0, 1) |
+|---|---|---|---|---|---|---|---|
+| moe-aux0 (no balance loss) | 1,650,342 | 186 / 188 | 0 / 0 | 186 / 188 | 200 / 200 | 124 / 148 | 0.031, 0.647 / 0.056, 0.164 |
+| dense-narrow (MLP width d) | 858,782 | 194 / 189 | 0 / 0 | 194 / 189 | 200 / 200 | 157 / 170 | none |
+
+- Dropping the load-balance loss does not make the experts separate by kind (S stays low except block 1 on seed 1), and it forgets grids completely, like moe.
+- A dense loop with the same active MLP width as moe (about half the total weights) also forgets completely. So forgetting here does not depend on MLP width or on experts. Every net that trains shared weights on sums alone loses all of grids.
