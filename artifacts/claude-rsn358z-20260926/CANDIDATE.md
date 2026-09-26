@@ -19,3 +19,9 @@
 5. 358z cross-round mix.
 
 It uses 358y's marks, with a G6-style "beats its base by 10" mark.
+
+**Also logged (16:49 UTC, from the Thread manager and Ben): the MLP width ratio.**
+- Blocks now widen 4x in the MLP (scripts/claude_rsn358a_run.py:58), about 12·d² weights per block.
+- A 2x MLP (about 8·d²) leaves room for about 1.5x the layers at equal weights.
+- It would be a single change on the best shape and ratio from 358y, as step 6 after 358z-b.
+- Worth a test only if 358y shows depth helping: its loop curve still rising at the deepest point it could reach before heads get too narrow. Otherwise it is dropped.
