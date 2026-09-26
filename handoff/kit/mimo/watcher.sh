@@ -28,12 +28,12 @@ publish() {  # $1 = task name; marks $Q/$n.pushed on success
   # index = the fetched outbox tip, then stage ONLY this job's paths (git add -A once deleted other jobs' results, 09-26)
   local n="$1" d="$O/runs/$n"; mkdir -p "$d"
   cp "$Q/$n".md "$Q/$n".go* "$Q/$n".exit "$d/" 2>/dev/null
-  grep -h '^PUSH:' "$Q/$n.md" | sed 's/^PUSH://' | tr ' ' '\n' | grep -v '^$' | while read -r p; do
+  grep -h '^PUSH[^:]*:' "$Q/$n.md" | sed 's/^PUSH[^:]*://' | tr ' ' '\n' | grep -v '^$' | while read -r p; do
     case "$p" in notebook*|/*|*..*) log "refused push path $p"; continue;; esac
     (cd "$W" && find $p -type f -size -5M ! -name '*.pt' ! -name '*.safetensors' ! -name '*.gguf' ! -name '*.bin' 2>/dev/null) | while read -r f; do
       mkdir -p "$O/$(dirname "$f")"; cp "$W/$f" "$O/$f"; done
   done
-  (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --mixed FETCH_HEAD; { echo "runs/$n"; grep -h '^PUSH:' "$Q/$n.md" | sed 's/^PUSH://' | tr ' ' '\n' | grep -v '^$'; } | while read -r p; do git add -f -- "$p" 2>/dev/null; done; git commit -qm "builder results: $n"; git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 \
+  (cd "$O" && git fetch -q origin "$OUT" 2>/dev/null && git reset -q --mixed FETCH_HEAD; { echo "runs/$n"; grep -h '^PUSH[^:]*:' "$Q/$n.md" | sed 's/^PUSH[^:]*://' | tr ' ' '\n' | grep -v '^$'; } | while read -r p; do git add -f -- "$p" 2>/dev/null; done; git commit -qm "builder results: $n"; git push -q origin "HEAD:$OUT") >> "$LOG" 2>&1 \
     && touch "$Q/$n.pushed" && log "pushed $n" || log "push failed $n (retry next round)"
 }
 log "watcher started (pid $$)"
