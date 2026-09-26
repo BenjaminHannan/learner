@@ -29,3 +29,9 @@ Benchmarks found that on LoCoMo the about-the-user test would miss almost every 
 (1 of 1,540 with no names in the notebook), so R would answer them from the question alone. The test now also
 counts any name heard in an earlier turn of the same chat (a capitalised word inside a sentence, or "<Name> said";
 kept in <state_dir>/route383_names.json). Checks: scripts/claude_e2e383_test.py 11/11. Same change, same marks.
+
+## Addendum 2 2026-09-26 ~01:30 UTC, before any run (no mark changed)
+Benchmarks ran 338's trim() and guard() over bm-390's plain-1B GSM8K replies: 177 of 300 are over 338's 90-word cap
+(G4), and only 93 of the 191 right answers fit, so R's route would reject most worked math answers for length
+alone. The route now samples up to 512 new tokens (was 200) and caps its replies at 350 words (guard383); the G1-G3
+checks are 338's, unchanged, and still apply to the whole reply. Nothing else changes. Checks: scripts/claude_e2e383_test.py 13/13.

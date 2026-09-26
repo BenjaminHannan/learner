@@ -13,6 +13,9 @@ with no names held, 1 of 1,540 questions counted as about a person), and the tur
 plainly (SYSTEM383; 338's guards, strict when the turn says my/I). Questions about the user keep the honest line.
 Nothing here writes the notebook (checked). Layer order: ... chat338b -> route383 -> vary330c -> gram360 -> turnlog.
 Counters: loop.route383_stats (tried; replaced by the kind of line replaced: think_split / other; all_failed).
+Length (added before any run, 2026-09-26 ~01:25 UTC; Benchmarks found 338's 90-word cap (G4) and 200-token limit
+would reject most step-by-step math answers): the route samples up to MAXNEW383 new tokens and caps replies at
+WORDS383 words; guards G1-G3 are 338's, unchanged (guard383).
 
 build_383   = G + route383 (the registered arm R).
 build_383e  = G + ep-382 (k = 20, as 382b) + route383 (report only: both changes; memory is tried first).
@@ -29,6 +32,8 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 N383 = 4
+MAXNEW383 = 512
+WORDS383 = 350
 SYSTEM383 = ("You are a helpful, knowledgeable assistant. Answer the user's question directly and correctly. For "
              "math, work it out step by step and end with the final answer. For a multiple-choice question, end "
              "with the letter of the answer. Never make up facts about the user or people they know.")
@@ -64,6 +69,22 @@ def about_user383(text: str, names: set[str]) -> bool:
     return any(n in words for n in names)
 
 
+def guard383(c: str, text: str, known: set[str]) -> str | None:
+    """338's guard with the route's own length cap: G4 over WORDS383 words (not 90); G1-G3 exactly as 338's
+    (338's guard is called with its module cap lifted to WORDS383 for the call; one thread, restored after)."""
+    import claude_chat338_agent as C38
+    low = c.lower()
+    n = len(c.split())
+    if n == 0 or n > WORDS383 or "<think" in low or "</think" in low:
+        return "G4"
+    cap = C38.MAX_WORDS338
+    try:
+        C38.MAX_WORDS338 = WORDS383
+        return C38.guard(c, text, known)
+    finally:
+        C38.MAX_WORDS338 = cap
+
+
 def install_route383(loop, gen, n: int = N383) -> None:
     import claude_chat338_agent as C38
     import claude_chat338b_agent as C38B
@@ -96,7 +117,7 @@ def install_route383(loop, gen, n: int = N383) -> None:
         msgs = [{"role": "system", "content": SYSTEM383}, {"role": "user", "content": text}]
         for c in gen.sample_chat(msgs, n):
             c = C38.trim(c)
-            g = C38.guard(c, text, known)
+            g = guard383(c, text, known)
             if g is not None:
                 loop.route383_stats[g] += 1
                 continue
@@ -142,7 +163,8 @@ def _build(state_dir, args, memory_k):
     if store is not None:
         E382.install_answer382(loop, gen, store, k=memory_k)
         layers.append("answer382")
-    install_route383(loop, gen)
+    route_gen = C38.Gen338(share=one_b, max_new=MAXNEW383)
+    install_route383(loop, route_gen)
     VARY.install_vary330c(loop)
     GR.install_gram360(loop)
     layers += ["route383", "vary330c", "gram360"]

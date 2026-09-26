@@ -57,7 +57,13 @@ def main() -> int:
     loop4.turn('Caroline said, "I finally went to the park with Melanie."')
     assert loop4.turn("When did Caroline go to the park?") == ["I'm not sure."]; ok += 1   # heard name: kept
     assert loop4.turn("How many apples does Janet have if she buys 3 more?") == ["She went on Tuesday."]; ok += 1
-    print(f"claude_e2e383_test: {ok}/11 OK")
+    import claude_chat338_agent as C38
+    long_ok = "Step one: " + "we add the numbers together carefully. " * 20 + "So the answer is 42."
+    loop5 = Loop(lambda t: "I'm not sure.")
+    R.install_route383(loop5, Gen(["I'll remember that. " + "x " * 120, long_ok]))
+    assert loop5.turn("what is 40 plus 2, step by step?") == [long_ok] and loop5.route383_stats["G1"] == 1; ok += 1
+    assert C38.MAX_WORDS338 == 90 and R.guard383("word " * 400, "why?", set()) == "G4"; ok += 1   # cap restored
+    print(f"claude_e2e383_test: {ok}/13 OK")
     return 0
 
 
