@@ -68,6 +68,12 @@ Each of these gets its own PASSMARKS and a fresh sealed panel before its run.
 Filled 14:55 UTC: mu-402 is in (VERIFY.md: M3 PASS, adapter-off chats preferred 92-66 of 160 pair judgements), and
 0.2d keeps the adapter off the chat path, so B and C run with the adapter OFF (rent-ch404 ADAPTER_MODE: off).
 
+## Scope after Ben's goals page (written 2026-09-26 15:00 UTC)
+design/v3/30-modes/ben-goals-2026-09-26.md: the reasoner is the model; the reader and talker only turn words into
+thoughts and thoughts into words (Ben 14:49), so everyday chat should be solid and plain, not a big talker project.
+So this line stops at removing harms: ch-403 (stock non-answers) and one of ch-404/ch-404g (length or decoding). The
+ch-405 helpfulness score for the shared picker is dropped. Questions for Ben go only through the Thread manager.
+
 ## Money
 ch-403's job is capped at $1.60 of this thread's $2 (Ben, 12:59 UTC). A registered ch-404 run (three arms, 60
 conversations) is likely to take the thread past $2; before it is queued the thread first asks month-end whether it can
