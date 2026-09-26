@@ -1,0 +1,443 @@
+[0m
+> build · muse-spark-1.3-contributor
+[0m
+[0m# [0mTodos
+[•] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[ ] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[ ] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[ ] Run rows script (expect 240 rows / 210 history)
+[ ] Run lis-319f reader once, record device/median/wall
+[ ] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
+[0m$ [0mgit fetch -q origin main 2>&1; echo "FETCH_EXIT:$?"; git rev-parse origin/main --short; git status --short --branch | head -n 20; pwd
+FETCH_EXIT:0
+fatal: Needed a single revision
+5f44229bb4716ab7f4930d9fefedc4b760f7a0d4
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 22]
+A  artifacts/claude-blurt2-20260925/RESULTS-gpu-3r.md
+A  artifacts/claude-blurt2-20260925/gpu-3r/log_loop.txt
+A  artifacts/claude-blurt2-20260925/gpu-3r/loop_summary.json
+A  artifacts/claude-blurt2-20260925/gpu-3r/wins.jsonl
+A  artifacts/claude-blurt4-20260925/RESULTS-gpu-4.md
+A  artifacts/claude-blurt4-20260925/gpu-4/blurt4_summary.json
+A  artifacts/claude-blurt4-20260925/gpu-4/log.txt
+A  artifacts/claude-blurt5s-20260925/RESULTS-gpu-5s.md
+A  artifacts/claude-blurt5s-20260925/gpu-5s/blurt5s_summary.json
+A  artifacts/claude-blurt5s-20260925/gpu-5s/log.txt
+A  artifacts/claude-brd5-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd5-20260926/gpu/brd5_summary.json
+A  artifacts/claude-brd5-20260926/gpu/log.txt
+A  artifacts/claude-brd5-20260926/gpu/narrow_picks.jsonl
+A  artifacts/claude-brd5-20260926/gpu/streams.json
+A  artifacts/claude-brd6-20260926/RESULTS-gpu.md
+A  artifacts/claude-brd6-20260926/gpu/brd6_summary.json
+A  artifacts/claude-brd6-20260926/gpu/log.txt
+A  artifacts/claude-brd6-20260926/gpu/practice.jsonl
+/Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27
+[0m
+[0m$ [0mgit rev-parse origin/main --short 2>&1; echo "---"; git archive origin/main handoff/queue/lis-302-gpu.md | tar -xO | head -n 13; echo "===END13==="
+fatal: Needed a single revision
+5f44229bb4716ab7f4930d9fefedc4b760f7a0d4
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+===END13===
+[0m
+[0m$ [0mgit rev-parse FETCH_HEAD --short 2>&1; git rev-parse origin/main 2>&1; git log --oneline -3 FETCH_HEAD 2>&1; git log --oneline -3 origin/main 2>&1; git remote -v | head
+fatal: Needed a single revision
+5f44229bb4716ab7f4930d9fefedc4b760f7a0d4
+5f44229bb4716ab7f4930d9fefedc4b760f7a0d4
+5f44229bb queue: rent-y1f -> rent-0y1f (runs next, short job); rental pool 14 -> 18
+180569c78 rent kit: torch-upgrade torchvision fix; ledger rd378L/notes-b
+db34b82ab rent-notes-b: header time from date -u
+5f44229bb queue: rent-y1f -> rent-0y1f (runs next, short job); rental pool 14 -> 18
+180569c78 rent kit: torch-upgrade torchvision fix; ledger rd378L/notes-b
+db34b82ab rent-notes-b: header time from date -u
+origin	git@github.com:BenjaminHannan/learner.git (fetch)
+origin	git@github.com:BenjaminHannan/learner.git (push)
+[0m
+[0m$ [0mgit fetch -q origin 2>&1; echo "EXIT:$?"; git rev-parse --short origin/main 2>&1; git log --oneline -5 --date=short --format='%h %ad %s' origin/main 2>&1 | head -n 10
+EXIT:0
+5f44229bb
+5f44229bb 2026-09-26 queue: rent-y1f -> rent-0y1f (runs next, short job); rental pool 14 -> 18
+180569c78 2026-09-26 rent kit: torch-upgrade torchvision fix; ledger rd378L/notes-b
+db34b82ab 2026-09-26 rent-notes-b: header time from date -u
+cd91474c6 2026-09-26 rent-notes-b: retry rd-378L (first try wrote no notes: torchvision built for torch 2.8 broke transformers imports) with rd-379q on one rental; addendum E changes the environment only
+fcbca86ad 2026-09-26 rsn-358t v2: mark queued job RELEASED (Ben's 15:19 yes)
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-lis319t2-20260926 | tar -t | head -n 30; echo "---"; git archive origin/main handoff/queue/lis-302-gpu.md | tar -xO | head -n 60
+artifacts/
+artifacts/claude-lis319t2-20260926/
+artifacts/claude-lis319t2-20260926/PASSMARKS.md
+artifacts/claude-lis319t2-20260926/SEAL.sha256.txt
+---
+COMMON RULES (the listener thread, Claude, wrote this task on 2026-09-23). You are a build/verification agent working in the git worktree /Users/ben-hannan/Desktop/projects/beautiful-model/.claude/worktrees/card-experiment-handoff-7c5b27 (run every command from there).
+First read /private/tmp/claude-502/-Users-ben-hannan-Desktop-projects-beautiful-model--claude-worktrees-card-experiment-handoff-7c5b27/76c622f5-1395-42cc-b432-71b65f256cf4/scratchpad/briefs/OPUS-RULES.txt. It applies to you in full, even though you are not Opus. The key points:
+- Additive only: create new files; never edit or delete an existing file. Never edit anything in archive/, premonition/, learnlab/, artifacts/opus-*, or another agent's sealed files. The ledger is append-only (cat >>).
+- Fictional names only. Never write to the repo-root notebook/. No secrets. Never print config files that may hold keys.
+- Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B <script> ... (plain python3 under bash may be a broken x86 binary). macOS has no `timeout` command.
+- TEST-ONLY panels are never read item by item, never tuned on, and never quoted; you may run them only where your task says so, once.
+- Check `uptime` and `df -g /` before heavy steps. Stop and report if free disk is under 3 GB. Use at most 4 parallel processes.
+- Claims never exceed the numbers. Report every case, every miss and every deviation. Integer counts.
+- You cannot message the director mid-run. When the task says "report", put it in your final reply, which the director reads.
+Your final reply: verdict first, then a marks table with integer counts, every move, every miss, deviations, and what it means / doesn't mean in plain high-school English.
+BENSPC BUSY MARKER (Director 09-26): while a queue "GPU: yes" job runs, C:\Users\benja\GPU-BUSY.txt exists and names it. If that file exists, do not start anything on the GPU, whatever nvidia-smi shows.
+
+GETTING YOUR FILES: run git fetch -q origin main and read files with git show origin/main:<path> (the listener spec: design/v3/60-listener/frame-spec.md). Builder outputs are on origin/builder-outbox (git show origin/builder-outbox:<path>). Never check out, merge or push any branch yourself; the watcher pushes your PUSH paths.
+INDEPENDENCE: never open or read items of any TEST-ONLY panel. New files only. Never check out branches in the worktree; get a copy of the code for the GPU machine with `git archive origin/main` and `git archive origin/builder-outbox <path>`.
+GPU: yes
+
+YOUR TASK: lis-302-gpu, REPORT ONLY (no registered marks, no training, no panel). Two GPU measurements on BensPC for the listener thread, over lis-301's DEV readings (dev only; never any panel). Artifacts go in artifacts/claude-lis302-20260924/. The listener thread wrote the code. Run it and never edit it. If something breaks, stop and report the exact error.
+Files: scripts/claude_lis302_tokprobs.py, artifacts/claude-lis302-20260924/checks.json (753 checker queries, already built), scripts/claude_earcheck261_checker.py (sealed exp-261 client, unchanged). Dev inputs are on origin/builder-outbox: artifacts/claude-lis301-20260923/dev/dev_rows.jsonl and dev_pred.jsonl.
+1. TOKEN PROBS (about 5 min). Use the lis-301 merged reader on BensPC (C:/Users/benja/lis301/work/run/merged; check its safetensors sha256 = b4fd93a2b29fc9e246cfdd2ae5c815576957480f410d85eb24bb8df00d21b890) and the lis-301 venv:
+   python scripts/claude_lis302_tokprobs.py --model <merged> --rows dev_rows.jsonl --pred dev_pred.jsonl --out artifacts/claude-lis302-20260924/tokprobs.jsonl
+   Then free the GPU (the process exits).
+2. EXP-261 CHECKER PASS. Check `curl -s http://127.0.0.1:8081/health` on BensPC. If llama-server is not already up, start it yourself exactly as in handoff/kit/briefs/261-earcheck.txt line 44 (C:\llama-b10679\llama-server.exe, model C:\Users\benja\.lmstudio\models\Qwen3.8-27B\Qwen3.8-27B-UD-IQ4_XS.gguf, --host 127.0.0.1 --port 8081 -ngl 99 -fa 1 --cache-type-k q8_0 --cache-type-v q8_0 --parallel 1 -t 6), wait for /health ok, and record its PID. If the GGUF or exe is missing, skip this step and report it. Then run:
+   python scripts/claude_earcheck261_checker.py --url http://127.0.0.1:8081 --in artifacts/claude-lis302-20260924/checks.json --out artifacts/claude-lis302-20260924/pyes.json
+   Watch for VRAM spill (see the brief, line 48). If you started llama-server, stop it afterwards by its exact PID only.
+3. RESULTS-gpu.md: counts only. Include:
+   - rows done;
+   - how many rows have check_minp differing from the recorded minimum conf by more than 0.01 (dev_pred's conf list; report the count);
+   - the checker summary (n, fallbacks, median/p90/max ms);
+   - the device;
+   - whether you started or reused llama-server.
+   Never print dev turns in bulk (a few examples in RESULTS-gpu.md are fine).
+PUSH: artifacts/claude-lis302-20260924/tokprobs.jsonl artifacts/claude-lis302-20260924/pyes.json artifacts/claude-lis302-20260924/RESULTS-gpu.md
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-lis319t2-20260926/PASSMARKS.md artifacts/claude-lis319t2-20260926/SEAL.sha256.txt | tar -xO; echo "===LIST==="; git archive origin/main artifacts/claude-readpanel319k-20260926 | tar -t | head -n 20
+# lis-319t2: the 0.98 bar on the lis-319f reader (one change: the bar)
+
+Thread "Fix: reading facts from chat" (problem #1, saves too few). Written 2026-09-26 15:18 UTC, before any read of the test panel exists.
+
+## Why
+lis-319t FAILED on the lis-319 reader: at 0.98, right saves rose by 38 but wrong saves rose by 7 (bar +2) and no-fact rows with a save
+by 5 (bar +1). lis-319f PASSED and replaces lis-319. On the same panel, lis-319f at 0.98 showed +37 right and +2 wrong
+(artifacts/claude-lis319t-20260926/VERIFY.md). That was seen after the fact, so it chooses nothing: this is the re-test on a
+panel no read of which has been seen.
+
+## The one change
+Every fact saves at T = 0.98 instead of 0.995. Same reader (lis-319f, model.safetensors sha256
+970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b), same compiler, same prompt (claude_lis319_read.py).
+
+## Test
+readpanel319k (TEST-ONLY, sealed main cb0689501; 240 rows: 120 ordinary, 60 correction, 60 lookalike; 239 true facts; 70
+rows with no fact), read ONCE by lis-319f on the Mac (handoff/queue/lis319t2-panel-mac.md). Pairs at 0.995 and 0.98
+(claude_lis319_fullclaim_b.py pairs), two blind Opus judges (JUDGE_SAME.md, neutral names), then fullclaim_b final.
+
+## Marks (0.98 vs 0.995, same reads)
+| Mark | Bar |
+|---|---|
+| B1 | saved_right_full: 0.98 >= 0.995 + 10 |
+| B2 | saved_wrong_full: 0.98 <= 0.995 + 2 |
+| B3 | nofact_rows_with_save: 0.98 <= 0.995 + 1 |
+PASS = B1 and B2 and B3. Proved wrong: B1 gain <= 3. INCONCLUSIVE if the read covers fewer than 230 rows.
+If it passes, 0.98 does not ship as a hand-set bar: it becomes the bar the next retrained reader is checked at.
+Report only from this read: lis-319k's CORRECT-at-0.95 counts on lis-319f (lis-319k itself is decided on the lis-319 read).
+cd2106d8a9d6abae38f6de5f085d101306f9c4e2a2574742a4c411791b3d084d  artifacts/claude-lis319t2-20260926/PASSMARKS.md
+e9bb5aed1322db971b6865a2639a026b2a3856324f70791c8306055ffa1b7ced  scripts/claude_lis319_read.py
+31313985f9fd2dcf0d195fa0de89ddb5bb46b2869131f5aca796c7be30929a30  scripts/claude_lis319_rows.py
+3417f75c93a39e6581489a66b6f94ba3f06ca5baa99bfdc3eaccd71df6f52d00  scripts/claude_lis319_fullclaim_b.py
+===LIST===
+artifacts/
+artifacts/claude-readpanel319k-20260926/
+artifacts/claude-readpanel319k-20260926/ADJUDICATE.md
+artifacts/claude-readpanel319k-20260926/AUDIT.md
+artifacts/claude-readpanel319k-20260926/LABELLER.md
+artifacts/claude-readpanel319k-20260926/README.md
+artifacts/claude-readpanel319k-20260926/SEAL.sha256.txt
+artifacts/claude-readpanel319k-20260926/WRITER.md
+artifacts/claude-readpanel319k-20260926/adjudication.jsonl
+artifacts/claude-readpanel319k-20260926/label_B.jsonl
+artifacts/claude-readpanel319k-20260926/panel.jsonl
+[0m
+[0m$ [0mgit archive origin/main handoff/queue | tar -t | grep -i lis319 | head -n 20; echo "---worktree queue---"; ls handoff/queue/ 2>&1 | grep -i lis319 | head -n 20; echo "---artifacts lis319k---"; git archive origin/main artifacts/claude-lis319k-20260926 2>&1 | tar -t 2>&1 | head -n 30
+handoff/queue/lis319k-devbank-mac-r2.md
+handoff/queue/lis319k-devbank-mac.md
+handoff/queue/lis319k-panel-mac.md
+handoff/queue/lis319t2-panel-mac.md
+---worktree queue---
+---artifacts lis319k---
+artifacts/
+artifacts/claude-lis319k-20260926/
+artifacts/claude-lis319k-20260926/ADDENDUM-reread.md
+artifacts/claude-lis319k-20260926/PASSMARKS-FALLBACK.md
+artifacts/claude-lis319k-20260926/PASSMARKS.md
+artifacts/claude-lis319k-20260926/SEAL.sha256.txt
+artifacts/claude-lis319k-20260926/TIMES-ERRATUM.md
+artifacts/claude-lis319k-20260926/panel_tools/
+artifacts/claude-lis319k-20260926/panel_tools/agree.py
+artifacts/claude-lis319k-20260926/panel_tools/finalize.py
+[0m
+[0m$ [0mgit archive origin/main handoff/queue/lis319k-panel-mac.md handoff/queue/lis319k-devbank-mac-r2.md handoff/queue/lis319t2-panel-mac.md | tar -xO | head -n 120
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main builder-outbox` and `git show`/`git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+REQUEUE of lis319k-devbank-mac: go1 stopped on import because the TREE lacked design/v3/60-listener (claude_lis300_compiler reads relation-names.txt). Only change: that folder is added to the step-1 archive. Wait until lis319k-panel-mac has finished (one reader job on the Mac at a time). Results go to the same PUSH paths.
+GPU: no (Mac CPU/MPS; the reader runs on MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... (as lis-314-panel did). One reader job on the Mac at a time.
+DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end; the reader is read in place).
+TIME CAP: 60 minutes. $0, no rental, no BensPC. Label: lis319k-devbank.
+DATA: DEV only (the e2e331 dev bank). No TEST-ONLY panel is touched.
+
+YOUR TASK: read the dev bank's 69 teach/correct turns with the lis-319 reader and classify every taught fact (read and saved, read but below the 0.995 bar, blocked by the compiler, or not read). The reading thread wrote the code (scripts/claude_lis319k_devbank.py); run it, never edit it; if something breaks, stop and report the exact error.
+1. TREE: D=$(mktemp -d); git archive origin/builder-outbox artifacts/claude-e2e330-dev-20260924/run/arm_G.jsonl | tar -x -C $D; git archive origin/main scripts design/v3/60-listener artifacts/claude-e2e331-dev-20260924 | tar -x -C $D; cd $D.
+   READER = ~/premonition-models/lis319-merged; `shasum -a 256 $READER/model.safetensors` must be e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 (else stop with READER-FAIL). (cd artifacts/claude-e2e331-dev-20260924 && shasum -a 256 -c SEAL.sha256.txt) all OK.
+2. python -B scripts/claude_lis319k_devbank.py rows --run artifacts/claude-e2e330-dev-20260924/run/arm_G.jsonl --out rows.jsonl   (expect {"teach": 59, "correct": 10, "rows": 69, "missing_run_row": 0})
+3. python -B scripts/claude_lis319_read.py --model $READER --rows rows.jsonl --out reads_devbank.jsonl   (record the device and median ms)
+4. python -B scripts/claude_lis319k_devbank.py classify --rows rows.jsonl --reads reads_devbank.jsonl --out classes_all.json
+   python -B scripts/claude_lis319k_devbank.py classify --rows rows.jsonl --reads reads_devbank.jsonl --out classes_y1.json --facts dev01-f04,dev01-f05,dev01-f09,dev01-f12,dev01-f13,dev01-f14,dev02-f01,dev02-f02,dev02-f04,dev02-f06,dev02-f08,dev02-f10,dev03-f04,dev03-f08,dev03-f09,dev03-f10,dev04-f03,dev04-f05,dev04-f08,dev04-f10,dev04-f15,dev04-f16,dev05-f06,dev05-f07,dev05-f10,dev05-f12,dev06-f05,dev06-f06,dev06-f07,dev06-f09,dev06-f11,dev06-f13,dev07-f04,dev07-f05,dev07-f07,dev07-f10,dev08-f05,dev08-f06,dev08-f08,dev08-f10,dev08-f13,dev09-f04,dev09-f06,dev09-f09,dev09-f11,dev09-f12,dev09-f13,dev10-f03,dev10-f04,dev10-f06,dev10-f09,dev10-f10
+5. Copy reads_devbank.jsonl, classes_all.json, classes_y1.json into artifacts/claude-lis319k-20260926/devbank/ of your worktree, write artifacts/claude-lis319k-20260926/devbank/RESULTS.md (the printed counts verbatim, device, median ms, wall time), then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis319k-20260926/devbank/RESULTS.md artifacts/claude-lis319k-20260926/devbank/reads_devbank.jsonl artifacts/claude-lis319k-20260926/devbank/classes_all.json artifacts/claude-lis319k-20260926/devbank/classes_y1.json
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU/MPS; the reader runs on MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... Run only after lis319k-devbank-mac has finished (one reader job on the Mac at a time).
+DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end; the reader is read in place).
+TIME CAP: 60 minutes. $0, no rental, no BensPC. Label: lis319k-panel.
+INDEPENDENCE: never open, print or quote artifacts/claude-readpanel319k-20260926/panel.jsonl, label_B.jsonl, adjudication.jsonl or the reads file you write. Scripts print counts only; push the reads file unread. The panel is read exactly ONCE.
+
+YOUR TASK: lis-319k, one read of the sealed corrections panel with the lis-319 reader. Both save rules are scored later from this one read by the reading thread. Read origin/main:artifacts/claude-lis319k-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, stop and report the exact error.
+1. TREE + SEALS: D=$(mktemp -d); git archive origin/main scripts artifacts/claude-lis319k-20260926 artifacts/claude-readpanel319k-20260926 | tar -x -C $D; cd $D.
+   shasum -a 256 -c artifacts/claude-lis319k-20260926/SEAL.sha256.txt (all OK); (cd artifacts/claude-readpanel319k-20260926 && shasum -a 256 -c SEAL.sha256.txt) (all OK). Any failure: stop.
+   READER = ~/premonition-models/lis319-merged; shasum -a 256 $READER/model.safetensors must be e688e1b221cff938d7032a8864c87df60111ad92bc09a650d091931704776a76 (else stop with READER-FAIL).
+2. python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel319k-20260926/panel.jsonl --out rows.jsonl   (expect rows 240 with history 210)
+3. python -B scripts/claude_lis319_read.py --model $READER --rows rows.jsonl --out reads_panel.jsonl   (record the device, median ms, wall time)
+4. python -B scripts/claude_lis319k_score.py bar --reads reads_panel.jsonl --out reads_panel_new.jsonl   (record the printed counts)
+5. Copy reads_panel.jsonl and reads_panel_new.jsonl into artifacts/claude-lis319k-20260926/ of your worktree, write artifacts/claude-lis319k-20260926/RESULTS-read.md (seal checks, reader sha, device, median ms, wall time, the printed counts verbatim; "K1-K4 pending judges"), then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis319k-20260926/RESULTS-read.md artifacts/claude-lis319k-20260926/reads_panel.jsonl artifacts/claude-lis319k-20260926/reads_panel_new.jsonl
+COMMON RULES (the "Fix: reading facts from chat" thread, Claude, wrote this task on 2026-09-26). Follow the first 13 lines of origin/main:handoff/queue/lis-302-gpu.md (additive only, fictional names, TEST-ONLY panels never read, report in your final reply). Get files with `git fetch -q origin main` and `git archive`; never check out or push a branch yourself (the watcher pushes PUSH paths).
+GPU: no (Mac CPU/MPS; the reader runs on MPS). Run Python with: export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B <script> ... Run only after lis319k-panel-mac AND lis319k-devbank-mac-r2 have finished (one reader job on the Mac at a time).
+DISK: 1 (a ~25 MB code tree in one mktemp dir, removed by exact path at the end; the reader is read in place).
+TIME CAP: 60 minutes. $0, no rental, no BensPC. Label: lis319t2-panel.
+INDEPENDENCE: never open, print or quote artifacts/claude-readpanel319k-20260926/panel.jsonl, label_B.jsonl, adjudication.jsonl or the reads file you write. Scripts print counts only; push the reads file unread. This reader reads the panel exactly ONCE.
+
+YOUR TASK: lis-319t2, one read of the sealed corrections panel with the lis-319f reader. Read origin/main:artifacts/claude-lis319t2-20260926/PASSMARKS.md first. Run the code, never edit it; if something breaks, stop and report the exact error.
+1. TREE + SEALS: D=$(mktemp -d); git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319t2-20260926 artifacts/claude-readpanel319k-20260926 | tar -x -C $D; cd $D.
+   shasum -a 256 -c artifacts/claude-lis319t2-20260926/SEAL.sha256.txt (all OK); (cd artifacts/claude-readpanel319k-20260926 && shasum -a 256 -c SEAL.sha256.txt) (all OK). Any failure: stop.
+   READER = ~/premonition-models/lis319f-merged; shasum -a 256 $READER/model.safetensors must be 970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b (else stop with READER-FAIL).
+2. python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel319k-20260926/panel.jsonl --out rows.jsonl   (expect rows 240 with history 210)
+3. python -B scripts/claude_lis319_read.py --model $READER --rows rows.jsonl --out reads_panel_319f.jsonl   (record the device, median ms, wall time)
+4. Copy reads_panel_319f.jsonl into artifacts/claude-lis319t2-20260926/ of your worktree, write artifacts/claude-lis319t2-20260926/RESULTS-read.md (seal checks, reader sha, device, median ms, wall time, printed counts verbatim; "B1-B3 pending judges"), then rm -rf "$D" (exact path) and confirm it is gone.
+PUSH: artifacts/claude-lis319t2-20260926/RESULTS-read.md artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl
+[0m
+[0m$ [0mgit archive origin/main artifacts/claude-lis319k-20260926 | tar -t; echo "---worktree artifacts---"; ls -R artifacts/claude-lis319k-20260926 2>&1 | head -n 40; echo "---worktree t2---"; ls -R artifacts/claude-lis319t2-20260926 2>&1 | head -n 40
+artifacts/
+artifacts/claude-lis319k-20260926/
+artifacts/claude-lis319k-20260926/ADDENDUM-reread.md
+artifacts/claude-lis319k-20260926/PASSMARKS-FALLBACK.md
+artifacts/claude-lis319k-20260926/PASSMARKS.md
+artifacts/claude-lis319k-20260926/SEAL.sha256.txt
+artifacts/claude-lis319k-20260926/TIMES-ERRATUM.md
+artifacts/claude-lis319k-20260926/panel_tools/
+artifacts/claude-lis319k-20260926/panel_tools/agree.py
+artifacts/claude-lis319k-20260926/panel_tools/finalize.py
+---worktree artifacts---
+devbank
+reads_panel_new.jsonl
+reads_panel.jsonl
+RESULTS-read.md
+
+artifacts/claude-lis319k-20260926/devbank:
+classes_all.json
+classes_y1.json
+reads_devbank.jsonl
+RESULTS.md
+---worktree t2---
+ls: artifacts/claude-lis319t2-20260926: No such file or directory
+[0m
+[0m$ [0mps aux | grep -i -E "claude_lis319|python.*lis|torch" | grep -v grep | head -n 20; echo "---uptime---"; uptime; echo "---df---"; df -g / 2>&1 | head -n 5; echo "---reader dir---"; ls -l ~/premonition-models/lis319f-merged/ 2>&1 | head; ls -l ~/premonition-models/lis319-merged/ 2>&1 | head
+...output truncated...
+
+Full output saved to: /Users/ben-hannan/.local/share/opencode/tool-output/tool_0de55cdb8001JBmRi6w9jlltkP
+
+---uptime---
+11:29  up 3 days,  1:22, 4 users, load averages: 133.82 108.29 99.41
+---df---
+Filesystem     1G-blocks Used Available Capacity iused     ifree %iused  Mounted on
+/dev/disk3s1s1       460   12        54    19%  484014 575606440    0%   /
+---reader dir---
+total 4240648
+-rw-r--r--  1 ben-hannan  staff        9062 Sep 26 10:07 chat_template.jinja
+-rw-r--r--  1 ben-hannan  staff         749 Sep 26 10:06 config.json
+-rw-r--r--  1 ben-hannan  staff         214 Sep 26 10:06 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 26 10:07 model.safetensors
+-rw-r--r--  1 ben-hannan  staff         459 Sep 26 10:07 tokenizer_config.json
+-rw-r--r--  1 ben-hannan  staff     9894271 Sep 26 10:07 tokenizer.json
+total 4240648
+-rw-------  1 ben-hannan  staff        9241 Sep 25 16:21 chat_template.jinja
+-rw-------  1 ben-hannan  staff         784 Sep 25 16:21 config.json
+-rw-------  1 ben-hannan  staff         227 Sep 25 16:21 generation_config.json
+-rw-------  1 ben-hannan  staff  2161290944 Sep 25 16:21 model.safetensors
+-rw-------  1 ben-hannan  staff         477 Sep 25 16:21 tokenizer_config.json
+-rw-------  1 ben-hannan  staff     9894271 Sep 25 16:21 tokenizer.json
+[0m
+[0m→ [0mRead /Users/ben-hannan/.local/share/opencode/tool-output/tool_0de55cdb8001JBmRi6w9jlltkP
+[0m→ [0mRead artifacts/claude-lis319k-20260926/RESULTS-read.md
+[0m→ [0mRead artifacts/claude-lis319k-20260926/devbank/RESULTS.md
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[✓] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[•] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[ ] Run rows script (expect 240 rows / 210 history)
+[ ] Run lis-319f reader once, record device/median/wall
+[ ] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
+[0m$ [0mD=$(mktemp -d); echo "TMPDIR=$D"; git archive origin/main scripts design/v3/60-listener artifacts/claude-lis319t2-20260926 artifacts/claude-readpanel319k-20260926 | tar -x -C "$D"; echo "ARCHIVE_EXIT:$?"; ls "$D" | head; ls "$D/scripts" | grep lis319 | head; ls "$D/artifacts" | head
+TMPDIR=/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.K79Pnp3WPE
+ARCHIVE_EXIT:0
+artifacts
+design
+scripts
+claude_lis319_agree.py
+claude_lis319_arms.py
+claude_lis319_common.py
+claude_lis319_data.py
+claude_lis319_devsplit.py
+claude_lis319_fullclaim_b.py
+claude_lis319_fullclaim.py
+claude_lis319_lencheck.py
+claude_lis319_read.py
+claude_lis319_rows.py
+claude-lis319t2-20260926
+claude-readpanel319k-20260926
+[0m
+[0m$ [0mshasum -a 256 -c artifacts/claude-lis319t2-20260926/SEAL.sha256.txt; echo "SEAL_T2_EXIT:$?"; (cd artifacts/claude-readpanel319k-20260926 && shasum -a 256 -c SEAL.sha256.txt); echo "SEAL_PANEL_EXIT:$?"; shasum -a 256 ~/premonition-models/lis319f-merged/model.safetensors; echo "READER_SHA_EXIT:$?"
+artifacts/claude-lis319t2-20260926/PASSMARKS.md: OK
+scripts/claude_lis319_read.py: OK
+scripts/claude_lis319_rows.py: OK
+scripts/claude_lis319_fullclaim_b.py: OK
+SEAL_T2_EXIT:0
+panel.jsonl: OK
+label_B.jsonl: OK
+adjudication.jsonl: OK
+WRITER.md: OK
+LABELLER.md: OK
+ADJUDICATE.md: OK
+README.md: OK
+AUDIT.md: OK
+SEAL_PANEL_EXIT:0
+970ef0acd5966f9e1a42049025d4ed807dee3989225201fd9dbcc6b4aa6b4f9b  /Users/ben-hannan/premonition-models/lis319f-merged/model.safetensors
+READER_SHA_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[✓] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[✓] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[•] Run rows script (expect 240 rows / 210 history)
+[ ] Run lis-319f reader once, record device/median/wall
+[ ] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_rows.py --rows artifacts/claude-readpanel319k-20260926/panel.jsonl --out rows.jsonl; echo "ROWS_EXIT:$?"
+rows 240 with history 210
+ROWS_EXIT:0
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[✓] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[✓] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[✓] Run rows script (expect 240 rows / 210 history)
+[•] Run lis-319f reader once, record device/median/wall
+[ ] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
+[0m$ [0mdate -u +"%Y-%m-%d %H:%M:%S UTC"; export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy --with transformers --with safetensors python -B scripts/claude_lis319_read.py --model ~/premonition-models/lis319f-merged --rows rows.jsonl --out reads_panel_319f.jsonl; echo "READ_EXIT:$?"; date -u +"%Y-%m-%d %H:%M:%S UTC"
+2026-09-26 15:29:54 UTC
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]Loading weights:   0%|          | 1/219 [00:00<01:13,  2.96it/s]Loading weights:  88%|████████▊ | 193/219 [00:00<00:00, 563.53it/s]Loading weights: 100%|██████████| 219/219 [00:00<00:00, 460.81it/s]
+read 240 rows on mps
+READ_EXIT:0
+2026-09-26 15:36:58 UTC
+[0m
+[0m$ [0mexport OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONUTF8=1; uv run --offline --no-project --python 3.12 --with torch --with numpy python -B -c "import json,statistics; ms=[json.loads(l).get('ms') for l in open('reads_panel_319f.jsonl')]; ms=[x for x in ms if isinstance(x,(int,float))]; print('lines',len(ms)); import statistics as s; print('median_ms', s.median(ms) if ms else None)"; echo "MEDIAN_EXIT:$?"; wc -l reads_panel_319f.jsonl
+lines 240
+median_ms 1610.9
+MEDIAN_EXIT:0
+     240 reads_panel_319f.jsonl
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[✓] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[✓] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[✓] Run rows script (expect 240 rows / 210 history)
+[✓] Run lis-319f reader once, record device/median/wall
+[•] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
+[0m$ [0mmkdir -p artifacts/claude-lis319t2-20260926 && cp /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.K79Pnp3WPE/reads_panel_319f.jsonl artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl && wc -l artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl && ls -l artifacts/claude-lis319t2-20260926/
+240 artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl
+total 184
+-rw-r--r--  1 ben-hannan  staff  93207 Sep 26 11:37 reads_panel_319f.jsonl
+[0m
+[0m← [0mWrite artifacts/claude-lis319t2-20260926/RESULTS-read.md
+Wrote file successfully.
+[0m
+[0m$ [0mrm -rf "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.K79Pnp3WPE"; echo "RM_EXIT:$?"; ls "/var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.K79Pnp3WPE" 2>&1; echo "CONFIRM_EXIT:$?"; git status --short --branch | head -n 10
+RM_EXIT:0
+ls: /var/folders/6q/27cy8k2s7w7cyb5spxrkj2mm0000gp/T/tmp.K79Pnp3WPE: No such file or directory
+CONFIRM_EXIT:1
+## claude/card-experiment-handoff-7c5b27...origin/claude/card-experiment-handoff-7c5b27 [ahead 23]
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+[0m
+[0m$ [0mgit status --short artifacts/claude-lis319t2-20260926/; ls -l artifacts/claude-lis319t2-20260926/
+total 192
+-rw-r--r--  1 ben-hannan  staff  93207 Sep 26 11:37 reads_panel_319f.jsonl
+-rw-r--r--  1 ben-hannan  staff   1828 Sep 26 11:37 RESULTS-read.md
+[0m
+[0m$ [0mgit status --short | grep lis319t2; echo "GREP_EXIT:$?"; git check-ignore -v artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl 2>&1; echo "IGNORE_EXIT:$?"
+GREP_EXIT:1
+.gitignore:5:artifacts/	artifacts/claude-lis319t2-20260926/reads_panel_319f.jsonl
+IGNORE_EXIT:0
+[0m
+[0m$ [0mgit check-ignore -v artifacts/claude-lis319k-20260926/RESULTS-read.md 2>&1; git log --oneline -3 -- artifacts/claude-lis319k-20260926/ 2>&1 | head; git status --short | head -n 30
+.gitignore:5:artifacts/	artifacts/claude-lis319k-20260926/RESULTS-read.md
+ M artifacts/fable-predictions-ledger.md
+?? .claude/
+?? data/models/
+?? data/open/
+?? design/v3/30-modes/138p-merge-muse.md
+?? design/v3/30-modes/291-join-muse.md
+?? design/v3/30-modes/292-merge-muse.md
+?? design/v3/30-modes/321-compact-store-muse.md
+?? notebook/
+?? runs/
+?? scratchpad/
+?? scripts/claude_138nb_devrepro.py
+?? scripts/claude_138nb_m1.py
+?? scripts/claude_138nb_m2.py
+?? scripts/claude_138nb_m6.py
+?? scripts/claude_138nb_runall.sh
+?? scripts/claude_138nb_score.py
+?? scripts/claude_138p_l1.py
+?? scripts/claude_138p_panel.sh
+?? scripts/claude_138p_runall.sh
+?? scripts/claude_138p_score.py
+?? scripts/claude_255b_m1gen.py
+?? scripts/claude_255b_m2check.py
+?? scripts/claude_255b_m3changes.py
+?? scripts/claude_255b_m3format.py
+?? scripts/claude_255b_runall.sh
+?? scripts/claude_255b_score.py
+?? scripts/claude_255b_v255check.py
+?? scripts/claude_263_openpanel.sh
+?? scripts/claude_263_panel.sh
+[0m
+[0m# [0mTodos
+[✓] Fetch origin and read common rules (first 13 lines of lis-302-gpu.md) + PASSMARKS.md
+[✓] Verify prerequisite jobs lis319k-panel-mac and lis319k-devbank-mac-r2 finished
+[✓] TREE+SEALS: mktemp tree, git archive, shasum checks, reader sha
+[✓] Run rows script (expect 240 rows / 210 history)
+[✓] Run lis-319f reader once, record device/median/wall
+[✓] Copy reads, write RESULTS-read.md, rm -rf temp dir, confirm gone
+[0m
