@@ -6,5 +6,5 @@ about 1 in 4 messages long, wider cue checks, plan-word leaks and second-hand so
 before any y1t data existed. The y1t-glm-mac job runs whatever main holds when it starts; which version ran is shown
 by its printed check counts (RESULTS-mac.md), and the data the rental uses is fixed by the items' sha256 recorded there.
 
-SEAL-y1t-rental.sha256.txt is the same 16 hashes minus the three lis-320 scripts (checked identical by diff): every
+SEAL-y1t-rental.sha256.txt is the original 19 hashes minus the three lis-320 scripts, 16 left (checked identical by diff): every
 file the rental runs, and PLAN.md. The rental checks this file. No rule, bar or step of PLAN.md changed.
