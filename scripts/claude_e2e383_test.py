@@ -52,7 +52,12 @@ def main() -> int:
     loop3 = Loop(lambda t: "I'm not sure.")
     R.install_route383(loop3, Gen(["I'll remember that."]))
     assert loop3.turn("why is the sky blue?") == ["I'm not sure."] and loop3.route383_stats["all_failed"] == 1; ok += 1
-    print(f"claude_e2e383_test: {ok}/9 OK")
+    loop4 = Loop(lambda t: "I'm not sure." if "?" in t else "Okay.")
+    R.install_route383(loop4, Gen(["She went on Tuesday."]))
+    loop4.turn('Caroline said, "I finally went to the park with Melanie."')
+    assert loop4.turn("When did Caroline go to the park?") == ["I'm not sure."]; ok += 1   # heard name: kept
+    assert loop4.turn("How many apples does Janet have if she buys 3 more?") == ["She went on Tuesday."]; ok += 1
+    print(f"claude_e2e383_test: {ok}/11 OK")
     return 0
 
 

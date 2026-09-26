@@ -23,3 +23,9 @@ Report only: GSM8K and MMLU-Redux via the Benchmarks harness (bm-391 registers i
 If Q1 fails, the lost math is not recovered by handing abstained questions to the 1B inside the agent (look next at
 turns that never abstain but answer wrongly, or at think299b itself). If Q2 or Q3 fails, the about-the-user test is
 too narrow and routing leaks memory questions to the 1B.
+
+## Addendum 2026-09-26 ~01:45 UTC, before any run (no mark changed)
+Benchmarks found that on LoCoMo the about-the-user test would miss almost every question about the people talking
+(1 of 1,540 with no names in the notebook), so R would answer them from the question alone. The test now also
+counts any name heard in an earlier turn of the same chat (a capitalised word inside a sentence, or "<Name> said";
+kept in <state_dir>/route383_names.json). Checks: scripts/claude_e2e383_test.py 11/11. Same change, same marks.
